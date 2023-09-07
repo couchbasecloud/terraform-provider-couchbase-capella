@@ -4,8 +4,8 @@ This is the repository for the Terraform Couchbase Capella Provider which allows
 
 ## Requirements
 
-- [Terraform](https://www.terraform.io/downloads.html) >= 1.4.2
-- [Go](https://golang.org/doc/install) >= 1.18
+- [Terraform](https://www.terraform.io/downloads.html) >= 1.0
+- [Go](https://golang.org/doc/install) >= 1.19
 
 ## Using the provider
 
