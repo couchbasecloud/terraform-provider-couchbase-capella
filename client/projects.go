@@ -1,13 +1,14 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
 )
 
-func (c *Client) PostProject(project CreateProjectRequest, organizationId string) (*CreateProjectResponse, error) {
+func (c *Client) PostProject(ctx context.Context, project CreateProjectRequest, organizationId string) (*CreateProjectResponse, error) {
 	rb, err := json.Marshal(project)
 	if err != nil {
 		return nil, err
@@ -18,13 +19,13 @@ func (c *Client) PostProject(project CreateProjectRequest, organizationId string
 		return nil, err
 	}
 
-	body, err := c.doRequest(req, nil)
+	resp, err := c.doRequest(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
 	newProject := CreateProjectResponse{}
-	err = json.Unmarshal(body, &newProject)
+	err = json.Unmarshal(resp.Body, &newProject)
 	if err != nil {
 		return nil, err
 	}
@@ -32,39 +33,41 @@ func (c *Client) PostProject(project CreateProjectRequest, organizationId string
 	return &newProject, nil
 }
 
-func (c *Client) GetProject(organizationId, projectId string) (*GetProjectResponse, error) {
+func (c *Client) GetProject(ctx context.Context, organizationId, projectId string) (*GetProjectResponse, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/v4/organizations/%s/projects/%s", c.HostURL, organizationId, projectId), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	body, err := c.doRequest(req, nil)
+	resp, err := c.doRequest(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
 	project := GetProjectResponse{}
-	err = json.Unmarshal(body, &project)
+	err = json.Unmarshal(resp.Body, &project)
 	if err != nil {
 		return nil, err
 	}
 
+	project.Etag = resp.HTTPResponse.Header.Get("ETag")
+
 	return &project, nil
 }
 
-func (c *Client) GetProjects(organizationId string) (*GetProjectsResponse, error) {
+func (c *Client) GetProjects(ctx context.Context, organizationId string) (*GetProjectsResponse, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/v4/organizations/%s/projects", c.HostURL, organizationId), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	body, err := c.doRequest(req, nil)
+	resp, err := c.doRequest(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
 	projects := GetProjectsResponse{}
-	err = json.Unmarshal(body, &projects)
+	err = json.Unmarshal(resp.Body, &projects)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +75,7 @@ func (c *Client) GetProjects(organizationId string) (*GetProjectsResponse, error
 	return &projects, nil
 }
 
-func (c *Client) UpdateProject(project PutProjectRequest, organizationId, projectId string) error {
+func (c *Client) UpdateProject(ctx context.Context, project PutProjectRequest, organizationId, projectId string, params *PutProjectParams) error {
 	rb, err := json.Marshal(project)
 	if err != nil {
 		return err
@@ -83,7 +86,11 @@ func (c *Client) UpdateProject(project PutProjectRequest, organizationId, projec
 		return err
 	}
 
-	_, err = c.doRequest(req, nil)
+	if params != nil && params.IfMatch != nil {
+		req.Header.Set("If-Match", *params.IfMatch)
+	}
+
+	_, err = c.doRequest(ctx, req)
 	if err != nil {
 		return err
 	}
@@ -91,13 +98,13 @@ func (c *Client) UpdateProject(project PutProjectRequest, organizationId, projec
 	return nil
 }
 
-func (c *Client) DeleteProject(organizationId, projectId string) error {
+func (c *Client) DeleteProject(ctx context.Context, organizationId, projectId string) error {
 	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/v4/organizations/%s/projects/%s", c.HostURL, organizationId, projectId), nil)
 	if err != nil {
 		return err
 	}
 
-	_, err = c.doRequest(req, nil)
+	_, err = c.doRequest(ctx, req)
 	if err != nil {
 		return err
 	}

@@ -93,7 +93,7 @@ func (d *projectsDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	projects, err := d.client.GetProjects(state.OrganizationId.ValueString())
+	projects, err := d.client.GetProjects(ctx, state.OrganizationId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read Capella Projects",

@@ -4,7 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-//ProjectResourceModel maps project resource schema data
+// ProjectResourceModel maps project resource schema data
 type ProjectResourceModel struct {
 	// Description The description of a particular project.
 	Description types.String `tfsdk:"description"`
@@ -17,6 +17,10 @@ type ProjectResourceModel struct {
 
 	// Name The name of the project.
 	Name types.String `tfsdk:"name"`
+
+	Etag types.String `tfsdk:"etag"`
+
+	IfMatch types.String `tfsdk:"if_match"`
 
 	// Audit All audit-related fields. It is of types.Object type to avoid conversion error for a nested field.
 	Audit types.Object `tfsdk:"audit"`
@@ -38,6 +42,10 @@ type ProjectResponse struct {
 
 	// Name The name of the project.
 	Name types.String `tfsdk:"name"`
+
+	Etag types.String `tfsdk:"etag"`
+
+	IfMatch types.String `tfsdk:"if_match"`
 }
 
 // CouchbaseAuditData contains all audit-related fields.

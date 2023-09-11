@@ -3,13 +3,16 @@ package provider
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	projects "terraform-provider-capella/client"
+	"terraform-provider-capella/client"
 	"terraform-provider-capella/internal/capellaschema"
 )
 
@@ -27,7 +30,7 @@ func NewProjectResource() resource.Resource {
 
 // projectResource is the project resource implementation.
 type projectResource struct {
-	client *projects.Client
+	client *client.Client
 }
 
 // Metadata returns the project resource type name.
@@ -41,6 +44,9 @@ func (r *projectResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"organization_id": schema.StringAttribute{
 				Required: true,
@@ -49,7 +55,13 @@ func (r *projectResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 				Required: true,
 			},
 			"description": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+			},
+			"if_match": schema.StringAttribute{
+				Optional: true,
+			},
+			"etag": schema.StringAttribute{
+				Computed: true,
 			},
 			"audit": schema.SingleNestedAttribute{
 				Computed: true,
@@ -86,14 +98,22 @@ func (r *projectResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	projectRequest := projects.CreateProjectRequest{
+	projectRequest := client.CreateProjectRequest{
 		Description: plan.Description.ValueString(),
 		Name:        plan.Name.ValueString(),
 	}
 
 	// Create new project
-	response, err := r.client.PostProject(projectRequest, plan.OrganizationId.ValueString())
-	if err != nil {
+	response, err := r.client.PostProject(ctx, projectRequest, plan.OrganizationId.ValueString())
+	switch err := err.(type) {
+	case nil:
+	case client.Error:
+		resp.Diagnostics.AddError(
+			"Error creating project",
+			"Could not create project, unexpected error: "+err.CompleteError(),
+		)
+		return
+	default:
 		resp.Diagnostics.AddError(
 			"Error creating project",
 			"Could not create project, unexpected error: "+err.Error(),
@@ -101,8 +121,16 @@ func (r *projectResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	refreshedState, err := r.getProjectFromClient(plan.OrganizationId.ValueString(), response.Id.String())
-	if err != nil {
+	refreshedState, err := r.getProjectFromClient(ctx, plan.OrganizationId.ValueString(), response.Id.String())
+	switch err := err.(type) {
+	case nil:
+	case client.Error:
+		resp.Diagnostics.AddError(
+			"Error Reading Capella Projects",
+			"Could not read Capella project ID "+response.Id.String()+": "+err.CompleteError(),
+		)
+		return
+	default:
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Projects",
 			"Could not read Capella project ID "+response.Id.String()+": "+err.Error(),
@@ -124,7 +152,7 @@ func (r *projectResource) Configure(_ context.Context, req resource.ConfigureReq
 		return
 	}
 
-	client, ok := req.ProviderData.(*projects.Client)
+	client, ok := req.ProviderData.(*client.Client)
 
 	if !ok {
 		resp.Diagnostics.AddError(
@@ -154,8 +182,21 @@ func (r *projectResource) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 
 	// Get refreshed project value from Capella
-	refreshedState, err := r.getProjectFromClient(organizationId, state.Id.String())
-	if err != nil {
+	refreshedState, err := r.getProjectFromClient(ctx, organizationId, state.Id.String())
+	switch err := err.(type) {
+	case nil:
+	case client.Error:
+		if err.HttpStatusCode != 404 {
+			resp.Diagnostics.AddError(
+				"Error Reading Capella Projects",
+				"Could not read Capella project ID "+state.Id.String()+": "+err.CompleteError(),
+			)
+			return
+		}
+		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+		resp.State.RemoveResource(ctx)
+		return
+	default:
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Projects",
 			"Could not read Capella project ID "+state.Id.String()+": "+err.Error(),
@@ -187,28 +228,61 @@ func (r *projectResource) Update(ctx context.Context, req resource.UpdateRequest
 
 	projectId := state.Id.ValueString()
 
-	projectRequest := projects.PutProjectRequest{
+	projectRequest := client.PutProjectRequest{
 		Description: plan.Description.ValueString(),
 		Name:        plan.Name.ValueString(),
 	}
 
+	var params client.PutProjectParams
+	if !plan.IfMatch.IsUnknown() && !plan.IfMatch.IsNull() {
+		ifMatch := plan.IfMatch.ValueString()
+		params = client.PutProjectParams{
+			IfMatch: &ifMatch,
+		}
+	}
+
 	// Update existing project
-	err := r.client.UpdateProject(projectRequest, plan.OrganizationId.ValueString(), projectId)
-	if err != nil {
+	err := r.client.UpdateProject(ctx, projectRequest, plan.OrganizationId.ValueString(), projectId, &params)
+	switch err := err.(type) {
+	case nil:
+	case client.Error:
 		resp.Diagnostics.AddError(
-			"Error Updating project",
-			"Could not update project, unexpected error: "+err.Error(),
+			"Error Updating Capella Projects",
+			"Could not update Capella project ID "+state.Id.String()+": "+err.CompleteError(),
+		)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error Updating Capella Projects",
+			"Could not update Capella project ID "+state.Id.String()+": "+err.Error(),
 		)
 		return
 	}
 
-	currentState, err := r.getProjectFromClient(plan.OrganizationId.ValueString(), projectId)
-	if err != nil {
+	currentState, err := r.getProjectFromClient(ctx, plan.OrganizationId.ValueString(), projectId)
+	switch err := err.(type) {
+	case nil:
+	case client.Error:
+		if err.HttpStatusCode != 404 {
+			resp.Diagnostics.AddError(
+				"Error Reading Capella Projects",
+				"Could not read Capella project ID "+state.Id.String()+": "+err.CompleteError(),
+			)
+			return
+		}
+		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+		resp.State.RemoveResource(ctx)
+		return
+	default:
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Projects",
-			"Could not read Capella project ID "+projectId+": "+err.Error(),
+			"Could not read Capella project ID "+state.Id.String()+": "+err.Error(),
 		)
 		return
+	}
+
+	if !plan.IfMatch.IsUnknown() && !plan.IfMatch.IsNull() {
+		currentState.IfMatch = plan.IfMatch
 	}
 
 	// Set state to fully populated data
@@ -230,7 +304,25 @@ func (r *projectResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	// Delete existing project
-	err := r.client.DeleteProject(state.OrganizationId.ValueString(), state.Id.ValueString())
+	err := r.client.DeleteProject(ctx, state.OrganizationId.ValueString(), state.Id.ValueString())
+	switch err := err.(type) {
+	case nil:
+	case client.Error:
+		if err.HttpStatusCode != 404 {
+			resp.Diagnostics.AddError(
+				"Error Reading Capella Projects",
+				"Could not read Capella project ID "+state.Id.String()+": "+err.CompleteError(),
+			)
+			tflog.Info(ctx, "resource doesn't exist in remote server")
+			return
+		}
+	default:
+		resp.Diagnostics.AddError(
+			"Error Reading Capella Projects",
+			"Could not read Capella project ID "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Deleting project",
@@ -247,8 +339,8 @@ func (r *projectResource) ImportState(ctx context.Context, req resource.ImportSt
 }
 
 // It reads the project from Capella and converts it into a ProjectResponse object.
-func (r *projectResource) getProjectFromClient(organizationId, projectId string) (*capellaschema.ProjectResponse, error) {
-	projectResp, err := r.client.GetProject(organizationId, projectId)
+func (r *projectResource) getProjectFromClient(ctx context.Context, organizationId, projectId string) (*capellaschema.ProjectResponse, error) {
+	projectResp, err := r.client.GetProject(ctx, organizationId, projectId)
 	if err != nil {
 		return nil, err
 	}
@@ -265,6 +357,7 @@ func (r *projectResource) getProjectFromClient(organizationId, projectId string)
 			ModifiedBy: types.StringValue(projectResp.Audit.ModifiedBy),
 			Version:    types.Int64Value(int64(projectResp.Audit.Version)),
 		},
+		Etag: types.StringValue(projectResp.Etag),
 	}
 
 	return &refreshedState, nil
