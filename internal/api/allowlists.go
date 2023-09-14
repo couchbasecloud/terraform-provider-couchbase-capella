@@ -18,7 +18,7 @@ type CreateAllowListRequest struct {
 
 // CreateAllowListResponse defines model for CreateAllowListResponse.
 type CreateAllowListResponse struct {
-	// The ID of the cluster the AllowList was created for
+	// The ID of the AllowList
 	Id uuid.UUID `json:"id"`
 }
 
