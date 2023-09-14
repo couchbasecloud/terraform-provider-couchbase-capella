@@ -95,9 +95,9 @@ func (p *capellaProvider) Configure(ctx context.Context, req provider.ConfigureR
 	if config.AuthenticationToken.IsUnknown() {
 		resp.Diagnostics.AddAttributeError(
 			path.Root(capellaAuthenticationTokenField),
-			"Unknown Capella Bearer Token",
-			"The provider cannot create the Capella API client as there is an unknown configuration value for the capella bearer token. "+
-				"Either target apply the source of the value first, set the value statically in the configuration, or use the BEARER_TOKEN environment variable.",
+			"Unknown Capella Authentication Token",
+			"The provider cannot create the Capella API client as there is an unknown configuration value for the capella authentication token. "+
+				"Either target apply the source of the value first, set the value statically in the configuration, or use the CAPELLA_AUTHENTICATION_TOKEN environment variable.",
 		)
 	}
 
@@ -135,8 +135,8 @@ func (p *capellaProvider) Configure(ctx context.Context, req provider.ConfigureR
 		resp.Diagnostics.AddAttributeError(
 			path.Root(capellaAuthenticationTokenField),
 			"Missing Capella Authentication Token",
-			"The provider cannot create the Capella API client as there is a missing or empty value for the capella bearer token. "+
-				"Set the password value in the configuration or use the BEARER_TOKEN environment variable. "+
+			"The provider cannot create the Capella API client as there is a missing or empty value for the capella authentication token. "+
+				"Set the password value in the configuration or use the CAPELLA_AUTHENTICATION_TOKEN environment variable. "+
 				"If either is already set, ensure the value is not empty.",
 		)
 	}

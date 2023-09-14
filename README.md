@@ -69,7 +69,7 @@ terraform {
 
 provider "capella" {
   host     = "hostname of the capella"
-  bearer_token = "capella api key bearer token"
+  authentication_token = "capella authentication token"
 }
 
 
@@ -86,7 +86,7 @@ output "example_project" {
 
 
 You can also provide host of the capella and your credentials for authentication via the environment variables,
-`CAPELLA_HOST`, `CAPELLA_AUTHENTICATION_TOKEN` for host and your bearer token.
+`CAPELLA_HOST`, `CAPELLA_AUTHENTICATION_TOKEN` for host and your authentication token.
 
 Usage :
 
