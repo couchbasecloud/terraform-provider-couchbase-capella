@@ -44,6 +44,11 @@ direct {}
 }
 ```
 
+Now build the terraform provider from this source code
+
+`go build -o <PATH>`
+
+
 ### Configuring Programmatic Access
 
 In order to set up authentication with the Couchbase Capella provider a V4 API key must be generated. We need base 64 encoded api-key
