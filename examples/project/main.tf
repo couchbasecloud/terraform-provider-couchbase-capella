@@ -8,7 +8,7 @@ terraform {
 
 provider "capella" {
   host     = var.host
-  bearer_token = var.auth_token
+  authentication_token = var.auth_token
 }
 
 resource "capella_project" "example" {

@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	capellaClient "terraform-provider-capella/client"
+	"terraform-provider-capella/client"
 	"terraform-provider-capella/internal/capellaschema"
 )
 
@@ -25,7 +25,7 @@ func NewProjectsDataSource() datasource.DataSource {
 
 // projectsDataSource is the project data source implementation.
 type projectsDataSource struct {
-	client *capellaClient.Client
+	client *client.Client
 }
 
 // Metadata returns the project data source type name.
@@ -135,7 +135,7 @@ func (d *projectsDataSource) Configure(_ context.Context, req datasource.Configu
 		return
 	}
 
-	client, ok := req.ProviderData.(*capellaClient.Client)
+	client, ok := req.ProviderData.(*client.Client)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",

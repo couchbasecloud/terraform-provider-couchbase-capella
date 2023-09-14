@@ -86,13 +86,13 @@ output "example_project" {
 
 
 You can also provide host of the capella and your credentials for authentication via the environment variables,
-`CAPELLA_HOST`, `BEARER_TOKEN` for host and your bearer token.
+`CAPELLA_HOST`, `CAPELLA_AUTHENTICATION_TOKEN` for host and your bearer token.
 
 Usage :
 
 ```shell
 $  export CAPELLA_HOST="xxxx"
-$  export BEARER_TOKEN="xxxx"
+$  export CAPELLA_AUTHENTICATION_TOKEN="xxxx"
 ```
 
 **1\. Review the Terraform plan**

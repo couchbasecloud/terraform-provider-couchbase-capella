@@ -20,6 +20,11 @@ var (
 	_ provider.Provider = &capellaProvider{}
 )
 
+const (
+	capellaAuthenticationTokenField = "authentication_token"
+	capellaPublicAPIHostField       = "host"
+)
+
 // New is a helper function to simplify provider server and testing implementation.
 func New(version string) func() provider.Provider {
 	return func() provider.Provider {
@@ -49,12 +54,14 @@ func (p *capellaProvider) Metadata(_ context.Context, _ provider.MetadataRequest
 func (p *capellaProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"host": schema.StringAttribute{
-				Optional: true,
+			capellaPublicAPIHostField: schema.StringAttribute{
+				Required:    true,
+				Description: "Capella Public API HTTPS Host URL",
 			},
-			"bearer_token": schema.StringAttribute{
-				Optional:  true,
-				Sensitive: true,
+			capellaAuthenticationTokenField: schema.StringAttribute{
+				Required:    true,
+				Sensitive:   true,
+				Description: "Capella API Token that serves as an authentication mechanism.",
 			},
 		},
 	}
@@ -62,7 +69,7 @@ func (p *capellaProvider) Schema(_ context.Context, _ provider.SchemaRequest, re
 
 // Configure configures the Capella client.
 func (p *capellaProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	tflog.Info(ctx, "Configuring capella client")
+	tflog.Info(ctx, "Configuring the Capella Client")
 
 	// Retrieve provider data from configuration
 	var config capellaProviderModel
@@ -77,16 +84,16 @@ func (p *capellaProvider) Configure(ctx context.Context, req provider.ConfigureR
 
 	if config.Host.IsUnknown() {
 		resp.Diagnostics.AddAttributeError(
-			path.Root("host"),
+			path.Root(capellaPublicAPIHostField),
 			"Unknown Capella API Host",
 			"The provider cannot create the capella API client as there is an unknown configuration value for the capella API host. "+
 				"Either target apply the source of the value first, set the value statically in the configuration, or use the CAPELLA_HOST environment variable.",
 		)
 	}
 
-	if config.BearerToken.IsUnknown() {
+	if config.AuthenticationToken.IsUnknown() {
 		resp.Diagnostics.AddAttributeError(
-			path.Root("bearer_token"),
+			path.Root(capellaAuthenticationTokenField),
 			"Unknown Capella Bearer Token",
 			"The provider cannot create the Capella API client as there is an unknown configuration value for the capella bearer token. "+
 				"Either target apply the source of the value first, set the value statically in the configuration, or use the BEARER_TOKEN environment variable.",
@@ -101,33 +108,32 @@ func (p *capellaProvider) Configure(ctx context.Context, req provider.ConfigureR
 	// with Terraform configuration value if set.
 
 	host := os.Getenv("CAPELLA_HOST")
-	bearerToken := os.Getenv("BEARER_TOKEN")
+	authenticationToken := os.Getenv("CAPELLA_AUTHENTICATION_TOKEN")
 
 	if !config.Host.IsNull() {
 		host = config.Host.ValueString()
 	}
 
-	if !config.BearerToken.IsNull() {
-		bearerToken = config.BearerToken.ValueString()
+	if !config.AuthenticationToken.IsNull() {
+		authenticationToken = config.AuthenticationToken.ValueString()
 	}
 
 	// If any of the expected configurations are missing, return
 	// errors with provider-specific guidance.
-
 	if host == "" {
 		resp.Diagnostics.AddAttributeError(
-			path.Root("host"),
-			"Missing Capella API Host",
+			path.Root(capellaPublicAPIHostField),
+			"Missing Capella Public API Host",
 			"The provider cannot create the Capella API client as there is a missing or empty value for the Capella API host. "+
 				"Set the host value in the configuration or use the CAPELLA_HOST environment variable. "+
 				"If either is already set, ensure the value is not empty.",
 		)
 	}
 
-	if bearerToken == "" {
+	if authenticationToken == "" {
 		resp.Diagnostics.AddAttributeError(
-			path.Root("bearer_token"),
-			"Missing Capella bearer token",
+			path.Root(capellaAuthenticationTokenField),
+			"Missing Capella Authentication Token",
 			"The provider cannot create the Capella API client as there is a missing or empty value for the capella bearer token. "+
 				"Set the password value in the configuration or use the BEARER_TOKEN environment variable. "+
 				"If either is already set, ensure the value is not empty.",
@@ -138,14 +144,14 @@ func (p *capellaProvider) Configure(ctx context.Context, req provider.ConfigureR
 		return
 	}
 
-	ctx = tflog.SetField(ctx, "capella_host", host)
-	ctx = tflog.SetField(ctx, "bearer_token", bearerToken)
-	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "bearer_token")
+	ctx = tflog.SetField(ctx, capellaPublicAPIHostField, host)
+	ctx = tflog.SetField(ctx, capellaAuthenticationTokenField, authenticationToken)
+	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, capellaAuthenticationTokenField)
 
 	tflog.Debug(ctx, "Creating Capella client")
 
 	// Create a new capella client using the configuration values
-	client, err := capellaClient.NewClient(&host, &bearerToken)
+	client, err := capellaClient.NewClient(&host, &authenticationToken)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Create Capella Client",
@@ -181,6 +187,6 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 
 // capellaProviderModel maps provider schema data to a Go type.
 type capellaProviderModel struct {
-	Host        types.String `tfsdk:"host"`
-	BearerToken types.String `tfsdk:"bearer_token"`
+	Host                types.String `tfsdk:"host"`
+	AuthenticationToken types.String `tfsdk:"authentication_token"`
 }
