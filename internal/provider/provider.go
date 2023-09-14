@@ -2,17 +2,19 @@ package provider
 
 import (
 	"context"
+	"os"
+	"time"
+
+	"terraform-provider-capella/internal/api"
+	"terraform-provider-capella/internal/resources"
+	providerschema "terraform-provider-capella/internal/schema"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"os"
-	"terraform-provider-capella/internal/api"
-	"terraform-provider-capella/internal/resources"
-	providerschema "terraform-provider-capella/internal/schema"
-	"time"
 )
 
 // Ensure the implementation satisfies the expected interfaces.

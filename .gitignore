@@ -1,7 +1,18 @@
+# Ignore all
+*
+
+# Unignore all with extensions
+!*.*
+
+# Ignore terraform plan, variable, backup and state files
 terraform.tfplan
 terraform.tfstate
 terraform.tfvars
-/.terraform
 *.backup
-.idea
 *.tfstate.*
+
+# Ignore terraform hidden folder
+/.terraform
+
+# Ignore IDE files
+.idea
