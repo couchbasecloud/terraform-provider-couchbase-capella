@@ -17,13 +17,18 @@ description: |-
 
 ### Required
 
-- `description` (String)
 - `name` (String)
 - `organization_id` (String)
+
+### Optional
+
+- `description` (String)
+- `if_match` (String)
 
 ### Read-Only
 
 - `audit` (Attributes) (see [below for nested schema](#nestedatt--audit))
+- `etag` (String)
 - `id` (String) The ID of this resource.
 
 <a id="nestedatt--audit"></a>

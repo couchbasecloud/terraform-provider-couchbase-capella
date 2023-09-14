@@ -4,6 +4,9 @@
 # Unignore all with extensions
 !*.*
 
+# Unignore all dirs
+!*/
+
 # Ignore terraform plan, variable, backup and state files
 terraform.tfplan
 terraform.tfstate
