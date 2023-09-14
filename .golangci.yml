@@ -12,6 +12,7 @@ linters:
     - godot
     - gofmt
     - gosimple
+    - gosec
     - ineffassign
     - makezero
     - misspell
