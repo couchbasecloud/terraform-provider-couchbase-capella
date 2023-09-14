@@ -7,10 +7,9 @@ import (
 	"context"
 	"flag"
 	"log"
+	"terraform-provider-capella/internal/provider"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-
-	"terraform-provider-capella/internal/provider"
 )
 
 // Run the docs generation tool, check its repository for more information on how it works and how docs

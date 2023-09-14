@@ -2,28 +2,36 @@ package provider
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"os"
-
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
-
-	capellaClient "terraform-provider-capella/client"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"os"
+	"terraform-provider-capella/internal/api"
+	"terraform-provider-capella/internal/resources"
+	providerschema "terraform-provider-capella/internal/schema"
+	"time"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
-var (
-	_ provider.Provider = &capellaProvider{}
-)
+var _ provider.Provider = &capellaProvider{}
 
 const (
 	capellaAuthenticationTokenField = "authentication_token"
 	capellaPublicAPIHostField       = "host"
+	apiRequestTimeout               = 10 * time.Second
 )
+
+// capellaProvider is the provider implementation.
+type capellaProvider struct {
+	name string
+	// version is set to the provider version on release, "dev" when the
+	// provider is built and ran locally, and "test" when running acceptance
+	// testing.
+	version string
+}
 
 // New is a helper function to simplify provider server and testing implementation.
 func New(version string) func() provider.Provider {
@@ -33,15 +41,6 @@ func New(version string) func() provider.Provider {
 			version: version,
 		}
 	}
-}
-
-// capellaProvider is the provider implementation.
-type capellaProvider struct {
-	name string
-	// version is set to the provider version on release, "dev" when the
-	// provider is built and ran locally, and "test" when running acceptance
-	// testing.
-	version string
 }
 
 // Metadata returns the provider type name.
@@ -72,7 +71,7 @@ func (p *capellaProvider) Configure(ctx context.Context, req provider.ConfigureR
 	tflog.Info(ctx, "Configuring the Capella Client")
 
 	// Retrieve provider data from configuration
-	var config capellaProviderModel
+	var config providerschema.Config
 	diags := req.Config.Get(ctx, &config)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -119,7 +118,7 @@ func (p *capellaProvider) Configure(ctx context.Context, req provider.ConfigureR
 	}
 
 	// If any of the expected configurations are missing, return
-	// errors with provider-specific guidance.
+	// error with provider-specific guidance.
 	if host == "" {
 		resp.Diagnostics.AddAttributeError(
 			path.Root(capellaPublicAPIHostField),
@@ -151,21 +150,23 @@ func (p *capellaProvider) Configure(ctx context.Context, req provider.ConfigureR
 	tflog.Debug(ctx, "Creating Capella client")
 
 	// Create a new capella client using the configuration values
-	client, err := capellaClient.NewClient(&host, &authenticationToken)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Create Capella Client",
-			"An unexpected error occurred when creating the Capella client. "+
-				"If the error is not clear, please contact the provider developers.\n\n"+
-				"Provider Client Error: "+err.Error(),
-		)
-		return
+	providerData := &providerschema.Data{
+		HostURL: host,
+		Token:   authenticationToken,
+		Client:  api.NewClient(apiRequestTimeout),
 	}
 
 	// Make the Capella client available during DataSource and Resource
 	// type Configure methods.
-	resp.DataSourceData = client
-	resp.ResourceData = client
+	//
+	// DataSourceData is provider-defined data, clients, etc. that is passed
+	// to [datasource.ConfigureRequest.ProviderData] for each DataSource type
+	// that implements the Configure method.
+	resp.DataSourceData = providerData
+	// ResourceData is provider-defined data, clients, etc. that is passed
+	// to [resource.ConfigureRequest.ProviderData] for each Resource type
+	// that implements the Configure method.
+	resp.ResourceData = providerData
 
 	tflog.Info(ctx, "Configured Capella client", map[string]any{"success": true})
 
@@ -173,20 +174,12 @@ func (p *capellaProvider) Configure(ctx context.Context, req provider.ConfigureR
 
 // DataSources defines the data sources implemented in the provider.
 func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{
-		NewProjectsDataSource,
-	}
+	return []func() datasource.DataSource{}
 }
 
 // Resources defines the resources implemented in the provider.
 func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		NewProjectResource,
+		resources.NewProject,
 	}
-}
-
-// capellaProviderModel maps provider schema data to a Go type.
-type capellaProviderModel struct {
-	Host                types.String `tfsdk:"host"`
-	AuthenticationToken types.String `tfsdk:"authentication_token"`
 }
