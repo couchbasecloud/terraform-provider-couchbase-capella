@@ -1,8 +1,10 @@
 package api
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"time"
@@ -30,8 +32,13 @@ type Response struct {
 
 // Execute is used to construct and execute a HTTP request.
 // It then returns the response.
-func (c *Client) Execute(url string, method string, payload io.Reader, apiToken string) (response *Response, err error) {
-	req, err := http.NewRequest(method, url, payload)
+func (c *Client) Execute(url string, method string, payload any, apiToken string) (response *Response, err error) {
+	requestBody, err := json.Marshal(payload)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal payload: %w", err)
+	}
+
+	req, err := http.NewRequest(method, url, bytes.NewReader(requestBody))
 	if err != nil {
 		return nil, err
 	}
@@ -43,14 +50,14 @@ func (c *Client) Execute(url string, method string, payload io.Reader, apiToken 
 	}
 	defer apiRes.Body.Close()
 
-	body, err := io.ReadAll(apiRes.Body)
+	responseBody, err := io.ReadAll(apiRes.Body)
 	if err != nil {
 		return
 	}
 
 	if apiRes.StatusCode >= http.StatusBadRequest {
 		var error Error
-		if err := json.Unmarshal(body, &error); err != nil {
+		if err := json.Unmarshal(responseBody, &error); err != nil {
 			return nil, err
 		}
 
@@ -59,6 +66,6 @@ func (c *Client) Execute(url string, method string, payload io.Reader, apiToken 
 
 	return &Response{
 		Response: apiRes,
-		Body:     body,
+		Body:     responseBody,
 	}, nil
 }

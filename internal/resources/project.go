@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"terraform-provider-capella/internal/api"
 	providerschema "terraform-provider-capella/internal/schema"
@@ -123,21 +122,19 @@ func (r *Project) Create(ctx context.Context, req resource.CreateRequest, resp *
 		Name:        plan.Name.ValueString(),
 	}
 
-	rb, err := json.Marshal(projectRequest)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating project",
-			"Could not create project, unexpected error: "+err.Error(),
-		)
-		return
-	}
-
 	response, err := r.Client.Execute(
 		fmt.Sprintf("%s/v4/organizations/%s/projects", r.HostURL, plan.OrganizationId.ValueString()),
 		http.MethodPost,
-		strings.NewReader(string(rb)),
+		projectRequest,
 		r.Token,
 	)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error executing request",
+			"Could not execute request, unexpected error: "+err.Error(),
+		)
+		return
+	}
 
 	projectResponse := api.GetProjectResponse{}
 	err = json.Unmarshal(response.Body, &projectResponse)
@@ -203,6 +200,9 @@ func (r *Project) retrieveProject(ctx context.Context, organizationId, projectId
 		nil,
 		r.Token,
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	projectResp := api.GetProjectResponse{}
 	err = json.Unmarshal(response.Body, &projectResp)
