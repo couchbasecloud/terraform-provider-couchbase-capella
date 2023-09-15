@@ -36,6 +36,6 @@ type GetAllowListResponse struct {
 	// An RFC3339 timestamp determining when the allowed CIDR should expire.
 	ExpiresAt string `json:"expiresAt"`
 
-	// The ID of the cluster the AllowList was created for
+	// The ID of the allowed Cidr
 	Id uuid.UUID `json:"id"`
 }

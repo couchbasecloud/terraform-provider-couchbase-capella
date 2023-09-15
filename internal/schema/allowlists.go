@@ -43,7 +43,7 @@ type AllowLists struct {
 	ClusterId types.String `tfsdk:"cluster_id"`
 
 	// Data It contains the list of resources.
-	Data []OneProject `tfsdk:"data"`
+	Data []OneAllowList `tfsdk:"data"`
 }
 
 // OneAllowList maps allowlist resource schema data; there is a separate response object to avoid conversion error for nested fields.

@@ -32,12 +32,12 @@ func NewAllowList() resource.Resource {
 	return &AllowList{}
 }
 
-// Metadata returns the project resource type name.
+// Metadata returns the allowlist resource type name.
 func (r *AllowList) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_allowlist"
 }
 
-// Schema defines the schema for the project resource.
+// Schema defines the schema for the allowlist resource.
 func (r *AllowList) Schema(ctx context.Context, rsc resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -147,24 +147,24 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 	err = json.Unmarshal(response.Body, &allowListResponse)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating project",
-			"Could not create project, unexpected error: "+err.Error(),
+			"Error creating allow list",
+			"Could not create allow list, unexpected error: "+err.Error(),
 		)
 		return
 	}
 
-	refreshedState, err := r.retrieveAllowList(ctx, plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), plan.ClusterId.ValueString())
+	refreshedState, err := r.retrieveAllowList(ctx, plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), plan.ClusterId.ValueString(), allowListResponse.Id.String())
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
 		resp.Diagnostics.AddError(
-			"Error Reading Capella AllowList",
+			"Error reading Capella AllowList",
 			"Could not read Capella AllowList "+allowListResponse.Id.String()+": "+err.CompleteError(),
 		)
 		return
 	default:
 		resp.Diagnostics.AddError(
-			"Error Reading Capella AllowList",
+			"Error reading Capella AllowList",
 			"Could not read Capella AllowList "+allowListResponse.Id.String()+": "+err.Error(),
 		)
 		return
@@ -200,14 +200,15 @@ func (r *AllowList) ImportState(ctx context.Context, req resource.ImportStateReq
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func (r *AllowList) retrieveAllowList(ctx context.Context, organizationId, projectId, clusterId string) (*providerschema.OneAllowList, error) {
+func (r *AllowList) retrieveAllowList(ctx context.Context, organizationId, projectId, clusterId, allowedCidrId string) (*providerschema.OneAllowList, error) {
 	response, err := r.Client.Execute(
 		fmt.Sprintf(
-			"%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs",
+			"%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs/%s",
 			r.HostURL,
 			organizationId,
 			projectId,
 			clusterId,
+			allowedCidrId,
 		),
 		http.MethodGet,
 		nil,
