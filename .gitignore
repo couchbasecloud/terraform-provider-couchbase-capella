@@ -1,11 +1,11 @@
-# Ignore all temporary backup files
-*~
+# Ignore all
+*
 
-# Ignore all hidden files
-.*
+# Unignore all with extensions
+!*.*
 
-# Include gitgnore itself in version control
-!/.gitignore
+# Unignore all dirs
+!*/
 
 # Ignore terraform plan, variable, backup and state files
 terraform.tfplan

@@ -1,6 +1,8 @@
 package schema
 
 import (
+	"terraform-provider-capella/internal/errors"
+
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -24,6 +26,17 @@ type Project struct {
 
 	// Audit All audit-related fields. It is of types.Object type to avoid conversion error for a nested field.
 	Audit types.Object `tfsdk:"audit"`
+}
+
+func (p Project) Validate() error {
+	if p.Id.IsNull() {
+		return errors.ErrProjectIdCannotBeEmpty
+	}
+
+	if p.OrganizationId.IsNull() {
+		return errors.ErrOrganizationIdCannotBeEmpty
+	}
+	return nil
 }
 
 // Projects defines model for GetProjectsResponse.

@@ -32,17 +32,24 @@ type Response struct {
 
 // Execute is used to construct and execute a HTTP request.
 // It then returns the response.
-func (c *Client) Execute(url string, method string, payload any, apiToken string) (response *Response, err error) {
-	requestBody, err := json.Marshal(payload)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal payload: %w", err)
+func (c *Client) Execute(url string, method string, payload any, authToken string, headers map[string]string) (response *Response, err error) {
+	var requestBody []byte
+	if payload != nil {
+		requestBody, err = json.Marshal(payload)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal payload: %w", err)
+		}
 	}
 
 	req, err := http.NewRequest(method, url, bytes.NewReader(requestBody))
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Authorization", "Bearer "+apiToken)
+
+	req.Header.Set("Authorization", "Bearer "+authToken)
+	for header, value := range headers {
+		req.Header.Set(header, value)
+	}
 
 	apiRes, err := c.Do(req)
 	if err != nil {
@@ -56,8 +63,8 @@ func (c *Client) Execute(url string, method string, payload any, apiToken string
 	}
 
 	if apiRes.StatusCode >= http.StatusBadRequest {
-		var error Error
-		if err := json.Unmarshal(responseBody, &error); err != nil {
+		var apiError Error
+		if err := json.Unmarshal(responseBody, &apiError); err != nil {
 			return nil, err
 		}
 

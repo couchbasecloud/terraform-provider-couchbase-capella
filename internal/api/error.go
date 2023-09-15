@@ -1,6 +1,9 @@
 package api
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 type Error struct {
 	Code           int    `json:"code"`
@@ -10,7 +13,7 @@ type Error struct {
 }
 
 func (e Error) Error() string {
-	return e.Message
+	return fmt.Sprintf("%s-%d-%d-%s", e.Message, e.HttpStatusCode, e.Hint, e.Code)
 }
 
 func (e Error) CompleteError() string {

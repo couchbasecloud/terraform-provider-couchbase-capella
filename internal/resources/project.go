@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+
 	"terraform-provider-capella/internal/api"
 	providerschema "terraform-provider-capella/internal/schema"
 
@@ -112,10 +114,18 @@ func (r *Project) Create(ctx context.Context, req resource.CreateRequest, resp *
 	var plan providerschema.Project
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	if plan.OrganizationId.IsNull() {
+		resp.Diagnostics.AddError(
+			"Error creating project",
+			"Could not create project, unexpected error: organization ID cannot be empty.",
+		)
+		return
+	}
+	var organizationId = plan.OrganizationId.ValueString()
 
 	projectRequest := api.CreateProjectRequest{
 		Description: plan.Description.ValueString(),
@@ -123,15 +133,24 @@ func (r *Project) Create(ctx context.Context, req resource.CreateRequest, resp *
 	}
 
 	response, err := r.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects", r.HostURL, plan.OrganizationId.ValueString()),
+		fmt.Sprintf("%s/v4/organizations/%s/projects", r.HostURL, organizationId),
 		http.MethodPost,
 		projectRequest,
 		r.Token,
+		nil,
 	)
-	if err != nil {
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
 		resp.Diagnostics.AddError(
-			"Error executing request",
-			"Could not execute request, unexpected error: "+err.Error(),
+			"Error creating project",
+			"Could not create project, unexpected error: "+err.CompleteError(),
+		)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error creating project",
+			"Could not create project, unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -146,7 +165,7 @@ func (r *Project) Create(ctx context.Context, req resource.CreateRequest, resp *
 		return
 	}
 
-	refreshedState, err := r.retrieveProject(ctx, plan.OrganizationId.ValueString(), projectResponse.Id.String())
+	refreshedState, err := r.retrieveProject(ctx, organizationId, projectResponse.Id.String())
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
@@ -174,17 +193,186 @@ func (r *Project) Create(ctx context.Context, req resource.CreateRequest, resp *
 
 // Read reads project information.
 func (r *Project) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// todo
+	// Get current state
+	var state providerschema.Project
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if err := state.Validate(); err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Capella Projects",
+			"Could not read Capella project ID "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	var (
+		organizationId = state.OrganizationId.ValueString()
+		projectId      = state.Id.ValueString()
+	)
+
+	// Get refreshed project value from Capella
+	refreshedState, err := r.retrieveProject(ctx, organizationId, projectId)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		if err.HttpStatusCode != 404 {
+			resp.Diagnostics.AddError(
+				"Error Reading Capella Projects",
+				"Could not read Capella project ID "+state.Id.String()+": "+err.CompleteError(),
+			)
+			return
+		}
+		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+		resp.State.RemoveResource(ctx)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error Reading Capella Projects",
+			"Could not read Capella project ID "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	// Set refreshed state
+	diags = resp.State.Set(ctx, &refreshedState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Update updates the project.
 func (r *Project) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// todo
+	var state providerschema.Project
+	diags := req.Plan.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if err := state.Validate(); err != nil {
+		resp.Diagnostics.AddError(
+			"Error Updating Capella Project",
+			"Could not update Capella project ID "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	var (
+		projectId      = state.Id.ValueString()
+		organizationId = state.OrganizationId.ValueString()
+	)
+
+	projectRequest := api.PutProjectRequest{
+		Description: state.Description.ValueString(),
+		Name:        state.Name.ValueString(),
+	}
+
+	var headers = make(map[string]string)
+	if !state.IfMatch.IsUnknown() && !state.IfMatch.IsNull() {
+		headers["If-Match"] = state.IfMatch.ValueString()
+	}
+
+	_, err := r.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s", r.HostURL, organizationId, projectId),
+		http.MethodPut,
+		projectRequest,
+		r.Token,
+		headers,
+	)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		resp.Diagnostics.AddError(
+			"Error Updating Capella Projects",
+			"Could not update Capella project ID "+state.Id.String()+": "+err.CompleteError(),
+		)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error Updating Capella Projects",
+			"Could not update Capella project ID "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	currentState, err := r.retrieveProject(ctx, organizationId, projectId)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		if err.HttpStatusCode != 404 {
+			resp.Diagnostics.AddError(
+				"Error Reading Capella Projects",
+				"Could not read Capella project ID "+state.Id.String()+": "+err.CompleteError(),
+			)
+			return
+		}
+		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+		resp.State.RemoveResource(ctx)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error Reading Capella Projects",
+			"Could not read Capella project ID "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	if !state.IfMatch.IsUnknown() && !state.IfMatch.IsNull() {
+		currentState.IfMatch = state.IfMatch
+	}
+
+	// Set state to fully populated data
+	diags = resp.State.Set(ctx, currentState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Delete deletes the project.
 func (r *Project) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// todo
+	// Retrieve values from state
+	var state providerschema.Project
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var projectId = state.Id.ValueString()
+	var organizationId = state.OrganizationId.ValueString()
+
+	_, err := r.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s", r.HostURL, organizationId, projectId),
+		http.MethodDelete,
+		nil,
+		r.Token,
+		nil,
+	)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		if err.HttpStatusCode != 404 {
+			resp.Diagnostics.AddError(
+				"Error Deleting Capella Projects",
+				"Could not delete Capella project ID "+state.Id.String()+": "+err.CompleteError(),
+			)
+			tflog.Info(ctx, "resource doesn't exist in remote server")
+			return
+		}
+	default:
+		resp.Diagnostics.AddError(
+			"Error Deleting Capella Projects",
+			"Could not delete Capella project ID "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
 }
 
 // ImportState imports a remote project that is not created by Terraform.
@@ -199,6 +387,7 @@ func (r *Project) retrieveProject(ctx context.Context, organizationId, projectId
 		http.MethodGet,
 		nil,
 		r.Token,
+		nil,
 	)
 	if err != nil {
 		return nil, err
