@@ -11,7 +11,7 @@ type AllowList struct {
 	Comment types.String `tfsdk:"comment"`
 
 	// An RFC3339 timestamp determining when the allowed CIDR should expire.
-	ExpiresAt types.String `tfsdk:"expiresAt"`
+	ExpiresAt types.String `tfsdk:"expires_at"`
 
 	// Id A GUID4 identifier of the allowlist.
 	Id types.String `tfsdk:"id"`
@@ -58,7 +58,7 @@ type OneAllowList struct {
 	Comment types.String `tfsdk:"comment"`
 
 	// An RFC3339 timestamp determining when the allowed CIDR should expire.
-	ExpiresAt types.String `tfsdk:"expiresAt"`
+	ExpiresAt types.String `tfsdk:"expires_at"`
 
 	// Id A GUID4 identifier of the project.
 	Id types.String `tfsdk:"id"`

@@ -17,5 +17,5 @@ resource "capella_allowlist" "example" {
   cluster_id = var.cluster_id
   cidr = "0.00.00.00"
   comment = "Allow access from any ip address"
-  expiresAt = "2023-05-14T21:49:58.465Z"
+  expires_at = "2023-05-14T21:49:58.465Z"
 }
