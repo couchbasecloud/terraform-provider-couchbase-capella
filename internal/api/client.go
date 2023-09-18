@@ -29,54 +29,6 @@ type Response struct {
 	Body     []byte
 }
 
-// Execute is used to construct and execute a HTTP request.
-// It then returns the response.
-//func (c *Client) Execute(url string, method string, payload any, apiToken string) (response *Response, err error) {
-//	fmt.Println("&&&&&&&&& ENTERING EXECUTE 77777777777777")
-//	requestBody, err := json.Marshal(payload)
-//	if err != nil {
-//		return nil, fmt.Errorf("failed to marshal payload: %w", err)
-//	}
-//
-//	req, err := http.NewRequest(method, url, bytes.NewReader(requestBody))
-//	if err != nil {
-//		return nil, err
-//	}
-//	req.Header.Set("Authorization", "Bearer "+apiToken)
-//
-//	apiRes, err := c.Do(req)
-//	if err != nil {
-//		return nil, err
-//	}
-//	defer apiRes.Body.Close()
-//
-//	responseBody, err := io.ReadAll(apiRes.Body)
-//	if err != nil {
-//		return
-//	}
-//
-//	fmt.Println("&&&&&&&&& Response Body 77777777777777")
-//
-//	Data, _ := json.Marshal(apiRes.Body)
-//	fmt.Println(string(Data))
-//
-//	fmt.Println("STATUS CODE")
-//	fmt.Println(apiRes.StatusCode)
-//
-//	if apiRes.StatusCode >= http.StatusBadRequest {
-//		var error Error
-//		if err := json.Unmarshal(responseBody, &error); err != nil {
-//			return nil, fmt.Errorf("status: %d, body: %s", apiRes.StatusCode, responseBody)
-//		}
-//		return nil, error
-//	}
-//
-//	return &Response{
-//		Response: apiRes,
-//		Body:     responseBody,
-//	}, nil
-//}
-
 func (c *Client) Execute(url string, method string, payload any, authToken string, headers map[string]string) (response *Response, err error) {
 	var requestBody []byte
 	if payload != nil {
