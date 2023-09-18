@@ -641,7 +641,79 @@ func (r *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 
 // Delete deletes the project.
 func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// TODO
+	// Retrieve values from state
+	var state providerschema.ClusterResourceModel
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if err := state.Validate(); err != nil {
+		resp.Diagnostics.AddError(
+			"Error deleting cluster",
+			"Could not delete cluster id "+state.Id.String()+" unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	var (
+		projectId      = state.ProjectId.ValueString()
+		organizationId = state.OrganizationId.ValueString()
+		clusterId      = state.Id.ValueString()
+	)
+
+	// Delete existing Cluster
+	_, err := r.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", r.HostURL, organizationId, projectId, clusterId),
+		http.MethodDelete,
+		nil,
+		r.Token,
+		nil,
+	)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		if err.HttpStatusCode != 404 {
+			resp.Diagnostics.AddError(
+				"Error deleting cluster",
+				"Could not delete cluster id "+state.Id.String()+" unexpected error: "+err.CompleteError(),
+			)
+			return
+		}
+		tflog.Info(ctx, "resource doesn't exist in remote server")
+	default:
+		resp.Diagnostics.AddError(
+			"Error deleting cluster",
+			"Could not delete cluster id "+state.Id.String()+" unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	err = r.checkClusterStatus(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
+	switch err := err.(type) {
+	case nil:
+		Cluster, err := r.retrieveCluster(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
+		resp.Diagnostics.AddError(
+			"Error deleting cluster",
+			fmt.Sprintf("Could not delete cluster id %s, as current Cluster state: %s", state.Id.String(), Cluster.CurrentState),
+		)
+		return
+	case api.Error:
+		if err.HttpStatusCode != 404 {
+			resp.Diagnostics.AddError(
+				"Error deleting cluster",
+				"Could not delete cluster id "+state.Id.String()+": "+err.CompleteError(),
+			)
+			return
+		}
+	default:
+		resp.Diagnostics.AddError(
+			"Error deleting cluster",
+			"Could not delete cluster id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
 }
 
 // ImportState imports a remote Cluster that is not created by Terraform.
