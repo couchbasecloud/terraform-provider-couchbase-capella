@@ -92,6 +92,7 @@ func (r *AllowList) Schema(ctx context.Context, rsc resource.SchemaRequest, resp
 	}
 }
 
+// Configure set provider-defined data, clients, etc. that is passed to data sources or resources in the provider.
 func (r *AllowList) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -108,6 +109,7 @@ func (r *AllowList) Configure(ctx context.Context, req resource.ConfigureRequest
 	r.Data = data
 }
 
+// Create creates a new allowlist
 func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan providerschema.AllowList
 	diags := req.Plan.Get(ctx, &plan)
@@ -200,6 +202,7 @@ func (r *AllowList) ImportState(ctx context.Context, req resource.ImportStateReq
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
+// retrieveAllowList is used to pass an existing AllowList to the refreshed state
 func (r *AllowList) retrieveAllowList(ctx context.Context, organizationId, projectId, clusterId, allowedCidrId string) (*providerschema.OneAllowList, error) {
 	response, err := r.Client.Execute(
 		fmt.Sprintf(

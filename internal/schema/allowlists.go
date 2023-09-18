@@ -4,16 +4,16 @@ import "github.com/hashicorp/terraform-plugin-framework/types"
 
 // AllowList maps AllowList resource schema data
 type AllowList struct {
-	// The trusted CIDR to allow the database connections from.
+	// Cidr represents the trusted CIDR to allow the database connections from.
 	Cidr types.String `tfsdk:"cidr"`
 
-	// A short description of the allowed CIDR.
+	// Comment is a short description of the allowed CIDR.
 	Comment types.String `tfsdk:"comment"`
 
-	// An RFC3339 timestamp determining when the allowed CIDR should expire.
+	// ExpiresAt is an RFC3339 timestamp determining when the allowed CIDR should expire.
 	ExpiresAt types.String `tfsdk:"expires_at"`
 
-	// Id A GUID4 identifier of the allowlist.
+	// Id is a GUID4 identifier of the allowlist.
 	Id types.String `tfsdk:"id"`
 
 	// OrganizationId is the organizationId of the capella tenant.
@@ -27,13 +27,13 @@ type AllowList struct {
 
 	IfMatch types.String `tfsdk:"if_match"`
 
-	// Audit All audit-related fields. It is of types.Object type to avoid conversion error for a nested field.
+	// Audit represents all audit-related fields. It is of types.Object type to avoid conversion error for a nested field.
 	Audit types.Object `tfsdk:"audit"`
 }
 
-// AllowLists defines model for GetAllowLists.
+// AllowLists defines the model for GetAllowLists.
 type AllowLists struct {
-	// OrganizationId The organizationId of the capella.
+	// OrganizationId is the organizationId of the capella.
 	OrganizationId types.String `tfsdk:"organization_id""`
 
 	// ProjectId is the projectId of the capella tenant.
@@ -42,28 +42,28 @@ type AllowLists struct {
 	// ClusterId is the clusterId of the capella tenant.
 	ClusterId types.String `tfsdk:"cluster_id"`
 
-	// Data It contains the list of resources.
+	// Data contains the list of resources.
 	Data []OneAllowList `tfsdk:"data"`
 }
 
 // OneAllowList maps allowlist resource schema data; there is a separate response object to avoid conversion error for nested fields.
 type OneAllowList struct {
-	// Audit All audit-related fields.
+	// Audit represents all audit-related fields.
 	Audit CouchbaseAuditData `tfsdk:"audit"`
 
-	// The trusted CIDR to allow the database connections from.
+	// Cidr is the trusted CIDR to allow the database connections from.
 	Cidr types.String `tfsdk:"cidr"`
 
-	// A short description of the allowed CIDR.
+	// Comment is a short description of the allowed CIDR.
 	Comment types.String `tfsdk:"comment"`
 
-	// An RFC3339 timestamp determining when the allowed CIDR should expire.
+	// ExpiresAt is an RFC3339 timestamp determining when the allowed CIDR should expire.
 	ExpiresAt types.String `tfsdk:"expires_at"`
 
-	// Id A GUID4 identifier of the project.
+	// Id is a GUID4 identifier of the project.
 	Id types.String `tfsdk:"id"`
 
-	// OrganizationId The organizationId of the capella.
+	// OrganizationId is the organizationId of the capella.
 	OrganizationId types.String `tfsdk:"organization_id"`
 
 	// ProjectId is the projectId of the capella tenant.
