@@ -367,7 +367,72 @@ func (r *Cluster) Configure(_ context.Context, req resource.ConfigureRequest, re
 
 // Read reads project information.
 func (r *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// TODO
+	var state providerschema.ClusterResourceModel
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if state.OrganizationId.IsNull() || state.ProjectId.IsNull() ||
+		state.OrganizationId.IsUnknown() || state.ProjectId.IsUnknown() {
+		if err := state.PopulateParamsForImport(); err != nil {
+			resp.Diagnostics.AddError(
+				"Error reading cluster",
+				"Could not read cluster id "+state.Id.String()+" unexpected error: "+err.Error(),
+			)
+			return
+		}
+	}
+
+	var (
+		organizationId = state.OrganizationId.ValueString()
+		projectId      = state.ProjectId.ValueString()
+		clusterId      = state.Id.ValueString()
+	)
+
+	// Get refreshed Cluster value from Capella
+	refreshedState, err := r.retrieveCluster(ctx, organizationId, projectId, clusterId)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		if err.HttpStatusCode != 404 {
+			resp.Diagnostics.AddError(
+				"Error reading cluster",
+				"Could not read cluster id "+state.Id.String()+": "+err.CompleteError(),
+			)
+			return
+		}
+		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+		resp.State.RemoveResource(ctx)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error reading cluster",
+			"Could not read cluster id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	if len(state.ServiceGroups) == len(refreshedState.ServiceGroups) {
+		for i, serviceGroup := range refreshedState.ServiceGroups {
+			if utils.AreEqual(state.ServiceGroups[i].Services, serviceGroup.Services) {
+				refreshedState.ServiceGroups[i].Services = state.ServiceGroups[i].Services
+			}
+		}
+	}
+
+	//need to have proper check since we are passing 7.1 and response is returning 7.1.5
+	if state.CouchbaseServer != nil && !state.CouchbaseServer.Version.IsNull() && !state.CouchbaseServer.Version.IsUnknown() {
+		refreshedState.CouchbaseServer.Version = state.CouchbaseServer.Version
+	}
+
+	// Set refreshed state
+	diags = resp.State.Set(ctx, &refreshedState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Update updates the Cluster.
