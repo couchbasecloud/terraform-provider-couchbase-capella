@@ -1,6 +1,6 @@
 # Terraform Provider Capella 
 
-This is the repository for the Terraform Couchbase Capella Provider which allows you to use Terraform with Couchbase Capella.
+This is the repository for the Couchbase Terraform Provider Capella which which forms a Terraform plugin for use with Couchbase Capella.
 
 ## Requirements
 
@@ -10,25 +10,29 @@ This is the repository for the Terraform Couchbase Capella Provider which allows
 ## Using the provider
 
 ### Prepare Terraform for local provider install
-Terraform installs providers and verifies their versions and checksums when you run terraform init. Terraform will download your providers from either the provider registry or a local registry. However, while building your provider you will want to test Terraform configuration against a local development build of the provider. The development build will not have an associated version number or an official set of checksums listed in a provider registry.
+Terraform installs providers and verifies their versions and checksums when you run `terraform init`. Terraform will download your 
+providers from either the provider registry or a local registry. However, while building your provider you will want to 
+test a Terraform configuration against a local development build of the provider. The development build will not have an associated 
+version number or an official set of checksums listed in a provider registry.
 
-Terraform allows you to use local provider builds by setting a dev_overrides block in a configuration file called .terraformrc. This block overrides all other configured installation methods.
+Terraform allows you to use local provider builds by setting a dev_overrides block in a configuration file called .terraformrc. 
+This block overrides all other configured installation methods.
 
 Terraform searches for the .terraformrc file in your home directory and applies any configuration settings you set. 
 
 #### For Mac
 
 
-  First, find the GOBIN path where Go installs your binaries. Your path may vary depending on how your Go environment variables are configured.
+First, find the GOBIN path where Go installs your binaries. Your path may vary depending on how your Go environment variables are configured.
 
 ```shell
 go env GOBIN
 /Users/<Username>/go/bin
 ```
 
+Create a new file called .terraformrc in your home directory (~), then add the dev_overrides block below. 
+Change the <PATH> to the value returned from the go env GOBIN command above. 
 If the GOBIN go environment variable is not set, use the default path, /Users/<Username>/go/bin.
-
-Create a new file called .terraformrc in your home directory (~), then add the dev_overrides block below. Change the <PATH> to the value returned from the go env GOBIN command above.
 
 ```shell
 provider_installation {
@@ -68,7 +72,7 @@ terraform {
 }
 
 provider "capella" {
-  host     = "hostname of the capella"
+  host     = "hostname of the capella instance"
   authentication_token = "capella authentication token"
 }
 
@@ -96,6 +100,10 @@ $  export CAPELLA_AUTHENTICATION_TOKEN="xxxx"
 ```
 
 **1\. Review the Terraform plan**
+Execute the following command to automatically review and update the formatting of .tf files.
+```bash
+$ terraform fmt
+```
 
 Execute the following command to review the resources that will be deployed.
 
