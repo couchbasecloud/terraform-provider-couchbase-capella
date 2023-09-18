@@ -11,6 +11,7 @@ import (
 	clusterapi "terraform-provider-capella/internal/api/cluster"
 	providerschema "terraform-provider-capella/internal/schema"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -219,7 +220,74 @@ func (r *Cluster) Configure(_ context.Context, req resource.ConfigureRequest, re
 
 // Read reads project information.
 func (r *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// TODO
+	var state providerschema.Cluster
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var (
+		organizationId = state.OrganizationId.ValueString()
+		projectId      = state.ProjectId.ValueString()
+		clusterId      = state.Id.ValueString()
+		err            error
+	)
+
+	if state.OrganizationId.IsNull() || state.ProjectId.IsNull() ||
+		state.OrganizationId.IsUnknown() || state.ProjectId.IsUnknown() {
+		clusterId, projectId, organizationId, err = state.PopulateParamsForImport()
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error reading cluster",
+				"Could not read cluster id "+state.Id.String()+" unexpected error: "+err.Error(),
+			)
+			return
+		}
+	}
+
+	// Get refreshed Cluster value from Capella
+	refreshedState, err := r.retrieveCluster(ctx, organizationId, projectId, clusterId)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		if err.HttpStatusCode != 404 {
+			resp.Diagnostics.AddError(
+				"Error reading cluster",
+				"Could not read cluster id "+state.Id.String()+": "+err.CompleteError(),
+			)
+			return
+		}
+		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+		resp.State.RemoveResource(ctx)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error reading cluster",
+			"Could not read cluster id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	if len(state.ServiceGroups) == len(refreshedState.ServiceGroups) {
+		for i, serviceGroup := range refreshedState.ServiceGroups {
+			if clusterapi.AreEqual(state.ServiceGroups[i].Services, serviceGroup.Services) {
+				refreshedState.ServiceGroups[i].Services = state.ServiceGroups[i].Services
+			}
+		}
+	}
+
+	//need to have proper check since we are passing 7.1 and response is returning 7.1.5
+	if state.CouchbaseServer != nil && !state.CouchbaseServer.Version.IsNull() && !state.CouchbaseServer.Version.IsUnknown() {
+		refreshedState.CouchbaseServer.Version = state.CouchbaseServer.Version
+	}
+
+	// Set refreshed state
+	diags = resp.State.Set(ctx, &refreshedState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Update updates the Cluster.
@@ -234,7 +302,8 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 
 // ImportState imports a remote Cluster that is not created by Terraform.
 func (r *Cluster) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	// TODO
+	// Retrieve import ID and save to id attribute
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *Cluster) getCluster(organizationId, projectId, clusterId string) (*clusterapi.GetClusterResponse, error) {
@@ -249,13 +318,13 @@ func (r *Cluster) getCluster(organizationId, projectId, clusterId string) (*clus
 		return nil, err
 	}
 
-	clusterResp := clusterapi.GetClusterResponse{}
-	err = json.Unmarshal(response.Body, &clusterResp)
+	ClusterResp := clusterapi.GetClusterResponse{}
+	err = json.Unmarshal(response.Body, &ClusterResp)
 	if err != nil {
 		return nil, err
 	}
-	clusterResp.Etag = response.Response.Header.Get("ETag")
-	return &clusterResp, nil
+	ClusterResp.Etag = response.Response.Header.Get("ETag")
+	return &ClusterResp, nil
 }
 
 func (r *Cluster) retrieveCluster(ctx context.Context, organizationId, projectId, clusterId string) (*providerschema.Cluster, error) {

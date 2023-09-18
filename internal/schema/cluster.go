@@ -2,6 +2,7 @@ package schema
 
 import (
 	"fmt"
+	"strings"
 
 	clusterapi "terraform-provider-capella/internal/api/cluster"
 	"terraform-provider-capella/internal/errors"
@@ -245,4 +246,25 @@ func morphToTerraformServiceGroups(cluster *clusterapi.GetClusterResponse) ([]Se
 		newServiceGroups = append(newServiceGroups, newServiceGroup)
 	}
 	return newServiceGroups, nil
+}
+
+func (c *Cluster) PopulateParamsForImport() (string, string, string, error) {
+	combinedIDs := c.Id.ValueString()
+	const idDelimiter = ","
+
+	splitIDs := strings.Split(combinedIDs, idDelimiter)
+
+	if c.OrganizationId.IsNull() && len(splitIDs) > 2 {
+		c.OrganizationId = types.StringValue(splitIDs[0])
+	}
+
+	if c.ProjectId.IsNull() && len(splitIDs) > 2 {
+		c.ProjectId = types.StringValue(splitIDs[1])
+	}
+
+	if len(c.Id.ValueString()) > 36 && len(splitIDs) > 2 {
+		c.Id = types.StringValue(splitIDs[2])
+	}
+
+	return c.Validate()
 }

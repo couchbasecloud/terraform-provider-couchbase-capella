@@ -10,4 +10,3 @@ provider "capella" {
   host                 = var.host
   authentication_token = var.auth_token
 }
-
