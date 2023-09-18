@@ -63,7 +63,7 @@ type OneAllowList struct {
 	// Id is a GUID4 identifier of the project.
 	Id types.String `tfsdk:"id"`
 
-	// OrganizationId is the organizationId of the capella.
+	// OrganizationId is he organizationId of the capella.
 	OrganizationId types.String `tfsdk:"organization_id"`
 
 	// ProjectId is the projectId of the capella tenant.
