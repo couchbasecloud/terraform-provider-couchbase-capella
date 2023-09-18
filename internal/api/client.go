@@ -3,7 +3,6 @@ package api
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -24,7 +23,7 @@ func NewClient(timeout time.Duration) *Client {
 	}
 }
 
-// Response stuct is used to encapsulate the response details
+// Response struct is used to encapsulate the response details
 type Response struct {
 	Response *http.Response
 	Body     []byte
@@ -65,10 +64,9 @@ func (c *Client) Execute(url string, method string, payload any, authToken strin
 	if apiRes.StatusCode >= http.StatusBadRequest {
 		var apiError Error
 		if err := json.Unmarshal(responseBody, &apiError); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("status: %d, body: %s", apiRes.StatusCode, responseBody)
 		}
-
-		return nil, errors.New("received unexpected status code: " + apiRes.Status)
+		return nil, apiError
 	}
 
 	return &Response{
