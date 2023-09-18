@@ -1,6 +1,6 @@
 # Terraform Provider Capella 
 
-This is the repository for the Couchbase Terraform Provider Capella which which forms a Terraform plugin for use with Couchbase Capella.
+This is the repository for Couchbase's Terraform-Provider-Capella which which forms a Terraform plugin for use with Couchbase Capella.
 
 ## Requirements
 
@@ -114,7 +114,7 @@ variable "auth_token" {
 }
 ```
 
-The environment variables by uisng the following notation: 
+Set the environment variables by using the following notation: 
 ```terraform
 resource "capella_project" "example" {
   organization_id = var.organization_id
