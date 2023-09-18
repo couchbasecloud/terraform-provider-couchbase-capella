@@ -437,7 +437,206 @@ func (r *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 
 // Update updates the Cluster.
 func (r *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// TODO
+	// Retrieve values from plan
+	var plan, state providerschema.ClusterResourceModel
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+
+	diags = req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if err := state.Validate(); err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating cluster",
+			"Could not update cluster id "+state.Id.String()+" unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	var (
+		projectId      = state.ProjectId.ValueString()
+		organizationId = state.OrganizationId.ValueString()
+		clusterId      = state.Id.ValueString()
+	)
+
+	var planOrganizationId, stateOrganizationId string
+	if !plan.OrganizationId.IsNull() {
+		planOrganizationId = plan.OrganizationId.ValueString()
+	}
+
+	if !state.OrganizationId.IsNull() {
+		stateOrganizationId = state.OrganizationId.ValueString()
+	}
+
+	if planOrganizationId != stateOrganizationId {
+		resp.Diagnostics.AddError(
+			"Error updating cluster",
+			"Could not update cluster id "+state.Id.String()+" as organizationId can't be updated",
+		)
+		return
+	}
+
+	var planProjectId, stateProjectId string
+	if !plan.ProjectId.IsNull() {
+		planProjectId = plan.ProjectId.ValueString()
+	}
+
+	if !state.ProjectId.IsNull() {
+		stateProjectId = state.ProjectId.ValueString()
+	}
+
+	if planProjectId != stateProjectId {
+		resp.Diagnostics.AddError(
+			"Error updating cluster",
+			"Could not update cluster id "+state.Id.String()+" as projectId can't be updated",
+		)
+		return
+	}
+
+	var planCouchbaseServerVersion, stateCouchbaseServerVersion string
+	if !plan.CouchbaseServer.Version.IsNull() {
+		planCouchbaseServerVersion = plan.CouchbaseServer.Version.ValueString()
+	}
+	if !state.CouchbaseServer.Version.IsNull() {
+		stateCouchbaseServerVersion = state.CouchbaseServer.Version.ValueString()
+	}
+
+	if planCouchbaseServerVersion != stateCouchbaseServerVersion {
+		resp.Diagnostics.AddError(
+			"Error updating cluster",
+			"Could not update cluster id "+state.Id.String()+" as couchbase server version can't be updated",
+		)
+		return
+	}
+
+	var planAvailabilityType, stateAvailabilityType string
+	if !plan.Availability.Type.IsNull() {
+		planAvailabilityType = plan.Availability.Type.ValueString()
+	}
+	if !state.Availability.Type.IsNull() {
+		stateAvailabilityType = state.Availability.Type.ValueString()
+	}
+
+	if planAvailabilityType != stateAvailabilityType {
+		resp.Diagnostics.AddError(
+			"Error updating cluster",
+			"Could not update cluster id "+state.Id.String()+" as availability type can't be updated",
+		)
+		return
+	}
+
+	ClusterRequest := api.UpdateClusterRequest{
+		Description: plan.Description.ValueString(),
+		Name:        plan.Name.ValueString(),
+		Support: api.Support{
+			Plan:     api.SupportPlan(plan.Support.Plan.ValueString()),
+			Timezone: api.SupportTimezone(plan.Support.Timezone.ValueString()),
+		},
+	}
+
+	serviceGroups, err := r.morphToApiServiceGroups(plan)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating cluster",
+			"Could not update cluster id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	ClusterRequest.ServiceGroups = serviceGroups
+
+	var headers = make(map[string]string)
+	if !state.IfMatch.IsUnknown() && !state.IfMatch.IsNull() {
+		headers["If-Match"] = state.IfMatch.ValueString()
+	}
+
+	// Update existing Cluster
+	_, err = r.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", r.HostURL, organizationId, projectId, clusterId),
+		http.MethodPut,
+		ClusterRequest,
+		r.Token,
+		headers,
+	)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		resp.Diagnostics.AddError(
+			"Error updating cluster",
+			"Could not update cluster id "+state.Id.String()+": "+err.CompleteError(),
+		)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error updating cluster",
+			"Could not update cluster id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	err = r.checkClusterStatus(ctx, organizationId, projectId, clusterId)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		resp.Diagnostics.AddError(
+			"Error updating cluster",
+			"Could not update cluster id "+state.Id.String()+": "+err.CompleteError(),
+		)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error updating cluster",
+			"Could not update cluster id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	currentState, err := r.retrieveCluster(ctx, organizationId, projectId, clusterId)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		if err.HttpStatusCode != 404 {
+			resp.Diagnostics.AddError(
+				"Error updating cluster",
+				"Could not update cluster id "+state.Id.String()+": "+err.CompleteError(),
+			)
+			return
+		}
+		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+		resp.State.RemoveResource(ctx)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error updating cluster",
+			"Could not update cluster id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	if !plan.IfMatch.IsUnknown() && !plan.IfMatch.IsNull() {
+		currentState.IfMatch = plan.IfMatch
+	}
+
+	for i, serviceGroup := range currentState.ServiceGroups {
+		if utils.AreEqual(plan.ServiceGroups[i].Services, serviceGroup.Services) {
+			currentState.ServiceGroups[i].Services = plan.ServiceGroups[i].Services
+		}
+	}
+
+	//need to have proper check since we are passing 7.1 and response is returning 7.1.5
+	if state.CouchbaseServer != nil && !state.CouchbaseServer.Version.IsNull() && !state.CouchbaseServer.Version.IsUnknown() {
+		currentState.CouchbaseServer.Version = state.CouchbaseServer.Version
+	}
+	// Set state to fully populated data
+	diags = resp.State.Set(ctx, currentState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Delete deletes the project.
