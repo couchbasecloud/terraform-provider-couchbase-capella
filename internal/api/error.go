@@ -13,7 +13,7 @@ type Error struct {
 }
 
 func (e Error) Error() string {
-	return fmt.Sprintf("%s-%d-%d-%s", e.Message, e.HttpStatusCode, e.Hint, e.Code)
+	return fmt.Sprintf("%s", e.Message)
 }
 
 func (e Error) CompleteError() string {
