@@ -203,11 +203,6 @@ type Node struct {
 	Disk    json.RawMessage `json:"disk"`
 }
 
-//// Node_Disk defines model for Node.Disk.
-//type Node_Disk struct {
-//	union json.RawMessage
-//}
-
 // Service defines model for Service.
 type Service string
 
