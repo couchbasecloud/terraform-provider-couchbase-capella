@@ -1,6 +1,9 @@
 package schema
 
-import "github.com/hashicorp/terraform-plugin-framework/types"
+import (
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+)
 
 // CouchbaseAuditData contains all audit-related fields.
 type CouchbaseAuditData struct {
@@ -24,4 +27,14 @@ type CouchbaseAuditData struct {
 	// Version The version of the document. This value is incremented each time the
 	// resource is modified.
 	Version types.Int64 `tfsdk:"version"`
+}
+
+func (c CouchbaseAuditData) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"created_at":  types.StringType,
+		"created_by":  types.StringType,
+		"modified_at": types.StringType,
+		"modified_by": types.StringType,
+		"version":     types.Int64Type,
+	}
 }

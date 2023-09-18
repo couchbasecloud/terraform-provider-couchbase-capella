@@ -97,7 +97,7 @@ func (r *Project) Configure(_ context.Context, req resource.ConfigureRequest, re
 	data, ok := req.ProviderData.(*providerschema.Data)
 	if !ok {
 		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
+			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *ProviderSourceData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 
@@ -127,6 +127,7 @@ func (r *Project) Create(ctx context.Context, req resource.CreateRequest, resp *
 		http.MethodPost,
 		projectRequest,
 		r.Token,
+		nil,
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -199,6 +200,7 @@ func (r *Project) retrieveProject(ctx context.Context, organizationId, projectId
 		http.MethodGet,
 		nil,
 		r.Token,
+		nil,
 	)
 	if err != nil {
 		return nil, err
