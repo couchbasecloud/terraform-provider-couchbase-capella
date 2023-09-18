@@ -1,6 +1,6 @@
 # Terraform Provider Capella 
 
-This is the repository for Couchbase's Terraform-Provider-Capella which which forms a Terraform plugin for use with Couchbase Capella.
+This is the repository for Couchbase's Terraform-Provider-Capella which forms a Terraform plugin for use with Couchbase Capella.
 
 ## Requirements
 
