@@ -53,15 +53,16 @@ Now build the terraform provider from this source code
 `go build -o <PATH>`
 
 
-### Configuring Programmatic Access
+### Authentication
 
-In order to set up authentication with the Couchbase Capella provider a V4 API key must be generated. We need base 64 encoded api-key
+In order to set up authentication with the Couchbase Capella provider a V4 API key must be generated. 
 
-### Authenticating the Provider
-
-You will need to provide host of the capella and your credentials for authentication
+To find out how to generate a V4 API Key, please see the following document: 
+https://docs.couchbase.com/cloud/management-api-guide/management-api-start.html
 
 ### Example Usage
+
+Note: You will need to provide both the url of the capella host as well as your V4 API secret for authentication. 
 
 ```terraform
 terraform {
@@ -73,7 +74,7 @@ terraform {
 }
 
 provider "capella" {
-  host     = "hostname of the capella instance"
+  host     = "the host url of couchbase cloud"
   authentication_token = "capella authentication token"
 }
 
