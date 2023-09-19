@@ -337,10 +337,16 @@ func (r *Project) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 		return
 	}
 
-	var projectId = state.Id.ValueString()
-	var organizationId = state.OrganizationId.ValueString()
+	projectId, organizationId, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Updating Capella Project",
+			"Could not update Capella project ID "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
 
-	_, err := r.Client.Execute(
+	_, err = r.Client.Execute(
 		fmt.Sprintf("%s/v4/organizations/%s/projects/%s", r.HostURL, organizationId, projectId),
 		http.MethodDelete,
 		nil,
@@ -353,7 +359,7 @@ func (r *Project) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 		if err.HttpStatusCode != 404 {
 			resp.Diagnostics.AddError(
 				"Error Deleting Capella Projects",
-				"Could not delete Capella project ID "+state.Id.String()+": "+err.CompleteError(),
+				"Could not delete Capella project ID "+projectId+": "+err.CompleteError(),
 			)
 			tflog.Info(ctx, "resource doesn't exist in remote server")
 			return
@@ -361,7 +367,7 @@ func (r *Project) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 	default:
 		resp.Diagnostics.AddError(
 			"Error Deleting Capella Projects",
-			"Could not delete Capella project ID "+state.Id.String()+": "+err.Error(),
+			"Could not delete Capella project ID "+projectId+": "+err.Error(),
 		)
 		return
 	}
