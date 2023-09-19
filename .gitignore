@@ -16,3 +16,8 @@ terraform.tfvars
 
 # Ignore terraform hidden folder
 /.terraform
+
+# General
+.DS_STORE
+/.idea
+/.vscode

@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"strings"
 	"terraform-provider-capella/internal/errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -28,15 +29,28 @@ type Project struct {
 	Audit types.Object `tfsdk:"audit"`
 }
 
-func (p Project) Validate() error {
-	if p.Id.IsNull() {
-		return errors.ErrProjectIdCannotBeEmpty
+func (p Project) Validate() (projectId string, organizationId string, err error) {
+	organizationId = p.OrganizationId.ValueString()
+	projectId = p.Id.ValueString()
+
+	// check if the id is a comma separated string of multiple IDs, usually passed during the terraform import CLI
+	if p.OrganizationId.IsNull() {
+		strs := strings.Split(p.Id.ValueString(), ",")
+		if len(strs) > 1 {
+			projectId = strs[0]
+			organizationId = strs[1]
+		}
 	}
 
-	if p.OrganizationId.IsNull() {
-		return errors.ErrOrganizationIdCannotBeEmpty
+	if projectId == "" {
+		return "", "", errors.ErrProjectIdCannotBeEmpty
 	}
-	return nil
+
+	if organizationId == "" {
+		return "", "", errors.ErrOrganizationIdCannotBeEmpty
+	}
+
+	return projectId, organizationId, nil
 }
 
 // Projects defines model for GetProjectsResponse.

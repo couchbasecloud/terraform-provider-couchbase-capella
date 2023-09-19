@@ -201,18 +201,14 @@ func (r *Project) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 		return
 	}
 
-	if err := state.Validate(); err != nil {
+	projectId, organizationId, err := state.Validate()
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Projects",
 			"Could not read Capella project ID "+state.Id.String()+": "+err.Error(),
 		)
 		return
 	}
-
-	var (
-		organizationId = state.OrganizationId.ValueString()
-		projectId      = state.Id.ValueString()
-	)
 
 	// Get refreshed project value from Capella
 	refreshedState, err := r.retrieveProject(ctx, organizationId, projectId)
@@ -222,7 +218,7 @@ func (r *Project) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 		if err.HttpStatusCode != 404 {
 			resp.Diagnostics.AddError(
 				"Error Reading Capella Projects",
-				"Could not read Capella project ID "+state.Id.String()+": "+err.CompleteError(),
+				"Could not read Capella project ID "+projectId+": "+err.CompleteError(),
 			)
 			return
 		}
@@ -232,7 +228,7 @@ func (r *Project) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 	default:
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Projects",
-			"Could not read Capella project ID "+state.Id.String()+": "+err.Error(),
+			"Could not read Capella project ID "+projectId+": "+err.Error(),
 		)
 		return
 	}
@@ -255,18 +251,14 @@ func (r *Project) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		return
 	}
 
-	if err := state.Validate(); err != nil {
+	projectId, organizationId, err := state.Validate()
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Updating Capella Project",
 			"Could not update Capella project ID "+state.Id.String()+": "+err.Error(),
 		)
 		return
 	}
-
-	var (
-		projectId      = state.Id.ValueString()
-		organizationId = state.OrganizationId.ValueString()
-	)
 
 	projectRequest := api.PutProjectRequest{
 		Description: state.Description.ValueString(),
@@ -278,7 +270,7 @@ func (r *Project) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		headers["If-Match"] = state.IfMatch.ValueString()
 	}
 
-	_, err := r.Client.Execute(
+	_, err = r.Client.Execute(
 		fmt.Sprintf("%s/v4/organizations/%s/projects/%s", r.HostURL, organizationId, projectId),
 		http.MethodPut,
 		projectRequest,
@@ -376,6 +368,10 @@ func (r *Project) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 }
 
 // ImportState imports a remote project that is not created by Terraform.
+// Since Capella APIs may require multiple IDs, such as organizationId, projectId, clusterId,
+// this function passes the root attribute which is a comma separated string of multiple IDs.
+// Unfortunately the terraform import CLI doesn't allow us to pass multiple IDs at this point
+// and hence this workaround has been applied.
 func (r *Project) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
