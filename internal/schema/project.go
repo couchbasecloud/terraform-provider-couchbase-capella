@@ -38,15 +38,17 @@ func (p Project) Validate() (projectId string, organizationId string, err error)
 	if p.OrganizationId.IsNull() {
 		strs := strings.Split(p.Id.ValueString(), ",")
 		if len(strs) > 1 {
-			_, projectId, found = strings.Cut(strs[0], "=")
+			_, projectId, found = strings.Cut(strs[0], "id=")
 			if !found || projectId == "" {
 				return "", "", errors.ErrProjectIdMissing
 			}
 
-			_, organizationId, found = strings.Cut(strs[1], "=")
+			_, organizationId, found = strings.Cut(strs[1], "organization_id=")
 			if !found || organizationId == "" {
 				return "", "", errors.ErrOrganizationIdMissing
 			}
+		} else {
+			return "", "", errors.ErrOrganizationIdMissing
 		}
 	}
 
