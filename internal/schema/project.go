@@ -32,13 +32,21 @@ type Project struct {
 func (p Project) Validate() (projectId string, organizationId string, err error) {
 	organizationId = p.OrganizationId.ValueString()
 	projectId = p.Id.ValueString()
+	var found bool
 
 	// check if the id is a comma separated string of multiple IDs, usually passed during the terraform import CLI
 	if p.OrganizationId.IsNull() {
 		strs := strings.Split(p.Id.ValueString(), ",")
 		if len(strs) > 1 {
-			projectId = strs[0]
-			organizationId = strs[1]
+			_, projectId, found = strings.Cut(strs[0], "=")
+			if !found || projectId == "" {
+				return "", "", errors.ErrProjectIdMissing
+			}
+
+			_, organizationId, found = strings.Cut(strs[1], "=")
+			if !found || organizationId == "" {
+				return "", "", errors.ErrOrganizationIdMissing
+			}
 		}
 	}
 

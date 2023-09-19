@@ -136,6 +136,7 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 		http.MethodPost,
 		allowListRequest,
 		r.Token,
+		nil,
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -216,6 +217,7 @@ func (r *AllowList) retrieveAllowList(ctx context.Context, organizationId, proje
 		http.MethodGet,
 		nil,
 		r.Token,
+		nil,
 	)
 	if err != nil {
 		return nil, err

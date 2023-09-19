@@ -68,7 +68,7 @@ func (c *Client) Execute(url string, method string, payload any, authToken strin
 			return nil, err
 		}
 
-		return nil, errors.New("received unexpected status code")
+		return nil, errors.New("received unexpected status code: " + apiRes.Status)
 	}
 
 	return &Response{
