@@ -1,3 +1,5 @@
 auth_token      = "v4-api-key-secret"
-organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-host            = "https://cloudapi.dev.nonprod-project-avengers.com"
+organization_id = "bdb8662c-7157-46ea-956f-ed86f4c75211"
+project_id      = "e912ed02-8ac4-403c-a0c5-67c57284a5a4"
+cluster_id      = "f3818c88-3016-4c01-b3db-233173d8e4fd"
+host            = "https://cloudapi.cloud.couchbase.com"

@@ -198,6 +198,11 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 }
 
 // ImportState imports a remote allowlist that is not created by Terraform.
+// Since Capella APIs may require multiple IDs, such as organizationId, projectId, clusterId,
+// this function passes the root attribute which is a comma separated string of multiple IDs.
+// example: id=cluster123,project_id=proj123,organization_id=org123
+// Unfortunately the terraform import CLI doesn't allow us to pass multiple IDs at this point
+// and hence this workaround has been applied.
 func (r *AllowList) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)

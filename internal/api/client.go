@@ -24,7 +24,7 @@ func NewClient(timeout time.Duration) *Client {
 	}
 }
 
-// Reponse stuct is used to encapsulate the response details
+// Response stuct is used to encapsulate the response details
 type Response struct {
 	Response *http.Response
 	Body     []byte
