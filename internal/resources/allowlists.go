@@ -194,13 +194,100 @@ func (r *AllowList) Update(ctx context.Context, req resource.UpdateRequest, resp
 
 // Delete deletes the project.
 func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// todo
+	// Retrieve existing state
+	var state providerschema.AllowList
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var (
+		organizationId = state.OrganizationId.ValueString()
+		projectId      = state.ProjectId.ValueString()
+		clusterId      = state.ClusterId.ValueString()
+		allowedCidrId  = state.Id.ValueString()
+	)
+
+	// Execute request to delete existing allowlist
+	_, err := r.Client.Execute(
+		fmt.Sprintf(
+			"%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs/%s",
+			r.HostURL,
+			organizationId,
+			projectId,
+			clusterId,
+			allowedCidrId,
+		),
+		http.MethodDelete,
+		nil,
+		r.Token,
+		nil,
+	)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error executing request",
+			"Could not execute request, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	// Check if the allowlist has been deleted
+	_, err = r.getAllowList(ctx, organizationId, projectId, clusterId, allowedCidrId)
+	switch err := err.(type) {
+	case nil:
+		resp.Diagnostics.AddError(
+			"Error deleting allow list",
+			"AllowList requested to be deleted was not deleted "+err.Error(),
+		)
+		return
+	case api.Error:
+		if err.HttpStatusCode != http.StatusNotFound {
+			// AllowList not found indicating successful deletion
+			return
+		}
+	default:
+		resp.Diagnostics.AddError(
+			"Error retrieving allow list",
+			"Could not retrieve allow list, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
 }
 
 // ImportState imports a remote allowlist that is not created by Terraform.
 func (r *AllowList) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId, clusterId, allowedCidrId string) (*api.GetAllowListResponse, error) {
+	response, err := r.Client.Execute(
+		fmt.Sprintf(
+			"%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs/%s",
+			r.HostURL,
+			organizationId,
+			projectId,
+			clusterId,
+			allowedCidrId,
+		),
+		http.MethodGet,
+		nil,
+		r.Token,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	allowListResp := api.GetAllowListResponse{}
+	err = json.Unmarshal(response.Body, &allowListResp)
+	if err != nil {
+		return nil, err
+	}
+	return &allowListResp, nil
 }
 
 // retrieveAllowList is used to pass an existing AllowList to the refreshed state
