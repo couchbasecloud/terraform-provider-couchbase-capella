@@ -5,19 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"terraform-provider-capella/internal/api"
 	"time"
-
-	providerschema "terraform-provider-capella/internal/schema"
-	"terraform-provider-capella/internal/utils"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"terraform-provider-capella/internal/api"
+	clusterapi "terraform-provider-capella/internal/api/cluster"
+	providerschema "terraform-provider-capella/internal/schema"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -44,156 +40,12 @@ func (r *Cluster) Metadata(_ context.Context, req resource.MetadataRequest, resp
 
 // Schema defines the schema for the Cluster resource.
 func (r *Cluster) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"organization_id": schema.StringAttribute{
-				Required: true,
-			},
-			"project_id": schema.StringAttribute{
-				Required: true,
-			},
-			"name": schema.StringAttribute{
-				Required: true,
-			},
-			"description": schema.StringAttribute{
-				Optional: true,
-			},
-			"cloud_provider": schema.SingleNestedAttribute{
-				Required: true,
-				Attributes: map[string]schema.Attribute{
-					"type": schema.StringAttribute{
-						Required: true,
-					},
-					"region": schema.StringAttribute{
-						Required: true,
-					},
-					"cidr": schema.StringAttribute{
-						Required: true,
-					},
-				},
-			},
-			"couchbase_server": schema.SingleNestedAttribute{
-				Optional: true,
-				Computed: true,
-				Attributes: map[string]schema.Attribute{
-					"version": schema.StringAttribute{
-						Optional: true,
-						Computed: true,
-					},
-				},
-			},
-			"service_groups": schema.ListNestedAttribute{
-				Required: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"node": schema.SingleNestedAttribute{
-							Required: true,
-							Attributes: map[string]schema.Attribute{
-								"compute": schema.SingleNestedAttribute{
-									Required: true,
-									Attributes: map[string]schema.Attribute{
-										"cpu": schema.Int64Attribute{
-											Required: true,
-										},
-										"ram": schema.Int64Attribute{
-											Required: true,
-										},
-									},
-								},
-								"disk": schema.SingleNestedAttribute{
-									Required: true,
-									Attributes: map[string]schema.Attribute{
-										"type": schema.StringAttribute{
-											Required: true,
-										},
-										"storage": schema.Int64Attribute{
-											Optional: true,
-											Computed: true,
-										},
-										"iops": schema.Int64Attribute{
-											Optional: true,
-											Computed: true,
-										},
-									},
-								},
-							},
-						},
-						"num_of_nodes": schema.Int64Attribute{
-							Required: true,
-						},
-						"services": schema.ListAttribute{
-							ElementType: types.StringType,
-							Required:    true,
-						},
-					},
-				},
-			},
-			"availability": schema.SingleNestedAttribute{
-				Required: true,
-				Attributes: map[string]schema.Attribute{
-					"type": schema.StringAttribute{
-						Required: true,
-					},
-				},
-			},
-			"support": schema.SingleNestedAttribute{
-				Required: true,
-				Attributes: map[string]schema.Attribute{
-					"plan": schema.StringAttribute{
-						Required: true,
-					},
-					"timezone": schema.StringAttribute{
-						Required: true,
-					},
-				},
-			},
-			"current_state": schema.StringAttribute{
-				Computed: true,
-			},
-			"app_service_id": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-			},
-			"audit": schema.SingleNestedAttribute{
-				Computed: true,
-				Attributes: map[string]schema.Attribute{
-					"created_at": schema.StringAttribute{
-						Computed: true,
-					},
-					"created_by": schema.StringAttribute{
-						Computed: true,
-					},
-					"modified_at": schema.StringAttribute{
-						Computed: true,
-					},
-					"modified_by": schema.StringAttribute{
-						Computed: true,
-					},
-					"version": schema.Int64Attribute{
-						Computed: true,
-					},
-				},
-			},
-			"if_match": schema.StringAttribute{
-				Optional: true,
-			},
-			"etag": schema.StringAttribute{
-				Computed: true,
-			},
-		},
-	}
-
+	resp.Schema = ClusterSchema()
 }
 
 // Create creates a new Cluster.
 func (r *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan providerschema.ClusterResourceModel
+	var plan providerschema.Cluster
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 
@@ -201,19 +53,19 @@ func (r *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		return
 	}
 
-	ClusterRequest := api.CreateClusterRequest{
+	ClusterRequest := clusterapi.CreateClusterRequest{
 		Name: plan.Name.ValueString(),
-		Availability: api.Availability{
-			Type: api.AvailabilityType(plan.Availability.Type.ValueString()),
+		Availability: clusterapi.Availability{
+			Type: clusterapi.AvailabilityType(plan.Availability.Type.ValueString()),
 		},
-		CloudProvider: api.CloudProvider{
+		CloudProvider: clusterapi.CloudProvider{
 			Cidr:   plan.CloudProvider.Cidr.ValueString(),
 			Region: plan.CloudProvider.Region.ValueString(),
-			Type:   api.CloudProviderType(plan.CloudProvider.Type.ValueString()),
+			Type:   clusterapi.CloudProviderType(plan.CloudProvider.Type.ValueString()),
 		},
-		Support: api.Support{
-			Plan:     api.SupportPlan(plan.Support.Plan.ValueString()),
-			Timezone: api.SupportTimezone(plan.Support.Timezone.ValueString()),
+		Support: clusterapi.Support{
+			Plan:     clusterapi.SupportPlan(plan.Support.Plan.ValueString()),
+			Timezone: clusterapi.SupportTimezone(plan.Support.Timezone.ValueString()),
 		},
 	}
 
@@ -223,7 +75,7 @@ func (r *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 
 	if !plan.CouchbaseServer.Version.IsNull() && !plan.CouchbaseServer.Version.IsUnknown() {
 		version := plan.CouchbaseServer.Version.ValueString()
-		ClusterRequest.CouchbaseServer = &api.CouchbaseServer{
+		ClusterRequest.CouchbaseServer = &clusterapi.CouchbaseServer{
 			Version: &version,
 		}
 	}
@@ -280,7 +132,7 @@ func (r *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		return
 	}
 
-	ClusterResponse := api.GetClusterResponse{}
+	ClusterResponse := clusterapi.GetClusterResponse{}
 	err = json.Unmarshal(response.Body, &ClusterResponse)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -325,7 +177,7 @@ func (r *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	}
 
 	for i, serviceGroup := range refreshedState.ServiceGroups {
-		if utils.AreEqual(plan.ServiceGroups[i].Services, serviceGroup.Services) {
+		if clusterapi.AreEqual(plan.ServiceGroups[i].Services, serviceGroup.Services) {
 			refreshedState.ServiceGroups[i].Services = plan.ServiceGroups[i].Services
 		}
 	}
@@ -386,7 +238,7 @@ func (r *Cluster) ImportState(ctx context.Context, req resource.ImportStateReque
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func (r *Cluster) getCluster(organizationId, projectId, clusterId string) (*api.GetClusterResponse, error) {
+func (r *Cluster) getCluster(organizationId, projectId, clusterId string) (*clusterapi.GetClusterResponse, error) {
 	response, err := r.Client.Execute(
 		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", r.HostURL, organizationId, projectId, clusterId),
 		http.MethodGet,
@@ -398,127 +250,38 @@ func (r *Cluster) getCluster(organizationId, projectId, clusterId string) (*api.
 		return nil, err
 	}
 
-	ClusterResp := api.GetClusterResponse{}
-	err = json.Unmarshal(response.Body, &ClusterResp)
+	clusterResp := clusterapi.GetClusterResponse{}
+	err = json.Unmarshal(response.Body, &clusterResp)
 	if err != nil {
 		return nil, err
 	}
-	ClusterResp.Etag = response.Response.Header.Get("ETag")
-	return &ClusterResp, nil
+	clusterResp.Etag = response.Response.Header.Get("ETag")
+	return &clusterResp, nil
 }
 
-func (r *Cluster) retrieveCluster(ctx context.Context, organizationId, projectId, clusterId string) (*providerschema.ClusterResourceModel, error) {
+func (r *Cluster) retrieveCluster(ctx context.Context, organizationId, projectId, clusterId string) (*providerschema.Cluster, error) {
 	ClusterResp, err := r.getCluster(organizationId, projectId, clusterId)
 	if err != nil {
 		return nil, err
 	}
 
-	audit := providerschema.CouchbaseAuditData{
-		CreatedAt:  types.StringValue(ClusterResp.Audit.CreatedAt.String()),
-		CreatedBy:  types.StringValue(ClusterResp.Audit.CreatedBy),
-		ModifiedAt: types.StringValue(ClusterResp.Audit.ModifiedAt.String()),
-		ModifiedBy: types.StringValue(ClusterResp.Audit.ModifiedBy),
-		Version:    types.Int64Value(int64(ClusterResp.Audit.Version)),
-	}
+	audit := providerschema.NewCouchbaseAuditData(ClusterResp.Audit)
 
 	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
 	if diags.HasError() {
 		return nil, fmt.Errorf("error while audit conversion")
 	}
 
-	refreshedState := providerschema.ClusterResourceModel{
-		Id:             types.StringValue(ClusterResp.Id.String()),
-		OrganizationId: types.StringValue(organizationId),
-		ProjectId:      types.StringValue(projectId),
-		Name:           types.StringValue(ClusterResp.Name),
-		Description:    types.StringValue(ClusterResp.Description),
-		Availability: &providerschema.Availability{
-			Type: types.StringValue(string(ClusterResp.Availability.Type)),
-		},
-		CloudProvider: &providerschema.CloudProvider{
-			Cidr:   types.StringValue(ClusterResp.CloudProvider.Cidr),
-			Region: types.StringValue(ClusterResp.CloudProvider.Region),
-			Type:   types.StringValue(string(ClusterResp.CloudProvider.Type)),
-		},
-		Support: &providerschema.Support{
-			Plan:     types.StringValue(string(ClusterResp.Support.Plan)),
-			Timezone: types.StringValue(string(ClusterResp.Support.Timezone)),
-		},
-		CurrentState: types.StringValue(string(ClusterResp.CurrentState)),
-		Audit:        auditObj,
-		Etag:         types.StringValue(ClusterResp.Etag),
+	refreshedState, err := providerschema.NewCluster(ClusterResp, organizationId, projectId, auditObj)
+	if err != nil {
+		return nil, err
 	}
-
-	if ClusterResp.CouchbaseServer.Version != nil {
-		version := *ClusterResp.CouchbaseServer.Version
-		refreshedState.CouchbaseServer = &providerschema.CouchbaseServer{
-			Version: types.StringValue(version),
-		}
-	}
-
-	var serviceGroups []providerschema.ServiceGroup
-	for _, serviceGroup := range ClusterResp.ServiceGroups {
-
-		serviceGroupData := providerschema.ServiceGroup{
-			Node: &providerschema.Node{
-				Compute: providerschema.Compute{
-					Ram: types.Int64Value(int64(serviceGroup.Node.Compute.Ram)),
-					Cpu: types.Int64Value(int64(serviceGroup.Node.Compute.Cpu)),
-				},
-			},
-			NumOfNodes: types.Int64Value(int64(*serviceGroup.NumOfNodes)),
-		}
-
-		switch ClusterResp.CloudProvider.Type {
-		case api.Aws:
-			awsDisk, err := serviceGroup.Node.AsDiskAWS()
-			if err != nil {
-				return nil, err
-			}
-			serviceGroupData.Node.Disk = providerschema.Node_Disk{
-				Type:    types.StringValue(string(awsDisk.Type)),
-				Storage: types.Int64Value(int64(awsDisk.Storage)),
-				IOPS:    types.Int64Value(int64(awsDisk.Iops)),
-			}
-		case api.Azure:
-			azureDisk, err := serviceGroup.Node.AsDiskAzure()
-			if err != nil {
-				return nil, err
-			}
-
-			serviceGroupData.Node.Disk = providerschema.Node_Disk{
-				Type:    types.StringValue(string(azureDisk.Type)),
-				Storage: types.Int64Value(int64(*azureDisk.Storage)),
-				IOPS:    types.Int64Value(int64(*azureDisk.Iops)),
-			}
-		case api.Gcp:
-			gcpDisk, err := serviceGroup.Node.AsDiskGCP()
-			if err != nil {
-				return nil, err
-			}
-			serviceGroupData.Node.Disk = providerschema.Node_Disk{
-				Type:    types.StringValue(string(gcpDisk.Type)),
-				Storage: types.Int64Value(int64(gcpDisk.Storage)),
-			}
-		default:
-			return nil, fmt.Errorf("unsupported cloud provider is recieved from server")
-		}
-
-		serviceGroupData.NumOfNodes = types.Int64Value(int64(*serviceGroup.NumOfNodes))
-
-		for _, service := range *serviceGroup.Services {
-			tfService := types.StringValue(string(service))
-			serviceGroupData.Services = append(serviceGroupData.Services, tfService)
-		}
-		serviceGroups = append(serviceGroups, serviceGroupData)
-	}
-	refreshedState.ServiceGroups = serviceGroups
-	return &refreshedState, nil
+	return refreshedState, nil
 }
 
 func (r *Cluster) checkClusterStatus(ctx context.Context, organizationId, projectId, ClusterId string) error {
 	var (
-		ClusterResp *api.GetClusterResponse
+		ClusterResp *clusterapi.GetClusterResponse
 		err         error
 	)
 
@@ -543,7 +306,7 @@ func (r *Cluster) checkClusterStatus(ctx context.Context, organizationId, projec
 			ClusterResp, err = r.getCluster(organizationId, projectId, ClusterId)
 			switch err {
 			case nil:
-				if utils.IsFinalState(ClusterResp.CurrentState) {
+				if clusterapi.IsFinalState(ClusterResp.CurrentState) {
 					return nil
 				}
 				const msg = "waiting for Cluster to complete the execution"
@@ -556,13 +319,13 @@ func (r *Cluster) checkClusterStatus(ctx context.Context, organizationId, projec
 	}
 }
 
-func (r *Cluster) morphToApiServiceGroups(plan providerschema.ClusterResourceModel) ([]api.ServiceGroup, error) {
-	var serviceGroups []api.ServiceGroup
+func (r *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]clusterapi.ServiceGroup, error) {
+	var serviceGroups []clusterapi.ServiceGroup
 	for _, serviceGroup := range plan.ServiceGroups {
 		numOfNodes := int(serviceGroup.NumOfNodes.ValueInt64())
-		serviceGroupData := api.ServiceGroup{
-			Node: &api.Node{
-				Compute: api.Compute{
+		serviceGroupData := clusterapi.ServiceGroup{
+			Node: &clusterapi.Node{
+				Compute: clusterapi.Compute{
 					Ram: int(serviceGroup.Node.Compute.Ram.ValueInt64()),
 					Cpu: int(serviceGroup.Node.Compute.Cpu.ValueInt64()),
 				},
@@ -571,10 +334,10 @@ func (r *Cluster) morphToApiServiceGroups(plan providerschema.ClusterResourceMod
 		}
 
 		switch plan.CloudProvider.Type.ValueString() {
-		case string(api.Aws):
-			node := api.Node{}
-			diskAws := api.DiskAWS{
-				Type: api.DiskAWSType(serviceGroup.Node.Disk.Type.ValueString()),
+		case string(clusterapi.Aws):
+			node := clusterapi.Node{}
+			diskAws := clusterapi.DiskAWS{
+				Type: clusterapi.DiskAWSType(serviceGroup.Node.Disk.Type.ValueString()),
 			}
 
 			if serviceGroup.Node != nil && !serviceGroup.Node.Disk.Storage.IsNull() {
@@ -591,11 +354,11 @@ func (r *Cluster) morphToApiServiceGroups(plan providerschema.ClusterResourceMod
 			}
 			serviceGroupData.Node.Disk = node.Disk
 
-		case string(api.Azure):
-			node := api.Node{}
+		case string(clusterapi.Azure):
+			node := clusterapi.Node{}
 
-			diskAzure := api.DiskAzure{
-				Type: api.DiskAzureType(serviceGroup.Node.Disk.Type.ValueString()),
+			diskAzure := clusterapi.DiskAzure{
+				Type: clusterapi.DiskAzureType(serviceGroup.Node.Disk.Type.ValueString()),
 			}
 
 			if serviceGroup.Node != nil && !serviceGroup.Node.Disk.Storage.IsNull() && !serviceGroup.Node.Disk.Storage.IsUnknown() {
@@ -615,11 +378,11 @@ func (r *Cluster) morphToApiServiceGroups(plan providerschema.ClusterResourceMod
 
 			serviceGroupData.Node.Disk = node.Disk
 
-		case string(api.Gcp):
+		case string(clusterapi.Gcp):
 			storage := int(serviceGroup.Node.Disk.Storage.ValueInt64())
-			node := api.Node{}
-			err := node.FromDiskGCP(api.DiskGCP{
-				Type:    api.DiskGCPType(serviceGroup.Node.Disk.Type.ValueString()),
+			node := clusterapi.Node{}
+			err := node.FromDiskGCP(clusterapi.DiskGCP{
+				Type:    clusterapi.DiskGCPType(serviceGroup.Node.Disk.Type.ValueString()),
 				Storage: storage,
 			})
 			if err != nil {
@@ -630,10 +393,10 @@ func (r *Cluster) morphToApiServiceGroups(plan providerschema.ClusterResourceMod
 		for _, service := range serviceGroup.Services {
 			serviceapi := service.ValueString()
 			if serviceGroupData.Services == nil {
-				var emptyList []api.Service
+				var emptyList []clusterapi.Service
 				serviceGroupData.Services = &emptyList
 			}
-			serviceGroupDataServices := append(*serviceGroupData.Services, api.Service(serviceapi))
+			serviceGroupDataServices := append(*serviceGroupData.Services, clusterapi.Service(serviceapi))
 			serviceGroupData.Services = &serviceGroupDataServices
 		}
 		serviceGroups = append(serviceGroups, serviceGroupData)

@@ -3,6 +3,7 @@ package schema
 import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"terraform-provider-capella/internal/api"
 )
 
 // CouchbaseAuditData contains all audit-related fields.
@@ -36,5 +37,15 @@ func (c CouchbaseAuditData) AttributeTypes() map[string]attr.Type {
 		"modified_at": types.StringType,
 		"modified_by": types.StringType,
 		"version":     types.Int64Type,
+	}
+}
+
+func NewCouchbaseAuditData(audit api.CouchbaseAuditData) CouchbaseAuditData {
+	return CouchbaseAuditData{
+		CreatedAt:  types.StringValue(audit.CreatedAt.String()),
+		CreatedBy:  types.StringValue(audit.CreatedBy),
+		ModifiedAt: types.StringValue(audit.ModifiedAt.String()),
+		ModifiedBy: types.StringValue(audit.ModifiedBy),
+		Version:    types.Int64Value(int64(audit.Version)),
 	}
 }
