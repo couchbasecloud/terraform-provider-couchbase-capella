@@ -263,6 +263,7 @@ func (r *AllowList) ImportState(ctx context.Context, req resource.ImportStateReq
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
+// getAllowList is used to retrieve an existing allow list
 func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId, clusterId, allowedCidrId string) (*api.GetAllowListResponse, error) {
 	response, err := r.Client.Execute(
 		fmt.Sprintf(
