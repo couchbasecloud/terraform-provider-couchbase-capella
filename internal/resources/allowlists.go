@@ -156,7 +156,7 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 		return
 	}
 
-	refreshedState, err := r.retrieveAllowList(ctx, plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), plan.ClusterId.ValueString(), allowListResponse.Id.String())
+	refreshedState, err := r.refreshAllowList(ctx, plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), plan.ClusterId.ValueString(), allowListResponse.Id.String())
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
@@ -290,28 +290,9 @@ func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId,
 	return &allowListResp, nil
 }
 
-// retrieveAllowList is used to pass an existing AllowList to the refreshed state
-func (r *AllowList) retrieveAllowList(ctx context.Context, organizationId, projectId, clusterId, allowedCidrId string) (*providerschema.OneAllowList, error) {
-	response, err := r.Client.Execute(
-		fmt.Sprintf(
-			"%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs/%s",
-			r.HostURL,
-			organizationId,
-			projectId,
-			clusterId,
-			allowedCidrId,
-		),
-		http.MethodGet,
-		nil,
-		r.Token,
-		nil,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	allowListResp := api.GetAllowListResponse{}
-	err = json.Unmarshal(response.Body, &allowListResp)
+// refreshAllowList is used to pass an existing AllowList to the refreshed state
+func (r *AllowList) refreshAllowList(ctx context.Context, organizationId, projectId, clusterId, allowedCidrId string) (*providerschema.OneAllowList, error) {
+	allowListResp, err := r.getAllowList(ctx, organizationId, projectId, clusterId, allowedCidrId)
 	if err != nil {
 		return nil, err
 	}
