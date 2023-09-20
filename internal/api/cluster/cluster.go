@@ -1,8 +1,9 @@
 package cluster
 
 import (
-	"github.com/google/uuid"
 	"terraform-provider-capella/internal/api"
+
+	"github.com/google/uuid"
 )
 
 // Availability defines model for Availability.

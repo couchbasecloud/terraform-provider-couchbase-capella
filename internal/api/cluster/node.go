@@ -2,7 +2,6 @@ package cluster
 
 import (
 	"encoding/json"
-	"github.com/apapsch/go-jsonmerge/v2"
 )
 
 // Node defines model for Node.
@@ -72,102 +71,44 @@ type DiskGCP struct {
 // DiskGCPType is type of disk. Please choose from the given list for GCP cloud provider.
 type DiskGCPType string
 
-// AsDiskAWS returns the union data inside the Node_Disk as a DiskAWS
+// AsDiskAWS returns the disk data as a DiskAWS
 func (n *Node) AsDiskAWS() (DiskAWS, error) {
 	var body DiskAWS
 	err := json.Unmarshal(n.Disk, &body)
 	return body, err
 }
 
-// FromDiskAWS overwrites any union data inside the Node_Disk as the provided DiskAWS
+// FromDiskAWS overwrites any disk data inside as the provided DiskAWS
 func (n *Node) FromDiskAWS(v DiskAWS) error {
 	b, err := json.Marshal(v)
 	n.Disk = b
 	return err
 }
 
-// MergeDiskAWS performs a merge with any union data inside the Node_Disk,
-// using the provided DiskAWS
-func (n *Node) MergeDiskAWS(v DiskAWS) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := JsonMerge(n.Disk, b)
-	n.Disk = merged
-	return err
-}
-
-// AsDiskAzure returns the union data inside the Node_Disk as a DiskAzure
+// AsDiskAzure returns the disk data as a DiskAzure
 func (n *Node) AsDiskAzure() (DiskAzure, error) {
 	var body DiskAzure
 	err := json.Unmarshal(n.Disk, &body)
 	return body, err
 }
 
-// FromDiskAzure overwrites any union data inside the Node_Disk as
-// the provided DiskAzure
+// FromDiskAzure overwrites any disk data as the provided DiskAzure
 func (n *Node) FromDiskAzure(v DiskAzure) error {
 	b, err := json.Marshal(v)
 	n.Disk = b
 	return err
 }
 
-// MergeDiskAzure performs a merge with any union data inside the
-// Node_Disk, using the provided DiskAzure
-func (n *Node) MergeDiskAzure(v DiskAzure) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := JsonMerge(n.Disk, b)
-	n.Disk = merged
-	return err
-}
-
-// AsDiskGCP returns the union data inside the Node_Disk as a DiskGCP
+// AsDiskGCP returns the disk data as a DiskGCP
 func (n *Node) AsDiskGCP() (DiskGCP, error) {
 	var body DiskGCP
 	err := json.Unmarshal(n.Disk, &body)
 	return body, err
 }
 
-// FromDiskGCP overwrites any union data inside the Node_Disk
-// as the provided DiskGCP
+// FromDiskGCP overwrites any disk data as the provided DiskGCP
 func (n *Node) FromDiskGCP(v DiskGCP) error {
 	b, err := json.Marshal(v)
 	n.Disk = b
 	return err
-}
-
-// MergeDiskGCP performs a merge with any union data inside the Node_Disk,
-// using the provided DiskGCP
-func (n *Node) MergeDiskGCP(v DiskGCP) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := JsonMerge(n.Disk, b)
-	n.Disk = merged
-	return err
-}
-
-func JsonMerge(data, patch json.RawMessage) (json.RawMessage, error) {
-	merger := jsonmerge.Merger{
-		CopyNonexistent: true,
-	}
-	if data == nil {
-		data = []byte(`{}`)
-	}
-	if patch == nil {
-		patch = []byte(`{}`)
-	}
-	merged, err := merger.MergeBytes(data, patch)
-	if err != nil {
-		return nil, err
-	}
-	return merged, nil
 }

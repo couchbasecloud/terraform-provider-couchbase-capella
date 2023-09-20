@@ -2,13 +2,12 @@ package schema
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"strings"
-
-	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	clusterapi "terraform-provider-capella/internal/api/cluster"
 	"terraform-provider-capella/internal/errors"
+
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 // Availability defines the type of Availability Zone configuration for a cluster resource.
@@ -16,60 +15,62 @@ import (
 // zone in the cloud region. multi type means the nodes in the cluster will all be deployed
 // in separate multiple availability zones in the cloud region.
 type Availability struct {
-	// Type Availability zone type, either 'single' or 'multi'.
+	// Type is the availability zone type, either 'single' or 'multi'.
 	Type types.String `tfsdk:"type"`
 }
 
-// CloudProvider The cloud provider where the cluster will be hosted.
+// CloudProvider is the cloud provider where the cluster will be hosted.
 // To learn more, see [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html).
 type CloudProvider struct {
-	// Cidr CIDR block for Cloud Provider.
+	// Cidr is the cidr block for Cloud Provider.
 	Cidr types.String `tfsdk:"cidr"`
 
-	// Region Cloud provider region, e.g. 'us-west-2'.
+	// Region is the cloud provider region, e.g. 'us-west-2'.
 	// For information about supported regions,
 	// see [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html).
 	Region types.String `tfsdk:"region"`
 
-	// Type Cloud provider type, either 'AWS', 'GCP', or 'Azure'.
+	// Type is the cloud provider type, either 'AWS', 'GCP', or 'Azure'.
 	Type types.String `tfsdk:"type"`
 }
 
-// Compute Following are the supported compute combinations
+// Compute depicts the couchbase compute, following are the supported compute combinations
 // for CPU and RAM for different cloud providers. To learn more,
 // see [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html).
 type Compute struct {
-	// Cpu CPU units (cores).
+	// Cpu depicts cpu units (cores).
 	Cpu types.Int64 `tfsdk:"cpu"`
 
-	// Ram RAM units (GB).
+	// Ram depicts ram units (GB).
 	Ram types.Int64 `tfsdk:"ram"`
 }
 
 // CouchbaseServer defines model for CouchbaseServer.
 type CouchbaseServer struct {
-	// Version Version of the Couchbase Server to be installed in the cluster.
+	// Version is the version of the Couchbase Server to be installed in the cluster.
 	// Refer to documentation [here](https://docs.couchbase.com/cloud/clusters/upgrade-database.html#server-version-maintenance-support)
 	// for list of supported versions.
 	// The latest Couchbase Server version will be deployed by default.
 	Version types.String `tfsdk:"version"`
 }
 
+// Service is the couchbase service to run on the node.
 type Service string
 
-// ServiceGroup The set of nodes that share the same disk, number of nodes and services.
+// ServiceGroup is the set of nodes that share the same disk, number of nodes and services.
 type ServiceGroup struct {
 	Node *Node `tfsdk:"node"`
 
-	// NumOfNodes Number of nodes. The minimum number of nodes for the cluster
+	// NumOfNodes is number of nodes. The minimum number of nodes for the cluster
 	// can be 3 and maximum can be 27 nodes. Additional service groups can have
 	// 2 nodes minimum and 24 nodes maximum.
 	NumOfNodes types.Int64 `tfsdk:"num_of_nodes"`
 
-	// Services The couchbase service to run on the node.
+	// Services is the couchbase service to run on the node.
 	Services []types.String `tfsdk:"services"`
 }
 
+// Node defines model for Node.
 type Node struct {
 	// Compute Following are the supported compute combinations for CPU and RAM
 	// for different cloud providers. To learn more, see
@@ -87,10 +88,10 @@ type Node_Disk struct {
 
 // Support defines model for Support.
 type Support struct {
-	// Plan Plan type, either 'Basic', 'Developer Pro', or 'Enterprise'.
+	// Plan is the plan type, either 'Basic', 'Developer Pro', or 'Enterprise'.
 	Plan types.String `tfsdk:"plan"`
 
-	// Timezone The standard timezone for the cluster.
+	// Timezone is the standard timezone for the cluster.
 	// Should be the TZ identifier.
 	Timezone types.String `tfsdk:"timezone"`
 }
@@ -99,7 +100,7 @@ type Support struct {
 type Cluster struct {
 	Id types.String `tfsdk:"id"`
 
-	// AppServiceId The ID of the linked app service.
+	// AppServiceId is the ID of the linked app service.
 	AppServiceId   types.String  `tfsdk:"app_service_id"`
 	Audit          types.Object  `tfsdk:"audit"`
 	OrganizationId types.String  `tfsdk:"organization_id""`
@@ -117,7 +118,7 @@ type Cluster struct {
 	// Name of the cluster (up to 256 characters).
 	Name types.String `tfsdk:"name"`
 
-	// ServiceGroups The couchbase service groups to be run. At least one service group must contain the data service.
+	// ServiceGroups is the couchbase service groups to be run. At least one service group must contain the data service.
 	ServiceGroups []ServiceGroup `tfsdk:"service_groups"`
 	Support       *Support       `tfsdk:"support"`
 	CurrentState  types.String   `tfsdk:"current_state"`
@@ -126,40 +127,24 @@ type Cluster struct {
 	IfMatch types.String `tfsdk:"if_match"`
 }
 
-func (c *Cluster) Validate() error {
-	if c.Id.IsNull() {
-		return errors.ErrClusterIdCannotBeEmpty
+// Validate validates the cluster object
+func (c *Cluster) Validate() (clusterId string, projectId string, organizationId string, err error) {
+	organizationId = c.OrganizationId.ValueString()
+	projectId = c.ProjectId.ValueString()
+	clusterId = c.Id.ValueString()
+
+	if projectId == "" {
+		return "", "", "", errors.ErrProjectIdCannotBeEmpty
 	}
 
-	if c.OrganizationId.IsNull() {
-		return errors.ErrOrganizationIdCannotBeEmpty
+	if organizationId == "" {
+		return "", "", "", errors.ErrOrganizationIdCannotBeEmpty
 	}
 
-	if c.ProjectId.IsNull() {
-		return errors.ErrProjectIdCannotBeEmpty
-	}
-	return nil
+	return clusterId, projectId, organizationId, nil
 }
 
-func (c *Cluster) PopulateParamsForImport() error {
-	combinedIDs := c.Id.ValueString()
-	splitIDs := strings.Split(combinedIDs, "#")
-
-	if c.OrganizationId.IsNull() && len(splitIDs) > 2 {
-		c.OrganizationId = types.StringValue(splitIDs[0])
-	}
-
-	if c.ProjectId.IsNull() && len(splitIDs) > 2 {
-		c.ProjectId = types.StringValue(splitIDs[1])
-	}
-
-	if len(c.Id.ValueString()) > 36 && len(splitIDs) > 2 {
-		c.Id = types.StringValue(splitIDs[2])
-	}
-
-	return c.Validate()
-}
-
+// NewCluster create new cluster object
 func NewCluster(cluster *clusterapi.GetClusterResponse, organizationId, projectId string, auditObject basetypes.ObjectValue) (*Cluster, error) {
 	newCluster := Cluster{
 		Id:             types.StringValue(cluster.Id.String()),
