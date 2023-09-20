@@ -1,6 +1,6 @@
 # Capella AllowList Example
 
-This example shows how to create and manage Projects in Capella.
+This example shows how to create and manage AllowLists in Capella.
 
 This creates a new allowlist in the selected Capella cluster. It uses the organization ID, projectId and clusterId to do so.
 
