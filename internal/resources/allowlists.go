@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"terraform-provider-capella/internal/api"
 	providerschema "terraform-provider-capella/internal/schema"
@@ -14,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -210,6 +212,8 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 		allowedCidrId  = state.Id.ValueString()
 	)
 
+	log.Println("CIDR ID is", allowedCidrId)
+
 	// Execute request to delete existing allowlist
 	_, err := r.Client.Execute(
 		fmt.Sprintf(
@@ -237,24 +241,25 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 	_, err = r.getAllowList(ctx, organizationId, projectId, clusterId, allowedCidrId)
 	switch err := err.(type) {
 	case nil:
-		resp.Diagnostics.AddError(
-			"Error deleting allow list",
-			"AllowList requested to be deleted was not deleted "+err.Error(),
-		)
 		return
 	case api.Error:
-		if err.HttpStatusCode != http.StatusNotFound {
-			// AllowList not found indicating successful deletion
+		if err.HttpStatusCode != 404 {
+			resp.Diagnostics.AddError(
+				"Error Reading Capella Allow List",
+				"An error has occurred executing the request"+state.ClusterId.String()+": "+err.Error(),
+			)
 			return
 		}
+		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+		resp.State.RemoveResource(ctx)
+		return
 	default:
 		resp.Diagnostics.AddError(
-			"Error retrieving allow list",
-			"Could not retrieve allow list, unexpected error: "+err.Error(),
+			"Error Reading Capella Allow List",
+			"Could not read allow list for cluster"+state.ClusterId.String()+": "+err.Error(),
 		)
 		return
 	}
-
 }
 
 // ImportState imports a remote allowlist that is not created by Terraform.
@@ -280,13 +285,13 @@ func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId,
 		nil,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error executing request: %s", err)
 	}
 
 	allowListResp := api.GetAllowListResponse{}
 	err = json.Unmarshal(response.Body, &allowListResp)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error unmarshalling response: %s", err)
 	}
 	return &allowListResp, nil
 }

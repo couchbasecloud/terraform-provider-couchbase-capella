@@ -24,7 +24,7 @@ Alternatively to passing variable inputs with each command, the `terraform.templ
 
 Once the Project is created, you can use the Project ID to launch a cluster in it.
 
-To remove the Project
+To remove the allowlist
 
 ```
  terraform destroy

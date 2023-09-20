@@ -56,7 +56,7 @@ func (p Project) Validate() (projectId string, organizationId string, err error)
 // Projects defines model for GetProjectsResponse.
 type Projects struct {
 	// OrganizationId The organizationId of the capella.
-	OrganizationId types.String `tfsdk:"organization_id""`
+	OrganizationId types.String `tfsdk:"organization_id"`
 
 	// Data It contains the list of resources.
 	Data []OneProject `tfsdk:"data"`

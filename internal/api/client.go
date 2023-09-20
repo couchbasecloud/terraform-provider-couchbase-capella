@@ -43,7 +43,7 @@ func (c *Client) Execute(url string, method string, payload any, authToken strin
 
 	req, err := http.NewRequest(method, url, bytes.NewReader(requestBody))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to construct request: %w", err)
 	}
 
 	req.Header.Set("Authorization", "Bearer "+authToken)
@@ -53,7 +53,7 @@ func (c *Client) Execute(url string, method string, payload any, authToken strin
 
 	apiRes, err := c.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to execute request: %w", err)
 	}
 	defer apiRes.Body.Close()
 
@@ -65,9 +65,8 @@ func (c *Client) Execute(url string, method string, payload any, authToken strin
 	if apiRes.StatusCode >= http.StatusBadRequest {
 		var apiError Error
 		if err := json.Unmarshal(responseBody, &apiError); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 		}
-
 		return nil, errors.New("received unexpected status code")
 	}
 

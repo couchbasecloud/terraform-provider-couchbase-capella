@@ -34,7 +34,7 @@ type AllowList struct {
 // AllowLists defines the model for GetAllowLists.
 type AllowLists struct {
 	// OrganizationId is the organizationId of the capella.
-	OrganizationId types.String `tfsdk:"organization_id""`
+	OrganizationId types.String `tfsdk:"organization_id"`
 
 	// ProjectId is the projectId of the capella tenant.
 	ProjectId types.String `tfsdk:"project_id"`
