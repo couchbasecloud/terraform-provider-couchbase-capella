@@ -1,6 +1,12 @@
 package schema
 
-import "github.com/hashicorp/terraform-plugin-framework/types"
+import (
+	"fmt"
+	"strings"
+	"terraform-provider-capella/internal/errors"
+
+	"github.com/hashicorp/terraform-plugin-framework/types"
+)
 
 // AllowList maps AllowList resource schema data
 type AllowList struct {
@@ -44,6 +50,84 @@ type AllowLists struct {
 
 	// Data contains the list of resources.
 	Data []OneAllowList `tfsdk:"data"`
+}
+
+// Validate is used to verify that IDs have been properly imported
+func (a *AllowList) Validate() (map[string]string, error) {
+	const idDelimiter = ","
+	var found bool
+
+	organizationId := a.OrganizationId.ValueString()
+	projectId := a.ProjectId.ValueString()
+	clusterId := a.ClusterId.ValueString()
+	allowListId := a.Id.ValueString()
+
+	// check if the id is a comma separated string of multiple IDs, usually passed during the terraform import CLI
+	if a.OrganizationId.IsNull() {
+		strs := strings.Split(a.Id.ValueString(), idDelimiter)
+		if len(strs) != 4 {
+			return nil, errors.ErrIdMissing
+		}
+
+		_, allowListId, found = strings.Cut(strs[0], "id=")
+		if !found {
+			return nil, errors.ErrAllowListIdMissing
+		}
+
+		_, organizationId, found = strings.Cut(strs[1], "organization_id=")
+		if !found {
+			return nil, errors.ErrOrganizationIdMissing
+		}
+
+		_, projectId, found = strings.Cut(strs[2], "project_id=")
+		if !found {
+			return nil, errors.ErrProjectIdMissing
+		}
+
+		_, clusterId, found = strings.Cut(strs[3], "cluster_id=")
+		if !found {
+			return nil, errors.ErrClusterIdMissing
+		}
+	}
+
+	resourceIDs := a.generateResourceIdMap(organizationId, projectId, clusterId, allowListId)
+
+	err := a.checkEmpty(resourceIDs)
+	if err != nil {
+		return nil, fmt.Errorf("resource import unsuccessful: %s", err)
+	}
+
+	return resourceIDs, nil
+}
+
+// generateResourceIdmap is used to populate a map with selected IDs
+func (a *AllowList) generateResourceIdMap(organizationId, projectId, clusterId, allowListId string) map[string]string {
+	return map[string]string{
+		"organizationId": organizationId,
+		"projectId":      projectId,
+		"clusterId":      clusterId,
+		"allowListId":    allowListId,
+	}
+}
+
+// checkEmpty is used to verify that a supplied resourceId map has been populated
+func (a *AllowList) checkEmpty(resourceIdMap map[string]string) error {
+	if resourceIdMap["allowListId"] == "" {
+		return errors.ErrAllowListIdCannotBeEmpty
+	}
+
+	if resourceIdMap["clusterId"] == "" {
+		return errors.ErrClusterIdCannotBeEmpty
+	}
+
+	if resourceIdMap["projectId"] == "" {
+		return errors.ErrProjectIdCannotBeEmpty
+	}
+
+	if resourceIdMap["organizationId"] == "" {
+		return errors.ErrOrganizationIdCannotBeEmpty
+	}
+	return nil
 }
 
 // OneAllowList maps allowlist resource schema data; there is a separate response object to avoid conversion error for nested fields.
