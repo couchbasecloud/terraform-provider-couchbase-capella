@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -103,7 +104,7 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 		return
 	}
 
-	refreshedState, err := r.retrieveAllowList(ctx, plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), plan.ClusterId.ValueString(), allowListResponse.Id.String())
+	refreshedState, err := r.refreshAllowList(ctx, plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), plan.ClusterId.ValueString(), allowListResponse.Id.String())
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
@@ -139,9 +140,58 @@ func (r *AllowList) Update(ctx context.Context, req resource.UpdateRequest, resp
 	// todo
 }
 
-// Delete deletes the project.
+// Delete deletes the allow list.
 func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// todo
+	// Retrieve existing state
+	var state providerschema.AllowList
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceIDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Updating Capella Project",
+			"Could not update Capella project ID "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+	// Execute request to delete existing allowlist
+	_, err = r.Client.Execute(
+		fmt.Sprintf(
+			"%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs/%s",
+			r.HostURL,
+			resourceIDs["organizationId"],
+			resourceIDs["projectId"],
+			resourceIDs["clusterId"],
+			resourceIDs["allowListId"],
+		),
+		http.MethodDelete,
+		nil,
+		r.Token,
+		nil,
+	)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		if err.HttpStatusCode != http.StatusNotFound {
+			resp.Diagnostics.AddError(
+				"Error Deleting Capella Allow List",
+				"Could not delete Capella allowListId "+resourceIDs["allowListId"]+": "+err.CompleteError(),
+			)
+			tflog.Info(ctx, "resource doesn't exist in remote server")
+			return
+		}
+	default:
+		resp.Diagnostics.AddError(
+			"Error Deleting Capella Allow List",
+			"Could not delete Capella allowListId "+resourceIDs["allowListId"]+": "+err.Error(),
+		)
+		return
+	}
 }
 
 // ImportState imports a remote allowlist that is not created by Terraform.
@@ -155,8 +205,8 @@ func (r *AllowList) ImportState(ctx context.Context, req resource.ImportStateReq
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-// retrieveAllowList is used to pass an existing AllowList to the refreshed state
-func (r *AllowList) retrieveAllowList(ctx context.Context, organizationId, projectId, clusterId, allowedCidrId string) (*providerschema.OneAllowList, error) {
+// getAllowList is used to retrieve an existing allow list
+func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId, clusterId, allowListId string) (*api.GetAllowListResponse, error) {
 	response, err := r.Client.Execute(
 		fmt.Sprintf(
 			"%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs/%s",
@@ -164,7 +214,7 @@ func (r *AllowList) retrieveAllowList(ctx context.Context, organizationId, proje
 			organizationId,
 			projectId,
 			clusterId,
-			allowedCidrId,
+			allowListId,
 		),
 		http.MethodGet,
 		nil,
@@ -172,11 +222,20 @@ func (r *AllowList) retrieveAllowList(ctx context.Context, organizationId, proje
 		nil,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error executing request: %s", err)
 	}
 
 	allowListResp := api.GetAllowListResponse{}
 	err = json.Unmarshal(response.Body, &allowListResp)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling response: %s", err)
+	}
+	return &allowListResp, nil
+}
+
+// refreshAllowList is used to pass an existing AllowList to the refreshed state
+func (r *AllowList) refreshAllowList(ctx context.Context, organizationId, projectId, clusterId, allowListId string) (*providerschema.OneAllowList, error) {
+	allowListResp, err := r.getAllowList(ctx, organizationId, projectId, clusterId, allowListId)
 	if err != nil {
 		return nil, err
 	}

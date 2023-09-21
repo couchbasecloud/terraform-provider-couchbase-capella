@@ -90,7 +90,7 @@ output "example_project" {
 }
 ```
 
-# Terraform Environment Variables
+### Terraform Environment Variables
 
 Environment variables can be set by terraform by creating and adding terraform.template.tfvars
 ```terraform
