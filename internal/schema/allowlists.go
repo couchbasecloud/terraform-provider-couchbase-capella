@@ -52,6 +52,7 @@ type AllowLists struct {
 	Data []OneAllowList `tfsdk:"data"`
 }
 
+// Validate is used to verify that IDs have been properly imported
 func (a *AllowList) Validate() (map[string]string, error) {
 	const idDelimiter = ","
 	var found bool
@@ -99,6 +100,7 @@ func (a *AllowList) Validate() (map[string]string, error) {
 	return resourceIDs, nil
 }
 
+// generateResourceIdmap is used to populate a map with selected IDs
 func (a *AllowList) generateResourceIdMap(organizationId, projectId, clusterId, allowListId string) map[string]string {
 	return map[string]string{
 		organizationId: organizationId,
@@ -108,6 +110,7 @@ func (a *AllowList) generateResourceIdMap(organizationId, projectId, clusterId, 
 	}
 }
 
+// checkEmpty is used to verify that a supplied resourceId map has been populated
 func (a *AllowList) checkEmpty(resourceIdMap map[string]string) error {
 	if resourceIdMap["allowListId"] == "" {
 		return errors.ErrAllowListIdCannotBeEmpty
