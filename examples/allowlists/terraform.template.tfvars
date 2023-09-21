@@ -1,5 +1,5 @@
 auth_token      = "v4-api-key-secret"
-organization_id = "bdb8662c-7157-46ea-956f-ed86f4c75211"
-project_id      = "e912ed02-8ac4-403c-a0c5-67c57284a5a4"
-cluster_id      = "f3818c88-3016-4c01-b3db-233173d8e4fd"
+organization_id = "<organization_id>"
+project_id      = "<project_id>"
+cluster_id      = "<cluster_id>"
 host            = "https://cloudapi.cloud.couchbase.com"
