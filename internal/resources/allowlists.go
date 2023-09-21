@@ -155,7 +155,7 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 		organizationId = state.OrganizationId.ValueString()
 		projectId      = state.ProjectId.ValueString()
 		clusterId      = state.ClusterId.ValueString()
-		allowedCidrId  = state.Id.ValueString()
+		allowListId    = state.Id.ValueString()
 	)
 
 	// Execute request to delete existing allowlist
@@ -166,7 +166,7 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 			organizationId,
 			projectId,
 			clusterId,
-			allowedCidrId,
+			allowListId,
 		),
 		http.MethodDelete,
 		nil,
@@ -179,7 +179,7 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 		if err.HttpStatusCode != 404 {
 			resp.Diagnostics.AddError(
 				"Error Deleting Capella Allow List",
-				"Could not delete Capella allowedCidrId "+allowedCidrId+": "+err.CompleteError(),
+				"Could not delete Capella allowListId "+allowListId+": "+err.CompleteError(),
 			)
 			tflog.Info(ctx, "resource doesn't exist in remote server")
 			return
@@ -187,7 +187,7 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 	default:
 		resp.Diagnostics.AddError(
 			"Error Deleting Capella Allow List",
-			"Could not delete Capella allowedCidrId "+allowedCidrId+": "+err.Error(),
+			"Could not delete Capella allowListId "+allowListId+": "+err.Error(),
 		)
 		return
 	}
@@ -205,7 +205,7 @@ func (r *AllowList) ImportState(ctx context.Context, req resource.ImportStateReq
 }
 
 // getAllowList is used to retrieve an existing allow list
-func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId, clusterId, allowedCidrId string) (*api.GetAllowListResponse, error) {
+func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId, clusterId, allowListId string) (*api.GetAllowListResponse, error) {
 	response, err := r.Client.Execute(
 		fmt.Sprintf(
 			"%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs/%s",
@@ -213,7 +213,7 @@ func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId,
 			organizationId,
 			projectId,
 			clusterId,
-			allowedCidrId,
+			allowListId,
 		),
 		http.MethodGet,
 		nil,
@@ -233,8 +233,8 @@ func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId,
 }
 
 // refreshAllowList is used to pass an existing AllowList to the refreshed state
-func (r *AllowList) refreshAllowList(ctx context.Context, organizationId, projectId, clusterId, allowedCidrId string) (*providerschema.OneAllowList, error) {
-	allowListResp, err := r.getAllowList(ctx, organizationId, projectId, clusterId, allowedCidrId)
+func (r *AllowList) refreshAllowList(ctx context.Context, organizationId, projectId, clusterId, allowListId string) (*providerschema.OneAllowList, error) {
+	allowListResp, err := r.getAllowList(ctx, organizationId, projectId, clusterId, allowListId)
 	if err != nil {
 		return nil, err
 	}
