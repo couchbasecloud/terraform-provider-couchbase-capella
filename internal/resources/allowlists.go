@@ -144,8 +144,8 @@ func (r *AllowList) Read(ctx context.Context, req resource.ReadRequest, resp *re
 	resourceIDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Importing From Capella",
-			"Could not import from Capella: "+err.Error(),
+			"Error Reading Capella AllowList",
+			"Could not read Capella allow list: "+err.Error(),
 		)
 		return
 	}
