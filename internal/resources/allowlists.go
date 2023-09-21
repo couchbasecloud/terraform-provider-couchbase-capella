@@ -207,8 +207,8 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 	resourceIDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Importing From Capella",
-			"Could not import from Capella: "+err.Error(),
+			"Error Deleting Capella Allow List",
+			"Could not delete Capella allow list: "+err.Error(),
 		)
 		return
 	}
