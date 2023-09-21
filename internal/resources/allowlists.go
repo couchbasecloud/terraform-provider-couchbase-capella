@@ -188,7 +188,7 @@ func (r *AllowList) Read(ctx context.Context, req resource.ReadRequest, resp *re
 	}
 }
 
-// Update updates the project.
+// Update updates the allowlist.
 func (r *AllowList) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// todo
 }
