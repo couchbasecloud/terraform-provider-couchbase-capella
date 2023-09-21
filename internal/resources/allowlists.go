@@ -11,9 +11,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -41,57 +38,7 @@ func (r *AllowList) Metadata(_ context.Context, req resource.MetadataRequest, re
 
 // Schema defines the schema for the allowlist resource.
 func (r *AllowList) Schema(ctx context.Context, rsc resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"organization_id": schema.StringAttribute{
-				Required: true,
-			},
-			"project_id": schema.StringAttribute{
-				Required: true,
-			},
-			"cluster_id": schema.StringAttribute{
-				Required: true,
-			},
-			"cidr": schema.StringAttribute{
-				Required: true,
-			},
-			"comment": schema.StringAttribute{
-				Optional: true,
-			},
-			"expires_at": schema.StringAttribute{
-				Optional: true,
-			},
-			"if_match": schema.StringAttribute{
-				Optional: true,
-			},
-			"audit": schema.SingleNestedAttribute{
-				Computed: true,
-				Attributes: map[string]schema.Attribute{
-					"created_at": schema.StringAttribute{
-						Computed: true,
-					},
-					"created_by": schema.StringAttribute{
-						Computed: true,
-					},
-					"modified_at": schema.StringAttribute{
-						Computed: true,
-					},
-					"modified_by": schema.StringAttribute{
-						Computed: true,
-					},
-					"version": schema.Int64Attribute{
-						Computed: true,
-					},
-				},
-			},
-		},
-	}
+	resp.Schema = AllowlistsSchema()
 }
 
 // Configure set provider-defined data, clients, etc. that is passed to data sources or resources in the provider.
@@ -263,6 +210,11 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 }
 
 // ImportState imports a remote allowlist that is not created by Terraform.
+// Since Capella APIs may require multiple IDs, such as organizationId, projectId, clusterId,
+// this function passes the root attribute which is a comma separated string of multiple IDs.
+// example: id=cluster123,project_id=proj123,organization_id=org123
+// Unfortunately the terraform import CLI doesn't allow us to pass multiple IDs at this point
+// and hence this workaround has been applied.
 func (r *AllowList) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
