@@ -140,7 +140,7 @@ func (r *AllowList) Update(ctx context.Context, req resource.UpdateRequest, resp
 	// todo
 }
 
-// Delete deletes the project.
+// Delete deletes the allow list.
 func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// Retrieve existing state
 	var state providerschema.AllowList
