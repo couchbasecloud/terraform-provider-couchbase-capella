@@ -29,6 +29,8 @@ type Response struct {
 	Body     []byte
 }
 
+// Execute is used to construct and execute a HTTP request.
+// It then returns the response.
 func (c *Client) Execute(url string, method string, payload any, authToken string, headers map[string]string) (response *Response, err error) {
 	var requestBody []byte
 	if payload != nil {
