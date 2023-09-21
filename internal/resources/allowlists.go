@@ -162,7 +162,7 @@ func (r *AllowList) Read(ctx context.Context, req resource.ReadRequest, resp *re
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
-		if err.HttpStatusCode != 404 {
+		if err.HttpStatusCode != http.StatusNotFound {
 			resp.Diagnostics.AddError(
 				"Error Reading Capella AllowList",
 				"Could not read Capella allowListID "+allowListId+": "+err.CompleteError(),
