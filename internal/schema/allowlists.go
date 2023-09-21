@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"fmt"
 	"strings"
 	"terraform-provider-capella/internal/errors"
 
@@ -51,38 +52,79 @@ type AllowLists struct {
 	Data []OneAllowList `tfsdk:"data"`
 }
 
-func (a *AllowList) Validate() (projectId, organizationId, clusterId, allowListId string, err error) {
+func (a *AllowList) Validate() (map[string]string, error) {
 	const idDelimiter = ","
-	organizationId = a.OrganizationId.ValueString()
-	projectId = a.Id.ValueString()
 	var found bool
+
+	organizationId := a.OrganizationId.ValueString()
+	projectId := a.ProjectId.ValueString()
+	clusterId := a.ClusterId.ValueString()
+	allowListId := a.Id.ValueString()
 
 	// check if the id is a comma separated string of multiple IDs, usually passed during the terraform import CLI
 	if a.OrganizationId.IsNull() {
 		strs := strings.Split(a.Id.ValueString(), idDelimiter)
 		if len(strs) != 4 {
-			return "", "", "", "", errors.ErrIdMissing
+			return nil, errors.ErrIdMissing
 		}
-		_, projectId, found = strings.Cut(strs[0], "id=")
+
+		_, allowListId, found = strings.Cut(strs[0], "id=")
 		if !found {
-			return "", "", "", "", errors.ErrProjectIdMissing
+			return nil, errors.ErrAllowListIdMissing
 		}
 
-		_, organizationId, found = strings.Cut(strs[1], "organization_id=")
+		_, clusterId, found = strings.Cut(strs[1], "cluster_id=")
 		if !found {
-			return "", "", "", "", errors.ErrOrganizationIdMissing
+			return nil, errors.ErrClusterIdMissing
+		}
+
+		_, projectId, found = strings.Cut(strs[2], "project_id=")
+		if !found {
+			return nil, errors.ErrProjectIdMissing
+		}
+
+		_, organizationId, found = strings.Cut(strs[3], "organization_id=")
+		if !found {
+			return nil, errors.ErrOrganizationIdMissing
 		}
 	}
 
-	if projectId == "" {
-		return "", "", "", "", errors.ErrProjectIdCannotBeEmpty
+	resourceIDs := a.generateResourceIdMap(organizationId, projectId, clusterId, allowListId)
+
+	err := a.checkEmpty(resourceIDs)
+	if err != nil {
+		return nil, fmt.Errorf("resource import unsuccessful: %s", err)
 	}
 
-	if organizationId == "" {
-		return "", "", "", "", errors.ErrOrganizationIdCannotBeEmpty
+	return resourceIDs, nil
+}
+
+func (a *AllowList) generateResourceIdMap(organizationId, projectId, clusterId, allowListId string) map[string]string {
+	return map[string]string{
+		organizationId: organizationId,
+		projectId:      projectId,
+		clusterId:      clusterId,
+		allowListId:    allowListId,
+	}
+}
+
+func (a *AllowList) checkEmpty(resourceIdMap map[string]string) error {
+	if resourceIdMap["allowListId"] == "" {
+		return errors.ErrAllowListIdCannotBeEmpty
 	}
 
-	return projectId, organizationId, clusterId, allowListId, nil
+	if resourceIdMap["clusterId"] == "" {
+		return errors.ErrClusterIdCannotBeEmpty
+	}
+
+	if resourceIdMap["projectId"] == "" {
+		return errors.ErrProjectIdCannotBeEmpty
+	}
+
+	if resourceIdMap["organizationId"] == "" {
+		return errors.ErrOrganizationIdCannotBeEmpty
+	}
+	return nil
 }
 
 // OneAllowList maps allowlist resource schema data; there is a separate response object to avoid conversion error for nested fields.
