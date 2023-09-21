@@ -5,17 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"terraform-provider-capella/internal/api"
+	"reflect"
 	"time"
 
-	providerschema "terraform-provider-capella/internal/schema"
-	"terraform-provider-capella/internal/utils"
-
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"terraform-provider-capella/internal/api"
+	clusterapi "terraform-provider-capella/internal/api/cluster"
+	providerschema "terraform-provider-capella/internal/schema"
+
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -38,162 +36,18 @@ func NewCluster() resource.Resource {
 }
 
 // Metadata returns the Cluster resource type name.
-func (r *Cluster) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (c *Cluster) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_cluster"
 }
 
 // Schema defines the schema for the Cluster resource.
-func (r *Cluster) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"organization_id": schema.StringAttribute{
-				Required: true,
-			},
-			"project_id": schema.StringAttribute{
-				Required: true,
-			},
-			"name": schema.StringAttribute{
-				Required: true,
-			},
-			"description": schema.StringAttribute{
-				Optional: true,
-			},
-			"cloud_provider": schema.SingleNestedAttribute{
-				Required: true,
-				Attributes: map[string]schema.Attribute{
-					"type": schema.StringAttribute{
-						Required: true,
-					},
-					"region": schema.StringAttribute{
-						Required: true,
-					},
-					"cidr": schema.StringAttribute{
-						Required: true,
-					},
-				},
-			},
-			"couchbase_server": schema.SingleNestedAttribute{
-				Optional: true,
-				Computed: true,
-				Attributes: map[string]schema.Attribute{
-					"version": schema.StringAttribute{
-						Optional: true,
-						Computed: true,
-					},
-				},
-			},
-			"service_groups": schema.ListNestedAttribute{
-				Required: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"node": schema.SingleNestedAttribute{
-							Required: true,
-							Attributes: map[string]schema.Attribute{
-								"compute": schema.SingleNestedAttribute{
-									Required: true,
-									Attributes: map[string]schema.Attribute{
-										"cpu": schema.Int64Attribute{
-											Required: true,
-										},
-										"ram": schema.Int64Attribute{
-											Required: true,
-										},
-									},
-								},
-								"disk": schema.SingleNestedAttribute{
-									Required: true,
-									Attributes: map[string]schema.Attribute{
-										"type": schema.StringAttribute{
-											Required: true,
-										},
-										"storage": schema.Int64Attribute{
-											Optional: true,
-											Computed: true,
-										},
-										"iops": schema.Int64Attribute{
-											Optional: true,
-											Computed: true,
-										},
-									},
-								},
-							},
-						},
-						"num_of_nodes": schema.Int64Attribute{
-							Required: true,
-						},
-						"services": schema.ListAttribute{
-							ElementType: types.StringType,
-							Required:    true,
-						},
-					},
-				},
-			},
-			"availability": schema.SingleNestedAttribute{
-				Required: true,
-				Attributes: map[string]schema.Attribute{
-					"type": schema.StringAttribute{
-						Required: true,
-					},
-				},
-			},
-			"support": schema.SingleNestedAttribute{
-				Required: true,
-				Attributes: map[string]schema.Attribute{
-					"plan": schema.StringAttribute{
-						Required: true,
-					},
-					"timezone": schema.StringAttribute{
-						Required: true,
-					},
-				},
-			},
-			"current_state": schema.StringAttribute{
-				Computed: true,
-			},
-			"app_service_id": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-			},
-			"audit": schema.SingleNestedAttribute{
-				Computed: true,
-				Attributes: map[string]schema.Attribute{
-					"created_at": schema.StringAttribute{
-						Computed: true,
-					},
-					"created_by": schema.StringAttribute{
-						Computed: true,
-					},
-					"modified_at": schema.StringAttribute{
-						Computed: true,
-					},
-					"modified_by": schema.StringAttribute{
-						Computed: true,
-					},
-					"version": schema.Int64Attribute{
-						Computed: true,
-					},
-				},
-			},
-			"if_match": schema.StringAttribute{
-				Optional: true,
-			},
-			"etag": schema.StringAttribute{
-				Computed: true,
-			},
-		},
-	}
-
+func (c *Cluster) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = ClusterSchema()
 }
 
 // Create creates a new Cluster.
-func (r *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan providerschema.ClusterResourceModel
+func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan providerschema.Cluster
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 
@@ -201,19 +55,19 @@ func (r *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		return
 	}
 
-	ClusterRequest := api.CreateClusterRequest{
+	ClusterRequest := clusterapi.CreateClusterRequest{
 		Name: plan.Name.ValueString(),
-		Availability: api.Availability{
-			Type: api.AvailabilityType(plan.Availability.Type.ValueString()),
+		Availability: clusterapi.Availability{
+			Type: clusterapi.AvailabilityType(plan.Availability.Type.ValueString()),
 		},
-		CloudProvider: api.CloudProvider{
+		CloudProvider: clusterapi.CloudProvider{
 			Cidr:   plan.CloudProvider.Cidr.ValueString(),
 			Region: plan.CloudProvider.Region.ValueString(),
-			Type:   api.CloudProviderType(plan.CloudProvider.Type.ValueString()),
+			Type:   clusterapi.CloudProviderType(plan.CloudProvider.Type.ValueString()),
 		},
-		Support: api.Support{
-			Plan:     api.SupportPlan(plan.Support.Plan.ValueString()),
-			Timezone: api.SupportTimezone(plan.Support.Timezone.ValueString()),
+		Support: clusterapi.Support{
+			Plan:     clusterapi.SupportPlan(plan.Support.Plan.ValueString()),
+			Timezone: clusterapi.SupportTimezone(plan.Support.Timezone.ValueString()),
 		},
 	}
 
@@ -223,12 +77,12 @@ func (r *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 
 	if !plan.CouchbaseServer.Version.IsNull() && !plan.CouchbaseServer.Version.IsUnknown() {
 		version := plan.CouchbaseServer.Version.ValueString()
-		ClusterRequest.CouchbaseServer = &api.CouchbaseServer{
+		ClusterRequest.CouchbaseServer = &clusterapi.CouchbaseServer{
 			Version: &version,
 		}
 	}
 
-	serviceGroups, err := r.morphToApiServiceGroups(plan)
+	serviceGroups, err := c.morphToApiServiceGroups(plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
@@ -257,30 +111,23 @@ func (r *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	}
 	var projectId = plan.ProjectId.ValueString()
 
-	response, err := r.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", r.HostURL, organizationId, projectId),
+	response, err := c.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", c.HostURL, organizationId, projectId),
 		http.MethodPost,
 		ClusterRequest,
-		r.Token,
+		c.Token,
 		nil,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	_, err = handleClusterError(err)
+	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating Cluster",
-			"Could not create Cluster, unexpected error: "+err.CompleteError(),
-		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error creating Cluster",
-			"Could not create Cluster, unexpected error: "+err.Error(),
+			"Error creating cluster",
+			"Could not create cluster, unexpected error: "+err.Error(),
 		)
 		return
 	}
 
-	ClusterResponse := api.GetClusterResponse{}
+	ClusterResponse := clusterapi.GetClusterResponse{}
 	err = json.Unmarshal(response.Body, &ClusterResponse)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -290,52 +137,34 @@ func (r *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		return
 	}
 
-	err = r.checkClusterStatus(ctx, organizationId, projectId, ClusterResponse.Id.String())
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	err = c.checkClusterStatus(ctx, organizationId, projectId, ClusterResponse.Id.String())
+	_, err = handleClusterError(err)
+	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating Cluster",
-			"Could not create Cluster, unexpected error: "+err.CompleteError(),
-		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error creating Cluster",
-			"Could not create Cluster, unexpected error: "+err.Error(),
+			"Error creating cluster",
+			"Could not create cluster, unexpected error: "+err.Error(),
 		)
 		return
 	}
 
-	refreshedState, err := r.retrieveCluster(ctx, organizationId, projectId, ClusterResponse.Id.String())
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	refreshedState, err := c.retrieveCluster(ctx, organizationId, projectId, ClusterResponse.Id.String())
+	_, err = handleClusterError(err)
+	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating Cluster",
-			"Could not create Cluster, unexpected error: "+err.CompleteError(),
-		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error creating Cluster",
-			"Could not create Cluster, unexpected error: "+err.Error(),
+			"Error creating cluster",
+			"Could not create cluster, unexpected error: "+err.Error(),
 		)
 		return
 	}
 
 	for i, serviceGroup := range refreshedState.ServiceGroups {
-		if utils.AreEqual(plan.ServiceGroups[i].Services, serviceGroup.Services) {
+		if clusterapi.AreEqual(plan.ServiceGroups[i].Services, serviceGroup.Services) {
 			refreshedState.ServiceGroups[i].Services = plan.ServiceGroups[i].Services
 		}
 	}
 
-	//refreshedState.ServiceGroups = plan.ServiceGroups
-
 	//need to have proper check since we are passing 7.1 and response is returning 7.1.5
-	if !plan.CouchbaseServer.Version.IsNull() && !plan.CouchbaseServer.Version.IsUnknown() {
-		refreshedState.CouchbaseServer.Version = plan.CouchbaseServer.Version
-	}
+	c.populateInputServerVersionIfPresent(&plan, refreshedState)
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
@@ -346,7 +175,7 @@ func (r *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 }
 
 // Configure It adds the provider configured api to the project resource.
-func (r *Cluster) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (c *Cluster) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -362,51 +191,42 @@ func (r *Cluster) Configure(_ context.Context, req resource.ConfigureRequest, re
 		return
 	}
 
-	r.Data = data
+	c.Data = data
 }
 
 // Read reads project information.
-func (r *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state providerschema.ClusterResourceModel
+func (c *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state providerschema.Cluster
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if state.OrganizationId.IsNull() || state.ProjectId.IsNull() ||
-		state.OrganizationId.IsUnknown() || state.ProjectId.IsUnknown() {
-		if err := state.PopulateParamsForImport(); err != nil {
-			resp.Diagnostics.AddError(
-				"Error reading cluster",
-				"Could not read cluster id "+state.Id.String()+" unexpected error: "+err.Error(),
-			)
-			return
-		}
+	resourceIDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error reading cluster",
+			"Could not read cluster id "+state.Id.String()+" unexpected error: "+err.Error(),
+		)
+		return
 	}
 
 	var (
-		organizationId = state.OrganizationId.ValueString()
-		projectId      = state.ProjectId.ValueString()
-		clusterId      = state.Id.ValueString()
+		organizationId = resourceIDs[providerschema.OrganizationId]
+		projectId      = resourceIDs[providerschema.ProjectId]
+		clusterId      = resourceIDs[providerschema.ClusterId]
 	)
 
 	// Get refreshed Cluster value from Capella
-	refreshedState, err := r.retrieveCluster(ctx, organizationId, projectId, clusterId)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		if err.HttpStatusCode != 404 {
-			resp.Diagnostics.AddError(
-				"Error reading cluster",
-				"Could not read cluster id "+state.Id.String()+": "+err.CompleteError(),
-			)
-			return
-		}
+	refreshedState, err := c.retrieveCluster(ctx, organizationId, projectId, clusterId)
+	resourceNotFound, err := handleClusterError(err)
+	if resourceNotFound {
 		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
 		resp.State.RemoveResource(ctx)
 		return
-	default:
+	}
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading cluster",
 			"Could not read cluster id "+state.Id.String()+": "+err.Error(),
@@ -416,16 +236,14 @@ func (r *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 
 	if len(state.ServiceGroups) == len(refreshedState.ServiceGroups) {
 		for i, serviceGroup := range refreshedState.ServiceGroups {
-			if utils.AreEqual(state.ServiceGroups[i].Services, serviceGroup.Services) {
+			if clusterapi.AreEqual(state.ServiceGroups[i].Services, serviceGroup.Services) {
 				refreshedState.ServiceGroups[i].Services = state.ServiceGroups[i].Services
 			}
 		}
 	}
 
 	//need to have proper check since we are passing 7.1 and response is returning 7.1.5
-	if state.CouchbaseServer != nil && !state.CouchbaseServer.Version.IsNull() && !state.CouchbaseServer.Version.IsUnknown() {
-		refreshedState.CouchbaseServer.Version = state.CouchbaseServer.Version
-	}
+	c.populateInputServerVersionIfPresent(&state, refreshedState)
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &refreshedState)
@@ -436,9 +254,9 @@ func (r *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 }
 
 // Update updates the Cluster.
-func (r *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// Retrieve values from plan
-	var plan, state providerschema.ClusterResourceModel
+	var plan, state providerschema.Cluster
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 
@@ -449,7 +267,8 @@ func (r *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		return
 	}
 
-	if err := state.Validate(); err != nil {
+	resourceIDs, err := state.Validate()
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
 			"Could not update cluster id "+state.Id.String()+" unexpected error: "+err.Error(),
@@ -458,87 +277,29 @@ func (r *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 	}
 
 	var (
-		projectId      = state.ProjectId.ValueString()
-		organizationId = state.OrganizationId.ValueString()
-		clusterId      = state.Id.ValueString()
+		organizationId = resourceIDs[providerschema.OrganizationId]
+		projectId      = resourceIDs[providerschema.ProjectId]
+		clusterId      = resourceIDs[providerschema.ClusterId]
 	)
 
-	var planOrganizationId, stateOrganizationId string
-	if !plan.OrganizationId.IsNull() {
-		planOrganizationId = plan.OrganizationId.ValueString()
-	}
-
-	if !state.OrganizationId.IsNull() {
-		stateOrganizationId = state.OrganizationId.ValueString()
-	}
-
-	if planOrganizationId != stateOrganizationId {
+	if err := c.validateClusterUpdate(plan, state); err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
-			"Could not update cluster id "+state.Id.String()+" as organizationId can't be updated",
+			"Could not update cluster id "+state.Id.String()+" unexpected error: "+err.Error(),
 		)
 		return
 	}
 
-	var planProjectId, stateProjectId string
-	if !plan.ProjectId.IsNull() {
-		planProjectId = plan.ProjectId.ValueString()
-	}
-
-	if !state.ProjectId.IsNull() {
-		stateProjectId = state.ProjectId.ValueString()
-	}
-
-	if planProjectId != stateProjectId {
-		resp.Diagnostics.AddError(
-			"Error updating cluster",
-			"Could not update cluster id "+state.Id.String()+" as projectId can't be updated",
-		)
-		return
-	}
-
-	var planCouchbaseServerVersion, stateCouchbaseServerVersion string
-	if !plan.CouchbaseServer.Version.IsNull() {
-		planCouchbaseServerVersion = plan.CouchbaseServer.Version.ValueString()
-	}
-	if !state.CouchbaseServer.Version.IsNull() {
-		stateCouchbaseServerVersion = state.CouchbaseServer.Version.ValueString()
-	}
-
-	if planCouchbaseServerVersion != stateCouchbaseServerVersion {
-		resp.Diagnostics.AddError(
-			"Error updating cluster",
-			"Could not update cluster id "+state.Id.String()+" as couchbase server version can't be updated",
-		)
-		return
-	}
-
-	var planAvailabilityType, stateAvailabilityType string
-	if !plan.Availability.Type.IsNull() {
-		planAvailabilityType = plan.Availability.Type.ValueString()
-	}
-	if !state.Availability.Type.IsNull() {
-		stateAvailabilityType = state.Availability.Type.ValueString()
-	}
-
-	if planAvailabilityType != stateAvailabilityType {
-		resp.Diagnostics.AddError(
-			"Error updating cluster",
-			"Could not update cluster id "+state.Id.String()+" as availability type can't be updated",
-		)
-		return
-	}
-
-	ClusterRequest := api.UpdateClusterRequest{
+	ClusterRequest := clusterapi.UpdateClusterRequest{
 		Description: plan.Description.ValueString(),
 		Name:        plan.Name.ValueString(),
-		Support: api.Support{
-			Plan:     api.SupportPlan(plan.Support.Plan.ValueString()),
-			Timezone: api.SupportTimezone(plan.Support.Timezone.ValueString()),
+		Support: clusterapi.Support{
+			Plan:     clusterapi.SupportPlan(plan.Support.Plan.ValueString()),
+			Timezone: clusterapi.SupportTimezone(plan.Support.Timezone.ValueString()),
 		},
 	}
 
-	serviceGroups, err := r.morphToApiServiceGroups(plan)
+	serviceGroups, err := c.morphToApiServiceGroups(plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
@@ -555,22 +316,15 @@ func (r *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 	}
 
 	// Update existing Cluster
-	_, err = r.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", r.HostURL, organizationId, projectId, clusterId),
+	_, err = c.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", c.HostURL, organizationId, projectId, clusterId),
 		http.MethodPut,
 		ClusterRequest,
-		r.Token,
+		c.Token,
 		headers,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		resp.Diagnostics.AddError(
-			"Error updating cluster",
-			"Could not update cluster id "+state.Id.String()+": "+err.CompleteError(),
-		)
-		return
-	default:
+	_, err = handleClusterError(err)
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
 			"Could not update cluster id "+state.Id.String()+": "+err.Error(),
@@ -578,16 +332,9 @@ func (r *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		return
 	}
 
-	err = r.checkClusterStatus(ctx, organizationId, projectId, clusterId)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		resp.Diagnostics.AddError(
-			"Error updating cluster",
-			"Could not update cluster id "+state.Id.String()+": "+err.CompleteError(),
-		)
-		return
-	default:
+	err = c.checkClusterStatus(ctx, organizationId, projectId, clusterId)
+	_, err = handleClusterError(err)
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
 			"Could not update cluster id "+state.Id.String()+": "+err.Error(),
@@ -595,21 +342,9 @@ func (r *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		return
 	}
 
-	currentState, err := r.retrieveCluster(ctx, organizationId, projectId, clusterId)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		if err.HttpStatusCode != 404 {
-			resp.Diagnostics.AddError(
-				"Error updating cluster",
-				"Could not update cluster id "+state.Id.String()+": "+err.CompleteError(),
-			)
-			return
-		}
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		resp.State.RemoveResource(ctx)
-		return
-	default:
+	currentState, err := c.retrieveCluster(ctx, organizationId, projectId, clusterId)
+	_, err = handleClusterError(err)
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
 			"Could not update cluster id "+state.Id.String()+": "+err.Error(),
@@ -622,15 +357,13 @@ func (r *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 	}
 
 	for i, serviceGroup := range currentState.ServiceGroups {
-		if utils.AreEqual(plan.ServiceGroups[i].Services, serviceGroup.Services) {
+		if clusterapi.AreEqual(plan.ServiceGroups[i].Services, serviceGroup.Services) {
 			currentState.ServiceGroups[i].Services = plan.ServiceGroups[i].Services
 		}
 	}
 
 	//need to have proper check since we are passing 7.1 and response is returning 7.1.5
-	if state.CouchbaseServer != nil && !state.CouchbaseServer.Version.IsNull() && !state.CouchbaseServer.Version.IsUnknown() {
-		currentState.CouchbaseServer.Version = state.CouchbaseServer.Version
-	}
+	c.populateInputServerVersionIfPresent(&state, currentState)
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, currentState)
 	resp.Diagnostics.Append(diags...)
@@ -640,149 +373,60 @@ func (r *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 }
 
 // Delete deletes the project.
-func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (c *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// TODO
 }
 
 // ImportState imports a remote Cluster that is not created by Terraform.
-func (r *Cluster) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (c *Cluster) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func (r *Cluster) getCluster(organizationId, projectId, clusterId string) (*api.GetClusterResponse, error) {
-	response, err := r.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", r.HostURL, organizationId, projectId, clusterId),
+func (c *Cluster) getCluster(organizationId, projectId, clusterId string) (*clusterapi.GetClusterResponse, error) {
+	response, err := c.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", c.HostURL, organizationId, projectId, clusterId),
 		http.MethodGet,
 		nil,
-		r.Token,
+		c.Token,
 		nil,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	ClusterResp := api.GetClusterResponse{}
-	err = json.Unmarshal(response.Body, &ClusterResp)
+	clusterResp := clusterapi.GetClusterResponse{}
+	err = json.Unmarshal(response.Body, &clusterResp)
 	if err != nil {
 		return nil, err
 	}
-	ClusterResp.Etag = response.Response.Header.Get("ETag")
-	return &ClusterResp, nil
+	clusterResp.Etag = response.Response.Header.Get("ETag")
+	return &clusterResp, nil
 }
 
-func (r *Cluster) retrieveCluster(ctx context.Context, organizationId, projectId, clusterId string) (*providerschema.ClusterResourceModel, error) {
-	ClusterResp, err := r.getCluster(organizationId, projectId, clusterId)
+func (c *Cluster) retrieveCluster(ctx context.Context, organizationId, projectId, clusterId string) (*providerschema.Cluster, error) {
+	ClusterResp, err := c.getCluster(organizationId, projectId, clusterId)
 	if err != nil {
 		return nil, err
 	}
 
-	audit := providerschema.CouchbaseAuditData{
-		CreatedAt:  types.StringValue(ClusterResp.Audit.CreatedAt.String()),
-		CreatedBy:  types.StringValue(ClusterResp.Audit.CreatedBy),
-		ModifiedAt: types.StringValue(ClusterResp.Audit.ModifiedAt.String()),
-		ModifiedBy: types.StringValue(ClusterResp.Audit.ModifiedBy),
-		Version:    types.Int64Value(int64(ClusterResp.Audit.Version)),
-	}
+	audit := providerschema.NewCouchbaseAuditData(ClusterResp.Audit)
 
 	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
 	if diags.HasError() {
 		return nil, fmt.Errorf("error while audit conversion")
 	}
 
-	refreshedState := providerschema.ClusterResourceModel{
-		Id:             types.StringValue(ClusterResp.Id.String()),
-		OrganizationId: types.StringValue(organizationId),
-		ProjectId:      types.StringValue(projectId),
-		Name:           types.StringValue(ClusterResp.Name),
-		Description:    types.StringValue(ClusterResp.Description),
-		Availability: &providerschema.Availability{
-			Type: types.StringValue(string(ClusterResp.Availability.Type)),
-		},
-		CloudProvider: &providerschema.CloudProvider{
-			Cidr:   types.StringValue(ClusterResp.CloudProvider.Cidr),
-			Region: types.StringValue(ClusterResp.CloudProvider.Region),
-			Type:   types.StringValue(string(ClusterResp.CloudProvider.Type)),
-		},
-		Support: &providerschema.Support{
-			Plan:     types.StringValue(string(ClusterResp.Support.Plan)),
-			Timezone: types.StringValue(string(ClusterResp.Support.Timezone)),
-		},
-		CurrentState: types.StringValue(string(ClusterResp.CurrentState)),
-		Audit:        auditObj,
-		Etag:         types.StringValue(ClusterResp.Etag),
+	refreshedState, err := providerschema.NewCluster(ClusterResp, organizationId, projectId, auditObj)
+	if err != nil {
+		return nil, err
 	}
-
-	if ClusterResp.CouchbaseServer.Version != nil {
-		version := *ClusterResp.CouchbaseServer.Version
-		refreshedState.CouchbaseServer = &providerschema.CouchbaseServer{
-			Version: types.StringValue(version),
-		}
-	}
-
-	var serviceGroups []providerschema.ServiceGroup
-	for _, serviceGroup := range ClusterResp.ServiceGroups {
-
-		serviceGroupData := providerschema.ServiceGroup{
-			Node: &providerschema.Node{
-				Compute: providerschema.Compute{
-					Ram: types.Int64Value(int64(serviceGroup.Node.Compute.Ram)),
-					Cpu: types.Int64Value(int64(serviceGroup.Node.Compute.Cpu)),
-				},
-			},
-			NumOfNodes: types.Int64Value(int64(*serviceGroup.NumOfNodes)),
-		}
-
-		switch ClusterResp.CloudProvider.Type {
-		case api.Aws:
-			awsDisk, err := serviceGroup.Node.AsDiskAWS()
-			if err != nil {
-				return nil, err
-			}
-			serviceGroupData.Node.Disk = providerschema.Node_Disk{
-				Type:    types.StringValue(string(awsDisk.Type)),
-				Storage: types.Int64Value(int64(awsDisk.Storage)),
-				IOPS:    types.Int64Value(int64(awsDisk.Iops)),
-			}
-		case api.Azure:
-			azureDisk, err := serviceGroup.Node.AsDiskAzure()
-			if err != nil {
-				return nil, err
-			}
-
-			serviceGroupData.Node.Disk = providerschema.Node_Disk{
-				Type:    types.StringValue(string(azureDisk.Type)),
-				Storage: types.Int64Value(int64(*azureDisk.Storage)),
-				IOPS:    types.Int64Value(int64(*azureDisk.Iops)),
-			}
-		case api.Gcp:
-			gcpDisk, err := serviceGroup.Node.AsDiskGCP()
-			if err != nil {
-				return nil, err
-			}
-			serviceGroupData.Node.Disk = providerschema.Node_Disk{
-				Type:    types.StringValue(string(gcpDisk.Type)),
-				Storage: types.Int64Value(int64(gcpDisk.Storage)),
-			}
-		default:
-			return nil, fmt.Errorf("unsupported cloud provider is recieved from server")
-		}
-
-		serviceGroupData.NumOfNodes = types.Int64Value(int64(*serviceGroup.NumOfNodes))
-
-		for _, service := range *serviceGroup.Services {
-			tfService := types.StringValue(string(service))
-			serviceGroupData.Services = append(serviceGroupData.Services, tfService)
-		}
-		serviceGroups = append(serviceGroups, serviceGroupData)
-	}
-	refreshedState.ServiceGroups = serviceGroups
-	return &refreshedState, nil
+	return refreshedState, nil
 }
 
-func (r *Cluster) checkClusterStatus(ctx context.Context, organizationId, projectId, ClusterId string) error {
+func (c *Cluster) checkClusterStatus(ctx context.Context, organizationId, projectId, ClusterId string) error {
 	var (
-		ClusterResp *api.GetClusterResponse
+		ClusterResp *clusterapi.GetClusterResponse
 		err         error
 	)
 
@@ -804,10 +448,10 @@ func (r *Cluster) checkClusterStatus(ctx context.Context, organizationId, projec
 			return fmt.Errorf(msg)
 
 		case <-timer.C:
-			ClusterResp, err = r.getCluster(organizationId, projectId, ClusterId)
+			ClusterResp, err = c.getCluster(organizationId, projectId, ClusterId)
 			switch err {
 			case nil:
-				if utils.IsFinalState(ClusterResp.CurrentState) {
+				if clusterapi.IsFinalState(ClusterResp.CurrentState) {
 					return nil
 				}
 				const msg = "waiting for Cluster to complete the execution"
@@ -820,13 +464,13 @@ func (r *Cluster) checkClusterStatus(ctx context.Context, organizationId, projec
 	}
 }
 
-func (r *Cluster) morphToApiServiceGroups(plan providerschema.ClusterResourceModel) ([]api.ServiceGroup, error) {
-	var serviceGroups []api.ServiceGroup
+func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]clusterapi.ServiceGroup, error) {
+	var newServiceGroups []clusterapi.ServiceGroup
 	for _, serviceGroup := range plan.ServiceGroups {
 		numOfNodes := int(serviceGroup.NumOfNodes.ValueInt64())
-		serviceGroupData := api.ServiceGroup{
-			Node: &api.Node{
-				Compute: api.Compute{
+		newServiceGroup := clusterapi.ServiceGroup{
+			Node: &clusterapi.Node{
+				Compute: clusterapi.Compute{
 					Ram: int(serviceGroup.Node.Compute.Ram.ValueInt64()),
 					Cpu: int(serviceGroup.Node.Compute.Cpu.ValueInt64()),
 				},
@@ -835,10 +479,10 @@ func (r *Cluster) morphToApiServiceGroups(plan providerschema.ClusterResourceMod
 		}
 
 		switch plan.CloudProvider.Type.ValueString() {
-		case string(api.Aws):
-			node := api.Node{}
-			diskAws := api.DiskAWS{
-				Type: api.DiskAWSType(serviceGroup.Node.Disk.Type.ValueString()),
+		case string(clusterapi.Aws):
+			node := clusterapi.Node{}
+			diskAws := clusterapi.DiskAWS{
+				Type: clusterapi.DiskAWSType(serviceGroup.Node.Disk.Type.ValueString()),
 			}
 
 			if serviceGroup.Node != nil && !serviceGroup.Node.Disk.Storage.IsNull() {
@@ -853,13 +497,12 @@ func (r *Cluster) morphToApiServiceGroups(plan providerschema.ClusterResourceMod
 			if err != nil {
 				return nil, err
 			}
-			serviceGroupData.Node.Disk = node.Disk
+			newServiceGroup.Node.Disk = node.Disk
 
-		case string(api.Azure):
-			node := api.Node{}
-
-			diskAzure := api.DiskAzure{
-				Type: api.DiskAzureType(serviceGroup.Node.Disk.Type.ValueString()),
+		case string(clusterapi.Azure):
+			node := clusterapi.Node{}
+			diskAzure := clusterapi.DiskAzure{
+				Type: clusterapi.DiskAzureType(serviceGroup.Node.Disk.Type.ValueString()),
 			}
 
 			if serviceGroup.Node != nil && !serviceGroup.Node.Disk.Storage.IsNull() && !serviceGroup.Node.Disk.Storage.IsUnknown() {
@@ -871,36 +514,122 @@ func (r *Cluster) morphToApiServiceGroups(plan providerschema.ClusterResourceMod
 				iops := int(serviceGroup.Node.Disk.IOPS.ValueInt64())
 				diskAzure.Iops = &iops
 			}
-
-			err := node.FromDiskAzure(diskAzure)
-			if err != nil {
+			if err := node.FromDiskAzure(diskAzure); err != nil {
 				return nil, err
 			}
+			newServiceGroup.Node.Disk = node.Disk
 
-			serviceGroupData.Node.Disk = node.Disk
-
-		case string(api.Gcp):
+		case string(clusterapi.Gcp):
 			storage := int(serviceGroup.Node.Disk.Storage.ValueInt64())
-			node := api.Node{}
-			err := node.FromDiskGCP(api.DiskGCP{
-				Type:    api.DiskGCPType(serviceGroup.Node.Disk.Type.ValueString()),
+			node := clusterapi.Node{}
+			err := node.FromDiskGCP(clusterapi.DiskGCP{
+				Type:    clusterapi.DiskGCPType(serviceGroup.Node.Disk.Type.ValueString()),
 				Storage: storage,
 			})
 			if err != nil {
 				return nil, err
 			}
-			serviceGroupData.Node.Disk = node.Disk
+			newServiceGroup.Node.Disk = node.Disk
 		}
+		var newServices []clusterapi.Service
 		for _, service := range serviceGroup.Services {
-			serviceapi := service.ValueString()
-			if serviceGroupData.Services == nil {
-				var emptyList []api.Service
-				serviceGroupData.Services = &emptyList
-			}
-			serviceGroupDataServices := append(*serviceGroupData.Services, api.Service(serviceapi))
-			serviceGroupData.Services = &serviceGroupDataServices
+			newService := service.ValueString()
+			newServices = append(newServices, clusterapi.Service(newService))
 		}
-		serviceGroups = append(serviceGroups, serviceGroupData)
+		newServiceGroup.Services = &newServices
+		newServiceGroups = append(newServiceGroups, newServiceGroup)
 	}
-	return serviceGroups, nil
+	return newServiceGroups, nil
+}
+
+// need to have proper check since we are passing 7.1 and response is returning 7.1.5
+func (c *Cluster) populateInputServerVersionIfPresent(stateOrPlanCluster *providerschema.Cluster, refreshStateCluster *providerschema.Cluster) {
+	if stateOrPlanCluster.CouchbaseServer != nil &&
+		refreshStateCluster.CouchbaseServer != nil &&
+		!stateOrPlanCluster.CouchbaseServer.Version.IsNull() &&
+		!stateOrPlanCluster.CouchbaseServer.Version.IsUnknown() {
+		refreshStateCluster.CouchbaseServer.Version = stateOrPlanCluster.CouchbaseServer.Version
+	}
+}
+
+func (c *Cluster) validateClusterUpdate(plan, state providerschema.Cluster) error {
+	var planOrganizationId, stateOrganizationId string
+	if !plan.OrganizationId.IsNull() {
+		planOrganizationId = plan.OrganizationId.ValueString()
+	}
+
+	if !state.OrganizationId.IsNull() {
+		stateOrganizationId = state.OrganizationId.ValueString()
+	}
+
+	if planOrganizationId != stateOrganizationId {
+		return fmt.Errorf("organizationId can't be updated")
+	}
+
+	var planProjectId, stateProjectId string
+	if !plan.ProjectId.IsNull() {
+		planProjectId = plan.ProjectId.ValueString()
+	}
+
+	if !state.ProjectId.IsNull() {
+		stateProjectId = state.ProjectId.ValueString()
+	}
+
+	if planProjectId != stateProjectId {
+		return fmt.Errorf("projectId can't be updated")
+	}
+
+	var planCouchbaseServerVersion, stateCouchbaseServerVersion string
+	if plan.CouchbaseServer != nil && !plan.CouchbaseServer.Version.IsNull() {
+		planCouchbaseServerVersion = plan.CouchbaseServer.Version.ValueString()
+	}
+	if state.CouchbaseServer != nil && !state.CouchbaseServer.Version.IsNull() {
+		stateCouchbaseServerVersion = state.CouchbaseServer.Version.ValueString()
+	}
+
+	if planCouchbaseServerVersion != stateCouchbaseServerVersion {
+		return fmt.Errorf("couchbase server version can't be updated")
+	}
+
+	var planAvailabilityType, stateAvailabilityType string
+	if plan.Availability != nil && !plan.Availability.Type.IsNull() {
+		planAvailabilityType = plan.Availability.Type.ValueString()
+	}
+	if state.Availability != nil && !state.Availability.Type.IsNull() {
+		stateAvailabilityType = state.Availability.Type.ValueString()
+	}
+
+	if planAvailabilityType != stateAvailabilityType {
+		return fmt.Errorf("availability type can't be updated")
+	}
+
+	var planCloudProvider, stateCloudProvider providerschema.CloudProvider
+	if plan.CloudProvider != nil {
+		planCloudProvider = *plan.CloudProvider
+	}
+	if state.CloudProvider != nil {
+		stateCloudProvider = *state.CloudProvider
+	}
+
+	if !reflect.DeepEqual(planCloudProvider, stateCloudProvider) {
+		return fmt.Errorf("cloud provider can't be updated")
+	}
+
+	return nil
+}
+
+// this func extract error message if error is api.Error and also checks whether error is
+// resource not found
+func handleClusterError(err error) (bool, error) {
+	switch err := err.(type) {
+	case nil:
+		return false, nil
+	case api.Error:
+		if err.HttpStatusCode != http.StatusNotFound {
+			return false, fmt.Errorf(err.CompleteError())
+		}
+		return true, fmt.Errorf(err.CompleteError())
+	default:
+		return false, err
+	}
 }

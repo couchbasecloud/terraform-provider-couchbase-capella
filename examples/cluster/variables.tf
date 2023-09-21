@@ -1,5 +1,5 @@
 variable "host" {
-  default = "https://cloudapi.dev.nonprod-project-avengers.com"
+  default     = "https://cloudapi.dev.nonprod-project-avengers.com"
   description = "The Host URL of Couchbase Cloud."
 }
 
@@ -9,9 +9,60 @@ variable "organization_id" {
 
 variable "auth_token" {
   description = "Authentication API Key"
+  sensitive   = true
 }
 
 variable "project_name" {
-  default = "terraform-couchbasecapella-project"
+  default     = "terraform-couchbasecapella-project"
   description = "Project Name for Project Created via Terraform"
+}
+
+variable "cloud_provider" {
+  description = "Cloud Provider details useful for cluster creation"
+
+  type = object({
+    name   = string
+    region = string
+  })
+}
+
+variable "cluster" {
+  description = "Cluster configuration details useful for creation"
+
+  type = object({
+    name               = string
+    cidr               = string
+    node_count         = number
+    server_version     = string
+    couchbase_services = list(string)
+    availability_zone  = string
+  })
+}
+
+variable "compute" {
+  description = "All cluster node compute configuration"
+
+  type = object({
+    cpu = number
+    ram = number
+  })
+}
+
+variable "disk" {
+  description = "All nodes' disk configuration"
+
+  type = object({
+    size = number
+    type = string
+    iops = number
+  })
+}
+
+variable "support" {
+  description = "Support configuration applicable to the cluster during creation"
+
+  type = object({
+    plan     = string
+    timezone = string
+  })
 }
