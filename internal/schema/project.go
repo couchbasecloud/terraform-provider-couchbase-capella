@@ -42,12 +42,12 @@ func (p Project) Validate() (projectId string, organizationId string, err error)
 			return "", "", errors.ErrIdMissing
 		}
 		_, projectId, found = strings.Cut(strs[0], "id=")
-		if !found || projectId == "" {
+		if !found {
 			return "", "", errors.ErrProjectIdMissing
 		}
 
 		_, organizationId, found = strings.Cut(strs[1], "organization_id=")
-		if !found || organizationId == "" {
+		if !found {
 			return "", "", errors.ErrOrganizationIdMissing
 		}
 	}
