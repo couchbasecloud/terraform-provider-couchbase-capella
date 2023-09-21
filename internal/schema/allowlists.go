@@ -74,9 +74,9 @@ func (a *AllowList) Validate() (map[string]string, error) {
 			return nil, errors.ErrAllowListIdMissing
 		}
 
-		_, clusterId, found = strings.Cut(strs[1], "cluster_id=")
+		_, organizationId, found = strings.Cut(strs[1], "organization_id=")
 		if !found {
-			return nil, errors.ErrClusterIdMissing
+			return nil, errors.ErrOrganizationIdMissing
 		}
 
 		_, projectId, found = strings.Cut(strs[2], "project_id=")
@@ -84,9 +84,9 @@ func (a *AllowList) Validate() (map[string]string, error) {
 			return nil, errors.ErrProjectIdMissing
 		}
 
-		_, organizationId, found = strings.Cut(strs[3], "organization_id=")
+		_, clusterId, found = strings.Cut(strs[3], "cluster_id=")
 		if !found {
-			return nil, errors.ErrOrganizationIdMissing
+			return nil, errors.ErrClusterIdMissing
 		}
 	}
 
@@ -103,10 +103,10 @@ func (a *AllowList) Validate() (map[string]string, error) {
 // generateResourceIdmap is used to populate a map with selected IDs
 func (a *AllowList) generateResourceIdMap(organizationId, projectId, clusterId, allowListId string) map[string]string {
 	return map[string]string{
-		organizationId: organizationId,
-		projectId:      projectId,
-		clusterId:      clusterId,
-		allowListId:    allowListId,
+		"organizationId": organizationId,
+		"projectId":      projectId,
+		"clusterId":      clusterId,
+		"allowListId":    allowListId,
 	}
 }
 
