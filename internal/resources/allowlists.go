@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"terraform-provider-capella/internal/api"
 	providerschema "terraform-provider-capella/internal/schema"
@@ -158,8 +157,6 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 		clusterId      = state.ClusterId.ValueString()
 		allowedCidrId  = state.Id.ValueString()
 	)
-
-	log.Println("CIDR ID is", allowedCidrId)
 
 	// Execute request to delete existing allowlist
 	_, err := r.Client.Execute(
