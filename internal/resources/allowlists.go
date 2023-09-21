@@ -176,34 +176,21 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 		r.Token,
 		nil,
 	)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error executing request",
-			"Could not execute request, unexpected error: "+err.Error(),
-		)
-		return
-	}
-
-	// Check if the allowlist has been deleted
-	_, err = r.getAllowList(ctx, organizationId, projectId, clusterId, allowedCidrId)
 	switch err := err.(type) {
 	case nil:
-		return
 	case api.Error:
 		if err.HttpStatusCode != 404 {
 			resp.Diagnostics.AddError(
-				"Error Reading Capella Allow List",
-				"An error has occurred executing the request"+state.ClusterId.String()+": "+err.Error(),
+				"Error Deleting Capella Allow List",
+				"Could not delete Capella allowedCidrId "+allowedCidrId+": "+err.CompleteError(),
 			)
+			tflog.Info(ctx, "resource doesn't exist in remote server")
 			return
 		}
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		resp.State.RemoveResource(ctx)
-		return
 	default:
 		resp.Diagnostics.AddError(
-			"Error Reading Capella Allow List",
-			"Could not read allow list for cluster"+state.ClusterId.String()+": "+err.Error(),
+			"Error Deleting Capella Allow List",
+			"Could not delete Capella allowedCidrId "+allowedCidrId+": "+err.Error(),
 		)
 		return
 	}
