@@ -132,7 +132,60 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 
 // Read reads project information.
 func (r *AllowList) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// todo
+	var state providerschema.AllowList
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Validate parameters were successfully imported
+	resourceIDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Importing From Capella",
+			"Could not import from Capella: "+err.Error(),
+		)
+		return
+	}
+
+	var (
+		organizationId = resourceIDs["organizationId"]
+		projectId      = resourceIDs["projectId"]
+		clusterId      = resourceIDs["clusterId"]
+		allowListId    = resourceIDs["allowListId"]
+	)
+
+	// refresh the existing allow list
+	refreshedState, err := r.refreshAllowList(ctx, organizationId, projectId, clusterId, allowListId)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		if err.HttpStatusCode != 404 {
+			resp.Diagnostics.AddError(
+				"Error Reading Capella AllowList",
+				"Could not read Capella allowListID "+allowListId+": "+err.CompleteError(),
+			)
+			return
+		}
+		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+		resp.State.RemoveResource(ctx)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error Reading Capella AllowList",
+			"Could not read Capella allowListID "+allowListId+": "+err.Error(),
+		)
+		return
+	}
+
+	// Set refreshed state
+	diags = resp.State.Set(ctx, &refreshedState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Update updates the project.
@@ -154,8 +207,8 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 	resourceIDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Updating Capella Project",
-			"Could not update Capella project ID "+state.Id.String()+": "+err.Error(),
+			"Error Importing From Capella",
+			"Could not import from Capella: "+err.Error(),
 		)
 		return
 	}
