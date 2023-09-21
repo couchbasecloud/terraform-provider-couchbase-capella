@@ -24,7 +24,7 @@ func NewClient(timeout time.Duration) *Client {
 	}
 }
 
-// Reponse stuct is used to encapsulate the response details
+// Response stuct is used to encapsulate the response details
 type Response struct {
 	Response *http.Response
 	Body     []byte
@@ -68,7 +68,7 @@ func (c *Client) Execute(url string, method string, payload any, authToken strin
 			return nil, err
 		}
 
-		return nil, errors.New("received unexpected status code")
+		return nil, errors.New("received unexpected status code: " + apiRes.Status)
 	}
 
 	return &Response{
