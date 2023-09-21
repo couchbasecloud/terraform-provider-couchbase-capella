@@ -13,9 +13,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -42,52 +39,7 @@ func (r *Project) Metadata(_ context.Context, req resource.MetadataRequest, resp
 
 // Schema defines the schema for the project resource.
 func (r *Project) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"organization_id": schema.StringAttribute{
-				Required: true,
-			},
-			"name": schema.StringAttribute{
-				Required: true,
-			},
-			"description": schema.StringAttribute{
-				Optional: true,
-			},
-			"if_match": schema.StringAttribute{
-				Optional: true,
-			},
-			"etag": schema.StringAttribute{
-				Computed: true,
-			},
-			"audit": schema.SingleNestedAttribute{
-				Computed: true,
-				Attributes: map[string]schema.Attribute{
-					"created_at": schema.StringAttribute{
-						Computed: true,
-					},
-					"created_by": schema.StringAttribute{
-						Computed: true,
-					},
-					"modified_at": schema.StringAttribute{
-						Computed: true,
-					},
-					"modified_by": schema.StringAttribute{
-						Computed: true,
-					},
-					"version": schema.Int64Attribute{
-						Computed: true,
-					},
-				},
-			},
-		},
-	}
-
+	resp.Schema = ProjectSchema()
 }
 
 // Configure adds the provider configured client to the project resource.
@@ -99,7 +51,7 @@ func (r *Project) Configure(_ context.Context, req resource.ConfigureRequest, re
 	data, ok := req.ProviderData.(*providerschema.Data)
 	if !ok {
 		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
+			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *ProviderSourceData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 

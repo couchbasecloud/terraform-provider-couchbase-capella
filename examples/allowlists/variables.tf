@@ -16,4 +16,5 @@ variable "cluster_id" {
 
 variable "auth_token" {
   description = "Authentication API Key"
+  sensitive   = true
 }
