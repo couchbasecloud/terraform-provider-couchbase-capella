@@ -1,6 +1,11 @@
 package schema
 
-import "github.com/hashicorp/terraform-plugin-framework/types"
+import (
+	"strings"
+	"terraform-provider-capella/internal/errors"
+
+	"github.com/hashicorp/terraform-plugin-framework/types"
+)
 
 // AllowList maps AllowList resource schema data
 type AllowList struct {
@@ -44,6 +49,40 @@ type AllowLists struct {
 
 	// Data contains the list of resources.
 	Data []OneAllowList `tfsdk:"data"`
+}
+
+func (a *AllowList) Validate() (projectId, organizationId, clusterId, allowListId string, err error) {
+	const idDelimiter = ","
+	organizationId = a.OrganizationId.ValueString()
+	projectId = a.Id.ValueString()
+	var found bool
+
+	// check if the id is a comma separated string of multiple IDs, usually passed during the terraform import CLI
+	if a.OrganizationId.IsNull() {
+		strs := strings.Split(a.Id.ValueString(), idDelimiter)
+		if len(strs) != 4 {
+			return "", "", "", "", errors.ErrIdMissing
+		}
+		_, projectId, found = strings.Cut(strs[0], "id=")
+		if !found {
+			return "", "", "", "", errors.ErrProjectIdMissing
+		}
+
+		_, organizationId, found = strings.Cut(strs[1], "organization_id=")
+		if !found {
+			return "", "", "", "", errors.ErrOrganizationIdMissing
+		}
+	}
+
+	if projectId == "" {
+		return "", "", "", "", errors.ErrProjectIdCannotBeEmpty
+	}
+
+	if organizationId == "" {
+		return "", "", "", "", errors.ErrOrganizationIdCannotBeEmpty
+	}
+
+	return projectId, organizationId, clusterId, allowListId, nil
 }
 
 // OneAllowList maps allowlist resource schema data; there is a separate response object to avoid conversion error for nested fields.
