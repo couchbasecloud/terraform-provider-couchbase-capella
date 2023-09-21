@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"os"
+	"terraform-provider-capella/internal/datasources"
 	"time"
 
 	"terraform-provider-capella/internal/api"
@@ -176,7 +177,9 @@ func (p *capellaProvider) Configure(ctx context.Context, req provider.ConfigureR
 
 // DataSources defines the data sources implemented in the provider.
 func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{}
+	return []func() datasource.DataSource{
+		datasources.NewProject,
+	}
 }
 
 // Resources defines the resources implemented in the provider.
@@ -184,5 +187,6 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 	return []func() resource.Resource{
 		resources.NewProject,
 		resources.NewCluster,
+		resources.NewAllowList,
 	}
 }

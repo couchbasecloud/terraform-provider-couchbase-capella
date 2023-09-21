@@ -35,3 +35,17 @@ type GetProjectResponse struct {
 
 	Etag string
 }
+
+// PutProjectRequest defines the model for a PutProjectRequest.
+type PutProjectRequest struct {
+	// Description represents a short description of the project.
+	Description string `json:"description,omitempty"`
+
+	// Name is the name of the project.
+	Name string `json:"name"`
+}
+
+// GetProjectsResponse defines the model for a GetProjectsResponse.
+type GetProjectsResponse struct {
+	Data []GetProjectResponse `json:"data"`
+}
