@@ -176,7 +176,7 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
-		if err.HttpStatusCode != 404 {
+		if err.HttpStatusCode != http.StatusNotFound {
 			resp.Diagnostics.AddError(
 				"Error Deleting Capella Allow List",
 				"Could not delete Capella allowListId "+allowListId+": "+err.CompleteError(),
