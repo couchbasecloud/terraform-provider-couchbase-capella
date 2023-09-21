@@ -1,9 +1,10 @@
 package schema
 
 import (
+	"terraform-provider-capella/internal/api"
+
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"terraform-provider-capella/internal/api"
 )
 
 // CouchbaseAuditData contains all audit-related fields.

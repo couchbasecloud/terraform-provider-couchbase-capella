@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"net/http"
 	"time"
 
@@ -34,17 +35,17 @@ func NewCluster() resource.Resource {
 }
 
 // Metadata returns the Cluster resource type name.
-func (r *Cluster) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (c *Cluster) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_cluster"
 }
 
 // Schema defines the schema for the Cluster resource.
-func (r *Cluster) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (c *Cluster) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = ClusterSchema()
 }
 
 // Create creates a new Cluster.
-func (r *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan providerschema.Cluster
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -80,7 +81,7 @@ func (r *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		}
 	}
 
-	serviceGroups, err := r.morphToApiServiceGroups(plan)
+	serviceGroups, err := c.morphToApiServiceGroups(plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
@@ -109,25 +110,18 @@ func (r *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	}
 	var projectId = plan.ProjectId.ValueString()
 
-	response, err := r.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", r.HostURL, organizationId, projectId),
+	response, err := c.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", c.HostURL, organizationId, projectId),
 		http.MethodPost,
 		ClusterRequest,
-		r.Token,
+		c.Token,
 		nil,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	_, err = handleClusterError(err)
+	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating Cluster",
-			"Could not create Cluster, unexpected error: "+err.CompleteError(),
-		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error creating Cluster",
-			"Could not create Cluster, unexpected error: "+err.Error(),
+			"Error creating cluster",
+			"Could not create cluster, unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -142,36 +136,22 @@ func (r *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		return
 	}
 
-	err = r.checkClusterStatus(ctx, organizationId, projectId, ClusterResponse.Id.String())
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	err = c.checkClusterStatus(ctx, organizationId, projectId, ClusterResponse.Id.String())
+	_, err = handleClusterError(err)
+	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating Cluster",
-			"Could not create Cluster, unexpected error: "+err.CompleteError(),
-		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error creating Cluster",
-			"Could not create Cluster, unexpected error: "+err.Error(),
+			"Error creating cluster",
+			"Could not create cluster, unexpected error: "+err.Error(),
 		)
 		return
 	}
 
-	refreshedState, err := r.retrieveCluster(ctx, organizationId, projectId, ClusterResponse.Id.String())
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	refreshedState, err := c.retrieveCluster(ctx, organizationId, projectId, ClusterResponse.Id.String())
+	_, err = handleClusterError(err)
+	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating Cluster",
-			"Could not create Cluster, unexpected error: "+err.CompleteError(),
-		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error creating Cluster",
-			"Could not create Cluster, unexpected error: "+err.Error(),
+			"Error creating cluster",
+			"Could not create cluster, unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -182,12 +162,8 @@ func (r *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		}
 	}
 
-	//refreshedState.ServiceGroups = plan.ServiceGroups
-
 	//need to have proper check since we are passing 7.1 and response is returning 7.1.5
-	if !plan.CouchbaseServer.Version.IsNull() && !plan.CouchbaseServer.Version.IsUnknown() {
-		refreshedState.CouchbaseServer.Version = plan.CouchbaseServer.Version
-	}
+	c.populateInputServerVersionIfPresent(&plan, refreshedState)
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
@@ -198,7 +174,7 @@ func (r *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 }
 
 // Configure It adds the provider configured api to the project resource.
-func (r *Cluster) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (c *Cluster) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -214,35 +190,90 @@ func (r *Cluster) Configure(_ context.Context, req resource.ConfigureRequest, re
 		return
 	}
 
-	r.Data = data
+	c.Data = data
 }
 
 // Read reads project information.
-func (r *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// TODO
+func (c *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state providerschema.Cluster
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceIDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error reading cluster",
+			"Could not read cluster id "+state.Id.String()+" unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	var (
+		organizationId = resourceIDs[providerschema.OrganizationId]
+		projectId      = resourceIDs[providerschema.ProjectId]
+		clusterId      = resourceIDs[providerschema.ClusterId]
+	)
+
+	// Get refreshed Cluster value from Capella
+	refreshedState, err := c.retrieveCluster(ctx, organizationId, projectId, clusterId)
+	resourceNotFound, err := handleClusterError(err)
+	if resourceNotFound {
+		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+		resp.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error reading cluster",
+			"Could not read cluster id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	if len(state.ServiceGroups) == len(refreshedState.ServiceGroups) {
+		for i, serviceGroup := range refreshedState.ServiceGroups {
+			if clusterapi.AreEqual(state.ServiceGroups[i].Services, serviceGroup.Services) {
+				refreshedState.ServiceGroups[i].Services = state.ServiceGroups[i].Services
+			}
+		}
+	}
+
+	//need to have proper check since we are passing 7.1 and response is returning 7.1.5
+	c.populateInputServerVersionIfPresent(&state, refreshedState)
+
+	// Set refreshed state
+	diags = resp.State.Set(ctx, &refreshedState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Update updates the Cluster.
-func (r *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// TODO
 }
 
 // Delete deletes the project.
-func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (c *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// TODO
 }
 
 // ImportState imports a remote Cluster that is not created by Terraform.
-func (r *Cluster) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	// TODO
+func (c *Cluster) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	// Retrieve import ID and save to id attribute
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func (r *Cluster) getCluster(organizationId, projectId, clusterId string) (*clusterapi.GetClusterResponse, error) {
-	response, err := r.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", r.HostURL, organizationId, projectId, clusterId),
+func (c *Cluster) getCluster(organizationId, projectId, clusterId string) (*clusterapi.GetClusterResponse, error) {
+	response, err := c.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", c.HostURL, organizationId, projectId, clusterId),
 		http.MethodGet,
 		nil,
-		r.Token,
+		c.Token,
 		nil,
 	)
 	if err != nil {
@@ -258,8 +289,8 @@ func (r *Cluster) getCluster(organizationId, projectId, clusterId string) (*clus
 	return &clusterResp, nil
 }
 
-func (r *Cluster) retrieveCluster(ctx context.Context, organizationId, projectId, clusterId string) (*providerschema.Cluster, error) {
-	ClusterResp, err := r.getCluster(organizationId, projectId, clusterId)
+func (c *Cluster) retrieveCluster(ctx context.Context, organizationId, projectId, clusterId string) (*providerschema.Cluster, error) {
+	ClusterResp, err := c.getCluster(organizationId, projectId, clusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -278,7 +309,7 @@ func (r *Cluster) retrieveCluster(ctx context.Context, organizationId, projectId
 	return refreshedState, nil
 }
 
-func (r *Cluster) checkClusterStatus(ctx context.Context, organizationId, projectId, ClusterId string) error {
+func (c *Cluster) checkClusterStatus(ctx context.Context, organizationId, projectId, ClusterId string) error {
 	var (
 		ClusterResp *clusterapi.GetClusterResponse
 		err         error
@@ -302,7 +333,7 @@ func (r *Cluster) checkClusterStatus(ctx context.Context, organizationId, projec
 			return fmt.Errorf(msg)
 
 		case <-timer.C:
-			ClusterResp, err = r.getCluster(organizationId, projectId, ClusterId)
+			ClusterResp, err = c.getCluster(organizationId, projectId, ClusterId)
 			switch err {
 			case nil:
 				if clusterapi.IsFinalState(ClusterResp.CurrentState) {
@@ -318,11 +349,11 @@ func (r *Cluster) checkClusterStatus(ctx context.Context, organizationId, projec
 	}
 }
 
-func (r *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]clusterapi.ServiceGroup, error) {
-	var serviceGroups []clusterapi.ServiceGroup
+func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]clusterapi.ServiceGroup, error) {
+	var newServiceGroups []clusterapi.ServiceGroup
 	for _, serviceGroup := range plan.ServiceGroups {
 		numOfNodes := int(serviceGroup.NumOfNodes.ValueInt64())
-		serviceGroupData := clusterapi.ServiceGroup{
+		newServiceGroup := clusterapi.ServiceGroup{
 			Node: &clusterapi.Node{
 				Compute: clusterapi.Compute{
 					Ram: int(serviceGroup.Node.Compute.Ram.ValueInt64()),
@@ -351,11 +382,10 @@ func (r *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]cluste
 			if err != nil {
 				return nil, err
 			}
-			serviceGroupData.Node.Disk = node.Disk
+			newServiceGroup.Node.Disk = node.Disk
 
 		case string(clusterapi.Azure):
 			node := clusterapi.Node{}
-
 			diskAzure := clusterapi.DiskAzure{
 				Type: clusterapi.DiskAzureType(serviceGroup.Node.Disk.Type.ValueString()),
 			}
@@ -369,13 +399,10 @@ func (r *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]cluste
 				iops := int(serviceGroup.Node.Disk.IOPS.ValueInt64())
 				diskAzure.Iops = &iops
 			}
-
-			err := node.FromDiskAzure(diskAzure)
-			if err != nil {
+			if err := node.FromDiskAzure(diskAzure); err != nil {
 				return nil, err
 			}
-
-			serviceGroupData.Node.Disk = node.Disk
+			newServiceGroup.Node.Disk = node.Disk
 
 		case string(clusterapi.Gcp):
 			storage := int(serviceGroup.Node.Disk.Storage.ValueInt64())
@@ -387,18 +414,41 @@ func (r *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]cluste
 			if err != nil {
 				return nil, err
 			}
-			serviceGroupData.Node.Disk = node.Disk
+			newServiceGroup.Node.Disk = node.Disk
 		}
+		var newServices []clusterapi.Service
 		for _, service := range serviceGroup.Services {
-			serviceapi := service.ValueString()
-			if serviceGroupData.Services == nil {
-				var emptyList []clusterapi.Service
-				serviceGroupData.Services = &emptyList
-			}
-			serviceGroupDataServices := append(*serviceGroupData.Services, clusterapi.Service(serviceapi))
-			serviceGroupData.Services = &serviceGroupDataServices
+			newService := service.ValueString()
+			newServices = append(newServices, clusterapi.Service(newService))
 		}
-		serviceGroups = append(serviceGroups, serviceGroupData)
+		newServiceGroup.Services = &newServices
+		newServiceGroups = append(newServiceGroups, newServiceGroup)
 	}
-	return serviceGroups, nil
+	return newServiceGroups, nil
+}
+
+// need to have proper check since we are passing 7.1 and response is returning 7.1.5
+func (c *Cluster) populateInputServerVersionIfPresent(stateOrPlanCluster *providerschema.Cluster, refreshStateCluster *providerschema.Cluster) {
+	if stateOrPlanCluster.CouchbaseServer != nil &&
+		refreshStateCluster.CouchbaseServer != nil &&
+		!stateOrPlanCluster.CouchbaseServer.Version.IsNull() &&
+		!stateOrPlanCluster.CouchbaseServer.Version.IsUnknown() {
+		refreshStateCluster.CouchbaseServer.Version = stateOrPlanCluster.CouchbaseServer.Version
+	}
+}
+
+// this func extract error message if error is api.Error and also checks whether error is
+// resource not found
+func handleClusterError(err error) (bool, error) {
+	switch err := err.(type) {
+	case nil:
+		return false, nil
+	case api.Error:
+		if err.HttpStatusCode != http.StatusNotFound {
+			return false, fmt.Errorf(err.CompleteError())
+		}
+		return true, fmt.Errorf(err.CompleteError())
+	default:
+		return false, err
+	}
 }

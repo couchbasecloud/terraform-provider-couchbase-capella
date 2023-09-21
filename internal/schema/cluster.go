@@ -2,12 +2,19 @@ package schema
 
 import (
 	"fmt"
+	"strings"
 
 	clusterapi "terraform-provider-capella/internal/api/cluster"
 	"terraform-provider-capella/internal/errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+)
+
+const (
+	OrganizationId = "organizationId"
+	ProjectId      = "projectId"
+	ClusterId      = "clusterId"
 )
 
 // Availability defines the type of Availability Zone configuration for a cluster resource.
@@ -103,7 +110,7 @@ type Cluster struct {
 	// AppServiceId is the ID of the linked app service.
 	AppServiceId   types.String  `tfsdk:"app_service_id"`
 	Audit          types.Object  `tfsdk:"audit"`
-	OrganizationId types.String  `tfsdk:"organization_id""`
+	OrganizationId types.String  `tfsdk:"organization_id"`
 	ProjectId      types.String  `tfsdk:"project_id"`
 	Availability   *Availability `tfsdk:"availability"`
 
@@ -125,23 +132,6 @@ type Cluster struct {
 	Etag          types.String   `tfsdk:"etag"`
 
 	IfMatch types.String `tfsdk:"if_match"`
-}
-
-// Validate validates the cluster object
-func (c *Cluster) Validate() (clusterId string, projectId string, organizationId string, err error) {
-	organizationId = c.OrganizationId.ValueString()
-	projectId = c.ProjectId.ValueString()
-	clusterId = c.Id.ValueString()
-
-	if projectId == "" {
-		return "", "", "", errors.ErrProjectIdCannotBeEmpty
-	}
-
-	if organizationId == "" {
-		return "", "", "", errors.ErrOrganizationIdCannotBeEmpty
-	}
-
-	return clusterId, projectId, organizationId, nil
 }
 
 // NewCluster create new cluster object
@@ -245,4 +235,70 @@ func morphToTerraformServiceGroups(cluster *clusterapi.GetClusterResponse) ([]Se
 		newServiceGroups = append(newServiceGroups, newServiceGroup)
 	}
 	return newServiceGroups, nil
+}
+
+func (c *Cluster) Validate() (map[string]string, error) {
+	const idDelimiter = ","
+	var found bool
+
+	organizationId := c.OrganizationId.ValueString()
+	projectId := c.ProjectId.ValueString()
+	clusterId := c.Id.ValueString()
+
+	// check if the id is a comma separated string of multiple IDs, usually passed during the terraform import CLI
+	if c.OrganizationId.IsNull() {
+		strs := strings.Split(c.Id.ValueString(), idDelimiter)
+		if len(strs) != 3 {
+			return nil, errors.ErrIdMissing
+		}
+
+		_, clusterId, found = strings.Cut(strs[0], "id=")
+		if !found {
+			return nil, errors.ErrClusterIdMissing
+		}
+
+		_, organizationId, found = strings.Cut(strs[1], "organization_id=")
+		if !found {
+			return nil, errors.ErrOrganizationIdMissing
+		}
+
+		_, projectId, found = strings.Cut(strs[2], "project_id=")
+		if !found {
+			return nil, errors.ErrProjectIdMissing
+		}
+	}
+
+	resourceIDs := c.generateResourceIdMap(organizationId, projectId, clusterId)
+
+	err := c.checkEmpty(resourceIDs)
+	if err != nil {
+		return nil, fmt.Errorf("resource import unsuccessful: %s", err)
+	}
+
+	return resourceIDs, nil
+}
+
+// generateResourceIdMap is used to populate a map with selected IDs
+func (a *Cluster) generateResourceIdMap(organizationId, projectId, clusterId string) map[string]string {
+	return map[string]string{
+		OrganizationId: organizationId,
+		ProjectId:      projectId,
+		ClusterId:      clusterId,
+	}
+}
+
+// checkEmpty is used to verify that a supplied resourceId map has been populated
+func (a *Cluster) checkEmpty(resourceIdMap map[string]string) error {
+	if resourceIdMap[ClusterId] == "" {
+		return errors.ErrClusterIdCannotBeEmpty
+	}
+
+	if resourceIdMap[ProjectId] == "" {
+		return errors.ErrProjectIdCannotBeEmpty
+	}
+
+	if resourceIdMap[OrganizationId] == "" {
+		return errors.ErrOrganizationIdCannotBeEmpty
+	}
+	return nil
 }
