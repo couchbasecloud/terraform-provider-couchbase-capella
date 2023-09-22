@@ -39,3 +39,8 @@ type GetAllowListResponse struct {
 	// ID is the ID of the AllowList
 	Id uuid.UUID `json:"id"`
 }
+
+// GetAllowListsReponse defines the model for GetAllowListsResponse
+type GetAllowListsResponse struct {
+	Data []GetAllowListsResponse `json:"data"`
+}
