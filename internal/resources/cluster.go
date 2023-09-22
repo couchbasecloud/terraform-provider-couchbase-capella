@@ -377,12 +377,14 @@ func (c *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 	// TODO
 }
 
-// ImportState imports a remote Cluster that is not created by Terraform.
+// ImportState imports a remote cluster that is not created by Terraform.
 func (c *Cluster) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
+// getCluster retrieves cluster information from the specified organization and project
+// using the provided cluster ID by open-api call
 func (c *Cluster) getCluster(organizationId, projectId, clusterId string) (*clusterapi.GetClusterResponse, error) {
 	response, err := c.Client.Execute(
 		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", c.HostURL, organizationId, projectId, clusterId),
@@ -404,6 +406,7 @@ func (c *Cluster) getCluster(organizationId, projectId, clusterId string) (*clus
 	return &clusterResp, nil
 }
 
+// retrieveCluster retrieves cluster information for a specified organization, project, and cluster ID.
 func (c *Cluster) retrieveCluster(ctx context.Context, organizationId, projectId, clusterId string) (*providerschema.Cluster, error) {
 	ClusterResp, err := c.getCluster(organizationId, projectId, clusterId)
 	if err != nil {
@@ -424,6 +427,10 @@ func (c *Cluster) retrieveCluster(ctx context.Context, organizationId, projectId
 	return refreshedState, nil
 }
 
+// checkClusterStatus monitors the status of a cluster creation, update and deletion operation for a specified
+// organization, project, and cluster ID. It periodically fetches the cluster status using the `getCluster`
+// function and waits until the cluster reaches a final state or until a specified timeout is reached.
+// The function returns an error if the operation times out or encounters an error during status retrieval.
 func (c *Cluster) checkClusterStatus(ctx context.Context, organizationId, projectId, ClusterId string) error {
 	var (
 		ClusterResp *clusterapi.GetClusterResponse
@@ -464,6 +471,7 @@ func (c *Cluster) checkClusterStatus(ctx context.Context, organizationId, projec
 	}
 }
 
+// morphToApiServiceGroups converts a provider cluster serviceGroups to an API-compatible list of service groups.
 func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]clusterapi.ServiceGroup, error) {
 	var newServiceGroups []clusterapi.ServiceGroup
 	for _, serviceGroup := range plan.ServiceGroups {
@@ -552,6 +560,7 @@ func (c *Cluster) populateInputServerVersionIfPresent(stateOrPlanCluster *provid
 	}
 }
 
+// validateClusterUpdate checks if specific fields in a cluster can be updated and returns an error if not.
 func (c *Cluster) validateClusterUpdate(plan, state providerschema.Cluster) error {
 	var planOrganizationId, stateOrganizationId string
 	if !plan.OrganizationId.IsNull() {
