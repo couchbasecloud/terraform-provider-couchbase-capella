@@ -105,6 +105,15 @@ type Support struct {
 
 // Cluster defines model for CreateClusterRequest.
 type Cluster struct {
+	ClusterData
+
+	Etag types.String `tfsdk:"etag"`
+
+	IfMatch types.String `tfsdk:"if_match"`
+}
+
+// ClusterData defines model for cluster related data
+type ClusterData struct {
 	Id types.String `tfsdk:"id"`
 
 	// AppServiceId is the ID of the linked app service.
@@ -129,14 +138,23 @@ type Cluster struct {
 	ServiceGroups []ServiceGroup `tfsdk:"service_groups"`
 	Support       *Support       `tfsdk:"support"`
 	CurrentState  types.String   `tfsdk:"current_state"`
-	Etag          types.String   `tfsdk:"etag"`
-
-	IfMatch types.String `tfsdk:"if_match"`
 }
 
 // NewCluster create new cluster object
 func NewCluster(cluster *clusterapi.GetClusterResponse, organizationId, projectId string, auditObject basetypes.ObjectValue) (*Cluster, error) {
+	newClusterData, err := NewClusterData(cluster, organizationId, projectId, auditObject)
+	if err != nil {
+		return nil, err
+	}
 	newCluster := Cluster{
+		ClusterData: newClusterData,
+		Etag:        types.StringValue(cluster.Etag),
+	}
+	return &newCluster, nil
+}
+
+func NewClusterData(cluster *clusterapi.GetClusterResponse, organizationId, projectId string, auditObject basetypes.ObjectValue) (ClusterData, error) {
+	newClusterData := ClusterData{
 		Id:             types.StringValue(cluster.Id.String()),
 		OrganizationId: types.StringValue(organizationId),
 		ProjectId:      types.StringValue(projectId),
@@ -156,22 +174,22 @@ func NewCluster(cluster *clusterapi.GetClusterResponse, organizationId, projectI
 		},
 		CurrentState: types.StringValue(string(cluster.CurrentState)),
 		Audit:        auditObject,
-		Etag:         types.StringValue(cluster.Etag),
 	}
 
 	if cluster.CouchbaseServer.Version != nil {
 		version := *cluster.CouchbaseServer.Version
-		newCluster.CouchbaseServer = &CouchbaseServer{
+		newClusterData.CouchbaseServer = &CouchbaseServer{
 			Version: types.StringValue(version),
 		}
 	}
 
 	newServiceGroups, err := morphToTerraformServiceGroups(cluster)
 	if err != nil {
-		return nil, err
+		return ClusterData{}, err
 	}
-	newCluster.ServiceGroups = newServiceGroups
-	return &newCluster, nil
+
+	newClusterData.ServiceGroups = newServiceGroups
+	return newClusterData, nil
 }
 
 func morphToTerraformServiceGroups(cluster *clusterapi.GetClusterResponse) ([]ServiceGroup, error) {
@@ -301,4 +319,16 @@ func (a *Cluster) checkEmpty(resourceIdMap map[string]string) error {
 		return errors.ErrOrganizationIdCannotBeEmpty
 	}
 	return nil
+}
+
+// Clusters defines model for GetProjectsResponse.
+type Clusters struct {
+	// OrganizationId is the organizationId of the capella.
+	OrganizationId types.String `tfsdk:"organization_id"`
+
+	// ProjectId is the projectId of the cluster
+	ProjectId types.String `tfsdk:"project_id"`
+
+	// Data It contains the list of resources.
+	Data []ClusterData `tfsdk:"data"`
 }

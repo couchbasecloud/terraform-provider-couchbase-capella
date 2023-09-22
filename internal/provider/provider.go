@@ -169,6 +169,7 @@ func (p *capellaProvider) Configure(ctx context.Context, req provider.ConfigureR
 func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		datasources.NewProject,
+		datasources.NewCluster,
 		datasources.NewAllowList,
 		datasources.NewOrganization,
 		datasources.NewCertificate,
