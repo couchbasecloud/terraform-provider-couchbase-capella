@@ -105,7 +105,7 @@ func (d *AllowList) Read(ctx context.Context, req datasource.ReadRequest, resp *
 	}
 
 	// Validate state is not empty
-	err := d.checkForEmptyFields(state)
+	err := d.validate(state)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella AllowLists",
@@ -206,9 +206,9 @@ func (d *AllowList) Configure(_ context.Context, req datasource.ConfigureRequest
 	d.Data = data
 }
 
-// checkForEmptyFields is used to verify that none of the fields which
-// are expected to be populated are empty.
-func (a *AllowList) checkForEmptyFields(state providerschema.AllowLists) error {
+// validate is used to verify that all the fields in the datasource
+// have been populated.
+func (d *AllowList) validate(state providerschema.AllowLists) error {
 	if state.OrganizationId.IsNull() {
 		return errors.ErrOrganizationIdMissing
 	}
