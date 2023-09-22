@@ -206,6 +206,8 @@ func (d *AllowList) Configure(_ context.Context, req datasource.ConfigureRequest
 	d.Data = data
 }
 
+// checkForEmptyFields is used to verify that none of the fields which
+// are expected to be populated are empty.
 func (a *AllowList) checkForEmptyFields(state providerschema.AllowLists) error {
 	if state.OrganizationId.IsNull() {
 		return errors.ErrOrganizationIdMissing
