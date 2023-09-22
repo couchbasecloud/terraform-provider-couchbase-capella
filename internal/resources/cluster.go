@@ -258,8 +258,80 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 }
 
 // Delete deletes the project.
-func (c *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// TODO
+func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	// Retrieve values from state
+	var state providerschema.Cluster
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceIDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error deleting cluster",
+			"Could not delete cluster id "+state.Id.String()+" unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	var (
+		organizationId = resourceIDs[providerschema.OrganizationId]
+		projectId      = resourceIDs[providerschema.ProjectId]
+		clusterId      = resourceIDs[providerschema.ClusterId]
+	)
+
+	// Delete existing Cluster
+	_, err = r.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", r.HostURL, organizationId, projectId, clusterId),
+		http.MethodDelete,
+		nil,
+		r.Token,
+		nil,
+	)
+	resourceNotFound, err := handleClusterError(err)
+	if resourceNotFound {
+		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+		return
+	}
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error deleting cluster",
+			"Could not delete cluster id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	err = r.checkClusterStatus(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
+	resourceNotFound, err = handleClusterError(err)
+	switch err {
+	case nil:
+		// This case will only occur when cluster deletion has failed,
+		// and the cluster record still exists in the cp metadata. Therefore,
+		// no error will be returned when performing a GET call.
+		cluster, err := r.retrieveCluster(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error deleting cluster",
+				fmt.Sprintf("Could not delete cluster id %s: %s", state.Id.String(), err.Error()),
+			)
+			return
+		}
+		resp.Diagnostics.AddError(
+			"Error deleting cluster",
+			fmt.Sprintf("Could not delete cluster id %s, as current Cluster state: %s", state.Id.String(), cluster.CurrentState),
+		)
+		return
+	default:
+		if !resourceNotFound {
+			resp.Diagnostics.AddError(
+				"Error deleting cluster",
+				"Could not delete cluster id "+state.Id.String()+": "+err.Error(),
+			)
+			return
+		}
+	}
 }
 
 // ImportState imports a remote Cluster that is not created by Terraform.
@@ -311,7 +383,7 @@ func (c *Cluster) retrieveCluster(ctx context.Context, organizationId, projectId
 
 func (c *Cluster) checkClusterStatus(ctx context.Context, organizationId, projectId, ClusterId string) error {
 	var (
-		ClusterResp *clusterapi.GetClusterResponse
+		clusterResp *clusterapi.GetClusterResponse
 		err         error
 	)
 
@@ -333,13 +405,13 @@ func (c *Cluster) checkClusterStatus(ctx context.Context, organizationId, projec
 			return fmt.Errorf(msg)
 
 		case <-timer.C:
-			ClusterResp, err = c.getCluster(organizationId, projectId, ClusterId)
+			clusterResp, err = c.getCluster(organizationId, projectId, ClusterId)
 			switch err {
 			case nil:
-				if clusterapi.IsFinalState(ClusterResp.CurrentState) {
+				if clusterapi.IsFinalState(clusterResp.CurrentState) {
 					return nil
 				}
-				const msg = "waiting for Cluster to complete the execution"
+				const msg = "waiting for cluster to complete the execution"
 				tflog.Info(ctx, msg)
 			default:
 				return err
