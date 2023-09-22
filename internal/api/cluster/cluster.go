@@ -79,3 +79,8 @@ type UpdateClusterRequest struct {
 	ServiceGroups []ServiceGroup `json:"serviceGroups"`
 	Support       Support        `json:"support"`
 }
+
+// GetClustersResponse defines the model for a GetClustersResponse.
+type GetClustersResponse struct {
+	Data []GetClusterResponse `json:"data"`
+}
