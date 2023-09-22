@@ -159,23 +159,13 @@ func (d *AllowList) Read(ctx context.Context, req datasource.ReadRequest, resp *
 		return
 	}
 
-	// Map response body to model
-	for _, allowList := range allowListsResponse.Data {
-		allowListState := providerschema.OneAllowList{
-			Id:             types.StringValue(allowList.Id.String()),
-			OrganizationId: types.StringValue(state.OrganizationId.ValueString()),
-			Cidr:           types.StringValue(allowList.Cidr),
-			Comment:        types.StringValue(allowList.Comment),
-			ExpiresAt:      types.StringValue(allowList.ExpiresAt),
-			Audit: providerschema.CouchbaseAuditData{
-				CreatedAt:  types.StringValue(allowList.Audit.CreatedAt.String()),
-				CreatedBy:  types.StringValue(allowList.Audit.CreatedBy),
-				ModifiedAt: types.StringValue(allowList.Audit.ModifiedAt.String()),
-				ModifiedBy: types.StringValue(allowList.Audit.ModifiedBy),
-				Version:    types.Int64Value(int64(allowList.Audit.Version)),
-			},
-		}
-		state.Data = append(state.Data, allowListState)
+	state, err = d.mapResponseBody(allowListsResponse, &state)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error reading allowlist",
+			"Could not create allowlist, unexpected error: "+err.Error(),
+		)
+		return
 	}
 
 	// Set state
@@ -204,6 +194,32 @@ func (d *AllowList) Configure(_ context.Context, req datasource.ConfigureRequest
 		return
 	}
 	d.Data = data
+}
+
+// mapResponseBody is used to map the response body from a call to
+// get allowlists to the schema that will be used by terraform.
+func (d *AllowList) mapResponseBody(
+	allowListsResponse api.GetAllowListsResponse,
+	state *providerschema.AllowLists,
+) (providerschema.AllowLists, error) {
+	for _, allowList := range allowListsResponse.Data {
+		allowListState := providerschema.OneAllowList{
+			Id:             types.StringValue(allowList.Id.String()),
+			OrganizationId: types.StringValue(state.OrganizationId.ValueString()),
+			Cidr:           types.StringValue(allowList.Cidr),
+			Comment:        types.StringValue(allowList.Comment),
+			ExpiresAt:      types.StringValue(allowList.ExpiresAt),
+			Audit: providerschema.CouchbaseAuditData{
+				CreatedAt:  types.StringValue(allowList.Audit.CreatedAt.String()),
+				CreatedBy:  types.StringValue(allowList.Audit.CreatedBy),
+				ModifiedAt: types.StringValue(allowList.Audit.ModifiedAt.String()),
+				ModifiedBy: types.StringValue(allowList.Audit.ModifiedBy),
+				Version:    types.Int64Value(int64(allowList.Audit.Version)),
+			},
+		}
+		state.Data = append(state.Data, allowListState)
+	}
+	return *state, nil
 }
 
 // validate is used to verify that all the fields in the datasource
