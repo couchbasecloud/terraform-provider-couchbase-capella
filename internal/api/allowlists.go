@@ -42,5 +42,5 @@ type GetAllowListResponse struct {
 
 // GetAllowListsReponse defines the model for GetAllowListsResponse
 type GetAllowListsResponse struct {
-	Data []GetAllowListsResponse `json:"data"`
+	Data []GetAllowListResponse `json:"data"`
 }
