@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"net/http"
+	"reflect"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"terraform-provider-capella/internal/api"
 	clusterapi "terraform-provider-capella/internal/api/cluster"
 	providerschema "terraform-provider-capella/internal/schema"
@@ -254,7 +255,121 @@ func (c *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 
 // Update updates the Cluster.
 func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// TODO
+	// Retrieve values from plan
+	var plan, state providerschema.Cluster
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+
+	diags = req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceIDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating cluster",
+			"Could not update cluster id "+state.Id.String()+" unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	var (
+		organizationId = resourceIDs[providerschema.OrganizationId]
+		projectId      = resourceIDs[providerschema.ProjectId]
+		clusterId      = resourceIDs[providerschema.ClusterId]
+	)
+
+	if err := c.validateClusterUpdate(plan, state); err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating cluster",
+			"Could not update cluster id "+state.Id.String()+" unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	ClusterRequest := clusterapi.UpdateClusterRequest{
+		Description: plan.Description.ValueString(),
+		Name:        plan.Name.ValueString(),
+		Support: clusterapi.Support{
+			Plan:     clusterapi.SupportPlan(plan.Support.Plan.ValueString()),
+			Timezone: clusterapi.SupportTimezone(plan.Support.Timezone.ValueString()),
+		},
+	}
+
+	serviceGroups, err := c.morphToApiServiceGroups(plan)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating cluster",
+			"Could not update cluster id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	ClusterRequest.ServiceGroups = serviceGroups
+
+	var headers = make(map[string]string)
+	if !state.IfMatch.IsUnknown() && !state.IfMatch.IsNull() {
+		headers["If-Match"] = state.IfMatch.ValueString()
+	}
+
+	// Update existing Cluster
+	_, err = c.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", c.HostURL, organizationId, projectId, clusterId),
+		http.MethodPut,
+		ClusterRequest,
+		c.Token,
+		headers,
+	)
+	_, err = handleClusterError(err)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating cluster",
+			"Could not update cluster id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	err = c.checkClusterStatus(ctx, organizationId, projectId, clusterId)
+	_, err = handleClusterError(err)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating cluster",
+			"Could not update cluster id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	currentState, err := c.retrieveCluster(ctx, organizationId, projectId, clusterId)
+	_, err = handleClusterError(err)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating cluster",
+			"Could not update cluster id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	if !plan.IfMatch.IsUnknown() && !plan.IfMatch.IsNull() {
+		currentState.IfMatch = plan.IfMatch
+	}
+
+	for i, serviceGroup := range currentState.ServiceGroups {
+		if clusterapi.AreEqual(plan.ServiceGroups[i].Services, serviceGroup.Services) {
+			currentState.ServiceGroups[i].Services = plan.ServiceGroups[i].Services
+		}
+	}
+
+	//need to have proper check since we are passing 7.1 and response is returning 7.1.5
+	c.populateInputServerVersionIfPresent(&state, currentState)
+	// Set state to fully populated data
+	diags = resp.State.Set(ctx, currentState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Delete deletes the project.
@@ -334,12 +449,14 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 	}
 }
 
-// ImportState imports a remote Cluster that is not created by Terraform.
+// ImportState imports a remote cluster that is not created by Terraform.
 func (c *Cluster) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
+// getCluster retrieves cluster information from the specified organization and project
+// using the provided cluster ID by open-api call
 func (c *Cluster) getCluster(organizationId, projectId, clusterId string) (*clusterapi.GetClusterResponse, error) {
 	response, err := c.Client.Execute(
 		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", c.HostURL, organizationId, projectId, clusterId),
@@ -361,6 +478,7 @@ func (c *Cluster) getCluster(organizationId, projectId, clusterId string) (*clus
 	return &clusterResp, nil
 }
 
+// retrieveCluster retrieves cluster information for a specified organization, project, and cluster ID.
 func (c *Cluster) retrieveCluster(ctx context.Context, organizationId, projectId, clusterId string) (*providerschema.Cluster, error) {
 	ClusterResp, err := c.getCluster(organizationId, projectId, clusterId)
 	if err != nil {
@@ -381,6 +499,10 @@ func (c *Cluster) retrieveCluster(ctx context.Context, organizationId, projectId
 	return refreshedState, nil
 }
 
+// checkClusterStatus monitors the status of a cluster creation, update and deletion operation for a specified
+// organization, project, and cluster ID. It periodically fetches the cluster status using the `getCluster`
+// function and waits until the cluster reaches a final state or until a specified timeout is reached.
+// The function returns an error if the operation times out or encounters an error during status retrieval.
 func (c *Cluster) checkClusterStatus(ctx context.Context, organizationId, projectId, ClusterId string) error {
 	var (
 		clusterResp *clusterapi.GetClusterResponse
@@ -421,6 +543,7 @@ func (c *Cluster) checkClusterStatus(ctx context.Context, organizationId, projec
 	}
 }
 
+// morphToApiServiceGroups converts a provider cluster serviceGroups to an API-compatible list of service groups.
 func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]clusterapi.ServiceGroup, error) {
 	var newServiceGroups []clusterapi.ServiceGroup
 	for _, serviceGroup := range plan.ServiceGroups {
@@ -507,6 +630,73 @@ func (c *Cluster) populateInputServerVersionIfPresent(stateOrPlanCluster *provid
 		!stateOrPlanCluster.CouchbaseServer.Version.IsUnknown() {
 		refreshStateCluster.CouchbaseServer.Version = stateOrPlanCluster.CouchbaseServer.Version
 	}
+}
+
+// validateClusterUpdate checks if specific fields in a cluster can be updated and returns an error if not.
+func (c *Cluster) validateClusterUpdate(plan, state providerschema.Cluster) error {
+	var planOrganizationId, stateOrganizationId string
+	if !plan.OrganizationId.IsNull() {
+		planOrganizationId = plan.OrganizationId.ValueString()
+	}
+
+	if !state.OrganizationId.IsNull() {
+		stateOrganizationId = state.OrganizationId.ValueString()
+	}
+
+	if planOrganizationId != stateOrganizationId {
+		return fmt.Errorf("organizationId can't be updated")
+	}
+
+	var planProjectId, stateProjectId string
+	if !plan.ProjectId.IsNull() {
+		planProjectId = plan.ProjectId.ValueString()
+	}
+
+	if !state.ProjectId.IsNull() {
+		stateProjectId = state.ProjectId.ValueString()
+	}
+
+	if planProjectId != stateProjectId {
+		return fmt.Errorf("projectId can't be updated")
+	}
+
+	var planCouchbaseServerVersion, stateCouchbaseServerVersion string
+	if plan.CouchbaseServer != nil && !plan.CouchbaseServer.Version.IsNull() {
+		planCouchbaseServerVersion = plan.CouchbaseServer.Version.ValueString()
+	}
+	if state.CouchbaseServer != nil && !state.CouchbaseServer.Version.IsNull() {
+		stateCouchbaseServerVersion = state.CouchbaseServer.Version.ValueString()
+	}
+
+	if planCouchbaseServerVersion != stateCouchbaseServerVersion {
+		return fmt.Errorf("couchbase server version can't be updated")
+	}
+
+	var planAvailabilityType, stateAvailabilityType string
+	if plan.Availability != nil && !plan.Availability.Type.IsNull() {
+		planAvailabilityType = plan.Availability.Type.ValueString()
+	}
+	if state.Availability != nil && !state.Availability.Type.IsNull() {
+		stateAvailabilityType = state.Availability.Type.ValueString()
+	}
+
+	if planAvailabilityType != stateAvailabilityType {
+		return fmt.Errorf("availability type can't be updated")
+	}
+
+	var planCloudProvider, stateCloudProvider providerschema.CloudProvider
+	if plan.CloudProvider != nil {
+		planCloudProvider = *plan.CloudProvider
+	}
+	if state.CloudProvider != nil {
+		stateCloudProvider = *state.CloudProvider
+	}
+
+	if !reflect.DeepEqual(planCloudProvider, stateCloudProvider) {
+		return fmt.Errorf("cloud provider can't be updated")
+	}
+
+	return nil
 }
 
 // this func extract error message if error is api.Error and also checks whether error is

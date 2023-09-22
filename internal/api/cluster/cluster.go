@@ -68,3 +68,14 @@ type GetClusterResponse struct {
 
 	Etag string
 }
+
+// UpdateClusterRequest defines model for UpdateClusterRequest.
+type UpdateClusterRequest struct {
+	// Description is the new cluster description (up to 1024 characters).
+	Description string `json:"description"`
+
+	// Name is the new name of the cluster (up to 256 characters).
+	Name          string         `json:"name"`
+	ServiceGroups []ServiceGroup `json:"serviceGroups"`
+	Support       Support        `json:"support"`
+}
