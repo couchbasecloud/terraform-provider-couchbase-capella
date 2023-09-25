@@ -305,8 +305,6 @@ func (r *AllowList) refreshAllowList(ctx context.Context, organizationId, projec
 		ProjectId:      types.StringValue(projectId),
 		ClusterId:      types.StringValue(clusterId),
 		Cidr:           types.StringValue(allowListResp.Cidr),
-		Comment:        types.StringValue(allowListResp.Comment),
-		ExpiresAt:      types.StringValue(allowListResp.ExpiresAt),
 		Audit: providerschema.CouchbaseAuditData{
 			CreatedAt:  types.StringValue(allowListResp.Audit.CreatedAt.String()),
 			CreatedBy:  types.StringValue(allowListResp.Audit.CreatedBy),
@@ -315,5 +313,17 @@ func (r *AllowList) refreshAllowList(ctx context.Context, organizationId, projec
 			Version:    types.Int64Value(int64(allowListResp.Audit.Version)),
 		},
 	}
+
+	// Set optional fields
+	if allowListResp.Comment != nil {
+		comment := &allowListResp.Comment
+		refreshedState.Comment = types.StringValue(**comment)
+	}
+
+	if allowListResp.ExpiresAt != nil {
+		expiresAt := &allowListResp.ExpiresAt
+		refreshedState.Comment = types.StringValue(**expiresAt)
+	}
+
 	return &refreshedState, nil
 }
