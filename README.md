@@ -1,6 +1,6 @@
 # Terraform Provider Capella 
 
-This is the repository for the Terraform Couchbase Capella Provider which allows you to use Terraform with Couchbase Capella.
+This is the repository for Couchbase's Terraform-Provider-Capella which forms a Terraform plugin for use with Couchbase Capella.
 
 ## Requirements
 
@@ -10,25 +10,29 @@ This is the repository for the Terraform Couchbase Capella Provider which allows
 ## Using the provider
 
 ### Prepare Terraform for local provider install
-Terraform installs providers and verifies their versions and checksums when you run terraform init. Terraform will download your providers from either the provider registry or a local registry. However, while building your provider you will want to test Terraform configuration against a local development build of the provider. The development build will not have an associated version number or an official set of checksums listed in a provider registry.
 
-Terraform allows you to use local provider builds by setting a dev_overrides block in a configuration file called .terraformrc. This block overrides all other configured installation methods.
+Terraform installs providers and verifies their versions and checksums when you run `terraform init`. Terraform will download your 
+providers from either the provider registry or a local registry. However, while building your provider you will want to 
+test a Terraform configuration against a local development build of the provider. The development build will not have an associated 
+version number or an official set of checksums listed in a provider registry.
+
+Terraform allows you to use local provider builds by setting a dev_overrides block in a configuration file called .terraformrc. 
+This block overrides all other configured installation methods.
 
 Terraform searches for the .terraformrc file in your home directory and applies any configuration settings you set. 
 
 #### For Mac
 
-
-  First, find the GOBIN path where Go installs your binaries. Your path may vary depending on how your Go environment variables are configured.
+First, find the GOBIN path where Go installs your binaries. Your path may vary depending on how your Go environment variables are configured.
 
 ```shell
 go env GOBIN
 /Users/<Username>/go/bin
 ```
 
+Create a new file called .terraformrc in your home directory (~), then add the dev_overrides block below. 
+Change the <PATH> to the value returned from the go env GOBIN command above. 
 If the GOBIN go environment variable is not set, use the default path, /Users/<Username>/go/bin.
-
-Create a new file called .terraformrc in your home directory (~), then add the dev_overrides block below. Change the <PATH> to the value returned from the go env GOBIN command above.
 
 ```shell
 provider_installation {
@@ -49,14 +53,16 @@ Now build the terraform provider from this source code
 `go build -o <PATH>`
 
 
-### Configuring Programmatic Access
+### Authentication
 
-In order to set up authentication with the Couchbase Capella provider a V4 API key must be generated. We need base 64 encoded api-key
+In order to set up authentication with the Couchbase Capella provider a V4 API key must be generated. 
 
-### Authenticating the Provider
-You will need to provide host of the capella and your credentials for authentication
+To find out how to generate a V4 API Key, please see the following document: 
+https://docs.couchbase.com/cloud/management-api-guide/management-api-start.html
 
 ### Example Usage
+
+Note: You will need to provide both the url of the capella host as well as your V4 API secret for authentication. 
 
 ```terraform
 terraform {
@@ -68,7 +74,7 @@ terraform {
 }
 
 provider "capella" {
-  host     = "hostname of the capella"
+  host     = "the host url of couchbase cloud"
   authentication_token = "capella authentication token"
 }
 
@@ -84,18 +90,54 @@ output "example_project" {
 }
 ```
 
+### Terraform Environment Variables
 
-You can also provide host of the capella and your credentials for authentication via the environment variables,
-`CAPELLA_HOST`, `CAPELLA_AUTHENTICATION_TOKEN` for host and your authentication token.
+Environment variables can be set by terraform by creating and adding terraform.template.tfvars
+```terraform
+auth_token = "<v4-api-key-secret>"
+organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+host = "https://cloudapi.dev.nonprod-project-avengers.com"
+```
 
-Usage :
+A variables.tf should also be added to define the variables for terraform. 
+```terraform
+variable "host" {
+  description = "The Host URL of Couchbase Cloud."
+}
 
-```shell
-$  export CAPELLA_HOST="xxxx"
-$  export CAPELLA_AUTHENTICATION_TOKEN="xxxx"
+variable "organization_id" {
+  description = "Capella Organization ID"
+}
+
+variable "auth_token" {
+  description = "Authentication API Key"
+}
+```
+
+Set the environment variables by using the following notation: 
+```terraform
+resource "capella_project" "example" {
+  organization_id = var.organization_id
+  name = var.project_name
+  description = "A Capella Project that will host many Capella clusters."
+}
+```
+
+Alternatively, if you would like to set environment variables locally on your system (as opposed to using terraform.template.tfvars),
+preface them with `TF_VAR_`. Terraform will then apply them your .terraformrc file on running
+`terraform apply`. For example: 
+```bash
+export TF_VAR_auth_token=<v4_api_secret_key>
+export TF_VAR_organization_id="6af08c0a-8cab-4c1c-b257-b521575c16d0"
+export TF_VAR_host= "https://cloudapi.dev.nonprod-project-avengers.com"
 ```
 
 **1\. Review the Terraform plan**
+
+Execute the following command to automatically review and update the formatting of .tf files.
+```bash
+$ terraform fmt
+```
 
 Execute the following command to review the resources that will be deployed.
 

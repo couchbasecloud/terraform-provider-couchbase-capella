@@ -10,10 +10,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -39,57 +37,7 @@ func (r *AllowList) Metadata(_ context.Context, req resource.MetadataRequest, re
 
 // Schema defines the schema for the allowlist resource.
 func (r *AllowList) Schema(ctx context.Context, rsc resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"organization_id": schema.StringAttribute{
-				Required: true,
-			},
-			"project_id": schema.StringAttribute{
-				Required: true,
-			},
-			"cluster_id": schema.StringAttribute{
-				Required: true,
-			},
-			"cidr": schema.StringAttribute{
-				Required: true,
-			},
-			"comment": schema.StringAttribute{
-				Optional: true,
-			},
-			"expires_at": schema.StringAttribute{
-				Optional: true,
-			},
-			"if_match": schema.StringAttribute{
-				Optional: true,
-			},
-			"audit": schema.SingleNestedAttribute{
-				Computed: true,
-				Attributes: map[string]schema.Attribute{
-					"created_at": schema.StringAttribute{
-						Computed: true,
-					},
-					"created_by": schema.StringAttribute{
-						Computed: true,
-					},
-					"modified_at": schema.StringAttribute{
-						Computed: true,
-					},
-					"modified_by": schema.StringAttribute{
-						Computed: true,
-					},
-					"version": schema.Int64Attribute{
-						Computed: true,
-					},
-				},
-			},
-		},
-	}
+	resp.Schema = AllowlistsSchema()
 }
 
 // Configure set provider-defined data, clients, etc. that is passed to data sources or resources in the provider.
@@ -136,6 +84,7 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 		http.MethodPost,
 		allowListRequest,
 		r.Token,
+		nil,
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -155,7 +104,7 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 		return
 	}
 
-	refreshedState, err := r.retrieveAllowList(ctx, plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), plan.ClusterId.ValueString(), allowListResponse.Id.String())
+	refreshedState, err := r.refreshAllowList(ctx, plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), plan.ClusterId.ValueString(), allowListResponse.Id.String())
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
@@ -183,27 +132,140 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 
 // Read reads project information.
 func (r *AllowList) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// todo
+	var state providerschema.AllowList
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Validate parameters were successfully imported
+	resourceIDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Capella AllowList",
+			"Could not read Capella allow list: "+err.Error(),
+		)
+		return
+	}
+
+	var (
+		organizationId = resourceIDs["organizationId"]
+		projectId      = resourceIDs["projectId"]
+		clusterId      = resourceIDs["clusterId"]
+		allowListId    = resourceIDs["allowListId"]
+	)
+
+	// refresh the existing allow list
+	refreshedState, err := r.refreshAllowList(ctx, organizationId, projectId, clusterId, allowListId)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		if err.HttpStatusCode != http.StatusNotFound {
+			resp.Diagnostics.AddError(
+				"Error Reading Capella AllowList",
+				"Could not read Capella allowListID "+allowListId+": "+err.CompleteError(),
+			)
+			return
+		}
+		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+		resp.State.RemoveResource(ctx)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error Reading Capella AllowList",
+			"Could not read Capella allowListID "+allowListId+": "+err.Error(),
+		)
+		return
+	}
+
+	// Set refreshed state
+	diags = resp.State.Set(ctx, &refreshedState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
-// Update updates the project.
+// Update updates the allowlist.
 func (r *AllowList) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// todo
+	// Couchbase Capella's v4 does not support a PUT endpoint for allowlists.
+	// Allowlists can only be created, read and deleted.
+	// http://cbc-cp-api.s3-website-us-east-1.amazonaws.com/#tag/allowedCIDRs(Cluster)
+	//
+	// Note: In this situation, terraform apply will default to deleting and executing a new create.
+	// The update implementation should simply be left empty.
+	// https://developer.hashicorp.com/terraform/plugin/framework/resources/update
 }
 
-// Delete deletes the project.
+// Delete deletes the allow list.
 func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// todo
+	// Retrieve existing state
+	var state providerschema.AllowList
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceIDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Deleting Capella Allow List",
+			"Could not delete Capella allow list: "+err.Error(),
+		)
+		return
+	}
+	// Execute request to delete existing allowlist
+	_, err = r.Client.Execute(
+		fmt.Sprintf(
+			"%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs/%s",
+			r.HostURL,
+			resourceIDs["organizationId"],
+			resourceIDs["projectId"],
+			resourceIDs["clusterId"],
+			resourceIDs["allowListId"],
+		),
+		http.MethodDelete,
+		nil,
+		r.Token,
+		nil,
+	)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		if err.HttpStatusCode != http.StatusNotFound {
+			resp.Diagnostics.AddError(
+				"Error Deleting Capella Allow List",
+				"Could not delete Capella allowListId "+resourceIDs["allowListId"]+": "+err.CompleteError(),
+			)
+			tflog.Info(ctx, "resource doesn't exist in remote server")
+			return
+		}
+	default:
+		resp.Diagnostics.AddError(
+			"Error Deleting Capella Allow List",
+			"Could not delete Capella allowListId "+resourceIDs["allowListId"]+": "+err.Error(),
+		)
+		return
+	}
 }
 
 // ImportState imports a remote allowlist that is not created by Terraform.
+// Since Capella APIs may require multiple IDs, such as organizationId, projectId, clusterId,
+// this function passes the root attribute which is a comma separated string of multiple IDs.
+// example: id=cluster123,project_id=proj123,organization_id=org123
+// Unfortunately the terraform import CLI doesn't allow us to pass multiple IDs at this point
+// and hence this workaround has been applied.
 func (r *AllowList) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-// retrieveAllowList is used to pass an existing AllowList to the refreshed state
-func (r *AllowList) retrieveAllowList(ctx context.Context, organizationId, projectId, clusterId, allowedCidrId string) (*providerschema.OneAllowList, error) {
+// getAllowList is used to retrieve an existing allow list
+func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId, clusterId, allowListId string) (*api.GetAllowListResponse, error) {
 	response, err := r.Client.Execute(
 		fmt.Sprintf(
 			"%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs/%s",
@@ -211,18 +273,28 @@ func (r *AllowList) retrieveAllowList(ctx context.Context, organizationId, proje
 			organizationId,
 			projectId,
 			clusterId,
-			allowedCidrId,
+			allowListId,
 		),
 		http.MethodGet,
 		nil,
 		r.Token,
+		nil,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error executing request: %s", err)
 	}
 
 	allowListResp := api.GetAllowListResponse{}
 	err = json.Unmarshal(response.Body, &allowListResp)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling response: %s", err)
+	}
+	return &allowListResp, nil
+}
+
+// refreshAllowList is used to pass an existing AllowList to the refreshed state
+func (r *AllowList) refreshAllowList(ctx context.Context, organizationId, projectId, clusterId, allowListId string) (*providerschema.OneAllowList, error) {
+	allowListResp, err := r.getAllowList(ctx, organizationId, projectId, clusterId, allowListId)
 	if err != nil {
 		return nil, err
 	}
@@ -233,8 +305,6 @@ func (r *AllowList) retrieveAllowList(ctx context.Context, organizationId, proje
 		ProjectId:      types.StringValue(projectId),
 		ClusterId:      types.StringValue(clusterId),
 		Cidr:           types.StringValue(allowListResp.Cidr),
-		Comment:        types.StringValue(allowListResp.Comment),
-		ExpiresAt:      types.StringValue(allowListResp.ExpiresAt),
 		Audit: providerschema.CouchbaseAuditData{
 			CreatedAt:  types.StringValue(allowListResp.Audit.CreatedAt.String()),
 			CreatedBy:  types.StringValue(allowListResp.Audit.CreatedBy),
@@ -243,5 +313,15 @@ func (r *AllowList) retrieveAllowList(ctx context.Context, organizationId, proje
 			Version:    types.Int64Value(int64(allowListResp.Audit.Version)),
 		},
 	}
+
+	// Set optional fields
+	if allowListResp.Comment != nil {
+		refreshedState.Comment = types.StringValue(*allowListResp.Comment)
+	}
+
+	if allowListResp.ExpiresAt != nil {
+		refreshedState.Comment = types.StringValue(*allowListResp.ExpiresAt)
+	}
+
 	return &refreshedState, nil
 }
