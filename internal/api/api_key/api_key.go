@@ -6,9 +6,9 @@ import (
 )
 
 const (
-	OrganizationMember ApiKeyOrganizationRoles = "organizationMember"
-	OrganizationOwner  ApiKeyOrganizationRoles = "organizationOwner"
-	ProjectCreator     ApiKeyOrganizationRoles = "projectCreator"
+	OrganizationMember ApiKeyOrganizationRole = "organizationMember"
+	OrganizationOwner  ApiKeyOrganizationRole = "organizationOwner"
+	ProjectCreator     ApiKeyOrganizationRole = "projectCreator"
 )
 
 // Defines values for APIKeyResourcesItemsRoles.
@@ -33,7 +33,7 @@ type APIKeyName = string
 // APIKeyOrganizationRoles Organization roles assigned to the API key.
 //
 // To learn more, see [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
-type ApiKeyOrganizationRoles string
+type ApiKeyOrganizationRole string
 
 // APIKeyResources Resources are the resource level permissions associated with the API key.
 //
@@ -71,8 +71,8 @@ type CreateApiKeyRequest struct {
 	Expiry *APIKeyExpiry `json:"expiry,omitempty"`
 
 	// Name Name of the API key.
-	Name              APIKeyName                `json:"name"`
-	OrganizationRoles []ApiKeyOrganizationRoles `json:"organizationRoles"`
+	Name              APIKeyName               `json:"name"`
+	OrganizationRoles []ApiKeyOrganizationRole `json:"organizationRoles"`
 
 	// Resources Resources are the resource level permissions associated with the API key.
 	//
@@ -107,8 +107,8 @@ type GetApiKeyResponse struct {
 	Id string `json:"id"`
 
 	// Name Name of the API key.
-	Name              APIKeyName                `json:"name"`
-	OrganizationRoles []ApiKeyOrganizationRoles `json:"organizationRoles"`
+	Name              APIKeyName               `json:"name"`
+	OrganizationRoles []ApiKeyOrganizationRole `json:"organizationRoles"`
 
 	// Resources Resources are the resource level permissions associated with the API key.
 	//

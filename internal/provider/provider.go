@@ -188,5 +188,6 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewProject,
 		resources.NewCluster,
 		resources.NewAllowList,
+		resources.NewApiKey,
 	}
 }

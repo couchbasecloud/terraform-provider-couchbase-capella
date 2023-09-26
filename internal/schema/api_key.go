@@ -24,8 +24,8 @@ type ApiKey struct {
 
 	// AllowedCIDRs List of inbound CIDRs for the API key.
 	// The system making a request must come from one of the allowed CIDRs.
-	AllowedCIDRs []types.String `tfsdk:"allowed_cidrs"`
-	Audit        types.Object   `tfsdk:"audit"`
+	AllowedCIDRs types.List   `tfsdk:"allowed_cidrs"`
+	Audit        types.Object `tfsdk:"audit"`
 
 	// Description Description for the API key.
 	Description types.String `tfsdk:"description"`
@@ -45,4 +45,6 @@ type ApiKey struct {
 	//
 	// To learn more about Organization Roles, see [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
 	Resources []APIKeyResourcesItems `tfsdk:"resources"`
+
+	Token types.String `tfsdk:"token"`
 }
