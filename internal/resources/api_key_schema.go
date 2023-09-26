@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 func ApiKeySchema() schema.Schema {
@@ -24,11 +25,40 @@ func ApiKeySchema() schema.Schema {
 			"description": schema.StringAttribute{
 				Optional: true,
 			},
-			"if_match": schema.StringAttribute{
-				Optional: true,
+			"allowed_cidrs": schema.ListAttribute{
+				Optional:    true,
+				Computed:    true,
+				ElementType: types.StringType,
 			},
-			"etag": schema.StringAttribute{
+			"organization_roles": schema.ListAttribute{
+				Required:    true,
+				ElementType: types.StringType,
+			},
+			"expiry": schema.Float64Attribute{
+				Optional: true,
 				Computed: true,
+			},
+			"resources": schema.ListNestedAttribute{
+				Optional: true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"id": schema.StringAttribute{
+							Required: true,
+						},
+						"roles": schema.ListAttribute{
+							Required:    true,
+							ElementType: types.StringType,
+						},
+						"type": schema.StringAttribute{
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"token": schema.StringAttribute{
+				Computed:  true,
+				Sensitive: true,
 			},
 			"audit": schema.SingleNestedAttribute{
 				Computed: true,
