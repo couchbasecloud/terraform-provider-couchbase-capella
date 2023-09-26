@@ -316,13 +316,11 @@ func (r *AllowList) refreshAllowList(ctx context.Context, organizationId, projec
 
 	// Set optional fields
 	if allowListResp.Comment != nil {
-		comment := &allowListResp.Comment
-		refreshedState.Comment = types.StringValue(**comment)
+		refreshedState.Comment = types.StringValue(*allowListResp.Comment)
 	}
 
 	if allowListResp.ExpiresAt != nil {
-		expiresAt := &allowListResp.ExpiresAt
-		refreshedState.Comment = types.StringValue(**expiresAt)
+		refreshedState.Comment = types.StringValue(*allowListResp.ExpiresAt)
 	}
 
 	return &refreshedState, nil
