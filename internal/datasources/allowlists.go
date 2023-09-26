@@ -159,7 +159,7 @@ func (d *AllowList) Read(ctx context.Context, req datasource.ReadRequest, resp *
 		return
 	}
 
-	state, err = d.mapResponseBody(allowListsResponse, &state)
+	state = d.mapResponseBody(allowListsResponse, &state)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading allowlist",
@@ -197,15 +197,17 @@ func (d *AllowList) Configure(_ context.Context, req datasource.ConfigureRequest
 }
 
 // mapResponseBody is used to map the response body from a call to
-// get allowlists to the schema that will be used by terraform.
+// get allowlists to the allowlists schema that will be used by terraform.
 func (d *AllowList) mapResponseBody(
 	allowListsResponse api.GetAllowListsResponse,
 	state *providerschema.AllowLists,
-) (providerschema.AllowLists, error) {
+) providerschema.AllowLists {
 	for _, allowList := range allowListsResponse.Data {
 		allowListState := providerschema.OneAllowList{
 			Id:             types.StringValue(allowList.Id.String()),
 			OrganizationId: types.StringValue(state.OrganizationId.ValueString()),
+			ProjectId:      types.StringValue(state.ProjectId.ValueString()),
+			ClusterId:      types.StringValue(state.ClusterId.ValueString()),
 			Cidr:           types.StringValue(allowList.Cidr),
 			Comment:        types.StringValue(allowList.Comment),
 			ExpiresAt:      types.StringValue(allowList.ExpiresAt),
@@ -219,7 +221,7 @@ func (d *AllowList) mapResponseBody(
 		}
 		state.Data = append(state.Data, allowListState)
 	}
-	return *state, nil
+	return *state
 }
 
 // validate is used to verify that all the fields in the datasource
