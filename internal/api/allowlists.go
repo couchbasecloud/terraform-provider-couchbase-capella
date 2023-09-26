@@ -31,10 +31,10 @@ type GetAllowListResponse struct {
 	Cidr string `json:"cidr"`
 
 	// Comment is a short description of the allowed CIDR.
-	Comment string `json:"comment"`
+	Comment *string `json:"comment"`
 
 	// ExpiresAt is an RFC3339 timestamp determining when the allowed CIDR should expire.
-	ExpiresAt string `json:"expiresAt"`
+	ExpiresAt *string `json:"expiresAt"`
 
 	// ID is the ID of the AllowList
 	Id uuid.UUID `json:"id"`
