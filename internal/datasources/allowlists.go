@@ -65,10 +65,13 @@ func (d *AllowList) Schema(_ context.Context, _ datasource.SchemaRequest, resp *
 						"cluster_id": schema.StringAttribute{
 							Computed: true,
 						},
-						"name": schema.StringAttribute{
+						"cidr": schema.StringAttribute{
 							Computed: true,
 						},
-						"description": schema.StringAttribute{
+						"comment": schema.StringAttribute{
+							Computed: true,
+						},
+						"expires_at": schema.StringAttribute{
 							Computed: true,
 						},
 						"audit": schema.SingleNestedAttribute{
