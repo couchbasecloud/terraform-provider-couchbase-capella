@@ -43,6 +43,12 @@ func (d *AllowList) Schema(_ context.Context, _ datasource.SchemaRequest, resp *
 			"organization_id": schema.StringAttribute{
 				Required: true,
 			},
+			"project_id": schema.StringAttribute{
+				Required: true,
+			},
+			"cluster_id": schema.StringAttribute{
+				Required: true,
+			},
 			"data": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
