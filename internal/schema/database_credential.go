@@ -2,6 +2,7 @@ package schema
 
 import (
 	"strings"
+
 	"terraform-provider-capella/internal/errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"

@@ -7,6 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+// DatabaseCredentialSchema defines the schema for the terraform provider resource - "DatabaseCredential".
+// This terraform resource directly maps to the database credential created for a Capella cluster.
+// DatabaseCredential resource supports Create, Destroy, Read, Import and List operations.
 func DatabaseCredentialSchema() schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -17,11 +20,12 @@ func DatabaseCredentialSchema() schema.Schema {
 				},
 			},
 			"name": schema.StringAttribute{
-				Optional: true,
+				Required: true,
 			},
 			"password": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Optional:  true,
+				Computed:  true,
+				Sensitive: true,
 			},
 			"organization_id": schema.StringAttribute{
 				Required: true,
@@ -31,12 +35,6 @@ func DatabaseCredentialSchema() schema.Schema {
 			},
 			"cluster_id": schema.StringAttribute{
 				Required: true,
-			},
-			"if_match": schema.StringAttribute{
-				Optional: true,
-			},
-			"etag": schema.StringAttribute{
-				Computed: true,
 			},
 			"audit": schema.SingleNestedAttribute{
 				Computed: true,

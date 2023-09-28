@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-
 	"terraform-provider-capella/internal/api"
+	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -32,7 +32,8 @@ func NewDatabaseCredential() resource.Resource {
 	return &DatabaseCredential{}
 }
 
-// Metadata returns the database credential resource type name.
+// Metadata returns the name that the database credential will follow in the terraform files.
+// the name as per this function is capella_database_credential.
 func (r *DatabaseCredential) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_database_credential"
 }
@@ -61,7 +62,8 @@ func (r *DatabaseCredential) Configure(_ context.Context, req resource.Configure
 	r.Data = data
 }
 
-// Create creates a new database credential.
+// Create creates a new database credential. This function will validate the mandatory fields in the resource.CreateRequest
+// before invoking the Capella V4 API.
 func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan providerschema.DatabaseCredential
 	diags := req.Plan.Get(ctx, &plan)
@@ -73,23 +75,25 @@ func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequ
 	if plan.OrganizationId.IsNull() {
 		resp.Diagnostics.AddError(
 			"Error creating database credential",
-			"Could not create database credential, unexpected error: organization ID cannot be empty.",
+			"Could not create database credential, unexpected error: "+errors.ErrOrganizationIdCannotBeEmpty.Error(),
 		)
 		return
 	}
 	var organizationId = plan.OrganizationId.ValueString()
+
 	if plan.ProjectId.IsNull() {
 		resp.Diagnostics.AddError(
 			"Error creating database credential",
-			"Could not create database credential, unexpected error: project ID cannot be empty.",
+			"Could not create database credential, unexpected error: "+errors.ErrProjectIdCannotBeEmpty.Error(),
 		)
 		return
 	}
 	var projectId = plan.ProjectId.ValueString()
+
 	if plan.ClusterId.IsNull() {
 		resp.Diagnostics.AddError(
 			"Error creating database credential",
-			"Could not create database credential, unexpected error: cluster ID cannot be empty.",
+			"Could not create database credential, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
 		)
 		return
 	}
@@ -99,17 +103,16 @@ func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequ
 		Name: plan.Name.ValueString(),
 	}
 
+	if !plan.Password.IsNull() {
+		dbCredRequest.Password = plan.Password.ValueString()
+	}
+
 	var privileges []string
 	for _, a := range plan.Access {
 		for _, p := range a.Privileges {
 			privileges = append(privileges, p.ValueString())
 		}
 	}
-
-	if !plan.Password.IsNull() {
-		dbCredRequest.Password = plan.Password.ValueString()
-	}
-
 	dbCredRequest.Access = []api.Access{{Privileges: privileges}}
 
 	response, err := r.Client.Execute(
@@ -135,7 +138,7 @@ func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	dbResponse := api.GetDatabaseCredentialResponse{}
+	dbResponse := api.CreateDatabaseCredentialResponse{}
 	err = json.Unmarshal(response.Body, &dbResponse)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -162,7 +165,8 @@ func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	refreshedState.Password = plan.Password
+	// store the password that was either auto-generated or supplied during credential creation request.
+	refreshedState.Password = types.StringValue(dbResponse.Password)
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
@@ -182,42 +186,18 @@ func (r *DatabaseCredential) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	if state.OrganizationId.IsNull() {
+	dbId, clusterId, projectId, organizationId, err := state.Validate()
+	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error deleting database credential",
-			"Could not delete database credential, unexpected error: organization ID cannot be empty.",
+			"Error Reading Database Credentials in Capella",
+			"Could not read Capella database credential with ID "+state.Id.String()+": "+err.Error(),
 		)
 		return
 	}
-	var organizationId = state.OrganizationId.ValueString()
-	if state.ProjectId.IsNull() {
-		resp.Diagnostics.AddError(
-			"Error deleting database credential",
-			"Could not delete database credential, unexpected error: project ID cannot be empty.",
-		)
-		return
-	}
-	var projectId = state.ProjectId.ValueString()
-	if state.ClusterId.IsNull() {
-		resp.Diagnostics.AddError(
-			"Error deleting database credential",
-			"Could not delete database credential, unexpected error: cluster ID cannot be empty.",
-		)
-		return
-	}
-	var clusterId = state.ClusterId.ValueString()
-	if state.Id.IsNull() {
-		resp.Diagnostics.AddError(
-			"Error deleting database credential",
-			"Could not delete database credential, unexpected error: cluster ID cannot be empty.",
-		)
-		return
-	}
-	var dbId = state.Id.ValueString()
 
 	// Get refreshed Cluster value from Capella
 	refreshedState, err := r.retrieveDatabaseCredential(ctx, organizationId, projectId, clusterId, dbId)
-	resourceNotFound, err := handleClusterError(err)
+	resourceNotFound, err := handleDatabaseCredentialError(err)
 	if resourceNotFound {
 		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
 		resp.State.RemoveResource(ctx)
@@ -225,12 +205,13 @@ func (r *DatabaseCredential) Read(ctx context.Context, req resource.ReadRequest,
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading cluster",
-			"Could not read cluster id "+state.Id.String()+": "+err.Error(),
+			"Error reading database credential",
+			"Could not read database credential with id "+state.Id.String()+": "+err.Error(),
 		)
 		return
 	}
 
+	// if the user had provided the password in the input, we store that in the terraform state file.
 	refreshedState.Password = state.Password
 
 	// Set refreshed state
@@ -243,73 +224,12 @@ func (r *DatabaseCredential) Read(ctx context.Context, req resource.ReadRequest,
 
 // Update updates the database credential.
 func (r *DatabaseCredential) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// todo
-
+	// todo in AV-62853
 }
 
 // Delete deletes the database credential.
 func (r *DatabaseCredential) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// Retrieve values from state
-	var state providerschema.DatabaseCredential
-	diags := req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if state.OrganizationId.IsNull() {
-		resp.Diagnostics.AddError(
-			"Error deleting database credential",
-			"Could not delete database credential, unexpected error: organization ID cannot be empty.",
-		)
-		return
-	}
-	var organizationId = state.OrganizationId.ValueString()
-	if state.ProjectId.IsNull() {
-		resp.Diagnostics.AddError(
-			"Error deleting database credential",
-			"Could not delete database credential, unexpected error: project ID cannot be empty.",
-		)
-		return
-	}
-	var projectId = state.ProjectId.ValueString()
-	if state.ClusterId.IsNull() {
-		resp.Diagnostics.AddError(
-			"Error deleting database credential",
-			"Could not delete database credential, unexpected error: cluster ID cannot be empty.",
-		)
-		return
-	}
-	var clusterId = state.ClusterId.ValueString()
-	if state.Id.IsNull() {
-		resp.Diagnostics.AddError(
-			"Error deleting database credential",
-			"Could not delete database credential, unexpected error: cluster ID cannot be empty.",
-		)
-		return
-	}
-	var dbId = state.Id.ValueString()
-
-	// Delete existing Cluster
-	_, err := r.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", r.HostURL, organizationId, projectId, clusterId, dbId),
-		http.MethodDelete,
-		nil,
-		r.Token,
-		nil,
-	)
-	resourceNotFound, err := handleClusterError(err)
-	if resourceNotFound {
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		return
-	}
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error deleting database credential",
-			"Could not delete database credential with id "+state.Id.String()+": "+err.Error(),
-		)
-		return
-	}
+	// todo in AV-62166
 }
 
 // ImportState imports a remote database credential that is not created by Terraform.
@@ -323,6 +243,8 @@ func (r *DatabaseCredential) ImportState(ctx context.Context, req resource.Impor
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
+// retrieveDatabaseCredential fetches the database credential by making a GET API call to the Capella V4 Public API.
+// This usually helps retrieve the state of a newly created database credential that was created from Terraform.
 func (r *DatabaseCredential) retrieveDatabaseCredential(ctx context.Context, organizationId, projectId, clusterId, dbId string) (*providerschema.OneDatabaseCredential, error) {
 	response, err := r.Client.Execute(
 		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", r.HostURL, organizationId, projectId, clusterId, dbId),
@@ -341,8 +263,6 @@ func (r *DatabaseCredential) retrieveDatabaseCredential(ctx context.Context, org
 		return nil, err
 	}
 
-	dbResp.Etag = response.Response.Header.Get("ETag")
-
 	refreshedState := providerschema.OneDatabaseCredential{
 		Id:             types.StringValue(dbResp.Id.String()),
 		Name:           types.StringValue(dbResp.Name),
@@ -356,13 +276,29 @@ func (r *DatabaseCredential) retrieveDatabaseCredential(ctx context.Context, org
 			ModifiedBy: types.StringValue(dbResp.Audit.ModifiedBy),
 			Version:    types.Int64Value(int64(dbResp.Audit.Version)),
 		},
-		Etag: types.StringValue(dbResp.Etag),
-		Access: []providerschema.Access{
-			{
-				Privileges: []types.String{types.StringValue("data_reader"), types.StringValue("data_writer")},
-			},
-		},
+	}
+	for i, access := range dbResp.Access {
+		refreshedState.Access[i] = providerschema.Access{}
+		for _, permission := range access.Privileges {
+			refreshedState.Access[i].Privileges = append(refreshedState.Access[i].Privileges, types.StringValue(permission))
+		}
 	}
 
 	return &refreshedState, nil
+}
+
+// this func extract error message if error is api.Error and also checks whether error is
+// resource not found
+func handleDatabaseCredentialError(err error) (bool, error) {
+	switch err := err.(type) {
+	case nil:
+		return false, nil
+	case api.Error:
+		if err.HttpStatusCode != http.StatusNotFound {
+			return false, fmt.Errorf(err.CompleteError())
+		}
+		return true, fmt.Errorf(err.CompleteError())
+	default:
+		return false, err
+	}
 }
