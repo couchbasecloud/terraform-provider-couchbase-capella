@@ -107,6 +107,7 @@ func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequ
 		dbCredRequest.Password = plan.Password.ValueString()
 	}
 
+	// todo: Add support for granular access at per bucket and scope level in AV-62864.
 	var privileges []string
 	for _, a := range plan.Access {
 		for _, p := range a.Privileges {
