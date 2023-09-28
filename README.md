@@ -21,13 +21,6 @@ This block overrides all other configured installation methods.
 
 Terraform searches for the .terraformrc file in your home directory and applies any configuration settings you set. 
 
-First, find the GOBIN path where Go installs your binaries. Your path may vary depending on how your Go environment variables are configured.
-
-```shell
-go env GOBIN
-/Users/<Username>/go/bin
-```
-
 #### Create the terraform configuration file
 Create a new file called .terraformrc in your home directory (~), then add the dev_overrides block below.
 
