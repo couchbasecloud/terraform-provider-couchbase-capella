@@ -70,36 +70,6 @@ In order to set up authentication with the Couchbase Capella provider a V4 API k
 To find out how to generate a V4 API Key, please see the following document: 
 https://docs.couchbase.com/cloud/management-api-guide/management-api-start.html
 
-### Example Usage
-
-Note: You will need to provide both the url of the capella host as well as your V4 API secret for authentication. 
-
-```terraform
-terraform {
-  required_providers {
-    capella = {
-      source = "hashicorp.com/couchabasecloud/capella"
-    }
-  }
-}
-
-provider "capella" {
-  host     = "the host url of couchbase cloud"
-  authentication_token = "capella authentication token"
-}
-
-
-resource "capella_project" "example" {
-  organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
-  name = "example-name"
-  description = "example-description"
-}
-
-output "example_project" {
-  value = capella_project.example
-}
-```
-
 ### Terraform Environment Variables
 
 Environment variables can be set by terraform by creating and adding terraform.template.tfvars
@@ -143,6 +113,36 @@ export TF_VAR_host= "https://cloudapi.dev.nonprod-project-avengers.com"
 ```
 
 ### Create and manage resources using terraform
+
+#### Example Usage
+
+Note: You will need to provide both the url of the capella host as well as your V4 API secret for authentication. 
+
+```terraform
+terraform {
+  required_providers {
+    capella = {
+      source = "hashicorp.com/couchabasecloud/capella"
+    }
+  }
+}
+
+provider "capella" {
+  host     = "the host url of couchbase cloud"
+  authentication_token = "capella authentication token"
+}
+
+
+resource "capella_project" "example" {
+  organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+  name = "example-name"
+  description = "example-description"
+}
+
+output "example_project" {
+  value = capella_project.example
+}
+```
 
 This repository contains a number of example directories containing examples of Hashicorp Configuration Language (HCL) code 
 being used to create and manage Capella resources. To try these examples out for yourself, change into one of them and run
