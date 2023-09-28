@@ -320,7 +320,7 @@ func (r *AllowList) refreshAllowList(ctx context.Context, organizationId, projec
 	}
 
 	if allowListResp.ExpiresAt != nil {
-		refreshedState.Comment = types.StringValue(*allowListResp.ExpiresAt)
+		refreshedState.ExpiresAt = types.StringValue(*allowListResp.ExpiresAt)
 	}
 
 	return &refreshedState, nil
