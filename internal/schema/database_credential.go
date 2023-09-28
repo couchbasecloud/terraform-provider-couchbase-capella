@@ -34,7 +34,7 @@ type DatabaseCredential struct {
 	// ClusterId is the ID of the cluster for which the database credential needs to be created.
 	ClusterId types.String `tfsdk:"cluster_id"`
 
-	// Audit All audit-related fields. It is of types.Object type to avoid conversion error for a nested field.
+	// Audit contains all audit-related fields. It is of types.Object type to avoid conversion error for a nested field.
 	Audit types.Object `tfsdk:"audit"`
 
 	// Access is a list of access which can be narrowed to the scope level of every bucket in the Capella cluster.
