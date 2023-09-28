@@ -58,22 +58,22 @@ func (r *DatabaseCredential) Configure(_ context.Context, req resource.Configure
 
 // Create creates a new database credential.
 func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	// todo
+	// todo in AV-61729
 }
 
 // Read reads database credential information.
 func (r *DatabaseCredential) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// todo
+	// todo in AV-61729
 }
 
 // Update updates the database credential.
 func (r *DatabaseCredential) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// todo
+	// todo in AV-62853
 }
 
 // Delete deletes the database credential.
 func (r *DatabaseCredential) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// todo
+	// todo in AV-62166
 }
 
 // ImportState imports a remote database credential that is not created by Terraform.
