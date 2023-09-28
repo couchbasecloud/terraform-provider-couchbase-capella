@@ -101,7 +101,7 @@ preface them with `TF_VAR_`. Terraform will then apply them your .terraformrc fi
 `terraform apply`. For example: 
 ```bash
 export TF_VAR_auth_token=<v4_api_secret_key>
-export TF_VAR_organization_id="6af08c0a-8cab-4c1c-b257-b521575c16d0"
+export TF_VAR_organization_id=<organization_id>
 export TF_VAR_host= "https://cloudapi.cloud.couchbase.com"
 ```
 
