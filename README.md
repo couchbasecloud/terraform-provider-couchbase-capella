@@ -21,8 +21,6 @@ This block overrides all other configured installation methods.
 
 Terraform searches for the .terraformrc file in your home directory and applies any configuration settings you set. 
 
-#### For Mac
-
 First, find the GOBIN path where Go installs your binaries. Your path may vary depending on how your Go environment variables are configured.
 
 ```shell
@@ -30,9 +28,8 @@ go env GOBIN
 /Users/<Username>/go/bin
 ```
 
-Create a new file called .terraformrc in your home directory (~), then add the dev_overrides block below. 
-Change the <PATH> to the value returned from the go env GOBIN command above. 
-If the GOBIN go environment variable is not set, use the default path, /Users/<Username>/go/bin.
+#### Create the terraform configuration file
+Create a new file called .terraformrc in your home directory (~), then add the dev_overrides block below.
 
 ```shell
 provider_installation {
@@ -48,10 +45,23 @@ direct {}
 }
 ```
 
-Now build the terraform provider from this source code
+<PATH> should be replaced with the directory corresponding to the terraform provider binary. 
+This could be the default folder where Go installs your binaries, which can be determined by calling: 
+
+```shell
+go env GOBIN
+```
+
+Alternatively, it may be the default path which is of the form: 
+``` shell
+/Users/<Username>/go/bin
+```
+
+#### Build and install the executable 
+
+Now build the terraform provider. Ensure to specify the build location using <PATH> as described above. 
 
 `go build -o <PATH>`
-
 
 ### Authentication
 
