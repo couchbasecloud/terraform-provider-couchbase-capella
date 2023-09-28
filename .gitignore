@@ -10,7 +10,6 @@
 # Ignore terraform plan, variable, backup and state files
 terraform.tfplan
 terraform.tfstate
-terraform.tfvars
 *.backup
 *.tfstate.*
 
