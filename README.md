@@ -162,15 +162,18 @@ $ terraform fmt
 Execute the following command to review the resources that will be deployed.
 
 ```bash
-$ terraform plan
+$ terraform plan -var-file=terraform.template.tfvars
 ```
+NOTE: If using a terraform.template.tfvars file to specify variables, then the -var-file flag will need to be used. 
+If instead, variables are set either using a terraform.tfvars file or by using TF_VAR_ prefaced environment variables, 
+then the -var-file flag can be omitted. This also applies for `terraform apply`.
 
 **2\. Execute the Terraform apply**
 
 Execute the plan to deploy the Couchbase Capella resources.
 
 ```bash
-$ terraform apply
+$ terraform apply -var-file=terraform.template.tfvars
 ```
 
 **3\. Destroy the resources**
