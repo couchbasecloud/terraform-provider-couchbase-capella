@@ -142,6 +142,23 @@ export TF_VAR_organization_id="6af08c0a-8cab-4c1c-b257-b521575c16d0"
 export TF_VAR_host= "https://cloudapi.dev.nonprod-project-avengers.com"
 ```
 
+### Create and manage resources using terraform
+
+This repository contains a number of example directories containing examples of Hashicorp Configuration Language (HCL) code 
+being used to create and manage Capella resources. To try these examples out for yourself, change into one of them and run
+the below commands.
+
+#### n.b. Terraform Init
+
+Ordinarily, terraform will downloaded the requested providers on running the command: 
+```bash
+$ terraform init
+```
+As we are working with a local install of `Terraform-Provider-Capella` this command is not needed and considered optional. 
+However if you plan to use any other providers at the same time it may need to be ran. 
+
+#### Commands
+
 **1\. Review the Terraform plan**
 
 Execute the following command to automatically review and update the formatting of .tf files.
