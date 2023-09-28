@@ -166,8 +166,27 @@ func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	// store the password that was either auto-generated or supplied during credential creation request.
 	refreshedState.Password = types.StringValue(dbResponse.Password)
+	// store the password that was either auto-generated or supplied during credential creation request.
+	// todo: there is a bug in the V4 public APIs where the API returns the password in the response only if it is auto-generated.
+	// This will be fixed in AV-62867.
+	// For now, we are working around this issue.
+	if dbResponse.Password == "" {
+		// this means the customer had provided a password in the terraform file during creation, store that.
+		refreshedState.Password = plan.Password
+	}
+
+	// todo: there is a bug in cp-open-api where the access field is empty in the GET API response,
+	// we are going to work around this for private preview.
+	// The fix will be done in SURF-7366
+	// For now, we are appending same permissions that the customer passed in the terraform files and not relying on the GET API response.
+	refreshedState.Access = make([]providerschema.Access, len(plan.Access))
+	for i, access := range plan.Access {
+		refreshedState.Access[i] = providerschema.Access{Privileges: make([]types.String, len(access.Privileges))}
+		for j, permission := range access.Privileges {
+			refreshedState.Access[i].Privileges[j] = permission
+		}
+	}
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
@@ -214,6 +233,18 @@ func (r *DatabaseCredential) Read(ctx context.Context, req resource.ReadRequest,
 
 	// if the user had provided the password in the input, we store that in the terraform state file.
 	refreshedState.Password = state.Password
+
+	// todo: there is a bug in cp-open-api where the access field is empty in the GET API response,
+	// we are going to work around this for private preview.
+	// The fix will be done in SURF-7366
+	// For now, we are appending same permissions that the customer passed in the terraform files and not relying on the GET API response.
+	refreshedState.Access = make([]providerschema.Access, len(state.Access))
+	for i, access := range state.Access {
+		refreshedState.Access[i] = providerschema.Access{Privileges: make([]types.String, len(access.Privileges))}
+		for j, permission := range access.Privileges {
+			refreshedState.Access[i].Privileges[j] = permission
+		}
+	}
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &refreshedState)
@@ -278,13 +309,18 @@ func (r *DatabaseCredential) retrieveDatabaseCredential(ctx context.Context, org
 			Version:    types.Int64Value(int64(dbResp.Audit.Version)),
 		},
 	}
-	for i, access := range dbResp.Access {
-		refreshedState.Access[i] = providerschema.Access{}
-		for _, permission := range access.Privileges {
-			refreshedState.Access[i].Privileges = append(refreshedState.Access[i].Privileges, types.StringValue(permission))
+	// todo: there is a bug in cp-open-api where the access field is empty in the GET API response,
+	// we are going to work around this for private preview.
+	// The fix will be done in SURF-7366
+	// For now, we are appending same permissions that the customer passed in the terraform files and not relying on the GET API response.
+	// the below code will be uncommented once the bug is fixed.
+	/*	for i, access := range dbResp.Access {
+			refreshedState.Access[i] = providerschema.Access{}
+			for _, permission := range access.Privileges {
+				refreshedState.Access[i].Privileges = append(refreshedState.Access[i].Privileges, types.StringValue(permission))
+			}
 		}
-	}
-
+	*/
 	return &refreshedState, nil
 }
 
