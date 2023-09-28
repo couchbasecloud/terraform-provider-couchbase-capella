@@ -149,7 +149,7 @@ Ordinarily, terraform will downloaded the requested providers on running the com
 ```bash
 $ terraform init
 ```
-As we are working with a local install of `Terraform-Provider-Capella` this command is not needed and considered optional. 
+If you are working with a local install of `Terraform-Provider-Capella` provider, this step is not needed and considered optional. 
 However if you plan to use any other providers at the same time it may need to be ran. 
 
 **1\. Review the Terraform plan**
