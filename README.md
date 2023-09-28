@@ -45,7 +45,7 @@ direct {}
 }
 ```
 
-'<PATH>' should be replaced with the directory corresponding to the terraform provider binary. 
+`<PATH>` should be replaced with the directory corresponding to the terraform provider binary. 
 This could be the default folder where Go installs your binaries, which can be determined by calling: 
 
 ```shell
@@ -59,7 +59,7 @@ Alternatively, it may be the default path which is of the form:
 
 #### Build and install the executable 
 
-Now build the terraform provider. Ensure to specify the build location using '<PATH>' as described above. 
+Now build the terraform provider. Ensure to specify the build location using `<PATH>` as described above. 
 
 `go build -o <PATH>`
 
