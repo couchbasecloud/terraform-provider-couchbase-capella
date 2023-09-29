@@ -218,8 +218,8 @@ func (d *AllowList) mapResponseBody(
 			ProjectId:      types.StringValue(state.ProjectId.ValueString()),
 			ClusterId:      types.StringValue(state.ClusterId.ValueString()),
 			Cidr:           types.StringValue(allowList.Cidr),
-			Comment:        types.StringValue(allowList.Comment),
-			ExpiresAt:      types.StringValue(allowList.ExpiresAt),
+			Comment:        types.StringValue(*allowList.Comment),
+			ExpiresAt:      types.StringValue(*allowList.ExpiresAt),
 			Audit: providerschema.CouchbaseAuditData{
 				CreatedAt:  types.StringValue(allowList.Audit.CreatedAt.String()),
 				CreatedBy:  types.StringValue(allowList.Audit.CreatedBy),
