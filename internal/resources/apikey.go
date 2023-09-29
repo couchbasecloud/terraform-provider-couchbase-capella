@@ -7,8 +7,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"net/http"
-	"terraform-provider-capella/internal/api/api_key"
-
 	"terraform-provider-capella/internal/api"
 	providerschema "terraform-provider-capella/internal/schema"
 
@@ -79,7 +77,7 @@ func (r *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	}
 	var organizationId = plan.OrganizationId.ValueString()
 
-	apiKeyRequest := api_key.CreateApiKeyRequest{
+	apiKeyRequest := api.CreateApiKeyRequest{
 		Name: plan.Name.ValueString(),
 	}
 
@@ -98,7 +96,7 @@ func (r *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	}
 	apiKeyRequest.OrganizationRoles = newOrganizationRoles
 
-	var newResources []api_key.ApiKeyResourcesItems
+	var newResources []api.ResourcesItems
 	for _, resource := range plan.Resources {
 		id, err := uuid.Parse(resource.Id.ValueString())
 		if err != nil {
@@ -108,7 +106,7 @@ func (r *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 			)
 			return
 		}
-		newResource := api_key.ApiKeyResourcesItems{
+		newResource := api.ResourcesItems{
 			Id: id,
 		}
 
@@ -160,7 +158,7 @@ func (r *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		return
 	}
 
-	apiKeyResponse := api_key.CreateApiKeyResponse{}
+	apiKeyResponse := api.CreateApiKeyResponse{}
 	err = json.Unmarshal(response.Body, &apiKeyResponse)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -248,7 +246,7 @@ func (r *ApiKey) retrieveApiKey(ctx context.Context, organizationId, apiKeyId st
 		return nil, err
 	}
 
-	apiKeyResp := api_key.GetApiKeyResponse{}
+	apiKeyResp := api.GetApiKeyResponse{}
 	err = json.Unmarshal(response.Body, &apiKeyResp)
 	if err != nil {
 		return nil, err

@@ -1,16 +1,15 @@
-package api_key
+package api
 
 import (
 	"github.com/google/uuid"
-	"terraform-provider-capella/internal/api"
 )
 
-// ApiKeyResources  are the resource level permissions associated with the API key.
+// Resources  are the resource level permissions associated with the API key.
 // To learn more about Organization Roles, see [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
-type ApiKeyResources = []ApiKeyResourcesItems
+type Resources = []ResourcesItems
 
-// ApiKeyResourcesItems defines model for APIKeyResourcesItems.
-type ApiKeyResourcesItems struct {
+// ResourcesItems defines model for APIKeyResourcesItems.
+type ResourcesItems struct {
 	// Id is the id of the project.
 	Id uuid.UUID `json:"id"`
 
@@ -42,7 +41,7 @@ type CreateApiKeyRequest struct {
 	// Resources are the resource level permissions associated with the API key.
 	//
 	// To learn more about Organization Roles, see [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
-	Resources *ApiKeyResources `json:"resources,omitempty"`
+	Resources *Resources `json:"resources,omitempty"`
 }
 
 // CreateApiKeyResponse defines model for CreateAPIKeyResponse.
@@ -58,8 +57,8 @@ type CreateApiKeyResponse struct {
 type GetApiKeyResponse struct {
 	// AllowedCIDRs is the list of inbound CIDRs for the API key.
 	// The system making a request must come from one of the allowed CIDRs.
-	AllowedCIDRs []string               `json:"allowedCIDRs"`
-	Audit        api.CouchbaseAuditData `json:"audit"`
+	AllowedCIDRs []string           `json:"allowedCIDRs"`
+	Audit        CouchbaseAuditData `json:"audit"`
 
 	// Description is the description for the API key.
 	Description string `json:"description"`
@@ -78,5 +77,5 @@ type GetApiKeyResponse struct {
 	// Resources is the resources are the resource level permissions associated with the API key.
 	//
 	// To learn more about Organization Roles, see [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
-	Resources ApiKeyResources `json:"resources"`
+	Resources Resources `json:"resources"`
 }
