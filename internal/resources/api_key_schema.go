@@ -24,6 +24,7 @@ func ApiKeySchema() schema.Schema {
 			},
 			"description": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 			},
 			"allowed_cidrs": schema.ListAttribute{
 				Optional:    true,
