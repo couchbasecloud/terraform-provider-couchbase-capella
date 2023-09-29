@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"os"
 	"terraform-provider-capella/internal/datasources"
 	"time"
 
@@ -106,19 +105,10 @@ func (p *capellaProvider) Configure(ctx context.Context, req provider.ConfigureR
 		return
 	}
 
-	// Default values to environment variables, but override
-	// with Terraform configuration value if set.
+	// Set the host and authentication token to be used
 
-	host := os.Getenv("CAPELLA_HOST")
-	authenticationToken := os.Getenv("CAPELLA_AUTHENTICATION_TOKEN")
-
-	if !config.Host.IsNull() {
-		host = config.Host.ValueString()
-	}
-
-	if !config.AuthenticationToken.IsNull() {
-		authenticationToken = config.AuthenticationToken.ValueString()
-	}
+	host := config.Host.ValueString()
+	authenticationToken := config.AuthenticationToken.ValueString()
 
 	// If any of the expected configurations are missing, return
 	// error with provider-specific guidance.
@@ -127,7 +117,7 @@ func (p *capellaProvider) Configure(ctx context.Context, req provider.ConfigureR
 			path.Root(capellaPublicAPIHostField),
 			"Missing Capella Public API Host",
 			"The provider cannot create the Capella API client as there is a missing or empty value for the Capella API host. "+
-				"Set the host value in the configuration or use the CAPELLA_HOST environment variable. "+
+				"Set the host value in the configuration or use the TF_VAR_host environment variable. "+
 				"If either is already set, ensure the value is not empty.",
 		)
 	}
@@ -137,7 +127,7 @@ func (p *capellaProvider) Configure(ctx context.Context, req provider.ConfigureR
 			path.Root(capellaAuthenticationTokenField),
 			"Missing Capella Authentication Token",
 			"The provider cannot create the Capella API client as there is a missing or empty value for the capella authentication token. "+
-				"Set the password value in the configuration or use the CAPELLA_AUTHENTICATION_TOKEN environment variable. "+
+				"Set the password value in the configuration or use the TF_VAR_auth_token environment variable. "+
 				"If either is already set, ensure the value is not empty.",
 		)
 	}
@@ -179,6 +169,7 @@ func (p *capellaProvider) Configure(ctx context.Context, req provider.ConfigureR
 func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		datasources.NewProject,
+		datasources.NewAllowList,
 	}
 }
 
@@ -188,6 +179,7 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewProject,
 		resources.NewCluster,
 		resources.NewAllowList,
+		resources.NewDatabaseCredential,
 		resources.NewApiKey,
 	}
 }
