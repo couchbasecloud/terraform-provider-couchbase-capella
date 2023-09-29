@@ -45,7 +45,7 @@ type GetUserResponse struct {
 	Inactive bool `json:"inactive"`
 
 	// OrganizationId is a GUID4 identifier of the tenant.
-	OrganizationIdId uuid.UUID `json:"organizationId"`
+	OrganizationId uuid.UUID `json:"organizationId"`
 
 	// OrganizationRoles is an array of strings representing the roles granted to the user.
 	OrganizationRoles []string `json:"organizationRoles"`

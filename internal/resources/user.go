@@ -67,6 +67,15 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 		return
 	}
 
+	if plan.OrganizationId.IsNull() {
+		resp.Diagnostics.AddError(
+			"Error creating project",
+			"Could not create project, unexpected error: organization ID cannot be empty.",
+		)
+		return
+	}
+	var organizationId = plan.OrganizationId.ValueString()
+
 	createUserRequest := api.CreateUserRequest{
 		Name:              plan.Name.ValueString(),
 		Email:             plan.Email.ValueString(),
@@ -76,11 +85,7 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 
 	// Execute request
 	response, err := r.Client.Execute(
-		fmt.Sprintf(
-			"%s/v4/organizations/%s/users",
-			r.HostURL,
-			plan.OrganizationId.ValueString(),
-		),
+		fmt.Sprintf("%s/v4/organizations/%s/users", r.HostURL, organizationId),
 		http.MethodPost,
 		createUserRequest,
 		r.Token,
