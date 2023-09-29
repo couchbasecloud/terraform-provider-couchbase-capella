@@ -5,7 +5,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"terraform-provider-capella/internal/api/api_key"
+	"terraform-provider-capella/internal/api"
 )
 
 // ApiKeyResourcesItems defines model for APIKeyResourcesItems.
@@ -52,7 +52,7 @@ type ApiKey struct {
 }
 
 // NewApiKey creates new apikey object
-func NewApiKey(apiKey *api_key.GetApiKeyResponse, organizationId string, auditObject basetypes.ObjectValue) (*ApiKey, error) {
+func NewApiKey(apiKey *api.GetApiKeyResponse, organizationId string, auditObject basetypes.ObjectValue) (*ApiKey, error) {
 	newApiKey := ApiKey{
 		Id:             types.StringValue(apiKey.Id),
 		OrganizationId: types.StringValue(organizationId),
