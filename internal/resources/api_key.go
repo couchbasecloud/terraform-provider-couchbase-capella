@@ -4,7 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/google/uuid"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"net/http"
 	"terraform-provider-capella/internal/api/api_key"
 
@@ -78,15 +79,51 @@ func (r *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	}
 	var organizationId = plan.OrganizationId.ValueString()
 
-	ApiKeyRequest := api_key.CreateApiKeyRequest{
-		Description: plan.Description.ValueStringPointer(),
-		Name:        plan.Name.ValueString(),
+	apiKeyRequest := api_key.CreateApiKeyRequest{
+		Name: plan.Name.ValueString(),
 	}
-	var newOrganizationRoles []api_key.ApiKeyOrganizationRole
+
+	if !plan.Description.IsNull() && !plan.Description.IsUnknown() {
+		apiKeyRequest.Description = plan.Description.ValueStringPointer()
+	}
+
+	if !plan.Expiry.IsNull() && !plan.Expiry.IsUnknown() {
+		expiry := float32(plan.Expiry.ValueFloat64())
+		apiKeyRequest.Expiry = &expiry
+	}
+
+	var newOrganizationRoles []string
 	for _, organizationRole := range plan.OrganizationRoles {
-		newOrganizationRoles = append(newOrganizationRoles, api_key.ApiKeyOrganizationRole(organizationRole.ValueString()))
+		newOrganizationRoles = append(newOrganizationRoles, organizationRole.ValueString())
 	}
-	ApiKeyRequest.OrganizationRoles = newOrganizationRoles
+	apiKeyRequest.OrganizationRoles = newOrganizationRoles
+
+	var newResources []api_key.ApiKeyResourcesItems
+	for _, resource := range plan.Resources {
+		id, err := uuid.Parse(resource.Id.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error creating ApiKey",
+				"Could not create ApiKey, unexpected error: resource id is not valid uuid: err: "+err.Error(),
+			)
+			return
+		}
+		newResource := api_key.ApiKeyResourcesItems{
+			Id: id,
+		}
+
+		var newRoles []string
+		for _, role := range resource.Roles {
+			newRoles = append(newRoles, role.ValueString())
+		}
+		newResource.Roles = newRoles
+
+		if !resource.Type.IsNull() && !resource.Type.IsUnknown() {
+			newResource.Type = resource.Type.ValueStringPointer()
+		}
+		newResources = append(newResources, newResource)
+	}
+	apiKeyRequest.Resources = &newResources
 
 	elements := make([]types.String, 0, len(plan.AllowedCIDRs.Elements()))
 	_ = plan.AllowedCIDRs.ElementsAs(ctx, &elements, false)
@@ -97,12 +134,13 @@ func (r *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	}
 
 	if !plan.AllowedCIDRs.IsNull() {
-		ApiKeyRequest.AllowedCIDRs = &newAllowedCidrs
+		apiKeyRequest.AllowedCIDRs = &newAllowedCidrs
 	}
+
 	response, err := r.Client.Execute(
 		fmt.Sprintf("%s/v4/organizations/%s/apikeys", r.HostURL, organizationId),
 		http.MethodPost,
-		ApiKeyRequest,
+		apiKeyRequest,
 		r.Token,
 		nil,
 	)
@@ -122,8 +160,8 @@ func (r *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		return
 	}
 
-	ApiKeyResponse := api_key.CreateAPIKeyResponse{}
-	err = json.Unmarshal(response.Body, &ApiKeyResponse)
+	apiKeyResponse := api_key.CreateApiKeyResponse{}
+	err = json.Unmarshal(response.Body, &apiKeyResponse)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating ApiKey",
@@ -132,24 +170,42 @@ func (r *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		return
 	}
 
-	refreshedState, err := r.retrieveApiKey(ctx, organizationId, ApiKeyResponse.Id)
+	refreshedState, err := r.retrieveApiKey(ctx, organizationId, apiKeyResponse.Id)
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
 		resp.Diagnostics.AddError(
 			"Error Reading Capella ApiKeys",
-			"Could not read Capella ApiKey ID "+ApiKeyResponse.Id+": "+err.CompleteError(),
+			"Could not read Capella ApiKey ID "+apiKeyResponse.Id+": "+err.CompleteError(),
 		)
 		return
 	default:
 		resp.Diagnostics.AddError(
 			"Error Reading Capella ApiKeys",
-			"Could not read Capella ApiKey ID "+ApiKeyResponse.Id+": "+err.Error(),
+			"Could not read Capella ApiKey ID "+apiKeyResponse.Id+": "+err.Error(),
 		)
 		return
 	}
 
-	refreshedState.Token = types.StringValue(ApiKeyResponse.Token)
+	resources, err := providerschema.OrderList2(plan.Resources, refreshedState.Resources)
+	switch err {
+	case nil:
+		refreshedState.Resources = resources
+	default:
+		tflog.Error(ctx, err.Error())
+	}
+
+	for i, resource := range refreshedState.Resources {
+		if providerschema.AreEqual(resource.Roles, plan.Resources[i].Roles) {
+			refreshedState.Resources[i].Roles = plan.Resources[i].Roles
+		}
+	}
+
+	if providerschema.AreEqual(refreshedState.OrganizationRoles, plan.OrganizationRoles) {
+		refreshedState.OrganizationRoles = plan.OrganizationRoles
+	}
+
+	refreshedState.Token = types.StringValue(apiKeyResponse.Token)
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
@@ -179,6 +235,7 @@ func (r *ApiKey) ImportState(ctx context.Context, req resource.ImportStateReques
 	//TODO
 }
 
+// retrieveApiKey retrieves apikey information for a specified organization and apiKeyId.
 func (r *ApiKey) retrieveApiKey(ctx context.Context, organizationId, apiKeyId string) (*providerschema.ApiKey, error) {
 	response, err := r.Client.Execute(
 		fmt.Sprintf("%s/v4/organizations/%s/apikeys/%s", r.HostURL, organizationId, apiKeyId),
@@ -204,47 +261,9 @@ func (r *ApiKey) retrieveApiKey(ctx context.Context, organizationId, apiKeyId st
 		return nil, fmt.Errorf("error while audit conversion")
 	}
 
-	refreshedState := providerschema.ApiKey{
-		Id:             types.StringValue(apiKeyResp.Id),
-		OrganizationId: types.StringValue(organizationId),
-		Name:           types.StringValue(apiKeyResp.Name),
-		Description:    types.StringValue(apiKeyResp.Description),
-		Expiry:         types.Float64Value(float64(apiKeyResp.Expiry)),
-		Audit:          auditObj,
+	refreshedState, err := providerschema.NewApiKey(&apiKeyResp, organizationId, auditObj)
+	if err != nil {
+		return nil, err
 	}
-
-	var newAllowedCidr []attr.Value
-	for _, allowedCidr := range apiKeyResp.AllowedCIDRs {
-		newAllowedCidr = append(newAllowedCidr, types.StringValue(allowedCidr))
-	}
-	//refreshedState.AllowedCIDRs
-
-	x, _ := types.ListValue(types.StringType, newAllowedCidr)
-
-	refreshedState.AllowedCIDRs = x
-
-	var newOrganizationRoles []types.String
-	for _, organizationRole := range apiKeyResp.OrganizationRoles {
-		newOrganizationRoles = append(newOrganizationRoles, types.StringValue(string(organizationRole)))
-	}
-	refreshedState.OrganizationRoles = newOrganizationRoles
-
-	var newApiKeyResourcesItems []providerschema.APIKeyResourcesItems
-	for _, resource := range apiKeyResp.Resources {
-		newResourceItem := providerschema.APIKeyResourcesItems{
-			Id: types.StringValue(resource.Id.String()),
-		}
-		if resource.Type != nil {
-			newResourceItem.Type = types.StringValue(*resource.Type)
-		}
-		var newRoles []types.String
-		for _, role := range resource.Roles {
-			newRoles = append(newRoles, types.StringValue(string(role)))
-		}
-		newResourceItem.Roles = newRoles
-		newApiKeyResourcesItems = append(newApiKeyResourcesItems, newResourceItem)
-	}
-	refreshedState.Resources = newApiKeyResourcesItems
-
-	return &refreshedState, nil
+	return refreshedState, nil
 }
