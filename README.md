@@ -21,18 +21,8 @@ This block overrides all other configured installation methods.
 
 Terraform searches for the .terraformrc file in your home directory and applies any configuration settings you set. 
 
-#### For Mac
-
-First, find the GOBIN path where Go installs your binaries. Your path may vary depending on how your Go environment variables are configured.
-
-```shell
-go env GOBIN
-/Users/<Username>/go/bin
-```
-
-Create a new file called .terraformrc in your home directory (~), then add the dev_overrides block below. 
-Change the <PATH> to the value returned from the go env GOBIN command above. 
-If the GOBIN go environment variable is not set, use the default path, /Users/<Username>/go/bin.
+#### Create the terraform configuration file
+Create a new file called .terraformrc in your home directory (~), then add the dev_overrides block below.
 
 ```shell
 provider_installation {
@@ -48,10 +38,23 @@ direct {}
 }
 ```
 
-Now build the terraform provider from this source code
+`<PATH>` should be replaced with the directory corresponding to the terraform provider binary. 
+This could be the default folder where Go installs your binaries, which can be determined by calling: 
+
+```shell
+go env GOBIN
+```
+
+Alternatively, it may be the default path which is of the form: 
+``` shell
+/Users/<Username>/go/bin
+```
+
+#### Build and install the executable 
+
+Now build the terraform provider. Ensure to specify the build location using `<PATH>` as described above. 
 
 `go build -o <PATH>`
-
 
 ### Authentication
 
@@ -59,36 +62,6 @@ In order to set up authentication with the Couchbase Capella provider a V4 API k
 
 To find out how to generate a V4 API Key, please see the following document: 
 https://docs.couchbase.com/cloud/management-api-guide/management-api-start.html
-
-### Example Usage
-
-Note: You will need to provide both the url of the capella host as well as your V4 API secret for authentication. 
-
-```terraform
-terraform {
-  required_providers {
-    capella = {
-      source = "hashicorp.com/couchabasecloud/capella"
-    }
-  }
-}
-
-provider "capella" {
-  host     = "the host url of couchbase cloud"
-  authentication_token = "capella authentication token"
-}
-
-
-resource "capella_project" "example" {
-  organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
-  name = "example-name"
-  description = "example-description"
-}
-
-output "example_project" {
-  value = capella_project.example
-}
-```
 
 ### Terraform Environment Variables
 
@@ -128,9 +101,56 @@ preface them with `TF_VAR_`. Terraform will then apply them your .terraformrc fi
 `terraform apply`. For example: 
 ```bash
 export TF_VAR_auth_token=<v4_api_secret_key>
-export TF_VAR_organization_id="6af08c0a-8cab-4c1c-b257-b521575c16d0"
-export TF_VAR_host= "https://cloudapi.dev.nonprod-project-avengers.com"
+export TF_VAR_organization_id=<organization_id>
+export TF_VAR_host= "https://cloudapi.cloud.couchbase.com"
 ```
+
+### Create and manage resources using terraform
+
+#### Example Usage
+
+Note: You will need to provide both the url of the capella host as well as your V4 API secret for authentication. 
+
+```terraform
+terraform {
+  required_providers {
+    capella = {
+      source = "hashicorp.com/couchabasecloud/capella"
+    }
+  }
+}
+
+provider "capella" {
+  host     = "the host url of couchbase cloud"
+  authentication_token = "capella authentication token"
+}
+
+
+resource "capella_project" "example" {
+  organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+  name = "example-name"
+  description = "example-description"
+}
+
+output "example_project" {
+  value = capella_project.example
+}
+```
+
+This repository contains a number of example directories containing examples of Hashicorp Configuration Language (HCL) code 
+being used to create and manage Capella resources. To try these examples out for yourself, change into one of them and run
+the below commands.
+
+#### Commands
+
+#### n.b. Terraform Init
+
+Ordinarily, terraform will downloaded the requested providers on running the command: 
+```bash
+$ terraform init
+```
+If you are working with a local install of `Terraform-Provider-Capella` provider, this step is not needed and considered optional. 
+However if you plan to use any other providers at the same time it may need to be ran. 
 
 **1\. Review the Terraform plan**
 
@@ -142,15 +162,18 @@ $ terraform fmt
 Execute the following command to review the resources that will be deployed.
 
 ```bash
-$ terraform plan
+$ terraform plan -var-file=terraform.template.tfvars
 ```
+NOTE: If using a terraform.template.tfvars file to specify variables, then the -var-file flag will need to be used. 
+If instead, variables are set either using a terraform.tfvars file or by using TF_VAR_ prefaced environment variables, 
+then the -var-file flag can be omitted. This also applies for `terraform apply`.
 
 **2\. Execute the Terraform apply**
 
 Execute the plan to deploy the Couchbase Capella resources.
 
 ```bash
-$ terraform apply
+$ terraform apply -var-file=terraform.template.tfvars
 ```
 
 **3\. Destroy the resources**
