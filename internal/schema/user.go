@@ -57,13 +57,13 @@ type User struct {
 
 type Resource struct {
 	// Id is a GUID4 identifier of the resource.
-	Id string `tfsdk:"id"`
+	Id types.String `tfsdk:"id"`
 
 	// Type is the type of the resource.
-	Type string `tfsdk:"type"`
+	Type types.String `tfsdk:"type"`
 
 	// Roles is an array of strings representing a users project roles
-	Roles string `tfsdk:"roles"`
+	Roles []types.String `tfsdk:"roles"`
 }
 
 // OneAllowList maps user resource schema data; there is a separate response object to avoid conversion error for nested fields.
