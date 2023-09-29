@@ -67,15 +67,6 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 		return
 	}
 
-	if plan.OrganizationId.IsNull() {
-		resp.Diagnostics.AddError(
-			"Error creating project",
-			"Could not create project, unexpected error: organization ID cannot be empty.",
-		)
-		return
-	}
-	var organizationId = plan.OrganizationId.ValueString()
-
 	createUserRequest := api.CreateUserRequest{
 		Name:              plan.Name.ValueString(),
 		Email:             plan.Email.ValueString(),
@@ -85,7 +76,7 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 
 	// Execute request
 	response, err := r.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/users", r.HostURL, organizationId),
+		fmt.Sprintf("%s/v4/organizations/%s/users", r.HostURL, plan.OrganizationId.ValueString()),
 		http.MethodPost,
 		createUserRequest,
 		r.Token,
@@ -213,11 +204,41 @@ func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (
 		return nil, err
 	}
 
+	// TODO: Set ETag
+
+	var organizationRoles []basetypes.StringValue
+	for _, role := range userResp.OrganizationRoles {
+		organizationRoles = append(organizationRoles, types.StringValue(role))
+	}
+
+	var resources []basetypes.ObjectValue
+	// TODO: Convert resources in get response to terraform types.Object
+
 	// TODO: Populate fields in refreshedstate
 	refreshedState := providerschema.OneUser{
-		Id:             types.StringValue(userResp.Id.String()),
-		OrganizationId: types.StringValue(organizationId),
+		Id:                  types.StringValue(userResp.Id.String()),
+		Name:                types.StringValue(userResp.Name),
+		Email:               types.StringValue(userResp.Email),
+		Status:              types.StringValue(userResp.Status),
+		Inactive:            types.BoolValue(userResp.Inactive),
+		OrganizationId:      types.StringValue(organizationId),
+		OrganizationRoles:   organizationRoles,
+		LastLogin:           types.StringValue(userResp.LastLogin),
+		Region:              types.StringValue(userResp.Region),
+		TimeZone:            types.StringValue(userResp.TimeZone),
+		EnableNotifications: types.BoolValue(userResp.EnableNotifications),
+		ExpiresAt:           types.StringValue(userResp.ExpiresAt),
+		Resources:           resources,
+		Audit: providerschema.CouchbaseAuditData{
+			CreatedAt:  types.StringValue(userResp.Audit.CreatedAt.String()),
+			CreatedBy:  types.StringValue(userResp.Audit.CreatedBy),
+			ModifiedAt: types.StringValue(userResp.Audit.ModifiedAt.String()),
+			ModifiedBy: types.StringValue(userResp.Audit.ModifiedBy),
+			Version:    types.Int64Value(int64(userResp.Audit.Version)),
+		},
 	}
+
+	// TODO: Set optional fields
 
 	return &refreshedState, nil
 }
