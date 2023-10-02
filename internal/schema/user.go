@@ -106,7 +106,7 @@ type OneUser struct {
 	ExpiresAt types.String `tfsdk:"expiresAt"`
 
 	// Resources is an array of objects representing the resources the user has access to
-	Resources []types.Object `tfsdk:"resources"`
+	Resources []Resource `tfsdk:"resources"`
 
 	// ETag is a unique indentifier which the client uses to determine if the resource has changed.
 	ETag types.String `tfsdk:"if_match"`
