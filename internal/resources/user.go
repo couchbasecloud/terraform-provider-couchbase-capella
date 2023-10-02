@@ -67,6 +67,8 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 		return
 	}
 
+	// TODO: Add parameter validation
+
 	createUserRequest := api.CreateUserRequest{
 		Name:              plan.Name.ValueString(),
 		Email:             plan.Email.ValueString(),
@@ -199,46 +201,46 @@ func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api
 	return &userResp, nil
 }
 
-func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (*providerschema.OneUser, error) {
+func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (*providerschema.User, error) {
 	userResp, err := r.getUser(ctx, organizationId, userId)
 	if err != nil {
 		return nil, fmt.Errorf("error retrieving user: %s", err)
 	}
 
-	organizationRoles := r.morphOrganizationRoles(ctx, userResp.OrganizationRoles)
-	resources := r.morphResources(ctx, userResp.Resources)
-
-	refreshedState := providerschema.OneUser{
-		Id:                  types.StringValue(userResp.Id.String()),
-		Name:                types.StringValue(userResp.Name),
-		Email:               types.StringValue(userResp.Email),
-		Status:              types.StringValue(userResp.Status),
-		Inactive:            types.BoolValue(userResp.Inactive),
-		OrganizationId:      types.StringValue(organizationId),
-		OrganizationRoles:   organizationRoles,
-		LastLogin:           types.StringValue(userResp.LastLogin),
-		Region:              types.StringValue(userResp.Region),
-		TimeZone:            types.StringValue(userResp.TimeZone),
-		EnableNotifications: types.BoolValue(userResp.EnableNotifications),
-		ExpiresAt:           types.StringValue(userResp.ExpiresAt),
-		Resources:           resources,
-		Audit: providerschema.CouchbaseAuditData{
-			CreatedAt:  types.StringValue(userResp.Audit.CreatedAt.String()),
-			CreatedBy:  types.StringValue(userResp.Audit.CreatedBy),
-			ModifiedAt: types.StringValue(userResp.Audit.ModifiedAt.String()),
-			ModifiedBy: types.StringValue(userResp.Audit.ModifiedBy),
-			Version:    types.Int64Value(int64(userResp.Audit.Version)),
-		},
+	audit := providerschema.NewCouchbaseAuditData(userResp.Audit)
+	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
+	if diags.HasError() {
+		return nil, fmt.Errorf("failed to convert audit data")
 	}
+
+	organizationRoles := r.morphOrganizationRoles(userResp.OrganizationRoles)
+	resources := r.morphResources(userResp.Resources)
+
+	refreshedState := providerschema.NewUser(
+		types.StringValue(userResp.Id.String()),
+		types.StringValue(userResp.Name),
+		types.StringValue(userResp.Email),
+		types.StringValue(userResp.Status),
+		types.BoolValue(userResp.Inactive),
+		types.StringValue(userResp.OrganizationId.String()),
+		organizationRoles,
+		types.StringValue(userResp.LastLogin),
+		types.StringValue(userResp.Region),
+		types.StringValue(userResp.TimeZone),
+		types.BoolValue(userResp.EnableNotifications),
+		types.StringValue(userResp.ExpiresAt),
+		resources,
+		auditObj,
+	)
 
 	// TODO: Set optional fields
 
-	return &refreshedState, nil
+	return refreshedState, nil
 }
 
 // morphOrgnanizationRoles is used to convert nested organizationRoles from
 // strings to terraform type.String.
-func (r *User) morphOrganizationRoles(ctx context.Context, organizationRoles []string) []basetypes.StringValue {
+func (r *User) morphOrganizationRoles(organizationRoles []string) []basetypes.StringValue {
 	var morphedRoles []basetypes.StringValue
 	for _, role := range organizationRoles {
 		morphedRoles = append(morphedRoles, types.StringValue(role))
@@ -248,7 +250,7 @@ func (r *User) morphOrganizationRoles(ctx context.Context, organizationRoles []s
 
 // morphResources is used to covert nested resources from strings
 // to terraform types.String
-func (r *User) morphResources(ctx context.Context, resources []api.Resource) []providerschema.Resource {
+func (r *User) morphResources(resources []api.Resource) []providerschema.Resource {
 	var morphedResources []providerschema.Resource
 	for _, resource := range resources {
 		var morphedResource providerschema.Resource
