@@ -101,7 +101,7 @@ type OneUser struct {
 	ExpiresAt types.String `tfsdk:"expiresAt"`
 
 	// Resources is an array of objects representing the resources the user has access to
-	Resources []types.Object `tfsdk:"resources"`
+	Resources []Resource `tfsdk:"resources"`
 
 	IfMatch types.String `tfsdk:"if_match"`
 

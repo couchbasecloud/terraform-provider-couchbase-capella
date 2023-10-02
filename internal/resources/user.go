@@ -201,20 +201,33 @@ func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api
 func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (*providerschema.OneUser, error) {
 	userResp, err := r.getUser(ctx, organizationId, userId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error retrieving user: %s", err)
 	}
 
-	// TODO: Set ETag
+	// TODO: Populate ETag
 
 	var organizationRoles []basetypes.StringValue
 	for _, role := range userResp.OrganizationRoles {
 		organizationRoles = append(organizationRoles, types.StringValue(role))
 	}
 
-	var resources []basetypes.ObjectValue
-	// TODO: Convert resources in get response to terraform types.Object
+	var resources []providerschema.Resource
+	for _, resource := range userResp.Resources {
+		var convertedResource providerschema.Resource
 
-	// TODO: Populate fields in refreshedstate
+		convertedResource.Id = types.StringValue(resource.Id)
+		convertedResource.Type = types.StringValue(resource.Type)
+
+		var roles []basetypes.StringValue
+		for _, role := range resource.Roles {
+			roles = append(roles, types.StringValue(role))
+		}
+
+		convertedResource.Roles = roles
+
+		resources = append(resources, convertedResource)
+	}
+
 	refreshedState := providerschema.OneUser{
 		Id:                  types.StringValue(userResp.Id.String()),
 		Name:                types.StringValue(userResp.Name),
