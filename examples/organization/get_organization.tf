@@ -1,7 +1,7 @@
-output "organization_get" {
-  value = data.capella_organizations.existing_organization
+output "organizations_get" {
+  value = data.capella_organizations.existing_organizations
 }
 
-data "capella_organizations" "existing_organization" {
+data "capella_organizations" "existing_organizations" {
   organization_id = var.organization_id
 }
