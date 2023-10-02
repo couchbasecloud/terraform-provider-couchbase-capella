@@ -33,7 +33,7 @@ func NewAllowList() datasource.DataSource {
 
 // Metadata returns the allow list data source type name.
 func (d *AllowList) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_allowlists"
+	resp.TypeName = req.ProviderTypeName + "_allowlist"
 }
 
 // Schema defines the schema for the allowlist data source.
@@ -218,8 +218,8 @@ func (d *AllowList) mapResponseBody(
 			ProjectId:      types.StringValue(state.ProjectId.ValueString()),
 			ClusterId:      types.StringValue(state.ClusterId.ValueString()),
 			Cidr:           types.StringValue(allowList.Cidr),
-			Comment:        types.StringValue(allowList.Comment),
-			ExpiresAt:      types.StringValue(allowList.ExpiresAt),
+			Comment:        types.StringValue(*allowList.Comment),
+			ExpiresAt:      types.StringValue(*allowList.ExpiresAt),
 			Audit: providerschema.CouchbaseAuditData{
 				CreatedAt:  types.StringValue(allowList.Audit.CreatedAt.String()),
 				CreatedBy:  types.StringValue(allowList.Audit.CreatedBy),
