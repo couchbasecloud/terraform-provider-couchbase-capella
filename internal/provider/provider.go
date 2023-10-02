@@ -183,5 +183,6 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewAllowList,
 		resources.NewDatabaseCredential,
 		resources.NewApiKey,
+		resources.NewUser,
 	}
 }
