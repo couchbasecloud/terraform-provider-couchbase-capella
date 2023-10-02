@@ -67,18 +67,26 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 		return
 	}
 
-	// TODO: Add parameter validation
+	err := r.validateCreateUserRequest(plan)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error parsing create user request",
+			"Could not create user "+err.Error(),
+		)
+		return
+	}
+	var organizationId = plan.OrganizationId.ValueString()
 
 	createUserRequest := api.CreateUserRequest{
 		Name:              plan.Name.ValueString(),
 		Email:             plan.Email.ValueString(),
-		OrganizationRoles: r.convertOrganizationRoles(plan.OrganizationRoles),
+		OrganizationRoles: r.convertOrganizationRoles(*plan.OrganizationRoles),
 		Resources:         r.convertResources(plan.Resources),
 	}
 
 	// Execute request
 	response, err := r.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/users", r.HostURL, plan.OrganizationId.ValueString()),
+		fmt.Sprintf("%s/v4/organizations/%s/users", r.HostURL, organizationId),
 		http.MethodPost,
 		createUserRequest,
 		r.Token,
@@ -118,6 +126,19 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 	if resp.Diagnostics.HasError() {
 		return
 	}
+}
+
+func (r *User) validateCreateUserRequest(plan providerschema.User) error {
+	if plan.OrganizationId.IsNull() {
+		return fmt.Errorf("organizationId cannot be empty")
+	}
+	if plan.Email.IsNull() {
+		return fmt.Errorf("email cannot be empty")
+	}
+	if plan.OrganizationRoles == nil {
+		return fmt.Errorf("organizationRoles cannot be empty")
+	}
+	return nil
 }
 
 // Read reads user information
@@ -273,6 +294,8 @@ func (r *User) ImportState(ctx context.Context, req resource.ImportStateRequest,
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
+// handleCapellaUserError is used to differentiate between error types which
+// may be returned during requests to capella.
 func handleCapellaUserError(err error) error {
 	switch err := err.(type) {
 	case nil:
