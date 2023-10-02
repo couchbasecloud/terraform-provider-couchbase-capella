@@ -7,6 +7,10 @@ variable "auth_token" {
   sensitive   = true
 }
 
+variable "organization_id" {
+  description = "Capella Organization ID"
+}
+
 variable "organization_name" {
   default     = "terraform-couchbasecapella-project"
   description = "Organization Name for Organization Created via Terraform"
