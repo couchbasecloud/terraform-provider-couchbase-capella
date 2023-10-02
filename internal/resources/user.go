@@ -205,27 +205,8 @@ func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (
 		return nil, fmt.Errorf("error retrieving user: %s", err)
 	}
 
-	var organizationRoles []basetypes.StringValue
-	for _, role := range userResp.OrganizationRoles {
-		organizationRoles = append(organizationRoles, types.StringValue(role))
-	}
-
-	var resources []providerschema.Resource
-	for _, resource := range userResp.Resources {
-		var convertedResource providerschema.Resource
-
-		convertedResource.Id = types.StringValue(resource.Id)
-		convertedResource.Type = types.StringValue(resource.Type)
-
-		var roles []basetypes.StringValue
-		for _, role := range resource.Roles {
-			roles = append(roles, types.StringValue(role))
-		}
-
-		convertedResource.Roles = roles
-
-		resources = append(resources, convertedResource)
-	}
+	organizationRoles := r.morphOrganizationRoles(ctx, userResp.OrganizationRoles)
+	resources := r.morphResources(ctx, userResp.Resources)
 
 	refreshedState := providerschema.OneUser{
 		Id:                  types.StringValue(userResp.Id.String()),
@@ -253,6 +234,38 @@ func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (
 	// TODO: Set optional fields
 
 	return &refreshedState, nil
+}
+
+// morphOrgnanizationRoles is used to convert nested organizationRoles from
+// strings to terraform type.String.
+func (r *User) morphOrganizationRoles(ctx context.Context, organizationRoles []string) []basetypes.StringValue {
+	var morphedRoles []basetypes.StringValue
+	for _, role := range organizationRoles {
+		morphedRoles = append(morphedRoles, types.StringValue(role))
+	}
+	return morphedRoles
+}
+
+// morphResources is used to covert nested resources from strings
+// to terraform types.String
+func (r *User) morphResources(ctx context.Context, resources []api.Resource) []providerschema.Resource {
+	var morphedResources []providerschema.Resource
+	for _, resource := range resources {
+		var morphedResource providerschema.Resource
+
+		morphedResource.Id = types.StringValue(resource.Id)
+		morphedResource.Type = types.StringValue(resource.Type)
+
+		var roles []basetypes.StringValue
+		for _, role := range resource.Roles {
+			roles = append(roles, types.StringValue(role))
+		}
+
+		morphedResource.Roles = roles
+		morphedResources = append(morphedResources, morphedResource)
+
+	}
+	return morphedResources
 }
 
 // ImportState imports a remote user that was not created by Terraform.
