@@ -166,23 +166,6 @@ func (o Organization) Read(ctx context.Context, req datasource.ReadRequest, resp
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	//state = o.mapResponseBody(organizationsResponse, &state)
-	//if err != nil {
-	//	resp.Diagnostics.AddError(
-	//		"Error reading allowlist",
-	//		"Could not create allowlist, unexpected error: "+err.Error(),
-	//	)
-	//	return
-	//}
-	//
-	//// Set state
-	//diags = resp.State.Set(ctx, &state)
-	//
-	//resp.Diagnostics.Append(diags...)
-	//if resp.Diagnostics.HasError() {
-	//	return
-	//}
-
 }
 
 // validate is used to verify that all the fields in the datasource
@@ -193,31 +176,3 @@ func (o *Organization) validate(state providerschema.Organizations) error {
 	}
 	return nil
 }
-
-// mapResponseBody is used to map the response body from a call to
-// get allowlists to the allowlists schema that will be used by terraform.
-//func (o *Organization) mapResponseBody(
-//	organizationsResponse api.GetOrganizationResponse,
-//	state *providerschema.Organizations,
-//) providerschema.organizationsResponse {
-//	for _, allowList := range organizationsResponse.Data {
-//		allowListState := providerschema.OneAllowList{
-//			Id:             types.StringValue(allowList.Id.String()),
-//			OrganizationId: types.StringValue(state.OrganizationId.ValueString()),
-//			ProjectId:      types.StringValue(state.ProjectId.ValueString()),
-//			ClusterId:      types.StringValue(state.ClusterId.ValueString()),
-//			Cidr:           types.StringValue(allowList.Cidr),
-//			Comment:        types.StringValue(allowList.Comment),
-//			ExpiresAt:      types.StringValue(allowList.ExpiresAt),
-//			Audit: providerschema.CouchbaseAuditData{
-//				CreatedAt:  types.StringValue(allowList.Audit.CreatedAt.String()),
-//				CreatedBy:  types.StringValue(allowList.Audit.CreatedBy),
-//				ModifiedAt: types.StringValue(allowList.Audit.ModifiedAt.String()),
-//				ModifiedBy: types.StringValue(allowList.Audit.ModifiedBy),
-//				Version:    types.Int64Value(int64(allowList.Audit.Version)),
-//			},
-//		}
-//		state.Data = append(state.Data, allowListState)
-//	}
-//	return *state
-//}
