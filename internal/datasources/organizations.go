@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"terraform-provider-capella/internal/api"
+	"terraform-provider-capella/internal/errors"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"net/http"
-	"terraform-provider-capella/internal/api"
-	"terraform-provider-capella/internal/errors"
 
 	providerschema "terraform-provider-capella/internal/schema"
 )
@@ -53,7 +54,7 @@ func (o Organization) Schema(_ context.Context, req datasource.SchemaRequest, re
 						"preferences": schema.SingleNestedAttribute{
 							Computed: true,
 							Attributes: map[string]schema.Attribute{
-								"sessionDuration": schema.Int64Attribute{
+								"session_duration": schema.Int64Attribute{
 									Computed: true,
 								},
 							},
