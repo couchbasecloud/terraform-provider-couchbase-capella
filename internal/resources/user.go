@@ -26,7 +26,7 @@ type User struct {
 	*providerschema.Data
 }
 
-func NewUsers() resource.Resource {
+func NewUser() resource.Resource {
 	return &User{}
 }
 
