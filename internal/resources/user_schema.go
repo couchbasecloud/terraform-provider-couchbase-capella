@@ -15,34 +15,55 @@ func UserSchema() schema.Schema {
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"organization_id": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
 			"name": schema.StringAttribute{
 				Optional: true,
 			},
+			"status": schema.StringAttribute{
+				Computed: true,
+			},
+			"inactive": schema.BoolAttribute{
+				Computed: true,
+			},
 			"email": schema.StringAttribute{
+				Required: true,
+			},
+			"organization_id": schema.StringAttribute{
 				Required: true,
 			},
 			"organizationRoles": schema.StringAttribute{
 				Required: true,
 			},
-			"resources": schema.SingleNestedAttribute{
+			"lastLogin": schema.StringAttribute{
 				Computed: true,
+			},
+			"region": schema.StringAttribute{
+				Computed: true,
+			},
+			"timeZone": schema.StringAttribute{
+				Computed: true,
+			},
+			"enableNotifications": schema.BoolAttribute{
+				Computed: true,
+			},
+			"expiresAt": schema.StringAttribute{
+				Computed: true,
+			},
+			"resources": schema.SingleNestedAttribute{
+				Optional: true,
 				Attributes: map[string]schema.Attribute{
 					"type": schema.StringAttribute{
-						Computed: true,
+						Optional: true,
 					},
 					"id": schema.StringAttribute{
-						Computed: true,
+						Required: true,
 					},
 					"roles": schema.StringAttribute{
-						Computed: true,
+						Required: true,
 					},
 				},
+			},
+			"etag": schema.StringAttribute{
+				Computed: true,
 			},
 			"if_match": schema.StringAttribute{
 				Optional: true,
