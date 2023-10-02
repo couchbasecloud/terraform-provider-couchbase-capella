@@ -21,11 +21,11 @@ type OneOrganization struct {
 	Name types.String `tfsdk:"name"`
 
 	// Description is a short description of the organization.
-	Description types.String `tfsdk:"comment"`
+	Description types.String `tfsdk:"description"`
 
 	Preferences Preferences `tfsdk:"preferences"`
 }
 
 type Preferences struct {
-	SessionDuration types.Int64 `tfsdk:"sessionDuration"`
+	SessionDuration types.Int64 `tfsdk:"session_duration"`
 }

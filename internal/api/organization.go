@@ -15,10 +15,9 @@ type GetOrganizationResponse struct {
 	// Description is a short description of the organization.
 	Description *string `json:"description"`
 
-	// ExpiresAt is an RFC3339 timestamp determining when the allowed CIDR should expire.
 	Preferences *Preferences `json:"preferences"`
 
-	// ID is the ID of the AllowList
+	// ID is the ID of the Organization
 	Id uuid.UUID `json:"id"`
 }
 
