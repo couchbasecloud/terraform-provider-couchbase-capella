@@ -2,12 +2,18 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 
+	"terraform-provider-capella/internal/api"
+	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -56,14 +62,196 @@ func (r *DatabaseCredential) Configure(_ context.Context, req resource.Configure
 	r.Data = data
 }
 
-// Create creates a new database credential.
+// Create creates a new database credential. This function will validate the mandatory fields in the resource.CreateRequest
+// before invoking the Capella V4 API.
 func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	// todo in AV-61729
+	var plan providerschema.DatabaseCredential
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if plan.OrganizationId.IsNull() {
+		resp.Diagnostics.AddError(
+			"Error creating database credential",
+			"Could not create database credential, unexpected error: "+errors.ErrOrganizationIdCannotBeEmpty.Error(),
+		)
+		return
+	}
+	var organizationId = plan.OrganizationId.ValueString()
+
+	if plan.ProjectId.IsNull() {
+		resp.Diagnostics.AddError(
+			"Error creating database credential",
+			"Could not create database credential, unexpected error: "+errors.ErrProjectIdCannotBeEmpty.Error(),
+		)
+		return
+	}
+	var projectId = plan.ProjectId.ValueString()
+
+	if plan.ClusterId.IsNull() {
+		resp.Diagnostics.AddError(
+			"Error creating database credential",
+			"Could not create database credential, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
+		)
+		return
+	}
+	var clusterId = plan.ClusterId.ValueString()
+
+	dbCredRequest := api.CreateDatabaseCredentialRequest{
+		Name: plan.Name.ValueString(),
+	}
+
+	if !plan.Password.IsNull() {
+		dbCredRequest.Password = plan.Password.ValueString()
+	}
+
+	// todo: Add support for granular access at per bucket and scope level in AV-62864.
+	var privileges []string
+	for _, a := range plan.Access {
+		for _, p := range a.Privileges {
+			privileges = append(privileges, p.ValueString())
+		}
+	}
+	dbCredRequest.Access = []api.Access{{Privileges: privileges}}
+
+	response, err := r.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users", r.HostURL, organizationId, projectId, clusterId),
+		http.MethodPost,
+		dbCredRequest,
+		r.Token,
+		nil,
+	)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		resp.Diagnostics.AddError(
+			"Error creating database credential",
+			"Could not create database credential, unexpected error: "+err.CompleteError(),
+		)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error creating database credential",
+			"Could not create database credential, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	dbResponse := api.CreateDatabaseCredentialResponse{}
+	err = json.Unmarshal(response.Body, &dbResponse)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating database credential",
+			"Could not create database credential, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	refreshedState, err := r.retrieveDatabaseCredential(ctx, organizationId, projectId, clusterId, dbResponse.Id.String())
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		resp.Diagnostics.AddError(
+			"Error Reading Capella Database Credentials",
+			"Could not read Capella database credential with ID "+dbResponse.Id.String()+": "+err.CompleteError(),
+		)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error Reading Capella Database Credentials",
+			"Could not read Capella database credential with ID "+dbResponse.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	refreshedState.Password = types.StringValue(dbResponse.Password)
+	// store the password that was either auto-generated or supplied during credential creation request.
+	// todo: there is a bug in the V4 public APIs where the API returns the password in the response only if it is auto-generated.
+	// This will be fixed in AV-62867.
+	// For now, we are working around this issue.
+	if dbResponse.Password == "" {
+		// this means the customer had provided a password in the terraform file during creation, store that.
+		refreshedState.Password = plan.Password
+	}
+
+	// todo: there is a bug in cp-open-api where the access field is empty in the GET API response,
+	// we are going to work around this for private preview.
+	// The fix will be done in SURF-7366
+	// For now, we are appending same permissions that the customer passed in the terraform files and not relying on the GET API response.
+	refreshedState.Access = make([]providerschema.Access, len(plan.Access))
+	for i, access := range plan.Access {
+		refreshedState.Access[i] = providerschema.Access{Privileges: make([]types.String, len(access.Privileges))}
+		for j, permission := range access.Privileges {
+			refreshedState.Access[i].Privileges[j] = permission
+		}
+	}
+
+	// Set state to fully populated data
+	diags = resp.State.Set(ctx, refreshedState)
+
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Read reads database credential information.
 func (r *DatabaseCredential) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// todo in AV-61729
+	var state providerschema.DatabaseCredential
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	dbId, clusterId, projectId, organizationId, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Database Credentials in Capella",
+			"Could not read Capella database credential with ID "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	// Get refreshed Cluster value from Capella
+	refreshedState, err := r.retrieveDatabaseCredential(ctx, organizationId, projectId, clusterId, dbId)
+	resourceNotFound, err := handleDatabaseCredentialError(err)
+	if resourceNotFound {
+		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+		resp.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error reading database credential",
+			"Could not read database credential with id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	// if the user had provided the password in the input, we store that in the terraform state file.
+	refreshedState.Password = state.Password
+
+	// todo: there is a bug in cp-open-api where the access field is empty in the GET API response,
+	// we are going to work around this for private preview.
+	// The fix will be done in SURF-7366
+	// For now, we are appending same permissions that the customer passed in the terraform files and not relying on the GET API response.
+	refreshedState.Access = make([]providerschema.Access, len(state.Access))
+	for i, access := range state.Access {
+		refreshedState.Access[i] = providerschema.Access{Privileges: make([]types.String, len(access.Privileges))}
+		for j, permission := range access.Privileges {
+			refreshedState.Access[i].Privileges[j] = permission
+		}
+	}
+
+	// Set refreshed state
+	diags = resp.State.Set(ctx, &refreshedState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Update updates the database credential.
@@ -85,4 +273,69 @@ func (r *DatabaseCredential) Delete(ctx context.Context, req resource.DeleteRequ
 func (r *DatabaseCredential) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+// retrieveDatabaseCredential fetches the database credential by making a GET API call to the Capella V4 Public API.
+// This usually helps retrieve the state of a newly created database credential that was created from Terraform.
+func (r *DatabaseCredential) retrieveDatabaseCredential(ctx context.Context, organizationId, projectId, clusterId, dbId string) (*providerschema.OneDatabaseCredential, error) {
+	response, err := r.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", r.HostURL, organizationId, projectId, clusterId, dbId),
+		http.MethodGet,
+		nil,
+		r.Token,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	dbResp := api.GetDatabaseCredentialResponse{}
+	err = json.Unmarshal(response.Body, &dbResp)
+	if err != nil {
+		return nil, err
+	}
+
+	refreshedState := providerschema.OneDatabaseCredential{
+		Id:             types.StringValue(dbResp.Id.String()),
+		Name:           types.StringValue(dbResp.Name),
+		OrganizationId: types.StringValue(organizationId),
+		ProjectId:      types.StringValue(projectId),
+		ClusterId:      types.StringValue(clusterId),
+		Audit: providerschema.CouchbaseAuditData{
+			CreatedAt:  types.StringValue(dbResp.Audit.CreatedAt.String()),
+			CreatedBy:  types.StringValue(dbResp.Audit.CreatedBy),
+			ModifiedAt: types.StringValue(dbResp.Audit.ModifiedAt.String()),
+			ModifiedBy: types.StringValue(dbResp.Audit.ModifiedBy),
+			Version:    types.Int64Value(int64(dbResp.Audit.Version)),
+		},
+	}
+	// todo: there is a bug in cp-open-api where the access field is empty in the GET API response,
+	// we are going to work around this for private preview.
+	// The fix will be done in SURF-7366
+	// For now, we are appending same permissions that the customer passed in the terraform files and not relying on the GET API response.
+	// the below code will be uncommented once the bug is fixed.
+	/*	for i, access := range dbResp.Access {
+			refreshedState.Access[i] = providerschema.Access{}
+			for _, permission := range access.Privileges {
+				refreshedState.Access[i].Privileges = append(refreshedState.Access[i].Privileges, types.StringValue(permission))
+			}
+		}
+	*/
+	return &refreshedState, nil
+}
+
+// this func extract error message if error is api.Error and also checks whether error is
+// resource not found
+func handleDatabaseCredentialError(err error) (bool, error) {
+	switch err := err.(type) {
+	case nil:
+		return false, nil
+	case api.Error:
+		if err.HttpStatusCode != http.StatusNotFound {
+			return false, fmt.Errorf(err.CompleteError())
+		}
+		return true, fmt.Errorf(err.CompleteError())
+	default:
+		return false, err
+	}
 }
