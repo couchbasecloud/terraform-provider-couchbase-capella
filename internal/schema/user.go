@@ -11,7 +11,7 @@ type User struct {
 	Id types.String `tfsdk:"id"`
 
 	// Name represents the name of the user.
-	Name types.String `tfsdk:"name"`
+	Name *types.String `tfsdk:"name"`
 
 	// Name represents the email of the user.
 	Email types.String `tfsdk:"email"`
@@ -45,7 +45,7 @@ type User struct {
 	ExpiresAt types.String `tfsdk:"expiresAt"`
 
 	// Resources is an array of objects representing the resources the user has access to
-	Resources []Resource `tfsdk:"resources"`
+	Resources *[]Resource `tfsdk:"resources"`
 
 	// ETag is a unique indentifier which the client uses to determine if the resource has changed.
 	ETag types.String `tfsdk:"if_match"`
@@ -63,7 +63,7 @@ type Resource struct {
 	Id types.String `tfsdk:"id"`
 
 	// Type is the type of the resource.
-	Type types.String `tfsdk:"type"`
+	Type *types.String `tfsdk:"type"`
 
 	// Roles is an array of strings representing a users project roles
 	Roles []types.String `tfsdk:"roles"`
@@ -88,7 +88,7 @@ func NewUser(
 ) *User {
 	newUser := User{
 		Id:                  Id,
-		Name:                name,
+		Name:                &name,
 		Email:               email,
 		Status:              status,
 		Inactive:            inactive,
@@ -99,7 +99,7 @@ func NewUser(
 		TimeZone:            timeZone,
 		EnableNotifications: enableNotifications,
 		ExpiresAt:           expiresAt,
-		Resources:           resources,
+		Resources:           &resources,
 		Audit:               audit,
 	}
 	return &newUser

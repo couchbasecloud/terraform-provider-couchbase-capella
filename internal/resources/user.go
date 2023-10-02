@@ -81,7 +81,7 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 		Name:              plan.Name.ValueString(),
 		Email:             plan.Email.ValueString(),
 		OrganizationRoles: r.convertOrganizationRoles(*plan.OrganizationRoles),
-		Resources:         r.convertResources(plan.Resources),
+		Resources:         r.convertResources(*plan.Resources),
 	}
 
 	// Execute request
@@ -173,7 +173,9 @@ func (r *User) convertResources(resources []providerschema.Resource) []api.Resou
 	for _, resource := range resources {
 		var convertedResource api.Resource
 		convertedResource.Id = resource.Id.ValueString()
-		convertedResource.Type = resource.Type.ValueString()
+
+		resourceType := resource.Type.ValueString()
+		convertedResource.Type = &resourceType
 
 		// Iterate through roles belonging to the user and convert to string
 		var convertedRoles []string
@@ -226,17 +228,25 @@ func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (
 		return nil, fmt.Errorf("failed to convert audit data")
 	}
 
-	organizationRoles := r.morphOrganizationRoles(userResp.OrganizationRoles)
-	resources := r.morphResources(userResp.Resources)
+	// Set optional fields
+	var name basetypes.StringValue
+	var resources []providerschema.Resource
+	if userResp.Name != nil {
+		name = types.StringValue(*userResp.Name)
+	}
+
+	if userResp.Resources != nil {
+		resources = r.morphResources(*userResp.Resources)
+	}
 
 	refreshedState := providerschema.NewUser(
 		types.StringValue(userResp.Id.String()),
-		types.StringValue(userResp.Name),
+		name,
 		types.StringValue(userResp.Email),
 		types.StringValue(userResp.Status),
 		types.BoolValue(userResp.Inactive),
 		types.StringValue(userResp.OrganizationId.String()),
-		organizationRoles,
+		r.morphOrganizationRoles(userResp.OrganizationRoles),
 		types.StringValue(userResp.LastLogin),
 		types.StringValue(userResp.Region),
 		types.StringValue(userResp.TimeZone),
@@ -245,9 +255,6 @@ func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (
 		resources,
 		auditObj,
 	)
-
-	// TODO: Set optional fields
-
 	return refreshedState, nil
 }
 
@@ -269,7 +276,11 @@ func (r *User) morphResources(resources []api.Resource) []providerschema.Resourc
 		var morphedResource providerschema.Resource
 
 		morphedResource.Id = types.StringValue(resource.Id)
-		morphedResource.Type = types.StringValue(resource.Type)
+
+		if morphedResource.Type != nil {
+			resourceType := types.StringValue(*resource.Type)
+			morphedResource.Type = &resourceType
+		}
 
 		var roles []basetypes.StringValue
 		for _, role := range resource.Roles {
