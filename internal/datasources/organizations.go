@@ -17,7 +17,8 @@ import (
 )
 
 var (
-	_ datasource.DataSource = &Organization{}
+	_ datasource.DataSource              = &Organization{}
+	_ datasource.DataSourceWithConfigure = &Organization{}
 )
 
 type Organization struct {
@@ -133,7 +134,7 @@ func (o *Organization) Read(ctx context.Context, req datasource.ReadRequest, res
 		return
 	}
 
-	organizationsResponse := api.GetOrganizationsResponse{}
+	organizationsResponse := api.GetOrganizationResponse{}
 	err = json.Unmarshal(response.Body, &organizationsResponse)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -143,21 +144,19 @@ func (o *Organization) Read(ctx context.Context, req datasource.ReadRequest, res
 		return
 	}
 
-	for _, org := range organizationsResponse.Data {
-		orgState := providerschema.OneOrganization{
-			Id:          types.StringValue(org.Id.String()),
-			Name:        types.StringValue(org.Name),
-			Description: types.StringValue(*org.Description),
-			Audit: providerschema.CouchbaseAuditData{
-				CreatedAt:  types.StringValue(org.Audit.CreatedAt.String()),
-				CreatedBy:  types.StringValue(org.Audit.CreatedBy),
-				ModifiedAt: types.StringValue(org.Audit.ModifiedAt.String()),
-				ModifiedBy: types.StringValue(org.Audit.ModifiedBy),
-				Version:    types.Int64Value(int64(org.Audit.Version)),
-			},
-		}
-		state.Data = append(state.Data, orgState)
+	orgState := providerschema.OneOrganization{
+		Id:          types.StringValue(organizationsResponse.Id.String()),
+		Name:        types.StringValue(organizationsResponse.Name),
+		Description: types.StringValue(*organizationsResponse.Description),
+		Audit: providerschema.CouchbaseAuditData{
+			CreatedAt:  types.StringValue(organizationsResponse.Audit.CreatedAt.String()),
+			CreatedBy:  types.StringValue(organizationsResponse.Audit.CreatedBy),
+			ModifiedAt: types.StringValue(organizationsResponse.Audit.ModifiedAt.String()),
+			ModifiedBy: types.StringValue(organizationsResponse.Audit.ModifiedBy),
+			Version:    types.Int64Value(int64(organizationsResponse.Audit.Version)),
+		},
 	}
+	state.Data = append(state.Data, orgState)
 
 	diags = resp.State.Set(ctx, &state)
 
