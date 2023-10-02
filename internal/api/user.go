@@ -69,6 +69,9 @@ type GetUserResponse struct {
 	// Resources is an array of objects representing the resources the user has access to.
 	Resources []Resource `json:"resources"`
 
+	// ETag is a unique indentifier which the client uses to determine if the resource has changed.
+	ETag string
+
 	// Audit contains all audit-related fields.
 	Audit CouchbaseAuditData `json:"audit"`
 }
