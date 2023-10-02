@@ -26,7 +26,7 @@ type User struct {
 	OrganizationId types.String `tfsdk:"organization_id"`
 
 	// OrganizationRoles is an array of strings representing the roles granted to the user
-	OrganizationRoles []types.String `tfsdk:"organizationRoles"`
+	OrganizationRoles *[]types.String `tfsdk:"organizationRoles"`
 
 	// LastLogin is the time(UTC) at which user last logged in.
 	LastLogin types.String `tfsdk:"lastLogin"`
@@ -88,7 +88,7 @@ func NewUser(
 		Status:              status,
 		Inactive:            inactive,
 		OrganizationId:      organizationId,
-		OrganizationRoles:   organizationRoles,
+		OrganizationRoles:   &organizationRoles,
 		LastLogin:           lastLogin,
 		Region:              region,
 		TimeZone:            timeZone,
