@@ -39,8 +39,8 @@ func Test_MapResponseBody(t *testing.T) {
 				Version:    version,
 			},
 			Cidr:      cidr,
-			Comment:   comment,
-			ExpiresAt: expiresAt,
+			Comment:   &comment,
+			ExpiresAt: &expiresAt,
 			Id:        id,
 		}
 
