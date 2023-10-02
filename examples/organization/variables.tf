@@ -15,3 +15,7 @@ variable "organization_name" {
   default     = "terraform-couchbasecapella-project"
   description = "Organization Name for Organization Created via Terraform"
 }
+
+variable "organization_id" {
+  description = "Capella Organization ID"
+}
