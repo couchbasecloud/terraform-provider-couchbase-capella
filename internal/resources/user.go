@@ -103,18 +103,10 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 	}
 
 	refreshedState, err := r.refreshUser(ctx, plan.OrganizationId.String(), plan.Id.String())
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading Capella User",
-			"Could not read Capella User "+createUserResponse.Id.String()+": "+err.CompleteError(),
-		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error reading Capella User",
-			"Could not read Capella User "+createUserResponse.Id.String()+": "+err.Error(),
+			"Error reading user",
+			"Could not read user, unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -204,7 +196,7 @@ func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api
 func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (*providerschema.User, error) {
 	userResp, err := r.getUser(ctx, organizationId, userId)
 	if err != nil {
-		return nil, fmt.Errorf("error retrieving user: %s", err)
+		return nil, handleCapellaUserError(err)
 	}
 
 	audit := providerschema.NewCouchbaseAuditData(userResp.Audit)
@@ -279,4 +271,15 @@ func (r *User) morphResources(resources []api.Resource) []providerschema.Resourc
 func (r *User) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func handleCapellaUserError(err error) error {
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		return fmt.Errorf("could not read Capella User: %s", err.CompleteError())
+	default:
+		return fmt.Errorf("could not read Capella User: %s", err.Error())
+	}
+	return nil
 }
