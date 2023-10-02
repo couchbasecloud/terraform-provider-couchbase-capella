@@ -28,11 +28,11 @@ func NewOrganization() datasource.DataSource {
 	return &Organization{}
 }
 
-func (o Organization) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (o *Organization) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_organizations"
 }
 
-func (o Organization) Schema(_ context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (o *Organization) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
@@ -86,7 +86,7 @@ func (o Organization) Schema(_ context.Context, req datasource.SchemaRequest, re
 	}
 }
 
-func (o Organization) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (o *Organization) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state providerschema.Organizations
 	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -102,11 +102,9 @@ func (o Organization) Read(ctx context.Context, req datasource.ReadRequest, resp
 		return
 	}
 
-	var (
-		organizationId = state.OrganizationId.ValueString()
-	)
+	var organizationId = state.OrganizationId.ValueString()
 
-	// Make request to list allowlists
+	// Make request to get organization
 	response, err := o.Client.Execute(
 		fmt.Sprintf("%s/v4/organizations/%s", o.HostURL, organizationId),
 		http.MethodGet,
@@ -176,4 +174,23 @@ func (o *Organization) validate(state providerschema.Organizations) error {
 		return errors.ErrOrganizationIdMissing
 	}
 	return nil
+}
+
+// Configure adds the provider configured client to the organization data source.
+func (o *Organization) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	data, ok := req.ProviderData.(*providerschema.Data)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *ProviderSourceData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+
+	o.Data = data
 }
