@@ -22,7 +22,7 @@ type Resource struct {
 	Id string `json:"id"`
 
 	// Type is the type of the resource.
-	Type string `json:"type"`
+	Type *string `json:"type"`
 
 	// Roles is an array of strings representing a users project roles
 	Roles []string `json:"roles"`
@@ -33,7 +33,7 @@ type GetUserResponse struct {
 	Id uuid.UUID `json:"id"`
 
 	// Name represents the name of the user.
-	Name string `json:"name"`
+	Name *string `json:"name"`
 
 	// Email represents the email of the user.
 	Email string `json:"email"`
@@ -67,7 +67,7 @@ type GetUserResponse struct {
 	ExpiresAt string `json:"expiresAt"`
 
 	// Resources is an array of objects representing the resources the user has access to.
-	Resources []Resource `json:"resources"`
+	Resources *[]Resource `json:"resources"`
 
 	// ETag is a unique indentifier which the client uses to determine if the resource has changed.
 	ETag string
