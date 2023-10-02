@@ -195,6 +195,7 @@ func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling response: %s", err)
 	}
+	userResp.ETag = response.Response.Header.Get("ETag")
 	return &userResp, nil
 }
 
@@ -203,8 +204,6 @@ func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (
 	if err != nil {
 		return nil, fmt.Errorf("error retrieving user: %s", err)
 	}
-
-	// TODO: Populate ETag
 
 	var organizationRoles []basetypes.StringValue
 	for _, role := range userResp.OrganizationRoles {
