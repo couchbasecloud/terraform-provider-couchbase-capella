@@ -26,23 +26,23 @@ type User struct {
 	OrganizationId types.String `tfsdk:"organization_id"`
 
 	// OrganizationRoles is an array of strings representing the roles granted to the user
-	OrganizationRoles *[]types.String `tfsdk:"organizationRoles"`
+	OrganizationRoles *[]types.String `tfsdk:"organization_roles"`
 
 	// LastLogin is the time(UTC) at which user last logged in.
-	LastLogin types.String `tfsdk:"lastLogin"`
+	LastLogin types.String `tfsdk:"last_login"`
 
 	// Region is the region of the user.
 	Region types.String `tfsdk:"region"`
 
 	// TimeZone is the time zone of the user.
-	TimeZone types.String `tfsdk:"timeZone"`
+	TimeZone types.String `tfsdk:"time_zone"`
 
 	// EnableNotifications represents whether email alerts for databases in projects
 	// will be recieved.
-	EnableNotifications types.Bool `tfsdk:"enableNotifications"`
+	EnableNotifications types.Bool `tfsdk:"enable_notifications"`
 
 	// ExpiresAt is the time at which user expires.
-	ExpiresAt types.String `tfsdk:"expiresAt"`
+	ExpiresAt types.String `tfsdk:"expires_at"`
 
 	// Resources is an array of objects representing the resources the user has access to
 	Resources *[]Resource `tfsdk:"resources"`
