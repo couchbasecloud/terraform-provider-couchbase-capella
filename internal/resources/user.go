@@ -32,7 +32,7 @@ func NewUser() resource.Resource {
 
 // Metadata returns the users resource type name
 func (r *User) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_users"
+	resp.TypeName = req.ProviderTypeName + "_user"
 }
 
 // Schema defines the schema for the allowlist resource.
