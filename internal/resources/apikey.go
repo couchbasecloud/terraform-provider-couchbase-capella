@@ -2,7 +2,6 @@ package resources
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -11,7 +10,6 @@ import (
 	providerschema "terraform-provider-capella/internal/schema"
 
 	"github.com/google/uuid"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -229,190 +227,12 @@ func (r *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 
 // Read reads ApiKey information.
 func (a *ApiKey) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state providerschema.ApiKey
-	diags := req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resourceIDs, err := state.Validate()
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error reading api key",
-			"Could not read api key id "+state.Id.String()+" unexpected error: "+err.Error(),
-		)
-		return
-	}
-
-	var (
-		organizationId = resourceIDs[providerschema.OrganizationId]
-		apiKeyId       = resourceIDs[providerschema.ApiKeyId]
-	)
-
-	// Get refreshed Cluster value from Capella
-	refreshedState, err := a.retrieveApiKey(ctx, organizationId, apiKeyId)
-	resourceNotFound, err := handleApiKeyError(err)
-	if resourceNotFound {
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		resp.State.RemoveResource(ctx)
-		return
-	}
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error reading api key",
-			"Could not read api key id "+state.Id.String()+": "+err.Error(),
-		)
-		return
-	}
-
-	//if len(state.ServiceGroups) == len(refreshedState.ServiceGroups) {
-	//	for i, serviceGroup := range refreshedState.ServiceGroups {
-	//		if clusterapi.AreEqual(state.ServiceGroups[i].Services, serviceGroup.Services) {
-	//			refreshedState.ServiceGroups[i].Services = state.ServiceGroups[i].Services
-	//		}
-	//	}
-	//}
-
-	resources, err := providerschema.OrderList2(state.Resources, refreshedState.Resources)
-	switch err {
-	case nil:
-		refreshedState.Resources = resources
-	default:
-		tflog.Warn(ctx, err.Error())
-	}
-
-	if len(state.Resources) == len(refreshedState.Resources) {
-		for i, resource := range refreshedState.Resources {
-			if providerschema.AreEqual(resource.Roles, state.Resources[i].Roles) {
-				refreshedState.Resources[i].Roles = state.Resources[i].Roles
-			}
-		}
-	}
-
-	if providerschema.AreEqual(refreshedState.OrganizationRoles, state.OrganizationRoles) {
-		refreshedState.OrganizationRoles = state.OrganizationRoles
-	}
-
-	refreshedState.Token = state.Token
-	refreshedState.Rotate = state.Rotate
-	refreshedState.Secret = state.Secret
-
-	// Set refreshed state
-	diags = resp.State.Set(ctx, &refreshedState)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	// TODO
 }
 
 // Update updates the ApiKey.
 func (a *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// Retrieve values from plan
-	var plan, state providerschema.ApiKey
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-
-	diags = req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resourceIDs, err := state.Validate()
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error rotate api key",
-			"Could not rotate api key id "+state.Id.String()+" unexpected error: "+err.Error(),
-		)
-		return
-	}
-
-	var (
-		organizationId = resourceIDs[providerschema.OrganizationId]
-		apiKeyId       = resourceIDs[providerschema.ApiKeyId]
-	)
-
-	if plan.Rotate.IsNull() || plan.Rotate.IsUnknown() || plan.Rotate.ValueBool() != true {
-		resp.Diagnostics.AddError(
-			"Error rotating api key",
-			"Could not rotate api key id "+state.Id.String()+": rotate flag is not set or false",
-		)
-		return
-	}
-
-	var rotateApiRequest api.RotateAPIKeyRequest
-	if !plan.Secret.IsNull() || !plan.Secret.IsUnknown() {
-		rotateApiRequest = api.RotateAPIKeyRequest{
-			Secret: plan.Secret.ValueStringPointer(),
-		}
-	}
-
-	response, err := a.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/apikeys/%s/rotate", a.HostURL, organizationId, apiKeyId),
-		http.MethodPost,
-		rotateApiRequest,
-		a.Token,
-		nil,
-	)
-	_, err = handleApiKeyError(err)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error rotating api key",
-			"Could not rotate api key id "+state.Id.String()+": "+err.Error(),
-		)
-		return
-	}
-
-	rotateApiKeyResponse := api.RotateAPIKeyResponse{}
-	err = json.Unmarshal(response.Body, &rotateApiKeyResponse)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error rotating api key",
-			"Could not rotate api key id "+state.Id.String()+": "+err.Error(),
-		)
-		return
-	}
-
-	currentState, err := a.retrieveApiKey(ctx, organizationId, apiKeyId)
-	_, err = handleApiKeyError(err)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error rotating api key",
-			"Could not rotate api key id "+state.Id.String()+": "+err.Error(),
-		)
-		return
-	}
-
-	resources, err := providerschema.OrderList2(state.Resources, currentState.Resources)
-	switch err {
-	case nil:
-		currentState.Resources = resources
-	default:
-		tflog.Error(ctx, err.Error())
-	}
-
-	for i, resource := range currentState.Resources {
-		if providerschema.AreEqual(resource.Roles, state.Resources[i].Roles) {
-			currentState.Resources[i].Roles = state.Resources[i].Roles
-		}
-	}
-
-	if providerschema.AreEqual(currentState.OrganizationRoles, state.OrganizationRoles) {
-		currentState.OrganizationRoles = state.OrganizationRoles
-	}
-
-	currentState.Secret = types.StringValue(rotateApiKeyResponse.SecretKey)
-	currentState.Token = types.StringValue(base64.StdEncoding.EncodeToString([]byte(state.Id.ValueString() + ":" + state.Secret.ValueString())))
-	currentState.Rotate = plan.Rotate
-
-	// Set state to fully populated data
-	diags = resp.State.Set(ctx, currentState)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	//TODO
 }
 
 // Delete deletes the ApiKey.
@@ -439,7 +259,7 @@ func (a *ApiKey) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 		apiKeyId       = resourceIDs[providerschema.ApiKeyId]
 	)
 
-	// Delete existing Cluster
+	// Delete existing api key
 	_, err = a.Client.Execute(
 		fmt.Sprintf("%s/v4/organizations/%s/apikeys/%s", a.HostURL, organizationId, apiKeyId),
 		http.MethodDelete,
@@ -454,16 +274,15 @@ func (a *ApiKey) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error deleting cluster",
-			"Could not delete cluster id "+state.Id.String()+": "+err.Error(),
+			"Error deleting api key",
+			"Could not delete api key id "+state.Id.String()+" unexpected error: "+err.Error(),
 		)
 		return
 	}
 }
 
 func (r *ApiKey) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	// Retrieve import ID and save to id attribute
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	// TODO
 }
 
 // retrieveApiKey retrieves apikey information for a specified organization and apiKeyId.
