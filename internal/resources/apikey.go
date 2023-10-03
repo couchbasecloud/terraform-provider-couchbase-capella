@@ -2,17 +2,19 @@ package resources
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"net/http"
+
 	"terraform-provider-capella/internal/api"
 	providerschema "terraform-provider-capella/internal/schema"
 
+	"github.com/google/uuid"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -77,6 +79,16 @@ func (r *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		return
 	}
 	var organizationId = plan.OrganizationId.ValueString()
+
+	if !plan.Rotate.IsNull() && !plan.Rotate.IsUnknown() {
+		if plan.Rotate.ValueBool() == true {
+			resp.Diagnostics.AddError(
+				"Error creating api key",
+				"Could not create api key id: rotate flag should not be set or set to false",
+			)
+			return
+		}
+	}
 
 	apiKeyRequest := api.CreateApiKeyRequest{
 		Name: plan.Name.ValueString(),
@@ -267,12 +279,14 @@ func (a *ApiKey) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 	case nil:
 		refreshedState.Resources = resources
 	default:
-		tflog.Error(ctx, err.Error())
+		tflog.Warn(ctx, err.Error())
 	}
 
-	for i, resource := range refreshedState.Resources {
-		if providerschema.AreEqual(resource.Roles, state.Resources[i].Roles) {
-			refreshedState.Resources[i].Roles = state.Resources[i].Roles
+	if len(state.Resources) == len(refreshedState.Resources) {
+		for i, resource := range refreshedState.Resources {
+			if providerschema.AreEqual(resource.Roles, state.Resources[i].Roles) {
+				refreshedState.Resources[i].Roles = state.Resources[i].Roles
+			}
 		}
 	}
 
@@ -281,6 +295,8 @@ func (a *ApiKey) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 	}
 
 	refreshedState.Token = state.Token
+	refreshedState.Rotate = state.Rotate
+	refreshedState.Secret = state.Secret
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &refreshedState)
@@ -293,118 +309,110 @@ func (a *ApiKey) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 // Update updates the ApiKey.
 func (a *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// Retrieve values from plan
-	//var plan, state providerschema.ApiKey
-	//diags := req.Plan.Get(ctx, &plan)
-	//resp.Diagnostics.Append(diags...)
-	//
-	//diags = req.State.Get(ctx, &state)
-	//resp.Diagnostics.Append(diags...)
-	//
-	//if resp.Diagnostics.HasError() {
-	//	return
-	//}
-	//
-	//resourceIDs, err := state.Validate()
-	//if err != nil {
-	//	resp.Diagnostics.AddError(
-	//		"Error rotate api key",
-	//		"Could not rotate api key id "+state.Id.String()+" unexpected error: "+err.Error(),
-	//	)
-	//	return
-	//}
-	//
-	//var (
-	//	organizationId = resourceIDs[providerschema.OrganizationId]
-	//	apiKeyId       = resourceIDs[providerschema.ApiKeyId]
-	//)
-	//
-	////if err := a.validateClusterUpdate(plan, state); err != nil {
-	////	resp.Diagnostics.AddError(
-	////		"Error rotating api key",
-	////		"Could not rotating api key id "+state.Id.String()+" unexpected error: "+err.Error(),
-	////	)
-	////	return
-	////}
-	//
-	//var rotateApiRequest api.RotateAPIKeyRequest
-	//if !plan.Secret.IsNull() || !plan.Secret.IsUnknown() {
-	//	rotateApiRequest = api.RotateAPIKeyRequest{
-	//		Secret: plan.Secret.ValueStringPointer(),
-	//	}
-	//}
-	//
-	//serviceGroups, err := c.morphToApiServiceGroups(plan)
-	//if err != nil {
-	//	resp.Diagnostics.AddError(
-	//		"Error updating cluster",
-	//		"Could not update cluster id "+state.Id.String()+": "+err.Error(),
-	//	)
-	//	return
-	//}
-	//
-	//ClusterRequest.ServiceGroups = serviceGroups
-	//
-	//var headers = make(map[string]string)
-	//if !state.IfMatch.IsUnknown() && !state.IfMatch.IsNull() {
-	//	headers["If-Match"] = state.IfMatch.ValueString()
-	//}
-	//
-	////https: //cloudapi.cloud.couchbase.com/v4/organizations/{organizationId}/apikeys/{ApiKeyId}/rotate
-	//// Update existing Cluster
-	//_, err = a.Client.Execute(
-	//	fmt.Sprintf("%s/v4/organizations/%s/apikeys/%s/rotate", a.HostURL, organizationId, apiKeyId),
-	//	http.MethodPost,
-	//	ClusterRequest,
-	//	a.Token,
-	//	headers,
-	//)
-	//_, err = handleClusterError(err)
-	//if err != nil {
-	//	resp.Diagnostics.AddError(
-	//		"Error updating cluster",
-	//		"Could not update cluster id "+state.Id.String()+": "+err.Error(),
-	//	)
-	//	return
-	//}
-	//
-	//err = c.checkClusterStatus(ctx, organizationId, projectId, clusterId)
-	//_, err = handleClusterError(err)
-	//if err != nil {
-	//	resp.Diagnostics.AddError(
-	//		"Error updating cluster",
-	//		"Could not update cluster id "+state.Id.String()+": "+err.Error(),
-	//	)
-	//	return
-	//}
-	//
-	//currentState, err := c.retrieveCluster(ctx, organizationId, projectId, clusterId)
-	//_, err = handleClusterError(err)
-	//if err != nil {
-	//	resp.Diagnostics.AddError(
-	//		"Error updating cluster",
-	//		"Could not update cluster id "+state.Id.String()+": "+err.Error(),
-	//	)
-	//	return
-	//}
-	//
-	//if !plan.IfMatch.IsUnknown() && !plan.IfMatch.IsNull() {
-	//	currentState.IfMatch = plan.IfMatch
-	//}
-	//
-	//for i, serviceGroup := range currentState.ServiceGroups {
-	//	if clusterapi.AreEqual(plan.ServiceGroups[i].Services, serviceGroup.Services) {
-	//		currentState.ServiceGroups[i].Services = plan.ServiceGroups[i].Services
-	//	}
-	//}
-	//
-	////need to have proper check since we are passing 7.1 and response is returning 7.1.5
-	//c.populateInputServerVersionIfPresent(&state, currentState)
-	//// Set state to fully populated data
-	//diags = resp.State.Set(ctx, currentState)
-	//resp.Diagnostics.Append(diags...)
-	//if resp.Diagnostics.HasError() {
-	//	return
-	//}
+	var plan, state providerschema.ApiKey
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+
+	diags = req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceIDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error rotate api key",
+			"Could not rotate api key id "+state.Id.String()+" unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	var (
+		organizationId = resourceIDs[providerschema.OrganizationId]
+		apiKeyId       = resourceIDs[providerschema.ApiKeyId]
+	)
+
+	if plan.Rotate.IsNull() || plan.Rotate.IsUnknown() || plan.Rotate.ValueBool() != true {
+		resp.Diagnostics.AddError(
+			"Error rotating api key",
+			"Could not rotate api key id "+state.Id.String()+": rotate flag is not set or false",
+		)
+		return
+	}
+
+	var rotateApiRequest api.RotateAPIKeyRequest
+	if !plan.Secret.IsNull() || !plan.Secret.IsUnknown() {
+		rotateApiRequest = api.RotateAPIKeyRequest{
+			Secret: plan.Secret.ValueStringPointer(),
+		}
+	}
+
+	response, err := a.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/apikeys/%s/rotate", a.HostURL, organizationId, apiKeyId),
+		http.MethodPost,
+		rotateApiRequest,
+		a.Token,
+		nil,
+	)
+	_, err = handleApiKeyError(err)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error rotating api key",
+			"Could not rotate api key id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	rotateApiKeyResponse := api.RotateAPIKeyResponse{}
+	err = json.Unmarshal(response.Body, &rotateApiKeyResponse)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error rotating api key",
+			"Could not rotate api key id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	currentState, err := a.retrieveApiKey(ctx, organizationId, apiKeyId)
+	_, err = handleApiKeyError(err)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error rotating api key",
+			"Could not rotate api key id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	resources, err := providerschema.OrderList2(state.Resources, currentState.Resources)
+	switch err {
+	case nil:
+		currentState.Resources = resources
+	default:
+		tflog.Error(ctx, err.Error())
+	}
+
+	for i, resource := range currentState.Resources {
+		if providerschema.AreEqual(resource.Roles, state.Resources[i].Roles) {
+			currentState.Resources[i].Roles = state.Resources[i].Roles
+		}
+	}
+
+	if providerschema.AreEqual(currentState.OrganizationRoles, state.OrganizationRoles) {
+		currentState.OrganizationRoles = state.OrganizationRoles
+	}
+
+	currentState.Secret = types.StringValue(rotateApiKeyResponse.SecretKey)
+	currentState.Token = types.StringValue(base64.StdEncoding.EncodeToString([]byte(state.Id.ValueString() + ":" + state.Secret.ValueString())))
+	currentState.Rotate = plan.Rotate
+
+	// Set state to fully populated data
+	diags = resp.State.Set(ctx, currentState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Delete deletes the ApiKey.

@@ -40,7 +40,7 @@ func ApiKeySchema() schema.Schema {
 				ElementType: types.StringType,
 			},
 			"resources": schema.ListNestedAttribute{
-				Optional: true,
+				Required: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
@@ -57,7 +57,12 @@ func ApiKeySchema() schema.Schema {
 					},
 				},
 			},
+			"rotate": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+			},
 			"secret": schema.StringAttribute{
+				Optional:  true,
 				Computed:  true,
 				Sensitive: true,
 			},
