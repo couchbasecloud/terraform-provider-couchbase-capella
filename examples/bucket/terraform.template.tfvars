@@ -1,0 +1,6 @@
+auth_token      = "my-secret-key"
+organization_id = "<organization_id>"
+project_id      = "<project_id>"
+host            = "https://cloudapi.cloud.couchbase.com"
+bucket_name     = "test_bucket"
+cluster_id      = "<cluster_id>"

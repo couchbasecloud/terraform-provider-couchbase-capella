@@ -23,6 +23,9 @@ func BucketSchema() schema.Schema {
 			},
 			"name": schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"organization_id": schema.StringAttribute{
 				Required: true,
@@ -56,45 +59,63 @@ func BucketSchema() schema.Schema {
 			"type": schema.StringAttribute{
 				Optional: true,
 				Default:  stringdefault.StaticString("couchbase"),
+				Computed: true,
 			},
 			"storage_backend": schema.StringAttribute{
 				Optional: true,
 				Default:  stringdefault.StaticString("couchstore"),
+				Computed: true,
 			},
 			"memory_allocation_in_mb": schema.Int64Attribute{
 				Optional: true,
 				Default:  int64default.StaticInt64(100),
+				Computed: true,
 			},
 			"bucket_conflict_resolution": schema.StringAttribute{
 				Optional: true,
 				Default:  stringdefault.StaticString("seqno"),
+				Computed: true,
 			},
 			"durability_level": schema.StringAttribute{
 				Optional: true,
 				Default:  stringdefault.StaticString("none"),
+				Computed: true,
 			},
 			"replicas": schema.Int64Attribute{
 				Optional: true,
 				Default:  int64default.StaticInt64(1),
+				Computed: true,
 			},
 			"flush": schema.BoolAttribute{
 				Optional: true,
 				Default:  booldefault.StaticBool(false),
+				Computed: true,
 			},
 			"time_to_live_in_seconds": schema.Int64Attribute{
 				Optional: true,
 				Default:  int64default.StaticInt64(0),
+				Computed: true,
 			},
 			"eviction_policy": schema.StringAttribute{
 				Optional: true,
 				Default:  stringdefault.StaticString("fullEviction"),
+				Computed: true,
 			},
 			"stats": schema.SingleNestedAttribute{
+				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"item_count":         schema.Int64Attribute{},
-					"ops_per_second":     schema.Int64Attribute{},
-					"disk_used_in_mib":   schema.Int64Attribute{},
-					"memory_used_in_mib": schema.Int64Attribute{},
+					"item_count": schema.Int64Attribute{
+						Computed: true,
+					},
+					"ops_per_second": schema.Int64Attribute{
+						Computed: true,
+					},
+					"disk_used_in_mib": schema.Int64Attribute{
+						Computed: true,
+					},
+					"memory_used_in_mib": schema.Int64Attribute{
+						Computed: true,
+					},
 				},
 			},
 		},
