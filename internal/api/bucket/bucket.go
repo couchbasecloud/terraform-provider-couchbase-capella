@@ -1,32 +1,5 @@
 package bucket
 
-//type CreateBucketRequest struct {
-//
-//	// Name is the name of the cluster (up to 100 characters).
-//	Name string `json:"name"`
-//
-//	// Type represents the Bucket Type
-//	Type Type `json:"type"`
-//
-//	// StorageBackend represents the storage engine used for the bucket.
-//	StorageBackend StorageBackend `json:"storageBackend"`
-//
-//	// MemoryAllocationInMb The amount of memory to allocate for the bucket memory in MiB
-//	MemoryAllocationInMb int `json:"memoryAllocationInMb"`
-//
-//	BucketConflictResolution ConflictResolution `json:"bucketConflictResolution"`
-//
-//	DurabilityLevel DurabilityLevel `json:"durabilityLevel"`
-//
-//	Replicas int `json:"replicas"`
-//
-//	Flush bool `json:"flush"`
-//
-//	TimeToLiveInSeconds int `json:"timeToLiveInSeconds"`
-//
-//	EvictionPolicy BucketEviction `json:"evictionPolicy"`
-//}
-
 type CreateBucketRequest struct {
 
 	// Name is the name of the cluster (up to 100 characters).
@@ -69,17 +42,17 @@ type GetBucketResponse struct {
 	Name string `json:"name"`
 
 	// Type represents the Bucket Type
-	Type Type `json:"type"`
+	Type string `json:"type"`
 
 	// StorageBackend represents the storage engine used for the bucket.
-	StorageBackend StorageBackend `json:"storageBackend"`
+	StorageBackend string `json:"storageBackend"`
 
 	// MemoryAllocationInMb The amount of memory to allocate for the bucket memory in MiB
 	MemoryAllocationInMb int `json:"memoryAllocationInMb"`
 
-	BucketConflictResolution ConflictResolution `json:"bucketConflictResolution"`
+	BucketConflictResolution string `json:"bucketConflictResolution"`
 
-	DurabilityLevel DurabilityLevel `json:"durabilityLevel"`
+	DurabilityLevel string `json:"durabilityLevel"`
 
 	Replicas int `json:"replicas"`
 
@@ -87,5 +60,5 @@ type GetBucketResponse struct {
 
 	TimeToLiveInSeconds int `json:"timeToLiveInSeconds"`
 
-	EvictionPolicy BucketEviction `json:"evictionPolicy"`
+	EvictionPolicy string `json:"evictionPolicy"`
 }

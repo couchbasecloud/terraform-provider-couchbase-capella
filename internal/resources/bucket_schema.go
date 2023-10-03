@@ -18,28 +18,28 @@ func BucketSchema() schema.Schema {
 				Required: true,
 			},
 			"type": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 			},
 			"storage_backend": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 			},
 			"memory_allocationinmb": schema.Int64Attribute{
-				Required: true,
+				Optional: true,
 			},
 			"conflict_resolution": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 			},
 			"durability_level": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 			},
 			"replicas": schema.Int64Attribute{
-				Required: true,
+				Optional: true,
 			},
 			"flush": schema.BoolAttribute{
-				Required: true,
+				Optional: true,
 			},
 			"ttl": schema.Int64Attribute{
-				Required: true,
+				Optional: true,
 			},
 			"eviction_policy": schema.StringAttribute{
 				Optional: true,
