@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -179,6 +180,7 @@ func (a *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	}
 
 	refreshedState.Token = types.StringValue(apiKeyResponse.Token)
+	refreshedState.Rotate = plan.Rotate
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
@@ -194,9 +196,115 @@ func (a *ApiKey) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 	// TODO
 }
 
-// Update updates the ApiKey.
+// Update rotates the ApiKey.
 func (a *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	//TODO
+	// Retrieve values from plan
+	var plan, state providerschema.ApiKey
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+
+	diags = req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceIDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error rotate api key",
+			"Could not rotate api key id "+state.Id.String()+" unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	var (
+		organizationId = resourceIDs[providerschema.OrganizationId]
+		apiKeyId       = resourceIDs[providerschema.ApiKeyId]
+	)
+
+	if plan.Rotate.IsNull() || plan.Rotate.IsUnknown() || plan.Rotate.ValueBool() != true {
+		resp.Diagnostics.AddError(
+			"Error rotating api key",
+			"Could not rotate api key id "+state.Id.String()+": rotate flag is not set or false",
+		)
+		return
+	}
+
+	var rotateApiRequest api.RotateAPIKeyRequest
+	if !plan.Secret.IsNull() || !plan.Secret.IsUnknown() {
+		rotateApiRequest = api.RotateAPIKeyRequest{
+			Secret: plan.Secret.ValueStringPointer(),
+		}
+	}
+
+	response, err := a.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/apikeys/%s/rotate", a.HostURL, organizationId, apiKeyId),
+		http.MethodPost,
+		rotateApiRequest,
+		a.Token,
+		nil,
+	)
+	_, err = handleApiKeyError(err)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error rotating api key",
+			"Could not rotate api key id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	rotateApiKeyResponse := api.RotateAPIKeyResponse{}
+	err = json.Unmarshal(response.Body, &rotateApiKeyResponse)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error rotating api key",
+			"Could not rotate api key id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	currentState, err := a.retrieveApiKey(ctx, organizationId, apiKeyId)
+	_, err = handleApiKeyError(err)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error rotating api key",
+			"Could not rotate api key id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	resources, err := providerschema.OrderList2(state.Resources, currentState.Resources)
+	switch err {
+	case nil:
+		currentState.Resources = resources
+	default:
+		tflog.Error(ctx, err.Error())
+	}
+
+	for i, resource := range currentState.Resources {
+		if providerschema.AreEqual(resource.Roles, state.Resources[i].Roles) {
+			currentState.Resources[i].Roles = state.Resources[i].Roles
+		}
+	}
+
+	if providerschema.AreEqual(currentState.OrganizationRoles, state.OrganizationRoles) {
+		currentState.OrganizationRoles = state.OrganizationRoles
+	}
+
+	currentState.Secret = types.StringValue(rotateApiKeyResponse.SecretKey)
+	if !state.Id.IsNull() && !state.Id.IsUnknown() && !state.Secret.IsNull() && !state.Secret.IsUnknown() {
+		currentState.Token = types.StringValue(base64.StdEncoding.EncodeToString([]byte(state.Id.ValueString() + ":" + state.Secret.ValueString())))
+	}
+	currentState.Rotate = plan.Rotate
+
+	// Set state to fully populated data
+	diags = resp.State.Set(ctx, currentState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Delete deletes the ApiKey.
