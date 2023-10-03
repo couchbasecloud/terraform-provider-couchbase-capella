@@ -33,7 +33,7 @@ func UserSchema() schema.Schema {
 			"organization_roles": schema.StringAttribute{
 				Required: true,
 			},
-			"lastLogin": schema.StringAttribute{
+			"last_login": schema.StringAttribute{
 				Computed: true,
 			},
 			"region": schema.StringAttribute{
