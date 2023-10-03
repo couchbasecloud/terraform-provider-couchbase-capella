@@ -48,6 +48,10 @@ type ApiKey struct {
 	// To learn more about Organization Roles, see [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
 	Resources []ApiKeyResourcesItems `tfsdk:"resources"`
 
+	Rotate types.Bool `tfsdk:"rotate"`
+
+	Secret types.String `tfsdk:"secret"`
+
 	Token types.String `tfsdk:"token"`
 }
 
@@ -126,6 +130,9 @@ func OrderList2(list1, list2 []ApiKeyResourcesItems) ([]ApiKeyResourcesItems, er
 
 // AreEqual returns true if the two arrays contain the same elements, without any extra values, False otherwise.
 func AreEqual[T comparable](array1 []T, array2 []T) bool {
+	if len(array1) != len(array2) {
+		return false
+	}
 	set1 := make(map[T]bool)
 	for _, element := range array1 {
 		set1[element] = true

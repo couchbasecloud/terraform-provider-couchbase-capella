@@ -4,14 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"net/http"
+
 	"terraform-provider-capella/internal/api"
 	providerschema "terraform-provider-capella/internal/schema"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -124,7 +125,10 @@ func (r *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	apiKeyRequest.Resources = &newResources
 
 	elements := make([]types.String, 0, len(plan.AllowedCIDRs.Elements()))
-	_ = plan.AllowedCIDRs.ElementsAs(ctx, &elements, false)
+	diags = plan.AllowedCIDRs.ElementsAs(ctx, &elements, false)
+	if diags.HasError() {
+		return
+	}
 
 	var newAllowedCidrs []string
 	for _, allowedCidr := range elements {
@@ -215,31 +219,31 @@ func (r *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 }
 
 // Read reads ApiKey information.
-func (r *ApiKey) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (a *ApiKey) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	//TODO
 }
 
 // Update updates the ApiKey.
-func (r *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (a *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	//TODO
 }
 
 // Delete deletes the ApiKey.
-func (r *ApiKey) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (a *ApiKey) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	//TODO
 }
 
-func (r *ApiKey) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (a *ApiKey) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	//TODO
 }
 
 // retrieveApiKey retrieves apikey information for a specified organization and apiKeyId.
-func (r *ApiKey) retrieveApiKey(ctx context.Context, organizationId, apiKeyId string) (*providerschema.ApiKey, error) {
-	response, err := r.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/apikeys/%s", r.HostURL, organizationId, apiKeyId),
+func (a *ApiKey) retrieveApiKey(ctx context.Context, organizationId, apiKeyId string) (*providerschema.ApiKey, error) {
+	response, err := a.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/apikeys/%s", a.HostURL, organizationId, apiKeyId),
 		http.MethodGet,
 		nil,
-		r.Token,
+		a.Token,
 		nil,
 	)
 	if err != nil {
@@ -264,4 +268,20 @@ func (r *ApiKey) retrieveApiKey(ctx context.Context, organizationId, apiKeyId st
 		return nil, err
 	}
 	return refreshedState, nil
+}
+
+// this func extract error message if error is api.Error and also checks whether error is
+// resource not found
+func handleApiKeyError(err error) (bool, error) {
+	switch err := err.(type) {
+	case nil:
+		return false, nil
+	case api.Error:
+		if err.HttpStatusCode != http.StatusNotFound {
+			return false, fmt.Errorf(err.CompleteError())
+		}
+		return true, fmt.Errorf(err.CompleteError())
+	default:
+		return false, err
+	}
 }

@@ -4,6 +4,8 @@ import "errors"
 
 var (
 	ErrIdMissing                   = errors.New("some ID is missing or was passed incorrectly, please check provider documentation for syntax")
+	ErrApiKeyIdCannotBeEmpty       = errors.New("api key ID cannot be empty, please contact Couchbase Capella Support")
+	ErrApiKeyIdMissing             = errors.New("api key ID is missing or was passed incorrectly, please check provider documentation for syntax")
 	ErrAllowListIdCannotBeEmpty    = errors.New("allowlist ID cannot be empty, please contact Couchbase Capella Support")
 	ErrAllowListIdMissing          = errors.New("allowList ID is missing or was passed incorrectly, please check provider documentation for syntax")
 	ErrClusterIdCannotBeEmpty      = errors.New("cluster ID cannot be empty, please contact Couchbase Capella Support")

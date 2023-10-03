@@ -57,6 +57,15 @@ func ApiKeySchema() schema.Schema {
 					},
 				},
 			},
+			"rotate": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+			},
+			"secret": schema.StringAttribute{
+				Optional:  true,
+				Computed:  true,
+				Sensitive: true,
+			},
 			"token": schema.StringAttribute{
 				Computed:  true,
 				Sensitive: true,
