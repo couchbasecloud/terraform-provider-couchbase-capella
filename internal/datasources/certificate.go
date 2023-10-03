@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"net/http"
 	"terraform-provider-capella/internal/api"
+	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
 )
 
@@ -47,15 +48,8 @@ func (c *Certificate) Schema(_ context.Context, _ datasource.SchemaRequest, resp
 			"cluster_id": schema.StringAttribute{
 				Required: true,
 			},
-			"data": schema.ListNestedAttribute{
+			"certificate": schema.StringAttribute{
 				Computed: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"certificate": schema.StringAttribute{
-							Computed: true,
-						},
-					},
-				},
 			},
 		},
 	}
@@ -70,14 +64,15 @@ func (c *Certificate) Read(ctx context.Context, req datasource.ReadRequest, resp
 		return
 	}
 
-	//if state.OrganizationId.IsNull() {
-	//	resp.Diagnostics.AddError(
-	//		"Error creating project",
-	//		"Could not create project, unexpected error: organization ID cannot be empty.",
-	//	)
-	//	return
-	//}
-	//var organizationId = state.OrganizationId.ValueString()
+	// Validate state is not empty
+	err := c.validate(state)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Capella Certificate",
+			"Could not read certificate in cluster "+state.ClusterId.String()+": "+err.Error(),
+		)
+		return
+	}
 
 	var (
 		organizationId = state.OrganizationId.ValueString()
@@ -97,8 +92,8 @@ func (c *Certificate) Read(ctx context.Context, req datasource.ReadRequest, resp
 	case api.Error:
 		if err.HttpStatusCode != 404 {
 			resp.Diagnostics.AddError(
-				"Error Reading Capella Projects",
-				"Could not read projects in organization "+state.OrganizationId.String()+": "+err.CompleteError(),
+				"Error Reading Capella Certificate",
+				"Could not read certificate in cluster "+state.ClusterId.String()+": "+err.CompleteError(),
 			)
 			return
 		}
@@ -107,8 +102,8 @@ func (c *Certificate) Read(ctx context.Context, req datasource.ReadRequest, resp
 		return
 	default:
 		resp.Diagnostics.AddError(
-			"Error Reading Capella Projects",
-			"Could not read projects in organization "+state.OrganizationId.String()+": "+err.Error(),
+			"Error Reading Capella Certificate",
+			"Could not read certificate in cluster "+state.ClusterId.String()+": "+err.Error(),
 		)
 		return
 	}
@@ -117,15 +112,11 @@ func (c *Certificate) Read(ctx context.Context, req datasource.ReadRequest, resp
 	err = json.Unmarshal(response.Body, &certResp)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating project",
-			"Could not create project, unexpected error: "+err.Error(),
+			"Error reading certificate",
+			"Could not read certificate in cluster, unexpected error: "+err.Error(),
 		)
 		return
 	}
-
-	//certState := providerschema.OneCertificate{
-	//	Certificate: types.StringValue(certResp.Certificate),
-	//}
 
 	state.Certificate = types.StringValue(certResp.Certificate)
 
@@ -155,4 +146,19 @@ func (c *Certificate) Configure(_ context.Context, req datasource.ConfigureReque
 	}
 
 	c.Data = data
+}
+
+// validate is used to verify that all the fields in the datasource
+// have been populated.
+func (c *Certificate) validate(state providerschema.Certificate) error {
+	if state.OrganizationId.IsNull() {
+		return errors.ErrOrganizationIdMissing
+	}
+	if state.ProjectId.IsNull() {
+		return errors.ErrProjectIdMissing
+	}
+	if state.ClusterId.IsNull() {
+		return errors.ErrClusterIdMissing
+	}
+	return nil
 }
