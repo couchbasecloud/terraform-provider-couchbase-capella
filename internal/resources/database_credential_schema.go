@@ -64,6 +64,35 @@ func DatabaseCredentialSchema() schema.Schema {
 							Required:    true,
 							ElementType: types.StringType,
 						},
+						"resources": schema.SingleNestedAttribute{
+							Optional: true,
+							Attributes: map[string]schema.Attribute{
+								"buckets": schema.ListNestedAttribute{
+									Optional: true,
+									NestedObject: schema.NestedAttributeObject{
+										Attributes: map[string]schema.Attribute{
+											"name": schema.StringAttribute{
+												Required: true,
+											},
+											"scopes": schema.ListNestedAttribute{
+												Optional: true,
+												NestedObject: schema.NestedAttributeObject{
+													Attributes: map[string]schema.Attribute{
+														"name": schema.StringAttribute{
+															Required: true,
+														},
+														"collections": schema.ListAttribute{
+															Optional:    true,
+															ElementType: types.StringType,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
