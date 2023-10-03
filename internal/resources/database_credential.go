@@ -467,6 +467,12 @@ func createAccess(input providerschema.DatabaseCredential) []api.Access {
 					}
 				}
 			}
+		} else {
+			// todo: There is a bug in the PUT V4 API where we cannot pass empty buckets list as it leads to a nil pointer exception.
+			// to workaround this bug, I have temporarily added a fix where we pass an empty list of buckets if the terraform input field doesn't contain any buckets.
+			// fix for the V4 API bug will come as part of https://couchbasecloud.atlassian.net/browse/AV-63388
+
+			access[i].Resources = &api.Resources{Buckets: make([]api.Bucket, 0)}
 		}
 	}
 
