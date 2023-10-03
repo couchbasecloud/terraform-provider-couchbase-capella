@@ -230,7 +230,7 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 			resourceIDs["organizationId"],
 			resourceIDs["userId"],
 		),
-		http.MethodPatch,
+		http.MethodDelete,
 		nil,
 		r.Token,
 		nil,
