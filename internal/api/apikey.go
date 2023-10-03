@@ -79,3 +79,9 @@ type GetApiKeyResponse struct {
 	// To learn more about Organization Roles, see [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
 	Resources Resources `json:"resources"`
 }
+
+type RotateAPIKeyRequest struct {
+	// Secret A secret associated with API key. One has to follow the secret key policy, such as allowed characters and a length of 64 characters.
+	// If this field is left empty, a secret will be auto-generated.
+	Secret *string `json:"secret,omitempty"`
+}
