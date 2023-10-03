@@ -168,22 +168,23 @@ func (p *capellaProvider) Configure(ctx context.Context, req provider.ConfigureR
 // DataSources defines the data sources implemented in the provider.
 func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
+		datasources.NewOrganization,
 		datasources.NewProject,
 		datasources.NewCluster,
-		datasources.NewAllowList,
-		datasources.NewOrganization,
 		datasources.NewCertificate,
+		datasources.NewAllowList,
 	}
 }
 
 // Resources defines the resources implemented in the provider.
 func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
+		resources.NewUser,
 		resources.NewProject,
+		resources.NewApiKey,
 		resources.NewCluster,
 		resources.NewAllowList,
 		resources.NewDatabaseCredential,
-		resources.NewApiKey,
-		resources.NewUser,
+		resources.NewBucket,
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"terraform-provider-capella/internal/api"
+	"terraform-provider-capella/internal/api/organization"
 	"terraform-provider-capella/internal/errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -30,7 +31,7 @@ func NewOrganization() datasource.DataSource {
 }
 
 func (o *Organization) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_organizations"
+	resp.TypeName = req.ProviderTypeName + "_organization"
 }
 
 func (o *Organization) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -134,7 +135,7 @@ func (o *Organization) Read(ctx context.Context, req datasource.ReadRequest, res
 		return
 	}
 
-	organizationsResponse := api.GetOrganizationResponse{}
+	organizationsResponse := organization.GetOrganizationResponse{}
 	err = json.Unmarshal(response.Body, &organizationsResponse)
 	if err != nil {
 		resp.Diagnostics.AddError(

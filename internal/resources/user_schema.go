@@ -30,22 +30,22 @@ func UserSchema() schema.Schema {
 			"organization_id": schema.StringAttribute{
 				Required: true,
 			},
-			"organizationRoles": schema.StringAttribute{
+			"organization_roles": schema.StringAttribute{
 				Required: true,
 			},
-			"lastLogin": schema.StringAttribute{
+			"last_login": schema.StringAttribute{
 				Computed: true,
 			},
 			"region": schema.StringAttribute{
 				Computed: true,
 			},
-			"timeZone": schema.StringAttribute{
+			"time_zone": schema.StringAttribute{
 				Computed: true,
 			},
-			"enableNotifications": schema.BoolAttribute{
+			"enable_notifications": schema.BoolAttribute{
 				Computed: true,
 			},
-			"expiresAt": schema.StringAttribute{
+			"expires_at": schema.StringAttribute{
 				Computed: true,
 			},
 			"resources": schema.SingleNestedAttribute{

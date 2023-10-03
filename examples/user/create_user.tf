@@ -1,5 +1,5 @@
 output "new_user" {
-  value = capella_allowlist.new_user
+  value = capella_user.new_user
 }
 
 resource "capella_user" "new_user" {

@@ -1,6 +1,9 @@
 package schema
 
 import (
+	"strings"
+	"terraform-provider-capella/internal/errors"
+
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -26,23 +29,23 @@ type User struct {
 	OrganizationId types.String `tfsdk:"organization_id"`
 
 	// OrganizationRoles is an array of strings representing the roles granted to the user
-	OrganizationRoles *[]types.String `tfsdk:"organizationRoles"`
+	OrganizationRoles *[]types.String `tfsdk:"organization_roles"`
 
 	// LastLogin is the time(UTC) at which user last logged in.
-	LastLogin types.String `tfsdk:"lastLogin"`
+	LastLogin types.String `tfsdk:"last_login"`
 
 	// Region is the region of the user.
 	Region types.String `tfsdk:"region"`
 
 	// TimeZone is the time zone of the user.
-	TimeZone types.String `tfsdk:"timeZone"`
+	TimeZone types.String `tfsdk:"time_zone"`
 
 	// EnableNotifications represents whether email alerts for databases in projects
 	// will be recieved.
-	EnableNotifications types.Bool `tfsdk:"enableNotifications"`
+	EnableNotifications types.Bool `tfsdk:"enable_notifications"`
 
 	// ExpiresAt is the time at which user expires.
-	ExpiresAt types.String `tfsdk:"expiresAt"`
+	ExpiresAt types.String `tfsdk:"expires_at"`
 
 	// Resources is an array of objects representing the resources the user has access to
 	Resources *[]Resource `tfsdk:"resources"`
@@ -98,4 +101,51 @@ func NewUser(
 		Audit:               audit,
 	}
 	return &newUser
+}
+
+// Validate will split the IDs by a delimiter i.e. comma , in case a terraform import CLI is invoked.
+// The format of the terraform import CLI would include the IDs as follows -
+// `terraform import capella_user.new_user id=<uuid>,organization_id=<uuid>`
+func (u User) Validate() (userId, organizationId string, err error) {
+	const (
+		idDelimiter       = ","
+		organizationIdSep = "organization_id="
+		userIdSep         = "id="
+	)
+
+	organizationId = u.OrganizationId.ValueString()
+	userId = u.Id.ValueString()
+	var found bool
+
+	// check if the id is a comma separated string of multiple IDs, usually passed during the terraform import CLI
+	if u.OrganizationId.IsNull() {
+		strs := strings.Split(u.Id.ValueString(), idDelimiter)
+		if len(strs) != 4 {
+			err = errors.ErrIdMissing
+			return
+		}
+		_, userId, found = strings.Cut(strs[0], userIdSep)
+		if !found {
+			err = errors.ErrUserIdMissing
+			return
+		}
+
+		_, organizationId, found = strings.Cut(strs[3], organizationIdSep)
+		if !found {
+			err = errors.ErrOrganizationIdMissing
+			return
+		}
+	}
+
+	if userId == "" {
+		err = errors.ErrUserIdCannotBeEmpty
+		return
+	}
+
+	if organizationId == "" {
+		err = errors.ErrOrganizationIdCannotBeEmpty
+		return
+	}
+
+	return userId, organizationId, nil
 }

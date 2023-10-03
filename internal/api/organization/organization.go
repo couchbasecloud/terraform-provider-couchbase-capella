@@ -1,13 +1,15 @@
-package api
+package organization
 
 import (
+	"terraform-provider-capella/internal/api"
+
 	"github.com/google/uuid"
 )
 
 // GetOrganizationResponse defines the model for GetOrganizationResponse.
 type GetOrganizationResponse struct {
 	// Audit contains all audit-related fields.
-	Audit CouchbaseAuditData `json:"audit"`
+	Audit api.CouchbaseAuditData `json:"audit"`
 
 	// Name represents the organization name.
 	Name string `json:"name"`

@@ -450,7 +450,7 @@ func createAccess(input providerschema.DatabaseCredential) []api.Access {
 		}
 		if acc.Resources != nil {
 			if acc.Resources.Buckets != nil {
-				access[i].Resources = &api.Resources{Buckets: make([]api.Bucket, len(acc.Resources.Buckets))}
+				access[i].Resources = &api.AccessibleResources{Buckets: make([]api.Bucket, len(acc.Resources.Buckets))}
 				for k, bucket := range acc.Resources.Buckets {
 					access[i].Resources.Buckets[k].Name = acc.Resources.Buckets[k].Name.ValueString()
 					if bucket.Scopes != nil {
@@ -485,7 +485,7 @@ func mapAccess(plan providerschema.DatabaseCredential) []providerschema.Access {
 		}
 		if acc.Resources != nil {
 			if acc.Resources.Buckets != nil {
-				access[i].Resources = &providerschema.Resources{Buckets: make([]providerschema.Bucket, len(acc.Resources.Buckets))}
+				access[i].Resources = &providerschema.Resources{Buckets: make([]providerschema.BucketResource, len(acc.Resources.Buckets))}
 				for k, bucket := range acc.Resources.Buckets {
 					access[i].Resources.Buckets[k].Name = acc.Resources.Buckets[k].Name
 					if bucket.Scopes != nil {

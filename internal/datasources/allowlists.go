@@ -33,7 +33,7 @@ func NewAllowList() datasource.DataSource {
 
 // Metadata returns the allow list data source type name.
 func (d *AllowList) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_allowlist"
+	resp.TypeName = req.ProviderTypeName + "_allowlists"
 }
 
 // Schema defines the schema for the allowlist data source.

@@ -80,3 +80,9 @@ type CreateUserResponse struct {
 	// ID is the ID of the user
 	Id uuid.UUID `json:"id"`
 }
+
+type PatchUserRequest struct {
+	Op    string   `json:"op"`
+	Path  string   `json:"path"`
+	Value []string `json:"value,omitempty"`
+}

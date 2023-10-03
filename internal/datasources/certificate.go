@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"terraform-provider-capella/internal/api"
+	providerschema "terraform-provider-capella/internal/schema"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"net/http"
-	"terraform-provider-capella/internal/api"
-	providerschema "terraform-provider-capella/internal/schema"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -31,7 +32,7 @@ func NewCertificate() datasource.DataSource {
 
 // Metadata returns the certificates data source type name.
 func (c *Certificate) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_certificates"
+	resp.TypeName = req.ProviderTypeName + "_certificate"
 }
 
 // Schema defines the schema for the allowlist data source.

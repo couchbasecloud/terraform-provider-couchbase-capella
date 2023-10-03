@@ -32,7 +32,7 @@ func NewUser() resource.Resource {
 
 // Metadata returns the users resource type name
 func (r *User) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_users"
+	resp.TypeName = req.ProviderTypeName + "_user"
 }
 
 // Schema defines the schema for the allowlist resource.
@@ -143,17 +143,152 @@ func (r *User) validateCreateUserRequest(plan providerschema.User) error {
 
 // Read reads user information
 func (r *User) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// todo (AV-69625):
+	var state providerschema.User
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	userId, organizationId, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Users in Capella",
+			"Could not read Capella User with ID "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	// Get refreshed Cluster value from Capella
+	refreshedState, err := r.refreshUser(ctx, organizationId, userId)
+	if err := handleCapellaUserError(err); err != nil {
+		resp.Diagnostics.AddError(
+			"Error reading Capella User",
+			"Could not read Capella User with id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	// Set refreshed state
+	diags = resp.State.Set(ctx, &refreshedState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Update updates the user
 func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// todo (AV-69626):
+	var state providerschema.User
+	diags := req.Plan.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	userId, organizationId, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Users in Capella",
+			"Could not read Capella User with ID "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	userRequest := api.PatchUserRequest{}
+
+	_, err = r.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/users/%s", r.HostURL, organizationId, userId),
+		http.MethodPatch,
+		userRequest,
+		r.Token,
+		nil,
+	)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		resp.Diagnostics.AddError(
+			"Error updating Capella User",
+			"Could not update an existing Capella User, unexpected error: "+err.CompleteError(),
+		)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error updating Capella User",
+			"Could not update Capella User, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	currentState, err := r.refreshUser(ctx, organizationId, userId)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		resp.Diagnostics.AddError(
+			"Error Reading Capella User",
+			"Could not read Capella User with ID "+userId+": "+err.CompleteError(),
+		)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error Reading Capella User",
+			"Could not read Capella User with ID "+userId+": "+err.Error(),
+		)
+		return
+	}
+
+	// Set state to fully populated data
+	diags = resp.State.Set(ctx, currentState)
+
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Delete deletes the user
 func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// todo (AV-69627):
+	// Retrieve values from state
+	var state providerschema.User
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	userId, organizationId, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Users in Capella",
+			"Could not read Capella User with ID "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	_, err = r.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/users/%s", r.HostURL, organizationId, userId),
+		http.MethodDelete,
+		nil,
+		r.Token,
+		nil,
+	)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		if err.HttpStatusCode != 404 {
+			resp.Diagnostics.AddError(
+				"Error Deleting the Capella User",
+				"Could not delete Capella User associated with organization "+organizationId+": "+err.CompleteError(),
+			)
+			return
+		}
+	default:
+		resp.Diagnostics.AddError(
+			"Error Deleting the Capella User",
+			"Could not delete Capella User associated with organization "+organizationId+": "+err.Error(),
+		)
+		return
+	}
 }
 
 // convertOrganizationRoles is used to convert all roles

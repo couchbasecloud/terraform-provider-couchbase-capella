@@ -19,4 +19,7 @@ var (
 
 	ErrDatabaseCredentialIdCannotBeEmpty = errors.New("database credential ID cannot be empty, please contact Couchbase Capella Support")
 	ErrDatabaseCredentialIdMissing       = errors.New("database credential ID is missing or was passed incorrectly, please check provider documentation for syntax")
+
+	ErrUserIdCannotBeEmpty = errors.New("user ID cannot be empty, please contact Couchbase Capella Support")
+	ErrUserIdMissing       = errors.New("user ID is missing or was passed incorrectly, please check provider documentation for syntax")
 )
