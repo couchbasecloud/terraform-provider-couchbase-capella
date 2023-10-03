@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 func UserSchema() schema.Schema {
@@ -30,8 +31,9 @@ func UserSchema() schema.Schema {
 			"organization_id": schema.StringAttribute{
 				Required: true,
 			},
-			"organization_roles": schema.StringAttribute{
-				Required: true,
+			"organization_roles": schema.ListAttribute{
+				ElementType: types.StringType,
+				Required:    true,
 			},
 			"last_login": schema.StringAttribute{
 				Computed: true,
@@ -48,17 +50,20 @@ func UserSchema() schema.Schema {
 			"expires_at": schema.StringAttribute{
 				Computed: true,
 			},
-			"resources": schema.SingleNestedAttribute{
+			"resources": schema.ListNestedAttribute{
 				Optional: true,
-				Attributes: map[string]schema.Attribute{
-					"type": schema.StringAttribute{
-						Optional: true,
-					},
-					"id": schema.StringAttribute{
-						Required: true,
-					},
-					"roles": schema.StringAttribute{
-						Required: true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"type": schema.StringAttribute{
+							Optional: true,
+						},
+						"id": schema.StringAttribute{
+							Required: true,
+						},
+						"roles": schema.ListAttribute{
+							Required:    true,
+							ElementType: types.StringType,
+						},
 					},
 				},
 			},
