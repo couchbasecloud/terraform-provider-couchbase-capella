@@ -80,8 +80,8 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 	createUserRequest := api.CreateUserRequest{
 		Name:              plan.Name.ValueString(),
 		Email:             plan.Email.ValueString(),
-		OrganizationRoles: r.convertOrganizationRoles(*plan.OrganizationRoles),
-		Resources:         r.convertResources(*plan.Resources),
+		OrganizationRoles: r.convertOrganizationRoles(plan.OrganizationRoles),
+		Resources:         r.convertResources(plan.Resources),
 	}
 
 	// Execute request
@@ -246,7 +246,7 @@ func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (
 		types.StringValue(userResp.Status),
 		types.BoolValue(userResp.Inactive),
 		types.StringValue(userResp.OrganizationId.String()),
-		r.morphOrganizationRoles(userResp.OrganizationRoles),
+		r.morphOrganizationRoles(*userResp.OrganizationRoles),
 		types.StringValue(userResp.LastLogin),
 		types.StringValue(userResp.Region),
 		types.StringValue(userResp.TimeZone),
@@ -277,9 +277,9 @@ func (r *User) morphResources(resources []api.Resource) []providerschema.Resourc
 
 		morphedResource.Id = types.StringValue(resource.Id)
 
-		if morphedResource.Type != nil {
+		if resource.Type != nil {
 			resourceType := types.StringValue(*resource.Type)
-			morphedResource.Type = &resourceType
+			morphedResource.Type = resourceType
 		}
 
 		var roles []basetypes.StringValue
