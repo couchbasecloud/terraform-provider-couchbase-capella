@@ -1,6 +1,10 @@
 package schema
 
 import (
+	"fmt"
+	"strings"
+	"terraform-provider-capella/internal/errors"
+
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -58,17 +62,6 @@ type User struct {
 	Audit types.Object `tfsdk:"audit"`
 }
 
-type Resource struct {
-	// Id is a GUID4 identifier of the resource.
-	Id types.String `tfsdk:"id"`
-
-	// Type is the type of the resource.
-	Type types.String `tfsdk:"type"`
-
-	// Roles is an array of strings representing a users project roles
-	Roles []types.String `tfsdk:"roles"`
-}
-
 // NewUser creates a new instance of a User object
 func NewUser(
 	Id types.String,
@@ -103,4 +96,74 @@ func NewUser(
 		Audit:               audit,
 	}
 	return &newUser
+}
+
+type Resource struct {
+	// Id is a GUID4 identifier of the resource.
+	Id types.String `tfsdk:"id"`
+
+	// Type is the type of the resource.
+	Type types.String `tfsdk:"type"`
+
+	// Roles is an array of strings representing a users project roles
+	Roles []types.String `tfsdk:"roles"`
+}
+
+// Validate is used to verify that IDs have been properly imported
+// TODO (AV-53457): add unit testing
+func (u *User) Validate() (map[string]string, error) {
+	const idDelimiter = ","
+	var found bool
+
+	organizationId := u.OrganizationId.ValueString()
+	userId := u.Id.ValueString()
+
+	// check if the id is a comma separated string of multiple IDs, usually passed during the terraform import CLI
+	if u.OrganizationId.IsNull() {
+		strs := strings.Split(u.Id.ValueString(), idDelimiter)
+		if len(strs) != 2 {
+			return nil, errors.ErrIdMissing
+		}
+
+		_, userId, found = strings.Cut(strs[0], "id=")
+		if !found {
+			return nil, errors.ErrAllowListIdMissing
+		}
+
+		_, organizationId, found = strings.Cut(strs[1], "organization_id=")
+		if !found {
+			return nil, errors.ErrOrganizationIdMissing
+		}
+	}
+
+	resourceIDs := u.generateResourceIdMap(organizationId, userId)
+
+	err := u.checkEmpty(resourceIDs)
+	if err != nil {
+		return nil, fmt.Errorf("resource import unsuccessful: %s", err)
+	}
+
+	return resourceIDs, nil
+}
+
+// generateResourceIdmap is used to populate a map with selected IDs
+// TODO (AV-53457): add unit testing
+func (u *User) generateResourceIdMap(organizationId, userId string) map[string]string {
+	return map[string]string{
+		"organizationId": organizationId,
+		"userId":         userId,
+	}
+}
+
+// checkEmpty is used to verify that a supplied resourceId map has been populated
+// TODO (AV-53457): add unit testing
+func (u *User) checkEmpty(resourceIdMap map[string]string) error {
+	if resourceIdMap["userId"] == "" {
+		return errors.ErrAllowListIdCannotBeEmpty
+	}
+
+	if resourceIdMap["organizationId"] == "" {
+		return errors.ErrOrganizationIdCannotBeEmpty
+	}
+	return nil
 }

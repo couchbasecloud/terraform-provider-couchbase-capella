@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -143,7 +144,58 @@ func (r *User) validateCreateUserRequest(plan providerschema.User) error {
 
 // Read reads user information
 func (r *User) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// todo (AV-69625):
+	var state providerschema.User
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Validate parameters were successfully imported
+	resourceIDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Capella AllowList",
+			"Could not read Capella allow list: "+err.Error(),
+		)
+		return
+	}
+
+	var (
+		organizationId = resourceIDs["organizationId"]
+		userId         = resourceIDs["userId"]
+	)
+
+	// Refresh the existing user
+	refreshedState, err := r.refreshUser(ctx, organizationId, userId)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		if err.HttpStatusCode != http.StatusNotFound {
+			resp.Diagnostics.AddError(
+				"Error Reading Capella User",
+				"Could not read Capella userID "+userId+": "+err.CompleteError(),
+			)
+			return
+		}
+		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+		resp.State.RemoveResource(ctx)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error Reading Capella User",
+			"Could not read Capella userID "+userId+": "+err.Error(),
+		)
+		return
+	}
+
+	// Set refreshed state
+	diags = resp.State.Set(ctx, &refreshedState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Update updates the user
