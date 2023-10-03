@@ -63,7 +63,7 @@ func (c *Certificate) Schema(_ context.Context, _ datasource.SchemaRequest, resp
 
 // Read refreshes the Terraform state with the latest data of projects.
 func (c *Certificate) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state providerschema.Certificates
+	var state providerschema.Certificate
 	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -123,11 +123,11 @@ func (c *Certificate) Read(ctx context.Context, req datasource.ReadRequest, resp
 		return
 	}
 
-	certState := providerschema.OneCertificate{
-		Certificate: types.StringValue(certResp.Certificate),
-	}
+	//certState := providerschema.OneCertificate{
+	//	Certificate: types.StringValue(certResp.Certificate),
+	//}
 
-	state.Data = append(state.Data, certState)
+	state.Certificate = types.StringValue(certResp.Certificate)
 
 	// Set state
 	diags = resp.State.Set(ctx, &state)
