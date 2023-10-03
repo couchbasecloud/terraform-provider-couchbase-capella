@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
@@ -61,7 +62,7 @@ func (r *ApiKey) Configure(_ context.Context, req resource.ConfigureRequest, res
 }
 
 // Create creates a new apiKey.
-func (r *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (a *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan providerschema.ApiKey
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -69,17 +70,20 @@ func (r *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		return
 	}
 
-	if plan.OrganizationId.IsNull() {
+	err := a.validateCreateApiKeyRequest(plan)
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating ApiKey",
-			"Could not create ApiKey, unexpected error: organization ID cannot be empty.",
+			"Could not create ApiKey, unexpected error:"+err.Error(),
 		)
 		return
 	}
+
 	var organizationId = plan.OrganizationId.ValueString()
 
 	apiKeyRequest := api.CreateApiKeyRequest{
-		Name: plan.Name.ValueString(),
+		Name:              plan.Name.ValueString(),
+		OrganizationRoles: a.convertOrganizationRoles(plan.OrganizationRoles),
 	}
 
 	if !plan.Description.IsNull() && !plan.Description.IsUnknown() {
@@ -91,70 +95,37 @@ func (r *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		apiKeyRequest.Expiry = &expiry
 	}
 
-	var newOrganizationRoles []string
-	for _, organizationRole := range plan.OrganizationRoles {
-		newOrganizationRoles = append(newOrganizationRoles, organizationRole.ValueString())
+	convertedResources, err := a.convertResources(plan.Resources)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating ApiKey",
+			"Could not create ApiKey, unexpected error:"+err.Error(),
+		)
+		return
 	}
-	apiKeyRequest.OrganizationRoles = newOrganizationRoles
+	apiKeyRequest.Resources = &convertedResources
 
-	var newResources []api.ResourcesItems
-	for _, resource := range plan.Resources {
-		id, err := uuid.Parse(resource.Id.ValueString())
+	if !plan.AllowedCIDRs.IsNull() && !plan.AllowedCIDRs.IsUnknown() {
+		convertedAllowedCidr, err := a.convertAllowedCidrs(ctx, plan.AllowedCIDRs)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error creating ApiKey",
-				"Could not create ApiKey, unexpected error: resource id is not valid uuid: err: "+err.Error(),
+				"Could not create ApiKey, unexpected error:"+err.Error(),
 			)
 			return
 		}
-		newResource := api.ResourcesItems{
-			Id: id,
-		}
-
-		var newRoles []string
-		for _, role := range resource.Roles {
-			newRoles = append(newRoles, role.ValueString())
-		}
-		newResource.Roles = newRoles
-
-		if !resource.Type.IsNull() && !resource.Type.IsUnknown() {
-			newResource.Type = resource.Type.ValueStringPointer()
-		}
-		newResources = append(newResources, newResource)
-	}
-	apiKeyRequest.Resources = &newResources
-
-	elements := make([]types.String, 0, len(plan.AllowedCIDRs.Elements()))
-	diags = plan.AllowedCIDRs.ElementsAs(ctx, &elements, false)
-	if diags.HasError() {
-		return
+		apiKeyRequest.AllowedCIDRs = &convertedAllowedCidr
 	}
 
-	var newAllowedCidrs []string
-	for _, allowedCidr := range elements {
-		newAllowedCidrs = append(newAllowedCidrs, allowedCidr.ValueString())
-	}
-
-	if !plan.AllowedCIDRs.IsNull() {
-		apiKeyRequest.AllowedCIDRs = &newAllowedCidrs
-	}
-
-	response, err := r.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/apikeys", r.HostURL, organizationId),
+	response, err := a.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/apikeys", a.HostURL, organizationId),
 		http.MethodPost,
 		apiKeyRequest,
-		r.Token,
+		a.Token,
 		nil,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		resp.Diagnostics.AddError(
-			"Error creating ApiKey",
-			"Could not create ApiKey, unexpected error: "+err.CompleteError(),
-		)
-		return
-	default:
+	_, err = handleApiKeyError(err)
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating ApiKey",
 			"Could not create ApiKey, unexpected error: "+err.Error(),
@@ -172,7 +143,7 @@ func (r *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		return
 	}
 
-	refreshedState, err := r.retrieveApiKey(ctx, organizationId, apiKeyResponse.Id)
+	refreshedState, err := a.retrieveApiKey(ctx, organizationId, apiKeyResponse.Id)
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
@@ -284,4 +255,73 @@ func handleApiKeyError(err error) (bool, error) {
 	default:
 		return false, err
 	}
+}
+
+// validateCreateApiKeyRequest validates the required fields in the create request.
+func (a *ApiKey) validateCreateApiKeyRequest(plan providerschema.ApiKey) error {
+	if plan.OrganizationId.IsNull() {
+		return fmt.Errorf("organizationId cannot be empty")
+	}
+	if plan.Name.IsNull() {
+		return fmt.Errorf("name cannot be empty")
+	}
+	if plan.OrganizationRoles == nil {
+		return fmt.Errorf("organizationRoles cannot be empty")
+	}
+	if plan.Resources == nil {
+		return fmt.Errorf("resource cannot be nil")
+	}
+	return nil
+}
+
+// convertOrganizationRoles is used to convert all roles
+// in an array of basetypes.StringValue to strings.
+func (a *ApiKey) convertOrganizationRoles(organizationRoles []basetypes.StringValue) []string {
+	var convertedRoles []string
+	for _, role := range organizationRoles {
+		convertedRoles = append(convertedRoles, role.ValueString())
+	}
+	return convertedRoles
+}
+
+// convertResource is used to convert a resource object containing nested fields
+// of type basetypes.StringValue to a resource object containing nested fields of go defined type.
+func (a *ApiKey) convertResources(resources []providerschema.ApiKeyResourcesItems) ([]api.ResourcesItems, error) {
+	var convertedResources []api.ResourcesItems
+	for _, resource := range resources {
+		id, err := uuid.Parse(resource.Id.ValueString())
+		if err != nil {
+			return nil, fmt.Errorf("resource id is not valid uuid")
+		}
+		convertedResource := api.ResourcesItems{
+			Id: id,
+		}
+
+		var convertedRoles []string
+		for _, role := range resource.Roles {
+			convertedRoles = append(convertedRoles, role.ValueString())
+		}
+		convertedResource.Roles = convertedRoles
+
+		if !resource.Type.IsNull() && !resource.Type.IsUnknown() {
+			convertedResource.Type = resource.Type.ValueStringPointer()
+		}
+		convertedResources = append(convertedResources, convertedResource)
+	}
+	return convertedResources, nil
+}
+
+// convertAllowedCidrs is used to convert allowed cidrs in types.List to array of string.
+func (a *ApiKey) convertAllowedCidrs(ctx context.Context, allowedCidrs types.List) ([]string, error) {
+	elements := make([]types.String, 0, len(allowedCidrs.Elements()))
+	diags := allowedCidrs.ElementsAs(ctx, &elements, false)
+	if diags.HasError() {
+		return nil, fmt.Errorf("error while extracting allowedCidrs elements")
+	}
+
+	var convertedAllowedCidrs []string
+	for _, allowedCidr := range elements {
+		convertedAllowedCidrs = append(convertedAllowedCidrs, allowedCidr.ValueString())
+	}
+	return convertedAllowedCidrs, nil
 }

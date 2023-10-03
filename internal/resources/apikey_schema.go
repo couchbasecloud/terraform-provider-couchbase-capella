@@ -26,6 +26,10 @@ func ApiKeySchema() schema.Schema {
 				Optional: true,
 				Computed: true,
 			},
+			"expiry": schema.Float64Attribute{
+				Optional: true,
+				Computed: true,
+			},
 			"allowed_cidrs": schema.ListAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -35,12 +39,8 @@ func ApiKeySchema() schema.Schema {
 				Required:    true,
 				ElementType: types.StringType,
 			},
-			"expiry": schema.Float64Attribute{
-				Optional: true,
-				Computed: true,
-			},
 			"resources": schema.ListNestedAttribute{
-				Optional: true,
+				Required: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{

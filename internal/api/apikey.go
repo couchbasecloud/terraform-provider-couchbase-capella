@@ -5,7 +5,8 @@ import (
 )
 
 // Resources  are the resource level permissions associated with the API key.
-// To learn more about Organization Roles, see [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
+// To learn more about Organization Roles, see
+// [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
 type Resources = []ResourcesItems
 
 // ResourcesItems defines model for APIKeyResourcesItems.
@@ -14,7 +15,8 @@ type ResourcesItems struct {
 	Id uuid.UUID `json:"id"`
 
 	// Roles are the project roles associated with the API key.
-	// To learn more about Project Roles, see [Project Roles](https://docs.couchbase.com/cloud/projects/project-roles.html).
+	// To learn more about Project Roles, see
+	//[Project Roles](https://docs.couchbase.com/cloud/projects/project-roles.html).
 	Roles []string `json:"roles"`
 
 	// Type is the type of the resource.
@@ -35,12 +37,14 @@ type CreateApiKeyRequest struct {
 	Expiry *float32 `json:"expiry,omitempty"`
 
 	// Name is the name of the API key.
-	Name              string   `json:"name"`
+	Name string `json:"name"`
+
+	// OrganizationRoles are the organization level roles granted to the API key.
 	OrganizationRoles []string `json:"organizationRoles"`
 
 	// Resources are the resource level permissions associated with the API key.
-	//
-	// To learn more about Organization Roles, see [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
+	// To learn more about Organization Roles, see
+	// [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
 	Resources *Resources `json:"resources,omitempty"`
 }
 
@@ -71,11 +75,13 @@ type GetApiKeyResponse struct {
 	Id string `json:"id"`
 
 	// Name is the name of the API key.
-	Name              string   `json:"name"`
+	Name string `json:"name"`
+
+	// OrganizationRoles are the organization level roles granted to the API key.
 	OrganizationRoles []string `json:"organizationRoles"`
 
-	// Resources is the resources are the resource level permissions associated with the API key.
-	//
-	// To learn more about Organization Roles, see [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
+	// Resources is the resources are the resource level permissions
+	// associated with the API key. To learn more about Organization Roles, see
+	// [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
 	Resources Resources `json:"resources"`
 }
