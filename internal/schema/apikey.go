@@ -2,12 +2,14 @@ package schema
 
 import (
 	"fmt"
+	"strings"
+
+	"terraform-provider-capella/internal/api"
+	"terraform-provider-capella/internal/errors"
+
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"strings"
-	"terraform-provider-capella/internal/api"
-	"terraform-provider-capella/internal/errors"
 )
 
 // ApiKeyResourcesItems defines model for APIKeyResourcesItems.
@@ -16,7 +18,8 @@ type ApiKeyResourcesItems struct {
 	Id types.String `tfsdk:"id"`
 
 	// Roles is the Project Roles associated with the API key.
-	// To learn more about Project Roles, see [Project Roles](https://docs.couchbase.com/cloud/projects/project-roles.html).
+	// To learn more about Project Roles,
+	// see [Project Roles](https://docs.couchbase.com/cloud/projects/project-roles.html).
 	Roles []types.String `tfsdk:"roles"`
 
 	// Type is the type of the resource.
@@ -43,17 +46,27 @@ type ApiKey struct {
 	Id types.String `tfsdk:"id"`
 
 	// Name is the name of the API key.
-	Name              types.String   `tfsdk:"name"`
+	Name types.String `tfsdk:"name"`
+
+	// OrganizationRoles are the organization level roles granted to the API key.
 	OrganizationRoles []types.String `tfsdk:"organization_roles"`
 
-	// Resources  is the resources are the resource level permissions associated with the API key.
-	// To learn more about Organization Roles, see [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
+	// Resources  is the resources are the resource level permissions associated
+	// with the API key. To learn more about Organization Roles, see
+	// [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
 	Resources []ApiKeyResourcesItems `tfsdk:"resources"`
 
+	// Rotate is called only when updating(rotating) the API key,
+	// and it should be set to 'true'.
 	Rotate types.Bool `tfsdk:"rotate"`
 
+	// Secret associated with API key. One has to follow the secret key policy,
+	// such as allowed characters and a length of 64 characters. If this field
+	// is left empty, a secret will be auto-generated.
 	Secret types.String `tfsdk:"secret"`
 
+	// Token is a confidential piece of information that is used to authorize
+	// requests made to v4 endpoints.
 	Token types.String `tfsdk:"token"`
 }
 
@@ -186,7 +199,8 @@ func OrderList2(list1, list2 []ApiKeyResourcesItems) ([]ApiKeyResourcesItems, er
 	return orderedList2, nil
 }
 
-// AreEqual returns true if the two arrays contain the same elements, without any extra values, False otherwise.
+// AreEqual returns true if the two arrays contain the same elements,
+// without any extra values, False otherwise.
 func AreEqual[T comparable](array1 []T, array2 []T) bool {
 	if len(array1) != len(array2) {
 		return false
