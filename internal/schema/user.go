@@ -48,7 +48,7 @@ type User struct {
 	Resources *[]Resource `tfsdk:"resources"`
 
 	// ETag is a unique indentifier which the client uses to determine if the resource has changed.
-	ETag types.String `tfsdk:"if_match"`
+	ETag types.String `tfsdk:"etag"`
 
 	// IfMatch is used to check if a request should be made. The request will only proceed if
 	// the resources current ETag matches this value.
