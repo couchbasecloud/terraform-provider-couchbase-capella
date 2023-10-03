@@ -205,7 +205,54 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 
 // Delete deletes the user
 func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// todo (AV-69627):
+	// Retrieve existing state
+	var state providerschema.User
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceIDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Deleting Capella User",
+			"Could not delete Capella user: "+err.Error(),
+		)
+		return
+	}
+	// Execute request to delete existing user
+	_, err = r.Client.Execute(
+		fmt.Sprintf(
+			"%s/v4/organizations/%s/users/%s",
+			r.HostURL,
+			resourceIDs["organizationId"],
+			resourceIDs["userId"],
+		),
+		http.MethodPatch,
+		nil,
+		r.Token,
+		nil,
+	)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		if err.HttpStatusCode != http.StatusNotFound {
+			resp.Diagnostics.AddError(
+				"Error Deleting Capella User",
+				"Could not delete Capella userId "+resourceIDs["userId"]+": "+err.CompleteError(),
+			)
+			tflog.Info(ctx, "resource doesn't exist in remote server")
+			return
+		}
+	default:
+		resp.Diagnostics.AddError(
+			"Error Deleting Capella User",
+			"Could not delete Capella userId "+resourceIDs["userId"]+": "+err.Error(),
+		)
+		return
+	}
 }
 
 // convertOrganizationRoles is used to convert all roles
