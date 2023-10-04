@@ -30,7 +30,7 @@ func NewOrganization() datasource.DataSource {
 }
 
 func (o *Organization) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_organizations"
+	resp.TypeName = req.ProviderTypeName + "_organization"
 }
 
 func (o *Organization) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -98,8 +98,8 @@ func (o *Organization) Read(ctx context.Context, req datasource.ReadRequest, res
 	err := o.validate(state)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Capella Organizations",
-			"Could not read organizations in cluster"+state.OrganizationId.String()+": "+err.Error())
+			"Error Reading Capella Organization",
+			"Could not read organization in cluster"+state.OrganizationId.String()+": "+err.Error())
 		return
 	}
 
@@ -118,8 +118,8 @@ func (o *Organization) Read(ctx context.Context, req datasource.ReadRequest, res
 	case api.Error:
 		if err.HttpStatusCode != http.StatusNotFound {
 			resp.Diagnostics.AddError(
-				"Error Reading Capella Organizations",
-				"Could not read organizations in cluster "+state.OrganizationId.String()+": "+err.CompleteError(),
+				"Error Reading Capella Organization",
+				"Could not read organization in cluster "+state.OrganizationId.String()+": "+err.CompleteError(),
 			)
 			return
 		}
@@ -128,8 +128,8 @@ func (o *Organization) Read(ctx context.Context, req datasource.ReadRequest, res
 		return
 	default:
 		resp.Diagnostics.AddError(
-			"Error Reading Organizations",
-			"Could not read organizations in cluster "+state.OrganizationId.String()+": "+err.Error(),
+			"Error Reading Organization",
+			"Could not read organization in cluster "+state.OrganizationId.String()+": "+err.Error(),
 		)
 		return
 	}
@@ -138,8 +138,8 @@ func (o *Organization) Read(ctx context.Context, req datasource.ReadRequest, res
 	err = json.Unmarshal(response.Body, &organizationsResponse)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading organizations",
-			"Could not create organizations, unexpected error: "+err.Error(),
+			"Error reading organization",
+			"Could not create organization, unexpected error: "+err.Error(),
 		)
 		return
 	}
