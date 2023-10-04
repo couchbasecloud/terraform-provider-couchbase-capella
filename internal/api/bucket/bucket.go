@@ -62,5 +62,5 @@ type GetBucketResponse struct {
 
 	EvictionPolicy string `json:"evictionPolicy"`
 
-	//Stats Stats `json:"stats"`
+	Stats *Stats `json:"stats"`
 }

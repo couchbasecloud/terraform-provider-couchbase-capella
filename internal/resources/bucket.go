@@ -278,12 +278,12 @@ func (c *Bucket) retrieveBucket(ctx context.Context, organizationId, projectId, 
 		Flush:                    bucketResp.Flush,
 		TimeToLiveInSeconds:      bucketResp.TimeToLiveInSeconds,
 		EvictionPolicy:           types.StringValue(bucketResp.EvictionPolicy),
-		//Stats: providerschema.Stats{
-		//	ItemCount:       bucketResp.Stats.ItemCount,
-		//	OpsPerSecond:    bucketResp.Stats.OpsPerSecond,
-		//	DiskUsedInMib:   bucketResp.Stats.DiskUsedInMib,
-		//	MemoryUsedInMib: bucketResp.Stats.MemoryUsedInMib,
-		//},
+		Stats: &providerschema.Stats{
+			ItemCount:       types.Int64Value(int64(bucketResp.Stats.ItemCount)),
+			OpsPerSecond:    types.Int64Value(int64(bucketResp.Stats.OpsPerSecond)),
+			DiskUsedInMib:   types.Int64Value(int64(bucketResp.Stats.DiskUsedInMib)),
+			MemoryUsedInMib: types.Int64Value(int64(bucketResp.Stats.MemoryUsedInMib)),
+		},
 	}
 
 	return &refreshedState, nil

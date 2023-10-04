@@ -55,22 +55,23 @@ func BucketSchema() schema.Schema {
 				Computed: true,
 				Optional: true,
 			},
-			//"stats": schema.SingleNestedAttribute{
-			//	Computed: true,
-			//	Attributes: map[string]schema.Attribute{
-			//		"item_count": schema.Int64Attribute{
-			//			Computed: true,
-			//		},
-			//		"ops_per_second": schema.Int64Attribute{
-			//			Computed: true,
-			//		},
-			//		"disk_used_inmib": schema.Int64Attribute{
-			//			Computed: true,
-			//		},
-			//		"memory_used_inmib": schema.Int64Attribute{
-			//			Computed: true,
-			//		},
-			//	},
+			"stats": schema.SingleNestedAttribute{
+				Computed: true,
+				Attributes: map[string]schema.Attribute{
+					"item_count": schema.Int64Attribute{
+						Computed: true,
+					},
+					"ops_per_second": schema.Int64Attribute{
+						Computed: true,
+					},
+					"disk_used_inmib": schema.Int64Attribute{
+						Computed: true,
+					},
+					"memory_used_inmib": schema.Int64Attribute{
+						Computed: true,
+					},
+				},
+			},
 		},
 	}
 }
