@@ -2,10 +2,14 @@ package schema
 
 import (
 	"fmt"
+	"strings"
+
+	"terraform-provider-capella/internal/api"
+	"terraform-provider-capella/internal/errors"
+
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"terraform-provider-capella/internal/api"
 )
 
 // ApiKeyResourcesItems defines model for APIKeyResourcesItems.
@@ -22,7 +26,6 @@ type ApiKeyResourcesItems struct {
 	Type types.String `tfsdk:"type"`
 }
 
-// ApiKey maps api key resource schema data
 type ApiKey struct {
 	// OrganizationId is the organizationId of the capella.
 	OrganizationId types.String `tfsdk:"organization_id"`
@@ -114,6 +117,62 @@ func NewApiKey(apiKey *api.GetApiKeyResponse, organizationId string, auditObject
 	newApiKey.Resources = newApiKeyResourcesItems
 
 	return &newApiKey, nil
+}
+
+func (a *ApiKey) Validate() (map[string]string, error) {
+	const idDelimiter = ","
+	var found bool
+
+	organizationId := a.OrganizationId.ValueString()
+	apiKeyId := a.Id.ValueString()
+
+	// check if the id is a comma separated string of multiple IDs, usually passed during the terraform import CLI
+	if a.OrganizationId.IsNull() {
+		strs := strings.Split(a.Id.ValueString(), idDelimiter)
+		if len(strs) != 2 {
+			return nil, errors.ErrIdMissing
+		}
+
+		_, apiKeyId, found = strings.Cut(strs[0], "id=")
+		if !found {
+			return nil, errors.ErrApiKeyIdMissing
+		}
+
+		_, organizationId, found = strings.Cut(strs[1], "organization_id=")
+		if !found {
+			return nil, errors.ErrOrganizationIdMissing
+		}
+
+	}
+
+	resourceIDs := a.generateResourceIdMap(organizationId, apiKeyId)
+
+	err := a.checkEmpty(resourceIDs)
+	if err != nil {
+		return nil, fmt.Errorf("resource import unsuccessful: %s", err)
+	}
+
+	return resourceIDs, nil
+}
+
+// generateResourceIdMap is used to populate a map with selected IDs
+func (a *ApiKey) generateResourceIdMap(organizationId, apiKeyId string) map[string]string {
+	return map[string]string{
+		OrganizationId: organizationId,
+		ApiKeyId:       apiKeyId,
+	}
+}
+
+// checkEmpty is used to verify that a supplied resourceId map has been populated
+func (a *ApiKey) checkEmpty(resourceIdMap map[string]string) error {
+	if resourceIdMap[ApiKeyId] == "" {
+		return errors.ErrApiKeyIdCannotBeEmpty
+	}
+
+	if resourceIdMap[OrganizationId] == "" {
+		return errors.ErrOrganizationIdCannotBeEmpty
+	}
+	return nil
 }
 
 // OrderList2 function to order list2 based on list1's Ids

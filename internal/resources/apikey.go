@@ -191,7 +191,7 @@ func (a *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 
 // Read reads ApiKey information.
 func (a *ApiKey) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	//TODO
+	// TODO
 }
 
 // Update updates the ApiKey.
@@ -201,7 +201,48 @@ func (a *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 
 // Delete deletes the ApiKey.
 func (a *ApiKey) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	//TODO
+	// Retrieve values from state
+	var state providerschema.ApiKey
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceIDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error deleting api key",
+			"Could not delete api key id "+state.Id.String()+" unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	var (
+		organizationId = resourceIDs[providerschema.OrganizationId]
+		apiKeyId       = resourceIDs[providerschema.ApiKeyId]
+	)
+
+	// Delete existing api key
+	_, err = a.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/apikeys/%s", a.HostURL, organizationId, apiKeyId),
+		http.MethodDelete,
+		nil,
+		a.Token,
+		nil,
+	)
+	resourceNotFound, err := handleApiKeyError(err)
+	if resourceNotFound {
+		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+		return
+	}
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error deleting api key",
+			"Could not delete api key id "+state.Id.String()+" unexpected error: "+err.Error(),
+		)
+		return
+	}
 }
 
 func (a *ApiKey) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
