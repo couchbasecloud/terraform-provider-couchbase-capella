@@ -40,7 +40,7 @@ func (d *Cluster) Schema(_ context.Context, _ datasource.SchemaRequest, resp *da
 	resp.Schema = ClusterSchema()
 }
 
-// Read refreshes the Terraform state with the latest data of Clusters.
+// Read refreshes the Terraform state with the latest data of clusters.
 func (d *Cluster) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state providerschema.Clusters
 	diags := req.Config.Get(ctx, &state)
@@ -122,7 +122,7 @@ func (d *Cluster) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 				fmt.Sprintf("Could not read clusters in organization %s and project %s, unexpected error: %s", organizationId, projectId, err.Error()),
 			)
 		}
-		state.Data = append(state.Data, newClusterData)
+		state.Data = append(state.Data, *newClusterData)
 	}
 
 	// Set state
@@ -134,7 +134,7 @@ func (d *Cluster) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 	}
 }
 
-// Configure adds the provider configured client to the Cluster data source.
+// Configure adds the provider configured client to the cluster data source.
 func (d *Cluster) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
