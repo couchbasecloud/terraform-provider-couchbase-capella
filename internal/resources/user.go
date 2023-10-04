@@ -212,7 +212,6 @@ func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling response: %s", err)
 	}
-	userResp.ETag = response.Response.Header.Get("ETag")
 	return &userResp, nil
 }
 

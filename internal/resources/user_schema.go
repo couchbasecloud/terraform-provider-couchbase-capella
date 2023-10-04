@@ -67,12 +67,6 @@ func UserSchema() schema.Schema {
 					},
 				},
 			},
-			"etag": schema.StringAttribute{
-				Computed: true,
-			},
-			"if_match": schema.StringAttribute{
-				Optional: true,
-			},
 			"audit": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
