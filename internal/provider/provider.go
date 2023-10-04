@@ -171,6 +171,7 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewProject,
 		datasources.NewAllowList,
 		datasources.NewCertificate,
+		datasources.NewOrganization,
 	}
 }
 
