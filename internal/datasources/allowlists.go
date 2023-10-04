@@ -218,8 +218,6 @@ func (d *AllowList) mapResponseBody(
 			ProjectId:      types.StringValue(state.ProjectId.ValueString()),
 			ClusterId:      types.StringValue(state.ClusterId.ValueString()),
 			Cidr:           types.StringValue(allowList.Cidr),
-			Comment:        types.StringValue(*allowList.Comment),
-			ExpiresAt:      types.StringValue(*allowList.ExpiresAt),
 			Audit: providerschema.CouchbaseAuditData{
 				CreatedAt:  types.StringValue(allowList.Audit.CreatedAt.String()),
 				CreatedBy:  types.StringValue(allowList.Audit.CreatedBy),
@@ -227,6 +225,12 @@ func (d *AllowList) mapResponseBody(
 				ModifiedBy: types.StringValue(allowList.Audit.ModifiedBy),
 				Version:    types.Int64Value(int64(allowList.Audit.Version)),
 			},
+		}
+		if allowList.Comment != nil {
+			allowListState.Comment = types.StringValue(*allowList.Comment)
+		}
+		if allowList.ExpiresAt != nil {
+			allowListState.ExpiresAt = types.StringValue(*allowList.ExpiresAt)
 		}
 		state.Data = append(state.Data, allowListState)
 	}
