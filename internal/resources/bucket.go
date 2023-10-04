@@ -167,9 +167,75 @@ func (c *Bucket) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 	// Todo
 }
 
-// Delete deletes the project.
+// Delete deletes the bucket.
 func (r *Bucket) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	//Todo
+	var state providerschema.Bucket
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if state.OrganizationId.IsNull() {
+		resp.Diagnostics.AddError(
+			"Error creating bucket",
+			"Could not create bucket, unexpected error: "+errors.ErrOrganizationIdCannotBeEmpty.Error(),
+		)
+		return
+	}
+	var organizationId = state.OrganizationId.ValueString()
+
+	if state.ProjectId.IsNull() {
+		resp.Diagnostics.AddError(
+			"Error creating database credential",
+			"Could not create database credential, unexpected error: "+errors.ErrProjectIdCannotBeEmpty.Error(),
+		)
+		return
+	}
+	var projectId = state.ProjectId.ValueString()
+
+	if state.ClusterId.IsNull() {
+		resp.Diagnostics.AddError(
+			"Error creating database credential",
+			"Could not create database credential, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
+		)
+		return
+	}
+	var clusterId = state.ClusterId.ValueString()
+
+	if state.Id.IsNull() {
+		resp.Diagnostics.AddError(
+			"Error creating database credential",
+			"Could not create database credential, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
+		)
+		return
+	}
+	var bucketId = state.Id.ValueString()
+
+	_, err := r.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", r.HostURL, organizationId, projectId, clusterId, bucketId),
+		http.MethodDelete,
+		nil,
+		r.Token,
+		nil,
+	)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		if err.HttpStatusCode != 404 {
+			resp.Diagnostics.AddError(
+				"Error Deleting the Bucket",
+				"Could not delete Bucket associated with cluster "+clusterId+": "+err.CompleteError(),
+			)
+			return
+		}
+	default:
+		resp.Diagnostics.AddError(
+			"Error Deleting Bucket",
+			"Could not delete Bucket associated with cluster "+clusterId+": "+err.Error(),
+		)
+		return
+	}
 }
 
 // ImportState imports a remote cluster that is not created by Terraform.
