@@ -17,6 +17,7 @@ type CreateUserRequest struct {
 	Resources []Resource `json:"resources"`
 }
 
+// Response defines the model for a resource.
 type Resource struct {
 	// Id is a GUID4 identifier of the resource.
 	Id string `json:"id"`
@@ -28,6 +29,7 @@ type Resource struct {
 	Roles []string `json:"roles"`
 }
 
+// GetUserResponse defines the model for GetUserResponse.
 type GetUserResponse struct {
 	// ID is the ID of the user
 	Id uuid.UUID `json:"id"`
@@ -76,6 +78,7 @@ type GetUserResponse struct {
 	Audit CouchbaseAuditData `json:"audit"`
 }
 
+// CreateUserResponse defines the model for CreateUserResponse.
 type CreateUserResponse struct {
 	// ID is the ID of the user
 	Id uuid.UUID `json:"id"`
