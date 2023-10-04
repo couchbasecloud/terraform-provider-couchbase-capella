@@ -193,7 +193,7 @@ func (r *User) convertResources(resources []providerschema.Resource) []api.Resou
 func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api.GetUserResponse, error) {
 	response, err := r.Client.Execute(
 		fmt.Sprintf(
-			"%s/v4/organizations/%s/userss/%s",
+			"%s/v4/organizations/%s/users/%s",
 			r.HostURL,
 			organizationId,
 			userId,
