@@ -200,7 +200,15 @@ func (r *User) Read(ctx context.Context, req resource.ReadRequest, resp *resourc
 
 // Update updates the user
 func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// todo (AV-69626):
+	// Couchbase Capella's v4 does not support a PUT endpoint for users.
+	// Users are instead updated via a PATCH request.
+	// http://cbc-cp-api.s3-website-us-east-1.amazonaws.com/#tag/allowedCIDRs(Cluster)
+	//
+	// The update logic has been therefore been left blank. In this situation, terraform apply
+	// will default to deleting and executing a new create.
+	// https://developer.hashicorp.com/terraform/plugin/framework/resources/update
+	//
+	// TODO (AV-63471): Implement logic to parse and execute a PATCH request
 }
 
 // Delete deletes the user
