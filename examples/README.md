@@ -7,9 +7,9 @@ Projects
 Allowlist
 Cluster Certificate
 Bucket
+Database Credential
 
 TODO:
 API Key
 Cluster
-Database Credential
 User

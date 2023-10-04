@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -80,8 +81,8 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 	createUserRequest := api.CreateUserRequest{
 		Name:              plan.Name.ValueString(),
 		Email:             plan.Email.ValueString(),
-		OrganizationRoles: r.convertOrganizationRoles(*plan.OrganizationRoles),
-		Resources:         r.convertResources(*plan.Resources),
+		OrganizationRoles: r.convertOrganizationRoles(plan.OrganizationRoles),
+		Resources:         r.convertResources(plan.Resources),
 	}
 
 	// Execute request
@@ -110,7 +111,7 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 		return
 	}
 
-	refreshedState, err := r.refreshUser(ctx, plan.OrganizationId.String(), plan.Id.String())
+	refreshedState, err := r.refreshUser(ctx, plan.OrganizationId.String(), createUserResponse.Id.String())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading user",
@@ -146,25 +147,45 @@ func (r *User) Read(ctx context.Context, req resource.ReadRequest, resp *resourc
 	var state providerschema.User
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	userId, organizationId, err := state.Validate()
+	// Validate parameters were successfully imported
+	resourceIDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Users in Capella",
-			"Could not read Capella User with ID "+state.Id.String()+": "+err.Error(),
+			"Error Reading Capella AllowList",
+			"Could not read Capella allow list: "+err.Error(),
 		)
 		return
 	}
 
-	// Get refreshed Cluster value from Capella
+	var (
+		organizationId = resourceIDs["organizationId"]
+		userId         = resourceIDs["userId"]
+	)
+
+	// Refresh the existing user
 	refreshedState, err := r.refreshUser(ctx, organizationId, userId)
-	if err := handleCapellaUserError(err); err != nil {
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		if err.HttpStatusCode != http.StatusNotFound {
+			resp.Diagnostics.AddError(
+				"Error Reading Capella User",
+				"Could not read Capella userID "+userId+": "+err.CompleteError(),
+			)
+			return
+		}
+		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+		resp.State.RemoveResource(ctx)
+		return
+	default:
 		resp.Diagnostics.AddError(
-			"Error reading Capella User",
-			"Could not read Capella User with id "+state.Id.String()+": "+err.Error(),
+			"Error Reading Capella User",
+			"Could not read Capella userID "+userId+": "+err.Error(),
 		)
 		return
 	}
@@ -179,94 +200,44 @@ func (r *User) Read(ctx context.Context, req resource.ReadRequest, resp *resourc
 
 // Update updates the user
 func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var state providerschema.User
-	diags := req.Plan.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	userId, organizationId, err := state.Validate()
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Reading Users in Capella",
-			"Could not read Capella User with ID "+state.Id.String()+": "+err.Error(),
-		)
-		return
-	}
-
-	userRequest := api.PatchUserRequest{}
-
-	_, err = r.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/users/%s", r.HostURL, organizationId, userId),
-		http.MethodPatch,
-		userRequest,
-		r.Token,
-		nil,
-	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		resp.Diagnostics.AddError(
-			"Error updating Capella User",
-			"Could not update an existing Capella User, unexpected error: "+err.CompleteError(),
-		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error updating Capella User",
-			"Could not update Capella User, unexpected error: "+err.Error(),
-		)
-		return
-	}
-
-	currentState, err := r.refreshUser(ctx, organizationId, userId)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		resp.Diagnostics.AddError(
-			"Error Reading Capella User",
-			"Could not read Capella User with ID "+userId+": "+err.CompleteError(),
-		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error Reading Capella User",
-			"Could not read Capella User with ID "+userId+": "+err.Error(),
-		)
-		return
-	}
-
-	// Set state to fully populated data
-	diags = resp.State.Set(ctx, currentState)
-
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	// Couchbase Capella's v4 does not support a PUT endpoint for users.
+	// Users are instead updated via a PATCH request.
+	// http://cbc-cp-api.s3-website-us-east-1.amazonaws.com/#tag/allowedCIDRs(Cluster)
+	//
+	// The update logic has been therefore been left blank. In this situation, terraform apply
+	// will default to deleting and executing a new create.
+	// https://developer.hashicorp.com/terraform/plugin/framework/resources/update
+	//
+	// TODO (AV-63471): Implement logic to parse and execute a PATCH request
 }
 
 // Delete deletes the user
 func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// Retrieve values from state
+	// Retrieve existing state
 	var state providerschema.User
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	userId, organizationId, err := state.Validate()
+	resourceIDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Users in Capella",
-			"Could not read Capella User with ID "+state.Id.String()+": "+err.Error(),
+			"Error Deleting Capella User",
+			"Could not delete Capella user: "+err.Error(),
 		)
 		return
 	}
-
+	// Execute request to delete existing user
 	_, err = r.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/users/%s", r.HostURL, organizationId, userId),
+		fmt.Sprintf(
+			"%s/v4/organizations/%s/users/%s",
+			r.HostURL,
+			resourceIDs["organizationId"],
+			resourceIDs["userId"],
+		),
 		http.MethodDelete,
 		nil,
 		r.Token,
@@ -275,17 +246,18 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
-		if err.HttpStatusCode != 404 {
+		if err.HttpStatusCode != http.StatusNotFound {
 			resp.Diagnostics.AddError(
-				"Error Deleting the Capella User",
-				"Could not delete Capella User associated with organization "+organizationId+": "+err.CompleteError(),
+				"Error Deleting Capella User",
+				"Could not delete Capella userId "+resourceIDs["userId"]+": "+err.CompleteError(),
 			)
+			tflog.Info(ctx, "resource doesn't exist in remote server")
 			return
 		}
 	default:
 		resp.Diagnostics.AddError(
-			"Error Deleting the Capella User",
-			"Could not delete Capella User associated with organization "+organizationId+": "+err.Error(),
+			"Error Deleting Capella User",
+			"Could not delete Capella userId "+resourceIDs["userId"]+": "+err.Error(),
 		)
 		return
 	}
@@ -328,7 +300,7 @@ func (r *User) convertResources(resources []providerschema.Resource) []api.Resou
 func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api.GetUserResponse, error) {
 	response, err := r.Client.Execute(
 		fmt.Sprintf(
-			"%s/v4/organizations/%s/userss/%s",
+			"%s/v4/organizations/%s/users/%s",
 			r.HostURL,
 			organizationId,
 			userId,
@@ -381,7 +353,7 @@ func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (
 		types.StringValue(userResp.Status),
 		types.BoolValue(userResp.Inactive),
 		types.StringValue(userResp.OrganizationId.String()),
-		r.morphOrganizationRoles(userResp.OrganizationRoles),
+		r.morphOrganizationRoles(*userResp.OrganizationRoles),
 		types.StringValue(userResp.LastLogin),
 		types.StringValue(userResp.Region),
 		types.StringValue(userResp.TimeZone),
@@ -412,9 +384,9 @@ func (r *User) morphResources(resources []api.Resource) []providerschema.Resourc
 
 		morphedResource.Id = types.StringValue(resource.Id)
 
-		if morphedResource.Type != nil {
+		if resource.Type != nil {
 			resourceType := types.StringValue(*resource.Type)
-			morphedResource.Type = &resourceType
+			morphedResource.Type = resourceType
 		}
 
 		var roles []basetypes.StringValue

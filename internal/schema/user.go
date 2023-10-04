@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"fmt"
 	"strings"
 	"terraform-provider-capella/internal/errors"
 
@@ -14,7 +15,7 @@ type User struct {
 	Id types.String `tfsdk:"id"`
 
 	// Name represents the name of the user.
-	Name *types.String `tfsdk:"name"`
+	Name types.String `tfsdk:"name"`
 
 	// Name represents the email of the user.
 	Email types.String `tfsdk:"email"`
@@ -29,7 +30,7 @@ type User struct {
 	OrganizationId types.String `tfsdk:"organization_id"`
 
 	// OrganizationRoles is an array of strings representing the roles granted to the user
-	OrganizationRoles *[]types.String `tfsdk:"organization_roles"`
+	OrganizationRoles []types.String `tfsdk:"organization_roles"`
 
 	// LastLogin is the time(UTC) at which user last logged in.
 	LastLogin types.String `tfsdk:"last_login"`
@@ -48,23 +49,17 @@ type User struct {
 	ExpiresAt types.String `tfsdk:"expires_at"`
 
 	// Resources is an array of objects representing the resources the user has access to
-	Resources *[]Resource `tfsdk:"resources"`
+	Resources []Resource `tfsdk:"resources"`
 
+	// ETag is a unique indentifier which the client uses to determine if the resource has changed.
+	ETag types.String `tfsdk:"etag"`
+
+	// IfMatch is used to check if a request should be made. The request will only proceed if
+	// the resources current ETag matches this value.
 	IfMatch types.String `tfsdk:"if_match"`
 
 	// Audit represents all audit-related fields. It is of types.Object type to avoid conversion error for a nested field.
 	Audit types.Object `tfsdk:"audit"`
-}
-
-type Resource struct {
-	// Id is a GUID4 identifier of the resource.
-	Id types.String `tfsdk:"id"`
-
-	// Type is the type of the resource.
-	Type *types.String `tfsdk:"type"`
-
-	// Roles is an array of strings representing a users project roles
-	Roles []types.String `tfsdk:"roles"`
 }
 
 // NewUser creates a new instance of a User object
@@ -86,66 +81,147 @@ func NewUser(
 ) *User {
 	newUser := User{
 		Id:                  Id,
-		Name:                &name,
+		Name:                name,
 		Email:               email,
 		Status:              status,
 		Inactive:            inactive,
 		OrganizationId:      organizationId,
-		OrganizationRoles:   &organizationRoles,
+		OrganizationRoles:   organizationRoles,
 		LastLogin:           lastLogin,
 		Region:              region,
 		TimeZone:            timeZone,
 		EnableNotifications: enableNotifications,
 		ExpiresAt:           expiresAt,
-		Resources:           &resources,
+		Resources:           resources,
 		Audit:               audit,
 	}
 	return &newUser
 }
 
-// Validate will split the IDs by a delimiter i.e. comma , in case a terraform import CLI is invoked.
-// The format of the terraform import CLI would include the IDs as follows -
-// `terraform import capella_user.new_user id=<uuid>,organization_id=<uuid>`
-func (u User) Validate() (userId, organizationId string, err error) {
-	const (
-		idDelimiter       = ","
-		organizationIdSep = "organization_id="
-		userIdSep         = "id="
-	)
+type Resource struct {
+	// Id is a GUID4 identifier of the resource.
+	Id types.String `tfsdk:"id"`
 
-	organizationId = u.OrganizationId.ValueString()
-	userId = u.Id.ValueString()
+	// Type is the type of the resource.
+	Type types.String `tfsdk:"type"`
+
+	// Roles is an array of strings representing a users project roles
+	Roles []types.String `tfsdk:"roles"`
+}
+
+// Validate is used to verify that IDs have been properly imported
+// TODO (AV-53457): add unit testing
+func (u *User) Validate() (map[string]string, error) {
+	const idDelimiter = ","
 	var found bool
+
+	organizationId := u.OrganizationId.ValueString()
+	userId := u.Id.ValueString()
 
 	// check if the id is a comma separated string of multiple IDs, usually passed during the terraform import CLI
 	if u.OrganizationId.IsNull() {
 		strs := strings.Split(u.Id.ValueString(), idDelimiter)
-		if len(strs) != 4 {
-			err = errors.ErrIdMissing
-			return
+		if len(strs) != 2 {
+			return nil, errors.ErrIdMissing
 		}
-		_, userId, found = strings.Cut(strs[0], userIdSep)
+
+		_, userId, found = strings.Cut(strs[0], "id=")
 		if !found {
-			err = errors.ErrUserIdMissing
-			return
+			return nil, errors.ErrAllowListIdMissing
 		}
 
-		_, organizationId, found = strings.Cut(strs[3], organizationIdSep)
+		_, organizationId, found = strings.Cut(strs[1], "organization_id=")
 		if !found {
-			err = errors.ErrOrganizationIdMissing
-			return
+			return nil, errors.ErrOrganizationIdMissing
 		}
 	}
 
-	if userId == "" {
-		err = errors.ErrUserIdCannotBeEmpty
-		return
+	resourceIDs := u.generateResourceIdMap(organizationId, userId)
+
+	err := u.checkEmpty(resourceIDs)
+	if err != nil {
+		return nil, fmt.Errorf("resource import unsuccessful: %s", err)
 	}
 
-	if organizationId == "" {
-		err = errors.ErrOrganizationIdCannotBeEmpty
-		return
+	return resourceIDs, nil
+}
+
+// generateResourceIdmap is used to populate a map with selected IDs
+// TODO (AV-53457): add unit testing
+func (u *User) generateResourceIdMap(organizationId, userId string) map[string]string {
+	return map[string]string{
+		"organizationId": organizationId,
+		"userId":         userId,
+	}
+}
+
+// checkEmpty is used to verify that a supplied resourceId map has been populated
+// TODO (AV-53457): add unit testing
+func (u *User) checkEmpty(resourceIdMap map[string]string) error {
+	if resourceIdMap["userId"] == "" {
+		return errors.ErrAllowListIdCannotBeEmpty
 	}
 
-	return userId, organizationId, nil
+	if resourceIdMap["organizationId"] == "" {
+		return errors.ErrOrganizationIdCannotBeEmpty
+	}
+	return nil
+}
+
+// Users defines model for GetUsersResponse.
+type Users struct {
+	// OrganizationId The organizationId of the capella.
+	OrganizationId types.String `tfsdk:"organization_id"`
+
+	// Data It contains the list of resources.
+	Data []OneUser `tfsdk:"data"`
+}
+
+type OneUser struct {
+	// Id is a GUID4 identifier of the user.
+	Id types.String `tfsdk:"id"`
+
+	// Name represents the name of the user.
+	Name types.String `tfsdk:"name"`
+
+	// Name represents the email of the user.
+	Email types.String `tfsdk:"email"`
+
+	// Status depicts whether the user is verified or not
+	Status types.String `tfsdk:"status"`
+
+	// Inactive depicts whether the user has accepted the invite for the organization.
+	Inactive types.Bool `tfsdk:"inactive"`
+
+	// OrganizationId is the organizationId of the capella tenant.
+	OrganizationId types.String `tfsdk:"organization_id"`
+
+	// LastLogin is the time(UTC) at which user last logged in.
+	LastLogin types.String `tfsdk:"last_login"`
+
+	// Region is the region of the user.
+	Region types.String `tfsdk:"region"`
+
+	// TimeZone is the time zone of the user.
+	TimeZone types.String `tfsdk:"time_zone"`
+
+	// EnableNotifications represents whether email alerts for databases in projects
+	// will be recieved.
+	EnableNotifications types.Bool `tfsdk:"enable_notifications"`
+
+	// ExpiresAt is the time at which user expires.
+	ExpiresAt types.String `tfsdk:"expires_at"`
+
+	// Audit represents all audit-related fields.
+	Audit CouchbaseAuditData `tfsdk:"audit"`
+}
+
+// Validate is used to verify that all the fields in the datasource
+// have been populated.
+func (u Users) Validate() (organizationId string, err error) {
+	if u.OrganizationId.IsNull() {
+		return "", errors.ErrOrganizationIdMissing
+	}
+
+	return u.OrganizationId.ValueString(), nil
 }

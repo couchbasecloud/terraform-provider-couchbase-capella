@@ -48,7 +48,7 @@ type GetUserResponse struct {
 	OrganizationId uuid.UUID `json:"organizationId"`
 
 	// OrganizationRoles is an array of strings representing the roles granted to the user.
-	OrganizationRoles []string `json:"organizationRoles"`
+	OrganizationRoles *[]string `json:"organizationRoles"`
 
 	// LastLogin is the time(UTC) at which user last logged in.
 	LastLogin string `json:"lastLogin"`
@@ -81,8 +81,7 @@ type CreateUserResponse struct {
 	Id uuid.UUID `json:"id"`
 }
 
-type PatchUserRequest struct {
-	Op    string   `json:"op"`
-	Path  string   `json:"path"`
-	Value []string `json:"value,omitempty"`
+// GetUsersResponse defines the model for a GetBucketsResponse.
+type GetUsersResponse struct {
+	Data []GetUserResponse `json:"data"`
 }

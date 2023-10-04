@@ -14,3 +14,7 @@ variable "auth_token" {
   description = "Authentication API Key"
   sensitive   = true
 }
+
+variable "user_name" {
+  description = "Capella User Name"
+}
