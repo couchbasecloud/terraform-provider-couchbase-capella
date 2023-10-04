@@ -61,4 +61,6 @@ type GetBucketResponse struct {
 	TimeToLiveInSeconds int `json:"timeToLiveInSeconds"`
 
 	EvictionPolicy string `json:"evictionPolicy"`
+
+	//Stats Stats `json:"stats"`
 }

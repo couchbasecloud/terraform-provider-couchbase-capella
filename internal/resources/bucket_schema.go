@@ -1,10 +1,20 @@
 package resources
 
-import "github.com/hashicorp/terraform-plugin-framework/resource/schema"
+import (
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+)
 
 func BucketSchema() schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"organization_id": schema.StringAttribute{
 				Required: true,
 			},
@@ -44,6 +54,22 @@ func BucketSchema() schema.Schema {
 			"eviction_policy": schema.StringAttribute{
 				Optional: true,
 			},
+			//"stats": schema.SingleNestedAttribute{
+			//	Computed: true,
+			//	Attributes: map[string]schema.Attribute{
+			//		"item_count": schema.Int64Attribute{
+			//			Computed: true,
+			//		},
+			//		"ops_per_second": schema.Int64Attribute{
+			//			Computed: true,
+			//		},
+			//		"disk_used_inmib": schema.Int64Attribute{
+			//			Computed: true,
+			//		},
+			//		"memory_used_inmib": schema.Int64Attribute{
+			//			Computed: true,
+			//		},
+			//	},
 		},
 	}
 }
