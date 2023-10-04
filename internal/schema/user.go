@@ -51,13 +51,6 @@ type User struct {
 	// Resources is an array of objects representing the resources the user has access to
 	Resources []Resource `tfsdk:"resources"`
 
-	// ETag is a unique indentifier which the client uses to determine if the resource has changed.
-	ETag types.String `tfsdk:"etag"`
-
-	// IfMatch is used to check if a request should be made. The request will only proceed if
-	// the resources current ETag matches this value.
-	IfMatch types.String `tfsdk:"if_match"`
-
 	// Audit represents all audit-related fields. It is of types.Object type to avoid conversion error for a nested field.
 	Audit types.Object `tfsdk:"audit"`
 }

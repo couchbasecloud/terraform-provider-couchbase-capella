@@ -51,7 +51,7 @@ func UserSchema() schema.Schema {
 				Computed: true,
 			},
 			"resources": schema.ListNestedAttribute{
-				Optional: true,
+				Required: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"type": schema.StringAttribute{
@@ -66,12 +66,6 @@ func UserSchema() schema.Schema {
 						},
 					},
 				},
-			},
-			"etag": schema.StringAttribute{
-				Computed: true,
-			},
-			"if_match": schema.StringAttribute{
-				Optional: true,
 			},
 			"audit": schema.SingleNestedAttribute{
 				Computed: true,

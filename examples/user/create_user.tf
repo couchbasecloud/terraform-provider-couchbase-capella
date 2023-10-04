@@ -4,19 +4,12 @@ output "new_user" {
 
 resource "capella_user" "new_user" {
   organization_id = var.organization_id
-  name            = "John"
-  email           = "john.doe@example.com"
+  name            = "Matty"
+  email           = "matty.maclean+16@couchbase.com"
   organization_roles = [
-    "organizationMember"
+    "projectCreator"
   ]
   resources = [
-    {
-      type = "project"
-      id   = var.project_id
-      roles = [
-        "projectViewer"
-      ]
-    },
     {
       type = "project"
       id   = var.project_id
