@@ -69,3 +69,7 @@ type PutDatabaseCredentialRequest struct {
 	Password string   `json:"password,omitempty"`
 	Access   []Access `json:"access"`
 }
+
+type GetDatabaseCredentialsResponse struct {
+	Data []GetDatabaseCredentialResponse `json:"data"`
+}

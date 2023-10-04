@@ -78,6 +78,21 @@ type Scope struct {
 	Collections []types.String `tfsdk:"collections"`
 }
 
+// DatabaseCredentials defines model for GetDatabaseCredentialsResponse.
+type DatabaseCredentials struct {
+	// OrganizationId The organizationId of the capella.
+	OrganizationId types.String `tfsdk:"organization_id"`
+
+	// ProjectId is the projectId of the capella tenant.
+	ProjectId types.String `tfsdk:"project_id"`
+
+	// ClusterId is the clusterId of the capella tenant.
+	ClusterId types.String `tfsdk:"cluster_id"`
+
+	// Data It contains the list of resources.
+	Data []DatabaseCredentialItem `tfsdk:"data"`
+}
+
 // OneDatabaseCredential is used to retrieve the new state of a database credential after it is created by Terraform.
 // This struct is separate from the DatabaseCredential struct because of the change in data type of its attributes after retrieval.
 type OneDatabaseCredential struct {
@@ -183,4 +198,48 @@ func (c DatabaseCredential) Validate() (databaseCredentialId, clusterId, project
 	}
 
 	return databaseCredentialId, clusterId, projectId, organizationId, nil
+}
+
+// Validate is used to verify that all the fields in the datasource
+// have been populated.
+func (d DatabaseCredentials) Validate() (clusterId, projectId, organizationId string, err error) {
+	if d.OrganizationId.IsNull() {
+		return "", "", "", errors.ErrOrganizationIdMissing
+	}
+	if d.ProjectId.IsNull() {
+		return "", "", "", errors.ErrProjectIdMissing
+	}
+	if d.ClusterId.IsNull() {
+		return "", "", "", errors.ErrClusterIdMissing
+	}
+	return d.ClusterId.ValueString(), d.ProjectId.ValueString(), d.OrganizationId.ValueString(), nil
+}
+
+// DatabaseCredentialItem is used to retrieve the new state of a database credential after it is created by Terraform.
+// This struct is separate from the DatabaseCredential struct because of the change in data type of its attributes after retrieval.
+type DatabaseCredentialItem struct {
+	// Audit All audit-related fields.
+	Audit CouchbaseAuditData `tfsdk:"audit"`
+
+	// Id A GUID4 identifier of the created database credential.
+	Id types.String `tfsdk:"id"`
+
+	// Name is the name of the database credential, the name of the database credential should follow this naming criteria:
+	// A database credential name should have at least 2 characters and up to 256 characters and should not contain spaces.
+	Name types.String `tfsdk:"name"`
+
+	// OrganizationId is the ID of the organization to which the Capella cluster belongs.
+	// The database credential will be created for the cluster.
+	OrganizationId types.String `tfsdk:"organization_id"`
+
+	// ProjectId is the ID of the project to which the Capella cluster belongs.
+	// The database credential will be created for the cluster.
+	ProjectId types.String `tfsdk:"project_id"`
+
+	// ClusterId is the ID of the cluster for which the database credential needs to be created.
+	ClusterId types.String `tfsdk:"cluster_id"`
+
+	// Access is a list of access which can be narrowed to the scope level of every bucket in the Capella cluster.
+	// Access can be "read", "write" or both.
+	Access []Access `tfsdk:"access"`
 }
