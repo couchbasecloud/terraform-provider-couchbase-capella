@@ -39,6 +39,9 @@ func Contains[T comparable](s []T, e T) bool {
 
 // AreEqual returns true if the two arrays contain the same elements, without any extra values, False otherwise.
 func AreEqual[T comparable](array1 []T, array2 []T) bool {
+	if len(array1) != len(array2) {
+		return false
+	}
 	set1 := make(map[T]bool)
 	for _, element := range array1 {
 		set1[element] = true
