@@ -178,18 +178,30 @@ func (o *Organization) Read(ctx context.Context, req datasource.ReadRequest, res
 		return
 	}
 
+	audit := providerschema.NewCouchbaseAuditData(organizationsResponse.Audit)
+
+	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
+	if diags.HasError() {
+		//return nil, fmt.Errorf("error while audit conversion")
+	}
+
+	var preferences providerschema.Preferences
+	if organizationsResponse.Preferences != nil {
+		preferences = providerschema.NewPreferences(*organizationsResponse.Preferences)
+	}
+
+	preferencesObj, diags := types.ObjectValueFrom(ctx, preferences.AttributeTypes(), preferences)
+	if diags.HasError() {
+		//return nil, fmt.Errorf("error while audit conversion")
+	}
+
 	orgState := providerschema.Organization{
 		OrganizationId: types.StringValue(organizationsResponse.Id.String()),
 		//Id:          types.StringValue(organizationsResponse.Id.String()),
 		Name:        types.StringValue(organizationsResponse.Name),
 		Description: types.StringValue(*organizationsResponse.Description),
-		Audit: providerschema.CouchbaseAuditData{
-			CreatedAt:  types.StringValue(organizationsResponse.Audit.CreatedAt.String()),
-			CreatedBy:  types.StringValue(organizationsResponse.Audit.CreatedBy),
-			ModifiedAt: types.StringValue(organizationsResponse.Audit.ModifiedAt.String()),
-			ModifiedBy: types.StringValue(organizationsResponse.Audit.ModifiedBy),
-			Version:    types.Int64Value(int64(organizationsResponse.Audit.Version)),
-		},
+		Audit:       auditObj,
+		Preferences: preferencesObj,
 	}
 	//state.Data = append(state.Data, orgState)
 	state = orgState

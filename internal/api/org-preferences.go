@@ -1,5 +1,5 @@
 package api
 
 type Preferences struct {
-	SessionDuration *int32 `json:"session_duration"`
+	SessionDuration *int32 `json:"sessionDuration"`
 }

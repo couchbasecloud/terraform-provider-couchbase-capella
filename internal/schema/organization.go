@@ -1,6 +1,11 @@
 package schema
 
-import "github.com/hashicorp/terraform-plugin-framework/types"
+import (
+	"terraform-provider-capella/internal/api"
+
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+)
 
 // Organizations defines the model for GetOrganizations.
 //type Organizations struct {
@@ -12,7 +17,7 @@ import "github.com/hashicorp/terraform-plugin-framework/types"
 
 type Organization struct {
 	// Audit represents all audit-related fields.
-	Audit CouchbaseAuditData `tfsdk:"audit"`
+	Audit types.Object `tfsdk:"audit"`
 
 	// Id is a GUID4 identifier of the project.
 	//Id types.String `tfsdk:"id"`
@@ -24,9 +29,25 @@ type Organization struct {
 	// Description is a short description of the organization.
 	Description types.String `tfsdk:"description"`
 
-	Preferences Preferences `tfsdk:"preferences"`
+	Preferences types.Object `tfsdk:"preferences"`
 }
 
 type Preferences struct {
 	SessionDuration types.Int64 `tfsdk:"session_duration"`
+}
+
+func (p Preferences) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"session_duration": types.Int64Type,
+	}
+}
+
+func NewPreferences(preference api.Preferences) Preferences {
+	var sessionDuration int64
+	if preference.SessionDuration != nil {
+		sessionDuration = int64(*preference.SessionDuration)
+	}
+	return Preferences{
+		SessionDuration: types.Int64Value(sessionDuration),
+	}
 }
