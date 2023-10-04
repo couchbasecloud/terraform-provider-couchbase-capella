@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	"terraform-provider-capella/internal/api"
-	"terraform-provider-capella/internal/errors"
-
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
+	"terraform-provider-capella/internal/api"
+	"terraform-provider-capella/internal/errors"
 )
 
 // ApiKeyResourcesItems defines model for APIKeyResourcesItems.
@@ -211,7 +211,98 @@ type ApiKeys struct {
 	OrganizationId types.String `tfsdk:"organization_id"`
 
 	// Data It contains the list of resources.
-	Data []ApiKey `tfsdk:"data"`
+	Data []ApiKeyData `tfsdk:"data"`
+}
+
+// ApiKeyData maps api key resource schema data
+type ApiKeyData struct {
+	// OrganizationId is the organizationId of the capella.
+	OrganizationId types.String `tfsdk:"organization_id"`
+
+	// AllowedCIDRs is the list of inbound CIDRs for the API key.
+	// The system making a request must come from one of the allowed CIDRs.
+	AllowedCIDRs types.List   `tfsdk:"allowed_cidrs"`
+	Audit        types.Object `tfsdk:"audit"`
+
+	// Description is the description for the API key.
+	Description types.String `tfsdk:"description"`
+
+	// Expiry is the expiry of the API key in number of days.
+	// If set to -1, the token will not expire.
+	Expiry types.Float64 `tfsdk:"expiry"`
+
+	// Id is the id is a unique identifier for an apiKey.
+	Id types.String `tfsdk:"id"`
+
+	// Name is the name of the API key.
+	Name types.String `tfsdk:"name"`
+
+	// OrganizationRoles are the organization level roles granted to the API key.
+	OrganizationRoles []types.String `tfsdk:"organization_roles"`
+
+	// Resources  is the resources are the resource level permissions associated
+	// with the API key. To learn more about Organization Roles, see
+	// [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
+	Resources []ApiKeyResourcesItems `tfsdk:"resources"`
+}
+
+// NewApiKeyData creates new apiKeyData object
+func NewApiKeyData(apiKey *api.GetApiKeyResponse, organizationId string, auditObject basetypes.ObjectValue) (ApiKeyData, error) {
+	newApiKeyData := ApiKeyData{
+		Id:             types.StringValue(apiKey.Id),
+		OrganizationId: types.StringValue(organizationId),
+		Name:           types.StringValue(apiKey.Name),
+		Description:    types.StringValue(apiKey.Description),
+		Expiry:         types.Float64Value(float64(apiKey.Expiry)),
+		Audit:          auditObject,
+	}
+
+	var newAllowedCidr []attr.Value
+	for _, allowedCidr := range apiKey.AllowedCIDRs {
+		newAllowedCidr = append(newAllowedCidr, types.StringValue(allowedCidr))
+	}
+
+	allowedCidrs, diags := types.ListValue(types.StringType, newAllowedCidr)
+	if diags.HasError() {
+		return ApiKeyData{}, fmt.Errorf("error while converting allowedcidrs")
+	}
+
+	newApiKeyData.AllowedCIDRs = allowedCidrs
+
+	var newOrganizationRoles []types.String
+	for _, organizationRole := range apiKey.OrganizationRoles {
+		newOrganizationRoles = append(newOrganizationRoles, types.StringValue(organizationRole))
+	}
+	newApiKeyData.OrganizationRoles = newOrganizationRoles
+
+	var newApiKeyResourcesItems []ApiKeyResourcesItems
+	for _, resource := range apiKey.Resources {
+		newResourceItem := ApiKeyResourcesItems{
+			Id: types.StringValue(resource.Id.String()),
+		}
+		if resource.Type != nil {
+			newResourceItem.Type = types.StringValue(*resource.Type)
+		}
+		var newRoles []types.String
+		for _, role := range resource.Roles {
+			newRoles = append(newRoles, types.StringValue(role))
+		}
+		newResourceItem.Roles = newRoles
+		newApiKeyResourcesItems = append(newApiKeyResourcesItems, newResourceItem)
+	}
+	newApiKeyData.Resources = newApiKeyResourcesItems
+
+	return newApiKeyData, nil
+}
+
+// Validate is used to verify that all the fields in the datasource
+// have been populated.
+func (a ApiKeys) Validate() (organizationId string, err error) {
+	if a.OrganizationId.IsNull() {
+		return "", errors.ErrOrganizationIdMissing
+	}
+
+	return a.OrganizationId.ValueString(), nil
 }
 
 // OrderList2 function to order list2 based on list1's Ids

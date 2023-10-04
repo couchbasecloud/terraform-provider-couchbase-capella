@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -126,14 +125,14 @@ func (d *ApiKey) Read(ctx context.Context, req datasource.ReadRequest, resp *dat
 	organizationId, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading ApiKeys in Capella",
-			"Could not read Capella ApiKeys in organization "+organizationId+": "+err.Error(),
+			"Error Reading Api Keys in Capella",
+			"Could not read Capella api keys in organization "+organizationId+": "+err.Error(),
 		)
 		return
 	}
 
 	response, err := d.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/ApiKeys", d.HostURL, organizationId),
+		fmt.Sprintf("%s/v4/organizations/%s/apikeys", d.HostURL, organizationId),
 		http.MethodGet,
 		nil,
 		d.Token,
@@ -142,57 +141,50 @@ func (d *ApiKey) Read(ctx context.Context, req datasource.ReadRequest, resp *dat
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
-		if err.HttpStatusCode != 404 {
-			resp.Diagnostics.AddError(
-				"Error Reading Capella ApiKeys",
-				"Could not read ApiKeys in organization "+organizationId+": "+err.CompleteError(),
-			)
-			return
-		}
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		resp.State.RemoveResource(ctx)
+		resp.Diagnostics.AddError(
+			"Error Reading Capella ApiKeys",
+			"Could not read api keys in organization "+organizationId+": "+err.CompleteError(),
+		)
 		return
 	default:
 		resp.Diagnostics.AddError(
 			"Error Reading Capella ApiKeys",
-			"Could not read ApiKeys in organization "+organizationId+": "+err.Error(),
+			"Could not read api keys in organization "+organizationId+": "+err.Error(),
 		)
 		return
 	}
 
-	ApiKeyResp := api.GetApiKeysResponse{}
-	err = json.Unmarshal(response.Body, &ApiKeyResp)
+	apiKeyResp := api.GetApiKeysResponse{}
+	err = json.Unmarshal(response.Body, &apiKeyResp)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error listing ApiKeys",
-			"Could not list ApiKeys, unexpected error: "+err.Error(),
+			"Could not list api keys, unexpected error: "+err.Error(),
 		)
 		return
 	}
 
 	// Map response body to model
-	for _, ApiKey := range ApiKeyResp.Data {
-		ApiKeyState := providerschema.OneApiKey{
-			Audit: providerschema.CouchbaseAuditData{
-				CreatedAt:  types.StringValue(ApiKey.Audit.CreatedAt.String()),
-				CreatedBy:  types.StringValue(ApiKey.Audit.CreatedBy),
-				ModifiedAt: types.StringValue(ApiKey.Audit.ModifiedAt.String()),
-				ModifiedBy: types.StringValue(ApiKey.Audit.ModifiedBy),
-				Version:    types.Int64Value(int64(ApiKey.Audit.Version)),
-			},
-			Id:                  types.StringValue(ApiKey.Id.String()),
-			Name:                types.StringPointerValue(ApiKey.Name),
-			Email:               types.StringValue(ApiKey.Email),
-			Status:              types.StringValue(ApiKey.Status),
-			Inactive:            types.BoolValue(ApiKey.Inactive),
-			OrganizationId:      types.StringValue(ApiKey.OrganizationId.String()),
-			LastLogin:           types.StringValue(ApiKey.LastLogin),
-			Region:              types.StringValue(ApiKey.Region),
-			TimeZone:            types.StringValue(ApiKey.TimeZone),
-			EnableNotifications: types.BoolValue(ApiKey.EnableNotifications),
-			ExpiresAt:           types.StringValue(ApiKey.ExpiresAt),
+	for _, apiKey := range apiKeyResp.Data {
+		audit := providerschema.NewCouchbaseAuditData(apiKey.Audit)
+
+		auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
+		if diags.HasError() {
+			resp.Diagnostics.AddError(
+				"Error listing ApiKeys",
+				fmt.Sprintf("Could not list api keys, unexpected error: %s", fmt.Errorf("error while audit conversion")),
+			)
+			return
 		}
-		state.Data = append(state.Data, ApiKeyState)
+		newApiKeyData, err := providerschema.NewApiKeyData(&apiKey, organizationId, auditObj)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error listing ApiKeys",
+				fmt.Sprintf("Could not list api keys, unexpected error: %s", err.Error()),
+			)
+			return
+		}
+		state.Data = append(state.Data, newApiKeyData)
 	}
 
 	// Set state
