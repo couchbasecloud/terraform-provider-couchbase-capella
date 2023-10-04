@@ -205,6 +205,15 @@ func (a *ApiKey) checkEmpty(resourceIdMap map[string]string) error {
 	return nil
 }
 
+// ApiKeys defines model for GetApiKeysResponse.
+type ApiKeys struct {
+	// OrganizationId The organizationId of the capella.
+	OrganizationId types.String `tfsdk:"organization_id"`
+
+	// Data It contains the list of resources.
+	Data []ApiKey `tfsdk:"data"`
+}
+
 // OrderList2 function to order list2 based on list1's Ids
 func OrderList2(list1, list2 []ApiKeyResourcesItems) ([]ApiKeyResourcesItems, error) {
 	if len(list1) != len(list2) {
