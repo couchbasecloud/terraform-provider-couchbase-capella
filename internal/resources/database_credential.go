@@ -261,7 +261,47 @@ func (r *DatabaseCredential) Update(ctx context.Context, req resource.UpdateRequ
 
 // Delete deletes the database credential.
 func (r *DatabaseCredential) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// todo in AV-62166
+	// Retrieve values from state
+	var state providerschema.DatabaseCredential
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	dbId, clusterId, projectId, organizationId, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Database Credentials in Capella",
+			"Could not read Capella database credential with ID "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	_, err = r.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", r.HostURL, organizationId, projectId, clusterId, dbId),
+		http.MethodDelete,
+		nil,
+		r.Token,
+		nil,
+	)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		if err.HttpStatusCode != 404 {
+			resp.Diagnostics.AddError(
+				"Error Deleting the Database Credential",
+				"Could not delete Database Credential associated with cluster "+clusterId+": "+err.CompleteError(),
+			)
+			return
+		}
+	default:
+		resp.Diagnostics.AddError(
+			"Error Deleting Database Credential",
+			"Could not delete Database Credential associated with cluster "+clusterId+": "+err.Error(),
+		)
+		return
+	}
 }
 
 // ImportState imports a remote database credential that is not created by Terraform.
