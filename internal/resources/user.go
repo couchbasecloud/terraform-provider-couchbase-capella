@@ -227,15 +227,10 @@ func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (
 		return nil, fmt.Errorf("failed to convert audit data")
 	}
 
-	// Set optional fields
+	// Set optional fields - these may be left blank
 	var name basetypes.StringValue
-	var resources []providerschema.Resource
 	if userResp.Name != nil {
 		name = types.StringValue(*userResp.Name)
-	}
-
-	if userResp.Resources != nil {
-		resources = r.morphResources(*userResp.Resources)
 	}
 
 	refreshedState := providerschema.NewUser(
@@ -251,7 +246,7 @@ func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (
 		types.StringValue(userResp.TimeZone),
 		types.BoolValue(userResp.EnableNotifications),
 		types.StringValue(userResp.ExpiresAt),
-		resources,
+		r.morphResources(userResp.Resources),
 		auditObj,
 	)
 	return refreshedState, nil
@@ -276,6 +271,7 @@ func (r *User) morphResources(resources []api.Resource) []providerschema.Resourc
 
 		morphedResource.Id = types.StringValue(resource.Id)
 
+		// Check for optional field
 		if resource.Type != nil {
 			resourceType := types.StringValue(*resource.Type)
 			morphedResource.Type = resourceType

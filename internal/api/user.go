@@ -69,7 +69,7 @@ type GetUserResponse struct {
 	ExpiresAt string `json:"expiresAt"`
 
 	// Resources is an array of objects representing the resources the user has access to.
-	Resources *[]Resource `json:"resources"`
+	Resources []Resource `json:"resources"`
 
 	// Audit contains all audit-related fields.
 	Audit CouchbaseAuditData `json:"audit"`

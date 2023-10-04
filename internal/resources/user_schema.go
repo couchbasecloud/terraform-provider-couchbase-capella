@@ -51,7 +51,7 @@ func UserSchema() schema.Schema {
 				Computed: true,
 			},
 			"resources": schema.ListNestedAttribute{
-				Optional: true,
+				Required: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"type": schema.StringAttribute{
