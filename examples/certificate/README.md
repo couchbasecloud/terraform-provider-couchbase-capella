@@ -12,7 +12,7 @@ In this example, we are going to do the following.
 
 1. Get an existing certificate in Capella as stated in the `get_certificate.tf` file.
 
-If you check the `terraform.template.tfvars` file - you can see that we need 3 main variables to run the terraform commands.
+If you check the `terraform.template.tfvars` file - you can see that we need 5 main variables to run the terraform commands.
 Make sure you copy the file to `terraform.tfvars` and update the values of the variables as per the correct organization access.
 
 

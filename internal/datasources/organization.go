@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"terraform-provider-capella/internal/api"
+	"terraform-provider-capella/internal/api/organization"
 	"terraform-provider-capella/internal/errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -168,7 +169,7 @@ func (o *Organization) Read(ctx context.Context, req datasource.ReadRequest, res
 		return
 	}
 
-	organizationsResponse := api.GetOrganizationResponse{}
+	organizationsResponse := organization.GetOrganizationResponse{}
 	err = json.Unmarshal(response.Body, &organizationsResponse)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -182,7 +183,11 @@ func (o *Organization) Read(ctx context.Context, req datasource.ReadRequest, res
 
 	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
 	if diags.HasError() {
-		//return nil, fmt.Errorf("error while audit conversion")
+		resp.Diagnostics.AddError(
+			"Error while audit conversion",
+			"Could not perform audit conversion",
+		)
+		return
 	}
 
 	var preferences providerschema.Preferences
@@ -192,7 +197,11 @@ func (o *Organization) Read(ctx context.Context, req datasource.ReadRequest, res
 
 	preferencesObj, diags := types.ObjectValueFrom(ctx, preferences.AttributeTypes(), preferences)
 	if diags.HasError() {
-		//return nil, fmt.Errorf("error while audit conversion")
+		resp.Diagnostics.AddError(
+			"Error while preferences conversion",
+			"Could not perform preferences conversion",
+		)
+		return
 	}
 
 	orgState := providerschema.Organization{
