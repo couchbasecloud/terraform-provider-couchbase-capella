@@ -64,10 +64,10 @@ func BucketSchema() schema.Schema {
 					"ops_per_second": schema.Int64Attribute{
 						Computed: true,
 					},
-					"disk_used_inmib": schema.Int64Attribute{
+					"disk_used_in_mib": schema.Int64Attribute{
 						Computed: true,
 					},
-					"memory_used_inmib": schema.Int64Attribute{
+					"memory_used_in_mib": schema.Int64Attribute{
 						Computed: true,
 					},
 				},

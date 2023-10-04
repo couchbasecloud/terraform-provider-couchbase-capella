@@ -36,14 +36,14 @@ type Bucket struct {
 
 	EvictionPolicy types.String `tfsdk:"eviction_policy"`
 
-	Stats *Stats `tfsdk:"stats"`
+	Stats types.Object `tfsdk:"stats"`
 }
 
 type Stats struct {
 	ItemCount       types.Int64 `tfsdk:"item_count"`
 	OpsPerSecond    types.Int64 `tfsdk:"ops_per_second"`
-	DiskUsedInMib   types.Int64 `tfsdk:"disk_usedinmib"`
-	MemoryUsedInMib types.Int64 `tfsdk:"memory_usedinmib"`
+	DiskUsedInMib   types.Int64 `tfsdk:"disk_used_in_mib"`
+	MemoryUsedInMib types.Int64 `tfsdk:"memory_used_in_mib"`
 }
 
 type OneBucket struct {
