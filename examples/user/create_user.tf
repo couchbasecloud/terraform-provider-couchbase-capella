@@ -7,7 +7,7 @@ resource "capella_user" "new_user" {
   name            = "John"
   email           = "john.doe@example.com"
   organization_roles = [
-    "organizationMember"
+    "projectCreator"
   ]
   resources = [
     {
