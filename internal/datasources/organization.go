@@ -74,50 +74,6 @@ func (o *Organization) Schema(_ context.Context, _ datasource.SchemaRequest, res
 					},
 				},
 			},
-			/*"data": schema.ListNestedAttribute{
-				Computed: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"id": schema.StringAttribute{
-							Computed: true,
-						},
-						"name": schema.StringAttribute{
-							Computed: true,
-						},
-						"description": schema.StringAttribute{
-							Computed: true,
-						},
-						"preferences": schema.SingleNestedAttribute{
-							Computed: true,
-							Attributes: map[string]schema.Attribute{
-								"session_duration": schema.Int64Attribute{
-									Computed: true,
-								},
-							},
-						},
-						"audit": schema.SingleNestedAttribute{
-							Computed: true,
-							Attributes: map[string]schema.Attribute{
-								"created_at": schema.StringAttribute{
-									Computed: true,
-								},
-								"created_by": schema.StringAttribute{
-									Computed: true,
-								},
-								"modified_at": schema.StringAttribute{
-									Computed: true,
-								},
-								"modified_by": schema.StringAttribute{
-									Computed: true,
-								},
-								"version": schema.Int64Attribute{
-									Computed: true,
-								},
-							},
-						},
-					},
-				},
-			},*/
 		},
 	}
 }
@@ -206,13 +162,11 @@ func (o *Organization) Read(ctx context.Context, req datasource.ReadRequest, res
 
 	orgState := providerschema.Organization{
 		OrganizationId: types.StringValue(organizationsResponse.Id.String()),
-		//Id:          types.StringValue(organizationsResponse.Id.String()),
-		Name:        types.StringValue(organizationsResponse.Name),
-		Description: types.StringValue(*organizationsResponse.Description),
-		Audit:       auditObj,
-		Preferences: preferencesObj,
+		Name:           types.StringValue(organizationsResponse.Name),
+		Description:    types.StringValue(*organizationsResponse.Description),
+		Audit:          auditObj,
+		Preferences:    preferencesObj,
 	}
-	//state.Data = append(state.Data, orgState)
 	state = orgState
 
 	diags = resp.State.Set(ctx, &state)
