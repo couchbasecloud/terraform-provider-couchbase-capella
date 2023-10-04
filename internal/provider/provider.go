@@ -23,7 +23,7 @@ var _ provider.Provider = &capellaProvider{}
 const (
 	capellaAuthenticationTokenField = "authentication_token"
 	capellaPublicAPIHostField       = "host"
-	apiRequestTimeout               = 10 * time.Second
+	apiRequestTimeout               = 60 * time.Second
 )
 
 // capellaProvider is the provider implementation.
@@ -173,6 +173,7 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewCluster,
 		datasources.NewCertificate,
 		datasources.NewAllowList,
+		datasources.NewBucket,
 	}
 }
 

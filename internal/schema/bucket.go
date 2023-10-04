@@ -132,6 +132,21 @@ type Stats struct {
 	MemoryUsedInMiB types.Int64 `tfsdk:"memory_used_in_mib"`
 }
 
+// Buckets defines model for GetBucketsResponse.
+type Buckets struct {
+	// OrganizationId The organizationId of the capella.
+	OrganizationId types.String `tfsdk:"organization_id"`
+
+	// ProjectId is the projectId of the capella tenant.
+	ProjectId types.String `tfsdk:"project_id"`
+
+	// ClusterId is the clusterId of the capella tenant.
+	ClusterId types.String `tfsdk:"cluster_id"`
+
+	// Data It contains the list of resources.
+	Data []OneBucket `tfsdk:"data"`
+}
+
 type OneBucket struct {
 	// Id is the id of the created bucket.
 	Id types.String `tfsdk:"id"`
@@ -316,4 +331,19 @@ func (b Bucket) Validate() (bucketId, clusterId, projectId, organizationId strin
 	}
 
 	return bucketId, clusterId, projectId, organizationId, nil
+}
+
+// Validate is used to verify that all the fields in the datasource
+// have been populated.
+func (b Buckets) Validate() (clusterId, projectId, organizationId string, err error) {
+	if b.OrganizationId.IsNull() {
+		return "", "", "", errors.ErrOrganizationIdMissing
+	}
+	if b.ProjectId.IsNull() {
+		return "", "", "", errors.ErrProjectIdMissing
+	}
+	if b.ClusterId.IsNull() {
+		return "", "", "", errors.ErrClusterIdMissing
+	}
+	return b.ClusterId.ValueString(), b.ProjectId.ValueString(), b.OrganizationId.ValueString(), nil
 }

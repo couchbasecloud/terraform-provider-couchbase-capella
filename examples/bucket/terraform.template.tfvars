@@ -1,6 +1,19 @@
-auth_token      = "my-secret-key"
+auth_token = "my-secret-key"
+host       = "https://cloudapi.cloud.couchbase.com"
+
 organization_id = "<organization_id>"
 project_id      = "<project_id>"
-host            = "https://cloudapi.cloud.couchbase.com"
-bucket_name     = "test_bucket"
 cluster_id      = "<cluster_id>"
+
+bucket = {
+  name                       = "new_terraform_bucket"
+  type                       = "couchbase"
+  storage_backend            = "couchstore"
+  memory_allocation_in_mb    = 100
+  bucket_conflict_resolution = "seqno"
+  durability_level           = "none"
+  replicas                   = 1
+  flush                      = false
+  time_to_live_in_seconds    = 0
+  eviction_policy            = "fullEviction"
+}

@@ -47,3 +47,8 @@ type PutBucketRequest struct {
 	Flush                bool   `json:"flush"`
 	TimeToLiveInSeconds  int64  `json:"timeToLiveInSeconds"`
 }
+
+// GetBucketsResponse defines the model for a GetBucketsResponse.
+type GetBucketsResponse struct {
+	Data []GetBucketResponse `json:"data"`
+}
