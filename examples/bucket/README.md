@@ -451,8 +451,6 @@ Terraform has compared your real infrastructure against your configuration and f
 ## UPDATE
 ### Let us edit the terraform.tfvars file to change the bucket configuration settings.
 
-var.bucket_name = "my_edited_project_name"
-
 Command: `terraform apply -var 'bucket={durability_level="majority",name="new_terraform_bucket"}'`
 
 Sample Output:

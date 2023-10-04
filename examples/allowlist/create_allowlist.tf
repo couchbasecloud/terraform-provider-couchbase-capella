@@ -7,6 +7,6 @@ resource "capella_allowlist" "new_allowlist" {
   project_id      = var.project_id
   cluster_id      = var.cluster_id
   cidr            = "10.0.0.0/16"
-  comment         = "Allow access from another VPC"
+  comment         = var.comment
   expires_at      = "2023-11-14T21:49:58.465Z"
 }
