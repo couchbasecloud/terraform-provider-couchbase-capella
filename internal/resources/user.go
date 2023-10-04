@@ -110,7 +110,7 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 		return
 	}
 
-	refreshedState, err := r.refreshUser(ctx, plan.OrganizationId.String(), plan.Id.String())
+	refreshedState, err := r.refreshUser(ctx, organizationId, createUserResponse.Id.String())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading user",
