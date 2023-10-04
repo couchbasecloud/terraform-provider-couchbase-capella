@@ -5,7 +5,7 @@ output "new_user" {
 resource "capella_user" "new_user" {
   organization_id = var.organization_id
   name            = "Matty"
-  email           = "matty.maclean+16@couchbase.com"
+  email           = "matty.maclean+17@couchbase.com"
   organization_roles = [
     "projectCreator"
   ]
