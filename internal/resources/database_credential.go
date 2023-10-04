@@ -491,7 +491,7 @@ func mapAccess(plan providerschema.DatabaseCredential) []providerschema.Access {
 		}
 		if acc.Resources != nil {
 			if acc.Resources.Buckets != nil {
-				access[i].Resources = &providerschema.Resources{Buckets: make([]providerschema.Bucket, len(acc.Resources.Buckets))}
+				access[i].Resources = &providerschema.Resources{Buckets: make([]providerschema.Buckets, len(acc.Resources.Buckets))}
 				for k, bucket := range acc.Resources.Buckets {
 					access[i].Resources.Buckets[k].Name = acc.Resources.Buckets[k].Name
 					if bucket.Scopes != nil {

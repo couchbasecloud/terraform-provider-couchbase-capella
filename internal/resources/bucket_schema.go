@@ -52,6 +52,7 @@ func BucketSchema() schema.Schema {
 				Optional: true,
 			},
 			"eviction_policy": schema.StringAttribute{
+				Computed: true,
 				Optional: true,
 			},
 			//"stats": schema.SingleNestedAttribute{
