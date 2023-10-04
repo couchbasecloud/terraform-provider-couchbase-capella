@@ -224,12 +224,24 @@ func (a *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 		apiKeyId       = resourceIDs[providerschema.ApiKeyId]
 	)
 
-	if plan.Rotate.IsNull() || plan.Rotate.IsUnknown() || plan.Rotate.ValueBool() != true {
+	if plan.Rotate.IsNull() || plan.Rotate.IsUnknown() {
 		resp.Diagnostics.AddError(
 			"Error rotating api key",
-			"Could not rotate api key id "+state.Id.String()+": rotate flag is not set or false",
+			"Could not rotate api key id "+state.Id.String()+": rotate value is not set",
 		)
 		return
+	}
+
+	if !state.Rotate.IsNull() && !state.Rotate.IsUnknown() {
+		planRotate := *plan.Rotate.ValueBigFloat()
+		stateRotate := *state.Rotate.ValueBigFloat()
+		if planRotate.Cmp(&stateRotate) != 1 {
+			resp.Diagnostics.AddError(
+				"Error rotating api key",
+				"Could not rotate api key id "+state.Id.String()+": plan rotate value is not greater than state rotate value",
+			)
+			return
+		}
 	}
 
 	var rotateApiRequest api.RotateAPIKeyRequest
@@ -419,6 +431,12 @@ func (a *ApiKey) validateCreateApiKeyRequest(plan providerschema.ApiKey) error {
 	}
 	if plan.Resources == nil {
 		return fmt.Errorf("resource cannot be nil")
+	}
+	if !plan.Rotate.IsNull() && !plan.Rotate.IsUnknown() {
+		return fmt.Errorf("rotate value should not be set")
+	}
+	if !plan.Secret.IsNull() && !plan.Secret.IsUnknown() {
+		return fmt.Errorf("secret should not be set while create operation")
 	}
 	return nil
 }

@@ -91,7 +91,7 @@ func ApiKeySchema() schema.Schema {
 					listplanmodifier.RequiresReplace(),
 				},
 			},
-			"rotate": schema.BoolAttribute{
+			"rotate": schema.NumberAttribute{
 				Optional: true,
 				Computed: true,
 			},
