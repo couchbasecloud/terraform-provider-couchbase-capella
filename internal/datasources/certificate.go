@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -91,15 +90,10 @@ func (c *Certificate) Read(ctx context.Context, req datasource.ReadRequest, resp
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
-		if err.HttpStatusCode != 404 {
-			resp.Diagnostics.AddError(
-				"Error Reading Capella Certificate",
-				"Could not read certificate in cluster "+state.ClusterId.String()+": "+err.CompleteError(),
-			)
-			return
-		}
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		resp.State.RemoveResource(ctx)
+		resp.Diagnostics.AddError(
+			"Error Reading Capella Certificate",
+			"Could not read certificate in cluster "+state.ClusterId.String()+": "+err.CompleteError(),
+		)
 		return
 	default:
 		resp.Diagnostics.AddError(
