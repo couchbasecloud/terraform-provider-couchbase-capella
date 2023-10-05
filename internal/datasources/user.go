@@ -240,7 +240,7 @@ func (d *User) mapResponseBody(
 
 		auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
 		if diags.HasError() {
-			return *state, fmt.Errorf("Error occured while attempting to convert audit data")
+			return *state, fmt.Errorf("error occured while attempting to convert audit data")
 		}
 
 		UserState := providerschema.NewUser(
