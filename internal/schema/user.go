@@ -3,6 +3,7 @@ package schema
 import (
 	"fmt"
 	"strings"
+	"terraform-provider-capella/internal/api"
 	"terraform-provider-capella/internal/errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -168,4 +169,74 @@ func (u *User) checkEmpty(resourceIdMap map[string]string) error {
 		return errors.ErrOrganizationIdCannotBeEmpty
 	}
 	return nil
+}
+
+// MorphOrganizationRoles is used to convert nested organizationRoles from
+// strings to terraform type.String.
+func MorphOrganizationRoles(organizationRoles []string) []basetypes.StringValue {
+	var morphedRoles []basetypes.StringValue
+	for _, role := range organizationRoles {
+		morphedRoles = append(morphedRoles, types.StringValue(role))
+	}
+	return morphedRoles
+}
+
+// ConvertOrganizationRoles is used to convert all roles
+// in an array of basetypes.StringValue to strings.
+func ConvertOrganizationRoles(organizationRoles []basetypes.StringValue) []string {
+	var convertedRoles []string
+	for _, role := range organizationRoles {
+		convertedRoles = append(convertedRoles, role.ValueString())
+	}
+	return convertedRoles
+}
+
+// ConvertResource is used to convert a resource object containing nested fields
+// of type basetypes.StringValue to a resource object containing nested fields of type string.
+func ConvertResources(resources []Resource) []api.Resource {
+	var convertedResources []api.Resource
+	for _, resource := range resources {
+		var convertedResource api.Resource
+		convertedResource.Id = resource.Id.ValueString()
+
+		resourceType := resource.Type.ValueString()
+		convertedResource.Type = &resourceType
+
+		// Iterate through roles belonging to the user and convert to string
+		var convertedRoles []string
+		for _, role := range resource.Roles {
+			convertedRoles = append(convertedRoles, role.ValueString())
+		}
+		convertedResource.Roles = convertedRoles
+
+		convertedResources = append(convertedResources, convertedResource)
+	}
+	return convertedResources
+}
+
+// MorphResources is used to covert nested resources from strings
+// to terraform types.String
+func MorphResources(resources []api.Resource) []Resource {
+	var morphedResources []Resource
+	for _, resource := range resources {
+		var morphedResource Resource
+
+		morphedResource.Id = types.StringValue(resource.Id)
+
+		// Check for optional field
+		if resource.Type != nil {
+			resourceType := types.StringValue(*resource.Type)
+			morphedResource.Type = resourceType
+		}
+
+		var roles []basetypes.StringValue
+		for _, role := range resource.Roles {
+			roles = append(roles, types.StringValue(role))
+		}
+
+		morphedResource.Roles = roles
+		morphedResources = append(morphedResources, morphedResource)
+
+	}
+	return morphedResources
 }

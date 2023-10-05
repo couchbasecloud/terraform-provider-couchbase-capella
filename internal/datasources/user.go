@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
@@ -250,56 +249,19 @@ func (d *User) mapResponseBody(
 			types.StringValue(userResp.Status),
 			types.BoolValue(userResp.Inactive),
 			types.StringValue(userResp.OrganizationId.String()),
-			d.morphOrganizationRoles(*userResp.OrganizationRoles),
+			providerschema.MorphOrganizationRoles(*userResp.OrganizationRoles),
 			types.StringValue(userResp.LastLogin),
 			types.StringValue(userResp.Region),
 			types.StringValue(userResp.TimeZone),
 			types.BoolValue(userResp.EnableNotifications),
 			types.StringValue(userResp.ExpiresAt),
-			d.morphResources(userResp.Resources),
+			providerschema.MorphResources(userResp.Resources),
 			auditObj,
 		)
 
 		state.Data = append(state.Data, *UserState)
 	}
 	return *state, nil
-}
-
-// morphOrgnanizationRoles is used to convert nested organizationRoles from
-// strings to terraform type.String.
-func (r *User) morphOrganizationRoles(organizationRoles []string) []basetypes.StringValue {
-	var morphedRoles []basetypes.StringValue
-	for _, role := range organizationRoles {
-		morphedRoles = append(morphedRoles, types.StringValue(role))
-	}
-	return morphedRoles
-}
-
-// morphResources is used to covert nested resources from strings
-// to terraform types.String
-func (r *User) morphResources(resources []api.Resource) []providerschema.Resource {
-	var morphedResources []providerschema.Resource
-	for _, resource := range resources {
-		var morphedResource providerschema.Resource
-
-		morphedResource.Id = types.StringValue(resource.Id)
-
-		// Check for optional field
-		if resource.Type != nil {
-			resourceType := types.StringValue(*resource.Type)
-			morphedResource.Type = resourceType
-		}
-
-		var roles []basetypes.StringValue
-		for _, role := range resource.Roles {
-			roles = append(roles, types.StringValue(role))
-		}
-
-		morphedResource.Roles = roles
-		morphedResources = append(morphedResources, morphedResource)
-
-	}
-	return morphedResources
 }
 
 // validate is used to verify that all the fields in the datasource
