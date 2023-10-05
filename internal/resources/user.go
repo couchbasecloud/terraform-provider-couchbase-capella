@@ -22,6 +22,11 @@ var (
 	_ resource.ResourceWithImportState = &User{}
 )
 
+const (
+	organizationIdKey = "organizationId"
+	userIdKey         = "userId"
+)
+
 // User is the User resource implementation
 type User struct {
 	*providerschema.Data
@@ -163,8 +168,8 @@ func (r *User) Read(ctx context.Context, req resource.ReadRequest, resp *resourc
 	}
 
 	var (
-		organizationId = resourceIDs["organizationId"]
-		userId         = resourceIDs["userId"]
+		organizationId = resourceIDs[organizationIdKey]
+		userId         = resourceIDs[userIdKey]
 	)
 
 	// Refresh the existing user
@@ -235,8 +240,8 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 		fmt.Sprintf(
 			"%s/v4/organizations/%s/users/%s",
 			r.HostURL,
-			resourceIDs["organizationId"],
-			resourceIDs["userId"],
+			resourceIDs[organizationIdKey],
+			resourceIDs[userIdKey],
 		),
 		http.MethodDelete,
 		nil,
@@ -249,7 +254,7 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 		if err.HttpStatusCode != http.StatusNotFound {
 			resp.Diagnostics.AddError(
 				"Error Deleting Capella User",
-				"Could not delete Capella userId "+resourceIDs["userId"]+": "+err.CompleteError(),
+				"Could not delete Capella userId "+resourceIDs[userIdKey]+": "+err.CompleteError(),
 			)
 			tflog.Info(ctx, "resource doesn't exist in remote server")
 			return
@@ -257,7 +262,7 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 	default:
 		resp.Diagnostics.AddError(
 			"Error Deleting Capella User",
-			"Could not delete Capella userId "+resourceIDs["userId"]+": "+err.Error(),
+			"Could not delete Capella userId "+resourceIDs[userIdKey]+": "+err.Error(),
 		)
 		return
 	}
