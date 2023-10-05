@@ -33,7 +33,7 @@ func NewUser() datasource.DataSource {
 
 // Metadata returns the user data source type name.
 func (d *User) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_User"
+	resp.TypeName = req.ProviderTypeName + "_users"
 }
 
 // Schema defines the schema for the User data source.
