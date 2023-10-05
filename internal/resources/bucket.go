@@ -61,7 +61,7 @@ func (c *Bucket) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		Replicas:                 plan.Replicas,
 		Flush:                    plan.Flush,
 		TimeToLiveInSeconds:      plan.TimeToLiveInSeconds,
-		//EvictionPolicy:           plan.EvictionPolicy.ValueString(),
+		EvictionPolicy:           plan.EvictionPolicy.ValueString(),
 	}
 
 	if plan.OrganizationId.IsNull() {
