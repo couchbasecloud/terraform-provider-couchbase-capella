@@ -60,12 +60,12 @@ type Access struct {
 // Ex: Access of read/write privilege can be defined at the bucket level or scope level resource.
 type Resources struct {
 	// Buckets contains the details of all buckets with scope and collection level information to which the access applies.
-	Buckets []Buckets `tfsdk:"buckets"`
+	Buckets []BucketResource `tfsdk:"buckets"`
 }
 
 // Buckets contains the details of a single bucket with scope and collection level information.
 // Scopes can be a subset of all scopes inside the bucket, since this is defined only to govern the access.
-type Buckets struct {
+type BucketResource struct {
 	Name types.String `tfsdk:"name"`
 	// Scopes is the details of the scopes inside the bucket to which we want to apply access privileges.
 	Scopes []Scope `tfsdk:"scopes"`
