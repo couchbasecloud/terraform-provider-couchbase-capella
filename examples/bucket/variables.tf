@@ -24,14 +24,14 @@ variable "bucket" {
 
     type = object({
         name = string
-        type = string
-        storage_backend = string
-        memory_allocationinmb = number
-        conflict_resolution = string
-        durability_level = string
-        replicas = number
-        flush = bool
-        ttl = number
+        type = optional(string)
+        storage_backend = optional(string)
+        memory_allocationinmb = optional(number)
+        conflict_resolution = optional(string)
+        durability_level = optional(string)
+        replicas = optional(number)
+        flush = optional(bool)
+        ttl = optional(number)
         eviction_policy = optional(string)
     })
 }
