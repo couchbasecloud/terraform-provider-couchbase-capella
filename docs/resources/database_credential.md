@@ -39,6 +39,42 @@ Required:
 
 - `privileges` (List of String)
 
+Optional:
+
+- `resources` (Attributes) (see [below for nested schema](#nestedatt--access--resources))
+
+<a id="nestedatt--access--resources"></a>
+### Nested Schema for `access.resources`
+
+Optional:
+
+- `buckets` (Attributes List) (see [below for nested schema](#nestedatt--access--resources--buckets))
+
+<a id="nestedatt--access--resources--buckets"></a>
+### Nested Schema for `access.resources.buckets`
+
+Required:
+
+- `name` (String)
+
+Optional:
+
+- `scopes` (Attributes List) (see [below for nested schema](#nestedatt--access--resources--buckets--scopes))
+
+<a id="nestedatt--access--resources--buckets--scopes"></a>
+### Nested Schema for `access.resources.buckets.scopes`
+
+Required:
+
+- `name` (String)
+
+Optional:
+
+- `collections` (List of String)
+
+
+
+
 
 <a id="nestedatt--audit"></a>
 ### Nested Schema for `audit`

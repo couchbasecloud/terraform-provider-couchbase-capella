@@ -111,7 +111,7 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 		return
 	}
 
-	refreshedState, err := r.refreshUser(ctx, plan.OrganizationId.String(), plan.Id.String())
+	refreshedState, err := r.refreshUser(ctx, organizationId, createUserResponse.Id.String())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading user",
@@ -200,7 +200,15 @@ func (r *User) Read(ctx context.Context, req resource.ReadRequest, resp *resourc
 
 // Update updates the user
 func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// todo (AV-69626):
+	// Couchbase Capella's v4 does not support a PUT endpoint for users.
+	// Users are instead updated via a PATCH request.
+	// http://cbc-cp-api.s3-website-us-east-1.amazonaws.com/#tag/allowedCIDRs(Cluster)
+	//
+	// The update logic has been therefore been left blank. In this situation, terraform apply
+	// will default to deleting and executing a new create.
+	// https://developer.hashicorp.com/terraform/plugin/framework/resources/update
+	//
+	// TODO (AV-63471): Implement logic to parse and execute a PATCH request
 }
 
 // Delete deletes the user
@@ -292,7 +300,7 @@ func (r *User) convertResources(resources []providerschema.Resource) []api.Resou
 func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api.GetUserResponse, error) {
 	response, err := r.Client.Execute(
 		fmt.Sprintf(
-			"%s/v4/organizations/%s/userss/%s",
+			"%s/v4/organizations/%s/users/%s",
 			r.HostURL,
 			organizationId,
 			userId,
@@ -311,7 +319,6 @@ func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling response: %s", err)
 	}
-	userResp.ETag = response.Response.Header.Get("ETag")
 	return &userResp, nil
 }
 
@@ -327,15 +334,10 @@ func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (
 		return nil, fmt.Errorf("failed to convert audit data")
 	}
 
-	// Set optional fields
+	// Set optional fields - these may be left blank
 	var name basetypes.StringValue
-	var resources []providerschema.Resource
 	if userResp.Name != nil {
 		name = types.StringValue(*userResp.Name)
-	}
-
-	if userResp.Resources != nil {
-		resources = r.morphResources(*userResp.Resources)
 	}
 
 	refreshedState := providerschema.NewUser(
@@ -351,7 +353,7 @@ func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (
 		types.StringValue(userResp.TimeZone),
 		types.BoolValue(userResp.EnableNotifications),
 		types.StringValue(userResp.ExpiresAt),
-		resources,
+		r.morphResources(userResp.Resources),
 		auditObj,
 	)
 	return refreshedState, nil
@@ -376,6 +378,7 @@ func (r *User) morphResources(resources []api.Resource) []providerschema.Resourc
 
 		morphedResource.Id = types.StringValue(resource.Id)
 
+		// Check for optional field
 		if resource.Type != nil {
 			resourceType := types.StringValue(*resource.Type)
 			morphedResource.Type = resourceType

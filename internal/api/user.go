@@ -17,6 +17,7 @@ type CreateUserRequest struct {
 	Resources []Resource `json:"resources"`
 }
 
+// Response defines the model for a resource.
 type Resource struct {
 	// Id is a GUID4 identifier of the resource.
 	Id string `json:"id"`
@@ -28,6 +29,7 @@ type Resource struct {
 	Roles []string `json:"roles"`
 }
 
+// GetUserResponse defines the model for GetUserResponse.
 type GetUserResponse struct {
 	// ID is the ID of the user
 	Id uuid.UUID `json:"id"`
@@ -67,15 +69,13 @@ type GetUserResponse struct {
 	ExpiresAt string `json:"expiresAt"`
 
 	// Resources is an array of objects representing the resources the user has access to.
-	Resources *[]Resource `json:"resources"`
-
-	// ETag is a unique indentifier which the client uses to determine if the resource has changed.
-	ETag string
+	Resources []Resource `json:"resources"`
 
 	// Audit contains all audit-related fields.
 	Audit CouchbaseAuditData `json:"audit"`
 }
 
+// CreateUserResponse defines the model for CreateUserResponse.
 type CreateUserResponse struct {
 	// ID is the ID of the user
 	Id uuid.UUID `json:"id"`

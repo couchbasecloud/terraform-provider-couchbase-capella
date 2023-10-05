@@ -170,6 +170,9 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 	return []func() datasource.DataSource{
 		datasources.NewProject,
 		datasources.NewAllowList,
+		datasources.NewCertificate,
+		datasources.NewOrganization,
+		datasources.NewCluster,
 	}
 }
 
