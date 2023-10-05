@@ -173,6 +173,7 @@ func (u *User) checkEmpty(resourceIdMap map[string]string) error {
 
 // MorphOrganizationRoles is used to convert nested organizationRoles from
 // strings to terraform type.String.
+// TODO (AV-53457): add unit testing
 func MorphOrganizationRoles(organizationRoles []string) []basetypes.StringValue {
 	var morphedRoles []basetypes.StringValue
 	for _, role := range organizationRoles {
@@ -183,6 +184,7 @@ func MorphOrganizationRoles(organizationRoles []string) []basetypes.StringValue 
 
 // ConvertOrganizationRoles is used to convert all roles
 // in an array of basetypes.StringValue to strings.
+// TODO (AV-53457): add unit testing
 func ConvertOrganizationRoles(organizationRoles []basetypes.StringValue) []string {
 	var convertedRoles []string
 	for _, role := range organizationRoles {
@@ -193,6 +195,7 @@ func ConvertOrganizationRoles(organizationRoles []basetypes.StringValue) []strin
 
 // ConvertResource is used to convert a resource object containing nested fields
 // of type basetypes.StringValue to a resource object containing nested fields of type string.
+// TODO (AV-53457): add unit testing
 func ConvertResources(resources []Resource) []api.Resource {
 	var convertedResources []api.Resource
 	for _, resource := range resources {
@@ -216,6 +219,7 @@ func ConvertResources(resources []Resource) []api.Resource {
 
 // MorphResources is used to covert nested resources from strings
 // to terraform types.String
+// TODO (AV-53457): add unit testing
 func MorphResources(resources []api.Resource) []Resource {
 	var morphedResources []Resource
 	for _, resource := range resources {
