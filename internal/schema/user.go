@@ -102,6 +102,15 @@ type Resource struct {
 	Roles []types.String `tfsdk:"roles"`
 }
 
+// Users defines the model for GetUsers
+type Users struct {
+	// OrganizationId is the organizationId of the capella.
+	OrganizationId types.String `tfsdk:"organization_id"`
+
+	// Data contains the list of resources.
+	Data []User `tfsdk:"user"`
+}
+
 // Validate is used to verify that IDs have been properly imported
 // TODO (AV-53457): add unit testing
 func (u *User) Validate() (map[string]string, error) {
