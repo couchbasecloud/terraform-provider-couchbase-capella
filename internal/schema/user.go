@@ -109,7 +109,7 @@ type Users struct {
 	OrganizationId types.String `tfsdk:"organization_id"`
 
 	// Data contains the list of resources.
-	Data []User `tfsdk:"user"`
+	Data []User `tfsdk:"data"`
 }
 
 // Validate is used to verify that IDs have been properly imported
