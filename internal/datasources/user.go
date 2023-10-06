@@ -142,7 +142,7 @@ func (d *User) Read(ctx context.Context, req datasource.ReadRequest, resp *datas
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Users",
-			"Could not read users in cluster "+state.OrganizationId.String()+": "+err.Error(),
+			"Could not read users in organization "+state.OrganizationId.String()+": "+err.Error(),
 		)
 		return
 	}
@@ -153,7 +153,7 @@ func (d *User) Read(ctx context.Context, req datasource.ReadRequest, resp *datas
 
 	// Make request to list Users
 	response, err := d.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/users/", d.HostURL, organizationId),
+		fmt.Sprintf("%s/v4/organizations/%s/users", d.HostURL, organizationId),
 		http.MethodGet,
 		nil,
 		d.Token,
@@ -165,7 +165,7 @@ func (d *User) Read(ctx context.Context, req datasource.ReadRequest, resp *datas
 		if err.HttpStatusCode != http.StatusNotFound {
 			resp.Diagnostics.AddError(
 				"Error Reading Capella Users",
-				"Could not read users in cluster "+state.OrganizationId.String()+": "+err.CompleteError(),
+				"Could not read users in organization "+state.OrganizationId.String()+": "+err.CompleteError(),
 			)
 			return
 		}
@@ -175,7 +175,7 @@ func (d *User) Read(ctx context.Context, req datasource.ReadRequest, resp *datas
 	default:
 		resp.Diagnostics.AddError(
 			"Error Reading Users",
-			"Could not read users in cluster "+state.OrganizationId.String()+": "+err.Error(),
+			"Could not read users in organization "+state.OrganizationId.String()+": "+err.Error(),
 		)
 		return
 	}

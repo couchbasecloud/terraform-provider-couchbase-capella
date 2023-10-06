@@ -1,5 +1,5 @@
 output "users_list" {
-    value = data.capella_users.existing_users
+  value = data.capella_users.existing_users
 }
 
 data "capella_users" "existing_users" {
