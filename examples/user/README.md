@@ -17,9 +17,13 @@ To run, configure your Couchbase Capella provider as described in README in the 
 # Example Walkthrough
 ### View the plan for the resources that Terraform will create
 
-Command: `terraform plan`
+Command: 
+```
+terraform plan
+```
 Sample Output:
 ```
+
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
@@ -131,7 +135,11 @@ Note: You didn't use the -out option to save this plan, so Terraform can't guara
 ```
 
 ### Apply the Plan, in order to create a new User in Capella
-Command: `terraform apply`
+Command: 
+```
+terraform apply
+```
+
 Sample Output:
 ```
 │ Warning: Provider development overrides are in effect
@@ -312,7 +320,10 @@ users_list = {
 }
 ```
 ### Note the User ID for the new User
-Command: `terraform show`
+Command: 
+```
+terraform show
+```
 
 Sample Output:
 ```
@@ -443,7 +454,10 @@ users_list = {
 ```
 ### List the resources that are present in the Terraform State file.
 
-Command: `terraform state list`
+Command: 
+```
+terraform state list
+```
 
 Sample Output:
 ```
@@ -491,7 +505,10 @@ The resources that were imported are shown above. These resources are now in
 your Terraform state and will henceforth be managed by Terraform.
 ```
 ### Let's run a terraform plan to confirm that the import was successful and no resource states were impacted
-Command: `terraform plan`
+Command: 
+```
+terraform plan
+```
 
 Sample Output:
 ```
@@ -512,7 +529,11 @@ Terraform has compared your real infrastructure against your configuration and f
 ```
 
 ### Finally, destroy the resources created by Terraform
-Command: `terraform destroy`
+Command: 
+```
+terraform destroy
+```
+
 Sample Output:
 ```
 │ Warning: Provider development overrides are in effect
