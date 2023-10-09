@@ -647,7 +647,7 @@ func (c *Cluster) validateClusterUpdate(plan, state providerschema.Cluster) erro
 	}
 
 	if planOrganizationId != stateOrganizationId {
-		return errors.ErrUnableToUpdateOrgId
+		return errors.ErrUnableToUpdateOrganizationId
 	}
 
 	var planProjectId, stateProjectId string
