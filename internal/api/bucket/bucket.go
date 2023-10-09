@@ -64,3 +64,17 @@ type GetBucketResponse struct {
 
 	Stats *Stats `json:"stats"`
 }
+
+// PutBucketRequest defines model for PutBucketRequest.
+type PutBucketRequest struct {
+	// MemoryAllocationInMb The amount of memory to allocate for the bucket memory in MiB
+	MemoryAllocationInMb int `json:"memoryAllocationInMb"`
+
+	DurabilityLevel string `json:"durabilityLevel"`
+
+	Replicas int `json:"replicas"`
+
+	Flush bool `json:"flush"`
+
+	TimeToLiveInSeconds int `json:"timeToLiveInSeconds"`
+}

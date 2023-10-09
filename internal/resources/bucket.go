@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"net/http"
 	"terraform-provider-capella/internal/api"
 	bucketapi "terraform-provider-capella/internal/api/bucket"
@@ -162,9 +163,44 @@ func (c *Bucket) Configure(_ context.Context, req resource.ConfigureRequest, res
 	c.Data = data
 }
 
-// Read reads bucket information.
+// Read reads the bucket information.
 func (c *Bucket) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// Todo
+	var state providerschema.Bucket
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	bucketId, clusterId, projectId, organizationId, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Bucket in Capella",
+			"Could not read Capella Bucket with ID "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	refreshedState, err := c.retrieveBucket(ctx, organizationId, projectId, clusterId, bucketId)
+	resourceNotFound, err := handleBucketError(err)
+	if resourceNotFound {
+		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+		resp.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error reading bucket",
+			"Could not read bucket with id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	diags = resp.State.Set(ctx, &refreshedState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Delete deletes the bucket.
@@ -289,6 +325,86 @@ func (c *Bucket) retrieveBucket(ctx context.Context, organizationId, projectId, 
 	return &refreshedState, nil
 }
 
+// Update updates the bucket.
 func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// Todo
+	var state providerschema.Bucket
+	diags := req.Plan.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	bucketId, clusterId, projectId, organizationId, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Bucket in Capella",
+			"Could not read Capella Bucket with ID "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	bucketUpdateRequest := bucketapi.PutBucketRequest{
+		MemoryAllocationInMb: state.MemoryAllocationInMb,
+		DurabilityLevel:      state.DurabilityLevel.ValueString(),
+		Replicas:             state.Replicas,
+		Flush:                state.Flush,
+		TimeToLiveInSeconds:  state.TimeToLiveInSeconds,
+	}
+
+	response, err := c.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", c.HostURL, organizationId, projectId, clusterId, bucketId),
+		http.MethodPut,
+		bucketUpdateRequest,
+		c.Token,
+		nil,
+	)
+
+	_, err = handleBucketError(err)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating bucket",
+			"Could not update bucket, unexpected error: "+string(response.Body),
+		)
+		return
+	}
+
+	currentState, err := c.retrieveBucket(ctx, organizationId, projectId, clusterId, bucketId)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		resp.Diagnostics.AddError(
+			"Error updating bucket",
+			"Could not update Capella bucket with ID "+bucketId+": "+err.CompleteError(),
+		)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error updating bucket",
+			"Could not update Capella bucket with ID "+bucketId+": "+err.Error(),
+		)
+		return
+	}
+
+	// Set state to fully populated data
+	diags = resp.State.Set(ctx, currentState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+}
+
+// handleBucketError extracts error message if error is api.Error and also checks whether error is
+// resource not found
+func handleBucketError(err error) (bool, error) {
+	switch err := err.(type) {
+	case nil:
+		return false, nil
+	case api.Error:
+		if err.HttpStatusCode != http.StatusNotFound {
+			return false, fmt.Errorf(err.CompleteError())
+		}
+		return true, fmt.Errorf(err.CompleteError())
+	default:
+		return false, err
+	}
 }

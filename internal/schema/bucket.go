@@ -1,6 +1,10 @@
 package schema
 
-import "github.com/hashicorp/terraform-plugin-framework/types"
+import (
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"strings"
+	"terraform-provider-capella/internal/errors"
+)
 
 type Bucket struct {
 	Id types.String `tfsdk:"id"`
@@ -81,4 +85,78 @@ type OneBucket struct {
 	EvictionPolicy types.String `tfsdk:"eviction_policy"`
 
 	Stats *Stats `tfsdk:"stats"`
+}
+
+// Validate will split the IDs by a delimiter i.e. comma , in case a terraform import CLI is invoked.
+// The format of the terraform import CLI would include the IDs as follows -
+// `terraform import capella_bucket.new_bucket id=<uuid>,cluster_id=<uuid>,project_id=<uuid>,organization_id=<uuid>`
+func (c Bucket) Validate() (bucketId, clusterId, projectId, organizationId string, err error) {
+
+	const (
+		idDelimiter       = ","
+		organizationIdSep = "organization_id="
+		projectIdSep      = "project_id="
+		clusterIdSep      = "cluster_id="
+		bucketIdSep       = "id="
+	)
+
+	organizationId = c.OrganizationId.ValueString()
+	projectId = c.ProjectId.ValueString()
+	clusterId = c.ClusterId.ValueString()
+	bucketId = c.Id.ValueString()
+	var found bool
+
+	// check if the id is a comma separated string of multiple IDs, usually passed during the terraform import CLI
+	if c.OrganizationId.IsNull() {
+		strs := strings.Split(c.Id.ValueString(), idDelimiter)
+		if len(strs) != 4 {
+			err = errors.ErrIdMissing
+			return
+		}
+		_, bucketId, found = strings.Cut(strs[0], bucketIdSep)
+		if !found {
+			err = errors.ErrDatabaseCredentialIdMissing
+			return
+		}
+
+		_, clusterId, found = strings.Cut(strs[1], clusterIdSep)
+		if !found {
+			err = errors.ErrClusterIdMissing
+			return
+		}
+
+		_, projectId, found = strings.Cut(strs[2], projectIdSep)
+		if !found {
+			err = errors.ErrProjectIdMissing
+			return
+		}
+
+		_, organizationId, found = strings.Cut(strs[3], organizationIdSep)
+		if !found {
+			err = errors.ErrOrganizationIdMissing
+			return
+		}
+	}
+
+	if bucketId == "" {
+		err = errors.ErrBucketIdCannotBeEmpty
+		return
+	}
+
+	if clusterId == "" {
+		err = errors.ErrClusterIdCannotBeEmpty
+		return
+	}
+
+	if projectId == "" {
+		err = errors.ErrProjectIdCannotBeEmpty
+		return
+	}
+
+	if organizationId == "" {
+		err = errors.ErrOrganizationIdCannotBeEmpty
+		return
+	}
+
+	return bucketId, clusterId, projectId, organizationId, nil
 }
