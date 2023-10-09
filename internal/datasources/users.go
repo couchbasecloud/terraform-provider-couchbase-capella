@@ -203,14 +203,20 @@ func (d *Users) mapResponseBody(
 			return *state, fmt.Errorf("error occured while attempting to convert audit data")
 		}
 
+		// Set Optional Values
+		var name string
+		if userResp.Name != nil {
+			name = *userResp.Name
+		}
+
 		UserState := providerschema.NewUser(
 			types.StringValue(userResp.Id.String()),
-			types.StringValue(*userResp.Name),
+			types.StringValue(name),
 			types.StringValue(userResp.Email),
 			types.StringValue(userResp.Status),
 			types.BoolValue(userResp.Inactive),
 			types.StringValue(userResp.OrganizationId.String()),
-			providerschema.MorphOrganizationRoles(*userResp.OrganizationRoles),
+			providerschema.MorphOrganizationRoles(userResp.OrganizationRoles),
 			types.StringValue(userResp.LastLogin),
 			types.StringValue(userResp.Region),
 			types.StringValue(userResp.TimeZone),
