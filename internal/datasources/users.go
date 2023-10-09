@@ -17,27 +17,27 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ datasource.DataSource              = &User{}
-	_ datasource.DataSourceWithConfigure = &User{}
+	_ datasource.DataSource              = &Users{}
+	_ datasource.DataSourceWithConfigure = &Users{}
 )
 
-// User is the user data source implementation.
-type User struct {
+// Users is the user data source implementation.
+type Users struct {
 	*providerschema.Data
 }
 
-// NewUser is a helper function to simplify the provider implementation.
-func NewUser() datasource.DataSource {
-	return &User{}
+// NewUsers is a helper function to simplify the provider implementation.
+func NewUsers() datasource.DataSource {
+	return &Users{}
 }
 
 // Metadata returns the user data source type name.
-func (d *User) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *Users) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_users"
 }
 
 // Schema defines the schema for the User data source.
-func (d *User) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *Users) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
@@ -95,7 +95,7 @@ func (d *User) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datas
 }
 
 // Read refreshes the Terraform state with the latest data of Users.
-func (d *User) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *Users) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state providerschema.Users
 	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -174,7 +174,7 @@ func (d *User) Read(ctx context.Context, req datasource.ReadRequest, resp *datas
 }
 
 // Configure adds the provider configured client to the User data source.
-func (d *User) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *Users) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -193,7 +193,7 @@ func (d *User) Configure(_ context.Context, req datasource.ConfigureRequest, res
 
 // mapResponseBody is used to map the response body from a call to
 // get Users to the Users schema that will be used by terraform.
-func (d *User) mapResponseBody(
+func (d *Users) mapResponseBody(
 	ctx context.Context,
 	UsersResponse api.GetUsersResponse,
 	state *providerschema.Users,
@@ -246,7 +246,7 @@ func computedBoolAttribute() *schema.BoolAttribute {
 
 // validate is used to verify that all the fields in the datasource
 // have been populated.
-func (d *User) validate(state providerschema.Users) error {
+func (d *Users) validate(state providerschema.Users) error {
 	if state.OrganizationId.IsNull() {
 		return errors.ErrOrganizationIdMissing
 	}
