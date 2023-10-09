@@ -36,13 +36,13 @@ func (c *Client) Execute(url string, method string, payload any, authToken strin
 	if payload != nil {
 		requestBody, err = json.Marshal(payload)
 		if err != nil {
-			return nil, fmt.Errorf("failed to marshal payload: %w", err)
+			return nil, fmt.Errorf("%w: %v", ErrMarshallingPayload, err)
 		}
 	}
 
 	req, err := http.NewRequest(method, url, bytes.NewReader(requestBody))
 	if err != nil {
-		return nil, fmt.Errorf("failed to construct request: %w", err)
+		return nil, fmt.Errorf("%w: %v", ErrConstructingRequest, err)
 	}
 
 	req.Header.Set("Authorization", "Bearer "+authToken)
@@ -52,7 +52,7 @@ func (c *Client) Execute(url string, method string, payload any, authToken strin
 
 	apiRes, err := c.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to execute request: %w", err)
+		return nil, fmt.Errorf("%w: %v", ErrExecutingRequest, err)
 	}
 	defer apiRes.Body.Close()
 
