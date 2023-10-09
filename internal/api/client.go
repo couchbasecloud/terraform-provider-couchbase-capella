@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"terraform-provider-capella/internal/errors"
 )
 
 // Client is responsible for constructing and executing HTTP requests.
@@ -36,13 +38,13 @@ func (c *Client) Execute(url string, method string, payload any, authToken strin
 	if payload != nil {
 		requestBody, err = json.Marshal(payload)
 		if err != nil {
-			return nil, fmt.Errorf("%w: %v", ErrMarshallingPayload, err)
+			return nil, fmt.Errorf("%s: %w", errors.ErrMarshallingPayload, err)
 		}
 	}
 
 	req, err := http.NewRequest(method, url, bytes.NewReader(requestBody))
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrConstructingRequest, err)
+		return nil, fmt.Errorf("%s: %v", errors.ErrConstructingRequest, err)
 	}
 
 	req.Header.Set("Authorization", "Bearer "+authToken)
@@ -52,7 +54,7 @@ func (c *Client) Execute(url string, method string, payload any, authToken strin
 
 	apiRes, err := c.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrExecutingRequest, err)
+		return nil, fmt.Errorf("%s: %v", errors.ErrExecutingRequest, err)
 	}
 	defer apiRes.Body.Close()
 

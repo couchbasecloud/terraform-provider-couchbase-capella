@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"terraform-provider-capella/internal/api"
+	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -136,13 +137,13 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 
 func (r *User) validateCreateUserRequest(plan providerschema.User) error {
 	if plan.OrganizationId.IsNull() {
-		return fmt.Errorf("organizationId cannot be empty")
+		return errors.ErrOrganizationIdCannotBeEmpty
 	}
 	if plan.Email.IsNull() {
-		return fmt.Errorf("email cannot be empty")
+		return errors.ErrEmailCannotBeEmpty
 	}
 	if plan.OrganizationRoles == nil {
-		return fmt.Errorf("organizationRoles cannot be empty")
+		return errors.ErrOrganizationRolesCannotBeEmpty
 	}
 	return nil
 }
@@ -316,13 +317,13 @@ func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api
 		nil,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("error executing request: %s", err)
+		return nil, fmt.Errorf("%s: %v", errors.ErrExecutingRequest, err)
 	}
 
 	userResp := api.GetUserResponse{}
 	err = json.Unmarshal(response.Body, &userResp)
 	if err != nil {
-		return nil, fmt.Errorf("error unmarshalling response: %s", err)
+		return nil, fmt.Errorf("%s: %v", errors.ErrUnmarshallingResponse, err)
 	}
 	return &userResp, nil
 }
@@ -336,7 +337,7 @@ func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (
 	audit := providerschema.NewCouchbaseAuditData(userResp.Audit)
 	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
 	if diags.HasError() {
-		return nil, fmt.Errorf("failed to convert audit data")
+		return nil, errors.ErrUnableToConvertAuditData
 	}
 
 	// Set optional fields - these may be left blank
@@ -418,9 +419,9 @@ func handleCapellaUserError(err error) error {
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
-		return fmt.Errorf("could not read Capella User: %s", err.CompleteError())
+		return fmt.Errorf("%w: %s", errors.ErrUnableToReadCapellaUser, err.CompleteError())
 	default:
-		return fmt.Errorf("could not read Capella User: %s", err.Error())
+		return fmt.Errorf("%w: %s", errors.ErrUnableToReadCapellaUser, err.Error())
 	}
 	return nil
 }

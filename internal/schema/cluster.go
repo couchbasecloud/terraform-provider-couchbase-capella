@@ -170,7 +170,7 @@ func morphToTerraformServiceGroups(cluster *clusterapi.GetClusterResponse) ([]Se
 				Storage: types.Int64Value(int64(gcpDisk.Storage)),
 			}
 		default:
-			return nil, fmt.Errorf("unsupported cloud provider is recieved from server")
+			return nil, errors.ErrUnsupportedCloudProvider
 		}
 
 		if serviceGroup.NumOfNodes != nil {
@@ -223,7 +223,7 @@ func (c *Cluster) Validate() (map[string]string, error) {
 
 	err := c.checkEmpty(resourceIDs)
 	if err != nil {
-		return nil, fmt.Errorf("resource import unsuccessful: %s", err)
+		return nil, fmt.Errorf("%s: %w", errors.ErrUnableToImportResource, err)
 	}
 
 	return resourceIDs, nil
