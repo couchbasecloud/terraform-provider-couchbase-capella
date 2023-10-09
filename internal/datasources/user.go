@@ -113,9 +113,7 @@ func (d *User) Read(ctx context.Context, req datasource.ReadRequest, resp *datas
 		return
 	}
 
-	var (
-		organizationId = state.OrganizationId.ValueString()
-	)
+	organizationId := state.OrganizationId.ValueString()
 
 	// Make request to list Users
 	response, err := d.Client.Execute(
