@@ -57,9 +57,11 @@ type ApiKey struct {
 	// [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
 	Resources []ApiKeyResourcesItems `tfsdk:"resources"`
 
-	// Rotate is called only when updating(rotating) the API key,
-	// and it should be set to 'true'.
-	Rotate types.Bool `tfsdk:"rotate"`
+	// Rotate is set only when updating(rotating) the API key,
+	// and it should be set be set in incremental order from
+	// the previously set rotate value, ideally we should start.
+	// it from 1 when we are rotating for first time.
+	Rotate types.Number `tfsdk:"rotate"`
 
 	// Secret associated with API key. One has to follow the secret key policy,
 	// such as allowed characters and a length of 64 characters. If this field
