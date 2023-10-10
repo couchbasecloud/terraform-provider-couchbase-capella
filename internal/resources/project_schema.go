@@ -15,41 +15,12 @@ func ProjectSchema() schema.Schema {
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"organization_id": schema.StringAttribute{
-				Required: true,
-			},
-			"name": schema.StringAttribute{
-				Required: true,
-			},
-			"description": schema.StringAttribute{
-				Optional: true,
-			},
-			"if_match": schema.StringAttribute{
-				Optional: true,
-			},
-			"etag": schema.StringAttribute{
-				Computed: true,
-			},
-			"audit": schema.SingleNestedAttribute{
-				Computed: true,
-				Attributes: map[string]schema.Attribute{
-					"created_at": schema.StringAttribute{
-						Computed: true,
-					},
-					"created_by": schema.StringAttribute{
-						Computed: true,
-					},
-					"modified_at": schema.StringAttribute{
-						Computed: true,
-					},
-					"modified_by": schema.StringAttribute{
-						Computed: true,
-					},
-					"version": schema.Int64Attribute{
-						Computed: true,
-					},
-				},
-			},
+			"organization_id": stringAttribute(required),
+			"name":            stringAttribute(required),
+			"description":     stringAttribute(optional),
+			"if_match":        stringAttribute(optional),
+			"etag":            stringAttribute(computed),
+			"audit":           computedAuditAttribute(),
 		},
 	}
 }
