@@ -40,9 +40,7 @@ func (d *Project) Metadata(_ context.Context, req datasource.MetadataRequest, re
 func (d *Project) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required: true,
-			},
+			"organization_id": computedStringAttribute(),
 			"data": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
@@ -52,10 +50,8 @@ func (d *Project) Schema(_ context.Context, _ datasource.SchemaRequest, resp *da
 						"name":            computedStringAttribute(),
 						"description":     computedStringAttribute(),
 						"audit":           computedAuditAttribute(),
-						"if_match": schema.StringAttribute{
-							Optional: true,
-						},
-						"etag": computedStringAttribute(),
+						"if_match":        computedStringAttribute(),
+						"etag":            computedStringAttribute(),
 					},
 				},
 			},
