@@ -47,44 +47,15 @@ func (d *Project) Schema(_ context.Context, _ datasource.SchemaRequest, resp *da
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"id": schema.StringAttribute{
-							Computed: true,
-						},
-						"organization_id": schema.StringAttribute{
-							Computed: true,
-						},
-						"name": schema.StringAttribute{
-							Computed: true,
-						},
-						"description": schema.StringAttribute{
-							Computed: true,
-						},
-						"audit": schema.SingleNestedAttribute{
-							Computed: true,
-							Attributes: map[string]schema.Attribute{
-								"created_at": schema.StringAttribute{
-									Computed: true,
-								},
-								"created_by": schema.StringAttribute{
-									Computed: true,
-								},
-								"modified_at": schema.StringAttribute{
-									Computed: true,
-								},
-								"modified_by": schema.StringAttribute{
-									Computed: true,
-								},
-								"version": schema.Int64Attribute{
-									Computed: true,
-								},
-							},
-						},
+						"id":              computedStringAttribute(),
+						"organization_id": computedStringAttribute(),
+						"name":            computedStringAttribute(),
+						"description":     computedStringAttribute(),
+						"audit":           computedAuditAttribute(),
 						"if_match": schema.StringAttribute{
 							Optional: true,
 						},
-						"etag": schema.StringAttribute{
-							Computed: true,
-						},
+						"etag": computedStringAttribute(),
 					},
 				},
 			},

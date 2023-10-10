@@ -53,47 +53,14 @@ func (d *AllowList) Schema(_ context.Context, _ datasource.SchemaRequest, resp *
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"id": schema.StringAttribute{
-							Computed: true,
-						},
-						"organization_id": schema.StringAttribute{
-							Computed: true,
-						},
-						"project_id": schema.StringAttribute{
-							Computed: true,
-						},
-						"cluster_id": schema.StringAttribute{
-							Computed: true,
-						},
-						"cidr": schema.StringAttribute{
-							Computed: true,
-						},
-						"comment": schema.StringAttribute{
-							Computed: true,
-						},
-						"expires_at": schema.StringAttribute{
-							Computed: true,
-						},
-						"audit": schema.SingleNestedAttribute{
-							Computed: true,
-							Attributes: map[string]schema.Attribute{
-								"created_at": schema.StringAttribute{
-									Computed: true,
-								},
-								"created_by": schema.StringAttribute{
-									Computed: true,
-								},
-								"modified_at": schema.StringAttribute{
-									Computed: true,
-								},
-								"modified_by": schema.StringAttribute{
-									Computed: true,
-								},
-								"version": schema.Int64Attribute{
-									Computed: true,
-								},
-							},
-						},
+						"id":              computedStringAttribute(),
+						"organization_id": computedStringAttribute(),
+						"project_id":      computedStringAttribute(),
+						"cluster_id":      computedStringAttribute(),
+						"cidr":            computedStringAttribute(),
+						"comment":         computedStringAttribute(),
+						"expires_at":      computedStringAttribute(),
+						"audit":           computedAuditAttribute(),
 						"if_match": schema.StringAttribute{
 							Optional: true,
 						},

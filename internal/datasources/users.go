@@ -46,16 +46,13 @@ func (d *Users) Schema(_ context.Context, _ datasource.SchemaRequest, resp *data
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"id":              computedStringAttribute(),
-						"name":            computedStringAttribute(),
-						"status":          computedStringAttribute(),
-						"inactive":        computedBoolAttribute(),
-						"email":           computedStringAttribute(),
-						"organization_id": computedStringAttribute(),
-						"organization_roles": schema.ListAttribute{
-							ElementType: types.StringType,
-							Computed:    true,
-						},
+						"id":                   computedStringAttribute(),
+						"name":                 computedStringAttribute(),
+						"status":               computedStringAttribute(),
+						"inactive":             computedBoolAttribute(),
+						"email":                computedStringAttribute(),
+						"organization_id":      computedStringAttribute(),
+						"organization_roles":   computedListAttribute(),
 						"last_login":           computedStringAttribute(),
 						"region":               computedStringAttribute(),
 						"time_zone":            computedStringAttribute(),
@@ -65,12 +62,9 @@ func (d *Users) Schema(_ context.Context, _ datasource.SchemaRequest, resp *data
 							Required: true,
 							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
-									"type": computedStringAttribute(),
-									"id":   computedStringAttribute(),
-									"roles": schema.ListAttribute{
-										Computed:    true,
-										ElementType: types.StringType,
-									},
+									"type":  computedStringAttribute(),
+									"id":    computedStringAttribute(),
+									"roles": computedListAttribute(),
 								},
 							},
 						},
@@ -81,9 +75,7 @@ func (d *Users) Schema(_ context.Context, _ datasource.SchemaRequest, resp *data
 								"created_by":  computedStringAttribute(),
 								"modified_at": computedStringAttribute(),
 								"modified_by": computedStringAttribute(),
-								"version": schema.Int64Attribute{
-									Computed: true,
-								},
+								"version":     computedStringAttribute(),
 							},
 						},
 					},
@@ -229,22 +221,6 @@ func (d *Users) mapResponseBody(
 		state.Data = append(state.Data, *UserState)
 	}
 	return *state, nil
-}
-
-// computedStringAttribute returns a Terraform schema attribute
-// which is configured to be computed.
-func computedStringAttribute() *schema.StringAttribute {
-	return &schema.StringAttribute{
-		Computed: true,
-	}
-}
-
-// computedBoolAttribute returns a Terraform schema attribute
-// which is configured to be computed.
-func computedBoolAttribute() *schema.BoolAttribute {
-	return &schema.BoolAttribute{
-		Computed: true,
-	}
 }
 
 // validate is used to verify that all the fields in the datasource

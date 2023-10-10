@@ -48,9 +48,7 @@ func (c *Certificate) Schema(_ context.Context, _ datasource.SchemaRequest, resp
 			"cluster_id": schema.StringAttribute{
 				Required: true,
 			},
-			"certificate": schema.StringAttribute{
-				Computed: true,
-			},
+			"certificate": computedStringAttribute(),
 		},
 	}
 }
