@@ -11,7 +11,7 @@ type Access struct {
 	Privileges []string `json:"privileges"`
 	// Resources is the level at which the above privileges are defined.
 	// Ex: Access of read/write privilege can be defined at the bucket level or scope level resource.
-	Resources *Resources `json:"resources,omitempty"`
+	Resources *AccessibleResources `json:"resources,omitempty"`
 }
 
 // CreateDatabaseCredentialRequest represents the schema for the POST Capella V4 API request that creates the database credential.
@@ -22,9 +22,9 @@ type CreateDatabaseCredentialRequest struct {
 	Access   []Access `json:"access"`
 }
 
-// Resources is the level at which the above privileges are defined.
+// AccessibleResources is the level at which the above privileges are defined.
 // Ex: Access of read/write privilege can be defined at the bucket level or scope level resource.
-type Resources struct {
+type AccessibleResources struct {
 	// Buckets contains the details of all buckets with scope and collection level information to which the access applies.
 	Buckets []Bucket `json:"buckets"`
 }

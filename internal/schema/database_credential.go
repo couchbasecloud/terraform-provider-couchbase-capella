@@ -63,7 +63,7 @@ type Resources struct {
 	Buckets []BucketResource `tfsdk:"buckets"`
 }
 
-// Buckets contains the details of a single bucket with scope and collection level information.
+// BucketResource contains the details of a single bucket with scope and collection level information.
 // Scopes can be a subset of all scopes inside the bucket, since this is defined only to govern the access.
 type BucketResource struct {
 	Name types.String `tfsdk:"name"`
