@@ -246,7 +246,7 @@ type ApiKeyData struct {
 	Resources []ApiKeyResourcesItems `tfsdk:"resources"`
 }
 
-// NewApiKeyData creates new apiKeyData object
+// NewApiKeyData creates a new apiKeyData object
 func NewApiKeyData(apiKey *api.GetApiKeyResponse, organizationId string, auditObject basetypes.ObjectValue) (ApiKeyData, error) {
 	newApiKeyData := ApiKeyData{
 		Id:             types.StringValue(apiKey.Id),
