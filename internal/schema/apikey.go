@@ -26,6 +26,7 @@ type ApiKeyResourcesItems struct {
 	Type types.String `tfsdk:"type"`
 }
 
+// ApiKey maps ApiKey resource schema data
 type ApiKey struct {
 	// OrganizationId is the organizationId of the capella.
 	OrganizationId types.String `tfsdk:"organization_id"`
@@ -81,26 +82,53 @@ func NewApiKey(apiKey *api.GetApiKeyResponse, organizationId string, auditObject
 		Audit:          auditObject,
 	}
 
+	newAllowedCidrs, err := MorphAllowedCidrs(apiKey.AllowedCIDRs)
+	if err != nil {
+		return nil, err
+	}
+
+	newApiKey.AllowedCIDRs = newAllowedCidrs
+
+	newApiKey.OrganizationRoles = MorphApiKeyOrganizationRoles(apiKey.OrganizationRoles)
+
+	newApiKey.Resources = MorphApiKeyResources(apiKey.Resources)
+
+	return &newApiKey, nil
+}
+
+// MorphAllowedCidrs is used to convert string list to basetypes.ListValue
+// TODO : add unit testing
+func MorphAllowedCidrs(allowedCIDRs []string) (basetypes.ListValue, error) {
 	var newAllowedCidr []attr.Value
-	for _, allowedCidr := range apiKey.AllowedCIDRs {
+	for _, allowedCidr := range allowedCIDRs {
 		newAllowedCidr = append(newAllowedCidr, types.StringValue(allowedCidr))
 	}
 
-	allowedCidrs, diags := types.ListValue(types.StringType, newAllowedCidr)
+	newAllowedCidrs, diags := types.ListValue(types.StringType, newAllowedCidr)
 	if diags.HasError() {
-		return nil, fmt.Errorf("error while converting allowedcidrs")
+		return types.ListUnknown(types.StringType), fmt.Errorf("error while converting allowedcidrs")
 	}
 
-	newApiKey.AllowedCIDRs = allowedCidrs
+	return newAllowedCidrs, nil
+}
 
+// MorphApiKeyOrganizationRoles is used to convert nested organizationRoles from
+// strings to terraform type.String.
+// TODO : add unit testing
+func MorphApiKeyOrganizationRoles(organizationRoles []string) []basetypes.StringValue {
 	var newOrganizationRoles []types.String
-	for _, organizationRole := range apiKey.OrganizationRoles {
+	for _, organizationRole := range organizationRoles {
 		newOrganizationRoles = append(newOrganizationRoles, types.StringValue(string(organizationRole)))
 	}
-	newApiKey.OrganizationRoles = newOrganizationRoles
+	return newOrganizationRoles
+}
 
+// MorphApiKeyResources is used to covert nested resources from strings
+// to terraform types.String
+// TODO : add unit testing
+func MorphApiKeyResources(resources api.Resources) []ApiKeyResourcesItems {
 	var newApiKeyResourcesItems []ApiKeyResourcesItems
-	for _, resource := range apiKey.Resources {
+	for _, resource := range resources {
 		newResourceItem := ApiKeyResourcesItems{
 			Id: types.StringValue(resource.Id.String()),
 		}
@@ -114,11 +142,11 @@ func NewApiKey(apiKey *api.GetApiKeyResponse, organizationId string, auditObject
 		newResourceItem.Roles = newRoles
 		newApiKeyResourcesItems = append(newApiKeyResourcesItems, newResourceItem)
 	}
-	newApiKey.Resources = newApiKeyResourcesItems
-
-	return &newApiKey, nil
+	return newApiKeyResourcesItems
 }
 
+// Validate checks the validity of an API key and extracts associated IDs.
+// TODO : add unit testing
 func (a *ApiKey) Validate() (map[string]string, error) {
 	const idDelimiter = ","
 	var found bool
