@@ -17,6 +17,12 @@ type CreateUserRequest struct {
 	Resources []Resource `json:"resources"`
 }
 
+// CreateUserResponse defines the model for CreateUserResponse.
+type CreateUserResponse struct {
+	// ID is the ID of the user
+	Id uuid.UUID `json:"id"`
+}
+
 // Response defines the model for a resource.
 type Resource struct {
 	// Id is a GUID4 identifier of the resource.
@@ -50,7 +56,7 @@ type GetUserResponse struct {
 	OrganizationId uuid.UUID `json:"organizationId"`
 
 	// OrganizationRoles is an array of strings representing the roles granted to the user.
-	OrganizationRoles *[]string `json:"organizationRoles"`
+	OrganizationRoles []string `json:"organizationRoles"`
 
 	// LastLogin is the time(UTC) at which user last logged in.
 	LastLogin string `json:"lastLogin"`
@@ -75,8 +81,7 @@ type GetUserResponse struct {
 	Audit CouchbaseAuditData `json:"audit"`
 }
 
-// CreateUserResponse defines the model for CreateUserResponse.
-type CreateUserResponse struct {
-	// ID is the ID of the user
-	Id uuid.UUID `json:"id"`
+// GetUsersReponse defines the model for GetUsersResponse
+type GetUsersResponse struct {
+	Data []GetUserResponse `json:"data"`
 }
