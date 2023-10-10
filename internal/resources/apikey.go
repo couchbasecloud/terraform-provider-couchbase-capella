@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
+
 	"terraform-provider-capella/internal/api"
 	providerschema "terraform-provider-capella/internal/schema"
 
@@ -432,7 +434,8 @@ func (a *ApiKey) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 }
 
 func (a *ApiKey) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	//TODO
+	// Retrieve import ID and save to id attribute
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 // retrieveApiKey retrieves apikey information for a specified organization and apiKeyId.
