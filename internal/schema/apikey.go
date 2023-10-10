@@ -240,7 +240,7 @@ type ApiKeyData struct {
 	// OrganizationRoles are the organization level roles granted to the API key.
 	OrganizationRoles []types.String `tfsdk:"organization_roles"`
 
-	// Resources  is the resources are the resource level permissions associated
+	// Resources are the resource level permissions associated
 	// with the API key. To learn more about Organization Roles, see
 	// [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
 	Resources []ApiKeyResourcesItems `tfsdk:"resources"`
