@@ -39,9 +39,9 @@ func (c *Certificate) Metadata(_ context.Context, req datasource.MetadataRequest
 func (c *Certificate) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"organization_id": computedStringAttribute(),
-			"project_id":      computedStringAttribute(),
-			"cluster_id":      computedStringAttribute(),
+			"organization_id": requiredStringAttribute(),
+			"project_id":      requiredStringAttribute(),
+			"cluster_id":      requiredStringAttribute(),
 			"certificate":     computedStringAttribute(),
 		},
 	}

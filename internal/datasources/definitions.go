@@ -13,6 +13,14 @@ func computedStringAttribute() *schema.StringAttribute {
 	}
 }
 
+// requiredStringAttribute returns a Terraform schema attribute
+// which is configured to be required.
+func requiredStringAttribute() *schema.StringAttribute {
+	return &schema.StringAttribute{
+		Required: true,
+	}
+}
+
 // computedBoolAttribute returns a Terraform schema attribute
 // which is configured to be computed.
 func computedBoolAttribute() *schema.BoolAttribute {

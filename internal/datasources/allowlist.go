@@ -40,9 +40,9 @@ func (d *AllowList) Metadata(_ context.Context, req datasource.MetadataRequest, 
 func (d *AllowList) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"organization_id": computedStringAttribute(),
-			"project_id":      computedStringAttribute(),
-			"cluster_id":      computedStringAttribute(),
+			"organization_id": requiredStringAttribute(),
+			"project_id":      requiredStringAttribute(),
+			"cluster_id":      requiredStringAttribute(),
 			"data": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
@@ -71,7 +71,7 @@ func (d *AllowList) Read(ctx context.Context, req datasource.ReadRequest, resp *
 		return
 	}
 
-	// Validate state is not empty
+	// Validate state is not emptygit
 	err := d.validate(state)
 	if err != nil {
 		resp.Diagnostics.AddError(

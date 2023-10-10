@@ -7,8 +7,8 @@ import (
 func ClusterSchema() schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"organization_id": computedStringAttribute(),
-			"project_id":      computedStringAttribute(),
+			"organization_id": requiredStringAttribute(),
+			"project_id":      requiredStringAttribute(),
 			"data": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
