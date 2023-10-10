@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
+
 	"terraform-provider-capella/internal/api"
 	providerschema "terraform-provider-capella/internal/schema"
 
@@ -193,7 +195,73 @@ func (a *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 
 // Read reads ApiKey information.
 func (a *ApiKey) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// TODO
+	var state providerschema.ApiKey
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceIDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error reading api key",
+			"Could not read api key id "+state.Id.String()+" unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	var (
+		organizationId = resourceIDs[providerschema.OrganizationId]
+		apiKeyId       = resourceIDs[providerschema.ApiKeyId]
+	)
+
+	// Get refreshed api key value from Capella
+	refreshedState, err := a.retrieveApiKey(ctx, organizationId, apiKeyId)
+	resourceNotFound, err := handleApiKeyError(err)
+	if resourceNotFound {
+		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+		resp.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error reading api key",
+			"Could not read api key id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	resources, err := providerschema.OrderList2(state.Resources, refreshedState.Resources)
+	switch err {
+	case nil:
+		refreshedState.Resources = resources
+	default:
+		tflog.Warn(ctx, err.Error())
+	}
+
+	if len(state.Resources) == len(refreshedState.Resources) {
+		for i, resource := range refreshedState.Resources {
+			if providerschema.AreEqual(resource.Roles, state.Resources[i].Roles) {
+				refreshedState.Resources[i].Roles = state.Resources[i].Roles
+			}
+		}
+	}
+
+	if providerschema.AreEqual(refreshedState.OrganizationRoles, state.OrganizationRoles) {
+		refreshedState.OrganizationRoles = state.OrganizationRoles
+	}
+
+	refreshedState.Token = state.Token
+	refreshedState.Rotate = state.Rotate
+	refreshedState.Secret = state.Secret
+
+	// Set refreshed state
+	diags = resp.State.Set(ctx, &refreshedState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Update rotates the ApiKey.
@@ -366,7 +434,8 @@ func (a *ApiKey) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 }
 
 func (a *ApiKey) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	//TODO
+	// Retrieve import ID and save to id attribute
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 // retrieveApiKey retrieves apikey information for a specified organization and apiKeyId.
