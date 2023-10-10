@@ -99,3 +99,8 @@ type RotateAPIKeyResponse struct {
 	// The API key is made of an Access key and a Secret key.
 	SecretKey string `json:"secretKey"`
 }
+
+// GetApiKeysResponse defines the model for a GetApiKeysResponse.
+type GetApiKeysResponse struct {
+	Data []GetApiKeyResponse `json:"data"`
+}
