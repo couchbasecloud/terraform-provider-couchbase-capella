@@ -480,19 +480,19 @@ func (c *Cluster) getCluster(organizationId, projectId, clusterId string) (*clus
 
 // retrieveCluster retrieves cluster information for a specified organization, project, and cluster ID.
 func (c *Cluster) retrieveCluster(ctx context.Context, organizationId, projectId, clusterId string) (*providerschema.Cluster, error) {
-	ClusterResp, err := c.getCluster(organizationId, projectId, clusterId)
+	clusterResp, err := c.getCluster(organizationId, projectId, clusterId)
 	if err != nil {
 		return nil, err
 	}
 
-	audit := providerschema.NewCouchbaseAuditData(ClusterResp.Audit)
+	audit := providerschema.NewCouchbaseAuditData(clusterResp.Audit)
 
 	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
 	if diags.HasError() {
 		return nil, fmt.Errorf("error while audit conversion")
 	}
 
-	refreshedState, err := providerschema.NewCluster(ClusterResp, organizationId, projectId, auditObj)
+	refreshedState, err := providerschema.NewCluster(clusterResp, organizationId, projectId, auditObj)
 	if err != nil {
 		return nil, err
 	}

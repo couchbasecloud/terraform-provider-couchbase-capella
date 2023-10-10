@@ -99,72 +99,23 @@ type Support struct {
 
 // Cluster defines model for CreateClusterRequest.
 type Cluster struct {
-	Id types.String `tfsdk:"id"`
+	ClusterData
 
-	// AppServiceId is the ID of the linked app service.
-	AppServiceId   types.String  `tfsdk:"app_service_id"`
-	Audit          types.Object  `tfsdk:"audit"`
-	OrganizationId types.String  `tfsdk:"organization_id"`
-	ProjectId      types.String  `tfsdk:"project_id"`
-	Availability   *Availability `tfsdk:"availability"`
-
-	// CloudProvider The cloud provider where the cluster will be hosted.
-	// To learn more, see [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html).
-	CloudProvider   *CloudProvider   `tfsdk:"cloud_provider"`
-	CouchbaseServer *CouchbaseServer `tfsdk:"couchbase_server"`
-
-	// Description of the cluster (up to 1024 characters).
-	Description types.String `tfsdk:"description"`
-
-	// Name of the cluster (up to 256 characters).
-	Name types.String `tfsdk:"name"`
-
-	// ServiceGroups is the couchbase service groups to be run. At least one service group must contain the data service.
-	ServiceGroups []ServiceGroup `tfsdk:"service_groups"`
-	Support       *Support       `tfsdk:"support"`
-	CurrentState  types.String   `tfsdk:"current_state"`
-	Etag          types.String   `tfsdk:"etag"`
+	Etag types.String `tfsdk:"etag"`
 
 	IfMatch types.String `tfsdk:"if_match"`
 }
 
 // NewCluster create new cluster object
 func NewCluster(cluster *clusterapi.GetClusterResponse, organizationId, projectId string, auditObject basetypes.ObjectValue) (*Cluster, error) {
-	newCluster := Cluster{
-		Id:             types.StringValue(cluster.Id.String()),
-		OrganizationId: types.StringValue(organizationId),
-		ProjectId:      types.StringValue(projectId),
-		Name:           types.StringValue(cluster.Name),
-		Description:    types.StringValue(cluster.Description),
-		Availability: &Availability{
-			Type: types.StringValue(string(cluster.Availability.Type)),
-		},
-		CloudProvider: &CloudProvider{
-			Cidr:   types.StringValue(cluster.CloudProvider.Cidr),
-			Region: types.StringValue(cluster.CloudProvider.Region),
-			Type:   types.StringValue(string(cluster.CloudProvider.Type)),
-		},
-		Support: &Support{
-			Plan:     types.StringValue(string(cluster.Support.Plan)),
-			Timezone: types.StringValue(string(cluster.Support.Timezone)),
-		},
-		CurrentState: types.StringValue(string(cluster.CurrentState)),
-		Audit:        auditObject,
-		Etag:         types.StringValue(cluster.Etag),
-	}
-
-	if cluster.CouchbaseServer.Version != nil {
-		version := *cluster.CouchbaseServer.Version
-		newCluster.CouchbaseServer = &CouchbaseServer{
-			Version: types.StringValue(version),
-		}
-	}
-
-	newServiceGroups, err := morphToTerraformServiceGroups(cluster)
+	newClusterData, err := NewClusterData(cluster, organizationId, projectId, auditObject)
 	if err != nil {
 		return nil, err
 	}
-	newCluster.ServiceGroups = newServiceGroups
+	newCluster := Cluster{
+		ClusterData: *newClusterData,
+		Etag:        types.StringValue(cluster.Etag),
+	}
 	return &newCluster, nil
 }
 
@@ -295,4 +246,97 @@ func (a *Cluster) checkEmpty(resourceIdMap map[string]string) error {
 		return errors.ErrOrganizationIdCannotBeEmpty
 	}
 	return nil
+}
+
+// Clusters defines model for GetClustersResponse.
+type Clusters struct {
+	// OrganizationId is the organizationId of the capella.
+	OrganizationId types.String `tfsdk:"organization_id"`
+
+	// ProjectId is the projectId of the cluster
+	ProjectId types.String `tfsdk:"project_id"`
+
+	// Data It contains the list of resources.
+	Data []ClusterData `tfsdk:"data"`
+}
+
+// ClusterData defines model for single cluster data
+type ClusterData struct {
+	Id types.String `tfsdk:"id"`
+
+	// AppServiceId is the ID of the linked app service.
+	AppServiceId types.String `tfsdk:"app_service_id"`
+
+	// Audit contains all audit-related fields.
+	Audit types.Object `tfsdk:"audit"`
+
+	// OrganizationId is the organizationId of the capella tenant.
+	OrganizationId types.String `tfsdk:"organization_id"`
+
+	// ProjectId is the projectId of the capella tenant.
+	ProjectId types.String `tfsdk:"project_id"`
+
+	// Availability defines model for availability.
+	Availability *Availability `tfsdk:"availability"`
+
+	// CloudProvider The cloud provider where the cluster will be hosted.
+	// To learn more, see [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html).
+	CloudProvider *CloudProvider `tfsdk:"cloud_provider"`
+
+	// CouchbaseServer defines model for couchbaseServer.
+	CouchbaseServer *CouchbaseServer `tfsdk:"couchbase_server"`
+
+	// Description of the cluster (up to 1024 characters).
+	Description types.String `tfsdk:"description"`
+
+	// Name of the cluster (up to 256 characters).
+	Name types.String `tfsdk:"name"`
+
+	// ServiceGroups is the couchbase service groups to be run. At least one service group must contain the data service.
+	ServiceGroups []ServiceGroup `tfsdk:"service_groups"`
+
+	// Support defines model for Support.
+	Support *Support `tfsdk:"support"`
+
+	// State defines the current state of cluster
+	CurrentState types.String `tfsdk:"current_state"`
+}
+
+// NewClusterData creates a new cluster data object
+func NewClusterData(cluster *clusterapi.GetClusterResponse, organizationId, projectId string, auditObject basetypes.ObjectValue) (*ClusterData, error) {
+	newClusterData := ClusterData{
+		Id:             types.StringValue(cluster.Id.String()),
+		OrganizationId: types.StringValue(organizationId),
+		ProjectId:      types.StringValue(projectId),
+		Name:           types.StringValue(cluster.Name),
+		Description:    types.StringValue(cluster.Description),
+		Availability: &Availability{
+			Type: types.StringValue(string(cluster.Availability.Type)),
+		},
+		CloudProvider: &CloudProvider{
+			Cidr:   types.StringValue(cluster.CloudProvider.Cidr),
+			Region: types.StringValue(cluster.CloudProvider.Region),
+			Type:   types.StringValue(string(cluster.CloudProvider.Type)),
+		},
+		Support: &Support{
+			Plan:     types.StringValue(string(cluster.Support.Plan)),
+			Timezone: types.StringValue(string(cluster.Support.Timezone)),
+		},
+		CurrentState: types.StringValue(string(cluster.CurrentState)),
+		Audit:        auditObject,
+	}
+
+	if cluster.CouchbaseServer.Version != nil {
+		version := *cluster.CouchbaseServer.Version
+		newClusterData.CouchbaseServer = &CouchbaseServer{
+			Version: types.StringValue(version),
+		}
+	}
+
+	newServiceGroups, err := morphToTerraformServiceGroups(cluster)
+	if err != nil {
+		return nil, err
+	}
+	newClusterData.ServiceGroups = newServiceGroups
+	return &newClusterData, nil
 }

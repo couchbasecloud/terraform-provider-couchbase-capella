@@ -51,6 +51,31 @@ type Access struct {
 	// Privileges is a list of permissions that the database credential will have over the data in the given bucket or scope.
 	// Privileges can be "read", "write" or both.
 	Privileges []types.String `tfsdk:"privileges"`
+	// Resources is the level at which the above privileges are defined.
+	// Ex: Access of read/write privilege can be defined at the bucket level or scope level resource.
+	Resources *Resources `tfsdk:"resources"`
+}
+
+// Resources is the level at which the above privileges are defined.
+// Ex: Access of read/write privilege can be defined at the bucket level or scope level resource.
+type Resources struct {
+	// Buckets contains the details of all buckets with scope and collection level information to which the access applies.
+	Buckets []BucketResource `tfsdk:"buckets"`
+}
+
+// BucketResource contains the details of a single bucket with scope and collection level information.
+// Scopes can be a subset of all scopes inside the bucket, since this is defined only to govern the access.
+type BucketResource struct {
+	Name types.String `tfsdk:"name"`
+	// Scopes is the details of the scopes inside the bucket to which we want to apply access privileges.
+	Scopes []Scope `tfsdk:"scopes"`
+}
+
+// Scope is the details of a single scope inside the bucket, and it contains the collections details too.
+// This collections can be a subset of all collections inside the scope, since this is defined only to govern the access.
+type Scope struct {
+	Name        types.String   `tfsdk:"name"`
+	Collections []types.String `tfsdk:"collections"`
 }
 
 // OneDatabaseCredential is used to retrieve the new state of a database credential after it is created by Terraform.

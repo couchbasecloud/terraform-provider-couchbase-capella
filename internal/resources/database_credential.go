@@ -107,14 +107,7 @@ func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequ
 		dbCredRequest.Password = plan.Password.ValueString()
 	}
 
-	// todo: Add support for granular access at per bucket and scope level in AV-62864.
-	var privileges []string
-	for _, a := range plan.Access {
-		for _, p := range a.Privileges {
-			privileges = append(privileges, p.ValueString())
-		}
-	}
-	dbCredRequest.Access = []api.Access{{Privileges: privileges}}
+	dbCredRequest.Access = createAccess(plan)
 
 	response, err := r.Client.Execute(
 		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users", r.HostURL, organizationId, projectId, clusterId),
@@ -180,13 +173,7 @@ func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequ
 	// we are going to work around this for private preview.
 	// The fix will be done in SURF-7366
 	// For now, we are appending same permissions that the customer passed in the terraform files and not relying on the GET API response.
-	refreshedState.Access = make([]providerschema.Access, len(plan.Access))
-	for i, access := range plan.Access {
-		refreshedState.Access[i] = providerschema.Access{Privileges: make([]types.String, len(access.Privileges))}
-		for j, permission := range access.Privileges {
-			refreshedState.Access[i].Privileges[j] = permission
-		}
-	}
+	refreshedState.Access = mapAccess(plan)
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
@@ -238,13 +225,7 @@ func (r *DatabaseCredential) Read(ctx context.Context, req resource.ReadRequest,
 	// we are going to work around this for private preview.
 	// The fix will be done in SURF-7366
 	// For now, we are appending same permissions that the customer passed in the terraform files and not relying on the GET API response.
-	refreshedState.Access = make([]providerschema.Access, len(state.Access))
-	for i, access := range state.Access {
-		refreshedState.Access[i] = providerschema.Access{Privileges: make([]types.String, len(access.Privileges))}
-		for j, permission := range access.Privileges {
-			refreshedState.Access[i].Privileges[j] = permission
-		}
-	}
+	refreshedState.Access = mapAccess(state)
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &refreshedState)
@@ -256,12 +237,130 @@ func (r *DatabaseCredential) Read(ctx context.Context, req resource.ReadRequest,
 
 // Update updates the database credential.
 func (r *DatabaseCredential) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// todo in AV-62853
+	var state providerschema.DatabaseCredential
+	diags := req.Plan.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	dbId, clusterId, projectId, organizationId, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Database Credentials in Capella",
+			"Could not read Capella database credential with ID "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	dbCredRequest := api.PutDatabaseCredentialRequest{
+		// it is expected that the password in the state file will never be empty.
+		Password: state.Password.ValueString(),
+	}
+
+	dbCredRequest.Access = createAccess(state)
+
+	_, err = r.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", r.HostURL, organizationId, projectId, clusterId, dbId),
+		http.MethodPut,
+		dbCredRequest,
+		r.Token,
+		nil,
+	)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		resp.Diagnostics.AddError(
+			"Error updating database credential",
+			"Could not update an existing database credential, unexpected error: "+err.CompleteError(),
+		)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error updating database credential",
+			"Could not update database credential, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	currentState, err := r.retrieveDatabaseCredential(ctx, organizationId, projectId, clusterId, dbId)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		resp.Diagnostics.AddError(
+			"Error Reading Capella Database Credentials",
+			"Could not read Capella database credential with ID "+dbId+": "+err.CompleteError(),
+		)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error Reading Capella Database Credentials",
+			"Could not read Capella database credential with ID "+dbId+": "+err.Error(),
+		)
+		return
+	}
+
+	// this will ensure that the state file stores the new updated password, if password is not to be updated, it will retain the older one.
+	currentState.Password = state.Password
+
+	// todo: there is a bug in cp-open-api where the access field is empty in the GET API response,
+	// we are going to work around this for private preview.
+	// The fix will be done in SURF-7366
+	// For now, we are appending same permissions that the customer passed in the terraform files and not relying on the GET API response.
+	currentState.Access = mapAccess(state)
+
+	// Set state to fully populated data
+	diags = resp.State.Set(ctx, currentState)
+
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Delete deletes the database credential.
 func (r *DatabaseCredential) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// todo in AV-62166
+	// Retrieve values from state
+	var state providerschema.DatabaseCredential
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	dbId, clusterId, projectId, organizationId, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Database Credentials in Capella",
+			"Could not read Capella database credential with ID "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	_, err = r.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", r.HostURL, organizationId, projectId, clusterId, dbId),
+		http.MethodDelete,
+		nil,
+		r.Token,
+		nil,
+	)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		if err.HttpStatusCode != 404 {
+			resp.Diagnostics.AddError(
+				"Error Deleting the Database Credential",
+				"Could not delete Database Credential associated with cluster "+clusterId+": "+err.CompleteError(),
+			)
+			return
+		}
+	default:
+		resp.Diagnostics.AddError(
+			"Error Deleting Database Credential",
+			"Could not delete Database Credential associated with cluster "+clusterId+": "+err.Error(),
+		)
+		return
+	}
 }
 
 // ImportState imports a remote database credential that is not created by Terraform.
@@ -338,4 +437,79 @@ func handleDatabaseCredentialError(err error) (bool, error) {
 	default:
 		return false, err
 	}
+}
+
+// todo: add a unit test for this, tracking under: https://couchbasecloud.atlassian.net/browse/AV-63401
+func createAccess(input providerschema.DatabaseCredential) []api.Access {
+	var access = make([]api.Access, len(input.Access))
+
+	for i, acc := range input.Access {
+		access[i] = api.Access{Privileges: make([]string, len(acc.Privileges))}
+		for j, permission := range acc.Privileges {
+			access[i].Privileges[j] = permission.ValueString()
+		}
+		if acc.Resources != nil {
+			if acc.Resources.Buckets != nil {
+				access[i].Resources = &api.AccessibleResources{Buckets: make([]api.Bucket, len(acc.Resources.Buckets))}
+				for k, bucket := range acc.Resources.Buckets {
+					access[i].Resources.Buckets[k].Name = acc.Resources.Buckets[k].Name.ValueString()
+					if bucket.Scopes != nil {
+						access[i].Resources.Buckets[k].Scopes = make([]api.Scope, len(bucket.Scopes))
+						for s, scope := range bucket.Scopes {
+							access[i].Resources.Buckets[k].Scopes[s].Name = scope.Name.ValueString()
+							if scope.Collections != nil {
+								access[i].Resources.Buckets[k].Scopes[s].Collections = make([]string, len(scope.Collections))
+								for c, coll := range scope.Collections {
+									access[i].Resources.Buckets[k].Scopes[s].Collections[c] = coll.ValueString()
+								}
+							}
+						}
+					}
+				}
+			}
+		} else {
+			// todo: There is a bug in the PUT V4 API where we cannot pass empty buckets list as it leads to a nil pointer exception.
+			// to workaround this bug, I have temporarily added a fix where we pass an empty list of buckets if the terraform input field doesn't contain any buckets.
+			// fix for the V4 API bug will come as part of https://couchbasecloud.atlassian.net/browse/AV-63388
+
+			access[i].Resources = &api.AccessibleResources{Buckets: make([]api.Bucket, 0)}
+		}
+	}
+
+	return access
+}
+
+// mapAccess needs a 1:1 mapping when we store the output as the refreshed state.
+// todo: add a unit test, tracking under: https://couchbasecloud.atlassian.net/browse/AV-63401
+func mapAccess(plan providerschema.DatabaseCredential) []providerschema.Access {
+	var access = make([]providerschema.Access, len(plan.Access))
+
+	for i, acc := range plan.Access {
+		access[i] = providerschema.Access{Privileges: make([]types.String, len(acc.Privileges))}
+		for j, permission := range acc.Privileges {
+			access[i].Privileges[j] = permission
+		}
+		if acc.Resources != nil {
+			if acc.Resources.Buckets != nil {
+				access[i].Resources = &providerschema.Resources{Buckets: make([]providerschema.BucketResource, len(acc.Resources.Buckets))}
+				for k, bucket := range acc.Resources.Buckets {
+					access[i].Resources.Buckets[k].Name = acc.Resources.Buckets[k].Name
+					if bucket.Scopes != nil {
+						access[i].Resources.Buckets[k].Scopes = make([]providerschema.Scope, len(bucket.Scopes))
+						for s, scope := range bucket.Scopes {
+							access[i].Resources.Buckets[k].Scopes[s].Name = scope.Name
+							if scope.Collections != nil {
+								access[i].Resources.Buckets[k].Scopes[s].Collections = make([]types.String, len(scope.Collections))
+								for c, coll := range scope.Collections {
+									access[i].Resources.Buckets[k].Scopes[s].Collections[c] = coll
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return access
 }

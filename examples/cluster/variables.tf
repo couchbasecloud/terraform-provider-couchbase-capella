@@ -1,5 +1,4 @@
 variable "host" {
-  default     = "https://cloudapi.dev.nonprod-project-avengers.com"
   description = "The Host URL of Couchbase Cloud."
 }
 
