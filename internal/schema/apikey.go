@@ -219,7 +219,7 @@ type ApiKeyData struct {
 	// OrganizationId is the organizationId of the capella.
 	OrganizationId types.String `tfsdk:"organization_id"`
 
-	// AllowedCIDRs is the list of inbound CIDRs for the API key.
+	// AllowedCIDRs represents the list of inbound CIDRs for the API key.
 	// The system making a request must come from one of the allowed CIDRs.
 	AllowedCIDRs types.List   `tfsdk:"allowed_cidrs"`
 	Audit        types.Object `tfsdk:"audit"`
