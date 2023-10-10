@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"terraform-provider-capella/internal/api"
+	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -281,13 +282,13 @@ func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId,
 		nil,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("error executing request: %s", err)
+		return nil, fmt.Errorf("%s: %v", errors.ErrConstructingRequest, err)
 	}
 
 	allowListResp := api.GetAllowListResponse{}
 	err = json.Unmarshal(response.Body, &allowListResp)
 	if err != nil {
-		return nil, fmt.Errorf("error unmarshalling response: %s", err)
+		return nil, fmt.Errorf("%s: %v", errors.ErrUnmarshallingResponse, err)
 	}
 	return &allowListResp, nil
 }

@@ -143,7 +143,7 @@ func (u *User) Validate() (map[string]string, error) {
 
 	err := u.checkEmpty(resourceIDs)
 	if err != nil {
-		return nil, fmt.Errorf("resource import unsuccessful: %s", err)
+		return nil, fmt.Errorf("%s: %w", errors.ErrUnableToImportResource, err)
 	}
 
 	return resourceIDs, nil

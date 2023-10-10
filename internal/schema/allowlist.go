@@ -94,7 +94,7 @@ func (a *AllowList) Validate() (map[string]string, error) {
 
 	err := a.checkEmpty(resourceIDs)
 	if err != nil {
-		return nil, fmt.Errorf("resource import unsuccessful: %s", err)
+		return nil, fmt.Errorf("%s: %v", errors.ErrUnableToImportResource, err)
 	}
 
 	return resourceIDs, nil
