@@ -8,11 +8,8 @@ var (
 	ErrUserIdCannotBeEmpty = errors.New("user ID cannot be empty, please contact Couchbase Capella Support")
 	ErrUserIdMissing       = errors.New("user ID is missing or was passed incorrectly, please check provider documentation for syntax")
 
-	ErrApiKeyIdCannotBeEmpty       = errors.New("api key ID cannot be empty, please contact Couchbase Capella Support")
-	ErrApiKeyIdMissing             = errors.New("api key ID is missing or was passed incorrectly, please check provider documentation for syntax")
-
-	ErrAllowListIdCannotBeEmpty    = errors.New("allowlist ID cannot be empty, please contact Couchbase Capella Support")
-	ErrAllowListIdMissing          = errors.New("allowList ID is missing or was passed incorrectly, please check provider documentation for syntax")
+	ErrAllowListIdCannotBeEmpty = errors.New("allowlist ID cannot be empty, please contact Couchbase Capella Support")
+	ErrAllowListIdMissing       = errors.New("allowList ID is missing or was passed incorrectly, please check provider documentation for syntax")
 
 	ErrClusterIdCannotBeEmpty = errors.New("cluster ID cannot be empty, please contact Couchbase Capella Support")
 	ErrClusterIdMissing       = errors.New("cluster ID is missing or was passed incorrectly, please check provider documentation for syntax")
@@ -25,4 +22,7 @@ var (
 
 	ErrDatabaseCredentialIdCannotBeEmpty = errors.New("database credential ID cannot be empty, please contact Couchbase Capella Support")
 	ErrDatabaseCredentialIdMissing       = errors.New("database credential ID is missing or was passed incorrectly, please check provider documentation for syntax")
+
+	ErrApiKeyIdCannotBeEmpty = errors.New("api key ID cannot be empty, please contact Couchbase Capella Support")
+	ErrApiKeyIdMissing       = errors.New("api key ID is missing or was passed incorrectly, please check provider documentation for syntax")
 )
