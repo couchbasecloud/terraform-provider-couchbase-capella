@@ -11,12 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-const (
-	OrganizationId = "organizationId"
-	ProjectId      = "projectId"
-	ClusterId      = "clusterId"
-)
-
 // Availability defines the type of Availability Zone configuration for a cluster resource.
 // single type means the nodes in the cluster will all be deployed in a single availability
 // zone in the cloud region. multi type means the nodes in the cluster will all be deployed

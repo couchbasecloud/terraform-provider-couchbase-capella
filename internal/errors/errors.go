@@ -79,4 +79,9 @@ var (
 
 	// ErrUnableToReadCapellaUser is returned when the provider failed to read a requested Capella user
 	ErrUnableToReadCapellaUser = errors.New("could not read Capella user, please contact Couchbase Capella Support")
+
+	// ErrApiKeyIdCannotBeEmpty is returned when an ApiKeyId was required for a request but was not included.
+	ErrApiKeyIdCannotBeEmpty = errors.New("api key ID cannot be empty, please contact Couchbase Capella Support")
+	// ErrApiKeyIdMissing is returned when an expected ErrApiKeyIdMissing was not found after an import.
+	ErrApiKeyIdMissing = errors.New("api key ID is missing or was passed incorrectly, please check provider documentation for syntax")
 )
