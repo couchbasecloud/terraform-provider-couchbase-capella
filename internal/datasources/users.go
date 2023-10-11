@@ -66,16 +66,7 @@ func (d *Users) Schema(_ context.Context, _ datasource.SchemaRequest, resp *data
 								},
 							},
 						},
-						"audit": schema.SingleNestedAttribute{
-							Computed: true,
-							Attributes: map[string]schema.Attribute{
-								"created_at":  computedStringAttribute(),
-								"created_by":  computedStringAttribute(),
-								"modified_at": computedStringAttribute(),
-								"modified_by": computedStringAttribute(),
-								"version":     computedStringAttribute(),
-							},
-						},
+						"audit": computedAuditAttribute(),
 					},
 				},
 			},
