@@ -8,7 +8,7 @@ func UserSchema() schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"id":                   stringAttribute(computed, requiresReplace),
-			"name":                 stringAttribute(computed, requiresReplace),
+			"name":                 stringAttribute(optional, requiresReplace),
 			"status":               stringAttribute(computed, requiresReplace),
 			"inactive":             boolAttribute(computed, requiresReplace),
 			"email":                stringAttribute(required, requiresReplace),

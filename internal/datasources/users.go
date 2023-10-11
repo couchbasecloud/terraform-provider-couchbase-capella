@@ -39,7 +39,7 @@ func (d *Users) Metadata(_ context.Context, req datasource.MetadataRequest, resp
 func (d *Users) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"organization_id": computedStringAttribute(),
+			"organization_id": requiredStringAttribute(),
 			"data": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
