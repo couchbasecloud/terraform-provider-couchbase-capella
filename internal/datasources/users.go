@@ -39,34 +39,34 @@ func (d *Users) Metadata(_ context.Context, req datasource.MetadataRequest, resp
 func (d *Users) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"organization_id": requiredStringAttribute(),
+			"organization_id": requiredStringAttribute,
 			"data": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"id":                   computedStringAttribute(),
-						"name":                 computedStringAttribute(),
-						"status":               computedStringAttribute(),
-						"inactive":             computedBoolAttribute(),
-						"email":                computedStringAttribute(),
-						"organization_id":      computedStringAttribute(),
-						"organization_roles":   computedListAttribute(),
-						"last_login":           computedStringAttribute(),
-						"region":               computedStringAttribute(),
-						"time_zone":            computedStringAttribute(),
-						"enable_notifications": computedBoolAttribute(),
-						"expires_at":           computedStringAttribute(),
+						"id":                   computedStringAttribute,
+						"name":                 computedStringAttribute,
+						"status":               computedStringAttribute,
+						"inactive":             computedBoolAttribute,
+						"email":                computedStringAttribute,
+						"organization_id":      computedStringAttribute,
+						"organization_roles":   computedListAttribute,
+						"last_login":           computedStringAttribute,
+						"region":               computedStringAttribute,
+						"time_zone":            computedStringAttribute,
+						"enable_notifications": computedBoolAttribute,
+						"expires_at":           computedStringAttribute,
 						"resources": schema.ListNestedAttribute{
 							Required: true,
 							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
-									"type":  computedStringAttribute(),
-									"id":    computedStringAttribute(),
-									"roles": computedListAttribute(),
+									"type":  computedStringAttribute,
+									"id":    computedStringAttribute,
+									"roles": computedListAttribute,
 								},
 							},
 						},
-						"audit": computedAuditAttribute(),
+						"audit": computedAuditAttribute,
 					},
 				},
 			},

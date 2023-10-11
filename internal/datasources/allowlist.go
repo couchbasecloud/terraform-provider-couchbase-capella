@@ -40,21 +40,21 @@ func (d *AllowList) Metadata(_ context.Context, req datasource.MetadataRequest, 
 func (d *AllowList) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"organization_id": requiredStringAttribute(),
-			"project_id":      requiredStringAttribute(),
-			"cluster_id":      requiredStringAttribute(),
+			"organization_id": requiredStringAttribute,
+			"project_id":      requiredStringAttribute,
+			"cluster_id":      requiredStringAttribute,
 			"data": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"id":              computedStringAttribute(),
-						"organization_id": computedStringAttribute(),
-						"project_id":      computedStringAttribute(),
-						"cluster_id":      computedStringAttribute(),
-						"cidr":            computedStringAttribute(),
-						"comment":         computedStringAttribute(),
-						"expires_at":      computedStringAttribute(),
-						"audit":           computedAuditAttribute(),
+						"id":              computedStringAttribute,
+						"organization_id": computedStringAttribute,
+						"project_id":      computedStringAttribute,
+						"cluster_id":      computedStringAttribute,
+						"cidr":            computedStringAttribute,
+						"comment":         computedStringAttribute,
+						"expires_at":      computedStringAttribute,
+						"audit":           computedAuditAttribute,
 					},
 				},
 			},

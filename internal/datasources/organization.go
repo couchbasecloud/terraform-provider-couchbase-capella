@@ -37,16 +37,16 @@ func (o *Organization) Metadata(_ context.Context, req datasource.MetadataReques
 func (o *Organization) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"organization_id": requiredStringAttribute(),
-			"name":            computedStringAttribute(),
-			"description":     computedStringAttribute(),
+			"organization_id": requiredStringAttribute,
+			"name":            computedStringAttribute,
+			"description":     computedStringAttribute,
 			"preferences": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"session_duration": computedInt64Attribute(),
+					"session_duration": computedInt64Attribute,
 				},
 			},
-			"audit": computedAuditAttribute(),
+			"audit": computedAuditAttribute,
 		},
 	}
 }

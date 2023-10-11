@@ -7,29 +7,29 @@ import (
 func ClusterSchema() schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"organization_id": requiredStringAttribute(),
-			"project_id":      requiredStringAttribute(),
+			"organization_id": requiredStringAttribute,
+			"project_id":      requiredStringAttribute,
 			"data": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"id":              computedStringAttribute(),
-						"organization_id": computedStringAttribute(),
-						"project_id":      computedStringAttribute(),
-						"name":            computedStringAttribute(),
-						"description":     computedStringAttribute(),
+						"id":              computedStringAttribute,
+						"organization_id": computedStringAttribute,
+						"project_id":      computedStringAttribute,
+						"name":            computedStringAttribute,
+						"description":     computedStringAttribute,
 						"cloud_provider": schema.SingleNestedAttribute{
 							Computed: true,
 							Attributes: map[string]schema.Attribute{
-								"type":   computedStringAttribute(),
-								"region": computedStringAttribute(),
-								"cidr":   computedStringAttribute(),
+								"type":   computedStringAttribute,
+								"region": computedStringAttribute,
+								"cidr":   computedStringAttribute,
 							},
 						},
 						"couchbase_server": schema.SingleNestedAttribute{
 							Computed: true,
 							Attributes: map[string]schema.Attribute{
-								"version": computedStringAttribute(),
+								"version": computedStringAttribute,
 							},
 						},
 						"service_groups": schema.ListNestedAttribute{
@@ -42,41 +42,41 @@ func ClusterSchema() schema.Schema {
 											"compute": schema.SingleNestedAttribute{
 												Computed: true,
 												Attributes: map[string]schema.Attribute{
-													"cpu": computedInt64Attribute(),
-													"ram": computedInt64Attribute(),
+													"cpu": computedInt64Attribute,
+													"ram": computedInt64Attribute,
 												},
 											},
 											"disk": schema.SingleNestedAttribute{
 												Computed: true,
 												Attributes: map[string]schema.Attribute{
-													"type":    computedStringAttribute(),
-													"storage": computedInt64Attribute(),
-													"iops":    computedInt64Attribute(),
+													"type":    computedStringAttribute,
+													"storage": computedInt64Attribute,
+													"iops":    computedInt64Attribute,
 												},
 											},
 										},
 									},
-									"num_of_nodes": computedInt64Attribute(),
-									"services":     computedListAttribute(),
+									"num_of_nodes": computedInt64Attribute,
+									"services":     computedListAttribute,
 								},
 							},
 						},
 						"availability": schema.SingleNestedAttribute{
 							Computed: true,
 							Attributes: map[string]schema.Attribute{
-								"type": computedStringAttribute(),
+								"type": computedStringAttribute,
 							},
 						},
 						"support": schema.SingleNestedAttribute{
 							Computed: true,
 							Attributes: map[string]schema.Attribute{
-								"plan":     computedStringAttribute(),
-								"timezone": computedStringAttribute(),
+								"plan":     computedStringAttribute,
+								"timezone": computedStringAttribute,
 							},
 						},
-						"current_state":  computedStringAttribute(),
-						"app_service_id": computedStringAttribute(),
-						"audit":          computedAuditAttribute(),
+						"current_state":  computedStringAttribute,
+						"app_service_id": computedStringAttribute,
+						"audit":          computedAuditAttribute,
 					},
 				},
 			},

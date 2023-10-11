@@ -39,73 +39,29 @@ func (d *ApiKey) Metadata(_ context.Context, req datasource.MetadataRequest, res
 func (d *ApiKey) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required: true,
-			},
+			"organization_id": requiredStringAttribute,
 			"data": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"id": schema.StringAttribute{
-							Computed: true,
-						},
-						"organization_id": schema.StringAttribute{
-							Computed: true,
-						},
-						"name": schema.StringAttribute{
-							Computed: true,
-						},
-						"description": schema.StringAttribute{
-							Computed: true,
-						},
-						"expiry": schema.Float64Attribute{
-							Computed: true,
-						},
-						"allowed_cidrs": schema.ListAttribute{
-							Computed:    true,
-							ElementType: types.StringType,
-						},
-						"organization_roles": schema.ListAttribute{
-							Computed:    true,
-							ElementType: types.StringType,
-						},
+						"id":                 computedStringAttribute,
+						"organization_id":    computedStringAttribute,
+						"name":               computedStringAttribute,
+						"description":        computedStringAttribute,
+						"expiry":             computedFloat64Attribute,
+						"allowed_cidrs":      computedListAttribute,
+						"organization_roles": computedListAttribute,
 						"resources": schema.ListNestedAttribute{
 							Computed: true,
 							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
-									"id": schema.StringAttribute{
-										Computed: true,
-									},
-									"roles": schema.ListAttribute{
-										Computed:    true,
-										ElementType: types.StringType,
-									},
-									"type": schema.StringAttribute{
-										Computed: true,
-									},
+									"id":    computedStringAttribute,
+									"roles": computedListAttribute,
+									"type":  computedStringAttribute,
 								},
 							},
 						},
-						"audit": schema.SingleNestedAttribute{
-							Computed: true,
-							Attributes: map[string]schema.Attribute{
-								"created_at": schema.StringAttribute{
-									Computed: true,
-								},
-								"created_by": schema.StringAttribute{
-									Computed: true,
-								},
-								"modified_at": schema.StringAttribute{
-									Computed: true,
-								},
-								"modified_by": schema.StringAttribute{
-									Computed: true,
-								},
-								"version": schema.Int64Attribute{
-									Computed: true,
-								},
-							},
-						},
+						"audit": computedAuditAttribute,
 					},
 				},
 			},
