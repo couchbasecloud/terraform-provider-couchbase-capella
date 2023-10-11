@@ -11,7 +11,7 @@ type CreateBucketRequest struct {
 	// StorageBackend represents the storage engine used for the bucket.
 	StorageBackend string `json:"storageBackend"`
 
-	// MemoryAllocationInMb The amount of memory to allocate for the bucket memory in MiB
+	// MemoryAllocationInMb is the amount of memory to allocate for the bucket memory in MiB
 	MemoryAllocationInMb int `json:"memoryAllocationInMb"`
 
 	BucketConflictResolution string `json:"bucketConflictResolution"`
@@ -47,7 +47,7 @@ type GetBucketResponse struct {
 	// StorageBackend represents the storage engine used for the bucket.
 	StorageBackend string `json:"storageBackend"`
 
-	// MemoryAllocationInMb The amount of memory to allocate for the bucket memory in MiB
+	// MemoryAllocationInMb is the amount of memory to allocate for the bucket memory in MiB
 	MemoryAllocationInMb int `json:"memoryAllocationInMb"`
 
 	BucketConflictResolution string `json:"bucketConflictResolution"`
@@ -67,7 +67,7 @@ type GetBucketResponse struct {
 
 // PutBucketRequest defines model for PutBucketRequest.
 type PutBucketRequest struct {
-	// MemoryAllocationInMb The amount of memory to allocate for the bucket memory in MiB
+	// MemoryAllocationInMb is the amount of memory to allocate for the bucket memory in MiB
 	MemoryAllocationInMb int `json:"memoryAllocationInMb"`
 
 	DurabilityLevel string `json:"durabilityLevel"`

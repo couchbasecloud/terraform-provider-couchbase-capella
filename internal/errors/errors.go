@@ -3,40 +3,48 @@ package errors
 import "errors"
 
 var (
-	//ErIdMissing is returned when an expected Id was not found after an import.
+	// ErrIdMissing is returned when an expected Id was not found after an import.
 	ErrIdMissing = errors.New("some ID is missing or was passed incorrectly, please check provider documentation for syntax")
 
 	// ErrUserIdCannotBeEmpty is returned when a User Id was required for a request but was not included.
 	ErrUserIdCannotBeEmpty = errors.New("user ID cannot be empty, please contact Couchbase Capella Support")
+
 	// ErrUserIdMissing is returned when an expected User Id was not found after an import.
 	ErrUserIdMissing = errors.New("user ID is missing or was passed incorrectly, please check provider documentation for syntax")
 
 	// ErrAllowListIdCannotBeEmpty is returned when an AllowList Id was required for a request but was not included.
 	ErrAllowListIdCannotBeEmpty = errors.New("allowlist ID cannot be empty, please contact Couchbase Capella Support")
+
 	// ErrAllowListIdMissing is returned when an expected AllowList Id was not found after an import.
 	ErrAllowListIdMissing = errors.New("allowList ID is missing or was passed incorrectly, please check provider documentation for syntax")
 
 	// ErrClusterIdCannotBeEmpty is returned when a Cluster Id was required for a request but was not included.
 	ErrClusterIdCannotBeEmpty = errors.New("cluster ID cannot be empty, please contact Couchbase Capella Support")
+
 	// ErrClusterIdMissing is returned when an expected Cluster Id was not found after an import.
 	ErrClusterIdMissing = errors.New("cluster ID is missing or was passed incorrectly, please check provider documentation for syntax")
 
 	// ErrProjectIdCannotBeEmpty is returned when a Project Id was required for a request but was not included.
 	ErrProjectIdCannotBeEmpty = errors.New("project ID cannot be empty, please contact Couchbase Capella Support")
+
 	// ErrProjectIdMissing is returned when an expected Project Id was not found after an import.
 	ErrProjectIdMissing = errors.New("project ID is missing or was passed incorrectly, please check provider documentation for syntax")
+
 	// ErrUnableToUpdateProjectId is returned when an update to a projectId was unsuccessful.
 	ErrUnableToUpdateProjectId = errors.New("unable to update projectId")
 
 	// ErrOrganizationIdCannotBeEmpty is returned when an Organization Id was required for a request but was not included.
 	ErrOrganizationIdCannotBeEmpty = errors.New("organization ID cannot be empty, please contact Couchbase Capella Support")
+
 	// ErrOrganizationIdMissing is returned when an expected Organization Id was not found after an import.
 	ErrOrganizationIdMissing = errors.New("organization ID is missing or was passed incorrectly, please check provider documentation for syntax")
+
 	// ErrUnableToUpdateOrganizationId is returned when an update to a projectId was unsuccessful.
 	ErrUnableToUpdateOrganizationId = errors.New("unable to update organizationId")
 
 	// ErrDatabaseCredentialIdCannotBeEmpty is returned when a Database Credential Id was required for a request but was not included.
 	ErrDatabaseCredentialIdCannotBeEmpty = errors.New("database credential ID cannot be empty, please contact Couchbase Capella Support")
+
 	// ErrDatabaseCredentialIdMissing is returned when an expected DatabaseCredential Id was not found after an import.
 	ErrDatabaseCredentialIdMissing = errors.New("database credential ID is missing or was passed incorrectly, please check provider documentation for syntax")
 
@@ -58,7 +66,7 @@ var (
 	// ErrMarshallingPayload is returned when a payload has failed to marshal into a request body.
 	ErrMarshallingPayload = errors.New("failed to marshal payload")
 
-	// ErrUnmarshallingPayload is returned when a HTTP response failrf to unmarshal
+	// ErrUnmarshallingResponse is returned when a HTTP response failrf to unmarshal
 	ErrUnmarshallingResponse = errors.New("failed to unmarshal response")
 
 	// ErrConstructingRequest is returned when a HTTP.NewRequest has failed.
@@ -82,9 +90,10 @@ var (
 
 	// ErrApiKeyIdCannotBeEmpty is returned when an ApiKeyId was required for a request but was not included.
 	ErrApiKeyIdCannotBeEmpty = errors.New("api key ID cannot be empty, please contact Couchbase Capella Support")
+
 	// ErrApiKeyIdMissing is returned when an expected ErrApiKeyIdMissing was not found after an import.
 	ErrApiKeyIdMissing = errors.New("api key ID is missing or was passed incorrectly, please check provider documentation for syntax")
-	ErrDatabaseCredentialIdMissing       = errors.New("database credential ID is missing or was passed incorrectly, please check provider documentation for syntax")
 
+	// ErrBucketIdCannotBeEmpty is returned when an ApiKeyId was required for a request but was not included.
 	ErrBucketIdCannotBeEmpty = errors.New("bucket ID cannot be empty, please contact Couchbase Capella Support")
 )
