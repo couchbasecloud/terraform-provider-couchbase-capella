@@ -71,7 +71,7 @@ func (d *AllowList) Read(ctx context.Context, req datasource.ReadRequest, resp *
 		return
 	}
 
-	// Validate state is not emptygit
+	// Validate state is not empty
 	err := d.validate(state)
 	if err != nil {
 		resp.Diagnostics.AddError(
