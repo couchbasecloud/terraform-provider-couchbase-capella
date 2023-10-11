@@ -4,7 +4,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 func ClusterSchema() schema.Schema {
@@ -16,40 +15,23 @@ func ClusterSchema() schema.Schema {
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"organization_id": schema.StringAttribute{
-				Required: true,
-			},
-			"project_id": schema.StringAttribute{
-				Required: true,
-			},
-			"name": schema.StringAttribute{
-				Required: true,
-			},
-			"description": schema.StringAttribute{
-				Optional: true,
-			},
+			"organization_id": stringAttribute(required),
+			"project_id":      stringAttribute(required),
+			"name":            stringAttribute(required),
+			"description":     stringAttribute(optional),
 			"cloud_provider": schema.SingleNestedAttribute{
 				Required: true,
 				Attributes: map[string]schema.Attribute{
-					"type": schema.StringAttribute{
-						Required: true,
-					},
-					"region": schema.StringAttribute{
-						Required: true,
-					},
-					"cidr": schema.StringAttribute{
-						Required: true,
-					},
+					"type":   stringAttribute(required),
+					"region": stringAttribute(required),
+					"cidr":   stringAttribute(required),
 				},
 			},
 			"couchbase_server": schema.SingleNestedAttribute{
 				Optional: true,
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"version": schema.StringAttribute{
-						Optional: true,
-						Computed: true,
-					},
+					"version": stringAttribute(optional, computed),
 				},
 			},
 			"service_groups": schema.ListNestedAttribute{
@@ -62,94 +44,43 @@ func ClusterSchema() schema.Schema {
 								"compute": schema.SingleNestedAttribute{
 									Required: true,
 									Attributes: map[string]schema.Attribute{
-										"cpu": schema.Int64Attribute{
-											Required: true,
-										},
-										"ram": schema.Int64Attribute{
-											Required: true,
-										},
+										"cpu": int64Attribute(required),
+										"ram": int64Attribute(required),
 									},
 								},
 								"disk": schema.SingleNestedAttribute{
 									Required: true,
 									Attributes: map[string]schema.Attribute{
-										"type": schema.StringAttribute{
-											Required: true,
-										},
-										"storage": schema.Int64Attribute{
-											Optional: true,
-											Computed: true,
-										},
-										"iops": schema.Int64Attribute{
-											Optional: true,
-											Computed: true,
-										},
+										"type":    stringAttribute(required),
+										"storage": int64Attribute(optional, computed),
+										"iops":    int64Attribute(optional, computed),
 									},
 								},
 							},
 						},
-						"num_of_nodes": schema.Int64Attribute{
-							Required: true,
-						},
-						"services": schema.ListAttribute{
-							ElementType: types.StringType,
-							Required:    true,
-						},
+						"num_of_nodes": int64Attribute(required),
+						"services":     stringListAttribute(required),
 					},
 				},
 			},
 			"availability": schema.SingleNestedAttribute{
 				Required: true,
 				Attributes: map[string]schema.Attribute{
-					"type": schema.StringAttribute{
-						Required: true,
-					},
+					"type": stringAttribute(required),
 				},
 			},
 			"support": schema.SingleNestedAttribute{
 				Required: true,
 				Attributes: map[string]schema.Attribute{
-					"plan": schema.StringAttribute{
-						Required: true,
-					},
-					"timezone": schema.StringAttribute{
-						Required: true,
-					},
+					"plan":     stringAttribute(required),
+					"timezone": stringAttribute(required),
 				},
 			},
-			"current_state": schema.StringAttribute{
-				Computed: true,
-			},
-			"app_service_id": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-			},
-			"audit": schema.SingleNestedAttribute{
-				Computed: true,
-				Attributes: map[string]schema.Attribute{
-					"created_at": schema.StringAttribute{
-						Computed: true,
-					},
-					"created_by": schema.StringAttribute{
-						Computed: true,
-					},
-					"modified_at": schema.StringAttribute{
-						Computed: true,
-					},
-					"modified_by": schema.StringAttribute{
-						Computed: true,
-					},
-					"version": schema.Int64Attribute{
-						Computed: true,
-					},
-				},
-			},
-			"if_match": schema.StringAttribute{
-				Optional: true,
-			},
-			"etag": schema.StringAttribute{
-				Computed: true,
-			},
+			"current_state":  stringAttribute(computed),
+			"app_service_id": stringAttribute(optional, computed),
+			"audit":          computedAuditAttribute(),
+			"if_match":       stringAttribute(optional),
+			"etag":           stringAttribute(computed),
 		},
 	}
 }

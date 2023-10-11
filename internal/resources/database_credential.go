@@ -450,7 +450,7 @@ func createAccess(input providerschema.DatabaseCredential) []api.Access {
 		}
 		if acc.Resources != nil {
 			if acc.Resources.Buckets != nil {
-				access[i].Resources = &api.Resources{Buckets: make([]api.Bucket, len(acc.Resources.Buckets))}
+				access[i].Resources = &api.AccessibleResources{Buckets: make([]api.Bucket, len(acc.Resources.Buckets))}
 				for k, bucket := range acc.Resources.Buckets {
 					access[i].Resources.Buckets[k].Name = acc.Resources.Buckets[k].Name.ValueString()
 					if bucket.Scopes != nil {
@@ -472,7 +472,7 @@ func createAccess(input providerschema.DatabaseCredential) []api.Access {
 			// to workaround this bug, I have temporarily added a fix where we pass an empty list of buckets if the terraform input field doesn't contain any buckets.
 			// fix for the V4 API bug will come as part of https://couchbasecloud.atlassian.net/browse/AV-63388
 
-			access[i].Resources = &api.Resources{Buckets: make([]api.Bucket, 0)}
+			access[i].Resources = &api.AccessibleResources{Buckets: make([]api.Bucket, 0)}
 		}
 	}
 

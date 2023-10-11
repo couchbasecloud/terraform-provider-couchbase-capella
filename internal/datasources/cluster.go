@@ -8,6 +8,7 @@ import (
 
 	"terraform-provider-capella/internal/api"
 	clusterapi "terraform-provider-capella/internal/api/cluster"
+	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -111,7 +112,7 @@ func (d *Cluster) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 		if diags.HasError() {
 			resp.Diagnostics.AddError(
 				"Error Reading Capella Clusters",
-				fmt.Sprintf("Could not read clusters in organization %s and project %s, unexpected error: %s", organizationId, projectId, fmt.Errorf("error while audit conversion")),
+				fmt.Sprintf("Could not read clusters in organization %s and project %s, unexpected error: %s", organizationId, projectId, errors.ErrUnableToConvertAuditData),
 			)
 		}
 

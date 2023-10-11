@@ -20,18 +20,18 @@ variable "cluster_id" {
 }
 
 variable "bucket" {
-    description = "Bucket configuration details useful for creation"
+  description = "Bucket configuration details useful for creation"
 
-    type = object({
-        name = string
-        type = optional(string)
-        storage_backend = optional(string)
-        memory_allocationinmb = optional(number)
-        conflict_resolution = optional(string)
-        durability_level = optional(string)
-        replicas = optional(number)
-        flush = optional(bool)
-        ttl = optional(number)
-        eviction_policy = optional(string)
-    })
+  type = object({
+    name                  = string
+    type                  = optional(string)
+    storage_backend       = optional(string)
+    memory_allocationinmb = optional(number)
+    conflict_resolution   = optional(string)
+    durability_level      = optional(string)
+    replicas              = optional(number)
+    flush                 = optional(bool)
+    ttl                   = optional(number)
+    eviction_policy       = optional(string)
+  })
 }

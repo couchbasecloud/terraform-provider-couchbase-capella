@@ -32,25 +32,17 @@ func NewCertificate() datasource.DataSource {
 
 // Metadata returns the certificates data source type name.
 func (c *Certificate) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_certificate"
+	resp.TypeName = req.ProviderTypeName + "_certificates"
 }
 
 // Schema defines the schema for the allowlist data source.
 func (c *Certificate) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required: true,
-			},
-			"project_id": schema.StringAttribute{
-				Required: true,
-			},
-			"cluster_id": schema.StringAttribute{
-				Required: true,
-			},
-			"certificate": schema.StringAttribute{
-				Computed: true,
-			},
+			"organization_id": requiredStringAttribute,
+			"project_id":      requiredStringAttribute,
+			"cluster_id":      requiredStringAttribute,
+			"certificate":     computedStringAttribute,
 		},
 	}
 }

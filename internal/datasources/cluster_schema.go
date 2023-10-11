@@ -2,57 +2,34 @@ package datasources
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 func ClusterSchema() schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required: true,
-			},
-			"project_id": schema.StringAttribute{
-				Required: true,
-			},
+			"organization_id": requiredStringAttribute,
+			"project_id":      requiredStringAttribute,
 			"data": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"id": schema.StringAttribute{
-							Computed: true,
-						},
-						"organization_id": schema.StringAttribute{
-							Computed: true,
-						},
-						"project_id": schema.StringAttribute{
-							Computed: true,
-						},
-						"name": schema.StringAttribute{
-							Computed: true,
-						},
-						"description": schema.StringAttribute{
-							Computed: true,
-						},
+						"id":              computedStringAttribute,
+						"organization_id": computedStringAttribute,
+						"project_id":      computedStringAttribute,
+						"name":            computedStringAttribute,
+						"description":     computedStringAttribute,
 						"cloud_provider": schema.SingleNestedAttribute{
 							Computed: true,
 							Attributes: map[string]schema.Attribute{
-								"type": schema.StringAttribute{
-									Computed: true,
-								},
-								"region": schema.StringAttribute{
-									Computed: true,
-								},
-								"cidr": schema.StringAttribute{
-									Computed: true,
-								},
+								"type":   computedStringAttribute,
+								"region": computedStringAttribute,
+								"cidr":   computedStringAttribute,
 							},
 						},
 						"couchbase_server": schema.SingleNestedAttribute{
 							Computed: true,
 							Attributes: map[string]schema.Attribute{
-								"version": schema.StringAttribute{
-									Computed: true,
-								},
+								"version": computedStringAttribute,
 							},
 						},
 						"service_groups": schema.ListNestedAttribute{
@@ -65,85 +42,41 @@ func ClusterSchema() schema.Schema {
 											"compute": schema.SingleNestedAttribute{
 												Computed: true,
 												Attributes: map[string]schema.Attribute{
-													"cpu": schema.Int64Attribute{
-														Computed: true,
-													},
-													"ram": schema.Int64Attribute{
-														Computed: true,
-													},
+													"cpu": computedInt64Attribute,
+													"ram": computedInt64Attribute,
 												},
 											},
 											"disk": schema.SingleNestedAttribute{
 												Computed: true,
 												Attributes: map[string]schema.Attribute{
-													"type": schema.StringAttribute{
-														Computed: true,
-													},
-													"storage": schema.Int64Attribute{
-														Computed: true,
-													},
-													"iops": schema.Int64Attribute{
-														Computed: true,
-													},
+													"type":    computedStringAttribute,
+													"storage": computedInt64Attribute,
+													"iops":    computedInt64Attribute,
 												},
 											},
 										},
 									},
-									"num_of_nodes": schema.Int64Attribute{
-										Computed: true,
-									},
-									"services": schema.ListAttribute{
-										ElementType: types.StringType,
-										Computed:    true,
-									},
+									"num_of_nodes": computedInt64Attribute,
+									"services":     computedListAttribute,
 								},
 							},
 						},
 						"availability": schema.SingleNestedAttribute{
 							Computed: true,
 							Attributes: map[string]schema.Attribute{
-								"type": schema.StringAttribute{
-									Computed: true,
-								},
+								"type": computedStringAttribute,
 							},
 						},
 						"support": schema.SingleNestedAttribute{
 							Computed: true,
 							Attributes: map[string]schema.Attribute{
-								"plan": schema.StringAttribute{
-									Computed: true,
-								},
-								"timezone": schema.StringAttribute{
-									Computed: true,
-								},
+								"plan":     computedStringAttribute,
+								"timezone": computedStringAttribute,
 							},
 						},
-						"current_state": schema.StringAttribute{
-							Computed: true,
-						},
-						"app_service_id": schema.StringAttribute{
-							Computed: true,
-						},
-						"audit": schema.SingleNestedAttribute{
-							Computed: true,
-							Attributes: map[string]schema.Attribute{
-								"created_at": schema.StringAttribute{
-									Computed: true,
-								},
-								"created_by": schema.StringAttribute{
-									Computed: true,
-								},
-								"modified_at": schema.StringAttribute{
-									Computed: true,
-								},
-								"modified_by": schema.StringAttribute{
-									Computed: true,
-								},
-								"version": schema.Int64Attribute{
-									Computed: true,
-								},
-							},
-						},
+						"current_state":  computedStringAttribute,
+						"app_service_id": computedStringAttribute,
+						"audit":          computedAuditAttribute,
 					},
 				},
 			},

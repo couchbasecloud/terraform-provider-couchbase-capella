@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"terraform-provider-capella/internal/api"
+	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -86,8 +87,8 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 	createUserRequest := api.CreateUserRequest{
 		Name:              plan.Name.ValueString(),
 		Email:             plan.Email.ValueString(),
-		OrganizationRoles: r.convertOrganizationRoles(plan.OrganizationRoles),
-		Resources:         r.convertResources(plan.Resources),
+		OrganizationRoles: providerschema.ConvertOrganizationRoles(plan.OrganizationRoles),
+		Resources:         providerschema.ConvertResources(plan.Resources),
 	}
 
 	// Execute request
@@ -136,13 +137,13 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 
 func (r *User) validateCreateUserRequest(plan providerschema.User) error {
 	if plan.OrganizationId.IsNull() {
-		return fmt.Errorf("organizationId cannot be empty")
+		return errors.ErrOrganizationIdCannotBeEmpty
 	}
 	if plan.Email.IsNull() {
-		return fmt.Errorf("email cannot be empty")
+		return errors.ErrEmailCannotBeEmpty
 	}
 	if plan.OrganizationRoles == nil {
-		return fmt.Errorf("organizationRoles cannot be empty")
+		return errors.ErrOrganizationRolesCannotBeEmpty
 	}
 	return nil
 }
@@ -268,39 +269,6 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 	}
 }
 
-// convertOrganizationRoles is used to convert all roles
-// in an array of basetypes.StringValue to strings.
-func (r *User) convertOrganizationRoles(organizationRoles []basetypes.StringValue) []string {
-	var convertedRoles []string
-	for _, role := range organizationRoles {
-		convertedRoles = append(convertedRoles, role.ValueString())
-	}
-	return convertedRoles
-}
-
-// convertResource is used to convert a resource object containing nested fields
-// of type basetypes.StringValue to a resource object containing nested fields of type string.
-func (r *User) convertResources(resources []providerschema.Resource) []api.Resource {
-	var convertedResources []api.Resource
-	for _, resource := range resources {
-		var convertedResource api.Resource
-		convertedResource.Id = resource.Id.ValueString()
-
-		resourceType := resource.Type.ValueString()
-		convertedResource.Type = &resourceType
-
-		// Iterate through roles belonging to the user and convert to string
-		var convertedRoles []string
-		for _, role := range resource.Roles {
-			convertedRoles = append(convertedRoles, role.ValueString())
-		}
-		convertedResource.Roles = convertedRoles
-
-		convertedResources = append(convertedResources, convertedResource)
-	}
-	return convertedResources
-}
-
 // getUser is used to retrieve an existing user
 func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api.GetUserResponse, error) {
 	response, err := r.Client.Execute(
@@ -316,13 +284,13 @@ func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api
 		nil,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("error executing request: %s", err)
+		return nil, fmt.Errorf("%s: %v", errors.ErrExecutingRequest, err)
 	}
 
 	userResp := api.GetUserResponse{}
 	err = json.Unmarshal(response.Body, &userResp)
 	if err != nil {
-		return nil, fmt.Errorf("error unmarshalling response: %s", err)
+		return nil, fmt.Errorf("%s: %v", errors.ErrUnmarshallingResponse, err)
 	}
 	return &userResp, nil
 }
@@ -336,7 +304,7 @@ func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (
 	audit := providerschema.NewCouchbaseAuditData(userResp.Audit)
 	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
 	if diags.HasError() {
-		return nil, fmt.Errorf("failed to convert audit data")
+		return nil, errors.ErrUnableToConvertAuditData
 	}
 
 	// Set optional fields - these may be left blank
@@ -352,53 +320,16 @@ func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (
 		types.StringValue(userResp.Status),
 		types.BoolValue(userResp.Inactive),
 		types.StringValue(userResp.OrganizationId.String()),
-		r.morphOrganizationRoles(*userResp.OrganizationRoles),
+		providerschema.MorphOrganizationRoles(userResp.OrganizationRoles),
 		types.StringValue(userResp.LastLogin),
 		types.StringValue(userResp.Region),
 		types.StringValue(userResp.TimeZone),
 		types.BoolValue(userResp.EnableNotifications),
 		types.StringValue(userResp.ExpiresAt),
-		r.morphResources(userResp.Resources),
+		providerschema.MorphResources(userResp.Resources),
 		auditObj,
 	)
 	return refreshedState, nil
-}
-
-// morphOrgnanizationRoles is used to convert nested organizationRoles from
-// strings to terraform type.String.
-func (r *User) morphOrganizationRoles(organizationRoles []string) []basetypes.StringValue {
-	var morphedRoles []basetypes.StringValue
-	for _, role := range organizationRoles {
-		morphedRoles = append(morphedRoles, types.StringValue(role))
-	}
-	return morphedRoles
-}
-
-// morphResources is used to covert nested resources from strings
-// to terraform types.String
-func (r *User) morphResources(resources []api.Resource) []providerschema.Resource {
-	var morphedResources []providerschema.Resource
-	for _, resource := range resources {
-		var morphedResource providerschema.Resource
-
-		morphedResource.Id = types.StringValue(resource.Id)
-
-		// Check for optional field
-		if resource.Type != nil {
-			resourceType := types.StringValue(*resource.Type)
-			morphedResource.Type = resourceType
-		}
-
-		var roles []basetypes.StringValue
-		for _, role := range resource.Roles {
-			roles = append(roles, types.StringValue(role))
-		}
-
-		morphedResource.Roles = roles
-		morphedResources = append(morphedResources, morphedResource)
-
-	}
-	return morphedResources
 }
 
 // ImportState imports a remote user that was not created by Terraform.
@@ -418,9 +349,9 @@ func handleCapellaUserError(err error) error {
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
-		return fmt.Errorf("could not read Capella User: %s", err.CompleteError())
+		return fmt.Errorf("%w: %s", errors.ErrUnableToReadCapellaUser, err.CompleteError())
 	default:
-		return fmt.Errorf("could not read Capella User: %s", err.Error())
+		return fmt.Errorf("%w: %s", errors.ErrUnableToReadCapellaUser, err.Error())
 	}
 	return nil
 }

@@ -40,63 +40,21 @@ func (d *AllowList) Metadata(_ context.Context, req datasource.MetadataRequest, 
 func (d *AllowList) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required: true,
-			},
-			"project_id": schema.StringAttribute{
-				Required: true,
-			},
-			"cluster_id": schema.StringAttribute{
-				Required: true,
-			},
+			"organization_id": requiredStringAttribute,
+			"project_id":      requiredStringAttribute,
+			"cluster_id":      requiredStringAttribute,
 			"data": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"id": schema.StringAttribute{
-							Computed: true,
-						},
-						"organization_id": schema.StringAttribute{
-							Computed: true,
-						},
-						"project_id": schema.StringAttribute{
-							Computed: true,
-						},
-						"cluster_id": schema.StringAttribute{
-							Computed: true,
-						},
-						"cidr": schema.StringAttribute{
-							Computed: true,
-						},
-						"comment": schema.StringAttribute{
-							Computed: true,
-						},
-						"expires_at": schema.StringAttribute{
-							Computed: true,
-						},
-						"audit": schema.SingleNestedAttribute{
-							Computed: true,
-							Attributes: map[string]schema.Attribute{
-								"created_at": schema.StringAttribute{
-									Computed: true,
-								},
-								"created_by": schema.StringAttribute{
-									Computed: true,
-								},
-								"modified_at": schema.StringAttribute{
-									Computed: true,
-								},
-								"modified_by": schema.StringAttribute{
-									Computed: true,
-								},
-								"version": schema.Int64Attribute{
-									Computed: true,
-								},
-							},
-						},
-						"if_match": schema.StringAttribute{
-							Optional: true,
-						},
+						"id":              computedStringAttribute,
+						"organization_id": computedStringAttribute,
+						"project_id":      computedStringAttribute,
+						"cluster_id":      computedStringAttribute,
+						"cidr":            computedStringAttribute,
+						"comment":         computedStringAttribute,
+						"expires_at":      computedStringAttribute,
+						"audit":           computedAuditAttribute,
 					},
 				},
 			},

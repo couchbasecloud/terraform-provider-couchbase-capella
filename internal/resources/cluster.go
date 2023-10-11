@@ -8,11 +8,13 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"terraform-provider-capella/internal/api"
 	clusterapi "terraform-provider-capella/internal/api/cluster"
 	providerschema "terraform-provider-capella/internal/schema"
 
+	"terraform-provider-capella/internal/errors"
+
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -489,7 +491,7 @@ func (c *Cluster) retrieveCluster(ctx context.Context, organizationId, projectId
 
 	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
 	if diags.HasError() {
-		return nil, fmt.Errorf("error while audit conversion")
+		return nil, errors.ErrUnableToConvertAuditData
 	}
 
 	refreshedState, err := providerschema.NewCluster(clusterResp, organizationId, projectId, auditObj)
@@ -644,7 +646,7 @@ func (c *Cluster) validateClusterUpdate(plan, state providerschema.Cluster) erro
 	}
 
 	if planOrganizationId != stateOrganizationId {
-		return fmt.Errorf("organizationId can't be updated")
+		return errors.ErrUnableToUpdateOrganizationId
 	}
 
 	var planProjectId, stateProjectId string
@@ -657,7 +659,7 @@ func (c *Cluster) validateClusterUpdate(plan, state providerschema.Cluster) erro
 	}
 
 	if planProjectId != stateProjectId {
-		return fmt.Errorf("projectId can't be updated")
+		return errors.ErrUnableToUpdateProjectId
 	}
 
 	var planCouchbaseServerVersion, stateCouchbaseServerVersion string
@@ -669,7 +671,7 @@ func (c *Cluster) validateClusterUpdate(plan, state providerschema.Cluster) erro
 	}
 
 	if planCouchbaseServerVersion != stateCouchbaseServerVersion {
-		return fmt.Errorf("couchbase server version can't be updated")
+		return errors.ErrUnableToUpdateServerVersion
 	}
 
 	var planAvailabilityType, stateAvailabilityType string
@@ -681,7 +683,7 @@ func (c *Cluster) validateClusterUpdate(plan, state providerschema.Cluster) erro
 	}
 
 	if planAvailabilityType != stateAvailabilityType {
-		return fmt.Errorf("availability type can't be updated")
+		return errors.ErrUnableToUpdateAvailabilityType
 	}
 
 	var planCloudProvider, stateCloudProvider providerschema.CloudProvider
@@ -693,7 +695,7 @@ func (c *Cluster) validateClusterUpdate(plan, state providerschema.Cluster) erro
 	}
 
 	if !reflect.DeepEqual(planCloudProvider, stateCloudProvider) {
-		return fmt.Errorf("cloud provider can't be updated")
+		return errors.ErrUnableToUpdateCloudProvider
 	}
 
 	return nil
