@@ -44,7 +44,7 @@ func ApiKeySchema() schema.Schema {
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id":    stringAttribute(required),
-						"roles": stringAttribute(required),
+						"roles": stringListAttribute(required),
 						"type":  stringAttribute(optional, computed),
 					},
 				},
