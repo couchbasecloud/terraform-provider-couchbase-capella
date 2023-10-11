@@ -85,3 +85,22 @@ type GetApiKeyResponse struct {
 	// [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
 	Resources Resources `json:"resources"`
 }
+
+// RotateAPIKeyRequest defines model for RotateAPIKeyRequest.
+type RotateAPIKeyRequest struct {
+	// Secret represents the secret associated with an API key. One has to follow the secret key policy, such as allowed characters and a length of 64 characters.
+	// If this field is left empty, a secret will be auto-generated.
+	Secret *string `json:"secret,omitempty"`
+}
+
+// RotateAPIKeyResponse defines model for RotateAPIKeyResponse.
+type RotateAPIKeyResponse struct {
+	// SecretKey is a confidential token that is paired with the Access key.
+	// The API key is made of an Access key and a Secret key.
+	SecretKey string `json:"secretKey"`
+}
+
+// GetApiKeysResponse defines the model for a GetApiKeysResponse.
+type GetApiKeysResponse struct {
+	Data []GetApiKeyResponse `json:"data"`
+}

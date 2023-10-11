@@ -1,9 +1,15 @@
 package resources
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 func ApiKeySchema() schema.Schema {
@@ -15,12 +21,24 @@ func ApiKeySchema() schema.Schema {
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"organization_id":    stringAttribute(required),
-			"name":               stringAttribute(required),
-			"description":        stringAttribute(optional, computed),
-			"expiry":             float64Attribute(optional, computed),
-			"allowed_cidrs":      stringListAttribute(optional, computed),
-			"organization_roles": stringListAttribute(required),
+			"organization_id": stringAttribute(required, requiresReplace),
+			"name":            stringAttribute(required, requiresReplace),
+			"description":     stringAttribute(optional, computed, requiresReplace, useStateForUnknown),
+			"expiry":          float64Attribute(optional, computed, requiresReplace, useStateForUnknown),
+			"allowed_cidrs": schema.ListAttribute{
+				Optional:    true,
+				Computed:    true,
+				ElementType: types.StringType,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+					listplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.List{
+					listvalidator.SizeAtLeast(1),
+				},
+				Default: listdefault.StaticValue(types.ListValueMust(types.StringType, []attr.Value{types.StringValue("0.0.0.0/0")})),
+			},
+			"organization_roles": stringListAttribute(required, requiresReplace),
 			"resources": schema.ListNestedAttribute{
 				Required: true,
 				NestedObject: schema.NestedAttributeObject{
@@ -30,8 +48,14 @@ func ApiKeySchema() schema.Schema {
 						"type":  stringAttribute(optional, computed),
 					},
 				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
 			},
-			"rotate": boolAttribute(optional, computed),
+			"rotate": schema.NumberAttribute{
+				Optional: true,
+				Computed: true,
+			},
 			"secret": stringAttribute(optional, computed, sensitive),
 			"token":  stringAttribute(computed, sensitive),
 			"audit":  computedAuditAttribute(),

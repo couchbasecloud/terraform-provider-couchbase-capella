@@ -3,6 +3,7 @@ package resources
 import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -10,11 +11,12 @@ import (
 )
 
 const (
-	optional        = "optional"
-	computed        = "computed"
-	required        = "required"
-	sensitive       = "sensitive"
-	requiresReplace = "requiresReplace"
+	optional           = "optional"
+	computed           = "computed"
+	required           = "required"
+	sensitive          = "sensitive"
+	requiresReplace    = "requiresReplace"
+	useStateForUnknown = "useStateForUnknown"
 )
 
 // stringAttribute is a variadic function which sets the requested fields
@@ -36,7 +38,12 @@ func stringAttribute(fields ...string) *schema.StringAttribute {
 			var planModifiers = []planmodifier.String{
 				stringplanmodifier.RequiresReplace(),
 			}
-			attribute.PlanModifiers = planModifiers
+			attribute.PlanModifiers = append(attribute.PlanModifiers, planModifiers...)
+		case useStateForUnknown:
+			var planModifiers = []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			}
+			attribute.PlanModifiers = append(attribute.PlanModifiers, planModifiers...)
 		}
 	}
 	return &attribute
@@ -102,6 +109,16 @@ func float64Attribute(fields ...string) *schema.Float64Attribute {
 			attribute.Computed = true
 		case sensitive:
 			attribute.Sensitive = true
+		case requiresReplace:
+			var planModifiers = []planmodifier.Float64{
+				float64planmodifier.RequiresReplace(),
+			}
+			attribute.PlanModifiers = append(attribute.PlanModifiers, planModifiers...)
+		case useStateForUnknown:
+			var planModifiers = []planmodifier.Float64{
+				float64planmodifier.UseStateForUnknown(),
+			}
+			attribute.PlanModifiers = append(attribute.PlanModifiers, planModifiers...)
 		}
 	}
 	return &attribute

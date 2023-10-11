@@ -3,7 +3,7 @@ output "existing_project" {
 }
 
 output "new_apikey" {
-  value = capella_apikey.new_apikey
+  value     = capella_apikey.new_apikey
   sensitive = true
 }
 

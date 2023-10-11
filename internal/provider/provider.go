@@ -174,6 +174,7 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewOrganization,
 		datasources.NewCluster,
 		datasources.NewUsers,
+		datasources.NewApiKey,
 	}
 }
 
