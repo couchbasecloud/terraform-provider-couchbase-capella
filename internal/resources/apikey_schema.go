@@ -4,7 +4,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -22,34 +21,10 @@ func ApiKeySchema() schema.Schema {
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"organization_id": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"name": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"description": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"expiry": schema.Float64Attribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.Float64{
-					float64planmodifier.RequiresReplace(),
-					float64planmodifier.UseStateForUnknown(),
-				},
-			},
+			"organization_id": stringAttribute(required, requiresReplace),
+			"name":            stringAttribute(required, requiresReplace),
+			"description":     stringAttribute(optional, computed, requiresReplace, useStateForUnknown),
+			"expiry":          float64Attribute(optional, computed, requiresReplace, useStateForUnknown),
 			"allowed_cidrs": schema.ListAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -63,28 +38,14 @@ func ApiKeySchema() schema.Schema {
 				},
 				Default: listdefault.StaticValue(types.ListValueMust(types.StringType, []attr.Value{types.StringValue("0.0.0.0/0")})),
 			},
-			"organization_roles": schema.ListAttribute{
-				Required:    true,
-				ElementType: types.StringType,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-				},
-			},
+			"organization_roles": stringListAttribute(required, requiresReplace),
 			"resources": schema.ListNestedAttribute{
 				Required: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"id": schema.StringAttribute{
-							Required: true,
-						},
-						"roles": schema.ListAttribute{
-							Required:    true,
-							ElementType: types.StringType,
-						},
-						"type": schema.StringAttribute{
-							Optional: true,
-							Computed: true,
-						},
+						"id":    stringAttribute(required),
+						"roles": stringListAttribute(required),
+						"type":  stringAttribute(optional, computed),
 					},
 				},
 				PlanModifiers: []planmodifier.List{
@@ -95,35 +56,9 @@ func ApiKeySchema() schema.Schema {
 				Optional: true,
 				Computed: true,
 			},
-			"secret": schema.StringAttribute{
-				Optional:  true,
-				Computed:  true,
-				Sensitive: true,
-			},
-			"token": schema.StringAttribute{
-				Computed:  true,
-				Sensitive: true,
-			},
-			"audit": schema.SingleNestedAttribute{
-				Computed: true,
-				Attributes: map[string]schema.Attribute{
-					"created_at": schema.StringAttribute{
-						Computed: true,
-					},
-					"created_by": schema.StringAttribute{
-						Computed: true,
-					},
-					"modified_at": schema.StringAttribute{
-						Computed: true,
-					},
-					"modified_by": schema.StringAttribute{
-						Computed: true,
-					},
-					"version": schema.Int64Attribute{
-						Computed: true,
-					},
-				},
-			},
+			"secret": stringAttribute(optional, computed, sensitive),
+			"token":  stringAttribute(computed, sensitive),
+			"audit":  computedAuditAttribute(),
 		},
 	}
 }

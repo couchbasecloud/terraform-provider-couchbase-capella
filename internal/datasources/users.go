@@ -39,53 +39,34 @@ func (d *Users) Metadata(_ context.Context, req datasource.MetadataRequest, resp
 func (d *Users) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Computed: true,
-			},
+			"organization_id": requiredStringAttribute,
 			"data": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"id":              computedStringAttribute(),
-						"name":            computedStringAttribute(),
-						"status":          computedStringAttribute(),
-						"inactive":        computedBoolAttribute(),
-						"email":           computedStringAttribute(),
-						"organization_id": computedStringAttribute(),
-						"organization_roles": schema.ListAttribute{
-							ElementType: types.StringType,
-							Computed:    true,
-						},
-						"last_login":           computedStringAttribute(),
-						"region":               computedStringAttribute(),
-						"time_zone":            computedStringAttribute(),
-						"enable_notifications": computedBoolAttribute(),
-						"expires_at":           computedStringAttribute(),
+						"id":                   computedStringAttribute,
+						"name":                 computedStringAttribute,
+						"status":               computedStringAttribute,
+						"inactive":             computedBoolAttribute,
+						"email":                computedStringAttribute,
+						"organization_id":      computedStringAttribute,
+						"organization_roles":   computedListAttribute,
+						"last_login":           computedStringAttribute,
+						"region":               computedStringAttribute,
+						"time_zone":            computedStringAttribute,
+						"enable_notifications": computedBoolAttribute,
+						"expires_at":           computedStringAttribute,
 						"resources": schema.ListNestedAttribute{
 							Required: true,
 							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
-									"type": computedStringAttribute(),
-									"id":   computedStringAttribute(),
-									"roles": schema.ListAttribute{
-										Computed:    true,
-										ElementType: types.StringType,
-									},
+									"type":  computedStringAttribute,
+									"id":    computedStringAttribute,
+									"roles": computedListAttribute,
 								},
 							},
 						},
-						"audit": schema.SingleNestedAttribute{
-							Computed: true,
-							Attributes: map[string]schema.Attribute{
-								"created_at":  computedStringAttribute(),
-								"created_by":  computedStringAttribute(),
-								"modified_at": computedStringAttribute(),
-								"modified_by": computedStringAttribute(),
-								"version": schema.Int64Attribute{
-									Computed: true,
-								},
-							},
-						},
+						"audit": computedAuditAttribute,
 					},
 				},
 			},
@@ -229,22 +210,6 @@ func (d *Users) mapResponseBody(
 		state.Data = append(state.Data, *UserState)
 	}
 	return *state, nil
-}
-
-// computedStringAttribute returns a Terraform schema attribute
-// which is configured to be computed.
-func computedStringAttribute() *schema.StringAttribute {
-	return &schema.StringAttribute{
-		Computed: true,
-	}
-}
-
-// computedBoolAttribute returns a Terraform schema attribute
-// which is configured to be computed.
-func computedBoolAttribute() *schema.BoolAttribute {
-	return &schema.BoolAttribute{
-		Computed: true,
-	}
 }
 
 // validate is used to verify that all the fields in the datasource

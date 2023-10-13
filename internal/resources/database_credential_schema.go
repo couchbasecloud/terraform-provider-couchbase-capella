@@ -4,7 +4,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 // DatabaseCredentialSchema defines the schema for the terraform provider resource - "DatabaseCredential".
@@ -19,51 +18,17 @@ func DatabaseCredentialSchema() schema.Schema {
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name": schema.StringAttribute{
-				Required: true,
-			},
-			"password": schema.StringAttribute{
-				Optional:  true,
-				Computed:  true,
-				Sensitive: true,
-			},
-			"organization_id": schema.StringAttribute{
-				Required: true,
-			},
-			"project_id": schema.StringAttribute{
-				Required: true,
-			},
-			"cluster_id": schema.StringAttribute{
-				Required: true,
-			},
-			"audit": schema.SingleNestedAttribute{
-				Computed: true,
-				Attributes: map[string]schema.Attribute{
-					"created_at": schema.StringAttribute{
-						Computed: true,
-					},
-					"created_by": schema.StringAttribute{
-						Computed: true,
-					},
-					"modified_at": schema.StringAttribute{
-						Computed: true,
-					},
-					"modified_by": schema.StringAttribute{
-						Computed: true,
-					},
-					"version": schema.Int64Attribute{
-						Computed: true,
-					},
-				},
-			},
+			"name":            stringAttribute(required),
+			"password":        stringAttribute(optional, computed, sensitive),
+			"organization_id": stringAttribute(required),
+			"project_id":      stringAttribute(required),
+			"cluster_id":      stringAttribute(required),
+			"audit":           computedAuditAttribute(),
 			"access": schema.ListNestedAttribute{
 				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"privileges": schema.ListAttribute{
-							Required:    true,
-							ElementType: types.StringType,
-						},
+						"privileges": stringListAttribute(required),
 						"resources": schema.SingleNestedAttribute{
 							Optional: true,
 							Attributes: map[string]schema.Attribute{
@@ -71,20 +36,13 @@ func DatabaseCredentialSchema() schema.Schema {
 									Optional: true,
 									NestedObject: schema.NestedAttributeObject{
 										Attributes: map[string]schema.Attribute{
-											"name": schema.StringAttribute{
-												Required: true,
-											},
+											"name": stringAttribute(required),
 											"scopes": schema.ListNestedAttribute{
 												Optional: true,
 												NestedObject: schema.NestedAttributeObject{
 													Attributes: map[string]schema.Attribute{
-														"name": schema.StringAttribute{
-															Required: true,
-														},
-														"collections": schema.ListAttribute{
-															Optional:    true,
-															ElementType: types.StringType,
-														},
+														"name":        stringAttribute(required),
+														"collections": stringListAttribute(optional),
 													},
 												},
 											},
