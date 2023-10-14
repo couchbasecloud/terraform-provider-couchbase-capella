@@ -94,6 +94,9 @@ var (
 	// ErrApiKeyIdMissing is returned when an expected ErrApiKeyIdMissing was not found after an import.
 	ErrApiKeyIdMissing = errors.New("api key ID is missing or was passed incorrectly, please check provider documentation for syntax")
 
-	// ErrBucketIdCannotBeEmpty is returned when an ApiKeyId was required for a request but was not included.
+	// ErrBucketIdCannotBeEmpty is returned when an BucketId was required for a request but was not included.
 	ErrBucketIdCannotBeEmpty = errors.New("bucket ID cannot be empty, please contact Couchbase Capella Support")
+
+	// ErrAppServiceIdCannotBeEmpty is returned when an AppServiceId was required for a request but was not included.
+	ErrAppServiceIdCannotBeEmpty = errors.New("apService ID cannot be empty, please contact Couchbase Capella Support")
 )
