@@ -8,7 +8,6 @@ app_service = {
   name = "test_app_service"
   description = "test_nidhi"
   nodes = 2
-  version = "3.0"
 }
 
 compute = {
