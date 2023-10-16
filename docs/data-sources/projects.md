@@ -26,16 +26,13 @@ description: |-
 <a id="nestedatt--data"></a>
 ### Nested Schema for `data`
 
-Optional:
-
-- `if_match` (String)
-
 Read-Only:
 
 - `audit` (Attributes) (see [below for nested schema](#nestedatt--data--audit))
 - `description` (String)
 - `etag` (String)
 - `id` (String)
+- `if_match` (String)
 - `name` (String)
 - `organization_id` (String)
 
