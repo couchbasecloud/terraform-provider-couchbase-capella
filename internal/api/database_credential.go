@@ -8,18 +8,44 @@ import (
 // This access is currently defined for all buckets and all scopes in the cluster.
 // todo: Support for granular access per bucket and per scope will be added in AV-62864
 type Access struct {
+	// Privileges defines the privileges field in this API represents the privilege level for users.
+	// It accepts one of the following values:
+	// data_reader
+	// data_writer
+	// read: Equivalent to data_reader.
+	// write: Equivalent to data_writer.
 	Privileges []string `json:"privileges"`
 	// Resources is the level at which the above privileges are defined.
 	// Ex: Access of read/write privilege can be defined at the bucket level or scope level resource.
+	// Leaving this empty will grant access to all buckets.
 	Resources *AccessibleResources `json:"resources,omitempty"`
 }
 
 // CreateDatabaseCredentialRequest represents the schema for the POST Capella V4 API request that creates the database credential.
 // Password is an optional field, if not passed, the password for the database credential is auto-generated.
+// In order to access this endpoint, the provided API key must have at least one of the following roles:
+//
+// Organization Owner
+// Project Owner
+// To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
 type CreateDatabaseCredentialRequest struct {
-	Name     string   `json:"name"`
-	Password string   `json:"password,omitempty"`
-	Access   []Access `json:"access"`
+	// Name is Username for the database credential. The name should be according to the following rules:
+	// The name must be between 2 & 128 characters.
+	// The name cannot contain spaces.
+	// The name cannot contain the following characters - ) ( > < , ; : " \ / ] [ ? = } {
+	// The name cannot begin with @ character.
+	Name string `json:"name"`
+
+	// Password is the password associated with the database credential.
+	// If this field is left empty, a password will be auto-generated.
+	// The password should be according to the following rules:
+	// Password should have at least 8 or more characters.
+	// Characters used for the password should contain at least one uppercase (A-Z), one lowercase (a-z), one numerical (0-9), and one special character.
+	// Forbidden special characters for the password are: < > ; . * & | £
+	Password string `json:"password,omitempty"`
+
+	// Access describes the access information of the database credential.
+	Access []Access `json:"access"`
 }
 
 // AccessibleResources is the level at which the above privileges are defined.
@@ -32,6 +58,7 @@ type AccessibleResources struct {
 // Bucket contains the details of a single bucket with scope and collection level information.
 // Scopes can be a subset of all scopes inside the bucket, since this is defined only to govern the access.
 type Bucket struct {
+	// Name is the name of the bucket.
 	Name string `json:"name"`
 	// Scopes is the details of the scopes inside the bucket to which we want to apply access privileges.
 	Scopes []Scope `json:"scopes,omitempty"`
@@ -40,14 +67,18 @@ type Bucket struct {
 // Scope is the details of a single scope inside the bucket, and it contains the collections details too.
 // This collections can be a subset of all collections inside the scope, since this is defined only to govern the access.
 type Scope struct {
-	Name        string   `json:"name"`
+	// Name is the name of the scope.
+	Name string `json:"name"`
+	// Collections is the set of collections that are present in the provided scope to which the database credential should have access.
 	Collections []string `json:"collections,omitempty"`
 }
 
 // CreateDatabaseCredentialResponse represents the schema for the POST Capella V4 API response that creates the database credential.
 type CreateDatabaseCredentialResponse struct {
-	Id       uuid.UUID `json:"id"`
-	Password string    `json:"password"`
+	// ID is the UUID of the created database credential.
+	Id uuid.UUID `json:"id"`
+	// Password is the password associated with the database credential.
+	Password string `json:"password"`
 }
 
 // GetDatabaseCredentialResponse represents the schema for the GET Capella V4 API request that fetches the database credential details.
@@ -55,17 +86,20 @@ type GetDatabaseCredentialResponse struct {
 	// Audit contains all audit-related fields.
 	Audit CouchbaseAuditData `json:"audit"`
 
-	// Id A GUID4 identifier of the project.
+	// Id A GUID4 identifier of the database credential.
 	Id uuid.UUID `json:"id"`
 
+	// Name is Username for the database credential.
 	Name string `json:"name"`
 
+	// Access describes the access information of the database credential.
 	Access []Access `json:"access"`
 }
 
 // PutDatabaseCredentialRequest represents the schema for the PUT Capella V4 API request that updates an existing database credential.
-// Password is an optional field, if not passed, the existing password is not updated.
 type PutDatabaseCredentialRequest struct {
-	Password string   `json:"password,omitempty"`
-	Access   []Access `json:"access"`
+	// Password is an optional field, if not passed, the existing password is not updated.
+	Password string `json:"password,omitempty"`
+	// Access describes the access information of the database credential.
+	Access []Access `json:"access"`
 }

@@ -4,13 +4,15 @@ import (
 	"encoding/json"
 )
 
-// Node defines model for Node.
+// Node defines attributes of a cluster node.
 type Node struct {
-	// Compute Following are the supported compute combinations for CPU
+	// Compute is the family of instances in cloud that are supported during cluster creation.
+	// Following are the supported compute combinations for CPU
 	// and RAM for different cloud providers. To learn more,
 	// see [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html).
-	Compute Compute         `json:"compute"`
-	Disk    json.RawMessage `json:"disk"`
+	Compute Compute `json:"compute"`
+	// Disk is the type of disk that is supported per cloud provider during cluster creation.
+	Disk json.RawMessage `json:"disk"`
 }
 
 // Compute Following are the supported compute combinations for CPU

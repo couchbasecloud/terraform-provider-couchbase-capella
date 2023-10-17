@@ -312,9 +312,9 @@ func (a *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 		}
 	}
 
-	var rotateApiRequest api.RotateAPIKeyRequest
+	var rotateApiRequest api.RotateApiKeyRequest
 	if !plan.Secret.IsNull() || !plan.Secret.IsUnknown() {
-		rotateApiRequest = api.RotateAPIKeyRequest{
+		rotateApiRequest = api.RotateApiKeyRequest{
 			Secret: plan.Secret.ValueStringPointer(),
 		}
 	}
@@ -335,7 +335,7 @@ func (a *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 		return
 	}
 
-	rotateApiKeyResponse := api.RotateAPIKeyResponse{}
+	rotateApiKeyResponse := api.RotateApiKeyResponse{}
 	err = json.Unmarshal(response.Body, &rotateApiKeyResponse)
 	if err != nil {
 		resp.Diagnostics.AddError(
