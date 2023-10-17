@@ -62,7 +62,7 @@ type GetAppServiceResponse struct {
 	ClusterId string `tfsdk:"clusterId"`
 
 	// CurrentState defines the current state of app service.
-	CurrentState string `json:"currentState"`
+	CurrentState State `json:"currentState"`
 
 	// Version defines the version of the app service server
 	Version string `tfsdk:"version"`

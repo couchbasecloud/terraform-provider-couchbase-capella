@@ -13,6 +13,7 @@ import (
 	"terraform-provider-capella/internal/api/appservice"
 	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
+	"time"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -96,16 +97,26 @@ func (a *AppService) Create(ctx context.Context, req resource.CreateRequest, res
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating app service",
-			"Could not create_app_service.tf app service, unexpected error: "+err.Error(),
+			"Could not create app service, unexpected error: "+err.Error(),
 		)
 		return
 	}
 
-	refreshedState, err := a.refreshAppService(ctx, organizationId, projectId, clusterId, createAppServiceResponse.Id.String())
+	err = a.checkAppServiceStatus(ctx, organizationId, projectId, clusterId, createAppServiceResponse.Id.String())
+	_, err = handleAppServiceError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading app service",
-			"Could not read app service, unexpected error: "+err.Error(),
+			"Error creating app service",
+			"Could not create app service, unexpected error: "+err.Error(),
+		)
+		return
+	}
+	refreshedState, err := a.refreshAppService(ctx, organizationId, projectId, clusterId, createAppServiceResponse.Id.String())
+	_, err = handleAppServiceError(err)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating app service",
+			"Could not create app service, unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -155,7 +166,7 @@ func (a *AppService) Read(ctx context.Context, req resource.ReadRequest, resp *r
 		return
 	default:
 		resp.Diagnostics.AddError(
-			"Error Reading Capella User",
+			"Error Reading Capella App Service",
 			"Could not read Capella appServiceID "+appServiceId+": "+err.Error(),
 		)
 		return
@@ -251,7 +262,7 @@ func (a *AppService) refreshAppService(ctx context.Context, organizationId, proj
 		OrganizationId: types.StringValue(organizationId),
 		ProjectId:      types.StringValue(projectId),
 		ClusterId:      types.StringValue(clusterId),
-		CurrentState:   types.StringValue(appServiceResponse.CurrentState),
+		CurrentState:   types.StringValue(string(appServiceResponse.CurrentState)),
 		Version:        types.StringValue(appServiceResponse.Version),
 		Audit: providerschema.CouchbaseAuditData{
 			CreatedAt:  types.StringValue(appServiceResponse.Audit.CreatedAt.String()),
@@ -262,4 +273,86 @@ func (a *AppService) refreshAppService(ctx context.Context, organizationId, proj
 		},
 	}
 	return &refreshedState, nil
+}
+
+// checkAppServiceStatus monitors the status of an app service creation, update and deletion operation for a specified
+// organization, project, cluster and appService ID. It periodically fetches the app service status using the `getAppService`
+// function and waits until the app service reaches a final state or until a specified timeout is reached.
+// The function returns an error if the operation times out or encounters an error during status retrieval.
+func (a *AppService) checkAppServiceStatus(ctx context.Context, organizationId, projectId, clusterId, appServiceId string) error {
+	var (
+		appServiceResp *appservice.GetAppServiceResponse
+		err            error
+	)
+
+	// Assuming 60 minutes is the max time deployment takes, can change after discussion
+	const timeout = time.Minute * 60
+
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	const sleep = time.Second * 3
+
+	timer := time.NewTimer(2 * time.Minute)
+
+	for {
+		select {
+		case <-ctx.Done():
+			const msg = "app service creation status transition timed out after initiation"
+			return fmt.Errorf(msg)
+
+		case <-timer.C:
+			appServiceResp, err = a.getAppService(organizationId, projectId, clusterId, appServiceId)
+			switch err {
+			case nil:
+				if appservice.IsFinalState(appServiceResp.CurrentState) {
+					return nil
+				}
+				const msg = "waiting for app service to complete the execution"
+				tflog.Info(ctx, msg)
+			default:
+				return err
+			}
+			timer.Reset(sleep)
+		}
+	}
+}
+
+// getAppService retrieves app service information from the specified organization, project and cluster
+// using the provided app service ID by open-api call
+func (a *AppService) getAppService(organizationId, projectId, clusterId, appServiceId string) (*appservice.GetAppServiceResponse, error) {
+	response, err := a.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s", a.HostURL, organizationId, projectId, clusterId, appServiceId),
+		http.MethodGet,
+		nil,
+		a.Token,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	appServiceResp := appservice.GetAppServiceResponse{}
+	err = json.Unmarshal(response.Body, &appServiceResp)
+	if err != nil {
+		return nil, err
+	}
+	return &appServiceResp, nil
+}
+
+// handleAppServiceError extracts error message if error is api.Error and also checks whether error is
+// resource not found
+func handleAppServiceError(err error) (bool, error) {
+	switch err := err.(type) {
+	case nil:
+		return false, nil
+	case api.Error:
+		if err.HttpStatusCode != http.StatusNotFound {
+			return false, fmt.Errorf(err.CompleteError())
+		}
+		return true, fmt.Errorf(err.CompleteError())
+	default:
+		return false, err
+	}
 }
