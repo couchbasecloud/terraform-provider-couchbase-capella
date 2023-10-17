@@ -18,3 +18,7 @@ variable "auth_token" {
   description = "Authentication API Key"
   sensitive   = true
 }
+
+variable "comment" {
+  description = "comment describing the allowlist details"
+}

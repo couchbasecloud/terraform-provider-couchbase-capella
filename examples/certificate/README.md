@@ -1,8 +1,8 @@
-# Capella Certificate Example
+# Capella Clusters Certificate Example
 
-This example shows how to manage Certificates in Capella.
+This example shows how to retrive certificate details for a Capella cluster.
 
-This gets an existing Certificate in the cluster. It uses the organization ID, project ID and cluster ID to do so.
+This lists the certificate details based on the cluster ID and authentication access token.
 
 To run, configure your Couchbase Capella provider as described in README in the root of this project.
 
@@ -10,111 +10,101 @@ To run, configure your Couchbase Capella provider as described in README in the 
 
 In this example, we are going to do the following.
 
-1. Get an existing certificate in Capella as stated in the `get_certificate.tf` file.
+1. GET: Read and display the Capella cluster certificate details as stated in the `get_certificate.tf` file.
+2. DELETE: Delete the certificate data output from terraform state.
 
-If you check the `terraform.template.tfvars` file - you can see that we need 5 main variables to run the terraform commands.
-Make sure you copy the file to `terraform.tfvars` and update the values of the variables as per the correct organization access.
+If you check the `terraform.template.tfvars` file - Make sure you copy the file to `terraform.tfvars` and update the values of the variables as per the correct organization access.
 
-
+## GET
 ### View the plan for the resources that Terraform will create
 
 Command: `terraform plan`
 
 Sample Output:
 ```
-terraform plan
+$ terraform plan
 ╷
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchabasecloud/capella in /Users/nidhi.kumar/go/bin
+│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/terraform-provider-capella
 │ 
-│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published
-│ releases.
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
+│ published releases.
 ╵
-data.capella_certificates.existing_certificates: Reading...
-data.capella_certificates.existing_certificates: Read complete after 1s
+data.capella_certificate.existing_certificate: Reading...
+data.capella_certificate.existing_certificate: Read complete after 6s
 
 Changes to Outputs:
-  + certificates_get = {
-      + certificate     = <<-EOT
-            -----BEGIN CERTIFICATE-----
-            MIIDFTCCAf2gAwIBAgIRANguFcFZ7eVLTF2mnPqkkhYwDQYJKoZIhvcNAQELBQAw
-            JDESMBAGA1UECgwJQ291Y2hiYXNlMQ4wDAYDVQQLDAVDbG91ZDAeFw0xOTEwMTgx
-            NDUzMzRaFw0yOTEwMTgxNTUzMzRaMCQxEjAQBgNVBAoMCUNvdWNoYmFzZTEOMAwG
-            A1UECwwFQ2xvdWQwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDMoL2G
-            1yR4XKOL5KrAZbgJI11NkcooxqCSqoibr5nSM+GNARlou42XbopRhkLQlSMlmH7U
-            ZreI7xq2MqmCaQvP1jdS5al/GwuwAP+2kU2nz4IHzliCVV6YvYqNy0fygNpYky9/
-            wjCu32n8Ae0AZuxcsAzPUtJBvIIGHum08WlLYS3gNrYkfyds6LfvZvqMk703RL5X
-            Ny/RXWmbbBXAXh0chsavEK7EsDLI4t4WI2Iv8+lwS7Wo7Vh6NnEmJLPAAp7udNK4
-            U3nwjkL5p/yINROT7CxUE9x0IB2l2rZwZiJhgHCpee77J8QesDut+jZu38ZYY3le
-            PS38S81T6I6bSSgtAgMBAAGjQjBAMA8GA1UdEwEB/wQFMAMBAf8wHQYDVR0OBBYE
-            FLlocLdzgAeibrlCmEO4OH5Buf3vMA4GA1UdDwEB/wQEAwIBhjANBgkqhkiG9w0B
-            AQsFAAOCAQEAkoVX5CJ7rGx2ALfzy5C7Z+tmEmrZ6jdHjDtw4XwWNhlrsgMuuboU
-            Y9XMinSSm1TVfvIz4ru82MVMRxq4v1tPwPdZabbzKYclHkwSMxK5BkyEKWzF1Hoq
-            UcinTaT68lVzkTc0D8T+gkRzwXIqxjML2ZdruD1foHNzCgeGHzKzdsjYqrnHv17b
-            J+f5tqoa5CKbnyWl3HP0k7r3HHQP0GQequoqXcL3XlERX3Ne20Chck9mftNnHhKw
-            Dby7ylZaP97sphqOZQ/W/gza7x1JYylrLXvjfdv3Nmu7oSMKO/2cDyWwcbVGkpbk
-            8JOQtFENWmr9u2S0cQfwoCSYBWaK0ofivA==
-            -----END CERTIFICATE-----
-        EOT
-      + cluster_id      = "6072278e-2354-4ea0-9e1b-ff18aafd41df"
-      + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      + project_id      = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
+  + existing_certificate = {
+      + cluster_id      = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+      + data            = [
+          + {
+              + certificate = <<-EOT
+                    -----BEGIN CERTIFICATE-----
+                    MIIDFTCCAf2gAwIBAgIRANLVkgOvtaXiQJi0V6qeNtswDQYJKoZIhvcNAQELBQAw
+                    ...<redacted>...
+                    A1UECwwFQ2xvdWQwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCfvOIi
+                    enG4Dp+hJu9asdxEMRmH70hDyMXv5ZjBhbo39a42QwR59y/rC/sahLLQuNwqif85
+                    Fod1DkqgO6Ng3vecSAwyYVkj5NKdycQu5tzsZkghlpSDAyI0xlIPSQjoORA/pCOU
+                    WOpymA9dOjC1bo6rDyw0yWP2nFAI/KA4Z806XeqLREuB7292UnSsgFs4/5lqeil6
+                    rL3ooAw/i0uxr/TQSaxi1l8t4iMt4/gU+W52+8Yol0JbXBTFX6itg62ppb/Eugmn
+                    ...<redacted>...
+                    -----END CERTIFICATE-----
+                EOT
+            },
+        ]
+      + organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
+      + project_id      = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
     }
 
 You can apply this plan to save these new output values to the Terraform state, without changing any real infrastructure.
 
-─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly these actions if you run "terraform apply" now.
 ```
 
-### Apply the Plan, in order to get the certificate
+### Apply the Plan, in order to create a new Bucket
 
 Command: `terraform apply`
 
 Sample Output:
 ```
-terraform apply
+$ terraform apply
 ╷
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchabasecloud/capella in /Users/nidhi.kumar/go/bin
+│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/terraform-provider-capella
 │ 
-│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published
-│ releases.
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
+│ published releases.
 ╵
-data.capella_certificates.existing_certificates: Reading...
-data.capella_certificates.existing_certificates: Read complete after 0s
+data.capella_certificate.existing_certificate: Reading...
+data.capella_certificate.existing_certificate: Read complete after 7s
 
 Changes to Outputs:
-  + certificates_get = {
-      + certificate     = <<-EOT
-            -----BEGIN CERTIFICATE-----
-            MIIDFTCCAf2gAwIBAgIRANguFcFZ7eVLTF2mnPqkkhYwDQYJKoZIhvcNAQELBQAw
-            JDESMBAGA1UECgwJQ291Y2hiYXNlMQ4wDAYDVQQLDAVDbG91ZDAeFw0xOTEwMTgx
-            NDUzMzRaFw0yOTEwMTgxNTUzMzRaMCQxEjAQBgNVBAoMCUNvdWNoYmFzZTEOMAwG
-            A1UECwwFQ2xvdWQwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDMoL2G
-            1yR4XKOL5KrAZbgJI11NkcooxqCSqoibr5nSM+GNARlou42XbopRhkLQlSMlmH7U
-            ZreI7xq2MqmCaQvP1jdS5al/GwuwAP+2kU2nz4IHzliCVV6YvYqNy0fygNpYky9/
-            wjCu32n8Ae0AZuxcsAzPUtJBvIIGHum08WlLYS3gNrYkfyds6LfvZvqMk703RL5X
-            Ny/RXWmbbBXAXh0chsavEK7EsDLI4t4WI2Iv8+lwS7Wo7Vh6NnEmJLPAAp7udNK4
-            U3nwjkL5p/yINROT7CxUE9x0IB2l2rZwZiJhgHCpee77J8QesDut+jZu38ZYY3le
-            PS38S81T6I6bSSgtAgMBAAGjQjBAMA8GA1UdEwEB/wQFMAMBAf8wHQYDVR0OBBYE
-            FLlocLdzgAeibrlCmEO4OH5Buf3vMA4GA1UdDwEB/wQEAwIBhjANBgkqhkiG9w0B
-            AQsFAAOCAQEAkoVX5CJ7rGx2ALfzy5C7Z+tmEmrZ6jdHjDtw4XwWNhlrsgMuuboU
-            Y9XMinSSm1TVfvIz4ru82MVMRxq4v1tPwPdZabbzKYclHkwSMxK5BkyEKWzF1Hoq
-            UcinTaT68lVzkTc0D8T+gkRzwXIqxjML2ZdruD1foHNzCgeGHzKzdsjYqrnHv17b
-            J+f5tqoa5CKbnyWl3HP0k7r3HHQP0GQequoqXcL3XlERX3Ne20Chck9mftNnHhKw
-            Dby7ylZaP97sphqOZQ/W/gza7x1JYylrLXvjfdv3Nmu7oSMKO/2cDyWwcbVGkpbk
-            8JOQtFENWmr9u2S0cQfwoCSYBWaK0ofivA==
-            -----END CERTIFICATE-----
-        EOT
-      + cluster_id      = "6072278e-2354-4ea0-9e1b-ff18aafd41df"
-      + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      + project_id      = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
+  + existing_certificate = {
+      + cluster_id      = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+      + data            = [
+          + {
+              + certificate = <<-EOT
+                    -----BEGIN CERTIFICATE-----
+                    MIIDFTCCAf2gAwIBAgIRANLVkgOvtaXiQJi0V6qeNtswDQYJKoZIhvcNAQELBQAw
+                    ...<redacted>...
+                    A1UECwwFQ2xvdWQwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCfvOIi
+                    enG4Dp+hJu9asdxEMRmH70hDyMXv5ZjBhbo39a42QwR59y/rC/sahLLQuNwqif85
+                    Fod1DkqgO6Ng3vecSAwyYVkj5NKdycQu5tzsZkghlpSDAyI0xlIPSQjoORA/pCOU
+                    WOpymA9dOjC1bo6rDyw0yWP2nFAI/KA4Z806XeqLREuB7292UnSsgFs4/5lqeil6
+                    rL3ooAw/i0uxr/TQSaxi1l8t4iMt4/gU+W52+8Yol0JbXBTFX6itg62ppb/Eugmn
+                    ...<redacted>...
+                    -----END CERTIFICATE-----
+                EOT
+            },
+        ]
+      + organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
+      + project_id      = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
     }
 
 You can apply this plan to save these new output values to the Terraform state, without changing any real infrastructure.
@@ -130,31 +120,25 @@ Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
 
 Outputs:
 
-certificates_get = {
-  "certificate" = <<-EOT
-  -----BEGIN CERTIFICATE-----
-  MIIDFTCCAf2gAwIBAgIRANguFcFZ7eVLTF2mnPqkkhYwDQYJKoZIhvcNAQELBQAw
-  JDESMBAGA1UECgwJQ291Y2hiYXNlMQ4wDAYDVQQLDAVDbG91ZDAeFw0xOTEwMTgx
-  NDUzMzRaFw0yOTEwMTgxNTUzMzRaMCQxEjAQBgNVBAoMCUNvdWNoYmFzZTEOMAwG
-  A1UECwwFQ2xvdWQwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDMoL2G
-  1yR4XKOL5KrAZbgJI11NkcooxqCSqoibr5nSM+GNARlou42XbopRhkLQlSMlmH7U
-  ZreI7xq2MqmCaQvP1jdS5al/GwuwAP+2kU2nz4IHzliCVV6YvYqNy0fygNpYky9/
-  wjCu32n8Ae0AZuxcsAzPUtJBvIIGHum08WlLYS3gNrYkfyds6LfvZvqMk703RL5X
-  Ny/RXWmbbBXAXh0chsavEK7EsDLI4t4WI2Iv8+lwS7Wo7Vh6NnEmJLPAAp7udNK4
-  U3nwjkL5p/yINROT7CxUE9x0IB2l2rZwZiJhgHCpee77J8QesDut+jZu38ZYY3le
-  PS38S81T6I6bSSgtAgMBAAGjQjBAMA8GA1UdEwEB/wQFMAMBAf8wHQYDVR0OBBYE
-  FLlocLdzgAeibrlCmEO4OH5Buf3vMA4GA1UdDwEB/wQEAwIBhjANBgkqhkiG9w0B
-  AQsFAAOCAQEAkoVX5CJ7rGx2ALfzy5C7Z+tmEmrZ6jdHjDtw4XwWNhlrsgMuuboU
-  Y9XMinSSm1TVfvIz4ru82MVMRxq4v1tPwPdZabbzKYclHkwSMxK5BkyEKWzF1Hoq
-  UcinTaT68lVzkTc0D8T+gkRzwXIqxjML2ZdruD1foHNzCgeGHzKzdsjYqrnHv17b
-  J+f5tqoa5CKbnyWl3HP0k7r3HHQP0GQequoqXcL3XlERX3Ne20Chck9mftNnHhKw
-  Dby7ylZaP97sphqOZQ/W/gza7x1JYylrLXvjfdv3Nmu7oSMKO/2cDyWwcbVGkpbk
-  8JOQtFENWmr9u2S0cQfwoCSYBWaK0ofivA==
-  -----END CERTIFICATE-----
-  EOT
-  "cluster_id" = "6072278e-2354-4ea0-9e1b-ff18aafd41df"
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-  "project_id" = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
+existing_certificate = {
+  "cluster_id" = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+  "data" = tolist([
+    {
+      "certificate" = <<-EOT
+      -----BEGIN CERTIFICATE-----
+      MIIDFTCCAf2gAwIBAgIRANLVkgOvtaXiQJi0V6qeNtswDQYJKoZIhvcNAQELBQAw
+      ...<redacted>...
+      A1UECwwFQ2xvdWQwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCfvOIi
+      enG4Dp+hJu9asdxEMRmH70hDyMXv5ZjBhbo39a42QwR59y/rC/sahLLQuNwqif85
+      Fod1DkqgO6Ng3vecSAwyYVkj5NKdycQu5tzsZkghlpSDAyI0xlIPSQjoORA/pCOU
+      WOpymA9dOjC1bo6rDyw0yWP2nFAI/KA4Z806XeqLREuB7292UnSsgFs4/5lqeil6
+      rL3ooAw/i0uxr/TQSaxi1l8t4iMt4/gU+W52+8Yol0JbXBTFX6itg62ppb/Eugmn
+      ...<redacted>...
+      EOT
+    },
+  ])
+  "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
+  "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
 }
 ```
 
@@ -165,5 +149,59 @@ Command: `terraform state list`
 Sample Output:
 ```
 $ terraform state list
-data.capella_certificates.existing_certificates
+data.capella_certificate.existing_certificate
+```
+
+## DESTROY
+### Finally, destroy the resources created by Terraform
+
+Command: `terraform destroy`
+
+Sample Output:
+```
+$ terraform destroy
+╷
+│ Warning: Provider development overrides are in effect
+│ 
+│ The following provider development overrides are set in the CLI configuration:
+│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/terraform-provider-capella
+│ 
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
+│ published releases.
+╵
+data.capella_certificate.existing_certificate: Reading...
+data.capella_certificate.existing_certificate: Read complete after 7s
+
+Changes to Outputs:
+  - existing_certificate = {
+      - cluster_id      = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+      - data            = [
+          - {
+              - certificate = <<-EOT
+                    -----BEGIN CERTIFICATE-----
+                    MIIDFTCCAf2gAwIBAgIRANLVkgOvtaXiQJi0V6qeNtswDQYJKoZIhvcNAQELBQAw
+                    ...<redacted>...
+                    A1UECwwFQ2xvdWQwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCfvOIi
+                    enG4Dp+hJu9asdxEMRmH70hDyMXv5ZjBhbo39a42QwR59y/rC/sahLLQuNwqif85
+                    Fod1DkqgO6Ng3vecSAwyYVkj5NKdycQu5tzsZkghlpSDAyI0xlIPSQjoORA/pCOU
+                    WOpymA9dOjC1bo6rDyw0yWP2nFAI/KA4Z806XeqLREuB7292UnSsgFs4/5lqeil6
+                    rL3ooAw/i0uxr/TQSaxi1l8t4iMt4/gU+W52+8Yol0JbXBTFX6itg62ppb/Eugmn
+                    ...<redacted>...
+                EOT
+            },
+        ]
+      - organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
+      - project_id      = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+    } -> null
+
+You can apply this plan to save these new output values to the Terraform state, without changing any real infrastructure.
+
+Do you really want to destroy all resources?
+  Terraform will destroy all your managed infrastructure, as shown above.
+  There is no undo. Only 'yes' will be accepted to confirm.
+
+  Enter a value: yes
+
+
+Destroy complete! Resources: 0 destroyed.
 ```

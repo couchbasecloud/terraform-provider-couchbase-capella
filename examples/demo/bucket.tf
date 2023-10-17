@@ -1,12 +1,14 @@
-output "new_bucket" {
-  value = capella_bucket.new_bucket
+# Stores the bucket name in an output variable.
+# Can be viewed using `terraform output bucket` command
+output "bucket" {
+  value = capella_bucket.new_bucket.name
 }
 
 resource "capella_bucket" "new_bucket" {
   name                       = var.bucket.name
-  organization_id            = var.organization_id
-  project_id                 = var.project_id
-  cluster_id                 = var.cluster_id
+  organization_id            = data.capella_organization.existing_organization.id
+  project_id                 = capella_project.new_project.id
+  cluster_id                 = capella_cluster.new_cluster.id
   type                       = var.bucket.type
   storage_backend            = var.bucket.storage_backend
   memory_allocation_in_mb    = var.bucket.memory_allocation_in_mb

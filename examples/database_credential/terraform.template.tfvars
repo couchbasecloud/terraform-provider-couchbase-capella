@@ -1,5 +1,5 @@
-auth_token               = "my-secret-key"
-organization_id          = "0783f698-ac58-4018-84a3-31c3b6ef785d"
+auth_token               = "<v4-api-key-secret>"
+organization_id          = "<organization_id>"
 project_id               = "b9b467e2-cca0-4fc7-ab54-3cc2faba51c9"
 host                     = "https://cloudapi.cloud.couchbase.com"
 database_credential_name = "test_db_user"

@@ -1,12 +1,14 @@
-output "new_user" {
+# Stores the user details in an output variable.
+# Can be viewed using `terraform output user` command
+output "user" {
   value = capella_user.new_user
 }
 
 resource "capella_user" "new_user" {
-  organization_id = var.organization_id
+  organization_id = data.capella_organization.existing_organization.id
 
-  name  = var.user_name
-  email = "johndoe@couchbase.com"
+  name  = var.user.name
+  email = var.user.email
 
   organization_roles = [
     "organizationMember"
@@ -15,14 +17,14 @@ resource "capella_user" "new_user" {
   resources = [
     {
       type = "project"
-      id   = var.project_id
+      id   = capella_project.new_project.id
       roles = [
         "projectViewer"
       ]
     },
     {
       type = "project"
-      id   = var.project_id
+      id   = capella_project.new_project.id
       roles = [
         "projectDataReaderWriter"
       ]
