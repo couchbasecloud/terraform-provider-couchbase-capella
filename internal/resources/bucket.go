@@ -4,15 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"net/http"
 	"terraform-provider-capella/internal/api"
 	bucketapi "terraform-provider-capella/internal/api/bucket"
 	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
+
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -56,12 +57,12 @@ func (c *Bucket) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		Name:                     plan.Name.ValueString(),
 		Type:                     plan.Type.ValueString(),
 		StorageBackend:           plan.StorageBackend.ValueString(),
-		MemoryAllocationInMb:     plan.MemoryAllocationInMb,
+		MemoryAllocationInMb:     plan.MemoryAllocationInMB.ValueInt64(),
 		BucketConflictResolution: plan.BucketConflictResolution.ValueString(),
 		DurabilityLevel:          plan.DurabilityLevel.ValueString(),
-		Replicas:                 plan.Replicas,
-		Flush:                    plan.Flush,
-		TimeToLiveInSeconds:      plan.TimeToLiveInSeconds,
+		Replicas:                 plan.Replicas.ValueInt64(),
+		Flush:                    plan.Flush.ValueBool(),
+		TimeToLiveInSeconds:      plan.TimeToLiveInSeconds.ValueInt64(),
 		EvictionPolicy:           plan.EvictionPolicy.ValueString(),
 	}
 
@@ -307,18 +308,18 @@ func (c *Bucket) retrieveBucket(ctx context.Context, organizationId, projectId, 
 		ClusterId:                types.StringValue(clusterId),
 		Type:                     types.StringValue(bucketResp.Type),
 		StorageBackend:           types.StringValue(bucketResp.StorageBackend),
-		MemoryAllocationInMb:     bucketResp.MemoryAllocationInMb,
+		MemoryAllocationInMB:     types.Int64Value(bucketResp.MemoryAllocationInMb),
 		BucketConflictResolution: types.StringValue(bucketResp.BucketConflictResolution),
 		DurabilityLevel:          types.StringValue(bucketResp.DurabilityLevel),
-		Replicas:                 bucketResp.Replicas,
-		Flush:                    bucketResp.Flush,
-		TimeToLiveInSeconds:      bucketResp.TimeToLiveInSeconds,
+		Replicas:                 types.Int64Value(bucketResp.Replicas),
+		Flush:                    types.BoolValue(bucketResp.Flush),
+		TimeToLiveInSeconds:      types.Int64Value(bucketResp.TimeToLiveInSeconds),
 		EvictionPolicy:           types.StringValue(bucketResp.EvictionPolicy),
 		Stats: &providerschema.Stats{
 			ItemCount:       types.Int64Value(int64(bucketResp.Stats.ItemCount)),
 			OpsPerSecond:    types.Int64Value(int64(bucketResp.Stats.OpsPerSecond)),
-			DiskUsedInMib:   types.Int64Value(int64(bucketResp.Stats.DiskUsedInMib)),
-			MemoryUsedInMib: types.Int64Value(int64(bucketResp.Stats.MemoryUsedInMib)),
+			DiskUsedInMiB:   types.Int64Value(int64(bucketResp.Stats.DiskUsedInMib)),
+			MemoryUsedInMiB: types.Int64Value(int64(bucketResp.Stats.MemoryUsedInMib)),
 		},
 	}
 
@@ -344,11 +345,11 @@ func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 	}
 
 	bucketUpdateRequest := bucketapi.PutBucketRequest{
-		MemoryAllocationInMb: state.MemoryAllocationInMb,
+		MemoryAllocationInMb: state.MemoryAllocationInMB.ValueInt64(),
 		DurabilityLevel:      state.DurabilityLevel.ValueString(),
-		Replicas:             state.Replicas,
-		Flush:                state.Flush,
-		TimeToLiveInSeconds:  state.TimeToLiveInSeconds,
+		Replicas:             state.Replicas.ValueInt64(),
+		Flush:                state.Flush.ValueBool(),
+		TimeToLiveInSeconds:  state.TimeToLiveInSeconds.ValueInt64(),
 	}
 
 	response, err := c.Client.Execute(

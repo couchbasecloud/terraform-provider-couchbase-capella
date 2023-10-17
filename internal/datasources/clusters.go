@@ -17,32 +17,32 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ datasource.DataSource              = &Cluster{}
-	_ datasource.DataSourceWithConfigure = &Cluster{}
+	_ datasource.DataSource              = &Clusters{}
+	_ datasource.DataSourceWithConfigure = &Clusters{}
 )
 
-// Cluster is the Cluster data source implementation.
-type Cluster struct {
+// Clusters is the Clusters data source implementation.
+type Clusters struct {
 	*providerschema.Data
 }
 
-// NewCluster is a helper function to simplify the provider implementation.
-func NewCluster() datasource.DataSource {
-	return &Cluster{}
+// NewClusters is a helper function to simplify the provider implementation.
+func NewClusters() datasource.DataSource {
+	return &Clusters{}
 }
 
 // Metadata returns the cluster data source type name.
-func (d *Cluster) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *Clusters) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_clusters"
 }
 
-// Schema defines the schema for the Cluster data source.
-func (d *Cluster) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+// Schema defines the schema for the Clusters data source.
+func (d *Clusters) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = ClusterSchema()
 }
 
 // Read refreshes the Terraform state with the latest data of clusters.
-func (d *Cluster) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *Clusters) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state providerschema.Clusters
 	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -104,7 +104,6 @@ func (d *Cluster) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 		return
 	}
 
-	// Map response body to model
 	for _, cluster := range clusterResp.Data {
 		audit := providerschema.NewCouchbaseAuditData(cluster.Audit)
 
@@ -136,7 +135,7 @@ func (d *Cluster) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 }
 
 // Configure adds the provider configured client to the cluster data source.
-func (d *Cluster) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *Clusters) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}

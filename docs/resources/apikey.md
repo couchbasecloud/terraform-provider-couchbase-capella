@@ -20,13 +20,15 @@ description: |-
 - `name` (String)
 - `organization_id` (String)
 - `organization_roles` (List of String)
+- `resources` (Attributes List) (see [below for nested schema](#nestedatt--resources))
 
 ### Optional
 
 - `allowed_cidrs` (List of String)
 - `description` (String)
 - `expiry` (Number)
-- `resources` (Attributes List) (see [below for nested schema](#nestedatt--resources))
+- `rotate` (Number)
+- `secret` (String, Sensitive)
 
 ### Read-Only
 

@@ -9,7 +9,8 @@ import (
 // [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
 type Resources = []ResourcesItems
 
-// ResourcesItems defines model for APIKeyResourcesItems.
+// ResourcesItems the individual item that is part of Resources.
+// These items define the set of roles or access that can be had on a single type of resource.
 type ResourcesItems struct {
 	// Id is the id of the project.
 	Id uuid.UUID `json:"id"`
@@ -23,7 +24,12 @@ type ResourcesItems struct {
 	Type *string `json:"type,omitempty"`
 }
 
-// CreateApiKeyRequest defines model for CreateAPIKeyRequest.
+// CreateApiKeyRequest is the payload sent to the Capella V4 Public API when asked to create an API key in the organization.
+// Organization Owners can create Organization and Project scoped API keys.
+//
+// Project Owner and Project Creator can create project scoped keys.
+//
+// To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
 type CreateApiKeyRequest struct {
 	// AllowedCIDRs is the list of inbound CIDRs for the API key.
 	// The system making a request must come from one of the allowed CIDRs.
@@ -48,7 +54,7 @@ type CreateApiKeyRequest struct {
 	Resources *Resources `json:"resources,omitempty"`
 }
 
-// CreateApiKeyResponse defines model for CreateAPIKeyResponse.
+// CreateApiKeyResponse is the response received from the Capella V4 Public API when asked to create an API key in the organization.
 type CreateApiKeyResponse struct {
 	// Id The id is a unique identifier for an apiKey.
 	Id string `json:"id"`
@@ -57,7 +63,11 @@ type CreateApiKeyResponse struct {
 	Token string `json:"token"`
 }
 
-// GetApiKeyResponse defines model for GetAPIKey.
+// GetApiKeyResponse is the response received from the Capella V4 Public API when asked to fetch an API key in an organization.
+//
+// Organization Owners can get any API key inside the Organization.
+// Organization Members and Project Creator can get any Project scoped API key for which they are Project Owner.
+// To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
 type GetApiKeyResponse struct {
 	// AllowedCIDRs is the list of inbound CIDRs for the API key.
 	// The system making a request must come from one of the allowed CIDRs.
@@ -86,21 +96,29 @@ type GetApiKeyResponse struct {
 	Resources Resources `json:"resources"`
 }
 
-// RotateAPIKeyRequest defines model for RotateAPIKeyRequest.
-type RotateAPIKeyRequest struct {
-	// Secret represents the secret associated with an API key. One has to follow the secret key policy, such as allowed characters and a length of 64 characters.
+// RotateApiKeyRequest is the payload sent to the Capella V4 Public API when asked to rotate an API key.
+//
+// Organization Owners can rotate any API key inside the Organization.
+// To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
+type RotateApiKeyRequest struct {
+	// Secret represents the secret associated with an API key.
+	// One has to follow the secret key policy, such as allowed characters and a length of 64 characters.
 	// If this field is left empty, a secret will be auto-generated.
 	Secret *string `json:"secret,omitempty"`
 }
 
-// RotateAPIKeyResponse defines model for RotateAPIKeyResponse.
-type RotateAPIKeyResponse struct {
+// RotateApiKeyResponse is the response received from the Capella V4 Public API when asked to rotate an API key.
+type RotateApiKeyResponse struct {
 	// SecretKey is a confidential token that is paired with the Access key.
 	// The API key is made of an Access key and a Secret key.
 	SecretKey string `json:"secretKey"`
 }
 
-// GetApiKeysResponse defines the model for a GetApiKeysResponse.
+// GetApiKeysResponse is the response received from the Capella V4 Public API when asked to list all API keys in an organization.
+//
+// Organization Owners can list all the API keys inside the Organization.
+// Organization Members and Project Creators can list all the Project scoped API key for which they are Project Owner.
+// To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
 type GetApiKeysResponse struct {
 	Data []GetApiKeyResponse `json:"data"`
 }

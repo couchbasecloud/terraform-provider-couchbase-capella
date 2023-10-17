@@ -2,7 +2,22 @@ package api
 
 import "github.com/google/uuid"
 
-// CreateUserRequest defines the model for CreateUserRequest
+// CreateUserRequest is the request payload sent to the Capella V4 Public API when asked to invite a new user to an organization.
+// This request simply invites a new user under the organization.
+// An invitation email is triggered and sent to the user.
+// Upon receiving the invitation email, the user is required to click on a provided URL,
+// which will redirect them to a page with a user interface (UI) where they can set their username and password.
+//
+// The modification of any personal information related to a user can only be performed by the user through the UI.
+// Similarly, the user can solely conduct password updates through the UI.
+//
+// The "caller" possessing Organization Owner access rights retains the exclusive user creation capability.
+// They hold the authority to assign roles at the organization and project levels.
+// At present, our support is limited to the resourceType of "project" exclusively.
+//
+// In order to access this endpoint, the provided API key must have the following role:
+// Organization Owner
+// To learn more, see https://docs.couchbase.com/cloud/organizations/organization-user-roles.html
 type CreateUserRequest struct {
 	// Name represents the name of the user.
 	Name string `json:"name"`
@@ -17,13 +32,13 @@ type CreateUserRequest struct {
 	Resources []Resource `json:"resources"`
 }
 
-// CreateUserResponse defines the model for CreateUserResponse.
+// CreateUserResponse is the response received from the Capella V4 Public API when asked to invite a new user to an organization.
 type CreateUserResponse struct {
 	// ID is the ID of the user
 	Id uuid.UUID `json:"id"`
 }
 
-// Response defines the model for a resource.
+// Resource defines either a project or cluster to which the newly invited user should have access.
 type Resource struct {
 	// Id is a GUID4 identifier of the resource.
 	Id string `json:"id"`
@@ -35,7 +50,22 @@ type Resource struct {
 	Roles []string `json:"roles"`
 }
 
-// GetUserResponse defines the model for GetUserResponse.
+// GetUserResponse is the response received from the Capella V4 Public API when asked to get existing user's details.
+//
+// In order to access this endpoint, the provided API key must have at least one of the following roles:
+//
+// Organization Owner
+// Organization Member
+// Project Creator
+// The results are always limited by the role and scope of the caller's privileges.
+//
+// When performing a GET request for a user with an organization owner role,
+// the response will exclude project-level permissions for that user.
+// This is because organization owners have access to all resources at the organization level, rendering project-level permissions unnecessary for them.
+//
+// To learn more about the roles, see:
+// Organization Roles: https://docs.couchbase.com/cloud/organizations/organization-user-roles.html
+// Project Roles: https://docs.couchbase.com/cloud/projects/project-roles.html
 type GetUserResponse struct {
 	// ID is the ID of the user
 	Id uuid.UUID `json:"id"`
@@ -81,7 +111,21 @@ type GetUserResponse struct {
 	Audit CouchbaseAuditData `json:"audit"`
 }
 
-// GetUsersReponse defines the model for GetUsersResponse
+// GetUsersResponse is the response received from the Capella V4 Public API when asked to list all users that have access to an organization.
+//
+// In order to access this endpoint, the provided API key must have at least one of the following roles:
+//
+// Organization Owner
+// Organization Member
+// Project Creator
+// The results are always limited by the role and scope of the caller's privileges.
+// When retrieving a list of users through a GET request, if a user holds the organization owner role,
+// the response will exclude project-level permissions for those users.
+// This is because organization owners have full access to all resources within the organization, making project-level permissions irrelevant for them.
+//
+// To learn more about the roles, see:
+// Organization Roles: https://docs.couchbase.com/cloud/organizations/organization-user-roles.html
+// Project Roles: https://docs.couchbase.com/cloud/projects/project-roles.html
 type GetUsersResponse struct {
 	Data []GetUserResponse `json:"data"`
 }

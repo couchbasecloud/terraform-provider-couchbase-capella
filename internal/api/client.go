@@ -16,7 +16,7 @@ type Client struct {
 	*http.Client
 }
 
-// NewClient instantiates a new Client.
+// NewClient instantiates a new Client with the provided timeout.
 func NewClient(timeout time.Duration) *Client {
 	return &Client{
 		Client: &http.Client{

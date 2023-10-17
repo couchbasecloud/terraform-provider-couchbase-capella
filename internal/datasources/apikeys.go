@@ -16,27 +16,27 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ datasource.DataSource              = &ApiKey{}
-	_ datasource.DataSourceWithConfigure = &ApiKey{}
+	_ datasource.DataSource              = &ApiKeys{}
+	_ datasource.DataSourceWithConfigure = &ApiKeys{}
 )
 
-// ApiKey is the api key data source implementation.
-type ApiKey struct {
+// ApiKeys is the api key data source implementation.
+type ApiKeys struct {
 	*providerschema.Data
 }
 
-// NewApiKey is a helper function to simplify the provider implementation.
-func NewApiKey() datasource.DataSource {
-	return &ApiKey{}
+// NewApiKeys is a helper function to simplify the provider implementation.
+func NewApiKeys() datasource.DataSource {
+	return &ApiKeys{}
 }
 
 // Metadata returns the api key data source type name.
-func (d *ApiKey) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *ApiKeys) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_apikeys"
 }
 
 // Schema defines the schema for the api key data source.
-func (d *ApiKey) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *ApiKeys) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"organization_id": requiredStringAttribute,
@@ -70,7 +70,7 @@ func (d *ApiKey) Schema(_ context.Context, _ datasource.SchemaRequest, resp *dat
 }
 
 // Read refreshes the Terraform state with the latest data of api keys.
-func (d *ApiKey) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *ApiKeys) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state providerschema.ApiKeys
 	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -120,7 +120,6 @@ func (d *ApiKey) Read(ctx context.Context, req datasource.ReadRequest, resp *dat
 		return
 	}
 
-	// Map response body to model
 	for _, apiKey := range apiKeyResp.Data {
 		audit := providerschema.NewCouchbaseAuditData(apiKey.Audit)
 
@@ -153,7 +152,7 @@ func (d *ApiKey) Read(ctx context.Context, req datasource.ReadRequest, resp *dat
 }
 
 // Configure adds the provider configured client to the api key data source.
-func (d *ApiKey) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *ApiKeys) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}

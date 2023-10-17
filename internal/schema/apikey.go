@@ -12,7 +12,8 @@ import (
 	"terraform-provider-capella/internal/errors"
 )
 
-// ApiKeyResourcesItems defines model for APIKeyResourcesItems.
+// ApiKeyResourcesItems the individual item that is part of Resources.
+// These items define the set of roles or access that can be had on a single type of resource.
 type ApiKeyResourcesItems struct {
 	// Id is the id of the project.
 	Id types.String `tfsdk:"id"`
@@ -73,7 +74,6 @@ type ApiKey struct {
 	Token types.String `tfsdk:"token"`
 }
 
-// NewApiKey creates new apikey object
 func NewApiKey(apiKey *api.GetApiKeyResponse, organizationId string, auditObject basetypes.ObjectValue) (*ApiKey, error) {
 	newApiKey := ApiKey{
 		Id:             types.StringValue(apiKey.Id),
@@ -205,7 +205,7 @@ func (a *ApiKey) checkEmpty(resourceIdMap map[string]string) error {
 	return nil
 }
 
-// ApiKeys defines model for GetApiKeysResponse.
+// ApiKeys defines attributes as received in the LIST API response of Capella V4 Public API.
 type ApiKeys struct {
 	// OrganizationId The organizationId of the capella.
 	OrganizationId types.String `tfsdk:"organization_id"`
@@ -214,7 +214,7 @@ type ApiKeys struct {
 	Data []ApiKeyData `tfsdk:"data"`
 }
 
-// ApiKeyData maps api key resource schema data
+// ApiKeyData maps api key resource schema data to the GET API response as received from V4 Capella Public API
 type ApiKeyData struct {
 	// OrganizationId is the organizationId of the capella.
 	OrganizationId types.String `tfsdk:"organization_id"`
@@ -246,7 +246,6 @@ type ApiKeyData struct {
 	Resources []ApiKeyResourcesItems `tfsdk:"resources"`
 }
 
-// NewApiKeyData creates a new apiKeyData object
 func NewApiKeyData(apiKey *api.GetApiKeyResponse, organizationId string, auditObject basetypes.ObjectValue) (ApiKeyData, error) {
 	newApiKeyData := ApiKeyData{
 		Id:             types.StringValue(apiKey.Id),
