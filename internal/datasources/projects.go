@@ -17,27 +17,27 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ datasource.DataSource              = &Project{}
-	_ datasource.DataSourceWithConfigure = &Project{}
+	_ datasource.DataSource              = &Projects{}
+	_ datasource.DataSourceWithConfigure = &Projects{}
 )
 
-// Project is the project data source implementation.
-type Project struct {
+// Projects is the project data source implementation.
+type Projects struct {
 	*providerschema.Data
 }
 
-// NewProject is a helper function to simplify the provider implementation.
-func NewProject() datasource.DataSource {
-	return &Project{}
+// NewProjects is a helper function to simplify the provider implementation.
+func NewProjects() datasource.DataSource {
+	return &Projects{}
 }
 
 // Metadata returns the project data source type name.
-func (d *Project) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *Projects) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_projects"
 }
 
 // Schema defines the schema for the project data source.
-func (d *Project) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *Projects) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"organization_id": requiredStringAttribute,
@@ -60,7 +60,7 @@ func (d *Project) Schema(_ context.Context, _ datasource.SchemaRequest, resp *da
 }
 
 // Read refreshes the Terraform state with the latest data of projects.
-func (d *Project) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *Projects) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state providerschema.Projects
 	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -142,7 +142,7 @@ func (d *Project) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 }
 
 // Configure adds the provider configured client to the project data source.
-func (d *Project) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *Projects) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
