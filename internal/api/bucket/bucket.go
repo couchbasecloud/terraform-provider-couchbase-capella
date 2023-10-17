@@ -48,7 +48,7 @@ type CreateBucketRequest struct {
 	// For Couchstore, the default and minimum memory allocation is 100 MiB.
 	// For Magma, the default and minimum memory allocation is 1024 MiB.
 	// For Ephemeral buckets, the default and minimum memory allocation is 100 MiB.
-	MemoryAllocationInMb int `json:"memoryAllocationInMb"`
+	MemoryAllocationInMb int64 `json:"memoryAllocationInMb"`
 
 	// BucketConflictResolution is the means by which conflicts are resolved during replication.
 	// Default: "seqno"
@@ -82,7 +82,7 @@ type CreateBucketRequest struct {
 	// Default: 1
 	// Enum: 1 2 3
 	// To learn more, see https://docs.couchbase.com/cloud/clusters/data-service/manage-buckets.html#add-bucket
-	Replicas int `json:"replicas"`
+	Replicas int64 `json:"replicas"`
 
 	// Flush determines whether flushing is enabled on the bucket.
 	// Default: false
@@ -94,7 +94,7 @@ type CreateBucketRequest struct {
 	// Default: 0
 	// This is the maximum time to live for items in the bucket.
 	// Default is 0, that means TTL is disabled. This is a non-negative value.
-	TimeToLiveInSeconds int `json:"timeToLiveInSeconds"`
+	TimeToLiveInSeconds int64 `json:"timeToLiveInSeconds"`
 
 	// EvictionPolicy is the policy which Capella adopts to prevent data loss due to memory exhaustion.
 	// This may be also known as Ejection Policy in the Couchbase documentation.
@@ -145,7 +145,7 @@ type GetBucketResponse struct {
 	StorageBackend string `json:"storageBackend"`
 
 	// MemoryAllocationInMb is the amount of memory to allocate for the bucket memory in MiB
-	MemoryAllocationInMb int `json:"memoryAllocationInMb"`
+	MemoryAllocationInMb int64 `json:"memoryAllocationInMb"`
 
 	// BucketConflictResolution is the means by which conflicts are resolved during replication.
 	// To learn more, see https://docs.couchbase.com/cloud/clusters/xdcr/xdcr.html#conflict-resolution
@@ -157,13 +157,13 @@ type GetBucketResponse struct {
 
 	// Replicas states the number of replica nodes for the bucket.
 	// To learn more, see https://docs.couchbase.com/cloud/clusters/data-service/manage-buckets.html#add-bucket
-	Replicas int `json:"replicas"`
+	Replicas int64 `json:"replicas"`
 
 	// Flush determines whether flushing is enabled on the bucket.
 	Flush bool `json:"flush"`
 
 	// TimeToLiveInSeconds specifies the time to live (TTL) value in seconds.
-	TimeToLiveInSeconds int `json:"timeToLiveInSeconds"`
+	TimeToLiveInSeconds int64 `json:"timeToLiveInSeconds"`
 
 	// EvictionPolicy is the policy which Capella adopts to prevent data loss due to memory exhaustion.
 	//To learn more, see https://docs.couchbase.com/server/current/rest-api/rest-bucket-create.html#evictionpolicy
@@ -182,7 +182,7 @@ type GetBucketResponse struct {
 // To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
 type PutBucketRequest struct {
 	// MemoryAllocationInMb is the amount of memory to allocate for the bucket memory in MiB
-	MemoryAllocationInMb int `json:"memoryAllocationInMb"`
+	MemoryAllocationInMb int64 `json:"memoryAllocationInMb"`
 
 	// DurabilityLevel is the minimum level at which all writes to the bucket must occur.
 	// To learn more, see https://docs.couchbase.com/cloud/clusters/data-service/manage-buckets.html#add-bucket
@@ -190,13 +190,13 @@ type PutBucketRequest struct {
 
 	// Replicas states the number of replica nodes for the bucket.
 	// To learn more, see https://docs.couchbase.com/cloud/clusters/data-service/manage-buckets.html#add-bucket
-	Replicas int `json:"replicas"`
+	Replicas int64 `json:"replicas"`
 
 	// Flush determines whether flushing is enabled on the bucket.
 	Flush bool `json:"flush"`
 
 	// TimeToLiveInSeconds specifies the time to live (TTL) value in seconds.
-	TimeToLiveInSeconds int `json:"timeToLiveInSeconds"`
+	TimeToLiveInSeconds int64 `json:"timeToLiveInSeconds"`
 }
 
 // GetBucketsResponse is the response received from Capella V4 Public API when asked to list all buckets for a cluster.

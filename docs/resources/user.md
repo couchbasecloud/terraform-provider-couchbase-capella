@@ -20,18 +20,16 @@ description: |-
 - `email` (String)
 - `organization_id` (String)
 - `organization_roles` (List of String)
+- `resources` (Attributes List) (see [below for nested schema](#nestedatt--resources))
 
 ### Optional
 
-- `if_match` (String)
 - `name` (String)
-- `resources` (Attributes List) (see [below for nested schema](#nestedatt--resources))
 
 ### Read-Only
 
 - `audit` (Attributes) (see [below for nested schema](#nestedatt--audit))
 - `enable_notifications` (Boolean)
-- `etag` (String)
 - `expires_at` (String)
 - `id` (String) The ID of this resource.
 - `inactive` (Boolean)
