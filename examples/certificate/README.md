@@ -65,7 +65,7 @@ You can apply this plan to save these new output values to the Terraform state, 
 Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly these actions if you run "terraform apply" now.
 ```
 
-### Apply the Plan, in order to create a new Bucket
+### Apply the Plan, in order to get the certificate. 
 
 Command: `terraform apply`
 
