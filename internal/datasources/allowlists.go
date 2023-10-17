@@ -17,27 +17,27 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ datasource.DataSource              = &AllowList{}
-	_ datasource.DataSourceWithConfigure = &AllowList{}
+	_ datasource.DataSource              = &AllowLists{}
+	_ datasource.DataSourceWithConfigure = &AllowLists{}
 )
 
-// AllowList is the allow list data source implementation.
-type AllowList struct {
+// AllowLists is the allow list data source implementation.
+type AllowLists struct {
 	*providerschema.Data
 }
 
-// NewAllowList is a helper function to simplify the provider implementation.
-func NewAllowList() datasource.DataSource {
-	return &AllowList{}
+// NewAllowLists is a helper function to simplify the provider implementation.
+func NewAllowLists() datasource.DataSource {
+	return &AllowLists{}
 }
 
 // Metadata returns the allow list data source type name.
-func (d *AllowList) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *AllowLists) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_allowlist"
 }
 
 // Schema defines the schema for the allowlist data source.
-func (d *AllowList) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *AllowLists) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"organization_id": requiredStringAttribute,
@@ -63,7 +63,7 @@ func (d *AllowList) Schema(_ context.Context, _ datasource.SchemaRequest, resp *
 }
 
 // Read refreshes the Terraform state with the latest data of allowlists.
-func (d *AllowList) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *AllowLists) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state providerschema.AllowLists
 	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -146,7 +146,7 @@ func (d *AllowList) Read(ctx context.Context, req datasource.ReadRequest, resp *
 }
 
 // Configure adds the provider configured client to the allowlist data source.
-func (d *AllowList) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *AllowLists) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -165,7 +165,7 @@ func (d *AllowList) Configure(_ context.Context, req datasource.ConfigureRequest
 
 // mapResponseBody is used to map the response body from a call to
 // get allowlists to the allowlists schema that will be used by terraform.
-func (d *AllowList) mapResponseBody(
+func (d *AllowLists) mapResponseBody(
 	allowListsResponse api.GetAllowListsResponse,
 	state *providerschema.AllowLists,
 ) providerschema.AllowLists {
@@ -193,7 +193,7 @@ func (d *AllowList) mapResponseBody(
 
 // validate is used to verify that all the fields in the datasource
 // have been populated.
-func (d *AllowList) validate(state providerschema.AllowLists) error {
+func (d *AllowLists) validate(state providerschema.AllowLists) error {
 	if state.OrganizationId.IsNull() {
 		return errors.ErrOrganizationIdMissing
 	}

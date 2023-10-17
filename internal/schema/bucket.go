@@ -115,9 +115,6 @@ type Bucket struct {
 
 	// ClusterId is the ID of the cluster for which the database credential needs to be created.
 	ClusterId types.String `tfsdk:"cluster_id"`
-
-	// Audit contains all audit-related fields. It is of types.Object type to avoid conversion error for a nested field.
-	Audit types.Object `tfsdk:"audit"`
 }
 
 // Stats has the bucket stats that are related to memory and disk consumption.
@@ -255,9 +252,6 @@ type OneBucket struct {
 
 	// ClusterId is the ID of the cluster for which the database credential needs to be created.
 	ClusterId types.String `tfsdk:"cluster_id"`
-
-	// Audit represents all audit-related fields.
-	Audit CouchbaseAuditData `tfsdk:"audit"`
 }
 
 // Validate will split the IDs by a delimiter i.e. comma , in case a terraform import CLI is invoked.

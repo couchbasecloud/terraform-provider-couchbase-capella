@@ -105,7 +105,7 @@ func Test_MapResponseBody(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
-			a := &AllowList{}
+			a := &AllowLists{}
 
 			state := providerschema.AllowLists{
 				OrganizationId: organizationId,
@@ -169,7 +169,7 @@ func Test_Validate(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
-			a := &AllowList{}
+			a := &AllowLists{}
 
 			err := a.validate(test.state)
 
