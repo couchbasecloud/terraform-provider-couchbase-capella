@@ -115,7 +115,6 @@ func (d *Project) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 		return
 	}
 
-	// Map response body to model
 	for _, project := range projectResp.Data {
 		projectState := providerschema.OneProject{
 			Id:             types.StringValue(project.Id.String()),

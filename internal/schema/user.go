@@ -103,7 +103,7 @@ type Resource struct {
 	Roles []types.String `tfsdk:"roles"`
 }
 
-// Users defines the model for GetUsers
+// Users defines the attributes for a list of users in Capella.
 type Users struct {
 	// OrganizationId is the organizationId of the capella.
 	OrganizationId types.String `tfsdk:"organization_id"`

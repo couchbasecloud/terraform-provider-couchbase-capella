@@ -132,7 +132,7 @@ type Stats struct {
 	MemoryUsedInMiB types.Int64 `tfsdk:"memory_used_in_mib"`
 }
 
-// Buckets defines model for GetBucketsResponse.
+// Buckets defines attributes for the LIST buckets response received from V4 Capella Public API.
 type Buckets struct {
 	// OrganizationId The organizationId of the capella.
 	OrganizationId types.String `tfsdk:"organization_id"`

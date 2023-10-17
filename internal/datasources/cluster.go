@@ -104,7 +104,6 @@ func (d *Cluster) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 		return
 	}
 
-	// Map response body to model
 	for _, cluster := range clusterResp.Data {
 		audit := providerschema.NewCouchbaseAuditData(cluster.Audit)
 

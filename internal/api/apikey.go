@@ -9,7 +9,8 @@ import (
 // [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
 type Resources = []ResourcesItems
 
-// ResourcesItems defines model for APIKeyResourcesItems.
+// ResourcesItems the individual item that is part of Resources.
+// These items define the set of roles or access that can be had on a single type of resource.
 type ResourcesItems struct {
 	// Id is the id of the project.
 	Id uuid.UUID `json:"id"`

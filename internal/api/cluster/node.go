@@ -26,7 +26,7 @@ type Compute struct {
 	Ram int `json:"ram"`
 }
 
-// DiskAWS defines model for DiskAWS.
+// DiskAWS defines the disk metadata as supported by AWS.
 type DiskAWS struct {
 	// Iops Please refer to documentation for supported IOPS.
 	Iops int `json:"iops"`
@@ -43,7 +43,7 @@ type DiskAWS struct {
 // for AWS cloud provider.
 type DiskAWSType string
 
-// DiskAzure defines model for DiskAzure.
+// DiskAzure defines attributes for disks metadata supported in Azure.
 type DiskAzure struct {
 	// Iops is required for ultra disk types. Please refer to documentation
 	// for supported IOPS.
@@ -61,7 +61,7 @@ type DiskAzure struct {
 // DiskAzureType depicts type of disk. Please choose from the given list for Azure cloud provider.
 type DiskAzureType string
 
-// DiskGCP defines model for DiskGCP.
+// DiskGCP defines the disk metadata as supported by GCP.
 type DiskGCP struct {
 	// Storage is storage in GB. Please refer to documentation for supported storage.
 	Storage int `json:"storage"`

@@ -120,7 +120,6 @@ func (d *ApiKey) Read(ctx context.Context, req datasource.ReadRequest, resp *dat
 		return
 	}
 
-	// Map response body to model
 	for _, apiKey := range apiKeyResp.Data {
 		audit := providerschema.NewCouchbaseAuditData(apiKey.Audit)
 

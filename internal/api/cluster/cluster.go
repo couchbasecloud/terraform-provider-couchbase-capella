@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// Availability defines model for Availability.
+// Availability defines if the cluster nodes will be deployed in multiple or single availability zones in the cloud.
 type Availability struct {
 	// Type is availability zone type, either 'single' or 'multi'.
 	Type AvailabilityType `json:"type"`
