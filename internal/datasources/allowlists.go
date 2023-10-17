@@ -33,7 +33,7 @@ func NewAllowLists() datasource.DataSource {
 
 // Metadata returns the allow list data source type name.
 func (d *AllowLists) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_allowlist"
+	resp.TypeName = req.ProviderTypeName + "_allowlists"
 }
 
 // Schema defines the schema for the allowlist data source.
@@ -176,8 +176,6 @@ func (d *AllowLists) mapResponseBody(
 			ProjectId:      types.StringValue(state.ProjectId.ValueString()),
 			ClusterId:      types.StringValue(state.ClusterId.ValueString()),
 			Cidr:           types.StringValue(allowList.Cidr),
-			Comment:        types.StringValue(*allowList.Comment),
-			ExpiresAt:      types.StringValue(*allowList.ExpiresAt),
 			Audit: providerschema.CouchbaseAuditData{
 				CreatedAt:  types.StringValue(allowList.Audit.CreatedAt.String()),
 				CreatedBy:  types.StringValue(allowList.Audit.CreatedBy),
@@ -185,6 +183,12 @@ func (d *AllowLists) mapResponseBody(
 				ModifiedBy: types.StringValue(allowList.Audit.ModifiedBy),
 				Version:    types.Int64Value(int64(allowList.Audit.Version)),
 			},
+		}
+		if allowList.Comment != nil {
+			allowListState.Comment = types.StringValue(*allowList.Comment)
+		}
+		if allowList.ExpiresAt != nil {
+			allowListState.ExpiresAt = types.StringValue(*allowList.ExpiresAt)
 		}
 		state.Data = append(state.Data, allowListState)
 	}
