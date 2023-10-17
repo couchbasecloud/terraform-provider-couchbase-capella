@@ -46,58 +46,36 @@ type AppService struct {
 	Audit types.Object `tfsdk:"audit"`
 }
 
-type AppServices struct {
-	// OrganizationId is the organizationId of the capella tenant.
-	OrganizationId types.String `tfsdk:"organization_id"`
-
-	// ProjectId is the projectId of the cluster.
-	ProjectId types.String `tfsdk:"project_id"`
-
-	// ClusterId is the clusterId of the cluster.
-	ClusterId types.String `tfsdk:"cluster_id"`
-
-	// Data contains the list of resources.
-	Data []OneAppService `tfsdk:"data"`
-}
-
-// OneAppService maps app service resource schema data; there is a separate response object to avoid conversion error for nested fields.
-type OneAppService struct {
-	// Id is a GUID4 identifier of the app service.
-	Id types.String `tfsdk:"id"`
-
-	// Name is the name of the app service, the name of the app service should follow this naming criteria:
-	// An app service name should have at least 2 characters and up to 256 characters.
-	Name types.String `tfsdk:"name"`
-
-	// Description is the description for the app service.
-	Description types.String `tfsdk:"description"`
-
-	// CloudProvider is the cloud provider where the cluster will be hosted.
-	CloudProvider types.String `tfsdk:"cloud_provider"`
-
-	// Nodes is the number of nodes configured for the app service.
-	Nodes types.Int64 `tfsdk:"nodes"`
-
-	// Compute is the CPU and RAM configuration of the app service.
-	Compute Compute `tfsdk:"compute"`
-
-	// OrganizationId is the organizationId of the capella tenant.
-	OrganizationId types.String `tfsdk:"organization_id"`
-
-	// ProjectId is the projectId of the cluster.
-	ProjectId types.String `tfsdk:"project_id"`
-
-	// ClusterId is the clusterId of the cluster.
-	ClusterId types.String `tfsdk:"cluster_id"`
-
-	// CurrentState defines the current state of app service.
-	CurrentState types.String `tfsdk:"current_state"`
-
-	// Version defines the version of the app service server
-	Version types.String `tfsdk:"version"`
-
-	// Audit represents all audit-related fields. It is of types.Object type to avoid conversion error for a nested field.
-	Audit CouchbaseAuditData `tfsdk:"audit"`
+// NewAppService creates a new instance of an App Service
+func NewAppService(
+	Id types.String,
+	Name types.String,
+	Description types.String,
+	CloudProvider types.String,
+	Nodes types.Int64,
+	Compute Compute,
+	OrganizationId types.String,
+	ProjectId types.String,
+	ClusterId types.String,
+	CurrentState types.String,
+	Version types.String,
+	Audit types.Object,
+) *AppService {
+	newAppService := AppService{
+		Id:             Id,
+		Name:           Name,
+		Description:    Description,
+		CloudProvider:  CloudProvider,
+		Nodes:          Nodes,
+		Compute:        Compute,
+		OrganizationId: OrganizationId,
+		ProjectId:      ProjectId,
+		ClusterId:      ClusterId,
+		CurrentState:   CurrentState,
+		Version:        Version,
+		Audit:          Audit,
+	}
+	return &newAppService
 }
 
 // Validate will split the IDs by a delimiter i.e. comma , in case a terraform import CLI is invoked.

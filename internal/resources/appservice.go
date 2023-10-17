@@ -231,7 +231,7 @@ func (a *AppService) validateCreateAppServiceRequest(plan providerschema.AppServ
 	return nil
 }
 
-func (a *AppService) refreshAppService(ctx context.Context, organizationId, projectId, clusterId, appServiceId string) (*providerschema.OneAppService, error) {
+func (a *AppService) refreshAppService(ctx context.Context, organizationId, projectId, clusterId, appServiceId string) (*providerschema.AppService, error) {
 	response, err := a.Client.Execute(
 		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s", a.HostURL, organizationId, projectId, clusterId, appServiceId),
 		http.MethodGet,
@@ -249,30 +249,30 @@ func (a *AppService) refreshAppService(ctx context.Context, organizationId, proj
 		return nil, err
 	}
 
-	refreshedState := providerschema.OneAppService{
-		Id:            types.StringValue(appServiceId),
-		Name:          types.StringValue(appServiceResponse.Name),
-		Description:   types.StringValue(appServiceResponse.Description),
-		CloudProvider: types.StringValue(appServiceResponse.CloudProvider),
-		Nodes:         types.Int64Value(int64(appServiceResponse.Nodes)),
-		Compute: providerschema.Compute{
+	audit := providerschema.NewCouchbaseAuditData(appServiceResponse.Audit)
+	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
+	if diags.HasError() {
+		return nil, errors.ErrUnableToConvertAuditData
+	}
+
+	refreshedState := providerschema.NewAppService(
+		types.StringValue(appServiceId),
+		types.StringValue(appServiceResponse.Name),
+		types.StringValue(appServiceResponse.Description),
+		types.StringValue(appServiceResponse.CloudProvider),
+		types.Int64Value(int64(appServiceResponse.Nodes)),
+		providerschema.Compute{
 			Cpu: types.Int64Value(appServiceResponse.Compute.Cpu),
 			Ram: types.Int64Value(appServiceResponse.Compute.Ram),
 		},
-		OrganizationId: types.StringValue(organizationId),
-		ProjectId:      types.StringValue(projectId),
-		ClusterId:      types.StringValue(clusterId),
-		CurrentState:   types.StringValue(string(appServiceResponse.CurrentState)),
-		Version:        types.StringValue(appServiceResponse.Version),
-		Audit: providerschema.CouchbaseAuditData{
-			CreatedAt:  types.StringValue(appServiceResponse.Audit.CreatedAt.String()),
-			CreatedBy:  types.StringValue(appServiceResponse.Audit.CreatedBy),
-			ModifiedAt: types.StringValue(appServiceResponse.Audit.ModifiedAt.String()),
-			ModifiedBy: types.StringValue(appServiceResponse.Audit.ModifiedBy),
-			Version:    types.Int64Value(int64(appServiceResponse.Audit.Version)),
-		},
-	}
-	return &refreshedState, nil
+		types.StringValue(organizationId),
+		types.StringValue(projectId),
+		types.StringValue(clusterId),
+		types.StringValue(string(appServiceResponse.CurrentState)),
+		types.StringValue(appServiceResponse.Version),
+		auditObj,
+	)
+	return refreshedState, nil
 }
 
 // checkAppServiceStatus monitors the status of an app service creation, update and deletion operation for a specified
