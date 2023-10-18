@@ -36,7 +36,10 @@ func Test_ValidateSchemaState(t *testing.T) {
 		{
 			name: "[POSITIVE] - Multiple IDs successfully validated via terraform import",
 			state: map[Attr]basetypes.StringValue{
-				Id: basetypes.NewStringValue("id=100,cluster_id=200,project_id=300,organization_id=400"),
+				Id:             basetypes.NewStringValue("id=100,cluster_id=200,project_id=300,organization_id=400"),
+				ClusterId:      basetypes.NewStringNull(),
+				ProjectId:      basetypes.NewStringNull(),
+				OrganizationId: basetypes.NewStringNull(),
 			},
 			expectedDatabaseCredentialId: "100",
 			expectedClusterId:            "200",
@@ -46,7 +49,10 @@ func Test_ValidateSchemaState(t *testing.T) {
 		{
 			name: "[POSITIVE] - IDs are passed in a different order via terraform import",
 			state: map[Attr]basetypes.StringValue{
-				Id: basetypes.NewStringValue("cluster_id=200,id=100,organization_id=400,project_id=300"),
+				Id:             basetypes.NewStringValue("cluster_id=200,id=100,organization_id=400,project_id=300"),
+				ClusterId:      basetypes.NewStringNull(),
+				ProjectId:      basetypes.NewStringNull(),
+				OrganizationId: basetypes.NewStringNull(),
 			},
 			expectedDatabaseCredentialId: "100",
 			expectedClusterId:            "200",
