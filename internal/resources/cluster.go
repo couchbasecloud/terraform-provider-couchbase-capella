@@ -10,9 +10,8 @@ import (
 
 	"terraform-provider-capella/internal/api"
 	clusterapi "terraform-provider-capella/internal/api/cluster"
-	providerschema "terraform-provider-capella/internal/schema"
-
 	"terraform-provider-capella/internal/errors"
+	providerschema "terraform-provider-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"

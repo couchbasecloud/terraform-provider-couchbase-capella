@@ -5,7 +5,7 @@ output "cluster" {
 }
 
 resource "capella_cluster" "new_cluster" {
-  organization_id = data.capella_organization.existing_organization.id
+  organization_id = var.organization_id
   project_id      = capella_project.new_project.id
   name            = var.cluster.name
   description     = "My first test cluster for multiple services."
