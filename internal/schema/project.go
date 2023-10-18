@@ -63,7 +63,7 @@ func (p Project) Validate() (projectId string, organizationId string, err error)
 	return projectId, organizationId, nil
 }
 
-// Projects defines model for GetProjectsResponse.
+// Projects defines the attributes for a list of projects in Capella.
 type Projects struct {
 	// OrganizationId The organizationId of the capella.
 	OrganizationId types.String `tfsdk:"organization_id"`

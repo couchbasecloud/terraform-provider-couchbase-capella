@@ -1,19 +1,10 @@
-output "existing_project" {
-  value = capella_project.existing_project
-}
-
 output "new_cluster" {
   value = capella_cluster.new_cluster
-}
-resource "capella_project" "existing_project" {
-  organization_id = var.organization_id
-  name            = var.project_name
-  description     = "A Capella Project that will host many Capella clusters."
 }
 
 resource "capella_cluster" "new_cluster" {
   organization_id = var.organization_id
-  project_id      = capella_project.existing_project.id
+  project_id      = var.project_id
   name            = var.cluster.name
   description     = "My first test cluster for multiple services."
   cloud_provider = {

@@ -27,8 +27,10 @@ type CloudProvider struct {
 	Cidr types.String `tfsdk:"cidr"`
 
 	// Region is the cloud provider region, e.g. 'us-west-2'.
-	// For information about supported regions,
-	// see [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html).
+	// For information about supported regions, see
+	// [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html).
+	// [Google Cloud Provider](https://docs.couchbase.com/cloud/reference/gcp.html).
+	// [Azure Cloud](https://docs.couchbase.com/cloud/reference/azure.html).
 	Region types.String `tfsdk:"region"`
 
 	// Type is the cloud provider type, either 'AWS', 'GCP', or 'Azure'.
@@ -37,7 +39,10 @@ type CloudProvider struct {
 
 // Compute depicts the couchbase compute, following are the supported compute combinations
 // for CPU and RAM for different cloud providers. To learn more,
-// see [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html).
+// To learn more, see:
+// [AWS] https://docs.couchbase.com/cloud/reference/aws.html
+// [GCP] https://docs.couchbase.com/cloud/reference/gcp.html
+// [Azure] https://docs.couchbase.com/cloud/reference/azure.html
 type Compute struct {
 	// Cpu depicts cpu units (cores).
 	Cpu types.Int64 `tfsdk:"cpu"`
@@ -46,7 +51,7 @@ type Compute struct {
 	Ram types.Int64 `tfsdk:"ram"`
 }
 
-// CouchbaseServer defines model for CouchbaseServer.
+// CouchbaseServer defines version for the Couchbase Server to be launched during the creation of the Capella cluster.
 type CouchbaseServer struct {
 	// Version is the version of the Couchbase Server to be installed in the cluster.
 	// Refer to documentation [here](https://docs.couchbase.com/cloud/clusters/upgrade-database.html#server-version-maintenance-support)
@@ -71,23 +76,24 @@ type ServiceGroup struct {
 	Services []types.String `tfsdk:"services"`
 }
 
-// Node defines model for Node.
+// Node defines attributes of a cluster node.
 type Node struct {
 	// Compute Following are the supported compute combinations for CPU and RAM
 	// for different cloud providers. To learn more, see
 	// [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html).
-	Compute Compute   `tfsdk:"compute"`
-	Disk    Node_Disk `tfsdk:"disk"`
+	Compute Compute `tfsdk:"compute"`
+	// Disk is the type of disk that is supported per cloud provider during cluster creation.
+	Disk Node_Disk `tfsdk:"disk"`
 }
 
-// Node_Disk defines model for Node.Disk.
+// Node_Disk is the type of disk on a particular node that is supported per cloud provider during cluster creation.
 type Node_Disk struct {
 	Type    types.String `tfsdk:"type"`
 	Storage types.Int64  `tfsdk:"storage"`
 	IOPS    types.Int64  `tfsdk:"iops"`
 }
 
-// Support defines model for Support.
+// Support defines the support plan and timezone for this particular cluster.
 type Support struct {
 	// Plan is the plan type, either 'Basic', 'Developer Pro', or 'Enterprise'.
 	Plan types.String `tfsdk:"plan"`
@@ -97,7 +103,7 @@ type Support struct {
 	Timezone types.String `tfsdk:"timezone"`
 }
 
-// Cluster defines model for CreateClusterRequest.
+// Cluster defines the response as received from V4 Capella Public API when asked to create a new cluster.
 type Cluster struct {
 	ClusterData
 
@@ -106,7 +112,6 @@ type Cluster struct {
 	IfMatch types.String `tfsdk:"if_match"`
 }
 
-// NewCluster create new cluster object
 func NewCluster(cluster *clusterapi.GetClusterResponse, organizationId, projectId string, auditObject basetypes.ObjectValue) (*Cluster, error) {
 	newClusterData, err := NewClusterData(cluster, organizationId, projectId, auditObject)
 	if err != nil {
@@ -248,7 +253,7 @@ func (a *Cluster) checkEmpty(resourceIdMap map[string]string) error {
 	return nil
 }
 
-// Clusters defines model for GetClustersResponse.
+// Clusters defines structure based on the response received from V4 Capella Public API when asked to list clusters.
 type Clusters struct {
 	// OrganizationId is the organizationId of the capella.
 	OrganizationId types.String `tfsdk:"organization_id"`
@@ -260,7 +265,7 @@ type Clusters struct {
 	Data []ClusterData `tfsdk:"data"`
 }
 
-// ClusterData defines model for single cluster data
+// ClusterData defines attributes for a single cluster when fetched from the V4 Capella Public API.
 type ClusterData struct {
 	Id types.String `tfsdk:"id"`
 
@@ -276,14 +281,14 @@ type ClusterData struct {
 	// ProjectId is the projectId of the capella tenant.
 	ProjectId types.String `tfsdk:"project_id"`
 
-	// Availability defines model for availability.
+	// Availability defines if the cluster nodes will be deployed in multiple or single availability zones in the cloud.
 	Availability *Availability `tfsdk:"availability"`
 
 	// CloudProvider The cloud provider where the cluster will be hosted.
 	// To learn more, see [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html).
 	CloudProvider *CloudProvider `tfsdk:"cloud_provider"`
 
-	// CouchbaseServer defines model for couchbaseServer.
+	// CouchbaseServer defines version for the Couchbase Server to be launched during the creation of the Capella cluster.
 	CouchbaseServer *CouchbaseServer `tfsdk:"couchbase_server"`
 
 	// Description of the cluster (up to 1024 characters).
@@ -295,14 +300,13 @@ type ClusterData struct {
 	// ServiceGroups is the couchbase service groups to be run. At least one service group must contain the data service.
 	ServiceGroups []ServiceGroup `tfsdk:"service_groups"`
 
-	// Support defines model for Support.
+	// Support defines the support plan and timezone for this particular cluster.
 	Support *Support `tfsdk:"support"`
 
 	// State defines the current state of cluster
 	CurrentState types.String `tfsdk:"current_state"`
 }
 
-// NewClusterData creates a new cluster data object
 func NewClusterData(cluster *clusterapi.GetClusterResponse, organizationId, projectId string, auditObject basetypes.ObjectValue) (*ClusterData, error) {
 	newClusterData := ClusterData{
 		Id:             types.StringValue(cluster.Id.String()),

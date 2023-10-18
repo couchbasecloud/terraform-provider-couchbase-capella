@@ -27,3 +27,9 @@ variable "password" {
   description = "password for database credential"
   sensitive   = true
 }
+
+variable "access" {
+  type = list(object({
+    privileges = list(string)
+  }))
+}

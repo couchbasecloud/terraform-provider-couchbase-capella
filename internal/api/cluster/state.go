@@ -1,6 +1,5 @@
 package cluster
 
-// Defines values for State.
 const (
 	Degraded         State = "degraded"
 	Deploying        State = "deploying"
@@ -25,12 +24,11 @@ const (
 	Upgrading        State = "upgrading"
 )
 
-// State defines model for State.
+// State is the state that a cluster can have based on the fact if deployment of the cluster was successful or not.
 type State string
 
 // IsFinalState checks whether cluster is successfully deployed/updated or not while creation/updation
-//TODO: Degraded, draft, peeringFailed, turningOffFailed, and turningOnFailed are not known when it occurs and What happens if rebalancing fails? Will it retry?"
-
+// TODO: Degraded, draft, peeringFailed, turningOffFailed, and turningOnFailed are not known when it occurs and What happens if rebalancing fails? Will it retry?"
 func IsFinalState(state State) bool {
 	//"""Returns True if the state is critical, False otherwise."""
 	finalStates := []State{
