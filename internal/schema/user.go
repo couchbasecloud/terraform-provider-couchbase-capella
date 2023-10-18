@@ -244,28 +244,3 @@ func MorphResources(resources []api.Resource) []Resource {
 	}
 	return morphedResources
 }
-
-//func MorphResources(resources []Resource) []Resource {
-//	var morphedResources = make([]Resource, len(resources))
-//	for i, res := range resources {
-//		var morphedResource Resource
-//
-//		morphedResource.Id = res.Id
-//
-//		// Check for optional field
-//		if !res.Type.IsNull() {
-//			resourceType := res.Type
-//			morphedResource.Type = resourceType
-//		}
-//
-//		var roles = make([]basetypes.StringValue, len(res.Roles))
-//		for j, role := range res.Roles {
-//			roles[j] = role
-//		}
-//
-//		morphedResource.Roles = roles
-//		morphedResources[i] = morphedResource
-//
-//	}
-//	return morphedResources
-//}

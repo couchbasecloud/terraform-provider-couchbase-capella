@@ -31,8 +31,6 @@ type AllowList struct {
 	// ClusterId is the clusterId of the capella tenant.
 	ClusterId types.String `tfsdk:"cluster_id"`
 
-	IfMatch types.String `tfsdk:"if_match"`
-
 	// Audit represents all audit-related fields. It is of types.Object type to avoid conversion error for a nested field.
 	Audit types.Object `tfsdk:"audit"`
 }
@@ -155,6 +153,4 @@ type OneAllowList struct {
 
 	// ClusterId is the clusterId of the capella tenant.
 	ClusterId types.String `tfsdk:"cluster_id"`
-
-	IfMatch types.String `tfsdk:"if_match"`
 }

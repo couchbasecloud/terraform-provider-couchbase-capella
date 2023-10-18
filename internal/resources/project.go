@@ -185,6 +185,10 @@ func (r *Project) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 		return
 	}
 
+	if !state.IfMatch.IsUnknown() && !state.IfMatch.IsNull() {
+		refreshedState.IfMatch = state.IfMatch
+	}
+
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &refreshedState)
 	resp.Diagnostics.Append(diags...)
