@@ -114,7 +114,7 @@ type Users struct {
 func (u *User) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
 		OrganizationId: u.OrganizationId,
-		ProjectId:      u.Id,
+		UserId:         u.Id,
 	}
 
 	IDs, err := validateSchemaState(state)

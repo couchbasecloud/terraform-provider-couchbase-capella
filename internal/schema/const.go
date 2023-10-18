@@ -10,5 +10,6 @@ const (
 	AllowListId          Attr = "allowListId"
 	ApiKeyId             Attr = "apiKeyId"
 	DatabaseCredentialId Attr = "databaseCredentialId"
+	BucketId             Attr = "bucketId"
 	Id                   Attr = "id"
 )

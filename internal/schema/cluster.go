@@ -190,7 +190,7 @@ func (c *Cluster) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
 		OrganizationId: c.OrganizationId,
 		ProjectId:      c.ProjectId,
-		Id:             c.Id,
+		ClusterId:      c.Id,
 	}
 
 	IDs, err := validateSchemaState(state)

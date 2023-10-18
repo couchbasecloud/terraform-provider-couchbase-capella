@@ -118,10 +118,10 @@ type OneDatabaseCredential struct {
 // `terraform import capella_database_credential.new_database_credential id=<uuid>,cluster_id=<uuid>,project_id=<uuid>,organization_id=<uuid>`
 func (c DatabaseCredential) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
-		OrganizationId: c.OrganizationId,
-		ProjectId:      c.ProjectId,
-		ClusterId:      c.ClusterId,
-		Id:             c.Id,
+		OrganizationId:       c.OrganizationId,
+		ProjectId:            c.ProjectId,
+		ClusterId:            c.ClusterId,
+		DatabaseCredentialId: c.Id,
 	}
 	IDs, err := validateSchemaState(state)
 	if err != nil {
