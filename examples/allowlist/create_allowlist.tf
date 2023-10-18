@@ -6,7 +6,7 @@ resource "capella_allowlist" "new_allowlist" {
   organization_id = var.organization_id
   project_id      = var.project_id
   cluster_id      = var.cluster_id
-  cidr            = "10.0.0.0/16"
+  cidr            = var.cidr
   comment         = var.comment
-  expires_at      = "2023-11-14T21:49:58.465Z"
+  expires_at      = var.expires_at
 }

@@ -41,8 +41,9 @@ access = [{
   privileges = ["data_reader", "data_writer"]
 }]
 
-comment = "Allow access from a public IP"
-cidr    = "8.8.8.8/32"
+comment    = "Allow access from a public IP"
+cidr       = "8.8.8.8/32"
+expires_at = "2023-11-30T23:59:59.465Z"
 
 bucket = {
   name                       = "new_terraform_bucket"

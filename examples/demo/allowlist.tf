@@ -4,5 +4,5 @@ resource "capella_allowlist" "new_allowlist" {
   cluster_id      = capella_cluster.new_cluster.id
   cidr            = var.cidr
   comment         = var.comment
-  expires_at      = "2023-11-30T23:59:59.465Z"
+  expires_at      = var.expires_at
 }

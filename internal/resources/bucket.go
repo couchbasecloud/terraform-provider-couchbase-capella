@@ -33,12 +33,12 @@ func NewBucket() resource.Resource {
 	return &Bucket{}
 }
 
-// Metadata returns the Cluster resource type name.
+// Metadata returns the Bucket resource type name.
 func (c *Bucket) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_bucket"
 }
 
-// Schema defines the schema for the Cluster resource.
+// Schema defines the schema for the Bucket resource.
 func (c *Bucket) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = BucketSchema()
 }

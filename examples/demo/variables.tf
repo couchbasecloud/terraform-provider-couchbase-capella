@@ -85,6 +85,10 @@ variable "cidr" {
   description = "cidr in the allowlist that will have access to the Capella cluster"
 }
 
+variable "expires_at" {
+  description = "timestamp when the allowlist expires"
+}
+
 variable "database_credential_name" {
   description = "Database Credentials Name"
 }
