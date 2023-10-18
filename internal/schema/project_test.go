@@ -74,15 +74,15 @@ func TestProjectSchemaValidate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			projectId, organizationId, err := tt.input.Validate()
+			resourceIDs, err := tt.input.Validate()
 
 			if tt.expectedErr != nil {
 				assert.Equal(t, tt.expectedErr, err)
 				return
 			}
 
-			assert.Equal(t, tt.expectedProjectId, projectId)
-			assert.Equal(t, tt.expectedOrganizationId, organizationId)
+			assert.Equal(t, tt.expectedProjectId, resourceIDs["projectID"])
+			assert.Equal(t, tt.expectedOrganizationId, resourceIDs["organizationId"])
 		})
 	}
 }

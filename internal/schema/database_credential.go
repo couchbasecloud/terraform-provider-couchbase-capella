@@ -1,11 +1,12 @@
 package schema
 
 import (
-	"strings"
+	"fmt"
 
 	"terraform-provider-capella/internal/errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 // DatabaseCredential maps the schema for the resource - database credential in Capella.
@@ -115,74 +116,18 @@ type OneDatabaseCredential struct {
 // Validate will split the IDs by a delimiter i.e. comma , in case a terraform import CLI is invoked.
 // The format of the terraform import CLI would include the IDs as follows -
 // `terraform import capella_database_credential.new_database_credential id=<uuid>,cluster_id=<uuid>,project_id=<uuid>,organization_id=<uuid>`
-func (c DatabaseCredential) Validate() (databaseCredentialId, clusterId, projectId, organizationId string, err error) {
-	const (
-		idDelimiter             = ","
-		organizationIdSep       = "organization_id="
-		projectIdSep            = "project_id="
-		clusterIdSep            = "cluster_id="
-		databaseCredentialIdSep = "id="
-	)
-
-	organizationId = c.OrganizationId.ValueString()
-	projectId = c.ProjectId.ValueString()
-	clusterId = c.ClusterId.ValueString()
-	databaseCredentialId = c.Id.ValueString()
-	var found bool
-
-	// check if the id is a comma separated string of multiple IDs, usually passed during the terraform import CLI
-	if c.OrganizationId.IsNull() {
-		strs := strings.Split(c.Id.ValueString(), idDelimiter)
-		if len(strs) != 4 {
-			err = errors.ErrIdMissing
-			return
-		}
-		_, databaseCredentialId, found = strings.Cut(strs[0], databaseCredentialIdSep)
-		if !found {
-			err = errors.ErrDatabaseCredentialIdMissing
-			return
-		}
-
-		_, clusterId, found = strings.Cut(strs[1], clusterIdSep)
-		if !found {
-			err = errors.ErrClusterIdMissing
-			return
-		}
-
-		_, projectId, found = strings.Cut(strs[2], projectIdSep)
-		if !found {
-			err = errors.ErrProjectIdMissing
-			return
-		}
-
-		_, organizationId, found = strings.Cut(strs[3], organizationIdSep)
-		if !found {
-			err = errors.ErrOrganizationIdMissing
-			return
-		}
+func (c DatabaseCredential) Validate() (map[Attr]string, error) {
+	state := map[Attr]basetypes.StringValue{
+		OrganizationId: c.OrganizationId,
+		ProjectId:      c.ProjectId,
+		ClusterId:      c.ClusterId,
+		Id:             c.Id,
 	}
-
-	if databaseCredentialId == "" {
-		err = errors.ErrDatabaseCredentialIdCannotBeEmpty
-		return
+	IDs, err := validateSchemaState(state)
+	if err != nil {
+		return nil, fmt.Errorf("failed to validate resource state: %s", err)
 	}
-
-	if clusterId == "" {
-		err = errors.ErrClusterIdCannotBeEmpty
-		return
-	}
-
-	if projectId == "" {
-		err = errors.ErrProjectIdCannotBeEmpty
-		return
-	}
-
-	if organizationId == "" {
-		err = errors.ErrOrganizationIdCannotBeEmpty
-		return
-	}
-
-	return databaseCredentialId, clusterId, projectId, organizationId, nil
+	return IDs, nil
 }
 
 // DatabaseCredentials defines model for GetDatabaseCredentialsResponse.

@@ -1,10 +1,10 @@
 package schema
 
 import (
-	"strings"
-	"terraform-provider-capella/internal/errors"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 // Project maps project resource schema data
@@ -29,38 +29,18 @@ type Project struct {
 	Audit types.Object `tfsdk:"audit"`
 }
 
-func (p Project) Validate() (projectId string, organizationId string, err error) {
-	const idDelimiter = ","
-	organizationId = p.OrganizationId.ValueString()
-	projectId = p.Id.ValueString()
-	var found bool
-
-	// check if the id is a comma separated string of multiple IDs, usually passed during the terraform import CLI
-	if p.OrganizationId.IsNull() {
-		strs := strings.Split(p.Id.ValueString(), idDelimiter)
-		if len(strs) != 2 {
-			return "", "", errors.ErrIdMissing
-		}
-		_, projectId, found = strings.Cut(strs[0], "id=")
-		if !found {
-			return "", "", errors.ErrProjectIdMissing
-		}
-
-		_, organizationId, found = strings.Cut(strs[1], "organization_id=")
-		if !found {
-			return "", "", errors.ErrOrganizationIdMissing
-		}
+func (p Project) Validate() (map[Attr]string, error) {
+	state := map[Attr]basetypes.StringValue{
+		OrganizationId: p.OrganizationId,
+		ProjectId:      p.Id,
 	}
 
-	if projectId == "" {
-		return "", "", errors.ErrProjectIdCannotBeEmpty
+	IDs, err := validateSchemaState(state)
+	if err != nil {
+		return nil, fmt.Errorf("failed to validate resource state: %s", err)
 	}
 
-	if organizationId == "" {
-		return "", "", errors.ErrOrganizationIdCannotBeEmpty
-	}
-
-	return projectId, organizationId, nil
+	return IDs, nil
 }
 
 // Projects defines the attributes for a list of projects in Capella.

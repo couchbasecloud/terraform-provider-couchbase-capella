@@ -1,8 +1,14 @@
 package schema
 
+type Attr string
+
 const (
-	OrganizationId = "organizationId"
-	ProjectId      = "projectId"
-	ClusterId      = "clusterId"
-	ApiKeyId       = "apiKeyId"
+	OrganizationId       Attr = "organizationId"
+	ProjectId            Attr = "projectId"
+	ClusterId            Attr = "clusterId"
+	UserId               Attr = "userId"
+	AllowListId          Attr = "allowListId"
+	ApiKeyId             Attr = "apiKeyId"
+	DatabaseCredentialId Attr = "databaseCredentialId"
+	Id                   Attr = "id"
 )
