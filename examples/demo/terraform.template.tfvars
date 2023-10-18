@@ -1,7 +1,7 @@
-auth_token = "<v4-api-key-secret>"
-host       = "https://cloudapi.cloud.couchbase.com"
-
-organization_id = "<organization_id>"
+#auth_token = "<v4-api-key-secret>"
+#host       = "https://cloudapi.cloud.couchbase.com"
+#
+#organization_id = "<organization_id>"
 project_name    = "My First Terraform Project"
 
 cloud_provider = {
@@ -11,7 +11,7 @@ cloud_provider = {
 
 cluster = {
   name               = "My First Terraform Cluster"
-  cidr               = "192.168.0.0/20"
+  cidr               = "10.0.30.0/23"
   node_count         = 3
   server_version     = "7.1"
   couchbase_services = ["data", "index", "query"]

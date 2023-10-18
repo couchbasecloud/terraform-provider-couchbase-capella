@@ -41,7 +41,16 @@ func (c *Certificate) Schema(_ context.Context, _ datasource.SchemaRequest, resp
 			"organization_id": requiredStringAttribute,
 			"project_id":      requiredStringAttribute,
 			"cluster_id":      requiredStringAttribute,
-			"certificate":     computedStringAttribute,
+			"data": schema.ListNestedAttribute{
+				Computed: true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"certificate": schema.StringAttribute{
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
