@@ -153,7 +153,7 @@ data.capella_certificate.existing_certificate
 ```
 
 ## DESTROY
-### Finally, destroy the resources created by Terraform
+### Finally, delete the state of the certificate from terraform outputs
 
 Command: `terraform destroy`
 
