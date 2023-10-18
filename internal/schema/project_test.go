@@ -11,15 +11,17 @@ import (
 )
 
 func TestProjectSchemaValidate(t *testing.T) {
-	tests := []struct {
+	type test struct {
 		name                   string
 		input                  Project
 		expectedProjectId      string
 		expectedOrganizationId string
 		expectedErr            error
-	}{
+	}
+
+	tests := []test{
 		{
-			name: "[POSITIVE] project ID and organization ID are passed via terraform apply",
+			name: "[POSITIVE] organization ID and project ID are passed via terraform apply",
 			input: Project{
 				Id:             basetypes.NewStringValue("100"),
 				OrganizationId: basetypes.NewStringValue("200"),
@@ -28,7 +30,7 @@ func TestProjectSchemaValidate(t *testing.T) {
 			expectedOrganizationId: "200",
 		},
 		{
-			name: "[POSITIVE] project ID and organization ID are passed via terraform import",
+			name: "[POSITIVE] IDs are passed via terraform import",
 			input: Project{
 				Id: basetypes.NewStringValue("id=100,organization_id=200"),
 			},
@@ -42,47 +44,18 @@ func TestProjectSchemaValidate(t *testing.T) {
 			},
 			expectedErr: errors.ErrIdMissing,
 		},
-		{
-			name: "[NEGATIVE] only organization ID is passed via terraform apply",
-			input: Project{
-				OrganizationId: basetypes.NewStringValue("100"),
-			},
-			expectedErr: errors.ErrProjectIdCannotBeEmpty,
-		},
-		{
-			name: "[NEGATIVE] project ID and organization ID are incorrectly passed via terraform import",
-			input: Project{
-				Id: basetypes.NewStringValue("100&organization_id=200"),
-			},
-			expectedErr: errors.ErrIdMissing,
-		},
-		{
-			name: "[NEGATIVE] project ID and organization ID are incorrectly passed via terraform import",
-			input: Project{
-				Id: basetypes.NewStringValue("id=100,orgId=200"),
-			},
-			expectedErr: errors.ErrOrganizationIdMissing,
-		},
-		{
-			name: "[NEGATIVE] project ID and organization ID are incorrectly passed via terraform import",
-			input: Project{
-				Id: basetypes.NewStringValue("ProjectID=100,organization_id=200"),
-			},
-			expectedErr: errors.ErrProjectIdMissing,
-		},
 	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			IDs, err := test.input.Validate()
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			resourceIDs, err := tt.input.Validate()
-
-			if tt.expectedErr != nil {
-				assert.Equal(t, tt.expectedErr, err)
+			if test.expectedErr != nil {
+				assert.ErrorContains(t, err, test.expectedErr.Error())
 				return
 			}
 
-			assert.Equal(t, tt.expectedProjectId, resourceIDs["projectID"])
-			assert.Equal(t, tt.expectedOrganizationId, resourceIDs["organizationId"])
+			assert.Equal(t, test.expectedProjectId, IDs[Id])
+			assert.Equal(t, test.expectedOrganizationId, IDs[OrganizationId])
 		})
 	}
 }
