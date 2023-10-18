@@ -32,7 +32,7 @@ type Project struct {
 func (p Project) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
 		OrganizationId: p.OrganizationId,
-		ProjectId:      p.Id,
+		Id:             p.Id,
 	}
 
 	IDs, err := validateSchemaState(state)

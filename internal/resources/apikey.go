@@ -213,7 +213,7 @@ func (a *ApiKey) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 
 	var (
 		organizationId = resourceIDs[providerschema.OrganizationId]
-		apiKeyId       = resourceIDs[providerschema.ApiKeyId]
+		apiKeyId       = resourceIDs[providerschema.Id]
 	)
 
 	// Get refreshed api key value from Capella
@@ -289,7 +289,7 @@ func (a *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 
 	var (
 		organizationId = resourceIDs[providerschema.OrganizationId]
-		apiKeyId       = resourceIDs[providerschema.ApiKeyId]
+		apiKeyId       = resourceIDs[providerschema.Id]
 	)
 
 	if plan.Rotate.IsNull() || plan.Rotate.IsUnknown() {
@@ -408,7 +408,7 @@ func (a *ApiKey) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 
 	var (
 		organizationId = resourceIDs[providerschema.OrganizationId]
-		apiKeyId       = resourceIDs[providerschema.ApiKeyId]
+		apiKeyId       = resourceIDs[providerschema.Id]
 	)
 
 	// Delete existing api key

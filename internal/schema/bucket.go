@@ -263,7 +263,7 @@ func (b Bucket) Validate() (map[Attr]string, error) {
 		OrganizationId: b.OrganizationId,
 		ProjectId:      b.ProjectId,
 		ClusterId:      b.ClusterId,
-		BucketId:       b.Id,
+		Id:             b.Id,
 	}
 
 	IDs, err := validateSchemaState(state)

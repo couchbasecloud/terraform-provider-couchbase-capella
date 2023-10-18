@@ -142,7 +142,7 @@ func (r *AllowList) Read(ctx context.Context, req resource.ReadRequest, resp *re
 	}
 
 	// Validate parameters were successfully imported
-	resourceIDs, err := state.Validate()
+	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella AllowList",
@@ -152,10 +152,10 @@ func (r *AllowList) Read(ctx context.Context, req resource.ReadRequest, resp *re
 	}
 
 	var (
-		organizationId = resourceIDs["organizationId"]
-		projectId      = resourceIDs["projectId"]
-		clusterId      = resourceIDs["clusterId"]
-		allowListId    = resourceIDs["allowListId"]
+		organizationId = IDs[providerschema.ClusterId]
+		projectId      = IDs[providerschema.ProjectId]
+		clusterId      = IDs[providerschema.ClusterId]
+		allowListId    = IDs[providerschema.Id]
 	)
 
 	// refresh the existing allow list
@@ -211,7 +211,7 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 		return
 	}
 
-	resourceIDs, err := state.Validate()
+	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Deleting Capella Allow List",
@@ -219,15 +219,22 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 		)
 		return
 	}
+
+	var (
+		organizationId = IDs[providerschema.OrganizationId]
+		projectId      = IDs[providerschema.ProjectId]
+		clusterId      = IDs[providerschema.ClusterId]
+		allowListID    = IDs[providerschema.Id]
+	)
 	// Execute request to delete existing allowlist
 	_, err = r.Client.Execute(
 		fmt.Sprintf(
 			"%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs/%s",
 			r.HostURL,
-			resourceIDs["organizationId"],
-			resourceIDs["projectId"],
-			resourceIDs["clusterId"],
-			resourceIDs["allowListId"],
+			organizationId,
+			projectId,
+			clusterId,
+			allowListID,
 		),
 		http.MethodDelete,
 		nil,
@@ -240,7 +247,7 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 		if err.HttpStatusCode != http.StatusNotFound {
 			resp.Diagnostics.AddError(
 				"Error Deleting Capella Allow List",
-				"Could not delete Capella allowListId "+resourceIDs["allowListId"]+": "+err.CompleteError(),
+				"Could not delete Capella allowListId "+allowListID+": "+err.CompleteError(),
 			)
 			tflog.Info(ctx, "resource doesn't exist in remote server")
 			return
@@ -248,7 +255,7 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 	default:
 		resp.Diagnostics.AddError(
 			"Error Deleting Capella Allow List",
-			"Could not delete Capella allowListId "+resourceIDs["allowListId"]+": "+err.Error(),
+			"Could not delete Capella allowListId "+allowListID+": "+err.Error(),
 		)
 		return
 	}

@@ -183,10 +183,10 @@ func (c *Bucket) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 	}
 
 	var (
-		organizationId = IDs["organizationId"]
-		projectId      = IDs["projectId"]
-		clusterId      = IDs["clusterId"]
-		bucketId       = IDs["bucketId"]
+		organizationId = IDs[providerschema.OrganizationId]
+		projectId      = IDs[providerschema.ProjectId]
+		clusterId      = IDs[providerschema.ClusterId]
+		bucketId       = IDs[providerschema.Id]
 	)
 
 	refreshedState, err := c.retrieveBucket(ctx, organizationId, projectId, clusterId, bucketId)
@@ -352,10 +352,10 @@ func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 	}
 
 	var (
-		organizationId = IDs["organizationId"]
-		projectId      = IDs["projectId"]
-		clusterId      = IDs["clusterId"]
-		bucketId       = IDs["bucketId"]
+		organizationId = IDs[providerschema.OrganizationId]
+		projectId      = IDs[providerschema.ProjectId]
+		clusterId      = IDs[providerschema.ClusterId]
+		bucketId       = IDs[providerschema.Id]
 	)
 
 	bucketUpdateRequest := bucketapi.PutBucketRequest{

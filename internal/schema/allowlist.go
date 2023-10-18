@@ -57,7 +57,7 @@ func (a *AllowList) Validate() (map[Attr]string, error) {
 		OrganizationId: a.OrganizationId,
 		ProjectId:      a.ProjectId,
 		ClusterId:      a.ClusterId,
-		AllowListId:    a.Id,
+		Id:             a.Id,
 	}
 
 	IDs, err := validateSchemaState(state)

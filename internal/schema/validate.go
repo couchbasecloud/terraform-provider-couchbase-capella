@@ -10,14 +10,10 @@ import (
 
 var (
 	importIds = map[string]Attr{
-		"organization_id":       OrganizationId,
-		"project_id":            ProjectId,
-		"cluster_id":            ClusterId,
-		"user_id":               UserId,
-		"allowlist_id":          AllowListId,
-		"apikey_id":             ApiKeyId,
-		"databasecredential_id": DatabaseCredentialId,
-		"id":                    Id,
+		"organization_id": OrganizationId,
+		"project_id":      ProjectId,
+		"cluster_id":      ClusterId,
+		"id":              Id,
 	}
 )
 
