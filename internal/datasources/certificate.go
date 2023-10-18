@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"terraform-provider-capella/internal/api"
-	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -32,7 +31,7 @@ func NewCertificate() datasource.DataSource {
 
 // Metadata returns the certificates data source type name.
 func (c *Certificate) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_certificates"
+	resp.TypeName = req.ProviderTypeName + "_certificate"
 }
 
 // Schema defines the schema for the allowlist data source.
@@ -57,7 +56,7 @@ func (c *Certificate) Read(ctx context.Context, req datasource.ReadRequest, resp
 	}
 
 	// Validate state is not empty
-	err := c.validate(state)
+	err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Certificate",
@@ -105,7 +104,11 @@ func (c *Certificate) Read(ctx context.Context, req datasource.ReadRequest, resp
 		return
 	}
 
-	state.Certificate = types.StringValue(certResp.Certificate)
+	certState := providerschema.OneCertificate{
+		Certificate: types.StringValue(certResp.Certificate),
+	}
+
+	state.Data = append(state.Data, certState)
 
 	// Set state
 	diags = resp.State.Set(ctx, &state)
@@ -133,19 +136,4 @@ func (c *Certificate) Configure(_ context.Context, req datasource.ConfigureReque
 	}
 
 	c.Data = data
-}
-
-// validate is used to verify that all the fields in the datasource
-// have been populated.
-func (c *Certificate) validate(state providerschema.Certificate) error {
-	if state.OrganizationId.IsNull() {
-		return errors.ErrOrganizationIdMissing
-	}
-	if state.ProjectId.IsNull() {
-		return errors.ErrProjectIdMissing
-	}
-	if state.ClusterId.IsNull() {
-		return errors.ErrClusterIdMissing
-	}
-	return nil
 }

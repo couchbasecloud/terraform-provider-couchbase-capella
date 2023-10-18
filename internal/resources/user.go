@@ -42,7 +42,7 @@ func (r *User) Metadata(_ context.Context, req resource.MetadataRequest, resp *r
 	resp.TypeName = req.ProviderTypeName + "_user"
 }
 
-// Schema defines the schema for the allowlist resource.
+// Schema defines the schema for the user resource.
 func (r *User) Schema(ctx context.Context, rsc resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = UserSchema()
 }

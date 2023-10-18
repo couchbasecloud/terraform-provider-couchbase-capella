@@ -16,23 +16,5 @@ variable "auth_token" {
 }
 
 variable "user_name" {
-  description = "Name of the user"
-  type        = string
-}
-
-variable "user_email" {
-  description = "Email address of the user"
-  type        = string
-}
-
-variable "org_roles" {
-  description = "Roles of the user within the organization"
-  type        = list(string)
-  default     = []
-}
-
-variable "project_roles" {
-  description = "Roles of the user within the project"
-  type        = list(string)
-  default     = []
+  description = "Capella User Name"
 }

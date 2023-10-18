@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// AllowList maps AllowList resource schema data
+// AllowList maps AllowList resource schema data to the response received from V4 Capella Public API.
 type AllowList struct {
 	// Cidr represents the trusted CIDR to allow the database connections from.
 	Cidr types.String `tfsdk:"cidr"`
@@ -37,7 +37,7 @@ type AllowList struct {
 	Audit types.Object `tfsdk:"audit"`
 }
 
-// AllowLists defines the model for GetAllowLists.
+// AllowLists defines the attributes as received from the V4 Capella Public API when asked to list allowlists.
 type AllowLists struct {
 	// OrganizationId is the organizationId of the capella.
 	OrganizationId types.String `tfsdk:"organization_id"`

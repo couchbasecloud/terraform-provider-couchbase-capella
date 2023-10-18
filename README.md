@@ -4,7 +4,7 @@ This is the repository for Couchbase's Terraform-Provider-Capella which forms a 
 
 ## Requirements
 
-- [Terraform](https://www.terraform.io/downloads.html) >= 1.0
+- [Terraform](https://www.terraform.io/downloads.html) >= 1.5.2
 - [Go](https://golang.org/doc/install) >= 1.20
 
 ## Using the provider

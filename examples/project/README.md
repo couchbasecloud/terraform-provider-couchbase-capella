@@ -10,15 +10,16 @@ To run, configure your Couchbase Capella provider as described in README in the 
 
 In this example, we are going to do the following.
 
-1. Create a new project in Capella as stated in the `create_project.tf` file.
-2. List existing projects in Capella as stated in the `list_projects.tf` file.
-3. Import a project that exists in Capella but not in the terraform state file.
-4. Delete the newly created project from Capella.
+1. CREATE: Create a new project in Capella as stated in the `create_project.tf` file.
+2. UPDATE: Update the project using Terraform.
+3. LIST: List existing projects in Capella as stated in the `list_projects.tf` file.
+4. IMPORT: Import a project that exists in Capella but not in the terraform state file.
+5. DELETE: Delete the newly created project from Capella.
 
 If you check the `terraform.template.tfvars` file - you can see that we need 3 main variables to run the terraform commands.
 Make sure you copy the file to `terraform.tfvars` and update the values of the variables as per the correct organization access.
 
-
+## CREATE & LIST
 ### View the plan for the resources that Terraform will create
 
 Command: `terraform plan`
@@ -301,6 +302,7 @@ data.capella_projects.existing_projects
 capella_project.new_project
 ```
 
+## IMPORT
 ### Remove the resource `new_project` from the Terraform State file
 
 Command: `terraform state rm capella_project.new_project`
@@ -365,6 +367,97 @@ No changes. Your infrastructure matches the configuration.
 Terraform has compared your real infrastructure against your configuration and found no differences, so no changes are needed.
 ```
 
+## UPDATE
+### Let us edit the terraform.tfvars file to change the project name.
+
+var.project_name = "my_edited_project_name"
+
+Command: `terraform apply -var project_name="my_edited_project_name"`
+
+Sample Output:
+```
+$ terraform apply -var project_name="my_edited_project_name"
+╷
+│ Warning: Provider development overrides are in effect
+│ 
+│ The following provider development overrides are set in the CLI configuration:
+│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/terraform-provider-capella
+│ 
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
+│ published releases.
+╵
+data.capella_projects.existing_projects: Reading...
+capella_project.new_project: Refreshing state... [id=1d5f4c38-f645-4279-b7c3-5faec80dad0c]
+data.capella_projects.existing_projects: Read complete after 0s
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  ~ update in-place
+
+Terraform will perform the following actions:
+
+  # capella_project.new_project will be updated in-place
+  ~ resource "capella_project" "new_project" {
+      ~ audit           = {
+          ~ created_at  = "2023-10-03 03:33:59.770847849 +0000 UTC" -> (known after apply)
+          ~ created_by  = "osxKeibDiShFFyyqAVNvqWRaWryXBxBD" -> (known after apply)
+          ~ modified_at = "2023-10-03 03:33:59.770861069 +0000 UTC" -> (known after apply)
+          ~ modified_by = "osxKeibDiShFFyyqAVNvqWRaWryXBxBD" -> (known after apply)
+          ~ version     = 1 -> (known after apply)
+        }
+      ~ etag            = "Version: 1" -> (known after apply)
+        id              = "1d5f4c38-f645-4279-b7c3-5faec80dad0c"
+      ~ name            = "terraform-couchbasecapella-project" -> "my_edited_project_name"
+        # (2 unchanged attributes hidden)
+    }
+
+Plan: 0 to add, 1 to change, 0 to destroy.
+
+Changes to Outputs:
+  ~ new_project   = {
+      ~ audit           = {
+          - created_at  = "2023-10-03 03:33:59.770847849 +0000 UTC"
+          - created_by  = "osxKeibDiShFFyyqAVNvqWRaWryXBxBD"
+          - modified_at = "2023-10-03 03:33:59.770861069 +0000 UTC"
+          - modified_by = "osxKeibDiShFFyyqAVNvqWRaWryXBxBD"
+          - version     = 1
+        } -> (known after apply)
+      ~ etag            = "Version: 1" -> (known after apply)
+        id              = "1d5f4c38-f645-4279-b7c3-5faec80dad0c"
+      ~ name            = "terraform-couchbasecapella-project" -> "my_edited_project_name"
+        # (3 unchanged elements hidden)
+    }
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+capella_project.new_project: Modifying... [id=1d5f4c38-f645-4279-b7c3-5faec80dad0c]
+capella_project.new_project: Modifications complete after 0s [id=1d5f4c38-f645-4279-b7c3-5faec80dad0c]
+
+Apply complete! Resources: 0 added, 1 changed, 0 destroyed.
+
+Outputs:
+
+new_project = {
+  "audit" = {
+    "created_at" = "2023-10-03 03:33:59.770847849 +0000 UTC"
+    "created_by" = "osxKeibDiShFFyyqAVNvqWRaWryXBxBD"
+    "modified_at" = "2023-10-03 03:34:36.811342918 +0000 UTC"
+    "modified_by" = "osxKeibDiShFFyyqAVNvqWRaWryXBxBD"
+    "version" = 2
+  }
+  "description" = "A Capella Project that will host many Capella clusters."
+  "etag" = "Version: 2"
+  "id" = "1d5f4c38-f645-4279-b7c3-5faec80dad0c"
+  "if_match" = tostring(null)
+  "name" = "my_edited_project_name"
+  "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
+}
+```
+
+## DESTROY
 ### Finally, destroy the resources created by Terraform
 
 Command: `terraform destroy`

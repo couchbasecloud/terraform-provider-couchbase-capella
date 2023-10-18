@@ -1,5 +1,7 @@
-auth_token      = "v4-api-key-secret"
+auth_token      = "<v4-api-key-secret>"
 organization_id = "<organization_id>"
 project_id      = "<project_id>"
 cluster_id      = "<cluster_id>"
 host            = "https://cloudapi.cloud.couchbase.com"
+cidr            = "10.0.0.0/16"
+expires_at      = "2023-11-30T23:59:59.465Z"

@@ -1,4 +1,4 @@
-output "existing_organization" {
+output "organizations_get" {
   value = data.capella_organization.existing_organization
 }
 
