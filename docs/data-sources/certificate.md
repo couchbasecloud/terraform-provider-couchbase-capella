@@ -23,4 +23,11 @@ description: |-
 
 ### Read-Only
 
+- `data` (Attributes List) (see [below for nested schema](#nestedatt--data))
+
+<a id="nestedatt--data"></a>
+### Nested Schema for `data`
+
+Read-Only:
+
 - `certificate` (String)

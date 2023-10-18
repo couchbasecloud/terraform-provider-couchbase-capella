@@ -285,7 +285,7 @@ func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api
 		nil,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %v", errors.ErrExecutingRequest, err)
+		return nil, err
 	}
 
 	userResp := api.GetUserResponse{}
@@ -299,7 +299,7 @@ func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api
 func (r *User) refreshUser(ctx context.Context, organizationId, userId string, plan providerschema.User) (*providerschema.User, error) {
 	userResp, err := r.getUser(ctx, organizationId, userId)
 	if err != nil {
-		return nil, handleCapellaUserError(err)
+		return nil, err
 	}
 
 	audit := providerschema.NewCouchbaseAuditData(userResp.Audit)

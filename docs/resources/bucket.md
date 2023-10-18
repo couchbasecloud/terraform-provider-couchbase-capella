@@ -24,14 +24,14 @@ description: |-
 
 ### Optional
 
-- `conflict_resolution` (String)
+- `bucket_conflict_resolution` (String)
 - `durability_level` (String)
 - `eviction_policy` (String)
 - `flush` (Boolean)
-- `memory_allocationinmb` (Number)
+- `memory_allocation_in_mb` (Number)
 - `replicas` (Number)
 - `storage_backend` (String)
-- `ttl` (Number)
+- `time_to_live_in_seconds` (Number)
 - `type` (String)
 
 ### Read-Only
