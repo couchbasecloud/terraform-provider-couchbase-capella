@@ -13,8 +13,10 @@ type CloudProvider struct {
 	// Cidr block for Cloud Provider.
 	Cidr string `json:"cidr"`
 
-	// Region is cloud provider region, e.g. 'us-west-2'. For information about supported regions,
-	// see [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html).
+	// Region is cloud provider region, e.g. 'us-west-2'. For information about supported regions, see
+	// [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html).
+	// [Google Cloud Provider](https://docs.couchbase.com/cloud/reference/gcp.html).
+	// [Azure Cloud](https://docs.couchbase.com/cloud/reference/azure.html).
 	Region string `json:"region"`
 
 	// Type is cloud provider type, either 'AWS', 'GCP', or 'Azure'.

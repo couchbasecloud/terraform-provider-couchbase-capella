@@ -1,6 +1,7 @@
 package cluster
 
-// Service defines model for Service.
+// Service is a string for each individual service in Couchbase Server.
+// This field can accept enums: kv, index, n1ql, fts, analytics and eventing.
 type Service string
 
 // ServiceGroup The set of nodes that share the same disk,
@@ -17,7 +18,7 @@ type ServiceGroup struct {
 	Services *[]Service `json:"services,omitempty"`
 }
 
-// CouchbaseServer defines model for CouchbaseServer.
+// CouchbaseServer defines version for the Couchbase Server to be launched during the creation of the Capella cluster.
 type CouchbaseServer struct {
 	// Version is version of the Couchbase Server to be installed
 	// in the cluster. Refer to documentation

@@ -1,6 +1,6 @@
 package cluster
 
-// Support defines model for Support.
+// Support defines the support plan and timezone for this particular cluster.
 type Support struct {
 	// Plan is plan type, either 'Basic', 'Developer Pro', or 'Enterprise'.
 	Plan SupportPlan `json:"plan"`

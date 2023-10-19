@@ -9,10 +9,6 @@ resource "capella_database_credential" "new_database_credential" {
   project_id      = var.project_id
   cluster_id      = var.cluster_id
   password        = var.password
-  access = [
-    {
-      privileges = ["data_reader", "data_writer"]
-    }
-  ]
+  access          = var.access
 }
 

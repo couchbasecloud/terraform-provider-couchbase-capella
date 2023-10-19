@@ -2,7 +2,6 @@ package schema
 
 import (
 	"fmt"
-	"strings"
 	"terraform-provider-capella/internal/api"
 	"terraform-provider-capella/internal/errors"
 
@@ -103,7 +102,7 @@ type Resource struct {
 	Roles []types.String `tfsdk:"roles"`
 }
 
-// Users defines the model for GetUsers
+// Users defines the attributes for a list of users in Capella.
 type Users struct {
 	// OrganizationId is the organizationId of the capella.
 	OrganizationId types.String `tfsdk:"organization_id"`
@@ -113,62 +112,18 @@ type Users struct {
 }
 
 // Validate is used to verify that IDs have been properly imported
-// TODO (AV-53457): add unit testing
-func (u *User) Validate() (map[string]string, error) {
-	const idDelimiter = ","
-	var found bool
-
-	organizationId := u.OrganizationId.ValueString()
-	userId := u.Id.ValueString()
-
-	// check if the id is a comma separated string of multiple IDs, usually passed during the terraform import CLI
-	if u.OrganizationId.IsNull() {
-		strs := strings.Split(u.Id.ValueString(), idDelimiter)
-		if len(strs) != 2 {
-			return nil, errors.ErrIdMissing
-		}
-
-		_, userId, found = strings.Cut(strs[0], "id=")
-		if !found {
-			return nil, errors.ErrAllowListIdMissing
-		}
-
-		_, organizationId, found = strings.Cut(strs[1], "organization_id=")
-		if !found {
-			return nil, errors.ErrOrganizationIdMissing
-		}
+func (u *User) Validate() (map[Attr]string, error) {
+	state := map[Attr]basetypes.StringValue{
+		OrganizationId: u.OrganizationId,
+		Id:             u.Id,
 	}
 
-	resourceIDs := u.generateResourceIdMap(organizationId, userId)
-
-	err := u.checkEmpty(resourceIDs)
+	IDs, err := validateSchemaState(state)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrUnableToImportResource, err)
+		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
 	}
 
-	return resourceIDs, nil
-}
-
-// generateResourceIdmap is used to populate a map with selected IDs
-// TODO (AV-53457): add unit testing
-func (u *User) generateResourceIdMap(organizationId, userId string) map[string]string {
-	return map[string]string{
-		"organizationId": organizationId,
-		"userId":         userId,
-	}
-}
-
-// checkEmpty is used to verify that a supplied resourceId map has been populated
-// TODO (AV-53457): add unit testing
-func (u *User) checkEmpty(resourceIdMap map[string]string) error {
-	if resourceIdMap["userId"] == "" {
-		return errors.ErrAllowListIdCannotBeEmpty
-	}
-
-	if resourceIdMap["organizationId"] == "" {
-		return errors.ErrOrganizationIdCannotBeEmpty
-	}
-	return nil
+	return IDs, nil
 }
 
 // MorphOrganizationRoles is used to convert nested organizationRoles from

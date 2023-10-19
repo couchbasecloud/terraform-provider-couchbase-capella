@@ -1,8 +1,8 @@
-# Capella Organization Example
+# Capella Organizations Example
 
-This example shows how to manage Organization in Capella.
+This example shows how to retrive Organization details in Capella.
 
-This fetches the details of an existing Organization. It uses the organization ID to do so.
+This lists the organization details based on the organization ID and authentication access token.
 
 To run, configure your Couchbase Capella provider as described in README in the root of this project.
 
@@ -10,162 +10,140 @@ To run, configure your Couchbase Capella provider as described in README in the 
 
 In this example, we are going to do the following.
 
-1. Get an existing organization in Capella as stated in the `get_organization.tf` file.
+1. GET: Read and display the Capella Organization details as stated in the `get_organization.tf` file.
+2. DELETE: Delete the organization data output from terraform state.
 
-If you check the `terraform.template.tfvars` file - you can see that we need 3 main variables to run the terraform commands.
-Make sure you copy the file to `terraform.tfvars` and update the values of the variables as per the correct organization access.
+If you check the `terraform.template.tfvars` file - Make sure you copy the file to `terraform.tfvars` and update the values of the variables as per the correct organization access.
 
-
+## GET
 ### View the plan for the resources that Terraform will create
 
 Command: `terraform plan`
 
 Sample Output:
 ```
-terraform plan 
+$ terraform plan
 ╷
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchabasecloud/capella in /Users/nidhi.kumar/go/bin
+│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/terraform-provider-capella
 │ 
-│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published
-│ releases.
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
+│ published releases.
 ╵
 data.capella_organization.existing_organization: Reading...
-data.capella_organization.existing_organization: Read complete after 1s [name=cbc-dev]
+data.capella_organization.existing_organization: Read complete after 0s
 
 Changes to Outputs:
-  + existing_organization = {
-      + audit           = {
-          + created_at  = "2020-07-22 12:38:57.437248116 +0000 UTC"
-          + created_by  = ""
-          + modified_at = "2023-07-25 14:33:56.13967014 +0000 UTC"
-          + modified_by = "99b8dc97-b8ae-44af-8ccd-897e3802c3cb"
-          + version     = 0
-        }
-      + description     = ""
-      + name            = "cbc-dev"
-      + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      + preferences     = {
-          + session_duration = 7200
-        }
+  + organizations_get = {
+      + data            = [
+          + {
+              + audit       = {
+                  + created_at  = "2022-05-27 04:19:18.057836345 +0000 UTC"
+                  + created_by  = "fff64e90-e839-4b96-956e-05135e30d35b"
+                  + modified_at = "2022-05-27 04:19:18.057836345 +0000 UTC"
+                  + modified_by = "fff64e90-e839-4b96-956e-05135e30d35b"
+                  + version     = 1
+                }
+              + description = ""
+              + id          = "0783f698-ac58-4018-84a3-31c3b6ef785d"
+              + name        = "Couchbase"
+              + preferences = {
+                  + session_duration = null
+                }
+            },
+        ]
+      + organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
     }
 
 You can apply this plan to save these new output values to the Terraform state, without changing any real infrastructure.
 
-─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly these actions if you run "terraform apply" now.
+macos:organization talina.shrotriya$ 
+macos:organization talina.shrotriya$ terraform plan
+╷
+│ Warning: Provider development overrides are in effect
+│ 
+│ The following provider development overrides are set in the CLI configuration:
+│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/terraform-provider-capella
+│ 
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
+│ published releases.
+╵
+data.capella_organization.existing_organization: Reading...
+data.capella_organization.existing_organization: Read complete after 1s
 
+Changes to Outputs:
+  + organizations_get = {
+      + data            = [
+          + {
+              + audit       = {
+                  + created_at  = "2022-05-27 04:19:18.057836345 +0000 UTC"
+                  + created_by  = "fff64e90-e839-4b96-956e-05135e30d35b"
+                  + modified_at = "2022-05-27 04:19:18.057836345 +0000 UTC"
+                  + modified_by = "fff64e90-e839-4b96-956e-05135e30d35b"
+                  + version     = 1
+                }
+              + description = ""
+              + id          = "0783f698-ac58-4018-84a3-31c3b6ef785d"
+              + name        = "Couchbase"
+              + preferences = {
+                  + session_duration = null
+                }
+            },
+        ]
+      + organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
+    }
 
+You can apply this plan to save these new output values to the Terraform state, without changing any real infrastructure.
+
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly these actions if you run "terraform apply" now.
 ```
 
-### Apply the Plan, in order to get the organization
+### Apply the Plan, in order to create a new Bucket
 
 Command: `terraform apply`
 
 Sample Output:
 ```
-terraform apply
+$ terraform apply
 ╷
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchabasecloud/capella in /Users/nidhi.kumar/go/bin
+│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/terraform-provider-capella
 │ 
-│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published
-│ releases.
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
+│ published releases.
 ╵
 data.capella_organization.existing_organization: Reading...
-data.capella_organization.existing_organization: Read complete after 1s [name=cbc-dev]
-
-No changes. Your infrastructure matches the configuration.
-
-Terraform has compared your real infrastructure against your configuration and found no differences, so no changes are needed.
-
-Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
-
-Outputs:
-
-existing_organization = {
-  "audit" = {
-    "created_at" = "2020-07-22 12:38:57.437248116 +0000 UTC"
-    "created_by" = ""
-    "modified_at" = "2023-07-25 14:33:56.13967014 +0000 UTC"
-    "modified_by" = "99b8dc97-b8ae-44af-8ccd-897e3802c3cb"
-    "version" = 0
-  }
-  "description" = ""
-  "name" = "cbc-dev"
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-  "preferences" = {
-    "session_duration" = 7200
-  }
-}
-nidhi.kumar@QFXY6XF4V3 organization % terraform plan 
-╷
-│ Warning: Provider development overrides are in effect
-│ 
-│ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchabasecloud/capella in /Users/nidhi.kumar/go/bin
-│ 
-│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published
-│ releases.
-╵
-data.capella_organization.existing_organization: Reading...
-data.capella_organization.existing_organization: Read complete after 1s [name=cbc-dev]
+data.capella_organization.existing_organization: Read complete after 0s
 
 Changes to Outputs:
-  + existing_organization = {
-      + audit           = {
-          + created_at  = "2020-07-22 12:38:57.437248116 +0000 UTC"
-          + created_by  = ""
-          + modified_at = "2023-07-25 14:33:56.13967014 +0000 UTC"
-          + modified_by = "99b8dc97-b8ae-44af-8ccd-897e3802c3cb"
-          + version     = 0
-        }
-      + description     = ""
-      + name            = "cbc-dev"
-      + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      + preferences     = {
-          + session_duration = 7200
-        }
-    }
-
-You can apply this plan to save these new output values to the Terraform state, without changing any real infrastructure.
-
-─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-
-Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly these actions if you run "terraform apply" now.
-nidhi.kumar@QFXY6XF4V3 organization % terraform apply
-╷
-│ Warning: Provider development overrides are in effect
-│ 
-│ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchabasecloud/capella in /Users/nidhi.kumar/go/bin
-│ 
-│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published
-│ releases.
-╵
-data.capella_organization.existing_organization: Reading...
-data.capella_organization.existing_organization: Read complete after 1s [name=cbc-dev]
-
-Changes to Outputs:
-  + existing_organization = {
-      + audit           = {
-          + created_at  = "2020-07-22 12:38:57.437248116 +0000 UTC"
-          + created_by  = ""
-          + modified_at = "2023-07-25 14:33:56.13967014 +0000 UTC"
-          + modified_by = "99b8dc97-b8ae-44af-8ccd-897e3802c3cb"
-          + version     = 0
-        }
-      + description     = ""
-      + name            = "cbc-dev"
-      + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      + preferences     = {
-          + session_duration = 7200
-        }
+  + organizations_get = {
+      + data            = [
+          + {
+              + audit       = {
+                  + created_at  = "2022-05-27 04:19:18.057836345 +0000 UTC"
+                  + created_by  = "fff64e90-e839-4b96-956e-05135e30d35b"
+                  + modified_at = "2022-05-27 04:19:18.057836345 +0000 UTC"
+                  + modified_by = "fff64e90-e839-4b96-956e-05135e30d35b"
+                  + version     = 1
+                }
+              + description = ""
+              + id          = "0783f698-ac58-4018-84a3-31c3b6ef785d"
+              + name        = "Couchbase"
+              + preferences = {
+                  + session_duration = null
+                }
+            },
+        ]
+      + organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
     }
 
 You can apply this plan to save these new output values to the Terraform state, without changing any real infrastructure.
@@ -181,22 +159,26 @@ Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
 
 Outputs:
 
-existing_organization = {
-  "audit" = {
-    "created_at" = "2020-07-22 12:38:57.437248116 +0000 UTC"
-    "created_by" = ""
-    "modified_at" = "2023-07-25 14:33:56.13967014 +0000 UTC"
-    "modified_by" = "99b8dc97-b8ae-44af-8ccd-897e3802c3cb"
-    "version" = 0
-  }
-  "description" = ""
-  "name" = "cbc-dev"
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-  "preferences" = {
-    "session_duration" = 7200
-  }
+organizations_get = {
+  "data" = tolist([
+    {
+      "audit" = {
+        "created_at" = "2022-05-27 04:19:18.057836345 +0000 UTC"
+        "created_by" = "fff64e90-e839-4b96-956e-05135e30d35b"
+        "modified_at" = "2022-05-27 04:19:18.057836345 +0000 UTC"
+        "modified_by" = "fff64e90-e839-4b96-956e-05135e30d35b"
+        "version" = 1
+      }
+      "description" = ""
+      "id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
+      "name" = "Couchbase"
+      "preferences" = {
+        "session_duration" = tonumber(null)
+      }
+    },
+  ])
+  "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
 }
-
 ```
 
 ### List the resources that are present in the Terraform State file.
@@ -207,4 +189,58 @@ Sample Output:
 ```
 $ terraform state list
 data.capella_organization.existing_organization
+```
+
+## DESTROY
+### Finally, destroy the resources created by Terraform
+
+Command: `terraform destroy`
+
+Sample Output:
+```
+$ terraform destroy
+╷
+│ Warning: Provider development overrides are in effect
+│ 
+│ The following provider development overrides are set in the CLI configuration:
+│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/terraform-provider-capella
+│ 
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
+│ published releases.
+╵
+data.capella_organization.existing_organization: Reading...
+data.capella_organization.existing_organization: Read complete after 0s
+
+Changes to Outputs:
+  - organizations_get = {
+      - data            = [
+          - {
+              - audit       = {
+                  - created_at  = "2022-05-27 04:19:18.057836345 +0000 UTC"
+                  - created_by  = "fff64e90-e839-4b96-956e-05135e30d35b"
+                  - modified_at = "2022-05-27 04:19:18.057836345 +0000 UTC"
+                  - modified_by = "fff64e90-e839-4b96-956e-05135e30d35b"
+                  - version     = 1
+                }
+              - description = ""
+              - id          = "0783f698-ac58-4018-84a3-31c3b6ef785d"
+              - name        = "Couchbase"
+              - preferences = {
+                  - session_duration = null
+                }
+            },
+        ]
+      - organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
+    } -> null
+
+You can apply this plan to save these new output values to the Terraform state, without changing any real infrastructure.
+
+Do you really want to destroy all resources?
+  Terraform will destroy all your managed infrastructure, as shown above.
+  There is no undo. Only 'yes' will be accepted to confirm.
+
+  Enter a value: yes
+
+
+Destroy complete! Resources: 0 destroyed.
 ```

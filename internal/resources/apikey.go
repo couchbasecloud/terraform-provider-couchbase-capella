@@ -182,7 +182,6 @@ func (a *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	}
 
 	refreshedState.Token = types.StringValue(apiKeyResponse.Token)
-	refreshedState.Rotate = plan.Rotate
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
@@ -213,7 +212,7 @@ func (a *ApiKey) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 
 	var (
 		organizationId = resourceIDs[providerschema.OrganizationId]
-		apiKeyId       = resourceIDs[providerschema.ApiKeyId]
+		apiKeyId       = resourceIDs[providerschema.Id]
 	)
 
 	// Get refreshed api key value from Capella
@@ -289,7 +288,7 @@ func (a *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 
 	var (
 		organizationId = resourceIDs[providerschema.OrganizationId]
-		apiKeyId       = resourceIDs[providerschema.ApiKeyId]
+		apiKeyId       = resourceIDs[providerschema.Id]
 	)
 
 	if plan.Rotate.IsNull() || plan.Rotate.IsUnknown() {
@@ -312,9 +311,9 @@ func (a *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 		}
 	}
 
-	var rotateApiRequest api.RotateAPIKeyRequest
+	var rotateApiRequest api.RotateApiKeyRequest
 	if !plan.Secret.IsNull() || !plan.Secret.IsUnknown() {
-		rotateApiRequest = api.RotateAPIKeyRequest{
+		rotateApiRequest = api.RotateApiKeyRequest{
 			Secret: plan.Secret.ValueStringPointer(),
 		}
 	}
@@ -335,7 +334,7 @@ func (a *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 		return
 	}
 
-	rotateApiKeyResponse := api.RotateAPIKeyResponse{}
+	rotateApiKeyResponse := api.RotateApiKeyResponse{}
 	err = json.Unmarshal(response.Body, &rotateApiKeyResponse)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -374,8 +373,8 @@ func (a *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 	}
 
 	currentState.Secret = types.StringValue(rotateApiKeyResponse.SecretKey)
-	if !state.Id.IsNull() && !state.Id.IsUnknown() && !state.Secret.IsNull() && !state.Secret.IsUnknown() {
-		currentState.Token = types.StringValue(base64.StdEncoding.EncodeToString([]byte(state.Id.ValueString() + ":" + state.Secret.ValueString())))
+	if !currentState.Id.IsNull() && !currentState.Id.IsUnknown() && !currentState.Secret.IsNull() && !currentState.Secret.IsUnknown() {
+		currentState.Token = types.StringValue(base64.StdEncoding.EncodeToString([]byte(currentState.Id.ValueString() + ":" + currentState.Secret.ValueString())))
 	}
 	currentState.Rotate = plan.Rotate
 
@@ -408,7 +407,7 @@ func (a *ApiKey) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 
 	var (
 		organizationId = resourceIDs[providerschema.OrganizationId]
-		apiKeyId       = resourceIDs[providerschema.ApiKeyId]
+		apiKeyId       = resourceIDs[providerschema.Id]
 	)
 
 	// Delete existing api key
