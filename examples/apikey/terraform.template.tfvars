@@ -1,5 +1,5 @@
-auth_token      = "v4-api-key-secret"
-organization_id = "bdb8662c-7157-46ea-956f-ed86f4c75211"
+auth_token      = "<v4-api-key-secret>"
+organization_id = "<organization_id>"
 host            = "https://cloudapi.cloud.couchbase.com"
 
 apikey = {
@@ -11,7 +11,7 @@ apikey = {
 }
 
 resource = {
-  id    = "resource id"
+  id    = "<project_id>"
   roles = ["projectManager", "projectDataReader"]
   type  = "project"
 }

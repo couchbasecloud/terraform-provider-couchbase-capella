@@ -21,7 +21,6 @@ func AllowlistsSchema() schema.Schema {
 			"cidr":            stringAttribute(required, requiresReplace),
 			"comment":         stringAttribute(optional, requiresReplace),
 			"expires_at":      stringAttribute(optional, requiresReplace),
-			"if_match":        stringAttribute(optional),
 			"audit":           computedAuditAttribute(),
 		},
 	}

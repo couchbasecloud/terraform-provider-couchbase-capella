@@ -10,9 +10,8 @@ import (
 
 	"terraform-provider-capella/internal/api"
 	clusterapi "terraform-provider-capella/internal/api/cluster"
-	providerschema "terraform-provider-capella/internal/schema"
-
 	"terraform-provider-capella/internal/errors"
+	providerschema "terraform-provider-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -217,7 +216,7 @@ func (c *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 	var (
 		organizationId = resourceIDs[providerschema.OrganizationId]
 		projectId      = resourceIDs[providerschema.ProjectId]
-		clusterId      = resourceIDs[providerschema.ClusterId]
+		clusterId      = resourceIDs[providerschema.Id]
 	)
 
 	// Get refreshed Cluster value from Capella
@@ -281,7 +280,7 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 	var (
 		organizationId = resourceIDs[providerschema.OrganizationId]
 		projectId      = resourceIDs[providerschema.ProjectId]
-		clusterId      = resourceIDs[providerschema.ClusterId]
+		clusterId      = resourceIDs[providerschema.Id]
 	)
 
 	if err := c.validateClusterUpdate(plan, state); err != nil {
@@ -396,7 +395,7 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 	var (
 		organizationId = resourceIDs[providerschema.OrganizationId]
 		projectId      = resourceIDs[providerschema.ProjectId]
-		clusterId      = resourceIDs[providerschema.ClusterId]
+		clusterId      = resourceIDs[providerschema.Id]
 	)
 
 	// Delete existing Cluster

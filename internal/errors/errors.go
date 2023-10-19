@@ -97,6 +97,12 @@ var (
 	// ErrBucketIdCannotBeEmpty is returned when an BucketId was required for a request but was not included.
 	ErrBucketIdCannotBeEmpty = errors.New("bucket ID cannot be empty, please contact Couchbase Capella Support")
 
+	// ErrInvalidImport is returned when when the IDs supplied to terraform import did not match those expected for the resource.
+	ErrInvalidImport = errors.New("terraform import parameters did not match those expected for the resource, please check provider documentation for syntax")
+
+	// ErrValidatingResource is returned when the validation of an existing resource state failed.
+	ErrValidatingResource = errors.New("could not validate resource state, please contact Couchbase Capella Support")
+
 	// ErrAppServiceIdCannotBeEmpty is returned when an AppServiceId was required for a request but was not included.
 	ErrAppServiceIdCannotBeEmpty = errors.New("apService ID cannot be empty, please contact Couchbase Capella Support")
 )

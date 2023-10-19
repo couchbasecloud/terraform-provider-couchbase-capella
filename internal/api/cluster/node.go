@@ -4,13 +4,15 @@ import (
 	"encoding/json"
 )
 
-// Node defines model for Node.
+// Node defines attributes of a cluster node.
 type Node struct {
-	// Compute Following are the supported compute combinations for CPU
+	// Compute is the family of instances in cloud that are supported during cluster creation.
+	// Following are the supported compute combinations for CPU
 	// and RAM for different cloud providers. To learn more,
 	// see [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html).
-	Compute Compute         `json:"compute"`
-	Disk    json.RawMessage `json:"disk"`
+	Compute Compute `json:"compute"`
+	// Disk is the type of disk that is supported per cloud provider during cluster creation.
+	Disk json.RawMessage `json:"disk"`
 }
 
 // Compute Following are the supported compute combinations for CPU
@@ -24,7 +26,7 @@ type Compute struct {
 	Ram int `json:"ram"`
 }
 
-// DiskAWS defines model for DiskAWS.
+// DiskAWS defines the disk metadata as supported by AWS.
 type DiskAWS struct {
 	// Iops Please refer to documentation for supported IOPS.
 	Iops int `json:"iops"`
@@ -41,7 +43,7 @@ type DiskAWS struct {
 // for AWS cloud provider.
 type DiskAWSType string
 
-// DiskAzure defines model for DiskAzure.
+// DiskAzure defines attributes for disks metadata supported in Azure.
 type DiskAzure struct {
 	// Iops is required for ultra disk types. Please refer to documentation
 	// for supported IOPS.
@@ -59,7 +61,7 @@ type DiskAzure struct {
 // DiskAzureType depicts type of disk. Please choose from the given list for Azure cloud provider.
 type DiskAzureType string
 
-// DiskGCP defines model for DiskGCP.
+// DiskGCP defines the disk metadata as supported by GCP.
 type DiskGCP struct {
 	// Storage is storage in GB. Please refer to documentation for supported storage.
 	Storage int `json:"storage"`

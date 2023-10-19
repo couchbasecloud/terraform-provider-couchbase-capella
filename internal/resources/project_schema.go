@@ -17,7 +17,7 @@ func ProjectSchema() schema.Schema {
 			},
 			"organization_id": stringAttribute(required),
 			"name":            stringAttribute(required),
-			"description":     stringAttribute(optional),
+			"description":     stringAttribute(optional, computed),
 			"if_match":        stringAttribute(optional),
 			"etag":            stringAttribute(computed),
 			"audit":           computedAuditAttribute(),

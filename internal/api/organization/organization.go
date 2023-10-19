@@ -1,11 +1,19 @@
 package organization
 
 import (
-	"github.com/google/uuid"
 	"terraform-provider-capella/internal/api"
+
+	"github.com/google/uuid"
 )
 
-// GetOrganizationResponse defines the model for GetOrganizationResponse.
+// GetOrganizationResponse is the response received from the Capella V4 Public API when asked to fetch organization details.
+//
+// In order to access this endpoint, the provided API key must have at least one of the following roles:
+//
+// Organization Owner
+// Project Creator
+// Organization Member
+// To learn more, see https://docs.couchbase.com/cloud/organizations/organization-user-roles.html
 type GetOrganizationResponse struct {
 	// Audit contains all audit-related fields.
 	Audit api.CouchbaseAuditData `json:"audit"`

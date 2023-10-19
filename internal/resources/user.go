@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
 	"terraform-provider-capella/internal/api"
 	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
@@ -42,7 +43,7 @@ func (r *User) Metadata(_ context.Context, req resource.MetadataRequest, resp *r
 	resp.TypeName = req.ProviderTypeName + "_user"
 }
 
-// Schema defines the schema for the allowlist resource.
+// Schema defines the schema for the user resource.
 func (r *User) Schema(ctx context.Context, rsc resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = UserSchema()
 }
@@ -117,7 +118,7 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 		return
 	}
 
-	refreshedState, err := r.refreshUser(ctx, organizationId, createUserResponse.Id.String())
+	refreshedState, err := r.refreshUser(ctx, organizationId, createUserResponse.Id.String(), plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading user",
@@ -174,7 +175,7 @@ func (r *User) Read(ctx context.Context, req resource.ReadRequest, resp *resourc
 	)
 
 	// Refresh the existing user
-	refreshedState, err := r.refreshUser(ctx, organizationId, userId)
+	refreshedState, err := r.refreshUser(ctx, organizationId, userId, state)
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
@@ -284,7 +285,7 @@ func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api
 		nil,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %v", errors.ErrExecutingRequest, err)
+		return nil, err
 	}
 
 	userResp := api.GetUserResponse{}
@@ -295,10 +296,10 @@ func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api
 	return &userResp, nil
 }
 
-func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (*providerschema.User, error) {
+func (r *User) refreshUser(ctx context.Context, organizationId, userId string, plan providerschema.User) (*providerschema.User, error) {
 	userResp, err := r.getUser(ctx, organizationId, userId)
 	if err != nil {
-		return nil, handleCapellaUserError(err)
+		return nil, err
 	}
 
 	audit := providerschema.NewCouchbaseAuditData(userResp.Audit)
@@ -326,7 +327,7 @@ func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (
 		types.StringValue(userResp.TimeZone),
 		types.BoolValue(userResp.EnableNotifications),
 		types.StringValue(userResp.ExpiresAt),
-		providerschema.MorphResources(userResp.Resources),
+		plan.Resources,
 		auditObj,
 	)
 	return refreshedState, nil

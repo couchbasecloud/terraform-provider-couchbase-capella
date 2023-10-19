@@ -26,7 +26,6 @@ description: |-
 
 - `comment` (String)
 - `expires_at` (String)
-- `if_match` (String)
 
 ### Read-Only
 

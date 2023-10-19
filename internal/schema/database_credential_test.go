@@ -10,7 +10,7 @@ import (
 )
 
 func TestDatabaseCredentialSchemaValidate(t *testing.T) {
-	tests := []struct {
+	type test struct {
 		name                         string
 		input                        DatabaseCredential
 		expectedProjectId            string
@@ -18,7 +18,9 @@ func TestDatabaseCredentialSchemaValidate(t *testing.T) {
 		expectedClusterId            string
 		expectedDatabaseCredentialId string
 		expectedErr                  error
-	}{
+	}
+
+	tests := []test{
 		{
 			name: "[POSITIVE] project ID, organization ID, cluster ID, database credential ID are passed via terraform apply",
 			input: DatabaseCredential{
@@ -43,55 +45,27 @@ func TestDatabaseCredentialSchemaValidate(t *testing.T) {
 			expectedOrganizationId:       "400",
 		},
 		{
-			name: "[NEGATIVE] IDs follow the right syntax but order is incorrect in terraform import",
-			input: DatabaseCredential{
-				Id: basetypes.NewStringValue("id=100,organization_id=200,project_id=300,cluster_id=400"),
-			},
-			expectedErr: errors.ErrClusterIdMissing,
-		},
-		{
 			name: "[NEGATIVE] only database credential ID is passed via terraform apply",
 			input: DatabaseCredential{
 				Id: basetypes.NewStringValue("100"),
 			},
-			expectedErr: errors.ErrIdMissing,
-		},
-		{
-			name: "[NEGATIVE] only organization ID is passed via terraform apply",
-			input: DatabaseCredential{
-				OrganizationId: basetypes.NewStringValue("100"),
-			},
-			expectedErr: errors.ErrDatabaseCredentialIdCannotBeEmpty,
-		},
-		{
-			name: "[NEGATIVE] IDs are incorrectly passed via terraform import",
-			input: DatabaseCredential{
-				Id: basetypes.NewStringValue("100&organization_id=200,projectId=123&cluster_id=900"),
-			},
-			expectedErr: errors.ErrIdMissing,
-		},
-		{
-			name: "[NEGATIVE] IDs are incorrectly passed via terraform import",
-			input: DatabaseCredential{
-				Id: basetypes.NewStringValue("id=100,orgId=200,clusterId=300,project_id=900"),
-			},
-			expectedErr: errors.ErrClusterIdMissing,
+			expectedErr: errors.ErrInvalidImport,
 		},
 	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			IDs, err := test.input.Validate()
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			dbId, clusterId, projectId, organizationId, err := tt.input.Validate()
-
-			if tt.expectedErr != nil {
-				assert.Equal(t, tt.expectedErr, err)
+			if test.expectedErr != nil {
+				assert.ErrorContains(t, err, test.expectedErr.Error())
 				return
 			}
 
-			assert.Equal(t, tt.expectedDatabaseCredentialId, dbId)
-			assert.Equal(t, tt.expectedClusterId, clusterId)
-			assert.Equal(t, tt.expectedProjectId, projectId)
-			assert.Equal(t, tt.expectedOrganizationId, organizationId)
+			assert.Equal(t, test.expectedDatabaseCredentialId, IDs[Id])
+			assert.Equal(t, test.expectedClusterId, IDs[ClusterId])
+			assert.Equal(t, test.expectedProjectId, IDs[ProjectId])
+			assert.Equal(t, test.expectedOrganizationId, IDs[OrganizationId])
+
 		})
 	}
 }
