@@ -81,7 +81,7 @@ func splitImportString(importString string, keyParams []Attr) (map[Attr]string, 
 	// retrieve each key and value.
 	IDs := make(map[Attr]string)
 	for _, pair := range pairs {
-		keyValue := strings.Split(pair, equalsDelimiter)
+		keyValue := strings.SplitN(pair, equalsDelimiter, 2)
 		IDs[importIds[keyValue[0]]] = keyValue[1]
 	}
 
