@@ -79,6 +79,9 @@ func splitImportString(importString string, keyParams []Attr) (map[Attr]string, 
 
 	// Use the equals delimiter to further split each pair and
 	// retrieve each key and value.
+	//
+	// Note: Need to split by first occurence of equals sign
+	// since bucketIDs are suffixed with `==`
 	IDs := make(map[Attr]string)
 	for _, pair := range pairs {
 		keyValue := strings.SplitN(pair, equalsDelimiter, 2)
