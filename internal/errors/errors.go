@@ -96,4 +96,7 @@ var (
 
 	// ErrBucketIdCannotBeEmpty is returned when an ApiKeyId was required for a request but was not included.
 	ErrBucketIdCannotBeEmpty = errors.New("bucket ID cannot be empty, please contact Couchbase Capella Support")
+
+	// ErrInvalidImport is returned when when the IDs supplied to terraform import did not match those expected for the resource
+	ErrInvalidImport = errors.New("terraform import parameters did not match those expected for the resource, please check provider documentation for syntax")
 )

@@ -64,14 +64,14 @@ func Test_ValidateSchemaState(t *testing.T) {
 			state: map[Attr]basetypes.StringValue{
 				Id: basetypes.NewStringValue("100&organization_id=200,projectId=123&cluster_id=900"),
 			},
-			expectedErr: errors.ErrIdMissing,
+			expectedErr: errors.ErrInvalidImport,
 		},
 		{
 			name: "[NEGATIVE] - IDs are passed with incorrect names via terraform import",
 			state: map[Attr]basetypes.StringValue{
 				Id: basetypes.NewStringValue("id=100,orgId=200,clusterId=300,project_id=900"),
 			},
-			expectedErr: errors.ErrIdMissing,
+			expectedErr: errors.ErrInvalidImport,
 		},
 	}
 

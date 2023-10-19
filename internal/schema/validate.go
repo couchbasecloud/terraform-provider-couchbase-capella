@@ -3,6 +3,7 @@ package schema
 import (
 	"fmt"
 	"strings"
+
 	"terraform-provider-capella/internal/errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -74,7 +75,7 @@ func splitImportString(importString string, keyParams []Attr) (map[Attr]string, 
 
 	pairs := strings.Split(importString, idDelimiter)
 	if len(pairs) != len(keyParams) {
-		return nil, fmt.Errorf("error parsing terraform import: %s", errors.ErrIdMissing)
+		return nil, fmt.Errorf("error parsing terraform import: %s", errors.ErrInvalidImport)
 	}
 
 	// Use the equals delimiter to further split each pair and
