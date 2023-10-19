@@ -11,7 +11,7 @@ cloud_provider = {
 
 cluster = {
   name               = "My First Terraform Cluster"
-  cidr               = "192.168.0.0/20"
+  cidr               = "10.0.30.0/23"
   node_count         = 3
   server_version     = "7.1"
   couchbase_services = ["data", "index", "query"]

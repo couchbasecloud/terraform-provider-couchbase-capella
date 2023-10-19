@@ -100,11 +100,11 @@ func (c *Bucket) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		c.Token,
 		nil,
 	)
-	_, err = handleClusterError(err)
+	_, err = handleBucketError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating bucket",
-			"Could not create bucket, unexpected error: "+string(response.Body),
+			"Could not create bucket, unexpected error: "+err.Error(),
 		)
 		return
 	}
