@@ -153,7 +153,7 @@ func (r *Project) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 		return
 	}
 
-	projectId, organizationId, err := state.Validate()
+	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Projects",
@@ -161,6 +161,11 @@ func (r *Project) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 		)
 		return
 	}
+
+	var (
+		organizationId = IDs[providerschema.OrganizationId]
+		projectId      = IDs[providerschema.Id]
+	)
 
 	// Get refreshed project value from Capella
 	refreshedState, err := r.retrieveProject(ctx, organizationId, projectId)
@@ -207,7 +212,7 @@ func (r *Project) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		return
 	}
 
-	projectId, organizationId, err := state.Validate()
+	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Updating Capella Project",
@@ -215,6 +220,11 @@ func (r *Project) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		)
 		return
 	}
+
+	var (
+		organizationId = IDs[providerschema.OrganizationId]
+		projectId      = IDs[providerschema.Id]
+	)
 
 	projectRequest := api.PutProjectRequest{
 		Description: state.Description.ValueString(),
@@ -293,7 +303,7 @@ func (r *Project) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 		return
 	}
 
-	projectId, organizationId, err := state.Validate()
+	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Updating Capella Project",
@@ -301,6 +311,11 @@ func (r *Project) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 		)
 		return
 	}
+
+	var (
+		organizationId = IDs[providerschema.OrganizationId]
+		projectId      = IDs[providerschema.Id]
+	)
 
 	_, err = r.Client.Execute(
 		fmt.Sprintf("%s/v4/organizations/%s/projects/%s", r.HostURL, organizationId, projectId),
