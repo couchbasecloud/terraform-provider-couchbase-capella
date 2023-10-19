@@ -101,6 +101,15 @@ variable "password" {
 variable "access" {
   type = list(object({
     privileges = list(string)
+    resources = optional(object({
+      buckets = list(object({
+        name = string
+        scopes = optional(list(object({
+          name        = string
+          collections = optional(list(string))
+        })))
+      }))
+    }))
   }))
 }
 
