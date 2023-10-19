@@ -19,33 +19,31 @@ func TestClusterSchemaValidate(t *testing.T) {
 	}
 
 	tests := []test{
-		/*
-			{
-				name: "[POSITIVE] project ID, organization ID, and cluster ID are passed via terraform apply",
-				input: Cluster{ClusterData: ClusterData{
-					Id:             basetypes.NewStringValue("100"),
-					ProjectId:      basetypes.NewStringValue("200"),
-					OrganizationId: basetypes.NewStringValue("300"),
-				}},
-				expectedClusterId:      "100",
-				expectedProjectId:      "200",
-				expectedOrganizationId: "300",
+		{
+			name: "[POSITIVE] project ID, organization ID, and cluster ID are passed via terraform apply",
+			input: Cluster{
+				Id:             basetypes.NewStringValue("100"),
+				ProjectId:      basetypes.NewStringValue("200"),
+				OrganizationId: basetypes.NewStringValue("300"),
 			},
-		*/
+			expectedClusterId:      "100",
+			expectedProjectId:      "200",
+			expectedOrganizationId: "300",
+		},
 		{
 			name: "[POSITIVE] IDs are passed via terraform import",
-			input: Cluster{ClusterData: ClusterData{
+			input: Cluster{
 				Id: basetypes.NewStringValue("id=100,project_id=200,organization_id=300"),
-			}},
+			},
 			expectedClusterId:      "100",
 			expectedProjectId:      "200",
 			expectedOrganizationId: "300",
 		},
 		{
 			name: "[NEGATIVE] only allow list ID is passed via terraform apply",
-			input: Cluster{ClusterData: ClusterData{
+			input: Cluster{
 				Id: basetypes.NewStringValue("100"),
-			}},
+			},
 			expectedErr: errors.ErrIdMissing,
 		},
 	}

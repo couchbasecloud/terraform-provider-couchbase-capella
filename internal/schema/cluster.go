@@ -238,9 +238,9 @@ func morphToTerraformServiceGroups(cluster *clusterapi.GetClusterResponse) ([]Se
 
 func (c *Cluster) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
-		OrganizationId: c.ClusterData.OrganizationId,
-		ProjectId:      c.ClusterData.ProjectId,
-		Id:             c.ClusterData.Id,
+		OrganizationId: c.OrganizationId,
+		ProjectId:      c.ProjectId,
+		Id:             c.Id,
 	}
 
 	IDs, err := validateSchemaState(state)
