@@ -327,20 +327,7 @@ func (a *AppService) refreshAppService(ctx context.Context, organizationId, proj
 	}
 
 	refreshedState := providerschema.NewAppService(
-		types.StringValue(appServiceId),
-		types.StringValue(appServiceResponse.Name),
-		types.StringValue(appServiceResponse.Description),
-		types.StringValue(appServiceResponse.CloudProvider),
-		types.Int64Value(int64(appServiceResponse.Nodes)),
-		providerschema.Compute{
-			Cpu: types.Int64Value(appServiceResponse.Compute.Cpu),
-			Ram: types.Int64Value(appServiceResponse.Compute.Ram),
-		},
-		types.StringValue(organizationId),
-		types.StringValue(projectId),
-		types.StringValue(clusterId),
-		types.StringValue(string(appServiceResponse.CurrentState)),
-		types.StringValue(appServiceResponse.Version),
+		&appServiceResponse,
 		auditObj,
 	)
 	return refreshedState, nil

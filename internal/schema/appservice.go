@@ -5,22 +5,27 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"strings"
+	"terraform-provider-capella/internal/api/appservice"
 	"terraform-provider-capella/internal/errors"
 )
 
-// AppService maps App Service resource schema data
+// AppService defines the response as received from V4 Capella Public API when asked to create a new app service.
 type AppService struct {
-	// Id is a GUID4 identifier of the app service.
+	// Id is a UUID of the app service.
 	Id types.String `tfsdk:"id"`
 
 	// Name is the name of the app service, the name of the app service should follow this naming criteria:
 	// An app service name should have at least 2 characters and up to 256 characters.
 	Name types.String `tfsdk:"name"`
 
-	// Description is the description for the app service.
+	// Description is the description for the app service (up to 256 characters).
 	Description types.String `tfsdk:"description"`
 
-	// CloudProvider is the cloud provider where the cluster will be hosted.
+	// CloudProvider is the cloud provider where the app service will be hosted.
+	// To learn more, see:
+	// [AWS] https://docs.couchbase.com/cloud/reference/aws.html
+	// [GCP] https://docs.couchbase.com/cloud/reference/gcp.html
+	// [Azure] https://docs.couchbase.com/cloud/reference/azure.html
 	CloudProvider types.String `tfsdk:"cloud_provider"`
 
 	// Nodes is the number of nodes configured for the app service.
@@ -50,32 +55,23 @@ type AppService struct {
 
 // NewAppService creates a new instance of an App Service
 func NewAppService(
-	Id types.String,
-	Name types.String,
-	Description types.String,
-	CloudProvider types.String,
-	Nodes types.Int64,
-	Compute Compute,
-	OrganizationId types.String,
-	ProjectId types.String,
-	ClusterId types.String,
-	CurrentState types.String,
-	Version types.String,
-	Audit types.Object,
+	appService *appservice.GetAppServiceResponse,
+	auditObject basetypes.ObjectValue,
 ) *AppService {
 	newAppService := AppService{
-		Id:             Id,
-		Name:           Name,
-		Description:    Description,
-		CloudProvider:  CloudProvider,
-		Nodes:          Nodes,
-		Compute:        Compute,
-		OrganizationId: OrganizationId,
-		ProjectId:      ProjectId,
-		ClusterId:      ClusterId,
-		CurrentState:   CurrentState,
-		Version:        Version,
-		Audit:          Audit,
+		Id:            types.StringValue(appService.Id.String()),
+		Name:          types.StringValue(appService.Name),
+		Description:   types.StringValue(appService.Description),
+		CloudProvider: types.StringValue(appService.CloudProvider),
+		Nodes:         types.Int64Value(int64(appService.Nodes)),
+		Compute: Compute{
+			Cpu: types.Int64Value(appService.Compute.Cpu),
+			Ram: types.Int64Value(appService.Compute.Ram),
+		},
+		ClusterId:    types.StringValue(appService.ClusterId),
+		CurrentState: types.StringValue(string(appService.CurrentState)),
+		Version:      types.StringValue(appService.Version),
+		Audit:        auditObject,
 	}
 	return &newAppService
 }
