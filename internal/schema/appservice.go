@@ -1,7 +1,9 @@
 package schema
 
 import (
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"strings"
 	"terraform-provider-capella/internal/errors"
 )
@@ -150,4 +152,19 @@ func (a AppService) Validate() (appServiceId, clusterId, projectId, organization
 	}
 
 	return appServiceId, clusterId, projectId, organizationId, nil
+}
+
+func (a AppService) Validate2() (map[Attr]string, error) {
+	state := map[Attr]basetypes.StringValue{
+		OrganizationId: a.OrganizationId,
+		ProjectId:      a.ProjectId,
+		ClusterId:      a.ClusterId,
+		Id:             a.Id,
+	}
+
+	IDs, err := validateSchemaState(state)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
+	}
+	return IDs, nil
 }

@@ -185,9 +185,80 @@ func (a *AppService) Update(ctx context.Context, request resource.UpdateRequest,
 	panic("implement me")
 }
 
-func (a *AppService) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	//TODO implement me
-	panic("implement me")
+func (a *AppService) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state providerschema.AppService
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceIDs, err := state.Validate2()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error deleting app service",
+			"Could not delete app service id "+state.Id.String()+" unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	var (
+		organizationId = resourceIDs[providerschema.OrganizationId]
+		projectId      = resourceIDs[providerschema.ProjectId]
+		clusterId      = resourceIDs[providerschema.ClusterId]
+		appServiceId   = resourceIDs[providerschema.Id]
+	)
+
+	// Delete existing App Service
+	_, err = a.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s", a.HostURL, organizationId, projectId, clusterId, appServiceId),
+		http.MethodDelete,
+		nil,
+		a.Token,
+		nil,
+	)
+	resourceNotFound, err := handleApiKeyError(err)
+	if resourceNotFound {
+		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+		return
+	}
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error deleting app service",
+			"Could not delete app service id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	err = a.checkAppServiceStatus(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.ClusterId.ValueString(), state.Id.ValueString())
+	resourceNotFound, err = handleAppServiceError(err)
+	switch err {
+	case nil:
+		// This case will only occur when cluster deletion has failed,
+		// and the cluster record still exists in the cp metadata. Therefore,
+		// no error will be returned when performing a GET call.
+		cluster, err := a.refreshAppService(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.ClusterId.ValueString(), state.Id.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error deleting app service",
+				fmt.Sprintf("Could not delete app service id %s: %s", state.Id.String(), err.Error()),
+			)
+			return
+		}
+		resp.Diagnostics.AddError(
+			"Error deleting cluster",
+			fmt.Sprintf("Could not delete app service id %s, as current app service state: %s", state.Id.String(), cluster.CurrentState),
+		)
+		return
+	default:
+		if !resourceNotFound {
+			resp.Diagnostics.AddError(
+				"Error deleting app service",
+				"Could not delete app service id "+state.Id.String()+": "+err.Error(),
+			)
+			return
+		}
+	}
 }
 
 // Configure adds the provider configured client to the app service resource.
