@@ -152,7 +152,7 @@ func (r *AllowList) Read(ctx context.Context, req resource.ReadRequest, resp *re
 	}
 
 	var (
-		organizationId = IDs[providerschema.ClusterId]
+		organizationId = IDs[providerschema.OrganizationId]
 		projectId      = IDs[providerschema.ProjectId]
 		clusterId      = IDs[providerschema.ClusterId]
 		allowListId    = IDs[providerschema.Id]
