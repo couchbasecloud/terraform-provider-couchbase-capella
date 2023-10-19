@@ -157,7 +157,7 @@ func (a *ApiKey) Validate() (map[Attr]string, error) {
 
 	IDs, err := validateSchemaState(state)
 	if err != nil {
-		return nil, fmt.Errorf("failed to validate resource state: %s", err)
+		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
 	}
 
 	return IDs, nil

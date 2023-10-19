@@ -2,6 +2,7 @@ package schema
 
 import (
 	"fmt"
+	"terraform-provider-capella/internal/errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -60,7 +61,7 @@ func (a *AllowList) Validate() (map[Attr]string, error) {
 
 	IDs, err := validateSchemaState(state)
 	if err != nil {
-		return nil, fmt.Errorf("failed to validate resource state: %s", err)
+		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
 	}
 
 	return IDs, nil

@@ -49,7 +49,7 @@ func TestDatabaseCredentialSchemaValidate(t *testing.T) {
 			input: DatabaseCredential{
 				Id: basetypes.NewStringValue("100"),
 			},
-			expectedErr: errors.ErrIdMissing,
+			expectedErr: errors.ErrInvalidImport,
 		},
 	}
 	for _, test := range tests {

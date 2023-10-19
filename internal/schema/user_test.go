@@ -40,7 +40,7 @@ func TestUserSchemaValidate(t *testing.T) {
 			input: User{
 				Id: basetypes.NewStringValue("100"),
 			},
-			expectedErr: errors.ErrIdMissing,
+			expectedErr: errors.ErrInvalidImport,
 		},
 	}
 	for _, test := range tests {

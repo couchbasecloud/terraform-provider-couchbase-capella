@@ -29,13 +29,13 @@ func validateSchemaState(state map[Attr]basetypes.StringValue) (map[Attr]string,
 		var err error
 		IDs, err = splitImportString(state[Id].ValueString(), keyParams)
 		if err != nil {
-			return nil, fmt.Errorf("failed to validate imported state: %s", err)
+			return nil, fmt.Errorf("%s: %w", errors.ErrInvalidImport, err)
 		}
 	}
 
 	err := checkKeysAndValues(IDs, keyParams)
 	if err != nil {
-		return nil, fmt.Errorf("failed to validate resource state: %s", err)
+		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
 	}
 
 	return IDs, nil

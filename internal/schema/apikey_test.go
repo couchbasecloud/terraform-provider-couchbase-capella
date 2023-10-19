@@ -40,7 +40,7 @@ func TestApiKeySchemaValidate(t *testing.T) {
 			input: ApiKey{
 				Id: basetypes.NewStringValue("100"),
 			},
-			expectedErr: errors.ErrIdMissing,
+			expectedErr: errors.ErrInvalidImport,
 		},
 	}
 	for _, test := range tests {

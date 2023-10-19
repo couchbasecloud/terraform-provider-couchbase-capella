@@ -48,7 +48,7 @@ func TestBucketSchemaValidate(t *testing.T) {
 			input: Bucket{
 				Id: basetypes.NewStringValue("100"),
 			},
-			expectedErr: errors.ErrIdMissing,
+			expectedErr: errors.ErrInvalidImport,
 		},
 	}
 	for _, test := range tests {
