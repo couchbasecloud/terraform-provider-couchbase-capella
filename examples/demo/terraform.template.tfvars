@@ -37,9 +37,25 @@ support = {
 database_credential_name = "terraform_db_credential"
 password                 = "Secret12$#"
 
-access = [{
-  privileges = ["data_reader", "data_writer"]
-}]
+access = [
+  {
+    privileges = ["data_writer"]
+    resources = {
+      buckets = [{
+        name = "new_terraform_bucket"
+        scopes = [
+          {
+            name        = "_default"
+            collections = ["_default"]
+          }
+        ]
+      }]
+    }
+  },
+  {
+    privileges = ["data_reader"]
+  }
+]
 
 comment    = "Allow access from a public IP"
 cidr       = "8.8.8.8/32"
