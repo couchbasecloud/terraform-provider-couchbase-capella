@@ -59,13 +59,19 @@ func (a *AppService) Create(ctx context.Context, req resource.CreateRequest, res
 	}
 
 	appServiceRequest := appservice.CreateAppServiceRequest{
-		Name:        plan.Name.ValueString(),
-		Description: plan.Description.ValueString(),
-		Nodes:       plan.Nodes.ValueInt64(),
+		Name: plan.Name.ValueString(),
 		Compute: appservice.Compute{
 			Cpu: plan.Compute.Cpu.ValueInt64(),
 			Ram: plan.Compute.Ram.ValueInt64(),
 		},
+	}
+
+	if !plan.Description.IsNull() && !plan.Description.IsUnknown() {
+		appServiceRequest.Description = plan.Description.ValueStringPointer()
+	}
+
+	if !plan.Nodes.IsNull() && !plan.Nodes.IsUnknown() {
+		appServiceRequest.Nodes = plan.Nodes.ValueInt64Pointer()
 	}
 
 	if !plan.Version.IsNull() && !plan.Version.IsUnknown() {
@@ -328,6 +334,8 @@ func (a *AppService) refreshAppService(ctx context.Context, organizationId, proj
 
 	refreshedState := providerschema.NewAppService(
 		&appServiceResponse,
+		organizationId,
+		projectId,
 		auditObj,
 	)
 	return refreshedState, nil

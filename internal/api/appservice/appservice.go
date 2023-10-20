@@ -21,11 +21,11 @@ type CreateAppServiceRequest struct {
 	Name string `json:"name"`
 
 	// Description is the description for the app service (up to 256 characters).
-	Description string `json:"description"`
+	Description *string `json:"description,omitempty"`
 
 	// Nodes is the number of nodes configured for the App Service.
 	// The number of nodes can range from 2 to 12
-	Nodes int64 `json:"nodes"`
+	Nodes *int64 `json:"nodes,omitempty"`
 
 	// Compute is the CPU and RAM configuration of the app service.
 	Compute Compute `tfsdk:"compute"`

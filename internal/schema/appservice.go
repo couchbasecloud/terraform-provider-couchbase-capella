@@ -56,14 +56,17 @@ type AppService struct {
 // NewAppService creates a new instance of an App Service
 func NewAppService(
 	appService *appservice.GetAppServiceResponse,
+	organizationId, projectId string,
 	auditObject basetypes.ObjectValue,
 ) *AppService {
 	newAppService := AppService{
-		Id:            types.StringValue(appService.Id.String()),
-		Name:          types.StringValue(appService.Name),
-		Description:   types.StringValue(appService.Description),
-		CloudProvider: types.StringValue(appService.CloudProvider),
-		Nodes:         types.Int64Value(int64(appService.Nodes)),
+		Id:             types.StringValue(appService.Id.String()),
+		OrganizationId: types.StringValue(organizationId),
+		ProjectId:      types.StringValue(projectId),
+		Name:           types.StringValue(appService.Name),
+		Description:    types.StringValue(appService.Description),
+		CloudProvider:  types.StringValue(appService.CloudProvider),
+		Nodes:          types.Int64Value(int64(appService.Nodes)),
 		Compute: Compute{
 			Cpu: types.Int64Value(appService.Compute.Cpu),
 			Ram: types.Int64Value(appService.Compute.Ram),
