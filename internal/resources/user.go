@@ -233,24 +233,11 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 		userId         = IDs[providerschema.Id]
 	)
 
-	updateUserRequest := api.UpdateUserRequest{}
+	patch, err := r.compareStates(plan, state)
+	// TODO: Error handling
 
-	// Update existing user
-	_, err = r.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/users/%s", r.HostURL, organizationId, userId),
-		http.MethodPatch,
-		updateUserRequest,
-		r.Token,
-		nil,
-	)
-	_, err = handleUserError(err)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error updating cluster",
-			"Could not update cluster id "+state.Id.String()+": "+err.Error(),
-		)
-		return
-	}
+	err = r.updateUser(organizationId, userId, patch)
+	// TODO: Error handling
 
 	refreshedState, err := r.refreshUser(ctx, organizationId, userId)
 	switch err := err.(type) {
@@ -275,6 +262,30 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 	if resp.Diagnostics.HasError() {
 		return
 	}
+}
+
+// compareStates is used to determine the
+func (r *User) compareStates(plan, state providerschema.User) ([]api.PatchEntry, error) {
+	return nil, nil
+}
+
+// updateUser is used to execute the patch request to update a user.
+func (r *User) updateUser(organizationId, userId string, patch []api.PatchEntry) error {
+	// Update existing user
+	updateUserRequest := api.UpdateUserRequest{Patch: patch}
+	_, err := r.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/users/%s", r.HostURL, organizationId, userId),
+		http.MethodPatch,
+		updateUserRequest,
+		r.Token,
+		nil,
+	)
+	_, err = handleUserError(err)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Delete deletes the user

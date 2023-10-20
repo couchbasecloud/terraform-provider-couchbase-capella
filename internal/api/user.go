@@ -119,21 +119,25 @@ type GetUserResponse struct {
 // Project Owner
 // To learn more, see https://docs.couchbase.com/cloud/organizations/organizations.html
 type UpdateUserRequest struct {
+	Patch []PatchEntry
+}
+
+type PatchEntry struct {
 	// Op is the type of operation
 	//
 	// Enum: "add" "remove"
-	op string
+	Op string
 
 	// Path is the path of the resource that needs to be updated
 	//
 	// Organization Roles: /organizationRoles
 	// Resources: /resources/{resourceId}
 	// Resource Roles: /resources/{resourceId}/roles
-	path string
+	Path string
 
 	// Value is an array of OrganizationRoles (strings) or an
 	// Array of ProjectRoles (strings) or a Resource (object)
-	value interface{}
+	Value interface{}
 }
 
 // GetUsersResponse is the response received from the Capella V4 Public API when asked to list all users that have access to an organization.
