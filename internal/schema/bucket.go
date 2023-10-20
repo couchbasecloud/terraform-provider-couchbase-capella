@@ -1,10 +1,11 @@
 package schema
 
 import (
-	"strings"
+	"fmt"
 	"terraform-provider-capella/internal/errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 type Bucket struct {
@@ -257,74 +258,20 @@ type OneBucket struct {
 // Validate will split the IDs by a delimiter i.e. comma , in case a terraform import CLI is invoked.
 // The format of the terraform import CLI would include the IDs as follows -
 // `terraform import capella_bucket.new_bucket id=<uuid>,cluster_id=<uuid>,project_id=<uuid>,organization_id=<uuid>`
-func (b Bucket) Validate() (bucketId, clusterId, projectId, organizationId string, err error) {
-	const (
-		idDelimiter       = ","
-		organizationIdSep = "organization_id="
-		projectIdSep      = "project_id="
-		clusterIdSep      = "cluster_id="
-		bucketIdSep       = "id="
-	)
-
-	organizationId = b.OrganizationId.ValueString()
-	projectId = b.ProjectId.ValueString()
-	clusterId = b.ClusterId.ValueString()
-	bucketId = b.Id.ValueString()
-	var found bool
-
-	// check if the id is a comma separated string of multiple IDs, usually passed during the terraform import CLI
-	if b.OrganizationId.IsNull() {
-		strs := strings.Split(b.Id.ValueString(), idDelimiter)
-		if len(strs) != 4 {
-			err = errors.ErrIdMissing
-			return
-		}
-		_, bucketId, found = strings.Cut(strs[0], bucketIdSep)
-		if !found {
-			err = errors.ErrDatabaseCredentialIdMissing
-			return
-		}
-
-		_, clusterId, found = strings.Cut(strs[1], clusterIdSep)
-		if !found {
-			err = errors.ErrClusterIdMissing
-			return
-		}
-
-		_, projectId, found = strings.Cut(strs[2], projectIdSep)
-		if !found {
-			err = errors.ErrProjectIdMissing
-			return
-		}
-
-		_, organizationId, found = strings.Cut(strs[3], organizationIdSep)
-		if !found {
-			err = errors.ErrOrganizationIdMissing
-			return
-		}
+func (b Bucket) Validate() (map[Attr]string, error) {
+	state := map[Attr]basetypes.StringValue{
+		OrganizationId: b.OrganizationId,
+		ProjectId:      b.ProjectId,
+		ClusterId:      b.ClusterId,
+		Id:             b.Id,
 	}
 
-	if bucketId == "" {
-		err = errors.ErrBucketIdCannotBeEmpty
-		return
+	IDs, err := validateSchemaState(state)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
 	}
 
-	if clusterId == "" {
-		err = errors.ErrClusterIdCannotBeEmpty
-		return
-	}
-
-	if projectId == "" {
-		err = errors.ErrProjectIdCannotBeEmpty
-		return
-	}
-
-	if organizationId == "" {
-		err = errors.ErrOrganizationIdCannotBeEmpty
-		return
-	}
-
-	return bucketId, clusterId, projectId, organizationId, nil
+	return IDs, nil
 }
 
 // Validate is used to verify that all the fields in the datasource

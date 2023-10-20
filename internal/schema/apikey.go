@@ -2,7 +2,6 @@ package schema
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -150,60 +149,18 @@ func MorphApiKeyResources(resources api.Resources) []ApiKeyResourcesItems {
 
 // Validate checks the validity of an API key and extracts associated IDs.
 // TODO : add unit testing
-func (a *ApiKey) Validate() (map[string]string, error) {
-	const idDelimiter = ","
-	var found bool
-
-	organizationId := a.OrganizationId.ValueString()
-	apiKeyId := a.Id.ValueString()
-
-	// check if the id is a comma separated string of multiple IDs, usually passed during the terraform import CLI
-	if a.OrganizationId.IsNull() {
-		strs := strings.Split(a.Id.ValueString(), idDelimiter)
-		if len(strs) != 2 {
-			return nil, errors.ErrIdMissing
-		}
-
-		_, apiKeyId, found = strings.Cut(strs[0], "id=")
-		if !found {
-			return nil, errors.ErrApiKeyIdMissing
-		}
-
-		_, organizationId, found = strings.Cut(strs[1], "organization_id=")
-		if !found {
-			return nil, errors.ErrOrganizationIdMissing
-		}
-
+func (a *ApiKey) Validate() (map[Attr]string, error) {
+	state := map[Attr]basetypes.StringValue{
+		OrganizationId: a.OrganizationId,
+		Id:             a.Id,
 	}
 
-	resourceIDs := a.generateResourceIdMap(organizationId, apiKeyId)
-
-	err := a.checkEmpty(resourceIDs)
+	IDs, err := validateSchemaState(state)
 	if err != nil {
-		return nil, fmt.Errorf("resource import unsuccessful: %s", err)
+		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
 	}
 
-	return resourceIDs, nil
-}
-
-// generateResourceIdMap is used to populate a map with selected IDs
-func (a *ApiKey) generateResourceIdMap(organizationId, apiKeyId string) map[string]string {
-	return map[string]string{
-		OrganizationId: organizationId,
-		ApiKeyId:       apiKeyId,
-	}
-}
-
-// checkEmpty is used to verify that a supplied resourceId map has been populated
-func (a *ApiKey) checkEmpty(resourceIdMap map[string]string) error {
-	if resourceIdMap[ApiKeyId] == "" {
-		return errors.ErrApiKeyIdCannotBeEmpty
-	}
-
-	if resourceIdMap[OrganizationId] == "" {
-		return errors.ErrOrganizationIdCannotBeEmpty
-	}
-	return nil
+	return IDs, nil
 }
 
 // ApiKeys defines attributes as received in the LIST API response of Capella V4 Public API.
