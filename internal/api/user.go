@@ -111,6 +111,31 @@ type GetUserResponse struct {
 	Audit CouchbaseAuditData `json:"audit"`
 }
 
+// UpdateUserRequest is the payload sent to the Capella V4 Public API when asked to update a user in an organization.
+//
+// In order to access this endpoint, the provided API key must have at least one of the following roles:
+//
+// Organization Owner
+// Project Owner
+// To learn more, see https://docs.couchbase.com/cloud/organizations/organizations.html
+type UpdateUserRequest struct {
+	// Op is the type of operation
+	//
+	// Enum: "add" "remove"
+	op string
+
+	// Path is the path of the resource that needs to be updated
+	//
+	// Organization Roles: /organizationRoles
+	// Resources: /resources/{resourceId}
+	// Resource Roles: /resources/{resourceId}/roles
+	path string
+
+	// Value is an array of OrganizationRoles (strings) or an
+	// Array of ProjectRoles (strings) or a Resource (object)
+	value interface{}
+}
+
 // GetUsersResponse is the response received from the Capella V4 Public API when asked to list all users that have access to an organization.
 //
 // In order to access this endpoint, the provided API key must have at least one of the following roles:

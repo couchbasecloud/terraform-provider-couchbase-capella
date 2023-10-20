@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"terraform-provider-capella/internal/api"
+	api "terraform-provider-capella/internal/api"
 	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
 
@@ -118,7 +118,7 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 		return
 	}
 
-	refreshedState, err := r.refreshUser(ctx, organizationId, createUserResponse.Id.String(), plan)
+	refreshedState, err := r.refreshUser(ctx, organizationId, createUserResponse.Id.String())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading user",
@@ -175,7 +175,7 @@ func (r *User) Read(ctx context.Context, req resource.ReadRequest, resp *resourc
 	)
 
 	// Refresh the existing user
-	refreshedState, err := r.refreshUser(ctx, organizationId, userId, state)
+	refreshedState, err := r.refreshUser(ctx, organizationId, userId)
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
@@ -207,15 +207,74 @@ func (r *User) Read(ctx context.Context, req resource.ReadRequest, resp *resourc
 
 // Update updates the user
 func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// Couchbase Capella's v4 does not support a PUT endpoint for users.
-	// Users are instead updated via a PATCH request.
-	// http://cbc-cp-api.s3-website-us-east-1.amazonaws.com/#tag/allowedCIDRs(Cluster)
-	//
-	// The update logic has been therefore been left blank. In this situation, terraform apply
-	// will default to deleting and executing a new create.
-	// https://developer.hashicorp.com/terraform/plugin/framework/resources/update
-	//
-	// TODO (AV-63471): Implement logic to parse and execute a PATCH request
+	// Retrieve values from plan
+	var plan, state providerschema.User
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+
+	diags = req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	IDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating cluster",
+			"Could not update cluster id "+state.Id.String()+" unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	var (
+		organizationId = IDs[providerschema.OrganizationId]
+		userId         = IDs[providerschema.Id]
+	)
+
+	updateUserRequest := api.UpdateUserRequest{}
+
+	// Update existing user
+	_, err = r.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/users/%s", r.HostURL, organizationId, userId),
+		http.MethodPatch,
+		updateUserRequest,
+		r.Token,
+		nil,
+	)
+	_, err = handleUserError(err)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating cluster",
+			"Could not update cluster id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	refreshedState, err := r.refreshUser(ctx, organizationId, userId)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		resp.Diagnostics.AddError(
+			"Error updating bucket",
+			"Could not update Capella bucket with ID "+userId+": "+err.CompleteError(),
+		)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error updating bucket",
+			"Could not update Capella bucket with ID "+userId+": "+err.Error(),
+		)
+		return
+	}
+
+	// Set state to fully populated data
+	diags = resp.State.Set(ctx, refreshedState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Delete deletes the user
@@ -296,7 +355,9 @@ func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api
 	return &userResp, nil
 }
 
-func (r *User) refreshUser(ctx context.Context, organizationId, userId string, plan providerschema.User) (*providerschema.User, error) {
+// refreshUser retrieves user information for a specified organization and and user.
+// It returns a schema representing the current user state.
+func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (*providerschema.User, error) {
 	userResp, err := r.getUser(ctx, organizationId, userId)
 	if err != nil {
 		return nil, err
@@ -327,7 +388,7 @@ func (r *User) refreshUser(ctx context.Context, organizationId, userId string, p
 		types.StringValue(userResp.TimeZone),
 		types.BoolValue(userResp.EnableNotifications),
 		types.StringValue(userResp.ExpiresAt),
-		plan.Resources,
+		providerschema.MorphResources(userResp.Resources),
 		auditObj,
 	)
 	return refreshedState, nil
@@ -355,4 +416,20 @@ func handleCapellaUserError(err error) error {
 		return fmt.Errorf("%w: %s", errors.ErrUnableToReadCapellaUser, err.Error())
 	}
 	return nil
+}
+
+// this func extract error message if error is api.Error and also checks whether error is
+// resource not found
+func handleUserError(err error) (bool, error) {
+	switch err := err.(type) {
+	case nil:
+		return false, nil
+	case api.Error:
+		if err.HttpStatusCode != http.StatusNotFound {
+			return false, fmt.Errorf(err.CompleteError())
+		}
+		return true, fmt.Errorf(err.CompleteError())
+	default:
+		return false, err
+	}
 }
