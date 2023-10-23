@@ -38,7 +38,7 @@ const (
 type State string
 
 func IsFinalState(state State) bool {
-	//"""Returns True if the state is an end state, False otherwise."""
+	// Returns True if the state is an end state, False otherwise.
 	finalStates := []State{
 		Healthy,
 		Degraded,
