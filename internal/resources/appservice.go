@@ -254,7 +254,7 @@ func (a *AppService) Update(ctx context.Context, req resource.UpdateRequest, res
 		http.MethodPut,
 		appServiceRequest,
 		a.Token,
-		nil,
+		headers,
 	)
 	_, err = handleAppServiceError(err)
 	if err != nil {

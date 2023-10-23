@@ -98,3 +98,78 @@ func (a AppService) Validate() (map[Attr]string, error) {
 	}
 	return IDs, nil
 }
+
+// AppServices defines structure based on the response received from V4 Capella Public API when asked to list app services.
+type AppServices struct {
+	// OrganizationId The organizationId of the capella.
+	OrganizationId types.String `tfsdk:"organization_id"`
+
+	// Data contains the list of resources.
+	Data []AppServiceData `tfsdk:"data"`
+}
+
+// AppServiceData defines attributes for a single cluster when fetched from the V4 Capella Public API.
+type AppServiceData struct {
+	// Id is a UUID of the app service.
+	Id types.String `tfsdk:"id"`
+
+	// Name is the name of the app service, the name of the app service should follow this naming criteria:
+	// An app service name should have at least 2 characters and up to 256 characters.
+	Name types.String `tfsdk:"name"`
+
+	// Description is the description for the app service (up to 256 characters).
+	Description types.String `tfsdk:"description"`
+
+	// CloudProvider is the cloud provider where the app service will be hosted.
+	// To learn more, see:
+	// [AWS] https://docs.couchbase.com/cloud/reference/aws.html
+	// [GCP] https://docs.couchbase.com/cloud/reference/gcp.html
+	// [Azure] https://docs.couchbase.com/cloud/reference/azure.html
+	CloudProvider types.String `tfsdk:"cloud_provider"`
+
+	// Nodes is the number of nodes configured for the app service.
+	Nodes types.Int64 `tfsdk:"nodes"`
+
+	// Compute is the CPU and RAM configuration of the app service.
+	Compute Compute `tfsdk:"compute"`
+
+	// OrganizationId is the organizationId of the capella tenant.
+	OrganizationId types.String `tfsdk:"organization_id"`
+
+	// ClusterId is the clusterId of the cluster.
+	ClusterId types.String `tfsdk:"cluster_id"`
+
+	// CurrentState defines the current state of app service.
+	CurrentState types.String `tfsdk:"current_state"`
+
+	// Version defines the version of the app service server
+	Version types.String `tfsdk:"version"`
+
+	// Audit represents all audit-related fields. It is of types.Object type to avoid conversion error for a nested field.
+	Audit types.Object `tfsdk:"audit"`
+}
+
+// NewAppServiceData creates a new cluster data object
+func NewAppServiceData(
+	appService *appservice.GetAppServiceResponse,
+	organizationId string,
+	auditObject basetypes.ObjectValue,
+) *AppServiceData {
+	newAppService := AppServiceData{
+		Id:             types.StringValue(appService.Id.String()),
+		OrganizationId: types.StringValue(organizationId),
+		Name:           types.StringValue(appService.Name),
+		Description:    types.StringValue(appService.Description),
+		CloudProvider:  types.StringValue(appService.CloudProvider),
+		Nodes:          types.Int64Value(int64(appService.Nodes)),
+		Compute: Compute{
+			Cpu: types.Int64Value(appService.Compute.Cpu),
+			Ram: types.Int64Value(appService.Compute.Ram),
+		},
+		ClusterId:    types.StringValue(appService.ClusterId),
+		CurrentState: types.StringValue(string(appService.CurrentState)),
+		Version:      types.StringValue(appService.Version),
+		Audit:        auditObject,
+	}
+	return &newAppService
+}
