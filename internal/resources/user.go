@@ -286,21 +286,19 @@ func constructPatch(existing, proposed providerschema.User) []api.PatchEntry {
 // constructPatchEntries accepts a User schema and constructs the required fields
 func constructPatchEntries(patch []api.PatchEntry, state providerschema.User, op string) []api.PatchEntry {
 	// create patch entry for organization roles
-	orgRolesPatch := api.PatchEntry{
-		Op:                op,
-		Path:              "/organizationRoles",
-		OrganizationRoles: providerschema.ConvertOrganizationRoles(state.OrganizationRoles),
-	}
+	path := "/organizationRoles"
+	roles := providerschema.ConvertOrganizationRoles(state.OrganizationRoles)
+	orgRolesPatch := api.NewPatchEntryWithRoles(op, path, roles)
+
 	patch = append(patch, orgRolesPatch)
 
 	// create patch entries from resources
 	for _, resource := range state.Resources {
-		resourcesPatch := api.PatchEntry{
-			Op:       op,
-			Path:     "/resources/" + resource.Id.String(),
-			Resource: providerschema.ConvertResource(resource),
-		}
-		patch = append(patch, resourcesPatch)
+		path := "/resources/" + resource.Id.String()
+		value := providerschema.ConvertResource(resource)
+		entry := api.NewPatchEntryWithResource(op, path, value)
+
+		patch = append(patch, entry)
 	}
 	return patch
 }

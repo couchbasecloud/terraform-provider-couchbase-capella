@@ -1,6 +1,8 @@
 package api
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 // CreateUserRequest is the request payload sent to the Capella V4 Public API when asked to invite a new user to an organization.
 // This request simply invites a new user under the organization.
@@ -126,23 +128,36 @@ type PatchEntry struct {
 	// Op is the type of operation
 	//
 	// Enum: "add" "remove"
-	Op string
+	Op string `json:"op"`
 
 	// Path is the path of the resource that needs to be updated
 	//
 	// Organization Roles: /organizationRoles
 	// Resources: /resources/{resourceId}
 	// Resource Roles: /resources/{resourceId}/roles
-	Path string
+	Path string `json:"path"`
 
-	// Organization roles assigned to the User.
-	OrganizationRoles []string
+	Value interface{} `json:"value,omitempty"`
+}
 
-	// Project Roles associated with the User.
-	ProjectRoles []string
+// NewPatchEntryWithRoles is used to create a new user patch entry
+// with roles as value.
+func NewPatchEntryWithRoles(op, path string, roles []string) PatchEntry {
+	return PatchEntry{
+		Op:    op,
+		Path:  path,
+		Value: roles,
+	}
+}
 
-	// Resource defines either a project or cluster to which the user should have access.
-	Resource Resource
+// NewPatchEntryWithResource is used to create a new user patch entry
+// with a resource object as the value.
+func NewPatchEntryWithResource(op, path string, resource Resource) PatchEntry {
+	return PatchEntry{
+		Op:    op,
+		Path:  path,
+		Value: resource,
+	}
 }
 
 type Value struct {
