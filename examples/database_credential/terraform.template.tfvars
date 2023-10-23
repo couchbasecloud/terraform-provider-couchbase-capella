@@ -3,5 +3,24 @@ organization_id          = "<organization_id>"
 project_id               = "<project_id>"
 host                     = "https://cloudapi.cloud.couchbase.com"
 database_credential_name = "test_db_user"
-cluster_id               = "546caf5b-f495-45fc-93e5-7a40e0ee2a17"
+cluster_id               = "<cluster_id>"
 password                 = "Secret12$#"
+access = [
+  {
+    privileges = ["data_writer"]
+    resources = {
+      buckets = [{
+        name = "new_terraform_bucket"
+        scopes = [
+          {
+            name        = "_default"
+            collections = ["_default"]
+          }
+        ]
+      }]
+    }
+  },
+  {
+    privileges = ["data_reader"]
+  }
+]

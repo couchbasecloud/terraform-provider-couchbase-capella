@@ -100,11 +100,11 @@ func (c *Bucket) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		c.Token,
 		nil,
 	)
-	_, err = handleClusterError(err)
+	_, err = handleBucketError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating bucket",
-			"Could not create bucket, unexpected error: "+string(response.Body),
+			"Could not create bucket, unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -173,7 +173,7 @@ func (c *Bucket) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 		return
 	}
 
-	bucketId, clusterId, projectId, organizationId, err := state.Validate()
+	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Bucket in Capella",
@@ -181,6 +181,13 @@ func (c *Bucket) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 		)
 		return
 	}
+
+	var (
+		organizationId = IDs[providerschema.OrganizationId]
+		projectId      = IDs[providerschema.ProjectId]
+		clusterId      = IDs[providerschema.ClusterId]
+		bucketId       = IDs[providerschema.Id]
+	)
 
 	refreshedState, err := c.retrieveBucket(ctx, organizationId, projectId, clusterId, bucketId)
 	resourceNotFound, err := handleBucketError(err)
@@ -335,7 +342,7 @@ func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 		return
 	}
 
-	bucketId, clusterId, projectId, organizationId, err := state.Validate()
+	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Bucket in Capella",
@@ -343,6 +350,13 @@ func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 		)
 		return
 	}
+
+	var (
+		organizationId = IDs[providerschema.OrganizationId]
+		projectId      = IDs[providerschema.ProjectId]
+		clusterId      = IDs[providerschema.ClusterId]
+		bucketId       = IDs[providerschema.Id]
+	)
 
 	bucketUpdateRequest := bucketapi.PutBucketRequest{
 		MemoryAllocationInMb: state.MemoryAllocationInMB.ValueInt64(),

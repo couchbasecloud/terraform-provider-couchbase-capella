@@ -2,7 +2,6 @@ package schema
 
 import (
 	"fmt"
-	"strings"
 
 	clusterapi "terraform-provider-capella/internal/api/cluster"
 	"terraform-provider-capella/internal/errors"
@@ -105,22 +104,72 @@ type Support struct {
 
 // Cluster defines the response as received from V4 Capella Public API when asked to create a new cluster.
 type Cluster struct {
-	ClusterData
+	Id types.String `tfsdk:"id"`
 
-	Etag types.String `tfsdk:"etag"`
+	// AppServiceId is the ID of the linked app service.
+	AppServiceId   types.String  `tfsdk:"app_service_id"`
+	Audit          types.Object  `tfsdk:"audit"`
+	OrganizationId types.String  `tfsdk:"organization_id"`
+	ProjectId      types.String  `tfsdk:"project_id"`
+	Availability   *Availability `tfsdk:"availability"`
+
+	// CloudProvider The cloud provider where the cluster will be hosted.
+	// To learn more, see [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html).
+	CloudProvider   *CloudProvider   `tfsdk:"cloud_provider"`
+	CouchbaseServer *CouchbaseServer `tfsdk:"couchbase_server"`
+
+	// Description of the cluster (up to 1024 characters).
+	Description types.String `tfsdk:"description"`
+
+	// Name of the cluster (up to 256 characters).
+	Name types.String `tfsdk:"name"`
+
+	// ServiceGroups is the couchbase service groups to be run. At least one service group must contain the data service.
+	ServiceGroups []ServiceGroup `tfsdk:"service_groups"`
+	Support       *Support       `tfsdk:"support"`
+	CurrentState  types.String   `tfsdk:"current_state"`
+	Etag          types.String   `tfsdk:"etag"`
 
 	IfMatch types.String `tfsdk:"if_match"`
 }
 
+// NewCluster create new cluster object
 func NewCluster(cluster *clusterapi.GetClusterResponse, organizationId, projectId string, auditObject basetypes.ObjectValue) (*Cluster, error) {
-	newClusterData, err := NewClusterData(cluster, organizationId, projectId, auditObject)
+	newCluster := Cluster{
+		Id:             types.StringValue(cluster.Id.String()),
+		OrganizationId: types.StringValue(organizationId),
+		ProjectId:      types.StringValue(projectId),
+		Name:           types.StringValue(cluster.Name),
+		Description:    types.StringValue(cluster.Description),
+		Availability: &Availability{
+			Type: types.StringValue(string(cluster.Availability.Type)),
+		},
+		CloudProvider: &CloudProvider{
+			Cidr:   types.StringValue(cluster.CloudProvider.Cidr),
+			Region: types.StringValue(cluster.CloudProvider.Region),
+			Type:   types.StringValue(string(cluster.CloudProvider.Type)),
+		},
+		Support: &Support{
+			Plan:     types.StringValue(string(cluster.Support.Plan)),
+			Timezone: types.StringValue(string(cluster.Support.Timezone)),
+		},
+		CurrentState: types.StringValue(string(cluster.CurrentState)),
+		Audit:        auditObject,
+		Etag:         types.StringValue(cluster.Etag),
+	}
+
+	if cluster.CouchbaseServer.Version != nil {
+		version := *cluster.CouchbaseServer.Version
+		newCluster.CouchbaseServer = &CouchbaseServer{
+			Version: types.StringValue(version),
+		}
+	}
+
+	newServiceGroups, err := morphToTerraformServiceGroups(cluster)
 	if err != nil {
 		return nil, err
 	}
-	newCluster := Cluster{
-		ClusterData: *newClusterData,
-		Etag:        types.StringValue(cluster.Etag),
-	}
+	newCluster.ServiceGroups = newServiceGroups
 	return &newCluster, nil
 }
 
@@ -187,70 +236,19 @@ func morphToTerraformServiceGroups(cluster *clusterapi.GetClusterResponse) ([]Se
 	return newServiceGroups, nil
 }
 
-func (c *Cluster) Validate() (map[string]string, error) {
-	const idDelimiter = ","
-	var found bool
-
-	organizationId := c.OrganizationId.ValueString()
-	projectId := c.ProjectId.ValueString()
-	clusterId := c.Id.ValueString()
-
-	// check if the id is a comma separated string of multiple IDs, usually passed during the terraform import CLI
-	if c.OrganizationId.IsNull() {
-		strs := strings.Split(c.Id.ValueString(), idDelimiter)
-		if len(strs) != 3 {
-			return nil, errors.ErrIdMissing
-		}
-
-		_, clusterId, found = strings.Cut(strs[0], "id=")
-		if !found {
-			return nil, errors.ErrClusterIdMissing
-		}
-
-		_, organizationId, found = strings.Cut(strs[1], "organization_id=")
-		if !found {
-			return nil, errors.ErrOrganizationIdMissing
-		}
-
-		_, projectId, found = strings.Cut(strs[2], "project_id=")
-		if !found {
-			return nil, errors.ErrProjectIdMissing
-		}
+func (c *Cluster) Validate() (map[Attr]string, error) {
+	state := map[Attr]basetypes.StringValue{
+		OrganizationId: c.OrganizationId,
+		ProjectId:      c.ProjectId,
+		Id:             c.Id,
 	}
 
-	resourceIDs := c.generateResourceIdMap(organizationId, projectId, clusterId)
-
-	err := c.checkEmpty(resourceIDs)
+	IDs, err := validateSchemaState(state)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrUnableToImportResource, err)
+		return nil, fmt.Errorf("failed to validate resource state: %s", err)
 	}
 
-	return resourceIDs, nil
-}
-
-// generateResourceIdMap is used to populate a map with selected IDs
-func (a *Cluster) generateResourceIdMap(organizationId, projectId, clusterId string) map[string]string {
-	return map[string]string{
-		OrganizationId: organizationId,
-		ProjectId:      projectId,
-		ClusterId:      clusterId,
-	}
-}
-
-// checkEmpty is used to verify that a supplied resourceId map has been populated
-func (a *Cluster) checkEmpty(resourceIdMap map[string]string) error {
-	if resourceIdMap[ClusterId] == "" {
-		return errors.ErrClusterIdCannotBeEmpty
-	}
-
-	if resourceIdMap[ProjectId] == "" {
-		return errors.ErrProjectIdCannotBeEmpty
-	}
-
-	if resourceIdMap[OrganizationId] == "" {
-		return errors.ErrOrganizationIdCannotBeEmpty
-	}
-	return nil
+	return IDs, nil
 }
 
 // Clusters defines structure based on the response received from V4 Capella Public API when asked to list clusters.
@@ -307,6 +305,7 @@ type ClusterData struct {
 	CurrentState types.String `tfsdk:"current_state"`
 }
 
+// NewClusterData creates a new cluster data object
 func NewClusterData(cluster *clusterapi.GetClusterResponse, organizationId, projectId string, auditObject basetypes.ObjectValue) (*ClusterData, error) {
 	newClusterData := ClusterData{
 		Id:             types.StringValue(cluster.Id.String()),

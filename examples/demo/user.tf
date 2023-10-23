@@ -5,7 +5,7 @@ output "user" {
 }
 
 resource "capella_user" "new_user" {
-  organization_id = data.capella_organization.existing_organization.id
+  organization_id = var.organization_id
 
   name  = var.user.name
   email = var.user.email

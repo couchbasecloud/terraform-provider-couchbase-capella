@@ -193,7 +193,7 @@ func (r *DatabaseCredential) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	dbId, clusterId, projectId, organizationId, err := state.Validate()
+	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Database Credentials in Capella",
@@ -201,6 +201,13 @@ func (r *DatabaseCredential) Read(ctx context.Context, req resource.ReadRequest,
 		)
 		return
 	}
+
+	var (
+		organizationId = IDs[providerschema.OrganizationId]
+		projectId      = IDs[providerschema.ProjectId]
+		clusterId      = IDs[providerschema.ClusterId]
+		dbId           = IDs[providerschema.Id]
+	)
 
 	// Get refreshed Cluster value from Capella
 	refreshedState, err := r.retrieveDatabaseCredential(ctx, organizationId, projectId, clusterId, dbId)
@@ -244,7 +251,7 @@ func (r *DatabaseCredential) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	dbId, clusterId, projectId, organizationId, err := state.Validate()
+	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Database Credentials in Capella",
@@ -252,6 +259,13 @@ func (r *DatabaseCredential) Update(ctx context.Context, req resource.UpdateRequ
 		)
 		return
 	}
+
+	var (
+		organizationId = IDs[providerschema.OrganizationId]
+		projectId      = IDs[providerschema.ProjectId]
+		clusterId      = IDs[providerschema.ClusterId]
+		dbId           = IDs[providerschema.Id]
+	)
 
 	dbCredRequest := api.PutDatabaseCredentialRequest{
 		// it is expected that the password in the state file will never be empty.
@@ -328,7 +342,7 @@ func (r *DatabaseCredential) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	dbId, clusterId, projectId, organizationId, err := state.Validate()
+	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Database Credentials in Capella",
@@ -336,6 +350,13 @@ func (r *DatabaseCredential) Delete(ctx context.Context, req resource.DeleteRequ
 		)
 		return
 	}
+
+	var (
+		organizationId = IDs[providerschema.OrganizationId]
+		projectId      = IDs[providerschema.ProjectId]
+		clusterId      = IDs[providerschema.ClusterId]
+		dbId           = IDs[providerschema.Id]
+	)
 
 	_, err = r.Client.Execute(
 		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", r.HostURL, organizationId, projectId, clusterId, dbId),

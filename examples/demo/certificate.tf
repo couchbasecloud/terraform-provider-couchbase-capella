@@ -5,7 +5,7 @@ output "certificate" {
 }
 
 data "capella_certificate" "existing_certificate" {
-  organization_id = data.capella_organization.existing_organization.id
+  organization_id = var.organization_id
   project_id      = capella_project.new_project.id
   cluster_id      = capella_cluster.new_cluster.id
 }

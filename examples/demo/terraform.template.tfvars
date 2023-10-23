@@ -11,7 +11,7 @@ cloud_provider = {
 
 cluster = {
   name               = "My First Terraform Cluster"
-  cidr               = "192.168.0.0/20"
+  cidr               = "10.0.30.0/23"
   node_count         = 3
   server_version     = "7.1"
   couchbase_services = ["data", "index", "query"]
@@ -37,9 +37,25 @@ support = {
 database_credential_name = "terraform_db_credential"
 password                 = "Secret12$#"
 
-access = [{
-  privileges = ["data_reader", "data_writer"]
-}]
+access = [
+  {
+    privileges = ["data_writer"]
+    resources = {
+      buckets = [{
+        name = "new_terraform_bucket"
+        scopes = [
+          {
+            name        = "_default"
+            collections = ["_default"]
+          }
+        ]
+      }]
+    }
+  },
+  {
+    privileges = ["data_reader"]
+  }
+]
 
 comment    = "Allow access from a public IP"
 cidr       = "8.8.8.8/32"

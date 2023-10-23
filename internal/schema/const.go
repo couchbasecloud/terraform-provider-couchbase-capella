@@ -1,8 +1,10 @@
 package schema
 
+type Attr string
+
 const (
-	OrganizationId = "organizationId"
-	ProjectId      = "projectId"
-	ClusterId      = "clusterId"
-	ApiKeyId       = "apiKeyId"
+	OrganizationId Attr = "organizationId"
+	ProjectId      Attr = "projectId"
+	ClusterId      Attr = "clusterId"
+	Id             Attr = "id"
 )
