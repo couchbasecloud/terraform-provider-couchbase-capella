@@ -49,6 +49,7 @@ type GetProjectResponse struct {
 	// Name The name of the project.
 	Name string `json:"name"`
 
+	// Etag represents the version of the document
 	Etag string
 }
 

@@ -50,6 +50,10 @@ type AppService struct {
 
 	// Audit represents all audit-related fields. It is of types.Object type to avoid conversion error for a nested field.
 	Audit types.Object `tfsdk:"audit"`
+	// Etag represents the version of the document.
+	Etag types.String `tfsdk:"etag"`
+	// IfMatch is a precondition header that specifies the entity tag of a resource.
+	IfMatch types.String `tfsdk:"if_match"`
 }
 
 // NewAppService creates a new instance of an App Service
@@ -74,6 +78,7 @@ func NewAppService(
 		CurrentState: types.StringValue(string(appService.CurrentState)),
 		Version:      types.StringValue(appService.Version),
 		Audit:        auditObject,
+		Etag:         types.StringValue(appService.Etag),
 	}
 	return &newAppService
 }

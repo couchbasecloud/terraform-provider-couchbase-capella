@@ -197,9 +197,104 @@ func (a *AppService) Read(ctx context.Context, req resource.ReadRequest, resp *r
 }
 
 // Update updates the AppService.
-func (a *AppService) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	//TODO implement me
-	panic("implement me")
+func (a *AppService) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// Retrieve values from plan
+	var plan, state providerschema.AppService
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+
+	diags = req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceIDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating app service",
+			"Could not update app service id "+state.Id.String()+" unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	var (
+		organizationId = resourceIDs[providerschema.OrganizationId]
+		projectId      = resourceIDs[providerschema.ProjectId]
+		clusterId      = resourceIDs[providerschema.ClusterId]
+		appServiceId   = resourceIDs[providerschema.Id]
+	)
+
+	// Added temporarily until https://couchbasecloud.atlassian.net/browse/AV-65838 is fixed
+	if plan.Name != state.Name {
+		resp.Diagnostics.AddError(
+			"Error updating app service",
+			"Could not update app service id "+state.Id.String()+" unexpected error: "+errors.ErrUnableToUpdateAppServiceName.Error(),
+		)
+		return
+	}
+
+	appServiceRequest := appservice.UpdateAppServiceRequest{
+		Nodes: plan.Nodes.ValueInt64(),
+		Compute: appservice.Compute{
+			Cpu: plan.Compute.Cpu.ValueInt64(),
+			Ram: plan.Compute.Ram.ValueInt64(),
+		},
+	}
+
+	var headers = make(map[string]string)
+	if !state.IfMatch.IsUnknown() && !state.IfMatch.IsNull() {
+		headers["If-Match"] = state.IfMatch.ValueString()
+	}
+
+	// Update existing app service
+	_, err = a.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s", a.HostURL, organizationId, projectId, clusterId, appServiceId),
+		http.MethodPut,
+		appServiceRequest,
+		a.Token,
+		nil,
+	)
+	_, err = handleAppServiceError(err)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating app service",
+			"Could not update app service id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	err = a.checkAppServiceStatus(ctx, organizationId, projectId, clusterId, appServiceId)
+	_, err = handleAppServiceError(err)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating app service",
+			"Could not update app service id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	currentState, err := a.refreshAppService(ctx, organizationId, projectId, clusterId, appServiceId)
+	_, err = handleAppServiceError(err)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating app service",
+			"Could not update app service id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	if !plan.IfMatch.IsUnknown() && !plan.IfMatch.IsNull() {
+		currentState.IfMatch = plan.IfMatch
+	}
+
+	// Set state to fully populated data
+	diags = resp.State.Set(ctx, currentState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Delete deletes the app service.
@@ -407,6 +502,7 @@ func (a *AppService) getAppService(organizationId, projectId, clusterId, appServ
 	if err != nil {
 		return nil, err
 	}
+	appServiceResp.Etag = response.Response.Header.Get("ETag")
 	return &appServiceResp, nil
 }
 
