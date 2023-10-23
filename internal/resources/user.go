@@ -233,7 +233,14 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 		userId         = IDs[providerschema.Id]
 	)
 
-	patch := constructPatch(state, plan)
+	patch, err := constructPatch(state, plan)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating user",
+			"Could not update Capella user with ID "+userId+": "+err.Error(),
+		)
+		return
+	}
 
 	err = r.updateUser(organizationId, userId, patch)
 	if err != nil {
@@ -271,26 +278,34 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 
 // constructPatch is used to determine to compare the planned user state with the
 // existing user state and populate a Patch struct with the required fields.
-func constructPatch(existing, proposed providerschema.User) []api.PatchEntry {
-	// TODO: Consider error handling
-	// TODO: Consider using pointers
-	var patch []api.PatchEntry
+func constructPatch(existing, proposed providerschema.User) ([]api.PatchEntry, error) {
+	patch := make([]api.PatchEntry, 0)
 
-	patch = constructPatchEntries(patch, existing, "remove")
+	err := constructPatchEntries(&patch, existing, "remove")
+	if err != nil {
+		return nil, err
+	}
 
-	patch = constructPatchEntries(patch, proposed, "add")
+	err = constructPatchEntries(&patch, proposed, "add")
+	if err != nil {
+		return nil, err
+	}
 
-	return patch
+	return patch, nil
 }
 
 // constructPatchEntries accepts a User schema and constructs the required fields
-func constructPatchEntries(patch []api.PatchEntry, state providerschema.User, op string) []api.PatchEntry {
+func constructPatchEntries(patch *[]api.PatchEntry, state providerschema.User, op string) error {
 	// create patch entry for organization roles
 	path := "/organizationRoles"
 	roles := providerschema.ConvertOrganizationRoles(state.OrganizationRoles)
 	orgRolesPatch := api.NewPatchEntryWithRoles(op, path, roles)
 
-	patch = append(patch, orgRolesPatch)
+	if patch == nil {
+		return errors.ErrConstructingRequest
+	}
+
+	*patch = append(*patch, orgRolesPatch)
 
 	// create patch entries from resources
 	for _, resource := range state.Resources {
@@ -298,9 +313,9 @@ func constructPatchEntries(patch []api.PatchEntry, state providerschema.User, op
 		value := providerschema.ConvertResource(resource)
 		entry := api.NewPatchEntryWithResource(op, path, value)
 
-		patch = append(patch, entry)
+		*patch = append(*patch, entry)
 	}
-	return patch
+	return nil
 }
 
 // updateUser is used to execute the patch request to update a user.
