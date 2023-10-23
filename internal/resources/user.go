@@ -222,8 +222,8 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error updating cluster",
-			"Could not update cluster id "+state.Id.String()+" unexpected error: "+err.Error(),
+			"Error updating user",
+			"Could not update user id: "+state.Id.String()+" unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -233,25 +233,30 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 		userId         = IDs[providerschema.Id]
 	)
 
-	patch, err := r.compareStates(plan, state)
-	// TODO: Error handling
+	patch := constructPatch(state, plan)
 
 	err = r.updateUser(organizationId, userId, patch)
-	// TODO: Error handling
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating user",
+			"Could not update Capella user with ID "+userId+": "+err.Error(),
+		)
+		return
+	}
 
 	refreshedState, err := r.refreshUser(ctx, organizationId, userId)
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
 		resp.Diagnostics.AddError(
-			"Error updating bucket",
-			"Could not update Capella bucket with ID "+userId+": "+err.CompleteError(),
+			"Error updating user",
+			"Could not update Capella user with ID "+userId+": "+err.CompleteError(),
 		)
 		return
 	default:
 		resp.Diagnostics.AddError(
-			"Error updating bucket",
-			"Could not update Capella bucket with ID "+userId+": "+err.Error(),
+			"Error updating user",
+			"Could not update Capella user with ID "+userId+": "+err.Error(),
 		)
 		return
 	}
@@ -264,9 +269,40 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 	}
 }
 
-// compareStates is used to determine the
-func (r *User) compareStates(plan, state providerschema.User) ([]api.PatchEntry, error) {
-	return nil, nil
+// constructPatch is used to determine to compare the planned user state with the
+// existing user state and populate a Patch struct with the required fields.
+func constructPatch(existing, proposed providerschema.User) []api.PatchEntry {
+	// TODO: Consider error handling
+	// TODO: Consider using pointers
+	var patch []api.PatchEntry
+
+	patch = constructPatchEntries(patch, existing, "remove")
+
+	patch = constructPatchEntries(patch, proposed, "add")
+
+	return patch
+}
+
+// constructPatchEntries accepts a User schema and constructs the required fields
+func constructPatchEntries(patch []api.PatchEntry, state providerschema.User, op string) []api.PatchEntry {
+	// create patch entry for organization roles
+	orgRolesPatch := api.PatchEntry{
+		Op:    op,
+		Path:  "/organizationRoles",
+		Value: state.OrganizationRoles,
+	}
+	patch = append(patch, orgRolesPatch)
+
+	// create patch entries from resources
+	for _, resource := range state.Resources {
+		resourcesPatch := api.PatchEntry{
+			Op:    op,
+			Path:  "/resources/" + resource.Id.String(),
+			Value: resource,
+		}
+		patch = append(patch, resourcesPatch)
+	}
+	return patch
 }
 
 // updateUser is used to execute the patch request to update a user.

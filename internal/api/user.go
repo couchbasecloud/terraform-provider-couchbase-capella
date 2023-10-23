@@ -140,6 +140,21 @@ type PatchEntry struct {
 	Value interface{}
 }
 
+type Value struct {
+	// OrganizationRoles represents organization roles assigned to the user.
+	//
+	// Enum: "organizationOwner" "organizationMember" "projectCreator"
+	OrganizationRoles []string
+
+	// ProjectRoles represents project roles assigned to the user
+	//
+	// Enum: "projectOwner" "projectManager" "projectViewer" "projectDataReaderWriter" "projectDataReader"
+	ProjectRoles []string
+
+	// Resource defines either a project or cluster to which the newly invited user should have access.
+	Resource Resource
+}
+
 // GetUsersResponse is the response received from the Capella V4 Public API when asked to list all users that have access to an organization.
 //
 // In order to access this endpoint, the provided API key must have at least one of the following roles:
