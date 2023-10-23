@@ -23,18 +23,13 @@ variable "app_service" {
   description = "App Service configuration details useful for creation"
 
   type = object({
-    name                  = string
-    description                  = optional(string)
+    name        = string
+    description = optional(string)
     version     = optional(string)
-    nodes              = optional(number)
-  })
-}
-
-variable "compute" {
-  description = "All cluster node compute configuration"
-
-  type = object({
-    cpu = number
-    ram = number
+    nodes       = optional(number)
+    compute     = object({
+      cpu = number
+      ram = number
+    })
   })
 }

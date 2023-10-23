@@ -5,12 +5,11 @@ cluster_id      = "<cluster_id>"
 host            = "https://cloudapi.cloud.couchbase.com"
 
 app_service = {
-  name = "test_app_service"
-  description = "test_nidhi"
+  name = "new_terraform_app_service"
+  description = "My first test app service."
   nodes = 2
-}
-
-compute = {
- cpu = 2
- ram = 4
+  compute = {
+   cpu = 2
+   ram = 4
+  }
 }

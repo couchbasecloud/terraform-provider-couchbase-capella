@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"strings"
 	"terraform-provider-capella/internal/api/appservice"
 	"terraform-provider-capella/internal/errors"
 )
@@ -79,81 +78,8 @@ func NewAppService(
 	return &newAppService
 }
 
-// Validate will split the IDs by a delimiter i.e. comma , in case a terraform import CLI is invoked.
-// The format of the terraform import CLI would include the IDs as follows -
-// `terraform import capella_bucket.new_bucket id=<uuid>,cluster_id=<uuid>,project_id=<uuid>,organization_id=<uuid>`
-func (a AppService) Validate() (appServiceId, clusterId, projectId, organizationId string, err error) {
-
-	const (
-		idDelimiter       = ","
-		organizationIdSep = "organization_id="
-		projectIdSep      = "project_id="
-		clusterIdSep      = "cluster_id="
-		appServiceIdSep   = "id="
-	)
-
-	organizationId = a.OrganizationId.ValueString()
-	projectId = a.ProjectId.ValueString()
-	clusterId = a.ClusterId.ValueString()
-	appServiceId = a.Id.ValueString()
-	var found bool
-
-	// check if the id is a comma separated string of multiple IDs, usually passed during the terraform import CLI
-	if a.OrganizationId.IsNull() {
-		strs := strings.Split(a.Id.ValueString(), idDelimiter)
-		if len(strs) != 4 {
-			err = errors.ErrIdMissing
-			return
-		}
-		_, appServiceId, found = strings.Cut(strs[0], appServiceIdSep)
-		if !found {
-			err = errors.ErrDatabaseCredentialIdMissing
-			return
-		}
-
-		_, clusterId, found = strings.Cut(strs[1], clusterIdSep)
-		if !found {
-			err = errors.ErrClusterIdMissing
-			return
-		}
-
-		_, projectId, found = strings.Cut(strs[2], projectIdSep)
-		if !found {
-			err = errors.ErrProjectIdMissing
-			return
-		}
-
-		_, organizationId, found = strings.Cut(strs[3], organizationIdSep)
-		if !found {
-			err = errors.ErrOrganizationIdMissing
-			return
-		}
-	}
-
-	if appServiceId == "" {
-		err = errors.ErrAppServiceIdCannotBeEmpty
-		return
-	}
-
-	if clusterId == "" {
-		err = errors.ErrClusterIdCannotBeEmpty
-		return
-	}
-
-	if projectId == "" {
-		err = errors.ErrProjectIdCannotBeEmpty
-		return
-	}
-
-	if organizationId == "" {
-		err = errors.ErrOrganizationIdCannotBeEmpty
-		return
-	}
-
-	return appServiceId, clusterId, projectId, organizationId, nil
-}
-
-func (a AppService) Validate2() (map[Attr]string, error) {
+// Validate is used to verify that IDs have been properly imported
+func (a AppService) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
 		OrganizationId: a.OrganizationId,
 		ProjectId:      a.ProjectId,

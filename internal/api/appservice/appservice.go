@@ -76,10 +76,10 @@ type GetAppServiceResponse struct {
 	Compute Compute `tfsdk:"compute"`
 
 	// OrganizationId is the organizationId of the capella tenant.
-	// OrganizationId string `json:"organizationId"`
+	OrganizationId string `json:"organizationId"`
 
 	// ProjectId is the projectId of the cluster.
-	// ProjectId string `tfsdk:"projectId"`
+	ProjectId string `tfsdk:"projectId"`
 
 	// ClusterId is the clusterId of the cluster.
 	ClusterId string `tfsdk:"clusterId"`
