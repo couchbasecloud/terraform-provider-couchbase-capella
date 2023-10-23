@@ -148,28 +148,35 @@ func ConvertOrganizationRoles(organizationRoles []basetypes.StringValue) []strin
 	return convertedRoles
 }
 
-// ConvertResource is used to convert a resource object containing nested fields
-// of type basetypes.StringValue to a resource object containing nested fields of type string.
+// ConvertResources is used to convert an array of resource objects containing nested fields
+// of type basetypes.StringValue to resource objects containing nested fields of type string.
 // TODO (AV-53457): add unit testing
 func ConvertResources(resources []Resource) []api.Resource {
 	var convertedResources []api.Resource
 	for _, resource := range resources {
-		var convertedResource api.Resource
-		convertedResource.Id = resource.Id.ValueString()
-
-		resourceType := resource.Type.ValueString()
-		convertedResource.Type = &resourceType
-
-		// Iterate through roles belonging to the user and convert to string
-		var convertedRoles []string
-		for _, role := range resource.Roles {
-			convertedRoles = append(convertedRoles, role.ValueString())
-		}
-		convertedResource.Roles = convertedRoles
-
+		convertedResource := ConvertResource(resource)
 		convertedResources = append(convertedResources, convertedResource)
 	}
 	return convertedResources
+}
+
+// ConvertResources is used to convert a resource object containing nested fields
+// of type basetypes.StringValue to a resource object containing nested fields of type string.
+// TODO (AV-53457): add unit testing
+func ConvertResource(resource Resource) api.Resource {
+	var convertedResource api.Resource
+	convertedResource.Id = resource.Id.ValueString()
+
+	resourceType := resource.Type.ValueString()
+	convertedResource.Type = &resourceType
+
+	// Iterate through roles belonging to the user and convert to string
+	var convertedRoles []string
+	for _, role := range resource.Roles {
+		convertedRoles = append(convertedRoles, role.ValueString())
+	}
+	convertedResource.Roles = convertedRoles
+	return convertedResource
 }
 
 // MorphResources is used to covert nested resources from strings

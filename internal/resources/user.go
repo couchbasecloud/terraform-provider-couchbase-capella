@@ -287,18 +287,18 @@ func constructPatch(existing, proposed providerschema.User) []api.PatchEntry {
 func constructPatchEntries(patch []api.PatchEntry, state providerschema.User, op string) []api.PatchEntry {
 	// create patch entry for organization roles
 	orgRolesPatch := api.PatchEntry{
-		Op:    op,
-		Path:  "/organizationRoles",
-		Value: state.OrganizationRoles,
+		Op:                op,
+		Path:              "/organizationRoles",
+		OrganizationRoles: providerschema.ConvertOrganizationRoles(state.OrganizationRoles),
 	}
 	patch = append(patch, orgRolesPatch)
 
 	// create patch entries from resources
 	for _, resource := range state.Resources {
 		resourcesPatch := api.PatchEntry{
-			Op:    op,
-			Path:  "/resources/" + resource.Id.String(),
-			Value: resource,
+			Op:       op,
+			Path:     "/resources/" + resource.Id.String(),
+			Resource: providerschema.ConvertResource(resource),
 		}
 		patch = append(patch, resourcesPatch)
 	}

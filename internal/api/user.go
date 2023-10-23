@@ -135,9 +135,14 @@ type PatchEntry struct {
 	// Resource Roles: /resources/{resourceId}/roles
 	Path string
 
-	// Value is an array of OrganizationRoles (strings) or an
-	// Array of ProjectRoles (strings) or a Resource (object)
-	Value interface{}
+	// Organization roles assigned to the User.
+	OrganizationRoles []string
+
+	// Project Roles associated with the User.
+	ProjectRoles []string
+
+	// Resource defines either a project or cluster to which the user should have access.
+	Resource Resource
 }
 
 type Value struct {
