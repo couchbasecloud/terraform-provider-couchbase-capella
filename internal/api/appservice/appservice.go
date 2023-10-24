@@ -28,7 +28,7 @@ type CreateAppServiceRequest struct {
 	Nodes *int64 `json:"nodes,omitempty"`
 
 	// Compute is the CPU and RAM configuration of the app service.
-	Compute Compute `tfsdk:"compute"`
+	Compute AppServiceCompute `tfsdk:"compute"`
 
 	// Version is version of the App Service Server to be installed.
 	// The latest Server version will be deployed by default.
@@ -73,7 +73,7 @@ type GetAppServiceResponse struct {
 	Nodes int `json:"nodes"`
 
 	// Compute is the CPU and RAM configuration of the app service.
-	Compute Compute `tfsdk:"compute"`
+	Compute AppServiceCompute `tfsdk:"compute"`
 
 	// OrganizationId is the organizationId of the capella tenant.
 	OrganizationId string `json:"organizationId"`
@@ -117,5 +117,5 @@ type UpdateAppServiceRequest struct {
 	Nodes int64 `json:"nodes"`
 
 	// Compute is the CPU and RAM configuration of the app service.
-	Compute Compute `tfsdk:"compute"`
+	Compute AppServiceCompute `tfsdk:"compute"`
 }

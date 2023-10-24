@@ -31,7 +31,7 @@ type AppService struct {
 	Nodes types.Int64 `tfsdk:"nodes"`
 
 	// Compute is the CPU and RAM configuration of the app service.
-	Compute Compute `tfsdk:"compute"`
+	Compute *AppServiceCompute `tfsdk:"compute"`
 
 	// OrganizationId is the organizationId of the capella tenant.
 	OrganizationId types.String `tfsdk:"organization_id"`
@@ -56,6 +56,20 @@ type AppService struct {
 	IfMatch types.String `tfsdk:"if_match"`
 }
 
+// AppServiceCompute depicts the couchbase compute, following are the supported compute combinations
+// for CPU and RAM for different cloud providers.
+// To learn more, see:
+// [AWS] https://docs.couchbase.com/cloud/reference/aws.html
+// [GCP] https://docs.couchbase.com/cloud/reference/gcp.html
+// [Azure] https://docs.couchbase.com/cloud/reference/azure.html
+type AppServiceCompute struct {
+	// Cpu depicts cpu units (cores).
+	Cpu types.Int64 `tfsdk:"cpu"`
+
+	// Ram depicts ram units (GB).
+	Ram types.Int64 `tfsdk:"ram"`
+}
+
 // NewAppService creates a new instance of an App Service
 func NewAppService(
 	appService *appservice.GetAppServiceResponse,
@@ -70,7 +84,7 @@ func NewAppService(
 		Description:    types.StringValue(appService.Description),
 		CloudProvider:  types.StringValue(appService.CloudProvider),
 		Nodes:          types.Int64Value(int64(appService.Nodes)),
-		Compute: Compute{
+		Compute: &AppServiceCompute{
 			Cpu: types.Int64Value(appService.Compute.Cpu),
 			Ram: types.Int64Value(appService.Compute.Ram),
 		},
@@ -131,7 +145,7 @@ type AppServiceData struct {
 	Nodes types.Int64 `tfsdk:"nodes"`
 
 	// Compute is the CPU and RAM configuration of the app service.
-	Compute Compute `tfsdk:"compute"`
+	Compute *AppServiceCompute `tfsdk:"compute"`
 
 	// OrganizationId is the organizationId of the capella tenant.
 	OrganizationId types.String `tfsdk:"organization_id"`
@@ -162,7 +176,7 @@ func NewAppServiceData(
 		Description:    types.StringValue(appService.Description),
 		CloudProvider:  types.StringValue(appService.CloudProvider),
 		Nodes:          types.Int64Value(int64(appService.Nodes)),
-		Compute: Compute{
+		Compute: &AppServiceCompute{
 			Cpu: types.Int64Value(appService.Compute.Cpu),
 			Ram: types.Int64Value(appService.Compute.Ram),
 		},

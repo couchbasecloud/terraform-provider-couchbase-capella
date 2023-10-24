@@ -65,7 +65,7 @@ func (a *AppService) Create(ctx context.Context, req resource.CreateRequest, res
 
 	appServiceRequest := appservice.CreateAppServiceRequest{
 		Name: plan.Name.ValueString(),
-		Compute: appservice.Compute{
+		Compute: appservice.AppServiceCompute{
 			Cpu: plan.Compute.Cpu.ValueInt64(),
 			Ram: plan.Compute.Ram.ValueInt64(),
 		},
@@ -237,7 +237,7 @@ func (a *AppService) Update(ctx context.Context, req resource.UpdateRequest, res
 
 	appServiceRequest := appservice.UpdateAppServiceRequest{
 		Nodes: plan.Nodes.ValueInt64(),
-		Compute: appservice.Compute{
+		Compute: appservice.AppServiceCompute{
 			Cpu: plan.Compute.Cpu.ValueInt64(),
 			Ram: plan.Compute.Ram.ValueInt64(),
 		},
