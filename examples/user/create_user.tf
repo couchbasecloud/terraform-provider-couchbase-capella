@@ -17,13 +17,7 @@ resource "capella_user" "new_user" {
       type = "project"
       id   = var.project_id
       roles = [
-        "projectViewer"
-      ]
-    },
-    {
-      type = "project"
-      id   = var.project_id
-      roles = [
+        "projectViewer",
         "projectDataReaderWriter"
       ]
     }
