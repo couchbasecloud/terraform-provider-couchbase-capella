@@ -5,7 +5,7 @@ cluster_id      = "<cluster_id>"
 host            = "https://cloudapi.cloud.couchbase.com"
 
 app_service = {
-  name = "new_terraform_app_service"
+  name = "new-terraform-app-service"
   description = "My first test app service."
   nodes = 2
   compute = {

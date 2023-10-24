@@ -138,3 +138,18 @@ variable "user" {
     email = string
   })
 }
+
+variable "app_service" {
+  description = "App Service configuration details useful for creation"
+
+  type = object({
+    name        = string
+    description = optional(string)
+    version     = optional(string)
+    nodes       = optional(number)
+    compute     = object({
+      cpu = number
+      ram = number
+    })
+  })
+}

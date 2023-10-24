@@ -86,3 +86,13 @@ apikey = {
   organization_roles = ["organizationMember"]
   expiry             = 180
 }
+
+app_service = {
+  name = "new-terraform-app-service"
+  description = "My first test app service."
+  nodes = 2
+  compute = {
+    cpu = 2
+    ram = 4
+  }
+}
