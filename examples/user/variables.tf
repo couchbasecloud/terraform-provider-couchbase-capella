@@ -18,3 +18,7 @@ variable "auth_token" {
 variable "user_name" {
   description = "Capella User Name"
 }
+
+variable "email" {
+  description = "Capella Email Address"
+}
