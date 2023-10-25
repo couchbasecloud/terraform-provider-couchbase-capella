@@ -77,5 +77,7 @@ type GetAllowListResponse struct {
 // Database Data Reader
 // To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
 type GetAllowListsResponse struct {
+	Cursor Cursor `json:"cursor"`
+
 	Data []GetAllowListResponse `json:"data"`
 }
