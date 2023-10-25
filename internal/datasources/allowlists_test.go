@@ -112,7 +112,7 @@ func Test_MapResponseBody(t *testing.T) {
 				ProjectId:      projectId,
 				ClusterId:      clusterId,
 			}
-			state = a.mapResponseBody(test.response, &state)
+			state = a.mapResponseBody(test.response.Data, &state)
 
 			assert.Equal(t, test.expectedState, state)
 		})

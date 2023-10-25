@@ -88,14 +88,7 @@ func (d *AllowLists) Read(ctx context.Context, req datasource.ReadRequest, resp 
 		clusterId      = state.ClusterId.ValueString()
 	)
 
-	// Make request to list allowlists
-	response, err := d.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs", d.HostURL, organizationId, projectId, clusterId),
-		http.MethodGet,
-		nil,
-		d.Token,
-		nil,
-	)
+	allowLists, err := d.listAllowLists(ctx, organizationId, projectId, clusterId, state)
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
@@ -117,17 +110,7 @@ func (d *AllowLists) Read(ctx context.Context, req datasource.ReadRequest, resp 
 		return
 	}
 
-	allowListsResponse := api.GetAllowListsResponse{}
-	err = json.Unmarshal(response.Body, &allowListsResponse)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error reading allowlist",
-			"Could not create allowlist, unexpected error: "+err.Error(),
-		)
-		return
-	}
-
-	state = d.mapResponseBody(allowListsResponse, &state)
+	state = d.mapResponseBody(allowLists, &state)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading allowlist",
@@ -144,6 +127,44 @@ func (d *AllowLists) Read(ctx context.Context, req datasource.ReadRequest, resp 
 		return
 	}
 
+}
+
+// listAllowLists executes calls to the list allowlist endpoint. It handles pagination and
+// returns a slice of individual allowlists responses retrieved from multiple pages.
+func (d *AllowLists) listAllowLists(ctx context.Context, organizationId, projectId, clusterId string, state providerschema.AllowLists) ([]api.GetAllowListResponse, error) {
+	var allAllowLists []api.GetAllowListResponse
+	page := 1
+
+	for {
+		// Make request to list allowlists
+		response, err := d.Client.Execute(
+			fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs?page=%d&perPage=10", d.HostURL, organizationId, projectId, clusterId, page),
+			http.MethodGet,
+			nil,
+			d.Token,
+			nil,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		allowListsResponse := api.GetAllowListsResponse{}
+		err = json.Unmarshal(response.Body, &allowListsResponse)
+		if err != nil {
+			return nil, err
+		}
+
+		// handle pagination
+		allAllowLists = append(allAllowLists, allowListsResponse.Data...)
+
+		if allowListsResponse.Cursor.Pages.Next == 0 {
+			break
+		}
+
+		page = allowListsResponse.Cursor.Pages.Next
+
+	}
+	return allAllowLists, nil
 }
 
 // Configure adds the provider configured client to the allowlist data source.
@@ -165,12 +186,12 @@ func (d *AllowLists) Configure(_ context.Context, req datasource.ConfigureReques
 }
 
 // mapResponseBody is used to map the response body from a call to
-// get allowlists to the allowlists schema that will be used by terraform.
+// listAllowlists to the allowlists schema that will be used by terraform.
 func (d *AllowLists) mapResponseBody(
-	allowListsResponse api.GetAllowListsResponse,
+	allowLists []api.GetAllowListResponse,
 	state *providerschema.AllowLists,
 ) providerschema.AllowLists {
-	for _, allowList := range allowListsResponse.Data {
+	for _, allowList := range allowLists {
 		allowListState := providerschema.OneAllowList{
 			Id:             types.StringValue(allowList.Id.String()),
 			OrganizationId: types.StringValue(state.OrganizationId.ValueString()),
