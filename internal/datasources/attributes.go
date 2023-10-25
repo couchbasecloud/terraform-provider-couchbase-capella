@@ -43,36 +43,6 @@ var (
 		Computed:    true,
 	}
 
-	// computedCursorAttribute returns a Terraform nested list
-	// schema attribute which represents pagination metadata.
-	computedCursorAttribute = schema.ListNestedAttribute{
-		Computed: true,
-		NestedObject: schema.NestedAttributeObject{
-			Attributes: map[string]schema.Attribute{
-				"pages": schema.SingleNestedAttribute{
-					Computed: true,
-					Attributes: map[string]schema.Attribute{
-						"page":       computedInt64Attribute,
-						"next":       computedInt64Attribute,
-						"previous":   computedInt64Attribute,
-						"last":       computedInt64Attribute,
-						"perPage":    computedInt64Attribute,
-						"totalItems": computedInt64Attribute,
-					},
-				},
-				"hrefs": schema.SingleNestedAttribute{
-					Computed: true,
-					Attributes: map[string]schema.Attribute{
-						"first":    computedStringAttribute,
-						"last":     computedStringAttribute,
-						"previous": computedStringAttribute,
-						"next":     computedStringAttribute,
-					},
-				},
-			},
-		},
-	}
-
 	// computedAuditAttribute retuns a SingleNestedAttribute to
 	// represent couchbase audit data using terraform schema types.
 	computedAuditAttribute = schema.SingleNestedAttribute{

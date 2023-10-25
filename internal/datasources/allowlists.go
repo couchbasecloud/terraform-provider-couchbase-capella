@@ -43,7 +43,6 @@ func (d *AllowLists) Schema(_ context.Context, _ datasource.SchemaRequest, resp 
 			"organization_id": requiredStringAttribute,
 			"project_id":      requiredStringAttribute,
 			"cluster_id":      requiredStringAttribute,
-			"cursor":          computedCursorAttribute,
 			"data": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
