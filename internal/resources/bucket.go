@@ -54,16 +54,44 @@ func (c *Bucket) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	}
 
 	BucketRequest := bucketapi.CreateBucketRequest{
-		Name:                     plan.Name.ValueString(),
-		Type:                     plan.Type.ValueString(),
-		StorageBackend:           plan.StorageBackend.ValueString(),
-		MemoryAllocationInMb:     plan.MemoryAllocationInMB.ValueInt64(),
-		BucketConflictResolution: plan.BucketConflictResolution.ValueString(),
-		DurabilityLevel:          plan.DurabilityLevel.ValueString(),
-		Replicas:                 plan.Replicas.ValueInt64(),
-		Flush:                    plan.Flush.ValueBool(),
-		TimeToLiveInSeconds:      plan.TimeToLiveInSeconds.ValueInt64(),
-		EvictionPolicy:           plan.EvictionPolicy.ValueString(),
+		Name: plan.Name.ValueString(),
+	}
+
+	// Check for optional fields
+	if !plan.StorageBackend.IsNull() && !plan.StorageBackend.IsUnknown() {
+		BucketRequest.StorageBackend = plan.StorageBackend.ValueStringPointer()
+	}
+
+	if !plan.MemoryAllocationInMB.IsNull() && !plan.MemoryAllocationInMB.IsUnknown() {
+		BucketRequest.MemoryAllocationInMb = plan.MemoryAllocationInMB.ValueInt64Pointer()
+	}
+
+	if !plan.BucketConflictResolution.IsNull() && !plan.BucketConflictResolution.IsUnknown() {
+		BucketRequest.BucketConflictResolution = plan.BucketConflictResolution.ValueStringPointer()
+	}
+
+	if !plan.DurabilityLevel.IsNull() && !plan.DurabilityLevel.IsUnknown() {
+		BucketRequest.DurabilityLevel = plan.DurabilityLevel.ValueStringPointer()
+	}
+
+	if !plan.Replicas.IsNull() && !plan.Replicas.IsUnknown() {
+		BucketRequest.Replicas = plan.Replicas.ValueInt64Pointer()
+	}
+
+	if !plan.Flush.IsNull() && !plan.Flush.IsUnknown() {
+		BucketRequest.Flush = plan.Flush.ValueBoolPointer()
+	}
+
+	if !plan.TimeToLiveInSeconds.IsNull() && !plan.TimeToLiveInSeconds.IsUnknown() {
+		BucketRequest.TimeToLiveInSeconds = plan.TimeToLiveInSeconds.ValueInt64Pointer()
+	}
+
+	if !plan.EvictionPolicy.IsNull() && !plan.EvictionPolicy.IsUnknown() {
+		BucketRequest.EvictionPolicy = plan.EvictionPolicy.ValueStringPointer()
+	}
+
+	if !plan.Type.IsNull() && !plan.Type.IsUnknown() {
+		BucketRequest.Type = plan.Type.ValueStringPointer()
 	}
 
 	if plan.OrganizationId.IsNull() {
