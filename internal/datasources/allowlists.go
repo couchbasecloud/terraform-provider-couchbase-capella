@@ -2,7 +2,6 @@ package datasources
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"terraform-provider-capella/internal/api"
@@ -131,42 +130,17 @@ func (d *AllowLists) Read(ctx context.Context, req datasource.ReadRequest, resp 
 // listAllowLists executes calls to the list allowlist endpoint. It handles pagination and
 // returns a slice of individual allowlists responses retrieved from multiple pages.
 func (d *AllowLists) listAllowLists(ctx context.Context, organizationId, projectId, clusterId string) ([]api.GetAllowListResponse, error) {
-	var (
-		allAllowLists []api.GetAllowListResponse
-		page          = 1
-		perPage       = 10
-	)
-
-	for {
-		// Make request to list allowlists
-		response, err := d.Client.Execute(
+	callback := func(page, perPage int) (*api.Response, error) {
+		return d.Client.Execute(
 			fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs?page=%d&perPage=%d", d.HostURL, organizationId, projectId, clusterId, page, perPage),
 			http.MethodGet,
 			nil,
 			d.Token,
 			nil,
 		)
-		if err != nil {
-			return nil, err
-		}
-
-		allowListsResponse := api.GetAllowListsResponse{}
-		err = json.Unmarshal(response.Body, &allowListsResponse)
-		if err != nil {
-			return nil, err
-		}
-
-		// handle pagination
-		allAllowLists = append(allAllowLists, allowListsResponse.Data...)
-
-		if allowListsResponse.Cursor.Pages.Next == 0 {
-			break
-		}
-
-		page = allowListsResponse.Cursor.Pages.Next
-
 	}
-	return allAllowLists, nil
+
+	return api.WithPagination[[]api.GetAllowListResponse](ctx, organizationId, projectId, clusterId, callback)
 }
 
 // Configure adds the provider configured client to the allowlist data source.

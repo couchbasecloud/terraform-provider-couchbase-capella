@@ -1,5 +1,10 @@
 package api
 
+import (
+	"context"
+	"encoding/json"
+)
+
 // Cursor represents pagination metadata for navigating through large data sets.
 type Cursor struct {
 	// Pages represents the pagination details of the data set.
@@ -43,4 +48,49 @@ type HRefs struct {
 
 	// Next is the base URL, endpoint, and path parameters required to fetch the next page of results. Empty if there is no next page.
 	Next string `json:"next"`
+}
+
+// WithPagination is a generic function used to handle pagination. It accepts a callback
+// function which should include the request details. It then iterates through
+// remaining pages to flatten paginated responses into a single slice of responses.
+func WithPagination[S ~[]T, T any](ctx context.Context, oid, pid, cid string, fn func(page, perPage int) (*Response, error)) (S, error) {
+	var (
+		responses S
+		page      = 1
+		perPage   = 10
+	)
+
+	for {
+		// Make request to list allowlists
+		response, err := fn(page, perPage)
+		if err != nil {
+			return nil, err
+		}
+
+		type overlay struct {
+			Cursor Cursor `json:"cursor"`
+			Data   S      `json:"data"`
+		}
+
+		var decoded overlay
+
+		err = json.Unmarshal(response.Body, &decoded)
+		if err != nil {
+			return nil, err
+		}
+
+		// handle pagination
+		responses = append(responses, decoded.Data...)
+
+		cursor := decoded.Cursor
+
+		if cursor.Pages.Next == 0 {
+			break
+		}
+
+		page = cursor.Pages.Next
+
+	}
+
+	return responses, nil
 }
