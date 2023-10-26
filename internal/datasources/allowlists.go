@@ -131,13 +131,16 @@ func (d *AllowLists) Read(ctx context.Context, req datasource.ReadRequest, resp 
 // listAllowLists executes calls to the list allowlist endpoint. It handles pagination and
 // returns a slice of individual allowlists responses retrieved from multiple pages.
 func (d *AllowLists) listAllowLists(ctx context.Context, organizationId, projectId, clusterId string, state providerschema.AllowLists) ([]api.GetAllowListResponse, error) {
-	var allAllowLists []api.GetAllowListResponse
-	page := 1
+	var (
+		allAllowLists []api.GetAllowListResponse
+		page          = 1
+		perPage       = 10
+	)
 
 	for {
 		// Make request to list allowlists
 		response, err := d.Client.Execute(
-			fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs?page=%d&perPage=10", d.HostURL, organizationId, projectId, clusterId, page),
+			fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs?page=%d&perPage=%d", d.HostURL, organizationId, projectId, clusterId, page, perPage),
 			http.MethodGet,
 			nil,
 			d.Token,
