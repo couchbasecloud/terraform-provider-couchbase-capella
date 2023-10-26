@@ -50,26 +50,29 @@ type HRefs struct {
 	Next string `json:"next"`
 }
 
-// WithPagination is a generic function used to handle pagination. It accepts a callback
+// ExecuteWithPagination is a generic function used to handle pagination. It accepts a callback
 // function which should include the request details. It then iterates through
 // remaining pages to flatten paginated responses into a single slice of responses.
-func WithPagination[S ~[]T, T any](ctx context.Context, oid, pid, cid string, fn func(page, perPage int) (*Response, error)) (S, error) {
+func ExecuteWithPagination[DataSchema ~[]T, T any](
+	ctx context.Context,
+	fn func(page, perPage int) (*Response, error),
+) (DataSchema, error) {
 	var (
-		responses S
+		responses DataSchema
 		page      = 1
 		perPage   = 10
 	)
 
 	for {
-		// Make request to list allowlists
+		// execute callback function
 		response, err := fn(page, perPage)
 		if err != nil {
 			return nil, err
 		}
 
 		type overlay struct {
-			Cursor Cursor `json:"cursor"`
-			Data   S      `json:"data"`
+			Cursor Cursor     `json:"cursor"`
+			Data   DataSchema `json:"data"`
 		}
 
 		var decoded overlay
