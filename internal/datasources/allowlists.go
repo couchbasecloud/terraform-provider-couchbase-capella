@@ -132,7 +132,14 @@ func (d *AllowLists) Read(ctx context.Context, req datasource.ReadRequest, resp 
 func (d *AllowLists) listAllowLists(ctx context.Context, organizationId, projectId, clusterId string) ([]api.GetAllowListResponse, error) {
 	callback := func(page, perPage int) (*api.Response, error) {
 		return d.Client.Execute(
-			fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs?page=%d&perPage=%d", d.HostURL, organizationId, projectId, clusterId, page, perPage),
+			fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs?page=%d&perPage=%d",
+				d.HostURL,
+				organizationId,
+				projectId,
+				clusterId,
+				page,
+				perPage,
+			),
 			http.MethodGet,
 			nil,
 			d.Token,
