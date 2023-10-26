@@ -87,7 +87,7 @@ func (d *AllowLists) Read(ctx context.Context, req datasource.ReadRequest, resp 
 		clusterId      = state.ClusterId.ValueString()
 	)
 
-	allowLists, err := d.listAllowLists(ctx, organizationId, projectId, clusterId, state)
+	allowLists, err := d.listAllowLists(ctx, organizationId, projectId, clusterId)
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
@@ -130,7 +130,7 @@ func (d *AllowLists) Read(ctx context.Context, req datasource.ReadRequest, resp 
 
 // listAllowLists executes calls to the list allowlist endpoint. It handles pagination and
 // returns a slice of individual allowlists responses retrieved from multiple pages.
-func (d *AllowLists) listAllowLists(ctx context.Context, organizationId, projectId, clusterId string, state providerschema.AllowLists) ([]api.GetAllowListResponse, error) {
+func (d *AllowLists) listAllowLists(ctx context.Context, organizationId, projectId, clusterId string) ([]api.GetAllowListResponse, error) {
 	var (
 		allAllowLists []api.GetAllowListResponse
 		page          = 1
