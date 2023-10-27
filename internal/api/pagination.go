@@ -52,7 +52,7 @@ type HRefs struct {
 	Next string `json:"next"`
 }
 
-// GetPaginated is a generic function used to handle pagination. It accepts a get request
+// GetPaginated is a generic function used to handle pagination. It executes a get request
 // according to the supplied url parameter. It then iterates through remaining pages to
 // flatten paginated responses into a single slice of responses.
 func GetPaginated[DataSchema ~[]T, T any](ctx context.Context, client *Client, token string, url string) (DataSchema, error) {
