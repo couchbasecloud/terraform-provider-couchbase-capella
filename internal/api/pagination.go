@@ -71,7 +71,6 @@ func GetPaginated[DataSchema ~[]T, T any](ctx context.Context, client *Client, t
 		// add pagination parameters to url
 		pageParams := fmt.Sprintf("?page=%d&perPage=%d", page, perPage)
 
-		// execute callback function
 		response, err := client.Execute(
 			url+pageParams,
 			http.MethodGet,
@@ -84,13 +83,11 @@ func GetPaginated[DataSchema ~[]T, T any](ctx context.Context, client *Client, t
 		}
 
 		var decoded overlay
-
 		err = json.Unmarshal(response.Body, &decoded)
 		if err != nil {
 			return nil, err
 		}
 
-		// handle pagination
 		responses = append(responses, decoded.Data...)
 
 		cursor := decoded.Cursor
