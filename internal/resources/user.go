@@ -304,7 +304,7 @@ func constructPatchEntries(patch *[]api.PatchEntry, state providerschema.User, o
 
 	// create patch entries from resources
 	for _, resource := range state.Resources {
-		path := "/resources/" + resource.Id.String()
+		path := "/resources/" + resource.Id.ValueString()
 		value := providerschema.ConvertResource(resource)
 		entry := api.NewPatchEntryWithResource(op, path, value)
 
