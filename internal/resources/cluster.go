@@ -66,6 +66,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 			Region: plan.CloudProvider.Region.ValueString(),
 			Type:   clusterapi.CloudProviderType(plan.CloudProvider.Type.ValueString()),
 		},
+		ConfigurationType: clusterapi.ConfigurationType(plan.ConfigurationType.ValueString()),
 		Support: clusterapi.Support{
 			Plan:     clusterapi.SupportPlan(plan.Support.Plan.ValueString()),
 			Timezone: clusterapi.SupportTimezone(plan.Support.Timezone.ValueString()),

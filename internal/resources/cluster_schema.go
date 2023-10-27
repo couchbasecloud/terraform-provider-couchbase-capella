@@ -27,6 +27,7 @@ func ClusterSchema() schema.Schema {
 					"cidr":   stringAttribute(required),
 				},
 			},
+			"configuration_type": stringAttribute(required),
 			"couchbase_server": schema.SingleNestedAttribute{
 				Optional: true,
 				Computed: true,

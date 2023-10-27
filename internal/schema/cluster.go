@@ -115,8 +115,10 @@ type Cluster struct {
 
 	// CloudProvider The cloud provider where the cluster will be hosted.
 	// To learn more, see [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html).
-	CloudProvider   *CloudProvider   `tfsdk:"cloud_provider"`
-	CouchbaseServer *CouchbaseServer `tfsdk:"couchbase_server"`
+	CloudProvider *CloudProvider `tfsdk:"cloud_provider"`
+
+	ConfigurationType types.String     `tfsdk:"configuration_type"`
+	CouchbaseServer   *CouchbaseServer `tfsdk:"couchbase_server"`
 
 	// Description of the cluster (up to 1024 characters).
 	Description types.String `tfsdk:"description"`
@@ -149,6 +151,7 @@ func NewCluster(cluster *clusterapi.GetClusterResponse, organizationId, projectI
 			Region: types.StringValue(cluster.CloudProvider.Region),
 			Type:   types.StringValue(string(cluster.CloudProvider.Type)),
 		},
+		ConfigurationType: types.StringValue(string(cluster.ConfigurationType)),
 		Support: &Support{
 			Plan:     types.StringValue(string(cluster.Support.Plan)),
 			Timezone: types.StringValue(string(cluster.Support.Timezone)),
