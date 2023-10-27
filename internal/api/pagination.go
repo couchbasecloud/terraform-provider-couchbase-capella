@@ -3,6 +3,8 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"net/http"
 )
 
 // Cursor represents pagination metadata for navigating through large data sets.
@@ -50,22 +52,26 @@ type HRefs struct {
 	Next string `json:"next"`
 }
 
-// ExecuteWithPagination is a generic function used to handle pagination. It accepts an executor
-// function which should include the request details. It then iterates through
-// remaining pages to flatten paginated responses into a single slice of responses.
-func ExecuteWithPagination[DataSchema ~[]T, T any](
-	ctx context.Context,
-	fn func(page, perPage int) (*Response, error),
-) (DataSchema, error) {
+// GetPaginated is a generic function used to handle pagination. It accepts a get request
+// according to the supplied url parameter. It then iterates through remaining pages to
+// flatten paginated responses into a single slice of responses.
+func GetPaginated[DataSchema ~[]T, T any](ctx context.Context, client *Client, token string, url string) (DataSchema, error) {
 	var (
-		responses DataSchema
-		page      = 1
-		perPage   = 10
+		responses  DataSchema
+		page       = 1
+		perPage    = 10
+		pageParams = fmt.Sprintf("?page=%d&perPage=%d", page, perPage)
 	)
 
 	for {
 		// execute callback function
-		response, err := fn(page, perPage)
+		response, err := client.Execute(
+			url+pageParams,
+			http.MethodGet,
+			nil,
+			token,
+			nil,
+		)
 		if err != nil {
 			return nil, err
 		}
