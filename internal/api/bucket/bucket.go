@@ -27,7 +27,7 @@ type CreateBucketRequest struct {
 	// If selected Ephemeral, it is not eligible for imports or App Endpoints creation. This field cannot be changed later.
 	// The options may also be referred to as Memory and Disk (Couchbase), Memory Only (Ephemeral) in the Couchbase documentation.
 	// To learn more, see https://docs.couchbase.com/cloud/clusters/data-service/manage-buckets.html#add-bucket
-	Type string `json:"type"`
+	Type *string `json:"type"`
 
 	// StorageBackend represents the storage engine used for the bucket.
 	// Default: "couchstore"
@@ -36,7 +36,7 @@ type CreateBucketRequest struct {
 	// This field is only applicable for a Couchbase bucket. The default value mentioned (Couchstore) is for Couchbase bucket.
 	// This field cannot be changed later.
 	// To learn more, see https://docs.couchbase.com/cloud/clusters/data-service/storage-engines.html
-	StorageBackend string `json:"storageBackend"`
+	StorageBackend *string `json:"storageBackend"`
 
 	// MemoryAllocationInMb is the amount of memory to allocate for the bucket memory in MiB
 	// Default: 100
@@ -48,7 +48,7 @@ type CreateBucketRequest struct {
 	// For Couchstore, the default and minimum memory allocation is 100 MiB.
 	// For Magma, the default and minimum memory allocation is 1024 MiB.
 	// For Ephemeral buckets, the default and minimum memory allocation is 100 MiB.
-	MemoryAllocationInMb int64 `json:"memoryAllocationInMb"`
+	MemoryAllocationInMb *int64 `json:"memoryAllocationInMb"`
 
 	// BucketConflictResolution is the means by which conflicts are resolved during replication.
 	// Default: "seqno"
@@ -58,7 +58,7 @@ type CreateBucketRequest struct {
 	//
 	// This field cannot be changed later.
 	// To learn more, see https://docs.couchbase.com/cloud/clusters/xdcr/xdcr.html#conflict-resolution
-	BucketConflictResolution string `json:"bucketConflictResolution"`
+	BucketConflictResolution *string `json:"bucketConflictResolution"`
 
 	// DurabilityLevel is the minimum level at which all writes to the bucket must occur.
 	// Default: "none"
@@ -76,25 +76,25 @@ type CreateBucketRequest struct {
 	// None
 	// Replicate to Majority
 	// To learn more, see https://docs.couchbase.com/cloud/clusters/data-service/manage-buckets.html#add-bucket
-	DurabilityLevel string `json:"durabilityLevel"`
+	DurabilityLevel *string `json:"durabilityLevel"`
 
 	// Replicas states the number of replica nodes for the bucket.
 	// Default: 1
 	// Enum: 1 2 3
 	// To learn more, see https://docs.couchbase.com/cloud/clusters/data-service/manage-buckets.html#add-bucket
-	Replicas int64 `json:"replicas"`
+	Replicas *int64 `json:"replicas"`
 
 	// Flush determines whether flushing is enabled on the bucket.
 	// Default: false
 	// Enable Flush to delete all items in this bucket at the earliest opportunity.
 	// Disable Flush to avoid inadvertent data loss.
-	Flush bool `json:"flush"`
+	Flush *bool `json:"flush"`
 
 	// TimeToLiveInSeconds specifies the time to live (TTL) value in seconds.
 	// Default: 0
 	// This is the maximum time to live for items in the bucket.
 	// Default is 0, that means TTL is disabled. This is a non-negative value.
-	TimeToLiveInSeconds int64 `json:"timeToLiveInSeconds"`
+	TimeToLiveInSeconds *int64 `json:"timeToLiveInSeconds"`
 
 	// EvictionPolicy is the policy which Capella adopts to prevent data loss due to memory exhaustion.
 	// This may be also known as Ejection Policy in the Couchbase documentation.
@@ -108,7 +108,7 @@ type CreateBucketRequest struct {
 	// nruEviction
 	//
 	//To learn more, see https://docs.couchbase.com/server/current/rest-api/rest-bucket-create.html#evictionpolicy
-	EvictionPolicy string `json:"evictionPolicy"`
+	EvictionPolicy *string `json:"evictionPolicy"`
 }
 
 // CreateBucketResponse is the response received from Capella V4 Public API on requesting to create a new bucket.
