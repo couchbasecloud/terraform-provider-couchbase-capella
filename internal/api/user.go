@@ -113,17 +113,6 @@ type GetUserResponse struct {
 	Audit CouchbaseAuditData `json:"audit"`
 }
 
-// UpdateUserRequest is the payload sent to the Capella V4 Public API when asked to update a user in an organization.
-//
-// In order to access this endpoint, the provided API key must have at least one of the following roles:
-//
-// Organization Owner
-// Project Owner
-// To learn more, see https://docs.couchbase.com/cloud/organizations/organizations.html
-type UpdateUserRequest struct {
-	Patch []PatchEntry
-}
-
 type PatchEntry struct {
 	// Op is the type of operation
 	//

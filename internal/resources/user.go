@@ -316,11 +316,10 @@ func constructPatchEntries(patch *[]api.PatchEntry, state providerschema.User, o
 // updateUser is used to execute the patch request to update a user.
 func (r *User) updateUser(organizationId, userId string, patch []api.PatchEntry) error {
 	// Update existing user
-	updateUserRequest := api.UpdateUserRequest{Patch: patch}
 	_, err := r.Client.Execute(
 		fmt.Sprintf("%s/v4/organizations/%s/users/%s", r.HostURL, organizationId, userId),
 		http.MethodPatch,
-		updateUserRequest,
+		patch,
 		r.Token,
 		nil,
 	)
