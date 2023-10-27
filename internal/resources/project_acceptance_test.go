@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"terraform-provider-capella/internal/provider"
@@ -36,7 +37,7 @@ func TestAccProjectResource(t *testing.T) {
 			{
 				Config: testAccProjectResourceConfig(cfg.Cfg),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("capella_project.acc_test", "name", "acc_test_project_name"),
+					resource.TestCheckResourceAttr("capella_project.acc_test", "name", "acc_test_project_name12"),
 					resource.TestCheckResourceAttr("capella_project.acc_test", "description", "description"),
 					resource.TestCheckResourceAttr("capella_project.acc_test", "etag", "Version: 1"),
 				),
@@ -68,6 +69,9 @@ func TestAccProjectResource(t *testing.T) {
 			// Delete testing automatically occurs in TestCase
 		},
 	})
+
+	SetResult(t.Failed())
+
 }
 
 func testAccProjectResourceConfig(cfg string) string {
@@ -119,4 +123,20 @@ func generateProjectImportId(state *terraform.State) (string, error) {
 	}
 	fmt.Printf("raw state %s", rawState)
 	return fmt.Sprintf("id=%s,organization_id=%s", rawState["id"], rawState["organization_id"]), nil
+}
+
+func SetResult(isFailed bool) {
+	if isFailed {
+		setEnvVariable("TERRAFORM_ACCEPTANCE_TEST_RESULT", "failed")
+	} else {
+		setEnvVariable("TERRAFORM_ACCEPTANCE_TEST_RESULT", "passed")
+	}
+}
+
+func setEnvVariable(varname string, val string) {
+	err := os.Setenv(varname, val)
+	if err != nil {
+		fmt.Println("Error setting environment variable:", err)
+		return
+	}
 }
