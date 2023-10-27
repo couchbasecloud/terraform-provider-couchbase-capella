@@ -50,7 +50,7 @@ type HRefs struct {
 	Next string `json:"next"`
 }
 
-// ExecuteWithPagination is a generic function used to handle pagination. It accepts a callback
+// ExecuteWithPagination is a generic function used to handle pagination. It accepts an executor
 // function which should include the request details. It then iterates through
 // remaining pages to flatten paginated responses into a single slice of responses.
 func ExecuteWithPagination[DataSchema ~[]T, T any](
