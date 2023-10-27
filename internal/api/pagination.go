@@ -57,13 +57,20 @@ type HRefs struct {
 // flatten paginated responses into a single slice of responses.
 func GetPaginated[DataSchema ~[]T, T any](ctx context.Context, client *Client, token string, url string) (DataSchema, error) {
 	var (
-		responses  DataSchema
-		page       = 1
-		perPage    = 10
-		pageParams = fmt.Sprintf("?page=%d&perPage=%d", page, perPage)
+		responses DataSchema
+		page      = 1
+		perPage   = 10
 	)
 
+	type overlay struct {
+		Cursor Cursor     `json:"cursor"`
+		Data   DataSchema `json:"data"`
+	}
+
 	for {
+		// add pagination parameters to url
+		pageParams := fmt.Sprintf("?page=%d&perPage=%d", page, perPage)
+
 		// execute callback function
 		response, err := client.Execute(
 			url+pageParams,
@@ -74,11 +81,6 @@ func GetPaginated[DataSchema ~[]T, T any](ctx context.Context, client *Client, t
 		)
 		if err != nil {
 			return nil, err
-		}
-
-		type overlay struct {
-			Cursor Cursor     `json:"cursor"`
-			Data   DataSchema `json:"data"`
 		}
 
 		var decoded overlay
