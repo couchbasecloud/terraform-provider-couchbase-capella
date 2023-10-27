@@ -37,7 +37,7 @@ func TestAccProjectResource(t *testing.T) {
 			{
 				Config: testAccProjectResourceConfig(cfg.Cfg),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("capella_project.acc_test", "name", "acc_test_project_name12"),
+					resource.TestCheckResourceAttr("capella_project.acc_test", "name", "acc_test_project_name"),
 					resource.TestCheckResourceAttr("capella_project.acc_test", "description", "description"),
 					resource.TestCheckResourceAttr("capella_project.acc_test", "etag", "Version: 1"),
 				),
