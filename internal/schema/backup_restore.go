@@ -65,10 +65,10 @@ type Backup struct {
 	ScheduleInfo types.Object `tfsdk:"schedule_info"`
 
 	// Type represents whether the backup is a Weekly or Daily backup.
-	Type types.String `tfsdk:"type"`
+	Type *types.String `tfsdk:"type"`
 
 	// WeeklySchedule represents the weekly schedule of the backup.
-	WeeklySchedule types.Object `tfsdk:"weekly_schedule"`
+	WeeklySchedule *WeeklySchedule `tfsdk:"weekly_schedule"`
 }
 
 // BackupStats has the backup level stats provided by Couchbase.

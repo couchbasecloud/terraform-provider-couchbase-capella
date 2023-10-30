@@ -65,8 +65,8 @@ type GetBackupResponse struct {
 
 type CreateBackupRequest struct {
 	// Type represents whether the backup is a Weekly or Daily backup.
-	Type string `json:"type"`
+	Type *string `json:"type"`
 
 	// WeeklySchedule represents the weekly schedule of the backup.
-	WeeklySchedule WeeklySchedule `json:"weeklySchedule"`
+	WeeklySchedule *WeeklySchedule `json:"weeklySchedule"`
 }
