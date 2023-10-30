@@ -126,42 +126,9 @@ type PatchEntry struct {
 	// Resource Roles: /resources/{resourceId}/roles
 	Path string `json:"path"`
 
+	// Value represents the value to be amended by the patch. It may take an array
+	// of OrganizationRoles (strings), an Array of ProjectRoles (strings) or a Resource (object)
 	Value interface{} `json:"value,omitempty"`
-}
-
-// NewPatchEntryWithRoles is used to create a new user patch entry
-// with roles as value.
-func NewPatchEntryWithRoles(op, path string, roles []string) PatchEntry {
-	return PatchEntry{
-		Op:    op,
-		Path:  path,
-		Value: roles,
-	}
-}
-
-// NewPatchEntryWithResource is used to create a new user patch entry
-// with a resource object as the value.
-func NewPatchEntryWithResource(op, path string, resource Resource) PatchEntry {
-	return PatchEntry{
-		Op:    op,
-		Path:  path,
-		Value: resource,
-	}
-}
-
-type Value struct {
-	// OrganizationRoles represents organization roles assigned to the user.
-	//
-	// Enum: "organizationOwner" "organizationMember" "projectCreator"
-	OrganizationRoles []string
-
-	// ProjectRoles represents project roles assigned to the user
-	//
-	// Enum: "projectOwner" "projectManager" "projectViewer" "projectDataReaderWriter" "projectDataReader"
-	ProjectRoles []string
-
-	// Resource defines either a project or cluster to which the newly invited user should have access.
-	Resource Resource
 }
 
 // GetUsersResponse is the response received from the Capella V4 Public API when asked to list all users that have access to an organization.

@@ -203,11 +203,12 @@ func (r *User) Read(ctx context.Context, req resource.ReadRequest, resp *resourc
 // Update updates the user
 func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// Retrieve values from plan
-	var plan, state providerschema.User
-	diags := req.Plan.Get(ctx, &plan)
+	var state, plan providerschema.User
+
+	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 
-	diags = req.State.Get(ctx, &state)
+	diags = req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 
 	if resp.Diagnostics.HasError() {
@@ -276,41 +277,48 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 func constructPatch(existing, proposed providerschema.User) ([]api.PatchEntry, error) {
 	patch := make([]api.PatchEntry, 0)
 
-	err := constructPatchEntries(&patch, existing, "remove")
-	if err != nil {
-		return nil, err
+	// Remove values present in the existing state but not in removed.
+	for _, role := range existing.OrganizationRoles {
+		if !containsOrgRole(proposed.OrganizationRoles, role) {
+			patch = append(patch,
+				api.PatchEntry{
+					Op:    "remove",
+					Path:  "/organizationRoles",
+					Value: []string{role.ValueString()},
+				},
+			)
+		}
 	}
 
-	err = constructPatchEntries(&patch, proposed, "add")
-	if err != nil {
-		return nil, err
+	// Add values present in the proposed state but not in existing.
+	for _, role := range proposed.OrganizationRoles {
+		if !containsOrgRole(existing.OrganizationRoles, role) {
+			patch = append(patch,
+				api.PatchEntry{
+					Op:    "add",
+					Path:  "/organizationRoles",
+					Value: []string{role.ValueString()},
+				},
+			)
+		}
 	}
+
+	// TODO: Handle Resources and Resource Roles
 
 	return patch, nil
 }
 
-// constructPatchEntries accepts a User schema and constructs the required fields
-func constructPatchEntries(patch *[]api.PatchEntry, state providerschema.User, op string) error {
-	// create patch entry for organization roles
-	path := "/organizationRoles"
-	roles := providerschema.ConvertOrganizationRoles(state.OrganizationRoles)
-	orgRolesPatch := api.NewPatchEntryWithRoles(op, path, roles)
-
-	if patch == nil {
-		return errors.ErrConstructingRequest
+// containsOrgRole is used to check whether a supplied organization role is
+// already present in a slice of organization roles.
+func containsOrgRole(orgRoles []basetypes.StringValue, role basetypes.StringValue) bool {
+	fmt.Println(role.ValueString())
+	for _, orgRole := range orgRoles {
+		fmt.Println(orgRole.ValueString())
+		if role.ValueString() == orgRole.ValueString() {
+			return true
+		}
 	}
-
-	*patch = append(*patch, orgRolesPatch)
-
-	// create patch entries from resources
-	for _, resource := range state.Resources {
-		path := "/resources/" + resource.Id.ValueString()
-		value := providerschema.ConvertResource(resource)
-		entry := api.NewPatchEntryWithResource(op, path, value)
-
-		*patch = append(*patch, entry)
-	}
-	return nil
+	return false
 }
 
 // updateUser is used to execute the patch request to update a user.
