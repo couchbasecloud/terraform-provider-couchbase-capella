@@ -2,9 +2,7 @@ package datasources
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"terraform-provider-capella/internal/api"
 	providerschema "terraform-provider-capella/internal/schema"
@@ -153,13 +151,8 @@ func (d *DatabaseCredentials) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	response, err := d.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users", d.HostURL, organizationId, projectId, clusterId),
-		http.MethodGet,
-		nil,
-		d.Token,
-		nil,
-	)
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users", d.HostURL, organizationId, projectId, clusterId)
+	response, err := api.GetPaginated[[]api.GetDatabaseCredentialResponse](ctx, d.Client, d.Token, url)
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
@@ -181,18 +174,8 @@ func (d *DatabaseCredentials) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	databaseCredentialResp := api.GetDatabaseCredentialsResponse{}
-	err = json.Unmarshal(response.Body, &databaseCredentialResp)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error listing database credentials",
-			"Could not list database credentials, unexpected error: "+err.Error(),
-		)
-		return
-	}
-
 	// Map response body to model
-	for _, databaseCredential := range databaseCredentialResp.Data {
+	for _, databaseCredential := range response {
 		databaseCredentialState := providerschema.DatabaseCredentialItem{
 			Id:             types.StringValue(databaseCredential.Id.String()),
 			Name:           types.StringValue(databaseCredential.Name),
