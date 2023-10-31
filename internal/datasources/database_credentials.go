@@ -38,54 +38,19 @@ func (d *DatabaseCredentials) Metadata(_ context.Context, req datasource.Metadat
 func (d *DatabaseCredentials) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required: true,
-			},
-			"project_id": schema.StringAttribute{
-				Required: true,
-			},
-			"cluster_id": schema.StringAttribute{
-				Required: true,
-			},
+			"organization_id": requiredStringAttribute,
+			"project_id":      requiredStringAttribute,
+			"cluster_id":      requiredStringAttribute,
 			"data": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"id": schema.StringAttribute{
-							Computed: true,
-						},
-						"name": schema.StringAttribute{
-							Computed: true,
-						},
-						"organization_id": schema.StringAttribute{
-							Computed: true,
-						},
-						"project_id": schema.StringAttribute{
-							Computed: true,
-						},
-						"cluster_id": schema.StringAttribute{
-							Computed: true,
-						},
-						"audit": schema.SingleNestedAttribute{
-							Computed: true,
-							Attributes: map[string]schema.Attribute{
-								"created_at": schema.StringAttribute{
-									Computed: true,
-								},
-								"created_by": schema.StringAttribute{
-									Computed: true,
-								},
-								"modified_at": schema.StringAttribute{
-									Computed: true,
-								},
-								"modified_by": schema.StringAttribute{
-									Computed: true,
-								},
-								"version": schema.Int64Attribute{
-									Computed: true,
-								},
-							},
-						},
+						"id":              computedStringAttribute,
+						"name":            computedStringAttribute,
+						"organization_id": computedStringAttribute,
+						"project_id":      computedStringAttribute,
+						"cluster_id":      computedStringAttribute,
+						"audit":           computedAuditAttribute,
 						"access": schema.ListNestedAttribute{
 							Optional: true,
 							NestedObject: schema.NestedAttributeObject{
@@ -101,16 +66,12 @@ func (d *DatabaseCredentials) Schema(_ context.Context, _ datasource.SchemaReque
 												Optional: true,
 												NestedObject: schema.NestedAttributeObject{
 													Attributes: map[string]schema.Attribute{
-														"name": schema.StringAttribute{
-															Required: true,
-														},
+														"name": requiredStringAttribute,
 														"scopes": schema.ListNestedAttribute{
 															Optional: true,
 															NestedObject: schema.NestedAttributeObject{
 																Attributes: map[string]schema.Attribute{
-																	"name": schema.StringAttribute{
-																		Required: true,
-																	},
+																	"name": requiredStringAttribute,
 																	"collections": schema.ListAttribute{
 																		Optional:    true,
 																		ElementType: types.StringType,
