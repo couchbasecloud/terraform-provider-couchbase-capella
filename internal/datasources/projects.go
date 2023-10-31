@@ -2,9 +2,7 @@ package datasources
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"terraform-provider-capella/internal/api"
 	providerschema "terraform-provider-capella/internal/schema"
@@ -77,13 +75,8 @@ func (d *Projects) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 	}
 	var organizationId = state.OrganizationId.ValueString()
 
-	response, err := d.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects", d.HostURL, organizationId),
-		http.MethodGet,
-		nil,
-		d.Token,
-		nil,
-	)
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects", d.HostURL, organizationId)
+	response, err := api.GetPaginated[[]api.GetProjectResponse](ctx, d.Client, d.Token, url)
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
@@ -105,17 +98,7 @@ func (d *Projects) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 		return
 	}
 
-	projectResp := api.GetProjectsResponse{}
-	err = json.Unmarshal(response.Body, &projectResp)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating project",
-			"Could not create project, unexpected error: "+err.Error(),
-		)
-		return
-	}
-
-	for _, project := range projectResp.Data {
+	for _, project := range response {
 		projectState := providerschema.OneProject{
 			Id:             types.StringValue(project.Id.String()),
 			OrganizationId: types.StringValue(state.OrganizationId.ValueString()),
