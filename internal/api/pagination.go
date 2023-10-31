@@ -68,8 +68,8 @@ func GetPaginated[DataSchema ~[]T, T any](ctx context.Context, client *Client, t
 	}
 
 	for {
-		// add pagination parameters to url
-		pageParams := fmt.Sprintf("?page=%d&perPage=%d", page, perPage)
+		// construct pagination parameters
+		pageParams := fmt.Sprintf("?page=%d&perPage=%d&sortBy=id", page, perPage)
 
 		response, err := client.Execute(
 			url+pageParams,
@@ -97,7 +97,6 @@ func GetPaginated[DataSchema ~[]T, T any](ctx context.Context, client *Client, t
 		}
 
 		page = cursor.Pages.Next
-
 	}
 
 	return responses, nil
