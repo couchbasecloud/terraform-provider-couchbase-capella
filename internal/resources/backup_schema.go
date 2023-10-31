@@ -52,7 +52,7 @@ func BackupSchema() schema.Schema {
 			},
 			"type": stringAttribute(optional),
 			"weekly_schedule": schema.SingleNestedAttribute{
-				Computed: true,
+				Optional: true,
 				Attributes: map[string]schema.Attribute{
 					"day_of_week":              stringAttribute(optional),
 					"start_at":                 int64Attribute(optional),
