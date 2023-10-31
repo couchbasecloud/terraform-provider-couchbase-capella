@@ -198,18 +198,3 @@ type PutBucketRequest struct {
 	// TimeToLiveInSeconds specifies the time to live (TTL) value in seconds.
 	TimeToLiveInSeconds int64 `json:"timeToLiveInSeconds"`
 }
-
-// GetBucketsResponse is the response received from Capella V4 Public API when asked to list all buckets for a cluster.
-//
-// In order to access this endpoint, the provided API key must have at least one of the following roles:
-//
-// Organization Owner
-// Project Owner
-// Project Manager
-// Project Viewer
-// Database Data Reader/Writer
-// Database Data Reader
-// To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
-type GetBucketsResponse struct {
-	Data []GetBucketResponse `json:"data"`
-}
