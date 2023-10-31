@@ -2,9 +2,7 @@ package datasources
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"terraform-provider-capella/internal/api"
 	clusterapi "terraform-provider-capella/internal/api/cluster"
@@ -71,13 +69,8 @@ func (d *Clusters) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 		projectId      = state.ProjectId.ValueString()
 	)
 
-	response, err := d.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", d.HostURL, organizationId, projectId),
-		http.MethodGet,
-		nil,
-		d.Token,
-		nil,
-	)
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", d.HostURL, organizationId, projectId)
+	response, err := api.GetPaginated[[]clusterapi.GetClusterResponse](ctx, d.Client, d.Token, url)
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
@@ -94,17 +87,7 @@ func (d *Clusters) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 		return
 	}
 
-	clusterResp := clusterapi.GetClustersResponse{}
-	err = json.Unmarshal(response.Body, &clusterResp)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating cluster",
-			"Could not create cluster, unexpected error: "+err.Error(),
-		)
-		return
-	}
-
-	for _, cluster := range clusterResp.Data {
+	for _, cluster := range response {
 		audit := providerschema.NewCouchbaseAuditData(cluster.Audit)
 
 		auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
