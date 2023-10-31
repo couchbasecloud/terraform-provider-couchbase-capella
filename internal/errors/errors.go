@@ -104,5 +104,5 @@ var (
 	ErrValidatingResource = errors.New("could not validate resource state, please contact Couchbase Capella Support")
 
 	// ErrAppServiceIdCannotBeEmpty is returned when an AppServiceId was required for a request but was not included.
-	ErrAppServiceIdCannotBeEmpty = errors.New("apService ID cannot be empty, please contact Couchbase Capella Support")
+	ErrAppServiceIdCannotBeEmpty = errors.New("App Service ID cannot be empty, please contact Couchbase Capella Support")
 )
