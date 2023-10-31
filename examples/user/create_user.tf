@@ -6,7 +6,7 @@ resource "capella_user" "new_user" {
   organization_id = var.organization_id
 
   name  = var.user_name
-  email = "johndoe@couchbase.com"
+  email = var.email
 
   organization_roles = [
     "organizationMember"
@@ -17,13 +17,7 @@ resource "capella_user" "new_user" {
       type = "project"
       id   = var.project_id
       roles = [
-        "projectViewer"
-      ]
-    },
-    {
-      type = "project"
-      id   = var.project_id
-      roles = [
+        "projectViewer",
         "projectDataReaderWriter"
       ]
     }

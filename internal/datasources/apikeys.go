@@ -2,9 +2,7 @@ package datasources
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"terraform-provider-capella/internal/api"
 	providerschema "terraform-provider-capella/internal/schema"
@@ -87,13 +85,8 @@ func (d *ApiKeys) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 		return
 	}
 
-	response, err := d.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/apikeys", d.HostURL, organizationId),
-		http.MethodGet,
-		nil,
-		d.Token,
-		nil,
-	)
+	url := fmt.Sprintf("%s/v4/organizations/%s/apikeys", d.HostURL, organizationId)
+	response, err := api.GetPaginated[[]api.GetApiKeyResponse](ctx, d.Client, d.Token, url)
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
@@ -110,17 +103,7 @@ func (d *ApiKeys) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 		return
 	}
 
-	apiKeyResp := api.GetApiKeysResponse{}
-	err = json.Unmarshal(response.Body, &apiKeyResp)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error listing ApiKeys",
-			"Could not list api keys, unexpected error: "+err.Error(),
-		)
-		return
-	}
-
-	for _, apiKey := range apiKeyResp.Data {
+	for _, apiKey := range response {
 		audit := providerschema.NewCouchbaseAuditData(apiKey.Audit)
 
 		auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)

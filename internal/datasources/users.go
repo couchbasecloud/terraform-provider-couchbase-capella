@@ -2,7 +2,6 @@ package datasources
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"terraform-provider-capella/internal/api"
@@ -97,13 +96,8 @@ func (d *Users) Read(ctx context.Context, req datasource.ReadRequest, resp *data
 	organizationId := state.OrganizationId.ValueString()
 
 	// Make request to list Users
-	response, err := d.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/users", d.HostURL, organizationId),
-		http.MethodGet,
-		nil,
-		d.Token,
-		nil,
-	)
+	url := fmt.Sprintf("%s/v4/organizations/%s/users", d.HostURL, organizationId)
+	response, err := api.GetPaginated[[]api.GetUserResponse](ctx, d.Client, d.Token, url)
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
@@ -125,17 +119,7 @@ func (d *Users) Read(ctx context.Context, req datasource.ReadRequest, resp *data
 		return
 	}
 
-	UsersResponse := api.GetUsersResponse{}
-	err = json.Unmarshal(response.Body, &UsersResponse)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error reading User",
-			"Could not create User, unexpected error: "+err.Error(),
-		)
-		return
-	}
-
-	state, err = d.mapResponseBody(ctx, UsersResponse, &state)
+	state, err = d.mapResponseBody(ctx, response, &state)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading User",
@@ -176,10 +160,10 @@ func (d *Users) Configure(_ context.Context, req datasource.ConfigureRequest, re
 // get Users to the Users schema that will be used by terraform.
 func (d *Users) mapResponseBody(
 	ctx context.Context,
-	UsersResponse api.GetUsersResponse,
+	UsersResponse []api.GetUserResponse,
 	state *providerschema.Users,
 ) (providerschema.Users, error) {
-	for _, userResp := range UsersResponse.Data {
+	for _, userResp := range UsersResponse {
 		audit := providerschema.NewCouchbaseAuditData(userResp.Audit)
 
 		auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)

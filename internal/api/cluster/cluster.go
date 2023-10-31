@@ -140,19 +140,3 @@ type UpdateClusterRequest struct {
 	// Support defines the support plan and timezone for this particular cluster.
 	Support Support `json:"support"`
 }
-
-// GetClustersResponse is the response received from the Capella V4 Public API when asked to list all clusters.
-//
-// In order to access this endpoint, the provided API key must have at least one of the following roles:
-//
-// Organization Owner
-// Project Owner
-// Project Manager
-// Project Viewer
-// Database Data Reader/Writer
-// Database Data Reader
-// Returned set of clusters is reduced to what the caller has access to view.
-// To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
-type GetClustersResponse struct {
-	Data []GetClusterResponse `json:"data"`
-}
