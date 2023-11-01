@@ -277,35 +277,85 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 func constructPatch(existing, proposed providerschema.User) ([]api.PatchEntry, error) {
 	patch := make([]api.PatchEntry, 0)
 
+	// Handle changes to organizationRoles
+	addRoles, removeRoles := compare(existing.OrganizationRoles, proposed.OrganizationRoles)
+	patch = append(patch, api.PatchEntry{Op: "remove", Path: "/organizationRoles", Value: removeRoles})
+	patch = append(patch, api.PatchEntry{Op: "add", Path: "/organizationRoles", Value: addRoles})
+
+	// Handle changes to project roles
+	for _, existingResource := range existing.Resources {
+		for _, proposedResource := range proposed.Resources {
+			// check belong to same project
+			if existingResource.Id != proposedResource.Id {
+				break
+			}
+
+			path := fmt.Sprintf("/resources/%s/roles", existingResource.Id)
+
+			addRoles, removeRoles := compare(existing.OrganizationRoles, proposed.OrganizationRoles)
+			patch = append(patch, api.PatchEntry{Op: "remove", Path: path, Value: removeRoles})
+			patch = append(patch, api.PatchEntry{Op: "add", Path: path, Value: addRoles})
+		}
+	}
+
+	// Add resources present in the proposed state but not in existing
+	existingIDs := make(map[basetypes.StringValue]bool)
+	for _, existing := range existing.Resources {
+		existingIDs[existing.Id] = true
+		for _, proposed := range proposed.Resources {
+			if !existingIDs[proposed.Id] {
+				path := fmt.Sprintf("/resources/%s", proposed.Id)
+				patch = append(patch, api.PatchEntry{
+					Op:    "add",
+					Path:  path,
+					Value: providerschema.ConvertResource(proposed),
+				})
+			}
+		}
+	}
+
+	// Remove resources present in the existing state but not in proposed
+	proposedIDs := make(map[basetypes.StringValue]bool)
+	for _, proposed := range proposed.Resources {
+		proposedIDs[proposed.Id] = true
+		for _, existing := range existing.Resources {
+			if !proposedIDs[existing.Id] {
+				path := fmt.Sprintf("/resources/%s", existing.Id)
+				patch = append(patch, api.PatchEntry{
+					Op:    "add",
+					Path:  path,
+					Value: providerschema.ConvertResource(existing),
+				})
+			}
+		}
+	}
+
+	return patch, nil
+}
+
+// compare is used to compare two slices of basetypes.stringvalue
+// and determine which values should be added and which should be removed.
+func compare(existing, proposed []basetypes.StringValue) ([]string, []string) {
+	var (
+		add    []string
+		remove []string
+	)
+
 	// Remove values present in the existing state but not in removed.
-	for _, role := range existing.OrganizationRoles {
-		if !contains(proposed.OrganizationRoles, role) {
-			patch = append(patch,
-				api.PatchEntry{
-					Op:    "remove",
-					Path:  "/organizationRoles",
-					Value: []string{role.ValueString()},
-				},
-			)
+	for _, item := range existing {
+		if !contains(proposed, item) {
+			remove = append(remove, item.ValueString())
 		}
 	}
 
 	// Add values present in the proposed state but not in existing.
-	for _, role := range proposed.OrganizationRoles {
-		if !contains(existing.OrganizationRoles, role) {
-			patch = append(patch,
-				api.PatchEntry{
-					Op:    "add",
-					Path:  "/organizationRoles",
-					Value: []string{role.ValueString()},
-				},
-			)
+	for _, item := range proposed {
+		if !contains(existing, item) {
+			add = append(add, item.ValueString())
 		}
 	}
 
-	// TODO: Handle Resources and Resource Roles
-
-	return patch, nil
+	return add, remove
 }
 
 // contains is used to check whether a supplied value is
