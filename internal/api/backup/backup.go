@@ -54,7 +54,7 @@ type GetBackupResponse struct {
 	ElapsedTimeInSeconds int64 `json:"elapsedTimeInSeconds"`
 
 	// ScheduleInfo represents the schedule information of the backup.
-	//ScheduleInfo ScheduleInfo `json:"scheduleInfo"`
+	ScheduleInfo *ScheduleInfo `json:"scheduleInfo"`
 
 	// Type represents whether the backup is a Weekly or Daily backup.
 	//Type string `json:"type"`

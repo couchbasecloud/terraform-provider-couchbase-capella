@@ -38,6 +38,21 @@ type BackupStats struct {
 	Event types.Int64 `tfsdk:"event"`
 }
 
+// ScheduleInfo provides schedule information of the backup
+type ScheduleInfo struct {
+	// BackupType represents whether the backup is a Weekly or Daily backup.
+	BackupType types.String `tfsdk:"backup_type"`
+
+	// BackupTime is the timestamp indicating the backup created time.
+	BackupTime types.String `tfsdk:"backup_time"`
+
+	// Increment represents interval in hours for incremental backup.
+	Increment types.Int64 `tfsdk:"increment"`
+
+	// Retention represents retention time in days.
+	Retention types.String `tfsdk:"retention"`
+}
+
 // Backup maps Backup resource schema data to the response received from V4 Capella Public API.
 type Backup struct {
 	// Id is a GUID4 identifier of the backup.
@@ -93,28 +108,13 @@ type Backup struct {
 	ElapsedTimeInSeconds types.Int64 `tfsdk:"elapsed_time_in_seconds"`
 
 	// ScheduleInfo represents the schedule information of the backup.
-	//ScheduleInfo types.Object `tfsdk:"schedule_info"`
+	ScheduleInfo types.Object `tfsdk:"schedule_info"`
 
 	// Type represents whether the backup is a Weekly or Daily backup.
 	//Type types.String `tfsdk:"type"`
 
 	// WeeklySchedule represents the weekly schedule of the backup.
 	//WeeklySchedule WeeklySchedule `tfsdk:"weekly_schedule"`
-}
-
-// ScheduleInfo provides schedule information of the backup
-type ScheduleInfo struct {
-	// BackupType represents whether the backup is a Weekly or Daily backup.
-	BackupType types.String `tfsdk:"backup_type"`
-
-	// BackupTime is the timestamp indicating the backup created time.
-	BackupTime types.String `tfsdk:"backup_time"`
-
-	// Increment represents interval in hours for incremental backup.
-	Increment types.Int64 `tfsdk:"increment"`
-
-	// Retention represents retention time in days.
-	Retention types.String `tfsdk:"retention"`
 }
 
 // WeeklySchedule represents the weekly schedule of the backup.
@@ -161,20 +161,38 @@ func NewBackupStats(backupStats backup.BackupStats) BackupStats {
 	}
 }
 
+func (b ScheduleInfo) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"backup_type": types.StringType,
+		"backup_time": types.StringType,
+		"increment":   types.Int64Type,
+		"retention":   types.StringType,
+	}
+}
+
+func NewScheduleInfo(scheduleInfo backup.ScheduleInfo) ScheduleInfo {
+	return ScheduleInfo{
+		BackupType: types.StringValue(scheduleInfo.BackupType),
+		BackupTime: types.StringValue(scheduleInfo.BackupTime),
+		Increment:  types.Int64Value(scheduleInfo.Increment),
+		Retention:  types.StringValue(scheduleInfo.Retention),
+	}
+}
+
 func NewBackup(ctx context.Context, backup *backup.GetBackupResponse,
 	organizationId, projectId string,
 ) *Backup {
 
 	bStats := NewBackupStats(*backup.BackupStats)
-
 	bStatsObj, diags := types.ObjectValueFrom(ctx, bStats.AttributeTypes(), bStats)
 	if diags.HasError() {
-		//resp.Diagnostics.AddError(
-		//"Error while preferences conversion",
-		//"Could not perform preferences conversion",
-		//)
-		//return
 	}
+
+	sInfo := NewScheduleInfo(*backup.ScheduleInfo)
+	sInfoObj, diags := types.ObjectValueFrom(ctx, sInfo.AttributeTypes(), sInfo)
+	if diags.HasError() {
+	}
+
 	newBackup := Backup{
 		Id:             types.StringValue(backup.Id),
 		OrganizationId: types.StringValue(organizationId),
@@ -190,6 +208,7 @@ func NewBackup(ctx context.Context, backup *backup.GetBackupResponse,
 		Source:         types.StringValue(backup.Source),
 		CloudProvider:  types.StringValue(backup.CloudProvider),
 		BackupStats:    bStatsObj,
+		ScheduleInfo:   sInfoObj,
 		//BackupStats: BackupStats{
 		//	SizeInMB:   types.Float64Value(backup.BackupStats.SizeInMB),
 		//	Items:      types.Int64Value(backup.BackupStats.Items),

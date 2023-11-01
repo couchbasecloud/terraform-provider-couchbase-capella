@@ -41,15 +41,15 @@ func BackupSchema() schema.Schema {
 				},
 			},
 			"elapsed_time_in_seconds": int64Attribute(computed),
-			//"schedule_info": schema.SingleNestedAttribute{
-			//	Computed: true,
-			//	Attributes: map[string]schema.Attribute{
-			//		"backup_type": stringAttribute(computed),
-			//		"backup_time": stringAttribute(computed),
-			//		"increment":   int64Attribute(computed),
-			//		"retention":   stringAttribute(computed),
-			//	},
-			//},
+			"schedule_info": schema.SingleNestedAttribute{
+				Computed: true,
+				Attributes: map[string]schema.Attribute{
+					"backup_type": stringAttribute(computed),
+					"backup_time": stringAttribute(computed),
+					"increment":   int64Attribute(computed),
+					"retention":   stringAttribute(computed),
+				},
+			},
 			//"type": stringAttribute(optional),
 			//"weekly_schedule": schema.SingleNestedAttribute{
 			//	Optional: true,
