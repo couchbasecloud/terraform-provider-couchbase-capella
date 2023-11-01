@@ -24,7 +24,7 @@ type GetBackupResponse struct {
 
 	// Status represents the status of the backup.
 	// Enum: "pending" "ready" "failed"
-	Status string `json:"status"`
+	Status State `json:"status"`
 
 	// Method represents the mechanism of the backup.
 	// Enum: "incremental" "full"
@@ -45,22 +45,22 @@ type GetBackupResponse struct {
 	Source string `json:"source"`
 
 	// Provider is the cloud provider where the cluster is hosted.
-	Provider string `json:"provider"`
+	CloudProvider string `json:"provider"`
 
 	// BackupStats represents various backup level data that couchbase provides.
-	BackupStats BackupStats `json:"stats"`
+	//BackupStats BackupStats `json:"stats"`
 
 	// ElapsedTimeInSeconds represents the amount of seconds that have elapsed between the creation and completion of the backup.
-	ElapsedTimeInSeconds int `json:"elapsedTimeInSeconds"`
+	ElapsedTimeInSeconds int64 `json:"elapsedTimeInSeconds"`
 
 	// ScheduleInfo represents the schedule information of the backup.
-	ScheduleInfo ScheduleInfo `json:"scheduleInfo"`
+	//ScheduleInfo ScheduleInfo `json:"scheduleInfo"`
 
 	// Type represents whether the backup is a Weekly or Daily backup.
-	Type string `json:"type"`
+	//Type string `json:"type"`
 
 	// WeeklySchedule represents the weekly schedule of the backup.
-	WeeklySchedule WeeklySchedule `json:"weeklySchedule"`
+	//WeeklySchedule WeeklySchedule `json:"weeklySchedule"`
 }
 
 type CreateBackupRequest struct {
@@ -69,4 +69,8 @@ type CreateBackupRequest struct {
 
 	// WeeklySchedule represents the weekly schedule of the backup.
 	WeeklySchedule *WeeklySchedule `json:"weeklySchedule"`
+}
+
+type GetBackupsResponse struct {
+	Data []GetBackupResponse `json:"data"`
 }

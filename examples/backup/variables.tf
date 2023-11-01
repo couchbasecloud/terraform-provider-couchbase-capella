@@ -31,14 +31,14 @@ variable "backup" {
   })
 }
 
-#variable "weekly_schedule" {
-#  description = ""
-#
-#  type = object({
-#    day_of_week = optional(string)
-#    start_at = optional(number)
-#    incremental_every = optional(number)
-#    retention_time = optional(string)
-#    cost_optimized_retention = optional(bool)
-#  })
-#}
+variable "weekly_schedule" {
+  description = ""
+
+  type = object({
+    day_of_week = optional(string)
+    start_at = optional(number)
+    incremental_every = optional(number)
+    retention_time = optional(string)
+    cost_optimized_retention = optional(bool)
+  })
+}

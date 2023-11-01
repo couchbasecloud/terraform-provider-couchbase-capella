@@ -26,41 +26,41 @@ func BackupSchema() schema.Schema {
 			"method":          stringAttribute(computed),
 			"bucket_name":     stringAttribute(computed),
 			"source":          stringAttribute(computed),
-			"provider":        stringAttribute(computed),
-			"backup_stats": schema.SingleNestedAttribute{
-				Computed: true,
-				Attributes: map[string]schema.Attribute{
-					"size_in_mb": int64Attribute(computed),
-					"items":      int64Attribute(computed),
-					"mutations":  int64Attribute(computed),
-					"tombstones": int64Attribute(computed),
-					"gsi":        int64Attribute(computed),
-					"fts":        int64Attribute(computed),
-					"cbas":       int64Attribute(computed),
-					"event":      int64Attribute(computed),
-				},
-			},
+			"cloud_provider":  stringAttribute(computed),
+			//"backup_stats": schema.SingleNestedAttribute{
+			//	Computed: true,
+			//	Attributes: map[string]schema.Attribute{
+			//		"size_in_mb": int64Attribute(computed),
+			//		"items":      int64Attribute(computed),
+			//		"mutations":  int64Attribute(computed),
+			//		"tombstones": int64Attribute(computed),
+			//		"gsi":        int64Attribute(computed),
+			//		"fts":        int64Attribute(computed),
+			//		"cbas":       int64Attribute(computed),
+			//		"event":      int64Attribute(computed),
+			//	},
+			//},
 			"elapsed_time_in_seconds": int64Attribute(computed),
-			"schedule_info": schema.SingleNestedAttribute{
-				Computed: true,
-				Attributes: map[string]schema.Attribute{
-					"backup_type": stringAttribute(computed),
-					"backup_time": stringAttribute(computed),
-					"increment":   int64Attribute(computed),
-					"retention":   stringAttribute(computed),
-				},
-			},
-			"type": stringAttribute(optional),
-			"weekly_schedule": schema.SingleNestedAttribute{
-				Optional: true,
-				Attributes: map[string]schema.Attribute{
-					"day_of_week":              stringAttribute(optional),
-					"start_at":                 int64Attribute(optional),
-					"incremental_every":        int64Attribute(optional),
-					"retention_time":           stringAttribute(optional),
-					"cost_optimized_retention": boolAttribute(optional),
-				},
-			},
+			//"schedule_info": schema.SingleNestedAttribute{
+			//	Computed: true,
+			//	Attributes: map[string]schema.Attribute{
+			//		"backup_type": stringAttribute(computed),
+			//		"backup_time": stringAttribute(computed),
+			//		"increment":   int64Attribute(computed),
+			//		"retention":   stringAttribute(computed),
+			//	},
+			//},
+			//"type": stringAttribute(optional),
+			//"weekly_schedule": schema.SingleNestedAttribute{
+			//	Optional: true,
+			//	Attributes: map[string]schema.Attribute{
+			//		"day_of_week":              stringAttribute(optional),
+			//		"start_at":                 int64Attribute(optional),
+			//		"incremental_every":        int64Attribute(optional),
+			//		"retention_time":           stringAttribute(optional),
+			//		"cost_optimized_retention": boolAttribute(optional),
+			//	},
+			//},
 		},
 	}
 }

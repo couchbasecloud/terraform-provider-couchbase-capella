@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"terraform-provider-capella/internal/api/backup"
 	"terraform-provider-capella/internal/errors"
 )
 
@@ -53,28 +54,28 @@ type Backup struct {
 	Source types.String `tfsdk:"source"`
 
 	// Provider is the cloud provider where the cluster is hosted.
-	Provider types.String `tfsdk:"provider"`
+	CloudProvider types.String `tfsdk:"cloud_provider"`
 
 	// BackupStats represents various backup level data that couchbase provides.
-	BackupStats types.Object `tfsdk:"backup_stats"`
+	//BackupStats types.Object `tfsdk:"backup_stats"`
 
 	// ElapsedTimeInSeconds represents the amount of seconds that have elapsed between the creation and completion of the backup.
 	ElapsedTimeInSeconds types.Int64 `tfsdk:"elapsed_time_in_seconds"`
 
 	// ScheduleInfo represents the schedule information of the backup.
-	ScheduleInfo types.Object `tfsdk:"schedule_info"`
+	//ScheduleInfo types.Object `tfsdk:"schedule_info"`
 
 	// Type represents whether the backup is a Weekly or Daily backup.
-	Type *types.String `tfsdk:"type"`
+	//Type types.String `tfsdk:"type"`
 
 	// WeeklySchedule represents the weekly schedule of the backup.
-	WeeklySchedule *WeeklySchedule `tfsdk:"weekly_schedule"`
+	//WeeklySchedule WeeklySchedule `tfsdk:"weekly_schedule"`
 }
 
 // BackupStats has the backup level stats provided by Couchbase.
 type BackupStats struct {
 	// SizeInMB represents backup size in megabytes.
-	SizeInMB types.Int64 `tfsdk:"size_in_mb"`
+	SizeInMB types.Float64 `tfsdk:"size_in_mb"`
 
 	// Items is the number of items saved during the backup.
 	Items types.Int64 `tfsdk:"items"`
@@ -129,6 +130,52 @@ type WeeklySchedule struct {
 
 	// CostOptimizedRetention optimizes backup retention to reduce total cost of ownership (TCO).
 	CostOptimizedRetention types.Bool `tfsdk:"cost_optimized_retention"`
+}
+
+func NewBackup(backup *backup.GetBackupResponse,
+	organizationId, projectId string,
+) *Backup {
+	newBackup := Backup{
+		Id:             types.StringValue(backup.Id),
+		OrganizationId: types.StringValue(organizationId),
+		ProjectId:      types.StringValue(projectId),
+		ClusterId:      types.StringValue(backup.ClusterId),
+		CycleId:        types.StringValue(backup.CycleId),
+		Date:           types.StringValue(backup.Date),
+		RestoreBefore:  types.StringValue(backup.RestoreBefore),
+		Status:         types.StringValue(string(backup.Status)),
+		Method:         types.StringValue(backup.Method),
+		BucketName:     types.StringValue(backup.BucketName),
+		BucketId:       types.StringValue(backup.BucketId),
+		Source:         types.StringValue(backup.Source),
+		CloudProvider:  types.StringValue(backup.CloudProvider),
+		//BackupStats: BackupStats{
+		//	SizeInMB:   types.Float64Value(backup.BackupStats.SizeInMB),
+		//	Items:      types.Int64Value(backup.BackupStats.Items),
+		//	Mutations:  types.Int64Value(backup.BackupStats.Mutations),
+		//	Tombstones: types.Int64Value(backup.BackupStats.Tombstones),
+		//	GSI:        types.Int64Value(backup.BackupStats.GSI),
+		//	FTS:        types.Int64Value(backup.BackupStats.FTS),
+		//	CBAS:       types.Int64Value(backup.BackupStats.CBAS),
+		//	Event:      types.Int64Value(backup.BackupStats.Event),
+		//},
+		ElapsedTimeInSeconds: types.Int64Value(backup.ElapsedTimeInSeconds),
+		//ScheduleInfo: ScheduleInfo{
+		//	BackupType: types.StringValue(backup.ScheduleInfo.BackupType),
+		//	BackupTime: types.StringValue(backup.ScheduleInfo.BackupTime),
+		//	Increment:  types.Int64Value(backup.ScheduleInfo.Increment),
+		//	Retention:  types.StringValue(backup.ScheduleInfo.Retention),
+		//},
+		//	Type: types.StringValue(backup.Type),
+		/*	WeeklySchedule: WeeklySchedule{
+			DayOfWeek:              types.StringValue(backup.WeeklySchedule.DayOfWeek),
+			StartAt:                types.Int64Value(backup.WeeklySchedule.StartAt),
+			IncrementalEvery:       types.Int64Value(backup.WeeklySchedule.IncrementalEvery),
+			RetentionTime:          types.StringValue(backup.WeeklySchedule.RetentionTime),
+			CostOptimizedRetention: types.BoolValue(backup.WeeklySchedule.CostOptimizedRetention),
+		},*/
+	}
+	return &newBackup
 }
 
 // Validate is used to verify that IDs have been properly imported

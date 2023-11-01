@@ -2,7 +2,7 @@ package backup
 
 type BackupStats struct {
 	// SizeInMB represents backup size in megabytes.
-	SizeInMB int64 `json:"sizeInMb"`
+	SizeInMB float64 `json:"sizeInMb"`
 
 	// Items is the number of items saved during the backup.
 	Items int64 `json:"items"`
