@@ -48,7 +48,7 @@ type GetBackupResponse struct {
 	CloudProvider string `json:"provider"`
 
 	// BackupStats represents various backup level data that couchbase provides.
-	//BackupStats BackupStats `json:"stats"`
+	BackupStats *BackupStats `json:"stats"`
 
 	// ElapsedTimeInSeconds represents the amount of seconds that have elapsed between the creation and completion of the backup.
 	ElapsedTimeInSeconds int64 `json:"elapsedTimeInSeconds"`

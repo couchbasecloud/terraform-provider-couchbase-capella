@@ -27,19 +27,19 @@ func BackupSchema() schema.Schema {
 			"bucket_name":     stringAttribute(computed),
 			"source":          stringAttribute(computed),
 			"cloud_provider":  stringAttribute(computed),
-			//"backup_stats": schema.SingleNestedAttribute{
-			//	Computed: true,
-			//	Attributes: map[string]schema.Attribute{
-			//		"size_in_mb": int64Attribute(computed),
-			//		"items":      int64Attribute(computed),
-			//		"mutations":  int64Attribute(computed),
-			//		"tombstones": int64Attribute(computed),
-			//		"gsi":        int64Attribute(computed),
-			//		"fts":        int64Attribute(computed),
-			//		"cbas":       int64Attribute(computed),
-			//		"event":      int64Attribute(computed),
-			//	},
-			//},
+			"backup_stats": schema.SingleNestedAttribute{
+				Computed: true,
+				Attributes: map[string]schema.Attribute{
+					"size_in_mb": float64Attribute(computed),
+					"items":      int64Attribute(computed),
+					"mutations":  int64Attribute(computed),
+					"tombstones": int64Attribute(computed),
+					"gsi":        int64Attribute(computed),
+					"fts":        int64Attribute(computed),
+					"cbas":       int64Attribute(computed),
+					"event":      int64Attribute(computed),
+				},
+			},
 			"elapsed_time_in_seconds": int64Attribute(computed),
 			//"schedule_info": schema.SingleNestedAttribute{
 			//	Computed: true,

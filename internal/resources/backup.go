@@ -112,7 +112,7 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	//	return
 	//}
 
-	refreshedState := providerschema.NewBackup(BackupResponse, organizationId, projectId)
+	refreshedState := providerschema.NewBackup(ctx, BackupResponse, organizationId, projectId)
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
@@ -251,7 +251,9 @@ func (b *Backup) getLatestBackup(organizationId, projectId, clusterId, bucketId 
 	for _, backup := range clusterResp.Data {
 		if backup.BucketId == bucketId {
 			fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&&&&")
-			fmt.Print(backup.Id)
+			fmt.Println(backup.Id)
+			fmt.Println(backup.CloudProvider)
+			fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&&&&")
 			return &backup, nil
 		}
 	}

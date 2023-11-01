@@ -1,12 +1,42 @@
 package schema
 
 import (
+	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"terraform-provider-capella/internal/api/backup"
 	"terraform-provider-capella/internal/errors"
 )
+
+// BackupStats has the backup level stats provided by Couchbase.
+type BackupStats struct {
+	// SizeInMB represents backup size in megabytes.
+	SizeInMB types.Float64 `tfsdk:"size_in_mb"`
+
+	// Items is the number of items saved during the backup.
+	Items types.Int64 `tfsdk:"items"`
+
+	// Mutations is the number of mutations saved during the backup.
+	Mutations types.Int64 `tfsdk:"mutations"`
+
+	// Tombstones is the number of tombstones saved during the backup.
+	Tombstones types.Int64 `tfsdk:"tombstones"`
+
+	// GSI is the number of global secondary indexes saved during the backup.
+	GSI types.Int64 `tfsdk:"gsi"`
+
+	// FTS is the number of full text search entities saved during the backup.
+	FTS types.Int64 `tfsdk:"fts"`
+
+	// CBAS is the number of analytics entities saved during the backup.
+	CBAS types.Int64 `tfsdk:"cbas"`
+
+	// Event represents the number of event entities saved during the backup.
+	Event types.Int64 `tfsdk:"event"`
+}
 
 // Backup maps Backup resource schema data to the response received from V4 Capella Public API.
 type Backup struct {
@@ -57,7 +87,7 @@ type Backup struct {
 	CloudProvider types.String `tfsdk:"cloud_provider"`
 
 	// BackupStats represents various backup level data that couchbase provides.
-	//BackupStats types.Object `tfsdk:"backup_stats"`
+	BackupStats types.Object `tfsdk:"backup_stats"`
 
 	// ElapsedTimeInSeconds represents the amount of seconds that have elapsed between the creation and completion of the backup.
 	ElapsedTimeInSeconds types.Int64 `tfsdk:"elapsed_time_in_seconds"`
@@ -70,33 +100,6 @@ type Backup struct {
 
 	// WeeklySchedule represents the weekly schedule of the backup.
 	//WeeklySchedule WeeklySchedule `tfsdk:"weekly_schedule"`
-}
-
-// BackupStats has the backup level stats provided by Couchbase.
-type BackupStats struct {
-	// SizeInMB represents backup size in megabytes.
-	SizeInMB types.Float64 `tfsdk:"size_in_mb"`
-
-	// Items is the number of items saved during the backup.
-	Items types.Int64 `tfsdk:"items"`
-
-	// Mutations is the number of mutations saved during the backup.
-	Mutations types.Int64 `tfsdk:"mutations"`
-
-	// Tombstones is the number of tombstones saved during the backup.
-	Tombstones types.Int64 `tfsdk:"tombstones"`
-
-	// GSI is the number of global secondary indexes saved during the backup.
-	GSI types.Int64 `tfsdk:"gsi"`
-
-	// FTS is the number of full text search entities saved during the backup.
-	FTS types.Int64 `tfsdk:"fts"`
-
-	// CBAS is the number of analytics entities saved during the backup.
-	CBAS types.Int64 `tfsdk:"cbas"`
-
-	// Event represents the number of event entities saved during the backup.
-	Event types.Int64 `tfsdk:"event"`
 }
 
 // ScheduleInfo provides schedule information of the backup
@@ -132,9 +135,46 @@ type WeeklySchedule struct {
 	CostOptimizedRetention types.Bool `tfsdk:"cost_optimized_retention"`
 }
 
-func NewBackup(backup *backup.GetBackupResponse,
+func (b BackupStats) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"size_in_mb": types.Float64Type,
+		"items":      types.Int64Type,
+		"mutations":  types.Int64Type,
+		"tombstones": types.Int64Type,
+		"gsi":        types.Int64Type,
+		"fts":        types.Int64Type,
+		"cbas":       types.Int64Type,
+		"event":      types.Int64Type,
+	}
+}
+
+func NewBackupStats(backupStats backup.BackupStats) BackupStats {
+	return BackupStats{
+		SizeInMB:   types.Float64Value(backupStats.SizeInMB),
+		Items:      types.Int64Value(backupStats.Items),
+		Mutations:  types.Int64Value(backupStats.Mutations),
+		Tombstones: types.Int64Value(backupStats.Tombstones),
+		GSI:        types.Int64Value(backupStats.GSI),
+		FTS:        types.Int64Value(backupStats.FTS),
+		CBAS:       types.Int64Value(backupStats.CBAS),
+		Event:      types.Int64Value(backupStats.Event),
+	}
+}
+
+func NewBackup(ctx context.Context, backup *backup.GetBackupResponse,
 	organizationId, projectId string,
 ) *Backup {
+
+	bStats := NewBackupStats(*backup.BackupStats)
+
+	bStatsObj, diags := types.ObjectValueFrom(ctx, bStats.AttributeTypes(), bStats)
+	if diags.HasError() {
+		//resp.Diagnostics.AddError(
+		//"Error while preferences conversion",
+		//"Could not perform preferences conversion",
+		//)
+		//return
+	}
 	newBackup := Backup{
 		Id:             types.StringValue(backup.Id),
 		OrganizationId: types.StringValue(organizationId),
@@ -149,6 +189,7 @@ func NewBackup(backup *backup.GetBackupResponse,
 		BucketId:       types.StringValue(backup.BucketId),
 		Source:         types.StringValue(backup.Source),
 		CloudProvider:  types.StringValue(backup.CloudProvider),
+		BackupStats:    bStatsObj,
 		//BackupStats: BackupStats{
 		//	SizeInMB:   types.Float64Value(backup.BackupStats.SizeInMB),
 		//	Items:      types.Int64Value(backup.BackupStats.Items),
