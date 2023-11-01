@@ -58,7 +58,7 @@ func (d *Users) Schema(_ context.Context, _ datasource.SchemaRequest, resp *data
 						"enable_notifications": computedBoolAttribute,
 						"expires_at":           computedStringAttribute,
 						"resources": schema.ListNestedAttribute{
-							Required: true,
+							Computed: true,
 							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
 									"type":  computedStringAttribute,
