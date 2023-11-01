@@ -20,7 +20,7 @@ func UserSchema() schema.Schema {
 			"enable_notifications": boolAttribute(computed, requiresReplace),
 			"expires_at":           stringAttribute(computed, requiresReplace),
 			"resources": schema.ListNestedAttribute{
-				Required: true,
+				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"type":  stringAttribute(optional, requiresReplace),
