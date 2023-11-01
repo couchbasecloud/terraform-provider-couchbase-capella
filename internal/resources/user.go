@@ -279,7 +279,7 @@ func constructPatch(existing, proposed providerschema.User) ([]api.PatchEntry, e
 
 	// Remove values present in the existing state but not in removed.
 	for _, role := range existing.OrganizationRoles {
-		if !containsOrgRole(proposed.OrganizationRoles, role) {
+		if !contains(proposed.OrganizationRoles, role) {
 			patch = append(patch,
 				api.PatchEntry{
 					Op:    "remove",
@@ -292,7 +292,7 @@ func constructPatch(existing, proposed providerschema.User) ([]api.PatchEntry, e
 
 	// Add values present in the proposed state but not in existing.
 	for _, role := range proposed.OrganizationRoles {
-		if !containsOrgRole(existing.OrganizationRoles, role) {
+		if !contains(existing.OrganizationRoles, role) {
 			patch = append(patch,
 				api.PatchEntry{
 					Op:    "add",
@@ -308,13 +308,11 @@ func constructPatch(existing, proposed providerschema.User) ([]api.PatchEntry, e
 	return patch, nil
 }
 
-// containsOrgRole is used to check whether a supplied organization role is
-// already present in a slice of organization roles.
-func containsOrgRole(orgRoles []basetypes.StringValue, role basetypes.StringValue) bool {
-	fmt.Println(role.ValueString())
-	for _, orgRole := range orgRoles {
-		fmt.Println(orgRole.ValueString())
-		if role.ValueString() == orgRole.ValueString() {
+// contains is used to check whether a supplied value is
+// present in a slice of the values type.
+func contains(items []basetypes.StringValue, value basetypes.StringValue) bool {
+	for _, item := range items {
+		if value.ValueString() == item.ValueString() {
 			return true
 		}
 	}
