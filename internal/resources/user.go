@@ -298,6 +298,22 @@ func constructPatch(existing, proposed providerschema.User) ([]api.PatchEntry, e
 		}
 	}
 
+	// Remove resources present in the existing state but not in proposed
+	proposedIDs := make(map[basetypes.StringValue]bool)
+	for _, proposed := range proposed.Resources {
+		proposedIDs[proposed.Id] = true
+		for _, existing := range existing.Resources {
+			if !proposedIDs[existing.Id] {
+				path := fmt.Sprintf("/resources/%s", existing.Id)
+				patch = append(patch, api.PatchEntry{
+					Op:    "remove",
+					Path:  path,
+					Value: providerschema.ConvertResource(existing),
+				})
+			}
+		}
+	}
+
 	// Add resources present in the proposed state but not in existing
 	existingIDs := make(map[basetypes.StringValue]bool)
 	for _, existing := range existing.Resources {
@@ -313,23 +329,6 @@ func constructPatch(existing, proposed providerschema.User) ([]api.PatchEntry, e
 			}
 		}
 	}
-
-	// Remove resources present in the existing state but not in proposed
-	proposedIDs := make(map[basetypes.StringValue]bool)
-	for _, proposed := range proposed.Resources {
-		proposedIDs[proposed.Id] = true
-		for _, existing := range existing.Resources {
-			if !proposedIDs[existing.Id] {
-				path := fmt.Sprintf("/resources/%s", existing.Id)
-				patch = append(patch, api.PatchEntry{
-					Op:    "add",
-					Path:  path,
-					Value: providerschema.ConvertResource(existing),
-				})
-			}
-		}
-	}
-
 	return patch, nil
 }
 
