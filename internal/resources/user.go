@@ -229,14 +229,7 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 		userId         = IDs[providerschema.Id]
 	)
 
-	patch, err := constructPatch(state, plan)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error updating user",
-			"Could not update Capella user with ID "+userId+": "+err.Error(),
-		)
-		return
-	}
+	patch := constructPatch(state, plan)
 
 	err = r.updateUser(organizationId, userId, patch)
 	if err != nil {
@@ -274,7 +267,7 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 
 // constructPatch is used to determine to compare the planned user state with the
 // existing user state and populate a Patch struct with the required fields.
-func constructPatch(existing, proposed providerschema.User) ([]api.PatchEntry, error) {
+func constructPatch(existing, proposed providerschema.User) []api.PatchEntry {
 	patch := make([]api.PatchEntry, 0)
 
 	// Handle changes to organizationRoles
@@ -329,7 +322,7 @@ func constructPatch(existing, proposed providerschema.User) ([]api.PatchEntry, e
 			}
 		}
 	}
-	return patch, nil
+	return patch
 }
 
 // compare is used to compare two slices of basetypes.stringvalue
