@@ -1,14 +1,13 @@
 package schema
 
 import (
-	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-
-	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"terraform-provider-capella/internal/api/backup"
 	"terraform-provider-capella/internal/errors"
+
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 // Backup maps Backup resource schema data to the response received from V4 Capella Public API.
@@ -68,11 +67,12 @@ type Backup struct {
 	// ScheduleInfo represents the schedule information of the backup.
 	ScheduleInfo types.Object `tfsdk:"schedule_info"`
 
+	// ToDo Required for Backup Schedule, tracking under -https://couchbasecloud.atlassian.net/browse/AV-66698
 	// Type represents whether the backup is a Weekly or Daily backup.
-	//Type types.String `tfsdk:"type"`
+	// Type types.String `tfsdk:"type"`
 
 	// WeeklySchedule represents the weekly schedule of the backup.
-	//WeeklySchedule WeeklySchedule `tfsdk:"weekly_schedule"`
+	// WeeklySchedule WeeklySchedule `tfsdk:"weekly_schedule"`
 }
 
 // BackupStats has the backup level stats provided by Couchbase.
@@ -102,7 +102,7 @@ type BackupStats struct {
 	Event types.Int64 `tfsdk:"event"`
 }
 
-// ScheduleInfo provides schedule information of the backup
+// ScheduleInfo provides schedule information of the backup.
 type ScheduleInfo struct {
 	// BackupType represents whether the backup is a Weekly or Daily backup.
 	BackupType types.String `tfsdk:"backup_type"`
@@ -148,6 +148,7 @@ func (b BackupStats) AttributeTypes() map[string]attr.Type {
 	}
 }
 
+// NewBackupStats creates a new BackupStats data object
 func NewBackupStats(backupStats backup.BackupStats) BackupStats {
 	return BackupStats{
 		SizeInMB:   types.Float64Value(backupStats.SizeInMB),
@@ -170,6 +171,7 @@ func (b ScheduleInfo) AttributeTypes() map[string]attr.Type {
 	}
 }
 
+// NewScheduleInfo creates a new ScheduleInfo data object
 func NewScheduleInfo(scheduleInfo backup.ScheduleInfo) ScheduleInfo {
 	return ScheduleInfo{
 		BackupType: types.StringValue(scheduleInfo.BackupType),
@@ -179,21 +181,11 @@ func NewScheduleInfo(scheduleInfo backup.ScheduleInfo) ScheduleInfo {
 	}
 }
 
-func NewBackup(ctx context.Context, backup *backup.GetBackupResponse,
+// NewBackup creates new backup object
+func NewBackup(backup *backup.GetBackupResponse,
 	organizationId, projectId string,
 	bStatsObj, sInfoObj basetypes.ObjectValue,
 ) *Backup {
-
-	//bStats := NewBackupStats(*backup.BackupStats)
-	//bStatsObj, diags := types.ObjectValueFrom(ctx, bStats.AttributeTypes(), bStats)
-	//if diags.HasError() {
-	//}
-	//
-	//sInfo := NewScheduleInfo(*backup.ScheduleInfo)
-	//sInfoObj, diags := types.ObjectValueFrom(ctx, sInfo.AttributeTypes(), sInfo)
-	//if diags.HasError() {
-	//}
-
 	newBackup := Backup{
 		Id:                   types.StringValue(backup.Id),
 		OrganizationId:       types.StringValue(organizationId),
@@ -211,14 +203,15 @@ func NewBackup(ctx context.Context, backup *backup.GetBackupResponse,
 		BackupStats:          bStatsObj,
 		ScheduleInfo:         sInfoObj,
 		ElapsedTimeInSeconds: types.Int64Value(backup.ElapsedTimeInSeconds),
-		//	Type: types.StringValue(backup.Type),
-		/*	WeeklySchedule: WeeklySchedule{
-			DayOfWeek:              types.StringValue(backup.WeeklySchedule.DayOfWeek),
-			StartAt:                types.Int64Value(backup.WeeklySchedule.StartAt),
-			IncrementalEvery:       types.Int64Value(backup.WeeklySchedule.IncrementalEvery),
-			RetentionTime:          types.StringValue(backup.WeeklySchedule.RetentionTime),
-			CostOptimizedRetention: types.BoolValue(backup.WeeklySchedule.CostOptimizedRetention),
-		},*/
+		// ToDo Required for Backup Schedule, tracking under -https://couchbasecloud.atlassian.net/browse/AV-66698
+		// Type: types.StringValue(backup.Type),
+		// WeeklySchedule: WeeklySchedule{
+		//	DayOfWeek:              types.StringValue(backup.WeeklySchedule.DayOfWeek),
+		//	StartAt:                types.Int64Value(backup.WeeklySchedule.StartAt),
+		//	IncrementalEvery:       types.Int64Value(backup.WeeklySchedule.IncrementalEvery),
+		//	RetentionTime:          types.StringValue(backup.WeeklySchedule.RetentionTime),
+		//	CostOptimizedRetention: types.BoolValue(backup.WeeklySchedule.CostOptimizedRetention),
+		//},
 	}
 	return &newBackup
 }
