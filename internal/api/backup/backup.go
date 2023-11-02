@@ -1,5 +1,14 @@
 package backup
 
+// GetBackupResponse is the response received from the Capella V4 Public API when asked to fetch details of an existing backup.
+//
+// To learn more about backup and restore, see https://docs.couchbase.com/cloud/clusters/backup-restore.html
+//
+// In order to access this endpoint, the provided API key must have at least one of the following roles:
+//
+// Organization Owner
+// Project Owner
+// To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
 type GetBackupResponse struct {
 	// Id is a GUID4 identifier of the backup.
 	Id string `json:"id"`
@@ -56,13 +65,27 @@ type GetBackupResponse struct {
 	// ScheduleInfo represents the schedule information of the backup.
 	ScheduleInfo *ScheduleInfo `json:"scheduleInfo"`
 
+	// ToDo Required for Backup Schedule, tracking under -https://couchbasecloud.atlassian.net/browse/AV-66698
 	// Type represents whether the backup is a Weekly or Daily backup.
-	//Type string `json:"type"`
+	// Type string `json:"type"`
 
 	// WeeklySchedule represents the weekly schedule of the backup.
-	//WeeklySchedule WeeklySchedule `json:"weeklySchedule"`
+	// WeeklySchedule WeeklySchedule `json:"weeklySchedule"`
 }
 
+// CreateBackupRequest is the request payload sent to the Capella V4 Public API in order to create a new backup.
+//
+// Couchbase supports a robust scheduled backup and retention time policy as part of an overall disaster recovery plan for production data.
+// Couchbase Capella supports scheduled and on-demand backups of bucket data. A backup can be restored to the same database where it was created or another database in the same organization.
+// An on-demand backup of a bucket is always a Full backup. Capella schedules on-demand backup to start immediately.
+// On setting up a backup schedule, the bucket automatically backs up the bucket based on the chosen schedule.
+//
+// To learn more about backup and restore, see https://docs.couchbase.com/cloud/clusters/backup-restore.html
+//
+// In order to access this endpoint, the provided API key must have at least one of the following roles:
+// Organization Owner
+// Project Owner
+// To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
 type CreateBackupRequest struct {
 	// Type represents whether the backup is a Weekly or Daily backup.
 	Type *string `json:"type"`
@@ -71,6 +94,13 @@ type CreateBackupRequest struct {
 	WeeklySchedule *WeeklySchedule `json:"weeklySchedule"`
 }
 
+// GetBackupsResponse is the response received from the Capella V4 Public API when asked to list all backups.
+//
+// In order to access this endpoint, the provided API key must have at least one of the following roles:
+//
+// Organization Owner
+// Project Owner
+// To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
 type GetBackupsResponse struct {
 	Data []GetBackupResponse `json:"data"`
 }

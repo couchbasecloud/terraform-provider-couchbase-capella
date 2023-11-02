@@ -1,5 +1,6 @@
 package backup
 
+// BackupStats represents various backup level data that couchbase provides.
 type BackupStats struct {
 	// SizeInMB represents backup size in megabytes.
 	SizeInMB float64 `json:"sizeInMb"`

@@ -1,5 +1,6 @@
 package backup
 
+// ScheduleInfo represents the schedule information of the backup.
 type ScheduleInfo struct {
 	// BackupType represents whether the backup is a Weekly or Daily backup.
 	BackupType string `json:"backupType"`

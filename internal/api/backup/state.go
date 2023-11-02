@@ -14,11 +14,12 @@ const (
 	Failed State = "failed"
 )
 
+// State is the state that a backup can have based on the fact if backup job has run successfully or not.
 type State string
 
 // IsFinalState checks whether backup job has successfully run.
 func IsFinalState(state State) bool {
-	//"""Returns True if the state is critical, False otherwise."""
+	// Returns True if the state is critical, False otherwise.
 	finalStates := []State{
 		Ready,
 		Failed,
