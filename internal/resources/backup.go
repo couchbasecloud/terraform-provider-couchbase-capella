@@ -33,14 +33,17 @@ func NewBackup() resource.Resource {
 	return &Backup{}
 }
 
+// Metadata returns the Backup resource type name.
 func (b *Backup) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_backup"
 }
 
+// Schema defines the schema for the Backup resource.
 func (b *Backup) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = BackupSchema()
 }
 
+// Create creates a new Backup.
 func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan providerschema.Backup
 	diags := req.Plan.Get(ctx, &plan)
@@ -60,7 +63,7 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	}
 
 	BackupRequest := backupapi.CreateBackupRequest{}
-	// ToDo Backup Schedule yet to be implemented
+	// ToDo Required for Backup Schedule, tracking under -https://couchbasecloud.atlassian.net/browse/AV-66698
 	//if !plan.Type.IsNull() && !plan.Type.IsUnknown() {
 	//	BackupRequest.Type = plan.Type.ValueStringPointer()
 	//	//BackupRequest.WeeklySchedule = &backupapi.WeeklySchedule{
@@ -127,7 +130,7 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		return
 	}
 
-	refreshedState := providerschema.NewBackup(ctx, BackupResponse, organizationId, projectId, bStatsObj, sInfoObj)
+	refreshedState := providerschema.NewBackup(BackupResponse, organizationId, projectId, bStatsObj, sInfoObj)
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
@@ -138,6 +141,7 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 
 }
 
+// Read reads backup information.
 func (b *Backup) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state providerschema.Backup
 	diags := req.State.Get(ctx, &state)
@@ -184,21 +188,22 @@ func (b *Backup) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 
 }
 
+// Update updates the Backup record.
 func (b *Backup) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	//TODO implement me
-	panic("implement me")
+	//TODO implement me https://couchbasecloud.atlassian.net/browse/AV-66713
 }
 
+// Delete deletes the backup.
 func (b *Backup) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	//TODO implement me
-	panic("implement me")
+	//TODO implement me https://couchbasecloud.atlassian.net/browse/AV-66712
 }
 
+// ImportState imports a remote backup that is not created by Terraform.
 func (b *Backup) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	//TODO implement me
-	panic("implement me")
+	//TODO implement me https://couchbasecloud.atlassian.net/browse/AV-66714
 }
 
+// Configure adds the provider configured api to the backup resource.
 func (b *Backup) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -231,9 +236,9 @@ func (a *Backup) validateCreateBackupRequest(plan providerschema.Backup) error {
 	return nil
 }
 
-// checkClusterStatus monitors the status of a cluster creation, update and deletion operation for a specified
-// organization, project, and cluster ID. It periodically fetches the cluster status using the `getCluster`
-// function and waits until the cluster reaches a final state or until a specified timeout is reached.
+// checkLatestBackupStatus monitors the status of a backup creation operation for a specified
+// organization, project, and cluster ID. It periodically fetches the backup job status using the `getLatestBackup`
+// function and waits until the backup reaches a final state or until a specified timeout is reached.
 // The function returns an error if the operation times out or encounters an error during status retrieval.
 func (b *Backup) checkLatestBackupStatus(ctx context.Context, organizationId, projectId, clusterId, bucketId string, backupFound bool, latestBackup *backupapi.GetBackupResponse) (*backupapi.GetBackupResponse, error) {
 	var (
@@ -284,6 +289,8 @@ func (b *Backup) checkLatestBackupStatus(ctx context.Context, organizationId, pr
 	}
 }
 
+// retrieveBackup retrieves backup information from the specified organization and project
+// using the provided backup ID by open-api call
 func (b *Backup) retrieveBackup(ctx context.Context, organizationId, projectId, clusterId, bucketId, backupId string) (*providerschema.Backup, error) {
 	response, err := b.Client.Execute(
 		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/backups/%s", b.HostURL, organizationId, projectId, clusterId, backupId),
@@ -314,12 +321,12 @@ func (b *Backup) retrieveBackup(ctx context.Context, organizationId, projectId, 
 		return nil, errors.ErrUnableToConvertAuditData
 	}
 
-	refreshedState := providerschema.NewBackup(ctx, &backupResp, organizationId, projectId, bStatsObj, sInfoObj)
+	refreshedState := providerschema.NewBackup(&backupResp, organizationId, projectId, bStatsObj, sInfoObj)
 	return refreshedState, nil
 }
 
-// getCluster retrieves cluster information from the specified organization and project
-// using the provided cluster ID by open-api call
+// getLatestBackup retrieves the latest backup information for a specified bucket in a cluster
+// from the specified organization, project and cluster using the provided bucket ID by open-api call
 func (b *Backup) getLatestBackup(organizationId, projectId, clusterId, bucketId string) (*backupapi.GetBackupResponse, error) {
 	response, err := b.Client.Execute(
 		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/backups", b.HostURL, organizationId, projectId, clusterId),
@@ -348,12 +355,11 @@ func (b *Backup) getLatestBackup(organizationId, projectId, clusterId, bucketId 
 		}
 	}
 
-	//fmt.Print(clusterResp.Data)
 	return nil, nil
 }
 
-// this func extract error message if error is api.Error and also checks whether error is
-// resource not found
+// handleBackupError extracts error message if error is api.Error and
+// also checks whether error is resource not found
 func handleBackupError(err error) (bool, error) {
 	switch err := err.(type) {
 	case nil:
