@@ -296,10 +296,17 @@ func handleOrganizationRoles(existingRoles, proposedRoles []basetypes.StringValu
 	// Handle changes to organizationRoles
 	addRoles, removeRoles := compare(existingRoles, proposedRoles)
 	if len(addRoles) > 0 {
-		entries = append(entries, api.PatchEntry{Op: "add", Path: "/organizationRoles", Value: addRoles})
+		entries = append(entries, api.PatchEntry{
+			Op:    "add",
+			Path:  "/organizationRoles",
+			Value: append(addRoles)})
 	}
 	if len(removeRoles) > 0 {
-		entries = append(entries, api.PatchEntry{Op: "remove", Path: "/organizationRoles", Value: removeRoles})
+		entries = append(entries, api.PatchEntry{
+			Op:    "remove",
+			Path:  "/organizationRoles",
+			Value: removeRoles,
+		})
 	}
 
 	return entries
@@ -322,10 +329,18 @@ func handleProjectRoles(existingResources, proposedResources []providerschema.Re
 
 			addRoles, removeRoles := compare(existingResource.Roles, proposedResource.Roles)
 			if len(addRoles) > 0 {
-				entries = append(entries, api.PatchEntry{Op: "add", Path: path, Value: addRoles})
+				entries = append(entries, api.PatchEntry{
+					Op:    "add",
+					Path:  path,
+					Value: addRoles,
+				})
 			}
 			if len(removeRoles) > 0 {
-				entries = append(entries, api.PatchEntry{Op: "remove", Path: path, Value: removeRoles})
+				entries = append(entries, api.PatchEntry{
+					Op:    "remove",
+					Path:  path,
+					Value: removeRoles,
+				})
 			}
 		}
 	}

@@ -45,7 +45,10 @@ func Test_ConstructPatch(t *testing.T) {
 				},
 			},
 			proposedSchema: providerschema.User{
-				OrganizationRoles: []basetypes.StringValue{organizationOwner, organizationMember},
+				OrganizationRoles: []basetypes.StringValue{
+					organizationOwner,
+					organizationMember,
+				},
 				Resources: []providerschema.Resource{
 					{
 						Id: basetypes.NewStringValue("100"),
@@ -220,9 +223,12 @@ func Test_ConstructPatch(t *testing.T) {
 					Op:   add,
 					Path: "/resources/200",
 					Value: api.Resource{
-						Id:    "200",
-						Type:  &projectType,
-						Roles: []string{projectViewer.ValueString(), projectDataReaderWriter.ValueString()},
+						Id:   "200",
+						Type: &projectType,
+						Roles: []string{
+							projectViewer.ValueString(),
+							projectDataReaderWriter.ValueString(),
+						},
 					},
 				},
 			},
@@ -251,9 +257,12 @@ func Test_ConstructPatch(t *testing.T) {
 					Op:   remove,
 					Path: "/resources/100",
 					Value: api.Resource{
-						Id:    "100",
-						Type:  &projectType,
-						Roles: []string{projectViewer.ValueString(), projectDataReaderWriter.ValueString()},
+						Id:   "100",
+						Type: &projectType,
+						Roles: []string{
+							projectViewer.ValueString(),
+							projectDataReaderWriter.ValueString(),
+						},
 					},
 				},
 			},
