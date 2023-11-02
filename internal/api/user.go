@@ -130,22 +130,3 @@ type PatchEntry struct {
 	// of OrganizationRoles (strings), an Array of ProjectRoles (strings) or a Resource (object)
 	Value interface{} `json:"value,omitempty"`
 }
-
-// GetUsersResponse is the response received from the Capella V4 Public API when asked to list all users that have access to an organization.
-//
-// In order to access this endpoint, the provided API key must have at least one of the following roles:
-//
-// Organization Owner
-// Organization Member
-// Project Creator
-// The results are always limited by the role and scope of the caller's privileges.
-// When retrieving a list of users through a GET request, if a user holds the organization owner role,
-// the response will exclude project-level permissions for those users.
-// This is because organization owners have full access to all resources within the organization, making project-level permissions irrelevant for them.
-//
-// To learn more about the roles, see:
-// Organization Roles: https://docs.couchbase.com/cloud/organizations/organization-user-roles.html
-// Project Roles: https://docs.couchbase.com/cloud/projects/project-roles.html
-type GetUsersResponse struct {
-	Data []GetUserResponse `json:"data"`
-}
