@@ -112,13 +112,15 @@ func Test_ConstructPatch(t *testing.T) {
 				},
 			},
 		},
+
 		{
 			name: "[POSITIVE] - Successfully add a project role",
 			existingSchema: providerschema.User{
 				OrganizationRoles: []basetypes.StringValue{organizationMember},
 				Resources: []providerschema.Resource{
 					{
-						Id: basetypes.NewStringValue("100"),
+						Id:   basetypes.NewStringValue("100"),
+						Type: basetypes.NewStringValue("project"),
 						Roles: []basetypes.StringValue{
 							projectViewer,
 						},
@@ -129,7 +131,8 @@ func Test_ConstructPatch(t *testing.T) {
 				OrganizationRoles: []basetypes.StringValue{organizationMember},
 				Resources: []providerschema.Resource{
 					{
-						Id: basetypes.NewStringValue("100"),
+						Id:   basetypes.NewStringValue("100"),
+						Type: basetypes.NewStringValue("project"),
 						Roles: []basetypes.StringValue{
 							projectViewer,
 							projectDataReaderWriter,
@@ -153,7 +156,8 @@ func Test_ConstructPatch(t *testing.T) {
 				OrganizationRoles: []basetypes.StringValue{organizationMember},
 				Resources: []providerschema.Resource{
 					{
-						Id: basetypes.NewStringValue("100"),
+						Id:   basetypes.NewStringValue("100"),
+						Type: basetypes.NewStringValue("project"),
 						Roles: []basetypes.StringValue{
 							projectViewer,
 							projectDataReaderWriter,
@@ -165,7 +169,8 @@ func Test_ConstructPatch(t *testing.T) {
 				OrganizationRoles: []basetypes.StringValue{organizationMember},
 				Resources: []providerschema.Resource{
 					{
-						Id: basetypes.NewStringValue("100"),
+						Id:   basetypes.NewStringValue("100"),
+						Type: basetypes.NewStringValue("project"),
 						Roles: []basetypes.StringValue{
 							projectViewer,
 						},
@@ -182,6 +187,7 @@ func Test_ConstructPatch(t *testing.T) {
 				},
 			},
 		},
+
 		{
 			name: "[POSITIVE] - Successfully add a resource",
 			existingSchema: providerschema.User{
@@ -233,7 +239,6 @@ func Test_ConstructPatch(t *testing.T) {
 				},
 			},
 		},
-
 		{
 			name: "[POSITIVE] - Successfully remove a resource",
 			existingSchema: providerschema.User{

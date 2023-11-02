@@ -317,17 +317,29 @@ func handleOrganizationRoles(existingRoles, proposedRoles []basetypes.StringValu
 func handleProjectRoles(existingResources, proposedResources []providerschema.Resource) []api.PatchEntry {
 	entries := make([]api.PatchEntry, 0)
 
-	// Handle changes to project roles
-	for _, existingResource := range existingResources {
-		for _, proposedResource := range proposedResources {
-			// check belong to same project
-			if existingResource.Id != proposedResource.Id {
-				break
-			}
+	// populate maps with existing and proposed project roles
+	existingMap := make(map[basetypes.StringValue][]basetypes.StringValue)
+	proposedMap := make(map[basetypes.StringValue][]basetypes.StringValue)
 
-			path := fmt.Sprintf("/resources/%s/roles", existingResource.Id.ValueString())
+	for _, resource := range existingResources {
+		if resource.Type.ValueString() != "project" {
+			break
+		}
+		existingMap[resource.Id] = resource.Roles
+	}
 
-			addRoles, removeRoles := compare(existingResource.Roles, proposedResource.Roles)
+	for _, resource := range proposedResources {
+		if resource.Type.ValueString() != "project" {
+			break
+		}
+		proposedMap[resource.Id] = resource.Roles
+	}
+
+	// compare and construct patch entries
+	for _, resource := range proposedResources {
+		path := fmt.Sprintf("/resources/%s/roles", resource.Id.ValueString())
+		if existing, exists := existingMap[resource.Id]; exists {
+			addRoles, removeRoles := compare(existing, resource.Roles)
 			if len(addRoles) > 0 {
 				entries = append(entries, api.PatchEntry{
 					Op:    "add",
