@@ -18,6 +18,7 @@ func Test_ConstructPatch(t *testing.T) {
 		add                     = "add"
 		remove                  = "remove"
 		orgRolesPath            = "/organizationRoles"
+		projectType             = "project"
 	)
 
 	type test struct {
@@ -28,6 +29,7 @@ func Test_ConstructPatch(t *testing.T) {
 	}
 
 	tests := []test{
+
 		{
 			name: "[POSITIVE] - Successfully add an organization role",
 			existingSchema: providerschema.User{
@@ -107,7 +109,6 @@ func Test_ConstructPatch(t *testing.T) {
 				},
 			},
 		},
-
 		{
 			name: "[POSITIVE] - Successfully add a project role",
 			existingSchema: providerschema.User{
@@ -158,7 +159,7 @@ func Test_ConstructPatch(t *testing.T) {
 				},
 			},
 			proposedSchema: providerschema.User{
-				OrganizationRoles: []basetypes.StringValue{organizationOwner, organizationMember},
+				OrganizationRoles: []basetypes.StringValue{organizationMember},
 				Resources: []providerschema.Resource{
 					{
 						Id: basetypes.NewStringValue("100"),
@@ -184,7 +185,8 @@ func Test_ConstructPatch(t *testing.T) {
 				OrganizationRoles: []basetypes.StringValue{organizationMember},
 				Resources: []providerschema.Resource{
 					{
-						Id: basetypes.NewStringValue("100"),
+						Id:   basetypes.NewStringValue("100"),
+						Type: basetypes.NewStringValue("project"),
 						Roles: []basetypes.StringValue{
 							projectViewer,
 							projectDataReaderWriter,
@@ -193,17 +195,19 @@ func Test_ConstructPatch(t *testing.T) {
 				},
 			},
 			proposedSchema: providerschema.User{
-				OrganizationRoles: []basetypes.StringValue{organizationOwner, organizationMember},
+				OrganizationRoles: []basetypes.StringValue{organizationMember},
 				Resources: []providerschema.Resource{
 					{
-						Id: basetypes.NewStringValue("100"),
+						Id:   basetypes.NewStringValue("100"),
+						Type: basetypes.NewStringValue("project"),
 						Roles: []basetypes.StringValue{
 							projectViewer,
 							projectDataReaderWriter,
 						},
 					},
 					{
-						Id: basetypes.NewStringValue("200"),
+						Id:   basetypes.NewStringValue("200"),
+						Type: basetypes.NewStringValue("project"),
 						Roles: []basetypes.StringValue{
 							projectViewer,
 							projectDataReaderWriter,
@@ -217,11 +221,13 @@ func Test_ConstructPatch(t *testing.T) {
 					Path: "/resources/200",
 					Value: api.Resource{
 						Id:    "200",
+						Type:  &projectType,
 						Roles: []string{projectViewer.ValueString(), projectDataReaderWriter.ValueString()},
 					},
 				},
 			},
 		},
+
 		{
 			name: "[POSITIVE] - Successfully remove a resource",
 			existingSchema: providerschema.User{
@@ -237,7 +243,7 @@ func Test_ConstructPatch(t *testing.T) {
 				},
 			},
 			proposedSchema: providerschema.User{
-				OrganizationRoles: []basetypes.StringValue{organizationOwner, organizationMember},
+				OrganizationRoles: []basetypes.StringValue{organizationMember},
 				Resources:         []providerschema.Resource{},
 			},
 			expectedPatch: []api.PatchEntry{
@@ -246,6 +252,7 @@ func Test_ConstructPatch(t *testing.T) {
 					Path: "/resources/100",
 					Value: api.Resource{
 						Id:    "100",
+						Type:  &projectType,
 						Roles: []string{projectViewer.ValueString(), projectDataReaderWriter.ValueString()},
 					},
 				},
@@ -267,10 +274,10 @@ func Test_ConstructPatch(t *testing.T) {
 				switch expectedValue := v.Value.(type) {
 				case []string:
 					actualVal, _ := patch[i].Value.([]string)
-					assert.Equal(t, expectedValue, actualVal)
+					assert.DeepEqual(t, expectedValue, actualVal)
 				case api.Resource:
 					actualVal, _ := patch[i].Value.(api.Resource)
-					assert.Equal(t, expectedValue, actualVal)
+					assert.DeepEqual(t, expectedValue, actualVal)
 				}
 			}
 		})

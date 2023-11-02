@@ -270,35 +270,97 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 func constructPatch(existing, proposed providerschema.User) []api.PatchEntry {
 	patch := make([]api.PatchEntry, 0)
 
+	orgRoleEntries := handleOrganizationRoles(existing.OrganizationRoles, proposed.OrganizationRoles)
+	for _, entry := range orgRoleEntries {
+		patch = append(patch, entry)
+	}
+
+	projRoleEntries := handleProjectRoles(existing.Resources, proposed.Resources)
+	for _, entry := range projRoleEntries {
+		patch = append(patch, entry)
+	}
+
+	resourceEntries := handleResources(existing.Resources, proposed.Resources)
+	for _, entry := range resourceEntries {
+		patch = append(patch, entry)
+	}
+
+	return patch
+}
+
+// handleOrganizationRoles is used to compare the organizationRoles contained within
+// two states and construct patch entries to reflect their differences.
+func handleOrganizationRoles(existingRoles, proposedRoles []basetypes.StringValue) []api.PatchEntry {
+	entries := make([]api.PatchEntry, 0)
+
 	// Handle changes to organizationRoles
-	addRoles, removeRoles := compare(existing.OrganizationRoles, proposed.OrganizationRoles)
-	patch = append(patch, api.PatchEntry{Op: "remove", Path: "/organizationRoles", Value: removeRoles})
-	patch = append(patch, api.PatchEntry{Op: "add", Path: "/organizationRoles", Value: addRoles})
+	addRoles, removeRoles := compare(existingRoles, proposedRoles)
+	if len(addRoles) > 0 {
+		entries = append(entries, api.PatchEntry{Op: "add", Path: "/organizationRoles", Value: addRoles})
+	}
+	if len(removeRoles) > 0 {
+		entries = append(entries, api.PatchEntry{Op: "remove", Path: "/organizationRoles", Value: removeRoles})
+	}
+
+	return entries
+}
+
+// handleProjectRoles is used to compare the projectRoles contained within
+// two states and construct patch entries to reflect their differences.
+func handleProjectRoles(existingResources, proposedResources []providerschema.Resource) []api.PatchEntry {
+	entries := make([]api.PatchEntry, 0)
 
 	// Handle changes to project roles
-	for _, existingResource := range existing.Resources {
-		for _, proposedResource := range proposed.Resources {
+	for _, existingResource := range existingResources {
+		for _, proposedResource := range proposedResources {
 			// check belong to same project
 			if existingResource.Id != proposedResource.Id {
 				break
 			}
 
-			path := fmt.Sprintf("/resources/%s/roles", existingResource.Id)
+			path := fmt.Sprintf("/resources/%s/roles", existingResource.Id.ValueString())
 
-			addRoles, removeRoles := compare(existing.OrganizationRoles, proposed.OrganizationRoles)
-			patch = append(patch, api.PatchEntry{Op: "remove", Path: path, Value: removeRoles})
-			patch = append(patch, api.PatchEntry{Op: "add", Path: path, Value: addRoles})
+			addRoles, removeRoles := compare(existingResource.Roles, proposedResource.Roles)
+			if len(addRoles) > 0 {
+				entries = append(entries, api.PatchEntry{Op: "add", Path: path, Value: addRoles})
+			}
+			if len(removeRoles) > 0 {
+				entries = append(entries, api.PatchEntry{Op: "remove", Path: path, Value: removeRoles})
+			}
+		}
+	}
+	return entries
+}
+
+// handleResources is used to compare the projectRoles contained within
+// two states and construct patch entries to reflect their differences.
+func handleResources(existingResources, proposedResources []providerschema.Resource) []api.PatchEntry {
+	entries := make([]api.PatchEntry, 0)
+
+	// Add resources present in the proposed state but not in existing
+	existingIDs := make(map[basetypes.StringValue]bool)
+	for _, existing := range existingResources {
+		existingIDs[existing.Id] = true
+		for _, proposed := range proposedResources {
+			if !existingIDs[proposed.Id] {
+				path := fmt.Sprintf("/resources/%s", proposed.Id.ValueString())
+				entries = append(entries, api.PatchEntry{
+					Op:    "add",
+					Path:  path,
+					Value: providerschema.ConvertResource(proposed),
+				})
+			}
 		}
 	}
 
 	// Remove resources present in the existing state but not in proposed
 	proposedIDs := make(map[basetypes.StringValue]bool)
-	for _, proposed := range proposed.Resources {
+	for _, proposed := range proposedResources {
 		proposedIDs[proposed.Id] = true
-		for _, existing := range existing.Resources {
+		for _, existing := range existingResources {
 			if !proposedIDs[existing.Id] {
-				path := fmt.Sprintf("/resources/%s", existing.Id)
-				patch = append(patch, api.PatchEntry{
+				path := fmt.Sprintf("/resources/%s", existing.Id.ValueString())
+				entries = append(entries, api.PatchEntry{
 					Op:    "remove",
 					Path:  path,
 					Value: providerschema.ConvertResource(existing),
@@ -307,22 +369,7 @@ func constructPatch(existing, proposed providerschema.User) []api.PatchEntry {
 		}
 	}
 
-	// Add resources present in the proposed state but not in existing
-	existingIDs := make(map[basetypes.StringValue]bool)
-	for _, existing := range existing.Resources {
-		existingIDs[existing.Id] = true
-		for _, proposed := range proposed.Resources {
-			if !existingIDs[proposed.Id] {
-				path := fmt.Sprintf("/resources/%s", proposed.Id)
-				patch = append(patch, api.PatchEntry{
-					Op:    "add",
-					Path:  path,
-					Value: providerschema.ConvertResource(proposed),
-				})
-			}
-		}
-	}
-	return patch
+	return entries
 }
 
 // compare is used to compare two slices of basetypes.stringvalue
