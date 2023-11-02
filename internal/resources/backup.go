@@ -4,14 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"net/http"
+	"terraform-provider-capella/internal/api"
 	backupapi "terraform-provider-capella/internal/api/backup"
 	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -58,7 +60,7 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	}
 
 	BackupRequest := backupapi.CreateBackupRequest{}
-
+	// ToDo Backup Schedule yet to be implemented
 	//if !plan.Type.IsNull() && !plan.Type.IsUnknown() {
 	//	BackupRequest.Type = plan.Type.ValueStringPointer()
 	//	//BackupRequest.WeeklySchedule = &backupapi.WeeklySchedule{
@@ -136,9 +138,50 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 
 }
 
-func (b *Backup) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	//TODO implement me
-	panic("implement me")
+func (b *Backup) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state providerschema.Backup
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	IDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Backup in Capella",
+			"Could not read Capella Backup with ID "+state.Id.String()+": "+err.Error(),
+		)
+	}
+	var (
+		organizationId = IDs[providerschema.OrganizationId]
+		projectId      = IDs[providerschema.ProjectId]
+		clusterId      = IDs[providerschema.ClusterId]
+		bucketId       = IDs[providerschema.BucketId]
+		backupId       = IDs[providerschema.Id]
+	)
+
+	refreshedState, err := b.retrieveBackup(ctx, organizationId, projectId, clusterId, bucketId, backupId)
+	resourceNotFound, err := handleBackupError(err)
+	if resourceNotFound {
+		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+		resp.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error reading backup",
+			"Could not read backup id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	diags = resp.State.Set(ctx, &refreshedState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 }
 
 func (b *Backup) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
@@ -241,6 +284,40 @@ func (b *Backup) checkLatestBackupStatus(ctx context.Context, organizationId, pr
 	}
 }
 
+func (b *Backup) retrieveBackup(ctx context.Context, organizationId, projectId, clusterId, bucketId, backupId string) (*providerschema.Backup, error) {
+	response, err := b.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/backups/%s", b.HostURL, organizationId, projectId, clusterId, backupId),
+		http.MethodGet,
+		nil,
+		b.Token,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	backupResp := backupapi.GetBackupResponse{}
+	err = json.Unmarshal(response.Body, &backupResp)
+	if err != nil {
+		return nil, err
+	}
+
+	bStats := providerschema.NewBackupStats(*backupResp.BackupStats)
+	bStatsObj, diags := types.ObjectValueFrom(ctx, bStats.AttributeTypes(), bStats)
+	if diags.HasError() {
+		return nil, errors.ErrUnableToConvertAuditData
+	}
+
+	sInfo := providerschema.NewScheduleInfo(*backupResp.ScheduleInfo)
+	sInfoObj, diags := types.ObjectValueFrom(ctx, sInfo.AttributeTypes(), sInfo)
+	if diags.HasError() {
+		return nil, errors.ErrUnableToConvertAuditData
+	}
+
+	refreshedState := providerschema.NewBackup(ctx, &backupResp, organizationId, projectId, bStatsObj, sInfoObj)
+	return refreshedState, nil
+}
+
 // getCluster retrieves cluster information from the specified organization and project
 // using the provided cluster ID by open-api call
 func (b *Backup) getLatestBackup(organizationId, projectId, clusterId, bucketId string) (*backupapi.GetBackupResponse, error) {
@@ -273,4 +350,20 @@ func (b *Backup) getLatestBackup(organizationId, projectId, clusterId, bucketId 
 
 	//fmt.Print(clusterResp.Data)
 	return nil, nil
+}
+
+// this func extract error message if error is api.Error and also checks whether error is
+// resource not found
+func handleBackupError(err error) (bool, error) {
+	switch err := err.(type) {
+	case nil:
+		return false, nil
+	case api.Error:
+		if err.HttpStatusCode != http.StatusNotFound {
+			return false, fmt.Errorf(err.CompleteError())
+		}
+		return true, fmt.Errorf(err.CompleteError())
+	default:
+		return false, err
+	}
 }
