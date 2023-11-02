@@ -1,6 +1,8 @@
 package errors
 
-import "errors"
+import (
+	"errors"
+)
 
 var (
 	// ErrIdMissing is returned when an expected Id was not found after an import.
@@ -102,4 +104,17 @@ var (
 
 	// ErrValidatingResource is returned when the validation of an existing resource state failed.
 	ErrValidatingResource = errors.New("could not validate resource state, please contact Couchbase Capella Support")
+
+	// ErrTFVarHostIsNotSet is returned when TF_VAR_host is not set.
+	ErrTFVarHostIsNotSet = errors.New("TF_VAR_host is not set")
+
+	// ErrTFVARAuthTokenIsNotSet is returned when TF_VAR_auth_token is not set.
+	ErrTFVARAuthTokenIsNotSet = errors.New("TF_VAR_auth_token is not set")
+
+	// ErrTFVAROrganizationIdIsNotSet is returned when TF_VAR_organization_id is not set.
+	ErrTFVAROrganizationIdIsNotSet = errors.New("TF_VAR_organization_id is not set")
+
+	// ErrClusterCreationTimeoutAfterInitiation is returned when cluster creation
+	// is timeout after initiation.
+	ErrClusterCreationTimeoutAfterInitiation = errors.New("cluster creation status transition timed out after initiation")
 )

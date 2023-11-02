@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"testing"
 
+	"terraform-provider-capella/internal/provider"
+	acctest "terraform-provider-capella/internal/testing"
+
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"terraform-provider-capella/internal/provider"
 )
 
 // testAccProtoV6ProviderFactories are used to instantiate a provider during
@@ -18,102 +21,104 @@ var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServe
 	"capella": providerserver.NewProtocol6WithError(provider.New("test")()),
 }
 
-func testAccPreCheck(t *testing.T) {
-	// You can add code here to run prior to any test case execution, for
-	// example assertions about the appropriate environment variables being set
-	// are common to see in a pre-check function.
+func TestAccProjectResource(t *testing.T) {
+	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
+	resourceName := "capella_project." + rnd
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create and Read testing
+			{
+				Config: testAccProjectResourceConfig(acctest.Cfg, rnd),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rnd),
+					resource.TestCheckResourceAttr(resourceName, "description", "description"),
+					resource.TestCheckResourceAttr(resourceName, "etag", "Version: 1"),
+				),
+			},
+			//// ImportState testing
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: generateProjectImportIdForResource(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Update and Read testing
+			{
+				Config: testAccProjectResourceConfigUpdate(acctest.Cfg, rnd),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", "acc_test_project_name_update"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description_update"),
+				),
+			},
+			{
+				Config: testAccProjectResourceConfigUpdateWithIfMatch(acctest.Cfg, rnd),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", "acc_test_project_name_update_with_if_match"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description_update_with_match"),
+					resource.TestCheckResourceAttr(resourceName, "etag", "Version: 3"),
+					resource.TestCheckResourceAttr(resourceName, "if_match", "2"),
+				),
+			},
+			// Delete testing automatically occurs in TestCase
+		},
+	})
 }
 
-//func TestAccProjectResource(t *testing.T) {
-//	resource.Test(t, resource.TestCase{
-//		PreCheck:                 func() { testAccPreCheck(t) },
-//		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-//		Steps: []resource.TestStep{
-//			// Create and Read testing
-//			{
-//				Config: testAccProjectResourceConfig(cfg.Cfg),
-//				Check: resource.ComposeTestCheckFunc(
-//					resource.TestCheckResourceAttr("capella_project.acc_test", "name", "acc_test_project_name"),
-//					resource.TestCheckResourceAttr("capella_project.acc_test", "description", "description"),
-//					resource.TestCheckResourceAttr("capella_project.acc_test", "etag", "Version: 1"),
-//				),
-//			},
-//			//// ImportState testing
-//			{
-//				ResourceName:      "capella_project.acc_test",
-//				ImportStateIdFunc: generateProjectImportId,
-//				ImportState:       true,
-//				ImportStateVerify: true,
-//			},
-//			// Update and Read testing
-//			{
-//				Config: testAccProjectResourceConfigUpdate(cfg.Cfg),
-//				Check: resource.ComposeAggregateTestCheckFunc(
-//					resource.TestCheckResourceAttr("capella_project.acc_test", "name", "acc_test_project_name_update"),
-//					resource.TestCheckResourceAttr("capella_project.acc_test", "description", "description_update"),
-//				),
-//			},
-//			{
-//				Config: testAccProjectResourceConfigUpdateWithIfMatch(cfg.Cfg),
-//				Check: resource.ComposeAggregateTestCheckFunc(
-//					resource.TestCheckResourceAttr("capella_project.acc_test", "name", "acc_test_project_name_update_with_if_match"),
-//					resource.TestCheckResourceAttr("capella_project.acc_test", "description", "description_update_with_match"),
-//					resource.TestCheckResourceAttr("capella_project.acc_test", "etag", "Version: 3"),
-//					resource.TestCheckResourceAttr("capella_project.acc_test", "if_match", "2"),
-//				),
-//			},
-//			// Delete testing automatically occurs in TestCase
-//		},
-//	})
-//}
-
-func testAccProjectResourceConfig(cfg string) string {
+func testAccProjectResourceConfig(cfg, rnd string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "acc_test" {
+resource "capella_project" "%[2]s" {
     organization_id = var.organization_id
-	name            = "acc_test_project_name"
+	name            = "%[2]s"
 	description     = "description"
 }
-`, cfg)
+`, cfg, rnd)
 }
 
-func testAccProjectResourceConfigUpdate(cfg string) string {
+func testAccProjectResourceConfigUpdate(cfg, rnd string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "acc_test" {
+resource "capella_project" "%[2]s" {
    organization_id = var.organization_id
 	name            = "acc_test_project_name_update"
 	description     = "description_update"
 }
-`, cfg)
+`, cfg, rnd)
 }
 
-func testAccProjectResourceConfigUpdateWithIfMatch(cfg string) string {
+func testAccProjectResourceConfigUpdateWithIfMatch(cfg, rnd string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "acc_test" {
+resource "capella_project" "%[2]s" {
     organization_id = var.organization_id
 	name            = "acc_test_project_name_update_with_if_match"
 	description     = "description_update_with_match"
 	if_match        =  2
 }
-`, cfg)
+`, cfg, rnd)
 }
 
-func generateProjectImportId(state *terraform.State) (string, error) {
-	resourceName := "capella_project.acc_test"
-	var rawState map[string]string
-	for _, m := range state.Modules {
-		if len(m.Resources) > 0 {
-			if v, ok := m.Resources[resourceName]; ok {
-				rawState = v.Primary.Attributes
+// generateProjectImportIdForResource generates a project import ID based on the provided resource name
+// and the attributes in the Terraform state.
+//
+// This function takes a resource name as input and returns a function of type `resource.ImportStateIdFunc`.
+// The generated import ID is in the format "id=<value>,organization_id=<value>".
+func generateProjectImportIdForResource(resourceName string) resource.ImportStateIdFunc {
+	return func(state *terraform.State) (string, error) {
+		var rawState map[string]string
+		for _, m := range state.Modules {
+			if len(m.Resources) > 0 {
+				if v, ok := m.Resources[resourceName]; ok {
+					rawState = v.Primary.Attributes
+				}
 			}
 		}
+		fmt.Printf("raw state %s", rawState)
+		return fmt.Sprintf("id=%s,organization_id=%s", rawState["id"], rawState["organization_id"]), nil
 	}
-	fmt.Printf("raw state %s", rawState)
-	return fmt.Sprintf("id=%s,organization_id=%s", rawState["id"], rawState["organization_id"]), nil
 }

@@ -8,6 +8,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"terraform-provider-capella/internal/api"
 	clusterapi "terraform-provider-capella/internal/api/cluster"
 	"terraform-provider-capella/internal/errors"
@@ -66,7 +68,6 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 			Region: plan.CloudProvider.Region.ValueString(),
 			Type:   clusterapi.CloudProviderType(plan.CloudProvider.Type.ValueString()),
 		},
-		ConfigurationType: clusterapi.ConfigurationType(plan.ConfigurationType.ValueString()),
 		Support: clusterapi.Support{
 			Plan:     clusterapi.SupportPlan(plan.Support.Plan.ValueString()),
 			Timezone: clusterapi.SupportTimezone(plan.Support.Timezone.ValueString()),
@@ -77,11 +78,21 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		ClusterRequest.Description = plan.Description.ValueStringPointer()
 	}
 
-	if !plan.CouchbaseServer.Version.IsNull() && !plan.CouchbaseServer.Version.IsUnknown() {
-		version := plan.CouchbaseServer.Version.ValueString()
+	var couchbaseServer providerschema.CouchbaseServer
+	if !plan.CouchbaseServer.IsUnknown() && !plan.CouchbaseServer.IsNull() {
+		couchbaseServerAtt := getCouchbaseServer(ctx, req.Config, &resp.Diagnostics)
+		couchbaseServer = *couchbaseServerAtt
+	}
+
+	if !couchbaseServer.Version.IsNull() && !couchbaseServer.Version.IsUnknown() {
+		version := couchbaseServer.Version.ValueString()
 		ClusterRequest.CouchbaseServer = &clusterapi.CouchbaseServer{
 			Version: &version,
 		}
+	}
+
+	if !plan.ConfigurationType.IsNull() && !plan.ConfigurationType.IsUnknown() {
+		ClusterRequest.ConfigurationType = clusterapi.ConfigurationType(plan.ConfigurationType.ValueString())
 	}
 
 	serviceGroups, err := c.morphToApiServiceGroups(plan)
@@ -120,7 +131,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		c.Token,
 		nil,
 	)
-	_, err = handleClusterError(err)
+	_, err = HandleClusterError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
@@ -140,7 +151,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	}
 
 	err = c.checkClusterStatus(ctx, organizationId, projectId, ClusterResponse.Id.String())
-	_, err = handleClusterError(err)
+	_, err = HandleClusterError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
@@ -150,7 +161,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	}
 
 	refreshedState, err := c.retrieveCluster(ctx, organizationId, projectId, ClusterResponse.Id.String())
-	_, err = handleClusterError(err)
+	_, err = HandleClusterError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
@@ -164,9 +175,6 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 			refreshedState.ServiceGroups[i].Services = plan.ServiceGroups[i].Services
 		}
 	}
-
-	//need to have proper check since we are passing 7.1 and response is returning 7.1.5
-	c.populateInputServerVersionIfPresent(&plan, refreshedState)
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
@@ -222,7 +230,7 @@ func (c *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 
 	// Get refreshed Cluster value from Capella
 	refreshedState, err := c.retrieveCluster(ctx, organizationId, projectId, clusterId)
-	resourceNotFound, err := handleClusterError(err)
+	resourceNotFound, err := HandleClusterError(err)
 	if resourceNotFound {
 		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
 		resp.State.RemoveResource(ctx)
@@ -243,9 +251,6 @@ func (c *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 			}
 		}
 	}
-
-	//need to have proper check since we are passing 7.1 and response is returning 7.1.5
-	c.populateInputServerVersionIfPresent(&state, refreshedState)
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &refreshedState)
@@ -325,7 +330,7 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		c.Token,
 		headers,
 	)
-	_, err = handleClusterError(err)
+	_, err = HandleClusterError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
@@ -335,7 +340,7 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 	}
 
 	err = c.checkClusterStatus(ctx, organizationId, projectId, clusterId)
-	_, err = handleClusterError(err)
+	_, err = HandleClusterError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
@@ -345,7 +350,7 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 	}
 
 	currentState, err := c.retrieveCluster(ctx, organizationId, projectId, clusterId)
-	_, err = handleClusterError(err)
+	_, err = HandleClusterError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
@@ -364,8 +369,6 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		}
 	}
 
-	//need to have proper check since we are passing 7.1 and response is returning 7.1.5
-	c.populateInputServerVersionIfPresent(&state, currentState)
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, currentState)
 	resp.Diagnostics.Append(diags...)
@@ -407,7 +410,7 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 		r.Token,
 		nil,
 	)
-	resourceNotFound, err := handleClusterError(err)
+	resourceNotFound, err := HandleClusterError(err)
 	if resourceNotFound {
 		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
 		return
@@ -421,7 +424,7 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 	}
 
 	err = r.checkClusterStatus(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
-	resourceNotFound, err = handleClusterError(err)
+	resourceNotFound, err = HandleClusterError(err)
 	switch err {
 	case nil:
 		// This case will only occur when cluster deletion has failed,
@@ -624,16 +627,6 @@ func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]cluste
 	return newServiceGroups, nil
 }
 
-// need to have proper check since we are passing 7.1 and response is returning 7.1.5
-func (c *Cluster) populateInputServerVersionIfPresent(stateOrPlanCluster *providerschema.Cluster, refreshStateCluster *providerschema.Cluster) {
-	if stateOrPlanCluster.CouchbaseServer != nil &&
-		refreshStateCluster.CouchbaseServer != nil &&
-		!stateOrPlanCluster.CouchbaseServer.Version.IsNull() &&
-		!stateOrPlanCluster.CouchbaseServer.Version.IsUnknown() {
-		refreshStateCluster.CouchbaseServer.Version = stateOrPlanCluster.CouchbaseServer.Version
-	}
-}
-
 // validateClusterUpdate checks if specific fields in a cluster can be updated and returns an error if not.
 func (c *Cluster) validateClusterUpdate(plan, state providerschema.Cluster) error {
 	var planOrganizationId, stateOrganizationId string
@@ -660,18 +653,6 @@ func (c *Cluster) validateClusterUpdate(plan, state providerschema.Cluster) erro
 
 	if planProjectId != stateProjectId {
 		return errors.ErrUnableToUpdateProjectId
-	}
-
-	var planCouchbaseServerVersion, stateCouchbaseServerVersion string
-	if plan.CouchbaseServer != nil && !plan.CouchbaseServer.Version.IsNull() {
-		planCouchbaseServerVersion = plan.CouchbaseServer.Version.ValueString()
-	}
-	if state.CouchbaseServer != nil && !state.CouchbaseServer.Version.IsNull() {
-		stateCouchbaseServerVersion = state.CouchbaseServer.Version.ValueString()
-	}
-
-	if planCouchbaseServerVersion != stateCouchbaseServerVersion {
-		return errors.ErrUnableToUpdateServerVersion
 	}
 
 	var planAvailabilityType, stateAvailabilityType string
@@ -701,9 +682,17 @@ func (c *Cluster) validateClusterUpdate(plan, state providerschema.Cluster) erro
 	return nil
 }
 
-// this func extract error message if error is api.Error and also checks whether error is
+// this function converts types.Object field to couchbaseServer field
+func getCouchbaseServer(ctx context.Context, config tfsdk.Config, diags *diag.Diagnostics) *providerschema.CouchbaseServer {
+	var couchbaseServer *providerschema.CouchbaseServer
+	diags.Append(config.GetAttribute(ctx, path.Root("couchbase_server"), &couchbaseServer)...)
+	tflog.Info(ctx, fmt.Sprintf("couchbase_server: %+v", couchbaseServer))
+	return couchbaseServer
+}
+
+// HandleClusterError extracts error message if error is api.Error and also checks whether error is
 // resource not found
-func handleClusterError(err error) (bool, error) {
+func HandleClusterError(err error) (bool, error) {
 	switch err := err.(type) {
 	case nil:
 		return false, nil
