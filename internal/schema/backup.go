@@ -11,48 +11,6 @@ import (
 	"terraform-provider-capella/internal/errors"
 )
 
-// BackupStats has the backup level stats provided by Couchbase.
-type BackupStats struct {
-	// SizeInMB represents backup size in megabytes.
-	SizeInMB types.Float64 `tfsdk:"size_in_mb"`
-
-	// Items is the number of items saved during the backup.
-	Items types.Int64 `tfsdk:"items"`
-
-	// Mutations is the number of mutations saved during the backup.
-	Mutations types.Int64 `tfsdk:"mutations"`
-
-	// Tombstones is the number of tombstones saved during the backup.
-	Tombstones types.Int64 `tfsdk:"tombstones"`
-
-	// GSI is the number of global secondary indexes saved during the backup.
-	GSI types.Int64 `tfsdk:"gsi"`
-
-	// FTS is the number of full text search entities saved during the backup.
-	FTS types.Int64 `tfsdk:"fts"`
-
-	// CBAS is the number of analytics entities saved during the backup.
-	CBAS types.Int64 `tfsdk:"cbas"`
-
-	// Event represents the number of event entities saved during the backup.
-	Event types.Int64 `tfsdk:"event"`
-}
-
-// ScheduleInfo provides schedule information of the backup
-type ScheduleInfo struct {
-	// BackupType represents whether the backup is a Weekly or Daily backup.
-	BackupType types.String `tfsdk:"backup_type"`
-
-	// BackupTime is the timestamp indicating the backup created time.
-	BackupTime types.String `tfsdk:"backup_time"`
-
-	// Increment represents interval in hours for incremental backup.
-	Increment types.Int64 `tfsdk:"increment"`
-
-	// Retention represents retention time in days.
-	Retention types.String `tfsdk:"retention"`
-}
-
 // Backup maps Backup resource schema data to the response received from V4 Capella Public API.
 type Backup struct {
 	// Id is a GUID4 identifier of the backup.
@@ -115,6 +73,48 @@ type Backup struct {
 
 	// WeeklySchedule represents the weekly schedule of the backup.
 	//WeeklySchedule WeeklySchedule `tfsdk:"weekly_schedule"`
+}
+
+// BackupStats has the backup level stats provided by Couchbase.
+type BackupStats struct {
+	// SizeInMB represents backup size in megabytes.
+	SizeInMB types.Float64 `tfsdk:"size_in_mb"`
+
+	// Items is the number of items saved during the backup.
+	Items types.Int64 `tfsdk:"items"`
+
+	// Mutations is the number of mutations saved during the backup.
+	Mutations types.Int64 `tfsdk:"mutations"`
+
+	// Tombstones is the number of tombstones saved during the backup.
+	Tombstones types.Int64 `tfsdk:"tombstones"`
+
+	// GSI is the number of global secondary indexes saved during the backup.
+	GSI types.Int64 `tfsdk:"gsi"`
+
+	// FTS is the number of full text search entities saved during the backup.
+	FTS types.Int64 `tfsdk:"fts"`
+
+	// CBAS is the number of analytics entities saved during the backup.
+	CBAS types.Int64 `tfsdk:"cbas"`
+
+	// Event represents the number of event entities saved during the backup.
+	Event types.Int64 `tfsdk:"event"`
+}
+
+// ScheduleInfo provides schedule information of the backup
+type ScheduleInfo struct {
+	// BackupType represents whether the backup is a Weekly or Daily backup.
+	BackupType types.String `tfsdk:"backup_type"`
+
+	// BackupTime is the timestamp indicating the backup created time.
+	BackupTime types.String `tfsdk:"backup_time"`
+
+	// Increment represents interval in hours for incremental backup.
+	Increment types.Int64 `tfsdk:"increment"`
+
+	// Retention represents retention time in days.
+	Retention types.String `tfsdk:"retention"`
 }
 
 // WeeklySchedule represents the weekly schedule of the backup.
