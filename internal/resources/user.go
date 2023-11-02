@@ -352,35 +352,38 @@ func handleProjectRoles(existingResources, proposedResources []providerschema.Re
 func handleResources(existingResources, proposedResources []providerschema.Resource) []api.PatchEntry {
 	entries := make([]api.PatchEntry, 0)
 
-	// Add resources present in the proposed state but not in existing
-	existingIDs := make(map[basetypes.StringValue]bool)
-	for _, existing := range existingResources {
-		existingIDs[existing.Id] = true
-		for _, proposed := range proposedResources {
-			if !existingIDs[proposed.Id] {
-				path := fmt.Sprintf("/resources/%s", proposed.Id.ValueString())
-				entries = append(entries, api.PatchEntry{
-					Op:    "add",
-					Path:  path,
-					Value: providerschema.ConvertResource(proposed),
-				})
-			}
+	// populate maps with existing and proposed resources
+	existingMap := make(map[basetypes.StringValue]providerschema.Resource)
+	proposedMap := make(map[basetypes.StringValue]providerschema.Resource)
+
+	for _, resource := range existingResources {
+		existingMap[resource.Id] = resource
+	}
+
+	for _, resource := range proposedResources {
+		proposedMap[resource.Id] = resource
+	}
+
+	// compare and construct patch entries
+	for _, resource := range proposedResources {
+		if _, exists := existingMap[resource.Id]; !exists {
+			path := fmt.Sprintf("/resources/%s", resource.Id.ValueString())
+			entries = append(entries, api.PatchEntry{
+				Op:    "add",
+				Path:  path,
+				Value: providerschema.ConvertResource(resource),
+			})
 		}
 	}
 
-	// Remove resources present in the existing state but not in proposed
-	proposedIDs := make(map[basetypes.StringValue]bool)
-	for _, proposed := range proposedResources {
-		proposedIDs[proposed.Id] = true
-		for _, existing := range existingResources {
-			if !proposedIDs[existing.Id] {
-				path := fmt.Sprintf("/resources/%s", existing.Id.ValueString())
-				entries = append(entries, api.PatchEntry{
-					Op:    "remove",
-					Path:  path,
-					Value: providerschema.ConvertResource(existing),
-				})
-			}
+	for _, resource := range existingResources {
+		if _, exists := proposedMap[resource.Id]; !exists {
+			path := fmt.Sprintf("/resources/%s", resource.Id.ValueString())
+			entries = append(entries, api.PatchEntry{
+				Op:    "remove",
+				Path:  path,
+				Value: providerschema.ConvertResource(resource),
+			})
 		}
 	}
 

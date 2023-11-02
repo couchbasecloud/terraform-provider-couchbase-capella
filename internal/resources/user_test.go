@@ -240,7 +240,8 @@ func Test_ConstructPatch(t *testing.T) {
 				OrganizationRoles: []basetypes.StringValue{organizationMember},
 				Resources: []providerschema.Resource{
 					{
-						Id: basetypes.NewStringValue("100"),
+						Id:   basetypes.NewStringValue("100"),
+						Type: basetypes.NewStringValue("project"),
 						Roles: []basetypes.StringValue{
 							projectViewer,
 							projectDataReaderWriter,
