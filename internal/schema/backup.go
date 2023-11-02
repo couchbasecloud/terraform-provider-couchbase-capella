@@ -181,51 +181,36 @@ func NewScheduleInfo(scheduleInfo backup.ScheduleInfo) ScheduleInfo {
 
 func NewBackup(ctx context.Context, backup *backup.GetBackupResponse,
 	organizationId, projectId string,
+	bStatsObj, sInfoObj basetypes.ObjectValue,
 ) *Backup {
 
-	bStats := NewBackupStats(*backup.BackupStats)
-	bStatsObj, diags := types.ObjectValueFrom(ctx, bStats.AttributeTypes(), bStats)
-	if diags.HasError() {
-	}
-
-	sInfo := NewScheduleInfo(*backup.ScheduleInfo)
-	sInfoObj, diags := types.ObjectValueFrom(ctx, sInfo.AttributeTypes(), sInfo)
-	if diags.HasError() {
-	}
+	//bStats := NewBackupStats(*backup.BackupStats)
+	//bStatsObj, diags := types.ObjectValueFrom(ctx, bStats.AttributeTypes(), bStats)
+	//if diags.HasError() {
+	//}
+	//
+	//sInfo := NewScheduleInfo(*backup.ScheduleInfo)
+	//sInfoObj, diags := types.ObjectValueFrom(ctx, sInfo.AttributeTypes(), sInfo)
+	//if diags.HasError() {
+	//}
 
 	newBackup := Backup{
-		Id:             types.StringValue(backup.Id),
-		OrganizationId: types.StringValue(organizationId),
-		ProjectId:      types.StringValue(projectId),
-		ClusterId:      types.StringValue(backup.ClusterId),
-		CycleId:        types.StringValue(backup.CycleId),
-		Date:           types.StringValue(backup.Date),
-		RestoreBefore:  types.StringValue(backup.RestoreBefore),
-		Status:         types.StringValue(string(backup.Status)),
-		Method:         types.StringValue(backup.Method),
-		BucketName:     types.StringValue(backup.BucketName),
-		BucketId:       types.StringValue(backup.BucketId),
-		Source:         types.StringValue(backup.Source),
-		CloudProvider:  types.StringValue(backup.CloudProvider),
-		BackupStats:    bStatsObj,
-		ScheduleInfo:   sInfoObj,
-		//BackupStats: BackupStats{
-		//	SizeInMB:   types.Float64Value(backup.BackupStats.SizeInMB),
-		//	Items:      types.Int64Value(backup.BackupStats.Items),
-		//	Mutations:  types.Int64Value(backup.BackupStats.Mutations),
-		//	Tombstones: types.Int64Value(backup.BackupStats.Tombstones),
-		//	GSI:        types.Int64Value(backup.BackupStats.GSI),
-		//	FTS:        types.Int64Value(backup.BackupStats.FTS),
-		//	CBAS:       types.Int64Value(backup.BackupStats.CBAS),
-		//	Event:      types.Int64Value(backup.BackupStats.Event),
-		//},
+		Id:                   types.StringValue(backup.Id),
+		OrganizationId:       types.StringValue(organizationId),
+		ProjectId:            types.StringValue(projectId),
+		ClusterId:            types.StringValue(backup.ClusterId),
+		CycleId:              types.StringValue(backup.CycleId),
+		Date:                 types.StringValue(backup.Date),
+		RestoreBefore:        types.StringValue(backup.RestoreBefore),
+		Status:               types.StringValue(string(backup.Status)),
+		Method:               types.StringValue(backup.Method),
+		BucketName:           types.StringValue(backup.BucketName),
+		BucketId:             types.StringValue(backup.BucketId),
+		Source:               types.StringValue(backup.Source),
+		CloudProvider:        types.StringValue(backup.CloudProvider),
+		BackupStats:          bStatsObj,
+		ScheduleInfo:         sInfoObj,
 		ElapsedTimeInSeconds: types.Int64Value(backup.ElapsedTimeInSeconds),
-		//ScheduleInfo: ScheduleInfo{
-		//	BackupType: types.StringValue(backup.ScheduleInfo.BackupType),
-		//	BackupTime: types.StringValue(backup.ScheduleInfo.BackupTime),
-		//	Increment:  types.Int64Value(backup.ScheduleInfo.Increment),
-		//	Retention:  types.StringValue(backup.ScheduleInfo.Retention),
-		//},
 		//	Type: types.StringValue(backup.Type),
 		/*	WeeklySchedule: WeeklySchedule{
 			DayOfWeek:              types.StringValue(backup.WeeklySchedule.DayOfWeek),

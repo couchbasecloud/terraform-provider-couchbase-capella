@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"net/http"
 	backupapi "terraform-provider-capella/internal/api/backup"
@@ -103,16 +104,28 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	}
 
 	BackupResponse, err := b.checkLatestBackupStatus(ctx, organizationId, projectId, clusterId, bucketId, backupFound, latestBackup)
-	//err = json.Unmarshal(response.Body, BackupResponse)
-	//if err != nil {
-	//	resp.Diagnostics.AddError(
-	//		"Error creating backup",
-	//		"Could not create backup, error during unmarshalling:"+err.Error(),
-	//	)
-	//	return
-	//}
 
-	refreshedState := providerschema.NewBackup(ctx, BackupResponse, organizationId, projectId)
+	bStats := providerschema.NewBackupStats(*BackupResponse.BackupStats)
+	bStatsObj, diags := types.ObjectValueFrom(ctx, bStats.AttributeTypes(), bStats)
+	if diags.HasError() {
+		resp.Diagnostics.AddError(
+			"Error listing ApiKeys",
+			fmt.Sprintf("Could not list api keys, unexpected error: %s", fmt.Errorf("error while audit conversion")),
+		)
+		return
+	}
+
+	sInfo := providerschema.NewScheduleInfo(*BackupResponse.ScheduleInfo)
+	sInfoObj, diags := types.ObjectValueFrom(ctx, sInfo.AttributeTypes(), sInfo)
+	if diags.HasError() {
+		resp.Diagnostics.AddError(
+			"Error listing ApiKeys",
+			fmt.Sprintf("Could not list api keys, unexpected error: %s", fmt.Errorf("error while audit conversion")),
+		)
+		return
+	}
+
+	refreshedState := providerschema.NewBackup(ctx, BackupResponse, organizationId, projectId, bStatsObj, sInfoObj)
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
