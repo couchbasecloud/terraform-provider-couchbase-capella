@@ -160,7 +160,7 @@ func (r *User) Read(ctx context.Context, req resource.ReadRequest, resp *resourc
 	}
 
 	// Validate parameters were successfully imported
-	resourceIDs, err := state.Validate()
+	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella AllowList",
@@ -170,8 +170,8 @@ func (r *User) Read(ctx context.Context, req resource.ReadRequest, resp *resourc
 	}
 
 	var (
-		organizationId = resourceIDs[organizationIdKey]
-		userId         = resourceIDs[userIdKey]
+		organizationId = IDs[providerschema.OrganizationId]
+		userId         = IDs[providerschema.Id]
 	)
 
 	// Refresh the existing user
@@ -229,7 +229,7 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 		return
 	}
 
-	resourceIDs, err := state.Validate()
+	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Deleting Capella User",
@@ -237,13 +237,19 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 		)
 		return
 	}
+
+	var (
+		organizationId = IDs[providerschema.OrganizationId]
+		userId         = IDs[providerschema.Id]
+	)
+
 	// Execute request to delete existing user
 	_, err = r.Client.Execute(
 		fmt.Sprintf(
 			"%s/v4/organizations/%s/users/%s",
 			r.HostURL,
-			resourceIDs[organizationIdKey],
-			resourceIDs[userIdKey],
+			organizationId,
+			userId,
 		),
 		http.MethodDelete,
 		nil,
@@ -256,7 +262,7 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 		if err.HttpStatusCode != http.StatusNotFound {
 			resp.Diagnostics.AddError(
 				"Error Deleting Capella User",
-				"Could not delete Capella userId "+resourceIDs[userIdKey]+": "+err.CompleteError(),
+				"Could not delete Capella userId "+userId+": "+err.CompleteError(),
 			)
 			tflog.Info(ctx, "resource doesn't exist in remote server")
 			return
@@ -264,7 +270,7 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 	default:
 		resp.Diagnostics.AddError(
 			"Error Deleting Capella User",
-			"Could not delete Capella userId "+resourceIDs[userIdKey]+": "+err.Error(),
+			"Could not delete Capella userId "+userId+": "+err.Error(),
 		)
 		return
 	}

@@ -113,12 +113,3 @@ type RotateApiKeyResponse struct {
 	// The API key is made of an Access key and a Secret key.
 	SecretKey string `json:"secretKey"`
 }
-
-// GetApiKeysResponse is the response received from the Capella V4 Public API when asked to list all API keys in an organization.
-//
-// Organization Owners can list all the API keys inside the Organization.
-// Organization Members and Project Creators can list all the Project scoped API key for which they are Project Owner.
-// To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
-type GetApiKeysResponse struct {
-	Data []GetApiKeyResponse `json:"data"`
-}
