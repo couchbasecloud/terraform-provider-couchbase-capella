@@ -323,14 +323,14 @@ func handleProjectRoles(existingResources, proposedResources []providerschema.Re
 
 	for _, resource := range existingResources {
 		if resource.Type.ValueString() != "project" {
-			break
+			continue
 		}
 		existingMap[resource.Id] = resource.Roles
 	}
 
 	for _, resource := range proposedResources {
 		if resource.Type.ValueString() != "project" {
-			break
+			continue
 		}
 		proposedMap[resource.Id] = resource.Roles
 	}
