@@ -113,6 +113,13 @@ type GetUserResponse struct {
 	Audit CouchbaseAuditData `json:"audit"`
 }
 
+type Op string
+
+const (
+	Add    Op = "add"
+	Remove Op = "remove"
+)
+
 type PatchEntry struct {
 	// Op is the type of operation
 	//
