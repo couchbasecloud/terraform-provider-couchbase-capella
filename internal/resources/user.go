@@ -10,7 +10,7 @@ import (
 	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
 
-	tcslices "github.com/couchbase/tools-common/functional/slices"
+	"github.com/couchbase/tools-common/functional/slices"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -401,10 +401,10 @@ func handleResources(existingResources, proposedResources []providerschema.Resou
 // and determine which values should be added and which should be removed.
 func compare(existing, proposed []basetypes.StringValue) ([]basetypes.StringValue, []basetypes.StringValue) {
 	// Add values present in the proposed state but not in existing.
-	add := tcslices.Difference(proposed, existing)
+	add := slices.Difference(proposed, existing)
 
 	// Remove values present in the existing state but not in removed.
-	remove := tcslices.Difference(existing, proposed)
+	remove := slices.Difference(existing, proposed)
 
 	return add, remove
 }
