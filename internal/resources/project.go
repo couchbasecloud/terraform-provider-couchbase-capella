@@ -92,7 +92,7 @@ func (r *Project) Create(ctx context.Context, req resource.CreateRequest, resp *
 		nil,
 	)
 	if err != nil {
-		_, err := CheckApiError(err)
+		_, err := ParseApiError(err)
 		resp.Diagnostics.AddError(
 			"Error creating project",
 			"Could not create project, unexpected error: "+err,
@@ -111,7 +111,7 @@ func (r *Project) Create(ctx context.Context, req resource.CreateRequest, resp *
 
 	refreshedState, err := r.retrieveProject(ctx, organizationId, projectResponse.Id.String())
 	if err != nil {
-		_, err := CheckApiError(err)
+		_, err := ParseApiError(err)
 		resp.Diagnostics.AddError(
 			"Error creating project",
 			"Could not create project, unexpected error: "+err,
@@ -228,7 +228,7 @@ func (r *Project) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		headers,
 	)
 	if err != nil {
-		_, err := CheckApiError(err)
+		_, err := ParseApiError(err)
 		resp.Diagnostics.AddError(
 			"Error Updating Capella Projects",
 			"Could not update Capella project ID "+state.Id.String()+": "+err,

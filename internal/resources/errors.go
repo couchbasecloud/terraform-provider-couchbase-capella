@@ -6,9 +6,9 @@ import (
 	"terraform-provider-capella/internal/api"
 )
 
-// CheckApiError is used to check if an error is of type
+// ParseApiError is used to check if an error is of type
 // api.Error error and return it as a string.
-func CheckApiError(err error) (bool, string) {
+func ParseApiError(err error) (bool, string) {
 	var apiErr *api.Error
 
 	if errors.As(err, &apiErr) {
