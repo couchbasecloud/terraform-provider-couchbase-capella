@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"net/http"
 	"terraform-provider-capella/internal/api"
 	backupapi "terraform-provider-capella/internal/api/backup"
@@ -194,13 +195,58 @@ func (b *Backup) Update(ctx context.Context, request resource.UpdateRequest, res
 }
 
 // Delete deletes the backup.
-func (b *Backup) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	//TODO implement me https://couchbasecloud.atlassian.net/browse/AV-66712
+func (b *Backup) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	// Retrieve values from state
+	var state providerschema.Backup
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceIDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error deleting backup",
+			"Could not delete backup id "+state.Id.String()+" unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	var (
+		organizationId = resourceIDs[providerschema.OrganizationId]
+		projectId      = resourceIDs[providerschema.ProjectId]
+		clusterId      = resourceIDs[providerschema.ClusterId]
+		backupId       = resourceIDs[providerschema.Id]
+	)
+
+	// Delete existing Backup
+	_, err = b.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/backups/%s", b.HostURL, organizationId, projectId, clusterId, backupId),
+		http.MethodDelete,
+		nil,
+		b.Token,
+		nil,
+	)
+
+	resourceNotFound, err := handleBackupError(err)
+	if resourceNotFound {
+		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+		return
+	}
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error deleting backup",
+			"Could not delete backup id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
 }
 
 // ImportState imports a remote backup that is not created by Terraform.
-func (b *Backup) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	//TODO implement me https://couchbasecloud.atlassian.net/browse/AV-66714
+func (b *Backup) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	// Retrieve import ID and save to id attribute
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 // Configure adds the provider configured api to the backup resource.
