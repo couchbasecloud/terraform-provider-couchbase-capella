@@ -271,7 +271,7 @@ func (b *Backup) checkLatestBackupStatus(ctx context.Context, organizationId, pr
 				// If a backup record exists already, wait for a backup record with a new ID to created.
 				if !backupFound && backupResp != nil && backupapi.IsFinalState(backupResp.Status) {
 					return backupResp, nil
-				} else if backupFound && backupResp != nil && latestBackup.Id == backupResp.Id && backupapi.IsFinalState(backupResp.Status) {
+				} else if backupFound && backupResp != nil && latestBackup.Id != backupResp.Id && backupapi.IsFinalState(backupResp.Status) {
 					return backupResp, nil
 				}
 				const msg = "waiting for backup to complete the execution"

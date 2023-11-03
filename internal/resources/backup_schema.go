@@ -18,7 +18,7 @@ func BackupSchema() schema.Schema {
 			"organization_id": stringAttribute(required),
 			"project_id":      stringAttribute(required),
 			"cluster_id":      stringAttribute(required),
-			"bucket_id":       stringAttribute(required),
+			"bucket_id":       stringAttribute(required, requiresReplace),
 			"cycle_id":        stringAttribute(computed),
 			"date":            stringAttribute(computed),
 			"restore_before":  stringAttribute(optional, computed),

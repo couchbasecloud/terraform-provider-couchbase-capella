@@ -31,6 +31,7 @@ variable "backup" {
   })
 }
 
+# ToDo Required for Backup Schedule, tracking under -https://couchbasecloud.atlassian.net/browse/AV-66698
 variable "weekly_schedule" {
   description = ""
 
