@@ -270,20 +270,9 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 func constructPatch(existing, proposed providerschema.User) []api.PatchEntry {
 	patch := make([]api.PatchEntry, 0)
 
-	orgRoleEntries := handleOrganizationRoles(existing.OrganizationRoles, proposed.OrganizationRoles)
-	for _, entry := range orgRoleEntries {
-		patch = append(patch, entry)
-	}
-
-	projRoleEntries := handleProjectRoles(existing.Resources, proposed.Resources)
-	for _, entry := range projRoleEntries {
-		patch = append(patch, entry)
-	}
-
-	resourceEntries := handleResources(existing.Resources, proposed.Resources)
-	for _, entry := range resourceEntries {
-		patch = append(patch, entry)
-	}
+	patch = append(patch, handleOrganizationRoles(existing.OrganizationRoles, proposed.OrganizationRoles)...)
+	patch = append(patch, handleProjectRoles(existing.Resources, proposed.Resources)...)
+	patch = append(patch, handleResources(existing.Resources, proposed.Resources)...)
 
 	return patch
 }
