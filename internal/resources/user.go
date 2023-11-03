@@ -350,7 +350,7 @@ func handleProjectRoles(existingResources, proposedResources []providerschema.Re
 	return entries
 }
 
-// handleResources is used to compare the projectRoles contained within
+// handleResources is used to compare the resources contained within
 // two states and construct patch entries to reflect their differences.
 func handleResources(existingResources, proposedResources []providerschema.Resource) []api.PatchEntry {
 	entries := make([]api.PatchEntry, 0)
