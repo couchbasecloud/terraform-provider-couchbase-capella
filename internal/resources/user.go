@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"golang.org/x/exp/slices"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -403,30 +404,19 @@ func compare(existing, proposed []basetypes.StringValue) ([]string, []string) {
 
 	// Remove values present in the existing state but not in removed.
 	for _, item := range existing {
-		if !contains(proposed, item) {
+		if !slices.Contains(proposed, item) {
 			remove = append(remove, item.ValueString())
 		}
 	}
 
 	// Add values present in the proposed state but not in existing.
 	for _, item := range proposed {
-		if !contains(existing, item) {
+		if !slices.Contains(existing, item) {
 			add = append(add, item.ValueString())
 		}
 	}
 
 	return add, remove
-}
-
-// contains is used to check whether a supplied value is
-// present in a slice of the values type.
-func contains(items []basetypes.StringValue, value basetypes.StringValue) bool {
-	for _, item := range items {
-		if value.ValueString() == item.ValueString() {
-			return true
-		}
-	}
-	return false
 }
 
 // updateUser is used to execute the patch request to update a user.
