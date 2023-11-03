@@ -10,12 +10,13 @@ import (
 	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
 
+	tcslices "github.com/couchbase/tools-common/functional/slices"
+
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"golang.org/x/exp/slices"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -84,7 +85,7 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 	createUserRequest := api.CreateUserRequest{
 		Name:              plan.Name.ValueString(),
 		Email:             plan.Email.ValueString(),
-		OrganizationRoles: providerschema.ConvertOrganizationRoles(plan.OrganizationRoles),
+		OrganizationRoles: providerschema.ConvertRoles(plan.OrganizationRoles),
 		Resources:         providerschema.ConvertResources(plan.Resources),
 	}
 
@@ -286,16 +287,18 @@ func handleOrganizationRoles(existingRoles, proposedRoles []basetypes.StringValu
 	// Handle changes to organizationRoles
 	addRoles, removeRoles := compare(existingRoles, proposedRoles)
 	if len(addRoles) > 0 {
+		providerschema.ConvertRoles(addRoles)
 		entries = append(entries, api.PatchEntry{
 			Op:    "add",
 			Path:  "/organizationRoles",
-			Value: append(addRoles)})
+			Value: providerschema.ConvertRoles(addRoles),
+		})
 	}
 	if len(removeRoles) > 0 {
 		entries = append(entries, api.PatchEntry{
 			Op:    "remove",
 			Path:  "/organizationRoles",
-			Value: removeRoles,
+			Value: providerschema.ConvertRoles(removeRoles),
 		})
 	}
 
@@ -396,25 +399,12 @@ func handleResources(existingResources, proposedResources []providerschema.Resou
 
 // compare is used to compare two slices of basetypes.stringvalue
 // and determine which values should be added and which should be removed.
-func compare(existing, proposed []basetypes.StringValue) ([]string, []string) {
-	var (
-		add    []string
-		remove []string
-	)
+func compare(existing, proposed []basetypes.StringValue) ([]basetypes.StringValue, []basetypes.StringValue) {
+	// Add values present in the proposed state but not in existing.
+	add := tcslices.Difference(proposed, existing)
 
 	// Remove values present in the existing state but not in removed.
-	for _, item := range existing {
-		if !slices.Contains(proposed, item) {
-			remove = append(remove, item.ValueString())
-		}
-	}
-
-	// Add values present in the proposed state but not in existing.
-	for _, item := range proposed {
-		if !slices.Contains(existing, item) {
-			add = append(add, item.ValueString())
-		}
-	}
+	remove := tcslices.Difference(existing, proposed)
 
 	return add, remove
 }
@@ -548,7 +538,7 @@ func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (
 		types.StringValue(userResp.Status),
 		types.BoolValue(userResp.Inactive),
 		types.StringValue(userResp.OrganizationId.String()),
-		providerschema.MorphOrganizationRoles(userResp.OrganizationRoles),
+		providerschema.MorphRoles(userResp.OrganizationRoles),
 		types.StringValue(userResp.LastLogin),
 		types.StringValue(userResp.Region),
 		types.StringValue(userResp.TimeZone),

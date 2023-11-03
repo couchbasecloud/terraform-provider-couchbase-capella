@@ -126,23 +126,23 @@ func (u *User) Validate() (map[Attr]string, error) {
 	return IDs, nil
 }
 
-// MorphOrganizationRoles is used to convert nested organizationRoles from
+// MorphRoles is used to convert nested organizationRoles from
 // strings to terraform type.String.
 // TODO (AV-53457): add unit testing
-func MorphOrganizationRoles(organizationRoles []string) []basetypes.StringValue {
+func MorphRoles(roles []string) []basetypes.StringValue {
 	var morphedRoles []basetypes.StringValue
-	for _, role := range organizationRoles {
+	for _, role := range roles {
 		morphedRoles = append(morphedRoles, types.StringValue(role))
 	}
 	return morphedRoles
 }
 
-// ConvertOrganizationRoles is used to convert all roles
+// ConvertRoles is used to convert all roles
 // in an array of basetypes.StringValue to strings.
 // TODO (AV-53457): add unit testing
-func ConvertOrganizationRoles(organizationRoles []basetypes.StringValue) []string {
+func ConvertRoles(roles []basetypes.StringValue) []string {
 	var convertedRoles []string
-	for _, role := range organizationRoles {
+	for _, role := range roles {
 		convertedRoles = append(convertedRoles, role.ValueString())
 	}
 	return convertedRoles

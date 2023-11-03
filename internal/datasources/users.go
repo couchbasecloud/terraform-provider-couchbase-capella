@@ -184,7 +184,7 @@ func (d *Users) mapResponseBody(
 			types.StringValue(userResp.Status),
 			types.BoolValue(userResp.Inactive),
 			types.StringValue(userResp.OrganizationId.String()),
-			providerschema.MorphOrganizationRoles(userResp.OrganizationRoles),
+			providerschema.MorphRoles(userResp.OrganizationRoles),
 			types.StringValue(userResp.LastLogin),
 			types.StringValue(userResp.Region),
 			types.StringValue(userResp.TimeZone),
