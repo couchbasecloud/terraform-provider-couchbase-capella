@@ -322,14 +322,16 @@ func handleProjectRoles(existingResources, proposedResources []providerschema.Re
 	proposedMap := make(map[basetypes.StringValue][]basetypes.StringValue)
 
 	for _, resource := range existingResources {
-		if resource.Type.ValueString() != "project" {
+		resourceType := resource.Type.ValueString()
+		if resourceType != "" && resourceType != "project" {
 			continue
 		}
 		existingMap[resource.Id] = resource.Roles
 	}
 
 	for _, resource := range proposedResources {
-		if resource.Type.ValueString() != "project" {
+		resourceType := resource.Type.ValueString()
+		if resourceType != "" && resource.Type.ValueString() != "project" {
 			continue
 		}
 		proposedMap[resource.Id] = resource.Roles

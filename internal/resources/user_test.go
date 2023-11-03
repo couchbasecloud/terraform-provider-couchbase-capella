@@ -112,7 +112,6 @@ func Test_ConstructPatch(t *testing.T) {
 				},
 			},
 		},
-
 		{
 			name: "[POSITIVE] - Successfully add a project role",
 			existingSchema: providerschema.User{
@@ -187,7 +186,42 @@ func Test_ConstructPatch(t *testing.T) {
 				},
 			},
 		},
-
+		{
+			name: "[POSITIVE] - Remove a project role with type omitted",
+			existingSchema: providerschema.User{
+				OrganizationRoles: []basetypes.StringValue{organizationMember},
+				Resources: []providerschema.Resource{
+					{
+						Id:   basetypes.NewStringValue("100"),
+						Type: basetypes.NewStringValue("project"),
+						Roles: []basetypes.StringValue{
+							projectViewer,
+							projectDataReaderWriter,
+						},
+					},
+				},
+			},
+			proposedSchema: providerschema.User{
+				OrganizationRoles: []basetypes.StringValue{organizationMember},
+				Resources: []providerschema.Resource{
+					{
+						Id: basetypes.NewStringValue("100"),
+						Roles: []basetypes.StringValue{
+							projectViewer,
+						},
+					},
+				},
+			},
+			expectedPatch: []api.PatchEntry{
+				{
+					Op:   remove,
+					Path: "/resources/100/roles",
+					Value: []string{
+						projectDataReaderWriter.ValueString(),
+					},
+				},
+			},
+		},
 		{
 			name: "[POSITIVE] - Successfully add a resource",
 			existingSchema: providerschema.User{
