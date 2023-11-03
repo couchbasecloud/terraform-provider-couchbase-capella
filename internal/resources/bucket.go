@@ -412,20 +412,12 @@ func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 	}
 
 	currentState, err := c.retrieveBucket(ctx, organizationId, projectId, clusterId, bucketId)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
+		err := CheckApiError(err)
 		resp.Diagnostics.AddError(
 			"Error updating bucket",
-			"Could not update Capella bucket with ID "+bucketId+": "+err.CompleteError(),
+			"Could not update Capella bucket with ID "+bucketId+": "+err,
 		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error updating bucket",
-			"Could not update Capella bucket with ID "+bucketId+": "+err.Error(),
-		)
-		return
 	}
 
 	// Set state to fully populated data

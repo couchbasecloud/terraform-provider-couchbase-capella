@@ -98,11 +98,11 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 		nil,
 	)
 	if err != nil {
+		err := CheckApiError(err)
 		resp.Diagnostics.AddError(
 			"Error executing request",
-			"Could not execute request, unexpected error: "+err.Error(),
+			"Could not execute request, unexpected error: "+err,
 		)
-		return
 	}
 
 	createUserResponse := api.CreateUserResponse{}
@@ -117,11 +117,11 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 
 	refreshedState, err := r.refreshUser(ctx, organizationId, createUserResponse.Id.String())
 	if err != nil {
+		err := CheckApiError(err)
 		resp.Diagnostics.AddError(
-			"Error reading user",
-			"Could not read user, unexpected error: "+err.Error(),
+			"Error executing request",
+			"Could not execute request, unexpected error: "+err,
 		)
-		return
 	}
 
 	// Set state to fully populated data
@@ -243,20 +243,12 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 	}
 
 	refreshedState, err := r.refreshUser(ctx, organizationId, userId)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
+		err := CheckApiError(err)
 		resp.Diagnostics.AddError(
 			"Error updating user",
-			"Could not update Capella user with ID "+userId+": "+err.CompleteError(),
+			"Could not update Capella user with ID "+userId+": "+err,
 		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error updating user",
-			"Could not update Capella user with ID "+userId+": "+err.Error(),
-		)
-		return
 	}
 
 	// Set state to fully populated data

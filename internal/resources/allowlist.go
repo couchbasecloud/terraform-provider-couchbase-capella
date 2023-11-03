@@ -106,20 +106,12 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 	}
 
 	refreshedState, err := r.refreshAllowList(ctx, plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), plan.ClusterId.ValueString(), allowListResponse.Id.String())
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
+		err := CheckApiError(err)
 		resp.Diagnostics.AddError(
 			"Error reading Capella AllowList",
-			"Could not read Capella AllowList "+allowListResponse.Id.String()+": "+err.CompleteError(),
+			"Could not read Capella AllowList "+allowListResponse.Id.String()+": "+err,
 		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error reading Capella AllowList",
-			"Could not read Capella AllowList "+allowListResponse.Id.String()+": "+err.Error(),
-		)
-		return
 	}
 
 	// Set state to fully populated data

@@ -281,37 +281,21 @@ func (r *DatabaseCredential) Update(ctx context.Context, req resource.UpdateRequ
 		r.Token,
 		nil,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
+		err := CheckApiError(err)
 		resp.Diagnostics.AddError(
 			"Error updating database credential",
-			"Could not update an existing database credential, unexpected error: "+err.CompleteError(),
+			"Could not update an existing database credential, unexpected error: "+err,
 		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error updating database credential",
-			"Could not update database credential, unexpected error: "+err.Error(),
-		)
-		return
 	}
 
 	currentState, err := r.retrieveDatabaseCredential(ctx, organizationId, projectId, clusterId, dbId)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
+		err := CheckApiError(err)
 		resp.Diagnostics.AddError(
-			"Error Reading Capella Database Credentials",
-			"Could not read Capella database credential with ID "+dbId+": "+err.CompleteError(),
+			"Error updating database credential",
+			"Could not update an existing database credential, unexpected error: "+err,
 		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error Reading Capella Database Credentials",
-			"Could not read Capella database credential with ID "+dbId+": "+err.Error(),
-		)
-		return
 	}
 
 	// this will ensure that the state file stores the new updated password, if password is not to be updated, it will retain the older one.

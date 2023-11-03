@@ -91,20 +91,12 @@ func (r *Project) Create(ctx context.Context, req resource.CreateRequest, resp *
 		r.Token,
 		nil,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
+		err := CheckApiError(err)
 		resp.Diagnostics.AddError(
 			"Error creating project",
-			"Could not create project, unexpected error: "+err.CompleteError(),
+			"Could not create project, unexpected error: "+err,
 		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error creating project",
-			"Could not create project, unexpected error: "+err.Error(),
-		)
-		return
 	}
 
 	projectResponse := api.GetProjectResponse{}
@@ -118,20 +110,12 @@ func (r *Project) Create(ctx context.Context, req resource.CreateRequest, resp *
 	}
 
 	refreshedState, err := r.retrieveProject(ctx, organizationId, projectResponse.Id.String())
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
+		err := CheckApiError(err)
 		resp.Diagnostics.AddError(
-			"Error Reading Capella Projects",
-			"Could not read Capella project ID "+projectResponse.Id.String()+": "+err.CompleteError(),
+			"Error creating project",
+			"Could not create project, unexpected error: "+err,
 		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error Reading Capella Projects",
-			"Could not read Capella project ID "+projectResponse.Id.String()+": "+err.Error(),
-		)
-		return
 	}
 
 	// Set state to fully populated data
@@ -243,20 +227,12 @@ func (r *Project) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		r.Token,
 		headers,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
+		err := CheckApiError(err)
 		resp.Diagnostics.AddError(
 			"Error Updating Capella Projects",
-			"Could not update Capella project ID "+state.Id.String()+": "+err.CompleteError(),
+			"Could not update Capella project ID "+state.Id.String()+": "+err,
 		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error Updating Capella Projects",
-			"Could not update Capella project ID "+state.Id.String()+": "+err.Error(),
-		)
-		return
 	}
 
 	currentState, err := r.retrieveProject(ctx, organizationId, projectId)
