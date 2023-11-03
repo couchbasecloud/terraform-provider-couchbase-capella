@@ -339,14 +339,14 @@ func handleProjectRoles(existingResources, proposedResources []providerschema.Re
 				entries = append(entries, api.PatchEntry{
 					Op:    "add",
 					Path:  path,
-					Value: addRoles,
+					Value: providerschema.ConvertRoles(addRoles),
 				})
 			}
 			if len(removeRoles) > 0 {
 				entries = append(entries, api.PatchEntry{
 					Op:    "remove",
 					Path:  path,
-					Value: removeRoles,
+					Value: providerschema.ConvertRoles(removeRoles),
 				})
 			}
 		}

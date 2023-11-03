@@ -29,7 +29,6 @@ func Test_ConstructPatch(t *testing.T) {
 	}
 
 	tests := []test{
-
 		{
 			name: "[POSITIVE] - Successfully add an organization role",
 			existingSchema: providerschema.User{
