@@ -211,7 +211,7 @@ func (r *DatabaseCredential) Read(ctx context.Context, req resource.ReadRequest,
 
 	// Get refreshed Cluster value from Capella
 	refreshedState, err := r.retrieveDatabaseCredential(ctx, organizationId, projectId, clusterId, dbId)
-	resourceNotFound, err := CheckResourceNotFoundError(err)
+	resourceNotFound, clientErr := CheckResourceNotFoundError(err)
 	if resourceNotFound {
 		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
 		resp.State.RemoveResource(ctx)
@@ -220,7 +220,7 @@ func (r *DatabaseCredential) Read(ctx context.Context, req resource.ReadRequest,
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading database credential",
-			"Could not read database credential with id "+state.Id.String()+": "+err.Error(),
+			"Could not read database credential with id "+state.Id.String()+": "+clientErr,
 		)
 		return
 	}
@@ -282,7 +282,7 @@ func (r *DatabaseCredential) Update(ctx context.Context, req resource.UpdateRequ
 		nil,
 	)
 	if err != nil {
-		err := CheckApiError(err)
+		_, err := CheckApiError(err)
 		resp.Diagnostics.AddError(
 			"Error updating database credential",
 			"Could not update an existing database credential, unexpected error: "+err,
@@ -291,7 +291,7 @@ func (r *DatabaseCredential) Update(ctx context.Context, req resource.UpdateRequ
 
 	currentState, err := r.retrieveDatabaseCredential(ctx, organizationId, projectId, clusterId, dbId)
 	if err != nil {
-		err := CheckApiError(err)
+		_, err := CheckApiError(err)
 		resp.Diagnostics.AddError(
 			"Error updating database credential",
 			"Could not update an existing database credential, unexpected error: "+err,

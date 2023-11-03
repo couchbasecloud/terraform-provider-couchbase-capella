@@ -118,11 +118,11 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		c.Token,
 		nil,
 	)
-	_, err = CheckResourceNotFoundError(err)
 	if err != nil {
+		_, errString := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
-			"Could not create cluster, unexpected error: "+err.Error(),
+			"Could not create cluster, unexpected error: "+errString,
 		)
 		return
 	}
@@ -138,21 +138,21 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	}
 
 	err = c.checkClusterStatus(ctx, organizationId, projectId, ClusterResponse.Id.String())
-	_, err = CheckResourceNotFoundError(err)
 	if err != nil {
+		_, errString := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
-			"Could not create cluster, unexpected error: "+err.Error(),
+			"Could not create cluster, unexpected error: "+errString,
 		)
 		return
 	}
 
 	refreshedState, err := c.retrieveCluster(ctx, organizationId, projectId, ClusterResponse.Id.String())
-	_, err = CheckResourceNotFoundError(err)
 	if err != nil {
+		_, errString := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
-			"Could not create cluster, unexpected error: "+err.Error(),
+			"Could not create cluster, unexpected error: "+errString,
 		)
 		return
 	}
@@ -220,7 +220,7 @@ func (c *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 
 	// Get refreshed Cluster value from Capella
 	refreshedState, err := c.retrieveCluster(ctx, organizationId, projectId, clusterId)
-	resourceNotFound, err := CheckResourceNotFoundError(err)
+	resourceNotFound, clientErr := CheckResourceNotFoundError(err)
 	if resourceNotFound {
 		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
 		resp.State.RemoveResource(ctx)
@@ -229,7 +229,7 @@ func (c *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading cluster",
-			"Could not read cluster id "+state.Id.String()+": "+err.Error(),
+			"Could not read cluster id "+state.Id.String()+": "+clientErr,
 		)
 		return
 	}
@@ -323,31 +323,31 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		c.Token,
 		headers,
 	)
-	_, err = CheckResourceNotFoundError(err)
 	if err != nil {
+		_, errString := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
-			"Could not update cluster id "+state.Id.String()+": "+err.Error(),
+			"Could not update cluster id "+state.Id.String()+": "+errString,
 		)
 		return
 	}
 
 	err = c.checkClusterStatus(ctx, organizationId, projectId, clusterId)
-	_, err = CheckResourceNotFoundError(err)
 	if err != nil {
+		_, errString := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
-			"Could not update cluster id "+state.Id.String()+": "+err.Error(),
+			"Could not update cluster id "+state.Id.String()+": "+errString,
 		)
 		return
 	}
 
 	currentState, err := c.retrieveCluster(ctx, organizationId, projectId, clusterId)
-	_, err = CheckResourceNotFoundError(err)
 	if err != nil {
+		_, errString := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
-			"Could not update cluster id "+state.Id.String()+": "+err.Error(),
+			"Could not update cluster id "+state.Id.String()+": "+errString,
 		)
 		return
 	}
@@ -405,7 +405,7 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 		r.Token,
 		nil,
 	)
-	resourceNotFound, err := CheckResourceNotFoundError(err)
+	resourceNotFound, clientErr := CheckResourceNotFoundError(err)
 	if resourceNotFound {
 		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
 		return
@@ -413,13 +413,12 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error deleting cluster",
-			"Could not delete cluster id "+state.Id.String()+": "+err.Error(),
+			"Could not delete cluster id "+state.Id.String()+": "+clientErr,
 		)
 		return
 	}
 
 	err = r.checkClusterStatus(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
-	resourceNotFound, err = CheckResourceNotFoundError(err)
 	switch err {
 	case nil:
 		// This case will only occur when cluster deletion has failed,
@@ -439,10 +438,11 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 		)
 		return
 	default:
+		resourceNotFound, clientErr := CheckResourceNotFoundError(err)
 		if !resourceNotFound {
 			resp.Diagnostics.AddError(
 				"Error deleting cluster",
-				"Could not delete cluster id "+state.Id.String()+": "+err.Error(),
+				"Could not delete cluster id "+state.Id.String()+": "+clientErr,
 			)
 			return
 		}

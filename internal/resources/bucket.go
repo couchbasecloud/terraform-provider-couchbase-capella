@@ -128,11 +128,11 @@ func (c *Bucket) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		c.Token,
 		nil,
 	)
-	_, err = CheckResourceNotFoundError(err)
 	if err != nil {
+		_, clientErr := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error creating bucket",
-			"Could not create bucket, unexpected error: "+err.Error(),
+			"Could not create bucket, unexpected error: "+clientErr,
 		)
 		return
 	}
@@ -218,7 +218,7 @@ func (c *Bucket) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 	)
 
 	refreshedState, err := c.retrieveBucket(ctx, organizationId, projectId, clusterId, bucketId)
-	resourceNotFound, err := CheckResourceNotFoundError(err)
+	resourceNotFound, clientErr := CheckResourceNotFoundError(err)
 	if resourceNotFound {
 		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
 		resp.State.RemoveResource(ctx)
@@ -227,7 +227,7 @@ func (c *Bucket) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading bucket",
-			"Could not read bucket with id "+state.Id.String()+": "+err.Error(),
+			"Could not read bucket with id "+state.Id.String()+": "+clientErr,
 		)
 		return
 	}
@@ -401,8 +401,6 @@ func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 		c.Token,
 		nil,
 	)
-
-	_, err = CheckResourceNotFoundError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating bucket",
@@ -413,7 +411,7 @@ func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 
 	currentState, err := c.retrieveBucket(ctx, organizationId, projectId, clusterId, bucketId)
 	if err != nil {
-		err := CheckApiError(err)
+		_, err := CheckApiError(err)
 		resp.Diagnostics.AddError(
 			"Error updating bucket",
 			"Could not update Capella bucket with ID "+bucketId+": "+err,

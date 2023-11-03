@@ -98,7 +98,7 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 		nil,
 	)
 	if err != nil {
-		err := CheckApiError(err)
+		_, err := CheckApiError(err)
 		resp.Diagnostics.AddError(
 			"Error executing request",
 			"Could not execute request, unexpected error: "+err,
@@ -117,7 +117,7 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 
 	refreshedState, err := r.refreshUser(ctx, organizationId, createUserResponse.Id.String())
 	if err != nil {
-		err := CheckApiError(err)
+		_, err := CheckApiError(err)
 		resp.Diagnostics.AddError(
 			"Error executing request",
 			"Could not execute request, unexpected error: "+err,
@@ -244,7 +244,7 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 
 	refreshedState, err := r.refreshUser(ctx, organizationId, userId)
 	if err != nil {
-		err := CheckApiError(err)
+		_, err := CheckApiError(err)
 		resp.Diagnostics.AddError(
 			"Error updating user",
 			"Could not update Capella user with ID "+userId+": "+err,
@@ -411,12 +411,12 @@ func (r *User) updateUser(organizationId, userId string, patch []api.PatchEntry)
 		r.Token,
 		nil,
 	)
-	resourceNotFound, err := CheckResourceNotFoundError(err)
-	if resourceNotFound {
-		return fmt.Errorf("error updating user: %s", errors.ErrNotFound)
-	}
 
 	if err != nil {
+		resourceNotFound, clientErr := CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			return fmt.Errorf("error updating user: %s", clientErr)
+		}
 		return err
 	}
 
