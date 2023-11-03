@@ -217,13 +217,13 @@ func (a *ApiKey) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 
 	// Get refreshed api key value from Capella
 	refreshedState, err := a.retrieveApiKey(ctx, organizationId, apiKeyId)
+	resourceNotFound, clientErr := CheckResourceNotFoundError(err)
+	if resourceNotFound {
+		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+		resp.State.RemoveResource(ctx)
+		return
+	}
 	if err != nil {
-		resourceNotFound, clientErr := CheckResourceNotFoundError(err)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			resp.State.RemoveResource(ctx)
-			return
-		}
 		resp.Diagnostics.AddError(
 			"Error reading api key",
 			"Could not read api key id "+state.Id.String()+": "+clientErr,
