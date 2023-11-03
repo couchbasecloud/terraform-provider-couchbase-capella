@@ -102,4 +102,7 @@ var (
 
 	// ErrValidatingResource is returned when the validation of an existing resource state failed.
 	ErrValidatingResource = errors.New("could not validate resource state, please contact Couchbase Capella Support")
+
+	// ErrNotFound is returned when a resource is requested but not found.
+	ErrNotFound = errors.New("A resource was requested but could not be found")
 )

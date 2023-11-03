@@ -419,7 +419,11 @@ func (r *User) updateUser(organizationId, userId string, patch []api.PatchEntry)
 		r.Token,
 		nil,
 	)
-	_, err = handleUserError(err)
+	resourceNotFound, err := handleUserError(err)
+	if resourceNotFound {
+		return fmt.Errorf("error updating user: %s", errors.ErrNotFound)
+	}
+
 	if err != nil {
 		return err
 	}
