@@ -80,18 +80,18 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	var clusterId = plan.ClusterId.ValueString()
 	var bucketId = plan.BucketId.ValueString()
 
-	fmt.Printf("//////////////bucketID: %s", bucketId)
 	latestBackup, err := b.getLatestBackup(organizationId, projectId, clusterId, bucketId)
 	if err != nil {
-		fmt.Print("//////////////ERRR")
-		fmt.Print(err.Error())
+		resp.Diagnostics.AddError(
+			"Error getting latest bucket backup in a cluster",
+			"Could not get the latest bucket backup : unexpected error "+err.Error(),
+		)
+		return
 	}
-	fmt.Printf("//////////////latestBackup: %q", latestBackup)
 	var backupFound bool
 	if latestBackup != nil {
 		backupFound = true
 	}
-	fmt.Printf("//////////////backupFound: %t", backupFound)
 
 	_, err = b.Client.Execute(
 		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backups", b.HostURL, organizationId, projectId, clusterId, bucketId),
@@ -110,27 +110,27 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 
 	BackupResponse, err := b.checkLatestBackupStatus(ctx, organizationId, projectId, clusterId, bucketId, backupFound, latestBackup)
 
-	bStats := providerschema.NewBackupStats(*BackupResponse.BackupStats)
-	bStatsObj, diags := types.ObjectValueFrom(ctx, bStats.AttributeTypes(), bStats)
+	backupStats := providerschema.NewBackupStats(*BackupResponse.BackupStats)
+	backupStatsObj, diags := types.ObjectValueFrom(ctx, backupStats.AttributeTypes(), backupStats)
 	if diags.HasError() {
 		resp.Diagnostics.AddError(
-			"Error listing ApiKeys",
-			fmt.Sprintf("Could not list api keys, unexpected error: %s", fmt.Errorf("error while audit conversion")),
+			"Error Reading Backup Stats",
+			fmt.Sprintf("Could not read backup stats data in a backup record, unexpected error: %s", fmt.Errorf("error while backup stats conversion")),
 		)
 		return
 	}
 
-	sInfo := providerschema.NewScheduleInfo(*BackupResponse.ScheduleInfo)
-	sInfoObj, diags := types.ObjectValueFrom(ctx, sInfo.AttributeTypes(), sInfo)
+	scheduleInfo := providerschema.NewScheduleInfo(*BackupResponse.ScheduleInfo)
+	scheduleInfoObj, diags := types.ObjectValueFrom(ctx, scheduleInfo.AttributeTypes(), scheduleInfo)
 	if diags.HasError() {
 		resp.Diagnostics.AddError(
-			"Error listing ApiKeys",
-			fmt.Sprintf("Could not list api keys, unexpected error: %s", fmt.Errorf("error while audit conversion")),
+			"Error Error Reading Backup Schedule Info",
+			fmt.Sprintf("Could not read backup schedule info in a backup record, unexpected error: %s", fmt.Errorf("error while backup schedule info conversion")),
 		)
 		return
 	}
 
-	refreshedState := providerschema.NewBackup(BackupResponse, organizationId, projectId, bStatsObj, sInfoObj)
+	refreshedState := providerschema.NewBackup(BackupResponse, organizationId, projectId, backupStatsObj, scheduleInfoObj)
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
@@ -246,7 +246,7 @@ func (b *Backup) checkLatestBackupStatus(ctx context.Context, organizationId, pr
 		err        error
 	)
 
-	// Assuming 60 minutes is the max time deployment takes, can change after discussion
+	// Assuming 60 minutes is the max time backup completion takes, can change after discussion
 	const timeout = time.Minute * 60
 
 	var cancel context.CancelFunc
@@ -260,26 +260,21 @@ func (b *Backup) checkLatestBackupStatus(ctx context.Context, organizationId, pr
 	for {
 		select {
 		case <-ctx.Done():
-			const msg = "cluster creation status transition timed out after initiation"
+			const msg = "bucket backup creation status transition timed out after initiation"
 			return nil, fmt.Errorf(msg)
 
 		case <-timer.C:
 			backupResp, err = b.getLatestBackup(organizationId, projectId, clusterId, bucketId)
 			switch err {
 			case nil:
-				fmt.Println("%%%%%%%%%%%%%%")
-				fmt.Println(backupResp)
-				fmt.Println(")))))))))))))))))))))))))))")
+				// If there is no existing backup for a bucket, check for a new backup record to be created.
+				// If a backup record exists already, wait for a backup record with a new ID to created.
 				if !backupFound && backupResp != nil && backupapi.IsFinalState(backupResp.Status) {
-					fmt.Println("^^^^^^^^^^^^^^^^^^^^")
-					fmt.Println(backupResp.Id)
 					return backupResp, nil
 				} else if backupFound && backupResp != nil && latestBackup.Id == backupResp.Id && backupapi.IsFinalState(backupResp.Status) {
-					fmt.Println("#######################")
-					fmt.Println(backupResp.Id)
 					return backupResp, nil
 				}
-				const msg = "waiting for cluster to complete the execution"
+				const msg = "waiting for backup to complete the execution"
 				tflog.Info(ctx, msg)
 			default:
 				return nil, err
@@ -345,16 +340,12 @@ func (b *Backup) getLatestBackup(organizationId, projectId, clusterId, bucketId 
 		return nil, err
 	}
 
+	// check for a backup record of the specified bucket
 	for _, backup := range clusterResp.Data {
 		if backup.BucketId == bucketId {
-			fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&&&&")
-			fmt.Println(backup.Id)
-			fmt.Println(backup.CloudProvider)
-			fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&&&&")
 			return &backup, nil
 		}
 	}
-
 	return nil, nil
 }
 
