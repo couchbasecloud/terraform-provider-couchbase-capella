@@ -419,7 +419,7 @@ func (r *User) updateUser(organizationId, userId string, patch []api.PatchEntry)
 		r.Token,
 		nil,
 	)
-	resourceNotFound, err := handleUserError(err)
+	resourceNotFound, err := CheckResourceNotFoundError(err)
 	if resourceNotFound {
 		return fmt.Errorf("error updating user: %s", errors.ErrNotFound)
 	}
@@ -576,20 +576,4 @@ func handleCapellaUserError(err error) error {
 		return fmt.Errorf("%w: %s", errors.ErrUnableToReadCapellaUser, err.Error())
 	}
 	return nil
-}
-
-// this func extract error message if error is api.Error and also checks whether error is
-// resource not found
-func handleUserError(err error) (bool, error) {
-	switch err := err.(type) {
-	case nil:
-		return false, nil
-	case api.Error:
-		if err.HttpStatusCode != http.StatusNotFound {
-			return false, fmt.Errorf(err.CompleteError())
-		}
-		return true, fmt.Errorf(err.CompleteError())
-	default:
-		return false, err
-	}
 }

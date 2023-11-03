@@ -8,7 +8,6 @@ import (
 	"reflect"
 	"time"
 
-	"terraform-provider-capella/internal/api"
 	clusterapi "terraform-provider-capella/internal/api/cluster"
 	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
@@ -119,7 +118,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		c.Token,
 		nil,
 	)
-	_, err = handleClusterError(err)
+	_, err = CheckResourceNotFoundError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
@@ -139,7 +138,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	}
 
 	err = c.checkClusterStatus(ctx, organizationId, projectId, ClusterResponse.Id.String())
-	_, err = handleClusterError(err)
+	_, err = CheckResourceNotFoundError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
@@ -149,7 +148,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	}
 
 	refreshedState, err := c.retrieveCluster(ctx, organizationId, projectId, ClusterResponse.Id.String())
-	_, err = handleClusterError(err)
+	_, err = CheckResourceNotFoundError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
@@ -221,7 +220,7 @@ func (c *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 
 	// Get refreshed Cluster value from Capella
 	refreshedState, err := c.retrieveCluster(ctx, organizationId, projectId, clusterId)
-	resourceNotFound, err := handleClusterError(err)
+	resourceNotFound, err := CheckResourceNotFoundError(err)
 	if resourceNotFound {
 		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
 		resp.State.RemoveResource(ctx)
@@ -324,7 +323,7 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		c.Token,
 		headers,
 	)
-	_, err = handleClusterError(err)
+	_, err = CheckResourceNotFoundError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
@@ -334,7 +333,7 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 	}
 
 	err = c.checkClusterStatus(ctx, organizationId, projectId, clusterId)
-	_, err = handleClusterError(err)
+	_, err = CheckResourceNotFoundError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
@@ -344,7 +343,7 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 	}
 
 	currentState, err := c.retrieveCluster(ctx, organizationId, projectId, clusterId)
-	_, err = handleClusterError(err)
+	_, err = CheckResourceNotFoundError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
@@ -406,7 +405,7 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 		r.Token,
 		nil,
 	)
-	resourceNotFound, err := handleClusterError(err)
+	resourceNotFound, err := CheckResourceNotFoundError(err)
 	if resourceNotFound {
 		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
 		return
@@ -420,7 +419,7 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 	}
 
 	err = r.checkClusterStatus(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
-	resourceNotFound, err = handleClusterError(err)
+	resourceNotFound, err = CheckResourceNotFoundError(err)
 	switch err {
 	case nil:
 		// This case will only occur when cluster deletion has failed,
@@ -698,20 +697,4 @@ func (c *Cluster) validateClusterUpdate(plan, state providerschema.Cluster) erro
 	}
 
 	return nil
-}
-
-// this func extract error message if error is api.Error and also checks whether error is
-// resource not found
-func handleClusterError(err error) (bool, error) {
-	switch err := err.(type) {
-	case nil:
-		return false, nil
-	case api.Error:
-		if err.HttpStatusCode != http.StatusNotFound {
-			return false, fmt.Errorf(err.CompleteError())
-		}
-		return true, fmt.Errorf(err.CompleteError())
-	default:
-		return false, err
-	}
 }

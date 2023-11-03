@@ -127,7 +127,7 @@ func (a *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		a.Token,
 		nil,
 	)
-	_, err = handleApiKeyError(err)
+	_, err = CheckResourceNotFoundError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating ApiKey",
@@ -217,7 +217,7 @@ func (a *ApiKey) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 
 	// Get refreshed api key value from Capella
 	refreshedState, err := a.retrieveApiKey(ctx, organizationId, apiKeyId)
-	resourceNotFound, err := handleApiKeyError(err)
+	resourceNotFound, err := CheckResourceNotFoundError(err)
 	if resourceNotFound {
 		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
 		resp.State.RemoveResource(ctx)
@@ -325,7 +325,7 @@ func (a *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 		a.Token,
 		nil,
 	)
-	_, err = handleApiKeyError(err)
+	_, err = CheckResourceNotFoundError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error rotating api key",
@@ -345,7 +345,7 @@ func (a *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 	}
 
 	currentState, err := a.retrieveApiKey(ctx, organizationId, apiKeyId)
-	_, err = handleApiKeyError(err)
+	_, err = CheckResourceNotFoundError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error rotating api key",
@@ -418,7 +418,7 @@ func (a *ApiKey) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 		a.Token,
 		nil,
 	)
-	resourceNotFound, err := handleApiKeyError(err)
+	resourceNotFound, err := CheckResourceNotFoundError(err)
 	if resourceNotFound {
 		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
 		return
@@ -468,22 +468,6 @@ func (a *ApiKey) retrieveApiKey(ctx context.Context, organizationId, apiKeyId st
 		return nil, err
 	}
 	return refreshedState, nil
-}
-
-// this func extract error message if error is api.Error and also checks whether error is
-// resource not found
-func handleApiKeyError(err error) (bool, error) {
-	switch err := err.(type) {
-	case nil:
-		return false, nil
-	case api.Error:
-		if err.HttpStatusCode != http.StatusNotFound {
-			return false, fmt.Errorf(err.CompleteError())
-		}
-		return true, fmt.Errorf(err.CompleteError())
-	default:
-		return false, err
-	}
 }
 
 // validateCreateApiKeyRequest validates the required fields in the create request.

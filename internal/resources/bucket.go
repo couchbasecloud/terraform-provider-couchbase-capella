@@ -128,7 +128,7 @@ func (c *Bucket) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		c.Token,
 		nil,
 	)
-	_, err = handleBucketError(err)
+	_, err = CheckResourceNotFoundError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating bucket",
@@ -218,7 +218,7 @@ func (c *Bucket) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 	)
 
 	refreshedState, err := c.retrieveBucket(ctx, organizationId, projectId, clusterId, bucketId)
-	resourceNotFound, err := handleBucketError(err)
+	resourceNotFound, err := CheckResourceNotFoundError(err)
 	if resourceNotFound {
 		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
 		resp.State.RemoveResource(ctx)
@@ -402,7 +402,7 @@ func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 		nil,
 	)
 
-	_, err = handleBucketError(err)
+	_, err = CheckResourceNotFoundError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating bucket",
@@ -433,21 +433,5 @@ func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
-	}
-}
-
-// handleBucketError extracts error message if error is api.Error and also checks whether error is
-// resource not found
-func handleBucketError(err error) (bool, error) {
-	switch err := err.(type) {
-	case nil:
-		return false, nil
-	case api.Error:
-		if err.HttpStatusCode != http.StatusNotFound {
-			return false, fmt.Errorf(err.CompleteError())
-		}
-		return true, fmt.Errorf(err.CompleteError())
-	default:
-		return false, err
 	}
 }

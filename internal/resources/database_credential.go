@@ -211,7 +211,7 @@ func (r *DatabaseCredential) Read(ctx context.Context, req resource.ReadRequest,
 
 	// Get refreshed Cluster value from Capella
 	refreshedState, err := r.retrieveDatabaseCredential(ctx, organizationId, projectId, clusterId, dbId)
-	resourceNotFound, err := handleDatabaseCredentialError(err)
+	resourceNotFound, err := CheckResourceNotFoundError(err)
 	if resourceNotFound {
 		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
 		resp.State.RemoveResource(ctx)
@@ -442,22 +442,6 @@ func (r *DatabaseCredential) retrieveDatabaseCredential(ctx context.Context, org
 		}
 	*/
 	return &refreshedState, nil
-}
-
-// this func extract error message if error is api.Error and also checks whether error is
-// resource not found
-func handleDatabaseCredentialError(err error) (bool, error) {
-	switch err := err.(type) {
-	case nil:
-		return false, nil
-	case api.Error:
-		if err.HttpStatusCode != http.StatusNotFound {
-			return false, fmt.Errorf(err.CompleteError())
-		}
-		return true, fmt.Errorf(err.CompleteError())
-	default:
-		return false, err
-	}
 }
 
 // todo: add a unit test for this, tracking under: https://couchbasecloud.atlassian.net/browse/AV-63401
