@@ -7,7 +7,8 @@ import (
 	"terraform-provider-capella/internal/api"
 )
 
-// CheckApiError is used
+// CheckApiError is used to check if an error is of type
+// api.Error error and return it as a string.
 func CheckApiError(err error) string {
 	var apiErr *api.Error
 
