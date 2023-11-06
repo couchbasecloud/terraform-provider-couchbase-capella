@@ -77,24 +77,16 @@ func (o *Organization) Read(ctx context.Context, req datasource.ReadRequest, res
 		o.Token,
 		nil,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		if err.HttpStatusCode != http.StatusNotFound {
-			resp.Diagnostics.AddError(
-				"Error Reading Capella Organization",
-				"Could not read organization in cluster "+state.OrganizationId.String()+": "+err.CompleteError(),
-			)
-			return
-		}
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		resp.State.RemoveResource(ctx)
-		return
-	default:
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
-			"Error Reading Organization",
-			"Could not read organization in cluster "+state.OrganizationId.String()+": "+err.Error(),
+			"Error Reading Capella Organization",
+			"Could not read organization in cluster "+state.OrganizationId.String()+": "+errString,
 		)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+		}
 		return
 	}
 
