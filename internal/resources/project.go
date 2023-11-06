@@ -151,24 +151,16 @@ func (r *Project) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 
 	// Get refreshed project value from Capella
 	refreshedState, err := r.retrieveProject(ctx, organizationId, projectId)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		if err.HttpStatusCode != 404 {
-			resp.Diagnostics.AddError(
-				"Error Reading Capella Projects",
-				"Could not read Capella project ID "+projectId+": "+err.CompleteError(),
-			)
-			return
-		}
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		resp.State.RemoveResource(ctx)
-		return
-	default:
+	if err != nil {
+		resourceNotFound, errString := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
-			"Error Reading Capella Projects",
-			"Could not read Capella project ID "+projectId+": "+err.Error(),
+			"Error Reading Capella Project",
+			"Could not read Capella project ID "+projectId+": "+errString,
 		)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+		}
 		return
 	}
 
@@ -233,24 +225,16 @@ func (r *Project) Update(ctx context.Context, req resource.UpdateRequest, resp *
 	}
 
 	currentState, err := r.retrieveProject(ctx, organizationId, projectId)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		if err.HttpStatusCode != 404 {
-			resp.Diagnostics.AddError(
-				"Error Reading Capella Projects",
-				"Could not read Capella project ID "+state.Id.String()+": "+err.CompleteError(),
-			)
-			return
-		}
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		resp.State.RemoveResource(ctx)
-		return
-	default:
+	if err != nil {
+		resourceNotFound, errString := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
-			"Error Reading Capella Projects",
-			"Could not read Capella project ID "+state.Id.String()+": "+err.Error(),
+			"Error Updating Capella Project",
+			"Could not update Capella project ID "+projectId+": "+errString,
 		)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+		}
 		return
 	}
 
@@ -297,22 +281,16 @@ func (r *Project) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 		r.Token,
 		nil,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		if err.HttpStatusCode != 404 {
-			resp.Diagnostics.AddError(
-				"Error Deleting Capella Projects",
-				"Could not delete Capella project ID "+projectId+": "+err.CompleteError(),
-			)
-			tflog.Info(ctx, "resource doesn't exist in remote server")
-			return
-		}
-	default:
+	if err != nil {
+		resourceNotFound, errString := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
-			"Error Deleting Capella Projects",
-			"Could not delete Capella project ID "+projectId+": "+err.Error(),
+			"Error Deleting Capella Project",
+			"Could not delete Capella project ID "+projectId+": "+errString,
 		)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+		}
 		return
 	}
 }

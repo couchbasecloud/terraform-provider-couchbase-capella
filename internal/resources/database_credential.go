@@ -116,18 +116,10 @@ func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequ
 		r.Token,
 		nil,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating database credential",
-			"Could not create database credential, unexpected error: "+err.CompleteError(),
-		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error creating database credential",
-			"Could not create database credential, unexpected error: "+err.Error(),
+			"Could not create database credential, unexpected error: "+ParseError(err),
 		)
 		return
 	}
@@ -143,18 +135,10 @@ func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	refreshedState, err := r.retrieveDatabaseCredential(ctx, organizationId, projectId, clusterId, dbResponse.Id.String())
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Database Credentials",
-			"Could not read Capella database credential with ID "+dbResponse.Id.String()+": "+err.CompleteError(),
-		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error Reading Capella Database Credentials",
-			"Could not read Capella database credential with ID "+dbResponse.Id.String()+": "+err.Error(),
+			"Could not read Capella database credential with ID "+dbResponse.Id.String()+": "+ParseError(err),
 		)
 		return
 	}
@@ -211,17 +195,16 @@ func (r *DatabaseCredential) Read(ctx context.Context, req resource.ReadRequest,
 
 	// Get refreshed Cluster value from Capella
 	refreshedState, err := r.retrieveDatabaseCredential(ctx, organizationId, projectId, clusterId, dbId)
-	resourceNotFound, clientErr := CheckResourceNotFoundError(err)
-	if resourceNotFound {
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		resp.State.RemoveResource(ctx)
-		return
-	}
 	if err != nil {
+		resourceNotFound, errString := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error reading database credential",
-			"Could not read database credential with id "+state.Id.String()+": "+clientErr,
+			"Could not read database credential with id "+state.Id.String()+": "+errString,
 		)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+		}
 		return
 	}
 
@@ -347,21 +330,16 @@ func (r *DatabaseCredential) Delete(ctx context.Context, req resource.DeleteRequ
 		r.Token,
 		nil,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		if err.HttpStatusCode != 404 {
-			resp.Diagnostics.AddError(
-				"Error Deleting the Database Credential",
-				"Could not delete Database Credential associated with cluster "+clusterId+": "+err.CompleteError(),
-			)
-			return
-		}
-	default:
+	if err != nil {
+		resourceNotFound, errString := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
-			"Error Deleting Database Credential",
-			"Could not delete Database Credential associated with cluster "+clusterId+": "+err.Error(),
+			"Error Deleting the Database Credential",
+			"Could not delete Database Credential associated with cluster "+clusterId+": "+errString,
 		)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+		}
 		return
 	}
 }

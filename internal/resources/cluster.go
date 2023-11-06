@@ -206,8 +206,8 @@ func (c *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 	resourceIDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading cluster",
-			"Could not read cluster id "+state.Id.String()+" unexpected error: "+err.Error(),
+			"Error Reading Capella Cluster",
+			"Could Not Read Capella Cluster "+state.Id.String()+": "+err.Error(),
 		)
 		return
 	}
@@ -220,17 +220,16 @@ func (c *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 
 	// Get refreshed Cluster value from Capella
 	refreshedState, err := c.retrieveCluster(ctx, organizationId, projectId, clusterId)
-	resourceNotFound, clientErr := CheckResourceNotFoundError(err)
-	if resourceNotFound {
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		resp.State.RemoveResource(ctx)
-		return
-	}
 	if err != nil {
+		resourceNotFound, errString := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
-			"Error reading cluster",
-			"Could not read cluster id "+state.Id.String()+": "+clientErr,
+			"Error Reading Capella Cluster",
+			"Could Not Read Capella Cluster "+state.Id.String()+": "+errString,
 		)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+		}
 		return
 	}
 
@@ -324,30 +323,27 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		headers,
 	)
 	if err != nil {
-		_, errString := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
-			"Could not update cluster id "+state.Id.String()+": "+errString,
+			"Could not update cluster id "+state.Id.String()+": "+ParseError(err),
 		)
 		return
 	}
 
 	err = c.checkClusterStatus(ctx, organizationId, projectId, clusterId)
 	if err != nil {
-		_, errString := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
-			"Could not update cluster id "+state.Id.String()+": "+errString,
+			"Could not update cluster id "+state.Id.String()+": "+ParseError(err),
 		)
 		return
 	}
 
 	currentState, err := c.retrieveCluster(ctx, organizationId, projectId, clusterId)
 	if err != nil {
-		_, errString := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
-			"Could not update cluster id "+state.Id.String()+": "+errString,
+			"Could not update cluster id "+state.Id.String()+": "+ParseError(err),
 		)
 		return
 	}
@@ -405,48 +401,49 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 		r.Token,
 		nil,
 	)
-	resourceNotFound, clientErr := CheckResourceNotFoundError(err)
-	if resourceNotFound {
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		return
-	}
 	if err != nil {
+		resourceNotFound, errString := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
-			"Error deleting cluster",
-			"Could not delete cluster id "+state.Id.String()+": "+clientErr,
+			"Error Deleting Capella Cluster",
+			"Could Not Delete Capella Cluster "+state.Id.String()+": "+errString,
 		)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+		}
 		return
 	}
 
 	err = r.checkClusterStatus(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
-	switch err {
-	case nil:
-		// This case will only occur when cluster deletion has failed,
-		// and the cluster record still exists in the cp metadata. Therefore,
-		// no error will be returned when performing a GET call.
-		cluster, err := r.retrieveCluster(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error deleting cluster",
-				fmt.Sprintf("Could not delete cluster id %s: %s", state.Id.String(), err.Error()),
-			)
-			return
+	if err != nil {
+		resourceNotFound, errString := CheckResourceNotFoundError(err)
+		resp.Diagnostics.AddError(
+			"Error Deleting Capella Cluster",
+			"Could not delete cluster id "+state.Id.String()+": "+errString,
+		)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
 		}
+		return
+	}
+
+	// This case will only occur when cluster deletion has failed,
+	// and the cluster record still exists in the cp metadata. Therefore,
+	// no error will be returned when performing a GET call.
+	cluster, err := r.retrieveCluster(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error deleting cluster",
-			fmt.Sprintf("Could not delete cluster id %s, as current Cluster state: %s", state.Id.String(), cluster.CurrentState),
+			fmt.Sprintf("Could not delete cluster id %s: %s", state.Id.String(), err.Error()),
 		)
 		return
-	default:
-		resourceNotFound, clientErr := CheckResourceNotFoundError(err)
-		if !resourceNotFound {
-			resp.Diagnostics.AddError(
-				"Error deleting cluster",
-				"Could not delete cluster id "+state.Id.String()+": "+clientErr,
-			)
-			return
-		}
 	}
+	resp.Diagnostics.AddError(
+		"Error deleting cluster",
+		fmt.Sprintf("Could not delete cluster id %s, as current Cluster state: %s", state.Id.String(), cluster.CurrentState),
+	)
+	return
 }
 
 // ImportState imports a remote cluster that is not created by Terraform.

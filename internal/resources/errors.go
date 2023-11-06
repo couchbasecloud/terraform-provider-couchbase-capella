@@ -19,7 +19,10 @@ func ParseError(err error) string {
 }
 
 // CheckResourceNotFoundError is used to check if an error is of
-// type api.Error whether the error is resource not found.
+// type api.Error and whether the error is resource not found.
+//
+// Note: If the error is other than not found, the error string
+// will be returned along with a bool value of false.
 func CheckResourceNotFoundError(err error) (bool, string) {
 	var apiErr *api.Error
 

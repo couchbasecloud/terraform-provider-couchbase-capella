@@ -171,24 +171,16 @@ func (r *User) Read(ctx context.Context, req resource.ReadRequest, resp *resourc
 
 	// Refresh the existing user
 	refreshedState, err := r.refreshUser(ctx, organizationId, userId)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		if err.HttpStatusCode != http.StatusNotFound {
-			resp.Diagnostics.AddError(
-				"Error Reading Capella User",
-				"Could not read Capella userID "+userId+": "+err.CompleteError(),
-			)
-			return
-		}
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		resp.State.RemoveResource(ctx)
-		return
-	default:
+	if err != nil {
+		resourceNotFound, errString := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error Reading Capella User",
-			"Could not read Capella userID "+userId+": "+err.Error(),
+			"Could not read Capella userID "+userId+": "+errString,
 		)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+		}
 		return
 	}
 
@@ -233,10 +225,15 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 
 	err = r.updateUser(organizationId, userId, patch)
 	if err != nil {
+		resourceNotFound, errString := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error updating user",
-			"Could not update Capella user with ID "+userId+": "+err.Error(),
+			"Could not update Capella user with ID "+userId+": "+errString,
 		)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+		}
 		return
 	}
 
@@ -410,10 +407,6 @@ func (r *User) updateUser(organizationId, userId string, patch []api.PatchEntry)
 	)
 
 	if err != nil {
-		resourceNotFound, clientErr := CheckResourceNotFoundError(err)
-		if resourceNotFound {
-			return fmt.Errorf("error updating user: %s", clientErr)
-		}
 		return err
 	}
 
@@ -458,22 +451,16 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 		r.Token,
 		nil,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		if err.HttpStatusCode != http.StatusNotFound {
-			resp.Diagnostics.AddError(
-				"Error Deleting Capella User",
-				"Could not delete Capella userId "+userId+": "+err.CompleteError(),
-			)
-			tflog.Info(ctx, "resource doesn't exist in remote server")
-			return
-		}
-	default:
+	if err != nil {
+		resourceNotFound, errString := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error Deleting Capella User",
-			"Could not delete Capella userId "+userId+": "+err.Error(),
+			"Could not delete Capella userId "+userId+": "+errString,
 		)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+		}
 		return
 	}
 }

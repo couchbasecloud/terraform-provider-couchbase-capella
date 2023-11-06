@@ -153,18 +153,15 @@ func (r *AllowList) Read(ctx context.Context, req resource.ReadRequest, resp *re
 	refreshedState, err := r.refreshAllowList(ctx, organizationId, projectId, clusterId, allowListId)
 	if err != nil {
 		resourceNotFound, errString := CheckResourceNotFoundError(err)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			resp.State.RemoveResource(ctx)
-			return
-		}
-
 		resp.Diagnostics.AddError(
 			"Error Reading Capella AllowList",
 			"Could not read Capella allowListID "+allowListId+": "+errString,
 		)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+		}
 		return
-
 	}
 
 	// Set refreshed state
@@ -210,7 +207,7 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 		organizationId = IDs[providerschema.OrganizationId]
 		projectId      = IDs[providerschema.ProjectId]
 		clusterId      = IDs[providerschema.ClusterId]
-		allowListID    = IDs[providerschema.Id]
+		allowListId    = IDs[providerschema.Id]
 	)
 	// Execute request to delete existing allowlist
 	_, err = r.Client.Execute(
@@ -220,29 +217,23 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 			organizationId,
 			projectId,
 			clusterId,
-			allowListID,
+			allowListId,
 		),
 		http.MethodDelete,
 		nil,
 		r.Token,
 		nil,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		if err.HttpStatusCode != http.StatusNotFound {
-			resp.Diagnostics.AddError(
-				"Error Deleting Capella Allow List",
-				"Could not delete Capella allowListId "+allowListID+": "+err.CompleteError(),
-			)
-			tflog.Info(ctx, "resource doesn't exist in remote server")
-			return
-		}
-	default:
+	if err != nil {
+		resourceNotFound, errString := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
-			"Error Deleting Capella Allow List",
-			"Could not delete Capella allowListId "+allowListID+": "+err.Error(),
+			"Error Reading Capella AllowList",
+			"Could not read Capella allowListID "+allowListId+": "+errString,
 		)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+		}
 		return
 	}
 }

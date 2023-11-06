@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"terraform-provider-capella/internal/api"
 	bucketapi "terraform-provider-capella/internal/api/bucket"
 	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
@@ -129,10 +128,9 @@ func (c *Bucket) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		nil,
 	)
 	if err != nil {
-		_, clientErr := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error creating bucket",
-			"Could not create bucket, unexpected error: "+clientErr,
+			"Could not create bucket, unexpected error: "+ParseError(err),
 		)
 		return
 	}
@@ -148,19 +146,16 @@ func (c *Bucket) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	}
 
 	refreshedState, err := c.retrieveBucket(ctx, organizationId, projectId, clusterId, BucketResponse.Id)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
+		resourceNotFound, errString := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Bucket",
-			"Could not read Capella bucket with ID "+BucketResponse.Id+": "+err.CompleteError(),
+			"Could not read Capella bucket with ID "+BucketResponse.Id+": "+errString,
 		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error Reading Capella Bucket",
-			"Could not read Capella bucket with ID "+BucketResponse.Id+": "+err.Error(),
-		)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+		}
 		return
 	}
 
@@ -218,17 +213,16 @@ func (c *Bucket) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 	)
 
 	refreshedState, err := c.retrieveBucket(ctx, organizationId, projectId, clusterId, bucketId)
-	resourceNotFound, clientErr := CheckResourceNotFoundError(err)
-	if resourceNotFound {
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		resp.State.RemoveResource(ctx)
-		return
-	}
 	if err != nil {
+		resourceNotFound, errString := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error reading bucket",
-			"Could not read bucket with id "+state.Id.String()+": "+clientErr,
+			"Could not read bucket with id "+state.Id.String()+": "+errString,
 		)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+		}
 		return
 	}
 
@@ -259,8 +253,8 @@ func (r *Bucket) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 
 	if state.ProjectId.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error creating database credential",
-			"Could not create database credential, unexpected error: "+errors.ErrProjectIdCannotBeEmpty.Error(),
+			"Error creating bucket",
+			"Could not create bucket, unexpected error: "+errors.ErrProjectIdCannotBeEmpty.Error(),
 		)
 		return
 	}
@@ -268,8 +262,8 @@ func (r *Bucket) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 
 	if state.ClusterId.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error creating database credential",
-			"Could not create database credential, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
+			"Error creating bucket",
+			"Could not create bucket, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
 		)
 		return
 	}
@@ -277,8 +271,8 @@ func (r *Bucket) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 
 	if state.Id.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error creating database credential",
-			"Could not create database credential, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
+			"Error creating bucket",
+			"Could not create bucket, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
 		)
 		return
 	}
@@ -291,21 +285,16 @@ func (r *Bucket) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 		r.Token,
 		nil,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		if err.HttpStatusCode != 404 {
-			resp.Diagnostics.AddError(
-				"Error Deleting the Bucket",
-				"Could not delete Bucket associated with cluster "+clusterId+": "+err.CompleteError(),
-			)
-			return
-		}
-	default:
+	if err != nil {
+		resourceNotFound, errString := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
-			"Error Deleting Bucket",
-			"Could not delete Bucket associated with cluster "+clusterId+": "+err.Error(),
+			"Error Deleting the Bucket",
+			"Could not delete Bucket associated with cluster "+clusterId+": "+errString,
 		)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+		}
 		return
 	}
 }
