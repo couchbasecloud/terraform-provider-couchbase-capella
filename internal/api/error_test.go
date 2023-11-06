@@ -43,6 +43,14 @@ func Test_ParseError(t *testing.T) {
 func Test_CheckResourceNotFound(t *testing.T) {
 	var (
 		errMessage = "example error message"
+		err500     = Error{
+			HttpStatusCode: 500,
+			Message:        errMessage,
+		}
+		err404 = Error{
+			HttpStatusCode: 404,
+			Message:        errMessage,
+		}
 	)
 
 	type test struct {
@@ -54,28 +62,16 @@ func Test_CheckResourceNotFound(t *testing.T) {
 
 	tests := []test{
 		{
-			name: "Error received from Capella V4 Api",
-			err: Error{
-				HttpStatusCode: 500,
-				Message:        errMessage,
-			},
-			expOutput: Error{
-				HttpStatusCode: 500,
-				Message:        errMessage,
-			}.CompleteError(),
-			expBool: false,
+			name:      "Error received from Capella V4 Api",
+			err:       err500,
+			expOutput: err500.CompleteError(),
+			expBool:   false,
 		},
 		{
-			name: "Error received from Capella V4 Api - Resource Not Found",
-			err: Error{
-				HttpStatusCode: 404,
-				Message:        errMessage,
-			},
-			expOutput: Error{
-				HttpStatusCode: 404,
-				Message:        errMessage,
-			}.CompleteError(),
-			expBool: true,
+			name:      "Error received from Capella V4 Api - Resource Not Found",
+			err:       err404,
+			expOutput: err404.CompleteError(),
+			expBool:   true,
 		},
 		{
 			name:      "Error other than received from Capella V4 Api",
