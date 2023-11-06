@@ -94,7 +94,7 @@ func (r *Project) Create(ctx context.Context, req resource.CreateRequest, resp *
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating project",
-			"Could not create project, unexpected error: "+ParseError(err),
+			"Could not create project, unexpected error: "+api.ParseError(err),
 		)
 	}
 
@@ -112,7 +112,7 @@ func (r *Project) Create(ctx context.Context, req resource.CreateRequest, resp *
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating project",
-			"Could not create project, unexpected error: "+ParseError(err),
+			"Could not create project, unexpected error: "+api.ParseError(err),
 		)
 	}
 
@@ -152,7 +152,7 @@ func (r *Project) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 	// Get refreshed project value from Capella
 	refreshedState, err := r.retrieveProject(ctx, organizationId, projectId)
 	if err != nil {
-		resourceNotFound, errString := CheckResourceNotFoundError(err)
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Project",
 			"Could not read Capella project ID "+projectId+": "+errString,
@@ -220,13 +220,13 @@ func (r *Project) Update(ctx context.Context, req resource.UpdateRequest, resp *
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Updating Capella Projects",
-			"Could not update Capella project ID "+state.Id.String()+": "+ParseError(err),
+			"Could not update Capella project ID "+state.Id.String()+": "+api.ParseError(err),
 		)
 	}
 
 	currentState, err := r.retrieveProject(ctx, organizationId, projectId)
 	if err != nil {
-		resourceNotFound, errString := CheckResourceNotFoundError(err)
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error Updating Capella Project",
 			"Could not update Capella project ID "+projectId+": "+errString,
@@ -282,7 +282,7 @@ func (r *Project) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 		nil,
 	)
 	if err != nil {
-		resourceNotFound, errString := CheckResourceNotFoundError(err)
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error Deleting Capella Project",
 			"Could not delete Capella project ID "+projectId+": "+errString,

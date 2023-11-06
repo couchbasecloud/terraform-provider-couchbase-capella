@@ -128,10 +128,9 @@ func (a *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		nil,
 	)
 	if err != nil {
-		_, err := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error creating ApiKey",
-			"Could not create ApiKey, unexpected error: "+err,
+			"Could not create ApiKey, unexpected error: "+api.ParseError(err),
 		)
 		return
 	}
@@ -148,7 +147,7 @@ func (a *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 
 	refreshedState, err := a.retrieveApiKey(ctx, organizationId, apiKeyResponse.Id)
 	if err != nil {
-		resourceNotFound, errString := CheckResourceNotFoundError(err)
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error Reading Capella ApiKeys",
 			"Could not read Capella ApiKey ID "+apiKeyResponse.Id+": "+errString,
@@ -215,7 +214,7 @@ func (a *ApiKey) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 	// Get refreshed api key value from Capella
 	refreshedState, err := a.retrieveApiKey(ctx, organizationId, apiKeyId)
 	if err != nil {
-		resourceNotFound, errString := CheckResourceNotFoundError(err)
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error reading api key",
 			"Could not read api key id "+state.Id.String()+": "+errString,
@@ -324,7 +323,7 @@ func (a *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error rotating api key",
-			"Could not rotate api key id "+state.Id.String()+": "+ParseError(err),
+			"Could not rotate api key id "+state.Id.String()+": "+api.ParseError(err),
 		)
 		return
 	}
@@ -343,7 +342,7 @@ func (a *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error rotating api key",
-			"Could not rotate api key id "+state.Id.String()+": "+ParseError(err),
+			"Could not rotate api key id "+state.Id.String()+": "+api.ParseError(err),
 		)
 		return
 	}
@@ -413,7 +412,7 @@ func (a *ApiKey) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 		nil,
 	)
 	if err != nil {
-		resourceNotFound, errString := CheckResourceNotFoundError(err)
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error deleting api key",
 			"Could not delete api key id "+state.Id.String()+" unexpected error: "+errString,

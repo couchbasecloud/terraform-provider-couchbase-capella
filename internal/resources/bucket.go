@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"terraform-provider-capella/internal/api"
 	bucketapi "terraform-provider-capella/internal/api/bucket"
 	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
@@ -130,7 +131,7 @@ func (c *Bucket) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating bucket",
-			"Could not create bucket, unexpected error: "+ParseError(err),
+			"Could not create bucket, unexpected error: "+api.ParseError(err),
 		)
 		return
 	}
@@ -147,7 +148,7 @@ func (c *Bucket) Create(ctx context.Context, req resource.CreateRequest, resp *r
 
 	refreshedState, err := c.retrieveBucket(ctx, organizationId, projectId, clusterId, BucketResponse.Id)
 	if err != nil {
-		resourceNotFound, errString := CheckResourceNotFoundError(err)
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Bucket",
 			"Could not read Capella bucket with ID "+BucketResponse.Id+": "+errString,
@@ -214,7 +215,7 @@ func (c *Bucket) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 
 	refreshedState, err := c.retrieveBucket(ctx, organizationId, projectId, clusterId, bucketId)
 	if err != nil {
-		resourceNotFound, errString := CheckResourceNotFoundError(err)
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error reading bucket",
 			"Could not read bucket with id "+state.Id.String()+": "+errString,
@@ -286,7 +287,7 @@ func (r *Bucket) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 		nil,
 	)
 	if err != nil {
-		resourceNotFound, errString := CheckResourceNotFoundError(err)
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error Deleting the Bucket",
 			"Could not delete Bucket associated with cluster "+clusterId+": "+errString,
@@ -402,7 +403,7 @@ func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating bucket",
-			"Could not update Capella bucket with ID "+bucketId+": "+ParseError(err),
+			"Could not update Capella bucket with ID "+bucketId+": "+api.ParseError(err),
 		)
 	}
 

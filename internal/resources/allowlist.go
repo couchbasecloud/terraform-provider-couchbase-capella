@@ -109,7 +109,7 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading Capella AllowList",
-			"Could not read Capella AllowList "+allowListResponse.Id.String()+": "+ParseError(err),
+			"Could not read Capella AllowList "+allowListResponse.Id.String()+": "+api.ParseError(err),
 		)
 	}
 
@@ -152,7 +152,7 @@ func (r *AllowList) Read(ctx context.Context, req resource.ReadRequest, resp *re
 	// refresh the existing allow list
 	refreshedState, err := r.refreshAllowList(ctx, organizationId, projectId, clusterId, allowListId)
 	if err != nil {
-		resourceNotFound, errString := CheckResourceNotFoundError(err)
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error Reading Capella AllowList",
 			"Could not read Capella allowListID "+allowListId+": "+errString,
@@ -225,7 +225,7 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 		nil,
 	)
 	if err != nil {
-		resourceNotFound, errString := CheckResourceNotFoundError(err)
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error Reading Capella AllowList",
 			"Could not read Capella allowListID "+allowListId+": "+errString,

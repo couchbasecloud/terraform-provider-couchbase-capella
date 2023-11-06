@@ -119,7 +119,7 @@ func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequ
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating database credential",
-			"Could not create database credential, unexpected error: "+ParseError(err),
+			"Could not create database credential, unexpected error: "+api.ParseError(err),
 		)
 		return
 	}
@@ -138,7 +138,7 @@ func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequ
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Database Credentials",
-			"Could not read Capella database credential with ID "+dbResponse.Id.String()+": "+ParseError(err),
+			"Could not read Capella database credential with ID "+dbResponse.Id.String()+": "+api.ParseError(err),
 		)
 		return
 	}
@@ -196,7 +196,7 @@ func (r *DatabaseCredential) Read(ctx context.Context, req resource.ReadRequest,
 	// Get refreshed Cluster value from Capella
 	refreshedState, err := r.retrieveDatabaseCredential(ctx, organizationId, projectId, clusterId, dbId)
 	if err != nil {
-		resourceNotFound, errString := CheckResourceNotFoundError(err)
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error reading database credential",
 			"Could not read database credential with id "+state.Id.String()+": "+errString,
@@ -267,7 +267,7 @@ func (r *DatabaseCredential) Update(ctx context.Context, req resource.UpdateRequ
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating database credential",
-			"Could not update an existing database credential, unexpected error: "+ParseError(err),
+			"Could not update an existing database credential, unexpected error: "+api.ParseError(err),
 		)
 	}
 
@@ -275,7 +275,7 @@ func (r *DatabaseCredential) Update(ctx context.Context, req resource.UpdateRequ
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating database credential",
-			"Could not update an existing database credential, unexpected error: "+ParseError(err),
+			"Could not update an existing database credential, unexpected error: "+api.ParseError(err),
 		)
 	}
 
@@ -331,7 +331,7 @@ func (r *DatabaseCredential) Delete(ctx context.Context, req resource.DeleteRequ
 		nil,
 	)
 	if err != nil {
-		resourceNotFound, errString := CheckResourceNotFoundError(err)
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error Deleting the Database Credential",
 			"Could not delete Database Credential associated with cluster "+clusterId+": "+errString,

@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"time"
 
+	"terraform-provider-capella/internal/api"
 	clusterapi "terraform-provider-capella/internal/api/cluster"
 	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
@@ -119,10 +120,9 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		nil,
 	)
 	if err != nil {
-		_, errString := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
-			"Could not create cluster, unexpected error: "+errString,
+			"Could not create cluster, unexpected error: "+api.ParseError(err),
 		)
 		return
 	}
@@ -139,20 +139,18 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 
 	err = c.checkClusterStatus(ctx, organizationId, projectId, ClusterResponse.Id.String())
 	if err != nil {
-		_, errString := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
-			"Could not create cluster, unexpected error: "+errString,
+			"Could not create cluster, unexpected error: "+api.ParseError(err),
 		)
 		return
 	}
 
 	refreshedState, err := c.retrieveCluster(ctx, organizationId, projectId, ClusterResponse.Id.String())
 	if err != nil {
-		_, errString := CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
-			"Could not create cluster, unexpected error: "+errString,
+			"Could not create cluster, unexpected error: "+api.ParseError(err),
 		)
 		return
 	}
@@ -221,7 +219,7 @@ func (c *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 	// Get refreshed Cluster value from Capella
 	refreshedState, err := c.retrieveCluster(ctx, organizationId, projectId, clusterId)
 	if err != nil {
-		resourceNotFound, errString := CheckResourceNotFoundError(err)
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Cluster",
 			"Could Not Read Capella Cluster "+state.Id.String()+": "+errString,
@@ -325,7 +323,7 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
-			"Could not update cluster id "+state.Id.String()+": "+ParseError(err),
+			"Could not update cluster id "+state.Id.String()+": "+api.ParseError(err),
 		)
 		return
 	}
@@ -334,7 +332,7 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
-			"Could not update cluster id "+state.Id.String()+": "+ParseError(err),
+			"Could not update cluster id "+state.Id.String()+": "+api.ParseError(err),
 		)
 		return
 	}
@@ -343,7 +341,7 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
-			"Could not update cluster id "+state.Id.String()+": "+ParseError(err),
+			"Could not update cluster id "+state.Id.String()+": "+api.ParseError(err),
 		)
 		return
 	}
@@ -402,7 +400,7 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 		nil,
 	)
 	if err != nil {
-		resourceNotFound, errString := CheckResourceNotFoundError(err)
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error Deleting Capella Cluster",
 			"Could Not Delete Capella Cluster "+state.Id.String()+": "+errString,
@@ -416,7 +414,7 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 
 	err = r.checkClusterStatus(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
 	if err != nil {
-		resourceNotFound, errString := CheckResourceNotFoundError(err)
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error Deleting Capella Cluster",
 			"Could not delete cluster id "+state.Id.String()+": "+errString,

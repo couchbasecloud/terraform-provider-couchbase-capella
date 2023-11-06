@@ -100,7 +100,7 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error executing request",
-			"Could not execute request, unexpected error: "+ParseError(err),
+			"Could not execute request, unexpected error: "+api.ParseError(err),
 		)
 	}
 
@@ -118,7 +118,7 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error executing request",
-			"Could not execute request, unexpected error: "+ParseError(err),
+			"Could not execute request, unexpected error: "+api.ParseError(err),
 		)
 	}
 
@@ -172,7 +172,7 @@ func (r *User) Read(ctx context.Context, req resource.ReadRequest, resp *resourc
 	// Refresh the existing user
 	refreshedState, err := r.refreshUser(ctx, organizationId, userId)
 	if err != nil {
-		resourceNotFound, errString := CheckResourceNotFoundError(err)
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error Reading Capella User",
 			"Could not read Capella userID "+userId+": "+errString,
@@ -225,7 +225,7 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 
 	err = r.updateUser(organizationId, userId, patch)
 	if err != nil {
-		resourceNotFound, errString := CheckResourceNotFoundError(err)
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error updating user",
 			"Could not update Capella user with ID "+userId+": "+errString,
@@ -241,7 +241,7 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating user",
-			"Could not update Capella user with ID "+userId+": "+ParseError(err),
+			"Could not update Capella user with ID "+userId+": "+api.ParseError(err),
 		)
 	}
 
@@ -452,7 +452,7 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 		nil,
 	)
 	if err != nil {
-		resourceNotFound, errString := CheckResourceNotFoundError(err)
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error Deleting Capella User",
 			"Could not delete Capella userId "+userId+": "+errString,
