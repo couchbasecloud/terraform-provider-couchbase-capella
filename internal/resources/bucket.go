@@ -411,10 +411,9 @@ func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 
 	currentState, err := c.retrieveBucket(ctx, organizationId, projectId, clusterId, bucketId)
 	if err != nil {
-		_, err := ParseApiError(err)
 		resp.Diagnostics.AddError(
 			"Error updating bucket",
-			"Could not update Capella bucket with ID "+bucketId+": "+err,
+			"Could not update Capella bucket with ID "+bucketId+": "+ParseError(err),
 		)
 	}
 

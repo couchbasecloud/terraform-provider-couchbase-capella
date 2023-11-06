@@ -98,10 +98,9 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 		nil,
 	)
 	if err != nil {
-		_, err := ParseApiError(err)
 		resp.Diagnostics.AddError(
 			"Error executing request",
-			"Could not execute request, unexpected error: "+err,
+			"Could not execute request, unexpected error: "+ParseError(err),
 		)
 	}
 
@@ -117,10 +116,9 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 
 	refreshedState, err := r.refreshUser(ctx, organizationId, createUserResponse.Id.String())
 	if err != nil {
-		_, err := ParseApiError(err)
 		resp.Diagnostics.AddError(
 			"Error executing request",
-			"Could not execute request, unexpected error: "+err,
+			"Could not execute request, unexpected error: "+ParseError(err),
 		)
 	}
 
@@ -244,10 +242,9 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 
 	refreshedState, err := r.refreshUser(ctx, organizationId, userId)
 	if err != nil {
-		_, err := ParseApiError(err)
 		resp.Diagnostics.AddError(
 			"Error updating user",
-			"Could not update Capella user with ID "+userId+": "+err,
+			"Could not update Capella user with ID "+userId+": "+ParseError(err),
 		)
 	}
 

@@ -107,10 +107,9 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 
 	refreshedState, err := r.refreshAllowList(ctx, plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), plan.ClusterId.ValueString(), allowListResponse.Id.String())
 	if err != nil {
-		_, err := ParseApiError(err)
 		resp.Diagnostics.AddError(
 			"Error reading Capella AllowList",
-			"Could not read Capella AllowList "+allowListResponse.Id.String()+": "+err,
+			"Could not read Capella AllowList "+allowListResponse.Id.String()+": "+ParseError(err),
 		)
 	}
 

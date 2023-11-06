@@ -282,19 +282,17 @@ func (r *DatabaseCredential) Update(ctx context.Context, req resource.UpdateRequ
 		nil,
 	)
 	if err != nil {
-		_, err := ParseApiError(err)
 		resp.Diagnostics.AddError(
 			"Error updating database credential",
-			"Could not update an existing database credential, unexpected error: "+err,
+			"Could not update an existing database credential, unexpected error: "+ParseError(err),
 		)
 	}
 
 	currentState, err := r.retrieveDatabaseCredential(ctx, organizationId, projectId, clusterId, dbId)
 	if err != nil {
-		_, err := ParseApiError(err)
 		resp.Diagnostics.AddError(
 			"Error updating database credential",
-			"Could not update an existing database credential, unexpected error: "+err,
+			"Could not update an existing database credential, unexpected error: "+ParseError(err),
 		)
 	}
 
