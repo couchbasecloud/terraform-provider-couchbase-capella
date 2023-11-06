@@ -15,19 +15,19 @@ func Test_ParseError(t *testing.T) {
 	type test struct {
 		name      string
 		err       error
-		expString string
+		expOutput interface{}
 	}
 
 	tests := []test{
 		{
 			name:      "Error received from Capella V4 Api",
 			err:       Error{Message: errMessage},
-			expString: errMessage,
+			expOutput: Error{Message: errMessage}.CompleteError(),
 		},
 		{
 			name:      "Error other than received from Capella V4 Api",
 			err:       errors.ErrAllowListIdCannotBeEmpty,
-			expString: errors.ErrAllowListIdCannotBeEmpty.Error(),
+			expOutput: errors.ErrAllowListIdCannotBeEmpty.Error(),
 		},
 	}
 
@@ -35,7 +35,7 @@ func Test_ParseError(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			errString := ParseError(test.err)
 
-			assert.Equal(t, errString, test.expString)
+			assert.Equal(t, errString, test.expOutput)
 		})
 	}
 }
@@ -48,7 +48,7 @@ func Test_CheckResourceNotFound(t *testing.T) {
 	type test struct {
 		name      string
 		err       error
-		expString string
+		expOutput interface{}
 		expBool   bool
 	}
 
@@ -59,8 +59,11 @@ func Test_CheckResourceNotFound(t *testing.T) {
 				HttpStatusCode: 500,
 				Message:        errMessage,
 			},
-			expString: errMessage,
-			expBool:   false,
+			expOutput: Error{
+				HttpStatusCode: 500,
+				Message:        errMessage,
+			}.CompleteError(),
+			expBool: false,
 		},
 		{
 			name: "Error received from Capella V4 Api - Resource Not Found",
@@ -68,13 +71,16 @@ func Test_CheckResourceNotFound(t *testing.T) {
 				HttpStatusCode: 404,
 				Message:        errMessage,
 			},
-			expString: errMessage,
-			expBool:   true,
+			expOutput: Error{
+				HttpStatusCode: 404,
+				Message:        errMessage,
+			}.CompleteError(),
+			expBool: true,
 		},
 		{
 			name:      "Error other than received from Capella V4 Api",
 			err:       errors.ErrAllowListIdCannotBeEmpty,
-			expString: errors.ErrAllowListIdCannotBeEmpty.Error(),
+			expOutput: errors.ErrAllowListIdCannotBeEmpty.Error(),
 			expBool:   false,
 		},
 	}
@@ -83,8 +89,8 @@ func Test_CheckResourceNotFound(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			resourceNotFound, errString := CheckResourceNotFoundError(test.err)
 
-			assert.Equal(t, errString, test.expString)
-			assert.Equal(t, resourceNotFound, test.expBool)
+			assert.Equal(t, test.expOutput, errString)
+			assert.Equal(t, test.expBool, resourceNotFound)
 		})
 	}
 }
