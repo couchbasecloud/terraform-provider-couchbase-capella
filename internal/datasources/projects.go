@@ -89,28 +89,6 @@ func (d *Projects) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 		}
 		return
 	}
-
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		if err.HttpStatusCode != 404 {
-			resp.Diagnostics.AddError(
-				"Error Reading Capella Projects",
-				"Could not read projects in organization "+state.OrganizationId.String()+": "+err.CompleteError(),
-			)
-			return
-		}
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		resp.State.RemoveResource(ctx)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error Reading Capella Projects",
-			"Could not read projects in organization "+state.OrganizationId.String()+": "+err.Error(),
-		)
-		return
-	}
-
 	for _, project := range response {
 		projectState := providerschema.OneProject{
 			Id:             types.StringValue(project.Id.String()),

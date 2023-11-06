@@ -1,6 +1,7 @@
 package api
 
 import (
+	"net/http"
 	"terraform-provider-capella/internal/errors"
 	"testing"
 
@@ -44,11 +45,11 @@ func Test_CheckResourceNotFound(t *testing.T) {
 	var (
 		errMessage = "example error message"
 		err500     = Error{
-			HttpStatusCode: 500,
+			HttpStatusCode: http.StatusInternalServerError,
 			Message:        errMessage,
 		}
 		err404 = Error{
-			HttpStatusCode: 404,
+			HttpStatusCode: http.StatusNotFound,
 			Message:        errMessage,
 		}
 	)
