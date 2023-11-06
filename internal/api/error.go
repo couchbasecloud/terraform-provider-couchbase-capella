@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 )
@@ -36,13 +35,12 @@ func (e Error) CompleteError() string {
 // ParseError is used to check if an error is of type
 // api.Error error and return it as a string.
 func ParseError(err error) string {
-	var apiErr *Error
-
-	if errors.As(err, &apiErr) {
-		return apiErr.CompleteError()
+	switch err := err.(type) {
+	case Error:
+		return err.CompleteError()
+	default:
+		return err.Error()
 	}
-
-	return err.Error()
 }
 
 // CheckResourceNotFoundError is used to check if an error is of
@@ -51,14 +49,13 @@ func ParseError(err error) string {
 // Note: If the error is other than not found, the error string
 // will be returned along with a bool value of false.
 func CheckResourceNotFoundError(err error) (bool, string) {
-	var apiErr *Error
-
-	if errors.As(err, &apiErr) {
-		if apiErr.HttpStatusCode != http.StatusNotFound {
-			return false, apiErr.CompleteError()
+	switch err := err.(type) {
+	case Error:
+		if err.HttpStatusCode != http.StatusNotFound {
+			return false, err.CompleteError()
 		}
-		return true, apiErr.CompleteError()
+		return true, err.CompleteError()
+	default:
+		return false, err.Error()
 	}
-
-	return false, err.Error()
 }
