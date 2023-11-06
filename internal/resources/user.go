@@ -553,3 +553,19 @@ func handleCapellaUserError(err error) error {
 	}
 	return nil
 }
+
+// this func extract error message if error is api.Error and also checks whether error is
+// resource not found
+func handleUserError(err error) (bool, error) {
+	switch err := err.(type) {
+	case nil:
+		return false, nil
+	case api.Error:
+		if err.HttpStatusCode != http.StatusNotFound {
+			return false, fmt.Errorf(err.CompleteError())
+		}
+		return true, fmt.Errorf(err.CompleteError())
+	default:
+		return false, err
+	}
+}
