@@ -153,14 +153,15 @@ func (r *Project) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 	refreshedState, err := r.retrieveProject(ctx, organizationId, projectId)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Project",
 			"Could not read Capella project ID "+projectId+": "+errString,
 		)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			resp.State.RemoveResource(ctx)
-		}
 		return
 	}
 
@@ -218,10 +219,17 @@ func (r *Project) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		headers,
 	)
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error Updating Capella Projects",
-			"Could not update Capella project ID "+state.Id.String()+": "+api.ParseError(err),
+			"Could not update Capella project ID "+state.Id.String()+": "+errString,
 		)
+		return
 	}
 
 	currentState, err := r.retrieveProject(ctx, organizationId, projectId)

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -88,9 +89,15 @@ func (d *ApiKeys) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 	url := fmt.Sprintf("%s/v4/organizations/%s/apikeys", d.HostURL, organizationId)
 	response, err := api.GetPaginated[[]api.GetApiKeyResponse](ctx, d.Client, d.Token, url)
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error Reading Capella ApiKeys",
-			"Could not read api keys in organization "+organizationId+": "+api.ParseError(err),
+			"Could not read api keys in organization "+organizationId+": "+errString,
 		)
 		return
 	}

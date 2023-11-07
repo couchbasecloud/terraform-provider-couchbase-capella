@@ -153,14 +153,15 @@ func (r *AllowList) Read(ctx context.Context, req resource.ReadRequest, resp *re
 	refreshedState, err := r.refreshAllowList(ctx, organizationId, projectId, clusterId, allowListId)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error Reading Capella AllowList",
 			"Could not read Capella allowListID "+allowListId+": "+errString,
 		)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			resp.State.RemoveResource(ctx)
-		}
 		return
 	}
 

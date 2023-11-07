@@ -79,16 +79,18 @@ func (d *Projects) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 	response, err := api.GetPaginated[[]api.GetProjectResponse](ctx, d.Client, d.Token, url)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Projects",
 			"Could not read projects in organization "+state.OrganizationId.String()+": "+errString,
 		)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			resp.State.RemoveResource(ctx)
-		}
 		return
 	}
+
 	for _, project := range response {
 		projectState := providerschema.OneProject{
 			Id:             types.StringValue(project.Id.String()),

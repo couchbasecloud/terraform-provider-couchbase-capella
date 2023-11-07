@@ -197,14 +197,15 @@ func (r *DatabaseCredential) Read(ctx context.Context, req resource.ReadRequest,
 	refreshedState, err := r.retrieveDatabaseCredential(ctx, organizationId, projectId, clusterId, dbId)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error reading database credential",
 			"Could not read database credential with id "+state.Id.String()+": "+errString,
 		)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			resp.State.RemoveResource(ctx)
-		}
 		return
 	}
 
@@ -265,10 +266,17 @@ func (r *DatabaseCredential) Update(ctx context.Context, req resource.UpdateRequ
 		nil,
 	)
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error updating database credential",
-			"Could not update an existing database credential, unexpected error: "+api.ParseError(err),
+			"Could not update an existing database credential, unexpected error: "+errString,
 		)
+		return
 	}
 
 	currentState, err := r.retrieveDatabaseCredential(ctx, organizationId, projectId, clusterId, dbId)

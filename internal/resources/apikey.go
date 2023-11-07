@@ -215,14 +215,15 @@ func (a *ApiKey) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 	refreshedState, err := a.retrieveApiKey(ctx, organizationId, apiKeyId)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error reading api key",
 			"Could not read api key id "+state.Id.String()+": "+errString,
 		)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			resp.State.RemoveResource(ctx)
-		}
 		return
 	}
 
@@ -321,9 +322,15 @@ func (a *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 		nil,
 	)
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error rotating api key",
-			"Could not rotate api key id "+state.Id.String()+": "+api.ParseError(err),
+			"Could not rotate api key id "+state.Id.String()+": "+errString,
 		)
 		return
 	}
