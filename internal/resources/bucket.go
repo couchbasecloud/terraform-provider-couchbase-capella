@@ -148,15 +148,10 @@ func (c *Bucket) Create(ctx context.Context, req resource.CreateRequest, resp *r
 
 	refreshedState, err := c.retrieveBucket(ctx, organizationId, projectId, clusterId, BucketResponse.Id)
 	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
-			"Error Reading Capella Bucket",
-			"Could not read Capella bucket with ID "+BucketResponse.Id+": "+errString,
+			"Error creating bucket",
+			"Could not create bucket, unexpected error:"+api.ParseError(err),
 		)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			resp.State.RemoveResource(ctx)
-		}
 		return
 	}
 

@@ -147,15 +147,10 @@ func (a *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 
 	refreshedState, err := a.retrieveApiKey(ctx, organizationId, apiKeyResponse.Id)
 	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
-			"Error Reading Capella ApiKeys",
-			"Could not read Capella ApiKey ID "+apiKeyResponse.Id+": "+errString,
+			"Error creating ApiKey",
+			"Could not create ApiKey, unexpected error: "+api.ParseError(err),
 		)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			resp.State.RemoveResource(ctx)
-		}
 		return
 	}
 
