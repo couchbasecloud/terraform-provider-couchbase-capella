@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -148,15 +147,9 @@ func (d *Buckets) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets", d.HostURL, organizationId, projectId, clusterId)
 	response, err := api.GetPaginated[[]bucket.GetBucketResponse](ctx, d.Client, d.Token, url)
 	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			resp.State.RemoveResource(ctx)
-			return
-		}
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Buckets",
-			"Could not read buckets in cluster "+clusterId+": "+errString,
+			"Could not read buckets in cluster "+clusterId+": "+api.ParseError(err),
 		)
 		return
 	}

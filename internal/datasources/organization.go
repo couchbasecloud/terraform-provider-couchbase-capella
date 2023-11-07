@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	providerschema "terraform-provider-capella/internal/schema"
 )
@@ -78,15 +77,9 @@ func (o *Organization) Read(ctx context.Context, req datasource.ReadRequest, res
 		nil,
 	)
 	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			resp.State.RemoveResource(ctx)
-			return
-		}
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Organization",
-			"Could not read organization in cluster "+state.OrganizationId.String()+": "+errString,
+			"Could not read organization in cluster "+state.OrganizationId.String()+": "+api.ParseError(err),
 		)
 		return
 	}
