@@ -113,24 +113,6 @@ type ScheduleInfo struct {
 	Retention types.String `tfsdk:"retention"`
 }
 
-// WeeklySchedule represents the weekly schedule of the backup.
-type WeeklySchedule struct {
-	// DayOfWeek represents the day of the week for the backup.
-	DayOfWeek types.String `tfsdk:"day_of_week"`
-
-	// StartAt represents the start hour of the backup.
-	StartAt types.Int64 `tfsdk:"start_at"`
-
-	// IncrementalEvery represents the interval in hours for incremental backup.
-	IncrementalEvery types.Int64 `tfsdk:"incremental_every"`
-
-	// RetentionTime represents the retention time in days.
-	RetentionTime types.String `tfsdk:"retention_time"`
-
-	// CostOptimizedRetention optimizes backup retention to reduce total cost of ownership (TCO).
-	CostOptimizedRetention types.Bool `tfsdk:"cost_optimized_retention"`
-}
-
 // Validate is used to verify that IDs have been properly imported
 func (b Backup) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{

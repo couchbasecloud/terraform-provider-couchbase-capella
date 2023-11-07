@@ -191,5 +191,6 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewDatabaseCredential,
 		resources.NewBucket,
 		resources.NewBackup,
+		resources.NewBackupSchedule,
 	}
 }
