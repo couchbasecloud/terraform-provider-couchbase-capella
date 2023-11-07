@@ -339,15 +339,10 @@ func (r *DatabaseCredential) Delete(ctx context.Context, req resource.DeleteRequ
 		nil,
 	)
 	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error Deleting the Database Credential",
-			"Could not delete Database Credential associated with cluster "+clusterId+": "+errString,
+			"Could not delete Database Credential associated with cluster "+clusterId+": "+api.ParseError(err),
 		)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			resp.State.RemoveResource(ctx)
-		}
 		return
 	}
 }

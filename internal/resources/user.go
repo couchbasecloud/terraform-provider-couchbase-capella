@@ -453,15 +453,10 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 		nil,
 	)
 	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error Deleting Capella User",
-			"Could not delete Capella userId "+userId+": "+errString,
+			"Could not delete Capella userId "+userId+": "+api.ParseError(err),
 		)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			resp.State.RemoveResource(ctx)
-		}
 		return
 	}
 }
@@ -540,33 +535,4 @@ func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (
 func (r *User) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-// handleCapellaUserError is used to differentiate between error types which
-// may be returned during requests to capella.
-func handleCapellaUserError(err error) error {
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		return fmt.Errorf("%w: %s", errors.ErrUnableToReadCapellaUser, err.CompleteError())
-	default:
-		return fmt.Errorf("%w: %s", errors.ErrUnableToReadCapellaUser, err.Error())
-	}
-	return nil
-}
-
-// this func extract error message if error is api.Error and also checks whether error is
-// resource not found
-func handleUserError(err error) (bool, error) {
-	switch err := err.(type) {
-	case nil:
-		return false, nil
-	case api.Error:
-		if err.HttpStatusCode != http.StatusNotFound {
-			return false, fmt.Errorf(err.CompleteError())
-		}
-		return true, fmt.Errorf(err.CompleteError())
-	default:
-		return false, err
-	}
 }
