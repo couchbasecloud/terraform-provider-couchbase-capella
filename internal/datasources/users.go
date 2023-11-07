@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -97,9 +98,15 @@ func (d *Users) Read(ctx context.Context, req datasource.ReadRequest, resp *data
 	url := fmt.Sprintf("%s/v4/organizations/%s/users", d.HostURL, organizationId)
 	response, err := api.GetPaginated[[]api.GetUserResponse](ctx, d.Client, d.Token, url)
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Users",
-			"Could not read users in organization "+state.OrganizationId.String()+": "+api.ParseError(err),
+			"Could not read users in organization "+state.OrganizationId.String()+": "+errString,
 		)
 		return
 	}
