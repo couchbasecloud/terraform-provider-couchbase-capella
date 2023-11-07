@@ -80,9 +80,10 @@ func (c *Certificate) Read(ctx context.Context, req datasource.ReadRequest, resp
 		clusterId      = state.ClusterId.ValueString()
 	)
 
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/certificates", c.HostURL, organizationId, projectId, clusterId)
+	cfg := api.EndpointCfg{url, http.MethodGet, http.StatusOK}
 	response, err := c.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/certificates", c.HostURL, organizationId, projectId, clusterId),
-		http.MethodGet,
+		cfg,
 		nil,
 		c.Token,
 		nil,

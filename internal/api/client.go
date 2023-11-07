@@ -31,9 +31,27 @@ type Response struct {
 	Body     []byte
 }
 
+// RequestCfg is used to encapsulate request details to endpoints
+type EndpointCfg struct {
+	// Url is url of the endpoint to be contacted
+	Url string
+
+	// Method is the HTTP method to be requested.
+	Method string
+
+	// SuccessStatus represents the HTTP status code associated
+	// with a successful response from the endpoint.
+	SuccessStatus int
+}
+
 // Execute is used to construct and execute a HTTP request.
 // It then returns the response.
-func (c *Client) Execute(url string, method string, payload any, authToken string, headers map[string]string) (response *Response, err error) {
+func (c *Client) Execute(
+	endpointCfg EndpointCfg,
+	payload any,
+	authToken string,
+	headers map[string]string,
+) (response *Response, err error) {
 	var requestBody []byte
 	if payload != nil {
 		requestBody, err = json.Marshal(payload)
@@ -42,7 +60,7 @@ func (c *Client) Execute(url string, method string, payload any, authToken strin
 		}
 	}
 
-	req, err := http.NewRequest(method, url, bytes.NewReader(requestBody))
+	req, err := http.NewRequest(endpointCfg.Method, endpointCfg.Url, bytes.NewReader(requestBody))
 	if err != nil {
 		return nil, fmt.Errorf("%s: %v", errors.ErrConstructingRequest, err)
 	}
@@ -63,10 +81,10 @@ func (c *Client) Execute(url string, method string, payload any, authToken strin
 		return
 	}
 
-	if apiRes.StatusCode >= http.StatusBadRequest {
+	if apiRes.StatusCode != endpointCfg.SuccessStatus {
 		var apiError Error
 		if err := json.Unmarshal(responseBody, &apiError); err != nil {
-			return nil, fmt.Errorf("status: %d, body: %s", apiRes.StatusCode, responseBody)
+			return nil, fmt.Errorf("unexpect status code: %d, body: %s", apiRes.StatusCode, responseBody)
 		}
 		return nil, apiError
 	}

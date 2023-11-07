@@ -3,6 +3,7 @@ package datasources
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"terraform-provider-capella/internal/api"
 	providerschema "terraform-provider-capella/internal/schema"
@@ -86,7 +87,8 @@ func (d *ApiKeys) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/apikeys", d.HostURL, organizationId)
-	response, err := api.GetPaginated[[]api.GetApiKeyResponse](ctx, d.Client, d.Token, url)
+	cfg := api.EndpointCfg{url, http.MethodGet, http.StatusOK}
+	response, err := api.GetPaginated[[]api.GetApiKeyResponse](ctx, d.Client, d.Token, cfg)
 	switch err := err.(type) {
 	case nil:
 	case api.Error:

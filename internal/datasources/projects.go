@@ -3,6 +3,7 @@ package datasources
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"terraform-provider-capella/internal/api"
 	providerschema "terraform-provider-capella/internal/schema"
@@ -76,7 +77,8 @@ func (d *Projects) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 	var organizationId = state.OrganizationId.ValueString()
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects", d.HostURL, organizationId)
-	response, err := api.GetPaginated[[]api.GetProjectResponse](ctx, d.Client, d.Token, url)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	response, err := api.GetPaginated[[]api.GetProjectResponse](ctx, d.Client, d.Token, cfg)
 	switch err := err.(type) {
 	case nil:
 	case api.Error:

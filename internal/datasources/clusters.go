@@ -3,6 +3,7 @@ package datasources
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"terraform-provider-capella/internal/api"
 	clusterapi "terraform-provider-capella/internal/api/cluster"
@@ -70,7 +71,8 @@ func (d *Clusters) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 	)
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", d.HostURL, organizationId, projectId)
-	response, err := api.GetPaginated[[]clusterapi.GetClusterResponse](ctx, d.Client, d.Token, url)
+	cfg := api.EndpointCfg{url, http.MethodGet, http.StatusOK}
+	response, err := api.GetPaginated[[]clusterapi.GetClusterResponse](ctx, d.Client, d.Token, cfg)
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
