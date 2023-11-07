@@ -199,7 +199,6 @@ func (a *AppService) Read(ctx context.Context, req resource.ReadRequest, resp *r
 // Update updates the AppService.
 func (a *AppService) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	//TODO implement me
-	panic("implement me")
 }
 
 // Delete deletes the app service.

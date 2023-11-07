@@ -1,5 +1,7 @@
 package cluster
 
+import "slices"
+
 const (
 	Degraded         State = "degraded"
 	Deploying        State = "deploying"
@@ -41,5 +43,5 @@ func IsFinalState(state State) bool {
 		ScaleFailed,
 		UpgradeFailed,
 	}
-	return Contains(finalStates, state)
+	return slices.Contains(finalStates, state)
 }
