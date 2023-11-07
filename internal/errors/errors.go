@@ -102,4 +102,7 @@ var (
 
 	// ErrValidatingResource is returned when the validation of an existing resource state failed.
 	ErrValidatingResource = errors.New("could not validate resource state, please contact Couchbase Capella Support")
+
+	// ErrBucketIdMissing is returned when an expected Bucket Id was not found after an import.
+	ErrBucketIdMissing = errors.New("bucket ID is missing or was passed incorrectly, please check provider documentation for syntax")
 )

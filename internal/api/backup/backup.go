@@ -94,6 +94,33 @@ type CreateBackupRequest struct {
 	WeeklySchedule *WeeklySchedule `json:"weeklySchedule"`
 }
 
+// GetCycleResponse is the response received from the Capella V4 Public API when asked to fetch details of an existing cycle.
+//
+// To learn more about backup and restore, see https://docs.couchbase.com/cloud/clusters/backup-restore.html
+//
+// In order to access this endpoint, the provided API key must have at least one of the following roles:
+//
+// Organization Owner
+// Project Owner
+// To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
+type GetCycleResponse struct {
+	// CycleId is the cycleId to the which the backup belongs to.
+	CycleId string `json:"cycleID"`
+}
+
+// GetCyclesResponse is the response received from the Capella V4 Public API when asked to list all cycles for a bucket in a cluster.
+//
+// To learn more about backup and restore, see https://docs.couchbase.com/cloud/clusters/backup-restore.html
+//
+// In order to access this endpoint, the provided API key must have at least one of the following roles:
+//
+// Organization Owner
+// Project Owner
+// To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
+type GetCyclesResponse struct {
+	Data []GetCycleResponse `json:"data"`
+}
+
 // GetBackupsResponse is the response received from the Capella V4 Public API when asked to list all backups.
 //
 // In order to access this endpoint, the provided API key must have at least one of the following roles:

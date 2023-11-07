@@ -231,3 +231,39 @@ func (b Backup) Validate() (map[Attr]string, error) {
 	}
 	return IDs, nil
 }
+
+// Backups defines structure based on the response received from V4 Capella Public API when asked to list backups.
+type Backups struct {
+	// OrganizationId The organizationId of the capella.
+	OrganizationId types.String `tfsdk:"organization_id"`
+
+	// ProjectId is the projectId of the capella tenant.
+	ProjectId types.String `tfsdk:"project_id"`
+
+	// ClusterId is the clusterId of the capella tenant.
+	ClusterId types.String `tfsdk:"cluster_id"`
+
+	// BucketId is the ID of the bucket to which the backup belongs to.
+	BucketId types.String `tfsdk:"bucket_id"`
+
+	// Data contains the list of resources.
+	Data []Backup `tfsdk:"data"`
+}
+
+// Validate is used to verify that IDs have been properly imported
+func (b Backups) Validate() (bucketId, clusterId, projectId, organizationId string, err error) {
+	if b.BucketId.IsNull() {
+		return "", "", "", "", errors.ErrBucketIdMissing
+	}
+	if b.OrganizationId.IsNull() {
+		return "", "", "", "", errors.ErrOrganizationIdMissing
+	}
+	if b.ProjectId.IsNull() {
+		return "", "", "", "", errors.ErrProjectIdMissing
+	}
+	if b.ClusterId.IsNull() {
+		return "", "", "", "", errors.ErrClusterIdMissing
+	}
+
+	return b.BucketId.ValueString(), b.ClusterId.ValueString(), b.ProjectId.ValueString(), b.OrganizationId.ValueString(), nil
+}
