@@ -283,15 +283,10 @@ func (r *Bucket) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 		nil,
 	)
 	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error Deleting the Bucket",
-			"Could not delete Bucket associated with cluster "+clusterId+": "+errString,
+			"Could not delete Bucket associated with cluster "+clusterId+": "+api.ParseError(err),
 		)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			resp.State.RemoveResource(ctx)
-		}
 		return
 	}
 }
