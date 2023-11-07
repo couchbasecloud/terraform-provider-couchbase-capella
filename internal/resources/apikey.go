@@ -414,15 +414,10 @@ func (a *ApiKey) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 		nil,
 	)
 	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error deleting api key",
-			"Could not delete api key id "+state.Id.String()+" unexpected error: "+errString,
+			"Could not delete api key id "+state.Id.String()+" unexpected error: "+api.ParseError(err),
 		)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			resp.State.RemoveResource(ctx)
-		}
 		return
 	}
 }
