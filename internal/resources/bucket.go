@@ -375,7 +375,7 @@ func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 		TimeToLiveInSeconds:  state.TimeToLiveInSeconds.ValueInt64(),
 	}
 
-	response, err := c.Client.Execute(
+	_, err = c.Client.Execute(
 		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", c.HostURL, organizationId, projectId, clusterId, bucketId),
 		http.MethodPut,
 		bucketUpdateRequest,
@@ -383,9 +383,15 @@ func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 		nil,
 	)
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error updating bucket",
-			"Could not update bucket, unexpected error: "+string(response.Body),
+			"Could not update bucket, unexpected error: "+bucketId+": "+errString,
 		)
 		return
 	}
