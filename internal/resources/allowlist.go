@@ -90,7 +90,7 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error executing request",
-			"Could not execute request, unexpected error: "+err.Error(),
+			"Could not execute request, unexpected error: "+api.ParseError(err),
 		)
 		return
 	}
