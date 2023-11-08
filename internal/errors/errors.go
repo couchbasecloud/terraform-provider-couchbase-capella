@@ -108,4 +108,7 @@ var (
 
 	// ErrAppServiceIdCannotBeEmpty is returned when an AppServiceId was required for a request but was not included.
 	ErrAppServiceIdCannotBeEmpty = errors.New("App Service ID cannot be empty, please contact Couchbase Capella Support")
+
+	// ErrUnableToUpdateAppServiceName is returned when an app service name was updated.
+	ErrUnableToUpdateAppServiceName = errors.New("app service name cannot be updated")
 )

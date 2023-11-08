@@ -115,6 +115,7 @@ type GetClusterResponse struct {
 	// Support defines the support plan and timezone for this particular cluster.
 	Support Support `json:"support"`
 
+	// Etag represents the version of the document
 	Etag string
 }
 

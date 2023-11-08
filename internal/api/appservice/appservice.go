@@ -30,7 +30,7 @@ type CreateAppServiceRequest struct {
 	Nodes *int64 `json:"nodes,omitempty"`
 
 	// Compute is the CPU and RAM configuration of the app service.
-	Compute Compute `json:"compute"`
+	Compute AppServiceCompute `json:"compute"`
 
 	// Version is version of the App Service Server to be installed.
 	// The latest Server version will be deployed by default.
@@ -75,7 +75,7 @@ type GetAppServiceResponse struct {
 	Nodes int `json:"nodes"`
 
 	// Compute is the CPU and RAM configuration of the app service.
-	Compute Compute `json:"compute"`
+	Compute AppServiceCompute `json:"compute"`
 
 	// OrganizationId is the organizationId of the capella tenant.
 	OrganizationId string `json:"organizationId"`
@@ -94,6 +94,9 @@ type GetAppServiceResponse struct {
 
 	// Audit contains all audit-related fields.
 	Audit api.CouchbaseAuditData `json:"audit"`
+
+	// Etag represents the version of the document
+	Etag string
 }
 
 // GetAppServicesResponse is the response received from the Capella V4 Public API when asked to list all app services.
@@ -108,4 +111,13 @@ type GetAppServiceResponse struct {
 // To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
 type GetAppServicesResponse struct {
 	Data []GetAppServiceResponse `json:"data"`
+}
+
+type UpdateAppServiceRequest struct {
+	// Nodes is the number of nodes configured for the App Service.
+	// The number of nodes can range from 2 to 12
+	Nodes int64 `json:"nodes"`
+
+	// Compute is the CPU and RAM configuration of the app service.
+	Compute AppServiceCompute `json:"compute"`
 }
