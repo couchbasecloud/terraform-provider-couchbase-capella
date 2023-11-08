@@ -257,7 +257,7 @@ func (b *Backup) checkLatestBackupStatus(ctx context.Context, organizationId, pr
 			switch err {
 			case nil:
 				// If there is no existing backup for a bucket, check for a new backup record to be created.
-				// If a backup record exists already, wait for a backup record with a new ID to created.
+				// If a backup record exists already, wait for a backup record with a new ID to be created.
 				if !backupFound && backupResp != nil && backupapi.IsFinalState(backupResp.Status) {
 					return backupResp, nil
 				} else if backupFound && backupResp != nil && latestBackup.Id != backupResp.Id && backupapi.IsFinalState(backupResp.Status) {
