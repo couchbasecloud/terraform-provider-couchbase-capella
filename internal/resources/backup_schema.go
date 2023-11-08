@@ -50,6 +50,24 @@ func BackupSchema() schema.Schema {
 					"retention":   stringAttribute(computed),
 				},
 			},
+			"restore": schema.SingleNestedAttribute{
+				Optional: true,
+				Attributes: map[string]schema.Attribute{
+					"target_cluster_id":       stringAttribute(required),
+					"source_cluster_id":       stringAttribute(required),
+					"backup_id":               stringAttribute(required),
+					"services":                stringListAttribute(required),
+					"force_updates":           boolAttribute(optional),
+					"auto_remove_collections": boolAttribute(optional),
+					"filter_keys":             stringAttribute(optional),
+					"filter_values":           stringAttribute(optional),
+					"include_data":            stringAttribute(optional),
+					"exclude_data":            stringAttribute(optional),
+					"map_data":                stringAttribute(optional),
+					"replace_ttl":             stringAttribute(optional),
+					"replace_ttl_with":        stringAttribute(optional),
+				},
+			},
 		},
 	}
 }

@@ -7,3 +7,6 @@ cluster_id      = "<cluster_id>"
 bucket_id = "<bucket_id>"
 
 backup = {}
+
+restore = {
+}

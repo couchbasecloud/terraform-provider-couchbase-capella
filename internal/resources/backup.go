@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"net/http"
 	"terraform-provider-capella/internal/api"
 	backupapi "terraform-provider-capella/internal/api/backup"
@@ -62,6 +63,13 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		return
 	}
 
+	if !plan.Restore.IsNull() && !plan.Restore.IsUnknown() {
+		resp.Diagnostics.AddError(
+			"Cannot create restore on a backup that is not found",
+			"Could not create restore ",
+		)
+		return
+	}
 	BackupRequest := backupapi.CreateBackupRequest{}
 
 	var organizationId = plan.OrganizationId.ValueString()
@@ -178,8 +186,69 @@ func (b *Backup) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 }
 
 // Update updates the Backup record.
-func (b *Backup) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	//TODO implement me https://couchbasecloud.atlassian.net/browse/AV-66713
+func (b *Backup) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var state providerschema.Backup
+	diags := req.Plan.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	IDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Backup in Capella",
+			"Could not read Capella Backup with ID "+state.Id.String()+": "+err.Error(),
+		)
+	}
+	var (
+		organizationId = IDs[providerschema.OrganizationId]
+		projectId      = IDs[providerschema.ProjectId]
+		clusterId      = IDs[providerschema.ClusterId]
+		//bucketId       = IDs[providerschema.BucketId]
+		backupId = IDs[providerschema.Id]
+	)
+
+	var restore *providerschema.Restore
+	diags.Append(req.Config.GetAttribute(ctx, path.Root("restore"), &restore)...)
+	//tflog.Info(ctx, fmt.Sprintf("couchbase_server: %+v", restore))
+	//return couchbaseServer
+
+	fmt.Println("****************************")
+	fmt.Println(restore.TargetClusterId)
+	var newServices []backupapi.Service
+	for _, service := range restore.Services {
+		newService := service.ValueString()
+		newServices = append(newServices, backupapi.Service(newService))
+	}
+
+	restoreRequest := backupapi.CreateRestoreRequest{
+		TargetClusterId: restore.TargetClusterId.ValueString(),
+		SourceClusterId: restore.SourceClusterId.ValueString(),
+		BackupId:        restore.BackupId.ValueString(),
+		Services:        &newServices,
+	}
+
+	_, err = b.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/backups/%s/restore", b.HostURL, organizationId, projectId, clusterId, backupId),
+		http.MethodPost,
+		restoreRequest,
+		b.Token,
+		nil,
+	)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating bucket",
+			"Could not update bucket, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	fmt.Printf("RESTORE CREATED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Delete deletes the backup.

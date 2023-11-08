@@ -66,6 +66,8 @@ type Backup struct {
 
 	// ScheduleInfo represents the schedule information of the backup.
 	ScheduleInfo types.Object `tfsdk:"schedule_info"`
+
+	Restore types.Object `tfsdk:"restore"`
 }
 
 // BackupStats has the backup level stats provided by Couchbase.
@@ -108,6 +110,34 @@ type ScheduleInfo struct {
 
 	// Retention represents retention time in days.
 	Retention types.String `tfsdk:"retention"`
+}
+
+type Restore struct {
+	TargetClusterId types.String `tfsdk:"target_cluster_id"`
+
+	SourceClusterId types.String `tfsdk:"source_cluster_id"`
+
+	BackupId types.String `tfsdk:"backup_id"`
+
+	Services []types.String `tfsdk:"services"`
+
+	ForceUpdates types.Bool `tfsdk:"force_updates"`
+
+	AutoRemoveCollections types.Bool `tfsdk:"auto_remove_collections"`
+
+	FilterKeys types.String `tfsdk:"filter_keys"`
+
+	FilterValues types.String `tfsdk:"filter_values"`
+
+	IncludeData types.String `tfsdk:"include_data"`
+
+	ExcludeData types.String `tfsdk:"exclude_data"`
+
+	MapData types.String `tfsdk:"map_data"`
+
+	ReplaceTTL types.String `tfsdk:"replace_ttl"`
+
+	ReplaceTTLWith types.String `json:"replace_ttl_with"`
 }
 
 func (b BackupStats) AttributeTypes() map[string]attr.Type {
