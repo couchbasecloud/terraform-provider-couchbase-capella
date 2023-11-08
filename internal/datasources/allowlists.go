@@ -138,7 +138,7 @@ func (d *AllowLists) listAllowLists(ctx context.Context, organizationId, project
 		clusterId,
 	)
 
-	return api.GetPaginated[[]api.GetAllowListResponse](ctx, d.Client, d.Token, url)
+	return api.GetPaginated[[]api.GetAllowListResponse](ctx, d.Client, d.Token, url, api.SortById)
 }
 
 // Configure adds the provider configured client to the allowlist data source.
