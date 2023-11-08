@@ -52,10 +52,23 @@ type HRefs struct {
 	Next string `json:"next"`
 }
 
+type sortParameter string
+
+const (
+	SortById   = "id"
+	SortByName = "name"
+)
+
 // GetPaginated is a generic function used to handle pagination. It executes a get request
 // according to the supplied url parameter. It then iterates through remaining pages to
 // flatten paginated responses into a single slice of responses.
-func GetPaginated[DataSchema ~[]T, T any](ctx context.Context, client *Client, token string, url string) (DataSchema, error) {
+func GetPaginated[DataSchema ~[]T, T any](
+	ctx context.Context,
+	client *Client,
+	token string,
+	url string,
+	sortBy sortParameter,
+) (DataSchema, error) {
 	var (
 		responses DataSchema
 		page      = 1
@@ -69,7 +82,7 @@ func GetPaginated[DataSchema ~[]T, T any](ctx context.Context, client *Client, t
 
 	for {
 		// construct pagination parameters
-		pageParams := fmt.Sprintf("?page=%d&perPage=%d&sortBy=id", page, perPage)
+		pageParams := fmt.Sprintf("?page=%d&perPage=%d&sortBy=%s", page, perPage, string(sortBy))
 
 		response, err := client.Execute(
 			url+pageParams,

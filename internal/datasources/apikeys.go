@@ -86,8 +86,10 @@ func (d *ApiKeys) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/apikeys", d.HostURL, organizationId)
-	response, err := api.GetPaginated[[]api.GetApiKeyResponse](ctx, d.Client, d.Token, url)
-	if err != nil {
+	response, err := api.GetPaginated[[]api.GetApiKeyResponse](ctx, d.Client, d.Token, url, api.SortByName)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
 		resp.Diagnostics.AddError(
 			"Error Reading Capella ApiKeys",
 			"Could not read api keys in organization "+organizationId+": "+api.ParseError(err),
