@@ -45,7 +45,7 @@ type GetBackupResponse struct {
 	Source string `json:"source"`
 
 	// Provider is the cloud provider where the cluster is hosted.
-	Provider string `json:"provider"`
+	CloudProvider string `json:"provider"`
 
 	// BackupStats represents various backup level data that couchbase provides.
 	BackupStats BackupStats `json:"stats"`

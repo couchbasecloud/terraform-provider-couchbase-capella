@@ -26,7 +26,7 @@ func BackupSchema() schema.Schema {
 			"method":          stringAttribute(computed),
 			"bucket_name":     stringAttribute(computed),
 			"source":          stringAttribute(computed),
-			"provider":        stringAttribute(computed),
+			"cloud_provider":  stringAttribute(computed),
 			"backup_stats": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{

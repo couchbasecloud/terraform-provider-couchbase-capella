@@ -53,7 +53,7 @@ type Backup struct {
 	Source types.String `tfsdk:"source"`
 
 	// Provider is the cloud provider where the cluster is hosted.
-	Provider types.String `tfsdk:"provider"`
+	CloudProvider types.String `tfsdk:"cloud_provider"`
 
 	// BackupStats represents various backup level data that couchbase provides.
 	BackupStats types.Object `tfsdk:"backup_stats"`
