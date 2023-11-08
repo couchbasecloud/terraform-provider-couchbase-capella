@@ -64,18 +64,14 @@ func Test_MapResponseBody(t *testing.T) {
 
 	type test struct {
 		desc          string
-		response      api.GetAllowListsResponse
+		data          []api.GetAllowListResponse
 		expectedState providerschema.AllowLists
 	}
 
 	tests := []test{
 		{
 			desc: "[POSITIVE] - Fields successfully populated - one allow list in response",
-			response: api.GetAllowListsResponse{
-				Data: []api.GetAllowListResponse{
-					allowList,
-				},
-			},
+			data: []api.GetAllowListResponse{allowList},
 			expectedState: providerschema.AllowLists{
 				OrganizationId: organizationId,
 				ProjectId:      projectId,
@@ -85,12 +81,7 @@ func Test_MapResponseBody(t *testing.T) {
 		},
 		{
 			desc: "[POSITIVE] - Fields successfully populated - multiple allow lists in response",
-			response: api.GetAllowListsResponse{
-				Data: []api.GetAllowListResponse{
-					allowList,
-					allowList,
-				},
-			},
+			data: []api.GetAllowListResponse{allowList, allowList},
 			expectedState: providerschema.AllowLists{
 				OrganizationId: organizationId,
 				ProjectId:      projectId,
@@ -112,7 +103,7 @@ func Test_MapResponseBody(t *testing.T) {
 				ProjectId:      projectId,
 				ClusterId:      clusterId,
 			}
-			state = a.mapResponseBody(test.response, &state)
+			state = a.mapResponseBody(test.data, &state)
 
 			assert.Equal(t, test.expectedState, state)
 		})
