@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"net/http"
 
-	"terraform-provider-capella/internal/api"
+	api "terraform-provider-capella/internal/api"
 	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
+
+	"github.com/couchbase/tools-common/functional/slices"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -22,11 +24,6 @@ var (
 	_ resource.Resource                = &User{}
 	_ resource.ResourceWithConfigure   = &User{}
 	_ resource.ResourceWithImportState = &User{}
-)
-
-const (
-	organizationIdKey = "organizationId"
-	userIdKey         = "userId"
 )
 
 // User is the User resource implementation
@@ -88,7 +85,7 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 	createUserRequest := api.CreateUserRequest{
 		Name:              plan.Name.ValueString(),
 		Email:             plan.Email.ValueString(),
-		OrganizationRoles: providerschema.ConvertOrganizationRoles(plan.OrganizationRoles),
+		OrganizationRoles: providerschema.ConvertRoles(plan.OrganizationRoles),
 		Resources:         providerschema.ConvertResources(plan.Resources),
 	}
 
@@ -118,7 +115,7 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 		return
 	}
 
-	refreshedState, err := r.refreshUser(ctx, organizationId, createUserResponse.Id.String(), plan)
+	refreshedState, err := r.refreshUser(ctx, organizationId, createUserResponse.Id.String())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading user",
@@ -160,7 +157,7 @@ func (r *User) Read(ctx context.Context, req resource.ReadRequest, resp *resourc
 	}
 
 	// Validate parameters were successfully imported
-	resourceIDs, err := state.Validate()
+	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella AllowList",
@@ -170,12 +167,12 @@ func (r *User) Read(ctx context.Context, req resource.ReadRequest, resp *resourc
 	}
 
 	var (
-		organizationId = resourceIDs[organizationIdKey]
-		userId         = resourceIDs[userIdKey]
+		organizationId = IDs[providerschema.OrganizationId]
+		userId         = IDs[providerschema.Id]
 	)
 
 	// Refresh the existing user
-	refreshedState, err := r.refreshUser(ctx, organizationId, userId, state)
+	refreshedState, err := r.refreshUser(ctx, organizationId, userId)
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
@@ -207,15 +204,231 @@ func (r *User) Read(ctx context.Context, req resource.ReadRequest, resp *resourc
 
 // Update updates the user
 func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// Couchbase Capella's v4 does not support a PUT endpoint for users.
-	// Users are instead updated via a PATCH request.
-	// http://cbc-cp-api.s3-website-us-east-1.amazonaws.com/#tag/allowedCIDRs(Cluster)
-	//
-	// The update logic has been therefore been left blank. In this situation, terraform apply
-	// will default to deleting and executing a new create.
-	// https://developer.hashicorp.com/terraform/plugin/framework/resources/update
-	//
-	// TODO (AV-63471): Implement logic to parse and execute a PATCH request
+	// Retrieve values from plan
+	var state, plan providerschema.User
+
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+
+	diags = req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	IDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating user",
+			"Could not update user id: "+state.Id.String()+" unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	var (
+		organizationId = IDs[providerschema.OrganizationId]
+		userId         = IDs[providerschema.Id]
+	)
+
+	patch := constructPatch(state, plan)
+
+	err = r.updateUser(organizationId, userId, patch)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating user",
+			"Could not update Capella user with ID "+userId+": "+err.Error(),
+		)
+		return
+	}
+
+	refreshedState, err := r.refreshUser(ctx, organizationId, userId)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		resp.Diagnostics.AddError(
+			"Error updating user",
+			"Could not update Capella user with ID "+userId+": "+err.CompleteError(),
+		)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error updating user",
+			"Could not update Capella user with ID "+userId+": "+err.Error(),
+		)
+		return
+	}
+
+	// Set state to fully populated data
+	diags = resp.State.Set(ctx, refreshedState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+}
+
+// constructPatch is used to determine to compare the planned user state with the
+// existing user state and populate a Patch struct with the required fields.
+func constructPatch(existing, proposed providerschema.User) []api.PatchEntry {
+	patch := make([]api.PatchEntry, 0)
+
+	patch = append(patch, handleOrganizationRoles(existing.OrganizationRoles, proposed.OrganizationRoles)...)
+	patch = append(patch, handleProjectRoles(existing.Resources, proposed.Resources)...)
+	patch = append(patch, handleResources(existing.Resources, proposed.Resources)...)
+
+	return patch
+}
+
+// handleOrganizationRoles is used to compare the organizationRoles contained within
+// two states and construct patch entries to reflect their differences.
+func handleOrganizationRoles(existingRoles, proposedRoles []basetypes.StringValue) []api.PatchEntry {
+	entries := make([]api.PatchEntry, 0)
+
+	// Handle changes to organizationRoles
+	addRoles, removeRoles := compare(existingRoles, proposedRoles)
+	if len(addRoles) > 0 {
+		providerschema.ConvertRoles(addRoles)
+		entries = append(entries, api.PatchEntry{
+			Op:    string(api.Add),
+			Path:  "/organizationRoles",
+			Value: providerschema.ConvertRoles(addRoles),
+		})
+	}
+	if len(removeRoles) > 0 {
+		entries = append(entries, api.PatchEntry{
+			Op:    string(api.Remove),
+			Path:  "/organizationRoles",
+			Value: providerschema.ConvertRoles(removeRoles),
+		})
+	}
+
+	return entries
+}
+
+// handleProjectRoles is used to compare the projectRoles contained within
+// two states and construct patch entries to reflect their differences.
+func handleProjectRoles(existingResources, proposedResources []providerschema.Resource) []api.PatchEntry {
+	entries := make([]api.PatchEntry, 0)
+
+	// populate maps with existing and proposed project roles
+	existingMap := make(map[basetypes.StringValue][]basetypes.StringValue)
+	proposedMap := make(map[basetypes.StringValue][]basetypes.StringValue)
+
+	for _, resource := range existingResources {
+		resourceType := resource.Type.ValueString()
+		if resourceType != "" && resourceType != "project" {
+			continue
+		}
+		existingMap[resource.Id] = resource.Roles
+	}
+
+	for _, resource := range proposedResources {
+		resourceType := resource.Type.ValueString()
+		if resourceType != "" && resource.Type.ValueString() != "project" {
+			continue
+		}
+		proposedMap[resource.Id] = resource.Roles
+	}
+
+	// compare and construct patch entries
+	for _, resource := range proposedResources {
+		path := fmt.Sprintf("/resources/%s/roles", resource.Id.ValueString())
+		if existing, exists := existingMap[resource.Id]; exists {
+			addRoles, removeRoles := compare(existing, resource.Roles)
+			if len(addRoles) > 0 {
+				entries = append(entries, api.PatchEntry{
+					Op:    string(api.Add),
+					Path:  path,
+					Value: providerschema.ConvertRoles(addRoles),
+				})
+			}
+			if len(removeRoles) > 0 {
+				entries = append(entries, api.PatchEntry{
+					Op:    string(api.Remove),
+					Path:  path,
+					Value: providerschema.ConvertRoles(removeRoles),
+				})
+			}
+		}
+	}
+	return entries
+}
+
+// handleResources is used to compare the resources contained within
+// two states and construct patch entries to reflect their differences.
+func handleResources(existingResources, proposedResources []providerschema.Resource) []api.PatchEntry {
+	entries := make([]api.PatchEntry, 0)
+
+	// populate maps with existing and proposed resources
+	existingMap := make(map[basetypes.StringValue]providerschema.Resource)
+	proposedMap := make(map[basetypes.StringValue]providerschema.Resource)
+
+	for _, resource := range existingResources {
+		existingMap[resource.Id] = resource
+	}
+
+	for _, resource := range proposedResources {
+		proposedMap[resource.Id] = resource
+	}
+
+	// compare and construct patch entries
+	for _, resource := range proposedResources {
+		if _, exists := existingMap[resource.Id]; !exists {
+			path := fmt.Sprintf("/resources/%s", resource.Id.ValueString())
+			entries = append(entries, api.PatchEntry{
+				Op:    "add",
+				Path:  path,
+				Value: providerschema.ConvertResource(resource),
+			})
+		}
+	}
+
+	for _, resource := range existingResources {
+		if _, exists := proposedMap[resource.Id]; !exists {
+			path := fmt.Sprintf("/resources/%s", resource.Id.ValueString())
+			entries = append(entries, api.PatchEntry{
+				Op:    "remove",
+				Path:  path,
+				Value: providerschema.ConvertResource(resource),
+			})
+		}
+	}
+
+	return entries
+}
+
+// compare is used to compare two slices of basetypes.stringvalue
+// and determine which values should be added and which should be removed.
+func compare(existing, proposed []basetypes.StringValue) ([]basetypes.StringValue, []basetypes.StringValue) {
+	// Add values present in the proposed state but not in existing.
+	add := slices.Difference(proposed, existing)
+
+	// Remove values present in the existing state but not in removed.
+	remove := slices.Difference(existing, proposed)
+
+	return add, remove
+}
+
+// updateUser is used to execute the patch request to update a user.
+func (r *User) updateUser(organizationId, userId string, patch []api.PatchEntry) error {
+	// Update existing user
+	_, err := r.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/users/%s", r.HostURL, organizationId, userId),
+		http.MethodPatch,
+		patch,
+		r.Token,
+		nil,
+	)
+	resourceNotFound, err := handleUserError(err)
+	if resourceNotFound {
+		return fmt.Errorf("error updating user: %s", errors.ErrNotFound)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Delete deletes the user
@@ -229,7 +442,7 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 		return
 	}
 
-	resourceIDs, err := state.Validate()
+	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Deleting Capella User",
@@ -237,13 +450,19 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 		)
 		return
 	}
+
+	var (
+		organizationId = IDs[providerschema.OrganizationId]
+		userId         = IDs[providerschema.Id]
+	)
+
 	// Execute request to delete existing user
 	_, err = r.Client.Execute(
 		fmt.Sprintf(
 			"%s/v4/organizations/%s/users/%s",
 			r.HostURL,
-			resourceIDs[organizationIdKey],
-			resourceIDs[userIdKey],
+			organizationId,
+			userId,
 		),
 		http.MethodDelete,
 		nil,
@@ -256,7 +475,7 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 		if err.HttpStatusCode != http.StatusNotFound {
 			resp.Diagnostics.AddError(
 				"Error Deleting Capella User",
-				"Could not delete Capella userId "+resourceIDs[userIdKey]+": "+err.CompleteError(),
+				"Could not delete Capella userId "+userId+": "+err.CompleteError(),
 			)
 			tflog.Info(ctx, "resource doesn't exist in remote server")
 			return
@@ -264,7 +483,7 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 	default:
 		resp.Diagnostics.AddError(
 			"Error Deleting Capella User",
-			"Could not delete Capella userId "+resourceIDs[userIdKey]+": "+err.Error(),
+			"Could not delete Capella userId "+userId+": "+err.Error(),
 		)
 		return
 	}
@@ -296,7 +515,9 @@ func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api
 	return &userResp, nil
 }
 
-func (r *User) refreshUser(ctx context.Context, organizationId, userId string, plan providerschema.User) (*providerschema.User, error) {
+// refreshUser retrieves user information for a specified organization and and user.
+// It returns a schema representing the current user state.
+func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (*providerschema.User, error) {
 	userResp, err := r.getUser(ctx, organizationId, userId)
 	if err != nil {
 		return nil, err
@@ -321,13 +542,13 @@ func (r *User) refreshUser(ctx context.Context, organizationId, userId string, p
 		types.StringValue(userResp.Status),
 		types.BoolValue(userResp.Inactive),
 		types.StringValue(userResp.OrganizationId.String()),
-		providerschema.MorphOrganizationRoles(userResp.OrganizationRoles),
+		providerschema.MorphRoles(userResp.OrganizationRoles),
 		types.StringValue(userResp.LastLogin),
 		types.StringValue(userResp.Region),
 		types.StringValue(userResp.TimeZone),
 		types.BoolValue(userResp.EnableNotifications),
 		types.StringValue(userResp.ExpiresAt),
-		plan.Resources,
+		providerschema.MorphResources(userResp.Resources),
 		auditObj,
 	)
 	return refreshedState, nil
@@ -355,4 +576,20 @@ func handleCapellaUserError(err error) error {
 		return fmt.Errorf("%w: %s", errors.ErrUnableToReadCapellaUser, err.Error())
 	}
 	return nil
+}
+
+// this func extract error message if error is api.Error and also checks whether error is
+// resource not found
+func handleUserError(err error) (bool, error) {
+	switch err := err.(type) {
+	case nil:
+		return false, nil
+	case api.Error:
+		if err.HttpStatusCode != http.StatusNotFound {
+			return false, fmt.Errorf(err.CompleteError())
+		}
+		return true, fmt.Errorf(err.CompleteError())
+	default:
+		return false, err
+	}
 }

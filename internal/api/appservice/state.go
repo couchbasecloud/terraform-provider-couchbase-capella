@@ -1,5 +1,7 @@
 package appservice
 
+import "slices"
+
 const (
 	// Pending communicates that the sync gateway is waiting to be
 	// provisioned.
@@ -50,15 +52,5 @@ func IsFinalState(state State) bool {
 		ScaleFailed,
 		UpgradeFailed,
 	}
-	return Contains(finalStates, state)
-}
-
-// Contains checks whether passed element presents in array or not
-func Contains[T comparable](s []T, e T) bool {
-	for _, r := range s {
-		if r == e {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(finalStates, state)
 }

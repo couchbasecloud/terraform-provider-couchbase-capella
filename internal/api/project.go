@@ -67,18 +67,3 @@ type PutProjectRequest struct {
 	// Name is the name of the project.
 	Name string `json:"name"`
 }
-
-// GetProjectsResponse is the response received from the Capella V4 Public API when asked to list all projects in an organization.
-//
-// In order to access this endpoint, the provided API key must have at least one of the following roles:
-//
-// Organization Owner
-// Project Owner
-// Project Manager
-// Project Viewer
-// Database Data Reader/Writer
-// Database Data Reader
-// To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
-type GetProjectsResponse struct {
-	Data []GetProjectResponse `json:"data"`
-}

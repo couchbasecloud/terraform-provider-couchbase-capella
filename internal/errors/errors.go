@@ -103,8 +103,11 @@ var (
 	// ErrValidatingResource is returned when the validation of an existing resource state failed.
 	ErrValidatingResource = errors.New("could not validate resource state, please contact Couchbase Capella Support")
 
+	// ErrNotFound is returned when a resource is requested but not found.
+	ErrNotFound = errors.New("A resource was requested but could not be found")
+
 	// ErrAppServiceIdCannotBeEmpty is returned when an AppServiceId was required for a request but was not included.
-	ErrAppServiceIdCannotBeEmpty = errors.New("apService ID cannot be empty, please contact Couchbase Capella Support")
+	ErrAppServiceIdCannotBeEmpty = errors.New("App Service ID cannot be empty, please contact Couchbase Capella Support")
 
 	// ErrUnableToUpdateAppServiceName is returned when an app service name was updated.
 	ErrUnableToUpdateAppServiceName = errors.New("app service name cannot be updated")

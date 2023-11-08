@@ -28,16 +28,6 @@ type CouchbaseServer struct {
 	Version *string `json:"version,omitempty"`
 }
 
-// Contains checks whether passed element presents in array or not
-func Contains[T comparable](s []T, e T) bool {
-	for _, r := range s {
-		if r == e {
-			return true
-		}
-	}
-	return false
-}
-
 // AreEqual returns true if the two arrays contain the same elements, without any extra values, False otherwise.
 func AreEqual[T comparable](array1 []T, array2 []T) bool {
 	if len(array1) != len(array2) {

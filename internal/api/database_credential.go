@@ -103,7 +103,3 @@ type PutDatabaseCredentialRequest struct {
 	// Access describes the access information of the database credential.
 	Access []Access `json:"access"`
 }
-
-type GetDatabaseCredentialsResponse struct {
-	Data []GetDatabaseCredentialResponse `json:"data"`
-}

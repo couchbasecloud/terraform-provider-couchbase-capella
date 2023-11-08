@@ -5,16 +5,18 @@ import (
 	"terraform-provider-capella/internal/api"
 )
 
-// CreateAppServiceRequest is the request payload sent to the Capella V4 Public API in order to create a new ap service.
-// An App Service synchronizes data between the Couchbase Capella database and your apps running on mobile applications.
+// CreateAppServiceRequest is the request payload sent to the Capella V4 Public API in order to create a new app service.
+// An App Service synchronizes data between the Couchbase Capella database and any mobile applications.
 // App Service is a fully managed application backend designed to provide data synchronization for mobile/IoT applications and the Capella Cloud Service.
+//
+// To learn more about App Services, see https://docs.couchbase.com/cloud/app-services/index.html
 //
 // In order to access this endpoint, the provided API key must have at least one of the roles referenced below:
 //
 // Organization Owner
 // Project Owner
 // Project Manager
-// To learn more, see Organization, Project, and Database Access Overview.
+// To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
 type CreateAppServiceRequest struct {
 	// Name is the name of the app service, the name of the app service should follow this naming criteria:
 	// An app service name should have at least 2 characters and up to 256 characters.
@@ -28,7 +30,7 @@ type CreateAppServiceRequest struct {
 	Nodes *int64 `json:"nodes,omitempty"`
 
 	// Compute is the CPU and RAM configuration of the app service.
-	Compute AppServiceCompute `tfsdk:"compute"`
+	Compute AppServiceCompute `json:"compute"`
 
 	// Version is version of the App Service Server to be installed.
 	// The latest Server version will be deployed by default.
@@ -50,7 +52,7 @@ type CreateAppServiceResponse struct {
 // Project Viewer
 // Database Data Reader/Writer
 // Database Data Reader
-// To learn more, see Organization, Project, and Database Access Overview.
+// To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
 type GetAppServiceResponse struct {
 	// Id is the ID of the app service created.
 	Id uuid.UUID `json:"id"`
@@ -73,22 +75,22 @@ type GetAppServiceResponse struct {
 	Nodes int `json:"nodes"`
 
 	// Compute is the CPU and RAM configuration of the app service.
-	Compute AppServiceCompute `tfsdk:"compute"`
+	Compute AppServiceCompute `json:"compute"`
 
 	// OrganizationId is the organizationId of the capella tenant.
 	OrganizationId string `json:"organizationId"`
 
 	// ProjectId is the projectId of the cluster.
-	ProjectId string `tfsdk:"projectId"`
+	ProjectId string `json:"projectId"`
 
 	// ClusterId is the clusterId of the cluster.
-	ClusterId string `tfsdk:"clusterId"`
+	ClusterId string `json:"clusterId"`
 
 	// CurrentState defines the current state of app service.
 	CurrentState State `json:"currentState"`
 
 	// Version defines the version of the app service server.
-	Version string `tfsdk:"version"`
+	Version string `json:"version"`
 
 	// Audit contains all audit-related fields.
 	Audit api.CouchbaseAuditData `json:"audit"`
@@ -106,7 +108,7 @@ type GetAppServiceResponse struct {
 // Project Viewer
 // Database Data Reader/Writer
 // Database Data Reader
-// To learn more, see Organization, Project, and Database Access Overview.
+// To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
 type GetAppServicesResponse struct {
 	Data []GetAppServiceResponse `json:"data"`
 }
@@ -117,5 +119,5 @@ type UpdateAppServiceRequest struct {
 	Nodes int64 `json:"nodes"`
 
 	// Compute is the CPU and RAM configuration of the app service.
-	Compute AppServiceCompute `tfsdk:"compute"`
+	Compute AppServiceCompute `json:"compute"`
 }

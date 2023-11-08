@@ -9,6 +9,7 @@ import (
 )
 
 // AppService defines the response as received from V4 Capella Public API when asked to create a new app service.
+// To learn more about App Services, see https://docs.couchbase.com/cloud/app-services/index.html
 type AppService struct {
 	// Id is a UUID of the app service.
 	Id types.String `tfsdk:"id"`
