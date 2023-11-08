@@ -57,7 +57,7 @@ func (d *Users) Schema(_ context.Context, _ datasource.SchemaRequest, resp *data
 						"enable_notifications": computedBoolAttribute,
 						"expires_at":           computedStringAttribute,
 						"resources": schema.ListNestedAttribute{
-							Required: true,
+							Computed: true,
 							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
 									"type":  computedStringAttribute,
@@ -184,7 +184,7 @@ func (d *Users) mapResponseBody(
 			types.StringValue(userResp.Status),
 			types.BoolValue(userResp.Inactive),
 			types.StringValue(userResp.OrganizationId.String()),
-			providerschema.MorphOrganizationRoles(userResp.OrganizationRoles),
+			providerschema.MorphRoles(userResp.OrganizationRoles),
 			types.StringValue(userResp.LastLogin),
 			types.StringValue(userResp.Region),
 			types.StringValue(userResp.TimeZone),
