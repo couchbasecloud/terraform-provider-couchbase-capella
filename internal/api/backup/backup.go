@@ -64,13 +64,6 @@ type GetBackupResponse struct {
 
 	// ScheduleInfo represents the schedule information of the backup.
 	ScheduleInfo *ScheduleInfo `json:"scheduleInfo"`
-
-	// ToDo Required for Backup Schedule, tracking under -https://couchbasecloud.atlassian.net/browse/AV-66698
-	// Type represents whether the backup is a Weekly or Daily backup.
-	// Type string `json:"type"`
-
-	// WeeklySchedule represents the weekly schedule of the backup.
-	// WeeklySchedule WeeklySchedule `json:"weeklySchedule"`
 }
 
 // CreateBackupRequest is the request payload sent to the Capella V4 Public API in order to create a new backup.
@@ -86,13 +79,7 @@ type GetBackupResponse struct {
 // Organization Owner
 // Project Owner
 // To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
-type CreateBackupRequest struct {
-	// Type represents whether the backup is a Weekly or Daily backup.
-	Type *string `json:"type"`
-
-	// WeeklySchedule represents the weekly schedule of the backup.
-	WeeklySchedule *WeeklySchedule `json:"weeklySchedule"`
-}
+type CreateBackupRequest struct{}
 
 // GetBackupsResponse is the response received from the Capella V4 Public API when asked to list all backups.
 //

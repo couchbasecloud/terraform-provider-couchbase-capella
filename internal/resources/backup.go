@@ -63,17 +63,6 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	}
 
 	BackupRequest := backupapi.CreateBackupRequest{}
-	// ToDo Required for Backup Schedule, tracking under -https://couchbasecloud.atlassian.net/browse/AV-66698
-	//if !plan.Type.IsNull() && !plan.Type.IsUnknown() {
-	//	BackupRequest.Type = plan.Type.ValueStringPointer()
-	//	//BackupRequest.WeeklySchedule = &backupapi.WeeklySchedule{
-	//	//	DayOfWeek:              plan.WeeklySchedule.DayOfWeek.ValueString(),
-	//	//	StartAt:                plan.WeeklySchedule.StartAt.ValueInt64(),
-	//	//	IncrementalEvery:       plan.WeeklySchedule.IncrementalEvery.ValueInt64(),
-	//	//	RetentionTime:          plan.WeeklySchedule.RetentionTime.ValueString(),
-	//	//	CostOptimizedRetention: plan.WeeklySchedule.CostOptimizedRetention.ValueBool(),
-	//	//}
-	//}
 
 	var organizationId = plan.OrganizationId.ValueString()
 	var projectId = plan.ProjectId.ValueString()
