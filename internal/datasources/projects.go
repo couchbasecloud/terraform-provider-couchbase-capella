@@ -76,7 +76,7 @@ func (d *Projects) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 	var organizationId = state.OrganizationId.ValueString()
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects", d.HostURL, organizationId)
-	response, err := api.GetPaginated[[]api.GetProjectResponse](ctx, d.Client, d.Token, url)
+	response, err := api.GetPaginated[[]api.GetProjectResponse](ctx, d.Client, d.Token, url, api.SortById)
 	switch err := err.(type) {
 	case nil:
 	case api.Error:

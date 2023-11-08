@@ -113,7 +113,7 @@ func (d *DatabaseCredentials) Read(ctx context.Context, req datasource.ReadReque
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users", d.HostURL, organizationId, projectId, clusterId)
-	response, err := api.GetPaginated[[]api.GetDatabaseCredentialResponse](ctx, d.Client, d.Token, url)
+	response, err := api.GetPaginated[[]api.GetDatabaseCredentialResponse](ctx, d.Client, d.Token, url, api.SortById)
 	switch err := err.(type) {
 	case nil:
 	case api.Error:

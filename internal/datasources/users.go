@@ -97,7 +97,7 @@ func (d *Users) Read(ctx context.Context, req datasource.ReadRequest, resp *data
 
 	// Make request to list Users
 	url := fmt.Sprintf("%s/v4/organizations/%s/users", d.HostURL, organizationId)
-	response, err := api.GetPaginated[[]api.GetUserResponse](ctx, d.Client, d.Token, url)
+	response, err := api.GetPaginated[[]api.GetUserResponse](ctx, d.Client, d.Token, url, api.SortById)
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
