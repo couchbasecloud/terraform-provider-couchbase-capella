@@ -71,13 +71,22 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	var bucketId = plan.BucketId.ValueString()
 
 	latestBackup, err := b.getLatestBackup(organizationId, projectId, clusterId, bucketId)
-	if err != nil {
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		resp.Diagnostics.AddError(
+			"Error getting latest bucket backup in a cluster",
+			"Could not get the latest bucket backup : unexpected error "+err.CompleteError(),
+		)
+		return
+	default:
 		resp.Diagnostics.AddError(
 			"Error getting latest bucket backup in a cluster",
 			"Could not get the latest bucket backup : unexpected error "+err.Error(),
 		)
 		return
 	}
+
 	var backupFound bool
 	if latestBackup != nil {
 		backupFound = true
@@ -90,17 +99,25 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		b.Token,
 		nil,
 	)
-	if err != nil {
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
 		resp.Diagnostics.AddError(
-			"Error executing request",
-			"Could not execute request, unexpected error: "+err.Error(),
+			"Error executing create backup request",
+			"Could not execute create backup request : unexpected error "+err.CompleteError(),
+		)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error executing create backup request",
+			"Could not execute create backup request : unexpected error "+err.Error(),
 		)
 		return
 	}
 
-	BackupResponse, err := b.checkLatestBackupStatus(ctx, organizationId, projectId, clusterId, bucketId, backupFound, latestBackup)
+	backupResponse, err := b.checkLatestBackupStatus(ctx, organizationId, projectId, clusterId, bucketId, backupFound, latestBackup)
 
-	backupStats := providerschema.NewBackupStats(*BackupResponse.BackupStats)
+	backupStats := providerschema.NewBackupStats(*backupResponse.BackupStats)
 	backupStatsObj, diags := types.ObjectValueFrom(ctx, backupStats.AttributeTypes(), backupStats)
 	if diags.HasError() {
 		resp.Diagnostics.AddError(
@@ -110,7 +127,7 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		return
 	}
 
-	scheduleInfo := providerschema.NewScheduleInfo(*BackupResponse.ScheduleInfo)
+	scheduleInfo := providerschema.NewScheduleInfo(*backupResponse.ScheduleInfo)
 	scheduleInfoObj, diags := types.ObjectValueFrom(ctx, scheduleInfo.AttributeTypes(), scheduleInfo)
 	if diags.HasError() {
 		resp.Diagnostics.AddError(
@@ -120,7 +137,7 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		return
 	}
 
-	refreshedState := providerschema.NewBackup(BackupResponse, organizationId, projectId, backupStatsObj, scheduleInfoObj)
+	refreshedState := providerschema.NewBackup(backupResponse, organizationId, projectId, backupStatsObj, scheduleInfoObj)
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
