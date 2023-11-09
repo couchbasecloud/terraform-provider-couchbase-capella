@@ -12,10 +12,10 @@ import (
 	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -202,7 +202,7 @@ func (b *Backup) Update(ctx context.Context, request resource.UpdateRequest, res
 }
 
 // Delete deletes the backup.
-func (b *Backup) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (b *Backup) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// Retrieve values from state
 	var state providerschema.Backup
 	diags := req.State.Get(ctx, &state)
@@ -251,7 +251,7 @@ func (b *Backup) Delete(ctx context.Context, request resource.DeleteRequest, res
 }
 
 // ImportState imports a remote backup that is not created by Terraform.
-func (b *Backup) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (b *Backup) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
