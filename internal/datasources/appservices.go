@@ -69,18 +69,10 @@ func (d *AppServices) Read(ctx context.Context, req datasource.ReadRequest, resp
 		d.Token,
 		nil,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella App Services",
-			fmt.Sprintf("Could not read app services in organization %s, unexpected error: %s", organizationId, err.CompleteError()),
-		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error Reading Capella App Services",
-			fmt.Sprintf("Could not read app services in organization %s, unexpected error: %s", organizationId, err.Error()),
+			fmt.Sprintf("Could not read app services in organization %s, unexpected error: %s", organizationId, api.ParseError(err)),
 		)
 		return
 	}
