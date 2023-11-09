@@ -177,6 +177,9 @@ func (b *Backup) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 		return
 	}
 
+	refreshedState.Restore = state.Restore
+	refreshedState.RestoreTimes = state.RestoreTimes
+
 	diags = resp.State.Set(ctx, &refreshedState)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -187,14 +190,19 @@ func (b *Backup) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 
 // Update updates the Backup record.
 func (b *Backup) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var state providerschema.Backup
-	diags := req.Plan.Get(ctx, &state)
+	var state, plan providerschema.Backup
+
+	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
+
+	diags = req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	IDs, err := state.Validate()
+	IDs, err := plan.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Backup in Capella",
@@ -214,6 +222,28 @@ func (b *Backup) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 	//tflog.Info(ctx, fmt.Sprintf("couchbase_server: %+v", restore))
 	//return couchbaseServer
 
+	fmt.Println("***********************STARTED RESTORE PROCESS - 2 ***************************")
+
+	if plan.RestoreTimes.IsNull() || plan.RestoreTimes.IsUnknown() {
+		resp.Diagnostics.AddError(
+			"Error restoring backup",
+			"Could not restore backup id "+state.Id.String()+": plan restore times value is not set",
+		)
+		return
+	}
+
+	if !state.RestoreTimes.IsNull() && !state.RestoreTimes.IsUnknown() {
+		planRestoreTimes := *plan.RestoreTimes.ValueBigFloat()
+		stateRestoreTimes := *state.RestoreTimes.ValueBigFloat()
+		if planRestoreTimes.Cmp(&stateRestoreTimes) != 1 {
+			resp.Diagnostics.AddError(
+				"Error restoring backup",
+				"Could not restore backup id "+state.Id.String()+": plan restore times value is not greater than state restore times value",
+			)
+			return
+		}
+	}
+
 	fmt.Println("****************************")
 	fmt.Println(restore.TargetClusterId)
 	var newServices []backupapi.Service
@@ -225,7 +255,7 @@ func (b *Backup) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 	restoreRequest := backupapi.CreateRestoreRequest{
 		TargetClusterId: restore.TargetClusterId.ValueString(),
 		SourceClusterId: restore.SourceClusterId.ValueString(),
-		BackupId:        restore.BackupId.ValueString(),
+		BackupId:        backupId,
 		Services:        &newServices,
 	}
 
@@ -245,6 +275,17 @@ func (b *Backup) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 	}
 
 	fmt.Printf("RESTORE CREATED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
+	if !plan.Restore.IsUnknown() && !plan.Restore.IsNull() {
+		restoreObj, diags := types.ObjectValueFrom(ctx, restore.AttributeTypes(), restore)
+		if diags.HasError() {
+			resp.Diagnostics.Append(diags...)
+			return
+		}
+		plan.Restore = restoreObj
+		plan.RestoreTimes = state.RestoreTimes
+	}
+	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -290,6 +331,10 @@ func (a *Backup) validateCreateBackupRequest(plan providerschema.Backup) error {
 	}
 	if plan.BucketId.IsNull() {
 		return errors.ErrBucketIdCannotBeEmpty
+	}
+
+	if !plan.RestoreTimes.IsNull() && !plan.RestoreTimes.IsUnknown() {
+		return errors.ErrRestoreTimesMustNotBeSetWhileCreateBackup
 	}
 	return nil
 }

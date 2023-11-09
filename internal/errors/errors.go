@@ -111,4 +111,6 @@ var (
 
 	// ErrUnableToUpdateAppServiceName is returned when an app service name was updated.
 	ErrUnableToUpdateAppServiceName = errors.New("app service name cannot be updated")
+
+	ErrRestoreTimesMustNotBeSetWhileCreateBackup = errors.New("restore times must not be set while create backup")
 )

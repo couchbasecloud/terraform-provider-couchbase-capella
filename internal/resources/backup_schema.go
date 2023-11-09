@@ -2,6 +2,7 @@ package resources
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 )
@@ -19,14 +20,14 @@ func BackupSchema() schema.Schema {
 			"project_id":      stringAttribute(required),
 			"cluster_id":      stringAttribute(required),
 			"bucket_id":       stringAttribute(required, requiresReplace),
-			"cycle_id":        stringAttribute(computed),
-			"date":            stringAttribute(computed),
-			"restore_before":  stringAttribute(optional, computed),
-			"status":          stringAttribute(computed),
-			"method":          stringAttribute(computed),
-			"bucket_name":     stringAttribute(computed),
-			"source":          stringAttribute(computed),
-			"cloud_provider":  stringAttribute(computed),
+			"cycle_id":        stringAttribute(computed, useStateForUnknown),
+			"date":            stringAttribute(computed, useStateForUnknown),
+			"restore_before":  stringAttribute(optional, computed, useStateForUnknown),
+			"status":          stringAttribute(computed, useStateForUnknown),
+			"method":          stringAttribute(computed, useStateForUnknown),
+			"bucket_name":     stringAttribute(computed, useStateForUnknown),
+			"source":          stringAttribute(computed, useStateForUnknown),
+			"cloud_provider":  stringAttribute(computed, useStateForUnknown),
 			"backup_stats": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
@@ -39,8 +40,11 @@ func BackupSchema() schema.Schema {
 					"cbas":       int64Attribute(computed),
 					"event":      int64Attribute(computed),
 				},
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.UseStateForUnknown(),
+				},
 			},
-			"elapsed_time_in_seconds": int64Attribute(computed),
+			"elapsed_time_in_seconds": int64Attribute(computed, useStateForUnknown),
 			"schedule_info": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
@@ -49,13 +53,15 @@ func BackupSchema() schema.Schema {
 					"increment":   int64Attribute(computed),
 					"retention":   stringAttribute(computed),
 				},
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"restore": schema.SingleNestedAttribute{
 				Optional: true,
 				Attributes: map[string]schema.Attribute{
 					"target_cluster_id":       stringAttribute(required),
 					"source_cluster_id":       stringAttribute(required),
-					"backup_id":               stringAttribute(required),
 					"services":                stringListAttribute(required),
 					"force_updates":           boolAttribute(optional),
 					"auto_remove_collections": boolAttribute(optional),
@@ -66,8 +72,10 @@ func BackupSchema() schema.Schema {
 					"map_data":                stringAttribute(optional),
 					"replace_ttl":             stringAttribute(optional),
 					"replace_ttl_with":        stringAttribute(optional),
+					"status":                  stringAttribute(computed),
 				},
 			},
+			"restore_times": int64Attribute(optional, computed),
 		},
 	}
 }
