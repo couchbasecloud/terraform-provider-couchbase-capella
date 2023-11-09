@@ -113,7 +113,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	var projectId = plan.ProjectId.ValueString()
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", c.HostURL, organizationId, projectId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
 	response, err := c.Client.Execute(
 		cfg,
 		ClusterRequest,
@@ -124,7 +124,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
-			"Could not create cluster, unexpected error: "+err.Error(),
+			"Could not create cluster: "+err.Error(),
 		)
 		return
 	}
@@ -144,7 +144,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
-			"Could not create cluster, unexpected error: "+err.Error(),
+			"Could not read cluster status, unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -154,7 +154,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
-			"Could not create cluster, unexpected error: "+err.Error(),
+			"Could not retrieve cluster, unexpected error: "+err.Error(),
 		)
 		return
 	}

@@ -51,16 +51,16 @@ func (d *Clusters) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 
 	if state.OrganizationId.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error creating cluster",
-			"Could not create cluster, unexpected error: organization ID cannot be empty.",
+			"Error reading cluster",
+			"Could not read cluster, unexpected error: organization ID cannot be empty.",
 		)
 		return
 	}
 
 	if state.ProjectId.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error creating cluster",
-			"Could not create cluster, unexpected error: project ID cannot be empty.",
+			"Error reading cluster",
+			"Could not read cluster, unexpected error: project ID cannot be empty.",
 		)
 		return
 	}
