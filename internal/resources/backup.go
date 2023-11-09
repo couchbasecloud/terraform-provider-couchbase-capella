@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
+
 	"terraform-provider-capella/internal/api"
 	backupapi "terraform-provider-capella/internal/api/backup"
 	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -63,17 +64,6 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	}
 
 	BackupRequest := backupapi.CreateBackupRequest{}
-	// ToDo Required for Backup Schedule, tracking under -https://couchbasecloud.atlassian.net/browse/AV-66698
-	//if !plan.Type.IsNull() && !plan.Type.IsUnknown() {
-	//	BackupRequest.Type = plan.Type.ValueStringPointer()
-	//	//BackupRequest.WeeklySchedule = &backupapi.WeeklySchedule{
-	//	//	DayOfWeek:              plan.WeeklySchedule.DayOfWeek.ValueString(),
-	//	//	StartAt:                plan.WeeklySchedule.StartAt.ValueInt64(),
-	//	//	IncrementalEvery:       plan.WeeklySchedule.IncrementalEvery.ValueInt64(),
-	//	//	RetentionTime:          plan.WeeklySchedule.RetentionTime.ValueString(),
-	//	//	CostOptimizedRetention: plan.WeeklySchedule.CostOptimizedRetention.ValueBool(),
-	//	//}
-	//}
 
 	var organizationId = plan.OrganizationId.ValueString()
 	var projectId = plan.ProjectId.ValueString()
@@ -81,13 +71,22 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	var bucketId = plan.BucketId.ValueString()
 
 	latestBackup, err := b.getLatestBackup(organizationId, projectId, clusterId, bucketId)
-	if err != nil {
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		resp.Diagnostics.AddError(
+			"Error getting latest bucket backup in a cluster",
+			"Could not get the latest bucket backup : unexpected error "+err.CompleteError(),
+		)
+		return
+	default:
 		resp.Diagnostics.AddError(
 			"Error getting latest bucket backup in a cluster",
 			"Could not get the latest bucket backup : unexpected error "+err.Error(),
 		)
 		return
 	}
+
 	var backupFound bool
 	if latestBackup != nil {
 		backupFound = true
@@ -100,17 +99,25 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		b.Token,
 		nil,
 	)
-	if err != nil {
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
 		resp.Diagnostics.AddError(
-			"Error executing request",
-			"Could not execute request, unexpected error: "+err.Error(),
+			"Error executing create backup request",
+			"Could not execute create backup request : unexpected error "+err.CompleteError(),
+		)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error executing create backup request",
+			"Could not execute create backup request : unexpected error "+err.Error(),
 		)
 		return
 	}
 
-	BackupResponse, err := b.checkLatestBackupStatus(ctx, organizationId, projectId, clusterId, bucketId, backupFound, latestBackup)
+	backupResponse, err := b.checkLatestBackupStatus(ctx, organizationId, projectId, clusterId, bucketId, backupFound, latestBackup)
 
-	backupStats := providerschema.NewBackupStats(*BackupResponse.BackupStats)
+	backupStats := providerschema.NewBackupStats(*backupResponse.BackupStats)
 	backupStatsObj, diags := types.ObjectValueFrom(ctx, backupStats.AttributeTypes(), backupStats)
 	if diags.HasError() {
 		resp.Diagnostics.AddError(
@@ -120,7 +127,7 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		return
 	}
 
-	scheduleInfo := providerschema.NewScheduleInfo(*BackupResponse.ScheduleInfo)
+	scheduleInfo := providerschema.NewScheduleInfo(*backupResponse.ScheduleInfo)
 	scheduleInfoObj, diags := types.ObjectValueFrom(ctx, scheduleInfo.AttributeTypes(), scheduleInfo)
 	if diags.HasError() {
 		resp.Diagnostics.AddError(
@@ -130,7 +137,7 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		return
 	}
 
-	refreshedState := providerschema.NewBackup(BackupResponse, organizationId, projectId, backupStatsObj, scheduleInfoObj)
+	refreshedState := providerschema.NewBackup(backupResponse, organizationId, projectId, backupStatsObj, scheduleInfoObj)
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
@@ -268,7 +275,7 @@ func (b *Backup) checkLatestBackupStatus(ctx context.Context, organizationId, pr
 			switch err {
 			case nil:
 				// If there is no existing backup for a bucket, check for a new backup record to be created.
-				// If a backup record exists already, wait for a backup record with a new ID to created.
+				// If a backup record exists already, wait for a backup record with a new ID to be created.
 				if !backupFound && backupResp != nil && backupapi.IsFinalState(backupResp.Status) {
 					return backupResp, nil
 				} else if backupFound && backupResp != nil && latestBackup.Id != backupResp.Id && backupapi.IsFinalState(backupResp.Status) {

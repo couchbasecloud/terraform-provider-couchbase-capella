@@ -126,50 +126,57 @@ func (u *User) Validate() (map[Attr]string, error) {
 	return IDs, nil
 }
 
-// MorphOrganizationRoles is used to convert nested organizationRoles from
+// MorphRoles is used to convert nested organizationRoles from
 // strings to terraform type.String.
 // TODO (AV-53457): add unit testing
-func MorphOrganizationRoles(organizationRoles []string) []basetypes.StringValue {
+func MorphRoles(roles []string) []basetypes.StringValue {
 	var morphedRoles []basetypes.StringValue
-	for _, role := range organizationRoles {
+	for _, role := range roles {
 		morphedRoles = append(morphedRoles, types.StringValue(role))
 	}
 	return morphedRoles
 }
 
-// ConvertOrganizationRoles is used to convert all roles
+// ConvertRoles is used to convert all roles
 // in an array of basetypes.StringValue to strings.
 // TODO (AV-53457): add unit testing
-func ConvertOrganizationRoles(organizationRoles []basetypes.StringValue) []string {
+func ConvertRoles(roles []basetypes.StringValue) []string {
 	var convertedRoles []string
-	for _, role := range organizationRoles {
+	for _, role := range roles {
 		convertedRoles = append(convertedRoles, role.ValueString())
 	}
 	return convertedRoles
 }
 
-// ConvertResource is used to convert a resource object containing nested fields
-// of type basetypes.StringValue to a resource object containing nested fields of type string.
+// ConvertResources is used to convert an array of resource objects containing nested fields
+// of type basetypes.StringValue to resource objects containing nested fields of type string.
 // TODO (AV-53457): add unit testing
 func ConvertResources(resources []Resource) []api.Resource {
 	var convertedResources []api.Resource
 	for _, resource := range resources {
-		var convertedResource api.Resource
-		convertedResource.Id = resource.Id.ValueString()
-
-		resourceType := resource.Type.ValueString()
-		convertedResource.Type = &resourceType
-
-		// Iterate through roles belonging to the user and convert to string
-		var convertedRoles []string
-		for _, role := range resource.Roles {
-			convertedRoles = append(convertedRoles, role.ValueString())
-		}
-		convertedResource.Roles = convertedRoles
-
+		convertedResource := ConvertResource(resource)
 		convertedResources = append(convertedResources, convertedResource)
 	}
 	return convertedResources
+}
+
+// ConvertResources is used to convert a resource object containing nested fields
+// of type basetypes.StringValue to a resource object containing nested fields of type string.
+// TODO (AV-53457): add unit testing
+func ConvertResource(resource Resource) api.Resource {
+	var convertedResource api.Resource
+	convertedResource.Id = resource.Id.ValueString()
+
+	resourceType := resource.Type.ValueString()
+	convertedResource.Type = &resourceType
+
+	// Iterate through roles belonging to the user and convert to string
+	var convertedRoles []string
+	for _, role := range resource.Roles {
+		convertedRoles = append(convertedRoles, role.ValueString())
+	}
+	convertedResource.Roles = convertedRoles
+	return convertedResource
 }
 
 // MorphResources is used to covert nested resources from strings

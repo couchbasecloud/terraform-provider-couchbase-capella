@@ -50,18 +50,6 @@ func BackupSchema() schema.Schema {
 					"retention":   stringAttribute(computed),
 				},
 			},
-			// ToDo Required for Backup Schedule, tracking under -https://couchbasecloud.atlassian.net/browse/AV-66698
-			//"type": stringAttribute(optional),
-			//"weekly_schedule": schema.SingleNestedAttribute{
-			//	Optional: true,
-			//	Attributes: map[string]schema.Attribute{
-			//		"day_of_week":              stringAttribute(optional),
-			//		"start_at":                 int64Attribute(optional),
-			//		"incremental_every":        int64Attribute(optional),
-			//		"retention_time":           stringAttribute(optional),
-			//		"cost_optimized_retention": boolAttribute(optional),
-			//	},
-			//},
 		},
 	}
 }

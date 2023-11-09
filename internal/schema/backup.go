@@ -66,13 +66,6 @@ type Backup struct {
 
 	// ScheduleInfo represents the schedule information of the backup.
 	ScheduleInfo types.Object `tfsdk:"schedule_info"`
-
-	// ToDo Required for Backup Schedule, tracking under -https://couchbasecloud.atlassian.net/browse/AV-66698
-	// Type represents whether the backup is a Weekly or Daily backup.
-	// Type types.String `tfsdk:"type"`
-
-	// WeeklySchedule represents the weekly schedule of the backup.
-	// WeeklySchedule WeeklySchedule `tfsdk:"weekly_schedule"`
 }
 
 // BackupStats has the backup level stats provided by Couchbase.
@@ -115,24 +108,6 @@ type ScheduleInfo struct {
 
 	// Retention represents retention time in days.
 	Retention types.String `tfsdk:"retention"`
-}
-
-// WeeklySchedule represents the weekly schedule of the backup.
-type WeeklySchedule struct {
-	// DayOfWeek represents the day of the week for the backup.
-	DayOfWeek types.String `tfsdk:"day_of_week"`
-
-	// StartAt represents the start hour of the backup.
-	StartAt types.Int64 `tfsdk:"start_at"`
-
-	// IncrementalEvery represents the interval in hours for incremental backup.
-	IncrementalEvery types.Int64 `tfsdk:"incremental_every"`
-
-	// RetentionTime represents the retention time in days.
-	RetentionTime types.String `tfsdk:"retention_time"`
-
-	// CostOptimizedRetention optimizes backup retention to reduce total cost of ownership (TCO).
-	CostOptimizedRetention types.Bool `tfsdk:"cost_optimized_retention"`
 }
 
 func (b BackupStats) AttributeTypes() map[string]attr.Type {
@@ -203,15 +178,6 @@ func NewBackup(backup *backup.GetBackupResponse,
 		BackupStats:          bStatsObj,
 		ScheduleInfo:         sInfoObj,
 		ElapsedTimeInSeconds: types.Int64Value(backup.ElapsedTimeInSeconds),
-		// ToDo Required for Backup Schedule, tracking under -https://couchbasecloud.atlassian.net/browse/AV-66698
-		// Type: types.StringValue(backup.Type),
-		// WeeklySchedule: WeeklySchedule{
-		//	DayOfWeek:              types.StringValue(backup.WeeklySchedule.DayOfWeek),
-		//	StartAt:                types.Int64Value(backup.WeeklySchedule.StartAt),
-		//	IncrementalEvery:       types.Int64Value(backup.WeeklySchedule.IncrementalEvery),
-		//	RetentionTime:          types.StringValue(backup.WeeklySchedule.RetentionTime),
-		//	CostOptimizedRetention: types.BoolValue(backup.WeeklySchedule.CostOptimizedRetention),
-		//},
 	}
 	return &newBackup
 }
