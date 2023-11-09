@@ -402,7 +402,7 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 
 	// Delete existing Cluster
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", r.HostURL, organizationId, projectId, clusterId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
 	_, err = r.Client.Execute(
 		cfg,
 		nil,
