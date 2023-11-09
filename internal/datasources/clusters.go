@@ -71,7 +71,7 @@ func (d *Clusters) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 	)
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", d.HostURL, organizationId, projectId)
-	cfg := api.EndpointCfg{url, http.MethodGet, http.StatusOK}
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
 	response, err := api.GetPaginated[[]clusterapi.GetClusterResponse](ctx, d.Client, d.Token, cfg, api.SortById)
 	switch err := err.(type) {

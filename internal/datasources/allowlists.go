@@ -138,7 +138,7 @@ func (d *AllowLists) listAllowLists(ctx context.Context, organizationId, project
 		clusterId,
 	)
 
-	cfg := api.EndpointCfg{url, http.MethodGet, http.StatusOK}
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	return api.GetPaginated[[]api.GetAllowListResponse](ctx, d.Client, d.Token, cfg, api.SortById)
 }
 

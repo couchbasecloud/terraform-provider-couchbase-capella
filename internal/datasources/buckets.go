@@ -147,7 +147,7 @@ func (d *Buckets) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets", d.HostURL, organizationId, projectId, clusterId)
-	cfg := api.EndpointCfg{url, http.MethodGet, http.StatusOK}
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
 	response, err := api.GetPaginated[[]bucket.GetBucketResponse](ctx, d.Client, d.Token, cfg, api.SortById)
 	switch err := err.(type) {
