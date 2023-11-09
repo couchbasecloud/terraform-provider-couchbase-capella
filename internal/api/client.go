@@ -84,7 +84,7 @@ func (c *Client) Execute(
 	if apiRes.StatusCode != endpointCfg.SuccessStatus {
 		var apiError Error
 		if err := json.Unmarshal(responseBody, &apiError); err != nil {
-			return nil, fmt.Errorf("unexpect status code: %d, body: %s", apiRes.StatusCode, responseBody)
+			return nil, fmt.Errorf("unexpected status code: %d, body: %s", apiRes.StatusCode, responseBody)
 		}
 		return nil, apiError
 	}
