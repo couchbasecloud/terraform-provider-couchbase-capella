@@ -46,3 +46,21 @@ type GetBackupScheduleResponse struct {
 	// WeeklySchedule represents the weekly schedule of the backup.
 	WeeklySchedule *WeeklySchedule `json:"weeklySchedule"`
 }
+
+// UpdateBackupScheduleRequest is the request payload sent to the Capella V4 Public API in order to update the existing backup schedule.
+//
+// To learn more about backup and restore, see https://docs.couchbase.com/cloud/clusters/backup-restore.html
+//
+// In order to access this endpoint, the provided API key must have at least one of the following roles:
+//
+// Organization Owner
+// Project Owner
+// Project Manager
+// To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
+type UpdateBackupScheduleRequest struct {
+	// Type represents whether the backup is a Weekly or Daily backup.
+	Type string `json:"type"`
+
+	// WeeklySchedule represents the weekly schedule of the backup.
+	WeeklySchedule WeeklySchedule `json:"weeklySchedule"`
+}

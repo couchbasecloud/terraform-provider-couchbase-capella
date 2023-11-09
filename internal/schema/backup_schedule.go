@@ -1,10 +1,12 @@
 package schema
 
 import (
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"terraform-provider-capella/internal/api/backup_schedule"
+	"terraform-provider-capella/internal/errors"
 )
 
 // BackupSchedule defines the response as received from V4 Capella Public API when asked to create a new backup schedule.
@@ -27,6 +29,24 @@ type BackupSchedule struct {
 
 	// WeeklySchedule represents the weekly schedule of the backup.
 	WeeklySchedule types.Object `tfsdk:"weekly_schedule"`
+}
+
+// Validate checks the validity of an API key and extracts associated IDs.
+// TODO : add unit testing
+func (a *BackupSchedule) Validate() (map[Attr]string, error) {
+	state := map[Attr]basetypes.StringValue{
+		OrganizationId: a.OrganizationId,
+		ProjectId:      a.ProjectId,
+		ClusterId:      a.ClusterId,
+		BucketId:       a.BucketId,
+	}
+
+	IDs, err := validateSchemaState(state)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
+	}
+
+	return IDs, nil
 }
 
 // WeeklySchedule represents the weekly schedule of the backup.
