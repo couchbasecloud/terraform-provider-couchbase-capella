@@ -26,7 +26,7 @@ var (
 	_ resource.ResourceWithImportState = &Cluster{}
 )
 
-// Cluster is the project resource implementation.
+// Cluster is the Cluster resource implementation.
 type Cluster struct {
 	*providerschema.Data
 }
@@ -176,7 +176,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	}
 }
 
-// Configure It adds the provider configured api to the project resource.
+// Configure adds the provider configured api to the project resource.
 func (c *Cluster) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -196,7 +196,7 @@ func (c *Cluster) Configure(_ context.Context, req resource.ConfigureRequest, re
 	c.Data = data
 }
 
-// Read reads project information.
+// Read reads the cluster information.
 func (c *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state providerschema.Cluster
 	diags := req.State.Get(ctx, &state)
@@ -375,7 +375,7 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 	}
 }
 
-// Delete deletes the project.
+// Delete deletes the cluster.
 func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// Retrieve values from state
 	var state providerschema.Cluster

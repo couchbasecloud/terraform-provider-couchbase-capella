@@ -88,7 +88,8 @@ func (d *ApiKeys) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/apikeys", d.HostURL, organizationId)
 	cfg := api.EndpointCfg{url, http.MethodGet, http.StatusOK}
-	response, err := api.GetPaginated[[]api.GetApiKeyResponse](ctx, d.Client, d.Token, cfg)
+	response, err := api.GetPaginated[[]api.GetApiKeyResponse](ctx, d.Client, d.Token, cfg, api.SortByName)
+
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
