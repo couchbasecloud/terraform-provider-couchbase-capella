@@ -2,9 +2,12 @@ package schema
 
 import (
 	"fmt"
+	"terraform-provider-capella/internal/api/backup"
+	"terraform-provider-capella/internal/errors"
+
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"terraform-provider-capella/internal/errors"
 )
 
 // Backup maps Backup resource schema data to the response received from V4 Capella Public API.
@@ -63,18 +66,12 @@ type Backup struct {
 
 	// ScheduleInfo represents the schedule information of the backup.
 	ScheduleInfo types.Object `tfsdk:"schedule_info"`
-
-	// Type represents whether the backup is a Weekly or Daily backup.
-	Type types.String `tfsdk:"type"`
-
-	// WeeklySchedule represents the weekly schedule of the backup.
-	WeeklySchedule types.Object `tfsdk:"weekly_schedule"`
 }
 
 // BackupStats has the backup level stats provided by Couchbase.
 type BackupStats struct {
 	// SizeInMB represents backup size in megabytes.
-	SizeInMB types.Int64 `tfsdk:"size_in_mb"`
+	SizeInMB types.Float64 `tfsdk:"size_in_mb"`
 
 	// Items is the number of items saved during the backup.
 	Items types.Int64 `tfsdk:"items"`
@@ -98,7 +95,7 @@ type BackupStats struct {
 	Event types.Int64 `tfsdk:"event"`
 }
 
-// ScheduleInfo provides schedule information of the backup
+// ScheduleInfo provides schedule information of the backup.
 type ScheduleInfo struct {
 	// BackupType represents whether the backup is a Weekly or Daily backup.
 	BackupType types.String `tfsdk:"backup_type"`
@@ -111,6 +108,78 @@ type ScheduleInfo struct {
 
 	// Retention represents retention time in days.
 	Retention types.String `tfsdk:"retention"`
+}
+
+func (b BackupStats) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"size_in_mb": types.Float64Type,
+		"items":      types.Int64Type,
+		"mutations":  types.Int64Type,
+		"tombstones": types.Int64Type,
+		"gsi":        types.Int64Type,
+		"fts":        types.Int64Type,
+		"cbas":       types.Int64Type,
+		"event":      types.Int64Type,
+	}
+}
+
+// NewBackupStats creates a new BackupStats data object
+func NewBackupStats(backupStats backup.BackupStats) BackupStats {
+	return BackupStats{
+		SizeInMB:   types.Float64Value(backupStats.SizeInMB),
+		Items:      types.Int64Value(backupStats.Items),
+		Mutations:  types.Int64Value(backupStats.Mutations),
+		Tombstones: types.Int64Value(backupStats.Tombstones),
+		GSI:        types.Int64Value(backupStats.GSI),
+		FTS:        types.Int64Value(backupStats.FTS),
+		CBAS:       types.Int64Value(backupStats.CBAS),
+		Event:      types.Int64Value(backupStats.Event),
+	}
+}
+
+func (b ScheduleInfo) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"backup_type": types.StringType,
+		"backup_time": types.StringType,
+		"increment":   types.Int64Type,
+		"retention":   types.StringType,
+	}
+}
+
+// NewScheduleInfo creates a new ScheduleInfo data object
+func NewScheduleInfo(scheduleInfo backup.ScheduleInfo) ScheduleInfo {
+	return ScheduleInfo{
+		BackupType: types.StringValue(scheduleInfo.BackupType),
+		BackupTime: types.StringValue(scheduleInfo.BackupTime),
+		Increment:  types.Int64Value(scheduleInfo.Increment),
+		Retention:  types.StringValue(scheduleInfo.Retention),
+	}
+}
+
+// NewBackup creates new backup object
+func NewBackup(backup *backup.GetBackupResponse,
+	organizationId, projectId string,
+	bStatsObj, sInfoObj basetypes.ObjectValue,
+) *Backup {
+	newBackup := Backup{
+		Id:                   types.StringValue(backup.Id),
+		OrganizationId:       types.StringValue(organizationId),
+		ProjectId:            types.StringValue(projectId),
+		ClusterId:            types.StringValue(backup.ClusterId),
+		CycleId:              types.StringValue(backup.CycleId),
+		Date:                 types.StringValue(backup.Date),
+		RestoreBefore:        types.StringValue(backup.RestoreBefore),
+		Status:               types.StringValue(string(backup.Status)),
+		Method:               types.StringValue(backup.Method),
+		BucketName:           types.StringValue(backup.BucketName),
+		BucketId:             types.StringValue(backup.BucketId),
+		Source:               types.StringValue(backup.Source),
+		CloudProvider:        types.StringValue(backup.CloudProvider),
+		BackupStats:          bStatsObj,
+		ScheduleInfo:         sInfoObj,
+		ElapsedTimeInSeconds: types.Int64Value(backup.ElapsedTimeInSeconds),
+	}
+	return &newBackup
 }
 
 // Validate is used to verify that IDs have been properly imported
