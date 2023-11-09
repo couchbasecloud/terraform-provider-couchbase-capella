@@ -2,9 +2,7 @@ package datasources
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"terraform-provider-capella/internal/api"
 	providerschema "terraform-provider-capella/internal/schema"
@@ -40,54 +38,19 @@ func (d *DatabaseCredentials) Metadata(_ context.Context, req datasource.Metadat
 func (d *DatabaseCredentials) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required: true,
-			},
-			"project_id": schema.StringAttribute{
-				Required: true,
-			},
-			"cluster_id": schema.StringAttribute{
-				Required: true,
-			},
+			"organization_id": requiredStringAttribute,
+			"project_id":      requiredStringAttribute,
+			"cluster_id":      requiredStringAttribute,
 			"data": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"id": schema.StringAttribute{
-							Computed: true,
-						},
-						"name": schema.StringAttribute{
-							Computed: true,
-						},
-						"organization_id": schema.StringAttribute{
-							Computed: true,
-						},
-						"project_id": schema.StringAttribute{
-							Computed: true,
-						},
-						"cluster_id": schema.StringAttribute{
-							Computed: true,
-						},
-						"audit": schema.SingleNestedAttribute{
-							Computed: true,
-							Attributes: map[string]schema.Attribute{
-								"created_at": schema.StringAttribute{
-									Computed: true,
-								},
-								"created_by": schema.StringAttribute{
-									Computed: true,
-								},
-								"modified_at": schema.StringAttribute{
-									Computed: true,
-								},
-								"modified_by": schema.StringAttribute{
-									Computed: true,
-								},
-								"version": schema.Int64Attribute{
-									Computed: true,
-								},
-							},
-						},
+						"id":              computedStringAttribute,
+						"name":            computedStringAttribute,
+						"organization_id": computedStringAttribute,
+						"project_id":      computedStringAttribute,
+						"cluster_id":      computedStringAttribute,
+						"audit":           computedAuditAttribute,
 						"access": schema.ListNestedAttribute{
 							Optional: true,
 							NestedObject: schema.NestedAttributeObject{
@@ -103,16 +66,12 @@ func (d *DatabaseCredentials) Schema(_ context.Context, _ datasource.SchemaReque
 												Optional: true,
 												NestedObject: schema.NestedAttributeObject{
 													Attributes: map[string]schema.Attribute{
-														"name": schema.StringAttribute{
-															Required: true,
-														},
+														"name": requiredStringAttribute,
 														"scopes": schema.ListNestedAttribute{
 															Optional: true,
 															NestedObject: schema.NestedAttributeObject{
 																Attributes: map[string]schema.Attribute{
-																	"name": schema.StringAttribute{
-																		Required: true,
-																	},
+																	"name": requiredStringAttribute,
 																	"collections": schema.ListAttribute{
 																		Optional:    true,
 																		ElementType: types.StringType,
@@ -153,13 +112,8 @@ func (d *DatabaseCredentials) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	response, err := d.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users", d.HostURL, organizationId, projectId, clusterId),
-		http.MethodGet,
-		nil,
-		d.Token,
-		nil,
-	)
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users", d.HostURL, organizationId, projectId, clusterId)
+	response, err := api.GetPaginated[[]api.GetDatabaseCredentialResponse](ctx, d.Client, d.Token, url, api.SortById)
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
@@ -181,18 +135,8 @@ func (d *DatabaseCredentials) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	databaseCredentialResp := api.GetDatabaseCredentialsResponse{}
-	err = json.Unmarshal(response.Body, &databaseCredentialResp)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error listing database credentials",
-			"Could not list database credentials, unexpected error: "+err.Error(),
-		)
-		return
-	}
-
 	// Map response body to model
-	for _, databaseCredential := range databaseCredentialResp.Data {
+	for _, databaseCredential := range response {
 		databaseCredentialState := providerschema.DatabaseCredentialItem{
 			Id:             types.StringValue(databaseCredential.Id.String()),
 			Name:           types.StringValue(databaseCredential.Name),

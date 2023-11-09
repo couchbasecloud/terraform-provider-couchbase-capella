@@ -168,7 +168,7 @@ type ApiKeys struct {
 	// OrganizationId The organizationId of the capella.
 	OrganizationId types.String `tfsdk:"organization_id"`
 
-	// Data It contains the list of resources.
+	// Data contains the list of resources.
 	Data []ApiKeyData `tfsdk:"data"`
 }
 

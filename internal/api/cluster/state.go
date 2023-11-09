@@ -1,5 +1,7 @@
 package cluster
 
+import "slices"
+
 const (
 	Degraded         State = "degraded"
 	Deploying        State = "deploying"
@@ -30,7 +32,7 @@ type State string
 // IsFinalState checks whether cluster is successfully deployed/updated or not while creation/updation
 // TODO: Degraded, draft, peeringFailed, turningOffFailed, and turningOnFailed are not known when it occurs and What happens if rebalancing fails? Will it retry?"
 func IsFinalState(state State) bool {
-	//"""Returns True if the state is critical, False otherwise."""
+	// Returns True if the state is an end state, False otherwise.
 	finalStates := []State{
 		Healthy,
 		Degraded,
@@ -41,5 +43,5 @@ func IsFinalState(state State) bool {
 		ScaleFailed,
 		UpgradeFailed,
 	}
-	return Contains(finalStates, state)
+	return slices.Contains(finalStates, state)
 }
