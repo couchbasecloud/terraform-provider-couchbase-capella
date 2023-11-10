@@ -111,4 +111,7 @@ var (
 
 	// ErrUnableToUpdateAppServiceName is returned when an app service name was updated.
 	ErrUnableToUpdateAppServiceName = errors.New("app service name cannot be updated")
+
+	// ErrBucketIdMissing is returned when an expected Bucket Id was not found after an import.
+	ErrBucketIdMissing = errors.New("bucket ID is missing or was passed incorrectly, please check provider documentation for syntax")
 )
