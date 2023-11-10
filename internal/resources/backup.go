@@ -64,13 +64,6 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		return
 	}
 
-	if !plan.Restore.IsNull() && !plan.Restore.IsUnknown() {
-		resp.Diagnostics.AddError(
-			"Cannot create restore on a backup that is not found",
-			"Could not create restore ",
-		)
-		return
-	}
 	BackupRequest := backupapi.CreateBackupRequest{}
 
 	var organizationId = plan.OrganizationId.ValueString()
@@ -79,13 +72,22 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	var bucketId = plan.BucketId.ValueString()
 
 	latestBackup, err := b.getLatestBackup(organizationId, projectId, clusterId, bucketId)
-	if err != nil {
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		resp.Diagnostics.AddError(
+			"Error getting latest bucket backup in a cluster",
+			"Could not get the latest bucket backup : unexpected error "+err.CompleteError(),
+		)
+		return
+	default:
 		resp.Diagnostics.AddError(
 			"Error getting latest bucket backup in a cluster",
 			"Could not get the latest bucket backup : unexpected error "+err.Error(),
 		)
 		return
 	}
+
 	var backupFound bool
 	if latestBackup != nil {
 		backupFound = true
@@ -98,15 +100,23 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		b.Token,
 		nil,
 	)
-	if err != nil {
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
 		resp.Diagnostics.AddError(
-			"Error executing request",
-			"Could not execute request, unexpected error: "+err.Error(),
+			"Error executing create backup request",
+			"Could not execute create backup request : unexpected error "+err.CompleteError(),
+		)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error executing create backup request",
+			"Could not execute create backup request : unexpected error "+err.Error(),
 		)
 		return
 	}
 
-	BackupResponse, err := b.checkLatestBackupStatus(ctx, organizationId, projectId, clusterId, bucketId, backupFound, latestBackup)
+	backupResponse, err := b.checkLatestBackupStatus(ctx, organizationId, projectId, clusterId, bucketId, backupFound, latestBackup)
 	_, err = handleBackupError(err)
 	if err != nil {
 		if diags.HasError() {
@@ -118,7 +128,7 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		}
 	}
 
-	backupStats := providerschema.NewBackupStats(*BackupResponse.BackupStats)
+	backupStats := providerschema.NewBackupStats(*backupResponse.BackupStats)
 	backupStatsObj, diags := types.ObjectValueFrom(ctx, backupStats.AttributeTypes(), backupStats)
 	if diags.HasError() {
 		resp.Diagnostics.AddError(
@@ -128,7 +138,7 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		return
 	}
 
-	scheduleInfo := providerschema.NewScheduleInfo(*BackupResponse.ScheduleInfo)
+	scheduleInfo := providerschema.NewScheduleInfo(*backupResponse.ScheduleInfo)
 	scheduleInfoObj, diags := types.ObjectValueFrom(ctx, scheduleInfo.AttributeTypes(), scheduleInfo)
 	if diags.HasError() {
 		resp.Diagnostics.AddError(
@@ -138,7 +148,7 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		return
 	}
 
-	refreshedState := providerschema.NewBackup(BackupResponse, organizationId, projectId, backupStatsObj, scheduleInfoObj)
+	refreshedState := providerschema.NewBackup(backupResponse, organizationId, projectId, backupStatsObj, scheduleInfoObj)
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
@@ -304,13 +314,58 @@ func (b *Backup) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 }
 
 // Delete deletes the backup.
-func (b *Backup) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	//TODO implement me https://couchbasecloud.atlassian.net/browse/AV-66712
+func (b *Backup) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	// Retrieve values from state
+	var state providerschema.Backup
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceIDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error deleting backup",
+			"Could not delete backup id "+state.Id.String()+" unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	var (
+		organizationId = resourceIDs[providerschema.OrganizationId]
+		projectId      = resourceIDs[providerschema.ProjectId]
+		clusterId      = resourceIDs[providerschema.ClusterId]
+		backupId       = resourceIDs[providerschema.Id]
+	)
+
+	// Delete existing Backup
+	_, err = b.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/backups/%s", b.HostURL, organizationId, projectId, clusterId, backupId),
+		http.MethodDelete,
+		nil,
+		b.Token,
+		nil,
+	)
+
+	resourceNotFound, err := handleBackupError(err)
+	if resourceNotFound {
+		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+		return
+	}
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error deleting backup",
+			"Could not delete backup id "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
 }
 
 // ImportState imports a remote backup that is not created by Terraform.
-func (b *Backup) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	//TODO implement me https://couchbasecloud.atlassian.net/browse/AV-66714
+func (b *Backup) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	// Retrieve import ID and save to id attribute
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 // Configure adds the provider configured api to the backup resource.
@@ -343,7 +398,6 @@ func (a *Backup) validateCreateBackupRequest(plan providerschema.Backup) error {
 	if plan.BucketId.IsNull() {
 		return errors.ErrBucketIdCannotBeEmpty
 	}
-
 	if !plan.RestoreTimes.IsNull() && !plan.RestoreTimes.IsUnknown() {
 		return errors.ErrRestoreTimesMustNotBeSetWhileCreateBackup
 	}
