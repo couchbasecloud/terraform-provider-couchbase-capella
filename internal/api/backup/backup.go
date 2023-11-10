@@ -81,17 +81,6 @@ type GetBackupResponse struct {
 // To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
 type CreateBackupRequest struct{}
 
-// GetBackupsResponse is the response received from the Capella V4 Public API when asked to list all backups.
-//
-// In order to access this endpoint, the provided API key must have at least one of the following roles:
-//
-// Organization Owner
-// Project Owner
-// To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
-type GetBackupsResponse struct {
-	Data []GetBackupResponse `json:"data"`
-}
-
 // GetCycleResponse is the response received from the Capella V4 Public API when asked to fetch details of an existing cycle.
 //
 // To learn more about backup and restore, see https://docs.couchbase.com/cloud/clusters/backup-restore.html
@@ -119,6 +108,16 @@ type GetCyclesResponse struct {
 	Data []GetCycleResponse `json:"data"`
 }
 
+// GetBackupsResponse is the response received from the Capella V4 Public API when asked to list all backups.
+//
+// In order to access this endpoint, the provided API key must have at least one of the following roles:
+//
+// Organization Owner
+// Project Owner
+// To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
+type GetBackupsResponse struct {
+	Data []GetBackupResponse `json:"data"`
+}
 
 type CreateRestoreRequest struct {
 	TargetClusterId string `json:"targetClusterID"`
