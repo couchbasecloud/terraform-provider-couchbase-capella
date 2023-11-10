@@ -68,6 +68,8 @@ type Backup struct {
 	ScheduleInfo types.Object `tfsdk:"schedule_info"`
 
 	Restore types.Object `tfsdk:"restore"`
+
+	RestoreTimes types.Number `tfsdk:"restore_times"`
 }
 
 // BackupStats has the backup level stats provided by Couchbase.
@@ -117,8 +119,6 @@ type Restore struct {
 
 	SourceClusterId types.String `tfsdk:"source_cluster_id"`
 
-	BackupId types.String `tfsdk:"backup_id"`
-
 	Services []types.String `tfsdk:"services"`
 
 	ForceUpdates types.Bool `tfsdk:"force_updates"`
@@ -137,7 +137,39 @@ type Restore struct {
 
 	ReplaceTTL types.String `tfsdk:"replace_ttl"`
 
-	ReplaceTTLWith types.String `json:"replace_ttl_with"`
+	ReplaceTTLWith types.String `tfsdk:"replace_ttl_with"`
+
+	Status types.String `tfsdk:"status"`
+}
+
+func (r Restore) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"target_cluster_id": types.StringType,
+
+		"source_cluster_id": types.StringType,
+
+		"services": types.ListType{ElemType: types.StringType},
+
+		"force_updates": types.BoolType,
+
+		"auto_remove_collections": types.BoolType,
+
+		"filter_keys": types.StringType,
+
+		"filter_values": types.StringType,
+
+		"include_data": types.StringType,
+
+		"exclude_data": types.StringType,
+
+		"map_data": types.StringType,
+
+		"replace_ttl": types.StringType,
+
+		"replace_ttl_with": types.StringType,
+
+		"status": types.StringType,
+	}
 }
 
 func (b BackupStats) AttributeTypes() map[string]attr.Type {
@@ -208,6 +240,7 @@ func NewBackup(backup *backup.GetBackupResponse,
 		BackupStats:          bStatsObj,
 		ScheduleInfo:         sInfoObj,
 		ElapsedTimeInSeconds: types.Int64Value(backup.ElapsedTimeInSeconds),
+		Restore:              types.ObjectNull(Restore{}.AttributeTypes()),
 	}
 	return &newBackup
 }

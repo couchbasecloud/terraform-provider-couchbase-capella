@@ -8,5 +8,4 @@ bucket_id = "<bucket_id>"
 
 backup = {}
 
-restore = {
-}
+restore = {}
