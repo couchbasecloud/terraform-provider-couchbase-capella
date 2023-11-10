@@ -75,7 +75,7 @@ func BackupSchema() schema.Schema {
 					"status":                  stringAttribute(computed),
 				},
 			},
-			"restore_times": int64Attribute(optional, computed),
+			"restore_times": numberAttribute(optional),
 		},
 	}
 }

@@ -4,14 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"net/http"
+	"time"
+
 	"terraform-provider-capella/internal/api"
 	backupapi "terraform-provider-capella/internal/api/backup"
 	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
-	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -106,6 +107,16 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	}
 
 	BackupResponse, err := b.checkLatestBackupStatus(ctx, organizationId, projectId, clusterId, bucketId, backupFound, latestBackup)
+	_, err = handleBackupError(err)
+	if err != nil {
+		if diags.HasError() {
+			resp.Diagnostics.AddError(
+				"Error whiling checking latest backup status",
+				fmt.Sprintf("Could not read check latest backup status, unexpected error: "+err.Error()),
+			)
+			return
+		}
+	}
 
 	backupStats := providerschema.NewBackupStats(*BackupResponse.BackupStats)
 	backupStatsObj, diags := types.ObjectValueFrom(ctx, backupStats.AttributeTypes(), backupStats)
@@ -213,16 +224,11 @@ func (b *Backup) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 		organizationId = IDs[providerschema.OrganizationId]
 		projectId      = IDs[providerschema.ProjectId]
 		clusterId      = IDs[providerschema.ClusterId]
-		//bucketId       = IDs[providerschema.BucketId]
-		backupId = IDs[providerschema.Id]
+		backupId       = IDs[providerschema.Id]
 	)
 
 	var restore *providerschema.Restore
 	diags.Append(req.Config.GetAttribute(ctx, path.Root("restore"), &restore)...)
-	//tflog.Info(ctx, fmt.Sprintf("couchbase_server: %+v", restore))
-	//return couchbaseServer
-
-	fmt.Println("***********************STARTED RESTORE PROCESS - 2 ***************************")
 
 	if plan.RestoreTimes.IsNull() || plan.RestoreTimes.IsUnknown() {
 		resp.Diagnostics.AddError(
@@ -244,8 +250,6 @@ func (b *Backup) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 		}
 	}
 
-	fmt.Println("****************************")
-	fmt.Println(restore.TargetClusterId)
 	var newServices []backupapi.Service
 	for _, service := range restore.Services {
 		newService := service.ValueString()
@@ -253,10 +257,19 @@ func (b *Backup) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 	}
 
 	restoreRequest := backupapi.CreateRestoreRequest{
-		TargetClusterId: restore.TargetClusterId.ValueString(),
-		SourceClusterId: restore.SourceClusterId.ValueString(),
-		BackupId:        backupId,
-		Services:        &newServices,
+		TargetClusterId:       restore.TargetClusterId.ValueString(),
+		SourceClusterId:       restore.SourceClusterId.ValueString(),
+		BackupId:              backupId,
+		Services:              &newServices,
+		ForceUpdates:          restore.ForceUpdates.ValueBool(),
+		AutoRemoveCollections: restore.AutoRemoveCollections.ValueBool(),
+		FilterKeys:            restore.FilterKeys.ValueString(),
+		FilterValues:          restore.FilterValues.ValueString(),
+		IncludeData:           restore.IncludeData.ValueString(),
+		ExcludeData:           restore.ExcludeData.ValueString(),
+		MapData:               restore.MapData.ValueString(),
+		ReplaceTTL:            restore.ReplaceTTL.ValueString(),
+		ReplaceTTLWith:        restore.ReplaceTTLWith.ValueString(),
 	}
 
 	_, err = b.Client.Execute(
@@ -268,22 +281,20 @@ func (b *Backup) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error updating bucket",
-			"Could not update bucket, unexpected error: "+err.Error(),
+			"Error restoring backup",
+			"Could not restore backup id "+state.Id.String()+": plan restore times value is not greater than state restore times value",
 		)
 		return
 	}
 
-	fmt.Printf("RESTORE CREATED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-
 	if !plan.Restore.IsUnknown() && !plan.Restore.IsNull() {
+		restore.Status = types.StringValue("RESTORE INITIATED")
 		restoreObj, diags := types.ObjectValueFrom(ctx, restore.AttributeTypes(), restore)
 		if diags.HasError() {
 			resp.Diagnostics.Append(diags...)
 			return
 		}
 		plan.Restore = restoreObj
-		plan.RestoreTimes = state.RestoreTimes
 	}
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)

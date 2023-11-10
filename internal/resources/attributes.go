@@ -105,6 +105,26 @@ func int64Attribute(fields ...string) *schema.Int64Attribute {
 	return &attribute
 }
 
+// numberAttribute is a variadic function which sets the requested fields
+// in an number attribute to true and then returns the string attribute.
+func numberAttribute(fields ...string) *schema.NumberAttribute {
+	attribute := schema.NumberAttribute{}
+
+	for _, field := range fields {
+		switch field {
+		case required:
+			attribute.Required = true
+		case optional:
+			attribute.Optional = true
+		case computed:
+			attribute.Computed = true
+		case sensitive:
+			attribute.Sensitive = true
+		}
+	}
+	return &attribute
+}
+
 // float64Attribute is a variadic function which sets the requested fields
 // in a float64 attribute to true and then returns the string attribute.
 func float64Attribute(fields ...string) *schema.Float64Attribute {

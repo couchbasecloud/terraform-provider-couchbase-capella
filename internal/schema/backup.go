@@ -2,7 +2,6 @@ package schema
 
 import (
 	"fmt"
-	"math/big"
 	"terraform-provider-capella/internal/api/backup"
 	"terraform-provider-capella/internal/errors"
 
@@ -70,7 +69,7 @@ type Backup struct {
 
 	Restore types.Object `tfsdk:"restore"`
 
-	RestoreTimes types.Number `tfsdk:"restore_time"`
+	RestoreTimes types.Number `tfsdk:"restore_times"`
 }
 
 // BackupStats has the backup level stats provided by Couchbase.
@@ -242,7 +241,6 @@ func NewBackup(backup *backup.GetBackupResponse,
 		ScheduleInfo:         sInfoObj,
 		ElapsedTimeInSeconds: types.Int64Value(backup.ElapsedTimeInSeconds),
 		Restore:              types.ObjectNull(Restore{}.AttributeTypes()),
-		RestoreTimes:         types.NumberValue(new(big.Float).SetFloat64(0.0)),
 	}
 	return &newBackup
 }
