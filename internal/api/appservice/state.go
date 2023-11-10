@@ -1,6 +1,6 @@
 package appservice
 
-"github.com/couchbase/tools-common/functional/slices"
+import "slices"
 
 const (
 	// Pending communicates that the sync gateway is waiting to be
