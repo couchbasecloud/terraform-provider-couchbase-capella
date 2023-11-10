@@ -74,15 +74,16 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 		ExpiresAt: plan.ExpiresAt.ValueString(),
 	}
 
+	url := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs",
+		r.HostURL,
+		plan.OrganizationId.ValueString(),
+		plan.ProjectId.ValueString(),
+		plan.ClusterId.ValueString(),
+	)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
 	response, err := r.Client.Execute(
-		fmt.Sprintf(
-			"%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs",
-			r.HostURL,
-			plan.OrganizationId.ValueString(),
-			plan.ProjectId.ValueString(),
-			plan.ClusterId.ValueString(),
-		),
-		http.MethodPost,
+		cfg,
 		allowListRequest,
 		r.Token,
 		nil,
@@ -211,16 +212,17 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 		allowListId    = IDs[providerschema.Id]
 	)
 	// Execute request to delete existing allowlist
+	url := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs/%s",
+		r.HostURL,
+		organizationId,
+		projectId,
+		clusterId,
+		allowListId,
+	)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
 	_, err = r.Client.Execute(
-		fmt.Sprintf(
-			"%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs/%s",
-			r.HostURL,
-			organizationId,
-			projectId,
-			clusterId,
-			allowListId,
-		),
-		http.MethodDelete,
+		cfg,
 		nil,
 		r.Token,
 		nil,
@@ -253,16 +255,17 @@ func (r *AllowList) ImportState(ctx context.Context, req resource.ImportStateReq
 
 // getAllowList is used to retrieve an existing allow list
 func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId, clusterId, allowListId string) (*api.GetAllowListResponse, error) {
+	url := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs/%s",
+		r.HostURL,
+		organizationId,
+		projectId,
+		clusterId,
+		allowListId,
+	)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := r.Client.Execute(
-		fmt.Sprintf(
-			"%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs/%s",
-			r.HostURL,
-			organizationId,
-			projectId,
-			clusterId,
-			allowListId,
-		),
-		http.MethodGet,
+		cfg,
 		nil,
 		r.Token,
 		nil,

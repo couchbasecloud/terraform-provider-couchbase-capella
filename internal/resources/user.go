@@ -90,9 +90,10 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 	}
 
 	// Execute request
+	url := fmt.Sprintf("%s/v4/organizations/%s/users", r.HostURL, organizationId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
 	response, err := r.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/users", r.HostURL, organizationId),
-		http.MethodPost,
+		cfg,
 		createUserRequest,
 		r.Token,
 		nil,
@@ -399,9 +400,10 @@ func compare(existing, proposed []basetypes.StringValue) ([]basetypes.StringValu
 // updateUser is used to execute the patch request to update a user.
 func (r *User) updateUser(organizationId, userId string, patch []api.PatchEntry) error {
 	// Update existing user
+	url := fmt.Sprintf("%s/v4/organizations/%s/users/%s", r.HostURL, organizationId, userId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPatch, SuccessStatus: http.StatusOK}
 	_, err := r.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/users/%s", r.HostURL, organizationId, userId),
-		http.MethodPatch,
+		cfg,
 		patch,
 		r.Token,
 		nil,
@@ -440,14 +442,15 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 	)
 
 	// Execute request to delete existing user
+	url := fmt.Sprintf(
+		"%s/v4/organizations/%s/users/%s",
+		r.HostURL,
+		organizationId,
+		userId,
+	)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
 	_, err = r.Client.Execute(
-		fmt.Sprintf(
-			"%s/v4/organizations/%s/users/%s",
-			r.HostURL,
-			organizationId,
-			userId,
-		),
-		http.MethodDelete,
+		cfg,
 		nil,
 		r.Token,
 		nil,
@@ -469,14 +472,16 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 
 // getUser is used to retrieve an existing user
 func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api.GetUserResponse, error) {
+	url := fmt.Sprintf(
+		"%s/v4/organizations/%s/users/%s",
+		r.HostURL,
+		organizationId,
+		userId,
+	)
+
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := r.Client.Execute(
-		fmt.Sprintf(
-			"%s/v4/organizations/%s/users/%s",
-			r.HostURL,
-			organizationId,
-			userId,
-		),
-		http.MethodGet,
+		cfg,
 		nil,
 		r.Token,
 		nil,

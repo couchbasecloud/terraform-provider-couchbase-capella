@@ -89,9 +89,11 @@ func (a *AppService) Create(ctx context.Context, req resource.CreateRequest, res
 	var projectId = plan.ProjectId.ValueString()
 	var clusterId = plan.ClusterId.ValueString()
 
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices", a.HostURL, organizationId, projectId, clusterId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
+
 	response, err := a.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices", a.HostURL, organizationId, projectId, clusterId),
-		http.MethodPost,
+		cfg,
 		appServiceRequest,
 		a.Token,
 		nil,
@@ -247,13 +249,13 @@ func (a *AppService) Update(ctx context.Context, req resource.UpdateRequest, res
 		headers["If-Match"] = state.IfMatch.ValueString()
 	}
 
-	// Update existing app service
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s", a.HostURL, organizationId, projectId, clusterId, appServiceId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
 	_, err = a.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s", a.HostURL, organizationId, projectId, clusterId, appServiceId),
-		http.MethodPut,
+		cfg,
 		appServiceRequest,
 		a.Token,
-		headers,
+		nil,
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -318,10 +320,11 @@ func (a *AppService) Delete(ctx context.Context, req resource.DeleteRequest, res
 		appServiceId   = resourceIDs[providerschema.Id]
 	)
 
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s", a.HostURL, organizationId, projectId, clusterId, appServiceId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
 	// Delete existing App Service
 	_, err = a.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s", a.HostURL, organizationId, projectId, clusterId, appServiceId),
-		http.MethodDelete,
+		cfg,
 		nil,
 		a.Token,
 		nil,
@@ -481,9 +484,11 @@ func (a *AppService) checkAppServiceStatus(ctx context.Context, organizationId, 
 // getAppService retrieves app service information from the specified organization, project and cluster
 // using the provided app service ID by open-api call
 func (a *AppService) getAppService(organizationId, projectId, clusterId, appServiceId string) (*appservice.GetAppServiceResponse, error) {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s", a.HostURL, organizationId, projectId, clusterId, appServiceId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+
 	response, err := a.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s", a.HostURL, organizationId, projectId, clusterId, appServiceId),
-		http.MethodGet,
+		cfg,
 		nil,
 		a.Token,
 		nil,

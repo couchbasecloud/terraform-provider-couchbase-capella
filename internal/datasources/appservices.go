@@ -2,10 +2,9 @@ package datasources
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
-	"terraform-provider-capella/internal/api/appservice"
+	appservice "terraform-provider-capella/internal/api/appservice"
 
 	"terraform-provider-capella/internal/api"
 	"terraform-provider-capella/internal/errors"
@@ -62,13 +61,10 @@ func (d *AppServices) Read(ctx context.Context, req datasource.ReadRequest, resp
 		organizationId = state.OrganizationId.ValueString()
 	)
 
-	response, err := d.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/appservices", d.HostURL, organizationId),
-		http.MethodGet,
-		nil,
-		d.Token,
-		nil,
-	)
+	url := fmt.Sprintf("%s/v4/organizations/%s/appservices", d.HostURL, organizationId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+
+	response, err := api.GetPaginated[[]appservice.GetAppServiceResponse](ctx, d.Client, d.Token, cfg, api.SortById)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella App Services",
@@ -77,17 +73,7 @@ func (d *AppServices) Read(ctx context.Context, req datasource.ReadRequest, resp
 		return
 	}
 
-	appServicesResp := appservice.GetAppServicesResponse{}
-	err = json.Unmarshal(response.Body, &appServicesResp)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error reading app services",
-			"Could not read app services, unexpected error: "+err.Error(),
-		)
-		return
-	}
-
-	for _, appService := range appServicesResp.Data {
+	for _, appService := range response {
 		audit := providerschema.NewCouchbaseAuditData(appService.Audit)
 
 		auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)

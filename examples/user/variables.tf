@@ -22,3 +22,8 @@ variable "user_name" {
 variable "email" {
   description = "Capella Email Address"
 }
+
+variable "organization_roles" {
+  description = "Capella Organization Roles"
+  type = list(string)
+}

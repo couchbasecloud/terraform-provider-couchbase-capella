@@ -3,6 +3,7 @@ package datasources
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"terraform-provider-capella/internal/api/bucket"
 
 	"terraform-provider-capella/internal/api"
@@ -146,7 +147,9 @@ func (d *Buckets) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets", d.HostURL, organizationId, projectId, clusterId)
-	response, err := api.GetPaginated[[]bucket.GetBucketResponse](ctx, d.Client, d.Token, url, api.SortById)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+
+	response, err := api.GetPaginated[[]bucket.GetBucketResponse](ctx, d.Client, d.Token, cfg, api.SortById)
 	switch err := err.(type) {
 	case nil:
 	case api.Error:

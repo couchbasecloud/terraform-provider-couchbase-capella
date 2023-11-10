@@ -3,6 +3,7 @@ package datasources
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"terraform-provider-capella/internal/api"
 	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
@@ -123,7 +124,8 @@ func (d *AllowLists) listAllowLists(ctx context.Context, organizationId, project
 		clusterId,
 	)
 
-	return api.GetPaginated[[]api.GetAllowListResponse](ctx, d.Client, d.Token, url, api.SortById)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	return api.GetPaginated[[]api.GetAllowListResponse](ctx, d.Client, d.Token, cfg, api.SortById)
 }
 
 // Configure adds the provider configured client to the allowlist data source.

@@ -109,9 +109,10 @@ func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequ
 
 	dbCredRequest.Access = createAccess(plan)
 
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users", r.HostURL, organizationId, projectId, clusterId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
 	response, err := r.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users", r.HostURL, organizationId, projectId, clusterId),
-		http.MethodPost,
+		cfg,
 		dbCredRequest,
 		r.Token,
 		nil,
@@ -258,9 +259,10 @@ func (r *DatabaseCredential) Update(ctx context.Context, req resource.UpdateRequ
 
 	dbCredRequest.Access = createAccess(state)
 
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", r.HostURL, organizationId, projectId, clusterId, dbId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
 	_, err = r.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", r.HostURL, organizationId, projectId, clusterId, dbId),
-		http.MethodPut,
+		cfg,
 		dbCredRequest,
 		r.Token,
 		nil,
@@ -331,9 +333,10 @@ func (r *DatabaseCredential) Delete(ctx context.Context, req resource.DeleteRequ
 		dbId           = IDs[providerschema.Id]
 	)
 
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", r.HostURL, organizationId, projectId, clusterId, dbId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
 	_, err = r.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", r.HostURL, organizationId, projectId, clusterId, dbId),
-		http.MethodDelete,
+		cfg,
 		nil,
 		r.Token,
 		nil,
@@ -367,9 +370,10 @@ func (r *DatabaseCredential) ImportState(ctx context.Context, req resource.Impor
 // retrieveDatabaseCredential fetches the database credential by making a GET API call to the Capella V4 Public API.
 // This usually helps retrieve the state of a newly created database credential that was created from Terraform.
 func (r *DatabaseCredential) retrieveDatabaseCredential(ctx context.Context, organizationId, projectId, clusterId, dbId string) (*providerschema.OneDatabaseCredential, error) {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", r.HostURL, organizationId, projectId, clusterId, dbId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := r.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", r.HostURL, organizationId, projectId, clusterId, dbId),
-		http.MethodGet,
+		cfg,
 		nil,
 		r.Token,
 		nil,

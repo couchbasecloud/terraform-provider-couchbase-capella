@@ -84,9 +84,10 @@ func (r *Project) Create(ctx context.Context, req resource.CreateRequest, resp *
 		Name:        plan.Name.ValueString(),
 	}
 
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects", r.HostURL, organizationId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
 	response, err := r.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects", r.HostURL, organizationId),
-		http.MethodPost,
+		cfg,
 		projectRequest,
 		r.Token,
 		nil,
@@ -211,9 +212,10 @@ func (r *Project) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		headers["If-Match"] = state.IfMatch.ValueString()
 	}
 
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s", r.HostURL, organizationId, projectId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
 	_, err = r.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s", r.HostURL, organizationId, projectId),
-		http.MethodPut,
+		cfg,
 		projectRequest,
 		r.Token,
 		headers,
@@ -282,9 +284,10 @@ func (r *Project) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 		projectId      = IDs[providerschema.Id]
 	)
 
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s", r.HostURL, organizationId, projectId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
 	_, err = r.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s", r.HostURL, organizationId, projectId),
-		http.MethodDelete,
+		cfg,
 		nil,
 		r.Token,
 		nil,
@@ -316,9 +319,10 @@ func (r *Project) ImportState(ctx context.Context, req resource.ImportStateReque
 }
 
 func (r *Project) retrieveProject(ctx context.Context, organizationId, projectId string) (*providerschema.OneProject, error) {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s", r.HostURL, organizationId, projectId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := r.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s", r.HostURL, organizationId, projectId),
-		http.MethodGet,
+		cfg,
 		nil,
 		r.Token,
 		nil,
