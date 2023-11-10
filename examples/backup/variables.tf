@@ -42,5 +42,6 @@ variable "restore" {
     map_data = optional(string)
     replace_ttl = optional(string)
     replace_ttl_with = optional(string)
+    restore_times = number
   })
 }
