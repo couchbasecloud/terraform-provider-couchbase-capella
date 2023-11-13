@@ -93,9 +93,10 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		backupFound = true
 	}
 
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backups", b.HostURL, organizationId, projectId, clusterId, bucketId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
 	_, err = b.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backups", b.HostURL, organizationId, projectId, clusterId, bucketId),
-		http.MethodPost,
+		cfg,
 		BackupRequest,
 		b.Token,
 		nil,
@@ -228,9 +229,10 @@ func (b *Backup) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 	)
 
 	// Delete existing Backup
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/backups/%s", b.HostURL, organizationId, projectId, clusterId, backupId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
 	_, err = b.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/backups/%s", b.HostURL, organizationId, projectId, clusterId, backupId),
-		http.MethodDelete,
+		cfg,
 		nil,
 		b.Token,
 		nil,
@@ -340,9 +342,10 @@ func (b *Backup) checkLatestBackupStatus(ctx context.Context, organizationId, pr
 // retrieveBackup retrieves backup information from the specified organization and project
 // using the provided backup ID by open-api call
 func (b *Backup) retrieveBackup(ctx context.Context, organizationId, projectId, clusterId, bucketId, backupId string) (*providerschema.Backup, error) {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/backups/%s", b.HostURL, organizationId, projectId, clusterId, backupId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := b.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/backups/%s", b.HostURL, organizationId, projectId, clusterId, backupId),
-		http.MethodGet,
+		cfg,
 		nil,
 		b.Token,
 		nil,
@@ -376,9 +379,10 @@ func (b *Backup) retrieveBackup(ctx context.Context, organizationId, projectId, 
 // getLatestBackup retrieves the latest backup information for a specified bucket in a cluster
 // from the specified organization, project and cluster using the provided bucket ID by open-api call
 func (b *Backup) getLatestBackup(organizationId, projectId, clusterId, bucketId string) (*backupapi.GetBackupResponse, error) {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/backups", b.HostURL, organizationId, projectId, clusterId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := b.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/backups", b.HostURL, organizationId, projectId, clusterId),
-		http.MethodGet,
+		cfg,
 		nil,
 		b.Token,
 		nil,
