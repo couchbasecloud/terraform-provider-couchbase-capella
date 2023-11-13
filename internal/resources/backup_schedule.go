@@ -80,9 +80,10 @@ func (b *BackupSchedule) Create(ctx context.Context, req resource.CreateRequest,
 			CostOptimizedRetention: weeklySchedule.CostOptimizedRetention.ValueBool(),
 		},
 	}
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/schedules", b.HostURL, organizationId, projectId, clusterId, bucketId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
 	_, err = b.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/schedules", b.HostURL, organizationId, projectId, clusterId, bucketId),
-		http.MethodPost,
+		cfg,
 		BackupScheduleRequest,
 		b.Token,
 		nil,
@@ -175,9 +176,10 @@ func (a *BackupSchedule) validateCreateBackupScheduleRequest(plan providerschema
 // retrieveBackupSchedule retrieves backup schedule information from the specified organization and project
 // using the provided bucket ID by open-api call
 func (b *BackupSchedule) retrieveBackupSchedule(ctx context.Context, organizationId, projectId, clusterId, bucketId string) (*providerschema.BackupSchedule, error) {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/schedules", b.HostURL, organizationId, projectId, clusterId, bucketId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := b.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/schedules", b.HostURL, organizationId, projectId, clusterId, bucketId),
-		http.MethodGet,
+		cfg,
 		nil,
 		b.Token,
 		nil,
