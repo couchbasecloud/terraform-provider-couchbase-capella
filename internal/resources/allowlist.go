@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"terraform-provider-capella/internal/api"
-	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -163,7 +162,6 @@ func (r *AllowList) Read(ctx context.Context, req resource.ReadRequest, resp *re
 			"Error Reading Capella AllowList",
 			"Could not read Capella allowListID "+allowListId+": "+errString,
 		)
-		fmt.Println("RESOURCE FOUND WITH ERROR")
 		return
 	}
 
@@ -272,13 +270,13 @@ func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId,
 		nil,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %v", errors.ErrExecutingRequest, err)
+		return nil, err
 	}
 
 	allowListResp := api.GetAllowListResponse{}
 	err = json.Unmarshal(response.Body, &allowListResp)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %v", errors.ErrUnmarshallingResponse, err)
+		return nil, err
 	}
 	return &allowListResp, nil
 }
