@@ -66,13 +66,14 @@ func GetPaginated[DataSchema ~[]T, T any](
 	ctx context.Context,
 	client *Client,
 	token string,
-	url string,
+	cfg EndpointCfg,
 	sortBy sortParameter,
 ) (DataSchema, error) {
 	var (
 		responses DataSchema
 		page      = 1
 		perPage   = 10
+		baseUrl   = cfg.Url
 	)
 
 	type overlay struct {
@@ -81,12 +82,11 @@ func GetPaginated[DataSchema ~[]T, T any](
 	}
 
 	for {
-		// construct pagination parameters
-		pageParams := fmt.Sprintf("?page=%d&perPage=%d&sortBy=%s", page, perPage, string(sortBy))
+		cfg.Url = baseUrl + fmt.Sprintf("?page=%d&perPage=%d&sortBy=%s", page, perPage, string(sortBy))
+		cfg.Method = http.MethodGet
 
 		response, err := client.Execute(
-			url+pageParams,
-			http.MethodGet,
+			cfg,
 			nil,
 			token,
 			nil,
