@@ -8,4 +8,14 @@ bucket_id = "<bucket_id>"
 
 backup = {}
 
-restore = {}
+restore = {
+  target_cluster_id = "<cluster_id>"
+  source_cluster_id = "<cluster_id>"
+  services = [
+    "data",
+    "query"
+  ]
+  force_updates = true
+  auto_remove_collections = true
+  restore_times = 1
+}

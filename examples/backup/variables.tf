@@ -1,14 +1,16 @@
 variable "host" {
+  default = "https://cloudapi.dev.nonprod-project-avengers.com"
   description = "The Host URL of Couchbase Cloud."
 }
 
 variable "organization_id" {
+  default = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
   description = "Capella Organization ID"
 }
 
 variable "auth_token" {
+  default = "SVJMcDhxUXdIaUY0TmkzSUlibEgwblBCYTRveDBwOEk6MmdyS2IxIVNjM09nczkjOWdsS1JRIyMycEBnTFV3Y3pLb0JZa0pjdm1seTRQNUR6Q0VPWVlxVTVmSWJjUVNEVw=="
   description = "Authentication API Key"
-  sensitive   = true
 }
 
 variable "project_id" {
@@ -31,7 +33,6 @@ variable "restore" {
   type = object({
     target_cluster_id = string
     source_cluster_id = string
-    backup_id = string
     services = list(string)
     force_updates = optional(bool)
     auto_remove_collections = optional(bool)
