@@ -213,9 +213,10 @@ func (b *BackupSchedule) Update(ctx context.Context, req resource.UpdateRequest,
 		},
 	}
 
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/schedules", b.HostURL, organizationId, projectId, clusterId, bucketId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
 	_, err = b.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/schedules", b.HostURL, organizationId, projectId, clusterId, bucketId),
-		http.MethodPut,
+		cfg,
 		BackupScheduleRequest,
 		b.Token,
 		nil,
@@ -292,10 +293,11 @@ func (b *BackupSchedule) Delete(ctx context.Context, req resource.DeleteRequest,
 		bucketId       = resourceIDs[providerschema.BucketId]
 	)
 
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/schedules", b.HostURL, organizationId, projectId, clusterId, bucketId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
 	// Delete existing backup schedule
 	_, err = b.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/schedules", b.HostURL, organizationId, projectId, clusterId, bucketId),
-		http.MethodDelete,
+		cfg,
 		nil,
 		b.Token,
 		nil,

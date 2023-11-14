@@ -283,9 +283,10 @@ func (b *Backup) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 		ReplaceTTLWith:        restore.ReplaceTTLWith.ValueString(),
 	}
 
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/backups/%s/restore", b.HostURL, organizationId, projectId, clusterId, backupId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
 	_, err = b.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/backups/%s/restore", b.HostURL, organizationId, projectId, clusterId, backupId),
-		http.MethodPost,
+		cfg,
 		restoreRequest,
 		b.Token,
 		nil,
