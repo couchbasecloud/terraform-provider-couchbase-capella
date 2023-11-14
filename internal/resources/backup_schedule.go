@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
 	"terraform-provider-capella/internal/api"
 	scheduleapi "terraform-provider-capella/internal/api/backup_schedule"
 	"terraform-provider-capella/internal/errors"
@@ -122,6 +123,7 @@ func (b *BackupSchedule) Create(ctx context.Context, req resource.CreateRequest,
 
 }
 
+// Read reads BackupSchedule information.
 func (b *BackupSchedule) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state providerschema.BackupSchedule
 	diags := req.State.Get(ctx, &state)
@@ -162,30 +164,6 @@ func (b *BackupSchedule) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	//resources, err := providerschema.OrderList2(state.Resources, refreshedState.Resources)
-	//switch err {
-	//case nil:
-	//	refreshedState.Resources = resources
-	//default:
-	//	tflog.Warn(ctx, err.Error())
-	//}
-	//
-	//if len(state.Resources) == len(refreshedState.Resources) {
-	//	for i, resource := range refreshedState.Resources {
-	//		if providerschema.AreEqual(resource.Roles, state.Resources[i].Roles) {
-	//			refreshedState.Resources[i].Roles = state.Resources[i].Roles
-	//		}
-	//	}
-	//}
-
-	//if providerschema.AreEqual(refreshedState.OrganizationRoles, state.OrganizationRoles) {
-	//	refreshedState.OrganizationRoles = state.OrganizationRoles
-	//}
-	//
-	//refreshedState.Token = state.Token
-	//refreshedState.Rotate = state.Rotate
-	//refreshedState.Secret = state.Secret
-
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &refreshedState)
 	resp.Diagnostics.Append(diags...)
@@ -194,6 +172,7 @@ func (b *BackupSchedule) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 }
 
+// Update updates the BackupSchedule.
 func (b *BackupSchedule) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan providerschema.BackupSchedule
 	diags := req.Plan.Get(ctx, &plan)
@@ -286,6 +265,7 @@ func (b *BackupSchedule) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 }
 
+// Delete deletes the BackupSchedule.
 func (b *BackupSchedule) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// Retrieve values from state
 	var state providerschema.BackupSchedule
