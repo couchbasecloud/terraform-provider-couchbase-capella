@@ -163,7 +163,6 @@ func (r *AllowList) Read(ctx context.Context, req resource.ReadRequest, resp *re
 			"Error Reading Capella AllowList",
 			"Could not read Capella allowListID "+allowListId+": "+errString,
 		)
-		fmt.Println("RESOURCE FOUND WITH ERROR")
 		return
 	}
 
