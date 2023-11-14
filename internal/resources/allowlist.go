@@ -286,7 +286,7 @@ func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId,
 func (r *AllowList) refreshAllowList(ctx context.Context, organizationId, projectId, clusterId, allowListId string) (*providerschema.OneAllowList, error) {
 	allowListResp, err := r.getAllowList(ctx, organizationId, projectId, clusterId, allowListId)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
+		return nil, fmt.Errorf("%s: %w", errors.ErrNotFound, err)
 	}
 
 	refreshedState := providerschema.OneAllowList{

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 
 	"terraform-provider-capella/internal/api"
+	internalerrors "terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
 
 	"github.com/google/uuid"
@@ -447,13 +448,13 @@ func (a *ApiKey) retrieveApiKey(ctx context.Context, organizationId, apiKeyId st
 		nil,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", internalerrors.ErrExecutingRequest, err)
 	}
 
 	apiKeyResp := api.GetApiKeyResponse{}
 	err = json.Unmarshal(response.Body, &apiKeyResp)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", internalerrors.ErrUnmarshallingResponse, err)
 	}
 
 	audit := providerschema.NewCouchbaseAuditData(apiKeyResp.Audit)
@@ -465,7 +466,7 @@ func (a *ApiKey) retrieveApiKey(ctx context.Context, organizationId, apiKeyId st
 
 	refreshedState, err := providerschema.NewApiKey(&apiKeyResp, organizationId, auditObj)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", internalerrors.ErrRefreshingState, err)
 	}
 	return refreshedState, nil
 }

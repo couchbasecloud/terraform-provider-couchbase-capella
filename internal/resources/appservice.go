@@ -8,6 +8,7 @@ import (
 	"terraform-provider-capella/internal/api"
 	"terraform-provider-capella/internal/api/appservice"
 	"terraform-provider-capella/internal/errors"
+
 	providerschema "terraform-provider-capella/internal/schema"
 	"time"
 
@@ -412,13 +413,14 @@ func (a *AppService) validateCreateAppServiceRequest(plan providerschema.AppServ
 func (a *AppService) refreshAppService(ctx context.Context, organizationId, projectId, clusterId, appServiceId string) (*providerschema.AppService, error) {
 	appServiceResponse, err := a.getAppService(organizationId, projectId, clusterId, appServiceId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrNotFound, err)
 	}
 
 	audit := providerschema.NewCouchbaseAuditData(appServiceResponse.Audit)
 	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
 	if diags.HasError() {
-		return nil, errors.ErrUnableToConvertAuditData
+		return nil, fmt.Errorf("%s: %w", errors.ErrUnableToConvertAuditData, err)
+
 	}
 
 	refreshedState := providerschema.NewAppService(
@@ -487,13 +489,13 @@ func (a *AppService) getAppService(organizationId, projectId, clusterId, appServ
 		nil,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 	}
 
 	appServiceResp := appservice.GetAppServiceResponse{}
 	err = json.Unmarshal(response.Body, &appServiceResp)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
 	appServiceResp.Etag = response.Response.Header.Get("ETag")
 	return &appServiceResp, nil

@@ -316,13 +316,13 @@ func (c *Bucket) retrieveBucket(ctx context.Context, organizationId, projectId, 
 		nil,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 	}
 
 	bucketResp := bucketapi.GetBucketResponse{}
 	err = json.Unmarshal(response.Body, &bucketResp)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
 
 	refreshedState := providerschema.OneBucket{

@@ -468,13 +468,13 @@ func (c *Cluster) getCluster(organizationId, projectId, clusterId string) (*clus
 		nil,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 	}
 
 	clusterResp := clusterapi.GetClusterResponse{}
 	err = json.Unmarshal(response.Body, &clusterResp)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
 	clusterResp.Etag = response.Response.Header.Get("ETag")
 	return &clusterResp, nil
@@ -484,19 +484,19 @@ func (c *Cluster) getCluster(organizationId, projectId, clusterId string) (*clus
 func (c *Cluster) retrieveCluster(ctx context.Context, organizationId, projectId, clusterId string) (*providerschema.Cluster, error) {
 	clusterResp, err := c.getCluster(organizationId, projectId, clusterId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrNotFound, err)
 	}
 
 	audit := providerschema.NewCouchbaseAuditData(clusterResp.Audit)
 
 	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
 	if diags.HasError() {
-		return nil, errors.ErrUnableToConvertAuditData
+		return nil, fmt.Errorf("%s: %w", errors.ErrUnableToConvertAuditData, err)
 	}
 
 	refreshedState, err := providerschema.NewCluster(clusterResp, organizationId, projectId, auditObj)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrRefreshingState, err)
 	}
 	return refreshedState, nil
 }
@@ -577,7 +577,7 @@ func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]cluste
 
 			err := node.FromDiskAWS(diskAws)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("%s: %w", errors.ErrConvertingServiceGroups, err)
 			}
 			newServiceGroup.Node.Disk = node.Disk
 
@@ -597,7 +597,7 @@ func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]cluste
 				diskAzure.Iops = &iops
 			}
 			if err := node.FromDiskAzure(diskAzure); err != nil {
-				return nil, err
+				return nil, fmt.Errorf("%s: %w", errors.ErrConvertingServiceGroups, err)
 			}
 			newServiceGroup.Node.Disk = node.Disk
 
@@ -609,7 +609,7 @@ func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]cluste
 				Storage: storage,
 			})
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("%s: %w", errors.ErrConvertingServiceGroups, err)
 			}
 			newServiceGroup.Node.Disk = node.Disk
 		}

@@ -379,13 +379,13 @@ func (r *DatabaseCredential) retrieveDatabaseCredential(ctx context.Context, org
 		nil,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 	}
 
 	dbResp := api.GetDatabaseCredentialResponse{}
 	err = json.Unmarshal(response.Body, &dbResp)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
 
 	refreshedState := providerschema.OneDatabaseCredential{
