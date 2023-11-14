@@ -425,9 +425,15 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 
 	err = r.checkClusterStatus(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error Deleting Capella Cluster",
-			"Could not delete cluster id "+state.Id.String()+": "+api.ParseError(err),
+			"Could not delete cluster id "+state.Id.String()+": "+errString,
 		)
 		return
 	}
@@ -437,9 +443,15 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 	// no error will be returned when performing a GET call.
 	cluster, err := r.retrieveCluster(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
-			"Error deleting cluster",
-			fmt.Sprintf("Could not delete cluster id %s: %s", state.Id.String(), err.Error()),
+			"Error Deleting Capella Cluster",
+			"Could not delete cluster id "+state.Id.String()+": "+errString,
 		)
 		return
 	}

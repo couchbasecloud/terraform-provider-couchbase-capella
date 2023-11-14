@@ -340,13 +340,16 @@ func (a *AppService) Delete(ctx context.Context, req resource.DeleteRequest, res
 	err = a.checkAppServiceStatus(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.ClusterId.ValueString(), state.Id.ValueString())
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if !resourceNotFound {
-			resp.Diagnostics.AddError(
-				"Error deleting app service",
-				"Could not delete app service id "+state.Id.String()+": "+errString,
-			)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
 			return
 		}
+		resp.Diagnostics.AddError(
+			"Error deleting app service",
+			"Could not delete app service id "+state.Id.String()+": "+errString,
+		)
+		return
 	}
 
 	// This will only be reached when app service deletion has failed,
@@ -354,9 +357,15 @@ func (a *AppService) Delete(ctx context.Context, req resource.DeleteRequest, res
 	// no error will be returned when performing a GET call.
 	appService, err := a.refreshAppService(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.ClusterId.ValueString(), state.Id.ValueString())
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error deleting app service",
-			fmt.Sprintf("Could not delete app service id %s: %s", state.Id.String(), err.Error()),
+			"Could not delete app service id "+state.Id.String()+": "+errString,
 		)
 		return
 	}
