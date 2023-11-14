@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 )
@@ -20,7 +21,7 @@ type Error struct {
 	Message string `json:"message"`
 }
 
-func (e Error) Error() string {
+func (e *Error) Error() string {
 	return fmt.Sprintf("%s", e.Message)
 }
 
@@ -35,9 +36,10 @@ func (e Error) CompleteError() string {
 // ParseError is used to check if an error is of type
 // api.Error error and return it as a string.
 func ParseError(err error) string {
-	switch err := err.(type) {
-	case Error:
-		return err.CompleteError()
+	var apiError *Error
+	switch {
+	case errors.As(err, &apiError):
+		return apiError.CompleteError()
 	default:
 		return err.Error()
 	}
@@ -49,12 +51,13 @@ func ParseError(err error) string {
 // Note: If the error is other than not found, the error string
 // will be returned along with a bool value of false.
 func CheckResourceNotFoundError(err error) (bool, string) {
-	switch err := err.(type) {
-	case Error:
-		if err.HttpStatusCode != http.StatusNotFound {
-			return false, err.CompleteError()
+	var apiError *Error
+	switch {
+	case errors.As(err, &apiError):
+		if apiError.HttpStatusCode != http.StatusNotFound {
+			return false, apiError.CompleteError()
 		}
-		return true, err.CompleteError()
+		return true, apiError.CompleteError()
 	default:
 		return false, err.Error()
 	}

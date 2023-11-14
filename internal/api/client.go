@@ -88,7 +88,7 @@ func (c *Client) Execute(
 				"unexpected code: %d, expected: %d, body: %s",
 				apiRes.StatusCode, endpointCfg.SuccessStatus, responseBody)
 		}
-		return nil, apiError
+		return nil, &apiError
 	}
 
 	return &Response{

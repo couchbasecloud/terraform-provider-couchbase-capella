@@ -2,7 +2,7 @@ package api
 
 import (
 	"net/http"
-	"terraform-provider-capella/internal/errors"
+	internalerrors "terraform-provider-capella/internal/errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -22,13 +22,13 @@ func Test_ParseError(t *testing.T) {
 	tests := []test{
 		{
 			name:      "Error received from Capella V4 Api",
-			err:       Error{Message: errMessage},
+			err:       &Error{Message: errMessage},
 			expOutput: Error{Message: errMessage}.CompleteError(),
 		},
 		{
 			name:      "Error other than received from Capella V4 Api",
-			err:       errors.ErrAllowListIdCannotBeEmpty,
-			expOutput: errors.ErrAllowListIdCannotBeEmpty.Error(),
+			err:       internalerrors.ErrAllowListIdCannotBeEmpty,
+			expOutput: internalerrors.ErrAllowListIdCannotBeEmpty.Error(),
 		},
 	}
 
@@ -64,20 +64,20 @@ func Test_CheckResourceNotFound(t *testing.T) {
 	tests := []test{
 		{
 			name:      "Error received from Capella V4 Api",
-			err:       err500,
+			err:       &err500,
 			expOutput: err500.CompleteError(),
 			expBool:   false,
 		},
 		{
 			name:      "Error received from Capella V4 Api - Resource Not Found",
-			err:       err404,
+			err:       &err404,
 			expOutput: err404.CompleteError(),
 			expBool:   true,
 		},
 		{
 			name:      "Error other than received from Capella V4 Api",
-			err:       errors.ErrAllowListIdCannotBeEmpty,
-			expOutput: errors.ErrAllowListIdCannotBeEmpty.Error(),
+			err:       internalerrors.ErrAllowListIdCannotBeEmpty,
+			expOutput: internalerrors.ErrAllowListIdCannotBeEmpty.Error(),
 			expBool:   false,
 		},
 	}
