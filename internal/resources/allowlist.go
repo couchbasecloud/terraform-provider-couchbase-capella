@@ -271,13 +271,13 @@ func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId,
 		nil,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %v", errors.ErrExecutingRequest, err)
+		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 	}
 
 	allowListResp := api.GetAllowListResponse{}
 	err = json.Unmarshal(response.Body, &allowListResp)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %v", errors.ErrUnmarshallingResponse, err)
+		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
 	return &allowListResp, nil
 }
@@ -286,7 +286,7 @@ func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId,
 func (r *AllowList) refreshAllowList(ctx context.Context, organizationId, projectId, clusterId, allowListId string) (*providerschema.OneAllowList, error) {
 	allowListResp, err := r.getAllowList(ctx, organizationId, projectId, clusterId, allowListId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
 	}
 
 	refreshedState := providerschema.OneAllowList{

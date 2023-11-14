@@ -62,7 +62,7 @@ func (c *Client) Execute(
 
 	req, err := http.NewRequest(endpointCfg.Method, endpointCfg.Url, bytes.NewReader(requestBody))
 	if err != nil {
-		return nil, fmt.Errorf("%s: %v", errors.ErrConstructingRequest, err)
+		return nil, fmt.Errorf("%s: %w", errors.ErrConstructingRequest, err)
 	}
 
 	req.Header.Set("Authorization", "Bearer "+authToken)
@@ -72,7 +72,7 @@ func (c *Client) Execute(
 
 	apiRes, err := c.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %v", errors.ErrExecutingRequest, err)
+		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 	}
 	defer apiRes.Body.Close()
 

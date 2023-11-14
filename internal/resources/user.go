@@ -493,7 +493,7 @@ func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api
 	userResp := api.GetUserResponse{}
 	err = json.Unmarshal(response.Body, &userResp)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %v", errors.ErrUnmarshallingResponse, err)
+		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
 	return &userResp, nil
 }
