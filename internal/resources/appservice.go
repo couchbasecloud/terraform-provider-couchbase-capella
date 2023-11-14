@@ -168,23 +168,16 @@ func (a *AppService) Read(ctx context.Context, req resource.ReadRequest, resp *r
 
 	// Refresh the existing app service
 	refreshedState, err := a.refreshAppService(ctx, organizationId, projectId, clusterId, appServiceId)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		if err.HttpStatusCode != http.StatusNotFound {
-			resp.Diagnostics.AddError(
-				"Error Reading Capella App Service",
-				"Could not read Capella appServiceID "+appServiceId+": "+err.CompleteError(),
-			)
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
 			return
 		}
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		resp.State.RemoveResource(ctx)
-		return
-	default:
 		resp.Diagnostics.AddError(
 			"Error Reading Capella App Service",
-			"Could not read Capella appServiceID "+appServiceId+": "+err.Error(),
+			"Could not read Capella appServiceID "+appServiceId+": "+errString,
 		)
 		return
 	}
