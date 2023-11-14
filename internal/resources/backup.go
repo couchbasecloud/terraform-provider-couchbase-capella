@@ -118,6 +118,16 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	}
 
 	backupResponse, err := b.checkLatestBackupStatus(ctx, organizationId, projectId, clusterId, bucketId, backupFound, latestBackup)
+	_, err = handleBackupError(err)
+	if err != nil {
+		if diags.HasError() {
+			resp.Diagnostics.AddError(
+				"Error whiling checking latest backup status",
+				fmt.Sprintf("Could not read check latest backup status, unexpected error: "+err.Error()),
+			)
+			return
+		}
+	}
 
 	backupStats := providerschema.NewBackupStats(*backupResponse.BackupStats)
 	backupStatsObj, diags := types.ObjectValueFrom(ctx, backupStats.AttributeTypes(), backupStats)
@@ -189,6 +199,9 @@ func (b *Backup) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 		return
 	}
 
+	refreshedState.Restore = state.Restore
+	refreshedState.RestoreTimes = state.RestoreTimes
+
 	diags = resp.State.Set(ctx, &refreshedState)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -198,8 +211,107 @@ func (b *Backup) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 }
 
 // Update updates the Backup record.
-func (b *Backup) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	//TODO implement me https://couchbasecloud.atlassian.net/browse/AV-66713
+func (b *Backup) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var state, plan providerschema.Backup
+
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+
+	diags = req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	IDs, err := plan.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Backup in Capella",
+			"Could not read Capella Backup with ID "+state.Id.String()+": "+err.Error(),
+		)
+	}
+	var (
+		organizationId = IDs[providerschema.OrganizationId]
+		projectId      = IDs[providerschema.ProjectId]
+		clusterId      = IDs[providerschema.ClusterId]
+		backupId       = IDs[providerschema.Id]
+	)
+
+	var restore *providerschema.Restore
+	diags.Append(req.Config.GetAttribute(ctx, path.Root("restore"), &restore)...)
+
+	if plan.RestoreTimes.IsNull() || plan.RestoreTimes.IsUnknown() {
+		resp.Diagnostics.AddError(
+			"Error restoring backup",
+			"Could not restore backup id "+state.Id.String()+": plan restore times value is not set",
+		)
+		return
+	}
+
+	if !state.RestoreTimes.IsNull() && !state.RestoreTimes.IsUnknown() {
+		planRestoreTimes := *plan.RestoreTimes.ValueBigFloat()
+		stateRestoreTimes := *state.RestoreTimes.ValueBigFloat()
+		if planRestoreTimes.Cmp(&stateRestoreTimes) != 1 {
+			resp.Diagnostics.AddError(
+				"Error restoring backup",
+				"Could not restore backup id "+state.Id.String()+": plan restore times value is not greater than state restore times value",
+			)
+			return
+		}
+	}
+
+	var newServices []backupapi.Service
+	for _, service := range restore.Services {
+		newService := service.ValueString()
+		newServices = append(newServices, backupapi.Service(newService))
+	}
+
+	restoreRequest := backupapi.CreateRestoreRequest{
+		TargetClusterId:       restore.TargetClusterId.ValueString(),
+		SourceClusterId:       restore.SourceClusterId.ValueString(),
+		BackupId:              backupId,
+		Services:              &newServices,
+		ForceUpdates:          restore.ForceUpdates.ValueBool(),
+		AutoRemoveCollections: restore.AutoRemoveCollections.ValueBool(),
+		FilterKeys:            restore.FilterKeys.ValueString(),
+		FilterValues:          restore.FilterValues.ValueString(),
+		IncludeData:           restore.IncludeData.ValueString(),
+		ExcludeData:           restore.ExcludeData.ValueString(),
+		MapData:               restore.MapData.ValueString(),
+		ReplaceTTL:            restore.ReplaceTTL.ValueString(),
+		ReplaceTTLWith:        restore.ReplaceTTLWith.ValueString(),
+	}
+
+	_, err = b.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/backups/%s/restore", b.HostURL, organizationId, projectId, clusterId, backupId),
+		http.MethodPost,
+		restoreRequest,
+		b.Token,
+		nil,
+	)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error restoring backup",
+			"Could not restore backup id "+state.Id.String()+": plan restore times value is not greater than state restore times value",
+		)
+		return
+	}
+
+	if !plan.Restore.IsUnknown() && !plan.Restore.IsNull() {
+		restore.Status = types.StringValue("RESTORE INITIATED")
+		restoreObj, diags := types.ObjectValueFrom(ctx, restore.AttributeTypes(), restore)
+		if diags.HasError() {
+			resp.Diagnostics.Append(diags...)
+			return
+		}
+		plan.Restore = restoreObj
+	}
+	diags = resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Delete deletes the backup.
@@ -287,6 +399,9 @@ func (a *Backup) validateCreateBackupRequest(plan providerschema.Backup) error {
 	}
 	if plan.BucketId.IsNull() {
 		return errors.ErrBucketIdCannotBeEmpty
+	}
+	if !plan.RestoreTimes.IsNull() && !plan.RestoreTimes.IsUnknown() {
+		return errors.ErrRestoreTimesMustNotBeSetWhileCreateBackup
 	}
 	return nil
 }

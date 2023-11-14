@@ -118,3 +118,32 @@ type GetCyclesResponse struct {
 type GetBackupsResponse struct {
 	Data []GetBackupResponse `json:"data"`
 }
+
+type CreateRestoreRequest struct {
+	TargetClusterId string `json:"targetClusterID"`
+
+	SourceClusterId string `json:"sourceClusterID"`
+
+	BackupId string     `json:"backupID"`
+	Services *[]Service `json:"services"`
+
+	ForceUpdates bool `json:"forceUpdates"`
+
+	AutoRemoveCollections bool `json:"autoRemoveCollections"`
+
+	FilterKeys string `json:"filterKeys"`
+
+	FilterValues string `json:"filterValues"`
+
+	IncludeData string `json:"includeData"`
+
+	ExcludeData string `json:"excludeData"`
+
+	MapData string `json:"mapData"`
+
+	ReplaceTTL string `json:"replaceTTL"`
+
+	ReplaceTTLWith string `json:"replaceTTLWith"`
+}
+
+type Service string
