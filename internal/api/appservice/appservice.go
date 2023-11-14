@@ -99,20 +99,6 @@ type GetAppServiceResponse struct {
 	Etag string
 }
 
-// GetAppServicesResponse is the response received from the Capella V4 Public API when asked to list all app services.
-// In order to access this endpoint, the provided API key must have at least one of the roles referenced below:
-//
-// Organization Owner
-// Project Owner
-// Project Manager
-// Project Viewer
-// Database Data Reader/Writer
-// Database Data Reader
-// To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
-type GetAppServicesResponse struct {
-	Data []GetAppServiceResponse `json:"data"`
-}
-
 type UpdateAppServiceRequest struct {
 	// Nodes is the number of nodes configured for the App Service.
 	// The number of nodes can range from 2 to 12
