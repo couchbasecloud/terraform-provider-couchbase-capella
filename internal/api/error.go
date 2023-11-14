@@ -22,13 +22,17 @@ type Error struct {
 }
 
 func (e *Error) Error() string {
-	return fmt.Sprintf("%s", e.Message)
+	return fmt.Sprintf(`{"code":%d,"hint":"%s","httpStatusCode":%d,"message":"%s"}`,
+		e.Code, e.Hint, e.HttpStatusCode, e.Message,
+	)
 }
 
 func (e Error) CompleteError() string {
 	jsonData, err := json.Marshal(e)
 	if err != nil {
-		return e.Message
+		return fmt.Sprintf(`{"code":%d,"hint":"%s","httpStatusCode":%d,"message":"%s"}`,
+			e.Code, e.Hint, e.HttpStatusCode, e.Message,
+		)
 	}
 	return string(jsonData)
 }

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	internalerrors "terraform-provider-capella/internal/errors"
 	"testing"
@@ -11,6 +12,7 @@ import (
 func Test_ParseError(t *testing.T) {
 	var (
 		errMessage = "Error received from Capella V4 Api"
+		apiError   = Error{Message: errMessage}
 	)
 
 	type test struct {
@@ -26,6 +28,11 @@ func Test_ParseError(t *testing.T) {
 			expOutput: Error{Message: errMessage}.CompleteError(),
 		},
 		{
+			name:      "Wrapped error received from Capella V4 Api",
+			err:       fmt.Errorf("received error: %w", &apiError),
+			expOutput: Error{Message: errMessage}.CompleteError(),
+		},
+		{
 			name:      "Error other than received from Capella V4 Api",
 			err:       internalerrors.ErrAllowListIdCannotBeEmpty,
 			expOutput: internalerrors.ErrAllowListIdCannotBeEmpty.Error(),
@@ -36,7 +43,7 @@ func Test_ParseError(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			errString := ParseError(test.err)
 
-			assert.Equal(t, errString, test.expOutput)
+			assert.Equal(t, test.expOutput, errString)
 		})
 	}
 }
@@ -71,6 +78,18 @@ func Test_CheckResourceNotFound(t *testing.T) {
 		{
 			name:      "Error received from Capella V4 Api - Resource Not Found",
 			err:       &err404,
+			expOutput: err404.CompleteError(),
+			expBool:   true,
+		},
+		{
+			name:      "Wrapped 500 error received from Capella V4 Api",
+			err:       fmt.Errorf("received error: %w", &err500),
+			expOutput: err500.CompleteError(),
+			expBool:   false,
+		},
+		{
+			name:      "Wrapped 404 error received from Capella V4 Api",
+			err:       fmt.Errorf("received error: %w", &err404),
 			expOutput: err404.CompleteError(),
 			expBool:   true,
 		},
