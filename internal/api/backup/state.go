@@ -1,5 +1,7 @@
 package backup
 
+import "slices"
+
 const (
 	// Pending communicates that a backup record has been created but the
 	// backup job has not yet run. This happens when dp-backup first
@@ -24,15 +26,5 @@ func IsFinalState(state State) bool {
 		Ready,
 		Failed,
 	}
-	return Contains(finalStates, state)
-}
-
-// Contains checks whether passed element presents in array or not
-func Contains[T comparable](s []T, e T) bool {
-	for _, r := range s {
-		if r == e {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(finalStates, state)
 }
