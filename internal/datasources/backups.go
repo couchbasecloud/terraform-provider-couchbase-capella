@@ -148,7 +148,7 @@ func (d *Backups) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 				return
 			}
 
-			newBackupData := providerschema.NewBackup(&backup, organizationId, projectId, backupStatsObj, scheduleInfoObj)
+			newBackupData := providerschema.NewBackupData(&backup, organizationId, projectId, backupStatsObj, scheduleInfoObj)
 			state.Data = append(state.Data, *newBackupData)
 		}
 	}
