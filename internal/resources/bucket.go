@@ -121,9 +121,10 @@ func (c *Bucket) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	}
 	var clusterId = plan.ClusterId.ValueString()
 
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets", c.HostURL, organizationId, projectId, clusterId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
 	response, err := c.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets", c.HostURL, organizationId, projectId, clusterId),
-		http.MethodPost,
+		cfg,
 		BucketRequest,
 		c.Token,
 		nil,
@@ -284,9 +285,10 @@ func (r *Bucket) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 	}
 	var bucketId = state.Id.ValueString()
 
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", r.HostURL, organizationId, projectId, clusterId, bucketId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
 	_, err := r.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", r.HostURL, organizationId, projectId, clusterId, bucketId),
-		http.MethodDelete,
+		cfg,
 		nil,
 		r.Token,
 		nil,
@@ -318,9 +320,10 @@ func (c *Bucket) ImportState(ctx context.Context, req resource.ImportStateReques
 
 // retrieveBucket retrieves bucket information for a specified organization, project, cluster and bucket ID.
 func (c *Bucket) retrieveBucket(ctx context.Context, organizationId, projectId, clusterId, bucketId string) (*providerschema.OneBucket, error) {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", c.HostURL, organizationId, projectId, clusterId, bucketId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := c.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", c.HostURL, organizationId, projectId, clusterId, bucketId),
-		http.MethodGet,
+		cfg,
 		nil,
 		c.Token,
 		nil,
@@ -394,9 +397,10 @@ func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 		TimeToLiveInSeconds:  state.TimeToLiveInSeconds.ValueInt64(),
 	}
 
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", c.HostURL, organizationId, projectId, clusterId, bucketId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
 	response, err := c.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", c.HostURL, organizationId, projectId, clusterId, bucketId),
-		http.MethodPut,
+		cfg,
 		bucketUpdateRequest,
 		c.Token,
 		nil,

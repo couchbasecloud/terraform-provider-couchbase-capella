@@ -8,9 +8,7 @@ resource "capella_user" "new_user" {
   name  = var.user_name
   email = var.email
 
-  organization_roles = [
-    "organizationMember"
-  ]
+  organization_roles = var.organization_roles
 
   resources = [
     {

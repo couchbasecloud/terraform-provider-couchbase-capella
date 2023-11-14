@@ -59,9 +59,10 @@ func (d *Backups) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 	}
 
 	// Get all the cycles
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/cycles", d.HostURL, organizationId, projectId, clusterId, bucketId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := d.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/cycles", d.HostURL, organizationId, projectId, clusterId, bucketId),
-		http.MethodGet,
+		cfg,
 		nil,
 		d.Token,
 		nil,
@@ -94,9 +95,10 @@ func (d *Backups) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 
 	// Loop through the cycles to fetch all backups within a cycle
 	for _, cycle := range cyclesResp.Data {
+		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/cycles/%s", d.HostURL, organizationId, projectId, clusterId, bucketId, cycle.CycleId)
+		cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 		response, err := d.Client.Execute(
-			fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/cycles/%s", d.HostURL, organizationId, projectId, clusterId, bucketId, cycle.CycleId),
-			http.MethodGet,
+			cfg,
 			nil,
 			d.Token,
 			nil,
