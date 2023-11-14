@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
 	"terraform-provider-capella/internal/api"
 	scheduleapi "terraform-provider-capella/internal/api/backup_schedule"
 	"terraform-provider-capella/internal/errors"
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -122,16 +124,194 @@ func (b *BackupSchedule) Create(ctx context.Context, req resource.CreateRequest,
 
 }
 
-func (b *BackupSchedule) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	//TODO implement me
+// Read reads BackupSchedule information.
+func (b *BackupSchedule) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state providerschema.BackupSchedule
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceIDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error reading backup schedule",
+			"Could not read backup schedule for bucket"+state.BucketId.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	var (
+		organizationId = resourceIDs[providerschema.OrganizationId]
+		projectId      = resourceIDs[providerschema.ProjectId]
+		clusterId      = resourceIDs[providerschema.ClusterId]
+		bucketId       = resourceIDs[providerschema.BucketId]
+	)
+
+	// Get refreshed backup schedule from Capella
+	refreshedState, err := b.retrieveBackupSchedule(ctx, organizationId, projectId, clusterId, bucketId)
+	resourceNotFound, err := handleBackupScheduleError(err)
+	if resourceNotFound {
+		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+		resp.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error reading backup schedule",
+			"Could not read backup schedule for bucket"+state.BucketId.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	// Set refreshed state
+	diags = resp.State.Set(ctx, &refreshedState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
-func (b *BackupSchedule) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	//TODO implement me
+// Update updates the BackupSchedule.
+func (b *BackupSchedule) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan providerschema.BackupSchedule
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceIDs, err := plan.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating backup schedule",
+			"Could not update backup schedule for bucket"+plan.BucketId.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	var (
+		organizationId = resourceIDs[providerschema.OrganizationId]
+		projectId      = resourceIDs[providerschema.ProjectId]
+		clusterId      = resourceIDs[providerschema.ClusterId]
+		bucketId       = resourceIDs[providerschema.BucketId]
+	)
+
+	var weeklySchedule *providerschema.WeeklySchedule
+	diags.Append(req.Config.GetAttribute(ctx, path.Root("weekly_schedule"), &weeklySchedule)...)
+
+	BackupScheduleRequest := scheduleapi.UpdateBackupScheduleRequest{
+		Type: plan.Type.ValueString(),
+		WeeklySchedule: scheduleapi.WeeklySchedule{
+			DayOfWeek:              weeklySchedule.DayOfWeek.ValueString(),
+			StartAt:                weeklySchedule.StartAt.ValueInt64(),
+			IncrementalEvery:       weeklySchedule.IncrementalEvery.ValueInt64(),
+			RetentionTime:          weeklySchedule.RetentionTime.ValueString(),
+			CostOptimizedRetention: weeklySchedule.CostOptimizedRetention.ValueBool(),
+		},
+	}
+
+	_, err = b.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/schedules", b.HostURL, organizationId, projectId, clusterId, bucketId),
+		http.MethodPut,
+		BackupScheduleRequest,
+		b.Token,
+		nil,
+	)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		resp.Diagnostics.AddError(
+			"Error updating backup schedule",
+			"Could not update backup schedule for bucket"+plan.BucketId.String()+": "+err.CompleteError(),
+		)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error updating backup schedule",
+			"Could not update backup schedule for bucket"+plan.BucketId.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	currentState, err := b.retrieveBackupSchedule(ctx, organizationId, projectId, clusterId, bucketId)
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		if err.HttpStatusCode != 404 {
+			resp.Diagnostics.AddError(
+				"Error reading backup schedule",
+				"Could not read backup schedule for bucket"+plan.BucketId.String()+": "+err.CompleteError(),
+			)
+			return
+		}
+		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+		resp.State.RemoveResource(ctx)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error reading backup schedule",
+			"Could not read backup schedule for bucket"+plan.BucketId.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	// Set state to fully populated data
+	diags = resp.State.Set(ctx, currentState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
-func (b *BackupSchedule) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	//TODO implement me
+// Delete deletes the BackupSchedule.
+func (b *BackupSchedule) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	// Retrieve values from state
+	var state providerschema.BackupSchedule
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceIDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error deleting backup schedule",
+			"Could not delete backup schedule with bucket id "+state.BucketId.String()+" unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	var (
+		organizationId = resourceIDs[providerschema.OrganizationId]
+		projectId      = resourceIDs[providerschema.ProjectId]
+		clusterId      = resourceIDs[providerschema.ClusterId]
+		bucketId       = resourceIDs[providerschema.BucketId]
+	)
+
+	// Delete existing backup schedule
+	_, err = b.Client.Execute(
+		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/schedules", b.HostURL, organizationId, projectId, clusterId, bucketId),
+		http.MethodDelete,
+		nil,
+		b.Token,
+		nil,
+	)
+	resourceNotFound, err := handleBackupScheduleError(err)
+	if resourceNotFound {
+		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+		return
+	}
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error deleting backup schedule",
+			"Could not delete backup schedule with bucket id "+state.BucketId.String()+" unexpected error: "+err.Error(),
+		)
+		return
+	}
 }
 
 func (b *BackupSchedule) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
@@ -202,4 +382,20 @@ func (b *BackupSchedule) retrieveBackupSchedule(ctx context.Context, organizatio
 
 	refreshedState := providerschema.NewBackupSchedule(&backupScheduleResp, organizationId, projectId, scheduleObj)
 	return refreshedState, nil
+}
+
+// this func extract error message if error is api.Error and also checks whether error is
+// resource not found
+func handleBackupScheduleError(err error) (bool, error) {
+	switch err := err.(type) {
+	case nil:
+		return false, nil
+	case api.Error:
+		if err.HttpStatusCode != http.StatusNotFound {
+			return false, fmt.Errorf(err.CompleteError())
+		}
+		return true, fmt.Errorf(err.CompleteError())
+	default:
+		return false, err
+	}
 }
