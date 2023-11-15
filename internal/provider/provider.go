@@ -178,6 +178,7 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewDatabaseCredentials,
 		datasources.NewApiKeys,
 		datasources.NewAppServices,
+		datasources.NewBackups,
 	}
 }
 
@@ -192,5 +193,7 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewDatabaseCredential,
 		resources.NewBucket,
 		resources.NewAppService,
+		resources.NewBackup,
+		resources.NewBackupSchedule,
 	}
 }
