@@ -1,6 +1,6 @@
 package cluster
 
-import "golang.org/x/exp/slices"
+import "slices"
 
 const (
 	Degraded         State = "degraded"
