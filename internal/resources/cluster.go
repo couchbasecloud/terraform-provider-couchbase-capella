@@ -433,6 +433,8 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 			)
 			return
 		}
+		// resourceNotFound as expected
+		return
 	}
 
 	// This case will only occur when cluster deletion has failed,

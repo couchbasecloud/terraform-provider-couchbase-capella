@@ -347,12 +347,14 @@ func (a *AppService) Delete(ctx context.Context, req resource.DeleteRequest, res
 			)
 			return
 		}
+		// resourceNotFound as expected
+		return
 	}
 
 	// This will only be reached when app service deletion has failed,
 	// and the app service record still exists in the cp metadata. Therefore,
 	// no error will be returned when performing a GET call.
-	_, err = a.refreshAppService(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.ClusterId.ValueString(), state.Id.ValueString())
+	appService, err := a.refreshAppService(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.ClusterId.ValueString(), state.Id.ValueString())
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -366,6 +368,11 @@ func (a *AppService) Delete(ctx context.Context, req resource.DeleteRequest, res
 		)
 		return
 	}
+	resp.Diagnostics.AddError(
+		"Error deleting app service",
+		fmt.Sprintf("Could not delete app service id %s, as current app service state: %s", state.Id.String(), appService.CurrentState),
+	)
+	return
 }
 
 // Configure adds the provider configured client to the app service resource.
