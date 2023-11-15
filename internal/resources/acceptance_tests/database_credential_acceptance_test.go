@@ -76,7 +76,7 @@ func testAccDatabaseCredentialConfigUpdate(cfg string) string {
 }
 
 func generateDatabaseCredentialImportId(state *terraform.State) (string, error) {
-	resourceName := "capella_project.acc_test"
+	resourceName := "capella_database_credential.acc_test"
 	var rawState map[string]string
 	for _, m := range state.Modules {
 		if len(m.Resources) > 0 {
