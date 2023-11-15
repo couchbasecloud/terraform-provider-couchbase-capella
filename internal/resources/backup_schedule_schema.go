@@ -4,11 +4,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 )
 
-// rest api schema doesn't specify about required field clearly
-// is there any other type is supported aparted from weekly?
 func BackupScheduleSchema() schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"id":              stringAttribute(computed, useStateForUnknown),
 			"organization_id": stringAttribute(required, requiresReplace),
 			"project_id":      stringAttribute(required, requiresReplace),
 			"cluster_id":      stringAttribute(required, requiresReplace),

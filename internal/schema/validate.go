@@ -14,6 +14,7 @@ var (
 		"organization_id": OrganizationId,
 		"project_id":      ProjectId,
 		"cluster_id":      ClusterId,
+		"bucket_id":       BucketId,
 		"id":              Id,
 	}
 )

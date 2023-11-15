@@ -11,6 +11,9 @@ import (
 
 // BackupSchedule defines the response as received from V4 Capella Public API when asked to create a new backup schedule.
 type BackupSchedule struct {
+	// Id is not present in the backup schedule, it is only present to support import
+	Id types.String `tfsdk:"id"`
+
 	// OrganizationId is the organizationId of the capella tenant.
 	OrganizationId types.String `tfsdk:"organization_id"`
 
@@ -39,9 +42,10 @@ func (a *BackupSchedule) Validate() (map[Attr]string, error) {
 		ProjectId:      a.ProjectId,
 		ClusterId:      a.ClusterId,
 		BucketId:       a.BucketId,
+		Id:             a.Id,
 	}
 
-	IDs, err := validateSchemaState(state)
+	IDs, err := validateBackupScheduleSchemaState(state)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
 	}
@@ -106,4 +110,48 @@ func NewBackupSchedule(backupSchedule *backup_schedule.GetBackupScheduleResponse
 		WeeklySchedule: scheduleObj,
 	}
 	return &newBackup
+}
+
+// validateBackupScheduleSchemaState validates that the IDs passed in as variadic
+// parameters were successfully imported for backup schedule.
+func validateBackupScheduleSchemaState(state map[Attr]basetypes.StringValue) (map[Attr]string, error) {
+	IDs, keyParams := morphState(state)
+
+	// If the state was passed in via terraform import we need to
+	// retrieve the individual IDs from the ID string.
+	if checkForImportString(state[OrganizationId]) {
+		var err error
+		IDs, err = splitImportString(state[Id].ValueString(), keyParams)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", errors.ErrInvalidImport, err)
+		}
+	}
+
+	err := checkKeysAndValuesForBackupSchedule(IDs, keyParams)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
+	}
+	delete(IDs, Id)
+	return IDs, nil
+}
+
+// checkKeysAndValuesForBackupSchedule is used to validate that an ID map
+// has been populated with the expected ID keys and that the
+// associated values are not empty for backup schedule and skip id key.
+func checkKeysAndValuesForBackupSchedule(IDs map[Attr]string, keyParams []Attr) error {
+	for _, key := range keyParams {
+		if key == "id" {
+			continue
+		}
+		value, ok := IDs[key]
+		if !ok {
+			return fmt.Errorf("terraform resource was missing: %w: %s", errors.ErrIdMissing, key)
+
+		}
+		if value == "" {
+			return fmt.Errorf("terraform resource was empty: %w: %s", errors.ErrIdMissing, key)
+
+		}
+	}
+	return nil
 }

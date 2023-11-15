@@ -11,7 +11,7 @@ To run, configure your Couchbase Capella provider as described in README in the 
 In this example, we are going to do the following.
 
 1. CREATE: Create a new backup entry in an existing Capella cluster as stated in the `create_backup.tf` file.
-2. UPDATE: 
+2. UPDATE: Triggers restore for the backup.
 3. LIST: List existing backups in Capella as stated in the `list_backups.tf` file.
 4. IMPORT: Import a backup that exists in Capella but not in the terraform state file.
 5. DELETE: Delete the newly created backup from Capella.
@@ -484,13 +484,212 @@ The fourth ID is the organization ID i.e. the ID of the organization to which th
 
 ## UPDATE
 ### Let us edit terraform.tfvars file to restore the backup.
-
-Command: ``
-
-``` 
-
+```
+resource "capella_backup" "new_backup" {
+  organization_id            = var.organization_id
+  project_id                 = var.project_id
+  cluster_id                 = var.cluster_id
+  bucket_id                  = var.bucket_id
+  restore = {
+    target_cluster_id = var.cluster_id
+    source_cluster_id = var.cluster_id
+    "services": [
+      "data",
+      "query"
+    ],
+  }
+  restore_times = 1
+}
 ```
 
+Command: `terraform plan`
+
+Sample Output:
+
+``` 
+│ Warning: Provider development overrides are in effect
+│ 
+│ The following provider development overrides are set in the CLI configuration:
+│  - hashicorp.com/couchabasecloud/capella in /Users/aniketkumar/.gvm/pkgsets/go1.21/global/bin
+│ 
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
+╵
+capella_backup.new_backup: Refreshing state... [id=b1e946dc-e72b-4547-97e2-4337eabf06af]
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  ~ update in-place
+
+Terraform will perform the following actions:
+
+  # capella_backup.new_backup will be updated in-place
+  ~ resource "capella_backup" "new_backup" {
+        id                      = "b1e946dc-e72b-4547-97e2-4337eabf06af"
+      + restore                 = {
+          + services          = [
+              + "data",
+              + "query",
+            ]
+          + source_cluster_id = "98964fdd-c45f-448c-8cbc-3c77e2e700a5"
+          + status            = (known after apply)
+          + target_cluster_id = "98964fdd-c45f-448c-8cbc-3c77e2e700a5"
+        }
+      + restore_times           = 1
+        # (15 unchanged attributes hidden)
+    }
+
+Plan: 0 to add, 1 to change, 0 to destroy.
+
+Changes to Outputs:
+  ~ new_backup = {
+        id                      = "b1e946dc-e72b-4547-97e2-4337eabf06af"
+      ~ restore                 = null -> {
+          + auto_remove_collections = null
+          + exclude_data            = null
+          + filter_keys             = null
+          + filter_values           = null
+          + force_updates           = null
+          + include_data            = null
+          + map_data                = null
+          + replace_ttl             = null
+          + replace_ttl_with        = null
+          + services                = [
+              + "data",
+              + "query",
+            ]
+          + source_cluster_id       = "98964fdd-c45f-448c-8cbc-3c77e2e700a5"
+          + target_cluster_id       = "98964fdd-c45f-448c-8cbc-3c77e2e700a5"
+        }
+      ~ restore_times           = null -> 1
+        # (15 unchanged attributes hidden)
+    }
+```
+
+command: `terrafom apply`
+
+Sample Output:
+
+```
+╷
+│ Warning: Provider development overrides are in effect
+│ 
+│ The following provider development overrides are set in the CLI configuration:
+│  - hashicorp.com/couchabasecloud/capella in /Users/aniketkumar/.gvm/pkgsets/go1.21/global/bin
+│ 
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
+╵
+capella_backup.new_backup: Refreshing state... [id=b1e946dc-e72b-4547-97e2-4337eabf06af]
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  ~ update in-place
+
+Terraform will perform the following actions:
+
+  # capella_backup.new_backup will be updated in-place
+  ~ resource "capella_backup" "new_backup" {
+        id                      = "b1e946dc-e72b-4547-97e2-4337eabf06af"
+      + restore                 = {
+          + services          = [
+              + "data",
+              + "query",
+            ]
+          + source_cluster_id = "98964fdd-c45f-448c-8cbc-3c77e2e700a5"
+          + status            = (known after apply)
+          + target_cluster_id = "98964fdd-c45f-448c-8cbc-3c77e2e700a5"
+        }
+      + restore_times           = 1
+        # (15 unchanged attributes hidden)
+    }
+
+Plan: 0 to add, 1 to change, 0 to destroy.
+
+Changes to Outputs:
+  ~ new_backup = {
+        id                      = "b1e946dc-e72b-4547-97e2-4337eabf06af"
+      ~ restore                 = null -> {
+          + auto_remove_collections = null
+          + exclude_data            = null
+          + filter_keys             = null
+          + filter_values           = null
+          + force_updates           = null
+          + include_data            = null
+          + map_data                = null
+          + replace_ttl             = null
+          + replace_ttl_with        = null
+          + services                = [
+              + "data",
+              + "query",
+            ]
+          + source_cluster_id       = "98964fdd-c45f-448c-8cbc-3c77e2e700a5"
+          + target_cluster_id       = "98964fdd-c45f-448c-8cbc-3c77e2e700a5"
+        }
+      ~ restore_times           = null -> 1
+        # (15 unchanged attributes hidden)
+    }
+capella_backup.new_backup: Modifying... [id=b1e946dc-e72b-4547-97e2-4337eabf06af]
+capella_backup.new_backup: Modifications complete after 1s [id=b1e946dc-e72b-4547-97e2-4337eabf06af]
+
+Apply complete! Resources: 0 added, 1 changed, 0 destroyed.
+
+Outputs:
+
+new_backup = {
+  "backup_stats" = {
+    "cbas" = 0
+    "event" = 0
+    "fts" = 0
+    "gsi" = 0
+    "items" = 0
+    "mutations" = 0
+    "size_in_mb" = 0.000527
+    "tombstones" = 0
+  }
+  "bucket_id" = "Q0JFeGFtcGxlMQ=="
+  "bucket_name" = "CBExample1"
+  "cloud_provider" = "hostedAWS"
+  "cluster_id" = "98964fdd-c45f-448c-8cbc-3c77e2e700a5"
+  "cycle_id" = "36735b2b-f2c1-4a8b-af5b-992b0a326eab"
+  "date" = "2023-11-15T17:26:30.816620426Z"
+  "elapsed_time_in_seconds" = 6
+  "id" = "b1e946dc-e72b-4547-97e2-4337eabf06af"
+  "method" = "full"
+  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+  "project_id" = "ad1b3554-0fc6-45f6-aec9-f994b4ad0729"
+  "restore" = {
+    "auto_remove_collections" = tobool(null)
+    "exclude_data" = tostring(null)
+    "filter_keys" = tostring(null)
+    "filter_values" = tostring(null)
+    "force_updates" = tobool(null)
+    "include_data" = tostring(null)
+    "map_data" = tostring(null)
+    "replace_ttl" = tostring(null)
+    "replace_ttl_with" = tostring(null)
+    "services" = tolist([
+      "data",
+      "query",
+    ])
+    "source_cluster_id" = "98964fdd-c45f-448c-8cbc-3c77e2e700a5"
+    "status" = "RESTORE INITIATED"
+    "target_cluster_id" = "98964fdd-c45f-448c-8cbc-3c77e2e700a5"
+  }
+  "restore_before" = "2023-12-16T00:00:00Z"
+  "restore_times" = 1
+  "schedule_info" = {
+    "backup_time" = "2023-11-15 17:26:30.816620426 +0000 UTC"
+    "backup_type" = "Manual"
+    "increment" = 1
+    "retention" = "30days"
+  }
+  "source" = "manual"
+  "status" = "ready"
+}
+
+
+```
+Note:
+```
+The 'restore_times' field is incremental in nature. Therefore, whenever we need to trigger a restore, the value should be greater than the previous value.
+```
 
 ## DESTROY
 ### Finally, destroy the resources created by Terraform
