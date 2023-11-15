@@ -3,6 +3,7 @@ package datasources
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"terraform-provider-capella/internal/api"
 	clusterapi "terraform-provider-capella/internal/api/cluster"
@@ -50,16 +51,16 @@ func (d *Clusters) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 
 	if state.OrganizationId.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error creating cluster",
-			"Could not create cluster, unexpected error: organization ID cannot be empty.",
+			"Error reading cluster",
+			"Could not read cluster, unexpected error: organization ID cannot be empty.",
 		)
 		return
 	}
 
 	if state.ProjectId.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error creating cluster",
-			"Could not create cluster, unexpected error: project ID cannot be empty.",
+			"Error reading cluster",
+			"Could not read cluster, unexpected error: project ID cannot be empty.",
 		)
 		return
 	}
@@ -70,7 +71,9 @@ func (d *Clusters) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 	)
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", d.HostURL, organizationId, projectId)
-	response, err := api.GetPaginated[[]clusterapi.GetClusterResponse](ctx, d.Client, d.Token, url)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+
+	response, err := api.GetPaginated[[]clusterapi.GetClusterResponse](ctx, d.Client, d.Token, cfg, api.SortById)
 	switch err := err.(type) {
 	case nil:
 	case api.Error:

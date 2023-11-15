@@ -1,6 +1,8 @@
 package api
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 // CreateUserRequest is the request payload sent to the Capella V4 Public API when asked to invite a new user to an organization.
 // This request simply invites a new user under the organization.
@@ -109,4 +111,29 @@ type GetUserResponse struct {
 
 	// Audit contains all audit-related fields.
 	Audit CouchbaseAuditData `json:"audit"`
+}
+
+type Op string
+
+const (
+	Add    Op = "add"
+	Remove Op = "remove"
+)
+
+type PatchEntry struct {
+	// Op is the type of operation
+	//
+	// Enum: "add" "remove"
+	Op string `json:"op"`
+
+	// Path is the path of the resource that needs to be updated
+	//
+	// Organization Roles: /organizationRoles
+	// Resources: /resources/{resourceId}
+	// Resource Roles: /resources/{resourceId}/roles
+	Path string `json:"path"`
+
+	// Value represents the value to be amended by the patch. It may take an array
+	// of OrganizationRoles (strings), an Array of ProjectRoles (strings) or a Resource (object)
+	Value interface{} `json:"value,omitempty"`
 }

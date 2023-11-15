@@ -2,7 +2,6 @@ package datasources
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"terraform-provider-capella/internal/api/bucket"
@@ -147,13 +146,10 @@ func (d *Buckets) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 		return
 	}
 
-	response, err := d.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets", d.HostURL, organizationId, projectId, clusterId),
-		http.MethodGet,
-		nil,
-		d.Token,
-		nil,
-	)
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets", d.HostURL, organizationId, projectId, clusterId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+
+	response, err := api.GetPaginated[[]bucket.GetBucketResponse](ctx, d.Client, d.Token, cfg, api.SortById)
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
@@ -175,18 +171,8 @@ func (d *Buckets) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 		return
 	}
 
-	bucketResp := bucket.GetBucketsResponse{}
-	err = json.Unmarshal(response.Body, &bucketResp)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error listing buckets",
-			"Could not list buckets, unexpected error: "+err.Error(),
-		)
-		return
-	}
-
 	// Map response body to model
-	for _, bucket := range bucketResp.Data {
+	for _, bucket := range response {
 		bucketState := providerschema.OneBucket{
 			Id:                       types.StringValue(bucket.Id),
 			Name:                     types.StringValue(bucket.Name),
