@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -78,6 +79,36 @@ func boolAttribute(fields ...string) *schema.BoolAttribute {
 // in an Int64 attribute to true and then returns the string attribute.
 func int64Attribute(fields ...string) *schema.Int64Attribute {
 	attribute := schema.Int64Attribute{}
+
+	for _, field := range fields {
+		switch field {
+		case required:
+			attribute.Required = true
+		case optional:
+			attribute.Optional = true
+		case computed:
+			attribute.Computed = true
+		case sensitive:
+			attribute.Sensitive = true
+		case requiresReplace:
+			var planModifiers = []planmodifier.Int64{
+				int64planmodifier.RequiresReplace(),
+			}
+			attribute.PlanModifiers = append(attribute.PlanModifiers, planModifiers...)
+		case useStateForUnknown:
+			var planModifiers = []planmodifier.Int64{
+				int64planmodifier.UseStateForUnknown(),
+			}
+			attribute.PlanModifiers = append(attribute.PlanModifiers, planModifiers...)
+		}
+	}
+	return &attribute
+}
+
+// numberAttribute is a variadic function which sets the requested fields
+// in an number attribute to true and then returns the string attribute.
+func numberAttribute(fields ...string) *schema.NumberAttribute {
+	attribute := schema.NumberAttribute{}
 
 	for _, field := range fields {
 		switch field {
