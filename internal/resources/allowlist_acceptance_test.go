@@ -1,4 +1,4 @@
-package acceptance_tests
+package resources_test
 
 import (
 	"encoding/json"
@@ -8,15 +8,13 @@ import (
 	"os"
 	"regexp"
 	clusterapi "terraform-provider-capella/internal/api/cluster"
-	cfg "terraform-provider-capella/internal/testing"
-
-	//acctest "terraform-provider-capella/internal/resources/acceptance_tests"
 	providerschema "terraform-provider-capella/internal/schema"
+	acctest "terraform-provider-capella/internal/testing"
+	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"testing"
-	"time"
 )
 
 func TestAccAllowListTestCases(t *testing.T) {
@@ -26,10 +24,10 @@ func TestAccAllowListTestCases(t *testing.T) {
 	projectResourceReference := "capella_project." + projectResourceName
 	cidr := "10.0.2.0/23"
 
-	testCfg := cfg.Cfg
+	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			//Creating cluster to check the allowlist configs
 			{
@@ -85,7 +83,7 @@ func TestAccAllowListTestCases(t *testing.T) {
 					resource.TestCheckResourceAttrSet("capella_allowlist.add_expiring_ip", "id"),
 					resource.TestCheckResourceAttrSet("capella_allowlist.add_expiring_ip", "expires_at"),
 					resource.TestCheckResourceAttr("capella_allowlist.add_expiring_ip", "comment", "terraform allow list acceptance test"),
-					testAccWait(time.Second*250)),
+					testAccWait(time.Second*140)),
 			},
 		},
 	})
@@ -99,10 +97,10 @@ func TestAccAllowedIPDeleteIP(t *testing.T) {
 	projectResourceReference := "capella_project." + projectResourceName
 	cidr := "10.0.2.0/23"
 
-	testCfg := cfg.Cfg
+	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCreateCluster(&testCfg, clusterName, projectResourceName, projectResourceReference, cidr),
@@ -133,10 +131,10 @@ func TestAccAllowedIPDeleteCluster(t *testing.T) {
 	projectResourceName := "terraform_project"
 	projectResourceReference := "capella_project." + projectResourceName
 	cidr := "10.0.2.0/23"
-	testCfg := cfg.Cfg
+	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCreateCluster(&testCfg, clusterName, projectResourceName, projectResourceReference, cidr),
@@ -176,7 +174,7 @@ resource "capella_cluster" "%[2]s" {
   organization_id = var.organization_id
   project_id      = %[4]s.id
   name            = "Terraform Acceptance Test Cluster"
-  description     = "My first test cluster for multiple services.""
+  description     = "My first test cluster for multiple services."
   couchbase_server = {
     version = "7.1"
   }
@@ -241,8 +239,8 @@ output "add_allowlist_req"{
 
 resource "capella_allowlist" "add_allowlist_req" {
   organization_id = var.organization_id
-  project_id      = capella_project.terraform_project.id
-  cluster_id      = capella_cluster.new_cluster.id
+  project_id      = "capella_project.terraform_project.id"
+  cluster_id      = "capella_cluster.new_cluster.id"
   cidr            = "10.1.1.1/32"
   comment		  = "Terraform acceptance tests"
 }
@@ -264,8 +262,8 @@ output "%[2]s"{
 
 resource "capella_allowlist" "%[2]s" {
   organization_id = var.organization_id
-  project_id      = capella_project.terraform_project.id
-  cluster_id      = capella_cluster.new_cluster.id
+  project_id      = "capella_project.terraform_project.id"
+  cluster_id      = "capella_cluster.new_cluster.id"
   cidr            = "%[3]s"
   comment		  = "terraform allow list acceptance test"
   expires_at      = "%[4]s"
@@ -287,8 +285,8 @@ output "%[2]s_1"{
 
 resource "capella_allowlist" "%[2]s_1" {
   organization_id = var.organization_id
-  project_id      = capella_project.terraform_project.id
-  cluster_id      = capella_cluster.new_cluster.id
+  project_id      = "capella_project.terraform_project.id"
+  cluster_id      = "capella_cluster.new_cluster.id"
   cidr            = "%[3]s"
   comment		  = "terraform allow list acceptance test"
   expires_at      = "%[4]s"
@@ -300,8 +298,8 @@ output "%[2]s_2"{
 
 resource "capella_allowlist" "%[2]s_2" {
   organization_id = var.organization_id
-  project_id      = capella_project.terraform_project.id
-  cluster_id      = capella_cluster.new_cluster.id
+  project_id      = "capella_project.terraform_project.id"
+  cluster_id      = "capella_cluster.new_cluster.id"
   cidr            = "%[3]s"
   comment		  = "terraform allow list acceptance test"
   expires_at      = "%[4]s"
@@ -323,8 +321,8 @@ output "%[2]s"{
 
 resource "capella_allowlist" "%[2]s" {
   organization_id = var.organization_id
-  project_id      = capella_project.terraform_project.id
-  cluster_id      = capella_cluster.new_cluster.id
+  project_id      = "capella_project.terraform_project.id"
+  cluster_id      = "capella_cluster.new_cluster.id"
   cidr            = "%[3]s"
   comment		  = "terraform allow list acceptance test"
   expires_at      = "%[4]s"
@@ -336,7 +334,7 @@ resource "capella_allowlist" "%[2]s" {
 func testAccAddExpiringIP(cfg string, resourceName string, cidr string) string {
 	timeNow := time.Now().UTC()
 	//Add two minutes for expiry so that IP can be expired
-	timeNow = timeNow.Add(time.Minute * 4)
+	timeNow = timeNow.Add(time.Minute * 2)
 	expiryTime := timeNow.Format(time.RFC3339)
 	return fmt.Sprintf(`
 %[1]s
@@ -347,8 +345,8 @@ output "%[2]s"{
 
 resource "capella_allowlist" "%[2]s" {
   organization_id = var.organization_id
-  project_id      = capella_project.terraform_project.id
-  cluster_id      = capella_cluster.new_cluster.id
+  project_id      = "capella_project.terraform_project.id"
+  cluster_id      = "capella_cluster.new_cluster.id"
   cidr            = "%[3]s"
   comment		  = "terraform allow list acceptance test"
   expires_at      = "%[4]s"
@@ -376,7 +374,7 @@ func testAccDeleteAllowIP(clusterResourceReference, projectResourceReference, al
 				}
 			}
 		}
-		data, err := TestClient()
+		data, err := acctest.TestClient()
 		if err != nil {
 			return err
 		}
@@ -408,7 +406,7 @@ func testAccDeleteProject(projectResourceReference string) resource.TestCheckFun
 				}
 			}
 		}
-		data, err := TestClient()
+		data, err := acctest.TestClient()
 		if err != nil {
 			return err
 		}
@@ -443,7 +441,7 @@ func testAccDeleteCluster(clusterResourceReference, projectResourceReference str
 				}
 			}
 		}
-		data, err := TestClient()
+		data, err := acctest.TestClient()
 		if err != nil {
 			return err
 		}
@@ -488,7 +486,7 @@ func testAccExistsClusterResource(resourceReference string) resource.TestCheckFu
 			}
 		}
 		fmt.Printf("raw state %s", rawState)
-		data, err := TestClient()
+		data, err := acctest.TestClient()
 		if err != nil {
 			return err
 		}
