@@ -2,20 +2,13 @@ package acceptance_tests
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"os"
 	"regexp"
-	"terraform-provider-capella/internal/provider"
 	cfg "terraform-provider-capella/internal/testing"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
-
-var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-	"capella": providerserver.NewProtocol6WithError(provider.New("test")()),
-}
 
 // testAccProtoV6ProviderFactories are used to instantiate a provider during
 // acceptance testing. The factory function will be invoked for every Terraform
