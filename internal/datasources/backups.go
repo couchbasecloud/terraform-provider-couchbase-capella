@@ -67,18 +67,10 @@ func (d *Backups) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 		d.Token,
 		nil,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Backup Cycles",
-			fmt.Sprintf("Could not read backup cycles in a cluster %s, unexpected error: %s", clusterId, err.CompleteError()),
-		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error Reading Capella Backup Cycles",
-			fmt.Sprintf("Could not read backup cycles in a cluster %s, unexpected error: %s", clusterId, err.Error()),
+			fmt.Sprintf("Could not read backup cycles in a cluster %s, unexpected error: %s", clusterId, api.ParseError(err)),
 		)
 		return
 	}
@@ -103,18 +95,10 @@ func (d *Backups) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 			d.Token,
 			nil,
 		)
-		switch err := err.(type) {
-		case nil:
-		case api.Error:
+		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error Reading Capella Backups in a Cycle",
-				fmt.Sprintf("Could not read backups for a cycle %s in a bucket %s, unexpected error: %s", cycle.CycleId, bucketId, err.CompleteError()),
-			)
-			return
-		default:
-			resp.Diagnostics.AddError(
-				"Error Reading Capella Backups in a Cycle",
-				fmt.Sprintf("Could not read backups for a cycle %s in a bucket %s, unexpected error: %s", cycle.CycleId, bucketId, err.Error()),
+				fmt.Sprintf("Could not read backups for a cycle %s in a bucket %s, unexpected error: %s", cycle.CycleId, bucketId, api.ParseError(err)),
 			)
 			return
 		}

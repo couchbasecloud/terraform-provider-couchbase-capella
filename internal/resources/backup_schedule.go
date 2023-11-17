@@ -99,18 +99,10 @@ func (b *BackupSchedule) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	refreshedState, err := b.retrieveBackupSchedule(ctx, organizationId, projectId, clusterId, bucketId)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Backup Schedule",
-			"Could not read Capella Backup Schedule for the bucket: %s "+bucketId+": "+err.CompleteError(),
-		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error Reading Capella Backup Schedule",
-			"Could not read Capella Backup Schedule for the bucket: %s "+bucketId+": "+err.Error(),
+			"Could not read Capella Backup Schedule for the bucket: %s "+bucketId+": "+api.ParseError(err),
 		)
 		return
 	}
@@ -151,16 +143,16 @@ func (b *BackupSchedule) Read(ctx context.Context, req resource.ReadRequest, res
 
 	// Get refreshed backup schedule from Capella
 	refreshedState, err := b.retrieveBackupSchedule(ctx, organizationId, projectId, clusterId, bucketId)
-	resourceNotFound, err := handleBackupScheduleError(err)
-	if resourceNotFound {
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		resp.State.RemoveResource(ctx)
-		return
-	}
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error reading backup schedule",
-			"Could not read backup schedule for bucket"+state.BucketId.String()+": "+err.Error(),
+			"Could not read backup schedule for bucket"+state.BucketId.String()+": "+errString,
 		)
 		return
 	}
@@ -221,40 +213,25 @@ func (b *BackupSchedule) Update(ctx context.Context, req resource.UpdateRequest,
 		b.Token,
 		nil,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating backup schedule",
-			"Could not update backup schedule for bucket"+plan.BucketId.String()+": "+err.CompleteError(),
-		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error updating backup schedule",
-			"Could not update backup schedule for bucket"+plan.BucketId.String()+": "+err.Error(),
+			"Could not update backup schedule for bucket"+plan.BucketId.String()+": "+api.ParseError(err),
 		)
 		return
 	}
 
 	currentState, err := b.retrieveBackupSchedule(ctx, organizationId, projectId, clusterId, bucketId)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		if err.HttpStatusCode != 404 {
-			resp.Diagnostics.AddError(
-				"Error reading backup schedule",
-				"Could not read backup schedule for bucket"+plan.BucketId.String()+": "+err.CompleteError(),
-			)
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
 			return
 		}
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		resp.State.RemoveResource(ctx)
-		return
-	default:
 		resp.Diagnostics.AddError(
 			"Error reading backup schedule",
-			"Could not read backup schedule for bucket"+plan.BucketId.String()+": "+err.Error(),
+			"Could not read backup schedule for bucket"+plan.BucketId.String()+": "+errString,
 		)
 		return
 	}
@@ -302,15 +279,16 @@ func (b *BackupSchedule) Delete(ctx context.Context, req resource.DeleteRequest,
 		b.Token,
 		nil,
 	)
-	resourceNotFound, err := handleBackupScheduleError(err)
-	if resourceNotFound {
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		return
-	}
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error deleting backup schedule",
-			"Could not delete backup schedule with bucket id "+state.BucketId.String()+" unexpected error: "+err.Error(),
+			"Could not delete backup schedule with bucket id "+state.BucketId.String()+" unexpected error: "+errString,
 		)
 		return
 	}
@@ -384,20 +362,4 @@ func (b *BackupSchedule) retrieveBackupSchedule(ctx context.Context, organizatio
 
 	refreshedState := providerschema.NewBackupSchedule(&backupScheduleResp, organizationId, projectId, scheduleObj)
 	return refreshedState, nil
-}
-
-// this func extract error message if error is api.Error and also checks whether error is
-// resource not found
-func handleBackupScheduleError(err error) (bool, error) {
-	switch err := err.(type) {
-	case nil:
-		return false, nil
-	case api.Error:
-		if err.HttpStatusCode != http.StatusNotFound {
-			return false, fmt.Errorf(err.CompleteError())
-		}
-		return true, fmt.Errorf(err.CompleteError())
-	default:
-		return false, err
-	}
 }
