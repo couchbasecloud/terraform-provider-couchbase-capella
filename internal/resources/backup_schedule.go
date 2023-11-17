@@ -343,8 +343,7 @@ func (b *BackupSchedule) Delete(ctx context.Context, req resource.DeleteRequest,
 // ImportState imports a remote backup schedule that is not created by Terraform.
 // Since Capella APIs may require multiple IDs, such as organizationId, projectId, clusterId,
 // and bucket_id, this function passes the root attribute which is a comma separated string of multiple IDs.
-// example: "id=<some random id>,organization_id=<orgId>,project_id=<projId>,cluster_id=<clusterId>,bucket_id=<bucketId>
-// here in id you can pass any random number
+// example: "organization_id=<orgId>,project_id=<projId>,cluster_id=<clusterId>,bucket_id=<bucketId>
 func (b *BackupSchedule) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("bucket_id"), req, resp)
