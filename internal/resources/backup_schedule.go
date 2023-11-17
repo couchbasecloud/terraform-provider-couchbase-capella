@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"terraform-provider-capella/internal/api"
 	scheduleapi "terraform-provider-capella/internal/api/backup_schedule"
@@ -97,8 +98,23 @@ func (b *BackupSchedule) Create(ctx context.Context, req resource.CreateRequest,
 		)
 		return
 	}
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		resp.Diagnostics.AddError(
+			"Error executing request",
+			"Could not execute request, unexpected error: "+err.CompleteError(),
+		)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error executing request",
+			"Could not execute request, unexpected error: "+err.Error(),
+		)
+		return
+	}
 
-	refreshedState, err := b.retrieveBackupSchedule(ctx, organizationId, projectId, clusterId, bucketId)
+	refreshedState, err := b.retrieveBackupSchedule(ctx, organizationId, projectId, clusterId, bucketId, weeklySchedule.DayOfWeek.ValueString())
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
@@ -142,6 +158,9 @@ func (b *BackupSchedule) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
+	var weeklySchedule *providerschema.WeeklySchedule
+	diags.Append(req.State.GetAttribute(ctx, path.Root("weekly_schedule"), &weeklySchedule)...)
+
 	var (
 		organizationId = resourceIDs[providerschema.OrganizationId]
 		projectId      = resourceIDs[providerschema.ProjectId]
@@ -149,8 +168,13 @@ func (b *BackupSchedule) Read(ctx context.Context, req resource.ReadRequest, res
 		bucketId       = resourceIDs[providerschema.BucketId]
 	)
 
+	var stateDayOfWeek string
+	if weeklySchedule != nil {
+		stateDayOfWeek = weeklySchedule.DayOfWeek.ValueString()
+	}
+
 	// Get refreshed backup schedule from Capella
-	refreshedState, err := b.retrieveBackupSchedule(ctx, organizationId, projectId, clusterId, bucketId)
+	refreshedState, err := b.retrieveBackupSchedule(ctx, organizationId, projectId, clusterId, bucketId, stateDayOfWeek)
 	resourceNotFound, err := handleBackupScheduleError(err)
 	if resourceNotFound {
 		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
@@ -237,7 +261,7 @@ func (b *BackupSchedule) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	currentState, err := b.retrieveBackupSchedule(ctx, organizationId, projectId, clusterId, bucketId)
+	currentState, err := b.retrieveBackupSchedule(ctx, organizationId, projectId, clusterId, bucketId, weeklySchedule.DayOfWeek.ValueString())
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
@@ -316,8 +340,13 @@ func (b *BackupSchedule) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 }
 
-func (b *BackupSchedule) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	//TODO implement me
+// ImportState imports a remote backup schedule that is not created by Terraform.
+// Since Capella APIs may require multiple IDs, such as organizationId, projectId, clusterId,
+// and bucket_id, this function passes the root attribute which is a comma separated string of multiple IDs.
+// example: "organization_id=<orgId>,project_id=<projId>,cluster_id=<clusterId>,bucket_id=<bucketId>
+func (b *BackupSchedule) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	// Retrieve import ID and save to id attribute
+	resource.ImportStatePassthroughID(ctx, path.Root("bucket_id"), req, resp)
 }
 
 func (b *BackupSchedule) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -357,7 +386,7 @@ func (a *BackupSchedule) validateCreateBackupScheduleRequest(plan providerschema
 
 // retrieveBackupSchedule retrieves backup schedule information from the specified organization and project
 // using the provided bucket ID by open-api call
-func (b *BackupSchedule) retrieveBackupSchedule(ctx context.Context, organizationId, projectId, clusterId, bucketId string) (*providerschema.BackupSchedule, error) {
+func (b *BackupSchedule) retrieveBackupSchedule(ctx context.Context, organizationId, projectId, clusterId, bucketId, planDayOfWeek string) (*providerschema.BackupSchedule, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/schedules", b.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := b.Client.Execute(
@@ -374,6 +403,10 @@ func (b *BackupSchedule) retrieveBackupSchedule(ctx context.Context, organizatio
 	err = json.Unmarshal(response.Body, &backupScheduleResp)
 	if err != nil {
 		return nil, err
+	}
+
+	if validateDayOfWeekIsSameInPlanAndState(planDayOfWeek, backupScheduleResp.WeeklySchedule.DayOfWeek) {
+		backupScheduleResp.WeeklySchedule.DayOfWeek = planDayOfWeek
 	}
 
 	scheduleInfo := providerschema.NewWeeklySchedule(*backupScheduleResp.WeeklySchedule)
@@ -400,4 +433,11 @@ func handleBackupScheduleError(err error) (bool, error) {
 	default:
 		return false, err
 	}
+}
+
+func validateDayOfWeekIsSameInPlanAndState(planDayOfWeek, stateDayOfWeek string) bool {
+	if strings.ToLower(planDayOfWeek) == strings.ToLower(stateDayOfWeek) {
+		return true
+	}
+	return false
 }
