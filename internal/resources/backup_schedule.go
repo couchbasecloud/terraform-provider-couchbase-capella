@@ -98,6 +98,21 @@ func (b *BackupSchedule) Create(ctx context.Context, req resource.CreateRequest,
 		)
 		return
 	}
+	switch err := err.(type) {
+	case nil:
+	case api.Error:
+		resp.Diagnostics.AddError(
+			"Error executing request",
+			"Could not execute request, unexpected error: "+err.CompleteError(),
+		)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error executing request",
+			"Could not execute request, unexpected error: "+err.Error(),
+		)
+		return
+	}
 
 	refreshedState, err := b.retrieveBackupSchedule(ctx, organizationId, projectId, clusterId, bucketId, weeklySchedule.DayOfWeek.ValueString())
 	switch err := err.(type) {
@@ -115,8 +130,6 @@ func (b *BackupSchedule) Create(ctx context.Context, req resource.CreateRequest,
 		)
 		return
 	}
-
-	refreshedState.Id = types.StringValue("")
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
@@ -175,8 +188,6 @@ func (b *BackupSchedule) Read(ctx context.Context, req resource.ReadRequest, res
 		)
 		return
 	}
-
-	refreshedState.Id = types.StringValue("")
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &refreshedState)
@@ -272,8 +283,6 @@ func (b *BackupSchedule) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	currentState.Id = types.StringValue("")
-
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, currentState)
 	resp.Diagnostics.Append(diags...)
@@ -338,7 +347,7 @@ func (b *BackupSchedule) Delete(ctx context.Context, req resource.DeleteRequest,
 // here in id you can pass any random number
 func (b *BackupSchedule) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("bucket_id"), req, resp)
 }
 
 func (b *BackupSchedule) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {

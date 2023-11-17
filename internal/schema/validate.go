@@ -21,14 +21,20 @@ var (
 
 // validateSchemaState validates that the IDs passed in as variadic
 // parameters were successfully imported.
-func validateSchemaState(state map[Attr]basetypes.StringValue) (map[Attr]string, error) {
+func validateSchemaState(state map[Attr]basetypes.StringValue, importAttr ...Attr) (map[Attr]string, error) {
 	IDs, keyParams := morphState(state)
 
 	// If the state was passed in via terraform import we need to
 	// retrieve the individual IDs from the ID string.
 	if checkForImportString(state[OrganizationId]) {
 		var err error
-		IDs, err = splitImportString(state[Id].ValueString(), keyParams)
+		switch {
+		case len(importAttr) > 0:
+			IDs, err = splitImportString(state[importAttr[0]].ValueString(), keyParams)
+		default:
+			IDs, err = splitImportString(state[Id].ValueString(), keyParams)
+
+		}
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", errors.ErrInvalidImport, err)
 		}

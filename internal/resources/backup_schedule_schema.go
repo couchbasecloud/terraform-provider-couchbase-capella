@@ -7,7 +7,6 @@ import (
 func BackupScheduleSchema() schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id":              stringAttribute(computed, useStateForUnknown),
 			"organization_id": stringAttribute(required, requiresReplace),
 			"project_id":      stringAttribute(required, requiresReplace),
 			"cluster_id":      stringAttribute(required, requiresReplace),
