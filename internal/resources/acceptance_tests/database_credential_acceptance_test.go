@@ -9,7 +9,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-func TestDatabaseCredentialResource(t *testing.T) {
+// TestAccDatabaseCredentialResourceRequiredFields is an acceptance test which tests
+// creating, reading, updating and deleting a database credential which has only the
+// required fields populated. Importing a database credential created externally is
+// also tested.
+func TestAccDatabaseCredentialResource(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -43,6 +47,14 @@ func TestDatabaseCredentialResource(t *testing.T) {
 
 		},
 	})
+}
+
+// TestAccDatabaseCredentialResourceRequiredFields is an acceptance test which tests
+// creating, reading, updating and deleting a database credential which has only the
+// required fields populated. Importing a database credential created externally is
+// also tested.
+func TestAccDatabaseCredentialResourceRequiredFields(t *testing.T) {
+	// TODO: Implement test
 }
 
 func testAccDatabaseCredentialConfig(cfg string) string {
