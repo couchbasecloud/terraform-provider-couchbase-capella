@@ -399,7 +399,7 @@ func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", c.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	response, err := c.Client.Execute(
+	_, err = c.Client.Execute(
 		cfg,
 		bucketUpdateRequest,
 		c.Token,
@@ -410,7 +410,7 @@ func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating bucket",
-			"Could not update bucket, unexpected error: "+string(response.Body),
+			"Could not update bucket, unexpected error: "+err.Error(),
 		)
 		return
 	}
