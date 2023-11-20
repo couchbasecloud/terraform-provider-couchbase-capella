@@ -244,7 +244,6 @@ resource "capella_allowlist" "add_allowlist_req" {
   project_id      = capella_project.terraform_project.id
   cluster_id      = capella_cluster.new_cluster.id
   cidr            = "10.1.1.1/32"
-  comment		  = "Terraform acceptance tests"
 }
 
 `, *cfg)
