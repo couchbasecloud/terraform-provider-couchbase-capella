@@ -117,18 +117,10 @@ func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequ
 		r.Token,
 		nil,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating database credential",
-			"Could not create database credential, unexpected error: "+err.CompleteError(),
-		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error creating database credential",
-			"Could not create database credential, unexpected error: "+err.Error(),
+			"Could not create database credential, unexpected error: "+api.ParseError(err),
 		)
 		return
 	}
@@ -144,18 +136,10 @@ func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	refreshedState, err := r.retrieveDatabaseCredential(ctx, organizationId, projectId, clusterId, dbResponse.Id.String())
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Database Credentials",
-			"Could not read Capella database credential with ID "+dbResponse.Id.String()+": "+err.CompleteError(),
-		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error Reading Capella Database Credentials",
-			"Could not read Capella database credential with ID "+dbResponse.Id.String()+": "+err.Error(),
+			"Could not read Capella database credential with ID "+dbResponse.Id.String()+": "+api.ParseError(err),
 		)
 		return
 	}
@@ -212,16 +196,16 @@ func (r *DatabaseCredential) Read(ctx context.Context, req resource.ReadRequest,
 
 	// Get refreshed Cluster value from Capella
 	refreshedState, err := r.retrieveDatabaseCredential(ctx, organizationId, projectId, clusterId, dbId)
-	resourceNotFound, err := handleDatabaseCredentialError(err)
-	if resourceNotFound {
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		resp.State.RemoveResource(ctx)
-		return
-	}
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error reading database credential",
-			"Could not read database credential with id "+state.Id.String()+": "+err.Error(),
+			"Could not read database credential with id "+state.Id.String()+": "+errString,
 		)
 		return
 	}
@@ -283,37 +267,26 @@ func (r *DatabaseCredential) Update(ctx context.Context, req resource.UpdateRequ
 		r.Token,
 		nil,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error updating database credential",
-			"Could not update an existing database credential, unexpected error: "+err.CompleteError(),
-		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error updating database credential",
-			"Could not update database credential, unexpected error: "+err.Error(),
+			"Could not update an existing database credential, unexpected error: "+errString,
 		)
 		return
 	}
 
 	currentState, err := r.retrieveDatabaseCredential(ctx, organizationId, projectId, clusterId, dbId)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Capella Database Credentials",
-			"Could not read Capella database credential with ID "+dbId+": "+err.CompleteError(),
+			"Error updating database credential",
+			"Could not update an existing database credential, unexpected error: "+api.ParseError(err),
 		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error Reading Capella Database Credentials",
-			"Could not read Capella database credential with ID "+dbId+": "+err.Error(),
-		)
-		return
 	}
 
 	// this will ensure that the state file stores the new updated password, if password is not to be updated, it will retain the older one.
@@ -368,20 +341,16 @@ func (r *DatabaseCredential) Delete(ctx context.Context, req resource.DeleteRequ
 		r.Token,
 		nil,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		if err.HttpStatusCode != 404 {
-			resp.Diagnostics.AddError(
-				"Error Deleting the Database Credential",
-				"Could not delete Database Credential associated with cluster "+clusterId+": "+err.CompleteError(),
-			)
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
 			return
 		}
-	default:
 		resp.Diagnostics.AddError(
-			"Error Deleting Database Credential",
-			"Could not delete Database Credential associated with cluster "+clusterId+": "+err.Error(),
+			"Error Deleting the Database Credential",
+			"Could not delete Database Credential associated with cluster "+clusterId+": "+errString,
 		)
 		return
 	}
@@ -410,13 +379,13 @@ func (r *DatabaseCredential) retrieveDatabaseCredential(ctx context.Context, org
 		nil,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 	}
 
 	dbResp := api.GetDatabaseCredentialResponse{}
 	err = json.Unmarshal(response.Body, &dbResp)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
 
 	refreshedState := providerschema.OneDatabaseCredential{
@@ -446,22 +415,6 @@ func (r *DatabaseCredential) retrieveDatabaseCredential(ctx context.Context, org
 		}
 	*/
 	return &refreshedState, nil
-}
-
-// this func extract error message if error is api.Error and also checks whether error is
-// resource not found
-func handleDatabaseCredentialError(err error) (bool, error) {
-	switch err := err.(type) {
-	case nil:
-		return false, nil
-	case api.Error:
-		if err.HttpStatusCode != http.StatusNotFound {
-			return false, fmt.Errorf(err.CompleteError())
-		}
-		return true, fmt.Errorf(err.CompleteError())
-	default:
-		return false, err
-	}
 }
 
 // todo: add a unit test for this, tracking under: https://couchbasecloud.atlassian.net/browse/AV-63401
