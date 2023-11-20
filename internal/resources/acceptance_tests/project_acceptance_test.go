@@ -1,4 +1,4 @@
-package resources_test
+package acceptance_tests
 
 import (
 	"fmt"

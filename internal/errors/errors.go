@@ -1,8 +1,6 @@
 package errors
 
-import (
-	"errors"
-)
+import "errors"
 
 var (
 	// ErrIdMissing is returned when an expected Id was not found after an import.
@@ -96,7 +94,7 @@ var (
 	// ErrApiKeyIdMissing is returned when an expected ErrApiKeyIdMissing was not found after an import.
 	ErrApiKeyIdMissing = errors.New("api key ID is missing or was passed incorrectly, please check provider documentation for syntax")
 
-	// ErrBucketIdCannotBeEmpty is returned when an ApiKeyId was required for a request but was not included.
+	// ErrBucketIdCannotBeEmpty is returned when an BucketId was required for a request but was not included.
 	ErrBucketIdCannotBeEmpty = errors.New("bucket ID cannot be empty, please contact Couchbase Capella Support")
 
 	// ErrInvalidImport is returned when when the IDs supplied to terraform import did not match those expected for the resource.
@@ -104,6 +102,20 @@ var (
 
 	// ErrValidatingResource is returned when the validation of an existing resource state failed.
 	ErrValidatingResource = errors.New("could not validate resource state, please contact Couchbase Capella Support")
+
+	// ErrNotFound is returned when a resource is requested but not found.
+	ErrNotFound = errors.New("A resource was requested but could not be found")
+
+	// ErrAppServiceIdCannotBeEmpty is returned when an AppServiceId was required for a request but was not included.
+	ErrAppServiceIdCannotBeEmpty = errors.New("App Service ID cannot be empty, please contact Couchbase Capella Support")
+
+	// ErrUnableToUpdateAppServiceName is returned when an app service name was updated.
+	ErrUnableToUpdateAppServiceName = errors.New("app service name cannot be updated")
+
+	// ErrBucketIdMissing is returned when an expected Bucket Id was not found after an import.
+	ErrBucketIdMissing = errors.New("bucket ID is missing or was passed incorrectly, please check provider documentation for syntax")
+
+	ErrRestoreTimesMustNotBeSetWhileCreateBackup = errors.New("restore times must not be set while create backup")
 
 	// ErrTFVarHostIsNotSet is returned when TF_VAR_host is not set.
 	ErrTFVarHostIsNotSet = errors.New("TF_VAR_host is not set")

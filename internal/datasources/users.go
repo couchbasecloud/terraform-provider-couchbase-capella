@@ -97,7 +97,9 @@ func (d *Users) Read(ctx context.Context, req datasource.ReadRequest, resp *data
 
 	// Make request to list Users
 	url := fmt.Sprintf("%s/v4/organizations/%s/users", d.HostURL, organizationId)
-	response, err := api.GetPaginated[[]api.GetUserResponse](ctx, d.Client, d.Token, url)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+
+	response, err := api.GetPaginated[[]api.GetUserResponse](ctx, d.Client, d.Token, cfg, api.SortById)
 	switch err := err.(type) {
 	case nil:
 	case api.Error:
@@ -184,7 +186,7 @@ func (d *Users) mapResponseBody(
 			types.StringValue(userResp.Status),
 			types.BoolValue(userResp.Inactive),
 			types.StringValue(userResp.OrganizationId.String()),
-			providerschema.MorphOrganizationRoles(userResp.OrganizationRoles),
+			providerschema.MorphRoles(userResp.OrganizationRoles),
 			types.StringValue(userResp.LastLogin),
 			types.StringValue(userResp.Region),
 			types.StringValue(userResp.TimeZone),

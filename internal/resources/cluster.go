@@ -28,7 +28,7 @@ var (
 	_ resource.ResourceWithImportState = &Cluster{}
 )
 
-// Cluster is the project resource implementation.
+// Cluster is the Cluster resource implementation.
 type Cluster struct {
 	*providerschema.Data
 }
@@ -124,9 +124,10 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	}
 	var projectId = plan.ProjectId.ValueString()
 
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", c.HostURL, organizationId, projectId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
 	response, err := c.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", c.HostURL, organizationId, projectId),
-		http.MethodPost,
+		cfg,
 		ClusterRequest,
 		c.Token,
 		nil,
@@ -135,7 +136,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
-			"Could not create cluster, unexpected error: "+err.Error(),
+			"Could not create cluster: "+err.Error(),
 		)
 		return
 	}
@@ -155,7 +156,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
-			"Could not create cluster, unexpected error: "+err.Error(),
+			"Could not read cluster status, unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -165,7 +166,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
-			"Could not create cluster, unexpected error: "+err.Error(),
+			"Could not retrieve cluster, unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -184,7 +185,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	}
 }
 
-// Configure It adds the provider configured api to the project resource.
+// Configure adds the provider configured api to the project resource.
 func (c *Cluster) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -204,7 +205,7 @@ func (c *Cluster) Configure(_ context.Context, req resource.ConfigureRequest, re
 	c.Data = data
 }
 
-// Read reads project information.
+// Read reads the cluster information.
 func (c *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state providerschema.Cluster
 	diags := req.State.Get(ctx, &state)
@@ -323,9 +324,10 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 	}
 
 	// Update existing Cluster
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", c.HostURL, organizationId, projectId, clusterId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
 	_, err = c.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", c.HostURL, organizationId, projectId, clusterId),
-		http.MethodPut,
+		cfg,
 		ClusterRequest,
 		c.Token,
 		headers,
@@ -377,7 +379,7 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 	}
 }
 
-// Delete deletes the project.
+// Delete deletes the cluster.
 func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// Retrieve values from state
 	var state providerschema.Cluster
@@ -403,9 +405,10 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 	)
 
 	// Delete existing Cluster
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", r.HostURL, organizationId, projectId, clusterId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
 	_, err = r.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", r.HostURL, organizationId, projectId, clusterId),
-		http.MethodDelete,
+		cfg,
 		nil,
 		r.Token,
 		nil,
@@ -463,9 +466,10 @@ func (c *Cluster) ImportState(ctx context.Context, req resource.ImportStateReque
 // getCluster retrieves cluster information from the specified organization and project
 // using the provided cluster ID by open-api call
 func (c *Cluster) getCluster(organizationId, projectId, clusterId string) (*clusterapi.GetClusterResponse, error) {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", c.HostURL, organizationId, projectId, clusterId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := c.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", c.HostURL, organizationId, projectId, clusterId),
-		http.MethodGet,
+		cfg,
 		nil,
 		c.Token,
 		nil,

@@ -114,7 +114,7 @@ type GetClusterResponse struct {
 	// Id is the ID of the cluster created.
 	Id uuid.UUID `json:"id"`
 
-	// Name Name of the cluster (up to 256 characters).
+	// Name is the name of the cluster (up to 256 characters).
 	Name string `json:"name"`
 
 	// ServiceGroups is the couchbase service groups to be run. At least one
@@ -124,6 +124,7 @@ type GetClusterResponse struct {
 	// Support defines the support plan and timezone for this particular cluster.
 	Support Support `json:"support"`
 
+	// Etag represents the version of the document
 	Etag string
 }
 

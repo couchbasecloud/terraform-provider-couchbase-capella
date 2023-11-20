@@ -41,7 +41,7 @@ type CloudProvider struct {
 }
 
 // Compute depicts the couchbase compute, following are the supported compute combinations
-// for CPU and RAM for different cloud providers. To learn more,
+// for CPU and RAM for different cloud providers.
 // To learn more, see:
 // [AWS] https://docs.couchbase.com/cloud/reference/aws.html
 // [GCP] https://docs.couchbase.com/cloud/reference/gcp.html
