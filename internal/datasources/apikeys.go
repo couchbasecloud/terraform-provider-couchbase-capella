@@ -90,18 +90,10 @@ func (d *ApiKeys) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
 	response, err := api.GetPaginated[[]api.GetApiKeyResponse](ctx, d.Client, d.Token, cfg, api.SortByName)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella ApiKeys",
-			"Could not read api keys in organization "+organizationId+": "+err.CompleteError(),
-		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error Reading Capella ApiKeys",
-			"Could not read api keys in organization "+organizationId+": "+err.Error(),
+			"Could not read api keys in organization "+organizationId+": "+api.ParseError(err),
 		)
 		return
 	}
