@@ -2,6 +2,10 @@ output "new_cluster" {
   value = capella_cluster.new_cluster
 }
 
+output "cluster_id" {
+  value = capella_cluster.new_cluster.id
+}
+
 resource "capella_cluster" "new_cluster" {
   organization_id = var.organization_id
   project_id      = var.project_id

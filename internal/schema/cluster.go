@@ -211,7 +211,7 @@ func NewCluster(cluster *clusterapi.GetClusterResponse, organizationId, projectI
 
 	newServiceGroups, err := morphToTerraformServiceGroups(cluster)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrConvertingServiceGroups, err)
 	}
 	newCluster.ServiceGroups = newServiceGroups
 	return &newCluster, nil
@@ -234,7 +234,7 @@ func morphToTerraformServiceGroups(cluster *clusterapi.GetClusterResponse) ([]Se
 		case clusterapi.Aws:
 			awsDisk, err := serviceGroup.Node.AsDiskAWS()
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("%s: %w", errors.ErrReadingAWSDisk, err)
 			}
 			newServiceGroup.Node.Disk = Node_Disk{
 				Type:    types.StringValue(string(awsDisk.Type)),
@@ -244,7 +244,7 @@ func morphToTerraformServiceGroups(cluster *clusterapi.GetClusterResponse) ([]Se
 		case clusterapi.Azure:
 			azureDisk, err := serviceGroup.Node.AsDiskAzure()
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("%s: %w", errors.ErrReadingAzureDisk, err)
 			}
 
 			newServiceGroup.Node.Disk = Node_Disk{
@@ -255,7 +255,7 @@ func morphToTerraformServiceGroups(cluster *clusterapi.GetClusterResponse) ([]Se
 		case clusterapi.Gcp:
 			gcpDisk, err := serviceGroup.Node.AsDiskGCP()
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("%s: %w", errors.ErrReadingGCPDisk, err)
 			}
 			newServiceGroup.Node.Disk = Node_Disk{
 				Type:    types.StringValue(string(gcpDisk.Type)),
@@ -382,7 +382,7 @@ func NewClusterData(cluster *clusterapi.GetClusterResponse, organizationId, proj
 
 	newServiceGroups, err := morphToTerraformServiceGroups(cluster)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrConvertingServiceGroups, err)
 	}
 	newClusterData.ServiceGroups = newServiceGroups
 	return &newClusterData, nil

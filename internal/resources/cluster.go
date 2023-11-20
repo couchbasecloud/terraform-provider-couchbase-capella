@@ -8,15 +8,15 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"terraform-provider-capella/internal/api"
 	clusterapi "terraform-provider-capella/internal/api/cluster"
 	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -132,11 +132,10 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		c.Token,
 		nil,
 	)
-	_, err = HandleClusterError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
-			"Could not create cluster: "+err.Error(),
+			"Could not create cluster, unexpected error: "+api.ParseError(err),
 		)
 		return
 	}
@@ -152,21 +151,19 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	}
 
 	err = c.checkClusterStatus(ctx, organizationId, projectId, ClusterResponse.Id.String())
-	_, err = HandleClusterError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
-			"Could not read cluster status, unexpected error: "+err.Error(),
+			"Could not create cluster, unexpected error: "+api.ParseError(err),
 		)
 		return
 	}
 
 	refreshedState, err := c.retrieveCluster(ctx, organizationId, projectId, ClusterResponse.Id.String())
-	_, err = HandleClusterError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
-			"Could not retrieve cluster, unexpected error: "+err.Error(),
+			"Could not create cluster, unexpected error: "+api.ParseError(err),
 		)
 		return
 	}
@@ -217,8 +214,8 @@ func (c *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 	resourceIDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading cluster",
-			"Could not read cluster id "+state.Id.String()+" unexpected error: "+err.Error(),
+			"Error Reading Capella Cluster",
+			"Could Not Read Capella Cluster "+state.Id.String()+": "+err.Error(),
 		)
 		return
 	}
@@ -231,16 +228,16 @@ func (c *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 
 	// Get refreshed Cluster value from Capella
 	refreshedState, err := c.retrieveCluster(ctx, organizationId, projectId, clusterId)
-	resourceNotFound, err := HandleClusterError(err)
-	if resourceNotFound {
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		resp.State.RemoveResource(ctx)
-		return
-	}
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
-			"Error reading cluster",
-			"Could not read cluster id "+state.Id.String()+": "+err.Error(),
+			"Error Reading Capella Cluster",
+			"Could Not Read Capella Cluster "+state.Id.String()+": "+errString,
 		)
 		return
 	}
@@ -332,31 +329,34 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		c.Token,
 		headers,
 	)
-	_, err = HandleClusterError(err)
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
-			"Could not update cluster id "+state.Id.String()+": "+err.Error(),
+			"Could not update cluster id "+state.Id.String()+": "+errString,
 		)
 		return
 	}
 
 	err = c.checkClusterStatus(ctx, organizationId, projectId, clusterId)
-	_, err = HandleClusterError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
-			"Could not update cluster id "+state.Id.String()+": "+err.Error(),
+			"Could not update cluster id "+state.Id.String()+": "+api.ParseError(err),
 		)
 		return
 	}
 
 	currentState, err := c.retrieveCluster(ctx, organizationId, projectId, clusterId)
-	_, err = HandleClusterError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
-			"Could not update cluster id "+state.Id.String()+": "+err.Error(),
+			"Could not update cluster id "+state.Id.String()+": "+api.ParseError(err),
 		)
 		return
 	}
@@ -413,48 +413,56 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 		r.Token,
 		nil,
 	)
-	resourceNotFound, err := HandleClusterError(err)
-	if resourceNotFound {
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		return
-	}
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
-			"Error deleting cluster",
-			"Could not delete cluster id "+state.Id.String()+": "+err.Error(),
+			"Error Deleting Capella Cluster",
+			"Could not delete cluster id "+state.Id.String()+": "+errString,
 		)
 		return
 	}
 
 	err = r.checkClusterStatus(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
-	resourceNotFound, err = HandleClusterError(err)
-	switch err {
-	case nil:
-		// This case will only occur when cluster deletion has failed,
-		// and the cluster record still exists in the cp metadata. Therefore,
-		// no error will be returned when performing a GET call.
-		cluster, err := r.retrieveCluster(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
-		if err != nil {
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if !resourceNotFound {
 			resp.Diagnostics.AddError(
-				"Error deleting cluster",
-				fmt.Sprintf("Could not delete cluster id %s: %s", state.Id.String(), err.Error()),
+				"Error Deleting Capella Cluster",
+				"Could not delete cluster id "+state.Id.String()+": "+errString,
 			)
+			return
+		}
+		// resourceNotFound as expected
+		return
+	}
+
+	// This case will only occur when cluster deletion has failed,
+	// and the cluster record still exists in the cp metadata. Therefore,
+	// no error will be returned when performing a GET call.
+	cluster, err := r.retrieveCluster(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
 			return
 		}
 		resp.Diagnostics.AddError(
-			"Error deleting cluster",
-			fmt.Sprintf("Could not delete cluster id %s, as current Cluster state: %s", state.Id.String(), cluster.CurrentState),
+			"Error Deleting Capella Cluster",
+			"Could not delete cluster id "+state.Id.String()+": "+errString,
 		)
 		return
-	default:
-		if !resourceNotFound {
-			resp.Diagnostics.AddError(
-				"Error deleting cluster",
-				"Could not delete cluster id "+state.Id.String()+": "+err.Error(),
-			)
-			return
-		}
 	}
+	resp.Diagnostics.AddError(
+		"Error deleting cluster",
+		fmt.Sprintf("Could not delete cluster id %s, as current Cluster state: %s", state.Id.String(), cluster.CurrentState),
+	)
+	return
 }
 
 // ImportState imports a remote cluster that is not created by Terraform.
@@ -475,13 +483,13 @@ func (c *Cluster) getCluster(organizationId, projectId, clusterId string) (*clus
 		nil,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 	}
 
 	clusterResp := clusterapi.GetClusterResponse{}
 	err = json.Unmarshal(response.Body, &clusterResp)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
 	clusterResp.Etag = response.Response.Header.Get("ETag")
 	return &clusterResp, nil
@@ -491,19 +499,19 @@ func (c *Cluster) getCluster(organizationId, projectId, clusterId string) (*clus
 func (c *Cluster) retrieveCluster(ctx context.Context, organizationId, projectId, clusterId string) (*providerschema.Cluster, error) {
 	clusterResp, err := c.getCluster(organizationId, projectId, clusterId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrNotFound, err)
 	}
 
 	audit := providerschema.NewCouchbaseAuditData(clusterResp.Audit)
 
 	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
 	if diags.HasError() {
-		return nil, errors.ErrUnableToConvertAuditData
+		return nil, fmt.Errorf("%s: %w", errors.ErrUnableToConvertAuditData, err)
 	}
 
 	refreshedState, err := providerschema.NewCluster(clusterResp, organizationId, projectId, auditObj)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrRefreshingState, err)
 	}
 	return refreshedState, nil
 }
@@ -584,7 +592,7 @@ func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]cluste
 
 			err := node.FromDiskAWS(diskAws)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("%s: %w", errors.ErrConvertingServiceGroups, err)
 			}
 			newServiceGroup.Node.Disk = node.Disk
 
@@ -604,7 +612,7 @@ func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]cluste
 				diskAzure.Iops = &iops
 			}
 			if err := node.FromDiskAzure(diskAzure); err != nil {
-				return nil, err
+				return nil, fmt.Errorf("%s: %w", errors.ErrConvertingServiceGroups, err)
 			}
 			newServiceGroup.Node.Disk = node.Disk
 
@@ -616,7 +624,7 @@ func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]cluste
 				Storage: storage,
 			})
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("%s: %w", errors.ErrConvertingServiceGroups, err)
 			}
 			newServiceGroup.Node.Disk = node.Disk
 		}
@@ -694,18 +702,18 @@ func getCouchbaseServer(ctx context.Context, config tfsdk.Config, diags *diag.Di
 	return couchbaseServer
 }
 
-// HandleClusterError extracts error message if error is api.Error and also checks whether error is
-// resource not found
-func HandleClusterError(err error) (bool, error) {
-	switch err := err.(type) {
-	case nil:
-		return false, nil
-	case api.Error:
-		if err.HttpStatusCode != http.StatusNotFound {
-			return false, fmt.Errorf(err.CompleteError())
-		}
-		return true, fmt.Errorf(err.CompleteError())
-	default:
-		return false, err
-	}
-}
+//// HandleClusterError extracts error message if error is api.Error and also checks whether error is
+//// resource not found
+//func HandleClusterError(err error) (bool, error) {
+//	switch err := err.(type) {
+//	case nil:
+//		return false, nil
+//	case api.Error:
+//		if err.HttpStatusCode != http.StatusNotFound {
+//			return false, fmt.Errorf(err.CompleteError())
+//		}
+//		return true, fmt.Errorf(err.CompleteError())
+//	default:
+//		return false, err
+//	}
+//}

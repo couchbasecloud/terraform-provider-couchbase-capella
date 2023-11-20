@@ -72,18 +72,10 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	var bucketId = plan.BucketId.ValueString()
 
 	latestBackup, err := b.getLatestBackup(organizationId, projectId, clusterId, bucketId)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error getting latest bucket backup in a cluster",
-			"Could not get the latest bucket backup : unexpected error "+err.CompleteError(),
-		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error getting latest bucket backup in a cluster",
-			"Could not get the latest bucket backup : unexpected error "+err.Error(),
+			"Could not get the latest bucket backup : unexpected error "+api.ParseError(err),
 		)
 		return
 	}
@@ -101,29 +93,20 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		b.Token,
 		nil,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error executing create backup request",
-			"Could not execute create backup request : unexpected error "+err.CompleteError(),
-		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error executing create backup request",
-			"Could not execute create backup request : unexpected error "+err.Error(),
+			"Could not execute create backup request : unexpected error "+api.ParseError(err),
 		)
 		return
 	}
 
 	backupResponse, err := b.checkLatestBackupStatus(ctx, organizationId, projectId, clusterId, bucketId, backupFound, latestBackup)
-	_, err = handleBackupError(err)
 	if err != nil {
 		if diags.HasError() {
 			resp.Diagnostics.AddError(
 				"Error whiling checking latest backup status",
-				fmt.Sprintf("Could not read check latest backup status, unexpected error: "+err.Error()),
+				fmt.Sprintf("Could not read check latest backup status, unexpected error: "+api.ParseError(err)),
 			)
 			return
 		}
@@ -185,16 +168,16 @@ func (b *Backup) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 	)
 
 	refreshedState, err := b.retrieveBackup(ctx, organizationId, projectId, clusterId, bucketId, backupId)
-	resourceNotFound, err := handleBackupError(err)
-	if resourceNotFound {
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		resp.State.RemoveResource(ctx)
-		return
-	}
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error reading backup",
-			"Could not read backup id "+state.Id.String()+": "+err.Error(),
+			"Could not read backup id "+state.Id.String()+": "+errString,
 		)
 		return
 	}
@@ -350,16 +333,16 @@ func (b *Backup) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 		b.Token,
 		nil,
 	)
-
-	resourceNotFound, err := handleBackupError(err)
-	if resourceNotFound {
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		return
-	}
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error deleting backup",
-			"Could not delete backup id "+state.Id.String()+": "+err.Error(),
+			"Could not delete backup id "+state.Id.String()+": "+errString,
 		)
 		return
 	}
@@ -520,20 +503,4 @@ func (b *Backup) getLatestBackup(organizationId, projectId, clusterId, bucketId 
 		}
 	}
 	return nil, nil
-}
-
-// handleBackupError extracts error message if error is api.Error and
-// also checks whether error is resource not found
-func handleBackupError(err error) (bool, error) {
-	switch err := err.(type) {
-	case nil:
-		return false, nil
-	case api.Error:
-		if err.HttpStatusCode != http.StatusNotFound {
-			return false, fmt.Errorf(err.CompleteError())
-		}
-		return true, fmt.Errorf(err.CompleteError())
-	default:
-		return false, err
-	}
 }

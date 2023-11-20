@@ -2,6 +2,10 @@ output "new_app_service" {
     value = capella_app_service.new_app_service
 }
 
+output "appservice_id" {
+  value = capella_app_service.new_app_service.id
+}
+
 resource "capella_app_service" "new_app_service" {
   organization_id = var.organization_id
   project_id      = var.project_id
