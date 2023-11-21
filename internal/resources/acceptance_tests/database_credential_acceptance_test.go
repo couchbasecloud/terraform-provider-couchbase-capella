@@ -14,7 +14,7 @@ import (
 // creating and deleting a database credential which has only the
 // required fields populated.
 func TestAccDatabaseCredentialWithOnlyReqFields(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -43,7 +43,7 @@ func TestAccDatabaseCredentialWithOnlyReqFields(t *testing.T) {
 // required and optional fields populated. Importing a database credential created externally is
 // also tested.
 func TestAccDatabaseCredentialResourceWithOptionalField(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
