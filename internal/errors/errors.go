@@ -112,11 +112,14 @@ var (
 	// ErrUnableToUpdateAppServiceName is returned when an app service name was updated.
 	ErrUnableToUpdateAppServiceName = errors.New("app service name cannot be updated")
 
-	// ErrAppServiceIdCannotBeEmpty is returned when a resource state failed to refresh.
+	// ErrRefreshingState is returned when a resource state failed to refresh.
 	ErrRefreshingState = errors.New("failed to refresh the state of a resource, please contact Couchbase Capella Support")
 
-	// ErrAppServiceIdCannotBeEmpty is returned when terraform fails to convert a clusters service groups.
+	// ErrConvertingServiceGroups is returned when terraform fails to convert a clusters service groups.
 	ErrConvertingServiceGroups = errors.New("failed to convert cluster service groups, please contact Couchbase Capella Support")
+
+	// ErrGcpIopsCannotBeSet is returned when iops is set for GCP cluster.
+	ErrGcpIopsCannotBeSet = errors.New("iops for gcp cluster cannot be set")
 
 	// ErrConvertingCidr is returned when terraform fails to convert a CIDR
 	ErrConvertingCidr = errors.New("failed to convert CIDR, please contact Couchbase Capella Support")

@@ -99,7 +99,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
-			"Could not create cluster : unexpected error "+err.Error(),
+			"Could not create cluster, unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -108,8 +108,8 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 
 	if plan.OrganizationId.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error creating Cluster",
-			"Could not create Cluster, unexpected error: organization ID cannot be empty.",
+			"Error creating cluster",
+			"Could not create cluster, unexpected error: organization ID cannot be empty.",
 		)
 		return
 	}
@@ -250,6 +250,10 @@ func (c *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 		}
 	}
 
+	if !state.IfMatch.IsUnknown() && !state.IfMatch.IsNull() {
+		refreshedState.IfMatch = state.IfMatch
+	}
+
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &refreshedState)
 	resp.Diagnostics.Append(diags...)
@@ -272,7 +276,7 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		return
 	}
 
-	resourceIDs, err := state.Validate()
+	resourceIDs, err := plan.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
@@ -308,7 +312,7 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
-			"Could not update cluster id "+state.Id.String()+": "+err.Error(),
+			"Could not update cluster id "+plan.Id.String()+": "+err.Error(),
 		)
 		return
 	}
@@ -316,8 +320,8 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 	ClusterRequest.ServiceGroups = serviceGroups
 
 	var headers = make(map[string]string)
-	if !state.IfMatch.IsUnknown() && !state.IfMatch.IsNull() {
-		headers["If-Match"] = state.IfMatch.ValueString()
+	if !plan.IfMatch.IsUnknown() && !plan.IfMatch.IsNull() {
+		headers["If-Match"] = plan.IfMatch.ValueString()
 	}
 
 	// Update existing Cluster
@@ -509,7 +513,7 @@ func (c *Cluster) retrieveCluster(ctx context.Context, organizationId, projectId
 		return nil, fmt.Errorf("%s: %w", errors.ErrUnableToConvertAuditData, err)
 	}
 
-	refreshedState, err := providerschema.NewCluster(clusterResp, organizationId, projectId, auditObj)
+	refreshedState, err := providerschema.NewCluster(ctx, clusterResp, organizationId, projectId, auditObj)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrRefreshingState, err)
 	}
@@ -617,10 +621,23 @@ func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]cluste
 			newServiceGroup.Node.Disk = node.Disk
 
 		case string(clusterapi.Gcp):
-			storage := int(serviceGroup.Node.Disk.Storage.ValueInt64())
+			var storage int
+			var diskType clusterapi.DiskGCPType
+
+			if serviceGroup.Node != nil {
+				if !serviceGroup.Node.Disk.Storage.IsNull() && !serviceGroup.Node.Disk.Storage.IsUnknown() {
+					storage = int(serviceGroup.Node.Disk.Storage.ValueInt64())
+				}
+				if !serviceGroup.Node.Disk.Type.IsNull() && !serviceGroup.Node.Disk.Type.IsUnknown() {
+					diskType = clusterapi.DiskGCPType(serviceGroup.Node.Disk.Type.ValueString())
+				}
+				if !serviceGroup.Node.Disk.IOPS.IsNull() && !serviceGroup.Node.Disk.IOPS.IsUnknown() {
+					return nil, fmt.Errorf("%s", errors.ErrGcpIopsCannotBeSet)
+				}
+			}
 			node := clusterapi.Node{}
 			err := node.FromDiskGCP(clusterapi.DiskGCP{
-				Type:    clusterapi.DiskGCPType(serviceGroup.Node.Disk.Type.ValueString()),
+				Type:    diskType,
 				Storage: storage,
 			})
 			if err != nil {

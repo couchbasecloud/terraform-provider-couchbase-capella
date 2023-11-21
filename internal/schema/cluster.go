@@ -171,7 +171,7 @@ func removePatch(version string) string {
 }
 
 // NewCluster create new cluster object
-func NewCluster(cluster *clusterapi.GetClusterResponse, organizationId, projectId string, auditObject basetypes.ObjectValue) (*Cluster, error) {
+func NewCluster(ctx context.Context, cluster *clusterapi.GetClusterResponse, organizationId, projectId string, auditObject basetypes.ObjectValue) (*Cluster, error) {
 	newCluster := Cluster{
 		Id:             types.StringValue(cluster.Id.String()),
 		OrganizationId: types.StringValue(organizationId),
@@ -202,7 +202,7 @@ func NewCluster(cluster *clusterapi.GetClusterResponse, organizationId, projectI
 		couchbaseServer := CouchbaseServer{
 			Version: types.StringValue(version),
 		}
-		couchbaseServerObject, diags := types.ObjectValueFrom(context.Background(), couchbaseServer.AttributeTypes(), couchbaseServer)
+		couchbaseServerObject, diags := types.ObjectValueFrom(ctx, couchbaseServer.AttributeTypes(), couchbaseServer)
 		if diags.HasError() {
 			return nil, fmt.Errorf("error while converting couchbase server version")
 		}
