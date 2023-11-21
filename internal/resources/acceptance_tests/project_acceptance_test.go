@@ -21,6 +21,15 @@ var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServe
 	"capella": providerserver.NewProtocol6WithError(provider.New("test")()),
 }
 
+// TestAccProjectResource is a Terraform acceptance test that covers the lifecycle of a Capella project resource.
+//
+// The test includes the following steps:
+//  1. PreCheck: Ensure the prerequisites for acceptance testing.
+//  2. Create and Read Testing: Configure the test environment and create a Capella project resource.
+//     Verify that the project has the expected attributes such as name, description, and etag.
+//  3. ImportState Testing: Import the state of the created project and verify the imported state matches the expected state.
+//  4. Update and Read Testing: Modify the project's attributes and ensure the changes are applied successfully.
+//  5. Delete Testing: Automatically occurs in the TestCase as part of cleanup.
 func TestAccProjectResource(t *testing.T) {
 	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
 	resourceName := "capella_project." + rnd
@@ -66,6 +75,7 @@ func TestAccProjectResource(t *testing.T) {
 	})
 }
 
+// testAccProjectResourceConfig generates a Terraform configuration string for creating a Capella project resource.
 func testAccProjectResourceConfig(cfg, rnd string) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -78,6 +88,7 @@ resource "capella_project" "%[2]s" {
 `, cfg, rnd)
 }
 
+// testAccProjectResourceConfigUpdate generates a Terraform configuration string for updating a Capella project resource.
 func testAccProjectResourceConfigUpdate(cfg, rnd string) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -90,6 +101,8 @@ resource "capella_project" "%[2]s" {
 `, cfg, rnd)
 }
 
+// testAccProjectResourceConfigUpdateWithIfMatch generates a Terraform configuration string for updating a Capella project resource
+// with an "if_match" attribute.
 func testAccProjectResourceConfigUpdateWithIfMatch(cfg, rnd string) string {
 	return fmt.Sprintf(`
 %[1]s
