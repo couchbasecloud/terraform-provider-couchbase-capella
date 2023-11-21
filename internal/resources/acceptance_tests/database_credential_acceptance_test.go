@@ -5,6 +5,7 @@ import (
 	acctest "terraform-provider-capella/internal/testing"
 	cfg "terraform-provider-capella/internal/testing"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -14,12 +15,18 @@ import (
 // creating and deleting a database credential which has only the
 // required fields populated.
 func TestAccDatabaseCredentialWithOnlyReqFields(t *testing.T) {
+	resourceName := "acc_database_credential" + acctest.GenerateRandomResourceName()
+	resourceReference := "capella_database_credential." + resourceName
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read
 			{
+				PreConfig: func() {
+					time.Sleep(1 * time.Second)
+				},
 				Config: generateDatabaseCredentialConfig(cfg.Cfg, map[string]string{
 					"name":            "var.database_credential_name",
 					"organization_id": "var.organization_id",
@@ -27,10 +34,10 @@ func TestAccDatabaseCredentialWithOnlyReqFields(t *testing.T) {
 					"cluster_id":      "var.cluster_id",
 					"access":          "access",
 				}),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("capella_database_credential.acc_test", "name", "acc_test_database_credential_name"),
-					resource.TestCheckResourceAttr("capella_database_credential.acc_test", "password", "password"),
-					resource.TestCheckResourceAttr("capella_database_credential.acc_test", "access", "access"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_database_credential_name"),
+					resource.TestCheckResourceAttr(resourceReference, "password", "password"),
+					resource.TestCheckResourceAttr(resourceReference, "access", "access"),
 				),
 			},
 			// NOTE: No delete case is provided - this occurs automatically
@@ -43,12 +50,18 @@ func TestAccDatabaseCredentialWithOnlyReqFields(t *testing.T) {
 // required and optional fields populated. Importing a database credential created externally is
 // also tested.
 func TestAccDatabaseCredentialResourceWithOptionalField(t *testing.T) {
+	resourceName := "acc_database_credential" + acctest.GenerateRandomResourceName()
+	resourceReference := "capella_database_credential." + resourceName
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read
 			{
+				PreConfig: func() {
+					time.Sleep(1 * time.Second)
+				},
 				Config: generateDatabaseCredentialConfig(cfg.Cfg, map[string]string{
 					"name":            "var.database_credential_name",
 					"organization_id": "var.organization_id",
@@ -58,14 +71,14 @@ func TestAccDatabaseCredentialResourceWithOptionalField(t *testing.T) {
 					"access":          "access",
 				}),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("capella_database_credential.acc_test", "name", "acc_test_database_credential_name"),
-					resource.TestCheckResourceAttr("capella_database_credential.acc_test", "password", "password"),
-					resource.TestCheckResourceAttr("capella_database_credential.acc_test", "access", "access"),
+					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_database_credential_name"),
+					resource.TestCheckResourceAttr(resourceReference, "password", "password"),
+					resource.TestCheckResourceAttr(resourceReference, "access", "access"),
 				),
 			},
 			// Import state
 			{
-				ResourceName:      "capella_database_credential.acc_test",
+				ResourceName:      resourceReference,
 				ImportStateIdFunc: generateDatabaseCredentialImportId,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -81,9 +94,9 @@ func TestAccDatabaseCredentialResourceWithOptionalField(t *testing.T) {
 					"access":          "access",
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("capella_project.acc_test", "name", "acc_test_project_name_update_with_if_match"),
-					resource.TestCheckResourceAttr("capella_database_credential.acc_test", "password", "updated_password"),
-					resource.TestCheckResourceAttr("capella_database_credential.acc_test", "access", "access"),
+					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_project_name_update_with_if_match"),
+					resource.TestCheckResourceAttr(resourceReference, "password", "updated_password"),
+					resource.TestCheckResourceAttr(resourceReference, "access", "access"),
 				),
 			},
 			// NOTE: No delete case is provided - this occurs automatically
