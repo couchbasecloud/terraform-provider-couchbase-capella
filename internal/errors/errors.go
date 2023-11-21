@@ -112,11 +112,14 @@ var (
 	// ErrUnableToUpdateAppServiceName is returned when an app service name was updated.
 	ErrUnableToUpdateAppServiceName = errors.New("app service name cannot be updated")
 
-	// ErrAppServiceIdCannotBeEmpty is returned when a resource state failed to refresh.
+	// ErrRefreshingState is returned when a resource state failed to refresh.
 	ErrRefreshingState = errors.New("failed to refresh the state of a resource, please contact Couchbase Capella Support")
 
-	// ErrAppServiceIdCannotBeEmpty is returned when terraform fails to convert a clusters service groups.
+	// ErrConvertingServiceGroups is returned when terraform fails to convert a clusters service groups.
 	ErrConvertingServiceGroups = errors.New("failed to convert cluster service groups, please contact Couchbase Capella Support")
+
+	// ErrGcpIopsCannotBeSet is returned when iops is set for GCP cluster.
+	ErrGcpIopsCannotBeSet = errors.New("iops for gcp cluster cannot be set")
 
 	// ErrConvertingCidr is returned when terraform fails to convert a CIDR
 	ErrConvertingCidr = errors.New("failed to convert CIDR, please contact Couchbase Capella Support")
@@ -133,4 +136,17 @@ var (
 	ErrBucketIdMissing = errors.New("bucket ID is missing or was passed incorrectly, please check provider documentation for syntax")
 
 	ErrRestoreTimesMustNotBeSetWhileCreateBackup = errors.New("restore times must not be set while create backup")
+
+	// ErrTFVarHostIsNotSet is returned when TF_VAR_host is not set.
+	ErrTFVarHostIsNotSet = errors.New("TF_VAR_host is not set")
+
+	// ErrTFVARAuthTokenIsNotSet is returned when TF_VAR_auth_token is not set.
+	ErrTFVARAuthTokenIsNotSet = errors.New("TF_VAR_auth_token is not set")
+
+	// ErrTFVAROrganizationIdIsNotSet is returned when TF_VAR_organization_id is not set.
+	ErrTFVAROrganizationIdIsNotSet = errors.New("TF_VAR_organization_id is not set")
+
+	// ErrClusterCreationTimeoutAfterInitiation is returned when cluster creation
+	// is timeout after initiation.
+	ErrClusterCreationTimeoutAfterInitiation = errors.New("cluster creation status transition timed out after initiation")
 )

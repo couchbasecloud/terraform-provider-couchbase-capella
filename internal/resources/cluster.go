@@ -13,8 +13,10 @@ import (
 	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -76,18 +78,28 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		ClusterRequest.Description = plan.Description.ValueStringPointer()
 	}
 
-	if !plan.CouchbaseServer.Version.IsNull() && !plan.CouchbaseServer.Version.IsUnknown() {
-		version := plan.CouchbaseServer.Version.ValueString()
+	var couchbaseServer providerschema.CouchbaseServer
+	if !plan.CouchbaseServer.IsUnknown() && !plan.CouchbaseServer.IsNull() {
+		couchbaseServerAtt := getCouchbaseServer(ctx, req.Config, &resp.Diagnostics)
+		couchbaseServer = *couchbaseServerAtt
+	}
+
+	if !couchbaseServer.Version.IsNull() && !couchbaseServer.Version.IsUnknown() {
+		version := couchbaseServer.Version.ValueString()
 		ClusterRequest.CouchbaseServer = &clusterapi.CouchbaseServer{
 			Version: &version,
 		}
+	}
+
+	if !plan.ConfigurationType.IsNull() && !plan.ConfigurationType.IsUnknown() {
+		ClusterRequest.ConfigurationType = clusterapi.ConfigurationType(plan.ConfigurationType.ValueString())
 	}
 
 	serviceGroups, err := c.morphToApiServiceGroups(plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
-			"Could not create cluster : unexpected error "+err.Error(),
+			"Could not create cluster, unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -96,8 +108,8 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 
 	if plan.OrganizationId.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error creating Cluster",
-			"Could not create Cluster, unexpected error: organization ID cannot be empty.",
+			"Error creating cluster",
+			"Could not create cluster, unexpected error: organization ID cannot be empty.",
 		)
 		return
 	}
@@ -161,9 +173,6 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 			refreshedState.ServiceGroups[i].Services = plan.ServiceGroups[i].Services
 		}
 	}
-
-	//need to have proper check since we are passing 7.1 and response is returning 7.1.5
-	c.populateInputServerVersionIfPresent(&plan, refreshedState)
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
@@ -241,8 +250,9 @@ func (c *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 		}
 	}
 
-	//need to have proper check since we are passing 7.1 and response is returning 7.1.5
-	c.populateInputServerVersionIfPresent(&state, refreshedState)
+	if !state.IfMatch.IsUnknown() && !state.IfMatch.IsNull() {
+		refreshedState.IfMatch = state.IfMatch
+	}
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &refreshedState)
@@ -266,7 +276,7 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		return
 	}
 
-	resourceIDs, err := state.Validate()
+	resourceIDs, err := plan.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
@@ -302,7 +312,7 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating cluster",
-			"Could not update cluster id "+state.Id.String()+": "+err.Error(),
+			"Could not update cluster id "+plan.Id.String()+": "+err.Error(),
 		)
 		return
 	}
@@ -310,8 +320,8 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 	ClusterRequest.ServiceGroups = serviceGroups
 
 	var headers = make(map[string]string)
-	if !state.IfMatch.IsUnknown() && !state.IfMatch.IsNull() {
-		headers["If-Match"] = state.IfMatch.ValueString()
+	if !plan.IfMatch.IsUnknown() && !plan.IfMatch.IsNull() {
+		headers["If-Match"] = plan.IfMatch.ValueString()
 	}
 
 	// Update existing Cluster
@@ -365,8 +375,6 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		}
 	}
 
-	//need to have proper check since we are passing 7.1 and response is returning 7.1.5
-	c.populateInputServerVersionIfPresent(&state, currentState)
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, currentState)
 	resp.Diagnostics.Append(diags...)
@@ -505,7 +513,7 @@ func (c *Cluster) retrieveCluster(ctx context.Context, organizationId, projectId
 		return nil, fmt.Errorf("%s: %w", errors.ErrUnableToConvertAuditData, err)
 	}
 
-	refreshedState, err := providerschema.NewCluster(clusterResp, organizationId, projectId, auditObj)
+	refreshedState, err := providerschema.NewCluster(ctx, clusterResp, organizationId, projectId, auditObj)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrRefreshingState, err)
 	}
@@ -613,10 +621,23 @@ func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]cluste
 			newServiceGroup.Node.Disk = node.Disk
 
 		case string(clusterapi.Gcp):
-			storage := int(serviceGroup.Node.Disk.Storage.ValueInt64())
+			var storage int
+			var diskType clusterapi.DiskGCPType
+
+			if serviceGroup.Node != nil {
+				if !serviceGroup.Node.Disk.Storage.IsNull() && !serviceGroup.Node.Disk.Storage.IsUnknown() {
+					storage = int(serviceGroup.Node.Disk.Storage.ValueInt64())
+				}
+				if !serviceGroup.Node.Disk.Type.IsNull() && !serviceGroup.Node.Disk.Type.IsUnknown() {
+					diskType = clusterapi.DiskGCPType(serviceGroup.Node.Disk.Type.ValueString())
+				}
+				if !serviceGroup.Node.Disk.IOPS.IsNull() && !serviceGroup.Node.Disk.IOPS.IsUnknown() {
+					return nil, fmt.Errorf("%s", errors.ErrGcpIopsCannotBeSet)
+				}
+			}
 			node := clusterapi.Node{}
 			err := node.FromDiskGCP(clusterapi.DiskGCP{
-				Type:    clusterapi.DiskGCPType(serviceGroup.Node.Disk.Type.ValueString()),
+				Type:    diskType,
 				Storage: storage,
 			})
 			if err != nil {
@@ -633,16 +654,6 @@ func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]cluste
 		newServiceGroups = append(newServiceGroups, newServiceGroup)
 	}
 	return newServiceGroups, nil
-}
-
-// need to have proper check since we are passing 7.1 and response is returning 7.1.5
-func (c *Cluster) populateInputServerVersionIfPresent(stateOrPlanCluster *providerschema.Cluster, refreshStateCluster *providerschema.Cluster) {
-	if stateOrPlanCluster.CouchbaseServer != nil &&
-		refreshStateCluster.CouchbaseServer != nil &&
-		!stateOrPlanCluster.CouchbaseServer.Version.IsNull() &&
-		!stateOrPlanCluster.CouchbaseServer.Version.IsUnknown() {
-		refreshStateCluster.CouchbaseServer.Version = stateOrPlanCluster.CouchbaseServer.Version
-	}
 }
 
 // validateClusterUpdate checks if specific fields in a cluster can be updated and returns an error if not.
@@ -673,18 +684,6 @@ func (c *Cluster) validateClusterUpdate(plan, state providerschema.Cluster) erro
 		return errors.ErrUnableToUpdateProjectId
 	}
 
-	var planCouchbaseServerVersion, stateCouchbaseServerVersion string
-	if plan.CouchbaseServer != nil && !plan.CouchbaseServer.Version.IsNull() {
-		planCouchbaseServerVersion = plan.CouchbaseServer.Version.ValueString()
-	}
-	if state.CouchbaseServer != nil && !state.CouchbaseServer.Version.IsNull() {
-		stateCouchbaseServerVersion = state.CouchbaseServer.Version.ValueString()
-	}
-
-	if planCouchbaseServerVersion != stateCouchbaseServerVersion {
-		return errors.ErrUnableToUpdateServerVersion
-	}
-
 	var planAvailabilityType, stateAvailabilityType string
 	if plan.Availability != nil && !plan.Availability.Type.IsNull() {
 		planAvailabilityType = plan.Availability.Type.ValueString()
@@ -710,4 +709,12 @@ func (c *Cluster) validateClusterUpdate(plan, state providerschema.Cluster) erro
 	}
 
 	return nil
+}
+
+// this function converts types.Object field to couchbaseServer field
+func getCouchbaseServer(ctx context.Context, config tfsdk.Config, diags *diag.Diagnostics) *providerschema.CouchbaseServer {
+	var couchbaseServer *providerschema.CouchbaseServer
+	diags.Append(config.GetAttribute(ctx, path.Root("couchbase_server"), &couchbaseServer)...)
+	tflog.Info(ctx, fmt.Sprintf("couchbase_server: %+v", couchbaseServer))
+	return couchbaseServer
 }

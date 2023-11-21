@@ -1,11 +1,15 @@
 package schema
 
 import (
+	"context"
 	"fmt"
+	"strconv"
+	"strings"
 
 	clusterapi "terraform-provider-capella/internal/api/cluster"
 	"terraform-provider-capella/internal/errors"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -57,6 +61,14 @@ type CouchbaseServer struct {
 	// for list of supported versions.
 	// The latest Couchbase Server version will be deployed by default.
 	Version types.String `tfsdk:"version"`
+}
+
+// AttributeTypes returns a mapping of field names to their respective attribute types for the CouchbaseServer struct.
+// It is used during the conversion of a types.Object field to a CouchbaseServer type.
+func (c CouchbaseServer) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"version": types.StringType,
+	}
 }
 
 // Service is the couchbase service to run on the node.
@@ -115,8 +127,13 @@ type Cluster struct {
 
 	// CloudProvider The cloud provider where the cluster will be hosted.
 	// To learn more, see [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html).
-	CloudProvider   *CloudProvider   `tfsdk:"cloud_provider"`
-	CouchbaseServer *CouchbaseServer `tfsdk:"couchbase_server"`
+	CloudProvider *CloudProvider `tfsdk:"cloud_provider"`
+
+	// ConfigurationType represents whether a cluster is configured as a single-node or multi-node cluster.
+	ConfigurationType types.String `tfsdk:"configuration_type"`
+
+	// CouchbaseServer represents the server version of the cluster.
+	CouchbaseServer types.Object `tfsdk:"couchbase_server"`
 
 	// Description of the cluster (up to 1024 characters).
 	Description types.String `tfsdk:"description"`
@@ -133,8 +150,28 @@ type Cluster struct {
 	IfMatch types.String `tfsdk:"if_match"`
 }
 
+// removePatch removes the patch version from the provided cluster server version.
+func removePatch(version string) string {
+	// Split the version string by '.'
+	parts := strings.Split(version, ".")
+
+	if len(parts) >= 2 {
+		// Remove the last part (patch) if it's a digit
+		if _, err := strconv.Atoi(parts[len(parts)-1]); err == nil {
+			parts = parts[:len(parts)-1]
+		}
+
+		// Join the parts back together
+		result := strings.Join(parts, ".")
+		return result
+	}
+
+	// If the version is in an invalid format (e.g., '7'), return the same version
+	return version
+}
+
 // NewCluster create new cluster object
-func NewCluster(cluster *clusterapi.GetClusterResponse, organizationId, projectId string, auditObject basetypes.ObjectValue) (*Cluster, error) {
+func NewCluster(ctx context.Context, cluster *clusterapi.GetClusterResponse, organizationId, projectId string, auditObject basetypes.ObjectValue) (*Cluster, error) {
 	newCluster := Cluster{
 		Id:             types.StringValue(cluster.Id.String()),
 		OrganizationId: types.StringValue(organizationId),
@@ -149,6 +186,7 @@ func NewCluster(cluster *clusterapi.GetClusterResponse, organizationId, projectI
 			Region: types.StringValue(cluster.CloudProvider.Region),
 			Type:   types.StringValue(string(cluster.CloudProvider.Type)),
 		},
+		ConfigurationType: types.StringValue(string(cluster.ConfigurationType)),
 		Support: &Support{
 			Plan:     types.StringValue(string(cluster.Support.Plan)),
 			Timezone: types.StringValue(string(cluster.Support.Timezone)),
@@ -160,9 +198,15 @@ func NewCluster(cluster *clusterapi.GetClusterResponse, organizationId, projectI
 
 	if cluster.CouchbaseServer.Version != nil {
 		version := *cluster.CouchbaseServer.Version
-		newCluster.CouchbaseServer = &CouchbaseServer{
+		version = removePatch(version)
+		couchbaseServer := CouchbaseServer{
 			Version: types.StringValue(version),
 		}
+		couchbaseServerObject, diags := types.ObjectValueFrom(ctx, couchbaseServer.AttributeTypes(), couchbaseServer)
+		if diags.HasError() {
+			return nil, fmt.Errorf("error while converting couchbase server version")
+		}
+		newCluster.CouchbaseServer = couchbaseServerObject
 	}
 
 	newServiceGroups, err := morphToTerraformServiceGroups(cluster)
