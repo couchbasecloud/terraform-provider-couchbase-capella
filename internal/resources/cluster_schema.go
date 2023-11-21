@@ -18,7 +18,7 @@ func ClusterSchema() schema.Schema {
 			"organization_id": stringAttribute(required),
 			"project_id":      stringAttribute(required),
 			"name":            stringAttribute(required),
-			"description":     stringAttribute(optional),
+			"description":     stringAttribute(optional, computed),
 			"cloud_provider": schema.SingleNestedAttribute{
 				Required: true,
 				Attributes: map[string]schema.Attribute{
@@ -27,6 +27,7 @@ func ClusterSchema() schema.Schema {
 					"cidr":   stringAttribute(required),
 				},
 			},
+			"configuration_type": stringAttribute(optional, computed),
 			"couchbase_server": schema.SingleNestedAttribute{
 				Optional: true,
 				Computed: true,
@@ -49,6 +50,9 @@ func ClusterSchema() schema.Schema {
 									},
 								},
 								"disk": schema.SingleNestedAttribute{
+									Description: "The 'storage' and 'IOPS' fields are required for AWS. " +
+										"For Azure, only the 'disktype' field is required, and for Ultra, you can provide all three fields. " +
+										"In the case of GCP, only 'pd ssd' disk type is available, and you cannot set the 'IOPS' field.",
 									Required: true,
 									Attributes: map[string]schema.Attribute{
 										"type":    stringAttribute(required),
@@ -79,8 +83,9 @@ func ClusterSchema() schema.Schema {
 			"current_state":  stringAttribute(computed),
 			"app_service_id": stringAttribute(optional, computed),
 			"audit":          computedAuditAttribute(),
-			"if_match":       stringAttribute(optional),
-			"etag":           stringAttribute(computed),
+			// if_match is only required during update call
+			"if_match": stringAttribute(optional),
+			"etag":     stringAttribute(computed),
 		},
 	}
 }
