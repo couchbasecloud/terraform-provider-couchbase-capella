@@ -2,6 +2,7 @@ package acceptance_tests
 
 import (
 	"fmt"
+	"regexp"
 	acctest "terraform-provider-capella/internal/testing"
 	cfg "terraform-provider-capella/internal/testing"
 	"testing"
@@ -107,7 +108,36 @@ func TestAccDatabaseCredentialResourceWithOptionalField(t *testing.T) {
 // TestAccDatabaseCredentialInvalidScenario is a Terraform acceptance test that that simulates the
 // scenario where a database credential is created with all possible fields, but with an invalid name.
 func TestAccDatabaseCredentialInvalidScenario(t *testing.T) {
-	// TODO: Implement test
+	resourceName := "acc_database_credential" + acctest.GenerateRandomResourceName()
+	resourceReference := "capella_database_credential." + resourceName
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create and Read testing
+			{
+				PreConfig: func() {
+					time.Sleep(1 * time.Second)
+				},
+				Config: generateDatabaseCredentialConfig(cfg.Cfg, map[string]string{
+					"name":            "()<>,;[]={}",
+					"organization_id": "var.organization_id",
+					"project_id":      "var.project_id",
+					"cluster_id":      "var.cluster_id",
+					"password":        "password",
+					"access":          "access",
+				}),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_database_credential_name"),
+					resource.TestCheckResourceAttr(resourceReference, "password", "password"),
+					resource.TestCheckResourceAttr(resourceReference, "access", "access"),
+				),
+				// TODO: Figure out correct string expected for invalid name
+				ExpectError: regexp.MustCompile("Could not create database credential: unexpected error: "),
+			},
+		},
+	})
 }
 
 // TestAccDatabaseCredentialResourceNotFound is a Terraform acceptance test that that simulates the
