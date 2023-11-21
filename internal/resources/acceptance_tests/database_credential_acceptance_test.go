@@ -2,6 +2,7 @@ package acceptance_tests
 
 import (
 	"fmt"
+	acctest "terraform-provider-capella/internal/testing"
 	cfg "terraform-provider-capella/internal/testing"
 	"testing"
 
@@ -14,7 +15,7 @@ import (
 // required fields populated.
 func TestAccDatabaseCredentialWithOnlyReqFields(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read
@@ -43,7 +44,7 @@ func TestAccDatabaseCredentialWithOnlyReqFields(t *testing.T) {
 // also tested.
 func TestAccDatabaseCredentialResourceWithOptionalField(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read
