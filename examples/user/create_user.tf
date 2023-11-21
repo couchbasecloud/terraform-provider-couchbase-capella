@@ -2,6 +2,10 @@ output "new_user" {
   value = capella_user.new_user
 }
 
+output "user_id" {
+  value = capella_user.new_user.id
+}
+
 resource "capella_user" "new_user" {
   organization_id = var.organization_id
 

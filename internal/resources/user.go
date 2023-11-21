@@ -101,9 +101,8 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error executing request",
-			"Could not execute request, unexpected error: "+err.Error(),
+			"Could not execute request, unexpected error: "+api.ParseError(err),
 		)
-		return
 	}
 
 	createUserResponse := api.CreateUserResponse{}
@@ -119,10 +118,9 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 	refreshedState, err := r.refreshUser(ctx, organizationId, createUserResponse.Id.String())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading user",
-			"Could not read user, unexpected error: "+err.Error(),
+			"Error executing request",
+			"Could not execute request, unexpected error: "+api.ParseError(err),
 		)
-		return
 	}
 
 	// Set state to fully populated data
@@ -174,23 +172,16 @@ func (r *User) Read(ctx context.Context, req resource.ReadRequest, resp *resourc
 
 	// Refresh the existing user
 	refreshedState, err := r.refreshUser(ctx, organizationId, userId)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		if err.HttpStatusCode != http.StatusNotFound {
-			resp.Diagnostics.AddError(
-				"Error Reading Capella User",
-				"Could not read Capella userID "+userId+": "+err.CompleteError(),
-			)
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
 			return
 		}
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		resp.State.RemoveResource(ctx)
-		return
-	default:
 		resp.Diagnostics.AddError(
 			"Error Reading Capella User",
-			"Could not read Capella userID "+userId+": "+err.Error(),
+			"Could not read Capella userID "+userId+": "+errString,
 		)
 		return
 	}
@@ -236,28 +227,24 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 
 	err = r.updateUser(organizationId, userId, patch)
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
 			"Error updating user",
-			"Could not update Capella user with ID "+userId+": "+err.Error(),
+			"Could not update Capella user with ID "+userId+": "+errString,
 		)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+		}
 		return
 	}
 
 	refreshedState, err := r.refreshUser(ctx, organizationId, userId)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating user",
-			"Could not update Capella user with ID "+userId+": "+err.CompleteError(),
+			"Could not update Capella user with ID "+userId+": "+api.ParseError(err),
 		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error updating user",
-			"Could not update Capella user with ID "+userId+": "+err.Error(),
-		)
-		return
 	}
 
 	// Set state to fully populated data
@@ -421,10 +408,6 @@ func (r *User) updateUser(organizationId, userId string, patch []api.PatchEntry)
 		r.Token,
 		nil,
 	)
-	resourceNotFound, err := handleUserError(err)
-	if resourceNotFound {
-		return fmt.Errorf("error updating user: %s", errors.ErrNotFound)
-	}
 
 	if err != nil {
 		return err
@@ -472,21 +455,16 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 		r.Token,
 		nil,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		if err.HttpStatusCode != http.StatusNotFound {
-			resp.Diagnostics.AddError(
-				"Error Deleting Capella User",
-				"Could not delete Capella userId "+userId+": "+err.CompleteError(),
-			)
-			tflog.Info(ctx, "resource doesn't exist in remote server")
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
 			return
 		}
-	default:
 		resp.Diagnostics.AddError(
 			"Error Deleting Capella User",
-			"Could not delete Capella userId "+userId+": "+err.Error(),
+			"Could not delete Capella userId "+userId+": "+errString,
 		)
 		return
 	}
@@ -509,13 +487,13 @@ func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api
 		nil,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 	}
 
 	userResp := api.GetUserResponse{}
 	err = json.Unmarshal(response.Body, &userResp)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %v", errors.ErrUnmarshallingResponse, err)
+		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
 	return &userResp, nil
 }
@@ -525,13 +503,13 @@ func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api
 func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (*providerschema.User, error) {
 	userResp, err := r.getUser(ctx, organizationId, userId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrNotFound, err)
 	}
 
 	audit := providerschema.NewCouchbaseAuditData(userResp.Audit)
 	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
 	if diags.HasError() {
-		return nil, errors.ErrUnableToConvertAuditData
+		return nil, fmt.Errorf("%s: %w", errors.ErrUnableToConvertAuditData, err)
 	}
 
 	// Set optional fields - these may be left blank
@@ -568,33 +546,4 @@ func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (
 func (r *User) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-// handleCapellaUserError is used to differentiate between error types which
-// may be returned during requests to capella.
-func handleCapellaUserError(err error) error {
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		return fmt.Errorf("%w: %s", errors.ErrUnableToReadCapellaUser, err.CompleteError())
-	default:
-		return fmt.Errorf("%w: %s", errors.ErrUnableToReadCapellaUser, err.Error())
-	}
-	return nil
-}
-
-// this func extract error message if error is api.Error and also checks whether error is
-// resource not found
-func handleUserError(err error) (bool, error) {
-	switch err := err.(type) {
-	case nil:
-		return false, nil
-	case api.Error:
-		if err.HttpStatusCode != http.StatusNotFound {
-			return false, fmt.Errorf(err.CompleteError())
-		}
-		return true, fmt.Errorf(err.CompleteError())
-	default:
-		return false, err
-	}
 }

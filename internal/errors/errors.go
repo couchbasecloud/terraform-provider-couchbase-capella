@@ -111,4 +111,26 @@ var (
 
 	// ErrUnableToUpdateAppServiceName is returned when an app service name was updated.
 	ErrUnableToUpdateAppServiceName = errors.New("app service name cannot be updated")
+
+	// ErrAppServiceIdCannotBeEmpty is returned when a resource state failed to refresh.
+	ErrRefreshingState = errors.New("failed to refresh the state of a resource, please contact Couchbase Capella Support")
+
+	// ErrAppServiceIdCannotBeEmpty is returned when terraform fails to convert a clusters service groups.
+	ErrConvertingServiceGroups = errors.New("failed to convert cluster service groups, please contact Couchbase Capella Support")
+
+	// ErrConvertingCidr is returned when terraform fails to convert a CIDR
+	ErrConvertingCidr = errors.New("failed to convert CIDR, please contact Couchbase Capella Support")
+
+	// ErrReadingAWSDisk is returned when an AWS disk read fails.
+	ErrReadingAWSDisk = errors.New("failed to read AWS disk, please contact Couchbase Capella Support")
+
+	// ErrReadingAzureDisk is returned when an Azure disk read fails.
+	ErrReadingAzureDisk = errors.New("failed to read Azure disk, please contact Couchbase Capella Support")
+
+	// ErrReadingGCPDisk is returned when a GCP disk read fails.
+	ErrReadingGCPDisk = errors.New("failed to read GCP disk, please contact Couchbase Capella Support")
+	// ErrBucketIdMissing is returned when an expected Bucket Id was not found after an import.
+	ErrBucketIdMissing = errors.New("bucket ID is missing or was passed incorrectly, please check provider documentation for syntax")
+
+	ErrRestoreTimesMustNotBeSetWhileCreateBackup = errors.New("restore times must not be set while create backup")
 )

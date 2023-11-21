@@ -86,7 +86,7 @@ func NewApiKey(apiKey *api.GetApiKeyResponse, organizationId string, auditObject
 
 	newAllowedCidrs, err := MorphAllowedCidrs(apiKey.AllowedCIDRs)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrConvertingCidr, err)
 	}
 
 	newApiKey.AllowedCIDRs = newAllowedCidrs

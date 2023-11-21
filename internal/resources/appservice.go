@@ -8,6 +8,7 @@ import (
 	"terraform-provider-capella/internal/api"
 	"terraform-provider-capella/internal/api/appservice"
 	"terraform-provider-capella/internal/errors"
+
 	providerschema "terraform-provider-capella/internal/schema"
 	"time"
 
@@ -117,20 +118,18 @@ func (a *AppService) Create(ctx context.Context, req resource.CreateRequest, res
 	}
 
 	err = a.checkAppServiceStatus(ctx, organizationId, projectId, clusterId, createAppServiceResponse.Id.String())
-	_, err = handleAppServiceError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating app service",
-			"Could not create app service, unexpected error: "+err.Error(),
+			"Could not create app service, unexpected error: "+api.ParseError(err),
 		)
 		return
 	}
 	refreshedState, err := a.refreshAppService(ctx, organizationId, projectId, clusterId, createAppServiceResponse.Id.String())
-	_, err = handleAppServiceError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating app service",
-			"Could not create app service, unexpected error: "+err.Error(),
+			"Could not create app service, unexpected error: "+api.ParseError(err),
 		)
 		return
 	}
@@ -170,23 +169,16 @@ func (a *AppService) Read(ctx context.Context, req resource.ReadRequest, resp *r
 
 	// Refresh the existing app service
 	refreshedState, err := a.refreshAppService(ctx, organizationId, projectId, clusterId, appServiceId)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		if err.HttpStatusCode != http.StatusNotFound {
-			resp.Diagnostics.AddError(
-				"Error Reading Capella App Service",
-				"Could not read Capella appServiceID "+appServiceId+": "+err.CompleteError(),
-			)
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
 			return
 		}
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		resp.State.RemoveResource(ctx)
-		return
-	default:
 		resp.Diagnostics.AddError(
 			"Error Reading Capella App Service",
-			"Could not read Capella appServiceID "+appServiceId+": "+err.Error(),
+			"Could not read Capella appServiceID "+appServiceId+": "+errString,
 		)
 		return
 	}
@@ -259,31 +251,28 @@ func (a *AppService) Update(ctx context.Context, req resource.UpdateRequest, res
 		a.Token,
 		nil,
 	)
-	_, err = handleAppServiceError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating app service",
-			"Could not update app service id "+state.Id.String()+": "+err.Error(),
+			"Could not update app service id "+state.Id.String()+": "+api.ParseError(err),
 		)
 		return
 	}
 
 	err = a.checkAppServiceStatus(ctx, organizationId, projectId, clusterId, appServiceId)
-	_, err = handleAppServiceError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating app service",
-			"Could not update app service id "+state.Id.String()+": "+err.Error(),
+			"Could not update app service id "+state.Id.String()+": "+api.ParseError(err),
 		)
 		return
 	}
 
 	currentState, err := a.refreshAppService(ctx, organizationId, projectId, clusterId, appServiceId)
-	_, err = handleAppServiceError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating app service",
-			"Could not update app service id "+state.Id.String()+": "+err.Error(),
+			"Could not update app service id "+state.Id.String()+": "+api.ParseError(err),
 		)
 		return
 	}
@@ -334,49 +323,56 @@ func (a *AppService) Delete(ctx context.Context, req resource.DeleteRequest, res
 		a.Token,
 		nil,
 	)
-
-	resourceNotFound, err := handleAppServiceError(err)
-	if resourceNotFound {
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		return
-	}
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error deleting app service",
-			"Could not delete app service id "+state.Id.String()+": "+err.Error(),
+			"Could not delete app service id "+state.Id.String()+": "+errString,
 		)
 		return
 	}
 
 	err = a.checkAppServiceStatus(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.ClusterId.ValueString(), state.Id.ValueString())
-	resourceNotFound, err = handleAppServiceError(err)
-	switch err {
-	case nil:
-		// This case will only occur when app service deletion has failed,
-		// and the app service record still exists in the cp metadata. Therefore,
-		// no error will be returned when performing a GET call.
-		appService, err := a.refreshAppService(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.ClusterId.ValueString(), state.Id.ValueString())
-		if err != nil {
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if !resourceNotFound {
 			resp.Diagnostics.AddError(
 				"Error deleting app service",
-				fmt.Sprintf("Could not delete app service id %s: %s", state.Id.String(), err.Error()),
+				"Could not delete app service id "+state.Id.String()+": "+errString,
 			)
+			return
+		}
+		// resourceNotFound as expected
+		return
+	}
+
+	// This will only be reached when app service deletion has failed,
+	// and the app service record still exists in the cp metadata. Therefore,
+	// no error will be returned when performing a GET call.
+	appService, err := a.refreshAppService(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.ClusterId.ValueString(), state.Id.ValueString())
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
 			return
 		}
 		resp.Diagnostics.AddError(
 			"Error deleting app service",
-			fmt.Sprintf("Could not delete app service id %s, as current app service state: %s", state.Id.String(), appService.CurrentState),
+			"Could not delete app service id "+state.Id.String()+": "+errString,
 		)
 		return
-	default:
-		if !resourceNotFound {
-			resp.Diagnostics.AddError(
-				"Error deleting app service",
-				"Could not delete app service id "+state.Id.String()+": "+err.Error(),
-			)
-			return
-		}
 	}
+	resp.Diagnostics.AddError(
+		"Error deleting app service",
+		fmt.Sprintf("Could not delete app service id %s, as current app service state: %s", state.Id.String(), appService.CurrentState),
+	)
+	return
 }
 
 // Configure adds the provider configured client to the app service resource.
@@ -425,13 +421,14 @@ func (a *AppService) validateCreateAppServiceRequest(plan providerschema.AppServ
 func (a *AppService) refreshAppService(ctx context.Context, organizationId, projectId, clusterId, appServiceId string) (*providerschema.AppService, error) {
 	appServiceResponse, err := a.getAppService(organizationId, projectId, clusterId, appServiceId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrNotFound, err)
 	}
 
 	audit := providerschema.NewCouchbaseAuditData(appServiceResponse.Audit)
 	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
 	if diags.HasError() {
-		return nil, errors.ErrUnableToConvertAuditData
+		return nil, fmt.Errorf("%s: %w", errors.ErrUnableToConvertAuditData, err)
+
 	}
 
 	refreshedState := providerschema.NewAppService(
@@ -500,30 +497,14 @@ func (a *AppService) getAppService(organizationId, projectId, clusterId, appServ
 		nil,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 	}
 
 	appServiceResp := appservice.GetAppServiceResponse{}
 	err = json.Unmarshal(response.Body, &appServiceResp)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
 	appServiceResp.Etag = response.Response.Header.Get("ETag")
 	return &appServiceResp, nil
-}
-
-// handleAppServiceError extracts error message if error is api.Error and also checks whether error is
-// resource not found
-func handleAppServiceError(err error) (bool, error) {
-	switch err := err.(type) {
-	case nil:
-		return false, nil
-	case api.Error:
-		if err.HttpStatusCode != http.StatusNotFound {
-			return false, fmt.Errorf(err.CompleteError())
-		}
-		return true, fmt.Errorf(err.CompleteError())
-	default:
-		return false, err
-	}
 }
