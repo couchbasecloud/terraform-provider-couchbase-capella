@@ -718,19 +718,3 @@ func getCouchbaseServer(ctx context.Context, config tfsdk.Config, diags *diag.Di
 	tflog.Info(ctx, fmt.Sprintf("couchbase_server: %+v", couchbaseServer))
 	return couchbaseServer
 }
-
-//// HandleClusterError extracts error message if error is api.Error and also checks whether error is
-//// resource not found
-//func HandleClusterError(err error) (bool, error) {
-//	switch err := err.(type) {
-//	case nil:
-//		return false, nil
-//	case api.Error:
-//		if err.HttpStatusCode != http.StatusNotFound {
-//			return false, fmt.Errorf(err.CompleteError())
-//		}
-//		return true, fmt.Errorf(err.CompleteError())
-//	default:
-//		return false, err
-//	}
-//}
