@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"regexp"
 	"terraform-provider-capella/internal/api"
+	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
 	acctest "terraform-provider-capella/internal/testing"
 	cfg "terraform-provider-capella/internal/testing"
@@ -231,10 +232,9 @@ func testAccDatabaseCredentialResource(resourceReference string) resource.TestCh
 		}
 
 		fmt.Printf("delete initiated")
-		err = checkDatabaseCredentialStatus(data, rawState["organization_id"], rawState["project_id"], rawState["cluster_id"], rawState["id"])
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if !resourceNotFound {
-			return fmt.Errorf(errString)
+		_, err = checkDatabaseCredentialExists(data, rawState["organization_id"], rawState["project_id"], rawState["cluster_id"], rawState["id"])
+		if err != nil {
+			return err
 		}
 
 		fmt.Printf("successfully deleted")
@@ -259,9 +259,25 @@ func deleteDatabaseCredentialFromServer(data *providerschema.Data, organizationI
 }
 
 // deleteDatabaseCredentialFromServer checks the existence of a database credential
-func checkDatabaseCredentialStatus(data *providerschema.Data, organizationId, projectId, clusterId, userId string) error {
-	// TODO: Implement logic
-	return nil
+func checkDatabaseCredentialExists(data *providerschema.Data, organizationId, projectId, clusterId, userId string) (bool, error) {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", data.HostURL, organizationId, projectId, clusterId, userId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+
+	_, err := data.Client.Execute(
+		cfg,
+		nil,
+		data.Token,
+		nil,
+	)
+
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			return false, fmt.Errorf("%s: %v", errors.ErrExecutingRequest, errString)
+		}
+		return true, fmt.Errorf("%s: %v", errors.ErrExecutingRequest, errString)
+	}
+	return true, nil
 }
 
 // generateDatabaseCredentialConfig is used to build configs with varying fields and
