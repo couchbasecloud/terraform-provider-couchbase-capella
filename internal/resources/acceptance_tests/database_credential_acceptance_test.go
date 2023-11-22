@@ -136,8 +136,7 @@ func TestAccDatabaseCredentialInvalidScenario(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "password", "password"),
 					resource.TestCheckResourceAttr(resourceReference, "access", "access"),
 				),
-				// TODO: Figure out correct string expected for invalid name
-				ExpectError: regexp.MustCompile("Could not create database credential: unexpected error: "),
+				ExpectError: regexp.MustCompile("Could not create database credential, unexpected error: The request was malformed or invalid."),
 			},
 		},
 	})
