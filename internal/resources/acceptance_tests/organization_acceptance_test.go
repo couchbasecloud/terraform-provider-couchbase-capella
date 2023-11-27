@@ -55,7 +55,7 @@ func TestAccOrganizationDataSource(t *testing.T) {
 	})
 }
 
-func testAccOrganizationResourceConfig(cfg string, orgnizationId string) string {
+func testAccOrganizationResourceConfig(cfg string, organizationId string) string {
 	return fmt.Sprintf(`
 %[1]s
 
