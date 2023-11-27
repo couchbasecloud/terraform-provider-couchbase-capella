@@ -19,11 +19,11 @@ variable "user" {
   })
 }
 
-variable "resource" {
-  type = object({
+variable "resources" {
+  type = list(object({
     type = optional(string)
     id = string
     roles = list(string)
-  })
+  }))
   default = null
 }

@@ -9,11 +9,11 @@ user = {
   organization_roles = ["organizationMember"]
 }
 
-resource = {
+resources = [{
   type = "project"
   id   = "<project_id>"
   roles = [
     "projectViewer",
     "projectDataReaderWriter"
   ]
-}
+}]

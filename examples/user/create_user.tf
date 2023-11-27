@@ -12,11 +12,5 @@ resource "capella_user" "new_user" {
   name = var.user.name
   email = var.user.email
   organization_roles = var.user.organization_roles
-#  resources = [
-#    {
-#      id = var.resource.id
-#      roles = var.resource.roles
-#      type = var.resource.type
-#    }
-#  ]
+  resources = var.resources
 }
