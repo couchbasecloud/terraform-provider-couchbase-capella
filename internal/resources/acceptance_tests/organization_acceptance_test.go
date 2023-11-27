@@ -67,5 +67,5 @@ data "capella_organization" "get_organization" {
   organization_id = "%[2]s"
 }
 
-`, cfg, orgnizationId)
+`, cfg, organizationId)
 }
