@@ -1,6 +1,8 @@
 package api
 
 import (
+	"terraform-provider-capella/internal/errors"
+
 	"context"
 	"encoding/json"
 	"fmt"
@@ -92,13 +94,13 @@ func GetPaginated[DataSchema ~[]T, T any](
 			nil,
 		)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 		}
 
 		var decoded overlay
 		err = json.Unmarshal(response.Body, &decoded)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 		}
 
 		responses = append(responses, decoded.Data...)

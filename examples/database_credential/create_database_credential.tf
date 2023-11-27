@@ -3,6 +3,10 @@ output "new_database_credential" {
   sensitive = true
 }
 
+output "database_credential_id" {
+  value = capella_database_credential.new_database_credential.id
+}
+
 resource "capella_database_credential" "new_database_credential" {
   name            = var.database_credential_name
   organization_id = var.organization_id

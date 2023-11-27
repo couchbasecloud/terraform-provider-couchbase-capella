@@ -88,18 +88,10 @@ func (c *Certificate) Read(ctx context.Context, req datasource.ReadRequest, resp
 		c.Token,
 		nil,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Certificate",
-			"Could not read certificate in cluster "+state.ClusterId.String()+": "+err.CompleteError(),
-		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error Reading Capella Certificate",
-			"Could not read certificate in cluster "+state.ClusterId.String()+": "+err.Error(),
+			"Could not read certificate in cluster "+state.ClusterId.String()+": "+api.ParseError(err),
 		)
 		return
 	}

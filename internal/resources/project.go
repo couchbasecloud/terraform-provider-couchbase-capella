@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"terraform-provider-capella/internal/api"
+	"terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -92,20 +93,11 @@ func (r *Project) Create(ctx context.Context, req resource.CreateRequest, resp *
 		r.Token,
 		nil,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating project",
-			"Could not create project, unexpected error: "+err.CompleteError(),
+			"Could not create project, unexpected error: "+api.ParseError(err),
 		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error creating project",
-			"Could not create project, unexpected error: "+err.Error(),
-		)
-		return
 	}
 
 	projectResponse := api.GetProjectResponse{}
@@ -119,20 +111,11 @@ func (r *Project) Create(ctx context.Context, req resource.CreateRequest, resp *
 	}
 
 	refreshedState, err := r.retrieveProject(ctx, organizationId, projectResponse.Id.String())
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Capella Projects",
-			"Could not read Capella project ID "+projectResponse.Id.String()+": "+err.CompleteError(),
+			"Error creating project",
+			"Could not create project, unexpected error: "+api.ParseError(err),
 		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error Reading Capella Projects",
-			"Could not read Capella project ID "+projectResponse.Id.String()+": "+err.Error(),
-		)
-		return
 	}
 
 	// Set state to fully populated data
@@ -170,23 +153,16 @@ func (r *Project) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 
 	// Get refreshed project value from Capella
 	refreshedState, err := r.retrieveProject(ctx, organizationId, projectId)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		if err.HttpStatusCode != 404 {
-			resp.Diagnostics.AddError(
-				"Error Reading Capella Projects",
-				"Could not read Capella project ID "+projectId+": "+err.CompleteError(),
-			)
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
 			return
 		}
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		resp.State.RemoveResource(ctx)
-		return
-	default:
 		resp.Diagnostics.AddError(
-			"Error Reading Capella Projects",
-			"Could not read Capella project ID "+projectId+": "+err.Error(),
+			"Error Reading Capella Project",
+			"Could not read Capella project ID "+projectId+": "+errString,
 		)
 		return
 	}
@@ -245,41 +221,31 @@ func (r *Project) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		r.Token,
 		headers,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error Updating Capella Projects",
-			"Could not update Capella project ID "+state.Id.String()+": "+err.CompleteError(),
-		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error Updating Capella Projects",
-			"Could not update Capella project ID "+state.Id.String()+": "+err.Error(),
+			"Could not update Capella project ID "+state.Id.String()+": "+errString,
 		)
 		return
 	}
 
 	currentState, err := r.retrieveProject(ctx, organizationId, projectId)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		if err.HttpStatusCode != 404 {
-			resp.Diagnostics.AddError(
-				"Error Reading Capella Projects",
-				"Could not read Capella project ID "+state.Id.String()+": "+err.CompleteError(),
-			)
-			return
-		}
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		resp.State.RemoveResource(ctx)
-		return
-	default:
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
-			"Error Reading Capella Projects",
-			"Could not read Capella project ID "+state.Id.String()+": "+err.Error(),
+			"Error Updating Capella Project",
+			"Could not update Capella project ID "+projectId+": "+errString,
 		)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+		}
 		return
 	}
 
@@ -327,21 +293,16 @@ func (r *Project) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 		r.Token,
 		nil,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		if err.HttpStatusCode != 404 {
-			resp.Diagnostics.AddError(
-				"Error Deleting Capella Projects",
-				"Could not delete Capella project ID "+projectId+": "+err.CompleteError(),
-			)
-			tflog.Info(ctx, "resource doesn't exist in remote server")
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
 			return
 		}
-	default:
 		resp.Diagnostics.AddError(
-			"Error Deleting Capella Projects",
-			"Could not delete Capella project ID "+projectId+": "+err.Error(),
+			"Error Deleting Capella Project",
+			"Could not delete Capella project ID "+projectId+": "+errString,
 		)
 		return
 	}
@@ -368,13 +329,13 @@ func (r *Project) retrieveProject(ctx context.Context, organizationId, projectId
 		nil,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 	}
 
 	projectResp := api.GetProjectResponse{}
 	err = json.Unmarshal(response.Body, &projectResp)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
 
 	projectResp.Etag = response.Response.Header.Get("ETag")

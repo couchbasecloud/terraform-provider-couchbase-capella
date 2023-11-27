@@ -129,11 +129,10 @@ func (c *Bucket) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		c.Token,
 		nil,
 	)
-	_, err = handleBucketError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating bucket",
-			"Could not create bucket, unexpected error: "+err.Error(),
+			"Could not create bucket, unexpected error: "+api.ParseError(err),
 		)
 		return
 	}
@@ -149,18 +148,10 @@ func (c *Bucket) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	}
 
 	refreshedState, err := c.retrieveBucket(ctx, organizationId, projectId, clusterId, BucketResponse.Id)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Capella Bucket",
-			"Could not read Capella bucket with ID "+BucketResponse.Id+": "+err.CompleteError(),
-		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error Reading Capella Bucket",
-			"Could not read Capella bucket with ID "+BucketResponse.Id+": "+err.Error(),
+			"Error creating bucket",
+			"Could not create bucket, unexpected error:"+api.ParseError(err),
 		)
 		return
 	}
@@ -219,16 +210,16 @@ func (c *Bucket) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 	)
 
 	refreshedState, err := c.retrieveBucket(ctx, organizationId, projectId, clusterId, bucketId)
-	resourceNotFound, err := handleBucketError(err)
-	if resourceNotFound {
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		resp.State.RemoveResource(ctx)
-		return
-	}
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error reading bucket",
-			"Could not read bucket with id "+state.Id.String()+": "+err.Error(),
+			"Could not read bucket with id "+state.Id.String()+": "+errString,
 		)
 		return
 	}
@@ -260,8 +251,8 @@ func (r *Bucket) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 
 	if state.ProjectId.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error creating database credential",
-			"Could not create database credential, unexpected error: "+errors.ErrProjectIdCannotBeEmpty.Error(),
+			"Error creating bucket",
+			"Could not create bucket, unexpected error: "+errors.ErrProjectIdCannotBeEmpty.Error(),
 		)
 		return
 	}
@@ -269,8 +260,8 @@ func (r *Bucket) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 
 	if state.ClusterId.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error creating database credential",
-			"Could not create database credential, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
+			"Error creating bucket",
+			"Could not create bucket, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
 		)
 		return
 	}
@@ -278,8 +269,8 @@ func (r *Bucket) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 
 	if state.Id.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error creating database credential",
-			"Could not create database credential, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
+			"Error creating bucket",
+			"Could not create bucket, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
 		)
 		return
 	}
@@ -293,20 +284,16 @@ func (r *Bucket) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 		r.Token,
 		nil,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		if err.HttpStatusCode != 404 {
-			resp.Diagnostics.AddError(
-				"Error Deleting the Bucket",
-				"Could not delete Bucket associated with cluster "+clusterId+": "+err.CompleteError(),
-			)
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
 			return
 		}
-	default:
 		resp.Diagnostics.AddError(
-			"Error Deleting Bucket",
-			"Could not delete Bucket associated with cluster "+clusterId+": "+err.Error(),
+			"Error Deleting the Bucket",
+			"Could not delete Bucket associated with cluster "+clusterId+": "+errString,
 		)
 		return
 	}
@@ -329,13 +316,13 @@ func (c *Bucket) retrieveBucket(ctx context.Context, organizationId, projectId, 
 		nil,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 	}
 
 	bucketResp := bucketapi.GetBucketResponse{}
 	err = json.Unmarshal(response.Body, &bucketResp)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
 
 	refreshedState := providerschema.OneBucket{
@@ -405,31 +392,26 @@ func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 		c.Token,
 		nil,
 	)
-
-	_, err = handleBucketError(err)
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error updating bucket",
-			"Could not update bucket, unexpected error: "+err.Error(),
+			"Could not update bucket, unexpected error: "+bucketId+": "+errString,
 		)
 		return
 	}
 
 	currentState, err := c.retrieveBucket(ctx, organizationId, projectId, clusterId, bucketId)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating bucket",
-			"Could not update Capella bucket with ID "+bucketId+": "+err.CompleteError(),
+			"Could not update Capella bucket with ID "+bucketId+": "+api.ParseError(err),
 		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error updating bucket",
-			"Could not update Capella bucket with ID "+bucketId+": "+err.Error(),
-		)
-		return
 	}
 
 	// Set state to fully populated data
@@ -437,21 +419,5 @@ func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
-	}
-}
-
-// handleBucketError extracts error message if error is api.Error and also checks whether error is
-// resource not found
-func handleBucketError(err error) (bool, error) {
-	switch err := err.(type) {
-	case nil:
-		return false, nil
-	case api.Error:
-		if err.HttpStatusCode != http.StatusNotFound {
-			return false, fmt.Errorf(err.CompleteError())
-		}
-		return true, fmt.Errorf(err.CompleteError())
-	default:
-		return false, err
 	}
 }

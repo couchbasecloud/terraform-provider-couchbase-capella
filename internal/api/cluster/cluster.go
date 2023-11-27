@@ -15,6 +15,9 @@ type Availability struct {
 // AvailabilityType is availability zone type, either 'single' or 'multi'.
 type AvailabilityType string
 
+// ConfigurationType defines model for ConfigurationType, either 'multiNode' or 'singleNode'
+type ConfigurationType string
+
 // CreateClusterRequest is the request payload sent to the Capella V4 Public API in order to create a new cluster.
 // A Couchbase cluster consists of one or more instances of Couchbase Capella, each running on an independent node.
 // Data and services are shared across the cluster.
@@ -37,6 +40,9 @@ type CreateClusterRequest struct {
 	// [GCP] https://docs.couchbase.com/cloud/reference/gcp.html
 	// [Azure] https://docs.couchbase.com/cloud/reference/azure.html
 	CloudProvider CloudProvider `json:"cloudProvider"`
+
+	// ConfigurationType defines model for ConfigurationType, either 'multiNode' or 'singleNode'
+	ConfigurationType ConfigurationType `json:"configurationType"`
 
 	// CouchbaseServer is the version of the Couchbase Server to be installed in the cluster.
 	// Refer to documentation here (https://docs.couchbase.com/cloud/clusters/upgrade-database.html#server-version-maintenance-support)
@@ -89,6 +95,9 @@ type GetClusterResponse struct {
 	// [GCP] https://docs.couchbase.com/cloud/reference/gcp.html
 	// [Azure] https://docs.couchbase.com/cloud/reference/azure.html
 	CloudProvider CloudProvider `json:"cloudProvider"`
+
+	// ConfigurationType defines model for ConfigurationType, either 'multiNode' or 'singleNode'
+	ConfigurationType ConfigurationType `json:"configurationType"`
 
 	// CouchbaseServer is the version of the Couchbase Server to be installed in the cluster.
 	// Refer to documentation here (https://docs.couchbase.com/cloud/clusters/upgrade-database.html#server-version-maintenance-support)

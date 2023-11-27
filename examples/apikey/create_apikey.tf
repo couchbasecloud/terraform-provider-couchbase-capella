@@ -3,6 +3,10 @@ output "new_apikey" {
   sensitive = true
 }
 
+output "apikey_id" {
+  value = capella_apikey.new_apikey.id
+}
+
 resource "capella_apikey" "new_apikey" {
   organization_id    = var.organization_id
   name               = var.apikey.name
