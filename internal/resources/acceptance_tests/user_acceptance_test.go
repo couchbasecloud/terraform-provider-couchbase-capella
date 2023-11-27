@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	acctest "terraform-provider-capella/internal/testing"
 	cfg "terraform-provider-capella/internal/testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -11,39 +12,44 @@ import (
 )
 
 func TestUserResource(t *testing.T) {
+	resourceName := "acc_user" + acctest.GenerateRandomResourceName()
+	resourceReference := "capella_user." + resourceName
+	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
+	projectResourceReference := "capella_project." + projectResourceName
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read
 			{
-				Config: testAccUserResourceConfig(cfg.Cfg),
+				Config: testAccUserResourceConfig(cfg.Cfg, resourceName, projectResourceName, projectResourceReference),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("capella_user.acc_test", "name", "acc_test_user_name"),
-					resource.TestCheckResourceAttr("capella_user.acc_test", "email", "acc_test_email"),
+					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
+					resource.TestCheckResourceAttr(resourceReference, "email", "acc_test_email"),
 					resource.TestCheckResourceAttr(
-						"capella_user.acc_test", "organization_roles", "acc_test_organization_roles",
+						resourceReference, "organization_roles", "acc_test_organization_roles",
 					),
-					resource.TestCheckResourceAttr("capella_user.acc_test", "resources", "acc_test_resources"),
+					resource.TestCheckResourceAttr(resourceReference, "resources", "acc_test_resources"),
 				),
 			},
 			// Import state
 			{
-				ResourceName:      "capella_user.acc_test",
+				ResourceName:      resourceReference,
 				ImportStateIdFunc: generateUserImportId,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			// Update and Read
 			{
-				Config: testAccUserResourceConfig(cfg.Cfg),
+				Config: testAccUserResourceConfig(cfg.Cfg, resourceName, projectResourceName, projectResourceReference),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("capella_user.acc_test", "name", "acc_test_user_name"),
-					resource.TestCheckResourceAttr("capella_user.acc_test", "email", "acc_test_email"),
+					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
+					resource.TestCheckResourceAttr(resourceReference, "email", "acc_test_email"),
 					resource.TestCheckResourceAttr(
-						"capella_user.acc_test", "organization_roles", "acc_test_organization_roles",
+						resourceReference, "organization_roles", "acc_test_organization_roles",
 					),
-					resource.TestCheckResourceAttr("capella_user.acc_test", "resources", "acc_test_resources"),
+					resource.TestCheckResourceAttr(resourceReference, "resources", "acc_test_resources"),
 				),
 			},
 			// NOTE: No delete case is provided - this occurs automatically
@@ -51,22 +57,30 @@ func TestUserResource(t *testing.T) {
 	})
 }
 
-func testAccUserResourceConfig(cfg string) string {
+func testAccUserResourceConfig(cfg, resourceReference, projectResourceName, projectResourceReference string) string {
 	return fmt.Sprintf(`
 	%[1]s
+	  
+	resource "capella_project" "%[3]s" {
+		organization_id = var.organization_id
+		name            = "acc_test_project_name"
+		description     = "description"
+	}
 	
-	resource "capella_user" "new_user" {
+	resource "capella_user" "%[2]s" {
 		organization_id = var.organization_id
 	  
-		name  = var.user_name
-		email = var.email
+		name  = "Terraform Acceptance Test User"
+		email = "terraformacceptancetest@couchbase.com"
 	  
-		organization_roles = var.organization_roles
+		organization_roles = [
+			"organizationOwner"
+		]
 	  
 		resources = [
 		  {
 			type = "project"
-			id   = var.project_id
+			id   = %[4]s.id
 			roles = [
 			  "projectViewer",
 			  "projectDataReaderWriter"
@@ -74,32 +88,40 @@ func testAccUserResourceConfig(cfg string) string {
 		  }
 		]
 	  }
-	`, cfg)
+	`, cfg, resourceReference, projectResourceName, projectResourceReference)
 }
 
-func testAccUserResourceConfigUpdate(cfg string) string {
+func testAccUserResourceConfigUpdate(cfg, resourceReference, projectResourceName, projectResourceReference string) string {
 	return fmt.Sprintf(`
 	%[1]s
+	  
+	resource "capella_project" "%[3]s" {
+		organization_id = var.organization_id
+		name            = "acc_test_project_name"
+		description     = "description"
+	}
 	
-	resource "capella_user" "new_user" {
+	resource "capella_user" "%[2]s" {
 		organization_id = var.organization_id
 	  
-		name  = var.user_name
-		email = var.email
+		name  = "Terraform Acceptance Test User"
+		email = "terraformacceptancetest@couchbase.com"
 	  
-		organization_roles = var.organization_roles
+		organization_roles = [
+			"organizationOwner"
+		]
 	  
 		resources = [
 		  {
 			type = "project"
-			id   = var.project_id
+			id   = %[4]s.id
 			roles = [
 			  "projectViewer",
 			]
 		  }
 		]
 	  }
-	`, cfg)
+	`, cfg, resourceReference, projectResourceName, projectResourceReference)
 }
 
 func generateUserImportId(state *terraform.State) (string, error) {
