@@ -1,20 +1,12 @@
 package acceptance_tests
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
-	"os"
 	"regexp"
-	clusterapi "terraform-provider-capella/internal/api/cluster"
-	cfg "terraform-provider-capella/internal/testing"
-
-	//acctest "terraform-provider-capella/internal/resources/acceptance_tests"
-	providerschema "terraform-provider-capella/internal/schema"
+	acctest "terraform-provider-capella/internal/testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"testing"
 	"time"
 )
@@ -24,9 +16,9 @@ func TestAccAllowListTestCases(t *testing.T) {
 	resourceReference := "capella_cluster." + resourceName
 	projectResourceName := "terraform_project"
 	projectResourceReference := "capella_project." + projectResourceName
-	cidr := "10.0.2.0/23"
+	cidr := "10.250.250.0/23"
 
-	testCfg := cfg.Cfg
+	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
@@ -69,7 +61,7 @@ func TestAccAllowListTestCases(t *testing.T) {
 			//expired IP
 			{
 				Config:      testAccAddIpWithExpiredIP(testCfg, "add_allowlist_expiredIP", "10.2.2.2/32"),
-				ExpectError: regexp.MustCompile("Unable to create new allowlist\nfor database. The expiration time for the allowlist is not valid. Must be a\npoint in time greater than now."),
+				ExpectError: regexp.MustCompile("Unable\nto create new allowlist for database. The expiration time for the allowlist\nis not valid. Must be a point in time greater than now."),
 			},
 
 			//Add SameIP (this ip is same as the one added with required fields teststep and the config of that test step is retained)
@@ -97,9 +89,9 @@ func TestAccAllowedIPDeleteIP(t *testing.T) {
 	clusterResourceReference := "capella_cluster." + clusterName
 	projectResourceName := "terraform_project"
 	projectResourceReference := "capella_project." + projectResourceName
-	cidr := "10.0.2.0/23"
+	cidr := "10.3.2.0/23"
 
-	testCfg := cfg.Cfg
+	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
@@ -132,8 +124,8 @@ func TestAccAllowedIPDeleteCluster(t *testing.T) {
 	clusterResourceReference := "capella_cluster." + clusterName
 	projectResourceName := "terraform_project"
 	projectResourceReference := "capella_project." + projectResourceName
-	cidr := "10.0.2.0/23"
-	testCfg := cfg.Cfg
+	cidr := "10.4.2.0/23"
+	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
@@ -145,9 +137,9 @@ func TestAccAllowedIPDeleteCluster(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAddIpWithOptionalFields(testCfg, "allowList_delete", "10.2.3.4/32"),
+				Config: testAccAddIpWithOptionalFields(testCfg, "allowList_delete", "10.4.3.4/32"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("capella_allowlist.allowList_delete", "cidr", "10.2.3.4/32"),
+					resource.TestCheckResourceAttr("capella_allowlist.allowList_delete", "cidr", "10.4.3.4/32"),
 					resource.TestCheckResourceAttrSet("capella_allowlist.allowList_delete", "id"),
 					resource.TestCheckResourceAttrSet("capella_allowlist.allowList_delete", "expires_at"),
 					resource.TestCheckResourceAttr("capella_allowlist.allowList_delete", "comment", "terraform allow list acceptance test"),
@@ -176,7 +168,7 @@ resource "capella_cluster" "%[2]s" {
   organization_id = var.organization_id
   project_id      = %[4]s.id
   name            = "Terraform Acceptance Test Cluster"
-  description     = "My first test cluster for multiple services.""
+  description     = "My first test cluster for multiple services"
   couchbase_server = {
     version = "7.1"
   }
@@ -354,168 +346,4 @@ resource "capella_allowlist" "%[2]s" {
 }
 
 `, cfg, resourceName, cidr, expiryTime)
-}
-
-/*************** These functions to be moved to common util folder as they can be used with other tests as well **********************/
-
-func testAccDeleteAllowIP(clusterResourceReference, projectResourceReference, allowIPResoureceReference string) resource.TestCheckFunc {
-	log.Println("deleting the ip")
-	return func(s *terraform.State) error {
-		var clusterState, projectState, allowListState map[string]string
-		for _, m := range s.Modules {
-			if len(m.Resources) > 0 {
-				if v, ok := m.Resources[clusterResourceReference]; ok {
-					clusterState = v.Primary.Attributes
-				}
-				if v, ok := m.Resources[projectResourceReference]; ok {
-					projectState = v.Primary.Attributes
-				}
-				if v, ok := m.Resources[allowIPResoureceReference]; ok {
-					allowListState = v.Primary.Attributes
-				}
-			}
-		}
-		data, err := TestClient()
-		if err != nil {
-			return err
-		}
-		host := os.Getenv("TF_VAR_host")
-		orgid := os.Getenv("TF_VAR_organization_id")
-		authToken := os.Getenv("TF_VAR_auth_token")
-		_, err = data.Client.Execute(
-			fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s//allowedcidrs/%s", host, orgid, projectState["id"], clusterState["id"], allowListState["id"]),
-			http.MethodDelete,
-			nil,
-			authToken,
-			nil,
-		)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-}
-
-func testAccDeleteProject(projectResourceReference string) resource.TestCheckFunc {
-	log.Println("Deleting the project")
-	return func(s *terraform.State) error {
-		var projectState map[string]string
-		for _, m := range s.Modules {
-			if len(m.Resources) > 0 {
-				if v, ok := m.Resources[projectResourceReference]; ok {
-					projectState = v.Primary.Attributes
-				}
-			}
-		}
-		data, err := TestClient()
-		if err != nil {
-			return err
-		}
-		host := os.Getenv("TF_VAR_host")
-		orgid := os.Getenv("TF_VAR_organization_id")
-		authToken := os.Getenv("TF_VAR_auth_token")
-		_, err = data.Client.Execute(
-			fmt.Sprintf("%s/v4/organizations/%s/projects/%s", host, orgid, projectState["id"]),
-			http.MethodDelete,
-			nil,
-			authToken,
-			nil,
-		)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-}
-
-func testAccDeleteCluster(clusterResourceReference, projectResourceReference string) resource.TestCheckFunc {
-	log.Println("Deleting the cluster")
-	return func(s *terraform.State) error {
-		var clusterState, projectState map[string]string
-		for _, m := range s.Modules {
-			if len(m.Resources) > 0 {
-				if v, ok := m.Resources[clusterResourceReference]; ok {
-					clusterState = v.Primary.Attributes
-				}
-				if v, ok := m.Resources[projectResourceReference]; ok {
-					projectState = v.Primary.Attributes
-				}
-			}
-		}
-		data, err := TestClient()
-		if err != nil {
-			return err
-		}
-		host := os.Getenv("TF_VAR_host")
-		orgid := os.Getenv("TF_VAR_organization_id")
-		authToken := os.Getenv("TF_VAR_auth_token")
-		_, err = data.Client.Execute(
-			fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", host, orgid, projectState["id"], clusterState["id"]),
-			http.MethodDelete,
-			nil,
-			authToken,
-			nil,
-		)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-}
-
-func testAccWait(duration time.Duration) resource.TestCheckFunc {
-	return func(state *terraform.State) error {
-		time.Sleep(duration)
-		return nil
-	}
-}
-
-// This function takes a resource reference string and returns a resource.TestCheckFunc. The returned function, when used
-// in Terraform acceptance tests, ensures that the specified cluster resource exists in the Terraform state. It retrieves
-// the resource by name from the Terraform state and checks its existence. If the resource exists, it returns nil; otherwise,
-// it returns an error.
-func testAccExistsClusterResource(resourceReference string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		// retrieve the resource by name from state
-
-		var rawState map[string]string
-		for _, m := range s.Modules {
-			if len(m.Resources) > 0 {
-				if v, ok := m.Resources[resourceReference]; ok {
-					rawState = v.Primary.Attributes
-				}
-			}
-		}
-		fmt.Printf("raw state %s", rawState)
-		data, err := TestClient()
-		if err != nil {
-			return err
-		}
-		_, err = retrieveClusterFromServer(data, rawState["organization_id"], rawState["project_id"], rawState["id"])
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-}
-
-// retrieveClusterFromServer checks cluster exists in server.
-func retrieveClusterFromServer(data *providerschema.Data, organizationId, projectId, clusterId string) (*clusterapi.GetClusterResponse, error) {
-	response, err := data.Client.Execute(
-		fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", data.HostURL, organizationId, projectId, clusterId),
-		http.MethodGet,
-		nil,
-		data.Token,
-		nil,
-	)
-	if err != nil {
-		return nil, err
-	}
-	clusterResp := clusterapi.GetClusterResponse{}
-	err = json.Unmarshal(response.Body, &clusterResp)
-	if err != nil {
-		return nil, err
-	}
-	clusterResp.Etag = response.Response.Header.Get("ETag")
-	return &clusterResp, nil
 }

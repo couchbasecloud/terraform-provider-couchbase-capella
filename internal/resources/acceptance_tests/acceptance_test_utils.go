@@ -1,19 +1,25 @@
 package acceptance_tests
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"math/rand"
+	"net/http"
 	"os"
+	acctest "terraform-provider-capella/internal/testing"
 
 	"testing"
 	"time"
 
-	"terraform-provider-capella/internal/api"
-	"terraform-provider-capella/internal/provider"
-	providerschema "terraform-provider-capella/internal/schema"
-
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"terraform-provider-capella/internal/api"
+	clusterapi "terraform-provider-capella/internal/api/cluster"
+	"terraform-provider-capella/internal/provider"
+	providerschema "terraform-provider-capella/internal/schema"
 )
 
 var (
@@ -88,4 +94,173 @@ func GenerateRandomResourceName() string {
 // (exclusive).
 func randIntRange(min int, max int) int {
 	return rand.Intn(max-min) + min
+}
+
+// retrieveClusterFromServer checks cluster exists in server.
+func retrieveClusterFromServer(data *providerschema.Data, organizationId, projectId, clusterId string) (*clusterapi.GetClusterResponse, error) {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", data.HostURL, organizationId, projectId, clusterId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	response, err := data.Client.Execute(
+		cfg,
+		nil,
+		data.Token,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+	if err != nil {
+		return nil, err
+	}
+	clusterResp := clusterapi.GetClusterResponse{}
+	err = json.Unmarshal(response.Body, &clusterResp)
+	if err != nil {
+		return nil, err
+	}
+	clusterResp.Etag = response.Response.Header.Get("ETag")
+	return &clusterResp, nil
+}
+
+func testAccDeleteAllowIP(clusterResourceReference, projectResourceReference, allowIPResoureceReference string) resource.TestCheckFunc {
+	log.Println("deleting the ip")
+	return func(s *terraform.State) error {
+		var clusterState, projectState, allowListState map[string]string
+		for _, m := range s.Modules {
+			if len(m.Resources) > 0 {
+				if v, ok := m.Resources[clusterResourceReference]; ok {
+					clusterState = v.Primary.Attributes
+				}
+				if v, ok := m.Resources[projectResourceReference]; ok {
+					projectState = v.Primary.Attributes
+				}
+				if v, ok := m.Resources[allowIPResoureceReference]; ok {
+					allowListState = v.Primary.Attributes
+				}
+			}
+		}
+		data, err := TestClient()
+		if err != nil {
+			return err
+		}
+		host := os.Getenv("TF_VAR_host")
+		orgid := os.Getenv("TF_VAR_organization_id")
+		authToken := os.Getenv("TF_VAR_auth_token")
+		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s//allowedcidrs/%s", host, orgid, projectState["id"], clusterState["id"], allowListState["id"])
+		cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
+		_, err = data.Client.Execute(
+			cfg,
+			nil,
+			authToken,
+			nil,
+		)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+}
+
+func testAccDeleteProject(projectResourceReference string) resource.TestCheckFunc {
+	log.Println("Deleting the project")
+	return func(s *terraform.State) error {
+		var projectState map[string]string
+		for _, m := range s.Modules {
+			if len(m.Resources) > 0 {
+				if v, ok := m.Resources[projectResourceReference]; ok {
+					projectState = v.Primary.Attributes
+				}
+			}
+		}
+		data, err := TestClient()
+		if err != nil {
+			return err
+		}
+		host := os.Getenv("TF_VAR_host")
+		orgid := os.Getenv("TF_VAR_organization_id")
+		authToken := os.Getenv("TF_VAR_auth_token")
+		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s", host, orgid, projectState["id"])
+		cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
+		_, err = data.Client.Execute(
+			cfg,
+			nil,
+			authToken,
+			nil,
+		)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+}
+
+func testAccDeleteCluster(clusterResourceReference, projectResourceReference string) resource.TestCheckFunc {
+	log.Println("Deleting the cluster")
+	return func(s *terraform.State) error {
+		var clusterState, projectState map[string]string
+		for _, m := range s.Modules {
+			if len(m.Resources) > 0 {
+				if v, ok := m.Resources[clusterResourceReference]; ok {
+					clusterState = v.Primary.Attributes
+				}
+				if v, ok := m.Resources[projectResourceReference]; ok {
+					projectState = v.Primary.Attributes
+				}
+			}
+		}
+		data, err := TestClient()
+		if err != nil {
+			return err
+		}
+		host := os.Getenv("TF_VAR_host")
+		orgid := os.Getenv("TF_VAR_organization_id")
+		authToken := os.Getenv("TF_VAR_auth_token")
+		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", host, orgid, projectState["id"], clusterState["id"])
+		cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
+		_, err = data.Client.Execute(
+			cfg,
+			nil,
+			authToken,
+			nil,
+		)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+}
+
+func testAccWait(duration time.Duration) resource.TestCheckFunc {
+	return func(state *terraform.State) error {
+		time.Sleep(duration)
+		return nil
+	}
+}
+
+// This function takes a resource reference string and returns a resource.TestCheckFunc. The returned function, when used
+// in Terraform acceptance tests, ensures that the specified cluster resource exists in the Terraform state. It retrieves
+// the resource by name from the Terraform state and checks its existence. If the resource exists, it returns nil; otherwise,
+// it returns an error.
+func testAccExistsClusterResource(resourceReference string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		// retrieve the resource by name from state
+
+		var rawState map[string]string
+		for _, m := range s.Modules {
+			if len(m.Resources) > 0 {
+				if v, ok := m.Resources[resourceReference]; ok {
+					rawState = v.Primary.Attributes
+				}
+			}
+		}
+		fmt.Printf("raw state %s", rawState)
+		data, err := acctest.TestClient()
+		if err != nil {
+			return err
+		}
+		_, err = retrieveClusterFromServer(data, rawState["organization_id"], rawState["project_id"], rawState["id"])
+		if err != nil {
+			return err
+		}
+		return nil
+	}
 }
