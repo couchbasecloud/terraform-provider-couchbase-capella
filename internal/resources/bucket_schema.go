@@ -20,14 +20,14 @@ func BucketSchema() schema.Schema {
 			"project_id":                 stringAttribute(required),
 			"cluster_id":                 stringAttribute(required),
 			"type":                       stringDefaultAttribute("couchbase", optional, computed, requiresReplace),
-			"storage_backend":            stringDefaultAttribute("couchstore", optional, computed, requiresReplace),
+			"storage_backend":            stringAttribute(optional, computed, requiresReplace),
 			"memory_allocation_in_mb":    int64DefaultAttribute(100, optional, computed),
 			"bucket_conflict_resolution": stringDefaultAttribute("seqno", optional, computed, requiresReplace),
 			"durability_level":           stringDefaultAttribute("none", optional, computed),
 			"replicas":                   int64DefaultAttribute(1, optional, computed),
 			"flush":                      boolDefaultAttribute(false, optional, computed),
 			"time_to_live_in_seconds":    int64DefaultAttribute(0, optional, computed),
-			"eviction_policy":            stringDefaultAttribute("fullEviction", optional, computed, requiresReplace),
+			"eviction_policy":            stringAttribute(optional, computed, requiresReplace),
 			"stats": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
