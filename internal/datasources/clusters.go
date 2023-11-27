@@ -74,18 +74,13 @@ func (d *Clusters) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
 	response, err := api.GetPaginated[[]clusterapi.GetClusterResponse](ctx, d.Client, d.Token, cfg, api.SortById)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Clusters",
-			fmt.Sprintf("Could not read clusters in organization %s and project %s, unexpected error: %s", organizationId, projectId, err.CompleteError()),
-		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error Reading Capella Clusters",
-			fmt.Sprintf("Could not read clusters in organization %s and project %s, unexpected error: %s", organizationId, projectId, err.Error()),
+			fmt.Sprintf(
+				"Could not read clusters in organization %s and project %s, unexpected error: %s",
+				organizationId, projectId, api.ParseError(err),
+			),
 		)
 		return
 	}

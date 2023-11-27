@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 
 	"terraform-provider-capella/internal/api"
+	internalerrors "terraform-provider-capella/internal/errors"
 	providerschema "terraform-provider-capella/internal/schema"
 
 	"github.com/google/uuid"
@@ -128,11 +129,10 @@ func (a *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		a.Token,
 		nil,
 	)
-	_, err = handleApiKeyError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating ApiKey",
-			"Could not create ApiKey, unexpected error: "+err.Error(),
+			"Could not create ApiKey, unexpected error: "+api.ParseError(err),
 		)
 		return
 	}
@@ -148,18 +148,10 @@ func (a *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	}
 
 	refreshedState, err := a.retrieveApiKey(ctx, organizationId, apiKeyResponse.Id)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Capella ApiKeys",
-			"Could not read Capella ApiKey ID "+apiKeyResponse.Id+": "+err.CompleteError(),
-		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error Reading Capella ApiKeys",
-			"Could not read Capella ApiKey ID "+apiKeyResponse.Id+": "+err.Error(),
+			"Error creating ApiKey",
+			"Could not create ApiKey, unexpected error: "+api.ParseError(err),
 		)
 		return
 	}
@@ -218,16 +210,16 @@ func (a *ApiKey) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 
 	// Get refreshed api key value from Capella
 	refreshedState, err := a.retrieveApiKey(ctx, organizationId, apiKeyId)
-	resourceNotFound, err := handleApiKeyError(err)
-	if resourceNotFound {
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		resp.State.RemoveResource(ctx)
-		return
-	}
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error reading api key",
-			"Could not read api key id "+state.Id.String()+": "+err.Error(),
+			"Could not read api key id "+state.Id.String()+": "+errString,
 		)
 		return
 	}
@@ -327,11 +319,16 @@ func (a *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 		a.Token,
 		nil,
 	)
-	_, err = handleApiKeyError(err)
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error rotating api key",
-			"Could not rotate api key id "+state.Id.String()+": "+err.Error(),
+			"Could not rotate api key id "+state.Id.String()+": "+errString,
 		)
 		return
 	}
@@ -347,11 +344,10 @@ func (a *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 	}
 
 	currentState, err := a.retrieveApiKey(ctx, organizationId, apiKeyId)
-	_, err = handleApiKeyError(err)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error rotating api key",
-			"Could not rotate api key id "+state.Id.String()+": "+err.Error(),
+			"Could not rotate api key id "+state.Id.String()+": "+api.ParseError(err),
 		)
 		return
 	}
@@ -421,15 +417,16 @@ func (a *ApiKey) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 		a.Token,
 		nil,
 	)
-	resourceNotFound, err := handleApiKeyError(err)
-	if resourceNotFound {
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		return
-	}
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error deleting api key",
-			"Could not delete api key id "+state.Id.String()+" unexpected error: "+err.Error(),
+			"Could not delete api key id "+state.Id.String()+" unexpected error: "+errString,
 		)
 		return
 	}
@@ -451,13 +448,13 @@ func (a *ApiKey) retrieveApiKey(ctx context.Context, organizationId, apiKeyId st
 		nil,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", internalerrors.ErrExecutingRequest, err)
 	}
 
 	apiKeyResp := api.GetApiKeyResponse{}
 	err = json.Unmarshal(response.Body, &apiKeyResp)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", internalerrors.ErrUnmarshallingResponse, err)
 	}
 
 	audit := providerschema.NewCouchbaseAuditData(apiKeyResp.Audit)
@@ -469,25 +466,9 @@ func (a *ApiKey) retrieveApiKey(ctx context.Context, organizationId, apiKeyId st
 
 	refreshedState, err := providerschema.NewApiKey(&apiKeyResp, organizationId, auditObj)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", internalerrors.ErrRefreshingState, err)
 	}
 	return refreshedState, nil
-}
-
-// this func extract error message if error is api.Error and also checks whether error is
-// resource not found
-func handleApiKeyError(err error) (bool, error) {
-	switch err := err.(type) {
-	case nil:
-		return false, nil
-	case api.Error:
-		if err.HttpStatusCode != http.StatusNotFound {
-			return false, fmt.Errorf(err.CompleteError())
-		}
-		return true, fmt.Errorf(err.CompleteError())
-	default:
-		return false, err
-	}
 }
 
 // validateCreateApiKeyRequest validates the required fields in the create request.

@@ -91,7 +91,7 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error executing request",
-			"Could not execute request, unexpected error: "+err.Error(),
+			"Could not execute request, unexpected error: "+api.ParseError(err),
 		)
 		return
 	}
@@ -107,20 +107,11 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 	}
 
 	refreshedState, err := r.refreshAllowList(ctx, plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), plan.ClusterId.ValueString(), allowListResponse.Id.String())
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading Capella AllowList",
-			"Could not read Capella AllowList "+allowListResponse.Id.String()+": "+err.CompleteError(),
+			"Could not read Capella AllowList "+allowListResponse.Id.String()+": "+api.ParseError(err),
 		)
-		return
-	default:
-		resp.Diagnostics.AddError(
-			"Error reading Capella AllowList",
-			"Could not read Capella AllowList "+allowListResponse.Id.String()+": "+err.Error(),
-		)
-		return
 	}
 
 	// Set state to fully populated data
@@ -161,23 +152,16 @@ func (r *AllowList) Read(ctx context.Context, req resource.ReadRequest, resp *re
 
 	// refresh the existing allow list
 	refreshedState, err := r.refreshAllowList(ctx, organizationId, projectId, clusterId, allowListId)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		if err.HttpStatusCode != http.StatusNotFound {
-			resp.Diagnostics.AddError(
-				"Error Reading Capella AllowList",
-				"Could not read Capella allowListID "+allowListId+": "+err.CompleteError(),
-			)
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
 			return
 		}
-		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		resp.State.RemoveResource(ctx)
-		return
-	default:
 		resp.Diagnostics.AddError(
 			"Error Reading Capella AllowList",
-			"Could not read Capella allowListID "+allowListId+": "+err.Error(),
+			"Could not read Capella allowListID "+allowListId+": "+errString,
 		)
 		return
 	}
@@ -225,7 +209,7 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 		organizationId = IDs[providerschema.OrganizationId]
 		projectId      = IDs[providerschema.ProjectId]
 		clusterId      = IDs[providerschema.ClusterId]
-		allowListID    = IDs[providerschema.Id]
+		allowListId    = IDs[providerschema.Id]
 	)
 	// Execute request to delete existing allowlist
 	url := fmt.Sprintf(
@@ -234,7 +218,7 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 		organizationId,
 		projectId,
 		clusterId,
-		allowListID,
+		allowListId,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
 	_, err = r.Client.Execute(
@@ -243,21 +227,16 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 		r.Token,
 		nil,
 	)
-	switch err := err.(type) {
-	case nil:
-	case api.Error:
-		if err.HttpStatusCode != http.StatusNotFound {
-			resp.Diagnostics.AddError(
-				"Error Deleting Capella Allow List",
-				"Could not delete Capella allowListId "+allowListID+": "+err.CompleteError(),
-			)
-			tflog.Info(ctx, "resource doesn't exist in remote server")
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
 			return
 		}
-	default:
 		resp.Diagnostics.AddError(
-			"Error Deleting Capella Allow List",
-			"Could not delete Capella allowListId "+allowListID+": "+err.Error(),
+			"Error Reading Capella AllowList",
+			"Could not read Capella allowListID "+allowListId+": "+errString,
 		)
 		return
 	}
@@ -292,13 +271,13 @@ func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId,
 		nil,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %v", errors.ErrConstructingRequest, err)
+		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 	}
 
 	allowListResp := api.GetAllowListResponse{}
 	err = json.Unmarshal(response.Body, &allowListResp)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %v", errors.ErrUnmarshallingResponse, err)
+		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
 	return &allowListResp, nil
 }
@@ -307,7 +286,7 @@ func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId,
 func (r *AllowList) refreshAllowList(ctx context.Context, organizationId, projectId, clusterId, allowListId string) (*providerschema.OneAllowList, error) {
 	allowListResp, err := r.getAllowList(ctx, organizationId, projectId, clusterId, allowListId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", errors.ErrNotFound, err)
 	}
 
 	refreshedState := providerschema.OneAllowList{
