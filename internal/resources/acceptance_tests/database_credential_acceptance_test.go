@@ -22,6 +22,8 @@ import (
 func TestAccDatabaseCredentialWithOnlyReqFields(t *testing.T) {
 	resourceName := "acc_database_credential" + acctest.GenerateRandomResourceName()
 	resourceReference := "capella_database_credential." + resourceName
+	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
+	projectResourceReference := "capella_project." + projectResourceName
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
@@ -32,13 +34,17 @@ func TestAccDatabaseCredentialWithOnlyReqFields(t *testing.T) {
 				PreConfig: func() {
 					time.Sleep(1 * time.Second)
 				},
-				Config: generateDatabaseCredentialConfig(cfg.Cfg, map[string]string{
-					"name":            "var.database_credential_name",
-					"organization_id": "var.organization_id",
-					"project_id":      "var.project_id",
-					"cluster_id":      "var.cluster_id",
-					"access":          "access",
-				}),
+				Config: generateDatabaseCredentialConfig(
+					cfg.Cfg,
+					resourceName,
+					projectResourceName,
+					projectResourceReference,
+					map[string]string{
+						"name":            "var.database_credential_name",
+						"organization_id": "var.organization_id",
+						"cluster_id":      "var.cluster_id",
+						"access":          "access",
+					}),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_database_credential_name"),
 					resource.TestCheckResourceAttr(resourceReference, "password", "password"),
@@ -57,6 +63,8 @@ func TestAccDatabaseCredentialWithOnlyReqFields(t *testing.T) {
 func TestAccDatabaseCredentialResourceWithOptionalField(t *testing.T) {
 	resourceName := "acc_database_credential" + acctest.GenerateRandomResourceName()
 	resourceReference := "capella_database_credential." + resourceName
+	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
+	projectResourceReference := "capella_project." + projectResourceName
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
@@ -67,14 +75,18 @@ func TestAccDatabaseCredentialResourceWithOptionalField(t *testing.T) {
 				PreConfig: func() {
 					time.Sleep(1 * time.Second)
 				},
-				Config: generateDatabaseCredentialConfig(cfg.Cfg, map[string]string{
-					"name":            "var.database_credential_name",
-					"organization_id": "var.organization_id",
-					"project_id":      "var.project_id",
-					"cluster_id":      "var.cluster_id",
-					"password":        "password",
-					"access":          "access",
-				}),
+				Config: generateDatabaseCredentialConfig(
+					cfg.Cfg,
+					resourceName,
+					projectResourceName,
+					projectResourceReference,
+					map[string]string{
+						"name":            "var.database_credential_name",
+						"organization_id": "var.organization_id",
+						"cluster_id":      "var.cluster_id",
+						"password":        "password",
+						"access":          "access",
+					}),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_database_credential_name"),
 					resource.TestCheckResourceAttr(resourceReference, "password", "password"),
@@ -90,14 +102,18 @@ func TestAccDatabaseCredentialResourceWithOptionalField(t *testing.T) {
 			},
 			// Update and Read
 			{
-				Config: generateDatabaseCredentialConfig(cfg.Cfg, map[string]string{
-					"name":            "var.database_credential_name",
-					"organization_id": "var.organization_id",
-					"project_id":      "var.project_id",
-					"cluster_id":      "var.cluster_id",
-					"password":        "updated_password",
-					"access":          "access",
-				}),
+				Config: generateDatabaseCredentialConfig(
+					cfg.Cfg,
+					resourceName,
+					projectResourceName,
+					projectResourceReference,
+					map[string]string{
+						"name":            "var.database_credential_name",
+						"organization_id": "var.organization_id",
+						"cluster_id":      "var.cluster_id",
+						"password":        "updated_password",
+						"access":          "access",
+					}),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_database_credential_name"),
 					resource.TestCheckResourceAttr(resourceReference, "password", "updated_password"),
@@ -114,6 +130,8 @@ func TestAccDatabaseCredentialResourceWithOptionalField(t *testing.T) {
 func TestAccDatabaseCredentialInvalidScenario(t *testing.T) {
 	resourceName := "acc_database_credential" + acctest.GenerateRandomResourceName()
 	resourceReference := "capella_database_credential." + resourceName
+	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
+	projectResourceReference := "capella_project." + projectResourceName
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
@@ -124,14 +142,18 @@ func TestAccDatabaseCredentialInvalidScenario(t *testing.T) {
 				PreConfig: func() {
 					time.Sleep(1 * time.Second)
 				},
-				Config: generateDatabaseCredentialConfig(cfg.Cfg, map[string]string{
-					"name":            "()<>,;[]={}",
-					"organization_id": "var.organization_id",
-					"project_id":      "var.project_id",
-					"cluster_id":      "var.cluster_id",
-					"password":        "password",
-					"access":          "access",
-				}),
+				Config: generateDatabaseCredentialConfig(
+					cfg.Cfg,
+					resourceName,
+					projectResourceName,
+					projectResourceReference,
+					map[string]string{
+						"name":            "()<>,[]={}",
+						"organization_id": "var.organization_id",
+						"cluster_id":      "var.cluster_id",
+						"password":        "password",
+						"access":          "access",
+					}),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_database_credential_name"),
 					resource.TestCheckResourceAttr(resourceReference, "password", "password"),
@@ -152,6 +174,8 @@ func TestAccDatabaseCredentialInvalidScenario(t *testing.T) {
 func TestAccDatabaseCredentialResourceNotFound(t *testing.T) {
 	resourceName := "acc_database_credential" + acctest.GenerateRandomResourceName()
 	resourceReference := "capella_database_credential." + resourceName
+	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
+	projectResourceReference := "capella_project." + projectResourceName
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
@@ -162,14 +186,18 @@ func TestAccDatabaseCredentialResourceNotFound(t *testing.T) {
 				PreConfig: func() {
 					time.Sleep(1 * time.Second)
 				},
-				Config: generateDatabaseCredentialConfig(cfg.Cfg, map[string]string{
-					"name":            "var.database_credential_name",
-					"organization_id": "var.organization_id",
-					"project_id":      "var.project_id",
-					"cluster_id":      "var.cluster_id",
-					"password":        "password",
-					"access":          "access",
-				}),
+				Config: generateDatabaseCredentialConfig(
+					cfg.Cfg,
+					resourceName,
+					projectResourceName,
+					projectResourceReference,
+					map[string]string{
+						"name":            "var.database_credential_name",
+						"organization_id": "var.organization_id",
+						"cluster_id":      "var.cluster_id",
+						"password":        "password",
+						"access":          "access",
+					}),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_database_credential_name"),
 					resource.TestCheckResourceAttr(resourceReference, "password", "password"),
@@ -185,14 +213,18 @@ func TestAccDatabaseCredentialResourceNotFound(t *testing.T) {
 			// Attempt to update after credential has been deleted. This should
 			// result in a new database credential being created.
 			{
-				Config: generateDatabaseCredentialConfig(cfg.Cfg, map[string]string{
-					"name":            "var.database_credential_name",
-					"organization_id": "var.organization_id",
-					"project_id":      "var.project_id",
-					"cluster_id":      "var.cluster_id",
-					"password":        "updated_password",
-					"access":          "access",
-				}),
+				Config: generateDatabaseCredentialConfig(
+					cfg.Cfg,
+					resourceName,
+					projectResourceName,
+					projectResourceReference,
+					map[string]string{
+						"name":            "var.database_credential_name",
+						"organization_id": "var.organization_id",
+						"cluster_id":      "var.cluster_id",
+						"password":        "updated_password",
+						"access":          "access",
+					}),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_database_credential_name"),
 					resource.TestCheckResourceAttr(resourceReference, "password", "updated_password"),
@@ -296,12 +328,21 @@ func checkDatabaseCredentialExists(data *providerschema.Data, organizationId, pr
 //		access          = <access>
 //	  }
 //	`, cfg)
-func generateDatabaseCredentialConfig(cfg string, configFields map[string]string) string {
+func generateDatabaseCredentialConfig(cfg, resourceName, projectResourceName, projectResourceReference string, configFields map[string]string) string {
 	databaseCredentialCfg := fmt.Sprintf(`
 	%[1]s
 
-	resource "capella_database_credential" "new_database_credential" {
-	`, cfg)
+	resource "capella_project" "%[3]s" {
+		organization_id = var.organization_id
+		name            = "acc_test_project_name"
+		description     = "description"
+	}
+
+	resource "capella_database_credential" "%[2]s" {
+	`, cfg, resourceName, projectResourceName)
+
+	// add ids
+	databaseCredentialCfg += fmt.Sprintf("	%s= %s.id\n ", "project_id", projectResourceReference)
 
 	// add specific fields
 	for k, v := range configFields {
