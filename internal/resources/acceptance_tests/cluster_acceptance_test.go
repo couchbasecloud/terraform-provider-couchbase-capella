@@ -1,8 +1,7 @@
-package acceptance_tests_test
+package acceptance_tests
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -1432,35 +1431,6 @@ resource "capella_cluster"  "%[2]s" {
 }
 
 // This function takes a resource reference string and returns a resource.TestCheckFunc. The returned function, when used
-// in Terraform acceptance tests, ensures that the specified cluster resource exists in the Terraform state. It retrieves
-// the resource by name from the Terraform state and checks its existence. If the resource exists, it returns nil; otherwise,
-// it returns an error.
-func testAccExistsClusterResource(resourceReference string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		// retrieve the resource by name from state
-
-		var rawState map[string]string
-		for _, m := range s.Modules {
-			if len(m.Resources) > 0 {
-				if v, ok := m.Resources[resourceReference]; ok {
-					rawState = v.Primary.Attributes
-				}
-			}
-		}
-		fmt.Printf("raw state %s", rawState)
-		data, err := acctest.TestClient()
-		if err != nil {
-			return err
-		}
-		_, err = retrieveClusterFromServer(data, rawState["organization_id"], rawState["project_id"], rawState["id"])
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-}
-
-// This function takes a resource reference string and returns a resource.TestCheckFunc. The returned function, when used
 // in Terraform acceptance tests, ensures the successful deletion of the specified cluster resource. It retrieves
 // the resource by name from the Terraform state, initiates the deletion, checks the status of the deletion, and
 // confirms that the resource no longer exists. If the resource is successfully deleted, it returns nil; otherwise,
@@ -1494,31 +1464,6 @@ func testAccDeleteClusterResource(resourceReference string) resource.TestCheckFu
 		fmt.Printf("successfully deleted")
 		return nil
 	}
-}
-
-// retrieveClusterFromServer checks cluster exists in server.
-func retrieveClusterFromServer(data *providerschema.Data, organizationId, projectId, clusterId string) (*clusterapi.GetClusterResponse, error) {
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", data.HostURL, organizationId, projectId, clusterId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := data.Client.Execute(
-		cfg,
-		nil,
-		data.Token,
-		nil,
-	)
-	if err != nil {
-		return nil, err
-	}
-	if err != nil {
-		return nil, err
-	}
-	clusterResp := clusterapi.GetClusterResponse{}
-	err = json.Unmarshal(response.Body, &clusterResp)
-	if err != nil {
-		return nil, err
-	}
-	clusterResp.Etag = response.Response.Header.Get("ETag")
-	return &clusterResp, nil
 }
 
 // deleteClusterFromServer deletes cluster from server
