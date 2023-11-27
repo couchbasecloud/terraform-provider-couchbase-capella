@@ -41,7 +41,7 @@ func (a *BackupSchedule) Validate() (map[Attr]string, error) {
 		BucketId:       a.BucketId,
 	}
 
-	IDs, err := validateSchemaState(state)
+	IDs, err := validateSchemaState(state, BucketId)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
 	}
