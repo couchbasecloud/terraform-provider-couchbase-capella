@@ -14,25 +14,50 @@ import (
 // ApiKeyResourcesItems the individual item that is part of Resources.
 // These items define the set of roles or access that can be had on a single type of resource.
 type ApiKeyResourcesItems struct {
-	Id    types.String   `tfsdk:"id"`
-	Type  types.String   `tfsdk:"type"`
+	Id   types.String `tfsdk:"id"`
+	Type types.String `tfsdk:"type"`
+
+	// Roles is the Project Roles associated with the API key.
+	// To learn more about Project Roles,
+	// see [Project Roles](https://docs.couchbase.com/cloud/projects/project-roles.html).
 	Roles []types.String `tfsdk:"roles"`
 }
 
 // ApiKey maps ApiKey resource schema data.
 type ApiKey struct {
-	Expiry            types.Float64          `tfsdk:"expiry"`
-	Rotate            types.Number           `tfsdk:"rotate"`
-	AllowedCIDRs      types.List             `tfsdk:"allowed_cidrs"`
-	OrganizationId    types.String           `tfsdk:"organization_id"`
-	Audit             types.Object           `tfsdk:"audit"`
-	Description       types.String           `tfsdk:"description"`
-	Id                types.String           `tfsdk:"id"`
-	Name              types.String           `tfsdk:"name"`
-	Secret            types.String           `tfsdk:"secret"`
-	Token             types.String           `tfsdk:"token"`
-	OrganizationRoles []types.String         `tfsdk:"organization_roles"`
-	Resources         []ApiKeyResourcesItems `tfsdk:"resources"`
+	// Expiry is the expiry of the API key in number of days.
+	// If set to -1, the token will not expire.
+	Expiry types.Float64 `tfsdk:"expiry"`
+
+	// Rotate is set only when updating(rotating) the API key,
+	// and it should be set be set in incremental order from
+	// the previously set rotate value, ideally we should start.
+	// it from 1 when we are rotating for first time.
+	Rotate types.Number `tfsdk:"rotate"`
+
+	// AllowedCIDRs is the list of inbound CIDRs for the API key.
+	// The system making a request must come from one of the allowed CIDRs.
+	AllowedCIDRs   types.List   `tfsdk:"allowed_cidrs"`
+	OrganizationId types.String `tfsdk:"organization_id"`
+	Audit          types.Object `tfsdk:"audit"`
+	Description    types.String `tfsdk:"description"`
+	Id             types.String `tfsdk:"id"`
+	Name           types.String `tfsdk:"name"`
+
+	// Secret associated with API key. One has to follow the secret key policy,
+	// such as allowed characters and a length of 64 characters. If this field
+	// is left empty, a secret will be auto-generated.
+	Secret types.String `tfsdk:"secret"`
+
+	// Token is a confidential piece of information that is used to authorize
+	// requests made to v4 endpoints.
+	Token             types.String   `tfsdk:"token"`
+	OrganizationRoles []types.String `tfsdk:"organization_roles"`
+
+	// Resources  is the resources are the resource level permissions associated
+	// with the API key. To learn more about Organization Roles, see
+	// [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
+	Resources []ApiKeyResourcesItems `tfsdk:"resources"`
 }
 
 // NewApiKey creates new apikey object.

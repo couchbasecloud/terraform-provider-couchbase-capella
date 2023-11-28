@@ -70,8 +70,10 @@ func (a *AllowList) Validate() (map[Attr]string, error) {
 
 // OneAllowList maps allowlist resource schema data; there is a separate response object to avoid conversion error for nested fields.
 type OneAllowList struct {
-	Cidr           types.String       `tfsdk:"cidr"`
-	Comment        types.String       `tfsdk:"comment"`
+	Cidr    types.String `tfsdk:"cidr"`
+	Comment types.String `tfsdk:"comment"`
+
+	// ExpiresAt is an RFC3339 timestamp determining when the allowed CIDR should expire.
 	ExpiresAt      types.String       `tfsdk:"expires_at"`
 	Id             types.String       `tfsdk:"id"`
 	OrganizationId types.String       `tfsdk:"organization_id"`

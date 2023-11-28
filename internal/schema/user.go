@@ -12,20 +12,22 @@ import (
 
 // User maps User resource schema data.
 type User struct {
-	TimeZone            types.String   `tfsdk:"time_zone"`
-	Region              types.String   `tfsdk:"region"`
-	Email               types.String   `tfsdk:"email"`
-	Status              types.String   `tfsdk:"status"`
-	Audit               types.Object   `tfsdk:"audit"`
-	OrganizationId      types.String   `tfsdk:"organization_id"`
-	Name                types.String   `tfsdk:"name"`
-	LastLogin           types.String   `tfsdk:"last_login"`
-	ExpiresAt           types.String   `tfsdk:"expires_at"`
-	Id                  types.String   `tfsdk:"id"`
-	OrganizationRoles   []types.String `tfsdk:"organization_roles"`
-	Resources           []Resource     `tfsdk:"resources"`
-	EnableNotifications types.Bool     `tfsdk:"enable_notifications"`
-	Inactive            types.Bool     `tfsdk:"inactive"`
+	TimeZone       types.String `tfsdk:"time_zone"`
+	Region         types.String `tfsdk:"region"`
+	Email          types.String `tfsdk:"email"`
+	Status         types.String `tfsdk:"status"`
+	Audit          types.Object `tfsdk:"audit"`
+	OrganizationId types.String `tfsdk:"organization_id"`
+	Name           types.String `tfsdk:"name"`
+	LastLogin      types.String `tfsdk:"last_login"`
+	// ExpiresAt is the time at which user invitation expires.
+	ExpiresAt         types.String   `tfsdk:"expires_at"`
+	Id                types.String   `tfsdk:"id"`
+	OrganizationRoles []types.String `tfsdk:"organization_roles"`
+	// Resources is an array of objects representing the resources the user has access to
+	Resources           []Resource `tfsdk:"resources"`
+	EnableNotifications types.Bool `tfsdk:"enable_notifications"`
+	Inactive            types.Bool `tfsdk:"inactive"`
 }
 
 // NewUser creates a new instance of a User object.
