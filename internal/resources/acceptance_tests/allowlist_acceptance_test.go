@@ -3,10 +3,14 @@ package acceptance_tests
 import (
 	"fmt"
 	"log"
+	"net/http"
+	"os"
 	"regexp"
+	"terraform-provider-capella/internal/api"
 	acctest "terraform-provider-capella/internal/testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"testing"
 	"time"
 )
@@ -16,12 +20,12 @@ func TestAccAllowListTestCases(t *testing.T) {
 	resourceReference := "capella_cluster." + resourceName
 	projectResourceName := "terraform_project"
 	projectResourceReference := "capella_project." + projectResourceName
-	cidr := "10.250.250.0/23"
+	cidr := "10.0.2.0/23"
 
 	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			//Creating cluster to check the allowlist configs
 			{
@@ -66,8 +70,8 @@ func TestAccAllowListTestCases(t *testing.T) {
 
 			//Add SameIP (this ip is same as the one added with required fields teststep and the config of that test step is retained)
 			{
-				Config:      testAccAddIPSameIP(testCfg, "add_allowlist_sameIP", "10.1.1.1/32"),
-				ExpectError: regexp.MustCompile("Could not execute request, unexpected error: Unable to add allowlist entry.\nThe CIDR provided already exists for the cluster. If you continue to have\nissues connecting to your cluster please contact support."),
+				Config:      testAccAddIPSameIP(testCfg, "add_allowlist_sameIP", "10.1.4.1/32"),
+				ExpectError: regexp.MustCompile("CIDR provided already exists for the cluster"),
 			},
 			//Delete expired IP
 			{
@@ -77,7 +81,7 @@ func TestAccAllowListTestCases(t *testing.T) {
 					resource.TestCheckResourceAttrSet("capella_allowlist.add_expiring_ip", "id"),
 					resource.TestCheckResourceAttrSet("capella_allowlist.add_expiring_ip", "expires_at"),
 					resource.TestCheckResourceAttr("capella_allowlist.add_expiring_ip", "comment", "terraform allow list acceptance test"),
-					testAccWait(time.Second*250)),
+					acctest.TestAccWait(time.Second*250)),
 			},
 		},
 	})
@@ -93,8 +97,8 @@ func TestAccAllowedIPDeleteIP(t *testing.T) {
 
 	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCreateCluster(&testCfg, clusterName, projectResourceName, projectResourceReference, cidr),
@@ -127,8 +131,8 @@ func TestAccAllowedIPDeleteCluster(t *testing.T) {
 	cidr := "10.4.2.0/23"
 	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCreateCluster(&testCfg, clusterName, projectResourceName, projectResourceReference, cidr),
@@ -346,4 +350,43 @@ resource "capella_allowlist" "%[2]s" {
 }
 
 `, cfg, resourceName, cidr, expiryTime)
+}
+
+func testAccDeleteAllowIP(clusterResourceReference, projectResourceReference, allowIPResoureceReference string) resource.TestCheckFunc {
+	log.Println("deleting the ip")
+	return func(s *terraform.State) error {
+		var clusterState, projectState, allowListState map[string]string
+		for _, m := range s.Modules {
+			if len(m.Resources) > 0 {
+				if v, ok := m.Resources[clusterResourceReference]; ok {
+					clusterState = v.Primary.Attributes
+				}
+				if v, ok := m.Resources[projectResourceReference]; ok {
+					projectState = v.Primary.Attributes
+				}
+				if v, ok := m.Resources[allowIPResoureceReference]; ok {
+					allowListState = v.Primary.Attributes
+				}
+			}
+		}
+		data, err := acctest.TestClient()
+		if err != nil {
+			return err
+		}
+		host := os.Getenv("TF_VAR_host")
+		orgid := os.Getenv("TF_VAR_organization_id")
+		authToken := os.Getenv("TF_VAR_auth_token")
+		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s//allowedcidrs/%s", host, orgid, projectState["id"], clusterState["id"], allowListState["id"])
+		cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
+		_, err = data.Client.Execute(
+			cfg,
+			nil,
+			authToken,
+			nil,
+		)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
 }

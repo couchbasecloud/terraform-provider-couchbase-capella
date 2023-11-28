@@ -2,6 +2,10 @@ package acceptance_tests
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"terraform-provider-capella/internal/api"
 	"testing"
 
 	"terraform-provider-capella/internal/provider"
@@ -133,5 +137,38 @@ func generateProjectImportIdForResource(resourceName string) resource.ImportStat
 		}
 		fmt.Printf("raw state %s", rawState)
 		return fmt.Sprintf("id=%s,organization_id=%s", rawState["id"], rawState["organization_id"]), nil
+	}
+}
+
+func testAccDeleteProject(projectResourceReference string) resource.TestCheckFunc {
+	log.Println("Deleting the project")
+	return func(s *terraform.State) error {
+		var projectState map[string]string
+		for _, m := range s.Modules {
+			if len(m.Resources) > 0 {
+				if v, ok := m.Resources[projectResourceReference]; ok {
+					projectState = v.Primary.Attributes
+				}
+			}
+		}
+		data, err := acctest.TestClient()
+		if err != nil {
+			return err
+		}
+		host := os.Getenv("TF_VAR_host")
+		orgid := os.Getenv("TF_VAR_organization_id")
+		authToken := os.Getenv("TF_VAR_auth_token")
+		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s", host, orgid, projectState["id"])
+		cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
+		_, err = data.Client.Execute(
+			cfg,
+			nil,
+			authToken,
+			nil,
+		)
+		if err != nil {
+			return err
+		}
+		return nil
 	}
 }
