@@ -7,10 +7,6 @@ variable "organization_id" {
   description = "Capella Organization ID"
 }
 
-variable "project_id" {
-  description = "Capella Project ID"
-}
-
 variable "auth_token" {
   description = "Authentication API Key"
   sensitive   = true
@@ -21,19 +17,20 @@ variable "apikey" {
 
   type = object({
     name               = string
-    description        = string
-    allowed_cidrs      = list(string)
+    description        = optional(string)
+    allowed_cidrs      = optional(list(string))
     organization_roles = list(string)
-    expiry             = number
+    expiry             = optional(number)
   })
 }
 
-variable "resource" {
+variable "resources" {
   description = "Resource details useful for apikey creation"
 
-  type = object({
+  type = list(object({
     id    = string
     roles = list(string)
-    type  = string
-  })
+    type  = optional(string)
+  }))
+  default = []
 }
