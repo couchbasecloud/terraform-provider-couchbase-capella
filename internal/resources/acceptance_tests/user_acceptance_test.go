@@ -11,7 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-func TestUserResource(t *testing.T) {
+func TestAccUserResourceWithOnlyReqFields(t *testing.T) {
+
+}
+
+func TestAccUserResourceAllFields(t *testing.T) {
 	resourceName := "acc_user" + acctest.GenerateRandomResourceName()
 	resourceReference := "capella_user." + resourceName
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
@@ -55,6 +59,14 @@ func TestUserResource(t *testing.T) {
 			// NOTE: No delete case is provided - this occurs automatically
 		},
 	})
+}
+
+func TestAccUserResourceInvalidScenario(t *testing.T) {
+
+}
+
+func TestAccUserResourceResourceNotFound(t *testing.T) {
+
 }
 
 func testAccUserResourceConfig(cfg, resourceReference, projectResourceName, projectResourceReference string) string {
