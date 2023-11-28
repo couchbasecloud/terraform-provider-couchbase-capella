@@ -73,7 +73,7 @@ func checkForImportString(organizationId basetypes.StringValue) bool {
 // and its corresponding value retrieved from the terraform import string.
 //
 // Note: The import string is passed in the following format:
-// "id=100,cluster_id=200,project_id=300,organization_id=400"
+// "id=100,cluster_id=200,project_id=300,organization_id=400".
 func splitImportString(importString string, keyParams []Attr) (map[Attr]string, error) {
 	const (
 		idDelimiter     = ","
@@ -88,7 +88,7 @@ func splitImportString(importString string, keyParams []Attr) (map[Attr]string, 
 	// Use the equals delimiter to further split each pair and
 	// retrieve each key and value.
 	//
-	// Note: Need to split by first occurence of equals sign
+	// Note: Need to split by first occurrence of equals sign
 	// since bucketIDs are suffixed with `==`
 	IDs := make(map[Attr]string)
 	for _, pair := range pairs {

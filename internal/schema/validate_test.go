@@ -11,13 +11,13 @@ import (
 
 func Test_ValidateSchemaState(t *testing.T) {
 	type test struct {
-		name                         string
+		expectedErr                  error
 		state                        map[Attr]basetypes.StringValue
+		name                         string
 		expectedProjectId            string
 		expectedOrganizationId       string
 		expectedClusterId            string
 		expectedDatabaseCredentialId string
-		expectedErr                  error
 	}
 
 	tests := []test{

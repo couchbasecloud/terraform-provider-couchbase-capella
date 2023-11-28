@@ -119,9 +119,9 @@ func Test_Validate(t *testing.T) {
 	)
 
 	type test struct {
+		expectedErr error
 		desc        string
 		state       providerschema.AllowLists
-		expectedErr error
 	}
 
 	tests := []test{

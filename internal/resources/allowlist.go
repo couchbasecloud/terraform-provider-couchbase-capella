@@ -59,7 +59,7 @@ func (r *AllowList) Configure(ctx context.Context, req resource.ConfigureRequest
 	r.Data = data
 }
 
-// Create creates a new allowlist
+// Create creates a new allowlist.
 func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan providerschema.AllowList
 	diags := req.Plan.Get(ctx, &plan)
@@ -255,7 +255,7 @@ func (r *AllowList) ImportState(ctx context.Context, req resource.ImportStateReq
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-// getAllowList is used to retrieve an existing allow list
+// getAllowList is used to retrieve an existing allow list.
 func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId, clusterId, allowListId string) (*api.GetAllowListResponse, error) {
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs/%s",
@@ -284,7 +284,7 @@ func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId,
 	return &allowListResp, nil
 }
 
-// refreshAllowList is used to pass an existing AllowList to the refreshed state
+// refreshAllowList is used to pass an existing AllowList to the refreshed state.
 func (r *AllowList) refreshAllowList(ctx context.Context, organizationId, projectId, clusterId, allowListId string) (*providerschema.OneAllowList, error) {
 	allowListResp, err := r.getAllowList(ctx, organizationId, projectId, clusterId, allowListId)
 	if err != nil {

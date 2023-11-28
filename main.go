@@ -40,7 +40,7 @@ func main() {
 
 	err := providerserver.Serve(
 		context.Background(),
-		provider.New(version),
+		provider.New(),
 		opts)
 
 	if err != nil {

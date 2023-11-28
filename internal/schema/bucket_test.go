@@ -11,13 +11,13 @@ import (
 
 func TestBucketSchemaValidate(t *testing.T) {
 	type test struct {
-		name                   string
+		expectedErr            error
 		input                  Bucket
+		name                   string
 		expectedProjectId      string
 		expectedOrganizationId string
 		expectedClusterId      string
 		expectedBucketId       string
-		expectedErr            error
 	}
 
 	tests := []test{

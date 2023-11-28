@@ -33,7 +33,7 @@ type BackupSchedule struct {
 }
 
 // Validate checks the validity of an API key and extracts associated IDs.
-// TODO : add unit testing
+// TODO : add unit testing.
 func (a *BackupSchedule) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
 		OrganizationId: a.OrganizationId,
@@ -52,24 +52,11 @@ func (a *BackupSchedule) Validate() (map[Attr]string, error) {
 
 // WeeklySchedule represents the weekly schedule of the backup.
 type WeeklySchedule struct {
-	// DayOfWeek represents the day of the week for the backup.
-	// Enum: "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"
-	DayOfWeek types.String `tfsdk:"day_of_week"`
-
-	// StartAt represents the start hour of the backup.
-	// Enum: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23
-	StartAt types.Int64 `tfsdk:"start_at"`
-
-	// IncrementalEvery represents the interval in hours for incremental backup.
-	// Enum: 1, 2, 4, 6, 8, 12, 24
-	IncrementalEvery types.Int64 `tfsdk:"incremental_every"`
-
-	// RetentionTime represents the retention time in days.
-	// Enum: "30days", "60days", "90days", "180days", "1year", "2years", "3years", "4years", "5years"
-	RetentionTime types.String `tfsdk:"retention_time"`
-
-	// CostOptimizedRetention optimizes backup retention to reduce total cost of ownership (TCO).
-	CostOptimizedRetention types.Bool `tfsdk:"cost_optimized_retention"`
+	DayOfWeek              types.String `tfsdk:"day_of_week"`
+	RetentionTime          types.String `tfsdk:"retention_time"`
+	StartAt                types.Int64  `tfsdk:"start_at"`
+	IncrementalEvery       types.Int64  `tfsdk:"incremental_every"`
+	CostOptimizedRetention types.Bool   `tfsdk:"cost_optimized_retention"`
 }
 
 func (b WeeklySchedule) AttributeTypes() map[string]attr.Type {
@@ -82,7 +69,7 @@ func (b WeeklySchedule) AttributeTypes() map[string]attr.Type {
 	}
 }
 
-// NewWeeklySchedule creates a new WeeklySchedule data object
+// NewWeeklySchedule creates a new WeeklySchedule data object.
 func NewWeeklySchedule(weeklySchedule backup_schedule.WeeklySchedule) WeeklySchedule {
 	return WeeklySchedule{
 		DayOfWeek:              types.StringValue(weeklySchedule.DayOfWeek),
@@ -93,7 +80,7 @@ func NewWeeklySchedule(weeklySchedule backup_schedule.WeeklySchedule) WeeklySche
 	}
 }
 
-// NewBackupSchedule creates new backup schedule object
+// NewBackupSchedule creates new backup schedule object.
 func NewBackupSchedule(backupSchedule *backup_schedule.GetBackupScheduleResponse,
 	organizationId, projectId string,
 	scheduleObj basetypes.ObjectValue,

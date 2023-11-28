@@ -476,7 +476,7 @@ func (c *Cluster) ImportState(ctx context.Context, req resource.ImportStateReque
 }
 
 // getCluster retrieves cluster information from the specified organization and project
-// using the provided cluster ID by open-api call
+// using the provided cluster ID by open-api call.
 func (c *Cluster) getCluster(organizationId, projectId, clusterId string) (*clusterapi.GetClusterResponse, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", c.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
@@ -711,7 +711,7 @@ func (c *Cluster) validateClusterUpdate(plan, state providerschema.Cluster) erro
 	return nil
 }
 
-// this function converts types.Object field to couchbaseServer field
+// this function converts types.Object field to couchbaseServer field.
 func getCouchbaseServer(ctx context.Context, config tfsdk.Config, diags *diag.Diagnostics) *providerschema.CouchbaseServer {
 	var couchbaseServer *providerschema.CouchbaseServer
 	diags.Append(config.GetAttribute(ctx, path.Root("couchbase_server"), &couchbaseServer)...)

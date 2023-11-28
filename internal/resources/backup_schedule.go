@@ -348,7 +348,7 @@ func (a *BackupSchedule) validateCreateBackupScheduleRequest(plan providerschema
 }
 
 // retrieveBackupSchedule retrieves backup schedule information from the specified organization and project
-// using the provided bucket ID by open-api call
+// using the provided bucket ID by open-api call.
 func (b *BackupSchedule) retrieveBackupSchedule(ctx context.Context, organizationId, projectId, clusterId, bucketId, planDayOfWeek string) (*providerschema.BackupSchedule, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/schedules", b.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}

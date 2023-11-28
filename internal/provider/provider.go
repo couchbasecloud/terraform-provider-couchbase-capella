@@ -4,17 +4,18 @@ import (
 	"context"
 	"time"
 
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/datasources"
-
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/datasources"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/version"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
@@ -25,23 +26,19 @@ const (
 	capellaAuthenticationTokenField = "authentication_token"
 	capellaPublicAPIHostField       = "host"
 	apiRequestTimeout               = 60 * time.Second
+	defaultAPIHostURL               = "https://cloudapi.couchbase.com"
 )
 
 // capellaProvider is the provider implementation.
 type capellaProvider struct {
 	name string
-	// version is set to the provider version on release, "dev" when the
-	// provider is built and ran locally, and "test" when running acceptance
-	// testing.
-	version string
 }
 
 // New is a helper function to simplify provider server and testing implementation.
-func New(version string) func() provider.Provider {
+func New() func() provider.Provider {
 	return func() provider.Provider {
 		return &capellaProvider{
-			name:    "couchbase-capella",
-			version: version,
+			name: "couchbase-capella",
 		}
 	}
 }
@@ -49,7 +46,7 @@ func New(version string) func() provider.Provider {
 // Metadata returns the provider type name.
 func (p *capellaProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
 	resp.TypeName = p.name
-	resp.Version = p.version
+	resp.Version = version.ProviderVersion
 }
 
 // Schema defines the provider-level schema for configuration data.
@@ -84,13 +81,9 @@ func (p *capellaProvider) Configure(ctx context.Context, req provider.ConfigureR
 	// If practitioner provided a configuration value for any of the
 	// attributes, it must be a known value.
 
+	// if the host URL is not provided, connect to the production Capella API host url by default.
 	if config.Host.IsUnknown() {
-		resp.Diagnostics.AddAttributeError(
-			path.Root(capellaPublicAPIHostField),
-			"Unknown Capella API Host",
-			"The provider cannot create the capella API client as there is an unknown configuration value for the capella API host. "+
-				"Either target apply the source of the value first, set the value statically in the configuration, or use the CAPELLA_HOST environment variable.",
-		)
+		config.Host = types.StringValue(defaultAPIHostURL)
 	}
 
 	if config.AuthenticationToken.IsUnknown() {

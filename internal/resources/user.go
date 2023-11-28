@@ -26,7 +26,7 @@ var (
 	_ resource.ResourceWithImportState = &User{}
 )
 
-// User is the User resource implementation
+// User is the User resource implementation.
 type User struct {
 	*providerschema.Data
 }
@@ -35,7 +35,7 @@ func NewUser() resource.Resource {
 	return &User{}
 }
 
-// Metadata returns the users resource type name
+// Metadata returns the users resource type name.
 func (r *User) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_user"
 }
@@ -62,7 +62,7 @@ func (r *User) Configure(ctx context.Context, req resource.ConfigureRequest, res
 	r.Data = data
 }
 
-// Create creates a new user
+// Create creates a new user.
 func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan providerschema.User
 	diags := req.Plan.Get(ctx, &plan)
@@ -154,7 +154,7 @@ func (r *User) validateCreateUserRequest(plan providerschema.User) error {
 	return nil
 }
 
-// Read reads user information
+// Read reads user information.
 func (r *User) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state providerschema.User
 	diags := req.State.Get(ctx, &state)
@@ -203,7 +203,7 @@ func (r *User) Read(ctx context.Context, req resource.ReadRequest, resp *resourc
 	}
 }
 
-// Update updates the user
+// Update updates the user.
 func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// Retrieve values from plan
 	var state, plan providerschema.User
@@ -426,7 +426,7 @@ func (r *User) updateUser(organizationId, userId string, patch []api.PatchEntry)
 	return nil
 }
 
-// Delete deletes the user
+// Delete deletes the user.
 func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// Retrieve existing state
 	var state providerschema.User
@@ -480,7 +480,7 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 	}
 }
 
-// getUser is used to retrieve an existing user
+// getUser is used to retrieve an existing user.
 func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api.GetUserResponse, error) {
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/users/%s",

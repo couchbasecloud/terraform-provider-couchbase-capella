@@ -17,9 +17,9 @@ func Test_ParseError(t *testing.T) {
 	)
 
 	type test struct {
-		name      string
 		err       error
 		expOutput interface{}
+		name      string
 	}
 
 	tests := []test{
@@ -63,9 +63,9 @@ func Test_CheckResourceNotFound(t *testing.T) {
 	)
 
 	type test struct {
-		name      string
 		err       error
 		expOutput interface{}
+		name      string
 		expBool   bool
 	}
 

@@ -5,31 +5,18 @@ ONLY MERGE INTO MAIN IF CHANGES ARE TESTED, VERIFIED AND QUALITY CHECKED THOROUG
 Merging to main == merging to PRODUCTION.
 -->
 
-## Jira
-
-* AV-XXXXX
-
 ## Description
 
+Please include a summary of the fix/feature/change, including any relevant motivation and context.
 <!-- What does this change do? Why is it needed? -->
 
-## Maturity Assessment
+## Type of Change
 
-- [ ] 0. Prototype
-- [ ] 1. Make it work
-- [ ] 2. Make it right
-- [ ] 3. Make it delightful
-- [ ] N/A
-
-## Area impacted
-
-- [ ] Resource
-- [ ] Data source
-- [ ] Documentation
-- [ ] Other (Please comment)
-
-<!-- Tick this box if this PR introduces a breaking change -->
-- [ ] Breaking change
+- [ ] Bug fix (non-breaking change which fixes an issue). Please, add the "bug" label to the PR.
+- [ ] New feature (non-breaking change which adds functionality). Please, add the "enhancement" label to the PR.
+- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected). Please, add the "breaking change" label to the PR.
+- [ ] This change requires a documentation update
+- [ ] Documentation fix/enhancement
 
 ## Manual Testing Approach
 
@@ -38,9 +25,7 @@ Merging to main == merging to PRODUCTION.
 - [ ] Manually tested
 - [ ] Unit tested
 - [ ] Acceptance tested
-- [ ] E2E tested
 - [ ] Unable to test / will not test (Please provide comments in section below)
-
 
 ### Testing
 
@@ -48,3 +33,14 @@ Merging to main == merging to PRODUCTION.
   <summary>Testing</summary>
   <!-- Provide your testing proof within this collapsible segment-->
 </details>
+
+## Required Checklist:
+
+- [ ] I have signed the [Couchbase CLA](https://review.couchbase.org/static/individual_agreement.html)
+- [ ] I have read the [contribution guidelines](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/master/CONTRIBUTING.md)
+- [ ] I have checked that this change does not generate any credentials and that **they are NOT accidentally logged anywhere**.
+- [ ] I have added tests that prove my fix is effective or that my feature works per HashiCorp requirements
+- [ ] I have added any necessary documentation (if required)
+- [ ] I have run make fmt and formatted my code
+
+## Further comments

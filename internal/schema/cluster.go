@@ -76,25 +76,15 @@ type Service string
 
 // ServiceGroup is the set of nodes that share the same disk, number of nodes and services.
 type ServiceGroup struct {
-	Node *Node `tfsdk:"node"`
-
-	// NumOfNodes is number of nodes. The minimum number of nodes for the cluster
-	// can be 3 and maximum can be 27 nodes. Additional service groups can have
-	// 2 nodes minimum and 24 nodes maximum.
-	NumOfNodes types.Int64 `tfsdk:"num_of_nodes"`
-
-	// Services is the couchbase service to run on the node.
-	Services []types.String `tfsdk:"services"`
+	Node       *Node          `tfsdk:"node"`
+	Services   []types.String `tfsdk:"services"`
+	NumOfNodes types.Int64    `tfsdk:"num_of_nodes"`
 }
 
 // Node defines attributes of a cluster node.
 type Node struct {
-	// Compute Following are the supported compute combinations for CPU and RAM
-	// for different cloud providers. To learn more, see
-	// [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html).
-	Compute Compute `tfsdk:"compute"`
-	// Disk is the type of disk that is supported per cloud provider during cluster creation.
-	Disk Node_Disk `tfsdk:"disk"`
+	Disk    Node_Disk `tfsdk:"disk"`
+	Compute Compute   `tfsdk:"compute"`
 }
 
 // Node_Disk is the type of disk on a particular node that is supported per cloud provider during cluster creation.
@@ -116,38 +106,22 @@ type Support struct {
 
 // Cluster defines the response as received from V4 Capella Public API when asked to create a new cluster.
 type Cluster struct {
-	Id types.String `tfsdk:"id"`
-
-	// AppServiceId is the ID of the linked app service.
-	AppServiceId   types.String  `tfsdk:"app_service_id"`
-	Audit          types.Object  `tfsdk:"audit"`
-	OrganizationId types.String  `tfsdk:"organization_id"`
-	ProjectId      types.String  `tfsdk:"project_id"`
-	Availability   *Availability `tfsdk:"availability"`
-
-	// CloudProvider The cloud provider where the cluster will be hosted.
-	// To learn more, see [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html).
-	CloudProvider *CloudProvider `tfsdk:"cloud_provider"`
-
-	// ConfigurationType represents whether a cluster is configured as a single-node or multi-node cluster.
-	ConfigurationType types.String `tfsdk:"configuration_type"`
-
-	// CouchbaseServer represents the server version of the cluster.
-	CouchbaseServer types.Object `tfsdk:"couchbase_server"`
-
-	// Description of the cluster (up to 1024 characters).
-	Description types.String `tfsdk:"description"`
-
-	// Name of the cluster (up to 256 characters).
-	Name types.String `tfsdk:"name"`
-
-	// ServiceGroups is the couchbase service groups to be run. At least one service group must contain the data service.
-	ServiceGroups []ServiceGroup `tfsdk:"service_groups"`
-	Support       *Support       `tfsdk:"support"`
-	CurrentState  types.String   `tfsdk:"current_state"`
-	Etag          types.String   `tfsdk:"etag"`
-
-	IfMatch types.String `tfsdk:"if_match"`
+	Availability      *Availability  `tfsdk:"availability"`
+	Support           *Support       `tfsdk:"support"`
+	CloudProvider     *CloudProvider `tfsdk:"cloud_provider"`
+	ProjectId         types.String   `tfsdk:"project_id"`
+	Id                types.String   `tfsdk:"id"`
+	OrganizationId    types.String   `tfsdk:"organization_id"`
+	Audit             types.Object   `tfsdk:"audit"`
+	ConfigurationType types.String   `tfsdk:"configuration_type"`
+	CouchbaseServer   types.Object   `tfsdk:"couchbase_server"`
+	Description       types.String   `tfsdk:"description"`
+	Name              types.String   `tfsdk:"name"`
+	AppServiceId      types.String   `tfsdk:"app_service_id"`
+	CurrentState      types.String   `tfsdk:"current_state"`
+	Etag              types.String   `tfsdk:"etag"`
+	IfMatch           types.String   `tfsdk:"if_match"`
+	ServiceGroups     []ServiceGroup `tfsdk:"service_groups"`
 }
 
 // removePatch removes the patch version from the provided cluster server version.
@@ -170,7 +144,7 @@ func removePatch(version string) string {
 	return version
 }
 
-// NewCluster create new cluster object
+// NewCluster create new cluster object.
 func NewCluster(ctx context.Context, cluster *clusterapi.GetClusterResponse, organizationId, projectId string, auditObject basetypes.ObjectValue) (*Cluster, error) {
 	newCluster := Cluster{
 		Id:             types.StringValue(cluster.Id.String()),
@@ -309,47 +283,22 @@ type Clusters struct {
 
 // ClusterData defines attributes for a single cluster when fetched from the V4 Capella Public API.
 type ClusterData struct {
-	Id types.String `tfsdk:"id"`
-
-	// AppServiceId is the ID of the linked app service.
-	AppServiceId types.String `tfsdk:"app_service_id"`
-
-	// Audit contains all audit-related fields.
-	Audit types.Object `tfsdk:"audit"`
-
-	// OrganizationId is the organizationId of the capella tenant.
-	OrganizationId types.String `tfsdk:"organization_id"`
-
-	// ProjectId is the projectId of the capella tenant.
-	ProjectId types.String `tfsdk:"project_id"`
-
-	// Availability defines if the cluster nodes will be deployed in multiple or single availability zones in the cloud.
-	Availability *Availability `tfsdk:"availability"`
-
-	// CloudProvider The cloud provider where the cluster will be hosted.
-	// To learn more, see [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html).
-	CloudProvider *CloudProvider `tfsdk:"cloud_provider"`
-
-	// CouchbaseServer defines version for the Couchbase Server to be launched during the creation of the Capella cluster.
+	Availability    *Availability    `tfsdk:"availability"`
+	Support         *Support         `tfsdk:"support"`
 	CouchbaseServer *CouchbaseServer `tfsdk:"couchbase_server"`
-
-	// Description of the cluster (up to 1024 characters).
-	Description types.String `tfsdk:"description"`
-
-	// Name of the cluster (up to 256 characters).
-	Name types.String `tfsdk:"name"`
-
-	// ServiceGroups is the couchbase service groups to be run. At least one service group must contain the data service.
-	ServiceGroups []ServiceGroup `tfsdk:"service_groups"`
-
-	// Support defines the support plan and timezone for this particular cluster.
-	Support *Support `tfsdk:"support"`
-
-	// State defines the current state of cluster
-	CurrentState types.String `tfsdk:"current_state"`
+	CloudProvider   *CloudProvider   `tfsdk:"cloud_provider"`
+	OrganizationId  types.String     `tfsdk:"organization_id"`
+	ProjectId       types.String     `tfsdk:"project_id"`
+	Id              types.String     `tfsdk:"id"`
+	Audit           types.Object     `tfsdk:"audit"`
+	Description     types.String     `tfsdk:"description"`
+	Name            types.String     `tfsdk:"name"`
+	AppServiceId    types.String     `tfsdk:"app_service_id"`
+	CurrentState    types.String     `tfsdk:"current_state"`
+	ServiceGroups   []ServiceGroup   `tfsdk:"service_groups"`
 }
 
-// NewClusterData creates a new cluster data object
+// NewClusterData creates a new cluster data object.
 func NewClusterData(cluster *clusterapi.GetClusterResponse, organizationId, projectId string, auditObject basetypes.ObjectValue) (*ClusterData, error) {
 	newClusterData := ClusterData{
 		Id:             types.StringValue(cluster.Id.String()),

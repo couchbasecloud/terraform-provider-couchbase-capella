@@ -11,13 +11,13 @@ import (
 
 func TestDatabaseCredentialSchemaValidate(t *testing.T) {
 	type test struct {
+		expectedErr                  error
 		name                         string
-		input                        DatabaseCredential
 		expectedProjectId            string
 		expectedOrganizationId       string
 		expectedClusterId            string
 		expectedDatabaseCredentialId string
-		expectedErr                  error
+		input                        DatabaseCredential
 	}
 
 	tests := []test{

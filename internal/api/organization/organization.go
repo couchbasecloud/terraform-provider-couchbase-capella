@@ -15,18 +15,9 @@ import (
 // Organization Member
 // To learn more, see https://docs.couchbase.com/cloud/organizations/organization-user-roles.html
 type GetOrganizationResponse struct {
-	// Audit contains all audit-related fields.
-	Audit api.CouchbaseAuditData `json:"audit"`
-
-	// Name represents the organization name.
-	Name string `json:"name"`
-
-	// Description is a short description of the organization.
-	Description *string `json:"description"`
-
-	// Preferences stores preferences for the tenant.
-	Preferences *Preferences `json:"preferences"`
-
-	// ID is the ID of the Organization
-	Id uuid.UUID `json:"id"`
+	Description *string                `json:"description"`
+	Preferences *Preferences           `json:"preferences"`
+	Name        string                 `json:"name"`
+	Audit       api.CouchbaseAuditData `json:"audit"`
+	Id          uuid.UUID              `json:"id"`
 }

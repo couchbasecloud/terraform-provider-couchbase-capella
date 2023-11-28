@@ -11,13 +11,13 @@ import (
 
 func TestAllowListSchemaValidate(t *testing.T) {
 	type test struct {
-		name                   string
+		expectedErr            error
 		input                  AllowList
+		name                   string
 		expectedProjectId      string
 		expectedOrganizationId string
 		expectedClusterId      string
 		expectedAllowListId    string
-		expectedErr            error
 	}
 
 	tests := []test{

@@ -206,7 +206,7 @@ func stringListAttribute(fields ...string) *schema.ListAttribute {
 	return &attribute
 }
 
-// computedAuditAttribute retuns a SingleNestedAttribute to
+// computedAuditAttribute returns a SingleNestedAttribute to
 // represent couchbase audit data using terraform schema types.
 func computedAuditAttribute() *schema.SingleNestedAttribute {
 	return &schema.SingleNestedAttribute{

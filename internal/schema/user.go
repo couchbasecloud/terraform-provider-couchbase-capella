@@ -10,53 +10,25 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-// User maps User resource schema data
+// User maps User resource schema data.
 type User struct {
-	// Id is a GUID4 identifier of the user.
-	Id types.String `tfsdk:"id"`
-
-	// Name represents the name of the user.
-	Name types.String `tfsdk:"name"`
-
-	// Name represents the email of the user.
-	Email types.String `tfsdk:"email"`
-
-	// Status depicts whether the user is verified or not
-	Status types.String `tfsdk:"status"`
-
-	// Inactive depicts whether the user has accepted the invite for the organization.
-	Inactive types.Bool `tfsdk:"inactive"`
-
-	// OrganizationId is the organizationId of the capella tenant.
-	OrganizationId types.String `tfsdk:"organization_id"`
-
-	// OrganizationRoles is an array of strings representing the roles granted to the user
-	OrganizationRoles []types.String `tfsdk:"organization_roles"`
-
-	// LastLogin is the time(UTC) at which user last logged in.
-	LastLogin types.String `tfsdk:"last_login"`
-
-	// Region is the region of the user.
-	Region types.String `tfsdk:"region"`
-
-	// TimeZone is the time zone of the user.
-	TimeZone types.String `tfsdk:"time_zone"`
-
-	// EnableNotifications represents whether email alerts for databases in projects
-	// will be recieved.
-	EnableNotifications types.Bool `tfsdk:"enable_notifications"`
-
-	// ExpiresAt is the time at which user expires.
-	ExpiresAt types.String `tfsdk:"expires_at"`
-
-	// Resources is an array of objects representing the resources the user has access to
-	Resources []Resource `tfsdk:"resources"`
-
-	// Audit represents all audit-related fields. It is of types.Object type to avoid conversion error for a nested field.
-	Audit types.Object `tfsdk:"audit"`
+	TimeZone            types.String   `tfsdk:"time_zone"`
+	Region              types.String   `tfsdk:"region"`
+	Email               types.String   `tfsdk:"email"`
+	Status              types.String   `tfsdk:"status"`
+	Audit               types.Object   `tfsdk:"audit"`
+	OrganizationId      types.String   `tfsdk:"organization_id"`
+	Name                types.String   `tfsdk:"name"`
+	LastLogin           types.String   `tfsdk:"last_login"`
+	ExpiresAt           types.String   `tfsdk:"expires_at"`
+	Id                  types.String   `tfsdk:"id"`
+	OrganizationRoles   []types.String `tfsdk:"organization_roles"`
+	Resources           []Resource     `tfsdk:"resources"`
+	EnableNotifications types.Bool     `tfsdk:"enable_notifications"`
+	Inactive            types.Bool     `tfsdk:"inactive"`
 }
 
-// NewUser creates a new instance of a User object
+// NewUser creates a new instance of a User object.
 func NewUser(
 	Id types.String,
 	name types.String,
@@ -112,7 +84,7 @@ type Users struct {
 	Data []User `tfsdk:"data"`
 }
 
-// Validate is used to verify that IDs have been properly imported
+// Validate is used to verify that IDs have been properly imported.
 func (u *User) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
 		OrganizationId: u.OrganizationId,
@@ -129,7 +101,7 @@ func (u *User) Validate() (map[Attr]string, error) {
 
 // MorphRoles is used to convert nested organizationRoles from
 // strings to terraform type.String.
-// TODO (AV-53457): add unit testing
+// TODO (AV-53457): add unit testing.
 func MorphRoles(roles []string) []basetypes.StringValue {
 	var morphedRoles []basetypes.StringValue
 	for _, role := range roles {
@@ -140,7 +112,7 @@ func MorphRoles(roles []string) []basetypes.StringValue {
 
 // ConvertRoles is used to convert all roles
 // in an array of basetypes.StringValue to strings.
-// TODO (AV-53457): add unit testing
+// TODO (AV-53457): add unit testing.
 func ConvertRoles(roles []basetypes.StringValue) []string {
 	var convertedRoles []string
 	for _, role := range roles {
@@ -151,7 +123,7 @@ func ConvertRoles(roles []basetypes.StringValue) []string {
 
 // ConvertResources is used to convert an array of resource objects containing nested fields
 // of type basetypes.StringValue to resource objects containing nested fields of type string.
-// TODO (AV-53457): add unit testing
+// TODO (AV-53457): add unit testing.
 func ConvertResources(resources []Resource) []api.Resource {
 	var convertedResources []api.Resource
 	for _, resource := range resources {
@@ -163,7 +135,7 @@ func ConvertResources(resources []Resource) []api.Resource {
 
 // ConvertResources is used to convert a resource object containing nested fields
 // of type basetypes.StringValue to a resource object containing nested fields of type string.
-// TODO (AV-53457): add unit testing
+// TODO (AV-53457): add unit testing.
 func ConvertResource(resource Resource) api.Resource {
 	var convertedResource api.Resource
 	convertedResource.Id = resource.Id.ValueString()
@@ -182,7 +154,7 @@ func ConvertResource(resource Resource) api.Resource {
 
 // MorphResources is used to covert nested resources from strings
 // to terraform types.String
-// TODO (AV-53457): add unit testing
+// TODO (AV-53457): add unit testing.
 func MorphResources(resources []api.Resource) []Resource {
 	var morphedResources []Resource
 	for _, resource := range resources {

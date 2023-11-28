@@ -409,7 +409,7 @@ func (a *AppService) ImportState(ctx context.Context, req resource.ImportStateRe
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-// validateCreateAppServiceRequest validates the payload of create app service request
+// validateCreateAppServiceRequest validates the payload of create app service request.
 func (a *AppService) validateCreateAppServiceRequest(plan providerschema.AppService) error {
 	if plan.OrganizationId.IsNull() {
 		return errors.ErrOrganizationIdCannotBeEmpty
@@ -423,7 +423,7 @@ func (a *AppService) validateCreateAppServiceRequest(plan providerschema.AppServ
 	return nil
 }
 
-// refreshAppService is used to pass an existing AppService to the refreshed state
+// refreshAppService is used to pass an existing AppService to the refreshed state.
 func (a *AppService) refreshAppService(ctx context.Context, organizationId, projectId, clusterId, appServiceId string) (*providerschema.AppService, error) {
 	appServiceResponse, err := a.getAppService(organizationId, projectId, clusterId, appServiceId)
 	if err != nil {
@@ -491,7 +491,7 @@ func (a *AppService) checkAppServiceStatus(ctx context.Context, organizationId, 
 }
 
 // getAppService retrieves app service information from the specified organization, project and cluster
-// using the provided app service ID by open-api call
+// using the provided app service ID by open-api call.
 func (a *AppService) getAppService(organizationId, projectId, clusterId, appServiceId string) (*appservice.GetAppServiceResponse, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s", a.HostURL, organizationId, projectId, clusterId, appServiceId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}

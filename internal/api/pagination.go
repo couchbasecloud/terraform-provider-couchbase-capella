@@ -11,11 +11,8 @@ import (
 
 // Cursor represents pagination metadata for navigating through large data sets.
 type Cursor struct {
-	// Pages represents the pagination details of the data set.
-	Pages Pages `json:"pages"`
-
-	// Hrefs contains the hyperlinks for navigation through the paginated data set.
 	Hrefs HRefs `json:"hrefs"`
+	Pages Pages `json:"pages"`
 }
 
 // Pages represents the pagination details of the data set.
@@ -79,8 +76,8 @@ func GetPaginated[DataSchema ~[]T, T any](
 	)
 
 	type overlay struct {
-		Cursor Cursor     `json:"cursor"`
 		Data   DataSchema `json:"data"`
+		Cursor Cursor     `json:"cursor"`
 	}
 
 	for {

@@ -14,66 +14,28 @@ import (
 // ApiKeyResourcesItems the individual item that is part of Resources.
 // These items define the set of roles or access that can be had on a single type of resource.
 type ApiKeyResourcesItems struct {
-	// Id is the id of the project.
-	Id types.String `tfsdk:"id"`
-
-	// Roles is the Project Roles associated with the API key.
-	// To learn more about Project Roles,
-	// see [Project Roles](https://docs.couchbase.com/cloud/projects/project-roles.html).
+	Id    types.String   `tfsdk:"id"`
+	Type  types.String   `tfsdk:"type"`
 	Roles []types.String `tfsdk:"roles"`
-
-	// Type is the type of the resource.
-	Type types.String `tfsdk:"type"`
 }
 
-// ApiKey maps ApiKey resource schema data
+// ApiKey maps ApiKey resource schema data.
 type ApiKey struct {
-	// OrganizationId is the organizationId of the capella.
-	OrganizationId types.String `tfsdk:"organization_id"`
-
-	// AllowedCIDRs is the list of inbound CIDRs for the API key.
-	// The system making a request must come from one of the allowed CIDRs.
-	AllowedCIDRs types.List   `tfsdk:"allowed_cidrs"`
-	Audit        types.Object `tfsdk:"audit"`
-
-	// Description is the description for the API key.
-	Description types.String `tfsdk:"description"`
-
-	// Expiry is the expiry of the API key in number of days.
-	// If set to -1, the token will not expire.
-	Expiry types.Float64 `tfsdk:"expiry"`
-
-	// Id is the id is a unique identifier for an apiKey.
-	Id types.String `tfsdk:"id"`
-
-	// Name is the name of the API key.
-	Name types.String `tfsdk:"name"`
-
-	// OrganizationRoles are the organization level roles granted to the API key.
-	OrganizationRoles []types.String `tfsdk:"organization_roles"`
-
-	// Resources  is the resources are the resource level permissions associated
-	// with the API key. To learn more about Organization Roles, see
-	// [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
-	Resources []ApiKeyResourcesItems `tfsdk:"resources"`
-
-	// Rotate is set only when updating(rotating) the API key,
-	// and it should be set be set in incremental order from
-	// the previously set rotate value, ideally we should start.
-	// it from 1 when we are rotating for first time.
-	Rotate types.Number `tfsdk:"rotate"`
-
-	// Secret associated with API key. One has to follow the secret key policy,
-	// such as allowed characters and a length of 64 characters. If this field
-	// is left empty, a secret will be auto-generated.
-	Secret types.String `tfsdk:"secret"`
-
-	// Token is a confidential piece of information that is used to authorize
-	// requests made to v4 endpoints.
-	Token types.String `tfsdk:"token"`
+	Expiry            types.Float64          `tfsdk:"expiry"`
+	Rotate            types.Number           `tfsdk:"rotate"`
+	AllowedCIDRs      types.List             `tfsdk:"allowed_cidrs"`
+	OrganizationId    types.String           `tfsdk:"organization_id"`
+	Audit             types.Object           `tfsdk:"audit"`
+	Description       types.String           `tfsdk:"description"`
+	Id                types.String           `tfsdk:"id"`
+	Name              types.String           `tfsdk:"name"`
+	Secret            types.String           `tfsdk:"secret"`
+	Token             types.String           `tfsdk:"token"`
+	OrganizationRoles []types.String         `tfsdk:"organization_roles"`
+	Resources         []ApiKeyResourcesItems `tfsdk:"resources"`
 }
 
-// NewApiKey creates new apikey object
+// NewApiKey creates new apikey object.
 func NewApiKey(apiKey *api.GetApiKeyResponse, organizationId string, auditObject basetypes.ObjectValue) (*ApiKey, error) {
 	newApiKey := ApiKey{
 		Id:             types.StringValue(apiKey.Id),
@@ -99,7 +61,7 @@ func NewApiKey(apiKey *api.GetApiKeyResponse, organizationId string, auditObject
 }
 
 // MorphAllowedCidrs is used to convert string list to basetypes.ListValue
-// TODO : add unit testing
+// TODO : add unit testing.
 func MorphAllowedCidrs(allowedCIDRs []string) (basetypes.ListValue, error) {
 	var newAllowedCidr []attr.Value
 	for _, allowedCidr := range allowedCIDRs {
@@ -116,7 +78,7 @@ func MorphAllowedCidrs(allowedCIDRs []string) (basetypes.ListValue, error) {
 
 // MorphApiKeyOrganizationRoles is used to convert nested organizationRoles from
 // strings to terraform type.String.
-// TODO : add unit testing
+// TODO : add unit testing.
 func MorphApiKeyOrganizationRoles(organizationRoles []string) []basetypes.StringValue {
 	var newOrganizationRoles []types.String
 	for _, organizationRole := range organizationRoles {
@@ -127,7 +89,7 @@ func MorphApiKeyOrganizationRoles(organizationRoles []string) []basetypes.String
 
 // MorphApiKeyResources is used to covert nested resources from strings
 // to terraform types.String
-// TODO : add unit testing
+// TODO : add unit testing.
 func MorphApiKeyResources(resources api.Resources) []ApiKeyResourcesItems {
 	var newApiKeyResourcesItems []ApiKeyResourcesItems
 	for _, resource := range resources {
@@ -148,7 +110,7 @@ func MorphApiKeyResources(resources api.Resources) []ApiKeyResourcesItems {
 }
 
 // Validate checks the validity of an API key and extracts associated IDs.
-// TODO : add unit testing
+// TODO : add unit testing.
 func (a *ApiKey) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
 		OrganizationId: a.OrganizationId,
@@ -172,7 +134,7 @@ type ApiKeys struct {
 	Data []ApiKeyData `tfsdk:"data"`
 }
 
-// ApiKeyData maps api key resource schema data to the GET API response as received from V4 Capella Public API
+// ApiKeyData maps api key resource schema data to the GET API response as received from V4 Capella Public API.
 type ApiKeyData struct {
 	// OrganizationId is the organizationId of the capella.
 	OrganizationId types.String `tfsdk:"organization_id"`
@@ -204,7 +166,7 @@ type ApiKeyData struct {
 	Resources []ApiKeyResourcesItems `tfsdk:"resources"`
 }
 
-// NewApiKeyData creates a new apiKeyData object
+// NewApiKeyData creates a new apiKeyData object.
 func NewApiKeyData(apiKey *api.GetApiKeyResponse, organizationId string, auditObject basetypes.ObjectValue) (ApiKeyData, error) {
 	newApiKeyData := ApiKeyData{
 		Id:             types.StringValue(apiKey.Id),
@@ -263,7 +225,7 @@ func (a ApiKeys) Validate() (organizationId string, err error) {
 	return a.OrganizationId.ValueString(), nil
 }
 
-// OrderList2 function to order list2 based on list1's Ids
+// OrderList2 function to order list2 based on list1's Ids.
 func OrderList2(list1, list2 []ApiKeyResourcesItems) ([]ApiKeyResourcesItems, error) {
 	if len(list1) != len(list2) {
 		return nil, fmt.Errorf("returned resources is not same as in plan")

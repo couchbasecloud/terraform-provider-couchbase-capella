@@ -12,11 +12,11 @@ import (
 
 func TestProjectSchemaValidate(t *testing.T) {
 	type test struct {
-		name                   string
+		expectedErr            error
 		input                  Project
+		name                   string
 		expectedProjectId      string
 		expectedOrganizationId string
-		expectedErr            error
 	}
 
 	tests := []test{

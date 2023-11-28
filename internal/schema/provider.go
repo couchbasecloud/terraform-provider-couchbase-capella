@@ -15,7 +15,7 @@ type Config struct {
 // Data is provider-defined data, clients, etc. that is passed
 // to data sources or resources in the provider that implement the Configure method.
 type Data struct {
+	Client  *api.Client
 	HostURL string
 	Token   string
-	Client  *api.Client
 }

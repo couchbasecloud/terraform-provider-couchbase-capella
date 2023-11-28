@@ -48,19 +48,9 @@ type CreateAllowListResponse struct {
 // Database Data Reader
 // To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
 type GetAllowListResponse struct {
-	// Audit contains all audit-related fields.
-	Audit CouchbaseAuditData `json:"audit"`
-
-	// Cidr is the trusted CIDR to allow the database connections from.
-	// To add a single IP address, use a subnet mask of 32.
-	Cidr string `json:"cidr"`
-
-	// Comment is a short description of the allowed CIDR.
-	Comment *string `json:"comment"`
-
-	// ExpiresAt is an RFC3339 timestamp determining when the allowed CIDR should expire.
-	ExpiresAt *string `json:"expiresAt"`
-
-	// ID is the ID of the AllowList
-	Id uuid.UUID `json:"id"`
+	Comment   *string            `json:"comment"`
+	ExpiresAt *string            `json:"expiresAt"`
+	Cidr      string             `json:"cidr"`
+	Audit     CouchbaseAuditData `json:"audit"`
+	Id        uuid.UUID          `json:"id"`
 }

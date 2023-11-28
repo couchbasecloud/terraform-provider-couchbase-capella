@@ -1469,7 +1469,7 @@ func testAccDeleteClusterResource(resourceReference string) resource.TestCheckFu
 	}
 }
 
-// deleteClusterFromServer deletes cluster from server
+// deleteClusterFromServer deletes cluster from server.
 func deleteClusterFromServer(data *providerschema.Data, organizationId, projectId, clusterId string) error {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", data.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
@@ -1485,7 +1485,7 @@ func deleteClusterFromServer(data *providerschema.Data, organizationId, projectI
 	return nil
 }
 
-// checkClusterStatus checks the current state of cluster
+// checkClusterStatus checks the current state of cluster.
 func checkClusterStatus(data *providerschema.Data, ctx context.Context, organizationId, projectId, ClusterId string) error {
 	var (
 		clusterResp *clusterapi.GetClusterResponse

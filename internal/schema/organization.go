@@ -35,7 +35,7 @@ func (p Preferences) AttributeTypes() map[string]attr.Type {
 	}
 }
 
-// NewPreferences create new preferences object
+// NewPreferences create new preferences object.
 func NewPreferences(preference organization.Preferences) Preferences {
 	var sessionDuration int64
 	if preference.SessionDuration != nil {
