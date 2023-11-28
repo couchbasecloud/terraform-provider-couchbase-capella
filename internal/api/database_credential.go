@@ -6,10 +6,19 @@ import (
 
 // Access defines the level of access that the database credential will have across buckets and scopes.
 // This access is currently defined for all buckets and all scopes in the cluster.
-// todo: Support for granular access per bucket and per scope will be added in AV-62864
 type Access struct {
-	Resources  *AccessibleResources `json:"resources,omitempty"`
-	Privileges []string             `json:"privileges"`
+	// Resources is the level at which the above privileges are defined.
+	// Ex: Access of read/write privilege can be defined at the bucket level or scope level resource.
+	// Leaving this empty will grant access to all buckets.
+	Resources *AccessibleResources `json:"resources,omitempty"`
+
+	// Privileges defines the privileges field in this API represents the privilege level for users.
+	// It accepts one of the following values:
+	// data_reader
+	// data_writer
+	// read: Equivalent to data_reader.
+	// write: Equivalent to data_writer.
+	Privileges []string `json:"privileges"`
 }
 
 // CreateDatabaseCredentialRequest represents the schema for the POST Capella V4 API request that creates the database credential.

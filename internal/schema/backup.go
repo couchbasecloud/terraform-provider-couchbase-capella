@@ -13,44 +13,125 @@ import (
 
 // Backup maps Backup resource schema data to the response received from V4 Capella Public API.
 type Backup struct {
-	RestoreTimes         types.Number `tfsdk:"restore_times"`
-	Method               types.String `tfsdk:"method"`
-	Date                 types.String `tfsdk:"date"`
-	BucketName           types.String `tfsdk:"bucket_name"`
-	CycleId              types.String `tfsdk:"cycle_id"`
-	BucketId             types.String `tfsdk:"bucket_id"`
-	RestoreBefore        types.String `tfsdk:"restore_before"`
-	Status               types.String `tfsdk:"status"`
-	Source               types.String `tfsdk:"source"`
-	ClusterId            types.String `tfsdk:"cluster_id"`
-	ProjectId            types.String `tfsdk:"project_id"`
-	Id                   types.String `tfsdk:"id"`
-	CloudProvider        types.String `tfsdk:"cloud_provider"`
-	BackupStats          types.Object `tfsdk:"backup_stats"`
-	OrganizationId       types.String `tfsdk:"organization_id"`
-	ScheduleInfo         types.Object `tfsdk:"schedule_info"`
-	Restore              types.Object `tfsdk:"restore"`
-	ElapsedTimeInSeconds types.Int64  `tfsdk:"elapsed_time_in_seconds"`
+	// RestoreTimes represents the number of times we have requested a restore.
+	// It represents the incremental count each time we request a restore.
+	RestoreTimes types.Number `tfsdk:"restore_times"`
+
+	// Method represents the mechanism of the backup.
+	// Enum: "incremental" "full"
+	// Incremental backups include the data that has changed since the last scheduled backup.
+	// Full backup includes all bucket data from the time the backup was created.
+	Method types.String `tfsdk:"method"`
+
+	// Date represents the time at which backup was created.
+	Date types.String `tfsdk:"date"`
+
+	// BucketName represents the name of the bucket to which the backup belongs to.
+	BucketName types.String `tfsdk:"bucket_name"`
+
+	// CycleId is the cycleId to the which the backup belongs to.
+	CycleId types.String `tfsdk:"cycle_id"`
+
+	// BucketId is the ID of the bucket to which the backup belongs to.
+	BucketId types.String `tfsdk:"bucket_id"`
+
+	// RestoreBefore represents the time at which backup will expire.
+	RestoreBefore types.String `tfsdk:"restore_before"`
+
+	// Status represents the status of the backup.
+	// Enum: "pending" "ready" "failed"
+	Status types.String `tfsdk:"status"`
+
+	// Source represents the way a backup job was initiated.
+	// Enum: "manual" "scheduled"
+	// Manual represents a manually triggered backup job or on-demand.
+	// Scheduled represents a backup job created from a schedule.
+	Source types.String `tfsdk:"source"`
+
+	// ClusterId is the clusterId of the capella tenant.
+	ClusterId types.String `tfsdk:"cluster_id"`
+
+	// ProjectId is the projectId of the capella tenant.
+	ProjectId types.String `tfsdk:"project_id"`
+
+	// Id is a GUID4 identifier of the backup.
+	Id types.String `tfsdk:"id"`
+
+	// Provider is the cloud provider where the cluster is hosted.
+	CloudProvider types.String `tfsdk:"cloud_provider"`
+
+	// OrganizationId is the organizationId of the capella tenant.
+	OrganizationId types.String `tfsdk:"organization_id"`
+
+	// BackupStats represents various backup level data that couchbase provides.
+	BackupStats types.Object `tfsdk:"backup_stats"`
+
+	// ScheduleInfo represents the schedule information of the backup.
+	ScheduleInfo types.Object `tfsdk:"schedule_info"`
+
+	// Restore represents information about how to restore the backup.
+	Restore types.Object `tfsdk:"restore"`
+
+	// ElapsedTimeInSeconds represents the amount of seconds that have elapsed between the creation and completion of the backup.
+	ElapsedTimeInSeconds types.Int64 `tfsdk:"elapsed_time_in_seconds"`
 }
 
 // BackupData defines attributes for a single Backup when fetched from the V4 Capella Public API.
 type BackupData struct {
-	Method               types.String `tfsdk:"method"`
-	RestoreBefore        types.String `tfsdk:"restore_before"`
-	ProjectId            types.String `tfsdk:"project_id"`
-	ClusterId            types.String `tfsdk:"cluster_id"`
-	Id                   types.String `tfsdk:"id"`
-	Date                 types.String `tfsdk:"date"`
-	OrganizationId       types.String `tfsdk:"organization_id"`
-	Status               types.String `tfsdk:"status"`
-	CycleId              types.String `tfsdk:"cycle_id"`
-	BucketName           types.String `tfsdk:"bucket_name"`
-	BucketId             types.String `tfsdk:"bucket_id"`
-	Source               types.String `tfsdk:"source"`
-	CloudProvider        types.String `tfsdk:"cloud_provider"`
-	BackupStats          types.Object `tfsdk:"backup_stats"`
-	ScheduleInfo         types.Object `tfsdk:"schedule_info"`
-	ElapsedTimeInSeconds types.Int64  `tfsdk:"elapsed_time_in_seconds"`
+	// Method represents the mechanism of the backup.
+	// Enum: "incremental" "full"
+	// Incremental backups include the data that has changed since the last scheduled backup.
+	// Full backup includes all bucket data from the time the backup was created.
+	Method types.String `tfsdk:"method"`
+
+	// RestoreBefore represents the time at which backup will expire.
+	RestoreBefore types.String `tfsdk:"restore_before"`
+
+	// ProjectId is the projectId of the capella tenant.
+	ProjectId types.String `tfsdk:"project_id"`
+
+	// ClusterId is the clusterId of the capella tenant.
+	ClusterId types.String `tfsdk:"cluster_id"`
+
+	// Id is a GUID4 identifier of the backup.
+	Id types.String `tfsdk:"id"`
+
+	// Date represents the time at which backup was created.
+	Date types.String `tfsdk:"date"`
+
+	// OrganizationId is the organizationId of the capella tenant.
+	OrganizationId types.String `tfsdk:"organization_id"`
+
+	// Status represents the status of the backup.
+	// Enum: "pending" "ready" "failed"
+	Status types.String `tfsdk:"status"`
+
+	// CycleId is the cycleId to the which the backup belongs to.
+	CycleId types.String `tfsdk:"cycle_id"`
+
+	// BucketName represents the name of the bucket to which the backup belongs to.
+	BucketName types.String `tfsdk:"bucket_name"`
+
+	// BucketId is the ID of the bucket to which the backup belongs to.
+	BucketId types.String `tfsdk:"bucket_id"`
+
+	// Source represents the way a backup job was initiated.
+	// Enum: "manual" "scheduled"
+	// Manual represents a manually triggered backup job or on-demand.
+	// Scheduled represents a backup job created from a schedule.
+	Source types.String `tfsdk:"source"`
+
+	// Provider is the cloud provider where the cluster is hosted.
+	CloudProvider types.String `tfsdk:"cloud_provider"`
+
+	// BackupStats represents various backup level data that couchbase provides.
+	BackupStats types.Object `tfsdk:"backup_stats"`
+
+	// ScheduleInfo represents the schedule information of the backup.
+	ScheduleInfo types.Object `tfsdk:"schedule_info"`
+
+	// ElapsedTimeInSeconds represents the amount of seconds that have elapsed between the creation and completion of the backup.
+	ElapsedTimeInSeconds types.Int64 `tfsdk:"elapsed_time_in_seconds"`
 }
 
 // BackupStats has the backup level stats provided by Couchbase.
@@ -82,27 +163,65 @@ type BackupStats struct {
 
 // ScheduleInfo provides schedule information of the backup.
 type ScheduleInfo struct {
+	// BackupType represents whether the backup is a Weekly or Daily backup.
 	BackupType types.String `tfsdk:"backup_type"`
+
+	// BackupTime is the timestamp indicating the backup created time.
 	BackupTime types.String `tfsdk:"backup_time"`
-	Retention  types.String `tfsdk:"retention"`
-	Increment  types.Int64  `tfsdk:"increment"`
+
+	// Retention represents retention time in days.
+	Retention types.String `tfsdk:"retention"`
+
+	// Increment represents interval in hours for incremental backup.
+	Increment types.Int64 `tfsdk:"increment"`
 }
 
 // Restore provides information about how to restore the backup.
 type Restore struct {
-	MapData               types.String   `tfsdk:"map_data"`
-	SourceClusterId       types.String   `tfsdk:"source_cluster_id"`
-	FilterKeys            types.String   `tfsdk:"filter_keys"`
-	FilterValues          types.String   `tfsdk:"filter_values"`
-	IncludeData           types.String   `tfsdk:"include_data"`
-	ExcludeData           types.String   `tfsdk:"exclude_data"`
-	TargetClusterId       types.String   `tfsdk:"target_cluster_id"`
-	ReplaceTTL            types.String   `tfsdk:"replace_ttl"`
-	ReplaceTTLWith        types.String   `tfsdk:"replace_ttl_with"`
-	Status                types.String   `tfsdk:"status"`
-	Services              []types.String `tfsdk:"services"`
-	ForceUpdates          types.Bool     `tfsdk:"force_updates"`
-	AutoRemoveCollections types.Bool     `tfsdk:"auto_remove_collections"`
+	// MapData is specified when you want to restore source data into a different location.
+	MapData types.String `tfsdk:"map_data"`
+
+	// SourceClusterId represents the Id of the source cluster the restore is based on.
+	SourceClusterId types.String `tfsdk:"source_cluster_id"`
+
+	// FilterKeys represents a regular expression. It is used to selectively
+	// restore data, allowing only the restoration of data where the key
+	// matches a specific regular expression.
+	FilterKeys types.String `tfsdk:"filter_keys"`
+
+	// FilterValues represents a regular expression. It is used to selectively
+	// restore data, allowing restoration only when the value matches a
+	// specific regular expression.
+	FilterValues types.String `tfsdk:"filter_values"`
+
+	// IncludeData when specified restores only the data specified here
+	IncludeData types.String `tfsdk:"include_data"`
+
+	// ExcludeData when specified, skips restoring the data specified here.
+	ExcludeData types.String `tfsdk:"exclude_data"`
+
+	// TargetClusterId represents the Id of the target cluster to restore to.
+	TargetClusterId types.String `tfsdk:"target_cluster_id"`
+
+	// ReplaceTTL sets a new expiration (time-to-live) value for the specified keys.
+	ReplaceTTL types.String `tfsdk:"replace_ttl"`
+
+	// ReplaceTTLWith updates the expiration for the keys.
+	ReplaceTTLWith types.String `tfsdk:"replace_ttl_with"`
+
+	// Status represents the status of restore.
+	Status types.String `tfsdk:"status"`
+
+	// Services represents the array of strings (Services) like data, query.
+	Services []types.String `tfsdk:"services"`
+
+	// ForceUpdates when marked true forces data in the Couchbase cluster to
+	// be overwritten even if the data in the cluster is newer.
+	ForceUpdates types.Bool `tfsdk:"force_updates"`
+
+	// AutoRemoveCollections when marked true automatically delete scopes/collections
+	// which are known to be deleted in the backup.
+	AutoRemoveCollections types.Bool `tfsdk:"auto_remove_collections"`
 }
 
 func (r Restore) AttributeTypes() map[string]attr.Type {

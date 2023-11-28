@@ -69,20 +69,21 @@ type Resource struct {
 // Organization Roles: https://docs.couchbase.com/cloud/organizations/organization-user-roles.html
 // Project Roles: https://docs.couchbase.com/cloud/projects/project-roles.html
 type GetUserResponse struct {
-	Name                *string            `json:"name"`
-	TimeZone            string             `json:"timeZone"`
-	Email               string             `json:"email"`
-	Status              string             `json:"status"`
-	LastLogin           string             `json:"lastLogin"`
-	Region              string             `json:"region"`
-	ExpiresAt           string             `json:"expiresAt"`
-	Audit               CouchbaseAuditData `json:"audit"`
-	OrganizationRoles   []string           `json:"organizationRoles"`
-	Resources           []Resource         `json:"resources"`
-	OrganizationId      uuid.UUID          `json:"organizationId"`
-	Id                  uuid.UUID          `json:"id"`
-	Inactive            bool               `json:"inactive"`
-	EnableNotifications bool               `json:"enableNotifications"`
+	Name              *string            `json:"name"`
+	TimeZone          string             `json:"timeZone"`
+	Email             string             `json:"email"`
+	Status            string             `json:"status"`
+	LastLogin         string             `json:"lastLogin"`
+	Region            string             `json:"region"`
+	ExpiresAt         string             `json:"expiresAt"`
+	Audit             CouchbaseAuditData `json:"audit"`
+	OrganizationRoles []string           `json:"organizationRoles"`
+	Resources         []Resource         `json:"resources"`
+	OrganizationId    uuid.UUID          `json:"organizationId"`
+	Id                uuid.UUID          `json:"id"`
+	// Inactive depicts whether the user has accepted the invite for the organization.
+	Inactive            bool `json:"inactive"`
+	EnableNotifications bool `json:"enableNotifications"`
 }
 
 type Op string
@@ -93,7 +94,19 @@ const (
 )
 
 type PatchEntry struct {
+	// Value represents the value to be amended by the patch. It may take an array
+	// of OrganizationRoles (strings), an Array of ProjectRoles (strings) or a Resource (object)
 	Value interface{} `json:"value,omitempty"`
-	Op    string      `json:"op"`
-	Path  string      `json:"path"`
+
+	// Op is the type of operation
+	//
+	// Enum: "add" "remove"
+	Op string `json:"op"`
+
+	// Path is the path of the resource that needs to be updated
+	//
+	// Organization Roles: /organizationRoles
+	// Resources: /resources/{resourceId}
+	// Resource Roles: /resources/{resourceId}/roles
+	Path string `json:"path"`
 }
