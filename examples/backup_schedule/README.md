@@ -15,7 +15,7 @@ In this example, we are going to do the following.
 3. IMPORT: Import a backup schedule that exists in Capella but not in the terraform state file.
 4. DELETE: Delete the newly created backup schedule from Capella.
 
-If you check the `terraform.template.tfvars` file - Make sure you copy the file to `terraform.tfvars` and update the values of the variables as per the correct organization access.
+If you wish to use the `terraform.template.tfvars` file - Make sure you copy the file to `terraform.tfvars` and update the values of the variables as per the correct organization access.
 
 ## CREATE & READ
 ### View the plan for the resources that Terraform will create
