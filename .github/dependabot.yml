@@ -5,16 +5,5 @@ updates:
     schedule:
       interval: weekly
       day: wednesday
-    commit-message:
-      prefix: "deps"
-    reviewers:
-      - "couchbasecloud/couchbase-capella-terraform-provider-team"
-  - package-ecosystem: github-actions
-    directory: "/"
-    schedule:
-      interval: weekly
-      day: wednesday
-    commit-message:
-      prefix: "deps"
     reviewers:
       - "couchbasecloud/couchbase-capella-terraform-provider-team"

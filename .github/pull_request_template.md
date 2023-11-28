@@ -5,6 +5,10 @@ ONLY MERGE INTO MAIN IF CHANGES ARE TESTED, VERIFIED AND QUALITY CHECKED THOROUG
 Merging to main == merging to PRODUCTION.
 -->
 
+## Jira
+
+* AV-XXXXX
+
 ## Description
 
 Please include a summary of the fix/feature/change, including any relevant motivation and context.
@@ -36,8 +40,6 @@ Please include a summary of the fix/feature/change, including any relevant motiv
 
 ## Required Checklist:
 
-- [ ] I have signed the [Couchbase CLA](https://review.couchbase.org/static/individual_agreement.html)
-- [ ] I have read the [contribution guidelines](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/master/CONTRIBUTING.md)
 - [ ] I have checked that this change does not generate any credentials and that **they are NOT accidentally logged anywhere**.
 - [ ] I have added tests that prove my fix is effective or that my feature works per HashiCorp requirements
 - [ ] I have added any necessary documentation (if required)
