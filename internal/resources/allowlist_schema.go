@@ -19,7 +19,7 @@ func AllowlistsSchema() schema.Schema {
 			"project_id":      stringAttribute(required, requiresReplace),
 			"cluster_id":      stringAttribute(required, requiresReplace),
 			"cidr":            stringAttribute(required, requiresReplace),
-			"comment":         stringAttribute(optional, requiresReplace),
+			"comment":         stringAttribute(optional, requiresReplace, computed),
 			"expires_at":      stringAttribute(optional, requiresReplace),
 			"audit":           computedAuditAttribute(),
 		},
