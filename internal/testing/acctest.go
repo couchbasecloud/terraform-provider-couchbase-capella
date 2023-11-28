@@ -14,6 +14,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 var (
@@ -88,4 +90,11 @@ func GenerateRandomResourceName() string {
 // (exclusive).
 func randIntRange(min int, max int) int {
 	return rand.Intn(max-min) + min
+}
+
+func TestAccWait(duration time.Duration) resource.TestCheckFunc {
+	return func(state *terraform.State) error {
+		time.Sleep(duration)
+		return nil
+	}
 }
