@@ -83,10 +83,8 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 	var organizationId = plan.OrganizationId.ValueString()
 
 	createUserRequest := api.CreateUserRequest{
-		//Name:              plan.Name.ValueStringPointer(),
 		Email:             plan.Email.ValueString(),
 		OrganizationRoles: providerschema.ConvertRoles(plan.OrganizationRoles),
-		//Resources:         providerschema.ConvertResources(plan.Resources),
 	}
 
 	// check for optional fields
