@@ -12,11 +12,11 @@ import (
 func TestClusterSchemaValidate(t *testing.T) {
 	type test struct {
 		expectedErr            error
-		input                  Cluster
 		name                   string
 		expectedProjectId      string
 		expectedOrganizationId string
 		expectedClusterId      string
+		input                  Cluster
 	}
 
 	tests := []test{

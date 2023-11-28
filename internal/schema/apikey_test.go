@@ -12,10 +12,10 @@ import (
 func TestApiKeySchemaValidate(t *testing.T) {
 	type test struct {
 		expectedErr            error
-		input                  ApiKey
 		name                   string
 		expectedOrganizationId string
 		expectedApiKeyId       string
+		input                  ApiKey
 	}
 
 	tests := []test{

@@ -12,10 +12,10 @@ import (
 func TestUserSchemaValidate(t *testing.T) {
 	type test struct {
 		expectedErr            error
-		input                  User
 		name                   string
 		expectedUserId         string
 		expectedOrganizationId string
+		input                  User
 	}
 
 	tests := []test{

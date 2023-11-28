@@ -24,9 +24,9 @@ func Test_ConstructPatch(t *testing.T) {
 
 	type test struct {
 		name           string
+		expectedPatch  []api.PatchEntry
 		existingSchema providerschema.User
 		proposedSchema providerschema.User
-		expectedPatch  []api.PatchEntry
 	}
 
 	tests := []test{
