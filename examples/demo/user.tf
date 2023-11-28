@@ -19,13 +19,7 @@ resource "capella_user" "new_user" {
       type = "project"
       id   = capella_project.new_project.id
       roles = [
-        "projectViewer"
-      ]
-    },
-    {
-      type = "project"
-      id   = capella_project.new_project.id
-      roles = [
+        "projectViewer",
         "projectDataReaderWriter"
       ]
     }
