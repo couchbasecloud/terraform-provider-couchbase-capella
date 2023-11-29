@@ -11,7 +11,7 @@ func BackupScheduleSchema() schema.Schema {
 			"project_id":      stringAttribute(required, requiresReplace),
 			"cluster_id":      stringAttribute(required, requiresReplace),
 			"bucket_id":       stringAttribute(required, requiresReplace),
-			"type":            stringAttribute(required),
+			"type":            stringAttribute(required, requiresReplace),
 			"weekly_schedule": schema.SingleNestedAttribute{
 				Required: true,
 				Attributes: map[string]schema.Attribute{
