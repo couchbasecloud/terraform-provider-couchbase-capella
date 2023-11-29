@@ -157,14 +157,14 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 	})
 }
 
-// // TestAccClusterResourceWithOptionalFieldAWS is a Terraform acceptance test that covers the lifecycle of a cluster resource
-// // creation, retrieval, and import testing. It focuses on a cluster with both required and optional fields specified and uses
-// // an AWS cloud provider.
-// //
-// // The test configures and verifies the following aspects of the cluster resource:
-// // - Creation of the cluster with required and optional fields.
-// // - Retrieval and verification of the cluster attributes.
-// // - Import state testing for the created cluster.
+// TestAccClusterResourceWithOptionalFieldAWS is a Terraform acceptance test that covers the lifecycle of a cluster resource
+// creation, retrieval, and import testing. It focuses on a cluster with both required and optional fields specified and uses
+// an AWS cloud provider.
+//
+// The test configures and verifies the following aspects of the cluster resource:
+// - Creation of the cluster with required and optional fields.
+// - Retrieval and verification of the cluster attributes.
+// - Import state testing for the created cluster.
 func TestAccClusterResourceWithOptionalFieldAWS(t *testing.T) {
 	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
 	resourceReference := "capella_cluster." + resourceName
