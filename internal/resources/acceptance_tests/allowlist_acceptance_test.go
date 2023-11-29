@@ -20,7 +20,7 @@ func TestAccAllowListTestCases(t *testing.T) {
 	resourceReference := "capella_cluster." + resourceName
 	projectResourceName := "terraform_project"
 	projectResourceReference := "capella_project." + projectResourceName
-	cidr := "10.0.2.0/23"
+	cidr := "10.250.250.0/23"
 
 	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
@@ -70,7 +70,7 @@ func TestAccAllowListTestCases(t *testing.T) {
 
 			//Add SameIP (this ip is same as the one added with required fields teststep and the config of that test step is retained)
 			{
-				Config:      testAccAddIPSameIP(testCfg, "add_allowlist_sameIP", "10.1.4.1/32"),
+				Config:      testAccAddIPSameIP(testCfg, "add_allowlist_sameIP", "10.1.1.1/32"),
 				ExpectError: regexp.MustCompile("CIDR provided already exists for the cluster"),
 			},
 			//Delete expired IP
@@ -93,7 +93,7 @@ func TestAccAllowedIPDeleteIP(t *testing.T) {
 	clusterResourceReference := "capella_cluster." + clusterName
 	projectResourceName := "terraform_project"
 	projectResourceReference := "capella_project." + projectResourceName
-	cidr := "10.3.2.0/23"
+	cidr := "10.250.250.0/23"
 
 	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
@@ -172,7 +172,7 @@ resource "capella_cluster" "%[2]s" {
   organization_id = var.organization_id
   project_id      = %[4]s.id
   name            = "Terraform Acceptance Test Cluster"
-  description     = "My first test cluster for multiple services"
+  description     = "terraform acceptance test cluster"
   couchbase_server = {
     version = "7.1"
   }
@@ -288,20 +288,6 @@ resource "capella_allowlist" "%[2]s_1" {
   comment		  = "terraform allow list acceptance test"
   expires_at      = "%[4]s"
 }
-
-output "%[2]s_2"{
-  value = capella_allowlist.%[2]s_2
-}
-
-resource "capella_allowlist" "%[2]s_2" {
-  organization_id = var.organization_id
-  project_id      = capella_project.terraform_project.id
-  cluster_id      = capella_cluster.new_cluster.id
-  cidr            = "%[3]s"
-  comment		  = "terraform allow list acceptance test"
-  expires_at      = "%[4]s"
-}
-
 `, cfg, resourceName, cidr, expiryTime)
 }
 
@@ -376,7 +362,7 @@ func testAccDeleteAllowIP(clusterResourceReference, projectResourceReference, al
 		host := os.Getenv("TF_VAR_host")
 		orgid := os.Getenv("TF_VAR_organization_id")
 		authToken := os.Getenv("TF_VAR_auth_token")
-		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s//allowedcidrs/%s", host, orgid, projectState["id"], clusterState["id"], allowListState["id"])
+		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs/%s", host, orgid, projectState["id"], clusterState["id"], allowListState["id"])
 		cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
 		_, err = data.Client.Execute(
 			cfg,
