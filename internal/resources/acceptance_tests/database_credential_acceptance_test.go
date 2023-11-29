@@ -2,375 +2,191 @@ package acceptance_tests
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 	"regexp"
 	"terraform-provider-capella/internal/api"
-	"terraform-provider-capella/internal/errors"
-	providerschema "terraform-provider-capella/internal/schema"
 	acctest "terraform-provider-capella/internal/testing"
-	cfg "terraform-provider-capella/internal/testing"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-// TestAccDatabaseCredentialResourceWithOnlyReqFields is an acceptance test which tests
-// creating and deleting a database credential which has only the
-// required fields populated.
-func TestAccDatabaseCredentialWithOnlyReqFields(t *testing.T) {
-	resourceName := "acc_database_credential" + acctest.GenerateRandomResourceName()
-	resourceReference := "capella_database_credential." + resourceName
-	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
+func TestAccDatabaseCredentialTestCases(t *testing.T) {
+	resourceName := "new_cluster"
+	resourceReference := "capella_cluster." + resourceName
+	projectResourceName := "terraform_project"
 	projectResourceReference := "capella_project." + projectResourceName
+	cidr := "10.250.250.0/23"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			// Create and Read
-			{
-				PreConfig: func() {
-					time.Sleep(1 * time.Second)
-				},
-				Config: generateDatabaseCredentialConfig(
-					cfg.Cfg,
-					resourceName,
-					projectResourceName,
-					projectResourceReference,
-					map[string]string{
-						"name":            "var.database_credential_name",
-						"organization_id": "var.organization_id",
-						"cluster_id":      "var.cluster_id",
-						"access":          "access",
-					}),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_database_credential_name"),
-					resource.TestCheckResourceAttr(resourceReference, "password", "password"),
-					resource.TestCheckResourceAttr(resourceReference, "access", "access"),
-				),
-			},
-			// NOTE: No delete case is provided - this occurs automatically
-		},
-	})
-}
-
-// TestAccDatabaseCredentialResourceWithOptionalField is an acceptance test which tests
-// creating, reading, updating and deleting a database credential which both the
-// required and optional fields populated. Importing a database credential created externally is
-// also tested.
-func TestAccDatabaseCredentialResourceWithOptionalField(t *testing.T) {
-	resourceName := "acc_database_credential" + acctest.GenerateRandomResourceName()
-	resourceReference := "capella_database_credential." + resourceName
-	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
-	projectResourceReference := "capella_project." + projectResourceName
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			// Create and Read
-			{
-				PreConfig: func() {
-					time.Sleep(1 * time.Second)
-				},
-				Config: generateDatabaseCredentialConfig(
-					cfg.Cfg,
-					resourceName,
-					projectResourceName,
-					projectResourceReference,
-					map[string]string{
-						"name":            "var.database_credential_name",
-						"organization_id": "var.organization_id",
-						"cluster_id":      "var.cluster_id",
-						"password":        "password",
-						"access":          "access",
-					}),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_database_credential_name"),
-					resource.TestCheckResourceAttr(resourceReference, "password", "password"),
-					resource.TestCheckResourceAttr(resourceReference, "access", "access"),
-				),
-			},
-			// Import state
-			{
-				ResourceName:      resourceReference,
-				ImportStateIdFunc: generateDatabaseCredentialImportId,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			// Update and Read
-			{
-				Config: generateDatabaseCredentialConfig(
-					cfg.Cfg,
-					resourceName,
-					projectResourceName,
-					projectResourceReference,
-					map[string]string{
-						"name":            "var.database_credential_name",
-						"organization_id": "var.organization_id",
-						"cluster_id":      "var.cluster_id",
-						"password":        "updated_password",
-						"access":          "access",
-					}),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_database_credential_name"),
-					resource.TestCheckResourceAttr(resourceReference, "password", "updated_password"),
-					resource.TestCheckResourceAttr(resourceReference, "access", "access"),
-				),
-			},
-			// NOTE: No delete case is provided - this occurs automatically
-		},
-	})
-}
-
-// TestAccDatabaseCredentialInvalidScenario is a Terraform acceptance test that that simulates the
-// scenario where a database credential is created with all possible fields, but with an invalid name.
-func TestAccDatabaseCredentialInvalidScenario(t *testing.T) {
-	resourceName := "acc_database_credential" + acctest.GenerateRandomResourceName()
-	resourceReference := "capella_database_credential." + resourceName
-	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
-	projectResourceReference := "capella_project." + projectResourceName
-
-	resource.ParallelTest(t, resource.TestCase{
+	testCfg := acctest.Cfg
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
-			// Create and Read testing
+			// Creating cluster to check the database credential configs
 			{
-				PreConfig: func() {
-					time.Sleep(1 * time.Second)
-				},
-				Config: generateDatabaseCredentialConfig(
-					cfg.Cfg,
-					resourceName,
-					projectResourceName,
-					projectResourceReference,
-					map[string]string{
-						"name":            "()<>,[]={}",
-						"organization_id": "var.organization_id",
-						"cluster_id":      "var.cluster_id",
-						"password":        "password",
-						"access":          "access",
-					}),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_database_credential_name"),
-					resource.TestCheckResourceAttr(resourceReference, "password", "password"),
-					resource.TestCheckResourceAttr(resourceReference, "access", "access"),
+				Config: testAccCreateCluster(&testCfg, resourceName, projectResourceName, projectResourceReference, cidr),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccExistsClusterResource(resourceReference),
 				),
+			},
+			// Database Credential with required fields
+			{
+				Config: testAccAddDatabaseCredWithReqFields(&testCfg),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("capella_allowlist.add_allowlist_req", "id"),
+					resource.TestCheckResourceAttr("capella_database_credential.add_database_credential_req", "name", "acc_test_database_credential_name"),
+					resource.TestCheckResourceAttr("capella_database_credential.add_database_credential_req", "access", "acc_test_access"),
+				),
+			},
+			// Database Credential with optional fields
+			{
+				Config: testAccAddDatabaseCredWithOptionalFields(&testCfg),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("capella_allowlist.add_allowlist_req", "id"),
+					resource.TestCheckResourceAttr("capella_database_credential.add_database_credential_opt", "name", "acc_test_database_credential_name"),
+					resource.TestCheckResourceAttr("capella_database_credential.add_database_credential_opt", "password", "acc_test_password"),
+					resource.TestCheckResourceAttr("capella_database_credential.add_database_credential_opt", "access", "acc_test_access"),
+				),
+			},
+			// Invalid name
+			{
+				Config:      testAccAddDatabaseCredWithInvalidName(&testCfg),
 				ExpectError: regexp.MustCompile("Could not create database credential, unexpected error: The request was malformed or invalid."),
 			},
 		},
 	})
 }
 
-// TestAccDatabaseCredentialResourceNotFound is a Terraform acceptance test that that simulates the
-// scenario where a database credential is created from Terraform, but it is deleted by a REST API
-// call and the deletion is successful.
-//
-// This test ensures that Terraform can handle the scenario where the original database credential
-// no longer exists and can create a database credential with the specified configuration when updating.
-func TestAccDatabaseCredentialResourceNotFound(t *testing.T) {
-	resourceName := "acc_database_credential" + acctest.GenerateRandomResourceName()
-	resourceReference := "capella_database_credential." + resourceName
-	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
+// Attempt to delete the database credential when it has been already deleted through api
+func TestAccAllowedDatabaseCredentialNotFound(t *testing.T) {
+	clusterName := "new_cluster"
+	clusterResourceReference := "capella_cluster." + clusterName
+	projectResourceName := "terraform_project"
 	projectResourceReference := "capella_project." + projectResourceName
+	cidr := "10.250.250.0/23"
 
+	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
-			// Create and Read testing
 			{
-				PreConfig: func() {
-					time.Sleep(1 * time.Second)
-				},
-				Config: generateDatabaseCredentialConfig(
-					cfg.Cfg,
-					resourceName,
-					projectResourceName,
-					projectResourceReference,
-					map[string]string{
-						"name":            "var.database_credential_name",
-						"organization_id": "var.organization_id",
-						"cluster_id":      "var.cluster_id",
-						"password":        "password",
-						"access":          "access",
-					}),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_database_credential_name"),
-					resource.TestCheckResourceAttr(resourceReference, "password", "password"),
-					resource.TestCheckResourceAttr(resourceReference, "access", "access"),
-
-					//Delete the database credential and wait until the deletion is successful.
-					testAccDatabaseCredentialResource(resourceReference),
+				Config: testAccCreateCluster(&testCfg, clusterName, projectResourceName, projectResourceReference, cidr),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccExistsClusterResource(clusterResourceReference),
 				),
-
+			},
+			{
+				Config:             testAccAddIpWithOptionalFields(testCfg, "databaseCredential_delete", "10.2.3.4/32"),
+				Check:              resource.ComposeAggregateTestCheckFunc(),
 				ExpectNonEmptyPlan: true,
 				RefreshState:       false,
 			},
-			// Attempt to update after credential has been deleted. This should
-			// result in a new database credential being created.
-			{
-				Config: generateDatabaseCredentialConfig(
-					cfg.Cfg,
-					resourceName,
-					projectResourceName,
-					projectResourceReference,
-					map[string]string{
-						"name":            "var.database_credential_name",
-						"organization_id": "var.organization_id",
-						"cluster_id":      "var.cluster_id",
-						"password":        "updated_password",
-						"access":          "access",
-					}),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_database_credential_name"),
-					resource.TestCheckResourceAttr(resourceReference, "password", "updated_password"),
-					resource.TestCheckResourceAttr(resourceReference, "access", "access"),
-				),
-			},
-			// NOTE: No delete case is provided - this occurs automatically
 		},
 	})
 }
 
-// This function takes a resource reference string and returns a resource.TestCheckFunc. The returned function, when used
-// in Terraform acceptance tests, ensures the successful deletion of the specified cluster resource. It retrieves
-// the resource by name from the Terraform state, initiates the deletion, checks the status of the deletion, and
-// confirms that the resource no longer exists. If the resource is successfully deleted, it returns nil; otherwise,
-// it returns an error.
-func testAccDatabaseCredentialResource(resourceReference string) resource.TestCheckFunc {
+func testAccAddDatabaseCredWithReqFields(cfg *string) string {
+	*cfg = fmt.Sprintf(`
+	%[1]s
+	
+	output "add_database_credential_req"{
+		value = capella_database_credential.add_database_credential_req
+	}
+	
+	resource "capella_database_credential" "add_database_credential_req" {
+		name            = "acc_test_database_credential_name"
+		organization_id = var.organization_id
+		project_id      = capella_project.terraform_project.id
+		cluster_id      = capella_cluster.new_cluster.id
+		access          + "acc_test_access"
+	}
+	
+	`, *cfg)
+	return *cfg
+}
+
+func testAccAddDatabaseCredWithOptionalFields(cfg *string) string {
+	*cfg = fmt.Sprintf(`
+	%[1]s
+	
+	output "add_database_credential_req"{
+		value = capella_database_credential.add_database_credential_req
+	}
+	
+	resource "capella_database_credential" "add_database_credential_req" {
+		name            = "acc_test_database_credential_name"
+		organization_id = var.organization_id
+		project_id      = capella_project.terraform_project.id
+		cluster_id      = capella_cluster.new_cluster.id
+		password        = "acc_test_password"
+		access          + "acc_test_access"
+	}
+	
+	`, *cfg)
+	return *cfg
+}
+
+func testAccAddDatabaseCredWithInvalidName(cfg *string) string {
+	*cfg = fmt.Sprintf(`
+	%[1]s
+	
+	output "add_database_credential_req"{
+		value = capella_database_credential.add_database_credential_req
+	}
+	
+	resource "capella_database_credential" "add_database_credential_req" {
+		name            = "acc_test_database_credential_invalid_name_="
+		organization_id = var.organization_id
+		project_id      = capella_project.terraform_project.id
+		cluster_id      = capella_cluster.new_cluster.id
+		password        = "acc_test_password"
+		access          + "acc_test_access"
+	}
+	
+	`, *cfg)
+	return *cfg
+}
+
+func testAccDeleteDatabaseCredential(clusterResourceReference, projectResourceReference, databaseCredentialResourceReference string) resource.TestCheckFunc {
+	log.Println("deleting the database credential")
 	return func(s *terraform.State) error {
-		// retrieve the resource by name from state
-		var rawState map[string]string
+		var clusterState, projectState, databaseCredentialState map[string]string
 		for _, m := range s.Modules {
 			if len(m.Resources) > 0 {
-				if v, ok := m.Resources[resourceReference]; ok {
-					rawState = v.Primary.Attributes
+				if v, ok := m.Resources[clusterResourceReference]; ok {
+					clusterState = v.Primary.Attributes
+				}
+				if v, ok := m.Resources[projectResourceReference]; ok {
+					projectState = v.Primary.Attributes
+				}
+				if v, ok := m.Resources[databaseCredentialResourceReference]; ok {
+					databaseCredentialState = v.Primary.Attributes
 				}
 			}
 		}
-
 		data, err := acctest.TestClient()
 		if err != nil {
 			return err
 		}
-
-		err = deleteDatabaseCredentialFromServer(data, rawState["organization_id"], rawState["project_id"], rawState["cluster_id"], rawState["id"])
+		host := os.Getenv("TF_VAR_host")
+		orgid := os.Getenv("TF_VAR_organization_id")
+		authToken := os.Getenv("TF_VAR_auth_token")
+		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", host, orgid, projectState["id"], clusterState["id"], databaseCredentialState["id"])
+		cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
+		_, err = data.Client.Execute(
+			cfg,
+			nil,
+			authToken,
+			nil,
+		)
 		if err != nil {
 			return err
 		}
-
-		fmt.Printf("delete initiated")
-		_, err = checkDatabaseCredentialExists(data, rawState["organization_id"], rawState["project_id"], rawState["cluster_id"], rawState["id"])
-		if err != nil {
-			return err
-		}
-
-		fmt.Printf("successfully deleted")
 		return nil
 	}
-}
-
-// deleteDatabaseCredentialFromServer deletes a database credential from server
-func deleteDatabaseCredentialFromServer(data *providerschema.Data, organizationId, projectId, clusterId, userId string) error {
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", data.HostURL, organizationId, projectId, clusterId, userId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err := data.Client.Execute(
-		cfg,
-		nil,
-		data.Token,
-		nil,
-	)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// deleteDatabaseCredentialFromServer checks the existence of a database credential
-func checkDatabaseCredentialExists(data *providerschema.Data, organizationId, projectId, clusterId, userId string) (bool, error) {
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", data.HostURL, organizationId, projectId, clusterId, userId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-
-	_, err := data.Client.Execute(
-		cfg,
-		nil,
-		data.Token,
-		nil,
-	)
-
-	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if resourceNotFound {
-			return false, fmt.Errorf("%s: %v", errors.ErrExecutingRequest, errString)
-		}
-		return true, fmt.Errorf("%s: %v", errors.ErrExecutingRequest, errString)
-	}
-	return true, nil
-}
-
-// generateDatabaseCredentialConfig is used to build configs with varying fields and
-// values to be stored within the fields. It constructs a config with the following format.
-// Any omitted fields will not be included.
-//
-//	return fmt.Sprintf(`
-//	%[1]s
-//
-//	resource "capella_database_credential" "new_database_credential" {
-//		name            = <database_credential_name>
-//		organization_id = <organization_id>
-//		project_id      = <project_id>
-//		cluster_id      = <cluster_id>
-//		password        = <password>
-//		access          = <access>
-//	  }
-//	`, cfg)
-func generateDatabaseCredentialConfig(cfg, resourceName, projectResourceName, projectResourceReference string, configFields map[string]string) string {
-	databaseCredentialCfg := fmt.Sprintf(`
-	%[1]s
-
-	resource "capella_project" "%[3]s" {
-		organization_id = var.organization_id
-		name            = "acc_test_project_name"
-		description     = "description"
-	}
-
-	resource "capella_database_credential" "%[2]s" {
-	`, cfg, resourceName, projectResourceName)
-
-	// add ids
-	databaseCredentialCfg += fmt.Sprintf("	%s= %s.id\n ", "project_id", projectResourceReference)
-
-	// add specific fields
-	for k, v := range configFields {
-		databaseCredentialCfg += fmt.Sprintf("	%s= %s\n ", k, v)
-	}
-
-	// close the config
-	databaseCredentialCfg += "}"
-	return databaseCredentialCfg
-}
-
-func generateDatabaseCredentialImportId(state *terraform.State) (string, error) {
-	resourceName := "capella_database_credential.acc_test"
-	var rawState map[string]string
-	for _, m := range state.Modules {
-		if len(m.Resources) > 0 {
-			if v, ok := m.Resources[resourceName]; ok {
-				rawState = v.Primary.Attributes
-			}
-		}
-	}
-	fmt.Printf("raw state %s", rawState)
-
-	return fmt.Sprintf(
-			"id=%s,organization_id=%s,project_id=%s,cluster_id=%s",
-			rawState["id"],
-			rawState["organization_id"],
-			rawState["project_id"],
-			rawState["cluster_id"]),
-		nil
 }
