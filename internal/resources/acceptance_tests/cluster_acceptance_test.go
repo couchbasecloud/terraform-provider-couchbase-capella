@@ -1575,7 +1575,16 @@ func testAccDeleteCluster(clusterResourceReference, projectResourceReference str
 		if err != nil {
 			return err
 		}
+
+		//get the cluster state
+		err = checkClusterStatus(data, context.Background(), orgid, projectState["id"], clusterState["id"])
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if !resourceNotFound {
+			return fmt.Errorf(errString)
+		}
+		fmt.Printf("successfully deleted")
 		return nil
+
 	}
 }
 

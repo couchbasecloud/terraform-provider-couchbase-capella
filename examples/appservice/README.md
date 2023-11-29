@@ -495,7 +495,7 @@ The third ID is the project ID i.e. the ID of the project to which the cluster b
 The fourth ID is the organization ID i.e. the ID of the organization to which the project belongs.
 
 ## UPDATE
-### Let us edit the terraform.tfvars file to change the cluster configuration settings.
+### Let us edit the terraform.tfvars file to change the app service configuration settings.
 
 Command: `terraform apply -var-file=terraform.template.tfvars`
 
