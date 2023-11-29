@@ -22,7 +22,7 @@ import (
 // To learn more, see https://docs.couchbase.com/cloud/organizations/organization-user-roles.html
 type CreateUserRequest struct {
 	// Name represents the name of the user.
-	Name string `json:"name"`
+	Name *string `json:"name"`
 
 	// Email represents the email of the user.
 	Email string `json:"email"`

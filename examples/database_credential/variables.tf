@@ -15,21 +15,28 @@ variable "project_id" {
   description = "Capella Project ID"
 }
 
-variable "database_credential_name" {
-  description = "Database Credentials Name"
-}
-
 variable "cluster_id" {
   description = "Capella Cluster ID"
 }
 
-variable "password" {
-  description = "password for database credential"
-  sensitive   = true
+variable "database_credential" {
+  type = object({
+    database_credential_name = string
+    password = optional(string)
+  })
 }
 
 variable "access" {
   type = list(object({
     privileges = list(string)
+    resources = optional(object({
+      buckets = list(object({
+        name = string
+        scopes = optional(list(object({
+          name = string
+          collections = optional(list(string))
+        })))
+      }))
+    }))
   }))
 }

@@ -6,10 +6,9 @@ import (
 	"net/http"
 	"os"
 	"terraform-provider-capella/internal/api"
-	"testing"
-
 	"terraform-provider-capella/internal/provider"
 	acctest "terraform-provider-capella/internal/testing"
+	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
