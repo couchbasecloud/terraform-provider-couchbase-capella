@@ -98,6 +98,7 @@ func (r *Project) Create(ctx context.Context, req resource.CreateRequest, resp *
 			"Error creating project",
 			"Could not create project, unexpected error: "+api.ParseError(err),
 		)
+		return
 	}
 
 	projectResponse := api.GetProjectResponse{}

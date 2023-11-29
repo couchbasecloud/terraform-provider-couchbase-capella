@@ -149,4 +149,8 @@ var (
 	// ErrClusterCreationTimeoutAfterInitiation is returned when cluster creation
 	// is timeout after initiation.
 	ErrClusterCreationTimeoutAfterInitiation = errors.New("cluster creation status transition timed out after initiation")
+
+	ErrNotFinalState = errors.New("not final state")
+
+	ErrGatewayTimeout = errors.New("gateway timeout")
 )
