@@ -42,4 +42,5 @@ variable "restore" {
     replace_ttl_with = optional(string)
     restore_times = number
   })
+  default = null
 }
