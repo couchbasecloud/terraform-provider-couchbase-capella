@@ -39,7 +39,8 @@ func TestAccDatabaseCredentialTestCases(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("capella_allowlist.add_allowlist_req", "id"),
 					resource.TestCheckResourceAttr("capella_database_credential.add_database_credential_req", "name", "acc_test_database_credential_name"),
-					resource.TestCheckResourceAttr("capella_database_credential.add_database_credential_req", "access", "acc_test_access"),
+					resource.TestCheckResourceAttr("capella_database_credential.add_database_credential_req", "access.priviledges.0", "data_writer"),
+					resource.TestCheckResourceAttr("capella_database_credential.add_database_credential_req", "access.resources.buckets.0.name", "new_terraform_bucket"),
 				),
 			},
 			// Database Credential with optional fields
@@ -49,7 +50,8 @@ func TestAccDatabaseCredentialTestCases(t *testing.T) {
 					resource.TestCheckResourceAttrSet("capella_allowlist.add_allowlist_req", "id"),
 					resource.TestCheckResourceAttr("capella_database_credential.add_database_credential_opt", "name", "acc_test_database_credential_name"),
 					resource.TestCheckResourceAttr("capella_database_credential.add_database_credential_opt", "password", "acc_test_password"),
-					resource.TestCheckResourceAttr("capella_database_credential.add_database_credential_opt", "access", "acc_test_access"),
+					resource.TestCheckResourceAttr("capella_database_credential.add_database_credential_req", "access.priviledges.0", "data_writer"),
+					resource.TestCheckResourceAttr("capella_database_credential.add_database_credential_req", "access.resources.buckets.0.name", "new_terraform_bucket"),
 				),
 			},
 			// Invalid name
@@ -103,7 +105,25 @@ func testAccAddDatabaseCredWithReqFields(cfg *string) string {
 		organization_id = var.organization_id
 		project_id      = capella_project.terraform_project.id
 		cluster_id      = capella_cluster.new_cluster.id
-		access          + "acc_test_access"
+		access = [
+			{
+				privileges = ["data_writer"]
+				resources = {
+				buckets = [{
+					name = "new_terraform_bucket"
+					scopes = [
+					{
+						name        = "_default"
+						collections = ["_default"]
+					}
+					]
+				}]
+				}
+			},
+			{
+				privileges = ["data_reader"]
+			}
+		]
 	}
 	
 	`, *cfg)
@@ -124,7 +144,25 @@ func testAccAddDatabaseCredWithOptionalFields(cfg *string) string {
 		project_id      = capella_project.terraform_project.id
 		cluster_id      = capella_cluster.new_cluster.id
 		password        = "acc_test_password"
-		access          + "acc_test_access"
+		access = [
+			{
+				privileges = ["data_writer"]
+				resources = {
+				buckets = [{
+					name = "new_terraform_bucket"
+					scopes = [
+					{
+						name        = "_default"
+						collections = ["_default"]
+					}
+					]
+				}]
+				}
+			},
+			{
+				privileges = ["data_reader"]
+			}
+		]
 	}
 	
 	`, *cfg)
@@ -145,7 +183,26 @@ func testAccAddDatabaseCredWithInvalidName(cfg *string) string {
 		project_id      = capella_project.terraform_project.id
 		cluster_id      = capella_cluster.new_cluster.id
 		password        = "acc_test_password"
-		access          + "acc_test_access"
+		access          = "acc_test_access"
+		access = [
+			{
+				privileges = ["data_writer"]
+				resources = {
+				buckets = [{
+					name = "new_terraform_bucket"
+					scopes = [
+					{
+						name        = "_default"
+						collections = ["_default"]
+					}
+					]
+				}]
+				}
+			},
+			{
+				privileges = ["data_reader"]
+			}
+		]
 	}
 	
 	`, *cfg)
