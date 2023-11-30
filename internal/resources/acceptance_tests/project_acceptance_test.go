@@ -43,7 +43,7 @@ func TestAccProjectResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccProjectResourceConfig(acctest.Cfg, rnd),
+				Config: testAccProjectResourceConfig(acctest.ProjectCfg, rnd),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rnd),
 					resource.TestCheckResourceAttr(resourceName, "description", "description"),
@@ -59,14 +59,14 @@ func TestAccProjectResource(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: testAccProjectResourceConfigUpdate(acctest.Cfg, rnd),
+				Config: testAccProjectResourceConfigUpdate(acctest.ProjectCfg, rnd),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", "acc_test_project_name_update"),
 					resource.TestCheckResourceAttr(resourceName, "description", "description_update"),
 				),
 			},
 			{
-				Config: testAccProjectResourceConfigUpdateWithIfMatch(acctest.Cfg, rnd),
+				Config: testAccProjectResourceConfigUpdateWithIfMatch(acctest.ProjectCfg, rnd),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", "acc_test_project_name_update_with_if_match"),
 					resource.TestCheckResourceAttr(resourceName, "description", "description_update_with_match"),
@@ -89,7 +89,7 @@ func TestAccCreateProjectWithReqFields(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccProjectResourceConfigRequired(acctest.Cfg, rnd),
+				Config: testAccProjectResourceConfigRequired(acctest.ProjectCfg, rnd),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", "acc_test_project"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -108,7 +108,7 @@ func TestAccCreateProjectOptFields(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectResourceConfig(acctest.Cfg, rnd),
+				Config: testAccProjectResourceConfig(acctest.ProjectCfg, rnd),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", "acc_test_project"),
 					resource.TestCheckResourceAttr(resourceName, "description", "terraform acceptance test project"),
@@ -123,14 +123,14 @@ func TestAccCreateProjectOptFields(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: testAccProjectResourceConfigUpdate(acctest.Cfg, rnd),
+				Config: testAccProjectResourceConfigUpdate(acctest.ProjectCfg, rnd),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", "acc_test_project_update"),
 					resource.TestCheckResourceAttr(resourceName, "description", "description update"),
 				),
 			},
 			{
-				Config: testAccProjectResourceConfigUpdateWithIfMatch(acctest.Cfg, rnd),
+				Config: testAccProjectResourceConfigUpdateWithIfMatch(acctest.ProjectCfg, rnd),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", "acc_test_project_name_update_with_if_match"),
 					resource.TestCheckResourceAttr(resourceName, "description", "description_update_with_match"),
@@ -246,7 +246,7 @@ func TestAccValidProjcetUpdate(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectResourceConfig(acctest.Cfg, rnd),
+				Config: testAccProjectResourceConfig(acctest.ProjectCfg, rnd),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", "acc_test_project"),
 					resource.TestCheckResourceAttr(resourceName, "description", "terraform acceptance test project"),
@@ -255,7 +255,7 @@ func TestAccValidProjcetUpdate(t *testing.T) {
 			},
 			//update the project name and description
 			{
-				Config: testAccProjectResourceConfigUpdate(acctest.Cfg, rnd),
+				Config: testAccProjectResourceConfigUpdate(acctest.ProjectCfg, rnd),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", "acc_test_project_update"),
 					resource.TestCheckResourceAttr(resourceName, "description", "description update"),
@@ -275,11 +275,11 @@ func TestAccInvalidProjectResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Invalid field in create testing
 			{
-				Config:      testAccProjectResourceConfigInvalid(acctest.Cfg, rnd),
+				Config:      testAccProjectResourceConfigInvalid(acctest.ProjectCfg, rnd),
 				ExpectError: regexp.MustCompile("An argument named \"unwantedfiled\" is not expected here"),
 			},
 			{
-				Config: testAccProjectResourceConfig(acctest.Cfg, rnd),
+				Config: testAccProjectResourceConfig(acctest.ProjectCfg, rnd),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", "acc_test_project"),
 					resource.TestCheckResourceAttr(resourceName, "description", "terraform acceptance test project"),
@@ -288,7 +288,7 @@ func TestAccInvalidProjectResource(t *testing.T) {
 			},
 			//Update the organisation id
 			{
-				Config:      testAccProjectResourceConfigUpdateInvalid(acctest.Cfg, rnd),
+				Config:      testAccProjectResourceConfigUpdateInvalid(acctest.ProjectCfg, rnd),
 				ExpectError: regexp.MustCompile("The server cannot or will not\nprocess the request due to something that is perceived to be a client\nerror"),
 			},
 		},
@@ -303,7 +303,7 @@ func TestAccDeleteProjectBeforeDestroy(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectResourceConfig(acctest.Cfg, rnd),
+				Config: testAccProjectResourceConfig(acctest.ProjectCfg, rnd),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", "acc_test_project"),
 					resource.TestCheckResourceAttr(resourceName, "description", "terraform acceptance test project"),
