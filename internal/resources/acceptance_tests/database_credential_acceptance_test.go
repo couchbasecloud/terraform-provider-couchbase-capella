@@ -98,6 +98,7 @@ func testAccAddDatabaseCredWithReqFields(cfg *string) string {
 	
 	output "add_database_credential_req"{
 		value = capella_database_credential.add_database_credential_req
+		sensitive = true
 	}
 	
 	resource "capella_database_credential" "add_database_credential_req" {
@@ -136,6 +137,7 @@ func testAccAddDatabaseCredWithOptionalFields(cfg *string) string {
 	
 	output "add_database_credential_req"{
 		value = capella_database_credential.add_database_credential_req
+		sensitive = true
 	}
 	
 	resource "capella_database_credential" "add_database_credential_req" {
@@ -175,6 +177,7 @@ func testAccAddDatabaseCredWithInvalidName(cfg *string) string {
 	
 	output "add_database_credential_req"{
 		value = capella_database_credential.add_database_credential_req
+		sensitive = true
 	}
 	
 	resource "capella_database_credential" "add_database_credential_req" {
