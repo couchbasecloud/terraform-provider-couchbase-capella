@@ -5,6 +5,7 @@ DESTINATION=./bin/$(BINARY_NAME)
 
 GOFLAGS=-mod=vendor
 GOOPTS="-p 2"
+GOFMT_FILES?=$$(find . -name '*.go')
 
 GITTAG=$(shell git describe --always --tags)
 VERSION=$(GITTAG:v%=%)
@@ -33,8 +34,17 @@ build: fmt
 .PHONY: fmt
 fmt:
 	@echo "==> Fixing source code with gofmt..."
-	gofmt -s -w ./main.go
-	gofmt -s -w ./$(PKG_NAME)
+	gofmt -s -w $(GOFMT_FILES)
+
+.PHONY: vet
+vet:
+	@echo "==> Running go vet ."
+	@go vet ./... ; if [ $$? -ne 0 ]; then \
+		echo ""; \
+		echo "Vet found suspicious constructs. Please check the reported constructs"; \
+		echo "and fix them if necessary before submitting the code for review."; \
+		exit 1; \
+	fi
 
 .PHONY: lint-fix
 lint-fix:
@@ -54,7 +64,7 @@ check: tffmt tfcheck fmt docs-lint lint-fix test testacc
 
 .PHONY: docs-lint
 docs-lint:
-	@echo "==> Checking website against linters..."
+	@echo "==> Checking docs against linters..."
 	@misspell -error -source=text docs/
 
 .PHONY: docs
