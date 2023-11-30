@@ -112,6 +112,7 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 			"Error reading Capella AllowList",
 			"Could not read Capella AllowList "+allowListResponse.Id.String()+": "+api.ParseError(err),
 		)
+		return
 	}
 
 	// Set state to fully populated data
