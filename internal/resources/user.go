@@ -83,10 +83,17 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 	var organizationId = plan.OrganizationId.ValueString()
 
 	createUserRequest := api.CreateUserRequest{
-		Name:              plan.Name.ValueString(),
 		Email:             plan.Email.ValueString(),
 		OrganizationRoles: providerschema.ConvertRoles(plan.OrganizationRoles),
-		Resources:         providerschema.ConvertResources(plan.Resources),
+	}
+
+	// check for optional fields
+	if !plan.Name.IsNull() && !plan.Name.IsUnknown() {
+		createUserRequest.Name = plan.Name.ValueStringPointer()
+	}
+
+	if len(plan.Resources) != 0 {
+		createUserRequest.Resources = providerschema.ConvertResources(plan.Resources)
 	}
 
 	// Execute request
