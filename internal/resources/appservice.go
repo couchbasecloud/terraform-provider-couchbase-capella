@@ -183,6 +183,10 @@ func (a *AppService) Read(ctx context.Context, req resource.ReadRequest, resp *r
 		return
 	}
 
+	if !state.IfMatch.IsUnknown() && !state.IfMatch.IsNull() {
+		refreshedState.IfMatch = state.IfMatch
+	}
+
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &refreshedState)
 	resp.Diagnostics.Append(diags...)
