@@ -412,6 +412,7 @@ func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 			"Error updating bucket",
 			"Could not update Capella bucket with ID "+bucketId+": "+api.ParseError(err),
 		)
+		return
 	}
 
 	// Set state to fully populated data
