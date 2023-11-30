@@ -22,7 +22,7 @@ import (
 // CLI command executed to create a provider server to which the CLI can
 // reattach.
 var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-	"capella": providerserver.NewProtocol6WithError(provider.New()()),
+	"couchbase-capella": providerserver.NewProtocol6WithError(provider.New()()),
 }
 
 // TestAccProjectResource is a Terraform acceptance test that covers the lifecycle of a Capella project resource.
