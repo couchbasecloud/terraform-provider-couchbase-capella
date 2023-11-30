@@ -23,10 +23,7 @@ func TestAppServiceResource(t *testing.T) {
 					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "description", "description"),
 					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "compute.cpu", "2"),
 					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "compute.ram", "4"),
-
-					//resource.TestCheckResourceAttr("capella_app_service.new_app_service", "description", "description"),
-
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "etag", "Version: 8"),
+					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "nodes", "2"),
 				),
 			},
 			//// ImportState testing
@@ -40,16 +37,21 @@ func TestAppServiceResource(t *testing.T) {
 			{
 				Config: testAccAppServiceResourceConfigUpdate(cfg.Cfg),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "name", "test-terraform-app-service-update"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "description", "description-update"),
+					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "name", "test-terraform-app-service"),
+					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "description", "description"),
+					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "compute.cpu", "2"),
+					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "compute.ram", "4"),
+					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "nodes", "3"),
 				),
 			},
 			{
 				Config: testAccAppServiceResourceConfigUpdateWithIfMatch(cfg.Cfg),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "name", "acc_test_project_name_update_with_if_match"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "description", "description_update_with_match"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "etag", "Version: 3"),
+					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "name", "test-terraform-app-service"),
+					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "description", "description"),
+					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "compute.cpu", "4"),
+					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "compute.ram", "8"),
+					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "nodes", "2"),
 					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "if_match", "2"),
 				),
 			},
@@ -84,8 +86,13 @@ resource "capella_app_service" "new_app_service" {
   organization_id = var.organization_id
   project_id      = var.project_id
   cluster_id      = var.cluster_id
-  name            = "test-terraform-app-service-update"
-  description     = "description-update"
+  name            = "test-terraform-app-service"
+  description     = "description"
+  compute = {
+    cpu = 2
+    ram = 4
+  }
+  nodes = 3
 }
 `, cfg)
 }
@@ -98,9 +105,14 @@ resource "capella_app_service" "new_app_service" {
   organization_id = var.organization_id
   project_id      = var.project_id
   cluster_id      = var.cluster_id
-  name            = "test-terraform-app-service-update-with-if-match"
-  description     = "description-update-with-if-match"
+  name            = "test-terraform-app-service"
+  description     = "description"
   if_match        =  2
+  compute = {
+    cpu = 4
+    ram = 8
+  }
+  nodes = 2
 }
 `, cfg)
 }
