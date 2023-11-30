@@ -369,7 +369,7 @@ func (r *DatabaseCredential) ImportState(ctx context.Context, req resource.Impor
 
 // retrieveDatabaseCredential fetches the database credential by making a GET API call to the Capella V4 Public API.
 // This usually helps retrieve the state of a newly created database credential that was created from Terraform.
-func (r *DatabaseCredential) retrieveDatabaseCredential(ctx context.Context, organizationId, projectId, clusterId, dbId string) (*providerschema.OneDatabaseCredential, error) {
+func (r *DatabaseCredential) retrieveDatabaseCredential(_ context.Context, organizationId, projectId, clusterId, dbId string) (*providerschema.OneDatabaseCredential, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", r.HostURL, organizationId, projectId, clusterId, dbId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := r.Client.Execute(
@@ -464,9 +464,7 @@ func mapAccess(plan providerschema.DatabaseCredential) []providerschema.Access {
 
 	for i, acc := range plan.Access {
 		access[i] = providerschema.Access{Privileges: make([]types.String, len(acc.Privileges))}
-		for j, permission := range acc.Privileges {
-			access[i].Privileges[j] = permission
-		}
+		copy(access[i].Privileges, acc.Privileges)
 		if acc.Resources != nil {
 			if acc.Resources.Buckets != nil {
 				access[i].Resources = &providerschema.Resources{Buckets: make([]providerschema.BucketResource, len(acc.Resources.Buckets))}
@@ -478,9 +476,7 @@ func mapAccess(plan providerschema.DatabaseCredential) []providerschema.Access {
 							access[i].Resources.Buckets[k].Scopes[s].Name = scope.Name
 							if scope.Collections != nil {
 								access[i].Resources.Buckets[k].Scopes[s].Collections = make([]types.String, len(scope.Collections))
-								for c, coll := range scope.Collections {
-									access[i].Resources.Buckets[k].Scopes[s].Collections[c] = coll
-								}
+								copy(access[i].Resources.Buckets[k].Scopes[s].Collections, scope.Collections)
 							}
 						}
 					}

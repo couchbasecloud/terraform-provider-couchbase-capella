@@ -113,7 +113,8 @@ func (d *Backups) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 			return
 		}
 
-		for _, backup := range backupsResp.Data {
+		for i := range backupsResp.Data {
+			backup := backupsResp.Data[i]
 			backupStats := providerschema.NewBackupStats(*backup.BackupStats)
 			backupStatsObj, diags := types.ObjectValueFrom(ctx, backupStats.AttributeTypes(), backupStats)
 			if diags.HasError() {

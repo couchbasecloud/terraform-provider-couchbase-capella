@@ -481,7 +481,7 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 }
 
 // getUser is used to retrieve an existing user.
-func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api.GetUserResponse, error) {
+func (r *User) getUser(_ context.Context, organizationId, userId string) (*api.GetUserResponse, error) {
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/users/%s",
 		r.HostURL,

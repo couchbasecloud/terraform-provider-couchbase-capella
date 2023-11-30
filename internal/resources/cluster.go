@@ -466,7 +466,6 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 		"Error deleting cluster",
 		fmt.Sprintf("Could not delete cluster id %s, as current Cluster state: %s", state.Id.String(), cluster.CurrentState),
 	)
-	return
 }
 
 // ImportState imports a remote cluster that is not created by Terraform.

@@ -36,7 +36,7 @@ const (
 // CLI command executed to create a provider server to which the CLI can
 // reattach.
 var TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-	"capella": providerserver.NewProtocol6WithError(provider.New()()),
+	"couchbase-capella": providerserver.NewProtocol6WithError(provider.New()()),
 }
 
 // TestAccPreCheck You can add code here to run prior to any test case execution, for

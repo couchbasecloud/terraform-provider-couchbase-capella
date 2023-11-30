@@ -85,7 +85,8 @@ func (d *Clusters) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 		return
 	}
 
-	for _, cluster := range response {
+	for i := range response {
+		cluster := response[i]
 		audit := providerschema.NewCouchbaseAuditData(cluster.Audit)
 
 		auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)

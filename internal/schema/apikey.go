@@ -107,7 +107,7 @@ func MorphAllowedCidrs(allowedCIDRs []string) (basetypes.ListValue, error) {
 func MorphApiKeyOrganizationRoles(organizationRoles []string) []basetypes.StringValue {
 	var newOrganizationRoles []types.String
 	for _, organizationRole := range organizationRoles {
-		newOrganizationRoles = append(newOrganizationRoles, types.StringValue(string(organizationRole)))
+		newOrganizationRoles = append(newOrganizationRoles, types.StringValue(organizationRole))
 	}
 	return newOrganizationRoles
 }
@@ -126,7 +126,7 @@ func MorphApiKeyResources(resources api.Resources) []ApiKeyResourcesItems {
 		}
 		var newRoles []types.String
 		for _, role := range resource.Roles {
-			newRoles = append(newRoles, types.StringValue(string(role)))
+			newRoles = append(newRoles, types.StringValue(role))
 		}
 		newResourceItem.Roles = newRoles
 		newApiKeyResourcesItems = append(newApiKeyResourcesItems, newResourceItem)

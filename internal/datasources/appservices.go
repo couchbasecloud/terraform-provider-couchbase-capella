@@ -74,7 +74,8 @@ func (d *AppServices) Read(ctx context.Context, req datasource.ReadRequest, resp
 		return
 	}
 
-	for _, appService := range response {
+	for i := range response {
+		appService := response[i]
 		audit := providerschema.NewCouchbaseAuditData(appService.Audit)
 
 		auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)

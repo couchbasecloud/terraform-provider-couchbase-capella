@@ -378,7 +378,6 @@ func (a *AppService) Delete(ctx context.Context, req resource.DeleteRequest, res
 		"Error deleting app service",
 		fmt.Sprintf("Could not delete app service id %s, as current app service state: %s", state.Id.String(), appService.CurrentState),
 	)
-	return
 }
 
 // Configure adds the provider configured client to the app service resource.

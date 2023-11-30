@@ -98,7 +98,8 @@ func (d *ApiKeys) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 		return
 	}
 
-	for _, apiKey := range response {
+	for i := range response {
+		apiKey := response[i]
 		audit := providerschema.NewCouchbaseAuditData(apiKey.Audit)
 
 		auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)

@@ -383,8 +383,5 @@ func (b *BackupSchedule) retrieveBackupSchedule(ctx context.Context, organizatio
 }
 
 func validateDayOfWeekIsSameInPlanAndState(planDayOfWeek, stateDayOfWeek string) bool {
-	if strings.ToLower(planDayOfWeek) == strings.ToLower(stateDayOfWeek) {
-		return true
-	}
-	return false
+	return strings.EqualFold(planDayOfWeek, stateDayOfWeek)
 }

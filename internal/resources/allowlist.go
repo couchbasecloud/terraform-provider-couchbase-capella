@@ -177,7 +177,7 @@ func (r *AllowList) Read(ctx context.Context, req resource.ReadRequest, resp *re
 }
 
 // Update updates the allowlist.
-func (r *AllowList) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *AllowList) Update(_ context.Context, _ resource.UpdateRequest, _ *resource.UpdateResponse) {
 	// Couchbase Capella's v4 does not support a PUT endpoint for allowlists.
 	// Allowlists can only be created, read and deleted.
 	// http://cbc-cp-api.s3-website-us-east-1.amazonaws.com/#tag/allowedCIDRs(Cluster)
@@ -256,7 +256,7 @@ func (r *AllowList) ImportState(ctx context.Context, req resource.ImportStateReq
 }
 
 // getAllowList is used to retrieve an existing allow list.
-func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId, clusterId, allowListId string) (*api.GetAllowListResponse, error) {
+func (r *AllowList) getAllowList(_ context.Context, organizationId, projectId, clusterId, allowListId string) (*api.GetAllowListResponse, error) {
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs/%s",
 		r.HostURL,

@@ -307,7 +307,7 @@ func (c *Bucket) ImportState(ctx context.Context, req resource.ImportStateReques
 }
 
 // retrieveBucket retrieves bucket information for a specified organization, project, cluster and bucket ID.
-func (c *Bucket) retrieveBucket(ctx context.Context, organizationId, projectId, clusterId, bucketId string) (*providerschema.OneBucket, error) {
+func (c *Bucket) retrieveBucket(_ context.Context, organizationId, projectId, clusterId, bucketId string) (*providerschema.OneBucket, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", c.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := c.Client.Execute(
@@ -342,10 +342,10 @@ func (c *Bucket) retrieveBucket(ctx context.Context, organizationId, projectId, 
 		TimeToLiveInSeconds:      types.Int64Value(bucketResp.TimeToLiveInSeconds),
 		EvictionPolicy:           types.StringValue(bucketResp.EvictionPolicy),
 		Stats: &providerschema.Stats{
-			ItemCount:       types.Int64Value(int64(bucketResp.Stats.ItemCount)),
-			OpsPerSecond:    types.Int64Value(int64(bucketResp.Stats.OpsPerSecond)),
-			DiskUsedInMiB:   types.Int64Value(int64(bucketResp.Stats.DiskUsedInMib)),
-			MemoryUsedInMiB: types.Int64Value(int64(bucketResp.Stats.MemoryUsedInMib)),
+			ItemCount:       types.Int64Value(bucketResp.Stats.ItemCount),
+			OpsPerSecond:    types.Int64Value(bucketResp.Stats.OpsPerSecond),
+			DiskUsedInMiB:   types.Int64Value(bucketResp.Stats.DiskUsedInMib),
+			MemoryUsedInMiB: types.Int64Value(bucketResp.Stats.MemoryUsedInMib),
 		},
 	}
 
