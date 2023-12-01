@@ -97,5 +97,3 @@ test-acceptance:
 	TF_LOG=DEBUG  TF_ACC=1 go test -timeout=300m -v ./...
 
 
-
-
