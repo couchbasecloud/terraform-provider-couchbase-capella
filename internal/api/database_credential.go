@@ -92,6 +92,20 @@ type GetDatabaseCredentialResponse struct {
 	// Name is Username for the database credential.
 	Name string `json:"name"`
 
+	// Password is the password associated with the database credential.
+	Password string `json:"password"`
+
+	// OrganizationId is the ID of the organization to which the Capella cluster belongs.
+	// The database credential will be created for the cluster.
+	OrganizationId string `json:"organizationId"`
+
+	// ProjectId is the ID of the project to which the Capella cluster belongs.
+	// The database credential will be created for the cluster.
+	ProjectId string `json:"projectId"`
+
+	// ClusterId is the ID of the cluster for which the database credential needs to be created.
+	ClusterId string `json:"clusterId"`
+
 	// Access describes the access information of the database credential.
 	Access []Access `json:"access"`
 }
