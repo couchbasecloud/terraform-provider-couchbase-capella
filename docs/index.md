@@ -16,7 +16,7 @@ provider "couchbase-capella" {
 
 ## Configure Capella Access
 
-For authentication with the Couchbase Capella provider a [V4 REST API Key](https://docs.couchbase.com/cloud/management-api-guide/management-api-start.html#understand-management-api-keys) must be generated.
+For authentication with the Couchbase Capella provider a [V4 REST API Key](https://docs.couchbase.com/cloud/management-api-guide/management-api-start.html#understand-management-api-keys) must be [generated](https://docs.couchbase.com/cloud/management-api-guide/management-api-start.html#generate-management-api-keys).
 An [Organization Owner](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html) role should be sufficient to get you going --- although you may wish to review this level of access, and use a different key in production.
 This API key is then used for authenticating the Terraform Provider against Couchbase Capella.
 
@@ -27,7 +27,7 @@ This API key is then used for authenticating the Terraform Provider against Couc
 Environment variables can be set by terraform by creating and adding terraform.template.tfvars
 ```terraform
 auth_token = "<v4-api-key-secret>"
-organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+organization_id = "<replace with organization id>"
 host = "https://cloudapi.cloud.couchbase.com"
 ```
 
@@ -55,7 +55,7 @@ resource "capella_project" "example" {
 }
 ```
 
-Alternatively, if you would like to set environment variables locally on your system (as opposed to using terraform.template.tfvars), preface them with `TF_VAR_`. 
+Alternatively, if you would like to set environment variables locally on your system (as opposed to using terraform.template.tfvars file), preface them with `TF_VAR_`. 
 Terraform will then apply them your .terraformrc file on running `terraform apply`. 
 For example: 
 ```bash
@@ -131,8 +131,6 @@ Ordinarily, terraform will downloaded the requested providers on running the com
 ```bash
 $ terraform init
 ```
-If you are working with a local install of `Terraform-Provider-Capella` provider, this step is not needed and considered optional. 
-However if you plan to use any other providers at the same time it may need to be run. 
 
 **1\. Review the Terraform plan**
 
