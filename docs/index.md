@@ -21,6 +21,9 @@ An [Organization Owner](https://docs.couchbase.com/cloud/organizations/organizat
 This API key is then used for authenticating the Terraform Provider against Couchbase Capella.
 
 
+[!IMPORTANT]  
+Although in examples below, the API key secret is specified as a environmental variable and hardcoded in a config file, it is recommend that the API secret credentials be stored in a remote secrets manager such as Hashicorp Vault or AWS Secrets Manager that the Terraform Provider can then retrieve and use for authentication.
+
 
 ### Terraform Environment Variables
 
@@ -63,29 +66,6 @@ export TF_VAR_auth_token=<v4_api_secret_key>
 export TF_VAR_organization_id=<organization_id>
 export TF_VAR_host= "https://cloudapi.cloud.couchbase.com"
 ```
-
-
-
-
-
-
-
-
-
-
-
-???????????  AWS Secrets manager????
-
-
-
-
-
-
-
-
-
-
-
 
 
 ## Create and manage resources using terraform
@@ -189,44 +169,33 @@ $ terraform import RESOURCE_TYPE.NAME RESOURCE_IDENTIFIER
 
 
 
-
-
-
-
 ## Version Compatibility
 
-Terraform Version Requirement
-Terraform >= 1.5.2
-Go >= 1.20
-For couchbase capella provider version 1.0.0 and above.
+For Couchbase Capella provider version 1.0.0 and above:
+
+* Terraform Version Requirement: Terraform >= 1.5.2
+* Go >= 1.20
+
 
 
 ## Supported OS and Architecture
 
 As per HashiCorp's recommendations, we fully support the following operating system / architecture combinations:
-Darwin / AMD64
-Darwin / ARMv8
-Linux / AMD64
-Linux / ARMv8 (sometimes referred to as AArch64 or ARM64)
-Linux / ARMv6
-Windows / AMD64
-We ship binaries but do not prioritize fixes for the following operating system / architecture combinations:
-Linux / 386
-Windows / 386
-FreeBSD / 386
-FreeBSD / AMD64
+
+* Darwin / AMD64
+* Darwin / ARMv8
+* Linux / AMD64
+* Linux / ARMv8 (sometimes referred to as AArch64 or ARM64)
+* Linux / ARMv6
+* Windows / AMD64
+
 
 ## More Information
 
--------------Link to a blog such as ??????????????????????????????
-Report bugs: https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues
-----------------Request Features: to add a link where customers can provide request for features.. Like via our support zendesk or so?
-Support covered by couchbase capella support plans, Developer and above: link to our support plans docs
-^^^^^^^^^^^^^^^^^^^^^^^
-
-Issue can be opened on: https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues
-
-Github repo: https://github.com/couchbasecloud/terraform-provider-couchbase-capella
+* [Report bugs](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues)
+* [Open an issue on Git Hub](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues)
+* [Support Plan information](https://docs.couchbase.com/cloud/support/support.html}
+* [Github repo](https://github.com/couchbasecloud/terraform-provider-couchbase-capella)
 
 
 
@@ -236,66 +205,52 @@ Github repo: https://github.com/couchbasecloud/terraform-provider-couchbase-cape
 To get started, see the [Provider Example Configs](https://github.com/couchbasecloud/terraform-provider-capella/tree/main/examples):
 
 * [Retrieve organization details in Capella](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/organization):
-+
-Couchbase Capella uses an ordered hierarchy to help you keep all of your data organized and securely accessible. 
+
+    Couchbase Capella uses an ordered hierarchy to help you keep all of your data organized and securely accessible. 
 The entity at the top of the hierarchy is called an organization. 
 Everything you do in Capella  --  whether it’s creating a cluster or managing billing  --  happens within the scope of an [organization](https://docs.couchbase.com/cloud/organizations/organizations.html).
 
 * [Create and manage users](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/user):
-+
-Users have roles within an [organization](https://docs.couchbase.com/cloud/organizations/manage-organization-users.html), and within [individual projects](https://docs.couchbase.com/cloud/projects/manage-project-users.html).
+
+    Users have roles within an [organization](https://docs.couchbase.com/cloud/organizations/manage-organization-users.html), and within [individual projects](https://docs.couchbase.com/cloud/projects/manage-project-users.html).
 
 * [Create and manage API Keys](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/apikey):
-+
-Every API key is associated with an allowed IP Address list, and one or more organization roles, which determine the [privileges that the API key has](https://docs.couchbase.com/cloud/management-api-guide/management-api-start.html#understand-management-api-keys) within the organization.
+
+    Every API key is associated with an allowed IP Address list, and one or more organization roles, which determine the [privileges that the API key has](https://docs.couchbase.com/cloud/management-api-guide/management-api-start.html#understand-management-api-keys) within the organization.
 
 * [Create & manage projects](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/project):
-+
-Within organizations, [projects](https://docs.couchbase.com/cloud/projects/projects.html) are used to organize and manage groups of Couchbase databases. 
+
+    Within organizations, [projects](https://docs.couchbase.com/cloud/projects/projects.html) are used to organize and manage groups of Couchbase databases. 
 An organization can contain any number of projects, and a project can contain any number of databases.
 
 * [Create & manage Capella clusters (databases)](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/cluster):
-+
-The Cluster is the indivdual instance of a [Couchbase Database](https://docs.couchbase.com/cloud/clusters/databases.html), spanning one or more nodes on your Cloud Service Provider, and containing the Data Service, and any other services which you choose to deploy.
+
+    The Cluster is the indivdual instance of a [Couchbase Database](https://docs.couchbase.com/cloud/clusters/databases.html), spanning one or more nodes on your Cloud Service Provider, and containing the Data Service, and any other services which you choose to deploy.
 Within this sits the heirarchy of bucket, scope, collection, and document.
 
 * [Retrieve cluster certificate details](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/certificate):
-+
-Retrive the certificate details for a Capella cluster;
+
+    Retrive the certificate details for a Capella cluster;
 list the certificate details based on the cluster ID and authentication access token.
 
 * [Manage database credential](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/database_credential):
-+
-Database credentials are separate from organization roles and project roles.
+
+    Database credentials are separate from organization roles and project roles.
 A [database credential](https://docs.couchbase.com/cloud/clusters/manage-database-users.html#about-database-credentials) is specific to a database and consists of a database access name, secret, and a set of bucket and scope access levels.
 It’s required for applications to remotely authenticate on a database and access bucket data.
 
 * [Create & manage allowlists](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/allowlist):
-+
-More than one [allowlist](https://docs.couchbase.com/cloud/security/security.html#access-management) gives extra security across testing, development, and deployment infrastructure, and different projects.
+
+    More than one [allowlist](https://docs.couchbase.com/cloud/security/security.html#access-management) gives extra security across testing, development, and deployment infrastructure, and different projects.
 
 * [Create & manage buckets](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/bucket):
-+
-The [buckets](https://docs.couchbase.com/cloud/clusters/data-service/about-buckets-scopes-collections.html#buckets) is the top-level storage container for data in a Capella database.
 
-<!--
-* [Configure App Services]:
-+
+    The [buckets](https://docs.couchbase.com/cloud/clusters/data-service/about-buckets-scopes-collections.html#buckets) is the top-level storage container for data in a Capella database.
 
-* [Configure Bucket Backup & Restore]:
-+
+* [Configure App Services](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/registry-docs/examples/appservice)
 
-////
+    Create and manage App Services in Capella.
 
-// Above = coming soon
--->
+* [Configure Bucket Backup & Restore](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/registry-docs/examples/backup)
 
-
-<!-- Section: Resources -->
-
-
-
-<!-- Section: Data Sources -->
-
-
-
+    Create and manage Backups in Capella.
