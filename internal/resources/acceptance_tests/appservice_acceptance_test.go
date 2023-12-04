@@ -65,6 +65,14 @@ func TestAppServiceResource(t *testing.T) {
 }
 
 func TestAccAppServiceCreateWithReqFields(t *testing.T) {
+	appServiceResourceName := "app_service_req_fields"
+	appServiceResourceReference := "capella_app_service." + appServiceResourceName
+	clusterResourceName := "new_cluster"
+	clusterResourceReference := "capella_cluster." + clusterResourceName
+	testCfg := acctest.ProjectCfg
+	projectResourceName := "terraform_project"
+	projectResourceReference := "capella_project." + projectResourceName
+	cidr := "10.1.68.0/23"
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.TestAccPreCheck(t)
@@ -72,13 +80,19 @@ func TestAccAppServiceCreateWithReqFields(t *testing.T) {
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccCreateCluster(&testCfg, clusterResourceName, projectResourceName, projectResourceReference, cidr),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccExistsClusterResource(clusterResourceReference),
+				),
+			},
+			{
 				Config: testAccAppServiceResourceReqConfig(acctest.ProjectCfg),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("capella_app_service.app_service_req_fields", "name", "test-terraform-app-service"),
-					resource.TestCheckResourceAttr("capella_app_service.app_service_req_fields", "description", ""),
-					resource.TestCheckResourceAttr("capella_app_service.app_service_req_fields", "compute.cpu", "2"),
-					resource.TestCheckResourceAttr("capella_app_service.app_service_req_fields", "compute.ram", "4"),
-					resource.TestCheckResourceAttr("capella_app_service.app_service_req_fields", "nodes", "2"),
+					resource.TestCheckResourceAttr(appServiceResourceReference, "name", "test-terraform-app-service"),
+					resource.TestCheckResourceAttr(appServiceResourceReference, "description", ""),
+					resource.TestCheckResourceAttr(appServiceResourceReference, "compute.cpu", "2"),
+					resource.TestCheckResourceAttr(appServiceResourceReference, "compute.ram", "4"),
+					resource.TestCheckResourceAttr(appServiceResourceReference", "nodes", "2"),
 				),
 			},
 		},
@@ -89,6 +103,14 @@ func TestAccAppServiceCreateWithOptFields(t *testing.T) {
 	resourceName := "app_service_opt_fields"
 	//cidr, _ := acctest.GetCIDR()
 	//fmt.Println(cidr)
+	appServiceResourceName := "app_service_opt_fields"
+	appServiceResourceReference := "capella_app_service." + appServiceResourceName
+	clusterResourceName := "new_cluster"
+	clusterResourceReference := "capella_cluster." + clusterResourceName
+	testCfg := acctest.ProjectCfg
+	projectResourceName := "terraform_project"
+	projectResourceReference := "capella_project." + projectResourceName
+	cidr := "10.1.68.0/23"
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.TestAccPreCheck(t)
@@ -96,13 +118,19 @@ func TestAccAppServiceCreateWithOptFields(t *testing.T) {
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccCreateCluster(&testCfg, clusterResourceName, projectResourceName, projectResourceReference, cidr),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccExistsClusterResource(clusterResourceReference),
+				),
+			},
+			{
 				Config: testAccAppServiceResourceOptConfig(acctest.ProjectCfg, resourceName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("capella_app_service.app_service_opt_fields", "name", "app_service_opt_fields"),
-					resource.TestCheckResourceAttr("capella_app_service.app_service_opt_fields", "description", "acceptance test app service"),
-					resource.TestCheckResourceAttr("capella_app_service.app_service_opt_fields", "compute.cpu", "2"),
-					resource.TestCheckResourceAttr("capella_app_service.app_service_opt_fields", "compute.ram", "4"),
-					resource.TestCheckResourceAttr("capella_app_service.app_service_opt_fields", "nodes", "2"),
+					resource.TestCheckResourceAttr(appServiceResourceReference, "name", "app_service_opt_fields"),
+					resource.TestCheckResourceAttr(appServiceResourceReference, "description", "acceptance test app service"),
+					resource.TestCheckResourceAttr(appServiceResourceReference, "compute.cpu", "2"),
+					resource.TestCheckResourceAttr(appServiceResourceReference, "compute.ram", "4"),
+					resource.TestCheckResourceAttr(appServiceResourceReference, "nodes", "2"),
 					//resource.TestCheckResourceAttr("capella_app_service.app_service_opt_fields", "version", "3.0"),
 				),
 			},
@@ -398,102 +426,4 @@ func testAccDeleteAppService(projectResourceReference, clusterResourceReference,
 		return nil
 	}
 
-}
-
-// This function takes a resource reference string and returns a resource.TestCheckFunc. The returned function, when used
-// in Terraform acceptance tests, ensures that the specified cluster resource exists in the Terraform state. It retrieves
-// the resource by name from the Terraform state and checks its existence. If the resource exists, it returns nil; otherwise,
-// it returns an error.
-func testAccExistsClusterResource(resourceReference string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		// retrieve the resource by name from state
-
-		var rawState map[string]string
-		for _, m := range s.Modules {
-			if len(m.Resources) > 0 {
-				if v, ok := m.Resources[resourceReference]; ok {
-					rawState = v.Primary.Attributes
-				}
-			}
-		}
-		fmt.Printf("raw state %s", rawState)
-		data, err := acctest.TestClient()
-		if err != nil {
-			return err
-		}
-		_, err = retrieveClusterFromServer(data, rawState["organization_id"], rawState["project_id"], rawState["id"])
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-}
-
-func testAccCreateCluster(cfg *string, resourceName, projectResourceName, projectResourceReference, cidr string) string {
-	log.Println("Creating cluster")
-	*cfg = fmt.Sprintf(`
-%[1]s
-
-resource "capella_project" "%[3]s" {
-    organization_id = var.organization_id
-	name            = "acc_test_project_name"
-	description     = "description"
-}
-
-resource "capella_cluster" "%[2]s" {
-  organization_id = var.organization_id
-  project_id      = %[4]s.id
-  name            = "test cluster terraform"
-  description     = "terraform acceptance test cluster"
-  couchbase_server = {
-    version = "7.1"
-  }
-  configuration_type = "multiNode"
-  cloud_provider = {
-    type   = "aws"
-    region = "us-east-1"
-    cidr   = "%[5]s"
-  }
-  service_groups = [
-    {
-      node = {
-        compute = {
-          cpu = 4
-          ram = 16
-        }
-        disk = {
-          storage = 50
-          type    = "gp3"
-          iops    = 3000
-        }
-      }
-      num_of_nodes = 2
-      services     = ["index", "query"]
-    },
-    {
-      node = {
-        compute = {
-          cpu = 4
-          ram = 16
-        }
-        disk = {
-          storage = 50
-          type    = "gp3"
-          iops    = 3000
-        }
-      }
-      num_of_nodes = 3
-      services     = ["data"]
-    }
-  ]
-  availability = {
-    "type" : "multi"
-  }
-  support = {
-    plan     = "developer pro"
-    timezone = "PT"
-  }
-}
-`, *cfg, resourceName, projectResourceName, projectResourceReference, cidr)
-	return *cfg
 }
