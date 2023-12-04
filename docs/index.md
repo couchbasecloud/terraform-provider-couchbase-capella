@@ -194,7 +194,7 @@ As per HashiCorp's recommendations, we fully support the following operating sys
 
 * [Report bugs](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues)
 * [Open an issue on Git Hub](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues)
-* [Support Plan information](https://docs.couchbase.com/cloud/support/support.html}
+* [Support Plan information](https://docs.couchbase.com/cloud/support/support.html)
 * [Github repo](https://github.com/couchbasecloud/terraform-provider-couchbase-capella)
 
 
