@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"terraform-provider-capella/internal/errors"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -128,6 +129,15 @@ type Stats struct {
 	DiskUsedInMiB types.Int64 `tfsdk:"disk_used_in_mib"`
 	// MemoryUsedInMib: The amount of memory used (in MiB).
 	MemoryUsedInMiB types.Int64 `tfsdk:"memory_used_in_mib"`
+}
+
+func (s Stats) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"item_count":         types.Int64Type,
+		"ops_per_second":     types.Int64Type,
+		"disk_used_in_mib":   types.Int64Type,
+		"memory_used_in_mib": types.Int64Type,
+	}
 }
 
 // Buckets defines attributes for the LIST buckets response received from V4 Capella Public API.

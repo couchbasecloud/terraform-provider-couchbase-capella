@@ -4,16 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
-
-	"terraform-provider-capella/internal/api"
-	"terraform-provider-capella/internal/errors"
-	providerschema "terraform-provider-capella/internal/schema"
-
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"net/http"
+	"terraform-provider-capella/internal/api"
+	"terraform-provider-capella/internal/errors"
+	providerschema "terraform-provider-capella/internal/schema"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -22,6 +20,14 @@ var (
 	_ resource.ResourceWithConfigure   = &DatabaseCredential{}
 	_ resource.ResourceWithImportState = &DatabaseCredential{}
 )
+
+const errorMessageAfterDatabaseCredentialCreation = "Bucket creation is successful, but encountered an error while checking the current" +
+	" state of the bucket. Please run `terraform plan` after 1-2 minutes to know the" +
+	" current bucket state. Additionally, run `terraform apply --refresh-only` to update" +
+	" the state from remote, unexpected error: "
+
+const errorMessageWhileDatabaseCredentialCreation = "There is an error during bucket creation. Please check in Capella to see if any hanging resources" +
+	" have been created, unexpected error: "
 
 // DatabaseCredential is the database credential resource implementation.
 type DatabaseCredential struct {
@@ -55,7 +61,6 @@ func (r *DatabaseCredential) Configure(_ context.Context, req resource.Configure
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *ProviderSourceData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 
@@ -111,7 +116,8 @@ func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequ
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users", r.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-	response, err := r.Client.Execute(
+	response, err := r.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		dbCredRequest,
 		r.Token,
@@ -120,7 +126,7 @@ func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequ
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating database credential",
-			"Could not create database credential, unexpected error: "+api.ParseError(err),
+			errorMessageWhileDatabaseCredentialCreation+api.ParseError(err),
 		)
 		return
 	}
@@ -130,16 +136,22 @@ func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequ
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating database credential",
-			"Could not create database credential, unexpected error: "+err.Error(),
+			errorMessageWhileDatabaseCredentialCreation+"error during unmarshalling: "+err.Error(),
 		)
+		return
+	}
+
+	diags = resp.State.Set(ctx, initializeDataBaseCredentialWithPlanPasswordAndId(plan, dbResponse.Password, dbResponse.Id.String()))
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	refreshedState, err := r.retrieveDatabaseCredential(ctx, organizationId, projectId, clusterId, dbResponse.Id.String())
 	if err != nil {
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"Error Reading Capella Database Credentials",
-			"Could not read Capella database credential with ID "+dbResponse.Id.String()+": "+api.ParseError(err),
+			errorMessageAfterDatabaseCredentialCreation+api.ParseError(err),
 		)
 		return
 	}
@@ -261,7 +273,8 @@ func (r *DatabaseCredential) Update(ctx context.Context, req resource.UpdateRequ
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", r.HostURL, organizationId, projectId, clusterId, dbId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err = r.Client.Execute(
+	_, err = r.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		dbCredRequest,
 		r.Token,
@@ -280,13 +293,13 @@ func (r *DatabaseCredential) Update(ctx context.Context, req resource.UpdateRequ
 		)
 		return
 	}
-
 	currentState, err := r.retrieveDatabaseCredential(ctx, organizationId, projectId, clusterId, dbId)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating database credential",
 			"Could not update an existing database credential, unexpected error: "+api.ParseError(err),
 		)
+		return
 	}
 
 	// this will ensure that the state file stores the new updated password, if password is not to be updated, it will retain the older one.
@@ -335,7 +348,8 @@ func (r *DatabaseCredential) Delete(ctx context.Context, req resource.DeleteRequ
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", r.HostURL, organizationId, projectId, clusterId, dbId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err = r.Client.Execute(
+	_, err = r.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		r.Token,
@@ -372,7 +386,8 @@ func (r *DatabaseCredential) ImportState(ctx context.Context, req resource.Impor
 func (r *DatabaseCredential) retrieveDatabaseCredential(ctx context.Context, organizationId, projectId, clusterId, dbId string) (*providerschema.OneDatabaseCredential, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", r.HostURL, organizationId, projectId, clusterId, dbId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := r.Client.Execute(
+	response, err := r.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		r.Token,
@@ -490,4 +505,13 @@ func mapAccess(plan providerschema.DatabaseCredential) []providerschema.Access {
 	}
 
 	return access
+}
+
+func initializeDataBaseCredentialWithPlanPasswordAndId(plan providerschema.DatabaseCredential, password, id string) providerschema.DatabaseCredential {
+	plan.Id = types.StringValue(id)
+	if password != "" {
+		plan.Password = types.StringValue(password)
+	}
+	plan.Audit = types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
+	return plan
 }

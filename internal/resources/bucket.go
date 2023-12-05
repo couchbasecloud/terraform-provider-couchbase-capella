@@ -23,6 +23,14 @@ var (
 	_ resource.ResourceWithImportState = &Bucket{}
 )
 
+const errorMessageAfterBucketCreation = "Bucket creation is successful, but encountered an error while checking the current" +
+	" state of the bucket. Please run `terraform plan` after 1-2 minutes to know the" +
+	" current bucket state. Additionally, run `terraform apply --refresh-only` to update" +
+	" the state from remote, unexpected error: "
+
+const errorMessageWhileBucketCreation = "There is an error during bucket creation. Please check in Capella to see if any hanging resources" +
+	" have been created, unexpected error: "
+
 // Bucket is the bucket resource implementation.
 type Bucket struct {
 	*providerschema.Data
@@ -123,7 +131,8 @@ func (c *Bucket) Create(ctx context.Context, req resource.CreateRequest, resp *r
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets", c.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-	response, err := c.Client.Execute(
+	response, err := c.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		BucketRequest,
 		c.Token,
@@ -132,7 +141,7 @@ func (c *Bucket) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating bucket",
-			"Could not create bucket, unexpected error: "+api.ParseError(err),
+			errorMessageWhileBucketCreation+api.ParseError(err),
 		)
 		return
 	}
@@ -142,16 +151,22 @@ func (c *Bucket) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating bucket",
-			"Could not create bucket, error during unmarshalling:"+err.Error(),
+			errorMessageWhileBucketCreation+"error during unmarshalling: "+err.Error(),
 		)
+		return
+	}
+
+	diags = resp.State.Set(ctx, initializeBucketWithPlanAndId(plan, BucketResponse.Id))
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	refreshedState, err := c.retrieveBucket(ctx, organizationId, projectId, clusterId, BucketResponse.Id)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"Error creating bucket",
-			"Could not create bucket, unexpected error:"+api.ParseError(err),
+			errorMessageAfterBucketCreation+api.ParseError(err),
 		)
 		return
 	}
@@ -278,7 +293,8 @@ func (r *Bucket) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", r.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err := r.Client.Execute(
+	_, err := r.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		r.Token,
@@ -309,7 +325,8 @@ func (c *Bucket) ImportState(ctx context.Context, req resource.ImportStateReques
 func (c *Bucket) retrieveBucket(ctx context.Context, organizationId, projectId, clusterId, bucketId string) (*providerschema.OneBucket, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", c.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := c.Client.Execute(
+	response, err := c.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		c.Token,
@@ -386,7 +403,8 @@ func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", c.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err = c.Client.Execute(
+	_, err = c.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		bucketUpdateRequest,
 		c.Token,
@@ -412,6 +430,7 @@ func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 			"Error updating bucket",
 			"Could not update Capella bucket with ID "+bucketId+": "+api.ParseError(err),
 		)
+		return
 	}
 
 	// Set state to fully populated data
@@ -420,4 +439,16 @@ func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 	if resp.Diagnostics.HasError() {
 		return
 	}
+}
+
+func initializeBucketWithPlanAndId(plan providerschema.Bucket, id string) providerschema.Bucket {
+	plan.Id = types.StringValue(id)
+	if plan.StorageBackend.IsNull() || plan.StorageBackend.IsUnknown() {
+		plan.StorageBackend = types.StringNull()
+	}
+	if plan.EvictionPolicy.IsNull() || plan.EvictionPolicy.IsUnknown() {
+		plan.EvictionPolicy = types.StringNull()
+	}
+	plan.Stats = types.ObjectNull(providerschema.Stats{}.AttributeTypes())
+	return plan
 }

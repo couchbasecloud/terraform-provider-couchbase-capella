@@ -1,6 +1,7 @@
 package acceptance_tests
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -304,7 +305,8 @@ func testAccDeleteProject(projectResourceReference string) resource.TestCheckFun
 		authToken := os.Getenv("TF_VAR_auth_token")
 		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s", host, orgid, projectState["id"])
 		cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-		_, err = data.Client.Execute(
+		_, err = data.Client.ExecuteWithRetry(
+			context.Background(),
 			cfg,
 			nil,
 			authToken,

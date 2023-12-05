@@ -85,7 +85,8 @@ func (b *BackupSchedule) Create(ctx context.Context, req resource.CreateRequest,
 	}
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/schedules", b.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
-	_, err = b.Client.Execute(
+	_, err = b.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		BackupScheduleRequest,
 		b.Token,
@@ -99,9 +100,15 @@ func (b *BackupSchedule) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
+	diags = resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	refreshedState, err := b.retrieveBackupSchedule(ctx, organizationId, projectId, clusterId, bucketId, weeklySchedule.DayOfWeek.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"Error Reading Capella Backup Schedule",
 			"Could not read Capella Backup Schedule for the bucket: %s "+bucketId+": "+api.ParseError(err),
 		)
@@ -216,7 +223,8 @@ func (b *BackupSchedule) Update(ctx context.Context, req resource.UpdateRequest,
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/schedules", b.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err = b.Client.Execute(
+	_, err = b.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		BackupScheduleRequest,
 		b.Token,
@@ -282,7 +290,8 @@ func (b *BackupSchedule) Delete(ctx context.Context, req resource.DeleteRequest,
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/schedules", b.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
 	// Delete existing backup schedule
-	_, err = b.Client.Execute(
+	_, err = b.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		b.Token,
@@ -352,7 +361,8 @@ func (a *BackupSchedule) validateCreateBackupScheduleRequest(plan providerschema
 func (b *BackupSchedule) retrieveBackupSchedule(ctx context.Context, organizationId, projectId, clusterId, bucketId, planDayOfWeek string) (*providerschema.BackupSchedule, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/schedules", b.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := b.Client.Execute(
+	response, err := b.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		b.Token,

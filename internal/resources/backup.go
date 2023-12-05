@@ -71,7 +71,7 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	var clusterId = plan.ClusterId.ValueString()
 	var bucketId = plan.BucketId.ValueString()
 
-	latestBackup, err := b.getLatestBackup(organizationId, projectId, clusterId, bucketId)
+	latestBackup, err := b.getLatestBackup(ctx, organizationId, projectId, clusterId, bucketId)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error getting latest bucket backup in a cluster",
@@ -87,7 +87,8 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backups", b.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
-	_, err = b.Client.Execute(
+	_, err = b.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		BackupRequest,
 		b.Token,
@@ -268,7 +269,8 @@ func (b *Backup) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/backups/%s/restore", b.HostURL, organizationId, projectId, clusterId, backupId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
-	_, err = b.Client.Execute(
+	_, err = b.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		restoreRequest,
 		b.Token,
@@ -327,7 +329,8 @@ func (b *Backup) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 	// Delete existing Backup
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/backups/%s", b.HostURL, organizationId, projectId, clusterId, backupId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
-	_, err = b.Client.Execute(
+	_, err = b.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		b.Token,
@@ -418,7 +421,7 @@ func (b *Backup) checkLatestBackupStatus(ctx context.Context, organizationId, pr
 			return nil, fmt.Errorf(msg)
 
 		case <-timer.C:
-			backupResp, err = b.getLatestBackup(organizationId, projectId, clusterId, bucketId)
+			backupResp, err = b.getLatestBackup(ctx, organizationId, projectId, clusterId, bucketId)
 			switch err {
 			case nil:
 				// If there is no existing backup for a bucket, check for a new backup record to be created.
@@ -443,7 +446,8 @@ func (b *Backup) checkLatestBackupStatus(ctx context.Context, organizationId, pr
 func (b *Backup) retrieveBackup(ctx context.Context, organizationId, projectId, clusterId, bucketId, backupId string) (*providerschema.Backup, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/backups/%s", b.HostURL, organizationId, projectId, clusterId, backupId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := b.Client.Execute(
+	response, err := b.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		b.Token,
@@ -477,10 +481,11 @@ func (b *Backup) retrieveBackup(ctx context.Context, organizationId, projectId, 
 
 // getLatestBackup retrieves the latest backup information for a specified bucket in a cluster
 // from the specified organization, project and cluster using the provided bucket ID by open-api call
-func (b *Backup) getLatestBackup(organizationId, projectId, clusterId, bucketId string) (*backupapi.GetBackupResponse, error) {
+func (b *Backup) getLatestBackup(ctx context.Context, organizationId, projectId, clusterId, bucketId string) (*backupapi.GetBackupResponse, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/backups", b.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := b.Client.Execute(
+	response, err := b.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		b.Token,

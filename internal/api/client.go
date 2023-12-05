@@ -172,7 +172,7 @@ func exec(ctx context.Context, fn func() (response *Response, err error), waitOn
 		response *Response
 	)
 
-	const timeout = time.Minute * 5
+	const timeout = time.Minute * 10
 
 	var cancel context.CancelFunc
 	ctx, cancel = context.WithTimeout(ctx, timeout)

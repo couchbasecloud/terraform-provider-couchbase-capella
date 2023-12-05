@@ -99,7 +99,8 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 	// Execute request
 	url := fmt.Sprintf("%s/v4/organizations/%s/users", r.HostURL, organizationId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-	response, err := r.Client.Execute(
+	response, err := r.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		createUserRequest,
 		r.Token,
@@ -232,7 +233,7 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 
 	patch := constructPatch(state, plan)
 
-	err = r.updateUser(organizationId, userId, patch)
+	err = r.updateUser(ctx, organizationId, userId, patch)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
@@ -405,11 +406,12 @@ func compare(existing, proposed []basetypes.StringValue) ([]basetypes.StringValu
 }
 
 // updateUser is used to execute the patch request to update a user.
-func (r *User) updateUser(organizationId, userId string, patch []api.PatchEntry) error {
+func (r *User) updateUser(ctx context.Context, organizationId, userId string, patch []api.PatchEntry) error {
 	// Update existing user
 	url := fmt.Sprintf("%s/v4/organizations/%s/users/%s", r.HostURL, organizationId, userId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPatch, SuccessStatus: http.StatusOK}
-	_, err := r.Client.Execute(
+	_, err := r.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		patch,
 		r.Token,
@@ -456,7 +458,8 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 		userId,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err = r.Client.Execute(
+	_, err = r.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		r.Token,
@@ -487,7 +490,8 @@ func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api
 	)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := r.Client.Execute(
+	response, err := r.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		r.Token,

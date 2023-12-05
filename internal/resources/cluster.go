@@ -28,7 +28,7 @@ var (
 	_ resource.ResourceWithImportState = &Cluster{}
 )
 
-const errorMessageAfterClusterCreationInitiation = "Cluster creation is initiated, but encounters an error while checking the current" +
+const errorMessageAfterClusterCreationInitiation = "Cluster creation is initiated, but encountered an error while checking the current" +
 	" state of the cluster.Please run `terraform plan` after 4-5 minutes to know the" +
 	" current status of the cluster. Additionally, run `terraform apply --refresh-only` to update" +
 	" the status from remote, unexpected error: "
@@ -738,12 +738,26 @@ func getCouchbaseServer(ctx context.Context, config tfsdk.Config, diags *diag.Di
 func initializePendingClusterWithPlanAndId(plan providerschema.Cluster, id string) providerschema.Cluster {
 	plan.Id = types.StringValue(id)
 	plan.CurrentState = types.StringValue("pending")
+	if plan.Description.IsNull() || plan.Description.IsUnknown() {
+		plan.Description = types.StringNull()
+	}
+	if plan.ConfigurationType.IsNull() || plan.ConfigurationType.IsUnknown() {
+		plan.ConfigurationType = types.StringNull()
+	}
 	if plan.CouchbaseServer.IsNull() || plan.CouchbaseServer.IsUnknown() {
 		plan.CouchbaseServer = types.ObjectNull(providerschema.CouchbaseServer{}.AttributeTypes())
 	}
-	plan.Audit = types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
 	plan.AppServiceId = types.StringNull()
-	plan.ConfigurationType = types.StringNull()
+	plan.Audit = types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
 	plan.Etag = types.StringNull()
+
+	for _, serviceGroup := range plan.ServiceGroups {
+		if serviceGroup.Node != nil && (serviceGroup.Node.Disk.Storage.IsNull() || serviceGroup.Node.Disk.Storage.IsUnknown()) {
+			serviceGroup.Node.Disk.Storage = types.Int64Null()
+		}
+		if serviceGroup.Node != nil && (serviceGroup.Node.Disk.IOPS.IsNull() || serviceGroup.Node.Disk.IOPS.IsUnknown()) {
+			serviceGroup.Node.Disk.IOPS = types.Int64Null()
+		}
+	}
 	return plan
 }

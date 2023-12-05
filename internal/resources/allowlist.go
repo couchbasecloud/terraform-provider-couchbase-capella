@@ -82,7 +82,8 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 		plan.ClusterId.ValueString(),
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-	response, err := r.Client.Execute(
+	response, err := r.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		allowListRequest,
 		r.Token,
@@ -106,9 +107,15 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 		return
 	}
 
+	diags = resp.State.Set(ctx, initializeAllowListWithPlanAndId(plan, allowListResponse.Id.String()))
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	refreshedState, err := r.refreshAllowList(ctx, plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), plan.ClusterId.ValueString(), allowListResponse.Id.String())
 	if err != nil {
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"Error reading Capella AllowList",
 			"Could not read Capella AllowList "+allowListResponse.Id.String()+": "+api.ParseError(err),
 		)
@@ -221,7 +228,8 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 		allowListId,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err = r.Client.Execute(
+	_, err = r.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		r.Token,
@@ -264,7 +272,8 @@ func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId,
 		allowListId,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := r.Client.Execute(
+	response, err := r.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		r.Token,
@@ -314,4 +323,13 @@ func (r *AllowList) refreshAllowList(ctx context.Context, organizationId, projec
 	}
 
 	return &refreshedState, nil
+}
+
+func initializeAllowListWithPlanAndId(plan providerschema.AllowList, id string) providerschema.AllowList {
+	plan.Id = types.StringValue(id)
+	plan.Audit = types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
+	if plan.Comment.IsNull() || plan.Comment.IsUnknown() {
+		plan.Comment = types.StringNull()
+	}
+	return plan
 }

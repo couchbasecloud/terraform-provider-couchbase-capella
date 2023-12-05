@@ -123,7 +123,8 @@ func (a *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/apikeys", a.HostURL, organizationId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-	response, err := a.Client.Execute(
+	response, err := a.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		apiKeyRequest,
 		a.Token,
@@ -313,7 +314,8 @@ func (a *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/apikeys/%s/rotate", a.HostURL, organizationId, apiKeyId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusOK}
-	response, err := a.Client.Execute(
+	response, err := a.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		rotateApiRequest,
 		a.Token,
@@ -411,7 +413,8 @@ func (a *ApiKey) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 	// Delete existing api key
 	url := fmt.Sprintf("%s/v4/organizations/%s/apikeys/%s", a.HostURL, organizationId, apiKeyId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err = a.Client.Execute(
+	_, err = a.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		a.Token,
@@ -441,7 +444,8 @@ func (a *ApiKey) ImportState(ctx context.Context, req resource.ImportStateReques
 func (a *ApiKey) retrieveApiKey(ctx context.Context, organizationId, apiKeyId string) (*providerschema.ApiKey, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/apikeys/%s", a.HostURL, organizationId, apiKeyId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := a.Client.Execute(
+	response, err := a.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		a.Token,

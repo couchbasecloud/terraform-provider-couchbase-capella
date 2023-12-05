@@ -35,7 +35,7 @@ func ClusterSchema() schema.Schema {
 					"version": stringAttribute(optional, computed),
 				},
 			},
-			"service_groups": schema.ListNestedAttribute{
+			"service_groups": schema.SetNestedAttribute{
 				Required: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -63,7 +63,7 @@ func ClusterSchema() schema.Schema {
 							},
 						},
 						"num_of_nodes": int64Attribute(required),
-						"services":     stringListAttribute(required),
+						"services":     stringSetAttribute(required),
 					},
 				},
 			},
@@ -81,7 +81,7 @@ func ClusterSchema() schema.Schema {
 				},
 			},
 			"current_state":  stringAttribute(computed),
-			"app_service_id": stringAttribute(optional, computed),
+			"app_service_id": stringAttribute(computed),
 			"audit":          computedAuditAttribute(),
 			// if_match is only required during update call
 			"if_match": stringAttribute(optional),
