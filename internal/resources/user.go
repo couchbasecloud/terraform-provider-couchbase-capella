@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 
 	api "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
-	"github.com/couchbase/tools-common/functional/slices"
+	tcslices "github.com/couchbase/tools-common/functional/slices"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -93,7 +94,7 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 	}
 
 	if len(plan.Resources) != 0 {
-		createUserRequest.Resources = providerschema.ConvertResources(plan.Resources)
+		createUserRequest.Resources = handleResources(plan.OrganizationRoles, plan.Resources)
 	}
 
 	// Execute request
@@ -232,6 +233,8 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 		userId         = IDs[providerschema.Id]
 	)
 
+	// TODO: Handle case where user is organizationOwner and specific resources listed
+
 	patch := constructPatch(state, plan)
 
 	err = r.updateUser(organizationId, userId, patch)
@@ -272,7 +275,7 @@ func constructPatch(existing, proposed providerschema.User) []api.PatchEntry {
 
 	patch = append(patch, handleOrganizationRoles(existing.OrganizationRoles, proposed.OrganizationRoles)...)
 	patch = append(patch, handleProjectRoles(existing.Resources, proposed.Resources)...)
-	patch = append(patch, handleResources(existing.Resources, proposed.Resources)...)
+	patch = append(patch, compareResources(existing.Resources, proposed.Resources)...)
 
 	return patch
 }
@@ -352,9 +355,9 @@ func handleProjectRoles(existingResources, proposedResources []providerschema.Re
 	return entries
 }
 
-// handleResources is used to compare the resources contained within
+// compareResources is used to compare the resources contained within
 // two states and construct patch entries to reflect their differences.
-func handleResources(existingResources, proposedResources []providerschema.Resource) []api.PatchEntry {
+func compareResources(existingResources, proposedResources []providerschema.Resource) []api.PatchEntry {
 	entries := make([]api.PatchEntry, 0)
 
 	// populate maps with existing and proposed resources
@@ -395,14 +398,30 @@ func handleResources(existingResources, proposedResources []providerschema.Resou
 	return entries
 }
 
+// handleResources is used to convert a list of nested resources from
+// underlying types of basetypes.stringvalue to strings.
+func handleResources(roles []basetypes.StringValue, resources []providerschema.Resource) []api.Resource {
+	// Omit resources is if the user config contains specific resources and grants access level
+	// "organizationOwner". If so, an empty list of resources is returned. This is necessary
+	// because cp-open-api returns no listed resources when access level is organizationOwner.
+	// If a user is created with organizationOwner resources, then an error will occur when
+	// terraform next attempts to refresh state.
+	if resources != nil && slices.Contains(
+		roles, basetypes.NewStringValue("organizationOwner")) {
+		return nil
+	}
+
+	return providerschema.ConvertResources(resources)
+}
+
 // compare is used to compare two slices of basetypes.stringvalue
 // and determine which values should be added and which should be removed.
 func compare(existing, proposed []basetypes.StringValue) ([]basetypes.StringValue, []basetypes.StringValue) {
 	// Add values present in the proposed state but not in existing.
-	add := slices.Difference(proposed, existing)
+	add := tcslices.Difference(proposed, existing)
 
 	// Remove values present in the existing state but not in removed.
-	remove := slices.Difference(existing, proposed)
+	remove := tcslices.Difference(existing, proposed)
 
 	return add, remove
 }
