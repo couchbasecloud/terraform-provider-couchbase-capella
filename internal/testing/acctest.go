@@ -1,8 +1,14 @@
 package testing
 
 import (
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
+	"io"
 	"math/rand"
+	"net/http"
 	"os"
+	"strings"
 
 	"testing"
 	"time"
@@ -97,4 +103,93 @@ func TestAccWait(duration time.Duration) resource.TestCheckFunc {
 		time.Sleep(duration)
 		return nil
 	}
+}
+
+func GetCIDR(provider string) (string, error) {
+	jwt, err := GetJWT()
+	orgId := os.Getenv("TF_VAR_organization_id")
+	hostName := os.Getenv("TF_VAR_host")
+	hostName = strings.Replace(hostName, "cloudapi", "api", 1)
+	url := fmt.Sprintf(
+		"%s/v2/organizations/%s/clusters/deployment-options?provider=%s",
+		hostName,
+		orgId,
+		provider,
+	)
+	client := &http.Client{}
+	request, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+	request.Header.Set("Authorization", "Bearer "+jwt)
+
+	response, err := client.Do(request)
+	if err != nil {
+		fmt.Println("Error making request:", err)
+		return "", err
+	}
+	defer response.Body.Close()
+
+	// Read the response body
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		fmt.Println("Error reading response body:", err)
+		return "", err
+	}
+
+	cidr := struct {
+		SuggestedCidr string `json:"suggestedCidr"`
+	}{}
+	json.Unmarshal(body, &cidr)
+	return cidr.SuggestedCidr, nil
+}
+
+func GetJWT() (string, error) {
+
+	hostName := os.Getenv("TF_VAR_host")
+	hostName = strings.Replace(hostName, "cloudapi", "api", 1)
+	url := hostName + "/sessions"
+	// Username and password for Basic Authentication
+	username := os.Getenv("CAPELLA_USERNAME")
+	password := os.Getenv("CAPELLA_PASSWORD")
+
+	// Create a Basic Authentication token
+	authToken := createBasicAuthToken(username, password)
+
+	// Create a new HTTP client
+	client := &http.Client{}
+
+	request, err := http.NewRequest("POST", url, nil)
+	if err != nil {
+		fmt.Println("Error creating request:", err)
+		return "", err
+	}
+
+	// Add Basic Authentication header to the request
+	request.Header.Add("Authorization", "Basic "+authToken)
+
+	response, err := client.Do(request)
+	if err != nil {
+		fmt.Println("Error making request:", err)
+		return "", err
+	}
+	defer response.Body.Close()
+
+	// Read the response body
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		fmt.Println("Error reading response body:", err)
+		return "", err
+	}
+
+	res := struct {
+		Jwt string `json:"jwt"`
+	}{}
+	json.Unmarshal(body, &res)
+	return res.Jwt, nil
+}
+
+func createBasicAuthToken(username, password string) string {
+	auth := username + ":" + password
+	return base64.StdEncoding.EncodeToString([]byte(auth))
 }
