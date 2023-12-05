@@ -6,13 +6,15 @@ import (
 	"net/http"
 	"os"
 	"regexp"
-	"github.com/couchbasecloud/couchbase-capella/internal/api"
-	acctest "github.com/couchbasecloud/couchbase-capella/internal/testing"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
+
+	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"testing"
-	"time"
 )
 
 func TestAccAllowListTestCases(t *testing.T) {

@@ -6,10 +6,11 @@ import (
 	"net/http"
 	"os"
 	"regexp"
-	"github.com/couchbasecloud/couchbase-capella/internal/api"
-	"github.com/couchbasecloud/couchbase-capella/internal/provider"
-	acctest "github.com/couchbasecloud/couchbase-capella/internal/testing"
 	"testing"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/provider"
+	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"

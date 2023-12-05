@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"terraform-provider-capella/version"
 	"time"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/version"
 )
 
 const clientName = "terraform-provider-couchbase-capella"
