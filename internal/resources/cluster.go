@@ -29,9 +29,9 @@ var (
 )
 
 const errorMessageAfterClusterCreationInitiation = "Cluster creation is initiated, but encountered an error while checking the current" +
-	" state of the cluster.Please run `terraform plan` after 4-5 minutes to know the" +
+	" state of the cluster. Please run `terraform plan` after 4-5 minutes to know the" +
 	" current status of the cluster. Additionally, run `terraform apply --refresh-only` to update" +
-	" the status from remote, unexpected error: "
+	" the state from remote, unexpected error: "
 
 const errorMessageWhileClusterCreation = "There is an error during cluster creation. Please check in Capella to see if any hanging resources" +
 	" have been created, unexpected error: "

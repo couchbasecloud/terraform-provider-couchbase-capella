@@ -114,7 +114,7 @@ func (r *Project) Create(ctx context.Context, req resource.CreateRequest, resp *
 
 	refreshedState, err := r.retrieveProject(ctx, organizationId, projectResponse.Id.String())
 	if err != nil {
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"Error creating project",
 			"Could not create project, unexpected error: "+api.ParseError(err),
 		)

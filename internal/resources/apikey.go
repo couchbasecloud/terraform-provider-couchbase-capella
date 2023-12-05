@@ -27,6 +27,14 @@ var (
 	_ resource.ResourceWithImportState = &ApiKey{}
 )
 
+const errorMessageAfterApiKeyCreation = "Api Key creation is successful, but encountered an error while checking the current" +
+	" state of the api key. Please run `terraform plan` after 1-2 minutes to know the" +
+	" current api key state. Additionally, run `terraform apply --refresh-only` to update" +
+	" the state from remote, unexpected error: "
+
+const errorMessageWhileApiKeyCreation = "There is an error during api key creation. Please check in Capella to see if any hanging resources" +
+	" have been created, unexpected error: "
+
 // ApiKey is the ApiKey resource implementation.
 type ApiKey struct {
 	*providerschema.Data
@@ -132,8 +140,8 @@ func (a *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating ApiKey",
-			"Could not create ApiKey, unexpected error: "+api.ParseError(err),
+			"Error creating ApiKey Here",
+			errorMessageWhileApiKeyCreation+api.ParseError(err),
 		)
 		return
 	}
@@ -143,39 +151,28 @@ func (a *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating ApiKey",
-			"Could not create ApiKey, unexpected error: "+err.Error(),
+			errorMessageWhileApiKeyCreation+"error during unmarshalling: "+err.Error(),
 		)
+		return
+	}
+
+	diags = resp.State.Set(ctx, initializeApiKeyWithPlanAndId(plan, apiKeyResponse.Id))
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	refreshedState, err := a.retrieveApiKey(ctx, organizationId, apiKeyResponse.Id)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"Error creating ApiKey",
-			"Could not create ApiKey, unexpected error: "+api.ParseError(err),
+			errorMessageAfterApiKeyCreation+api.ParseError(err),
 		)
 		return
 	}
 
-	resources, err := providerschema.OrderList2(plan.Resources, refreshedState.Resources)
-	switch err {
-	case nil:
-		refreshedState.Resources = resources
-	default:
-		tflog.Error(ctx, err.Error())
-	}
-
-	for i, resource := range refreshedState.Resources {
-		if providerschema.AreEqual(resource.Roles, plan.Resources[i].Roles) {
-			refreshedState.Resources[i].Roles = plan.Resources[i].Roles
-		}
-	}
-
-	if providerschema.AreEqual(refreshedState.OrganizationRoles, plan.OrganizationRoles) {
-		refreshedState.OrganizationRoles = plan.OrganizationRoles
-	}
-
 	refreshedState.Token = types.StringValue(apiKeyResponse.Token)
+	refreshedState = a.retainResourcesIfOrgOwner(&plan, refreshedState)
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
@@ -225,29 +222,10 @@ func (a *ApiKey) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 		return
 	}
 
-	resources, err := providerschema.OrderList2(state.Resources, refreshedState.Resources)
-	switch err {
-	case nil:
-		refreshedState.Resources = resources
-	default:
-		tflog.Warn(ctx, err.Error())
-	}
-
-	if len(state.Resources) == len(refreshedState.Resources) {
-		for i, resource := range refreshedState.Resources {
-			if providerschema.AreEqual(resource.Roles, state.Resources[i].Roles) {
-				refreshedState.Resources[i].Roles = state.Resources[i].Roles
-			}
-		}
-	}
-
-	if providerschema.AreEqual(refreshedState.OrganizationRoles, state.OrganizationRoles) {
-		refreshedState.OrganizationRoles = state.OrganizationRoles
-	}
-
 	refreshedState.Token = state.Token
 	refreshedState.Rotate = state.Rotate
 	refreshedState.Secret = state.Secret
+	refreshedState = a.retainResourcesIfOrgOwner(&state, refreshedState)
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &refreshedState)
@@ -313,7 +291,7 @@ func (a *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/apikeys/%s/rotate", a.HostURL, organizationId, apiKeyId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusOK}
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
 	response, err := a.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
@@ -354,29 +332,12 @@ func (a *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 		return
 	}
 
-	resources, err := providerschema.OrderList2(state.Resources, currentState.Resources)
-	switch err {
-	case nil:
-		currentState.Resources = resources
-	default:
-		tflog.Error(ctx, err.Error())
-	}
-
-	for i, resource := range currentState.Resources {
-		if providerschema.AreEqual(resource.Roles, state.Resources[i].Roles) {
-			currentState.Resources[i].Roles = state.Resources[i].Roles
-		}
-	}
-
-	if providerschema.AreEqual(currentState.OrganizationRoles, state.OrganizationRoles) {
-		currentState.OrganizationRoles = state.OrganizationRoles
-	}
-
 	currentState.Secret = types.StringValue(rotateApiKeyResponse.SecretKey)
 	if !currentState.Id.IsNull() && !currentState.Id.IsUnknown() && !currentState.Secret.IsNull() && !currentState.Secret.IsUnknown() {
 		currentState.Token = types.StringValue(base64.StdEncoding.EncodeToString([]byte(currentState.Id.ValueString() + ":" + currentState.Secret.ValueString())))
 	}
 	currentState.Rotate = plan.Rotate
+	currentState = a.retainResourcesIfOrgOwner(&plan, currentState)
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, currentState)
@@ -486,9 +447,9 @@ func (a *ApiKey) validateCreateApiKeyRequest(plan providerschema.ApiKey) error {
 	if plan.OrganizationRoles == nil {
 		return fmt.Errorf("organizationRoles cannot be empty")
 	}
-	if plan.Resources == nil {
-		return fmt.Errorf("resource cannot be nil")
-	}
+	//if plan.Resources == nil {
+	//	return fmt.Errorf("resource cannot be nil")
+	//}
 	if !plan.Rotate.IsNull() && !plan.Rotate.IsUnknown() {
 		return fmt.Errorf("rotate value should not be set")
 	}
@@ -536,7 +497,7 @@ func (a *ApiKey) convertResources(resources []providerschema.ApiKeyResourcesItem
 }
 
 // convertAllowedCidrs is used to convert allowed cidrs in types.List to array of string.
-func (a *ApiKey) convertAllowedCidrs(ctx context.Context, allowedCidrs types.List) ([]string, error) {
+func (a *ApiKey) convertAllowedCidrs(ctx context.Context, allowedCidrs types.Set) ([]string, error) {
 	elements := make([]types.String, 0, len(allowedCidrs.Elements()))
 	diags := allowedCidrs.ElementsAs(ctx, &elements, false)
 	if diags.HasError() {
@@ -548,4 +509,30 @@ func (a *ApiKey) convertAllowedCidrs(ctx context.Context, allowedCidrs types.Lis
 		convertedAllowedCidrs = append(convertedAllowedCidrs, allowedCidr.ValueString())
 	}
 	return convertedAllowedCidrs, nil
+}
+
+func (a *ApiKey) retainResourcesIfOrgOwner(apiKeyReq, apiKeyRes *providerschema.ApiKey) *providerschema.ApiKey {
+	isOrgOwner := false
+	for _, role := range apiKeyRes.OrganizationRoles {
+		if role.ValueString() == "organizationOwner" {
+			isOrgOwner = true
+		}
+	}
+	if isOrgOwner {
+		apiKeyRes.Resources = apiKeyReq.Resources
+	}
+	return apiKeyRes
+}
+
+func initializeApiKeyWithPlanAndId(plan providerschema.ApiKey, id string) providerschema.ApiKey {
+	plan.Id = types.StringValue(id)
+	if plan.Secret.IsNull() || plan.Secret.IsUnknown() {
+		plan.Secret = types.StringNull()
+	}
+	if plan.Rotate.IsNull() || plan.Rotate.IsUnknown() {
+		plan.Rotate = types.NumberNull()
+	}
+	plan.Token = types.StringNull()
+	plan.Audit = types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
+	return plan
 }

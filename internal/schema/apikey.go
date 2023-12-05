@@ -33,7 +33,7 @@ type ApiKey struct {
 
 	// AllowedCIDRs is the list of inbound CIDRs for the API key.
 	// The system making a request must come from one of the allowed CIDRs.
-	AllowedCIDRs types.List   `tfsdk:"allowed_cidrs"`
+	AllowedCIDRs types.Set    `tfsdk:"allowed_cidrs"`
 	Audit        types.Object `tfsdk:"audit"`
 
 	// Description is the description for the API key.
@@ -100,15 +100,15 @@ func NewApiKey(apiKey *api.GetApiKeyResponse, organizationId string, auditObject
 
 // MorphAllowedCidrs is used to convert string list to basetypes.ListValue
 // TODO : add unit testing
-func MorphAllowedCidrs(allowedCIDRs []string) (basetypes.ListValue, error) {
+func MorphAllowedCidrs(allowedCIDRs []string) (basetypes.SetValue, error) {
 	var newAllowedCidr []attr.Value
 	for _, allowedCidr := range allowedCIDRs {
 		newAllowedCidr = append(newAllowedCidr, types.StringValue(allowedCidr))
 	}
 
-	newAllowedCidrs, diags := types.ListValue(types.StringType, newAllowedCidr)
+	newAllowedCidrs, diags := types.SetValue(types.StringType, newAllowedCidr)
 	if diags.HasError() {
-		return types.ListUnknown(types.StringType), fmt.Errorf("error while converting allowedcidrs")
+		return types.SetUnknown(types.StringType), fmt.Errorf("error while converting allowedcidrs")
 	}
 
 	return newAllowedCidrs, nil
@@ -120,7 +120,7 @@ func MorphAllowedCidrs(allowedCIDRs []string) (basetypes.ListValue, error) {
 func MorphApiKeyOrganizationRoles(organizationRoles []string) []basetypes.StringValue {
 	var newOrganizationRoles []types.String
 	for _, organizationRole := range organizationRoles {
-		newOrganizationRoles = append(newOrganizationRoles, types.StringValue(string(organizationRole)))
+		newOrganizationRoles = append(newOrganizationRoles, types.StringValue(organizationRole))
 	}
 	return newOrganizationRoles
 }
@@ -129,6 +129,11 @@ func MorphApiKeyOrganizationRoles(organizationRoles []string) []basetypes.String
 // to terraform types.String
 // TODO : add unit testing
 func MorphApiKeyResources(resources api.Resources) []ApiKeyResourcesItems {
+	//if len(resources) == 0 {
+	//	fmt.Println("*************************************")
+	//	fmt.Println(len(resources))
+	//	return make([]ApiKeyResourcesItems, 0)
+	//}
 	var newApiKeyResourcesItems []ApiKeyResourcesItems
 	for _, resource := range resources {
 		newResourceItem := ApiKeyResourcesItems{
@@ -139,7 +144,7 @@ func MorphApiKeyResources(resources api.Resources) []ApiKeyResourcesItems {
 		}
 		var newRoles []types.String
 		for _, role := range resource.Roles {
-			newRoles = append(newRoles, types.StringValue(string(role)))
+			newRoles = append(newRoles, types.StringValue(role))
 		}
 		newResourceItem.Roles = newRoles
 		newApiKeyResourcesItems = append(newApiKeyResourcesItems, newResourceItem)
@@ -263,46 +268,46 @@ func (a ApiKeys) Validate() (organizationId string, err error) {
 	return a.OrganizationId.ValueString(), nil
 }
 
-// OrderList2 function to order list2 based on list1's Ids
-func OrderList2(list1, list2 []ApiKeyResourcesItems) ([]ApiKeyResourcesItems, error) {
-	if len(list1) != len(list2) {
-		return nil, fmt.Errorf("returned resources is not same as in plan")
-	}
-	// Create a map from Id to APIKeyResourcesItems for list2
-	idToItem := make(map[string]ApiKeyResourcesItems)
-	for _, item := range list2 {
-		idToItem[item.Id.ValueString()] = item
-	}
+//// OrderList2 function to order list2 based on list1's Ids
+//func OrderList2(list1, list2 []ApiKeyResourcesItems) ([]ApiKeyResourcesItems, error) {
+//	if len(list1) != len(list2) {
+//		return nil, fmt.Errorf("returned resources is not same as in plan")
+//	}
+//	// Create a map from Id to APIKeyResourcesItems for list2
+//	idToItem := make(map[string]ApiKeyResourcesItems)
+//	for _, item := range list2 {
+//		idToItem[item.Id.ValueString()] = item
+//	}
+//
+//	// Create a new ordered list2 based on the order of list1's Ids
+//	orderedList2 := make([]ApiKeyResourcesItems, len(list1))
+//	for i, item1 := range list1 {
+//		orderedList2[i] = idToItem[item1.Id.ValueString()]
+//	}
+//
+//	if len(orderedList2) != len(list2) {
+//		return nil, fmt.Errorf("returned resources is not same as in plan")
+//	}
+//
+//	return orderedList2, nil
+//}
 
-	// Create a new ordered list2 based on the order of list1's Ids
-	orderedList2 := make([]ApiKeyResourcesItems, len(list1))
-	for i, item1 := range list1 {
-		orderedList2[i] = idToItem[item1.Id.ValueString()]
-	}
-
-	if len(orderedList2) != len(list2) {
-		return nil, fmt.Errorf("returned resources is not same as in plan")
-	}
-
-	return orderedList2, nil
-}
-
-// AreEqual returns true if the two arrays contain the same elements,
-// without any extra values, False otherwise.
-func AreEqual[T comparable](array1 []T, array2 []T) bool {
-	if len(array1) != len(array2) {
-		return false
-	}
-	set1 := make(map[T]bool)
-	for _, element := range array1 {
-		set1[element] = true
-	}
-
-	for _, element := range array2 {
-		if !set1[element] {
-			return false
-		}
-	}
-
-	return len(set1) == len(array1)
-}
+//// AreEqual returns true if the two arrays contain the same elements,
+//// without any extra values, False otherwise.
+//func AreEqual[T comparable](array1 []T, array2 []T) bool {
+//	if len(array1) != len(array2) {
+//		return false
+//	}
+//	set1 := make(map[T]bool)
+//	for _, element := range array1 {
+//		set1[element] = true
+//	}
+//
+//	for _, element := range array2 {
+//		if !set1[element] {
+//			return false
+//		}
+//	}
+//
+//	return len(set1) == len(array1)
+//}

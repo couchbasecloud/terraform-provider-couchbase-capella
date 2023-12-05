@@ -25,6 +25,14 @@ var (
 	_ resource.ResourceWithImportState = &AppService{}
 )
 
+const errorMessageAfterAppServiceCreationInitiation = "App Service creation is initiated, but encountered an error while checking the current" +
+	" state of the app service. Please run `terraform plan` after 4-5 minutes to know the" +
+	" current status of the app service. Additionally, run `terraform apply --refresh-only` to update" +
+	" the state from remote, unexpected error: "
+
+const errorMessageWhileAppServiceCreation = "There is an error during app service creation. Please check in Capella to see if any hanging resources" +
+	" have been created, unexpected error: "
+
 // AppService is the AppService resource implementation.
 type AppService struct {
 	*providerschema.Data
@@ -103,7 +111,7 @@ func (a *AppService) Create(ctx context.Context, req resource.CreateRequest, res
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error executing request",
-			"Could not execute request, unexpected error: "+err.Error(),
+			errorMessageWhileAppServiceCreation+err.Error(),
 		)
 		return
 	}
@@ -113,7 +121,7 @@ func (a *AppService) Create(ctx context.Context, req resource.CreateRequest, res
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating app service",
-			"Could not create app service, unexpected error: "+err.Error(),
+			errorMessageWhileAppServiceCreation+"error during unmarshalling:"+err.Error(),
 		)
 		return
 	}
@@ -128,7 +136,7 @@ func (a *AppService) Create(ctx context.Context, req resource.CreateRequest, res
 	if err != nil {
 		resp.Diagnostics.AddWarning(
 			"Error creating app service",
-			"Could not create app service, unexpected error: "+api.ParseError(err),
+			errorMessageAfterAppServiceCreationInitiation+api.ParseError(err),
 		)
 		return
 	}
@@ -136,7 +144,7 @@ func (a *AppService) Create(ctx context.Context, req resource.CreateRequest, res
 	if err != nil {
 		resp.Diagnostics.AddWarning(
 			"Error creating app service",
-			"Could not create app service, unexpected error: "+api.ParseError(err),
+			errorMessageAfterAppServiceCreationInitiation+api.ParseError(err),
 		)
 		return
 	}

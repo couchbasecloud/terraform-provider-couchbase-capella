@@ -152,6 +152,12 @@ func (c *Client) ExecuteWithRetry(
 					"unexpected code: %d, expected: %d, body: %s",
 					apiRes.StatusCode, endpointCfg.SuccessStatus, responseBody)
 			}
+			if apiError.Code == 0 {
+				return nil, fmt.Errorf(
+					"unexpected code: %d, expected: %d, body: %s",
+					apiRes.StatusCode, endpointCfg.SuccessStatus, responseBody)
+
+			}
 			return nil, &apiError
 		}
 

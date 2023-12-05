@@ -25,6 +25,9 @@ var (
 	_ resource.ResourceWithImportState = &Backup{}
 )
 
+const errorMessageWhileBackupCreation = "There is an error during backup creation. Please check in Capella to see if any hanging resources" +
+	" have been created, unexpected error: "
+
 // Backup is the Backup resource implementation.
 type Backup struct {
 	*providerschema.Data
@@ -97,20 +100,20 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error executing create backup request",
-			"Could not execute create backup request : unexpected error "+api.ParseError(err),
+			errorMessageWhileBackupCreation+api.ParseError(err),
 		)
 		return
 	}
 
 	backupResponse, err := b.checkLatestBackupStatus(ctx, organizationId, projectId, clusterId, bucketId, backupFound, latestBackup)
 	if err != nil {
-		if diags.HasError() {
-			resp.Diagnostics.AddError(
-				"Error whiling checking latest backup status",
-				fmt.Sprintf("Could not read check latest backup status, unexpected error: "+api.ParseError(err)),
-			)
-			return
-		}
+		resp.Diagnostics.AddError(
+			"Error while checking latest backup status",
+			fmt.Sprintf("Could not read check latest backup status."+
+				"Please check in Capella to see if any hanging resources have "+
+				"been created, unexpected error: "+api.ParseError(err)),
+		)
+		return
 	}
 
 	backupStats := providerschema.NewBackupStats(*backupResponse.BackupStats)
@@ -118,7 +121,9 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	if diags.HasError() {
 		resp.Diagnostics.AddError(
 			"Error Reading Backup Stats",
-			fmt.Sprintf("Could not read backup stats data in a backup record, unexpected error: %s", fmt.Errorf("error while backup stats conversion")),
+			fmt.Sprintf("Could not read backup stats data in a backup record, "+
+				"please check in Capella to see if any hanging resources have been created, "+
+				"unexpected error: %s", fmt.Errorf("error while backup stats conversion")),
 		)
 		return
 	}
@@ -128,7 +133,9 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	if diags.HasError() {
 		resp.Diagnostics.AddError(
 			"Error Error Reading Backup Schedule Info",
-			fmt.Sprintf("Could not read backup schedule info in a backup record, unexpected error: %s", fmt.Errorf("error while backup schedule info conversion")),
+			fmt.Sprintf("Could not read backup schedule info in a backup record, "+
+				"please check in Capella to see if any hanging resources have been created, "+
+				"unexpected error: %s", fmt.Errorf("error while backup schedule info conversion")),
 		)
 		return
 	}

@@ -13,7 +13,7 @@ func UserSchema() schema.Schema {
 			"inactive":             boolAttribute(computed),
 			"email":                stringAttribute(required),
 			"organization_id":      stringAttribute(required),
-			"organization_roles":   stringListAttribute(required),
+			"organization_roles":   stringSetAttribute(required),
 			"last_login":           stringAttribute(computed),
 			"region":               stringAttribute(computed),
 			"time_zone":            stringAttribute(computed),
@@ -23,7 +23,7 @@ func UserSchema() schema.Schema {
 				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"type":  stringAttribute(optional, computed),
+						"type":  stringDefaultAttribute("project", optional, computed),
 						"id":    stringAttribute(required),
 						"roles": stringSetAttribute(required),
 					},

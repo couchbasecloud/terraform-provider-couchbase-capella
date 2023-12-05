@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -178,6 +179,13 @@ func float64Attribute(fields ...string) *schema.Float64Attribute {
 		}
 	}
 	return &attribute
+}
+
+// float64DefaultAttribute sets the default values for an float field and returns the float64 attribute
+func float64DefaultAttribute(defaultValue float64, fields ...string) *schema.Float64Attribute {
+	attribute := float64Attribute(fields...)
+	attribute.Default = float64default.StaticFloat64(defaultValue)
+	return attribute
 }
 
 // stringListAttribute returns a Terraform string list schema attribute
