@@ -117,13 +117,13 @@ Note: You will need to provide both the url of the capella host as well as your 
 ```terraform
 terraform {
   required_providers {
-    capella = {
-      source = "hashicorp.com/couchabasecloud/capella"
+    couchbase-capella = {
+      source = "hashicorp.com/couchabasecloud/couchbase-capella"
     }
   }
 }
 
-provider "capella" {
+provider "couchbase-capella" {
   host     = "the host url of couchbase cloud"
   authentication_token = "capella authentication token"
 }
