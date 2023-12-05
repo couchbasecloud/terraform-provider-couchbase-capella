@@ -77,7 +77,7 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error parsing create user request",
-			"Could not create user "+err.Error(),
+			"Could not create user, "+err.Error(),
 		)
 		return
 	}
