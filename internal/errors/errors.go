@@ -39,10 +39,6 @@ var (
 	// ErrOrganizationIdMissing is returned when an expected Organization Id was not found after an import.
 	ErrOrganizationIdMissing = errors.New("organization ID is missing or was passed incorrectly, please check provider documentation for syntax")
 
-	// ErrOrganizationRolesCannotBePopulated is returned when a user has access level 'organization owner' and specific resources were listed
-	// for the user to have access to. This is necessary because cp-open-api reutrns no listed resources when access level is organizationOwner.
-	ErrOrganizationRolesCannotBePopulated = errors.New("user access level 'organization owner' has default access to all resources, please remove any reference to resources from the configuration")
-
 	// ErrUnableToUpdateOrganizationId is returned when an update to a projectId was unsuccessful.
 	ErrUnableToUpdateOrganizationId = errors.New("unable to update organizationId")
 
