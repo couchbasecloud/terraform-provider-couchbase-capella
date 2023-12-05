@@ -30,7 +30,7 @@ $ terraform plan
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/terraform-provider-capella
+│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/github.com/couchbasecloud/terraform-provider-couchbase-capella
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -168,7 +168,7 @@ $ terraform apply
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/terraform-provider-capella
+│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/github.com/couchbasecloud/terraform-provider-couchbase-capella
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -484,7 +484,7 @@ $ terraform plan
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/terraform-provider-capella
+│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/github.com/couchbasecloud/terraform-provider-couchbase-capella
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -509,7 +509,7 @@ $ terraform apply -var 'apikey={allowed_cidrs=["10.1.42.0/23", "10.1.43.0/23", "
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/terraform-provider-capella
+│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/github.com/couchbasecloud/terraform-provider-couchbase-capella
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -682,7 +682,7 @@ $ terraform destroy
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/terraform-provider-capella
+│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/github.com/couchbasecloud/terraform-provider-couchbase-capella
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵

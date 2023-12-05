@@ -1,8 +1,8 @@
 package appservice
 
 import (
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/google/uuid"
-	"terraform-provider-capella/internal/api"
 )
 
 // CreateAppServiceRequest is the request payload sent to the Capella V4 Public API in order to create a new app service.

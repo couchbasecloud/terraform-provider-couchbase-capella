@@ -3,8 +3,9 @@ package api
 import (
 	"fmt"
 	"net/http"
-	internalerrors "terraform-provider-capella/internal/errors"
 	"testing"
+
+	internalerrors "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 
 	"github.com/stretchr/testify/assert"
 )

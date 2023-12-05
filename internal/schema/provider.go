@@ -1,8 +1,9 @@
 package schema
 
 import (
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"terraform-provider-capella/internal/api"
 )
 
 // Config maps provider schema data to a Go type.

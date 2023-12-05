@@ -1,6 +1,6 @@
 # Terraform Provider Capella 
 
-This is the repository for Couchbase's Terraform-Provider-Capella which forms a Terraform plugin for use with Couchbase Capella.
+This is the repository for Couchbase's github.com/couchbasecloud/terraform-provider-couchbase-capella which forms a Terraform plugin for use with Couchbase Capella.
 
 ## Requirements
 
@@ -149,7 +149,7 @@ Ordinarily, terraform will downloaded the requested providers on running the com
 ```bash
 $ terraform init
 ```
-If you are working with a local install of `Terraform-Provider-Capella` provider, this step is not needed and considered optional. 
+If you are working with a local install of `github.com/couchbasecloud/terraform-provider-couchbase-capella` provider, this step is not needed and considered optional. 
 However if you plan to use any other providers at the same time it may need to be ran. 
 
 **1\. Review the Terraform plan**

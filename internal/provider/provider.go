@@ -2,12 +2,13 @@ package provider
 
 import (
 	"context"
-	"terraform-provider-capella/internal/datasources"
 	"time"
 
-	"terraform-provider-capella/internal/api"
-	"terraform-provider-capella/internal/resources"
-	providerschema "terraform-provider-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/datasources"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -39,7 +40,7 @@ type capellaProvider struct {
 func New(version string) func() provider.Provider {
 	return func() provider.Provider {
 		return &capellaProvider{
-			name:    "capella",
+			name:    "couchbase-capella",
 			version: version,
 		}
 	}

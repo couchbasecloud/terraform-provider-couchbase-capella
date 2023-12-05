@@ -2,11 +2,12 @@ package schema
 
 import (
 	"fmt"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/backup_schedule"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"terraform-provider-capella/internal/api/backup_schedule"
-	"terraform-provider-capella/internal/errors"
 )
 
 // BackupSchedule defines the response as received from V4 Capella Public API when asked to create a new backup schedule.

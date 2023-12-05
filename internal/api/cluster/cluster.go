@@ -1,7 +1,7 @@
 package cluster
 
 import (
-	"terraform-provider-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 
 	"github.com/google/uuid"
 )

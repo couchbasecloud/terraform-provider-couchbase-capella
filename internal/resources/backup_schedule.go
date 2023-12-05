@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"strings"
 
-	"terraform-provider-capella/internal/api"
-	scheduleapi "terraform-provider-capella/internal/api/backup_schedule"
-	"terraform-provider-capella/internal/errors"
-	providerschema "terraform-provider-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	scheduleapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/backup_schedule"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"

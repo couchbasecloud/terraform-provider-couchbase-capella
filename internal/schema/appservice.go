@@ -2,10 +2,11 @@ package schema
 
 import (
 	"fmt"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/appservice"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"terraform-provider-capella/internal/api/appservice"
-	"terraform-provider-capella/internal/errors"
 )
 
 // AppService defines the response as received from V4 Capella Public API when asked to create a new app service.

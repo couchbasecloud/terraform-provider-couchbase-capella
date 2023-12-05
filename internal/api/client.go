@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"terraform-provider-capella/internal/errors"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 )
 
 // Client is responsible for constructing and executing HTTP requests.

@@ -5,15 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"terraform-provider-capella/internal/api"
-	"terraform-provider-capella/internal/api/organization"
-	"terraform-provider-capella/internal/errors"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/organization"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	providerschema "terraform-provider-capella/internal/schema"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
 var (

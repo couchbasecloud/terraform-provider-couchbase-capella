@@ -3,7 +3,7 @@ package schema
 import (
 	"testing"
 
-	"terraform-provider-capella/internal/errors"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/stretchr/testify/assert"

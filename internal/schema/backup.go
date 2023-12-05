@@ -2,8 +2,9 @@ package schema
 
 import (
 	"fmt"
-	"terraform-provider-capella/internal/api/backup"
-	"terraform-provider-capella/internal/errors"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/backup"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"

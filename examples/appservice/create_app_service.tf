@@ -1,5 +1,5 @@
 output "new_app_service" {
-    value = capella_app_service.new_app_service
+  value = capella_app_service.new_app_service
 }
 
 output "appservice_id" {
@@ -13,9 +13,9 @@ resource "capella_app_service" "new_app_service" {
   name            = var.app_service.name
   description     = var.app_service.description
   nodes           = var.app_service.nodes
-  compute         = {
-      cpu = var.app_service.compute.cpu
-      ram = var.app_service.compute.ram
+  compute = {
+    cpu = var.app_service.compute.cpu
+    ram = var.app_service.compute.ram
   }
-  version         = var.app_service.version
+  version = var.app_service.version
 }

@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"terraform-provider-capella/internal/api"
-	"terraform-provider-capella/internal/errors"
-	"terraform-provider-capella/internal/provider"
-	providerschema "terraform-provider-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/provider"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"

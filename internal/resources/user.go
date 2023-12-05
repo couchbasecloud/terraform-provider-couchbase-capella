@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"net/http"
 
-	api "terraform-provider-capella/internal/api"
-	"terraform-provider-capella/internal/errors"
-	providerschema "terraform-provider-capella/internal/schema"
+	api "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/couchbase/tools-common/functional/slices"
 

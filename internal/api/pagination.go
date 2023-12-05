@@ -1,7 +1,7 @@
 package api
 
 import (
-	"terraform-provider-capella/internal/errors"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 
 	"context"
 	"encoding/json"

@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"os"
 	"regexp"
-	"terraform-provider-capella/internal/api"
-	"terraform-provider-capella/internal/provider"
-	acctest "terraform-provider-capella/internal/testing"
+	"github.com/couchbasecloud/couchbase-capella/internal/api"
+	"github.com/couchbasecloud/couchbase-capella/internal/provider"
+	acctest "github.com/couchbasecloud/couchbase-capella/internal/testing"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	cfg "terraform-provider-capella/internal/testing"
+	cfg "github.com/couchbasecloud/couchbase-capella/internal/testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"

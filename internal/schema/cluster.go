@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	clusterapi "terraform-provider-capella/internal/api/cluster"
-	"terraform-provider-capella/internal/errors"
+	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
