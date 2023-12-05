@@ -159,6 +159,7 @@ func (b *Backup) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 			"Error Reading Backup in Capella",
 			"Could not read Capella Backup with ID "+state.Id.String()+": "+err.Error(),
 		)
+		return
 	}
 	var (
 		organizationId = IDs[providerschema.OrganizationId]
@@ -214,6 +215,7 @@ func (b *Backup) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 			"Error Reading Backup in Capella",
 			"Could not read Capella Backup with ID "+state.Id.String()+": "+err.Error(),
 		)
+		return
 	}
 	var (
 		organizationId = IDs[providerschema.OrganizationId]

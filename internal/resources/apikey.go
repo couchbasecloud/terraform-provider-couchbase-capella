@@ -95,7 +95,7 @@ func (a *ApiKey) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	}
 
 	if !plan.Expiry.IsNull() && !plan.Expiry.IsUnknown() {
-		expiry := float32(plan.Expiry.ValueFloat64())
+		expiry := float32(*plan.Expiry.ValueFloat64Pointer())
 		apiKeyRequest.Expiry = &expiry
 	}
 

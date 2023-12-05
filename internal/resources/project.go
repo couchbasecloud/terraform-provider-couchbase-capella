@@ -118,6 +118,7 @@ func (r *Project) Create(ctx context.Context, req resource.CreateRequest, resp *
 			"Error creating project",
 			"Could not create project, unexpected error: "+api.ParseError(err),
 		)
+		return
 	}
 
 	// Set state to fully populated data
@@ -241,14 +242,15 @@ func (r *Project) Update(ctx context.Context, req resource.UpdateRequest, resp *
 	currentState, err := r.retrieveProject(ctx, organizationId, projectId)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error Updating Capella Project",
 			"Could not update Capella project ID "+projectId+": "+errString,
 		)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			resp.State.RemoveResource(ctx)
-		}
 		return
 	}
 

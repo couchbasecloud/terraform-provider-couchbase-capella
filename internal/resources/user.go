@@ -111,6 +111,7 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 			"Error executing request",
 			"Could not execute request, unexpected error: "+api.ParseError(err),
 		)
+		return
 	}
 
 	createUserResponse := api.CreateUserResponse{}
@@ -129,6 +130,7 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 			"Error executing request",
 			"Could not execute request, unexpected error: "+api.ParseError(err),
 		)
+		return
 	}
 
 	// Set state to fully populated data
@@ -253,6 +255,7 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 			"Error updating user",
 			"Could not update Capella user with ID "+userId+": "+api.ParseError(err),
 		)
+		return
 	}
 
 	// Set state to fully populated data

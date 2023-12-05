@@ -40,7 +40,7 @@ func ApiKeySchema() schema.Schema {
 			},
 			"organization_roles": stringListAttribute(required, requiresReplace),
 			"resources": schema.ListNestedAttribute{
-				Required: true,
+				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id":    stringAttribute(required),
