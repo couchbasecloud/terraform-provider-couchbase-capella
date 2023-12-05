@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 
 	api "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
-	"github.com/couchbase/tools-common/functional/slices"
+	tcslices "github.com/couchbase/tools-common/functional/slices"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -151,6 +152,17 @@ func (r *User) validateCreateUserRequest(plan providerschema.User) error {
 	if plan.OrganizationRoles == nil {
 		return errors.ErrOrganizationRolesCannotBeEmpty
 	}
+
+	// Reject user creation if the config contains resources and the user is
+	// "organizationOwner". This is necessary because cp-open-api reutrns no
+	// listed resources when access level is organizationOwner. If a user is
+	// created with organizationOwner resources, then an error will occur
+	// when terraform next attempts to refresh state.
+	if plan.Resources != nil && slices.Contains(
+		plan.OrganizationRoles, basetypes.NewStringValue("organizationOwner")) {
+		return errors.ErrOrganizationRolesCannotBePopulated
+	}
+
 	return nil
 }
 
@@ -399,10 +411,10 @@ func handleResources(existingResources, proposedResources []providerschema.Resou
 // and determine which values should be added and which should be removed.
 func compare(existing, proposed []basetypes.StringValue) ([]basetypes.StringValue, []basetypes.StringValue) {
 	// Add values present in the proposed state but not in existing.
-	add := slices.Difference(proposed, existing)
+	add := tcslices.Difference(proposed, existing)
 
 	// Remove values present in the existing state but not in removed.
-	remove := slices.Difference(existing, proposed)
+	remove := tcslices.Difference(existing, proposed)
 
 	return add, remove
 }
