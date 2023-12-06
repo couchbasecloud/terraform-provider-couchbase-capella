@@ -129,11 +129,6 @@ func MorphApiKeyOrganizationRoles(organizationRoles []string) []basetypes.String
 // to terraform types.String
 // TODO : add unit testing
 func MorphApiKeyResources(resources api.Resources) []ApiKeyResourcesItems {
-	//if len(resources) == 0 {
-	//	fmt.Println("*************************************")
-	//	fmt.Println(len(resources))
-	//	return make([]ApiKeyResourcesItems, 0)
-	//}
 	var newApiKeyResourcesItems []ApiKeyResourcesItems
 	for _, resource := range resources {
 		newResourceItem := ApiKeyResourcesItems{
@@ -268,46 +263,46 @@ func (a ApiKeys) Validate() (organizationId string, err error) {
 	return a.OrganizationId.ValueString(), nil
 }
 
-//// OrderList2 function to order list2 based on list1's Ids
-//func OrderList2(list1, list2 []ApiKeyResourcesItems) ([]ApiKeyResourcesItems, error) {
-//	if len(list1) != len(list2) {
-//		return nil, fmt.Errorf("returned resources is not same as in plan")
-//	}
-//	// Create a map from Id to APIKeyResourcesItems for list2
-//	idToItem := make(map[string]ApiKeyResourcesItems)
-//	for _, item := range list2 {
-//		idToItem[item.Id.ValueString()] = item
-//	}
-//
-//	// Create a new ordered list2 based on the order of list1's Ids
-//	orderedList2 := make([]ApiKeyResourcesItems, len(list1))
-//	for i, item1 := range list1 {
-//		orderedList2[i] = idToItem[item1.Id.ValueString()]
-//	}
-//
-//	if len(orderedList2) != len(list2) {
-//		return nil, fmt.Errorf("returned resources is not same as in plan")
-//	}
-//
-//	return orderedList2, nil
-//}
+// OrderList2 function to order list2 based on list1's Ids
+func OrderList2(list1, list2 []ApiKeyResourcesItems) ([]ApiKeyResourcesItems, error) {
+	if len(list1) != len(list2) {
+		return nil, fmt.Errorf("returned resources is not same as in plan")
+	}
+	// Create a map from Id to APIKeyResourcesItems for list2
+	idToItem := make(map[string]ApiKeyResourcesItems)
+	for _, item := range list2 {
+		idToItem[item.Id.ValueString()] = item
+	}
 
-//// AreEqual returns true if the two arrays contain the same elements,
-//// without any extra values, False otherwise.
-//func AreEqual[T comparable](array1 []T, array2 []T) bool {
-//	if len(array1) != len(array2) {
-//		return false
-//	}
-//	set1 := make(map[T]bool)
-//	for _, element := range array1 {
-//		set1[element] = true
-//	}
-//
-//	for _, element := range array2 {
-//		if !set1[element] {
-//			return false
-//		}
-//	}
-//
-//	return len(set1) == len(array1)
-//}
+	// Create a new ordered list2 based on the order of list1's Ids
+	orderedList2 := make([]ApiKeyResourcesItems, len(list1))
+	for i, item1 := range list1 {
+		orderedList2[i] = idToItem[item1.Id.ValueString()]
+	}
+
+	if len(orderedList2) != len(list2) {
+		return nil, fmt.Errorf("returned resources is not same as in plan")
+	}
+
+	return orderedList2, nil
+}
+
+// AreEqual returns true if the two arrays contain the same elements,
+// without any extra values, False otherwise.
+func AreEqual[T comparable](array1 []T, array2 []T) bool {
+	if len(array1) != len(array2) {
+		return false
+	}
+	set1 := make(map[T]bool)
+	for _, element := range array1 {
+		set1[element] = true
+	}
+
+	for _, element := range array2 {
+		if !set1[element] {
+			return false
+		}
+	}
+
+	return len(set1) == len(array1)
+}
