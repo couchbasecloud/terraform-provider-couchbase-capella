@@ -27,6 +27,7 @@ const (
 	capellaPublicAPIHostField       = "host"
 	apiRequestTimeout               = 60 * time.Second
 	defaultAPIHostURL               = "https://cloudapi.couchbase.com"
+	providerName                    = "couchbase-capella"
 )
 
 // capellaProvider is the provider implementation.
@@ -38,7 +39,7 @@ type capellaProvider struct {
 func New() func() provider.Provider {
 	return func() provider.Provider {
 		return &capellaProvider{
-			name: "couchbase-capella",
+			name: providerName,
 		}
 	}
 }
