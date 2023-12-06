@@ -79,7 +79,6 @@ func TestAppServiceResource(t *testing.T) {
 		},
 	})
 }
-
 func TestAccAppServiceCreateWithReqFields(t *testing.T) {
 	appServiceResourceName := "app_service_req_fields"
 	appServiceResourceReference := "capella_app_service." + appServiceResourceName
@@ -106,7 +105,7 @@ func TestAccAppServiceCreateWithReqFields(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppServiceResourceReqConfig(acctest.ProjectCfg),
+				Config: testAccAppServiceResourceReqConfig(testCfg),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(appServiceResourceReference, "name", "test-terraform-app-service"),
 					resource.TestCheckResourceAttr(appServiceResourceReference, "description", ""),
@@ -146,7 +145,7 @@ func TestAccAppServiceCreateWithOptFields(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppServiceResourceOptConfig(acctest.ProjectCfg, resourceName),
+				Config: testAccAppServiceResourceOptConfig(testCfg, resourceName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(appServiceResourceReference, "name", "app_service_opt_fields"),
 					resource.TestCheckResourceAttr(appServiceResourceReference, "description", "acceptance test app service"),
@@ -159,15 +158,15 @@ func TestAccAppServiceCreateWithOptFields(t *testing.T) {
 
 			//Invalid Update of fields
 			{
-				Config:      testAccAppServiceResourceUpdateInvalidProjectIdConfig(acctest.ProjectCfg, resourceName),
+				Config:      testAccAppServiceResourceUpdateInvalidProjectIdConfig(testCfg, resourceName),
 				ExpectError: regexp.MustCompile("wrong project id"),
 			},
 			{
-				Config:      testAccAppServiceResourceUpdateInvalidOrgIdConfig(acctest.ProjectCfg, resourceName),
+				Config:      testAccAppServiceResourceUpdateInvalidOrgIdConfig(testCfg, resourceName),
 				ExpectError: regexp.MustCompile("wrong org id"),
 			},
 			{
-				Config:      testAccAppServiceResourceUpdateInvalidClusterIdConfig(acctest.ProjectCfg, resourceName),
+				Config:      testAccAppServiceResourceUpdateInvalidClusterIdConfig(testCfg, resourceName),
 				ExpectError: regexp.MustCompile("wrong cluster id"),
 			},
 		},
