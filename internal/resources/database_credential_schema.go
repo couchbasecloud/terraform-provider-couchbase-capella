@@ -20,9 +20,9 @@ func DatabaseCredentialSchema() schema.Schema {
 			},
 			"name":            stringAttribute(required, requiresReplace),
 			"password":        stringAttribute(optional, computed, sensitive, useStateForUnknown),
-			"organization_id": stringAttribute(required),
-			"project_id":      stringAttribute(required),
-			"cluster_id":      stringAttribute(required),
+			"organization_id": stringAttribute(required, requiresReplace),
+			"project_id":      stringAttribute(required, requiresReplace),
+			"cluster_id":      stringAttribute(required, requiresReplace),
 			"audit":           computedAuditAttribute(),
 			"access": schema.ListNestedAttribute{
 				Optional: true,
