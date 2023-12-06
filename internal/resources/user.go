@@ -93,16 +93,9 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 		createUserRequest.Name = plan.Name.ValueStringPointer()
 	}
 
-	// Note: We are going to omit resources if the user config specifies resources and grants
-	// access level "organizationOwner". This is necessary because cp-open-api returns no
-	// listed resources when access level is organizationOwner.
-	var resources []providerschema.Resource
 	if len(plan.Resources) != 0 {
-		resources = handleOrganizationOwnerResources(plan.OrganizationRoles, plan.Resources)
+		createUserRequest.Resources = providerschema.ConvertResources(plan.Resources)
 
-	}
-	if resources != nil {
-		createUserRequest.Resources = providerschema.ConvertResources(resources)
 	}
 
 	// Execute request
@@ -143,8 +136,14 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
-
 	resp.Diagnostics.Append(diags...)
+
+	if checkOrganizationOwner(plan.OrganizationRoles, plan.Resources) {
+		attributePath := path.Root("resources")
+		diags = resp.State.SetAttribute(ctx, attributePath, plan.Resources)
+		resp.Diagnostics.Append(diags...)
+	}
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -241,13 +240,6 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 		userId         = IDs[providerschema.Id]
 	)
 
-	// Note: We are going to omit resources if the user config specifies resources and grants
-	// access level "organizationOwner". This is necessary because cp-open-api returns no
-	// listed resources when access level is organizationOwner.
-	if len(plan.Resources) != 0 {
-		plan.Resources = handleOrganizationOwnerResources(plan.OrganizationRoles, plan.Resources)
-	}
-
 	patch := constructPatch(state, plan)
 
 	err = r.updateUser(organizationId, userId, patch)
@@ -276,6 +268,13 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
+
+	if checkOrganizationOwner(plan.OrganizationRoles, plan.Resources) {
+		attributePath := path.Root("resources")
+		diags = resp.State.SetAttribute(ctx, attributePath, plan.Resources)
+		resp.Diagnostics.Append(diags...)
+	}
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -411,18 +410,14 @@ func compareResources(existingResources, proposedResources []providerschema.Reso
 	return entries
 }
 
-// handleOrganizationOwnerResources is used to check if config contains specific resources and grants
-// access level "organizationOwner". If so, an empty list of resources is returned. This
-// is necessary because cp-open-api returns no listed resources when access level is organizationOwner.
-// If a user is created with organizationOwner resources, then an error will occur when
-// terraform next attempts to refresh state.
-func handleOrganizationOwnerResources(roles []basetypes.StringValue, resources []providerschema.Resource) []providerschema.Resource {
+// checkOrganizationOwner is used to determine whether a list of planned roles for
+// a user includes the role 'organizationOwner'.
+func checkOrganizationOwner(roles []basetypes.StringValue, resources []providerschema.Resource) bool {
 	if resources != nil && slices.Contains(
 		roles, basetypes.NewStringValue("organizationOwner")) {
-		return nil
+		return true
 	}
-
-	return resources
+	return false
 }
 
 // compare is used to compare two slices of basetypes.stringvalue
