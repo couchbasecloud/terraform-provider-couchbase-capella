@@ -735,6 +735,8 @@ func getCouchbaseServer(ctx context.Context, config tfsdk.Config, diags *diag.Di
 	return couchbaseServer
 }
 
+// initializePendingClusterWithPlanAndId initializes an instance of providerschema.Cluster
+// with the specified plan and ID. It marks all computed fields as null and state as pending.
 func initializePendingClusterWithPlanAndId(plan providerschema.Cluster, id string) providerschema.Cluster {
 	plan.Id = types.StringValue(id)
 	plan.CurrentState = types.StringValue("pending")

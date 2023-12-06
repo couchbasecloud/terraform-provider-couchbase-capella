@@ -46,6 +46,7 @@ type EndpointCfg struct {
 	SuccessStatus int
 }
 
+// defaultWaitAttempt re-attempt http request after 2 seconds
 const defaultWaitAttempt = time.Second * 2
 
 // Execute is used to construct and execute a HTTP request.

@@ -507,6 +507,8 @@ func mapAccess(plan providerschema.DatabaseCredential) []providerschema.Access {
 	return access
 }
 
+// initializeDataBaseCredentialWithPlanPasswordAndId initializes an instance of providerschema.DatabaseCredential
+// with the specified plan and ID. It marks all computed fields as null.
 func initializeDataBaseCredentialWithPlanPasswordAndId(plan providerschema.DatabaseCredential, password, id string) providerschema.DatabaseCredential {
 	plan.Id = types.StringValue(id)
 	if password != "" {

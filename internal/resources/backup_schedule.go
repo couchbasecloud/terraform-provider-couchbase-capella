@@ -25,6 +25,14 @@ var (
 	_ resource.ResourceWithImportState = &BackupSchedule{}
 )
 
+const errorMessageAfterBackupScheduleCreation = "Backup Schedule creation is successful, but encountered an error while checking the current" +
+	" state of the backup schedule. Please run `terraform plan` after 1-2 minutes to know the" +
+	" current backup schedule state. Additionally, run `terraform apply --refresh-only` to update" +
+	" the state from remote, unexpected error: "
+
+const errorMessageWhileBackupScheduleCreation = "There is an error during backup schedule creation. Please check in Capella to see if any hanging resources" +
+	" have been created, unexpected error: "
+
 // BackupSchedule is the BackupSchedule resource implementation.
 type BackupSchedule struct {
 	*providerschema.Data
@@ -95,7 +103,7 @@ func (b *BackupSchedule) Create(ctx context.Context, req resource.CreateRequest,
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error executing request",
-			"Could not execute request, unexpected error: "+api.ParseError(err),
+			errorMessageWhileBackupScheduleCreation+api.ParseError(err),
 		)
 		return
 	}
@@ -110,7 +118,7 @@ func (b *BackupSchedule) Create(ctx context.Context, req resource.CreateRequest,
 	if err != nil {
 		resp.Diagnostics.AddWarning(
 			"Error Reading Capella Backup Schedule",
-			"Could not read Capella Backup Schedule for the bucket: %s "+bucketId+": "+api.ParseError(err),
+			"Could not read Capella Backup Schedule for the bucket: %s "+bucketId+"."+errorMessageAfterBackupScheduleCreation+api.ParseError(err),
 		)
 		return
 	}

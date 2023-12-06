@@ -113,8 +113,8 @@ func (c *Bucket) Create(ctx context.Context, req resource.CreateRequest, resp *r
 
 	if plan.ProjectId.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error creating database credential",
-			"Could not create database credential, unexpected error: "+errors.ErrProjectIdCannotBeEmpty.Error(),
+			"Error creating bucket",
+			"Could not create bucket, unexpected error: "+errors.ErrProjectIdCannotBeEmpty.Error(),
 		)
 		return
 	}
@@ -122,8 +122,8 @@ func (c *Bucket) Create(ctx context.Context, req resource.CreateRequest, resp *r
 
 	if plan.ClusterId.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error creating database credential",
-			"Could not create database credential, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
+			"Error creating bucket",
+			"Could not create bucket, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
 		)
 		return
 	}
@@ -441,6 +441,8 @@ func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 	}
 }
 
+// initializeBucketWithPlanAndId initializes an instance of providerschema.Bucket
+// with the specified plan and ID. It marks all computed fields as null.
 func initializeBucketWithPlanAndId(plan providerschema.Bucket, id string) providerschema.Bucket {
 	plan.Id = types.StringValue(id)
 	if plan.StorageBackend.IsNull() || plan.StorageBackend.IsUnknown() {

@@ -26,6 +26,14 @@ var (
 	_ resource.ResourceWithImportState = &User{}
 )
 
+const errorMessageAfterUserCreation = "User creation is successful, but encountered an error while checking the current" +
+	" state of the user. Please run `terraform plan` after 1-2 minutes to know the" +
+	" current user state. Additionally, run `terraform apply --refresh-only` to update" +
+	" the state from remote, unexpected error: "
+
+const errorMessageWhileUserCreation = "There is an error during user creation. Please check in Capella to see if any hanging resources" +
+	" have been created, unexpected error: "
+
 // User is the User resource implementation
 type User struct {
 	*providerschema.Data
@@ -109,7 +117,7 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error executing request",
-			"Could not execute request, unexpected error: "+api.ParseError(err),
+			errorMessageWhileUserCreation+api.ParseError(err),
 		)
 		return
 	}
@@ -119,16 +127,22 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating user",
-			"Could not create user, unexpected error: "+err.Error(),
+			errorMessageWhileUserCreation+"error during unmarshalling: "+err.Error(),
 		)
+		return
+	}
+
+	diags = resp.State.Set(ctx, initializeUserWithPlanAndId(plan, createUserResponse.Id.String()))
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	refreshedState, err := r.refreshUser(ctx, organizationId, createUserResponse.Id.String())
 	if err != nil {
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"Error executing request",
-			"Could not execute request, unexpected error: "+api.ParseError(err),
+			errorMessageAfterUserCreation+api.ParseError(err),
 		)
 		return
 	}
@@ -560,4 +574,22 @@ func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (
 func (r *User) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+// initializeUserWithPlanAndId initializes an instance of providerschema.User
+// with the specified plan and ID. It marks all computed fields as null.
+func initializeUserWithPlanAndId(plan providerschema.User, id string) providerschema.User {
+	plan.Id = types.StringValue(id)
+	if plan.Name.IsNull() || plan.Name.IsUnknown() {
+		plan.Name = types.StringNull()
+	}
+	plan.Status = types.StringNull()
+	plan.Inactive = types.BoolNull()
+	plan.LastLogin = types.StringNull()
+	plan.Region = types.StringNull()
+	plan.TimeZone = types.StringNull()
+	plan.EnableNotifications = types.BoolNull()
+	plan.ExpiresAt = types.StringNull()
+	plan.Audit = types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
+	return plan
 }

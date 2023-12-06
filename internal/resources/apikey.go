@@ -524,6 +524,8 @@ func (a *ApiKey) retainResourcesIfOrgOwner(apiKeyReq, apiKeyRes *providerschema.
 	return apiKeyRes
 }
 
+// initializeApiKeyWithPlanAndId initializes an instance of providerschema.ApiKey
+// with the specified plan and ID. It marks all computed fields as null.
 func initializeApiKeyWithPlanAndId(plan providerschema.ApiKey, id string) providerschema.ApiKey {
 	plan.Id = types.StringValue(id)
 	if plan.Secret.IsNull() || plan.Secret.IsUnknown() {

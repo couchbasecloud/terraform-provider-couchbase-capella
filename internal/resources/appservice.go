@@ -531,6 +531,8 @@ func (a *AppService) getAppService(ctx context.Context, organizationId, projectI
 	return &appServiceResp, nil
 }
 
+// initializePendingAppServiceWithPlanAndId initializes an instance of providerschema.AppService
+// with the specified plan and ID. It marks all computed fields as null and state as pending.
 func initializePendingAppServiceWithPlanAndId(plan providerschema.AppService, id string) providerschema.AppService {
 	plan.Id = types.StringValue(id)
 	plan.CurrentState = types.StringValue("pending")
