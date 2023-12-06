@@ -2,6 +2,8 @@ package acceptance_tests
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"log"
 	"net/http"
 	"os"
@@ -9,16 +11,30 @@ import (
 	"terraform-provider-capella/internal/api"
 	acctest "terraform-provider-capella/internal/testing"
 	"testing"
-
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAppServiceResource(t *testing.T) {
+
+	clusterResourceName := "new_cluster"
+	clusterResourceReference := "capella_cluster." + clusterResourceName
+	testCfg := acctest.ProjectCfg
+	projectResourceName := "terraform_project"
+	projectResourceReference := "capella_project." + projectResourceName
+	cidr, err := acctest.GetCIDR("aws")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
+			{
+				Config: testAccCreateCluster(&testCfg, clusterResourceName, projectResourceName, projectResourceReference, cidr),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccExistsClusterResource(clusterResourceReference),
+				),
+			},
 			// Create and Read testing
 			{
 				Config: testAccAppServiceResourceConfig(acctest.Cfg),
@@ -92,7 +108,7 @@ func TestAccAppServiceCreateWithReqFields(t *testing.T) {
 					resource.TestCheckResourceAttr(appServiceResourceReference, "description", ""),
 					resource.TestCheckResourceAttr(appServiceResourceReference, "compute.cpu", "2"),
 					resource.TestCheckResourceAttr(appServiceResourceReference, "compute.ram", "4"),
-					resource.TestCheckResourceAttr(appServiceResourceReference", "nodes", "2"),
+					resource.TestCheckResourceAttr(appServiceResourceReference, "nodes", "2"),
 				),
 			},
 		},
@@ -101,8 +117,11 @@ func TestAccAppServiceCreateWithReqFields(t *testing.T) {
 }
 func TestAccAppServiceCreateWithOptFields(t *testing.T) {
 	resourceName := "app_service_opt_fields"
-	//cidr, _ := acctest.GetCIDR()
-	//fmt.Println(cidr)
+	cidr, err := acctest.GetCIDR("aws")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
 	appServiceResourceName := "app_service_opt_fields"
 	appServiceResourceReference := "capella_app_service." + appServiceResourceName
 	clusterResourceName := "new_cluster"
@@ -110,7 +129,6 @@ func TestAccAppServiceCreateWithOptFields(t *testing.T) {
 	testCfg := acctest.ProjectCfg
 	projectResourceName := "terraform_project"
 	projectResourceReference := "capella_project." + projectResourceName
-	cidr := "10.1.68.0/23"
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.TestAccPreCheck(t)
@@ -137,10 +155,6 @@ func TestAccAppServiceCreateWithOptFields(t *testing.T) {
 
 			//Invalid Update of fields
 			{
-				Config:      testAccAppServiceResourceUpdateInvalidClusterIdConfig(acctest.ProjectCfg, resourceName),
-				ExpectError: regexp.MustCompile("wrong cluster id"),
-			},
-			{
 				Config:      testAccAppServiceResourceUpdateInvalidProjectIdConfig(acctest.ProjectCfg, resourceName),
 				ExpectError: regexp.MustCompile("wrong project id"),
 			},
@@ -148,12 +162,53 @@ func TestAccAppServiceCreateWithOptFields(t *testing.T) {
 				Config:      testAccAppServiceResourceUpdateInvalidOrgIdConfig(acctest.ProjectCfg, resourceName),
 				ExpectError: regexp.MustCompile("wrong org id"),
 			},
+			{
+				Config:      testAccAppServiceResourceUpdateInvalidClusterIdConfig(acctest.ProjectCfg, resourceName),
+				ExpectError: regexp.MustCompile("wrong cluster id"),
+			},
 		},
 	},
 	)
 }
 
-func TestAccAppServiceDeleteAppService(t *testing.T) {
+//	func TestAccAppServiceDeleteAppService(t *testing.T) {
+//		appServiceResourceName := "app_service_opt_fields"
+//		appServiceResourceReference := "capella_app_service." + appServiceResourceName
+//		clusterResourceName := "new_cluster"
+//		clusterResourceReference := "capella_cluster." + clusterResourceName
+//		testCfg := acctest.ProjectCfg
+//		projectResourceName := "terraform_project"
+//		projectResourceReference := "capella_project." + projectResourceName
+//		cidr := "10.1.68.0/23"
+//		resource.Test(t, resource.TestCase{
+//			PreCheck: func() {
+//				acctest.TestAccPreCheck(t)
+//			},
+//			ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+//			Steps: []resource.TestStep{
+//				{
+//					Config: testAccCreateCluster(&testCfg, clusterResourceName, projectResourceName, projectResourceReference, cidr),
+//					Check: resource.ComposeAggregateTestCheckFunc(
+//						testAccExistsClusterResource(clusterResourceReference),
+//					),
+//				},
+//				{
+//					Config: testAccAppServiceResourceOptConfig(testCfg, appServiceResourceName),
+//					Check: resource.ComposeTestCheckFunc(
+//						resource.TestCheckResourceAttr(appServiceResourceReference, "name", "app_service_opt_fields"),
+//						resource.TestCheckResourceAttr(appServiceResourceReference, "description", "acceptance test app service"),
+//						resource.TestCheckResourceAttr(appServiceResourceReference, "compute.cpu", "2"),
+//						resource.TestCheckResourceAttr(appServiceResourceReference, "compute.ram", "4"),
+//						resource.TestCheckResourceAttr(appServiceResourceReference, "nodes", "2"),
+//						testAccDeleteAppService(projectResourceReference, clusterResourceReference, appServiceResourceReference),
+//					),
+//					ExpectNonEmptyPlan: true,
+//					RefreshState:       false,
+//				},
+//			},
+//		})
+//	}
+func TestAccAppServiceDeleteAppAndCluster(t *testing.T) {
 	appServiceResourceName := "app_service_opt_fields"
 	appServiceResourceReference := "capella_app_service." + appServiceResourceName
 	clusterResourceName := "new_cluster"
@@ -161,7 +216,11 @@ func TestAccAppServiceDeleteAppService(t *testing.T) {
 	testCfg := acctest.ProjectCfg
 	projectResourceName := "terraform_project"
 	projectResourceReference := "capella_project." + projectResourceName
-	cidr := "10.1.68.0/23"
+	cidr, err := acctest.GetCIDR("aws")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.TestAccPreCheck(t)
@@ -187,31 +246,6 @@ func TestAccAppServiceDeleteAppService(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 				RefreshState:       false,
 			},
-		},
-	})
-}
-
-func TestAccAppServiceDeleteCluster(t *testing.T) {
-	appServiceResourceName := "app_service_opt_fields"
-	appServiceResourceReference := "capella_app_service." + appServiceResourceName
-	clusterResourceName := "new_cluster"
-	clusterResourceReference := "capella_cluster." + clusterResourceName
-	testCfg := acctest.ProjectCfg
-	projectResourceName := "terraform_project"
-	projectResourceReference := "capella_project." + projectResourceName
-	cidr := "10.0.30.0/23"
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.TestAccPreCheck(t)
-		},
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCreateCluster(&testCfg, clusterResourceName, projectResourceName, projectResourceReference, cidr),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExistsClusterResource(clusterResourceReference),
-				),
-			},
 			{
 				Config: testAccAppServiceResourceOptConfig(testCfg, appServiceResourceName),
 				Check: resource.ComposeTestCheckFunc(
@@ -234,8 +268,8 @@ func testAccAppServiceResourceOptConfig(cfg, resourceName string) string {
 %[1]s
 resource "capella_app_service" "%[2]s" {
   organization_id = var.organization_id
-  project_id      = "90bafc4e-43fe-4577-9c6f-2893478bd392"
-  cluster_id      = "c517165b-bd66-4f34-9bf5-31d89bae5e8c"
+  project_id      = capella_project.terraform_project.id
+  cluster_id      = capella_cluster.new_cluster.id
   description	  = "acceptance test app service"
   name            = "app_service_opt_fields"
   nodes			  = "2"
@@ -252,8 +286,8 @@ func testAccAppServiceResourceReqConfig(cfg string) string {
 %[1]s
 resource "capella_app_service" "app_service_req_fields" {
   organization_id = var.organization_id
-  project_id      = "90bafc4e-43fe-4577-9c6f-2893478bd392"
-  cluster_id      = "c517165b-bd66-4f34-9bf5-31d89bae5e8c"
+  project_id      = capella_project.terraform_project.id
+  cluster_id      = capella_cluster.new_cluster.id
   name            = "test-terraform-app-service"
   compute = {
     cpu = 2
@@ -269,8 +303,8 @@ func testAccAppServiceResourceConfig(cfg string) string {
 
 resource "capella_app_service" "new_app_service" {
   organization_id = var.organization_id
-  project_id      = var.project_id
-  cluster_id      = var.cluster_id
+  project_id      = capella_project.terraform_project.id
+  cluster_id      = capella_cluster.new_cluster.id
   name            = "test-terraform-app-service"
   description     = "description"
   compute = {
@@ -287,8 +321,8 @@ func testAccAppServiceResourceConfigUpdate(cfg string) string {
 
 resource "capella_app_service" "new_app_service" {
   organization_id = var.organization_id
-  project_id      = var.project_id
-  cluster_id      = var.cluster_id
+  project_id      = capella_project.terraform_project.id
+  cluster_id      = capella_cluster.new_cluster.id
   name            = "test-terraform-app-service"
   description     = "description"
   compute = {
@@ -306,8 +340,8 @@ func testAccAppServiceResourceConfigUpdateWithIfMatch(cfg string) string {
 
 resource "capella_app_service" "new_app_service" {
   organization_id = var.organization_id
-  project_id      = var.project_id
-  cluster_id      = var.cluster_id
+  project_id      = capella_project.terraform_project.id
+  cluster_id      = capella_cluster.new_cluster.id
   name            = "test-terraform-app-service"
   description     = "description"
   if_match        =  2
@@ -339,8 +373,8 @@ func testAccAppServiceResourceUpdateInvalidClusterIdConfig(cfg, resourceName str
 %[1]s
 resource "capella_app_service" "%[2]s" {
   organization_id = var.organization_id
-  project_id      = "90bafc4e-43fe-4577-9c6f-2893478bd392"
-  cluster_id      = "55556666-4444-3333-2222-11111ffffff"
+  project_id      = capella_project.terraform_project.id
+  cluster_id      = capella_cluster.new_cluster.id
   description	  = "acceptance test app service"
   name            = "app_service_opt_fields"
   nodes			  = "2"
@@ -357,8 +391,8 @@ func testAccAppServiceResourceUpdateInvalidProjectIdConfig(cfg, resourceName str
 %[1]s
 resource "capella_app_service" "%[2]s" {
   organization_id = var.organization_id
-  project_id      = "55556666-4444-3333-2222-11111ffffff"
-  cluster_id      = "c517165b-bd66-4f34-9bf5-31d89bae5e8c"
+  project_id      = capella_project.terraform_project.id
+  cluster_id      = capella_cluster.new_cluster.id
   description	  = "acceptance test app service"
   name            = "app_service_opt_fields"
   nodes			  = "2"
@@ -375,8 +409,8 @@ func testAccAppServiceResourceUpdateInvalidOrgIdConfig(cfg, resourceName string)
 %[1]s
 resource "capella_app_service" "%[2]s" {
   organization_id = "55556666-4444-3333-2222-11111ffffff"
-  project_id      = "90bafc4e-43fe-4577-9c6f-2893478bd392"
-  cluster_id      = "c517165b-bd66-4f34-9bf5-31d89bae5e8c"
+  project_id      = capella_project.terraform_project.id
+  cluster_id      = capella_cluster.new_cluster.id
   description	  = "acceptance test app service"
   name            = "app_service_opt_fields"
   nodes			  = "2"

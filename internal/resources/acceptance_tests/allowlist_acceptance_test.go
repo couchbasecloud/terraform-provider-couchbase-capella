@@ -20,9 +20,13 @@ func TestAccAllowListTestCases(t *testing.T) {
 	resourceReference := "capella_cluster." + resourceName
 	projectResourceName := "terraform_project"
 	projectResourceReference := "capella_project." + projectResourceName
-	cidr := "10.250.250.0/23"
+	cidr, err := acctest.GetCIDR("aws")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
 
-	testCfg := acctest.Cfg
+	testCfg := acctest.ProjectCfg
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
@@ -93,9 +97,13 @@ func TestAccAllowedIPDeleteIP(t *testing.T) {
 	clusterResourceReference := "capella_cluster." + clusterName
 	projectResourceName := "terraform_project"
 	projectResourceReference := "capella_project." + projectResourceName
-	cidr := "10.250.250.0/23"
+	cidr, err := acctest.GetCIDR("aws")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
 
-	testCfg := acctest.Cfg
+	testCfg := acctest.ProjectCfg
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
@@ -128,8 +136,12 @@ func TestAccAllowedIPDeleteCluster(t *testing.T) {
 	clusterResourceReference := "capella_cluster." + clusterName
 	projectResourceName := "terraform_project"
 	projectResourceReference := "capella_project." + projectResourceName
-	cidr := "10.4.2.0/23"
-	testCfg := acctest.Cfg
+	cidr, err := acctest.GetCIDR("aws")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	testCfg := acctest.ProjectCfg
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
