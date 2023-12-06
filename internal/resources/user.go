@@ -204,16 +204,17 @@ func (r *User) Read(ctx context.Context, req resource.ReadRequest, resp *resourc
 	}
 
 	// Set refreshed state
-
 	if checkOrganizationOwner(state.OrganizationRoles, state.Resources) {
-		// overwrite resource values for organization owner. This is needed
-		// as the API returns null resources for organization owner.
-		attributePath := path.Root("resources")
-		diags = resp.State.SetAttribute(ctx, attributePath, state.Resources)
-		resp.Diagnostics.Append(diags...)
+		existingResources := state.Resources
 
 		diags = resp.State.Set(ctx, &refreshedState)
 		resp.Diagnostics.Append(diags...)
+		// overwrite resource values for organization owner. This is needed
+		// as the API returns null resources for organization owner.
+		attributePath := path.Root("resources")
+		diags = resp.State.SetAttribute(ctx, attributePath, existingResources)
+		resp.Diagnostics.Append(diags...)
+		return
 	}
 
 	diags = resp.State.Set(ctx, &refreshedState)
