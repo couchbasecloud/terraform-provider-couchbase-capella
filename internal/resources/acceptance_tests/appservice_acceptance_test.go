@@ -37,7 +37,7 @@ func TestAppServiceResource(t *testing.T) {
 			},
 			// Create and Read testing
 			{
-				Config: testAccAppServiceResourceConfig(acctest.Cfg),
+				Config: testAccAppServiceResourceConfig(testCfg),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "name", "test-terraform-app-service"),
 					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "description", "description"),
@@ -55,7 +55,7 @@ func TestAppServiceResource(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: testAccAppServiceResourceConfigUpdate(acctest.Cfg),
+				Config: testAccAppServiceResourceConfigUpdate(testCfg),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "name", "test-terraform-app-service"),
 					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "description", "description"),
@@ -65,7 +65,7 @@ func TestAppServiceResource(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppServiceResourceConfigUpdateWithIfMatch(acctest.Cfg),
+				Config: testAccAppServiceResourceConfigUpdateWithIfMatch(testCfg),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "name", "test-terraform-app-service"),
 					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "description", "description"),
@@ -88,7 +88,11 @@ func TestAccAppServiceCreateWithReqFields(t *testing.T) {
 	testCfg := acctest.ProjectCfg
 	projectResourceName := "terraform_project"
 	projectResourceReference := "capella_project." + projectResourceName
-	cidr := "10.1.68.0/23"
+	cidr, err := acctest.GetCIDR("aws")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.TestAccPreCheck(t)
@@ -235,7 +239,7 @@ func TestAccAppServiceDeleteAppAndCluster(t *testing.T) {
 			},
 			{
 				Config: testAccAppServiceResourceOptConfig(testCfg, appServiceResourceName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(appServiceResourceReference, "name", "app_service_opt_fields"),
 					resource.TestCheckResourceAttr(appServiceResourceReference, "description", "acceptance test app service"),
 					resource.TestCheckResourceAttr(appServiceResourceReference, "compute.cpu", "2"),
@@ -248,7 +252,7 @@ func TestAccAppServiceDeleteAppAndCluster(t *testing.T) {
 			},
 			{
 				Config: testAccAppServiceResourceOptConfig(testCfg, appServiceResourceName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(appServiceResourceReference, "name", "app_service_opt_fields"),
 					resource.TestCheckResourceAttr(appServiceResourceReference, "description", "acceptance test app service"),
 					resource.TestCheckResourceAttr(appServiceResourceReference, "compute.cpu", "2"),
