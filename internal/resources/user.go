@@ -93,8 +93,16 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 		createUserRequest.Name = plan.Name.ValueStringPointer()
 	}
 
+	// Note: We are going to omit resources if the user config specifies resources and grants
+	// access level "organizationOwner". This is necessary because cp-open-api returns no
+	// listed resources when access level is organizationOwner.
+	var resources []providerschema.Resource
 	if len(plan.Resources) != 0 {
-		createUserRequest.Resources = handleResources(plan.OrganizationRoles, plan.Resources)
+		resources = handleOrganizationOwnerResources(plan.OrganizationRoles, plan.Resources)
+
+	}
+	if resources != nil {
+		createUserRequest.Resources = providerschema.ConvertResources(resources)
 	}
 
 	// Execute request
@@ -233,7 +241,12 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 		userId         = IDs[providerschema.Id]
 	)
 
-	// TODO: Handle case where user is organizationOwner and specific resources listed
+	// Note: We are going to omit resources if the user config specifies resources and grants
+	// access level "organizationOwner". This is necessary because cp-open-api returns no
+	// listed resources when access level is organizationOwner.
+	if len(plan.Resources) != 0 {
+		plan.Resources = handleOrganizationOwnerResources(plan.OrganizationRoles, plan.Resources)
+	}
 
 	patch := constructPatch(state, plan)
 
@@ -398,20 +411,18 @@ func compareResources(existingResources, proposedResources []providerschema.Reso
 	return entries
 }
 
-// handleResources is used to convert a list of nested resources from
-// underlying types of basetypes.stringvalue to strings.
-func handleResources(roles []basetypes.StringValue, resources []providerschema.Resource) []api.Resource {
-	// Omit resources is if the user config contains specific resources and grants access level
-	// "organizationOwner". If so, an empty list of resources is returned. This is necessary
-	// because cp-open-api returns no listed resources when access level is organizationOwner.
-	// If a user is created with organizationOwner resources, then an error will occur when
-	// terraform next attempts to refresh state.
+// handleOrganizationOwnerResources is used to check if config contains specific resources and grants
+// access level "organizationOwner". If so, an empty list of resources is returned. This
+// is necessary because cp-open-api returns no listed resources when access level is organizationOwner.
+// If a user is created with organizationOwner resources, then an error will occur when
+// terraform next attempts to refresh state.
+func handleOrganizationOwnerResources(roles []basetypes.StringValue, resources []providerschema.Resource) []providerschema.Resource {
 	if resources != nil && slices.Contains(
 		roles, basetypes.NewStringValue("organizationOwner")) {
 		return nil
 	}
 
-	return providerschema.ConvertResources(resources)
+	return resources
 }
 
 // compare is used to compare two slices of basetypes.stringvalue
