@@ -1,13 +1,13 @@
 output "new_apikey" {
-  value     = capella_apikey.new_apikey
+  value     = couchbase-capella_apikey.new_apikey
   sensitive = true
 }
 
 output "apikey_id" {
-  value = capella_apikey.new_apikey.id
+  value = couchbase-capella_apikey.new_apikey.id
 }
 
-resource "capella_apikey" "new_apikey" {
+resource "couchbase-capella_apikey" "new_apikey" {
   organization_id    = var.organization_id
   name               = var.apikey.name
   description        = var.apikey.description

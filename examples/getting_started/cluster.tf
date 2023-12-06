@@ -1,12 +1,12 @@
 # Stores the cluster details in an output variable.
 # Can be viewed using `terraform output cluster` command
 output "cluster" {
-  value = capella_cluster.new_cluster
+  value = couchbase-capella_cluster.new_cluster
 }
 
-resource "capella_cluster" "new_cluster" {
+resource "couchbase-capella_cluster" "new_cluster" {
   organization_id = var.organization_id
-  project_id      = capella_project.new_project.id
+  project_id      = couchbase-capella_project.new_project.id
   name            = var.cluster.name
   description     = "My first test cluster for multiple services."
   cloud_provider = {

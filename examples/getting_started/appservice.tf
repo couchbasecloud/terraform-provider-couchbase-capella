@@ -1,13 +1,13 @@
 # Stores the app service details in an output variable.
 # Can be viewed using `terraform output app_service` command
 output "app_service" {
-  value = capella_app_service.new_app_service
+  value = couchbase-capella_app_service.new_app_service
 }
 
-resource "capella_app_service" "new_app_service" {
+resource "couchbase-capella_app_service" "new_app_service" {
   organization_id = var.organization_id
-  project_id      = capella_project.new_project.id
-  cluster_id      = capella_cluster.new_cluster.id
+  project_id      = couchbase-capella_project.new_project.id
+  cluster_id      = couchbase-capella_cluster.new_cluster.id
   name            = var.app_service.name
   description     = var.app_service.description
   nodes           = var.app_service.nodes
@@ -15,5 +15,6 @@ resource "capella_app_service" "new_app_service" {
     cpu = var.app_service.compute.cpu
     ram = var.app_service.compute.ram
   }
-  version = var.app_service.version
+  version    = var.app_service.version
+  depends_on = [couchbase-capella_cluster.new_cluster, couchbase-capella_bucket.new_bucket]
 }

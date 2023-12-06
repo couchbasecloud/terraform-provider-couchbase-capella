@@ -1,12 +1,12 @@
 output "new_cluster" {
-  value = capella_cluster.new_cluster
+  value = couchbase-capella_cluster.new_cluster
 }
 
 output "cluster_id" {
-  value = capella_cluster.new_cluster.id
+  value = couchbase-capella_cluster.new_cluster.id
 }
 
-resource "capella_cluster" "new_cluster" {
+resource "couchbase-capella_cluster" "new_cluster" {
   organization_id = var.organization_id
   project_id      = var.project_id
   name            = var.cluster.name

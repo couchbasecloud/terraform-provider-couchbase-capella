@@ -1,8 +1,8 @@
 output "new_backup_schedule" {
-  value = capella_backup_schedule.new_backup_schedule
+  value = couchbase-capella_backup_schedule.new_backup_schedule
 }
 
-resource "capella_backup_schedule" "new_backup_schedule" {
+resource "couchbase-capella_backup_schedule" "new_backup_schedule" {
   organization_id = var.organization_id
   project_id      = var.project_id
   cluster_id      = var.cluster_id
