@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"testing"
 
-	"terraform-provider-capella/internal/api"
-	providerschema "terraform-provider-capella/internal/schema"
-	acctest "terraform-provider-capella/internal/testing"
-	cfg "terraform-provider-capella/internal/testing"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
+	cfg "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
