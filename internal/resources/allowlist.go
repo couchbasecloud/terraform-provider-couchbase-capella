@@ -131,6 +131,12 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 		return
 	}
 
+	// This is added to workaround any timezone conversions that the API does automatically and
+	// may cause an issue in the state file.
+	if plan.ExpiresAt != refreshedState.ExpiresAt {
+		refreshedState.ExpiresAt = plan.ExpiresAt
+	}
+
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
 
@@ -181,6 +187,10 @@ func (r *AllowList) Read(ctx context.Context, req resource.ReadRequest, resp *re
 			"Could not read Capella allowListID "+allowListId+": "+errString,
 		)
 		return
+	}
+
+	if state.ExpiresAt != refreshedState.ExpiresAt {
+		refreshedState.ExpiresAt = state.ExpiresAt
 	}
 
 	// Set refreshed state
