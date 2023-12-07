@@ -264,8 +264,7 @@ func TestAccAppServiceDeleteAppAndCluster(t *testing.T) {
 					resource.TestCheckResourceAttr(appServiceResourceReference, "nodes", "2"),
 					testAccDeleteCluster(projectResourceReference, clusterResourceReference),
 				),
-				ExpectNonEmptyPlan: true,
-				RefreshState:       false,
+				ExpectError: regexp.MustCompile("An App\nService is associated with the cluster, please delete the app service before\ndeleting the cluster"),
 			},
 		},
 	})

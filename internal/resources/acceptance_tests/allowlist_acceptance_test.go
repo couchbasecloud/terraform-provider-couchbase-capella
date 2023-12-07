@@ -69,7 +69,7 @@ func TestAccAllowListTestCases(t *testing.T) {
 			//expired IP
 			{
 				Config:      testAccAddIpWithExpiredIP(testCfg, "add_allowlist_expiredIP", "10.2.2.2/32"),
-				ExpectError: regexp.MustCompile("Unable\nto create new allowlist for database. The expiration time for the allowlist\nis not valid. Must be a point in time greater than now."),
+				ExpectError: regexp.MustCompile("The expiration time for the allowlist is not valid"),
 			},
 
 			//Add SameIP (this ip is same as the one added with required fields teststep and the config of that test step is retained)
