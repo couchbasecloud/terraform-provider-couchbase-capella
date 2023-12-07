@@ -43,7 +43,7 @@ var (
 		Computed:    true,
 	}
 
-	// computedAuditAttribute retuns a SingleNestedAttribute to
+	// computedAuditAttribute returns a SingleNestedAttribute to
 	// represent couchbase audit data using terraform schema types.
 	computedAuditAttribute = schema.SingleNestedAttribute{
 		Computed: true,

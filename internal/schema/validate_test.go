@@ -1,8 +1,9 @@
 package schema
 
 import (
-	"terraform-provider-capella/internal/errors"
 	"testing"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"gotest.tools/assert"
@@ -10,13 +11,13 @@ import (
 
 func Test_ValidateSchemaState(t *testing.T) {
 	type test struct {
-		name                         string
+		expectedErr                  error
 		state                        map[Attr]basetypes.StringValue
+		name                         string
 		expectedProjectId            string
 		expectedOrganizationId       string
 		expectedClusterId            string
 		expectedDatabaseCredentialId string
-		expectedErr                  error
 	}
 
 	tests := []test{

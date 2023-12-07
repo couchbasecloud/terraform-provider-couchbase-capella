@@ -37,20 +37,11 @@ type CreateProjectResponse struct {
 // Database Data Reader
 // To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
 type GetProjectResponse struct {
-	// Audit contains all audit-related fields.
-	Audit CouchbaseAuditData `json:"audit"`
-
-	// Description The description of a particular project.
 	Description string `json:"description"`
-
-	// Id A GUID4 identifier of the project.
-	Id uuid.UUID `json:"id"`
-
-	// Name The name of the project.
-	Name string `json:"name"`
-
-	// Etag represents the version of the document
-	Etag string
+	Name        string `json:"name"`
+	Etag        string
+	Audit       CouchbaseAuditData `json:"audit"`
+	Id          uuid.UUID          `json:"id"`
 }
 
 // PutProjectRequest is the payload sent to the Capella V4 Public API when asked to update a project in an organization.

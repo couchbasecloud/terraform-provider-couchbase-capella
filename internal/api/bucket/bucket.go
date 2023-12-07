@@ -12,14 +12,6 @@ package bucket
 // Project Manager
 // To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
 type CreateBucketRequest struct {
-	// Name is the name of the bucket (up to 100 characters).
-	// This field cannot be changed later. The name should be according to the following rules:
-	// Characters used for the name should be in the ranges of A-Z, a-z, and 0-9; plus the underscore, period, dash, and percent characters.
-	// The name can be a maximum of 100 characters in length.
-	// The name cannot have 0 characters or empty. Minimum length of name is 1.
-	// The name cannot start with a . (period).
-	Name string `json:"name"`
-
 	// Type represents the Bucket Type
 	// Default: "couchbase"
 	// Enum: "couchbase" "ephemeral"
@@ -109,10 +101,18 @@ type CreateBucketRequest struct {
 	//
 	//To learn more, see https://docs.couchbase.com/server/current/rest-api/rest-bucket-create.html#evictionpolicy
 	EvictionPolicy *string `json:"evictionPolicy"`
+
+	// Name is the name of the bucket (up to 100 characters).
+	// This field cannot be changed later. The name should be according to the following rules:
+	// Characters used for the name should be in the ranges of A-Z, a-z, and 0-9; plus the underscore, period, dash, and percent characters.
+	// The name can be a maximum of 100 characters in length.
+	// The name cannot have 0 characters or empty. Minimum length of name is 1.
+	// The name cannot start with a . (period).
+	Name string `json:"name"`
 }
 
 // CreateBucketResponse is the response received from Capella V4 Public API on requesting to create a new bucket.
-// Common response codes: 201, 403, 422, 429, 500
+// Common response codes: 201, 403, 422, 429, 500.
 type CreateBucketResponse struct {
 	// Id is unique ID of the bucket created.
 	Id string `json:"id"`
@@ -130,6 +130,8 @@ type CreateBucketResponse struct {
 // Database Data Reader
 // To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
 type GetBucketResponse struct {
+	Stats *Stats `json:"stats"`
+
 	// Id is the ID of the bucket created.
 	Id string `json:"id"`
 
@@ -144,9 +146,6 @@ type GetBucketResponse struct {
 	// To learn more, see https://docs.couchbase.com/cloud/clusters/data-service/storage-engines.html
 	StorageBackend string `json:"storageBackend"`
 
-	// MemoryAllocationInMb is the amount of memory to allocate for the bucket memory in MiB
-	MemoryAllocationInMb int64 `json:"memoryAllocationInMb"`
-
 	// BucketConflictResolution is the means by which conflicts are resolved during replication.
 	// To learn more, see https://docs.couchbase.com/cloud/clusters/xdcr/xdcr.html#conflict-resolution
 	BucketConflictResolution string `json:"bucketConflictResolution"`
@@ -155,21 +154,22 @@ type GetBucketResponse struct {
 	// To learn more, see https://docs.couchbase.com/cloud/clusters/data-service/manage-buckets.html#add-bucket
 	DurabilityLevel string `json:"durabilityLevel"`
 
-	// Replicas states the number of replica nodes for the bucket.
-	// To learn more, see https://docs.couchbase.com/cloud/clusters/data-service/manage-buckets.html#add-bucket
-	Replicas int64 `json:"replicas"`
-
-	// Flush determines whether flushing is enabled on the bucket.
-	Flush bool `json:"flush"`
-
-	// TimeToLiveInSeconds specifies the time to live (TTL) value in seconds.
-	TimeToLiveInSeconds int64 `json:"timeToLiveInSeconds"`
-
 	// EvictionPolicy is the policy which Capella adopts to prevent data loss due to memory exhaustion.
 	//To learn more, see https://docs.couchbase.com/server/current/rest-api/rest-bucket-create.html#evictionpolicy
 	EvictionPolicy string `json:"evictionPolicy"`
 
-	Stats *Stats `json:"stats"`
+	// MemoryAllocationInMb is the amount of memory to allocate for the bucket memory in MiB
+	MemoryAllocationInMb int64 `json:"memoryAllocationInMb"`
+
+	// Replicas states the number of replica nodes for the bucket.
+	// To learn more, see https://docs.couchbase.com/cloud/clusters/data-service/manage-buckets.html#add-bucket
+	Replicas int64 `json:"replicas"`
+
+	// TimeToLiveInSeconds specifies the time to live (TTL) value in seconds.
+	TimeToLiveInSeconds int64 `json:"timeToLiveInSeconds"`
+
+	// Flush determines whether flushing is enabled on the bucket.
+	Flush bool `json:"flush"`
 }
 
 // PutBucketRequest is the request payload sent to the Capella V4 Public API in order to update an existing bucket.
@@ -181,20 +181,20 @@ type GetBucketResponse struct {
 // Project Manager
 // To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
 type PutBucketRequest struct {
-	// MemoryAllocationInMb is the amount of memory to allocate for the bucket memory in MiB
-	MemoryAllocationInMb int64 `json:"memoryAllocationInMb"`
-
 	// DurabilityLevel is the minimum level at which all writes to the bucket must occur.
 	// To learn more, see https://docs.couchbase.com/cloud/clusters/data-service/manage-buckets.html#add-bucket
 	DurabilityLevel string `json:"durabilityLevel"`
+
+	// MemoryAllocationInMb is the amount of memory to allocate for the bucket memory in MiB
+	MemoryAllocationInMb int64 `json:"memoryAllocationInMb"`
 
 	// Replicas states the number of replica nodes for the bucket.
 	// To learn more, see https://docs.couchbase.com/cloud/clusters/data-service/manage-buckets.html#add-bucket
 	Replicas int64 `json:"replicas"`
 
-	// Flush determines whether flushing is enabled on the bucket.
-	Flush bool `json:"flush"`
-
 	// TimeToLiveInSeconds specifies the time to live (TTL) value in seconds.
 	TimeToLiveInSeconds int64 `json:"timeToLiveInSeconds"`
+
+	// Flush determines whether flushing is enabled on the bucket.
+	Flush bool `json:"flush"`
 }

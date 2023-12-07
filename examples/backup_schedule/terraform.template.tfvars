@@ -9,10 +9,10 @@ bucket_id       = "<bucket_id>"
 backup_schedule = {
   type = "weekly"
   weekly_schedule = {
-    day_of_week = "sunday"
-    start_at = 10
-    incremental_every = 4
-    retention_time = "90days"
+    day_of_week              = "sunday"
+    start_at                 = 10
+    incremental_every        = 4
+    retention_time           = "90days"
     cost_optimized_retention = false
   }
 }

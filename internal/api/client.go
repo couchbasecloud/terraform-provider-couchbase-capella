@@ -8,8 +8,13 @@ import (
 	"net/http"
 	"time"
 
-	"terraform-provider-capella/internal/errors"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/version"
 )
+
+const clientName = "terraform-provider-couchbase-capella"
+
+var userAgent = fmt.Sprintf("%s/%s", clientName, version.ProviderVersion)
 
 // Client is responsible for constructing and executing HTTP requests.
 type Client struct {
@@ -25,13 +30,13 @@ func NewClient(timeout time.Duration) *Client {
 	}
 }
 
-// Response struct is used to encapsulate the response details
+// Response struct is used to encapsulate the response details.
 type Response struct {
 	Response *http.Response
 	Body     []byte
 }
 
-// RequestCfg is used to encapsulate request details to endpoints
+// EndpointCfg is used to encapsulate request details to endpoints.
 type EndpointCfg struct {
 	// Url is url of the endpoint to be contacted
 	Url string
@@ -44,7 +49,7 @@ type EndpointCfg struct {
 	SuccessStatus int
 }
 
-// Execute is used to construct and execute a HTTP request.
+// Execute is used to construct and execute an HTTP request.
 // It then returns the response.
 func (c *Client) Execute(
 	endpointCfg EndpointCfg,
@@ -66,6 +71,7 @@ func (c *Client) Execute(
 	}
 
 	req.Header.Set("Authorization", "Bearer "+authToken)
+	req.Header.Set("User-Agent", userAgent)
 	for header, value := range headers {
 		req.Header.Set(header, value)
 	}

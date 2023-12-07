@@ -1,12 +1,12 @@
 output "new_bucket" {
-  value = capella_bucket.new_bucket
+  value = couchbase-capella_bucket.new_bucket
 }
 
 output "bucket_id" {
-  value = capella_bucket.new_bucket.id
+  value = couchbase-capella_bucket.new_bucket.id
 }
 
-resource "capella_bucket" "new_bucket" {
+resource "couchbase-capella_bucket" "new_bucket" {
   name                       = var.bucket.name
   organization_id            = var.organization_id
   project_id                 = var.project_id

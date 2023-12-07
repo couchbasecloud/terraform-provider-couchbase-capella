@@ -3,7 +3,7 @@ package schema
 import (
 	"testing"
 
-	"terraform-provider-capella/internal/errors"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/stretchr/testify/assert"
@@ -11,13 +11,13 @@ import (
 
 func TestDatabaseCredentialSchemaValidate(t *testing.T) {
 	type test struct {
+		expectedErr                  error
 		name                         string
-		input                        DatabaseCredential
 		expectedProjectId            string
 		expectedOrganizationId       string
 		expectedClusterId            string
 		expectedDatabaseCredentialId string
-		expectedErr                  error
+		input                        DatabaseCredential
 	}
 
 	tests := []test{

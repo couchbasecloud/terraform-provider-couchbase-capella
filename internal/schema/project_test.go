@@ -5,18 +5,18 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"terraform-provider-capella/internal/errors"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 func TestProjectSchemaValidate(t *testing.T) {
 	type test struct {
-		name                   string
+		expectedErr            error
 		input                  Project
+		name                   string
 		expectedProjectId      string
 		expectedOrganizationId string
-		expectedErr            error
 	}
 
 	tests := []test{

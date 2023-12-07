@@ -13,16 +13,16 @@ variable "auth_token" {
 
 variable "user" {
   type = object({
-    name = optional(string)
-    email = string
+    name               = optional(string)
+    email              = string
     organization_roles = list(string)
   })
 }
 
 variable "resources" {
   type = list(object({
-    type = optional(string)
-    id = string
+    type  = optional(string)
+    id    = string
     roles = list(string)
   }))
   default = null
