@@ -1,21 +1,18 @@
 package acceptance_tests
 
 import (
-	"context"
 	"fmt"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 	"log"
 	"net/http"
 	"os"
 	"regexp"
 
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
-
-	"testing"
-	"time"
-
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"testing"
+	"time"
 )
 
 func TestAccAllowListTestCases(t *testing.T) {
@@ -23,9 +20,13 @@ func TestAccAllowListTestCases(t *testing.T) {
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	projectResourceName := "terraform_project"
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
-	cidr := "10.250.250.0/23"
+	cidr, err := acctest.GetCIDR("aws")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
 
-	testCfg := acctest.Cfg
+	testCfg := acctest.ProjectCfg
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
@@ -96,9 +97,13 @@ func TestAccAllowedIPDeleteIP(t *testing.T) {
 	clusterResourceReference := "couchbase-capella_cluster." + clusterName
 	projectResourceName := "terraform_project"
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
-	cidr := "10.250.250.0/23"
+	cidr, err := acctest.GetCIDR("aws")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
 
-	testCfg := acctest.Cfg
+	testCfg := acctest.ProjectCfg
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
@@ -131,8 +136,12 @@ func TestAccAllowedIPDeleteCluster(t *testing.T) {
 	clusterResourceReference := "couchbase-capella_cluster." + clusterName
 	projectResourceName := "terraform_project"
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
-	cidr := "10.4.2.0/23"
-	testCfg := acctest.Cfg
+	cidr, err := acctest.GetCIDR("aws")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	testCfg := acctest.ProjectCfg
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
@@ -367,8 +376,7 @@ func testAccDeleteAllowIP(clusterResourceReference, projectResourceReference, al
 		authToken := os.Getenv("TF_VAR_auth_token")
 		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs/%s", host, orgid, projectState["id"], clusterState["id"], allowListState["id"])
 		cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-		_, err = data.Client.ExecuteWithRetry(
-			context.Background(),
+		_, err = data.Client.Execute(
 			cfg,
 			nil,
 			authToken,
