@@ -128,7 +128,6 @@ func TestAccUserResourceResourceNotFound(t *testing.T) {
 	resourceReference := "couchbase-capella_user." + resourceName
 	projectResourceName := "acc_project_" + cfg.GenerateRandomResourceName()
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { cfg.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: cfg.TestAccProtoV6ProviderFactories,
@@ -149,7 +148,7 @@ func TestAccUserResourceResourceNotFound(t *testing.T) {
 
 			// Attempt to update - since the orginal has been deleted, a new user will be created.
 			{
-				Config: testAccUserResourceConfig(cfg.Cfg, resourceName, projectResourceName, projectResourceReference),
+				Config: testAccUserResourceConfigUpdate(cfg.Cfg, resourceName, projectResourceName, projectResourceReference),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
 					resource.TestCheckResourceAttr(resourceReference, "email", "terraformacceptancetest@couchbase.com"),
