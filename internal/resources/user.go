@@ -191,8 +191,8 @@ func (r *User) Read(ctx context.Context, req resource.ReadRequest, resp *resourc
 	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Capella AllowList",
-			"Could not read Capella allow list: "+err.Error(),
+			"Error Reading Capella User",
+			"Could not read Capella user: "+err.Error(),
 		)
 		return
 	}
