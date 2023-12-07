@@ -7,7 +7,6 @@ import (
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
-	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 	cfg "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -15,13 +14,13 @@ import (
 )
 
 func TestAccUserResourceWithOnlyReqFields(t *testing.T) {
-	resourceName := "acc_user" + acctest.GenerateRandomResourceName()
+	resourceName := "acc_user" + cfg.GenerateRandomResourceName()
 	resourceReference := "capella_user." + resourceName
-	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
+	projectResourceName := "acc_project_" + cfg.GenerateRandomResourceName()
 	projectResourceReference := "capella_project." + projectResourceName
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
+		PreCheck:                 func() { cfg.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read
@@ -61,13 +60,13 @@ func TestAccUserResourceWithOnlyReqFields(t *testing.T) {
 }
 
 func TestAccUserResourceAllFields(t *testing.T) {
-	resourceName := "acc_user" + acctest.GenerateRandomResourceName()
+	resourceName := "acc_user" + cfg.GenerateRandomResourceName()
 	resourceReference := "capella_user." + resourceName
-	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
+	projectResourceName := "acc_project_" + cfg.GenerateRandomResourceName()
 	projectResourceReference := "capella_project." + projectResourceName
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
+		PreCheck:                 func() { cfg.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read
@@ -123,7 +122,7 @@ func testAccDeleteUserResource(resourceReference string) resource.TestCheckFunc 
 			}
 		}
 
-		data, err := acctest.TestClient()
+		data, err := cfg.TestClient()
 		if err != nil {
 			return err
 		}
@@ -175,14 +174,14 @@ func readUserFromServer(data *providerschema.Data, organizationId, clusterId str
 }
 
 func TestAccUserResourceResourceNotFound(t *testing.T) {
-	resourceName := "acc_database_credential" + acctest.GenerateRandomResourceName()
+	resourceName := "acc_database_credential" + cfg.GenerateRandomResourceName()
 	resourceReference := "capella_database_credential." + resourceName
-	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
+	projectResourceName := "acc_project_" + cfg.GenerateRandomResourceName()
 	projectResourceReference := "capella_project." + projectResourceName
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { cfg.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: cfg.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
