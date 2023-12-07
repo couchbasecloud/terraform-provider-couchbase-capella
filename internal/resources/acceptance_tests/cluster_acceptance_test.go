@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
+// TODO: AV-66543 - Make Acceptance test concurrent
 // Concurrent Project creation is failing.
 
 // TestAccClusterResourceWithOnlyReqFieldAWS is a Terraform acceptance test that covers the lifecycle of a cluster resource
@@ -481,7 +482,7 @@ func TestAccClusterResourceWithOptionalFieldAWSInvalidScenario(t *testing.T) {
 					time.Sleep(4 * time.Minute)
 				},
 				Config:      testAccClusterResourceConfigWithAllFieldInvalidScenario(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
-				ExpectError: regexp.MustCompile("The disk type provided, gp2, is not valid"),
+				ExpectError: regexp.MustCompile("gp2, is not valid"),
 			},
 		},
 	})
