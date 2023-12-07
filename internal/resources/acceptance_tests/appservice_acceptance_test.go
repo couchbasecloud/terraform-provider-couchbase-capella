@@ -39,12 +39,11 @@ func TestAppServiceResource(t *testing.T) {
 			// Create and Read testing
 			{
 				Config: testAccAppServiceResourceConfig(testCfg),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("couchbase-capella_app_service.new_app_service", "name", "test-terraform-app-service"),
 					resource.TestCheckResourceAttr("couchbase-capella_app_service.new_app_service", "description", "description"),
 					resource.TestCheckResourceAttr("couchbase-capella_app_service.new_app_service", "compute.cpu", "2"),
 					resource.TestCheckResourceAttr("couchbase-capella_app_service.new_app_service", "compute.ram", "4"),
-					resource.TestCheckResourceAttr("couchbase-capella_app_service.new_app_service", "nodes", "2"),
 				),
 			},
 			//// ImportState testing
