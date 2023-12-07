@@ -10,17 +10,20 @@ package backup
 // Project Owner
 // To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
 type GetBackupResponse struct {
-	// Id is a GUID4 identifier of the backup.
-	Id string `json:"id"`
+	// BackupStats represents various backup level data that couchbase provides.
+	BackupStats *BackupStats `json:"stats"`
 
-	// OrganizationId is the organizationId of the capella tenant.
-	OrganizationId string `json:"organizationID"`
+	// ScheduleInfo represents the schedule information of the backup.
+	ScheduleInfo *ScheduleInfo `json:"scheduleInfo"`
 
-	// ProjectId is the projectId of the capella tenant.
-	ProjectId string `json:"projectID"`
+	// Method represents the mechanism of the backup.
+	// Enum: "incremental" "full"
+	// Incremental backups include the data that has changed since the last scheduled backup.
+	// Full backup includes all bucket data from the time the backup was created.
+	Method string `json:"method"`
 
-	// ClusterId is the clusterId of the capella tenant.
-	ClusterId string `json:"clusterID"`
+	// BucketName represents the name of the bucket to which the backup belongs to.
+	BucketName string `json:"bucketName"`
 
 	// CycleId is the cycleId to the which the backup belongs to.
 	CycleId string `json:"cycleID"`
@@ -35,14 +38,11 @@ type GetBackupResponse struct {
 	// Enum: "pending" "ready" "failed"
 	Status State `json:"status"`
 
-	// Method represents the mechanism of the backup.
-	// Enum: "incremental" "full"
-	// Incremental backups include the data that has changed since the last scheduled backup.
-	// Full backup includes all bucket data from the time the backup was created.
-	Method string `json:"method"`
+	// Id is a GUID4 identifier of the backup.
+	Id string `json:"id"`
 
-	// BucketName represents the name of the bucket to which the backup belongs to.
-	BucketName string `json:"bucketName"`
+	// ClusterId is the clusterId of the capella tenant.
+	ClusterId string `json:"clusterID"`
 
 	// BucketId is the ID of the bucket to which the backup belongs to.
 	BucketId string `json:"bucketID"`
@@ -53,17 +53,17 @@ type GetBackupResponse struct {
 	// Scheduled represents a backup job created from a schedule.
 	Source string `json:"source"`
 
-	// Provider is the cloud provider where the cluster is hosted.
+	// CloudProvider is the cloud provider where the cluster is hosted.
 	CloudProvider string `json:"provider"`
 
-	// BackupStats represents various backup level data that couchbase provides.
-	BackupStats *BackupStats `json:"stats"`
+	// ProjectId is the projectId of the capella tenant.
+	ProjectId string `json:"projectID"`
+
+	// OrganizationId is the organizationId of the capella tenant.
+	OrganizationId string `json:"organizationID"`
 
 	// ElapsedTimeInSeconds represents the amount of seconds that have elapsed between the creation and completion of the backup.
 	ElapsedTimeInSeconds int64 `json:"elapsedTimeInSeconds"`
-
-	// ScheduleInfo represents the schedule information of the backup.
-	ScheduleInfo *ScheduleInfo `json:"scheduleInfo"`
 }
 
 // CreateBackupRequest is the request payload sent to the Capella V4 Public API in order to create a new backup.
@@ -120,30 +120,19 @@ type GetBackupsResponse struct {
 }
 
 type CreateRestoreRequest struct {
-	TargetClusterId string `json:"targetClusterID"`
-
-	SourceClusterId string `json:"sourceClusterID"`
-
-	BackupId string     `json:"backupID"`
-	Services *[]Service `json:"services"`
-
-	ForceUpdates bool `json:"forceUpdates"`
-
-	AutoRemoveCollections bool `json:"autoRemoveCollections"`
-
-	FilterKeys string `json:"filterKeys"`
-
-	FilterValues string `json:"filterValues"`
-
-	IncludeData string `json:"includeData"`
-
-	ExcludeData string `json:"excludeData"`
-
-	MapData string `json:"mapData"`
-
-	ReplaceTTL string `json:"replaceTTL"`
-
-	ReplaceTTLWith string `json:"replaceTTLWith"`
+	Services              *[]Service `json:"services"`
+	FilterKeys            string     `json:"filterKeys"`
+	BackupId              string     `json:"backupID"`
+	SourceClusterId       string     `json:"sourceClusterID"`
+	TargetClusterId       string     `json:"targetClusterID"`
+	FilterValues          string     `json:"filterValues"`
+	IncludeData           string     `json:"includeData"`
+	ExcludeData           string     `json:"excludeData"`
+	MapData               string     `json:"mapData"`
+	ReplaceTTL            string     `json:"replaceTTL"`
+	ReplaceTTLWith        string     `json:"replaceTTLWith"`
+	ForceUpdates          bool       `json:"forceUpdates"`
+	AutoRemoveCollections bool       `json:"autoRemoveCollections"`
 }
 
 type Service string

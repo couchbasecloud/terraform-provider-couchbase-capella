@@ -3,8 +3,9 @@ package api
 import (
 	"fmt"
 	"net/http"
-	internalerrors "terraform-provider-capella/internal/errors"
 	"testing"
+
+	internalerrors "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -16,9 +17,9 @@ func Test_ParseError(t *testing.T) {
 	)
 
 	type test struct {
-		name      string
 		err       error
 		expOutput interface{}
+		name      string
 	}
 
 	tests := []test{
@@ -62,9 +63,9 @@ func Test_CheckResourceNotFound(t *testing.T) {
 	)
 
 	type test struct {
-		name      string
 		err       error
 		expOutput interface{}
+		name      string
 		expBool   bool
 	}
 

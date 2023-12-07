@@ -55,7 +55,7 @@ func stringAttribute(fields ...string) *schema.StringAttribute {
 	return &attribute
 }
 
-// stringDefaultAttribute sets the default values for a string field and returns the string attribute
+// stringDefaultAttribute sets the default values for a string field and returns the string attribute.
 func stringDefaultAttribute(defaultValue string, fields ...string) *schema.StringAttribute {
 	attribute := stringAttribute(fields...)
 	attribute.Default = stringdefault.StaticString(defaultValue)
@@ -87,7 +87,7 @@ func boolAttribute(fields ...string) *schema.BoolAttribute {
 	return &attribute
 }
 
-// boolDefaultAttribute sets the default values for a boolean field and returns the bool attribute
+// boolDefaultAttribute sets the default values for a boolean field and returns the bool attribute.
 func boolDefaultAttribute(defaultValue bool, fields ...string) *schema.BoolAttribute {
 	attribute := boolAttribute(fields...)
 	attribute.Default = booldefault.StaticBool(defaultValue)
@@ -124,7 +124,7 @@ func int64Attribute(fields ...string) *schema.Int64Attribute {
 	return &attribute
 }
 
-// int64DefaultAttribute sets the default values for an int field and returns the int64 attribute
+// int64DefaultAttribute sets the default values for an int field and returns the int64 attribute.
 func int64DefaultAttribute(defaultValue int64, fields ...string) *schema.Int64Attribute {
 	attribute := int64Attribute(fields...)
 	attribute.Default = int64default.StaticInt64(defaultValue)
@@ -242,7 +242,7 @@ func stringSetAttribute(fields ...string) *schema.SetAttribute {
 	return &attribute
 }
 
-// computedAuditAttribute retuns a SingleNestedAttribute to
+// computedAuditAttribute returns a SingleNestedAttribute to
 // represent couchbase audit data using terraform schema types.
 func computedAuditAttribute() *schema.SingleNestedAttribute {
 	return &schema.SingleNestedAttribute{

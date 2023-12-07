@@ -69,48 +69,21 @@ type Resource struct {
 // Organization Roles: https://docs.couchbase.com/cloud/organizations/organization-user-roles.html
 // Project Roles: https://docs.couchbase.com/cloud/projects/project-roles.html
 type GetUserResponse struct {
-	// ID is the ID of the user
-	Id uuid.UUID `json:"id"`
-
-	// Name represents the name of the user.
-	Name *string `json:"name"`
-
-	// Email represents the email of the user.
-	Email string `json:"email"`
-
-	// Status depicts whether the user is verified or not
-	Status string `json:"status"`
-
+	Name              *string            `json:"name"`
+	TimeZone          string             `json:"timeZone"`
+	Email             string             `json:"email"`
+	Status            string             `json:"status"`
+	LastLogin         string             `json:"lastLogin"`
+	Region            string             `json:"region"`
+	ExpiresAt         string             `json:"expiresAt"`
+	Audit             CouchbaseAuditData `json:"audit"`
+	OrganizationRoles []string           `json:"organizationRoles"`
+	Resources         []Resource         `json:"resources"`
+	OrganizationId    uuid.UUID          `json:"organizationId"`
+	Id                uuid.UUID          `json:"id"`
 	// Inactive depicts whether the user has accepted the invite for the organization.
-	Inactive bool `json:"inactive"`
-
-	// OrganizationId is a GUID4 identifier of the tenant.
-	OrganizationId uuid.UUID `json:"organizationId"`
-
-	// OrganizationRoles is an array of strings representing the roles granted to the user.
-	OrganizationRoles []string `json:"organizationRoles"`
-
-	// LastLogin is the time(UTC) at which user last logged in.
-	LastLogin string `json:"lastLogin"`
-
-	// Region is the region of the user.
-	Region string `json:"region"`
-
-	// TimeZone is the time zone of the user.
-	TimeZone string `json:"timeZone"`
-
-	// EnableNotifications represents whether email alerts for databases in projects
-	// will be recieved.
+	Inactive            bool `json:"inactive"`
 	EnableNotifications bool `json:"enableNotifications"`
-
-	// ExpiresAt is the time at which user expires.
-	ExpiresAt string `json:"expiresAt"`
-
-	// Resources is an array of objects representing the resources the user has access to.
-	Resources []Resource `json:"resources"`
-
-	// Audit contains all audit-related fields.
-	Audit CouchbaseAuditData `json:"audit"`
 }
 
 type Op string
@@ -121,6 +94,10 @@ const (
 )
 
 type PatchEntry struct {
+	// Value represents the value to be amended by the patch. It may take an array
+	// of OrganizationRoles (strings), an Array of ProjectRoles (strings) or a Resource (object)
+	Value interface{} `json:"value,omitempty"`
+
 	// Op is the type of operation
 	//
 	// Enum: "add" "remove"
@@ -132,8 +109,4 @@ type PatchEntry struct {
 	// Resources: /resources/{resourceId}
 	// Resource Roles: /resources/{resourceId}/roles
 	Path string `json:"path"`
-
-	// Value represents the value to be amended by the patch. It may take an array
-	// of OrganizationRoles (strings), an Array of ProjectRoles (strings) or a Resource (object)
-	Value interface{} `json:"value,omitempty"`
 }

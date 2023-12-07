@@ -1,12 +1,12 @@
 output "new_allowlist" {
-  value = capella_allowlist.new_allowlist
+  value = couchbase-capella_allowlist.new_allowlist
 }
 
 output "allowlist_id" {
-  value = capella_allowlist.new_allowlist.id
+  value = couchbase-capella_allowlist.new_allowlist.id
 }
 
-resource "capella_allowlist" "new_allowlist" {
+resource "couchbase-capella_allowlist" "new_allowlist" {
   organization_id = var.organization_id
   project_id      = var.project_id
   cluster_id      = var.cluster_id

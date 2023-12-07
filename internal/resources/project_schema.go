@@ -15,7 +15,7 @@ func ProjectSchema() schema.Schema {
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"organization_id": stringAttribute(required),
+			"organization_id": stringAttribute(required, requiresReplace),
 			"name":            stringAttribute(required),
 			"description":     stringAttribute(optional, computed),
 			"if_match":        stringAttribute(optional),

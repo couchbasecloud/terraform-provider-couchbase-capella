@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"terraform-provider-capella/internal/api"
-	clusterapi "terraform-provider-capella/internal/api/cluster"
-	"terraform-provider-capella/internal/errors"
-	providerschema "terraform-provider-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -85,7 +85,8 @@ func (d *Clusters) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 		return
 	}
 
-	for _, cluster := range response {
+	for i := range response {
+		cluster := response[i]
 		audit := providerschema.NewCouchbaseAuditData(cluster.Audit)
 
 		auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)

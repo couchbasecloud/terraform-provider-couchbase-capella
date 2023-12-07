@@ -7,10 +7,11 @@ import (
 	"net/http"
 	"os"
 	"regexp"
-	"terraform-provider-capella/internal/api"
-	"terraform-provider-capella/internal/provider"
-	acctest "terraform-provider-capella/internal/testing"
 	"testing"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/provider"
+	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
@@ -18,12 +19,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
+var providerName = "couchbase-capella"
+
 // testAccProtoV6ProviderFactories are used to instantiate a provider during
 // acceptance testing. The factory function will be invoked for every Terraform
 // CLI command executed to create a provider server to which the CLI can
 // reattach.
 var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-	"capella": providerserver.NewProtocol6WithError(provider.New("test")()),
+	providerName: providerserver.NewProtocol6WithError(provider.New()()),
+}
+
+func projectResourceName() string {
+	return providerName + "_project"
 }
 
 // TestAccProjectResource is a Terraform acceptance test that covers the lifecycle of a Capella project resource.
@@ -37,7 +44,7 @@ var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServe
 //  5. Delete Testing: Automatically occurs in the TestCase as part of cleanup.
 func TestAccProjectResource(t *testing.T) {
 	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
-	resourceName := "capella_project." + rnd
+	resourceName := projectResourceName() + "." + rnd
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -83,7 +90,7 @@ func TestAccProjectResource(t *testing.T) {
 func TestAccCreateProjectWithReqFields(t *testing.T) {
 
 	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
-	resourceName := "capella_project." + rnd
+	resourceName := projectResourceName() + "." + rnd
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -103,7 +110,7 @@ func TestAccCreateProjectWithReqFields(t *testing.T) {
 
 func TestAccCreateProjectOptFields(t *testing.T) {
 	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
-	resourceName := "capella_project." + rnd
+	resourceName := projectResourceName() + "." + rnd
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -145,9 +152,9 @@ func TestAccCreateProjectOptFields(t *testing.T) {
 
 // Update
 
-func TestAccValidProjcetUpdate(t *testing.T) {
+func TestAccValidProjectUpdate(t *testing.T) {
 	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
-	resourceName := "capella_project." + rnd
+	resourceName := projectResourceName() + "." + rnd
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -175,7 +182,7 @@ func TestAccValidProjcetUpdate(t *testing.T) {
 
 func TestAccInvalidProjectResource(t *testing.T) {
 	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
-	resourceName := "capella_project." + rnd
+	resourceName := projectResourceName() + "." + rnd
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -196,7 +203,7 @@ func TestAccInvalidProjectResource(t *testing.T) {
 			//Update the organisation id
 			{
 				Config:      testAccProjectResourceConfigUpdateInvalid(acctest.ProjectCfg, rnd),
-				ExpectError: regexp.MustCompile("The server cannot or will not\nprocess the request due to something that is perceived to be a client\nerror"),
+				ExpectError: regexp.MustCompile("server cannot or will not process the request.*"),
 			},
 		},
 	})
@@ -204,7 +211,7 @@ func TestAccInvalidProjectResource(t *testing.T) {
 
 func TestAccDeleteProjectBeforeDestroy(t *testing.T) {
 	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
-	resourceName := "capella_project." + rnd
+	resourceName := projectResourceName() + "." + rnd
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -229,7 +236,7 @@ func testAccProjectResourceConfig(cfg, rnd string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "%[2]s" {
+resource "couchbase-capella_project" "%[2]s" {
     organization_id = var.organization_id
 	name            = "%[2]s"
 	description     = "terraform acceptance test project"
@@ -242,7 +249,7 @@ func testAccProjectResourceConfigUpdate(cfg, rnd string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "%[2]s" {
+resource "couchbase-capella_project" "%[2]s" {
    organization_id = var.organization_id
 	name            = "%[2]s"
 	description     = "description_update"
@@ -256,7 +263,7 @@ func testAccProjectResourceConfigUpdateWithIfMatch(cfg, rnd string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "%[2]s" {
+resource "couchbase-capella_project" "%[2]s" {
     organization_id = var.organization_id
 	name            = "%[2]s"
 	description     = "description_update_with_match"
@@ -323,7 +330,7 @@ func testAccProjectResourceConfigRequired(cfg string, rnd string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "%[2]s" {
+resource "couchbase-capella_project" "%[2]s" {
     organization_id = var.organization_id
 	name            = "%[2]s"
 }
@@ -335,7 +342,7 @@ func testAccProjectResourceConfigUpdateInvalid(cfg, rnd string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "%[2]s" {
+resource "couchbase-capella_project" "%[2]s" {
     organization_id = "abc-def"
 	name            = "%[2]s"
 }
@@ -346,7 +353,7 @@ func testAccProjectResourceConfigInvalid(cfg, rnd string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "%[2]s" {
+resource "couchbase-capella_project" "%[2]s" {
     organization_id = var.organization_id
 	name            = "%[2]s"
 	unwantedfiled   = "unwanted value"

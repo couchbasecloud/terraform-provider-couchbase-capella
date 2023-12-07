@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"terraform-provider-capella/internal/api"
-	"terraform-provider-capella/internal/api/appservice"
-	"terraform-provider-capella/internal/errors"
 
-	providerschema "terraform-provider-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/appservice"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+
 	"time"
+
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -393,7 +395,6 @@ func (a *AppService) Delete(ctx context.Context, req resource.DeleteRequest, res
 		"Error deleting app service",
 		fmt.Sprintf("Could not delete app service id %s, as current app service state: %s", state.Id.String(), appService.CurrentState),
 	)
-	return
 }
 
 // Configure adds the provider configured client to the app service resource.
@@ -424,7 +425,7 @@ func (a *AppService) ImportState(ctx context.Context, req resource.ImportStateRe
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-// validateCreateAppServiceRequest validates the payload of create app service request
+// validateCreateAppServiceRequest validates the payload of create app service request.
 func (a *AppService) validateCreateAppServiceRequest(plan providerschema.AppService) error {
 	if plan.OrganizationId.IsNull() {
 		return errors.ErrOrganizationIdCannotBeEmpty
@@ -438,7 +439,7 @@ func (a *AppService) validateCreateAppServiceRequest(plan providerschema.AppServ
 	return nil
 }
 
-// refreshAppService is used to pass an existing AppService to the refreshed state
+// refreshAppService is used to pass an existing AppService to the refreshed state.
 func (a *AppService) refreshAppService(ctx context.Context, organizationId, projectId, clusterId, appServiceId string) (*providerschema.AppService, error) {
 	appServiceResponse, err := a.getAppService(ctx, organizationId, projectId, clusterId, appServiceId)
 	if err != nil {

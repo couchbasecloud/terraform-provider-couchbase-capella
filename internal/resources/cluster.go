@@ -8,10 +8,10 @@ import (
 	"reflect"
 	"time"
 
-	"terraform-provider-capella/internal/api"
-	clusterapi "terraform-provider-capella/internal/api/cluster"
-	"terraform-provider-capella/internal/errors"
-	providerschema "terraform-provider-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -483,7 +483,6 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 		"Error deleting cluster",
 		fmt.Sprintf("Could not delete cluster id %s, as current Cluster state: %s", state.Id.String(), cluster.CurrentState),
 	)
-	return
 }
 
 // ImportState imports a remote cluster that is not created by Terraform.
@@ -727,7 +726,7 @@ func (c *Cluster) validateClusterUpdate(plan, state providerschema.Cluster) erro
 	return nil
 }
 
-// this function converts types.Object field to couchbaseServer field
+// this function converts types.Object field to couchbaseServer field.
 func getCouchbaseServer(ctx context.Context, config tfsdk.Config, diags *diag.Diagnostics) *providerschema.CouchbaseServer {
 	var couchbaseServer *providerschema.CouchbaseServer
 	diags.Append(config.GetAttribute(ctx, path.Root("couchbase_server"), &couchbaseServer)...)

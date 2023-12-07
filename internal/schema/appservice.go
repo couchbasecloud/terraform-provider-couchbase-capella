@@ -2,21 +2,22 @@ package schema
 
 import (
 	"fmt"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/appservice"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"terraform-provider-capella/internal/api/appservice"
-	"terraform-provider-capella/internal/errors"
 )
 
 // AppService defines the response as received from V4 Capella Public API when asked to create a new app service.
 // To learn more about App Services, see https://docs.couchbase.com/cloud/app-services/index.html
 type AppService struct {
-	// Id is a UUID of the app service.
-	Id types.String `tfsdk:"id"`
+	// Compute is the CPU and RAM configuration of the app service.
+	Compute *AppServiceCompute `tfsdk:"compute"`
 
-	// Name is the name of the app service, the name of the app service should follow this naming criteria:
-	// An app service name should have at least 2 characters and up to 256 characters.
-	Name types.String `tfsdk:"name"`
+	// OrganizationId is the organizationId of the capella tenant.
+	OrganizationId types.String `tfsdk:"organization_id"`
 
 	// Description is the description for the app service (up to 256 characters).
 	Description types.String `tfsdk:"description"`
@@ -28,14 +29,12 @@ type AppService struct {
 	// [Azure] https://docs.couchbase.com/cloud/reference/azure.html
 	CloudProvider types.String `tfsdk:"cloud_provider"`
 
-	// Nodes is the number of nodes configured for the app service.
-	Nodes types.Int64 `tfsdk:"nodes"`
+	// Name is the name of the app service, the name of the app service should follow this naming criteria:
+	// An app service name should have at least 2 characters and up to 256 characters.
+	Name types.String `tfsdk:"name"`
 
-	// Compute is the CPU and RAM configuration of the app service.
-	Compute *AppServiceCompute `tfsdk:"compute"`
-
-	// OrganizationId is the organizationId of the capella tenant.
-	OrganizationId types.String `tfsdk:"organization_id"`
+	// Id is a UUID of the app service.
+	Id types.String `tfsdk:"id"`
 
 	// ProjectId is the projectId of the cluster.
 	ProjectId types.String `tfsdk:"project_id"`
@@ -51,10 +50,15 @@ type AppService struct {
 
 	// Audit represents all audit-related fields. It is of types.Object type to avoid conversion error for a nested field.
 	Audit types.Object `tfsdk:"audit"`
+
 	// Etag represents the version of the document.
 	Etag types.String `tfsdk:"etag"`
+
 	// IfMatch is a precondition header that specifies the entity tag of a resource.
 	IfMatch types.String `tfsdk:"if_match"`
+
+	// Nodes is the number of nodes configured for the app service.
+	Nodes types.Int64 `tfsdk:"nodes"`
 }
 
 // AppServiceCompute depicts the couchbase compute, following are the supported compute combinations
@@ -71,7 +75,7 @@ type AppServiceCompute struct {
 	Ram types.Int64 `tfsdk:"ram"`
 }
 
-// NewAppService creates a new instance of an App Service
+// NewAppService creates a new instance of an App Service.
 func NewAppService(
 	appService *appservice.GetAppServiceResponse,
 	organizationId, projectId string,
@@ -98,7 +102,7 @@ func NewAppService(
 	return &newAppService
 }
 
-// Validate is used to verify that IDs have been properly imported
+// Validate is used to verify that IDs have been properly imported.
 func (a AppService) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
 		OrganizationId: a.OrganizationId,
@@ -125,6 +129,9 @@ type AppServices struct {
 
 // AppServiceData defines attributes for a single cluster when fetched from the V4 Capella Public API.
 type AppServiceData struct {
+	// Compute is the CPU and RAM configuration of the app service.
+	Compute *AppServiceCompute `tfsdk:"compute"`
+
 	// Id is a UUID of the app service.
 	Id types.String `tfsdk:"id"`
 
@@ -142,12 +149,6 @@ type AppServiceData struct {
 	// [Azure] https://docs.couchbase.com/cloud/reference/azure.html
 	CloudProvider types.String `tfsdk:"cloud_provider"`
 
-	// Nodes is the number of nodes configured for the app service.
-	Nodes types.Int64 `tfsdk:"nodes"`
-
-	// Compute is the CPU and RAM configuration of the app service.
-	Compute *AppServiceCompute `tfsdk:"compute"`
-
 	// OrganizationId is the organizationId of the capella tenant.
 	OrganizationId types.String `tfsdk:"organization_id"`
 
@@ -162,9 +163,12 @@ type AppServiceData struct {
 
 	// Audit represents all audit-related fields. It is of types.Object type to avoid conversion error for a nested field.
 	Audit types.Object `tfsdk:"audit"`
+
+	// Nodes is the number of nodes configured for the app service.
+	Nodes types.Int64 `tfsdk:"nodes"`
 }
 
-// NewAppServiceData creates a new cluster data object
+// NewAppServiceData creates a new cluster data object.
 func NewAppServiceData(
 	appService *appservice.GetAppServiceResponse,
 	organizationId string,

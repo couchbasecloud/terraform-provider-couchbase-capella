@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"terraform-provider-capella/internal/api"
-	"terraform-provider-capella/internal/errors"
-	"terraform-provider-capella/internal/provider"
-	providerschema "terraform-provider-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/provider"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
@@ -36,7 +36,7 @@ const (
 // CLI command executed to create a provider server to which the CLI can
 // reattach.
 var TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-	"capella": providerserver.NewProtocol6WithError(provider.New("test")()),
+	"couchbase-capella": providerserver.NewProtocol6WithError(provider.New()()),
 }
 
 // TestAccPreCheck You can add code here to run prior to any test case execution, for

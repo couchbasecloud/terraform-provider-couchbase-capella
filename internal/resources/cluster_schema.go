@@ -2,6 +2,7 @@ package resources
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 )
@@ -15,8 +16,8 @@ func ClusterSchema() schema.Schema {
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"organization_id": stringAttribute(required),
-			"project_id":      stringAttribute(required),
+			"organization_id": stringAttribute(required, requiresReplace),
+			"project_id":      stringAttribute(required, requiresReplace),
 			"name":            stringAttribute(required),
 			"description":     stringAttribute(optional, computed),
 			"cloud_provider": schema.SingleNestedAttribute{
@@ -26,13 +27,19 @@ func ClusterSchema() schema.Schema {
 					"region": stringAttribute(required),
 					"cidr":   stringAttribute(required),
 				},
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.RequiresReplace(),
+				},
 			},
-			"configuration_type": stringAttribute(optional, computed),
+			"configuration_type": stringAttribute(optional, computed, requiresReplace),
 			"couchbase_server": schema.SingleNestedAttribute{
 				Optional: true,
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
 					"version": stringAttribute(optional, computed),
+				},
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.RequiresReplace(),
 				},
 			},
 			"service_groups": schema.SetNestedAttribute{
@@ -71,6 +78,9 @@ func ClusterSchema() schema.Schema {
 				Required: true,
 				Attributes: map[string]schema.Attribute{
 					"type": stringAttribute(required),
+				},
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.RequiresReplace(),
 				},
 			},
 			"support": schema.SingleNestedAttribute{

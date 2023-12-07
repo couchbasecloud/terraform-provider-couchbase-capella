@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"time"
 
-	"terraform-provider-capella/internal/api"
-	backupapi "terraform-provider-capella/internal/api/backup"
-	"terraform-provider-capella/internal/errors"
-	providerschema "terraform-provider-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	backupapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/backup"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -172,11 +172,10 @@ func (b *Backup) Read(ctx context.Context, req resource.ReadRequest, resp *resou
 		organizationId = IDs[providerschema.OrganizationId]
 		projectId      = IDs[providerschema.ProjectId]
 		clusterId      = IDs[providerschema.ClusterId]
-		bucketId       = IDs[providerschema.BucketId]
 		backupId       = IDs[providerschema.Id]
 	)
 
-	refreshedState, err := b.retrieveBackup(ctx, organizationId, projectId, clusterId, bucketId, backupId)
+	refreshedState, err := b.retrieveBackup(ctx, organizationId, projectId, clusterId, backupId)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -451,8 +450,8 @@ func (b *Backup) checkLatestBackupStatus(ctx context.Context, organizationId, pr
 }
 
 // retrieveBackup retrieves backup information from the specified organization and project
-// using the provided backup ID by open-api call
-func (b *Backup) retrieveBackup(ctx context.Context, organizationId, projectId, clusterId, bucketId, backupId string) (*providerschema.Backup, error) {
+// using the provided backup ID by open-api call.
+func (b *Backup) retrieveBackup(ctx context.Context, organizationId, projectId, clusterId, backupId string) (*providerschema.Backup, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/backups/%s", b.HostURL, organizationId, projectId, clusterId, backupId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := b.Client.ExecuteWithRetry(

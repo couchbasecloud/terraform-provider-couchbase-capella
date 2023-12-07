@@ -1,13 +1,13 @@
 output "new_database_credential" {
-  value     = capella_database_credential.new_database_credential
+  value     = couchbase-capella_database_credential.new_database_credential
   sensitive = true
 }
 
 output "database_credential_id" {
-  value = capella_database_credential.new_database_credential.id
+  value = couchbase-capella_database_credential.new_database_credential.id
 }
 
-resource "capella_database_credential" "new_database_credential" {
+resource "couchbase-capella_database_credential" "new_database_credential" {
   name            = var.database_credential.database_credential_name
   organization_id = var.organization_id
   project_id      = var.project_id

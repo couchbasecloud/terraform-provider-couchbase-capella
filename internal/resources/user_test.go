@@ -1,9 +1,10 @@
 package resources
 
 import (
-	"terraform-provider-capella/internal/api"
-	providerschema "terraform-provider-capella/internal/schema"
 	"testing"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"gotest.tools/assert"
@@ -23,9 +24,9 @@ func Test_ConstructPatch(t *testing.T) {
 
 	type test struct {
 		name           string
+		expectedPatch  []api.PatchEntry
 		existingSchema providerschema.User
 		proposedSchema providerschema.User
-		expectedPatch  []api.PatchEntry
 	}
 
 	tests := []test{
