@@ -35,7 +35,7 @@ func TestAccUserResource(t *testing.T) {
 			// Import state
 			{
 				ResourceName:      resourceReference,
-				ImportStateIdFunc: generateUserImportId,
+				ImportStateIdFunc: generateUserImportIdForResource(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -217,21 +217,17 @@ func testAccUserResourceConfigUpdate(cfg, resourceReference, projectResourceName
 	`, cfg, resourceReference, projectResourceName, projectResourceReference)
 }
 
-func generateUserImportId(state *terraform.State) (string, error) {
-	resourceName := "couchbase-capella_user.acc_test"
-	var rawState map[string]string
-	for _, m := range state.Modules {
-		if len(m.Resources) > 0 {
-			if v, ok := m.Resources[resourceName]; ok {
-				rawState = v.Primary.Attributes
+func generateUserImportIdForResource(resourceName string) resource.ImportStateIdFunc {
+	return func(state *terraform.State) (string, error) {
+		var rawState map[string]string
+		for _, m := range state.Modules {
+			if len(m.Resources) > 0 {
+				if v, ok := m.Resources[resourceName]; ok {
+					rawState = v.Primary.Attributes
+				}
 			}
 		}
+		fmt.Printf("raw state %s", rawState)
+		return fmt.Sprintf("id=%s,organization_id=%s", rawState["id"], rawState["organization_id"]), nil
 	}
-	fmt.Printf("raw state %s", rawState)
-
-	return fmt.Sprintf(
-			"id=%s,organization_id=%s",
-			rawState["id"],
-			rawState["organization_id"]),
-		nil
 }
