@@ -159,19 +159,13 @@ func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	refreshedState.Password = types.StringValue(dbResponse.Password)
-	// store the password that was either auto-generated or supplied during credential creation request.
-	// todo: there is a bug in the V4 public APIs where the API returns the password in the response only if it is auto-generated.
-	// This will be fixed in AV-62867.
-	// For now, we are working around this issue.
-	if dbResponse.Password == "" {
-		// this means the customer had provided a password in the terraform file during creation, store that.
-		refreshedState.Password = plan.Password
-	}
 
 	// todo: there is a bug in cp-open-api where the access field is empty in the GET API response,
 	// we are going to work around this for private preview.
 	// The fix will be done in SURF-7366
 	// For now, we are appending same permissions that the customer passed in the terraform files and not relying on the GET API response.
+
+	// Update: GET API response gives the access field however the formats passed in terraform files and the GET response are different.
 	refreshedState.Access = mapAccess(plan)
 
 	// Set state to fully populated data
@@ -231,7 +225,7 @@ func (r *DatabaseCredential) Read(ctx context.Context, req resource.ReadRequest,
 	// we are going to work around this for private preview.
 	// The fix will be done in SURF-7366
 	// For now, we are appending same permissions that the customer passed in the terraform files and not relying on the GET API response.
-	refreshedState.Access = mapAccess(state)
+	refreshedState.Access = mapAccess(*refreshedState)
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &refreshedState)
@@ -385,7 +379,7 @@ func (r *DatabaseCredential) ImportState(ctx context.Context, req resource.Impor
 
 // retrieveDatabaseCredential fetches the database credential by making a GET API call to the Capella V4 Public API.
 // This usually helps retrieve the state of a newly created database credential that was created from Terraform.
-func (r *DatabaseCredential) retrieveDatabaseCredential(ctx context.Context, organizationId, projectId, clusterId, dbId string) (*providerschema.OneDatabaseCredential, error) {
+func (r *DatabaseCredential) retrieveDatabaseCredential(ctx context.Context, organizationId, projectId, clusterId, dbId string) (*providerschema.DatabaseCredential, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", r.HostURL, organizationId, projectId, clusterId, dbId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := r.Client.ExecuteWithRetry(
@@ -405,33 +399,22 @@ func (r *DatabaseCredential) retrieveDatabaseCredential(ctx context.Context, org
 		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
 
-	refreshedState := providerschema.OneDatabaseCredential{
-		Id:             types.StringValue(dbResp.Id.String()),
-		Name:           types.StringValue(dbResp.Name),
-		OrganizationId: types.StringValue(organizationId),
-		ProjectId:      types.StringValue(projectId),
-		ClusterId:      types.StringValue(clusterId),
-		Audit: providerschema.CouchbaseAuditData{
-			CreatedAt:  types.StringValue(dbResp.Audit.CreatedAt.String()),
-			CreatedBy:  types.StringValue(dbResp.Audit.CreatedBy),
-			ModifiedAt: types.StringValue(dbResp.Audit.ModifiedAt.String()),
-			ModifiedBy: types.StringValue(dbResp.Audit.ModifiedBy),
-			Version:    types.Int64Value(int64(dbResp.Audit.Version)),
-		},
+	audit := providerschema.NewCouchbaseAuditData(dbResp.Audit)
+	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
+	if diags.HasError() {
+		return nil, fmt.Errorf("%s: %w", errors.ErrUnableToConvertAuditData, err)
 	}
-	// todo: there is a bug in cp-open-api where the access field is empty in the GET API response,
-	// we are going to work around this for private preview.
-	// The fix will be done in SURF-7366
-	// For now, we are appending same permissions that the customer passed in the terraform files and not relying on the GET API response.
-	// the below code will be uncommented once the bug is fixed.
-	/*	for i, access := range dbResp.Access {
-			refreshedState.Access[i] = providerschema.Access{}
-			for _, permission := range access.Privileges {
-				refreshedState.Access[i].Privileges = append(refreshedState.Access[i].Privileges, types.StringValue(permission))
-			}
-		}
-	*/
-	return &refreshedState, nil
+
+	refreshedState := providerschema.NewDatabaseCredential(
+		types.StringValue(dbResp.Id.String()),
+		types.StringValue(dbResp.Name),
+		types.StringValue(organizationId),
+		types.StringValue(projectId),
+		types.StringValue(clusterId),
+		auditObj,
+	)
+
+	return refreshedState, nil
 }
 
 // todo: add a unit test for this, tracking under: https://couchbasecloud.atlassian.net/browse/AV-63401
