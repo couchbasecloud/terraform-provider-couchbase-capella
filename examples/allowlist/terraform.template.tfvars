@@ -5,7 +5,7 @@ cluster_id      = "<cluster_id>"
 host            = "https://cloudapi.cloud.couchbase.com"
 
 allowlist = {
-  cidr            = "10.0.0.0/16"
-  comment = "Allow access from a public IP"
-  expires_at      = "2023-12-30T23:59:59.465Z"
+  cidr       = "10.0.0.0/16"
+  comment    = "Allow access from a public IP"
+  expires_at = "2023-12-30T23:59:59.465Z"
 }

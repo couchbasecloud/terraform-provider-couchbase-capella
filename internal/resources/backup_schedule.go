@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"strings"
 
-	"terraform-provider-capella/internal/api"
-	scheduleapi "terraform-provider-capella/internal/api/backup_schedule"
-	"terraform-provider-capella/internal/errors"
-	providerschema "terraform-provider-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	scheduleapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/backup_schedule"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -348,7 +348,7 @@ func (a *BackupSchedule) validateCreateBackupScheduleRequest(plan providerschema
 }
 
 // retrieveBackupSchedule retrieves backup schedule information from the specified organization and project
-// using the provided bucket ID by open-api call
+// using the provided bucket ID by open-api call.
 func (b *BackupSchedule) retrieveBackupSchedule(ctx context.Context, organizationId, projectId, clusterId, bucketId, planDayOfWeek string) (*providerschema.BackupSchedule, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/schedules", b.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
@@ -383,8 +383,5 @@ func (b *BackupSchedule) retrieveBackupSchedule(ctx context.Context, organizatio
 }
 
 func validateDayOfWeekIsSameInPlanAndState(planDayOfWeek, stateDayOfWeek string) bool {
-	if strings.ToLower(planDayOfWeek) == strings.ToLower(stateDayOfWeek) {
-		return true
-	}
-	return false
+	return strings.EqualFold(planDayOfWeek, stateDayOfWeek)
 }

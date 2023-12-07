@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"terraform-provider-capella/internal/api"
-	"terraform-provider-capella/internal/errors"
-	providerschema "terraform-provider-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -447,9 +447,7 @@ func mapAccess(plan providerschema.DatabaseCredential) []providerschema.Access {
 
 	for i, acc := range plan.Access {
 		access[i] = providerschema.Access{Privileges: make([]types.String, len(acc.Privileges))}
-		for j, permission := range acc.Privileges {
-			access[i].Privileges[j] = permission
-		}
+		copy(access[i].Privileges, acc.Privileges)
 		if acc.Resources != nil {
 			if acc.Resources.Buckets != nil {
 				access[i].Resources = &providerschema.Resources{Buckets: make([]providerschema.BucketResource, len(acc.Resources.Buckets))}
@@ -461,9 +459,7 @@ func mapAccess(plan providerschema.DatabaseCredential) []providerschema.Access {
 							access[i].Resources.Buckets[k].Scopes[s].Name = scope.Name
 							if scope.Collections != nil {
 								access[i].Resources.Buckets[k].Scopes[s].Collections = make([]types.String, len(scope.Collections))
-								for c, coll := range scope.Collections {
-									access[i].Resources.Buckets[k].Scopes[s].Collections[c] = coll
-								}
+								copy(access[i].Resources.Buckets[k].Scopes[s].Collections, scope.Collections)
 							}
 						}
 					}

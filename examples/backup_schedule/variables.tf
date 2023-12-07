@@ -27,12 +27,12 @@ variable "backup_schedule" {
   description = "Backup Schedule configuration details useful for creation"
 
   type = object({
-    type  = string
+    type = string
     weekly_schedule = object({
-      day_of_week = string
-      start_at = number
-      incremental_every = number
-      retention_time = string
+      day_of_week              = string
+      start_at                 = number
+      incremental_every        = number
+      retention_time           = string
       cost_optimized_retention = bool
     })
   })

@@ -147,7 +147,7 @@ variable "app_service" {
     description = optional(string)
     version     = optional(string)
     nodes       = optional(number)
-    compute     = object({
+    compute = object({
       cpu = number
       ram = number
     })

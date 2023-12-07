@@ -1,8 +1,9 @@
 package schema
 
 import (
-	"terraform-provider-capella/internal/errors"
 	"testing"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/stretchr/testify/assert"
@@ -10,13 +11,13 @@ import (
 
 func TestAllowListSchemaValidate(t *testing.T) {
 	type test struct {
-		name                   string
+		expectedErr            error
 		input                  AllowList
+		name                   string
 		expectedProjectId      string
 		expectedOrganizationId string
 		expectedClusterId      string
 		expectedAllowListId    string
-		expectedErr            error
 	}
 
 	tests := []test{

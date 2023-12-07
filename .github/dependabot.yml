@@ -1,0 +1,9 @@
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: wednesday
+    reviewers:
+      - "couchbasecloud/couchbase-capella-terraform-provider-team"

@@ -1,7 +1,7 @@
 package schema
 
 import (
-	"terraform-provider-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"

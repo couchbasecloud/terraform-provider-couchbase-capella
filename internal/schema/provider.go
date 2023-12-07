@@ -1,8 +1,9 @@
 package schema
 
 import (
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"terraform-provider-capella/internal/api"
 )
 
 // Config maps provider schema data to a Go type.
@@ -14,7 +15,7 @@ type Config struct {
 // Data is provider-defined data, clients, etc. that is passed
 // to data sources or resources in the provider that implement the Configure method.
 type Data struct {
+	Client  *api.Client
 	HostURL string
 	Token   string
-	Client  *api.Client
 }

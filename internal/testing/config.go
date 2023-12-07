@@ -9,20 +9,12 @@ variable "organization_id" {
   description = "Capella Organization ID"
 }
 
-variable "project_id" {
-  description = "Capella Project ID"
-}
-
-variable "cluster_id" {
-  description = "Capella Project ID"
-}
-
 variable "auth_token" {
   description = "Authentication API Key"
   sensitive   = true
 }
 
-provider "capella" {
+provider "couchbase-capella" {
   host                 = var.host
   authentication_token = var.auth_token
 }

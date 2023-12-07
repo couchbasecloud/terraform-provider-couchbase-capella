@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"terraform-provider-capella/internal/api"
-	"terraform-provider-capella/internal/errors"
-	providerschema "terraform-provider-capella/internal/schema"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -58,7 +59,7 @@ func (r *AllowList) Configure(ctx context.Context, req resource.ConfigureRequest
 	r.Data = data
 }
 
-// Create creates a new allowlist
+// Create creates a new allowlist.
 func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan providerschema.AllowList
 	diags := req.Plan.Get(ctx, &plan)
@@ -112,6 +113,7 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 			"Error reading Capella AllowList",
 			"Could not read Capella AllowList "+allowListResponse.Id.String()+": "+api.ParseError(err),
 		)
+		return
 	}
 
 	// Set state to fully populated data
@@ -175,7 +177,7 @@ func (r *AllowList) Read(ctx context.Context, req resource.ReadRequest, resp *re
 }
 
 // Update updates the allowlist.
-func (r *AllowList) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *AllowList) Update(_ context.Context, _ resource.UpdateRequest, _ *resource.UpdateResponse) {
 	// Couchbase Capella's v4 does not support a PUT endpoint for allowlists.
 	// Allowlists can only be created, read and deleted.
 	// http://cbc-cp-api.s3-website-us-east-1.amazonaws.com/#tag/allowedCIDRs(Cluster)
@@ -253,8 +255,8 @@ func (r *AllowList) ImportState(ctx context.Context, req resource.ImportStateReq
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-// getAllowList is used to retrieve an existing allow list
-func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId, clusterId, allowListId string) (*api.GetAllowListResponse, error) {
+// getAllowList is used to retrieve an existing allow list.
+func (r *AllowList) getAllowList(_ context.Context, organizationId, projectId, clusterId, allowListId string) (*api.GetAllowListResponse, error) {
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs/%s",
 		r.HostURL,
@@ -282,7 +284,7 @@ func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId,
 	return &allowListResp, nil
 }
 
-// refreshAllowList is used to pass an existing AllowList to the refreshed state
+// refreshAllowList is used to pass an existing AllowList to the refreshed state.
 func (r *AllowList) refreshAllowList(ctx context.Context, organizationId, projectId, clusterId, allowListId string) (*providerschema.OneAllowList, error) {
 	allowListResp, err := r.getAllowList(ctx, organizationId, projectId, clusterId, allowListId)
 	if err != nil {

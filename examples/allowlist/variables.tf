@@ -23,8 +23,8 @@ variable "allowlist" {
   description = "Allowlist configuration details useful for creation"
 
   type = object({
-    cidr = string
-    comment = optional(string)
+    cidr       = string
+    comment    = optional(string)
     expires_at = optional(string)
   })
 }

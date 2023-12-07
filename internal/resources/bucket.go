@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"terraform-provider-capella/internal/api"
-	bucketapi "terraform-provider-capella/internal/api/bucket"
-	"terraform-provider-capella/internal/errors"
-	providerschema "terraform-provider-capella/internal/schema"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	bucketapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/bucket"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -306,7 +307,7 @@ func (c *Bucket) ImportState(ctx context.Context, req resource.ImportStateReques
 }
 
 // retrieveBucket retrieves bucket information for a specified organization, project, cluster and bucket ID.
-func (c *Bucket) retrieveBucket(ctx context.Context, organizationId, projectId, clusterId, bucketId string) (*providerschema.OneBucket, error) {
+func (c *Bucket) retrieveBucket(_ context.Context, organizationId, projectId, clusterId, bucketId string) (*providerschema.OneBucket, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", c.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := c.Client.Execute(
@@ -341,10 +342,10 @@ func (c *Bucket) retrieveBucket(ctx context.Context, organizationId, projectId, 
 		TimeToLiveInSeconds:      types.Int64Value(bucketResp.TimeToLiveInSeconds),
 		EvictionPolicy:           types.StringValue(bucketResp.EvictionPolicy),
 		Stats: &providerschema.Stats{
-			ItemCount:       types.Int64Value(int64(bucketResp.Stats.ItemCount)),
-			OpsPerSecond:    types.Int64Value(int64(bucketResp.Stats.OpsPerSecond)),
-			DiskUsedInMiB:   types.Int64Value(int64(bucketResp.Stats.DiskUsedInMib)),
-			MemoryUsedInMiB: types.Int64Value(int64(bucketResp.Stats.MemoryUsedInMib)),
+			ItemCount:       types.Int64Value(bucketResp.Stats.ItemCount),
+			OpsPerSecond:    types.Int64Value(bucketResp.Stats.OpsPerSecond),
+			DiskUsedInMiB:   types.Int64Value(bucketResp.Stats.DiskUsedInMib),
+			MemoryUsedInMiB: types.Int64Value(bucketResp.Stats.MemoryUsedInMib),
 		},
 	}
 
@@ -412,6 +413,7 @@ func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 			"Error updating bucket",
 			"Could not update Capella bucket with ID "+bucketId+": "+api.ParseError(err),
 		)
+		return
 	}
 
 	// Set state to fully populated data
