@@ -14,14 +14,14 @@ import (
 )
 
 func TestAccUserResource(t *testing.T) {
-	resourceName := "acc_user" + cfg.GenerateRandomResourceName()
+	resourceName := "acc_user_" + cfg.GenerateRandomResourceName()
 	resourceReference := "couchbase-capella_user." + resourceName
 	projectResourceName := "acc_project_" + cfg.GenerateRandomResourceName()
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { cfg.TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: cfg.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read
 			{
@@ -29,7 +29,7 @@ func TestAccUserResource(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
 					resource.TestCheckResourceAttr(resourceReference, "email", "terraformacceptancetest@couchbase.com"),
-					resource.TestCheckResourceAttr(resourceReference, "resources", "acc_test_resources"),
+					resource.TestCheckResourceAttr(resourceReference, "organization_roles.0", "organizationOwner"),
 				),
 			},
 			// Import state
@@ -45,9 +45,9 @@ func TestAccUserResource(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
 					resource.TestCheckResourceAttr(resourceReference, "email", "terraformacceptancetest@couchbase.com"),
+					resource.TestCheckResourceAttr(resourceReference, "organization_roles.0", "organizationMember"),
 					resource.TestCheckResourceAttr(resourceReference, "resources.0.type", "project"),
 					resource.TestCheckResourceAttr(resourceReference, "resources.0.roles.0", "projectViewer"),
-					resource.TestCheckResourceAttr(resourceReference, "resources", "acc_test_resources"),
 				),
 			},
 			// NOTE: No delete case is provided - this occurs automatically
@@ -139,11 +139,7 @@ func TestAccUserResourceResourceNotFound(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
 					resource.TestCheckResourceAttr(resourceReference, "email", "acc_test_email"),
-					resource.TestCheckResourceAttr(
-						resourceReference, "organization_roles", "acc_test_organization_roles",
-					),
-					resource.TestCheckResourceAttr(resourceReference, "resources", "acc_test_resources"),
-
+					resource.TestCheckResourceAttr(resourceReference, "organization_roles.0", "organizationOwner"),
 					// Delete the user from the server and wait until deletion is successful
 					testAccDeleteUserResource(resourceReference),
 				),
@@ -157,9 +153,9 @@ func TestAccUserResourceResourceNotFound(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
 					resource.TestCheckResourceAttr(resourceReference, "email", "acc_test_email"),
+					resource.TestCheckResourceAttr(resourceReference, "organization_roles.0", "organizationMember"),
 					resource.TestCheckResourceAttr(resourceReference, "resources.0.type", "project"),
 					resource.TestCheckResourceAttr(resourceReference, "resources.0.roles.0", "projectViewer"),
-					resource.TestCheckResourceAttr(resourceReference, "resources", "acc_test_resources"),
 				),
 			},
 		},
