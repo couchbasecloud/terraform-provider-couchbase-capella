@@ -81,10 +81,14 @@ type CreateDatabaseCredentialResponse struct {
 
 // GetDatabaseCredentialResponse represents the schema for the GET Capella V4 API request that fetches the database credential details.
 type GetDatabaseCredentialResponse struct {
-	Name   string             `json:"name"`
-	Audit  CouchbaseAuditData `json:"audit"`
-	Access []Access           `json:"access"`
-	Id     uuid.UUID          `json:"id"`
+	Name           string             `json:"name"`
+	Password       string             `json:"password"`
+	OrganizationId string             `json:"organizationId"`
+	ProjectId      string             `json:"projectId"`
+	ClusterId      string             `json:"clusterId"`
+	Audit          CouchbaseAuditData `json:"audit"`
+	Access         []Access           `json:"access"`
+	Id             uuid.UUID          `json:"id"`
 }
 
 // PutDatabaseCredentialRequest represents the schema for the PUT Capella V4 API request that updates an existing database credential.
