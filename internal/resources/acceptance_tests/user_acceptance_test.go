@@ -138,7 +138,7 @@ func TestAccUserResourceResourceNotFound(t *testing.T) {
 				Config: testAccUserResourceConfig(cfg.Cfg, resourceName, projectResourceName, projectResourceReference),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
-					resource.TestCheckResourceAttr(resourceReference, "email", "acc_test_email"),
+					resource.TestCheckResourceAttr(resourceReference, "email", "terraformacceptancetest@couchbase.com"),
 					resource.TestCheckResourceAttr(resourceReference, "organization_roles.0", "organizationOwner"),
 					// Delete the user from the server and wait until deletion is successful
 					testAccDeleteUserResource(resourceReference),
@@ -152,7 +152,7 @@ func TestAccUserResourceResourceNotFound(t *testing.T) {
 				Config: testAccUserResourceConfig(cfg.Cfg, resourceName, projectResourceName, projectResourceReference),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
-					resource.TestCheckResourceAttr(resourceReference, "email", "acc_test_email"),
+					resource.TestCheckResourceAttr(resourceReference, "email", "terraformacceptancetest@couchbase.com"),
 					resource.TestCheckResourceAttr(resourceReference, "organization_roles.0", "organizationMember"),
 					resource.TestCheckResourceAttr(resourceReference, "resources.0.type", "project"),
 					resource.TestCheckResourceAttr(resourceReference, "resources.0.roles.0", "projectViewer"),
