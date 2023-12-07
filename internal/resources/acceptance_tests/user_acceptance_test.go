@@ -166,16 +166,16 @@ func testAccUserResourceConfig(cfg, resourceReference, projectResourceName, proj
 	return fmt.Sprintf(`
 	%[1]s
 	  
-	resource "capella_project" "%[3]s" {
+	resource "couchbase-capella_project" "%[3]s" {
 		organization_id = var.organization_id
 		name            = "acc_test_project_name"
 		description     = "description"
 	}
 	
-	resource "capella_user" "%[2]s" {
+	resource "couchbase-capella_user" "%[2]s" {
 		organization_id = var.organization_id
 	  
-		name  = "Terraform Acceptance Test User"
+		name  = "acc_test_user_name"
 		email = "terraformacceptancetest@couchbase.com"
 	  
 		organization_roles = [
@@ -189,13 +189,13 @@ func testAccUserResourceConfigUpdate(cfg, resourceReference, projectResourceName
 	return fmt.Sprintf(`
 	%[1]s
 	  
-	resource "capella_project" "%[3]s" {
+	resource "couchbase-capellacapella_project" "%[3]s" {
 		organization_id = var.organization_id
 		name            = "acc_test_project_name"
 		description     = "description"
 	}
 	
-	resource "capella_user" "%[2]s" {
+	resource "couchbase-capella_user" "%[2]s" {
 		organization_id = var.organization_id
 	  
 		name  = "acc_test_user_name"
@@ -219,7 +219,7 @@ func testAccUserResourceConfigUpdate(cfg, resourceReference, projectResourceName
 }
 
 func generateUserImportId(state *terraform.State) (string, error) {
-	resourceName := "capella_user.acc_test"
+	resourceName := "couchbase-capella_user.acc_test"
 	var rawState map[string]string
 	for _, m := range state.Modules {
 		if len(m.Resources) > 0 {
