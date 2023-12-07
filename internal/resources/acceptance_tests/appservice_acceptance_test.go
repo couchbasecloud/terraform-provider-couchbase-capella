@@ -20,16 +20,16 @@ func TestAppServiceResource(t *testing.T) {
 			{
 				Config: testAccAppServiceResourceConfig(cfg.Cfg),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "name", "test-terraform-app-service"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "description", "description"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "compute.cpu", "2"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "compute.ram", "4"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "nodes", "2"),
+					resource.TestCheckResourceAttr("couchbase-capella_app_service.new_app_service", "name", "test-terraform-app-service"),
+					resource.TestCheckResourceAttr("couchbase-capella_app_service.new_app_service", "description", "description"),
+					resource.TestCheckResourceAttr("couchbase-capella_app_service.new_app_service", "compute.cpu", "2"),
+					resource.TestCheckResourceAttr("couchbase-capella_app_service.new_app_service", "compute.ram", "4"),
+					resource.TestCheckResourceAttr("couchbase-capella_app_service.new_app_service", "nodes", "2"),
 				),
 			},
 			//// ImportState testing
 			{
-				ResourceName:      "capella_app_service.new_app_service",
+				ResourceName:      "couchbase-capella_app_service.new_app_service",
 				ImportStateIdFunc: generateAppServiceImportId,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -38,22 +38,22 @@ func TestAppServiceResource(t *testing.T) {
 			{
 				Config: testAccAppServiceResourceConfigUpdate(cfg.Cfg),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "name", "test-terraform-app-service"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "description", "description"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "compute.cpu", "2"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "compute.ram", "4"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "nodes", "3"),
+					resource.TestCheckResourceAttr("couchbase-capella_app_service.new_app_service", "name", "test-terraform-app-service"),
+					resource.TestCheckResourceAttr("couchbase-capella_app_service.new_app_service", "description", "description"),
+					resource.TestCheckResourceAttr("couchbase-capella_app_service.new_app_service", "compute.cpu", "2"),
+					resource.TestCheckResourceAttr("couchbase-capella_app_service.new_app_service", "compute.ram", "4"),
+					resource.TestCheckResourceAttr("couchbase-capella_app_service.new_app_service", "nodes", "3"),
 				),
 			},
 			{
 				Config: testAccAppServiceResourceConfigUpdateWithIfMatch(cfg.Cfg),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "name", "test-terraform-app-service"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "description", "description"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "compute.cpu", "4"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "compute.ram", "8"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "nodes", "2"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "if_match", "2"),
+					resource.TestCheckResourceAttr("couchbase-capella_app_service.new_app_service", "name", "test-terraform-app-service"),
+					resource.TestCheckResourceAttr("couchbase-capella_app_service.new_app_service", "description", "description"),
+					resource.TestCheckResourceAttr("couchbase-capella_app_service.new_app_service", "compute.cpu", "4"),
+					resource.TestCheckResourceAttr("couchbase-capella_app_service.new_app_service", "compute.ram", "8"),
+					resource.TestCheckResourceAttr("couchbase-capella_app_service.new_app_service", "nodes", "2"),
+					resource.TestCheckResourceAttr("couchbase-capella_app_service.new_app_service", "if_match", "2"),
 				),
 			},
 			// Delete testing automatically occurs in TestCase
@@ -65,7 +65,7 @@ func testAccAppServiceResourceConfig(cfg string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_app_service" "new_app_service" {
+resource "couchbase-capella_app_service" "new_app_service" {
   organization_id = var.organization_id
   project_id      = var.project_id
   cluster_id      = var.cluster_id
@@ -83,7 +83,7 @@ func testAccAppServiceResourceConfigUpdate(cfg string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_app_service" "new_app_service" {
+resource "couchbase-capella_app_service" "new_app_service" {
   organization_id = var.organization_id
   project_id      = var.project_id
   cluster_id      = var.cluster_id
@@ -102,7 +102,7 @@ func testAccAppServiceResourceConfigUpdateWithIfMatch(cfg string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_app_service" "new_app_service" {
+resource "couchbase-capella_app_service" "new_app_service" {
   organization_id = var.organization_id
   project_id      = var.project_id
   cluster_id      = var.cluster_id
@@ -119,7 +119,7 @@ resource "capella_app_service" "new_app_service" {
 }
 
 func generateAppServiceImportId(state *terraform.State) (string, error) {
-	resourceName := "capella_app_service.new_app_service"
+	resourceName := "couchbase-capella_app_service.new_app_service"
 	var rawState map[string]string
 	for _, m := range state.Modules {
 		if len(m.Resources) > 0 {
