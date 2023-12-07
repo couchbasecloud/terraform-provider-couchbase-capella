@@ -202,7 +202,7 @@ func TestAccInvalidProjectResource(t *testing.T) {
 			//Update the organisation id
 			{
 				Config:      testAccProjectResourceConfigUpdateInvalid(acctest.ProjectCfg, rnd),
-				ExpectError: regexp.MustCompile("The server cannot or will not process the request.*"),
+				ExpectError: regexp.MustCompile("server cannot or will not process the request.*"),
 			},
 		},
 	})

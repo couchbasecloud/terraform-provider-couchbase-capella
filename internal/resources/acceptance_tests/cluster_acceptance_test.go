@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-// TODO: AV-66543 - Make Acceptance test concurrent
 // Concurrent Project creation is failing.
 
 // TestAccClusterResourceWithOnlyReqFieldAWS is a Terraform acceptance test that covers the lifecycle of a cluster resource
@@ -36,9 +35,9 @@ import (
 // - Verification of the updated cluster attributes.
 func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
-	resourceReference := "capella_cluster." + resourceName
+	resourceReference := "couchbase-capella_cluster." + resourceName
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
-	projectResourceReference := "capella_project." + projectResourceName
+	projectResourceReference := "couchbase-capella_project." + projectResourceName
 	cidr := "10.250.250.0/23"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
@@ -167,9 +166,9 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 // - Import state testing for the created cluster.
 func TestAccClusterResourceWithOptionalFieldAWS(t *testing.T) {
 	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
-	resourceReference := "capella_cluster." + resourceName
+	resourceReference := "couchbase-capella_cluster." + resourceName
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
-	projectResourceReference := "capella_project." + projectResourceName
+	projectResourceReference := "couchbase-capella_project." + projectResourceName
 	cidr := "10.251.250.0/23"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
@@ -233,9 +232,9 @@ func TestAccClusterResourceWithOptionalFieldAWS(t *testing.T) {
 // - Multiple updates to the cluster, including changes to disk types and horizontal scaling.
 func TestAccClusterResourceAzure(t *testing.T) {
 	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
-	resourceReference := "capella_cluster." + resourceName
+	resourceReference := "couchbase-capella_cluster." + resourceName
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
-	projectResourceReference := "capella_project." + projectResourceName
+	projectResourceReference := "couchbase-capella_project." + projectResourceName
 	cidr := "10.252.250.0/23"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
@@ -380,9 +379,9 @@ func TestAccClusterResourceAzure(t *testing.T) {
 // - An update to the cluster, including changes to horizontal scaling.
 func TestAccClusterResourceGCP(t *testing.T) {
 	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
-	resourceReference := "capella_cluster." + resourceName
+	resourceReference := "couchbase-capella_cluster." + resourceName
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
-	projectResourceReference := "capella_project." + projectResourceName
+	projectResourceReference := "couchbase-capella_project." + projectResourceName
 	cidr := "10.253.250.0/23"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -470,7 +469,7 @@ func TestAccClusterResourceGCP(t *testing.T) {
 func TestAccClusterResourceWithOptionalFieldAWSInvalidScenario(t *testing.T) {
 	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
-	projectResourceReference := "capella_project." + projectResourceName
+	projectResourceReference := "couchbase-capella_project." + projectResourceName
 	cidr := "10.251.250.0/23"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
@@ -494,7 +493,7 @@ func TestAccClusterResourceWithOptionalFieldAWSInvalidScenario(t *testing.T) {
 func TestAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenario(t *testing.T) {
 	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
-	projectResourceReference := "capella_project." + projectResourceName
+	projectResourceReference := "couchbase-capella_project." + projectResourceName
 	cidr := "10.248.250.0/23"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
@@ -519,9 +518,9 @@ func TestAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenario(t *testin
 // This test ensures that a cluster resource can be successfully created with the specified configuration type.
 func TestAccClusterResourceWithConfigurationTypeFieldAdded(t *testing.T) {
 	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
-	resourceReference := "capella_cluster." + resourceName
+	resourceReference := "couchbase-capella_cluster." + resourceName
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
-	projectResourceReference := "capella_project." + projectResourceName
+	projectResourceReference := "couchbase-capella_project." + projectResourceName
 	cidr := "10.249.250.0/23"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
@@ -576,9 +575,9 @@ func TestAccClusterResourceWithConfigurationTypeFieldAdded(t *testing.T) {
 // create a new cluster with the specified configuration when updating.
 func TestAccClusterResourceNotFound(t *testing.T) {
 	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
-	resourceReference := "capella_cluster." + resourceName
+	resourceReference := "couchbase-capella_cluster." + resourceName
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
-	projectResourceReference := "capella_project." + projectResourceName
+	projectResourceReference := "couchbase-capella_project." + projectResourceName
 	cidr := "10.254.250.0/23"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
@@ -669,13 +668,13 @@ func testAccClusterResourceConfigWithOnlyReqField(cfg, resourceName, projectReso
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "%[3]s" {
+resource "couchbase-capella_project" "%[3]s" {
     organization_id = var.organization_id
 	name            = "acc_test_project_name"
 	description     = "description"
 }
 
-resource "capella_cluster" "%[2]s" {
+resource "couchbase-capella_cluster" "%[2]s" {
   organization_id = var.organization_id
   project_id      = %[4]s.id
   name            = "%[2]s"
@@ -718,13 +717,13 @@ func testAccClusterResourceConfigWithAllField(cfg, resourceName, projectResource
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "%[3]s" {
+resource "couchbase-capella_project" "%[3]s" {
     organization_id = var.organization_id
 	name            = "acc_test_project_name"
 	description     = "description"
 }
 
-resource "capella_cluster" "%[2]s" {
+resource "couchbase-capella_cluster" "%[2]s" {
   organization_id = var.organization_id
   project_id      = %[4]s.id
   name            = "Terraform Acceptance Test Cluster"
@@ -787,13 +786,13 @@ func testAccClusterResourceConfigWithAllFieldInvalidScenario(cfg, resourceName, 
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "%[3]s" {
+resource "couchbase-capella_project" "%[3]s" {
     organization_id = var.organization_id
 	name            = "acc_test_project_name"
 	description     = "description"
 }
 
-resource "capella_cluster" "%[2]s" {
+resource "couchbase-capella_cluster" "%[2]s" {
   organization_id = var.organization_id
   project_id      = %[4]s.id
   name            = "Terraform Acceptance Test Cluster"
@@ -856,13 +855,13 @@ func testAccClusterResourceConfigAzure(cfg, resourceName, projectResourceName, p
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "%[3]s" {
+resource "couchbase-capella_project" "%[3]s" {
     organization_id = var.organization_id
 	name            = "acc_test_project_name"
 	description     = "description"
 }
 
-resource "capella_cluster" "%[2]s" {
+resource "couchbase-capella_cluster" "%[2]s" {
   organization_id = var.organization_id
   project_id      = %[4]s.id
   name            = "Terraform Acceptance Test Cluster"
@@ -910,13 +909,13 @@ func testAccClusterResourceConfigWithConfigurationTypeFieldAdded(cfg, resourceNa
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "%[3]s" {
+resource "couchbase-capella_project" "%[3]s" {
     organization_id = var.organization_id
 	name            = "acc_test_project_name"
 	description     = "description"
 }
 
-resource "capella_cluster" "%[2]s" {
+resource "couchbase-capella_cluster" "%[2]s" {
   organization_id = var.organization_id
   project_id      = %[4]s.id
   name            = "%[2]s"
@@ -960,13 +959,13 @@ func testAccClusterResourceConfigAzureUpdateToDiskTypeP6(cfg, resourceName, proj
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "%[3]s" {
+resource "couchbase-capella_project" "%[3]s" {
     organization_id = var.organization_id
 	name            = "acc_test_project_name"
 	description     = "description"
 }
 
-resource "capella_cluster" "%[2]s" {
+resource "couchbase-capella_cluster" "%[2]s" {
   organization_id = var.organization_id
   project_id      = %[4]s.id
   name            = "Terraform Acceptance Test Cluster"
@@ -1011,13 +1010,13 @@ func testAccClusterResourceConfigAzureUpdateToDiskP30(cfg, resourceName, project
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "%[3]s" {
+resource "couchbase-capella_project" "%[3]s" {
     organization_id = var.organization_id
 	name            = "acc_test_project_name"
 	description     = "description"
 }
 
-resource "capella_cluster" "%[2]s" {
+resource "couchbase-capella_cluster" "%[2]s" {
   organization_id = var.organization_id
   project_id      = %[4]s.id
   name            = "Terraform Acceptance Test Cluster"
@@ -1066,13 +1065,13 @@ func testAccClusterResourceConfigAzureUpdateToDiskUltraAndHorizontalScaling(cfg,
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "%[3]s" {
+resource "couchbase-capella_project" "%[3]s" {
     organization_id = var.organization_id
 	name            = "acc_test_project_name"
 	description     = "description"
 }
 
-resource "capella_cluster" "%[2]s" {
+resource "couchbase-capella_cluster" "%[2]s" {
   organization_id = var.organization_id
   project_id      = %[4]s.id
   name            = "Terraform Acceptance Test Cluster"
@@ -1132,13 +1131,13 @@ func testAccClusterResourceConfigGCP(cfg, resourceName, projectResourceName, pro
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "%[3]s" {
+resource "couchbase-capella_project" "%[3]s" {
     organization_id = var.organization_id
 	name            = "acc_test_project_name"
 	description     = "description"
 }
 
-resource "capella_cluster"  "%[2]s" {
+resource "couchbase-capella_cluster"  "%[2]s" {
   organization_id = var.organization_id
   project_id      = %[4]s.id
   name            = "Terraform Acceptance Test Cluster"
@@ -1185,13 +1184,13 @@ func testAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenarioConfig(cfg
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "%[3]s" {
+resource "couchbase-capella_project" "%[3]s" {
     organization_id = var.organization_id
 	name            = "acc_test_project_name"
 	description     = "description"
 }
 
-resource "capella_cluster"  "%[2]s" {
+resource "couchbase-capella_cluster"  "%[2]s" {
   organization_id = var.organization_id
   project_id      = %[4]s.id
   name            = "Terraform Acceptance Test Cluster"
@@ -1239,13 +1238,13 @@ func testAccClusterResourceConfigUpdateWhenClusterCreatedWithReqFieldOnly(cfg, r
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "%[3]s" {
+resource "couchbase-capella_project" "%[3]s" {
     organization_id = var.organization_id
 	name            = "acc_test_project_name"
 	description     = "description"
 }
 
-resource "capella_cluster" "%[2]s" {
+resource "couchbase-capella_cluster" "%[2]s" {
   organization_id = var.organization_id
   project_id      = %[4]s.id
   name            = "Terraform Acceptance Test Cluster Update 2"
@@ -1305,13 +1304,13 @@ func testAccClusterResourceConfigUpdateWhenClusterCreatedWithReqFieldOnlyAndIfMa
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "%[3]s" {
+resource "couchbase-capella_project" "%[3]s" {
     organization_id = var.organization_id
 	name            = "acc_test_project_name"
 	description     = "description"
 }
 
-resource "capella_cluster" "%[2]s" {
+resource "couchbase-capella_cluster" "%[2]s" {
   organization_id = var.organization_id
   project_id      = %[4]s.id
   name            = "Terraform Acceptance Test Cluster Update"
@@ -1372,13 +1371,13 @@ func testAccClusterResourceConfigGCPUpdateWithHorizontalScaling(cfg, resourceNam
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "%[3]s" {
+resource "couchbase-capella_project" "%[3]s" {
     organization_id = var.organization_id
 	name            = "acc_test_project_name"
 	description     = "description"
 }
 
-resource "capella_cluster"  "%[2]s" {
+resource "couchbase-capella_cluster"  "%[2]s" {
   organization_id = var.organization_id
   project_id      = %[4]s.id
   name            = "Terraform Acceptance Test Cluster"

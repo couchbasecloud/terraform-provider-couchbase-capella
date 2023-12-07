@@ -39,18 +39,18 @@ func TestAccOrganizationDataSource(t *testing.T) {
 			{
 				Config: testAccOrganizationResourceConfig(cfg.Cfg, organizationId),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.capella_organization.get_organization", "name"),
-					resource.TestCheckResourceAttr("data.capella_organization.get_organization", "organization_id", organizationId),
-					resource.TestCheckResourceAttrSet("data.capella_organization.get_organization", "audit.created_at"),
-					resource.TestCheckResourceAttrSet("data.capella_organization.get_organization", "audit.modified_by"),
-					resource.TestCheckResourceAttrSet("data.capella_organization.get_organization", "audit.modified_at"),
-					resource.TestCheckResourceAttrSet("data.capella_organization.get_organization", "audit.version"),
+					resource.TestCheckResourceAttrSet("data.couchbase-capella_organization.get_organization", "name"),
+					resource.TestCheckResourceAttr("data.couchbase-capella_organization.get_organization", "organization_id", organizationId),
+					resource.TestCheckResourceAttrSet("data.couchbase-capella_organization.get_organization", "audit.created_at"),
+					resource.TestCheckResourceAttrSet("data.couchbase-capella_organization.get_organization", "audit.modified_by"),
+					resource.TestCheckResourceAttrSet("data.couchbase-capella_organization.get_organization", "audit.modified_at"),
+					resource.TestCheckResourceAttrSet("data.couchbase-capella_organization.get_organization", "audit.version"),
 				),
 			},
 
 			{
 				Config:      testAccOrganizationResourceConfig(cfg.Cfg, "123456-abcd-4567890"),
-				ExpectError: regexp.MustCompile("The server cannot or will not\nprocess the request due to something that is perceived to be a client\nerror"),
+				ExpectError: regexp.MustCompile("server cannot or will not process the request.*"),
 			},
 		},
 	})
@@ -61,10 +61,10 @@ func testAccOrganizationResourceConfig(cfg string, organizationId string) string
 %[1]s
 
 output "organizations_get" {
-  value = data.capella_organization.get_organization
+  value = data.couchbase-capella_organization.get_organization
 }
 
-data "capella_organization" "get_organization" {
+data "couchbase-capella_organization" "get_organization" {
   organization_id = "%[2]s"
 }
 
