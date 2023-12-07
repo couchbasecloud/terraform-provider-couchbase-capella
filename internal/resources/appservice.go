@@ -27,6 +27,14 @@ var (
 	_ resource.ResourceWithImportState = &AppService{}
 )
 
+const errorMessageAfterAppServiceCreationInitiation = "App Service creation is initiated, but encountered an error while checking the current" +
+	" state of the app service. Please run `terraform plan` after 4-5 minutes to know the" +
+	" current status of the app service. Additionally, run `terraform apply --refresh-only` to update" +
+	" the state from remote, unexpected error: "
+
+const errorMessageWhileAppServiceCreation = "There is an error during app service creation. Please check in Capella to see if any hanging resources" +
+	" have been created, unexpected error: "
+
 // AppService is the AppService resource implementation.
 type AppService struct {
 	*providerschema.Data
@@ -95,7 +103,8 @@ func (a *AppService) Create(ctx context.Context, req resource.CreateRequest, res
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices", a.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
 
-	response, err := a.Client.Execute(
+	response, err := a.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		appServiceRequest,
 		a.Token,
@@ -104,7 +113,7 @@ func (a *AppService) Create(ctx context.Context, req resource.CreateRequest, res
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error executing request",
-			"Could not execute request, unexpected error: "+err.Error(),
+			errorMessageWhileAppServiceCreation+err.Error(),
 		)
 		return
 	}
@@ -114,24 +123,30 @@ func (a *AppService) Create(ctx context.Context, req resource.CreateRequest, res
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating app service",
-			"Could not create app service, unexpected error: "+err.Error(),
+			errorMessageWhileAppServiceCreation+"error during unmarshalling:"+err.Error(),
 		)
+		return
+	}
+
+	diags = resp.State.Set(ctx, initializePendingAppServiceWithPlanAndId(plan, createAppServiceResponse.Id.String()))
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	err = a.checkAppServiceStatus(ctx, organizationId, projectId, clusterId, createAppServiceResponse.Id.String())
 	if err != nil {
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"Error creating app service",
-			"Could not create app service, unexpected error: "+api.ParseError(err),
+			errorMessageAfterAppServiceCreationInitiation+api.ParseError(err),
 		)
 		return
 	}
 	refreshedState, err := a.refreshAppService(ctx, organizationId, projectId, clusterId, createAppServiceResponse.Id.String())
 	if err != nil {
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"Error creating app service",
-			"Could not create app service, unexpected error: "+api.ParseError(err),
+			errorMessageAfterAppServiceCreationInitiation+api.ParseError(err),
 		)
 		return
 	}
@@ -251,7 +266,8 @@ func (a *AppService) Update(ctx context.Context, req resource.UpdateRequest, res
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s", a.HostURL, organizationId, projectId, clusterId, appServiceId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err = a.Client.Execute(
+	_, err = a.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		appServiceRequest,
 		a.Token,
@@ -323,7 +339,8 @@ func (a *AppService) Delete(ctx context.Context, req resource.DeleteRequest, res
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s", a.HostURL, organizationId, projectId, clusterId, appServiceId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
 	// Delete existing App Service
-	_, err = a.Client.Execute(
+	_, err = a.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		a.Token,
@@ -424,7 +441,7 @@ func (a *AppService) validateCreateAppServiceRequest(plan providerschema.AppServ
 
 // refreshAppService is used to pass an existing AppService to the refreshed state.
 func (a *AppService) refreshAppService(ctx context.Context, organizationId, projectId, clusterId, appServiceId string) (*providerschema.AppService, error) {
-	appServiceResponse, err := a.getAppService(organizationId, projectId, clusterId, appServiceId)
+	appServiceResponse, err := a.getAppService(ctx, organizationId, projectId, clusterId, appServiceId)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrNotFound, err)
 	}
@@ -473,7 +490,7 @@ func (a *AppService) checkAppServiceStatus(ctx context.Context, organizationId, 
 			return fmt.Errorf(msg)
 
 		case <-timer.C:
-			appServiceResp, err = a.getAppService(organizationId, projectId, clusterId, appServiceId)
+			appServiceResp, err = a.getAppService(ctx, organizationId, projectId, clusterId, appServiceId)
 			switch err {
 			case nil:
 				if appservice.IsFinalState(appServiceResp.CurrentState) {
@@ -491,11 +508,12 @@ func (a *AppService) checkAppServiceStatus(ctx context.Context, organizationId, 
 
 // getAppService retrieves app service information from the specified organization, project and cluster
 // using the provided app service ID by open-api call.
-func (a *AppService) getAppService(organizationId, projectId, clusterId, appServiceId string) (*appservice.GetAppServiceResponse, error) {
+func (a *AppService) getAppService(ctx context.Context, organizationId, projectId, clusterId, appServiceId string) (*appservice.GetAppServiceResponse, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s", a.HostURL, organizationId, projectId, clusterId, appServiceId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
-	response, err := a.Client.Execute(
+	response, err := a.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		a.Token,
@@ -512,4 +530,26 @@ func (a *AppService) getAppService(organizationId, projectId, clusterId, appServ
 	}
 	appServiceResp.Etag = response.Response.Header.Get("ETag")
 	return &appServiceResp, nil
+}
+
+// initializePendingAppServiceWithPlanAndId initializes an instance of providerschema.AppService
+// with the specified plan and ID. It marks all computed fields as null and state as pending.
+func initializePendingAppServiceWithPlanAndId(plan providerschema.AppService, id string) providerschema.AppService {
+	plan.Id = types.StringValue(id)
+	plan.CurrentState = types.StringValue("pending")
+	if plan.Description.IsNull() || plan.Description.IsUnknown() {
+		plan.Description = types.StringNull()
+	}
+	if plan.Nodes.IsNull() || plan.Nodes.IsUnknown() {
+		plan.Nodes = types.Int64Null()
+	}
+	if plan.CloudProvider.IsNull() || plan.CloudProvider.IsUnknown() {
+		plan.CloudProvider = types.StringNull()
+	}
+	if plan.Version.IsNull() || plan.Version.IsUnknown() {
+		plan.Version = types.StringNull()
+	}
+	plan.Audit = types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
+	plan.Etag = types.StringNull()
+	return plan
 }

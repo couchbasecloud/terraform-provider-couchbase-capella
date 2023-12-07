@@ -19,13 +19,13 @@ func UserSchema() schema.Schema {
 			"time_zone":            stringAttribute(computed),
 			"enable_notifications": boolAttribute(computed),
 			"expires_at":           stringAttribute(computed),
-			"resources": schema.ListNestedAttribute{
+			"resources": schema.SetNestedAttribute{
 				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"type":  stringAttribute(optional, computed),
+						"type":  stringDefaultAttribute("project", optional, computed),
 						"id":    stringAttribute(required),
-						"roles": stringListAttribute(required),
+						"roles": stringSetAttribute(required),
 					},
 				},
 			},

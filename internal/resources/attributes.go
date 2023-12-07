@@ -4,11 +4,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -179,6 +181,13 @@ func float64Attribute(fields ...string) *schema.Float64Attribute {
 	return &attribute
 }
 
+// float64DefaultAttribute sets the default values for an float field and returns the float64 attribute.
+func float64DefaultAttribute(defaultValue float64, fields ...string) *schema.Float64Attribute {
+	attribute := float64Attribute(fields...)
+	attribute.Default = float64default.StaticFloat64(defaultValue)
+	return attribute
+}
+
 // stringListAttribute returns a Terraform string list schema attribute
 // which is configured to be of type string.
 func stringListAttribute(fields ...string) *schema.ListAttribute {
@@ -199,6 +208,33 @@ func stringListAttribute(fields ...string) *schema.ListAttribute {
 		case requiresReplace:
 			var planModifiers = []planmodifier.List{
 				listplanmodifier.RequiresReplace(),
+			}
+			attribute.PlanModifiers = planModifiers
+		}
+	}
+	return &attribute
+}
+
+// stringSetAttribute returns a Terraform string set schema attribute
+// which is configured to be of type string.
+func stringSetAttribute(fields ...string) *schema.SetAttribute {
+	attribute := schema.SetAttribute{
+		ElementType: types.StringType,
+	}
+
+	for _, field := range fields {
+		switch field {
+		case required:
+			attribute.Required = true
+		case optional:
+			attribute.Optional = true
+		case computed:
+			attribute.Computed = true
+		case sensitive:
+			attribute.Sensitive = true
+		case requiresReplace:
+			var planModifiers = []planmodifier.Set{
+				setplanmodifier.RequiresReplace(),
 			}
 			attribute.PlanModifiers = planModifiers
 		}

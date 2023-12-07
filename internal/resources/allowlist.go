@@ -23,6 +23,14 @@ var (
 	_ resource.ResourceWithImportState = &AllowList{}
 )
 
+const errorMessageAfterAllowListCreation = "Allow list creation is successful, but encountered an error while checking the current" +
+	" state of the allow list. Please run `terraform plan` after 1-2 minutes to know the" +
+	" current allow list state. Additionally, run `terraform apply --refresh-only` to update" +
+	" the state from remote, unexpected error: "
+
+const errorMessageWhileAllowListCreation = "There is an error during allow list creation. Please check in Capella to see if any hanging resources" +
+	" have been created, unexpected error: "
+
 // AllowList is the AllowList resource implementation.
 type AllowList struct {
 	*providerschema.Data
@@ -83,7 +91,8 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 		plan.ClusterId.ValueString(),
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-	response, err := r.Client.Execute(
+	response, err := r.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		allowListRequest,
 		r.Token,
@@ -92,7 +101,7 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error executing request",
-			"Could not execute request, unexpected error: "+api.ParseError(err),
+			errorMessageWhileAllowListCreation+api.ParseError(err),
 		)
 		return
 	}
@@ -102,16 +111,22 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating allow list",
-			"Could not create allow list, unexpected error: "+err.Error(),
+			errorMessageWhileAllowListCreation+"error during unmarshalling: "+err.Error(),
 		)
+		return
+	}
+
+	diags = resp.State.Set(ctx, initializeAllowListWithPlanAndId(plan, allowListResponse.Id.String()))
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	refreshedState, err := r.refreshAllowList(ctx, plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), plan.ClusterId.ValueString(), allowListResponse.Id.String())
 	if err != nil {
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"Error reading Capella AllowList",
-			"Could not read Capella AllowList "+allowListResponse.Id.String()+": "+api.ParseError(err),
+			errorMessageAfterAllowListCreation+api.ParseError(err),
 		)
 		return
 	}
@@ -223,7 +238,8 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 		allowListId,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err = r.Client.Execute(
+	_, err = r.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		r.Token,
@@ -256,7 +272,7 @@ func (r *AllowList) ImportState(ctx context.Context, req resource.ImportStateReq
 }
 
 // getAllowList is used to retrieve an existing allow list.
-func (r *AllowList) getAllowList(_ context.Context, organizationId, projectId, clusterId, allowListId string) (*api.GetAllowListResponse, error) {
+func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId, clusterId, allowListId string) (*api.GetAllowListResponse, error) {
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs/%s",
 		r.HostURL,
@@ -266,7 +282,8 @@ func (r *AllowList) getAllowList(_ context.Context, organizationId, projectId, c
 		allowListId,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := r.Client.Execute(
+	response, err := r.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		r.Token,
@@ -316,4 +333,15 @@ func (r *AllowList) refreshAllowList(ctx context.Context, organizationId, projec
 	}
 
 	return &refreshedState, nil
+}
+
+// initializeAllowListWithPlanAndId initializes an instance of providerschema.AllowList
+// with the specified plan and ID. It marks all computed fields as null.
+func initializeAllowListWithPlanAndId(plan providerschema.AllowList, id string) providerschema.AllowList {
+	plan.Id = types.StringValue(id)
+	plan.Audit = types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
+	if plan.Comment.IsNull() || plan.Comment.IsUnknown() {
+		plan.Comment = types.StringNull()
+	}
+	return plan
 }

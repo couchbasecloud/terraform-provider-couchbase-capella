@@ -27,6 +27,14 @@ var (
 	_ resource.ResourceWithImportState = &User{}
 )
 
+const errorMessageAfterUserCreation = "User creation is successful, but encountered an error while checking the current" +
+	" state of the user. Please run `terraform plan` after 1-2 minutes to know the" +
+	" current user state. Additionally, run `terraform apply --refresh-only` to update" +
+	" the state from remote, unexpected error: "
+
+const errorMessageWhileUserCreation = "There is an error during user creation. Please check in Capella to see if any hanging resources" +
+	" have been created, unexpected error: "
+
 // User is the User resource implementation.
 type User struct {
 	*providerschema.Data
@@ -101,7 +109,8 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 	// Execute request
 	url := fmt.Sprintf("%s/v4/organizations/%s/users", r.HostURL, organizationId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-	response, err := r.Client.Execute(
+	response, err := r.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		createUserRequest,
 		r.Token,
@@ -110,7 +119,7 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error executing request",
-			"Could not execute request, unexpected error: "+api.ParseError(err),
+			errorMessageWhileUserCreation+api.ParseError(err),
 		)
 		return
 	}
@@ -120,16 +129,22 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating user",
-			"Could not create user, unexpected error: "+err.Error(),
+			errorMessageWhileUserCreation+"error during unmarshalling: "+err.Error(),
 		)
+		return
+	}
+
+	diags = resp.State.Set(ctx, initializeUserWithPlanAndId(plan, createUserResponse.Id.String()))
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	refreshedState, err := r.refreshUser(ctx, organizationId, createUserResponse.Id.String())
 	if err != nil {
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"Error executing request",
-			"Could not execute request, unexpected error: "+api.ParseError(err),
+			errorMessageAfterUserCreation+api.ParseError(err),
 		)
 		return
 	}
@@ -255,7 +270,7 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 
 	patch := constructPatch(state, plan)
 
-	err = r.updateUser(organizationId, userId, patch)
+	err = r.updateUser(ctx, organizationId, userId, patch)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
@@ -446,11 +461,12 @@ func compare(existing, proposed []basetypes.StringValue) ([]basetypes.StringValu
 }
 
 // updateUser is used to execute the patch request to update a user.
-func (r *User) updateUser(organizationId, userId string, patch []api.PatchEntry) error {
+func (r *User) updateUser(ctx context.Context, organizationId, userId string, patch []api.PatchEntry) error {
 	// Update existing user
 	url := fmt.Sprintf("%s/v4/organizations/%s/users/%s", r.HostURL, organizationId, userId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPatch, SuccessStatus: http.StatusOK}
-	_, err := r.Client.Execute(
+	_, err := r.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		patch,
 		r.Token,
@@ -497,7 +513,8 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 		userId,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err = r.Client.Execute(
+	_, err = r.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		r.Token,
@@ -519,7 +536,7 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 }
 
 // getUser is used to retrieve an existing user.
-func (r *User) getUser(_ context.Context, organizationId, userId string) (*api.GetUserResponse, error) {
+func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api.GetUserResponse, error) {
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/users/%s",
 		r.HostURL,
@@ -528,7 +545,8 @@ func (r *User) getUser(_ context.Context, organizationId, userId string) (*api.G
 	)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := r.Client.Execute(
+	response, err := r.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		r.Token,
@@ -594,4 +612,22 @@ func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (
 func (r *User) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+// initializeUserWithPlanAndId initializes an instance of providerschema.User
+// with the specified plan and ID. It marks all computed fields as null.
+func initializeUserWithPlanAndId(plan providerschema.User, id string) providerschema.User {
+	plan.Id = types.StringValue(id)
+	if plan.Name.IsNull() || plan.Name.IsUnknown() {
+		plan.Name = types.StringNull()
+	}
+	plan.Status = types.StringNull()
+	plan.Inactive = types.BoolNull()
+	plan.LastLogin = types.StringNull()
+	plan.Region = types.StringNull()
+	plan.TimeZone = types.StringNull()
+	plan.EnableNotifications = types.BoolNull()
+	plan.ExpiresAt = types.StringNull()
+	plan.Audit = types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
+	return plan
 }

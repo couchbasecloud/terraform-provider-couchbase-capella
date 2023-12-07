@@ -37,7 +37,7 @@ type ApiKey struct {
 
 	// AllowedCIDRs is the list of inbound CIDRs for the API key.
 	// The system making a request must come from one of the allowed CIDRs.
-	AllowedCIDRs   types.List   `tfsdk:"allowed_cidrs"`
+	AllowedCIDRs   types.Set    `tfsdk:"allowed_cidrs"`
 	OrganizationId types.String `tfsdk:"organization_id"`
 	Audit          types.Object `tfsdk:"audit"`
 	Description    types.String `tfsdk:"description"`
@@ -87,15 +87,15 @@ func NewApiKey(apiKey *api.GetApiKeyResponse, organizationId string, auditObject
 
 // MorphAllowedCidrs is used to convert string list to basetypes.ListValue
 // TODO : add unit testing.
-func MorphAllowedCidrs(allowedCIDRs []string) (basetypes.ListValue, error) {
+func MorphAllowedCidrs(allowedCIDRs []string) (basetypes.SetValue, error) {
 	var newAllowedCidr []attr.Value
 	for _, allowedCidr := range allowedCIDRs {
 		newAllowedCidr = append(newAllowedCidr, types.StringValue(allowedCidr))
 	}
 
-	newAllowedCidrs, diags := types.ListValue(types.StringType, newAllowedCidr)
+	newAllowedCidrs, diags := types.SetValue(types.StringType, newAllowedCidr)
 	if diags.HasError() {
-		return types.ListUnknown(types.StringType), fmt.Errorf("error while converting allowedcidrs")
+		return types.SetUnknown(types.StringType), fmt.Errorf("error while converting allowedcidrs")
 	}
 
 	return newAllowedCidrs, nil

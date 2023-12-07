@@ -1,12 +1,12 @@
 package resources
 
 import (
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -23,33 +23,33 @@ func ApiKeySchema() schema.Schema {
 			},
 			"organization_id": stringAttribute(required, requiresReplace),
 			"name":            stringAttribute(required, requiresReplace),
-			"description":     stringAttribute(optional, computed, requiresReplace, useStateForUnknown),
-			"expiry":          float64Attribute(optional, computed, requiresReplace, useStateForUnknown),
-			"allowed_cidrs": schema.ListAttribute{
+			"description":     stringDefaultAttribute("", optional, computed, requiresReplace, useStateForUnknown),
+			"expiry":          float64DefaultAttribute(180, optional, computed, requiresReplace, useStateForUnknown),
+			"allowed_cidrs": schema.SetAttribute{
 				Optional:    true,
 				Computed:    true,
 				ElementType: types.StringType,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-					listplanmodifier.RequiresReplace(),
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+					setplanmodifier.RequiresReplace(),
 				},
-				Validators: []validator.List{
-					listvalidator.SizeAtLeast(1),
+				Validators: []validator.Set{
+					setvalidator.SizeAtLeast(1),
 				},
-				Default: listdefault.StaticValue(types.ListValueMust(types.StringType, []attr.Value{types.StringValue("0.0.0.0/0")})),
+				Default: setdefault.StaticValue(types.SetValueMust(types.StringType, []attr.Value{types.StringValue("0.0.0.0/0")})),
 			},
-			"organization_roles": stringListAttribute(required, requiresReplace),
-			"resources": schema.ListNestedAttribute{
+			"organization_roles": stringSetAttribute(required, requiresReplace),
+			"resources": schema.SetNestedAttribute{
 				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id":    stringAttribute(required),
-						"roles": stringListAttribute(required),
-						"type":  stringAttribute(optional, computed),
+						"roles": stringSetAttribute(required),
+						"type":  stringDefaultAttribute("project", optional, computed),
 					},
 				},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.RequiresReplace(),
 				},
 			},
 			"rotate": schema.NumberAttribute{

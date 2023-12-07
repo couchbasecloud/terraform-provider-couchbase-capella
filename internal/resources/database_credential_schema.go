@@ -24,25 +24,25 @@ func DatabaseCredentialSchema() schema.Schema {
 			"project_id":      stringAttribute(required, requiresReplace),
 			"cluster_id":      stringAttribute(required, requiresReplace),
 			"audit":           computedAuditAttribute(),
-			"access": schema.ListNestedAttribute{
-				Optional: true,
+			"access": schema.SetNestedAttribute{
+				Required: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"privileges": stringListAttribute(required),
+						"privileges": stringSetAttribute(required),
 						"resources": schema.SingleNestedAttribute{
 							Optional: true,
 							Attributes: map[string]schema.Attribute{
-								"buckets": schema.ListNestedAttribute{
+								"buckets": schema.SetNestedAttribute{
 									Optional: true,
 									NestedObject: schema.NestedAttributeObject{
 										Attributes: map[string]schema.Attribute{
 											"name": stringAttribute(required),
-											"scopes": schema.ListNestedAttribute{
+											"scopes": schema.SetNestedAttribute{
 												Optional: true,
 												NestedObject: schema.NestedAttributeObject{
 													Attributes: map[string]schema.Attribute{
 														"name":        stringAttribute(required),
-														"collections": stringListAttribute(optional),
+														"collections": stringSetAttribute(optional),
 													},
 												},
 											},
