@@ -189,6 +189,10 @@ func (r *AllowList) Read(ctx context.Context, req resource.ReadRequest, resp *re
 		return
 	}
 
+	if state.ExpiresAt != refreshedState.ExpiresAt {
+		refreshedState.ExpiresAt = state.ExpiresAt
+	}
+
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &refreshedState)
 	resp.Diagnostics.Append(diags...)
