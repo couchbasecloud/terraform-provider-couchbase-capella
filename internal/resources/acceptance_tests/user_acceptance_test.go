@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-func TestAccUserResourceWithOnlyReqFields(t *testing.T) {
+func TestAccUserResource(t *testing.T) {
 	resourceName := "acc_user" + cfg.GenerateRandomResourceName()
 	resourceReference := "capella_user." + resourceName
 	projectResourceName := "acc_project_" + cfg.GenerateRandomResourceName()
@@ -25,7 +25,7 @@ func TestAccUserResourceWithOnlyReqFields(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read
 			{
-				Config: testAccUserResourceConfigOnlyReqFields(cfg.Cfg, resourceName, projectResourceName, projectResourceReference),
+				Config: testAccUserResourceConfig(cfg.Cfg, resourceName, projectResourceName, projectResourceReference),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
 					resource.TestCheckResourceAttr(resourceReference, "email", "acc_test_email"),
@@ -44,53 +44,7 @@ func TestAccUserResourceWithOnlyReqFields(t *testing.T) {
 			},
 			// Update and Read
 			{
-				Config: testAccUserResourceConfigOnlyReqFields(cfg.Cfg, resourceName, projectResourceName, projectResourceReference),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
-					resource.TestCheckResourceAttr(resourceReference, "email", "acc_test_email"),
-					resource.TestCheckResourceAttr(
-						resourceReference, "organization_roles", "acc_test_organization_roles",
-					),
-					resource.TestCheckResourceAttr(resourceReference, "resources", "acc_test_resources"),
-				),
-			},
-			// NOTE: No delete case is provided - this occurs automatically
-		},
-	})
-}
-
-func TestAccUserResourceAllFields(t *testing.T) {
-	resourceName := "acc_user" + cfg.GenerateRandomResourceName()
-	resourceReference := "capella_user." + resourceName
-	projectResourceName := "acc_project_" + cfg.GenerateRandomResourceName()
-	projectResourceReference := "capella_project." + projectResourceName
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { cfg.TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			// Create and Read
-			{
-				Config: testAccUserResourceConfigAllFields(cfg.Cfg, resourceName, projectResourceName, projectResourceReference),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
-					resource.TestCheckResourceAttr(resourceReference, "email", "acc_test_email"),
-					resource.TestCheckResourceAttr(
-						resourceReference, "organization_roles", "acc_test_organization_roles",
-					),
-					resource.TestCheckResourceAttr(resourceReference, "resources", "acc_test_resources"),
-				),
-			},
-			// Import state
-			{
-				ResourceName:      resourceReference,
-				ImportStateIdFunc: generateUserImportId,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			// Update and Read
-			{
-				Config: testAccUserResourceConfigOnlyReqFields(cfg.Cfg, resourceName, projectResourceName, projectResourceReference),
+				Config: testAccUserResourceConfigUpdate(cfg.Cfg, resourceName, projectResourceName, projectResourceReference),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
 					resource.TestCheckResourceAttr(resourceReference, "email", "acc_test_email"),
@@ -185,7 +139,7 @@ func TestAccUserResourceResourceNotFound(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccUserResourceConfigAllFields(cfg.Cfg, resourceName, projectResourceName, projectResourceReference),
+				Config: testAccUserResourceConfig(cfg.Cfg, resourceName, projectResourceName, projectResourceReference),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
 					resource.TestCheckResourceAttr(resourceReference, "email", "acc_test_email"),
@@ -203,7 +157,7 @@ func TestAccUserResourceResourceNotFound(t *testing.T) {
 
 			// Attempt to update - since the orginal has been deleted, a new user will be created.
 			{
-				Config: testAccUserResourceConfigOnlyReqFields(cfg.Cfg, resourceName, projectResourceName, projectResourceReference),
+				Config: testAccUserResourceConfig(cfg.Cfg, resourceName, projectResourceName, projectResourceReference),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
 					resource.TestCheckResourceAttr(resourceReference, "email", "acc_test_email"),
@@ -217,7 +171,7 @@ func TestAccUserResourceResourceNotFound(t *testing.T) {
 	})
 }
 
-func testAccUserResourceConfigOnlyReqFields(cfg, resourceReference, projectResourceName, projectResourceReference string) string {
+func testAccUserResourceConfig(cfg, resourceReference, projectResourceName, projectResourceReference string) string {
 	return fmt.Sprintf(`
 	%[1]s
 	  
@@ -235,51 +189,6 @@ func testAccUserResourceConfigOnlyReqFields(cfg, resourceReference, projectResou
 	  
 		organization_roles = [
 			"organizationOwner"
-		]
-	  
-		resources = [
-		  {
-			type = "project"
-			id   = %[4]s.id
-			roles = [
-			  "projectViewer",
-			  "projectDataReaderWriter"
-			]
-		  }
-		]
-	  }
-	`, cfg, resourceReference, projectResourceName, projectResourceReference)
-}
-
-func testAccUserResourceConfigAllFields(cfg, resourceReference, projectResourceName, projectResourceReference string) string {
-	return fmt.Sprintf(`
-	%[1]s
-	  
-	resource "capella_project" "%[3]s" {
-		organization_id = var.organization_id
-		name            = "acc_test_project_name"
-		description     = "description"
-	}
-	
-	resource "capella_user" "%[2]s" {
-		organization_id = var.organization_id
-	  
-		name  = "Terraform Acceptance Test User"
-		email = "terraformacceptancetest@couchbase.com"
-	  
-		organization_roles = [
-			"organizationOwner"
-		]
-	  
-		resources = [
-		  {
-			type = "project"
-			id   = %[4]s.id
-			roles = [
-			  "projectViewer",
-			  "projectDataReaderWriter"
-			]
-		  }
 		]
 	  }
 	`, cfg, resourceReference, projectResourceName, projectResourceReference)
@@ -302,7 +211,7 @@ func testAccUserResourceConfigUpdate(cfg, resourceReference, projectResourceName
 		email = "terraformacceptancetest@couchbase.com"
 	  
 		organization_roles = [
-			"organizationOwner"
+			"organizationMember"
 		]
 	  
 		resources = [
