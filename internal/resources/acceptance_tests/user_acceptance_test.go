@@ -15,9 +15,9 @@ import (
 
 func TestAccUserResource(t *testing.T) {
 	resourceName := "acc_user" + cfg.GenerateRandomResourceName()
-	resourceReference := "capella_user." + resourceName
+	resourceReference := "couchbase-capella_user." + resourceName
 	projectResourceName := "acc_project_" + cfg.GenerateRandomResourceName()
-	projectResourceReference := "capella_project." + projectResourceName
+	projectResourceReference := "couchbase-capella_project." + projectResourceName
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { cfg.TestAccPreCheck(t) },
@@ -28,10 +28,7 @@ func TestAccUserResource(t *testing.T) {
 				Config: testAccUserResourceConfig(cfg.Cfg, resourceName, projectResourceName, projectResourceReference),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
-					resource.TestCheckResourceAttr(resourceReference, "email", "acc_test_email"),
-					resource.TestCheckResourceAttr(
-						resourceReference, "organization_roles", "acc_test_organization_roles",
-					),
+					resource.TestCheckResourceAttr(resourceReference, "email", "terraformacceptancetest@couchbase.com"),
 					resource.TestCheckResourceAttr(resourceReference, "resources", "acc_test_resources"),
 				),
 			},
@@ -47,10 +44,9 @@ func TestAccUserResource(t *testing.T) {
 				Config: testAccUserResourceConfigUpdate(cfg.Cfg, resourceName, projectResourceName, projectResourceReference),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
-					resource.TestCheckResourceAttr(resourceReference, "email", "acc_test_email"),
-					resource.TestCheckResourceAttr(
-						resourceReference, "organization_roles", "acc_test_organization_roles",
-					),
+					resource.TestCheckResourceAttr(resourceReference, "email", "terraformacceptancetest@couchbase.com"),
+					resource.TestCheckResourceAttr(resourceReference, "resources.0.type", "project"),
+					resource.TestCheckResourceAttr(resourceReference, "resources.0.roles.0", "projectViewer"),
 					resource.TestCheckResourceAttr(resourceReference, "resources", "acc_test_resources"),
 				),
 			},
@@ -128,10 +124,10 @@ func readUserFromServer(data *providerschema.Data, organizationId, clusterId str
 }
 
 func TestAccUserResourceResourceNotFound(t *testing.T) {
-	resourceName := "acc_database_credential" + cfg.GenerateRandomResourceName()
-	resourceReference := "capella_database_credential." + resourceName
+	resourceName := "acc_user_" + cfg.GenerateRandomResourceName()
+	resourceReference := "couchbase-capella_user." + resourceName
 	projectResourceName := "acc_project_" + cfg.GenerateRandomResourceName()
-	projectResourceReference := "capella_project." + projectResourceName
+	projectResourceReference := "couchbase-capella_project." + projectResourceName
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { cfg.TestAccPreCheck(t) },
@@ -161,9 +157,8 @@ func TestAccUserResourceResourceNotFound(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
 					resource.TestCheckResourceAttr(resourceReference, "email", "acc_test_email"),
-					resource.TestCheckResourceAttr(
-						resourceReference, "organization_roles", "acc_test_organization_roles",
-					),
+					resource.TestCheckResourceAttr(resourceReference, "resources.0.type", "project"),
+					resource.TestCheckResourceAttr(resourceReference, "resources.0.roles.0", "projectViewer"),
 					resource.TestCheckResourceAttr(resourceReference, "resources", "acc_test_resources"),
 				),
 			},
@@ -207,7 +202,7 @@ func testAccUserResourceConfigUpdate(cfg, resourceReference, projectResourceName
 	resource "capella_user" "%[2]s" {
 		organization_id = var.organization_id
 	  
-		name  = "Terraform Acceptance Test User"
+		name  = "acc_test_user_name"
 		email = "terraformacceptancetest@couchbase.com"
 	  
 		organization_roles = [
