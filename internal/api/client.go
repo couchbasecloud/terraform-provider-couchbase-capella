@@ -51,7 +51,7 @@ type EndpointCfg struct {
 	SuccessStatus int
 }
 
-// defaultWaitAttempt re-attempt http request after 2 seconds
+// defaultWaitAttempt re-attempt http request after 2 seconds.
 const defaultWaitAttempt = time.Second * 2
 
 // Execute is used to construct and execute a HTTP request.
@@ -199,7 +199,7 @@ func exec(ctx context.Context, fn func() (response *Response, err error), waitOn
 			response, err = fn()
 			switch {
 			case err == nil:
-				return response, err
+				return response, nil
 			case !goer.Is(err, errors.ErrGatewayTimeout):
 				return response, err
 			}

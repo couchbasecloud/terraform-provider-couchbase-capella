@@ -507,7 +507,7 @@ func (a *AppService) checkAppServiceStatus(ctx context.Context, organizationId, 
 }
 
 // getAppService retrieves app service information from the specified organization, project and cluster
-// using the provided app service ID by open-api call
+// using the provided app service ID by open-api call.
 func (a *AppService) getAppService(ctx context.Context, organizationId, projectId, clusterId, appServiceId string) (*appservice.GetAppServiceResponse, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s", a.HostURL, organizationId, projectId, clusterId, appServiceId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}

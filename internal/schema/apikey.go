@@ -86,7 +86,7 @@ func NewApiKey(apiKey *api.GetApiKeyResponse, organizationId string, auditObject
 }
 
 // MorphAllowedCidrs is used to convert string list to basetypes.ListValue
-// TODO : add unit testing
+// TODO : add unit testing.
 func MorphAllowedCidrs(allowedCIDRs []string) (basetypes.SetValue, error) {
 	var newAllowedCidr []attr.Value
 	for _, allowedCidr := range allowedCIDRs {

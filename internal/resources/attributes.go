@@ -181,7 +181,7 @@ func float64Attribute(fields ...string) *schema.Float64Attribute {
 	return &attribute
 }
 
-// float64DefaultAttribute sets the default values for an float field and returns the float64 attribute
+// float64DefaultAttribute sets the default values for an float field and returns the float64 attribute.
 func float64DefaultAttribute(defaultValue float64, fields ...string) *schema.Float64Attribute {
 	attribute := float64Attribute(fields...)
 	attribute.Default = float64default.StaticFloat64(defaultValue)

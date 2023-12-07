@@ -35,7 +35,7 @@ const errorMessageAfterUserCreation = "User creation is successful, but encounte
 const errorMessageWhileUserCreation = "There is an error during user creation. Please check in Capella to see if any hanging resources" +
 	" have been created, unexpected error: "
 
-// User is the User resource implementation
+// User is the User resource implementation.
 type User struct {
 	*providerschema.Data
 }

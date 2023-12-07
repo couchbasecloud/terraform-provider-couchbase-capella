@@ -272,7 +272,7 @@ func (r *AllowList) ImportState(ctx context.Context, req resource.ImportStateReq
 }
 
 // getAllowList is used to retrieve an existing allow list.
-func (r *AllowList) getAllowList(_ context.Context, organizationId, projectId, clusterId, allowListId string) (*api.GetAllowListResponse, error) {
+func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId, clusterId, allowListId string) (*api.GetAllowListResponse, error) {
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs/%s",
 		r.HostURL,

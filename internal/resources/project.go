@@ -339,7 +339,7 @@ func (r *Project) ImportState(ctx context.Context, req resource.ImportStateReque
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func (r *Project) retrieveProject(_ context.Context, organizationId, projectId string) (*providerschema.OneProject, error) {
+func (r *Project) retrieveProject(ctx context.Context, organizationId, projectId string) (*providerschema.OneProject, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s", r.HostURL, organizationId, projectId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := r.Client.ExecuteWithRetry(
