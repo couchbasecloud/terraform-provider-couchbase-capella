@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 
-	api "terraform-provider-capella/internal/api"
-	"terraform-provider-capella/internal/errors"
-	providerschema "terraform-provider-capella/internal/schema"
+	api "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
-	"github.com/couchbase/tools-common/functional/slices"
+	tcslices "github.com/couchbase/tools-common/functional/slices"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -26,7 +27,15 @@ var (
 	_ resource.ResourceWithImportState = &User{}
 )
 
-// User is the User resource implementation
+const errorMessageAfterUserCreation = "User creation is successful, but encountered an error while checking the current" +
+	" state of the user. Please run `terraform plan` after 1-2 minutes to know the" +
+	" current user state. Additionally, run `terraform apply --refresh-only` to update" +
+	" the state from remote, unexpected error: "
+
+const errorMessageWhileUserCreation = "There is an error during user creation. Please check in Capella to see if any hanging resources" +
+	" have been created, unexpected error: "
+
+// User is the User resource implementation.
 type User struct {
 	*providerschema.Data
 }
@@ -35,7 +44,7 @@ func NewUser() resource.Resource {
 	return &User{}
 }
 
-// Metadata returns the users resource type name
+// Metadata returns the users resource type name.
 func (r *User) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_user"
 }
@@ -62,7 +71,7 @@ func (r *User) Configure(ctx context.Context, req resource.ConfigureRequest, res
 	r.Data = data
 }
 
-// Create creates a new user
+// Create creates a new user.
 func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan providerschema.User
 	diags := req.Plan.Get(ctx, &plan)
@@ -76,7 +85,7 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error parsing create user request",
-			"Could not create user "+err.Error(),
+			"Could not create user, "+err.Error(),
 		)
 		return
 	}
@@ -94,12 +103,14 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 
 	if len(plan.Resources) != 0 {
 		createUserRequest.Resources = providerschema.ConvertResources(plan.Resources)
+
 	}
 
 	// Execute request
 	url := fmt.Sprintf("%s/v4/organizations/%s/users", r.HostURL, organizationId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-	response, err := r.Client.Execute(
+	response, err := r.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		createUserRequest,
 		r.Token,
@@ -108,8 +119,9 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error executing request",
-			"Could not execute request, unexpected error: "+api.ParseError(err),
+			errorMessageWhileUserCreation+api.ParseError(err),
 		)
+		return
 	}
 
 	createUserResponse := api.CreateUserResponse{}
@@ -117,23 +129,36 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating user",
-			"Could not create user, unexpected error: "+err.Error(),
+			errorMessageWhileUserCreation+"error during unmarshalling: "+err.Error(),
 		)
+		return
+	}
+
+	diags = resp.State.Set(ctx, initializeUserWithPlanAndId(plan, createUserResponse.Id.String()))
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	refreshedState, err := r.refreshUser(ctx, organizationId, createUserResponse.Id.String())
 	if err != nil {
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"Error executing request",
-			"Could not execute request, unexpected error: "+api.ParseError(err),
+			errorMessageAfterUserCreation+api.ParseError(err),
 		)
+		return
 	}
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
-
 	resp.Diagnostics.Append(diags...)
+
+	if checkOrganizationOwner(plan.OrganizationRoles, plan.Resources) {
+		attributePath := path.Root("resources")
+		diags = resp.State.SetAttribute(ctx, attributePath, plan.Resources)
+		resp.Diagnostics.Append(diags...)
+	}
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -152,12 +177,12 @@ func (r *User) validateCreateUserRequest(plan providerschema.User) error {
 	return nil
 }
 
-// Read reads user information
+// Read reads user information.
 func (r *User) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state providerschema.User
+
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -194,6 +219,19 @@ func (r *User) Read(ctx context.Context, req resource.ReadRequest, resp *resourc
 	}
 
 	// Set refreshed state
+	if checkOrganizationOwner(state.OrganizationRoles, state.Resources) {
+		existingResources := state.Resources
+
+		diags = resp.State.Set(ctx, &refreshedState)
+		resp.Diagnostics.Append(diags...)
+		// overwrite resource values for organization owner. This is needed
+		// as the API returns null resources for organization owner.
+		attributePath := path.Root("resources")
+		diags = resp.State.SetAttribute(ctx, attributePath, existingResources)
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
 	diags = resp.State.Set(ctx, &refreshedState)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -201,7 +239,7 @@ func (r *User) Read(ctx context.Context, req resource.ReadRequest, resp *resourc
 	}
 }
 
-// Update updates the user
+// Update updates the user.
 func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// Retrieve values from plan
 	var state, plan providerschema.User
@@ -232,7 +270,7 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 
 	patch := constructPatch(state, plan)
 
-	err = r.updateUser(organizationId, userId, patch)
+	err = r.updateUser(ctx, organizationId, userId, patch)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		resp.Diagnostics.AddError(
@@ -252,11 +290,19 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 			"Error updating user",
 			"Could not update Capella user with ID "+userId+": "+api.ParseError(err),
 		)
+		return
 	}
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
+
+	if checkOrganizationOwner(plan.OrganizationRoles, plan.Resources) {
+		attributePath := path.Root("resources")
+		diags = resp.State.SetAttribute(ctx, attributePath, plan.Resources)
+		resp.Diagnostics.Append(diags...)
+	}
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -269,7 +315,7 @@ func constructPatch(existing, proposed providerschema.User) []api.PatchEntry {
 
 	patch = append(patch, handleOrganizationRoles(existing.OrganizationRoles, proposed.OrganizationRoles)...)
 	patch = append(patch, handleProjectRoles(existing.Resources, proposed.Resources)...)
-	patch = append(patch, handleResources(existing.Resources, proposed.Resources)...)
+	patch = append(patch, compareResources(existing.Resources, proposed.Resources)...)
 
 	return patch
 }
@@ -349,9 +395,9 @@ func handleProjectRoles(existingResources, proposedResources []providerschema.Re
 	return entries
 }
 
-// handleResources is used to compare the resources contained within
+// compareResources is used to compare the resources contained within
 // two states and construct patch entries to reflect their differences.
-func handleResources(existingResources, proposedResources []providerschema.Resource) []api.PatchEntry {
+func compareResources(existingResources, proposedResources []providerschema.Resource) []api.PatchEntry {
 	entries := make([]api.PatchEntry, 0)
 
 	// populate maps with existing and proposed resources
@@ -392,24 +438,35 @@ func handleResources(existingResources, proposedResources []providerschema.Resou
 	return entries
 }
 
+// checkOrganizationOwner is used to determine whether a list of planned roles for
+// a user includes the role 'organizationOwner'.
+func checkOrganizationOwner(roles []basetypes.StringValue, resources []providerschema.Resource) bool {
+	if resources != nil && slices.Contains(
+		roles, basetypes.NewStringValue("organizationOwner")) {
+		return true
+	}
+	return false
+}
+
 // compare is used to compare two slices of basetypes.stringvalue
 // and determine which values should be added and which should be removed.
 func compare(existing, proposed []basetypes.StringValue) ([]basetypes.StringValue, []basetypes.StringValue) {
 	// Add values present in the proposed state but not in existing.
-	add := slices.Difference(proposed, existing)
+	add := tcslices.Difference(proposed, existing)
 
 	// Remove values present in the existing state but not in removed.
-	remove := slices.Difference(existing, proposed)
+	remove := tcslices.Difference(existing, proposed)
 
 	return add, remove
 }
 
 // updateUser is used to execute the patch request to update a user.
-func (r *User) updateUser(organizationId, userId string, patch []api.PatchEntry) error {
+func (r *User) updateUser(ctx context.Context, organizationId, userId string, patch []api.PatchEntry) error {
 	// Update existing user
 	url := fmt.Sprintf("%s/v4/organizations/%s/users/%s", r.HostURL, organizationId, userId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPatch, SuccessStatus: http.StatusOK}
-	_, err := r.Client.Execute(
+	_, err := r.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		patch,
 		r.Token,
@@ -423,7 +480,7 @@ func (r *User) updateUser(organizationId, userId string, patch []api.PatchEntry)
 	return nil
 }
 
-// Delete deletes the user
+// Delete deletes the user.
 func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// Retrieve existing state
 	var state providerschema.User
@@ -456,7 +513,8 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 		userId,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err = r.Client.Execute(
+	_, err = r.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		r.Token,
@@ -477,7 +535,7 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 	}
 }
 
-// getUser is used to retrieve an existing user
+// getUser is used to retrieve an existing user.
 func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api.GetUserResponse, error) {
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/users/%s",
@@ -487,7 +545,8 @@ func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api
 	)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := r.Client.Execute(
+	response, err := r.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		r.Token,
@@ -553,4 +612,22 @@ func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (
 func (r *User) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+// initializeUserWithPlanAndId initializes an instance of providerschema.User
+// with the specified plan and ID. It marks all computed fields as null.
+func initializeUserWithPlanAndId(plan providerschema.User, id string) providerschema.User {
+	plan.Id = types.StringValue(id)
+	if plan.Name.IsNull() || plan.Name.IsUnknown() {
+		plan.Name = types.StringNull()
+	}
+	plan.Status = types.StringNull()
+	plan.Inactive = types.BoolNull()
+	plan.LastLogin = types.StringNull()
+	plan.Region = types.StringNull()
+	plan.TimeZone = types.StringNull()
+	plan.EnableNotifications = types.BoolNull()
+	plan.ExpiresAt = types.StringNull()
+	plan.Audit = types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
+	return plan
 }

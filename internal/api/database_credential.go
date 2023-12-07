@@ -6,8 +6,12 @@ import (
 
 // Access defines the level of access that the database credential will have across buckets and scopes.
 // This access is currently defined for all buckets and all scopes in the cluster.
-// todo: Support for granular access per bucket and per scope will be added in AV-62864
 type Access struct {
+	// Resources is the level at which the above privileges are defined.
+	// Ex: Access of read/write privilege can be defined at the bucket level or scope level resource.
+	// Leaving this empty will grant access to all buckets.
+	Resources *AccessibleResources `json:"resources,omitempty"`
+
 	// Privileges defines the privileges field in this API represents the privilege level for users.
 	// It accepts one of the following values:
 	// data_reader
@@ -15,10 +19,6 @@ type Access struct {
 	// read: Equivalent to data_reader.
 	// write: Equivalent to data_writer.
 	Privileges []string `json:"privileges"`
-	// Resources is the level at which the above privileges are defined.
-	// Ex: Access of read/write privilege can be defined at the bucket level or scope level resource.
-	// Leaving this empty will grant access to all buckets.
-	Resources *AccessibleResources `json:"resources,omitempty"`
 }
 
 // CreateDatabaseCredentialRequest represents the schema for the POST Capella V4 API request that creates the database credential.
@@ -75,25 +75,20 @@ type Scope struct {
 
 // CreateDatabaseCredentialResponse represents the schema for the POST Capella V4 API response that creates the database credential.
 type CreateDatabaseCredentialResponse struct {
-	// ID is the UUID of the created database credential.
-	Id uuid.UUID `json:"id"`
-	// Password is the password associated with the database credential.
-	Password string `json:"password"`
+	Password string    `json:"password"`
+	Id       uuid.UUID `json:"id"`
 }
 
 // GetDatabaseCredentialResponse represents the schema for the GET Capella V4 API request that fetches the database credential details.
 type GetDatabaseCredentialResponse struct {
-	// Audit contains all audit-related fields.
-	Audit CouchbaseAuditData `json:"audit"`
-
-	// Id A GUID4 identifier of the database credential.
-	Id uuid.UUID `json:"id"`
-
-	// Name is Username for the database credential.
-	Name string `json:"name"`
-
-	// Access describes the access information of the database credential.
-	Access []Access `json:"access"`
+	Name           string             `json:"name"`
+	Password       string             `json:"password"`
+	OrganizationId string             `json:"organizationId"`
+	ProjectId      string             `json:"projectId"`
+	ClusterId      string             `json:"clusterId"`
+	Audit          CouchbaseAuditData `json:"audit"`
+	Access         []Access           `json:"access"`
+	Id             uuid.UUID          `json:"id"`
 }
 
 // PutDatabaseCredentialRequest represents the schema for the PUT Capella V4 API request that updates an existing database credential.

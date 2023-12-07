@@ -59,7 +59,7 @@ access = [
 
 comment    = "Allow access from a public IP"
 cidr       = "8.8.8.8/32"
-expires_at = "2023-11-30T23:59:59.465Z"
+expires_at = "2043-11-30T23:59:59.465Z"
 
 bucket = {
   name                       = "new_terraform_bucket"
@@ -88,9 +88,9 @@ apikey = {
 }
 
 app_service = {
-  name = "new-terraform-app-service"
+  name        = "new-terraform-app-service"
   description = "My first test app service."
-  nodes = 2
+  nodes       = 2
   compute = {
     cpu = 2
     ram = 4

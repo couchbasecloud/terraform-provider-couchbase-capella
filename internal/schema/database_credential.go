@@ -3,7 +3,7 @@ package schema
 import (
 	"fmt"
 
-	"terraform-provider-capella/internal/errors"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -49,12 +49,13 @@ type DatabaseCredential struct {
 
 // Access is a list of privileges or permissions which can be narrowed to the scope level of every bucket in the Capella cluster.
 type Access struct {
-	// Privileges is a list of permissions that the database credential will have over the data in the given bucket or scope.
-	// Privileges can be "read", "write" or both.
-	Privileges []types.String `tfsdk:"privileges"`
 	// Resources is the level at which the above privileges are defined.
 	// Ex: Access of read/write privilege can be defined at the bucket level or scope level resource.
 	Resources *Resources `tfsdk:"resources"`
+
+	// Privileges is a list of permissions that the database credential will have over the data in the given bucket or scope.
+	// Privileges can be "read", "write" or both.
+	Privileges []types.String `tfsdk:"privileges"`
 }
 
 // Resources is the level at which the above privileges are defined.
@@ -79,43 +80,26 @@ type Scope struct {
 	Collections []types.String `tfsdk:"collections"`
 }
 
-// OneDatabaseCredential is used to retrieve the new state of a database credential after it is created by Terraform.
-// This struct is separate from the DatabaseCredential struct because of the change in data type of its attributes after retrieval.
-type OneDatabaseCredential struct {
-	// Audit All audit-related fields.
-	Audit CouchbaseAuditData `tfsdk:"audit"`
-
-	// Id A GUID4 identifier of the created database credential.
-	Id types.String `tfsdk:"id"`
-
-	// Name is the name of the database credential, the name of the database credential should follow this naming criteria:
-	// A database credential name should have at least 2 characters and up to 256 characters and should not contain spaces.
-	Name types.String `tfsdk:"name"`
-
-	// Password is the password that you may want to use to create this database credential.
-	// This password can later be used to authenticate connections to the underlying couchbase server.
-	// The password should contain 8+ characters, at least 1 lower, 1 upper, 1 numerical and 1 special character.
-	Password types.String `tfsdk:"password"`
-
-	// OrganizationId is the ID of the organization to which the Capella cluster belongs.
-	// The database credential will be created for the cluster.
-	OrganizationId types.String `tfsdk:"organization_id"`
-
-	// ProjectId is the ID of the project to which the Capella cluster belongs.
-	// The database credential will be created for the cluster.
-	ProjectId types.String `tfsdk:"project_id"`
-
-	// ClusterId is the ID of the cluster for which the database credential needs to be created.
-	ClusterId types.String `tfsdk:"cluster_id"`
-
-	// Access is a list of access which can be narrowed to the scope level of every bucket in the Capella cluster.
-	// Access can be "read", "write" or both.
-	Access []Access `tfsdk:"access"`
+func NewDatabaseCredential(
+	Id types.String,
+	name types.String,
+	organizationId, projectId, clusterId types.String,
+	auditObject basetypes.ObjectValue,
+) *DatabaseCredential {
+	newDatabaseCredential := DatabaseCredential{
+		Id:             Id,
+		Name:           name,
+		OrganizationId: organizationId,
+		ProjectId:      projectId,
+		ClusterId:      clusterId,
+		Audit:          auditObject,
+	}
+	return &newDatabaseCredential
 }
 
 // Validate will split the IDs by a delimiter i.e. comma , in case a terraform import CLI is invoked.
 // The format of the terraform import CLI would include the IDs as follows -
-// `terraform import capella_database_credential.new_database_credential id=<uuid>,cluster_id=<uuid>,project_id=<uuid>,organization_id=<uuid>`
+// `terraform import capella_database_credential.new_database_credential id=<uuid>,cluster_id=<uuid>,project_id=<uuid>,organization_id=<uuid>`.
 func (c DatabaseCredential) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
 		OrganizationId: c.OrganizationId,
@@ -163,9 +147,6 @@ func (d DatabaseCredentials) Validate() (clusterId, projectId, organizationId st
 // DatabaseCredentialItem is used to retrieve the new state of a database credential after it is created by Terraform.
 // This struct is separate from the DatabaseCredential struct because of the change in data type of its attributes after retrieval.
 type DatabaseCredentialItem struct {
-	// Audit All audit-related fields.
-	Audit CouchbaseAuditData `tfsdk:"audit"`
-
 	// Id A GUID4 identifier of the created database credential.
 	Id types.String `tfsdk:"id"`
 
@@ -187,4 +168,7 @@ type DatabaseCredentialItem struct {
 	// Access is a list of access which can be narrowed to the scope level of every bucket in the Capella cluster.
 	// Access can be "read", "write" or both.
 	Access []Access `tfsdk:"access"`
+
+	// Audit All audit-related fields.
+	Audit CouchbaseAuditData `tfsdk:"audit"`
 }

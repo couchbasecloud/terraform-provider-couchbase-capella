@@ -2,6 +2,7 @@ package resources
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 )
@@ -15,8 +16,8 @@ func ClusterSchema() schema.Schema {
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"organization_id": stringAttribute(required),
-			"project_id":      stringAttribute(required),
+			"organization_id": stringAttribute(required, requiresReplace),
+			"project_id":      stringAttribute(required, requiresReplace),
 			"name":            stringAttribute(required),
 			"description":     stringAttribute(optional, computed),
 			"cloud_provider": schema.SingleNestedAttribute{
@@ -25,6 +26,9 @@ func ClusterSchema() schema.Schema {
 					"type":   stringAttribute(required),
 					"region": stringAttribute(required),
 					"cidr":   stringAttribute(required),
+				},
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.RequiresReplace(),
 				},
 			},
 			"configuration_type": stringAttribute(optional, computed),
@@ -35,7 +39,7 @@ func ClusterSchema() schema.Schema {
 					"version": stringAttribute(optional, computed),
 				},
 			},
-			"service_groups": schema.ListNestedAttribute{
+			"service_groups": schema.SetNestedAttribute{
 				Required: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -63,7 +67,7 @@ func ClusterSchema() schema.Schema {
 							},
 						},
 						"num_of_nodes": int64Attribute(required),
-						"services":     stringListAttribute(required),
+						"services":     stringSetAttribute(required),
 					},
 				},
 			},
@@ -71,6 +75,9 @@ func ClusterSchema() schema.Schema {
 				Required: true,
 				Attributes: map[string]schema.Attribute{
 					"type": stringAttribute(required),
+				},
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.RequiresReplace(),
 				},
 			},
 			"support": schema.SingleNestedAttribute{
@@ -81,7 +88,7 @@ func ClusterSchema() schema.Schema {
 				},
 			},
 			"current_state":  stringAttribute(computed),
-			"app_service_id": stringAttribute(optional, computed),
+			"app_service_id": stringAttribute(computed),
 			"audit":          computedAuditAttribute(),
 			// if_match is only required during update call
 			"if_match": stringAttribute(optional),

@@ -351,7 +351,7 @@ new_database_credential = <sensitive>
 ```
 
 ## UPDATE
-### Let us edit the terraform.tfvars file to change the bucket configuration settings.
+### Let us edit the terraform.tfvars file to change the Database Credential configuration settings.
 
 Command: `terraform apply -var 'access=[{privileges=["data_reader"]}]'`
 

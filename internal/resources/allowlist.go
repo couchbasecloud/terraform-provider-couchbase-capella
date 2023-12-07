@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"terraform-provider-capella/internal/api"
-	"terraform-provider-capella/internal/errors"
-	providerschema "terraform-provider-capella/internal/schema"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -21,6 +22,14 @@ var (
 	_ resource.ResourceWithConfigure   = &AllowList{}
 	_ resource.ResourceWithImportState = &AllowList{}
 )
+
+const errorMessageAfterAllowListCreation = "Allow list creation is successful, but encountered an error while checking the current" +
+	" state of the allow list. Please run `terraform plan` after 1-2 minutes to know the" +
+	" current allow list state. Additionally, run `terraform apply --refresh-only` to update" +
+	" the state from remote, unexpected error: "
+
+const errorMessageWhileAllowListCreation = "There is an error during allow list creation. Please check in Capella to see if any hanging resources" +
+	" have been created, unexpected error: "
 
 // AllowList is the AllowList resource implementation.
 type AllowList struct {
@@ -58,7 +67,7 @@ func (r *AllowList) Configure(ctx context.Context, req resource.ConfigureRequest
 	r.Data = data
 }
 
-// Create creates a new allowlist
+// Create creates a new allowlist.
 func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan providerschema.AllowList
 	diags := req.Plan.Get(ctx, &plan)
@@ -82,7 +91,8 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 		plan.ClusterId.ValueString(),
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-	response, err := r.Client.Execute(
+	response, err := r.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		allowListRequest,
 		r.Token,
@@ -91,7 +101,7 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error executing request",
-			"Could not execute request, unexpected error: "+api.ParseError(err),
+			errorMessageWhileAllowListCreation+api.ParseError(err),
 		)
 		return
 	}
@@ -101,17 +111,30 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating allow list",
-			"Could not create allow list, unexpected error: "+err.Error(),
+			errorMessageWhileAllowListCreation+"error during unmarshalling: "+err.Error(),
 		)
+		return
+	}
+
+	diags = resp.State.Set(ctx, initializeAllowListWithPlanAndId(plan, allowListResponse.Id.String()))
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	refreshedState, err := r.refreshAllowList(ctx, plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), plan.ClusterId.ValueString(), allowListResponse.Id.String())
 	if err != nil {
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"Error reading Capella AllowList",
-			"Could not read Capella AllowList "+allowListResponse.Id.String()+": "+api.ParseError(err),
+			errorMessageAfterAllowListCreation+api.ParseError(err),
 		)
+		return
+	}
+
+	// This is added to workaround any timezone conversions that the API does automatically and
+	// may cause an issue in the state file.
+	if plan.ExpiresAt != refreshedState.ExpiresAt {
+		refreshedState.ExpiresAt = plan.ExpiresAt
 	}
 
 	// Set state to fully populated data
@@ -166,6 +189,10 @@ func (r *AllowList) Read(ctx context.Context, req resource.ReadRequest, resp *re
 		return
 	}
 
+	if state.ExpiresAt != refreshedState.ExpiresAt {
+		refreshedState.ExpiresAt = state.ExpiresAt
+	}
+
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &refreshedState)
 	resp.Diagnostics.Append(diags...)
@@ -175,7 +202,7 @@ func (r *AllowList) Read(ctx context.Context, req resource.ReadRequest, resp *re
 }
 
 // Update updates the allowlist.
-func (r *AllowList) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *AllowList) Update(_ context.Context, _ resource.UpdateRequest, _ *resource.UpdateResponse) {
 	// Couchbase Capella's v4 does not support a PUT endpoint for allowlists.
 	// Allowlists can only be created, read and deleted.
 	// http://cbc-cp-api.s3-website-us-east-1.amazonaws.com/#tag/allowedCIDRs(Cluster)
@@ -221,7 +248,8 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 		allowListId,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err = r.Client.Execute(
+	_, err = r.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		r.Token,
@@ -253,7 +281,7 @@ func (r *AllowList) ImportState(ctx context.Context, req resource.ImportStateReq
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-// getAllowList is used to retrieve an existing allow list
+// getAllowList is used to retrieve an existing allow list.
 func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId, clusterId, allowListId string) (*api.GetAllowListResponse, error) {
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs/%s",
@@ -264,7 +292,8 @@ func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId,
 		allowListId,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := r.Client.Execute(
+	response, err := r.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		r.Token,
@@ -282,7 +311,7 @@ func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId,
 	return &allowListResp, nil
 }
 
-// refreshAllowList is used to pass an existing AllowList to the refreshed state
+// refreshAllowList is used to pass an existing AllowList to the refreshed state.
 func (r *AllowList) refreshAllowList(ctx context.Context, organizationId, projectId, clusterId, allowListId string) (*providerschema.OneAllowList, error) {
 	allowListResp, err := r.getAllowList(ctx, organizationId, projectId, clusterId, allowListId)
 	if err != nil {
@@ -314,4 +343,15 @@ func (r *AllowList) refreshAllowList(ctx context.Context, organizationId, projec
 	}
 
 	return &refreshedState, nil
+}
+
+// initializeAllowListWithPlanAndId initializes an instance of providerschema.AllowList
+// with the specified plan and ID. It marks all computed fields as null.
+func initializeAllowListWithPlanAndId(plan providerschema.AllowList, id string) providerschema.AllowList {
+	plan.Id = types.StringValue(id)
+	plan.Audit = types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
+	if plan.Comment.IsNull() || plan.Comment.IsUnknown() {
+		plan.Comment = types.StringNull()
+	}
+	return plan
 }

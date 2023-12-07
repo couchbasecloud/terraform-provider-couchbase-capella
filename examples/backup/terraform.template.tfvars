@@ -4,7 +4,7 @@ host       = "https://cloudapi.cloud.couchbase.com"
 organization_id = "<organization_id>"
 project_id      = "<project_id>"
 cluster_id      = "<cluster_id>"
-bucket_id = "<bucket_id>"
+bucket_id       = "<bucket_id>"
 
 backup = {}
 
@@ -15,7 +15,7 @@ restore = {
     "data",
     "query"
   ]
-  force_updates = true
+  force_updates           = true
   auto_remove_collections = true
-  restore_times = 1
+  restore_times           = 1
 }

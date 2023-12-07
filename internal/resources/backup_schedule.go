@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"strings"
 
-	"terraform-provider-capella/internal/api"
-	scheduleapi "terraform-provider-capella/internal/api/backup_schedule"
-	"terraform-provider-capella/internal/errors"
-	providerschema "terraform-provider-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	scheduleapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/backup_schedule"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -24,6 +24,14 @@ var (
 	_ resource.ResourceWithConfigure   = &BackupSchedule{}
 	_ resource.ResourceWithImportState = &BackupSchedule{}
 )
+
+const errorMessageAfterBackupScheduleCreation = "Backup Schedule creation is successful, but encountered an error while checking the current" +
+	" state of the backup schedule. Please run `terraform plan` after 1-2 minutes to know the" +
+	" current backup schedule state. Additionally, run `terraform apply --refresh-only` to update" +
+	" the state from remote, unexpected error: "
+
+const errorMessageWhileBackupScheduleCreation = "There is an error during backup schedule creation. Please check in Capella to see if any hanging resources" +
+	" have been created, unexpected error: "
 
 // BackupSchedule is the BackupSchedule resource implementation.
 type BackupSchedule struct {
@@ -85,7 +93,8 @@ func (b *BackupSchedule) Create(ctx context.Context, req resource.CreateRequest,
 	}
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/schedules", b.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
-	_, err = b.Client.Execute(
+	_, err = b.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		BackupScheduleRequest,
 		b.Token,
@@ -94,16 +103,22 @@ func (b *BackupSchedule) Create(ctx context.Context, req resource.CreateRequest,
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error executing request",
-			"Could not execute request, unexpected error: "+api.ParseError(err),
+			errorMessageWhileBackupScheduleCreation+api.ParseError(err),
 		)
+		return
+	}
+
+	diags = resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	refreshedState, err := b.retrieveBackupSchedule(ctx, organizationId, projectId, clusterId, bucketId, weeklySchedule.DayOfWeek.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"Error Reading Capella Backup Schedule",
-			"Could not read Capella Backup Schedule for the bucket: %s "+bucketId+": "+api.ParseError(err),
+			"Could not read Capella Backup Schedule for the bucket: %s "+bucketId+"."+errorMessageAfterBackupScheduleCreation+api.ParseError(err),
 		)
 		return
 	}
@@ -216,7 +231,8 @@ func (b *BackupSchedule) Update(ctx context.Context, req resource.UpdateRequest,
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/schedules", b.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err = b.Client.Execute(
+	_, err = b.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		BackupScheduleRequest,
 		b.Token,
@@ -282,7 +298,8 @@ func (b *BackupSchedule) Delete(ctx context.Context, req resource.DeleteRequest,
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/schedules", b.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
 	// Delete existing backup schedule
-	_, err = b.Client.Execute(
+	_, err = b.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		b.Token,
@@ -348,11 +365,12 @@ func (a *BackupSchedule) validateCreateBackupScheduleRequest(plan providerschema
 }
 
 // retrieveBackupSchedule retrieves backup schedule information from the specified organization and project
-// using the provided bucket ID by open-api call
+// using the provided bucket ID by open-api call.
 func (b *BackupSchedule) retrieveBackupSchedule(ctx context.Context, organizationId, projectId, clusterId, bucketId, planDayOfWeek string) (*providerschema.BackupSchedule, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/schedules", b.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := b.Client.Execute(
+	response, err := b.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		b.Token,
@@ -383,8 +401,5 @@ func (b *BackupSchedule) retrieveBackupSchedule(ctx context.Context, organizatio
 }
 
 func validateDayOfWeekIsSameInPlanAndState(planDayOfWeek, stateDayOfWeek string) bool {
-	if strings.ToLower(planDayOfWeek) == strings.ToLower(stateDayOfWeek) {
-		return true
-	}
-	return false
+	return strings.EqualFold(planDayOfWeek, stateDayOfWeek)
 }

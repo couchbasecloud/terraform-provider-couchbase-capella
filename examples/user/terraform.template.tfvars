@@ -4,8 +4,8 @@ host            = "https://cloudapi.cloud.couchbase.com"
 
 
 user = {
-  name = "John ABC"
-  email = "john.doe@couchbase.com"
+  name               = "John ABC"
+  email              = "john.doe@couchbase.com"
   organization_roles = ["organizationMember"]
 }
 

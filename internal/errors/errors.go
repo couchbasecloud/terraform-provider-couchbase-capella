@@ -66,7 +66,7 @@ var (
 	// ErrMarshallingPayload is returned when a payload has failed to marshal into a request body.
 	ErrMarshallingPayload = errors.New("failed to marshal payload")
 
-	// ErrUnmarshallingResponse is returned when a HTTP response failrf to unmarshal
+	// ErrUnmarshallingResponse is returned when a HTTP response failrf to unmarshal.
 	ErrUnmarshallingResponse = errors.New("failed to unmarshal response")
 
 	// ErrConstructingRequest is returned when a HTTP.NewRequest has failed.
@@ -85,7 +85,7 @@ var (
 	// ErrUnsupportedCloudProvider is returned when an invalid cloud provider was requested.
 	ErrUnsupportedCloudProvider = errors.New("cloud provider is not supported")
 
-	// ErrUnableToReadCapellaUser is returned when the provider failed to read a requested Capella user
+	// ErrUnableToReadCapellaUser is returned when the provider failed to read a requested Capella user.
 	ErrUnableToReadCapellaUser = errors.New("could not read Capella user, please contact Couchbase Capella Support")
 
 	// ErrApiKeyIdCannotBeEmpty is returned when an ApiKeyId was required for a request but was not included.
@@ -121,7 +121,7 @@ var (
 	// ErrGcpIopsCannotBeSet is returned when iops is set for GCP cluster.
 	ErrGcpIopsCannotBeSet = errors.New("iops for gcp cluster cannot be set")
 
-	// ErrConvertingCidr is returned when terraform fails to convert a CIDR
+	// ErrConvertingCidr is returned when terraform fails to convert a CIDR.
 	ErrConvertingCidr = errors.New("failed to convert CIDR, please contact Couchbase Capella Support")
 
 	// ErrReadingAWSDisk is returned when an AWS disk read fails.
@@ -149,4 +149,7 @@ var (
 	// ErrClusterCreationTimeoutAfterInitiation is returned when cluster creation
 	// is timeout after initiation.
 	ErrClusterCreationTimeoutAfterInitiation = errors.New("cluster creation status transition timed out after initiation")
+
+	// ErrGatewayTimeout is returned when a gateway operation times out.
+	ErrGatewayTimeout = errors.New("gateway timeout")
 )

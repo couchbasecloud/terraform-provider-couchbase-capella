@@ -1,8 +1,9 @@
 package appservice
 
 import (
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+
 	"github.com/google/uuid"
-	"terraform-provider-capella/internal/api"
 )
 
 // CreateAppServiceRequest is the request payload sent to the Capella V4 Public API in order to create a new app service.
@@ -18,10 +19,6 @@ import (
 // Project Manager
 // To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
 type CreateAppServiceRequest struct {
-	// Name is the name of the app service, the name of the app service should follow this naming criteria:
-	// An app service name should have at least 2 characters and up to 256 characters.
-	Name string `json:"name"`
-
 	// Description is the description for the app service (up to 256 characters).
 	Description *string `json:"description,omitempty"`
 
@@ -29,12 +26,16 @@ type CreateAppServiceRequest struct {
 	// The number of nodes can range from 2 to 12
 	Nodes *int64 `json:"nodes,omitempty"`
 
-	// Compute is the CPU and RAM configuration of the app service.
-	Compute AppServiceCompute `json:"compute"`
-
 	// Version is version of the App Service Server to be installed.
 	// The latest Server version will be deployed by default.
 	Version *string `json:"version,omitempty"`
+
+	// Name is the name of the app service, the name of the app service should follow this naming criteria:
+	// An app service name should have at least 2 characters and up to 256 characters.
+	Name string `json:"name"`
+
+	// Compute is the CPU and RAM configuration of the app service.
+	Compute AppServiceCompute `json:"compute"`
 }
 
 // CreateAppServiceResponse is the response received from the Capella V4 Public API when asked to create a new app service.
@@ -54,8 +55,8 @@ type CreateAppServiceResponse struct {
 // Database Data Reader
 // To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
 type GetAppServiceResponse struct {
-	// Id is the ID of the app service created.
-	Id uuid.UUID `json:"id"`
+	// OrganizationId is the organizationId of the capella tenant.
+	OrganizationId string `json:"organizationId"`
 
 	// Name is the name of the app service, the name of the app service should follow this naming criteria:
 	// An app service name should have at least 2 characters and up to 256 characters.
@@ -71,15 +72,6 @@ type GetAppServiceResponse struct {
 	// [Azure] https://docs.couchbase.com/cloud/reference/azure.html
 	CloudProvider string `json:"cloudProvider"`
 
-	// Nodes is the number of nodes configured for the app service.
-	Nodes int `json:"nodes"`
-
-	// Compute is the CPU and RAM configuration of the app service.
-	Compute AppServiceCompute `json:"compute"`
-
-	// OrganizationId is the organizationId of the capella tenant.
-	OrganizationId string `json:"organizationId"`
-
 	// ProjectId is the projectId of the cluster.
 	ProjectId string `json:"projectId"`
 
@@ -92,11 +84,20 @@ type GetAppServiceResponse struct {
 	// Version defines the version of the app service server.
 	Version string `json:"version"`
 
+	// Etag represents the version of the document
+	Etag string
+
 	// Audit contains all audit-related fields.
 	Audit api.CouchbaseAuditData `json:"audit"`
 
-	// Etag represents the version of the document
-	Etag string
+	// Compute is the CPU and RAM configuration of the app service.
+	Compute AppServiceCompute `json:"compute"`
+
+	// Nodes is the number of nodes configured for the app service.
+	Nodes int `json:"nodes"`
+
+	// Id is the ID of the app service created.
+	Id uuid.UUID `json:"id"`
 }
 
 type UpdateAppServiceRequest struct {

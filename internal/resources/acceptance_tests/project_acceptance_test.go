@@ -1,14 +1,17 @@
 package acceptance_tests
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
-	"terraform-provider-capella/internal/api"
-	"terraform-provider-capella/internal/provider"
-	acctest "terraform-provider-capella/internal/testing"
+	"regexp"
 	"testing"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/provider"
+	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
@@ -16,12 +19,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
+var providerName = "couchbase-capella"
+
 // testAccProtoV6ProviderFactories are used to instantiate a provider during
 // acceptance testing. The factory function will be invoked for every Terraform
 // CLI command executed to create a provider server to which the CLI can
 // reattach.
 var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-	"capella": providerserver.NewProtocol6WithError(provider.New("test")()),
+	providerName: providerserver.NewProtocol6WithError(provider.New()()),
+}
+
+func projectResourceName() string {
+	return providerName + "_project"
 }
 
 // TestAccProjectResource is a Terraform acceptance test that covers the lifecycle of a Capella project resource.
@@ -35,17 +44,17 @@ var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServe
 //  5. Delete Testing: Automatically occurs in the TestCase as part of cleanup.
 func TestAccProjectResource(t *testing.T) {
 	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
-	resourceName := "capella_project." + rnd
+	resourceName := projectResourceName() + "." + rnd
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccProjectResourceConfig(acctest.Cfg, rnd),
+				Config: testAccProjectResourceConfig(acctest.ProjectCfg, rnd),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rnd),
-					resource.TestCheckResourceAttr(resourceName, "description", "description"),
+					resource.TestCheckResourceAttr(resourceName, "description", "terraform acceptance test project"),
 					resource.TestCheckResourceAttr(resourceName, "etag", "Version: 1"),
 				),
 			},
@@ -58,16 +67,16 @@ func TestAccProjectResource(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: testAccProjectResourceConfigUpdate(acctest.Cfg, rnd),
+				Config: testAccProjectResourceConfigUpdate(acctest.ProjectCfg, rnd),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "acc_test_project_name_update"),
+					resource.TestCheckResourceAttr(resourceName, "name", rnd),
 					resource.TestCheckResourceAttr(resourceName, "description", "description_update"),
 				),
 			},
 			{
-				Config: testAccProjectResourceConfigUpdateWithIfMatch(acctest.Cfg, rnd),
+				Config: testAccProjectResourceConfigUpdateWithIfMatch(acctest.ProjectCfg, rnd),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "acc_test_project_name_update_with_if_match"),
+					resource.TestCheckResourceAttr(resourceName, "name", rnd),
 					resource.TestCheckResourceAttr(resourceName, "description", "description_update_with_match"),
 					resource.TestCheckResourceAttr(resourceName, "etag", "Version: 3"),
 					resource.TestCheckResourceAttr(resourceName, "if_match", "2"),
@@ -78,15 +87,159 @@ func TestAccProjectResource(t *testing.T) {
 	})
 }
 
+func TestAccCreateProjectWithReqFields(t *testing.T) {
+
+	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
+	resourceName := projectResourceName() + "." + rnd
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create and Read testing
+			{
+				Config: testAccProjectResourceConfigRequired(acctest.ProjectCfg, rnd),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rnd),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "etag", "Version: 1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCreateProjectOptFields(t *testing.T) {
+	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
+	resourceName := projectResourceName() + "." + rnd
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectResourceConfig(acctest.ProjectCfg, rnd),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rnd),
+					resource.TestCheckResourceAttr(resourceName, "description", "terraform acceptance test project"),
+					resource.TestCheckResourceAttr(resourceName, "etag", "Version: 1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: generateProjectImportIdForResource(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Update and Read testing
+			{
+				Config: testAccProjectResourceConfigUpdate(acctest.ProjectCfg, rnd),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rnd),
+					resource.TestCheckResourceAttr(resourceName, "description", "description_update"),
+				),
+			},
+			{
+				Config: testAccProjectResourceConfigUpdateWithIfMatch(acctest.ProjectCfg, rnd),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rnd),
+					resource.TestCheckResourceAttr(resourceName, "description", "description_update_with_match"),
+					resource.TestCheckResourceAttr(resourceName, "etag", "Version: 3"),
+					resource.TestCheckResourceAttr(resourceName, "if_match", "2"),
+				),
+			},
+		},
+	})
+}
+
+// Update
+
+func TestAccValidProjectUpdate(t *testing.T) {
+	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
+	resourceName := projectResourceName() + "." + rnd
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectResourceConfig(acctest.ProjectCfg, rnd),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rnd),
+					resource.TestCheckResourceAttr(resourceName, "description", "terraform acceptance test project"),
+					resource.TestCheckResourceAttr(resourceName, "etag", "Version: 1"),
+				),
+			},
+			//update the project name and description
+			{
+				Config: testAccProjectResourceConfigUpdate(acctest.ProjectCfg, rnd),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rnd),
+					resource.TestCheckResourceAttr(resourceName, "description", "description_update"),
+					resource.TestCheckResourceAttr(resourceName, "etag", "Version: 2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccInvalidProjectResource(t *testing.T) {
+	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
+	resourceName := projectResourceName() + "." + rnd
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Invalid field in create testing
+			{
+				Config:      testAccProjectResourceConfigInvalid(acctest.ProjectCfg, rnd),
+				ExpectError: regexp.MustCompile("An argument named \"unwantedfiled\" is not expected here"),
+			},
+			{
+				Config: testAccProjectResourceConfig(acctest.ProjectCfg, rnd),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rnd),
+					resource.TestCheckResourceAttr(resourceName, "description", "terraform acceptance test project"),
+					resource.TestCheckResourceAttr(resourceName, "etag", "Version: 1"),
+				),
+			},
+			//Update the organisation id
+			{
+				Config:      testAccProjectResourceConfigUpdateInvalid(acctest.ProjectCfg, rnd),
+				ExpectError: regexp.MustCompile("server cannot or will not process the request.*"),
+			},
+		},
+	})
+}
+
+func TestAccDeleteProjectBeforeDestroy(t *testing.T) {
+	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
+	resourceName := projectResourceName() + "." + rnd
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectResourceConfig(acctest.ProjectCfg, rnd),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rnd),
+					resource.TestCheckResourceAttr(resourceName, "description", "terraform acceptance test project"),
+					resource.TestCheckResourceAttr(resourceName, "etag", "Version: 1"),
+					testAccDeleteProject(resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				RefreshState:       false,
+			},
+		},
+	})
+}
+
 // testAccProjectResourceConfig generates a Terraform configuration string for creating a Capella project resource.
 func testAccProjectResourceConfig(cfg, rnd string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "%[2]s" {
+resource "couchbase-capella_project" "%[2]s" {
     organization_id = var.organization_id
 	name            = "%[2]s"
-	description     = "description"
+	description     = "terraform acceptance test project"
 }
 `, cfg, rnd)
 }
@@ -96,9 +249,9 @@ func testAccProjectResourceConfigUpdate(cfg, rnd string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "%[2]s" {
+resource "couchbase-capella_project" "%[2]s" {
    organization_id = var.organization_id
-	name            = "acc_test_project_name_update"
+	name            = "%[2]s"
 	description     = "description_update"
 }
 `, cfg, rnd)
@@ -110,9 +263,9 @@ func testAccProjectResourceConfigUpdateWithIfMatch(cfg, rnd string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "%[2]s" {
+resource "couchbase-capella_project" "%[2]s" {
     organization_id = var.organization_id
-	name            = "acc_test_project_name_update_with_if_match"
+	name            = "%[2]s"
 	description     = "description_update_with_match"
 	if_match        =  2
 }
@@ -159,7 +312,8 @@ func testAccDeleteProject(projectResourceReference string) resource.TestCheckFun
 		authToken := os.Getenv("TF_VAR_auth_token")
 		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s", host, orgid, projectState["id"])
 		cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-		_, err = data.Client.Execute(
+		_, err = data.Client.ExecuteWithRetry(
+			context.Background(),
 			cfg,
 			nil,
 			authToken,
@@ -170,4 +324,40 @@ func testAccDeleteProject(projectResourceReference string) resource.TestCheckFun
 		}
 		return nil
 	}
+}
+
+func testAccProjectResourceConfigRequired(cfg string, rnd string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_project" "%[2]s" {
+    organization_id = var.organization_id
+	name            = "%[2]s"
+}
+`, cfg, rnd)
+
+}
+
+func testAccProjectResourceConfigUpdateInvalid(cfg, rnd string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_project" "%[2]s" {
+    organization_id = "abc-def"
+	name            = "%[2]s"
+}
+`, cfg, rnd)
+
+}
+func testAccProjectResourceConfigInvalid(cfg, rnd string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_project" "%[2]s" {
+    organization_id = var.organization_id
+	name            = "%[2]s"
+	unwantedfiled   = "unwanted value"
+}
+`, cfg, rnd)
+
 }

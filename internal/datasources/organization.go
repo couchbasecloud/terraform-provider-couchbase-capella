@@ -5,15 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"terraform-provider-capella/internal/api"
-	"terraform-provider-capella/internal/api/organization"
-	"terraform-provider-capella/internal/errors"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/organization"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	providerschema "terraform-provider-capella/internal/schema"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
 var (
@@ -71,7 +72,8 @@ func (o *Organization) Read(ctx context.Context, req datasource.ReadRequest, res
 	// Make request to get organization
 	url := fmt.Sprintf("%s/v4/organizations/%s", o.HostURL, organizationId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := o.Client.Execute(
+	response, err := o.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		o.Token,

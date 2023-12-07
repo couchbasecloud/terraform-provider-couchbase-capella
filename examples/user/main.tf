@@ -1,12 +1,12 @@
 terraform {
   required_providers {
-    capella = {
-      source = "hashicorp.com/couchabasecloud/capella"
+    couchbase-capella = {
+      source = "hashicorp.com/couchbasecloud/couchbase-capella"
     }
   }
 }
 
-provider "capella" {
+provider "couchbase-capella" {
   host                 = var.host
   authentication_token = var.auth_token
 }
