@@ -58,6 +58,13 @@ const (
 	SortByName = "name"
 )
 
+// overlay is a generic struct used to store data and cursor
+// information from paginated responses.
+type overlay[DataSchema any] struct {
+	Data   DataSchema `json:"data"`
+	Cursor Cursor     `json:"cursor"`
+}
+
 // GetPaginated is a generic function used to handle pagination. It executes a get request
 // according to the supplied url parameter. It then iterates through remaining pages to
 // flatten paginated responses into a single slice of responses.
@@ -75,11 +82,6 @@ func GetPaginated[DataSchema ~[]T, T any](
 		baseUrl   = cfg.Url
 	)
 
-	type overlay struct {
-		Data   DataSchema `json:"data"`
-		Cursor Cursor     `json:"cursor"`
-	}
-
 	for {
 		cfg.Url = baseUrl + fmt.Sprintf("?page=%d&perPage=%d&sortBy=%s", page, perPage, string(sortBy))
 		cfg.Method = http.MethodGet
@@ -95,7 +97,7 @@ func GetPaginated[DataSchema ~[]T, T any](
 			return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 		}
 
-		var decoded overlay
+		var decoded overlay[DataSchema]
 		err = json.Unmarshal(response.Body, &decoded)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
