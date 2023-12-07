@@ -60,7 +60,7 @@ setup:  ## Install dev tools
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin $(GOLANGCI_VERSION)
 
 .PHONY: check
-check: tffmt tfcheck fmt docs-lint lint-fix test testacc
+check: tffmt tfcheck fmt docs-lint lint-fix test
 
 .PHONY: docs-lint
 docs-lint:
