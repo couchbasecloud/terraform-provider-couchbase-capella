@@ -103,31 +103,16 @@ func (c *Bucket) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		BucketRequest.Type = plan.Type.ValueStringPointer()
 	}
 
-	if plan.OrganizationId.IsNull() {
+	if err := c.validateCreateBucket(plan); err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating bucket",
-			"Could not create bucket, unexpected error: "+errors.ErrOrganizationIdCannotBeEmpty.Error(),
+			"Could not create bucket, unexpected error: "+err.Error(),
 		)
 		return
 	}
+
 	var organizationId = plan.OrganizationId.ValueString()
-
-	if plan.ProjectId.IsNull() {
-		resp.Diagnostics.AddError(
-			"Error creating bucket",
-			"Could not create bucket, unexpected error: "+errors.ErrProjectIdCannotBeEmpty.Error(),
-		)
-		return
-	}
 	var projectId = plan.ProjectId.ValueString()
-
-	if plan.ClusterId.IsNull() {
-		resp.Diagnostics.AddError(
-			"Error creating bucket",
-			"Could not create bucket, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
-		)
-		return
-	}
 	var clusterId = plan.ClusterId.ValueString()
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets", c.HostURL, organizationId, projectId, clusterId)
@@ -454,4 +439,24 @@ func initializeBucketWithPlanAndId(plan providerschema.Bucket, id string) provid
 	}
 	plan.Stats = types.ObjectNull(providerschema.Stats{}.AttributeTypes())
 	return plan
+}
+
+func (r *Bucket) validateCreateBucket(plan providerschema.Bucket) error {
+	if plan.OrganizationId.IsNull() {
+		return errors.ErrOrganizationIdMissing
+	}
+	if plan.ProjectId.IsNull() {
+		return errors.ErrProjectIdMissing
+	}
+	if plan.ClusterId.IsNull() {
+		return errors.ErrClusterIdMissing
+	}
+	return r.validateBucketAttributesTrimmed(plan)
+}
+
+func (r *Bucket) validateBucketAttributesTrimmed(plan providerschema.Bucket) error {
+	if (!plan.Name.IsNull() && !plan.Name.IsUnknown()) && !providerschema.IsTrimmed(plan.Name.ValueString()) {
+		return fmt.Errorf("name %s", errors.ErrNotTrimmed)
+	}
+	return nil
 }

@@ -447,14 +447,21 @@ func (a *ApiKey) validateCreateApiKeyRequest(plan providerschema.ApiKey) error {
 	if plan.OrganizationRoles == nil {
 		return fmt.Errorf("organizationRoles cannot be empty")
 	}
-	//if plan.Resources == nil {
-	//	return fmt.Errorf("resource cannot be nil")
-	//}
 	if !plan.Rotate.IsNull() && !plan.Rotate.IsUnknown() {
 		return fmt.Errorf("rotate value should not be set")
 	}
 	if !plan.Secret.IsNull() && !plan.Secret.IsUnknown() {
 		return fmt.Errorf("secret should not be set while create operation")
+	}
+	return a.validateApiKeyAttributesTrimmed(plan)
+}
+
+func (a *ApiKey) validateApiKeyAttributesTrimmed(plan providerschema.ApiKey) error {
+	if (!plan.Name.IsNull() && !plan.Name.IsUnknown()) && !providerschema.IsTrimmed(plan.Name.ValueString()) {
+		return fmt.Errorf("name %s", internalerrors.ErrNotTrimmed)
+	}
+	if (!plan.Description.IsNull() && !plan.Description.IsUnknown()) && !providerschema.IsTrimmed(plan.Description.ValueString()) {
+		return fmt.Errorf("description %s", internalerrors.ErrNotTrimmed)
 	}
 	return nil
 }

@@ -16,6 +16,7 @@ cluster = {
   server_version     = "7.1"
   couchbase_services = ["data", "index", "query"]
   availability_zone  = "multi"
+  configuration_type = "multiNode"
 }
 
 compute = {
