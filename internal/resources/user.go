@@ -192,7 +192,7 @@ func (r *User) Read(ctx context.Context, req resource.ReadRequest, resp *resourc
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella User",
-			"Could not read Capella user: "+err.Error(),
+			"Could not read Capella user: "+state.Id.String()+": "+err.Error(),
 		)
 		return
 	}
