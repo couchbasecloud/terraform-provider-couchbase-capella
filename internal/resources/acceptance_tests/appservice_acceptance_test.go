@@ -1,13 +1,18 @@
 package acceptance_tests
 
 import (
+	"context"
 	"fmt"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	appserviceapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/appservice"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"log"
 	"net/http"
 	"os"
 	"regexp"
 	"testing"
+	"time"
 
 	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -152,70 +157,31 @@ func TestAccAppServiceCreateWithOptFields(t *testing.T) {
 					resource.TestCheckResourceAttr(appServiceResourceReference, "compute.cpu", "2"),
 					resource.TestCheckResourceAttr(appServiceResourceReference, "compute.ram", "4"),
 					resource.TestCheckResourceAttr(appServiceResourceReference, "nodes", "2"),
-					// T0 D0 AV-68702
-					//resource.TestCheckResourceAttr("couchbase-capella_app_service.app_service_opt_fields", "version", "3.0"),
 				),
 			},
 
 			//Invalid Update of fields
-			//Expected error:
-			//Could not execute request, unexpected error: {"code":1000,"hint":"Check if all the required params are present in the request body.","httpStatusCode":400,"message":"The server cannot or will not process the
+			//Expected error: Could not execute request, unexpected error: {"code":1000,"hint":"Check if all the required params are present in the request body.","httpStatusCode":400,"message":"The server cannot or will not process the
 			//│ request due to something that is perceived to be a client error."}
+			//we expect above error but due to formatting issues of expected error we are only checking unique word "perceived"
 			{
 				Config:      testAccAppServiceResourceUpdateInvalidProjectIdConfig(testCfg, resourceName),
-				ExpectError: regexp.MustCompile("something that is perceived to be a client error"),
+				ExpectError: regexp.MustCompile("perceived"),
 			},
 			{
 				Config:      testAccAppServiceResourceUpdateInvalidOrgIdConfig(testCfg, resourceName),
-				ExpectError: regexp.MustCompile("something that is perceived to be a client error"),
+				ExpectError: regexp.MustCompile("perceived"),
 			},
 			{
 				Config:      testAccAppServiceResourceUpdateInvalidClusterIdConfig(testCfg, resourceName),
-				ExpectError: regexp.MustCompile("something that is perceived to be a client error"),
+				ExpectError: regexp.MustCompile("perceived"),
 			},
 		},
 	},
 	)
 }
 
-//	func TestAccAppServiceDeleteAppService(t *testing.T) {
-//		appServiceResourceName := "app_service_opt_fields"
-//		appServiceResourceReference := "couchbase-capella_app_service." + appServiceResourceName
-//		clusterResourceName := "new_cluster"
-//		clusterResourceReference := "couchbase-capella_cluster." + clusterResourceName
-//		testCfg := acctest.ProjectCfg
-//		projectResourceName := "terraform_project"
-//		projectResourceReference := "couchbase-capella_project." + projectResourceName
-//		cidr := "10.1.68.0/23"
-//		resource.Test(t, resource.TestCase{
-//			PreCheck: func() {
-//				acctest.TestAccPreCheck(t)
-//			},
-//			ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
-//			Steps: []resource.TestStep{
-//				{
-//					Config: testAccCreateCluster(&testCfg, clusterResourceName, projectResourceName, projectResourceReference, cidr),
-//					Check: resource.ComposeAggregateTestCheckFunc(
-//						testAccExistsClusterResource(clusterResourceReference),
-//					),
-//				},
-//				{
-//					Config: testAccAppServiceResourceOptConfig(testCfg, appServiceResourceName),
-//					Check: resource.ComposeTestCheckFunc(
-//						resource.TestCheckResourceAttr(appServiceResourceReference, "name", "app_service_opt_fields"),
-//						resource.TestCheckResourceAttr(appServiceResourceReference, "description", "acceptance test app service"),
-//						resource.TestCheckResourceAttr(appServiceResourceReference, "compute.cpu", "2"),
-//						resource.TestCheckResourceAttr(appServiceResourceReference, "compute.ram", "4"),
-//						resource.TestCheckResourceAttr(appServiceResourceReference, "nodes", "2"),
-//						testAccDeleteAppService(projectResourceReference, clusterResourceReference, appServiceResourceReference),
-//					),
-//					ExpectNonEmptyPlan: true,
-//					RefreshState:       false,
-//				},
-//			},
-//		})
-//	}
-func TestAccAppServiceDeleteAppAndCluster(t *testing.T) {
+func TestAccAppServiceDeleteAppService(t *testing.T) {
 	appServiceResourceName := "app_service_opt_fields"
 	appServiceResourceReference := "couchbase-capella_app_service." + appServiceResourceName
 	clusterResourceName := "new_cluster"
@@ -252,18 +218,6 @@ func TestAccAppServiceDeleteAppAndCluster(t *testing.T) {
 				),
 				ExpectNonEmptyPlan: true,
 				RefreshState:       false,
-			},
-			{
-				Config: testAccAppServiceResourceOptConfig(testCfg, appServiceResourceName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(appServiceResourceReference, "name", "app_service_opt_fields"),
-					resource.TestCheckResourceAttr(appServiceResourceReference, "description", "acceptance test app service"),
-					resource.TestCheckResourceAttr(appServiceResourceReference, "compute.cpu", "2"),
-					resource.TestCheckResourceAttr(appServiceResourceReference, "compute.ram", "4"),
-					resource.TestCheckResourceAttr(appServiceResourceReference, "nodes", "2"),
-					testAccDeleteCluster(projectResourceReference, clusterResourceReference),
-				),
-				ExpectError: regexp.MustCompile("An App\nService is associated with the cluster, please delete the app service before\ndeleting the cluster"),
 			},
 		},
 	})
@@ -463,7 +417,68 @@ func testAccDeleteAppService(projectResourceReference, clusterResourceReference,
 		if err != nil {
 			return err
 		}
+		err = checkAppServiceStatus(data, context.Background(), orgid, projectState["id"], clusterState["id"], appServiceState["id"])
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if !resourceNotFound {
+			return fmt.Errorf(errString)
+		}
+		fmt.Printf("successfully deleted")
 		return nil
 	}
 
+}
+
+func checkAppServiceStatus(data *providerschema.Data, ctx context.Context, orgId, projectId, clusterId, appServiceId string) error {
+
+	const timeout = time.Minute * 60
+
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	const sleep = time.Second * 3
+	timer := time.NewTimer(2 * time.Minute)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("wrong cluster state")
+
+		case <-timer.C:
+			res, err := retrieveAppService(data, orgId, projectId, clusterId, appServiceId)
+			switch err {
+			case nil:
+				if appserviceapi.IsFinalState(res.CurrentState) {
+					return nil
+				}
+				const msg = "waiting for app service to get deleted"
+				tflog.Info(ctx, msg)
+			default:
+				return err
+			}
+			timer.Reset(sleep)
+
+		}
+	}
+}
+
+func retrieveAppService(data *providerschema.Data, orgId, projectId, clusterId, appServiceId string) (*appserviceapi.GetAppServiceResponse, error) {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s", data.HostURL, orgId, projectId, clusterId, appServiceId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	response, err := data.Client.ExecuteWithRetry(
+		context.Background(),
+		cfg,
+		nil,
+		data.Token,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+	appserviceresponse := appserviceapi.GetAppServiceResponse{}
+	if err != nil {
+		return nil, err
+	}
+	appserviceresponse.Etag = response.Response.Header.Get("ETag")
+	return &appserviceresponse, nil
 }

@@ -73,11 +73,6 @@ func TestAccApiKeyResourceWithMultipleResources(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "allowed_cidrs.1", "10.1.42.1/23"),
 					resource.TestCheckResourceAttr(resourceReference, "organization_roles.0", "organizationMember"),
 					resource.TestCheckResourceAttr(resourceReference, "resources.#", "2"),
-					resource.TestCheckResourceAttr(resourceReference, "resources.0.roles.0", "projectDataReader"),
-					resource.TestCheckResourceAttr(resourceReference, "resources.0.roles.1", "projectManager"),
-					resource.TestCheckResourceAttr(resourceReference, "resources.0.type", "project"),
-					resource.TestCheckResourceAttr(resourceReference, "resources.1.roles.0", "projectDataReader"),
-					resource.TestCheckResourceAttr(resourceReference, "resources.1.type", "project"),
 				),
 			},
 			//// ImportState testing

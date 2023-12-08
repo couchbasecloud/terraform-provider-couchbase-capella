@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"log"
 	"net/http"
 	"os"
 	"regexp"
-
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"testing"
 	"time"
 )
@@ -67,6 +66,9 @@ func TestAccAllowListTestCases(t *testing.T) {
 				),
 			},
 			//expired IP
+			//expected error: "Unable to create new
+			//        allowlist for database. The expiration time for the allowlist is not valid.
+			//        Must be a point in time greater than now."
 			{
 				Config:      testAccAddIpWithExpiredIP(testCfg, "add_allowlist_expiredIP", "10.2.2.2/32"),
 				ExpectError: regexp.MustCompile("The expiration time for the allowlist is not valid"),
