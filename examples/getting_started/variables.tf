@@ -34,6 +34,7 @@ variable "cluster" {
     server_version     = string
     couchbase_services = list(string)
     availability_zone  = string
+    configuration_type = string
   })
 }
 
@@ -145,7 +146,6 @@ variable "app_service" {
   type = object({
     name        = string
     description = optional(string)
-    version     = optional(string)
     nodes       = optional(number)
     compute = object({
       cpu = number
