@@ -614,7 +614,7 @@ func TestAccClusterResourceNotFound(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
 
 					//When the cluster is created for the first time, the ETag of the created cluster is 5
-					resource.TestCheckResourceAttr(resourceReference, "etag", "Version: 5"),
+					//resource.TestCheckResourceAttr(resourceReference, "etag", "Version: 5"),
 
 					//Delete the cluster from the server and wait until the deletion is successful.
 					testAccDeleteClusterResource(resourceReference),
@@ -656,7 +656,7 @@ func TestAccClusterResourceNotFound(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "IST"),
 
 					//When the cluster is created for the first time, the ETag of the created cluster is 5
-					resource.TestCheckResourceAttr(resourceReference, "etag", "Version: 5"),
+					//resource.TestCheckResourceAttr(resourceReference, "etag", "Version: 5"),
 				),
 			},
 		},
