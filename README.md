@@ -37,7 +37,7 @@ Terraform searches for the .terraformrc or .tfrc file in your home directory and
   provider_installation {
 
     dev_overrides {
-      "hashicorp.com/couchabasecloud/couchbase-capella" = "<PATH>"
+      "registry.terraform.io/couchbasecloud/couchbase-capella = "<PATH>"
     }
 
     # For all other providers, install them directly from their origin provider
