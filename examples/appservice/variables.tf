@@ -25,7 +25,6 @@ variable "app_service" {
   type = object({
     name        = string
     description = optional(string)
-    version     = optional(string)
     nodes       = optional(number)
     compute = object({
       cpu = number

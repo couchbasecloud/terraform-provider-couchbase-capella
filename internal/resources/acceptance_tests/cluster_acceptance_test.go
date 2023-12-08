@@ -412,8 +412,8 @@ func TestAccClusterResourceGCP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "4"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "3"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "data"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.1", "query"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.2", "index"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.1", "index"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.2", "query"),
 					resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
 					resource.TestCheckResourceAttr(resourceReference, "support.plan", "developer pro"),
 					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
@@ -684,6 +684,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
     region = "us-east-1"
     cidr   = "%[5]s"
   }
+  configuration_type = "multiNode"
   service_groups = [
     {
       node = {
@@ -979,6 +980,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
   couchbase_server = {
     version = "7.1"
   }
+  configuration_type = "multiNode"
   service_groups = [
     {
       node = {
@@ -1030,6 +1032,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
   couchbase_server = {
     version = "7.1"
   }
+  configuration_type = "multiNode"
   service_groups = [
     {
       node = {
@@ -1085,6 +1088,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
   couchbase_server = {
     version = "7.1"
   }
+  configuration_type = "multiNode"
   service_groups = [
     {
       node = {

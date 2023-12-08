@@ -174,7 +174,8 @@ func (r *User) validateCreateUserRequest(plan providerschema.User) error {
 	if plan.OrganizationRoles == nil {
 		return errors.ErrOrganizationRolesCannotBeEmpty
 	}
-	return nil
+
+	return r.validateUserAttributesTrimmed(plan)
 }
 
 // Read reads user information.
@@ -256,6 +257,14 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 
 	IDs, err := state.Validate()
 	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating user",
+			"Could not update user id: "+state.Id.String()+" unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	if err := r.validateUserAttributesTrimmed(plan); err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating user",
 			"Could not update user id: "+state.Id.String()+" unexpected error: "+err.Error(),
@@ -612,6 +621,13 @@ func (r *User) refreshUser(ctx context.Context, organizationId, userId string) (
 func (r *User) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func (r *User) validateUserAttributesTrimmed(plan providerschema.User) error {
+	if (!plan.Name.IsNull() && !plan.Name.IsUnknown()) && !providerschema.IsTrimmed(plan.Name.ValueString()) {
+		return fmt.Errorf("name %s", errors.ErrNotTrimmed)
+	}
+	return nil
 }
 
 // initializeUserWithPlanAndId initializes an instance of providerschema.User

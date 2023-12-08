@@ -16,9 +16,8 @@ resource "couchbase-capella_cluster" "new_cluster" {
     region = var.cloud_provider.region
     cidr   = var.cluster.cidr
   }
-  couchbase_server = {
-    version = var.cluster.server_version
-  }
+  configuration_type = var.cluster.configuration_type
+  couchbase_server = var.couchbase_server
   service_groups = [
     {
       node = {

@@ -152,4 +152,10 @@ var (
 
 	// ErrGatewayTimeout is returned when a gateway operation times out.
 	ErrGatewayTimeout = errors.New("gateway timeout")
+
+	// ErrNotTrimmed is returned when any attribute has leading or trailing spaces.
+	ErrNotTrimmed = errors.New("attribute has leading or trailing spaces")
+
+	// ErrIfMatchCannotBeSetWhileCreate is returned when if_match is set during create operation
+	ErrIfMatchCannotBeSetWhileCreate = errors.New("if_match attribute cannot be set during create operation")
 )
