@@ -24,7 +24,7 @@ func TestAccDatabaseCredentialTestCases(t *testing.T) {
 
 	clusterResourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
 	clusterResourceReference := "couchbase-capella_cluster." + clusterResourceName
-	cidr := "10.250.250.0/23"
+	cidr := "10.1.116.0/23"
 
 	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
@@ -40,7 +40,7 @@ func TestAccDatabaseCredentialTestCases(t *testing.T) {
 			},
 			// Database Credential with required fields
 			{
-				Config: testAccAddDatabaseCredWithReqFields(&testCfg),
+				Config: testAccAddDatabaseCredWithReqFields(testCfg, clusterResourceReference, resourceName, projectResourceReference),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceReference, "id"),
 					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_database_credential_name"),
@@ -50,7 +50,7 @@ func TestAccDatabaseCredentialTestCases(t *testing.T) {
 			},
 			// Database Credential with optional fields
 			{
-				Config: testAccAddDatabaseCredWithOptionalFields(&testCfg),
+				Config: testAccAddDatabaseCredWithOptionalFields(testCfg, clusterResourceReference, resourceName, projectResourceReference),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceReference, "id"),
 					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_database_credential_name"),
@@ -61,7 +61,7 @@ func TestAccDatabaseCredentialTestCases(t *testing.T) {
 			},
 			// Invalid name
 			{
-				Config:      testAccAddDatabaseCredWithInvalidName(&testCfg),
+				Config:      testAccAddDatabaseCredWithInvalidName(&testCfg, clusterResourceReference, resourceName, projectResourceReference),
 				ExpectError: regexp.MustCompile("Could not create database credential, unexpected error: The request was malformed or invalid."),
 			},
 		},
@@ -78,7 +78,7 @@ func TestAccAllowedDatabaseCredentialNotFound(t *testing.T) {
 
 	clusterResourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
 	clusterResourceReference := "couchbase-capella_cluster." + clusterResourceName
-	cidr := "10.250.250.0/23"
+	cidr := "10.1.116.0/23"
 
 	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
@@ -107,86 +107,84 @@ func TestAccAllowedDatabaseCredentialNotFound(t *testing.T) {
 	})
 }
 
-func testAccAddDatabaseCredWithReqFields(cfg *string) string {
-	*cfg = fmt.Sprintf(`
-	%[1]s
+func testAccAddDatabaseCredWithReqFields(cfg, clusterReference, resourceName, projectReference string) string {
+	return fmt.Sprintf(
+		`
+		%[1]s
 	
-	output "add_database_credential_req"{
-		value = couchbase-capella_database_credential.add_database_credential_req
-		sensitive = true
-	}
-	
-	resource "couchbase-capella_database_credential" "add_database_credential_req" {
-		name            = "acc_test_database_credential_name"
-		organization_id = var.organization_id
-		project_id      = couchbase-capella_project.terraform_project.id
-		cluster_id      = couchbase-capella_cluster.new_cluster.id
-		access = [
-			{
-				privileges = ["data_writer"]
-				resources = {
-				buckets = [{
-					name = "new_terraform_bucket"
-					scopes = [
-					{
-						name        = "_default"
-						collections = ["_default"]
+		output "add_database_credential_req"{
+			value = couchbase-capella_database_credential.add_database_credential_req
+			sensitive = true
+		}
+		
+		resource "couchbase-capella_database_credential" "%[2]s" {
+			name            = "acc_test_database_credential_name"
+			organization_id = var.organization_id
+			project_id      = %[3]s.id
+			cluster_id      = %[2]s.id
+			access = [
+				{
+					privileges = ["data_writer"]
+					resources = {
+					buckets = [{
+						name = "new_terraform_bucket"
+						scopes = [
+						{
+							name        = "_default"
+							collections = ["_default"]
+						}
+						]
+					}]
 					}
-					]
-				}]
+				},
+				{
+					privileges = ["data_reader"]
 				}
-			},
-			{
-				privileges = ["data_reader"]
-			}
-		]
-	}
-	
-	`, *cfg)
-	return *cfg
+			]
+		}
+		`, cfg, clusterReference, resourceName, projectReference)
 }
 
-func testAccAddDatabaseCredWithOptionalFields(cfg *string) string {
-	*cfg = fmt.Sprintf(`
-	%[1]s
+func testAccAddDatabaseCredWithOptionalFields(cfg, clusterReference, resourceName, projectReference string) string {
+	return fmt.Sprintf(
+		`
+		%[1]s
 	
-	output "add_database_credential_req"{
-		value = couchbase-capella_database_credential.add_database_credential_req
-		sensitive = true
-	}
-	
-	resource "couchbase-capella_database_credential" "add_database_credential_req" {
-		name            = "acc_test_database_credential_name"
-		organization_id = var.organization_id
-		project_id      = couchbase-capella_project.terraform_project.id
-		cluster_id      = couchbase-capella_cluster.new_cluster.id
-		password        = "acc_test_password"
-		access = [
-			{
-				privileges = ["data_writer"]
-				resources = {
-				buckets = [{
-					name = "new_terraform_bucket"
-					scopes = [
-					{
-						name        = "_default"
-						collections = ["_default"]
+		output "add_database_credential_req"{
+			value = couchbase-capella_database_credential.add_database_credential_req
+			sensitive = true
+		}
+		
+		resource "couchbase-capella_database_credential" "%[2]s" {
+			name            = "acc_test_database_credential_name"
+			organization_id = var.organization_id
+			project_id      = %[3]s.id
+			cluster_id      = %[2]s.id
+			password        = "acc_test_password"
+			access = [
+				{
+					privileges = ["data_writer"]
+					resources = {
+					buckets = [{
+						name = "new_terraform_bucket"
+						scopes = [
+						{
+							name        = "_default"
+							collections = ["_default"]
+						}
+						]
+					}]
 					}
-					]
-				}]
+				},
+				{
+					privileges = ["data_reader"]
 				}
-			},
-			{
-				privileges = ["data_reader"]
-			}
-		]
-	}
-	
-	`, *cfg)
-	return *cfg
+			]
+		}
+		`, cfg, clusterReference, resourceName, projectReference)
 }
 
-func testAccAddDatabaseCredWithInvalidName(cfg *string) string {
+func testAccAddDatabaseCredWithInvalidName(cfg *string, clusterReference, resourceName, projectReference string) string {
 	*cfg = fmt.Sprintf(`
 	%[1]s
 	
