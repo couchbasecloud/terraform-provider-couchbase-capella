@@ -225,7 +225,7 @@ func (r *DatabaseCredential) Read(ctx context.Context, req resource.ReadRequest,
 	// we are going to work around this for private preview.
 	// The fix will be done in SURF-7366
 	// For now, we are appending same permissions that the customer passed in the terraform files and not relying on the GET API response.
-	refreshedState.Access = mapAccess(*refreshedState)
+	refreshedState.Access = mapAccess(state)
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &refreshedState)

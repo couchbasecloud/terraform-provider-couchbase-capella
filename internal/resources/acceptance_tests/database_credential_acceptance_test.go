@@ -24,7 +24,7 @@ func TestAccDatabaseCredentialTestCases(t *testing.T) {
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	projectResourceName := "terraform_project"
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
-	cidr := "10.1.66.0/23"
+	cidr := "10.1.42.0/23"
 
 	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
@@ -50,8 +50,8 @@ func TestAccDatabaseCredentialTestCases(t *testing.T) {
 			{
 				Config: testAccAddDatabaseCredWithOptionalFields(&testCfg),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("couchbase-capella_database_credential.add_database_credential_opt", "name", "acc_test_database_credential_name"),
-					resource.TestCheckResourceAttr("couchbase-capella_database_credential.add_database_credential_opt", "password", "acc_test_password"),
+					resource.TestCheckResourceAttr("couchbase-capella_database_credential.add_database_credential_opt", "name", "acc_test_database_credential_name2"),
+					resource.TestCheckResourceAttr("couchbase-capella_database_credential.add_database_credential_opt", "password", "Secret12$#"),
 					resource.TestCheckResourceAttr("couchbase-capella_database_credential.add_database_credential_opt", "access.0.privileges.0", "data_writer"),
 				),
 			},
@@ -83,7 +83,7 @@ func testAccAddDatabaseCredWithReqFields(cfg *string) string {
 			cluster_id      = couchbase-capella_cluster.new_cluster.id
 			access = [
 				{
-					privileges = ["data_reader", "data_writer"]
+					privileges = ["data_writer"]
 				},
 			]
 		}
@@ -101,14 +101,14 @@ func testAccAddDatabaseCredWithOptionalFields(cfg *string) string {
 		}
 		
 		resource "couchbase-capella_database_credential" "add_database_credential_opt" {
-			name            = "acc_test_database_credential_name"
+			name            = "acc_test_database_credential_name2"
 			organization_id = var.organization_id
 			project_id      = couchbase-capella_project.terraform_project.id
 			cluster_id      = couchbase-capella_cluster.new_cluster.id
-			password        = "acc_test_password"
+			password        = "Secret12$#"
 			access = [
 				{
-					privileges = ["data_reader", "data_writer"]
+					privileges = ["data_writer"]
 				},
 			]
 		}
@@ -125,15 +125,15 @@ func testAccAddDatabaseCredWithInvalidName(cfg *string) string {
 	}
 	
 	resource "couchbase-capella_database_credential" "add_database_credential_invalid_name" {
-		name            = "acc_test_database_credential_invalid_name"
+		name            = "acc_test_database_credential_invalid_name3"
 		organization_id = var.organization_id
 		project_id      = couchbase-capella_project.terraform_project.id
 		cluster_id      = couchbase-capella_cluster.new_cluster.id
-		password        = "acc_test_password"
+		password        = "Secret12$#"
 		access          = "acc_test_access"
 		access = [
 			{
-				privileges = ["data_reader", "data_writer"]
+				privileges = ["data_writer"]
 			},
 		]
 	}
@@ -156,8 +156,8 @@ resource "couchbase-capella_project" "%[3]s" {
 resource "couchbase-capella_cluster" "%[2]s" {
   organization_id = var.organization_id
   project_id      = %[4]s.id
-  name            = "acc_test_database_credential_name"
-  description     = "terraform acceptance test cluster"
+  name            = "terraform database credential acceptance test cluster"
+  description     = "terraform database credential acceptance test cluster"
   couchbase_server = {
     version = "7.1"
   }
