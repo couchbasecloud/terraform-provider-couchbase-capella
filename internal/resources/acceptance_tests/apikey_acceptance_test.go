@@ -17,9 +17,9 @@ import (
 
 func TestAccApiKeyResource(t *testing.T) {
 	resourceName := "acc_apikey_" + acctest.GenerateRandomResourceName()
-	resourceReference := "capella_apikey." + resourceName
+	resourceReference := "couchbase-capella_apikey." + resourceName
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
-	projectResourceReference := "capella_project." + projectResourceName
+	projectResourceReference := "couchbase-capella_project." + projectResourceName
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
@@ -54,9 +54,9 @@ func TestAccApiKeyResource(t *testing.T) {
 
 func TestAccApiKeyResourceWithMultipleResources(t *testing.T) {
 	resourceName := "acc_apikey_" + acctest.GenerateRandomResourceName()
-	resourceReference := "capella_apikey." + resourceName
+	resourceReference := "couchbase-capella_apikey." + resourceName
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
-	projectResourceReference := "capella_project." + projectResourceName
+	projectResourceReference := "couchbase-capella_project." + projectResourceName
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
@@ -93,7 +93,7 @@ func TestAccApiKeyResourceWithMultipleResources(t *testing.T) {
 
 func TestAccApiKeyResourceWithOnlyReqField(t *testing.T) {
 	resourceName := "acc_apikey_" + acctest.GenerateRandomResourceName()
-	resourceReference := "capella_apikey." + resourceName
+	resourceReference := "couchbase-capella_apikey." + resourceName
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
@@ -139,7 +139,7 @@ func TestAccApiKeyResourceWithOnlyReqField(t *testing.T) {
 
 func TestAccApiKeyResourceForOrgOwner(t *testing.T) {
 	resourceName := "acc_apikey_" + acctest.GenerateRandomResourceName()
-	resourceReference := "capella_apikey." + resourceName
+	resourceReference := "couchbase-capella_apikey." + resourceName
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
@@ -190,7 +190,7 @@ func testAccApiKeyResourceConfig(cfg, resourceName, projectResourceName, project
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_apikey" "%[2]s" {
+resource "couchbase-capella_apikey" "%[2]s" {
   organization_id    = var.organization_id
   name               = "%[2]s"
   description        = "description"
@@ -212,13 +212,13 @@ func testAccApiKeyResourceConfigWithMultipleResources(cfg, resourceName, project
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "%[3]s" {
+resource "couchbase-capella_project" "%[3]s" {
     organization_id = var.organization_id
 	name            = "acc_test_project_name"
 	description     = "description"
 }
 
-resource "capella_apikey" "%[2]s" {
+resource "couchbase-capella_apikey" "%[2]s" {
   organization_id    = var.organization_id
   name               = "%[2]s"
   organization_roles = ["organizationMember"]
@@ -243,7 +243,7 @@ func testAccApiKeyResourceConfigWithOnlyReqField(cfg, resourceName string) strin
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_apikey" "%[2]s" {
+resource "couchbase-capella_apikey" "%[2]s" {
   organization_id    = var.organization_id
   name               = "%[2]s"
   organization_roles = ["organizationOwner", "organizationMember"]
@@ -255,7 +255,7 @@ func testAccApiKeyResourceConfigForOrgOwner(cfg, resourceName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_apikey" "%[2]s" {
+resource "couchbase-capella_apikey" "%[2]s" {
   organization_id    = var.organization_id
   name               = "%[2]s"
   organization_roles = [ "organizationMember"]
@@ -276,7 +276,7 @@ func testAccApiKeyResourceConfigRotateSet(cfg, resourceName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_apikey" "%[2]s" {
+resource "couchbase-capella_apikey" "%[2]s" {
   organization_id    = var.organization_id
   name               = "%[2]s"
   organization_roles = [ "organizationMember"]
@@ -298,7 +298,7 @@ func testAccApiKeyResourceConfigWithOnlyReqFieldRotate(cfg, resourceName string)
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_apikey" "%[2]s" {
+resource "couchbase-capella_apikey" "%[2]s" {
   organization_id    = var.organization_id
   name               = "%[2]s"
   organization_roles = ["organizationOwner", "organizationMember"]
@@ -312,13 +312,13 @@ func testAccApiKeyResourceConfigWithoutResource(cfg, resourceName, projectResour
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "%[3]s" {
+resource "couchbase-capella_project" "%[3]s" {
     organization_id = var.organization_id
 	name            = "acc_test_project_name"
 	description     = "description"
 }
 
-resource "capella_apikey" "%[2]s" {
+resource "couchbase-capella_apikey" "%[2]s" {
   organization_id    = var.organization_id
   name               = "%[2]s"
   organization_roles = ["organizationOwner", "organizationMember"]
