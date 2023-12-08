@@ -17,16 +17,16 @@ import (
 
 func TestAccApiKeyResource(t *testing.T) {
 	resourceName := "acc_apikey_" + acctest.GenerateRandomResourceName()
-	resourceReference := "capella_apikey." + resourceName
+	resourceReference := "couchbase-capella_apikey." + resourceName
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
-	projectResourceReference := "capella_project." + projectResourceName
-	resource.ParallelTest(t, resource.TestCase{
+	projectResourceReference := "couchbase-capella_project." + projectResourceName
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccApiKeyResourceConfig(acctest.Cfg, resourceName, projectResourceName, projectResourceReference),
+				Config: testAccApiKeyResourceConfig(acctest.ProjectCfg, resourceName, projectResourceName, projectResourceReference),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsApiKeyResource(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
@@ -54,16 +54,16 @@ func TestAccApiKeyResource(t *testing.T) {
 
 func TestAccApiKeyResourceWithMultipleResources(t *testing.T) {
 	resourceName := "acc_apikey_" + acctest.GenerateRandomResourceName()
-	resourceReference := "capella_apikey." + resourceName
+	resourceReference := "couchbase-capella_apikey." + resourceName
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
-	projectResourceReference := "capella_project." + projectResourceName
-	resource.ParallelTest(t, resource.TestCase{
+	projectResourceReference := "couchbase-capella_project." + projectResourceName
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccApiKeyResourceConfigWithMultipleResources(acctest.Cfg, resourceName, projectResourceName, projectResourceReference),
+				Config: testAccApiKeyResourceConfigWithMultipleResources(acctest.ProjectCfg, resourceName, projectResourceName, projectResourceReference),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsApiKeyResource(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
@@ -73,11 +73,11 @@ func TestAccApiKeyResourceWithMultipleResources(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "allowed_cidrs.1", "10.1.42.1/23"),
 					resource.TestCheckResourceAttr(resourceReference, "organization_roles.0", "organizationMember"),
 					resource.TestCheckResourceAttr(resourceReference, "resources.#", "2"),
-					resource.TestCheckResourceAttr(resourceReference, "resources.1.roles.0", "projectDataReader"),
-					resource.TestCheckResourceAttr(resourceReference, "resources.1.roles.1", "projectManager"),
-					resource.TestCheckResourceAttr(resourceReference, "resources.1.type", "project"),
 					resource.TestCheckResourceAttr(resourceReference, "resources.0.roles.0", "projectDataReader"),
+					resource.TestCheckResourceAttr(resourceReference, "resources.0.roles.1", "projectManager"),
 					resource.TestCheckResourceAttr(resourceReference, "resources.0.type", "project"),
+					resource.TestCheckResourceAttr(resourceReference, "resources.1.roles.0", "projectDataReader"),
+					resource.TestCheckResourceAttr(resourceReference, "resources.1.type", "project"),
 				),
 			},
 			//// ImportState testing
@@ -93,14 +93,14 @@ func TestAccApiKeyResourceWithMultipleResources(t *testing.T) {
 
 func TestAccApiKeyResourceWithOnlyReqField(t *testing.T) {
 	resourceName := "acc_apikey_" + acctest.GenerateRandomResourceName()
-	resourceReference := "capella_apikey." + resourceName
-	resource.ParallelTest(t, resource.TestCase{
+	resourceReference := "couchbase-capella_apikey." + resourceName
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccApiKeyResourceConfigWithOnlyReqField(acctest.Cfg, resourceName),
+				Config: testAccApiKeyResourceConfigWithOnlyReqField(acctest.ProjectCfg, resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsApiKeyResource(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
@@ -120,7 +120,7 @@ func TestAccApiKeyResourceWithOnlyReqField(t *testing.T) {
 			},
 			// Rotate testing
 			{
-				Config: testAccApiKeyResourceConfigWithOnlyReqFieldRotate(acctest.Cfg, resourceName),
+				Config: testAccApiKeyResourceConfigWithOnlyReqFieldRotate(acctest.ProjectCfg, resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsApiKeyResource(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
@@ -139,14 +139,14 @@ func TestAccApiKeyResourceWithOnlyReqField(t *testing.T) {
 
 func TestAccApiKeyResourceForOrgOwner(t *testing.T) {
 	resourceName := "acc_apikey_" + acctest.GenerateRandomResourceName()
-	resourceReference := "capella_apikey." + resourceName
-	resource.ParallelTest(t, resource.TestCase{
+	resourceReference := "couchbase-capella_apikey." + resourceName
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccApiKeyResourceConfigForOrgOwner(acctest.Cfg, resourceName),
+				Config: testAccApiKeyResourceConfigForOrgOwner(acctest.ProjectCfg, resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsApiKeyResource(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
@@ -173,13 +173,13 @@ func TestAccApiKeyResourceForOrgOwner(t *testing.T) {
 
 func TestAccApiKeyResourceInvalidScenarioRotateShouldNotPassedWhileCreate(t *testing.T) {
 	resourceName := "acc_apikey_" + acctest.GenerateRandomResourceName()
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccApiKeyResourceConfigRotateSet(acctest.Cfg, resourceName),
+				Config:      testAccApiKeyResourceConfigRotateSet(acctest.ProjectCfg, resourceName),
 				ExpectError: regexp.MustCompile("rotate value should not be set"),
 			},
 		},
@@ -189,8 +189,11 @@ func TestAccApiKeyResourceInvalidScenarioRotateShouldNotPassedWhileCreate(t *tes
 func testAccApiKeyResourceConfig(cfg, resourceName, projectResourceName, projectResourceReference string) string {
 	return fmt.Sprintf(`
 %[1]s
-
-resource "capella_apikey" "%[2]s" {
+resource "couchbase-capella_project" "terraform_api_test_project" {
+    organization_id = var.organization_id
+	name            = "terraform_api_test_project"
+}
+resource "couchbase-capella_apikey" "%[2]s" {
   organization_id    = var.organization_id
   name               = "%[2]s"
   description        = "description"
@@ -199,7 +202,7 @@ resource "capella_apikey" "%[2]s" {
   allowed_cidrs      = ["10.1.42.1/23", "10.1.42.0/23"]
   resources = [
     {
-      id    = var.project_id
+      id    = couchbase-capella_project.terraform_api_test_project.id
       roles = ["projectManager", "projectDataReader"]
       type  = "project"
     }
@@ -212,25 +215,31 @@ func testAccApiKeyResourceConfigWithMultipleResources(cfg, resourceName, project
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "%[3]s" {
+resource "couchbase-capella_project" "%[3]s_1" {
     organization_id = var.organization_id
-	name            = "acc_test_project_name"
-	description     = "description"
+	name            = "terraform_api_test_project"
+}
+resource "couchbase-capella_project" "%[3]s_2" {
+    organization_id = var.organization_id
+	name            = "terraform_api_test_project"
+  depends_on = [couchbase-capella_project.%[3]s_1]
+
 }
 
-resource "capella_apikey" "%[2]s" {
+
+resource "couchbase-capella_apikey" "%[2]s" {
   organization_id    = var.organization_id
   name               = "%[2]s"
   organization_roles = ["organizationMember"]
   allowed_cidrs      = ["10.1.42.1/23", "10.1.42.0/23"]
   resources = [
     {
-      id    = %[4]s.id
+      id    = %[4]s_1.id
       roles = ["projectManager", "projectDataReader"]
       type  = "project"
     },
 	{
-      id    = var.project_id
+      id    = %[4]s_2.id
       roles = ["projectDataReader"]
       type  = "project"
     }
@@ -243,7 +252,7 @@ func testAccApiKeyResourceConfigWithOnlyReqField(cfg, resourceName string) strin
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_apikey" "%[2]s" {
+resource "couchbase-capella_apikey" "%[2]s" {
   organization_id    = var.organization_id
   name               = "%[2]s"
   organization_roles = ["organizationOwner", "organizationMember"]
@@ -255,7 +264,7 @@ func testAccApiKeyResourceConfigForOrgOwner(cfg, resourceName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_apikey" "%[2]s" {
+resource "couchbase-capella_apikey" "%[2]s" {
   organization_id    = var.organization_id
   name               = "%[2]s"
   organization_roles = [ "organizationMember"]
@@ -276,7 +285,7 @@ func testAccApiKeyResourceConfigRotateSet(cfg, resourceName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_apikey" "%[2]s" {
+resource "couchbase-capella_apikey" "%[2]s" {
   organization_id    = var.organization_id
   name               = "%[2]s"
   organization_roles = [ "organizationMember"]
@@ -298,7 +307,7 @@ func testAccApiKeyResourceConfigWithOnlyReqFieldRotate(cfg, resourceName string)
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_apikey" "%[2]s" {
+resource "couchbase-capella_apikey" "%[2]s" {
   organization_id    = var.organization_id
   name               = "%[2]s"
   organization_roles = ["organizationOwner", "organizationMember"]
@@ -312,13 +321,13 @@ func testAccApiKeyResourceConfigWithoutResource(cfg, resourceName, projectResour
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "%[3]s" {
+resource "couchbase-capella_project" "%[3]s" {
     organization_id = var.organization_id
 	name            = "acc_test_project_name"
 	description     = "description"
 }
 
-resource "capella_apikey" "%[2]s" {
+resource "couchbase-capella_apikey" "%[2]s" {
   organization_id    = var.organization_id
   name               = "%[2]s"
   organization_roles = ["organizationOwner", "organizationMember"]
