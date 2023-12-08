@@ -24,7 +24,7 @@ func TestAccDatabaseCredentialTestCases(t *testing.T) {
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	projectResourceName := "terraform_project"
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
-	cidr := "10.1.66.0/23"
+	cidr := "10.1.122.0/23"
 
 	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
@@ -118,13 +118,13 @@ func testAccAddDatabaseCredWithInvalidName(cfg *string) string {
 	*cfg = fmt.Sprintf(`
 	%[1]s
 	
-	output "add_database_credential_invalid_name="{
+	output "add_database_credential_invalid_name"{
 		value = couchbase-capella_database_credential.add_database_credential_invalid_name
 		sensitive = true
 	}
 	
 	resource "couchbase-capella_database_credential" "add_database_credential_invalid_name" {
-		name            = "acc_test_database_credential_invalid_name3"
+		name            = "acc_test_database_credential_invalid_name="
 		organization_id = var.organization_id
 		project_id      = couchbase-capella_project.terraform_project.id
 		cluster_id      = couchbase-capella_cluster.new_cluster.id
