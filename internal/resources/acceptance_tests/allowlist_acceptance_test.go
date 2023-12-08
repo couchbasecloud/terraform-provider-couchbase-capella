@@ -23,7 +23,7 @@ func TestAccAllowListTestCases(t *testing.T) {
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	projectResourceName := "terraform_project"
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
-	cidr := "10.250.250.0/23"
+	cidr := "10.201.250.0/23"
 
 	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
@@ -96,7 +96,7 @@ func TestAccAllowedIPDeleteIP(t *testing.T) {
 	clusterResourceReference := "couchbase-capella_cluster." + clusterName
 	projectResourceName := "terraform_project"
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
-	cidr := "10.250.250.0/23"
+	cidr := "10.202.250.0/23"
 
 	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
@@ -131,14 +131,14 @@ func TestAccAllowedIPDeleteCluster(t *testing.T) {
 	clusterResourceReference := "couchbase-capella_cluster." + clusterName
 	projectResourceName := "terraform_project"
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
-	cidr := "10.4.2.0/23"
+	cidr := "10.203.2.0/23"
 	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCreateCluster(&testCfg, clusterName, projectResourceName, projectResourceReference, cidr),
+				Config: testAccAllowListCreateCluster(&testCfg, clusterName, projectResourceName, projectResourceReference, cidr),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsClusterResource(clusterResourceReference),
 				),
@@ -160,7 +160,7 @@ func TestAccAllowedIPDeleteCluster(t *testing.T) {
 	})
 }
 
-func testAccCreateCluster(cfg *string, resourceName, projectResourceName, projectResourceReference, cidr string) string {
+func testAccAllowListCreateCluster(cfg *string, resourceName, projectResourceName, projectResourceReference, cidr string) string {
 	log.Println("Creating cluster")
 	*cfg = fmt.Sprintf(`
 %[1]s
@@ -230,7 +230,6 @@ resource "couchbase-capella_cluster" "%[2]s" {
 }
 
 func testAccAddIpWithReqFields(cfg *string) string {
-
 	*cfg = fmt.Sprintf(`
 %[1]s
 

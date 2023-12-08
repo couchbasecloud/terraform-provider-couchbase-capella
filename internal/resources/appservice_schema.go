@@ -23,7 +23,7 @@ func AppServiceSchema() schema.Schema {
 			"nodes":           int64Attribute(optional, computed),
 			"cloud_provider":  stringAttribute(optional, computed),
 			"current_state":   stringAttribute(computed),
-			"version":         stringAttribute(optional, computed),
+			"version":         stringAttribute(computed),
 			"compute": schema.SingleNestedAttribute{
 				Required: true,
 				Attributes: map[string]schema.Attribute{

@@ -31,12 +31,16 @@ func ClusterSchema() schema.Schema {
 					objectplanmodifier.RequiresReplace(),
 				},
 			},
-			"configuration_type": stringAttribute(optional, computed),
+			"configuration_type": stringAttribute(required, requiresReplace),
 			"couchbase_server": schema.SingleNestedAttribute{
 				Optional: true,
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
 					"version": stringAttribute(optional, computed),
+				},
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.RequiresReplace(),
+					objectplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"service_groups": schema.SetNestedAttribute{

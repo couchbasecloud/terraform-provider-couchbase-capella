@@ -79,10 +79,10 @@ func (r *Project) Create(ctx context.Context, req resource.CreateRequest, resp *
 		return
 	}
 
-	if plan.OrganizationId.IsNull() {
+	if err := r.validateCreateProject(plan); err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating project",
-			"Could not create project, unexpected error: organization ID cannot be empty.",
+			"Could not create project, unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -208,6 +208,14 @@ func (r *Project) Update(ctx context.Context, req resource.UpdateRequest, resp *
 
 	IDs, err := state.Validate()
 	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Updating Capella Project",
+			"Could not update Capella project ID "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	if err := r.validateProjectAttributesTrimmed(state); err != nil {
 		resp.Diagnostics.AddError(
 			"Error Updating Capella Project",
 			"Could not update Capella project ID "+state.Id.String()+": "+err.Error(),
@@ -377,6 +385,27 @@ func (r *Project) retrieveProject(ctx context.Context, organizationId, projectId
 	}
 
 	return &refreshedState, nil
+}
+
+func (r *Project) validateCreateProject(plan providerschema.Project) error {
+	if plan.OrganizationId.IsNull() {
+		return errors.ErrOrganizationIdMissing
+	}
+	if !plan.IfMatch.IsNull() && !plan.IfMatch.IsUnknown() {
+		return errors.ErrIfMatchCannotBeSetWhileCreate
+	}
+
+	return r.validateProjectAttributesTrimmed(plan)
+}
+
+func (r *Project) validateProjectAttributesTrimmed(plan providerschema.Project) error {
+	if (!plan.Name.IsNull() && !plan.Name.IsUnknown()) && !providerschema.IsTrimmed(plan.Name.ValueString()) {
+		return fmt.Errorf("name %s", errors.ErrNotTrimmed)
+	}
+	if (!plan.Description.IsNull() && !plan.Description.IsUnknown()) && !providerschema.IsTrimmed(plan.Description.ValueString()) {
+		return fmt.Errorf("description %s", errors.ErrNotTrimmed)
+	}
+	return nil
 }
 
 // initializeProjectWithPlanAndId initializes an instance of providerschema.Project

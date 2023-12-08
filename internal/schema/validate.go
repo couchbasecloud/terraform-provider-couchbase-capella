@@ -116,3 +116,8 @@ func checkKeysAndValues(IDs map[Attr]string, keyParams []Attr) error {
 	}
 	return nil
 }
+
+// IsTrimmed checks if a string is equal to its trimmed version.
+func IsTrimmed(planValue string) bool {
+	return strings.TrimSpace(planValue) == planValue
+}
