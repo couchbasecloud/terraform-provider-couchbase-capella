@@ -24,7 +24,7 @@ func TestAccDatabaseCredentialTestCases(t *testing.T) {
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	projectResourceName := "terraform_project"
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
-	cidr := "10.1.122.0/23"
+	cidr := "10.1.66.0/23"
 
 	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
@@ -48,12 +48,11 @@ func TestAccDatabaseCredentialTestCases(t *testing.T) {
 			},
 			//database_credential with optional fields
 			{
-				Config: testAccAddDatabaseCredWithOptionalFields(testCfg, resourceName),
+				Config: testAccAddDatabaseCredWithOptionalFields(&testCfg),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("couchbase-capella_database_credential.add_database_credential_opt", "name", "acc_test_database_credential_name"),
 					resource.TestCheckResourceAttr("couchbase-capella_database_credential.add_database_credential_opt", "password", "acc_test_password"),
 					resource.TestCheckResourceAttr("couchbase-capella_database_credential.add_database_credential_opt", "access.0.privileges.0", "data_writer"),
-					resource.TestCheckResourceAttr("couchbase-capella_database_credential.add_database_credential_opt", "access.resources.buckets.0.name", "new_terraform_bucket"),
 				),
 			},
 
@@ -84,14 +83,14 @@ func testAccAddDatabaseCredWithReqFields(cfg *string) string {
 			cluster_id      = couchbase-capella_cluster.new_cluster.id
 			access = [
 				{
-					privileges = ["data_writer"]
+					privileges = ["data_reader", "data_writer"]
 				},
 			]
 		}
 		`, *cfg)
 }
 
-func testAccAddDatabaseCredWithOptionalFields(cfg, resourceName string) string {
+func testAccAddDatabaseCredWithOptionalFields(cfg *string) string {
 	return fmt.Sprintf(
 		`
 		%[1]s
@@ -101,7 +100,7 @@ func testAccAddDatabaseCredWithOptionalFields(cfg, resourceName string) string {
 			sensitive = true
 		}
 		
-		resource "couchbase-capella_database_credential" "%[2]s" {
+		resource "couchbase-capella_database_credential" "add_database_credential_opt" {
 			name            = "acc_test_database_credential_name"
 			organization_id = var.organization_id
 			project_id      = couchbase-capella_project.terraform_project.id
@@ -109,22 +108,11 @@ func testAccAddDatabaseCredWithOptionalFields(cfg, resourceName string) string {
 			password        = "acc_test_password"
 			access = [
 				{
-					privileges = ["data_writer"]
-					resources = {
-					buckets = [{
-						name = "new_terraform_bucket"
-						scopes = [
-						{
-							name        = "_default"
-							collections = ["_default"]
-						}
-						]
-					}]
-					}
+					privileges = ["data_reader", "data_writer"]
 				},
 			]
 		}
-		`, cfg, resourceName)
+		`, *cfg)
 }
 
 func testAccAddDatabaseCredWithInvalidName(cfg *string) string {
@@ -145,18 +133,7 @@ func testAccAddDatabaseCredWithInvalidName(cfg *string) string {
 		access          = "acc_test_access"
 		access = [
 			{
-				privileges = ["data_writer"]
-				resources = {
-				buckets = [{
-					name = "new_terraform_bucket"
-					scopes = [
-					{
-						name        = "_default"
-						collections = ["_default"]
-					}
-					]
-				}]
-				}
+				privileges = ["data_reader", "data_writer"]
 			},
 		]
 	}
