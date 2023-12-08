@@ -34,6 +34,9 @@ type CreateBackupScheduleRequest struct {
 // Project Manager
 // To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
 type GetBackupScheduleResponse struct {
+	// WeeklySchedule represents the weekly schedule of the backup.
+	WeeklySchedule *WeeklySchedule `json:"weeklySchedule"`
+
 	// Type represents whether the backup is a Weekly or Daily backup.
 	Type string `json:"type"`
 
@@ -42,9 +45,6 @@ type GetBackupScheduleResponse struct {
 
 	// BucketId is the ID of the bucket to which the backup belongs to.
 	BucketId string `json:"bucketId"`
-
-	// WeeklySchedule represents the weekly schedule of the backup.
-	WeeklySchedule *WeeklySchedule `json:"weeklySchedule"`
 }
 
 // UpdateBackupScheduleRequest is the request payload sent to the Capella V4 Public API in order to update the existing backup schedule.

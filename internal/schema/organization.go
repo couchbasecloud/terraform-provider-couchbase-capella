@@ -1,7 +1,7 @@
 package schema
 
 import (
-	"terraform-provider-capella/internal/api/organization"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/organization"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -35,7 +35,7 @@ func (p Preferences) AttributeTypes() map[string]attr.Type {
 	}
 }
 
-// NewPreferences create new preferences object
+// NewPreferences create new preferences object.
 func NewPreferences(preference organization.Preferences) Preferences {
 	var sessionDuration int64
 	if preference.SessionDuration != nil {

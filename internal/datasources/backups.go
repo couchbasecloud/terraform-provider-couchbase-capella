@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"terraform-provider-capella/internal/api"
-	backupapi "terraform-provider-capella/internal/api/backup"
-	providerschema "terraform-provider-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	backupapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/backup"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -61,7 +61,8 @@ func (d *Backups) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 	// Get all the cycles
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/cycles", d.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := d.Client.Execute(
+	response, err := d.Client.ExecuteWithRetry(
+		ctx,
 		cfg,
 		nil,
 		d.Token,
@@ -89,7 +90,8 @@ func (d *Backups) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 	for _, cycle := range cyclesResp.Data {
 		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/cycles/%s", d.HostURL, organizationId, projectId, clusterId, bucketId, cycle.CycleId)
 		cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-		response, err := d.Client.Execute(
+		response, err := d.Client.ExecuteWithRetry(
+			ctx,
 			cfg,
 			nil,
 			d.Token,
@@ -113,7 +115,8 @@ func (d *Backups) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 			return
 		}
 
-		for _, backup := range backupsResp.Data {
+		for i := range backupsResp.Data {
+			backup := backupsResp.Data[i]
 			backupStats := providerschema.NewBackupStats(*backup.BackupStats)
 			backupStatsObj, diags := types.ObjectValueFrom(ctx, backupStats.AttributeTypes(), backupStats)
 			if diags.HasError() {

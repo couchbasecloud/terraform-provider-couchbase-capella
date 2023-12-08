@@ -1,10 +1,11 @@
 package datasources
 
 import (
-	"terraform-provider-capella/internal/api"
-	"terraform-provider-capella/internal/errors"
-	providerschema "terraform-provider-capella/internal/schema"
 	"testing"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"time"
 
@@ -118,9 +119,9 @@ func Test_Validate(t *testing.T) {
 	)
 
 	type test struct {
+		expectedErr error
 		desc        string
 		state       providerschema.AllowLists
-		expectedErr error
 	}
 
 	tests := []test{

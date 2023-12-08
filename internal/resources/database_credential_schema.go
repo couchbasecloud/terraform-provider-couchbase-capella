@@ -18,31 +18,31 @@ func DatabaseCredentialSchema() schema.Schema {
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name":            stringAttribute(required),
-			"password":        stringAttribute(optional, computed, sensitive),
-			"organization_id": stringAttribute(required),
-			"project_id":      stringAttribute(required),
-			"cluster_id":      stringAttribute(required),
+			"name":            stringAttribute(required, requiresReplace),
+			"password":        stringAttribute(optional, computed, sensitive, useStateForUnknown),
+			"organization_id": stringAttribute(required, requiresReplace),
+			"project_id":      stringAttribute(required, requiresReplace),
+			"cluster_id":      stringAttribute(required, requiresReplace),
 			"audit":           computedAuditAttribute(),
-			"access": schema.ListNestedAttribute{
-				Optional: true,
+			"access": schema.SetNestedAttribute{
+				Required: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"privileges": stringListAttribute(required),
+						"privileges": stringSetAttribute(required),
 						"resources": schema.SingleNestedAttribute{
 							Optional: true,
 							Attributes: map[string]schema.Attribute{
-								"buckets": schema.ListNestedAttribute{
+								"buckets": schema.SetNestedAttribute{
 									Optional: true,
 									NestedObject: schema.NestedAttributeObject{
 										Attributes: map[string]schema.Attribute{
 											"name": stringAttribute(required),
-											"scopes": schema.ListNestedAttribute{
+											"scopes": schema.SetNestedAttribute{
 												Optional: true,
 												NestedObject: schema.NestedAttributeObject{
 													Attributes: map[string]schema.Attribute{
 														"name":        stringAttribute(required),
-														"collections": stringListAttribute(optional),
+														"collections": stringSetAttribute(optional),
 													},
 												},
 											},

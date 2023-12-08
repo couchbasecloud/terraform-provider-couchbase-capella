@@ -11,21 +11,21 @@ func UserSchema() schema.Schema {
 			"name":                 stringAttribute(optional, computed),
 			"status":               stringAttribute(computed),
 			"inactive":             boolAttribute(computed),
-			"email":                stringAttribute(required),
-			"organization_id":      stringAttribute(required),
+			"email":                stringAttribute(required, requiresReplace),
+			"organization_id":      stringAttribute(required, requiresReplace),
 			"organization_roles":   stringListAttribute(required),
 			"last_login":           stringAttribute(computed),
 			"region":               stringAttribute(computed),
 			"time_zone":            stringAttribute(computed),
 			"enable_notifications": boolAttribute(computed),
 			"expires_at":           stringAttribute(computed),
-			"resources": schema.ListNestedAttribute{
+			"resources": schema.SetNestedAttribute{
 				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"type":  stringAttribute(optional, computed),
+						"type":  stringDefaultAttribute("project", optional, computed),
 						"id":    stringAttribute(required),
-						"roles": stringListAttribute(required),
+						"roles": stringSetAttribute(required),
 					},
 				},
 			},

@@ -10,8 +10,8 @@ apikey = {
   expiry             = 179
 }
 
-resource = {
+resources = [{
   id    = "<project_id>"
   roles = ["projectManager", "projectDataReader"]
   type  = "project"
-}
+}]
