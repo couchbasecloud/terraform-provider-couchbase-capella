@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"regexp"
 	"testing"
-	//"time"
+
 	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -25,7 +24,7 @@ func TestAccDatabaseCredentialTestCases(t *testing.T) {
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	projectResourceName := "terraform_project"
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
-	cidr := "10.1.120.0/23"
+	cidr := "10.1.122.0/23"
 
 	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
@@ -43,20 +42,18 @@ func TestAccDatabaseCredentialTestCases(t *testing.T) {
 			{
 				Config: testAccAddDatabaseCredWithReqFields(&testCfg),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceReference, "id"),
-					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_database_credential_name"),
-					resource.TestCheckResourceAttr(resourceReference, "access.0.privileges.0", "data_writer"),
+					resource.TestCheckResourceAttr("couchbase-capella_database_credential.add_database_credential_req", "name", "acc_test_database_credential_name"),
+					resource.TestCheckResourceAttr("couchbase-capella_database_credential.add_database_credential_req", "access.0.privileges.0", "data_writer"),
 				),
 			},
 			//database_credential with optional fields
 			{
 				Config: testAccAddDatabaseCredWithOptionalFields(testCfg, resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceReference, "id"),
-					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_database_credential_name"),
-					resource.TestCheckResourceAttr(resourceReference, "password", "acc_test_password"),
-					resource.TestCheckResourceAttr(resourceReference, "access.0.privileges.0", "data_writer"),
-					resource.TestCheckResourceAttr(resourceReference, "access.resources.buckets.0.name", "new_terraform_bucket"),
+					resource.TestCheckResourceAttr("couchbase-capella_database_credential.add_database_credential_opt", "name", "acc_test_database_credential_name"),
+					resource.TestCheckResourceAttr("couchbase-capella_database_credential.add_database_credential_opt", "password", "acc_test_password"),
+					resource.TestCheckResourceAttr("couchbase-capella_database_credential.add_database_credential_opt", "access.0.privileges.0", "data_writer"),
+					resource.TestCheckResourceAttr("couchbase-capella_database_credential.add_database_credential_opt", "access.resources.buckets.0.name", "new_terraform_bucket"),
 				),
 			},
 
@@ -70,7 +67,6 @@ func TestAccDatabaseCredentialTestCases(t *testing.T) {
 }
 
 // Delete the database_credential when the cluster is destroyed through api
-
 func testAccAddDatabaseCredWithReqFields(cfg *string) string {
 	return fmt.Sprintf(
 		`
@@ -100,8 +96,8 @@ func testAccAddDatabaseCredWithOptionalFields(cfg, resourceName string) string {
 		`
 		%[1]s
 	
-		output "add_database_credential_req"{
-			value = couchbase-capella_database_credential.add_database_credential_req
+		output "add_database_credential_opt"{
+			value = couchbase-capella_database_credential.add_database_credential_opt
 			sensitive = true
 		}
 		
@@ -135,13 +131,13 @@ func testAccAddDatabaseCredWithInvalidName(cfg *string) string {
 	*cfg = fmt.Sprintf(`
 	%[1]s
 	
-	output "add_database_credential_req"{
-		value = couchbase-capella_database_credential.add_database_credential_req
+	output "add_database_credential_invalid_name"{
+		value = couchbase-capella_database_credential.add_database_credential_invalid_name
 		sensitive = true
 	}
 	
-	resource "couchbase-capella_database_credential" "add_database_credential_req" {
-		name            = "acc_test_database_credential_invalid_name_="
+	resource "couchbase-capella_database_credential" "add_database_credential_invalid_name" {
+		name            = "acc_test_database_credential_invalid_name"
 		organization_id = var.organization_id
 		project_id      = couchbase-capella_project.terraform_project.id
 		cluster_id      = couchbase-capella_cluster.new_cluster.id
@@ -236,45 +232,6 @@ resource "couchbase-capella_cluster" "%[2]s" {
 }
 `, *cfg, resourceName, projectResourceName, projectResourceReference, cidr)
 	return *cfg
-}
-
-func testAccDeleteDatabaseCredential(clusterResourceReference, projectResourceReference, databaseCredentialResourceReference string) resource.TestCheckFunc {
-	log.Println("deleting the database credential")
-	return func(s *terraform.State) error {
-		var clusterState, projectState, databaseCredentialState map[string]string
-		for _, m := range s.Modules {
-			if len(m.Resources) > 0 {
-				if v, ok := m.Resources[clusterResourceReference]; ok {
-					clusterState = v.Primary.Attributes
-				}
-				if v, ok := m.Resources[projectResourceReference]; ok {
-					projectState = v.Primary.Attributes
-				}
-				if v, ok := m.Resources[databaseCredentialResourceReference]; ok {
-					databaseCredentialState = v.Primary.Attributes
-				}
-			}
-		}
-		data, err := acctest.TestClient()
-		if err != nil {
-			return err
-		}
-		host := os.Getenv("TF_VAR_host")
-		orgid := os.Getenv("TF_VAR_organization_id")
-		authToken := os.Getenv("TF_VAR_auth_token")
-		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", host, orgid, projectState["id"], clusterState["id"], databaseCredentialState["id"])
-		cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-		_, err = data.Client.Execute(
-			cfg,
-			nil,
-			authToken,
-			nil,
-		)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
 }
 
 func testAccDatabaseCredentialExistsClusterResource(resourceReference string) resource.TestCheckFunc {
