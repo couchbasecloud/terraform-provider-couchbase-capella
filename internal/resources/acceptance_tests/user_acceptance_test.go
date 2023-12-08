@@ -35,7 +35,7 @@ func TestAccUserResource(t *testing.T) {
 			// Import state
 			{
 				ResourceName:      resourceReference,
-				ImportStateIdFunc: generateUserImportIdForResource(resourceName),
+				ImportStateIdFunc: generateUserImportIdForResource(resourceReference),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -217,12 +217,12 @@ func testAccUserResourceConfigUpdate(cfg, resourceReference, projectResourceName
 	`, cfg, resourceReference, projectResourceName, projectResourceReference)
 }
 
-func generateUserImportIdForResource(resourceName string) resource.ImportStateIdFunc {
+func generateUserImportIdForResource(resourceReference string) resource.ImportStateIdFunc {
 	return func(state *terraform.State) (string, error) {
 		var rawState map[string]string
 		for _, m := range state.Modules {
 			if len(m.Resources) > 0 {
-				if v, ok := m.Resources[resourceName]; ok {
+				if v, ok := m.Resources[resourceReference]; ok {
 					rawState = v.Primary.Attributes
 				}
 			}
