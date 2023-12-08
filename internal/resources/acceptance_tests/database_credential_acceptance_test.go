@@ -130,7 +130,6 @@ func testAccAddDatabaseCredWithInvalidName(cfg *string) string {
 		project_id      = couchbase-capella_project.terraform_project.id
 		cluster_id      = couchbase-capella_cluster.new_cluster.id
 		password        = "Secret12$#"
-		access          = "acc_test_access"
 		access = [
 			{
 				privileges = ["data_writer"]
