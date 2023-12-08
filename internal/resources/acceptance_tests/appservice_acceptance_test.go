@@ -380,7 +380,7 @@ func testAccAppServiceResourceUpdateInvalidClusterIdConfig(cfg, resourceName str
 resource "couchbase-capella_app_service" "%[2]s" {
   organization_id = var.organization_id
   project_id      = couchbase-capella_project.terraform_project.id
-  cluster_id      = couchbase-capella_cluster.new_cluster.id
+  cluster_id      = "55556666-4444-3333-2222-11111ffffff"
   description	  = "acceptance test app service"
   name            = "app_service_opt_fields"
   nodes			  = "2"
@@ -397,7 +397,7 @@ func testAccAppServiceResourceUpdateInvalidProjectIdConfig(cfg, resourceName str
 %[1]s
 resource "couchbase-capella_app_service" "%[2]s" {
   organization_id = var.organization_id
-  project_id      = couchbase-capella_project.terraform_project.id
+  project_id      = "55556666-4444-3333-2222-11111ffffff"
   cluster_id      = couchbase-capella_cluster.new_cluster.id
   description	  = "acceptance test app service"
   name            = "app_service_opt_fields"
