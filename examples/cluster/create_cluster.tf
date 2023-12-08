@@ -17,7 +17,7 @@ resource "couchbase-capella_cluster" "new_cluster" {
     cidr   = var.cluster.cidr
   }
   configuration_type = var.cluster.configuration_type
-  couchbase_server = var.couchbase_server
+  couchbase_server   = var.couchbase_server
   service_groups = [
     {
       node = {
