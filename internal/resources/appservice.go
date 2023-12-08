@@ -235,6 +235,14 @@ func (a *AppService) Update(ctx context.Context, req resource.UpdateRequest, res
 		return
 	}
 
+	if err := a.validateAppServiceAttributesTrimmed(state); err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating app service",
+			"Could not update app service id "+state.Id.String()+" unexpected error: "+err.Error(),
+		)
+		return
+	}
+
 	var (
 		organizationId = resourceIDs[providerschema.OrganizationId]
 		projectId      = resourceIDs[providerschema.ProjectId]
@@ -436,7 +444,10 @@ func (a *AppService) validateCreateAppServiceRequest(plan providerschema.AppServ
 	if plan.ClusterId.IsNull() {
 		return errors.ErrClusterIdCannotBeEmpty
 	}
-	return nil
+	if !plan.IfMatch.IsNull() && !plan.IfMatch.IsUnknown() {
+		return errors.ErrIfMatchCannotBeSetWhileCreate
+	}
+	return a.validateAppServiceAttributesTrimmed(plan)
 }
 
 // refreshAppService is used to pass an existing AppService to the refreshed state.
@@ -530,6 +541,16 @@ func (a *AppService) getAppService(ctx context.Context, organizationId, projectI
 	}
 	appServiceResp.Etag = response.Response.Header.Get("ETag")
 	return &appServiceResp, nil
+}
+
+func (a *AppService) validateAppServiceAttributesTrimmed(plan providerschema.AppService) error {
+	if (!plan.Name.IsNull() && !plan.Name.IsUnknown()) && !providerschema.IsTrimmed(plan.Name.ValueString()) {
+		return fmt.Errorf("name %s", errors.ErrNotTrimmed)
+	}
+	if (!plan.Description.IsNull() && !plan.Description.IsUnknown()) && !providerschema.IsTrimmed(plan.Description.ValueString()) {
+		return fmt.Errorf("description %s", errors.ErrNotTrimmed)
+	}
+	return nil
 }
 
 // initializePendingAppServiceWithPlanAndId initializes an instance of providerschema.AppService

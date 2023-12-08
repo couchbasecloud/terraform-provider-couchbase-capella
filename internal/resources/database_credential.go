@@ -79,31 +79,17 @@ func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	if plan.OrganizationId.IsNull() {
+	if err := r.validateCreateDatabaseCredential(plan); err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating database credential",
-			"Could not create database credential, unexpected error: "+errors.ErrOrganizationIdCannotBeEmpty.Error(),
+			"Could not create database credential, unexpected error: "+err.Error(),
 		)
 		return
 	}
+
 	var organizationId = plan.OrganizationId.ValueString()
 
-	if plan.ProjectId.IsNull() {
-		resp.Diagnostics.AddError(
-			"Error creating database credential",
-			"Could not create database credential, unexpected error: "+errors.ErrProjectIdCannotBeEmpty.Error(),
-		)
-		return
-	}
 	var projectId = plan.ProjectId.ValueString()
-
-	if plan.ClusterId.IsNull() {
-		resp.Diagnostics.AddError(
-			"Error creating database credential",
-			"Could not create database credential, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
-		)
-		return
-	}
 	var clusterId = plan.ClusterId.ValueString()
 
 	dbCredRequest := api.CreateDatabaseCredentialRequest{
@@ -247,8 +233,16 @@ func (r *DatabaseCredential) Update(ctx context.Context, req resource.UpdateRequ
 	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Database Credentials in Capella",
-			"Could not read Capella database credential with ID "+state.Id.String()+": "+err.Error(),
+			"Error Updating Database Credentials in Capella",
+			"Could not update Capella database credential with ID "+state.Id.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	if err := r.validateDatabaseCredentialAttributesTrimmed(state); err != nil {
+		resp.Diagnostics.AddError(
+			"Error Updating Database Credentials in Capella",
+			"Could not update Capella database credential with ID "+state.Id.String()+": "+err.Error(),
 		)
 		return
 	}
@@ -415,6 +409,26 @@ func (r *DatabaseCredential) retrieveDatabaseCredential(ctx context.Context, org
 	)
 
 	return refreshedState, nil
+}
+
+func (r *DatabaseCredential) validateCreateDatabaseCredential(plan providerschema.DatabaseCredential) error {
+	if plan.OrganizationId.IsNull() {
+		return errors.ErrOrganizationIdMissing
+	}
+	if plan.ProjectId.IsNull() {
+		return errors.ErrProjectIdMissing
+	}
+	if plan.ClusterId.IsNull() {
+		return errors.ErrClusterIdMissing
+	}
+	return r.validateDatabaseCredentialAttributesTrimmed(plan)
+}
+
+func (r *DatabaseCredential) validateDatabaseCredentialAttributesTrimmed(plan providerschema.DatabaseCredential) error {
+	if (!plan.Name.IsNull() && !plan.Name.IsUnknown()) && !providerschema.IsTrimmed(plan.Name.ValueString()) {
+		return fmt.Errorf("name %s", errors.ErrNotTrimmed)
+	}
+	return nil
 }
 
 // todo: add a unit test for this, tracking under: https://couchbasecloud.atlassian.net/browse/AV-63401

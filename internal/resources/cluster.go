@@ -66,6 +66,14 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		return
 	}
 
+	if err := c.validateCreateCluster(plan); err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating cluster",
+			"Could not create cluster, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
 	clusterRequest := clusterapi.CreateClusterRequest{
 		Name: plan.Name.ValueString(),
 		Availability: clusterapi.Availability{
@@ -723,6 +731,30 @@ func (c *Cluster) validateClusterUpdate(plan, state providerschema.Cluster) erro
 		return errors.ErrUnableToUpdateCloudProvider
 	}
 
+	return nil
+}
+
+func (c *Cluster) validateCreateCluster(plan providerschema.Cluster) error {
+	if plan.OrganizationId.IsNull() {
+		return errors.ErrOrganizationIdMissing
+	}
+	if plan.ProjectId.IsNull() {
+		return errors.ErrProjectIdMissing
+	}
+	if !plan.IfMatch.IsNull() && !plan.IfMatch.IsUnknown() {
+		return errors.ErrIfMatchCannotBeSetWhileCreate
+	}
+
+	return c.validateClusterAttributesTrimmed(plan)
+}
+
+func (c *Cluster) validateClusterAttributesTrimmed(plan providerschema.Cluster) error {
+	if (!plan.Name.IsNull() && !plan.Name.IsUnknown()) && !providerschema.IsTrimmed(plan.Name.ValueString()) {
+		return fmt.Errorf("name %s", errors.ErrNotTrimmed)
+	}
+	if (!plan.Description.IsNull() && !plan.Description.IsUnknown()) && !providerschema.IsTrimmed(plan.Description.ValueString()) {
+		return fmt.Errorf("description %s", errors.ErrNotTrimmed)
+	}
 	return nil
 }
 

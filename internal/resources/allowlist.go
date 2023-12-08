@@ -77,6 +77,14 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 		return
 	}
 
+	if err := r.validateCreateAllowList(plan); err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating allow list",
+			"Could not create allow list, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
 	allowListRequest := api.CreateAllowListRequest{
 		Cidr:      plan.Cidr.ValueString(),
 		Comment:   plan.Comment.ValueString(),
@@ -343,6 +351,27 @@ func (r *AllowList) refreshAllowList(ctx context.Context, organizationId, projec
 	}
 
 	return &refreshedState, nil
+}
+
+func (r *AllowList) validateCreateAllowList(plan providerschema.AllowList) error {
+	if plan.OrganizationId.IsNull() {
+		return errors.ErrOrganizationIdCannotBeEmpty
+	}
+	if plan.ProjectId.IsNull() {
+		return errors.ErrProjectIdMissing
+	}
+	if plan.ClusterId.IsNull() {
+		return errors.ErrClusterIdMissing
+	}
+
+	return r.validateAllowListAttributesTrimmed(plan)
+}
+
+func (r *AllowList) validateAllowListAttributesTrimmed(plan providerschema.AllowList) error {
+	if (!plan.Comment.IsNull() && !plan.Comment.IsUnknown()) && !providerschema.IsTrimmed(plan.Comment.ValueString()) {
+		return fmt.Errorf("comment %s", errors.ErrNotTrimmed)
+	}
+	return nil
 }
 
 // initializeAllowListWithPlanAndId initializes an instance of providerschema.AllowList

@@ -23,7 +23,7 @@ func TestAccAllowListTestCases(t *testing.T) {
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	projectResourceName := "terraform_project"
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
-	cidr := "10.250.250.0/23"
+	cidr := "10.201.250.0/23"
 
 	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
@@ -96,7 +96,7 @@ func TestAccAllowedIPDeleteIP(t *testing.T) {
 	clusterResourceReference := "couchbase-capella_cluster." + clusterName
 	projectResourceName := "terraform_project"
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
-	cidr := "10.250.250.0/23"
+	cidr := "10.202.250.0/23"
 
 	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
@@ -131,7 +131,7 @@ func TestAccAllowedIPDeleteCluster(t *testing.T) {
 	clusterResourceReference := "couchbase-capella_cluster." + clusterName
 	projectResourceName := "terraform_project"
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
-	cidr := "10.4.2.0/23"
+	cidr := "10.203.2.0/23"
 	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },

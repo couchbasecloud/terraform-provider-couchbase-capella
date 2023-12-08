@@ -12,9 +12,9 @@ cluster = {
   name               = "New Terraform Cluster"
   cidr               = "192.168.0.0/20"
   node_count         = 3
-  server_version     = "7.1"
   couchbase_services = ["data", "index", "query"]
   availability_zone  = "multi"
+  configuration_type = "multiNode"
 }
 
 compute = {
@@ -31,4 +31,8 @@ disk = {
 support = {
   plan     = "developer pro"
   timezone = "PT"
+}
+
+couchbase_server = {
+  version = 7.2
 }
