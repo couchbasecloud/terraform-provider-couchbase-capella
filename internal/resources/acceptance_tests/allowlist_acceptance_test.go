@@ -138,7 +138,7 @@ func TestAccAllowedIPDeleteCluster(t *testing.T) {
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCreateCluster(&testCfg, clusterName, projectResourceName, projectResourceReference, cidr),
+				Config: testAccAllowListCreateCluster(&testCfg, clusterName, projectResourceName, projectResourceReference, cidr),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsClusterResource(clusterResourceReference),
 				),
@@ -160,7 +160,7 @@ func TestAccAllowedIPDeleteCluster(t *testing.T) {
 	})
 }
 
-func testAccCreateCluster(cfg *string, resourceName, projectResourceName, projectResourceReference, cidr string) string {
+func testAccAllowListCreateCluster(cfg *string, resourceName, projectResourceName, projectResourceReference, cidr string) string {
 	log.Println("Creating cluster")
 	*cfg = fmt.Sprintf(`
 %[1]s
