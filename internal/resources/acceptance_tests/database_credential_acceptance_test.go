@@ -24,7 +24,7 @@ func TestAccDatabaseCredentialTestCases(t *testing.T) {
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	projectResourceName := "terraform_project"
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
-	cidr := "10.1.42.0/23"
+	cidr := "10.1.66.0/23"
 
 	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
@@ -55,11 +55,10 @@ func TestAccDatabaseCredentialTestCases(t *testing.T) {
 					resource.TestCheckResourceAttr("couchbase-capella_database_credential.add_database_credential_opt", "access.0.privileges.0", "data_writer"),
 				),
 			},
-
 			// Invalid name
 			{
 				Config:      testAccAddDatabaseCredWithInvalidName(&testCfg),
-				ExpectError: regexp.MustCompile("Could not create database credential, unexpected error: The request was malformed or invalid."),
+				ExpectError: regexp.MustCompile("A name must start with a letter or underscore and may contain only letters, digits, underscores, and dashes."),
 			},
 		},
 	})
@@ -119,7 +118,7 @@ func testAccAddDatabaseCredWithInvalidName(cfg *string) string {
 	*cfg = fmt.Sprintf(`
 	%[1]s
 	
-	output "add_database_credential_invalid_name"{
+	output "add_database_credential_invalid_name="{
 		value = couchbase-capella_database_credential.add_database_credential_invalid_name
 		sensitive = true
 	}
