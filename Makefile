@@ -60,7 +60,7 @@ setup:  ## Install dev tools
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin $(GOLANGCI_VERSION)
 
 .PHONY: check
-check: tffmt tfcheck fmt docs-lint lint-fix test
+check: setup tffmt tfcheck fmt docs-lint lint-fix test
 
 .PHONY: docs-lint
 docs-lint:
@@ -82,11 +82,12 @@ terraform-fmt:
 	@terraform fmt -write -recursive -diff .
 .PHONY: terraform-check tfcheck
 
-TEST_FLAGS ?= -short -cover -race
+TEST_FILES ?= $$(go list ./... | grep -v internal/resources/acceptance_tests)
+TEST_FLAGS ?= -short -cover -race -coverprofile .testCoverage.txt
 
 .PHONY: test
 test:
-	go test $(TEST_FLAGS) ./...
+	go test $(TEST_FILES) $(TEST_FLAGS)
 
 .PHONY: test-acceptance testacc
 testacc: test-acceptance

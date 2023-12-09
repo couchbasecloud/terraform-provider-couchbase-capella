@@ -1,5 +1,4 @@
 auth_token = "<v4-api-key-secret>"
-host       = "https://cloudapi.cloud.couchbase.com"
 
 organization_id = "<organization_id>"
 project_name    = "My First Terraform Project"
