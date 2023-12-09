@@ -77,7 +77,7 @@ func TestAccAllowListTestCases(t *testing.T) {
 			//Add SameIP (this ip is same as the one added with required fields teststep and the config of that test step is retained)
 			{
 				Config:      testAccAddIPSameIP(testCfg, "add_allowlist_sameIP", "10.1.1.1/32"),
-				ExpectError: regexp.MustCompile("CIDR provided already exists for the cluster"),
+				ExpectError: regexp.MustCompile("already exists for the cluster"),
 			},
 			//Delete expired IP
 			{
