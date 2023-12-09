@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     couchbase-capella = {
-      source = "hashicorp.com/couchbasecloud/couchbase-capella"
+      source = "registry.terraform.io/couchbasecloud/couchbase-capella"
     }
   }
 }

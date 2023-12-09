@@ -8,10 +8,11 @@ import (
 	"os"
 
 	"regexp"
-	"terraform-provider-capella/internal/api"
-	acctest "terraform-provider-capella/internal/testing"
-	cfg "terraform-provider-capella/internal/testing"
 	"testing"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
+	cfg "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
@@ -19,22 +20,22 @@ import (
 type OrganizationAPIPayload struct {
 	Name              string   `json:"name"`
 	Description       string   `json:"description"`
-	Expiry            int      `json:"expiry"`
 	AllowedCIDRs      []string `json:"allowedCIDRs"`
 	OrganizationRoles []string `json:"organizationRoles"`
 	Resources         []any    `json:"resources"`
+	Expiry            int      `json:"expiry"`
 }
 
 type ProjectAPIPayload struct {
 	Name              string   `json:"name"`
 	Description       string   `json:"description"`
-	Expiry            int      `json:"expiry"`
 	AllowedCIDRs      []string `json:"allowedCIDRs"`
 	OrganizationRoles []string `json:"organizationRoles"`
 	Resources         []struct {
 		ID    string   `json:"id"`
 		Roles []string `json:"roles"`
 	} `json:"resources"`
+	Expiry int `json:"expiry"`
 }
 
 type ResponseStruct struct {
@@ -42,34 +43,12 @@ type ResponseStruct struct {
 	Token string `json:"token"`
 }
 
-func AccPreCheckSec(t *testing.T) {
-	if os.Getenv("TF_VAR_host") == "" {
-		t.Fatalf("host not set")
-	}
-	if os.Getenv("TF_VAR_organization_id") == "" {
-		t.Fatalf("organization id not set")
-	}
-}
-
-func AccPreCheck(t *testing.T) {
-	if os.Getenv("TF_VAR_host") == "" {
-		t.Fatalf("host not set")
-	}
-	if os.Getenv("TF_VAR_auth_token") == "" {
-		t.Fatalf("Auth token not set")
-	}
-	if os.Getenv("TF_VAR_organization_id") == "" {
-		t.Fatalf("organization id not set")
-	}
-}
-
 func TestAccOrganizationDataSourceNoAuth(t *testing.T) {
-
 	organizationId := os.Getenv("TF_VAR_organization_id")
 	tempId := os.Getenv("TF_VAR_auth_token")
 	os.Setenv("TF_VAR_auth_token", "")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheckSec(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -86,7 +65,7 @@ func TestAccOrganizationDataSourceRbacOrgOwner(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationOwner")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -110,7 +89,7 @@ func TestAccOrganizationDataSourceRbacOrgMember(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationMember")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -134,7 +113,7 @@ func TestAccOrganizationDataSourceRbacProjCreator(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("projectCreator")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -169,7 +148,6 @@ data "capella_organization" "get_organization" {
 }
 
 func testAccCreateOrgAPI(role string) string {
-	// fmt.Println("")
 	log.Println("Creating api keys for Organization role")
 	data, err := acctest.TestClient()
 	if err != nil {
@@ -178,7 +156,6 @@ func testAccCreateOrgAPI(role string) string {
 
 	host := os.Getenv("TF_VAR_host")
 	orgid := os.Getenv("TF_VAR_organization_id")
-	authToken := os.Getenv("TF_VAR_auth_token")
 	endPointCfg := api.EndpointCfg{
 		Url:           fmt.Sprintf("%s/v4/organizations/%s/apikeys", host, orgid),
 		Method:        http.MethodPost,
@@ -195,7 +172,7 @@ func testAccCreateOrgAPI(role string) string {
 	resp, err := data.Client.Execute(
 		endPointCfg,
 		payload,
-		authToken,
+		data.Token,
 		nil,
 	)
 	if err != nil {

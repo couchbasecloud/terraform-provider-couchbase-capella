@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"testing"
 
-	acctest "terraform-provider-capella/internal/testing"
+	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
@@ -16,7 +16,7 @@ func TestAccCreateBackupScheduleNoAuth(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	os.Setenv("TF_VAR_auth_token", "")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheckSec(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -37,7 +37,7 @@ func TestAccCreateBackupScheduleOrgOwner(t *testing.T) {
 	clusterId := os.Getenv("TF_VAR_cluster_id")
 	testAccCreateOrgAPI("organizationOwner")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -62,7 +62,7 @@ func TestAccCreateBackupScheduleOrgMember(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationMember")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -80,7 +80,7 @@ func TestAccCreateBackupScheduleProjCreator(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("projectCreator")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -94,14 +94,13 @@ func TestAccCreateBackupScheduleProjCreator(t *testing.T) {
 }
 
 func TestAccCreateBackupScheduleProjOwner(t *testing.T) {
-
 	tempId := os.Getenv("TF_VAR_auth_token")
 	organizationId := os.Getenv("TF_VAR_organization_id")
 	projectId := os.Getenv("TF_VAR_project_id")
 	clusterId := os.Getenv("TF_VAR_cluster_id")
 	testAccCreateProjAPI("projectCreator", projectId, "projectOwner")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -122,14 +121,13 @@ func TestAccCreateBackupScheduleProjOwner(t *testing.T) {
 }
 
 func TestAccCreateBackupScheduleProjManager(t *testing.T) {
-
 	tempId := os.Getenv("TF_VAR_auth_token")
 	organizationId := os.Getenv("TF_VAR_organization_id")
 	projectId := os.Getenv("TF_VAR_project_id")
 	clusterId := os.Getenv("TF_VAR_cluster_id")
 	testAccCreateProjAPI("projectCreator", projectId, "projectManager")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -150,12 +148,11 @@ func TestAccCreateBackupScheduleProjManager(t *testing.T) {
 }
 
 func TestAccCreateBackupScheduleProjViewer(t *testing.T) {
-
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("projectCreator", projId, "projectViewer")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -169,12 +166,11 @@ func TestAccCreateBackupScheduleProjViewer(t *testing.T) {
 }
 
 func TestAccCreateBackupScheduleDatabaseReaderWriter(t *testing.T) {
-
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("projectCreator", projId, "projectDataReaderWriter")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -188,12 +184,11 @@ func TestAccCreateBackupScheduleDatabaseReaderWriter(t *testing.T) {
 }
 
 func TestAccCreateBackupScheduleDatabaseReader(t *testing.T) {
-
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("projectCreator", projId, "projectDataReader")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing

@@ -13,6 +13,7 @@ terraform.tfstate
 terraform.tfvars
 *.backup
 *.tfstate.*
+.testCoverage.txt
 
 # Ignore binary build folder
 bin

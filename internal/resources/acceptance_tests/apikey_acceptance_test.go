@@ -1,4 +1,4 @@
-package acceptance_tests_test
+package acceptance_tests
 
 import (
 	"encoding/json"
