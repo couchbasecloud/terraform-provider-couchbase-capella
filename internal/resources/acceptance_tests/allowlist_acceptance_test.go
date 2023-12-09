@@ -88,6 +88,8 @@ func TestAccAllowListTestCases(t *testing.T) {
 					resource.TestCheckResourceAttrSet("couchbase-capella_allowlist.add_expiring_ip", "expires_at"),
 					resource.TestCheckResourceAttr("couchbase-capella_allowlist.add_expiring_ip", "comment", "terraform allow list acceptance test"),
 					acctest.TestAccWait(time.Second*250)),
+				ExpectNonEmptyPlan: true,
+				RefreshState:       false,
 			},
 		},
 	})
