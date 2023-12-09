@@ -5,24 +5,19 @@ import (
 	"os"
 
 	"regexp"
-	acctest "terraform-provider-capella/internal/testing"
-	cfg "terraform-provider-capella/internal/testing"
 	"testing"
+
+	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
+	cfg "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-type Resource struct {
-	ID    string   `json:"id"`
-	Roles []string `json:"roles"`
-}
-
 func TestAccDataSourceNoAuth(t *testing.T) {
-
 	tempId := os.Getenv("TF_VAR_auth_token")
 	os.Setenv("TF_VAR_auth_token", "")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheckSec(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -35,11 +30,10 @@ func TestAccDataSourceNoAuth(t *testing.T) {
 }
 
 func TestAccAPIKeyRbacOrgOwner(t *testing.T) {
-
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationOwner")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -55,11 +49,10 @@ func TestAccAPIKeyRbacOrgOwner(t *testing.T) {
 }
 
 func TestAccAPIKeyRbacOrgMember(t *testing.T) {
-
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationMember")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -72,11 +65,10 @@ func TestAccAPIKeyRbacOrgMember(t *testing.T) {
 }
 
 func TestAccAPIKeyRbacProjCreator(t *testing.T) {
-
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("projectCreator")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -89,13 +81,12 @@ func TestAccAPIKeyRbacProjCreator(t *testing.T) {
 }
 
 func TestAccAPIKeyRbacProjOwner(t *testing.T) {
-
 	projId := os.Getenv("TF_VAR_project_id")
 	tempId := os.Getenv("TF_VAR_auth_token")
 
 	testAccCreateProjAPI("organizationMember", projId, "projectOwner")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -120,7 +111,7 @@ func TestAccAPIKeyRbacProjManager(t *testing.T) {
 
 	testAccCreateProjAPI("organizationMember", projId, "projectManager")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -142,7 +133,7 @@ func TestAccAPIKeyRbacProjViewer(t *testing.T) {
 
 	testAccCreateProjAPI("organizationMember", projId, "projectManager")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -164,7 +155,7 @@ func TestAccAPIKeyRbacDatabaseReaderWriter(t *testing.T) {
 
 	testAccCreateProjAPI("organizationMember", projId, "projectDataReaderWriter")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -186,7 +177,7 @@ func TestAccAPIKeyRbacDatabaseReader(t *testing.T) {
 
 	testAccCreateProjAPI("organizationMember", projId, "projectDataReader")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{

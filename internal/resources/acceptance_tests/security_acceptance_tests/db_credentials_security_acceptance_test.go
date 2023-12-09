@@ -2,20 +2,16 @@ package security_acceptance_tests
 
 import (
 	"fmt"
-	"log"
-	"net/http"
 	"os"
 	"regexp"
-	"terraform-provider-capella/internal/api"
-	acctest "terraform-provider-capella/internal/testing"
 	"testing"
 
+	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
+
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccOrgOwnerDatabaseCredentialTest(t *testing.T) {
-
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationOwner")
 	testCfg := acctest.Cfg
@@ -200,43 +196,4 @@ func testAccAddDatabaseCredWithReqFields(cfg *string) string {
 
 	`, *cfg)
 	return *cfg
-}
-
-func testAccDeleteDatabaseCredential(clusterResourceReference, projectResourceReference, databaseCredentialResourceReference string) resource.TestCheckFunc {
-	log.Println("deleting the database credential")
-	return func(s *terraform.State) error {
-		var clusterState, projectState, databaseCredentialState map[string]string
-		for _, m := range s.Modules {
-			if len(m.Resources) > 0 {
-				if v, ok := m.Resources[clusterResourceReference]; ok {
-					clusterState = v.Primary.Attributes
-				}
-				if v, ok := m.Resources[projectResourceReference]; ok {
-					projectState = v.Primary.Attributes
-				}
-				if v, ok := m.Resources[databaseCredentialResourceReference]; ok {
-					databaseCredentialState = v.Primary.Attributes
-				}
-			}
-		}
-		data, err := acctest.TestClient()
-		if err != nil {
-			return err
-		}
-		host := os.Getenv("TF_VAR_host")
-		orgid := os.Getenv("TF_VAR_organization_id")
-		authToken := os.Getenv("TF_VAR_auth_token")
-		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", host, orgid, projectState["id"], clusterState["id"], databaseCredentialState["id"])
-		cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-		_, err = data.Client.Execute(
-			cfg,
-			nil,
-			authToken,
-			nil,
-		)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
 }
