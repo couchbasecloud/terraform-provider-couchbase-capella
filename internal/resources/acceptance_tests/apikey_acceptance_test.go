@@ -258,14 +258,17 @@ resource "couchbase-capella_apikey" "%[2]s" {
 func testAccApiKeyResourceConfigForOrgOwner(cfg, resourceName string) string {
 	return fmt.Sprintf(`
 %[1]s
-
+resource "couchbase-capella_project" "terraform_api_test_project" {
+    organization_id = var.organization_id
+	name            = "terraform_api_test_project"
+}
 resource "couchbase-capella_apikey" "%[2]s" {
   organization_id    = var.organization_id
   name               = "%[2]s"
   organization_roles = [ "organizationMember"]
   resources = [
 	  {
-		id = "1c50d827-cb90-49ca-a47e-dff850f53557"
+		id = couchbase-capella_project.terraform_api_test_project.id
 		roles = [
 		  "projectManager",
 		  "projectDataReader"
@@ -279,14 +282,17 @@ resource "couchbase-capella_apikey" "%[2]s" {
 func testAccApiKeyResourceConfigRotateSet(cfg, resourceName string) string {
 	return fmt.Sprintf(`
 %[1]s
-
+resource "couchbase-capella_project" "terraform_api_test_project" {
+    organization_id = var.organization_id
+	name            = "terraform_api_test_project"
+}
 resource "couchbase-capella_apikey" "%[2]s" {
   organization_id    = var.organization_id
   name               = "%[2]s"
   organization_roles = [ "organizationMember"]
   resources = [
 	  {
-		id = "1c50d827-cb90-49ca-a47e-dff850f53557"
+		id = couchbase-capella_project.terraform_api_test_project.id
 		roles = [
 		  "projectManager",
 		  "projectDataReader"
