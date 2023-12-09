@@ -26,7 +26,7 @@ const (
 	capellaAuthenticationTokenField = "authentication_token"
 	capellaPublicAPIHostField       = "host"
 	apiRequestTimeout               = 60 * time.Second
-	defaultAPIHostURL               = "https://cloudapi.couchbase.com"
+	defaultAPIHostURL               = "https://cloudapi.cloud.couchbase.com"
 	providerName                    = "couchbase-capella"
 )
 
@@ -55,7 +55,7 @@ func (p *capellaProvider) Schema(_ context.Context, _ provider.SchemaRequest, re
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			capellaPublicAPIHostField: schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
 				Description: "Capella Public API HTTPS Host URL",
 			},
 			capellaAuthenticationTokenField: schema.StringAttribute{
@@ -83,7 +83,7 @@ func (p *capellaProvider) Configure(ctx context.Context, req provider.ConfigureR
 	// attributes, it must be a known value.
 
 	// if the host URL is not provided, connect to the production Capella API host url by default.
-	if config.Host.IsUnknown() {
+	if config.Host.IsNull() {
 		config.Host = types.StringValue(defaultAPIHostURL)
 	}
 
