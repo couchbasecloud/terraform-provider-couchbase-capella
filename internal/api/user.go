@@ -40,6 +40,10 @@ type CreateUserResponse struct {
 	Id uuid.UUID `json:"id"`
 }
 
+type PutUserRequest struct {
+	Name string `json:"name"`
+}
+
 // Resource defines either a project or cluster to which the newly invited user should have access.
 type Resource struct {
 	// Id is a GUID4 identifier of the resource.

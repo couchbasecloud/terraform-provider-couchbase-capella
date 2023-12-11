@@ -29,15 +29,7 @@ variable "cluster" {
     node_count         = number
     couchbase_services = list(string)
     availability_zone  = string
-    configuration_type = optional(string)
   })
-}
-
-variable "couchbase_server" {
-  type = object({
-    version = string
-  })
-  default = null
 }
 
 variable "compute" {
