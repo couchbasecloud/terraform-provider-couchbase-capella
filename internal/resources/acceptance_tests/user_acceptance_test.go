@@ -19,7 +19,7 @@ func TestAccUserResource(t *testing.T) {
 	projectResourceName := "acc_project_" + cfg.GenerateRandomResourceName()
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { cfg.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: cfg.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
