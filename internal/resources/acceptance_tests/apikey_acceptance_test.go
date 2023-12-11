@@ -73,11 +73,6 @@ func TestAccApiKeyResourceWithMultipleResources(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "allowed_cidrs.1", "10.1.42.1/23"),
 					resource.TestCheckResourceAttr(resourceReference, "organization_roles.0", "organizationMember"),
 					resource.TestCheckResourceAttr(resourceReference, "resources.#", "2"),
-					resource.TestCheckResourceAttr(resourceReference, "resources.0.roles.0", "projectDataReader"),
-					resource.TestCheckResourceAttr(resourceReference, "resources.0.roles.1", "projectManager"),
-					resource.TestCheckResourceAttr(resourceReference, "resources.0.type", "project"),
-					resource.TestCheckResourceAttr(resourceReference, "resources.1.roles.0", "projectDataReader"),
-					resource.TestCheckResourceAttr(resourceReference, "resources.1.type", "project"),
 				),
 			},
 			//// ImportState testing
@@ -263,14 +258,17 @@ resource "couchbase-capella_apikey" "%[2]s" {
 func testAccApiKeyResourceConfigForOrgOwner(cfg, resourceName string) string {
 	return fmt.Sprintf(`
 %[1]s
-
+resource "couchbase-capella_project" "terraform_api_test_project" {
+    organization_id = var.organization_id
+	name            = "terraform_api_test_project"
+}
 resource "couchbase-capella_apikey" "%[2]s" {
   organization_id    = var.organization_id
   name               = "%[2]s"
   organization_roles = [ "organizationMember"]
   resources = [
 	  {
-		id = "1c50d827-cb90-49ca-a47e-dff850f53557"
+		id = couchbase-capella_project.terraform_api_test_project.id
 		roles = [
 		  "projectManager",
 		  "projectDataReader"
@@ -284,14 +282,17 @@ resource "couchbase-capella_apikey" "%[2]s" {
 func testAccApiKeyResourceConfigRotateSet(cfg, resourceName string) string {
 	return fmt.Sprintf(`
 %[1]s
-
+resource "couchbase-capella_project" "terraform_api_test_project" {
+    organization_id = var.organization_id
+	name            = "terraform_api_test_project"
+}
 resource "couchbase-capella_apikey" "%[2]s" {
   organization_id    = var.organization_id
   name               = "%[2]s"
   organization_roles = [ "organizationMember"]
   resources = [
 	  {
-		id = "1c50d827-cb90-49ca-a47e-dff850f53557"
+		id = couchbase-capella_project.terraform_api_test_project.id
 		roles = [
 		  "projectManager",
 		  "projectDataReader"

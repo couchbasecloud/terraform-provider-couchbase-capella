@@ -1553,13 +1553,13 @@ func testAccCreateCluster(cfg *string, resourceName, projectResourceName, projec
 	*cfg = fmt.Sprintf(`
 %[1]s
 
-resource "capella_project" "%[3]s" {
+resource "couchbase-capella_project" "%[3]s" {
     organization_id = var.organization_id
 	name            = "acc_test_project_name"
 	description     = "description"
 }
 
-resource "capella_cluster" "%[2]s" {
+resource "couchbase-capella_cluster" "%[2]s" {
   organization_id = var.organization_id
   project_id      = %[4]s.id
   name            = "Terraform Acceptance Test Cluster"
