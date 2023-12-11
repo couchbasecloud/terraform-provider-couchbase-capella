@@ -35,7 +35,6 @@ resource "couchbase-capella_cluster" "new_cluster" {
   availability = {
     "type" : var.cluster.availability_zone
   }
-  configuration_type = var.cluster.configuration_type
   support = {
     plan     = var.support.plan
     timezone = var.support.timezone
