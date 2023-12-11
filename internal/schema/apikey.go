@@ -157,10 +157,6 @@ type ApiKeys struct {
 
 	// Data contains the list of resources.
 	Data []ApiKeyData `tfsdk:"data"`
-
-	// Pagination control for users via terraform config files
-	PerPage types.Int64 `tfsdk:"per_page"`
-	Page    types.Int64 `tfsdk:"page"`
 }
 
 // ApiKeyData maps api key resource schema data to the GET API response as received from V4 Capella Public API.
