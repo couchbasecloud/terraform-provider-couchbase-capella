@@ -62,7 +62,7 @@ Note: You will need to provide the V4 API secret for authentication.
 terraform {
   required_providers {
     couchbase-capella = {
-      source = "hashicorp.com/couchabasecloud/couchbase-capella"
+      source = "registry.terraform.io/couchbasecloud/couchbase-capella"
     }
   }
 }
@@ -72,14 +72,14 @@ provider "couchbase-capella" {
 }
 
 
-resource "couchbase-capella_project" "example" {
+resource "couchbase-capella_project" "project" {
   organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
   name = "example-name"
   description = "example-description"
 }
 
 output "example_project" {
-  value = couchbase-capella_project.example
+  value = couchbase-capella_project.project
 }
 ```
 
@@ -177,7 +177,7 @@ As per HashiCorp's recommendations, we fully support the following operating sys
 
 ## Example Usage
 
-To get started, see the [Provider Example Configs](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples):
+To get started, see the [Provider Example Configs](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/getting_started):
 
 * [Retrieve organization details in Capella](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/organization):
 
