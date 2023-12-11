@@ -12,10 +12,8 @@ cluster = {
   name               = "My First Terraform Cluster"
   cidr               = "10.250.250.0/23"
   node_count         = 3
-  server_version     = "7.1"
   couchbase_services = ["data", "index", "query"]
   availability_zone  = "multi"
-  configuration_type = "multiNode"
 }
 
 compute = {

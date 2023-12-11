@@ -673,7 +673,6 @@ resource "couchbase-capella_cluster" "%[2]s" {
     region = "us-east-1"
     cidr   = "%[5]s"
   }
-  configuration_type = "multiNode"
   service_groups = [
     {
       node = {
@@ -791,7 +790,6 @@ resource "couchbase-capella_cluster" "%[2]s" {
   couchbase_server = {
     version = "7.1"
   }
-  configuration_type = "multiNode"
   cloud_provider = {
     type   = "aws"
     region = "us-east-1"
@@ -862,7 +860,6 @@ resource "couchbase-capella_cluster" "%[2]s" {
     region = "eastus"
     cidr   = "%[5]s"
   }
-  configuration_type = "multiNode"
   couchbase_server = {
     version = "7.1"
   }
@@ -969,7 +966,6 @@ resource "couchbase-capella_cluster" "%[2]s" {
   couchbase_server = {
     version = "7.1"
   }
-  configuration_type = "multiNode"
   service_groups = [
     {
       node = {
@@ -1021,7 +1017,6 @@ resource "couchbase-capella_cluster" "%[2]s" {
   couchbase_server = {
     version = "7.1"
   }
-  configuration_type = "multiNode"
   service_groups = [
     {
       node = {
@@ -1077,7 +1072,6 @@ resource "couchbase-capella_cluster" "%[2]s" {
   couchbase_server = {
     version = "7.1"
   }
-  configuration_type = "multiNode"
   service_groups = [
     {
       node = {
@@ -1141,7 +1135,6 @@ resource "couchbase-capella_cluster"  "%[2]s" {
 	region = "us-east1",
     cidr   = "%[5]s"
   }
-  configuration_type = "multiNode"
   couchbase_server = {
     version = "7.1"
   } 
@@ -1248,7 +1241,6 @@ resource "couchbase-capella_cluster" "%[2]s" {
     region = "us-east-1"
     cidr   = "%[5]s"
   }
-  configuration_type = "multiNode"
   service_groups = [
     {
       node = {
@@ -1314,7 +1306,6 @@ resource "couchbase-capella_cluster" "%[2]s" {
     region = "us-east-1"
     cidr   = "%[5]s"
   }
-  configuration_type = "multiNode"
   service_groups = [
     {
       node = {
@@ -1381,7 +1372,6 @@ resource "couchbase-capella_cluster"  "%[2]s" {
 	region = "us-east1",
     cidr   = "%[5]s"
   }
-  configuration_type = "multiNode"
   couchbase_server = {
     version = "7.1"
   } 
