@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"sync"
 	"testing"
 	"time"
 
@@ -34,6 +35,10 @@ import (
 // - Import state testing for the created cluster.
 // - Update of the cluster by modifying various fields.
 // - Verification of the updated cluster attributes.
+
+var WaitTime time.Duration = time.Second * 10
+var mutex sync.Mutex
+
 func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
 	resourceReference := "couchbase-capella_cluster." + resourceName
@@ -46,10 +51,8 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				PreConfig: func() {
-					time.Sleep(1 * time.Second)
-				},
-				Config: testAccClusterResourceConfigWithOnlyReqField(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
+				PreConfig: testAccProjecCreationWaitTime(),
+				Config:    testAccClusterResourceConfigWithOnlyReqField(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsClusterResource(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
@@ -177,10 +180,8 @@ func TestAccClusterResourceWithOptionalFieldAWS(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				PreConfig: func() {
-					time.Sleep(1 * time.Minute)
-				},
-				Config: testAccClusterResourceConfigWithAllField(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
+				PreConfig: testAccProjecCreationWaitTime(),
+				Config:    testAccClusterResourceConfigWithAllField(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsClusterResource(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", "Terraform Acceptance Test Cluster"),
@@ -243,10 +244,8 @@ func TestAccClusterResourceAzure(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				PreConfig: func() {
-					time.Sleep(2 * time.Minute)
-				},
-				Config: testAccClusterResourceConfigAzure(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
+				PreConfig: testAccProjecCreationWaitTime(),
+				Config:    testAccClusterResourceConfigAzure(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsClusterResource(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", "Terraform Acceptance Test Cluster"),
@@ -392,10 +391,8 @@ func TestAccClusterResourceGCP(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				PreConfig: func() {
-					time.Sleep(3 * time.Minute)
-				},
-				Config: testAccClusterResourceConfigGCP(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
+				PreConfig: testAccProjecCreationWaitTime(),
+				Config:    testAccClusterResourceConfigGCP(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsClusterResource(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", "Terraform Acceptance Test Cluster"),
@@ -478,9 +475,7 @@ func TestAccClusterResourceWithOptionalFieldAWSInvalidScenario(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				PreConfig: func() {
-					time.Sleep(4 * time.Minute)
-				},
+				PreConfig:   testAccProjecCreationWaitTime(),
 				Config:      testAccClusterResourceConfigWithAllFieldInvalidScenario(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
 				ExpectError: regexp.MustCompile("gp2, is not valid"),
 			},
@@ -502,9 +497,7 @@ func TestAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenario(t *testin
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				PreConfig: func() {
-					//time.Sleep(4 * time.Minute)
-				},
+				PreConfig:   testAccProjecCreationWaitTime(),
 				Config:      testAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenarioConfig(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
 				ExpectError: regexp.MustCompile("Could not create cluster, unexpected error: iops for gcp cluster cannot be"),
 			},
@@ -529,10 +522,8 @@ func TestAccClusterResourceWithConfigurationTypeFieldAdded(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				PreConfig: func() {
-					time.Sleep(5 * time.Minute)
-				},
-				Config: testAccClusterResourceConfigWithConfigurationTypeFieldAdded(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
+				PreConfig: testAccProjecCreationWaitTime(),
+				Config:    testAccClusterResourceConfigWithConfigurationTypeFieldAdded(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsClusterResource(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
@@ -586,10 +577,8 @@ func TestAccClusterResourceNotFound(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				PreConfig: func() {
-					time.Sleep(6 * time.Minute)
-				},
-				Config: testAccClusterResourceConfigWithOnlyReqField(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
+				PreConfig: testAccProjecCreationWaitTime(),
+				Config:    testAccClusterResourceConfigWithOnlyReqField(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExistsClusterResource(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
@@ -1705,5 +1694,14 @@ func testAccExistsClusterResource(resourceReference string) resource.TestCheckFu
 			return err
 		}
 		return nil
+	}
+}
+
+func testAccProjecCreationWaitTime() func() {
+	return func() {
+		mutex.Lock()
+		WaitTime = WaitTime + time.Second*30
+		time.Sleep(WaitTime)
+		mutex.Unlock()
 	}
 }
