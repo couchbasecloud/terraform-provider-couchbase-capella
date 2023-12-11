@@ -2,6 +2,10 @@ variable "organization_id" {
   description = "Capella Organization ID"
 }
 
+variable "host_url" {
+  description = "Capella Host URL"
+}
+
 variable "auth_token" {
   description = "Authentication API Key"
   sensitive   = true

@@ -8,4 +8,5 @@ terraform {
 
 provider "couchbase-capella" {
   authentication_token = var.auth_token
+  host                 = var.host_url
 }
