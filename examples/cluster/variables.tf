@@ -32,13 +32,6 @@ variable "cluster" {
   })
 }
 
-variable "couchbase_server" {
-  type = object({
-    version = string
-  })
-  default = null
-}
-
 variable "compute" {
   description = "All cluster node compute configuration"
 
