@@ -62,7 +62,7 @@ Note: You will need to provide the V4 API secret for authentication.
 terraform {
   required_providers {
     couchbase-capella = {
-      source = "registry.terraform.io/couchbasecloud/couchbase-capella"
+      source = "couchbasecloud/couchbase-capella"
     }
   }
 }
@@ -135,7 +135,7 @@ $ terraform destroy -target=RESOURCE_ADDRESS
 Example
 
 ```bash
-$ terraform destroy -target=couchbase-capella_project.example
+$ terraform destroy -target=couchbase-capella_project.project
 ```
 
 **4\. To refresh the state file to sync with the remote**
@@ -200,8 +200,8 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 
 * [Create & manage Capella clusters (databases)](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/cluster):
 
-  The Cluster is the indivdual instance of a [Couchbase Database](https://docs.couchbase.com/cloud/clusters/databases.html), spanning one or more nodes on your Cloud Service Provider, and containing the Data Service, and any other services which you choose to deploy.
-  Within this sits the heirarchy of bucket, scope, collection, and document.
+  The Cluster is the individual instance of a [Couchbase Database](https://docs.couchbase.com/cloud/clusters/databases.html), spanning one or more nodes on your Cloud Service Provider, and containing the Data Service, and any other services which you choose to deploy.
+  Within this sits the hierarchy of bucket, scope, collection, and document.
 
 * [Retrieve cluster certificate details](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/certificate):
 
@@ -222,10 +222,10 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 
   The [buckets](https://docs.couchbase.com/cloud/clusters/data-service/about-buckets-scopes-collections.html#buckets) is the top-level storage container for data in a Capella database.
 
-* [Configure App Services](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/registry-docs/examples/appservice)
+* [Configure App Services](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/appservice)
 
   Create and manage App Services in Capella.
 
-* [Configure Bucket Backup & Restore](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/registry-docs/examples/backup)
+* [Configure Bucket Backup & Restore](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/backup)
 
   Create and manage Backups in Capella.
