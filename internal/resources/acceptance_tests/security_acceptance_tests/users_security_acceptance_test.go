@@ -6,19 +6,18 @@ import (
 	"regexp"
 	"testing"
 
-	acctest "terraform-provider-capella/internal/testing"
+	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAccCreateUserNoAuth(t *testing.T) {
-
 	tempId := os.Getenv("TF_VAR_auth_token")
 	os.Setenv("TF_VAR_auth_token", "")
 	name := "terraform_security"
 	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheckSec(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -32,7 +31,6 @@ func TestAccCreateUserNoAuth(t *testing.T) {
 }
 
 func TestAccCreateUserOrgOwner(t *testing.T) {
-
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationOwner")
 	name := "terraform_security"
@@ -56,7 +54,6 @@ func TestAccCreateUserOrgOwner(t *testing.T) {
 }
 
 func TestAccCreateUserOrgMember(t *testing.T) {
-
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationMember")
 	name := "terraform_security"
@@ -76,7 +73,6 @@ func TestAccCreateUserOrgMember(t *testing.T) {
 }
 
 func TestAccCreateUserProjCreator(t *testing.T) {
-
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("projectCreator")
 	name := "terraform_security"
@@ -96,7 +92,6 @@ func TestAccCreateUserProjCreator(t *testing.T) {
 }
 
 func TestAccCreateUserProjOwner(t *testing.T) {
-
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectOwner")
@@ -117,7 +112,6 @@ func TestAccCreateUserProjOwner(t *testing.T) {
 }
 
 func TestAccCreateUserProjManager(t *testing.T) {
-
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectManager")
@@ -138,7 +132,6 @@ func TestAccCreateUserProjManager(t *testing.T) {
 }
 
 func TestAccCreateUserProjViewer(t *testing.T) {
-
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectViewer")
@@ -159,7 +152,6 @@ func TestAccCreateUserProjViewer(t *testing.T) {
 }
 
 func TestAccCreateUserDatabaseReaderWriter(t *testing.T) {
-
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectDataReaderWriter")
@@ -180,7 +172,6 @@ func TestAccCreateUserDatabaseReaderWriter(t *testing.T) {
 }
 
 func TestAccCreateUserDatabaseReader(t *testing.T) {
-
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectDataReader")
@@ -227,5 +218,4 @@ resource "capella_user" "new_user" {
 }
 
 `, cfg, name, email)
-
 }

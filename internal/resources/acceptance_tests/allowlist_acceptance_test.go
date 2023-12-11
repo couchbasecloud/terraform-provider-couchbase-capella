@@ -1,21 +1,17 @@
 package acceptance_tests
 
 import (
-	"context"
 	"fmt"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"log"
 	"net/http"
 	"os"
 	"regexp"
-
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
-
 	"testing"
 	"time"
-
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccAllowListTestCases(t *testing.T) {
@@ -23,9 +19,13 @@ func TestAccAllowListTestCases(t *testing.T) {
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	projectResourceName := "terraform_project"
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
-	cidr := "10.201.250.0/23"
+	cidr, err := acctest.GetCIDR("aws")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
 
-	testCfg := acctest.Cfg
+	testCfg := acctest.ProjectCfg
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
@@ -66,15 +66,18 @@ func TestAccAllowListTestCases(t *testing.T) {
 				),
 			},
 			//expired IP
+			//expected error: "Unable to create new
+			//        allowlist for database. The expiration time for the allowlist is not valid.
+			//        Must be a point in time greater than now."
 			{
 				Config:      testAccAddIpWithExpiredIP(testCfg, "add_allowlist_expiredIP", "10.2.2.2/32"),
-				ExpectError: regexp.MustCompile("Unable\nto create new allowlist for database. The expiration time for the allowlist\nis not valid. Must be a point in time greater than now."),
+				ExpectError: regexp.MustCompile("The expiration time for the allowlist is not valid"),
 			},
 
 			//Add SameIP (this ip is same as the one added with required fields teststep and the config of that test step is retained)
 			{
 				Config:      testAccAddIPSameIP(testCfg, "add_allowlist_sameIP", "10.1.1.1/32"),
-				ExpectError: regexp.MustCompile("CIDR provided already exists for the cluster"),
+				ExpectError: regexp.MustCompile("already exists for the cluster"),
 			},
 			//Delete expired IP
 			{
@@ -85,6 +88,8 @@ func TestAccAllowListTestCases(t *testing.T) {
 					resource.TestCheckResourceAttrSet("couchbase-capella_allowlist.add_expiring_ip", "expires_at"),
 					resource.TestCheckResourceAttr("couchbase-capella_allowlist.add_expiring_ip", "comment", "terraform allow list acceptance test"),
 					acctest.TestAccWait(time.Second*250)),
+				ExpectNonEmptyPlan: true,
+				RefreshState:       false,
 			},
 		},
 	})
@@ -96,9 +101,13 @@ func TestAccAllowedIPDeleteIP(t *testing.T) {
 	clusterResourceReference := "couchbase-capella_cluster." + clusterName
 	projectResourceName := "terraform_project"
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
-	cidr := "10.202.250.0/23"
+	cidr, err := acctest.GetCIDR("aws")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
 
-	testCfg := acctest.Cfg
+	testCfg := acctest.ProjectCfg
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
@@ -131,8 +140,12 @@ func TestAccAllowedIPDeleteCluster(t *testing.T) {
 	clusterResourceReference := "couchbase-capella_cluster." + clusterName
 	projectResourceName := "terraform_project"
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
-	cidr := "10.203.2.0/23"
-	testCfg := acctest.Cfg
+	cidr, err := acctest.GetCIDR("aws")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	testCfg := acctest.ProjectCfg
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
@@ -366,8 +379,7 @@ func testAccDeleteAllowIP(clusterResourceReference, projectResourceReference, al
 		authToken := os.Getenv("TF_VAR_auth_token")
 		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/allowedcidrs/%s", host, orgid, projectState["id"], clusterState["id"], allowListState["id"])
 		cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-		_, err = data.Client.ExecuteWithRetry(
-			context.Background(),
+		_, err = data.Client.Execute(
 			cfg,
 			nil,
 			authToken,

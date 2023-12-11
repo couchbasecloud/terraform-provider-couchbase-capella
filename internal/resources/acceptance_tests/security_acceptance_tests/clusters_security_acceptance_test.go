@@ -8,18 +8,16 @@ import (
 	"regexp"
 	"testing"
 
-	"terraform-provider-capella/internal/api"
-	acctest "terraform-provider-capella/internal/testing"
-
-	clusterapi "terraform-provider-capella/internal/api/cluster"
-	providerschema "terraform-provider-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccCreateClusterNoAuth(t *testing.T) {
-
 	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
 	projectResourceReference := "capella_project." + projectResourceName
@@ -27,7 +25,7 @@ func TestAccCreateClusterNoAuth(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	os.Setenv("TF_VAR_auth_token", "")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheckSec(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -41,7 +39,6 @@ func TestAccCreateClusterNoAuth(t *testing.T) {
 }
 
 func TestAccCreateClusterOrgOwner(t *testing.T) {
-
 	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
 	resourceReference := "capella_cluster." + resourceName
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
@@ -50,7 +47,7 @@ func TestAccCreateClusterOrgOwner(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationOwner")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -90,7 +87,6 @@ func TestAccCreateClusterOrgOwner(t *testing.T) {
 }
 
 func TestAccCreateClusterOrgMember(t *testing.T) {
-
 	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
 	projectResourceReference := "capella_project." + projectResourceName
@@ -98,7 +94,7 @@ func TestAccCreateClusterOrgMember(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationMember")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -112,7 +108,6 @@ func TestAccCreateClusterOrgMember(t *testing.T) {
 }
 
 func TestAccCreateClusterProjCreator(t *testing.T) {
-
 	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
 	projectResourceReference := "capella_project." + projectResourceName
@@ -120,7 +115,7 @@ func TestAccCreateClusterProjCreator(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("projectCreator")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -134,7 +129,6 @@ func TestAccCreateClusterProjCreator(t *testing.T) {
 }
 
 func TestAccCreateClusterProjOwner(t *testing.T) {
-
 	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
 	resourceReference := "capella_cluster." + resourceName
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
@@ -144,7 +138,7 @@ func TestAccCreateClusterProjOwner(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectOwner")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -184,7 +178,6 @@ func TestAccCreateClusterProjOwner(t *testing.T) {
 }
 
 func TestAccCreateClusterProjManager(t *testing.T) {
-
 	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
 	resourceReference := "capella_cluster." + resourceName
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
@@ -194,7 +187,7 @@ func TestAccCreateClusterProjManager(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectManager")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -234,7 +227,6 @@ func TestAccCreateClusterProjManager(t *testing.T) {
 }
 
 func TestAccCreateClusterProjViewer(t *testing.T) {
-
 	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
 	projectResourceReference := "capella_project." + projectResourceName
@@ -243,7 +235,7 @@ func TestAccCreateClusterProjViewer(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectViewer")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -257,7 +249,6 @@ func TestAccCreateClusterProjViewer(t *testing.T) {
 }
 
 func TestAccCreateClusterDatabaseReaderWriter(t *testing.T) {
-
 	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
 	projectResourceReference := "capella_project." + projectResourceName
@@ -266,7 +257,7 @@ func TestAccCreateClusterDatabaseReaderWriter(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectDataReaderWriter")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -280,7 +271,6 @@ func TestAccCreateClusterDatabaseReaderWriter(t *testing.T) {
 }
 
 func TestAccCreateClusterDatabaseReader(t *testing.T) {
-
 	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
 	projectResourceReference := "capella_project." + projectResourceName
@@ -289,7 +279,7 @@ func TestAccCreateClusterDatabaseReader(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectDataReader")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheck(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing

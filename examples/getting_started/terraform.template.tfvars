@@ -1,5 +1,4 @@
 auth_token = "<v4-api-key-secret>"
-host       = "https://cloudapi.cloud.couchbase.com"
 
 organization_id = "<organization_id>"
 project_name    = "My First Terraform Project"
@@ -13,10 +12,8 @@ cluster = {
   name               = "My First Terraform Cluster"
   cidr               = "10.250.250.0/23"
   node_count         = 3
-  server_version     = "7.1"
   couchbase_services = ["data", "index", "query"]
   availability_zone  = "multi"
-  configuration_type = "multiNode"
 }
 
 compute = {

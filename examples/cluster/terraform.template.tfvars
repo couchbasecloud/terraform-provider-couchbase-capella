@@ -1,6 +1,5 @@
 auth_token      = "<v4-api-key-secret>"
 organization_id = "<organization_id>"
-host            = "https://cloudapi.cloud.couchbase.com"
 project_id      = "<project_id>"
 
 cloud_provider = {
@@ -14,7 +13,6 @@ cluster = {
   node_count         = 3
   couchbase_services = ["data", "index", "query"]
   availability_zone  = "multi"
-  configuration_type = "multiNode"
 }
 
 compute = {
@@ -31,8 +29,4 @@ disk = {
 support = {
   plan     = "developer pro"
   timezone = "PT"
-}
-
-couchbase_server = {
-  version = 7.2
 }

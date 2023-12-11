@@ -4,16 +4,15 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	acctest "terraform-provider-capella/internal/testing"
-
 	"testing"
+
+	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccAllowListOrgOwner(t *testing.T) {
-
 	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
@@ -55,7 +54,6 @@ func TestAccAllowListOrgMember(t *testing.T) {
 }
 
 func TestAccAllowListProjCreator(t *testing.T) {
-
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{

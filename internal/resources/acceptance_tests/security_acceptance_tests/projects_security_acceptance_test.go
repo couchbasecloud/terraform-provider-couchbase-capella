@@ -2,22 +2,20 @@ package security_acceptance_tests
 
 import (
 	"fmt"
-	"regexp"
-
 	"os"
-	acctest "terraform-provider-capella/internal/testing"
+	"regexp"
 	"testing"
 
+	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAccCreateProjectNoAuth(t *testing.T) {
-
 	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
 	tempId := os.Getenv("TF_VAR_auth_token")
 	os.Setenv("TF_VAR_auth_token", "")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { AccPreCheckSec(t) },
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -31,7 +29,6 @@ func TestAccCreateProjectNoAuth(t *testing.T) {
 }
 
 func TestAccCreateProjectOrgOwner(t *testing.T) {
-
 	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
 	resourceName := "capella_project." + rnd
 	tempId := os.Getenv("TF_VAR_auth_token")
@@ -55,7 +52,6 @@ func TestAccCreateProjectOrgOwner(t *testing.T) {
 }
 
 func TestAccCreateProjectProjCreator(t *testing.T) {
-
 	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
 	resourceName := "capella_project." + rnd
 	tempId := os.Getenv("TF_VAR_auth_token")
@@ -79,7 +75,6 @@ func TestAccCreateProjectProjCreator(t *testing.T) {
 }
 
 func TestAccCreateProjectOrgMember(t *testing.T) {
-
 	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationMember")
@@ -98,7 +93,6 @@ func TestAccCreateProjectOrgMember(t *testing.T) {
 }
 
 func TestAccCreateProjectProjOwner(t *testing.T) {
-
 	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
@@ -118,7 +112,6 @@ func TestAccCreateProjectProjOwner(t *testing.T) {
 }
 
 func TestAccCreateProjectProjManager(t *testing.T) {
-
 	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
@@ -138,7 +131,6 @@ func TestAccCreateProjectProjManager(t *testing.T) {
 }
 
 func TestAccCreateProjectProjViewer(t *testing.T) {
-
 	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
@@ -158,7 +150,6 @@ func TestAccCreateProjectProjViewer(t *testing.T) {
 }
 
 func TestAccCreateProjectDatabaseDataReaderWriter(t *testing.T) {
-
 	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
@@ -178,7 +169,6 @@ func TestAccCreateProjectDatabaseDataReaderWriter(t *testing.T) {
 }
 
 func TestAccCreateProjectDatabaseDataReader(t *testing.T) {
-
 	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
@@ -207,5 +197,4 @@ resource "capella_project" "%[2]s" {
 	description     = "terraform acceptance test project"
 }
 `, cfg, rnd)
-
 }

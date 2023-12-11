@@ -279,18 +279,37 @@ func (r *User) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 
 	patch := constructPatch(state, plan)
 
-	err = r.updateUser(ctx, organizationId, userId, patch)
-	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		resp.Diagnostics.AddError(
-			"Error updating user",
-			"Could not update Capella user with ID "+userId+": "+errString,
-		)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			resp.State.RemoveResource(ctx)
+	if len(patch) > 0 {
+		err = r.updateUser(ctx, organizationId, userId, patch)
+		if err != nil {
+			resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+			resp.Diagnostics.AddError(
+				"Error updating user",
+				"Could not update Capella user with ID "+userId+": "+errString,
+			)
+			if resourceNotFound {
+				tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+				resp.State.RemoveResource(ctx)
+			}
+			return
 		}
-		return
+	}
+
+	// This means the username also needs to be updated
+	if state.Name != plan.Name {
+		err = r.updateUserName(ctx, organizationId, userId, plan.Name.ValueString())
+		if err != nil {
+			resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+			resp.Diagnostics.AddError(
+				"Error updating username",
+				"Could not update Capella username for user with ID "+userId+": "+errString,
+			)
+			if resourceNotFound {
+				tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+				resp.State.RemoveResource(ctx)
+			}
+			return
+		}
 	}
 
 	refreshedState, err := r.refreshUser(ctx, organizationId, userId)
@@ -487,6 +506,21 @@ func (r *User) updateUser(ctx context.Context, organizationId, userId string, pa
 	}
 
 	return nil
+}
+
+func (r *User) updateUserName(ctx context.Context, organizationId, userId, username string) error {
+	// Update existing user
+	url := fmt.Sprintf("%s/v4/organizations/%s/users/%s", r.HostURL, organizationId, userId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
+	_, err := r.Client.ExecuteWithRetry(
+		ctx,
+		cfg,
+		&api.PutUserRequest{Name: username},
+		r.Token,
+		nil,
+	)
+
+	return err
 }
 
 // Delete deletes the user.

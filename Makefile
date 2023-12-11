@@ -82,11 +82,12 @@ terraform-fmt:
 	@terraform fmt -write -recursive -diff .
 .PHONY: terraform-check tfcheck
 
-TEST_FLAGS ?= -short -cover -race
+TEST_FILES ?= $$(go list ./... | grep -v internal/resources/acceptance_tests)
+TEST_FLAGS ?= -short -cover -race -coverprofile .testCoverage.txt
 
 .PHONY: test
 test:
-	go test $(TEST_FLAGS) ./...
+	go test $(TEST_FILES) $(TEST_FLAGS)
 
 .PHONY: test-acceptance testacc
 testacc: test-acceptance
