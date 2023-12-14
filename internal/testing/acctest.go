@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
-
+	"sync"
 	"testing"
 	"time"
 
@@ -36,6 +36,8 @@ const (
 	// Length of the resource name we wish to generate.
 	resourceNameLength = 10
 )
+
+var 	randMutex sync.Mutex{}
 
 // TestAccProtoV6ProviderFactories are used to instantiate a provider during
 // acceptance testing. The factory function will be invoked for every Terraform
@@ -85,6 +87,8 @@ func TestClient() (*providerschema.Data, error) {
 // GenerateRandomResourceName builds a unique-ish resource identifier to use in
 // tests.
 func GenerateRandomResourceName() string {
+	randMutex.Lock()
+	defer randMutex.Unlock()
 	result := make([]byte, resourceNameLength)
 	for i := 0; i < resourceNameLength; i++ {
 		result[i] = charSetAlpha[randIntRange(0, len(charSetAlpha))]
