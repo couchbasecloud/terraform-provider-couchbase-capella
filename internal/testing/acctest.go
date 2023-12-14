@@ -5,11 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math/rand"
 	"net/http"
 	"os"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -17,6 +15,7 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/provider"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	"github.com/google/uuid"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
@@ -27,17 +26,6 @@ import (
 var (
 	apiRequestTimeout = 60 * time.Second
 )
-
-const (
-	// charSetAlpha is the alphabetical character set for use with
-	// RandStringFromCharSet.
-	charSetAlpha = "abcdefghijklmnopqrstuvwxyz"
-
-	// Length of the resource name we wish to generate.
-	resourceNameLength = 10
-)
-
-var 	randMutex sync.Mutex{}
 
 // TestAccProtoV6ProviderFactories are used to instantiate a provider during
 // acceptance testing. The factory function will be invoked for every Terraform
@@ -87,19 +75,8 @@ func TestClient() (*providerschema.Data, error) {
 // GenerateRandomResourceName builds a unique-ish resource identifier to use in
 // tests.
 func GenerateRandomResourceName() string {
-	randMutex.Lock()
-	defer randMutex.Unlock()
-	result := make([]byte, resourceNameLength)
-	for i := 0; i < resourceNameLength; i++ {
-		result[i] = charSetAlpha[randIntRange(0, len(charSetAlpha))]
-	}
-	return string(result)
-}
-
-// randIntRange returns a random integer between min (inclusive) and max
-// (exclusive).
-func randIntRange(min int, max int) int {
-	return rand.Intn(max-min) + min
+	result := uuid.New().String()
+	return result
 }
 
 func TestAccWait(duration time.Duration) resource.TestCheckFunc {
