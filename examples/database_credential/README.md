@@ -212,19 +212,19 @@ Command: `terraform state list`
 Sample Output:
 ```
 $ terraform state list
-data.capella_database_credentials.existing_credentials
-capella_database_credential.new_database_credential
+data.couchbase-capella_database_credentials.existing_credentials
+couchbase-capella_database_credential.new_database_credential
 ```
 
 ## IMPORT
 ### Remove the resource `new_database_credential` from the Terraform State file
 
-Command: `terraform state rm capella_database_credential.new_database_credential`
+Command: `terraform state rm couchbase-capella_database_credential.new_database_credential`
 
 Sample Output:
 ```
-$ terraform state rm capella_database_credential.new_database_credential
-Removed capella_database_credential.new_database_credential
+$ terraform state rm couchbase-capella_database_credential.new_database_credential
+Removed couchbase-capella_database_credential.new_database_credential
 Successfully removed 1 resource instance(s).
 ```
 
@@ -232,10 +232,10 @@ Please note, this command will only remove the resource from the Terraform State
 
 ### Now, let's import the resource in Terraform
 
-Command: `terraform import capella_database_credential.new_database_credential id=<database_credential_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
+Command: `terraform import couchbase-capella_database_credential.new_database_credential id=<database_credential_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
 In this case, the complete command is:
-`terraform import capella_database_credential.new_database_credential id=95591a3b-7031-4257-8d9e-7c4620d14618,cluster_id=f499a9e6-e5a1-4f3e-95a7-941a41d046e6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d`
+`terraform import couchbase-capella_database_credential.new_database_credential id=95591a3b-7031-4257-8d9e-7c4620d14618,cluster_id=f499a9e6-e5a1-4f3e-95a7-941a41d046e6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d`
 
 Sample Output:
 ```

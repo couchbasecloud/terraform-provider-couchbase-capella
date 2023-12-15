@@ -448,18 +448,18 @@ Command: `terraform state list`
 Sample Output:
 ``` 
 terraform state list                                  
-data.capella_app_services.existing_app_services
-capella_app_service.new_app_service
+data.couchbase-capella_app_services.existing_app_services
+couchbase-capella_app_service.new_app_service
 ```
 
 ## IMPORT
 ### Remove the resource `new_app_service` from the Terraform State file
 
-Command: `terraform state rm capella_app_service.new_app_service`
+Command: `terraform state rm couchbase-capella_app_service.new_app_service`
 
 Sample Output:
 ``` 
-terraform state rm capella_app_service.new_app_service
+terraform state rm couchbase-capella_app_service.new_app_service
 Removed capella_app_service.new_app_service
 Successfully removed 1 resource instance(s).
 ```
@@ -467,14 +467,14 @@ Please note, this command will only remove the resource from the Terraform State
 
 ### Now, let's import the resource in Terraform
 
-Command: `terraform import capella_app_service.new_app_service id=<appservice_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
+Command: `terraform import couchbase-capella_app_service.new_app_service id=<appservice_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
 In this case, the complete command is:
-`terraform import capella_app_service.new_app_service id=e57494b4-c791-44b6-8e7a-ee20db89a7f0,cluster_id=b74f5350-f727-427e-8cad-623a691b1cfe,project_id=f14134f2-7943-4e7b-b2c5-fc2071728b6e,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0`
+`terraform import couchbase-capella_app_service.new_app_service id=e57494b4-c791-44b6-8e7a-ee20db89a7f0,cluster_id=b74f5350-f727-427e-8cad-623a691b1cfe,project_id=f14134f2-7943-4e7b-b2c5-fc2071728b6e,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0`
 
 Sample Output:
 ``` 
-terraform import capella_app_service.new_app_service id=e57494b4-c791-44b6-8e7a-ee20db89a7f0,cluster_id=b74f5350-f727-427e-8cad-623a691b1cfe,project_id=f14134f2-7943-4e7b-b2c5-fc2071728b6e,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0
+terraform import couchbase-capella_app_service.new_app_service id=e57494b4-c791-44b6-8e7a-ee20db89a7f0,cluster_id=b74f5350-f727-427e-8cad-623a691b1cfe,project_id=f14134f2-7943-4e7b-b2c5-fc2071728b6e,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0
 capella_app_service.new_app_service: Importing from ID "id=e57494b4-c791-44b6-8e7a-ee20db89a7f0,cluster_id=b74f5350-f727-427e-8cad-623a691b1cfe,project_id=f14134f2-7943-4e7b-b2c5-fc2071728b6e,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0"...
 data.capella_app_services.existing_app_services: Reading...
 capella_app_service.new_app_service: Import prepared!

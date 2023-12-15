@@ -190,17 +190,17 @@ Command: `terraform state list`
 Sample Output:
 ``` 
 terraform state list                                  
-capella_backup_schedule.new_backup_schedule
+couchbase-capella_backup_schedule.new_backup_schedule
 ```
 
 ## IMPORT
 ### Remove the resource `new_backup_schedule` from the Terraform State file
 
-Command: `terraform state rm capella_backup_schedule.new_backup_schedule`
+Command: `terraform state rm couchbase-capella_backup_schedule.new_backup_schedule`
 
 Sample Output:
 ``` 
-terraform state rm capella_backup_schedule.new_backup_schedule
+terraform state rm couchbase-capella_backup_schedule.new_backup_schedule
 Removed capella_backup_schedule.new_backup_schedule
 Successfully removed 1 resource instance(s).
 ```
@@ -208,14 +208,14 @@ Please note, this command will only remove the resource from the Terraform State
 
 ### Now, let's import the resource in Terraform
 
-Command: `terraform import capella_backup.new_backup id=<bucket_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
+Command: `terraform import couchbase-capella_backup.new_backup id=<bucket_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
 In this case, the complete command is:
-`terraform import capella_backup_schedule.new_backup_schedule bucket_id=dGVzdC1idWNrZXQ=,cluster_id=4f728ab7-dbbc-45a2-9789-ee172f09851e,project_id=53b0e002-eb11-4317-9a53-6a781b29960e,organization_id=7a99d00c-f55b-4b39-bc72-1b4cc68ba894`
+`terraform import couchbase-capella_backup_schedule.new_backup_schedule bucket_id=dGVzdC1idWNrZXQ=,cluster_id=4f728ab7-dbbc-45a2-9789-ee172f09851e,project_id=53b0e002-eb11-4317-9a53-6a781b29960e,organization_id=7a99d00c-f55b-4b39-bc72-1b4cc68ba894`
 
 Sample Output:
 ``` 
-terraform import capella_backup_schedule.new_backup_schedule bucket_id=dGVzdC1idWNrZXQ=,cluster_id=4f728ab7-dbbc-45a2-9789-ee172f09851e,project_id=53b0e002-eb11-4317-9a53-6a781b29960e,organization_id=7a99d00c-f55b-4b39-bc72-1b4cc68ba894
+terraform import couchbase-capella_backup_schedule.new_backup_schedule bucket_id=dGVzdC1idWNrZXQ=,cluster_id=4f728ab7-dbbc-45a2-9789-ee172f09851e,project_id=53b0e002-eb11-4317-9a53-6a781b29960e,organization_id=7a99d00c-f55b-4b39-bc72-1b4cc68ba894
 capella_backup_schedule.new_backup_schedule: Importing from ID "bucket_id=dGVzdC1idWNrZXQ=,cluster_id=4f728ab7-dbbc-45a2-9789-ee172f09851e,project_id=53b0e002-eb11-4317-9a53-6a781b29960e,organization_id=7a99d00c-f55b-4b39-bc72-1b4cc68ba894"...
 capella_backup_schedule.new_backup_schedule: Import prepared!
   Prepared capella_backup_schedule for import

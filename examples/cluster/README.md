@@ -621,19 +621,19 @@ Command: `terraform state list`
 Sample Output:
 ```
 $ terraform state list
-data.capella_clusters.existing_clusters
-capella_cluster.new_cluster
+data.couchbase-capella_clusters.existing_clusters
+couchbase-capella_cluster.new_cluster
 ```
 
 ## IMPORT
 ### Remove the resource `new_cluster` from the Terraform State file
 
-Command: `terraform state rm capella_cluster.new_cluster`
+Command: `terraform state rm couchbase-capella_cluster.new_cluster`
 
 Sample Output:
 ```
-$ terraform state rm capella_cluster.new_cluster
-Removed capella_cluster.new_cluster
+$ terraform state rm couchbase-capella_cluster.new_cluster
+Removed couchbase-capella_cluster.new_cluster
 Successfully removed 1 resource instance(s).
 ```
 
@@ -641,14 +641,14 @@ Please note, this command will only remove the resource from the Terraform State
 
 ### Now, let's import the resource in Terraform
 
-Command: `terraform import capella_cluster.new_cluster id=<cluster_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
+Command: `terraform import couchbase-capella_cluster.new_cluster id=<cluster_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
 In this case, the complete command is:
-`terraform import capella_cluster.new_cluster id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d`
+`terraform import couchbase-capella_cluster.new_cluster id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d`
 
 Sample Output:
 ```
-$ terraform import capella_cluster.new_cluster id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d
+$ terraform import couchbase-capella_cluster.new_cluster id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d
 capella_cluster.new_cluster: Importing from ID "id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d"...
 data.capella_clusters.existing_clusters: Reading...
 capella_cluster.new_cluster: Import prepared!

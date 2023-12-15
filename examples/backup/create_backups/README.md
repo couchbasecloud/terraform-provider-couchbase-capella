@@ -435,33 +435,33 @@ Command: `terraform state list`
 Sample Output:
 ``` 
 terraform state list                                  
-data.capella_backups.existing_backups
-capella_backup.new_backup
+data.couchbase-capella_backups.existing_backups
+couchbase-capella_backup.new_backup
 ```
 
 ## IMPORT
 ### Remove the resource `new_backup` from the Terraform State file
 
-Command: `terraform state rm capella_backup.new_backup`
+Command: `terraform state rm couchbase-capella_backup.new_backup`
 
 Sample Output:
 ``` 
-terraform state rm capella_backup.new_backup
-Removed capella_backup.new_backup
+terraform state rm couchbase-capella_backup.new_backup
+Removed couchbase-capella_backup.new_backup
 Successfully removed 1 resource instance(s).
 ```
 Please note, this command will only remove the resource from the Terraform State file, but in reality, the resource exists in Capella.
 
 ### Now, let's import the resource in Terraform
 
-Command: `terraform import capella_backup.new_backup id=<backup_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
+Command: `terraform import couchbase-capella_backup.new_backup id=<backup_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
 In this case, the complete command is:
-`terraform import capella_backup.new_backup id=58dd0f30-323b-461c-83a8-1d2719f4bcee,cluster_id=1f6bad22-602f-407b-a567-7a8f672db227,project_id=f14134f2-7943-4e7b-b2c5-fc2071728b6e,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0`
+`terraform import couchbase-capella_backup.new_backup id=58dd0f30-323b-461c-83a8-1d2719f4bcee,cluster_id=1f6bad22-602f-407b-a567-7a8f672db227,project_id=f14134f2-7943-4e7b-b2c5-fc2071728b6e,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0`
 
 Sample Output:
 ``` 
-terraform import capella_backup.new_backup id=58dd0f30-323b-461c-83a8-1d2719f4bcee,cluster_id=1f6bad22-602f-407b-a567-7a8f672db227,project_id=f14134f2-7943-4e7b-b2c5-fc2071728b6e,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0
+terraform import couchbase-capella_backup.new_backup id=58dd0f30-323b-461c-83a8-1d2719f4bcee,cluster_id=1f6bad22-602f-407b-a567-7a8f672db227,project_id=f14134f2-7943-4e7b-b2c5-fc2071728b6e,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0
 capella_backup.new_backup: Importing from ID "id=58dd0f30-323b-461c-83a8-1d2719f4bcee,cluster_id=1f6bad22-602f-407b-a567-7a8f672db227,project_id=f14134f2-7943-4e7b-b2c5-fc2071728b6e,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0"...
 data.capella_backups.existing_backups: Reading...
 capella_backup.new_backup: Import prepared!
