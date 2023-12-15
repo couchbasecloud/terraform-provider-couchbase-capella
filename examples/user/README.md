@@ -411,19 +411,19 @@ Command: `terraform state list`
 Sample Output:
 ```
 $ terraform state list
-data.capella_users.existing_users
-capella_user.new_user
+data.couchbase-capella_users.existing_users
+couchbase-capella_user.new_user
 ```
 
 ## IMPORT
 ### Remove the resource `new_user` from the Terraform State file
 
-Command: `terraform state rm capella_user.new_user`
+Command: `terraform state rm couchbase-capella_user.new_user`
 
 Sample Output:
 ```
-$ terraform state rm capella_user.new_user
-Removed capella_user.new_user
+$ terraform state rm couchbase-capella_user.new_user
+Removed couchbase-capella_user.new_user
 Successfully removed 1 resource instance(s).
 ```
 
@@ -431,14 +431,14 @@ Please note, this command will only remove the resource from the Terraform State
 
 ### Now, let's import the resource in Terraform
 
-Command: `terraform import capella_user.new_user id=<user_id>,organization_id=<organization_id>`
+Command: `terraform import couchbase-capella_user.new_user id=<user_id>,organization_id=<organization_id>`
 
 In this case, the complete command is:
-`terraform import capella_user.new_user id=ba422259-2b1b-429e-b3f1-d000475e8998,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d`
+`terraform import couchbase-capella_user.new_user id=ba422259-2b1b-429e-b3f1-d000475e8998,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d`
 
 Sample Output:
 ```
-$ terraform import capella_user.new_user id=ba422259-2b1b-429e-b3f1-d000475e8998,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d
+$ terraform import couchbase-capella_user.new_user id=ba422259-2b1b-429e-b3f1-d000475e8998,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d
 capella_user.new_user: Importing from ID "id=ba422259-2b1b-429e-b3f1-d000475e8998,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d"...
 data.capella_users.existing_users: Reading...
 capella_user.new_user: Import prepared!

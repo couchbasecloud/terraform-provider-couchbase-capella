@@ -376,18 +376,18 @@ Command: `terraform state list`
 Sample Output:
 ```
 $ terraform state list
-data.capella_buckets.existing_buckets
-capella_bucket.new_bucket
+data.couchbase-capella_buckets.existing_buckets
+couchbase-capella_bucket.new_bucket
 ```
 
 ## IMPORT
 ### Remove the resource `new_bucket` from the Terraform State file
 
-Command: `terraform state rm capella_bucket.new_bucket`
+Command: `terraform state rm couchbase-capella_bucket.new_bucket`
 
 Sample Output:
 ```
-$ terraform state rm capella_bucket.new_bucket
+$ terraform state rm couchbase-capella_bucket.new_bucket
 Removed capella_bucket.new_bucket
 Successfully removed 1 resource instance(s).
 ```
@@ -396,14 +396,14 @@ Please note, this command will only remove the resource from the Terraform State
 
 ### Now, let's import the resource in Terraform
 
-Command: `terraform import capella_bucket.new_bucket id=<bucket_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
+Command: `terraform import couchbase-capella_bucket.new_bucket id=<bucket_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
 In this case, the complete command is:
-`terraform import capella_bucket.new_bucket id=bmV3X3RlcnJhZm9ybV9idWNrZXQ=,cluster_id=f499a9e6-e5a1-4f3e-95a7-941a41d046e6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d`
+`terraform import couchbase-capella_bucket.new_bucket id=bmV3X3RlcnJhZm9ybV9idWNrZXQ=,cluster_id=f499a9e6-e5a1-4f3e-95a7-941a41d046e6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d`
 
 Sample Output:
 ```
-$ terraform import capella_bucket.new_bucket id=bmV3X3RlcnJhZm9ybV9idWNrZXQ=,cluster_id=f499a9e6-e5a1-4f3e-95a7-941a41d046e6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d
+$ terraform import couchbase-capella_bucket.new_bucket id=bmV3X3RlcnJhZm9ybV9idWNrZXQ=,cluster_id=f499a9e6-e5a1-4f3e-95a7-941a41d046e6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d
 capella_bucket.new_bucket: Importing from ID "id=bmV3X3RlcnJhZm9ybV9idWNrZXQ=,cluster_id=f499a9e6-e5a1-4f3e-95a7-941a41d046e6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d"...
 capella_bucket.new_bucket: Import prepared!
   Prepared capella_bucket for import
