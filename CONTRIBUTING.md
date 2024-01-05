@@ -18,7 +18,7 @@ Thank you for your interest in contributing to the Couchbase Capella Terraform P
 ## Using the Provider
 
 ### Building
-- Enter the provider directory
+- Enter the provider directory.
 - Run `make setup` to install the needed tools for the provider.
 - Run `make build` to build the binary in the `./bin` directory.
 - Use the local provider binary in the `./bin` folder.
