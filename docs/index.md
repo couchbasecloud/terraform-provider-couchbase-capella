@@ -11,7 +11,7 @@ provider "couchbase-capella" {
   authentication_token = var.couchbasecapella_auth_token
 }
 # Create the resources
-````
+```
 
 ## Configure Capella Access
 
@@ -20,7 +20,7 @@ An [Organization Owner](https://docs.couchbase.com/cloud/organizations/organizat
 This API key is then used for authenticating the Terraform Provider against Couchbase Capella.
 
 
-[!IMPORTANT]  
+**IMPORTANT**  
 Although in examples below, the API key secret is specified as a environmental variable and hardcoded in a config file, it is recommend that the API secret credentials be stored in a remote secrets manager such as Hashicorp Vault or AWS Secrets Manager that the Terraform Provider can then retrieve and use for authentication.
 
 
