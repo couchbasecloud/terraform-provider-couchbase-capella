@@ -27,7 +27,7 @@ $ terraform plan
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchbasecloud/capella in /Users/talina.shrotriya/workspace/terraform-provider-capella
+│  - hashicorp.com/couchbasecloud/capella in /Users/$USER/workspace/terraform-provider-capella
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
 │ published releases.
@@ -62,13 +62,13 @@ You can apply this plan to save these new output values to the Terraform state, 
 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly these actions if you run "terraform apply" now.
-macos:organization talina.shrotriya$ 
-macos:organization talina.shrotriya$ terraform plan
+macos:organization $USER$ 
+macos:organization $USER$ terraform plan
 ╷
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchbasecloud/capella in /Users/talina.shrotriya/workspace/terraform-provider-capella
+│  - hashicorp.com/couchbasecloud/capella in /Users/$USER/workspace/terraform-provider-capella
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
 │ published releases.
@@ -116,7 +116,7 @@ $ terraform apply
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchbasecloud/capella in /Users/talina.shrotriya/workspace/terraform-provider-capella
+│  - hashicorp.com/couchbasecloud/capella in /Users/$USER/workspace/terraform-provider-capella
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
 │ published releases.
@@ -203,7 +203,7 @@ $ terraform destroy
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchbasecloud/capella in /Users/talina.shrotriya/workspace/terraform-provider-capella
+│  - hashicorp.com/couchbasecloud/capella in /Users/$USER/workspace/terraform-provider-capella
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
 │ published releases.
