@@ -16,7 +16,7 @@ This is the repository for Couchbase's Terraform-Provider-Capella which forms a 
 ## Using the Provider
 
 To use a released provider in your Terraform environment, run `terraform init` and Terraform will automatically install the provider.
-Documentation about the provider specific configuration options can be found on the provider's website.
+Documentation about the provider specific configuration options can be found on the [provider's website](https://developer.hashicorp.com/terraform/language/providers).
 
 ## Contributing to the Provider
 See [Contributing.md](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/CONTRIBUTING.md)
