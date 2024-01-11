@@ -45,9 +45,9 @@ variable "disk" {
   description = "All nodes' disk configuration"
 
   type = object({
-    size = number
+    size = optional(number)
     type = string
-    iops = number
+    iops = optional(number)
   })
 }
 
