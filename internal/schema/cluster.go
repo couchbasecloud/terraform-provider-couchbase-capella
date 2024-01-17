@@ -246,9 +246,10 @@ func morphToTerraformServiceGroups(cluster *clusterapi.GetClusterResponse) ([]Se
 			}
 
 			newServiceGroup.Node.Disk = Node_Disk{
-				Type:    types.StringValue(string(azureDisk.Type)),
-				Storage: types.Int64Value(int64(*azureDisk.Storage)),
-				IOPS:    types.Int64Value(int64(*azureDisk.Iops)),
+				Type:          types.StringValue(string(azureDisk.Type)),
+				Storage:       types.Int64Value(int64(*azureDisk.Storage)),
+				IOPS:          types.Int64Value(int64(*azureDisk.Iops)),
+				Autoexpansion: types.BoolValue(*azureDisk.Autoexpansion),
 			}
 		case clusterapi.Gcp:
 			gcpDisk, err := serviceGroup.Node.AsDiskGCP()
