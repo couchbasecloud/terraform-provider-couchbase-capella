@@ -63,9 +63,10 @@ func ClusterSchema() schema.Schema {
 										"In the case of GCP, only 'pd ssd' disk type is available, and you cannot set the 'IOPS' field.",
 									Required: true,
 									Attributes: map[string]schema.Attribute{
-										"type":    stringAttribute(required),
-										"storage": int64Attribute(optional, computed),
-										"iops":    int64Attribute(optional, computed),
+										"type":          stringAttribute(required),
+										"storage":       int64Attribute(optional, computed),
+										"iops":          int64Attribute(optional, computed),
+										"autoexpansion": boolAttribute(optional, computed),
 									},
 								},
 							},

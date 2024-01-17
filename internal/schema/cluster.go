@@ -99,9 +99,10 @@ type Node struct {
 
 // Node_Disk is the type of disk on a particular node that is supported per cloud provider during cluster creation.
 type Node_Disk struct {
-	Type    types.String `tfsdk:"type"`
-	Storage types.Int64  `tfsdk:"storage"`
-	IOPS    types.Int64  `tfsdk:"iops"`
+	Type          types.String `tfsdk:"type"`
+	Storage       types.Int64  `tfsdk:"storage"`
+	IOPS          types.Int64  `tfsdk:"iops"`
+	Autoexpansion types.Bool   `tfsdk:"autoexpansion"`
 }
 
 // Support defines the support plan and timezone for this particular cluster.
