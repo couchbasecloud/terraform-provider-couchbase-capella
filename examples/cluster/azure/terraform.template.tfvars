@@ -21,7 +21,7 @@ compute = {
 }
 
 disk = {
-  type = "P6"
+  type          = "P6"
   autoexpansion = true
 }
 

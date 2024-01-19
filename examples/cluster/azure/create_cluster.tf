@@ -24,7 +24,7 @@ resource "couchbase-capella_cluster" "new_cluster" {
           ram = var.compute.ram
         }
         disk = {
-          type    = var.disk.type
+          type          = var.disk.type
           autoexpansion = var.disk.autoexpansion
         }
       }
