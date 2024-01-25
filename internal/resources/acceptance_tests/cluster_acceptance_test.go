@@ -173,7 +173,7 @@ func TestAccClusterResourceWithOptionalFieldAWS(t *testing.T) {
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
-	cidr := "10.1.96.0/23"
+	cidr := "10.251.250.0/23"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
