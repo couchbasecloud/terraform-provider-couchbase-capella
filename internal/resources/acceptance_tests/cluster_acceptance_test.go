@@ -719,7 +719,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
   name            = "Terraform Acceptance Test Cluster"
   description     = "My first test cluster for multiple services."
   couchbase_server = {
-    version = "7.2"
+    version = "7.1"
   }
   configuration_type = "multiNode"
   cloud_provider = {
@@ -861,7 +861,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
     cidr   = "%[5]s"
   }
   couchbase_server = {
-    version = "7.2"
+    version = "7.1"
   }
   service_groups = [
     {
@@ -1136,7 +1136,7 @@ resource "couchbase-capella_cluster"  "%[2]s" {
     cidr   = "%[5]s"
   }
   couchbase_server = {
-    version = "7.2"
+    version = "7.1"
   } 
   service_groups = [
 		{
