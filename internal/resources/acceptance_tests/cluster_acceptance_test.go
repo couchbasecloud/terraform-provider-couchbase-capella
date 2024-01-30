@@ -189,7 +189,7 @@ func TestAccClusterResourceWithOptionalFieldAWS(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east-1"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
-					resource.TestCheckResourceAttr(resourceReference, "couchbase_server.version", "7.1"),
+					resource.TestCheckResourceAttr(resourceReference, "couchbase_server.version", "7.2"),
 					resource.TestCheckResourceAttr(resourceReference, "configuration_type", "multiNode"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
@@ -253,7 +253,7 @@ func TestAccClusterResourceAzure(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "azure"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "eastus"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
-					resource.TestCheckResourceAttr(resourceReference, "couchbase_server.version", "7.1"),
+					resource.TestCheckResourceAttr(resourceReference, "couchbase_server.version", "7.2"),
 					resource.TestCheckResourceAttr(resourceReference, "configuration_type", "multiNode"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
@@ -287,7 +287,7 @@ func TestAccClusterResourceAzure(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "azure"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "eastus"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
-					resource.TestCheckResourceAttr(resourceReference, "couchbase_server.version", "7.1"),
+					resource.TestCheckResourceAttr(resourceReference, "couchbase_server.version", "7.2"),
 					resource.TestCheckResourceAttr(resourceReference, "configuration_type", "multiNode"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "32"),
@@ -314,7 +314,7 @@ func TestAccClusterResourceAzure(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "azure"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "eastus"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
-					resource.TestCheckResourceAttr(resourceReference, "couchbase_server.version", "7.1"),
+					resource.TestCheckResourceAttr(resourceReference, "couchbase_server.version", "7.2"),
 					resource.TestCheckResourceAttr(resourceReference, "configuration_type", "multiNode"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
@@ -341,7 +341,7 @@ func TestAccClusterResourceAzure(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "azure"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "eastus"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
-					resource.TestCheckResourceAttr(resourceReference, "couchbase_server.version", "7.1"),
+					resource.TestCheckResourceAttr(resourceReference, "couchbase_server.version", "7.2"),
 					resource.TestCheckResourceAttr(resourceReference, "configuration_type", "multiNode"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
@@ -400,7 +400,7 @@ func TestAccClusterResourceGCP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "gcp"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east1"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
-					resource.TestCheckResourceAttr(resourceReference, "couchbase_server.version", "7.1"),
+					resource.TestCheckResourceAttr(resourceReference, "couchbase_server.version", "7.2"),
 					resource.TestCheckResourceAttr(resourceReference, "configuration_type", "multiNode"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
@@ -433,7 +433,7 @@ func TestAccClusterResourceGCP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "gcp"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east1"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
-					resource.TestCheckResourceAttr(resourceReference, "couchbase_server.version", "7.1"),
+					resource.TestCheckResourceAttr(resourceReference, "couchbase_server.version", "7.2"),
 					resource.TestCheckResourceAttr(resourceReference, "configuration_type", "multiNode"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.compute.cpu", "8"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.compute.ram", "16"),
@@ -788,7 +788,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
   name            = "Terraform Acceptance Test Cluster"
   description     = "My first test cluster for multiple services."
   couchbase_server = {
-    version = "7.1"
+    version = "7.2"
   }
   cloud_provider = {
     type   = "aws"
@@ -964,7 +964,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
     cidr   = "%[5]s"
   }
   couchbase_server = {
-    version = "7.1"
+    version = "7.2"
   }
   service_groups = [
     {
@@ -1015,7 +1015,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
     cidr   = "%[5]s"
   }
   couchbase_server = {
-    version = "7.1"
+    version = "7.2"
   }
   service_groups = [
     {
@@ -1070,7 +1070,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
     cidr   = "%[5]s"
   }
   couchbase_server = {
-    version = "7.1"
+    version = "7.2"
   }
   service_groups = [
     {
@@ -1189,7 +1189,7 @@ resource "couchbase-capella_cluster"  "%[2]s" {
   }
   configuration_type = "multiNode"
   couchbase_server = {
-    version = "7.1"
+    version = "7.2"
   } 
   service_groups = [
 		{
@@ -1373,7 +1373,7 @@ resource "couchbase-capella_cluster"  "%[2]s" {
     cidr   = "%[5]s"
   }
   couchbase_server = {
-    version = "7.1"
+    version = "7.2"
   } 
   service_groups = [
 		{
