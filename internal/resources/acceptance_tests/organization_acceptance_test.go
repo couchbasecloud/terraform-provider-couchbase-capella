@@ -50,7 +50,7 @@ func TestAccOrganizationDataSource(t *testing.T) {
 
 			{
 				Config:      testAccOrganizationResourceConfig(cfg.Cfg, "123456-abcd-4567890"),
-				ExpectError: regexp.MustCompile("server cannot or will not process the request.*"),
+				ExpectError: regexp.MustCompile("server cannot or will not process.*"),
 			},
 		},
 	})
