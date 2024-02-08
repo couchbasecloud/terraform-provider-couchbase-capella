@@ -26,11 +26,11 @@ Quickly set up and run Terraform Provider Couchbase Capella locally with these s
 - Define environment variables for the Terraform configuration file. 
 - Initialize, plan, and apply your Terraform configuration.
 
-### Enter the Provider Directory: 
+#### Enter the Provider Directory: 
 
 Navigate to the directory containing the provider's source code.
 
-### Install Dependencies: 
+#### Install Dependencies: 
 
 Run the following command to install the required tools for building the provider:
 
@@ -38,7 +38,7 @@ Run the following command to install the required tools for building the provide
 make setup
 ```
 
-### Build the Provider Binary:
+#### Build the Provider Binary:
 
 Generate the binary by executing:
 
@@ -48,7 +48,7 @@ make build
 
 This will create the binary in the `./bin` directory.
 
-### Use the Provider Binary: 
+#### Use the Provider Binary: 
 
 Normally, Terraform installs providers and verifies their versions and checksums when you run `terraform init`. 
 Terraform will download your providers from either the provider registry or a local registry. However, during 
@@ -61,9 +61,7 @@ with ext .terraformrc or .tfrc. This block overrides all other configured instal
 When Terraform runs, it searches for any .terraformrc or .tfrc file in your home directory and applies any 
 configuration settings that have been set.
 
-To configure Terraform to use the local provider binary, execute these commands in your terminal:
-
-#### Navigate to your home directory (or the desired directory for your .terraformrc or .tfrc file):
+Navigate to your home directory (or the desired directory for your .terraformrc or .tfrc file):
 
 ```
 cd ~
@@ -100,7 +98,7 @@ the following contents:
   export TF_CLI_CONFIG_FILE=PATH/TO/dev.terraformrc
   ```
 
-### (Optional) Change to an example directory
+#### Change to an example directory
 
 This repository contains a number of example terraform configurations to enable you to get started quickly. 
 To get started with an example configuration provided by Couchbase, execute the following command: 
@@ -112,7 +110,7 @@ cd examples/getting-started
 If you are not using an example and instead using your own custom configuration, you will instead need
 to change into that directory. For a full list of examples, see the appendinx section on examples.
 
-### Terraform Environment Variables
+#### Terraform Environment Variables
 
 Each example configuration contains a terraform.templates.tfvars file. This file contains the values 
 environment variables defined in the example configurations. To use these values, first copy the values
@@ -130,7 +128,7 @@ auth_token = "<v4-api-key-secret>"
 organization_id = "<organization-uuid>"
 ```
 
-### Initializing and Running Terraform
+#### Initializing and Running Terraform
 
 - Run `terraform init` to initialize terraform
 - Run `terraform plan` to use terraform with the local binary and preview the infrastructure that will be created
@@ -138,6 +136,10 @@ organization_id = "<organization-uuid>"
 
 For more information about development overrides see [Development Overrides for Provider Developers](https://www.terraform.io/docs/cli/config/config-file.html#development-overrides-for-provider-developers)
 
+#### Discovering New API features
+
+Most of the new features of the provider are using [capella-public-apis](https://docs.couchbase.com/cloud/management-api-guide/management-api-intro.html)
+Public APIs are updated automatically, tracking all new Capella features.
 
 ## Appendix A - Examples
 
@@ -243,11 +245,6 @@ $ terraform import RESOURCE_TYPE.NAME RESOURCE_IDENTIFIER
 
 ~> **Notice:** Acceptance tests create real resources, and often cost money to run. Please note in any PRs made if you are unable to pay to run acceptance tests for your contribution. We will accept "best effort" implementations of acceptance tests in this case and run them for you on our side. This may delay the contribution but we do not want your contribution blocked by funding.
 - Run `make testacc`
-
-## Discovering New API features
-
-Most of the new features of the provider are using [capella-public-apis](https://docs.couchbase.com/cloud/management-api-guide/management-api-intro.html)
-Public APIs are updated automatically, tracking all new Capella features.
 
 ## Appendix B - Creating your own environment variables
 
