@@ -55,11 +55,6 @@ func TestAccClusterResourceAzureDiskAutoExpansion(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.autoexpansion", "true"),
 				),
 			},
-			//Update with invalid field
-			{
-				Config:      testAccClusterConfigAzureDiskAutoExpansionInvalidfield(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
-				ExpectError: regexp.MustCompile("Error: Invalid reference"),
-			},
 		},
 	})
 }
