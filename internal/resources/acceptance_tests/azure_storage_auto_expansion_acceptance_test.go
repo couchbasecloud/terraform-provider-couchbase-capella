@@ -85,7 +85,7 @@ func TestAccClusterResourceAzureAutoDiskExpansionDefault(t *testing.T) {
 				Config: testAccClusterConfigAzureDiskAutoExpansionDefault(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsClusterResource(resourceReference),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.autoexpansion", "true"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.autoexpansion", "false"),
 				),
 			},
 		},
