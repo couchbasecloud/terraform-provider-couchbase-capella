@@ -8,38 +8,83 @@ Thank you for your interest in contributing to the Couchbase Capella Terraform P
 - [Terraform](https://www.terraform.io/downloads.html) >= 1.5.2
 - [Go](https://golang.org/doc/install) >= 1.21
 
-### Environment
+## Environment
 
 - Fork the repository.
 - Clone your fork. Use `git clone` to create a local copy on your machine.
 - We use Go Modules to manage dependencies, so you can develop outside your `$GOPATH`.
 - We use [golangci-lint](https://github.com/golangci/golangci-lint) to lint our code, you can install it locally via `make setup`.
 
-## Using the Provider
+## Local Development Setup
 
-### Building
+Quickly set up and run Terraform Provider Couchbase Capella locally with these steps:
+
 - Enter the provider directory.
-- Run `make setup` to install the needed tools for the provider.
-- Run `make build` to build the binary in the `./bin` directory.
-- Use the local provider binary in the `./bin` folder.
-- Create the following `dev.terraformrc` file inside your directory
+- Install necessary tools with `make setup`.
+- Build the local provider binary using `make build`.
+- Set a development override to use the local provider binary.
+- Define environment variables for the Terraform configuration file. 
+- Initialize, plan, and apply your Terraform configuration.
 
-Terraform installs providers and verifies their versions and checksums when you run `terraform init`. Terraform will download your
-providers from either the provider registry or a local registry. However, while building your provider you will want to
-test a Terraform configuration against a local development build of the provider. The development build will not have an associated
-version number or an official set of checksums listed in a provider registry.
+### Enter the Provider Directory: 
 
-Terraform allows you to use local provider builds by setting a dev_overrides block in a configuration file with ext .terraformrc or .tfrc.
+Navigate to the directory containing the provider's source code.
 
-This block overrides all other configured installation methods.
+### Install Dependencies: 
 
-Terraform searches for the .terraformrc or .tfrc file in your home directory and applies any configuration settings you set.
+Run the following command to install the required tools for building the provider:
+
+```
+make setup
+```
+
+### Build the Provider Binary:
+
+Generate the binary by executing:
+
+```
+make build
+```
+
+This will create the binary in the `./bin` directory.
+
+### Use the Provider Binary: 
+
+Normally, Terraform installs providers and verifies their versions and checksums when you run `terraform init`. 
+Terraform will download your providers from either the provider registry or a local registry. However, during 
+development, we want to test using a a local development build of the provider. The development build will not 
+have an associated version number or an official set of checksums listed in a provider registry. 
+
+After successfully building the local provider binary for Couchbase Capella, the  next step is to instruct 
+Terraform to use local provider builds by setting a dev_overrides block in a  configuration file 
+with ext .terraformrc or .tfrc. This block overrides all other configured installation methods. 
+When Terraform runs, it searches for any .terraformrc or .tfrc file in your home directory and applies any 
+configuration settings that have been set.
+
+To configure Terraform to use the local provider binary, execute these commands in your terminal:
+
+#### Navigate to your home directory (or the desired directory for your .terraformrc or .tfrc file):
+
+```
+cd ~
+```
+
+#### Create the configuration file if it doesn't already exist
+
+```
+touch dev.terraformrc
+```
+
+#### Open and edit the configuration file 
+
+Navigate to `dev.terraformrc` either using console or your preferred text editor and paste in
+the following contents:
 
   ```terraform
   provider_installation {
 
   dev_overrides {
-    "couchbasecloud/couchbase-capella" = "<PATH>"
+    "hashicorp.com/couchbasecloud/couchbase-capella" = "$HOME/bin/terraform-provider-couchbase-capella"
   }
 
   # For all other providers, install them directly from their origin provider
@@ -49,70 +94,52 @@ Terraform searches for the .terraformrc or .tfrc file in your home directory and
 }
   ```
 
-- Define the env var `TF_CLI_CONFIG_FILE` in your console session
+#### Define the env var `TF_CLI_CONFIG_FILE` in your console session
 
   ```bash
   export TF_CLI_CONFIG_FILE=PATH/TO/dev.terraformrc
   ```
-- Run `terraform init` to initialize terraform
-- Run `terraform apply` to use terraform with the local binary
 
-For more explained information about plugin override check [Development Overrides for Provider Developers](https://www.terraform.io/docs/cli/config/config-file.html#development-overrides-for-provider-developers)
+### (Optional) Change to an example directory
 
-### Authentication
+This repository contains a number of example terraform configurations to enable you to get started quickly. 
+To get started with an example configuration provided by Couchbase, execute the following command: 
 
-In order to set up authentication with the Couchbase Capella provider a V4 API key must be generated.
+```
+cd examples/getting-started
+```
 
-To find out how to generate a V4 API Key, please see the following document:
-https://docs.couchbase.com/cloud/management-api-guide/management-api-start.html
+If you are not using an example and instead using your own custom configuration, you will instead need
+to change into that directory. For a full list of examples, see the appendinx section on examples.
 
 ### Terraform Environment Variables
 
-Environment variables can be set by terraform by creating and adding terraform.template.tfvars
-```terraform
+Each example configuration contains a terraform.templates.tfvars file. This file contains the values 
+environment variables defined in the example configurations. To use these values, first copy the values
+to a new file:
+
+```
+cp terraform.template.tfvars terraform.tfvars
+```
+
+Then, open the file up and replace the placeholders for auth_token and organization_id with their
+actual values. 
+
+```
 auth_token = "<v4-api-key-secret>"
 organization_id = "<organization-uuid>"
-# This env variable is optional and allow you to run terraform with a custom API server.
-host = "https://cloudapi.cloud.couchbase.com"
 ```
 
-A variables.tf should also be added to define the variables for terraform.
-```terraform
-variable "host" {
-  description = "The Host URL of Couchbase Cloud."
-}
+### Initializing and Running Terraform
 
-variable "organization_id" {
-  description = "Capella Organization ID"
-}
+- Run `terraform init` to initialize terraform
+- Run `terraform plan` to use terraform with the local binary and preview the infrastructure that will be created
+- Run `terraform apply` to execute the plan generated by terraform plan. This can also be ran by itself. 
 
-variable "auth_token" {
-  description = "Authentication API Key"
-}
-```
+For more information about development overrides see [Development Overrides for Provider Developers](https://www.terraform.io/docs/cli/config/config-file.html#development-overrides-for-provider-developers)
 
-Set the environment variables by using the following notation:
-```terraform
-resource "capella_project" "example" {
-  organization_id = var.organization_id
-  name = var.project_name
-  description = "A Capella Project that will host many Capella clusters."
-}
-```
 
-Alternatively, if you would like to set environment variables locally on your system (as opposed to using terraform.template.tfvars),
-preface them with `TF_VAR_`. Terraform will then apply them your .terraformrc file on running
-`terraform apply`. For example:
-```bash
-export TF_VAR_auth_token=<v4_api_secret_key>
-export TF_VAR_organization_id=<organization_id>
-# This env variable is optional and allow you to run terraform with a custom API server.
-export TF_VAR_host= "https://cloudapi.cloud.couchbase.com"
-```
-
-### Create and manage resources using terraform
-
-#### Example Usage
+## Appendix A - Examples
 
 Note: You will need to provide both the url of the capella host as well as your V4 API secret for authentication.
 
@@ -221,3 +248,51 @@ $ terraform import RESOURCE_TYPE.NAME RESOURCE_IDENTIFIER
 
 Most of the new features of the provider are using [capella-public-apis](https://docs.couchbase.com/cloud/management-api-guide/management-api-intro.html)
 Public APIs are updated automatically, tracking all new Capella features.
+
+## Appendix B - Creating your own environment variables
+
+Environment variables can be set by terraform by creating and adding a terraform.tfvars to your 
+configuration. 
+
+```terraform
+auth_token = "<v4-api-key-secret>"
+organization_id = "<organization-uuid>"
+```
+
+A variables.tf should also be added to define the variables for terraform.
+```terraform
+variable "organization_id" {
+  description = "Capella Organization ID"
+}
+
+variable "auth_token" {
+  description = "Authentication API Key"
+}
+```
+
+Set the environment variables by using the following notation:
+```terraform
+resource "capella_project" "example" {
+  organization_id = var.organization_id
+  name = var.project_name
+  description = "A Capella Project that will host many Capella clusters."
+}
+```
+
+Alternatively, if you would like to set environment variables locally on your system (as opposed to using terraform.tfvars),
+preface them with `TF_VAR_`. Terraform will then apply them your .terraformrc file on running
+`terraform apply`. For example:
+```bash
+export TF_VAR_auth_token=<v4_api_secret_key>
+export TF_VAR_organization_id=<organization_id>
+```
+
+## Appendix C - Authentication
+```
+In order to set up authentication with the Couchbase Capella provider a V4 API key must be generated.
+
+To find out how to generate a V4 API Key, please see the following document:
+https://docs.couchbase.com/cloud/management-api-guide/management-api-start.html
+
+Once you have generated your api key token, it must be set as an environment variable. 
+```
