@@ -34,7 +34,7 @@ Navigate to the directory containing the provider's source code.
 
 Run the following command to install the required tools for building the provider:
 
-```
+```bash
 make setup
 ```
 
@@ -42,7 +42,7 @@ make setup
 
 Generate the binary by executing:
 
-```
+```bash
 make build
 ```
 
@@ -63,13 +63,13 @@ configuration settings that have been set.
 
 Navigate to your home directory (or the desired directory for your .terraformrc or .tfrc file):
 
-```
+```bash
 cd $HOME
 ```
 
 #### Create the configuration file if it doesn't already exist
 
-```
+```bash
 touch dev.terraformrc
 ```
 
@@ -103,7 +103,7 @@ the following contents:
 This repository contains a number of example terraform configurations to enable you to get started quickly. 
 To get started with an example configuration provided by Couchbase, execute the following command: 
 
-```
+```bash
 cd $HOME/terraform-provider-couchbase-capella/examples/getting-started
 ```
 
@@ -116,14 +116,14 @@ Each example configuration contains a terraform.templates.tfvars file. This file
 environment variables defined in the example configurations. To use these values, first copy the values
 to a new file:
 
-```
+```bash
 cp terraform.template.tfvars terraform.tfvars
 ```
 
 Then, open the file up and replace the placeholders for auth_token and organization_id with their
 actual values. 
 
-```
+```terraform
 auth_token = "<v4-api-key-secret>"
 organization_id = "<organization-uuid>"
 ```
