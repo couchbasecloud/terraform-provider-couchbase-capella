@@ -95,7 +95,7 @@ the following contents:
 #### Define the env var `TF_CLI_CONFIG_FILE` in your console session
 
   ```bash
-  export TF_CLI_CONFIG_FILE=PATH/TO/dev.terraformrc
+  export TF_CLI_CONFIG_FILE=$HOME/dev.terraformrc
   ```
 
 #### Change to an example directory
