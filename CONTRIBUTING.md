@@ -28,7 +28,11 @@ Quickly set up and run Terraform Provider Couchbase Capella locally with these s
 
 #### Enter the Provider Directory: 
 
-Navigate to the directory containing the provider's source code.
+Navigate to the directory containing the provider's source code. For example: 
+
+```bash
+cd $HOME/terraform-provider-couchbase-capella
+```
 
 #### Install Dependencies: 
 
@@ -61,16 +65,10 @@ with ext .terraformrc or .tfrc. This block overrides all other configured instal
 When Terraform runs, it searches for any .terraformrc or .tfrc file in your home directory and applies any 
 configuration settings that have been set.
 
-Navigate to your home directory (or the desired directory for your .terraformrc or .tfrc file):
-
-```bash
-cd $HOME
-```
-
 #### Create the configuration file if it doesn't already exist
 
 ```bash
-touch dev.terraformrc
+touch $HOME/dev.terraformrc
 ```
 
 #### Open and edit the configuration file 
@@ -78,7 +76,7 @@ touch dev.terraformrc
 Navigate to `dev.terraformrc` either using console or your preferred text editor and paste in
 the following contents:
 
-  ```terraform
+```terraform
   provider_installation {
 
   dev_overrides {
@@ -104,7 +102,7 @@ This repository contains a number of example terraform configurations to enable 
 To get started with an example configuration provided by Couchbase, execute the following command: 
 
 ```bash
-cd $HOME/terraform-provider-couchbase-capella/examples/getting-started
+cd $HOME/terraform-provider-couchbase-capella/examples/getting_started
 ```
 
 If you are not using an example and instead using your own custom configuration, you will instead need
