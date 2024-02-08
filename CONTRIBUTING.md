@@ -64,7 +64,7 @@ configuration settings that have been set.
 Navigate to your home directory (or the desired directory for your .terraformrc or .tfrc file):
 
 ```
-cd ~
+cd $HOME
 ```
 
 #### Create the configuration file if it doesn't already exist
@@ -104,7 +104,7 @@ This repository contains a number of example terraform configurations to enable 
 To get started with an example configuration provided by Couchbase, execute the following command: 
 
 ```
-cd examples/getting-started
+cd $HOME/terraform-provider-couchbase-capella/examples/getting-started
 ```
 
 If you are not using an example and instead using your own custom configuration, you will instead need
