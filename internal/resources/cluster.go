@@ -638,6 +638,12 @@ func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]cluste
 				iops := int(serviceGroup.Node.Disk.IOPS.ValueInt64())
 				diskAzure.Iops = &iops
 			}
+
+			if serviceGroup.Node != nil && !serviceGroup.Node.Disk.Autoexpansion.IsNull() {
+				autoexpansion := serviceGroup.Node.Disk.Autoexpansion.ValueBool()
+				diskAzure.Autoexpansion = &autoexpansion
+			}
+
 			if err := node.FromDiskAzure(diskAzure); err != nil {
 				return nil, fmt.Errorf("%s: %w", errors.ErrConvertingServiceGroups, err)
 			}

@@ -49,9 +49,10 @@ func ClusterSchema() schema.Schema {
 											"disk": schema.SingleNestedAttribute{
 												Computed: true,
 												Attributes: map[string]schema.Attribute{
-													"type":    computedStringAttribute,
-													"storage": computedInt64Attribute,
-													"iops":    computedInt64Attribute,
+													"type":          computedStringAttribute,
+													"storage":       computedInt64Attribute,
+													"iops":          computedInt64Attribute,
+													"autoexpansion": computedBoolAttribute,
 												},
 											},
 										},

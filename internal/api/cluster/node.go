@@ -60,6 +60,9 @@ type DiskAzure struct {
 	// Type depicts type of disk. Please choose from the given list
 	// for Azure cloud provider.
 	Type DiskAzureType `json:"type"`
+
+	// Autoexpansion determines if disk auto expansion is enabled
+	Autoexpansion *bool `json:"autoexpansion,omitempty"`
 }
 
 // DiskAzureType depicts type of disk. Please choose from the given list for Azure cloud provider.
