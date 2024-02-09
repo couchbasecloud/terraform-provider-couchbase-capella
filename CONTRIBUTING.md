@@ -80,7 +80,7 @@ the following contents:
   provider_installation {
 
   dev_overrides {
-    "hashicorp.com/couchbasecloud/couchbase-capella" = "$HOME/bin/terraform-provider-couchbase-capella"
+    "hashicorp.com/couchbasecloud/couchbase-capella" = "$HOME/terraform-provider-couchbase-capella/bin/terraform-provider-couchbase-capella"
   }
 
   # For all other providers, install them directly from their origin provider
