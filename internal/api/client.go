@@ -130,7 +130,12 @@ func (c *Client) ExecuteWithRetry(
 		return nil, fmt.Errorf("%s: %w", errors.ErrConstructingRequest, err)
 	}
 
+	// Set the Authorization header.
 	req.Header.Set("Authorization", "Bearer "+authToken)
+
+	// Set the User-Agent header to "terraform-provider-couchbase-capella".
+	req.Header.Set("User-Agent", "terraform-provider-couchbase-capella")
+
 	for header, value := range headers {
 		req.Header.Set(header, value)
 	}
