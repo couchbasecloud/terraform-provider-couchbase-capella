@@ -52,7 +52,7 @@ func (s *Scope) Metadata(_ context.Context, req resource.MetadataRequest, resp *
 }
 
 // Schema defines the schema for the Scope resource.
-func (s *Scope) Schema(_ context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (s *Scope) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = ScopeSchema()
 }
 
