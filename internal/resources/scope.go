@@ -1,0 +1,227 @@
+package resources
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"strings"
+
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	scope_api "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/scope"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+)
+
+// Ensure the implementation satisfies the expected interfaces.
+var (
+	_ resource.Resource                = &Scope{}
+	_ resource.ResourceWithConfigure   = &Scope{}
+	_ resource.ResourceWithImportState = &Scope{}
+)
+
+const errorMessageWhileScopeCreation = "There is an error during scope creation. Please check in Capella to see if any hanging resources" +
+	" have been created, unexpected error: "
+
+const errorMessageAfterScopeCreation = "Scope creation is successful, but encountered an error while checking the current" +
+	" state of the scope. Please run `terraform plan` after 1-2 minutes to know the" +
+	" current scope state. Additionally, run `terraform apply --refresh-only` to update" +
+	" the state from remote, unexpected error: "
+
+// Scope is the scope resource implementation.
+type Scope struct {
+	*providerschema.Data
+}
+
+func (s *Scope) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
+}
+
+// Metadata returns the Scope resource type name.
+func (s *Scope) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_scope"
+}
+
+// Schema defines the schema for the Scope resource.
+func (s *Scope) Schema(_ context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = ScopeSchema()
+}
+
+// Configure It adds the provider configured api to the scope resource.
+func (s *Scope) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	data, ok := req.ProviderData.(*providerschema.Data)
+
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *ProviderSourceData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+
+	s.Data = data
+}
+
+func (s *Scope) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan providerschema.Scope
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	ScopeRequest := scope_api.CreateScopeRequest{
+		Name: plan.Name.ValueString(),
+	}
+
+	if err := s.validateCreateScopeRequest(plan); err != nil {
+		resp.Diagnostics.AddError(
+			"Error parsing create scope request",
+			"Could not create scope, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	var organizationId = plan.OrganizationId.ValueString()
+	var projectId = plan.ProjectId.ValueString()
+	var clusterId = plan.ClusterId.ValueString()
+	var bucketId = plan.BucketId.ValueString()
+
+	var scope *providerschema.Scope
+	diags.Append(req.Config.GetAttribute(ctx, path.Root("scope"), &scope)...)
+
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/scopes", s.HostURL, organizationId, projectId, clusterId, bucketId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
+	_, err := s.Client.ExecuteWithRetry(
+		ctx,
+		cfg,
+		ScopeRequest,
+		s.Token,
+		nil,
+	)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating scope",
+			errorMessageWhileScopeCreation+api.ParseError(err),
+		)
+		return
+	}
+
+	diags = resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	refreshedState, err := s.retrieveScope(ctx, organizationId, projectId, clusterId, bucketId, scope.Name.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddWarning(
+			"Error Reading Capella Scope",
+			"Could not read Capella Scope for the bucket: %s "+bucketId+"."+errorMessageAfterScopeCreation+api.ParseError(err),
+		)
+		return
+	}
+
+	// Set state to fully populated data
+	diags = resp.State.Set(ctx, refreshedState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+}
+
+func (s *Scope) validateCreateScopeRequest(plan providerschema.Scope) error {
+	if plan.OrganizationId.IsNull() {
+		return errors.ErrOrganizationIdMissing
+	}
+	if plan.ProjectId.IsNull() {
+		return errors.ErrProjectIdMissing
+	}
+	if plan.ClusterId.IsNull() {
+		return errors.ErrClusterIdMissing
+	}
+	if plan.BucketId.IsNull() {
+		return errors.ErrBucketIdMissing
+	}
+	return s.validateScopeAttributesTrimmed(plan)
+}
+
+func (s *Scope) validateScopeAttributesTrimmed(plan providerschema.Scope) error {
+	if (!plan.Name.IsNull() && !plan.Name.IsUnknown()) && !providerschema.IsTrimmed(plan.Name.ValueString()) {
+		return fmt.Errorf("name %s", errors.ErrNotTrimmed)
+	}
+	return nil
+}
+
+// retrieveScope retrieves scope information from the specified organization and project
+// using the provided bucket ID by open-api call.
+func (s *Scope) retrieveScope(ctx context.Context, organizationId, projectId, clusterId, bucketId, scopeName string) (*providerschema.OneScope, error) {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/scopes", s.HostURL, organizationId, projectId, clusterId, bucketId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	response, err := s.Client.ExecuteWithRetry(
+		ctx,
+		cfg,
+		nil,
+		s.Token,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	scopeResp := scope_api.GetScopeResponse{}
+	err = json.Unmarshal(response.Body, &scopeResp)
+	if err != nil {
+		return nil, err
+	}
+
+	if validateScopeNameIsSameInPlanAndState(scopeName, *scopeResp.Name) {
+		scopeResp.Name = &scopeName
+	}
+
+	refreshedState := providerschema.OneScope{
+		Name:        types.StringValue(*scopeResp.Name),
+		Uid:         types.StringValue(*scopeResp.Uid),
+		Collections: make([]providerschema.Collection, 0),
+	}
+
+	for _, apiCollection := range *scopeResp.Collections {
+		collection := providerschema.Collection{
+			MaxTTL: types.Int64Value(*apiCollection.MaxTTL),
+			Name:   types.StringValue(*apiCollection.Name),
+			Uid:    types.StringValue(*apiCollection.Uid),
+		}
+		refreshedState.Collections = append(refreshedState.Collections, collection)
+	}
+	return &refreshedState, nil
+}
+
+func validateScopeNameIsSameInPlanAndState(planScopeName, stateScopeName string) bool {
+	return strings.EqualFold(planScopeName, stateScopeName)
+}
+
+func (s Scope) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s Scope) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s Scope) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	//TODO implement me
+	panic("implement me")
+}
