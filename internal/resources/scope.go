@@ -37,6 +37,11 @@ type Scope struct {
 	*providerschema.Data
 }
 
+// NewScope is a helper function to simplify the provider implementation.
+func NewScope() resource.Resource {
+	return &Scope{}
+}
+
 func (s *Scope) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
 }
