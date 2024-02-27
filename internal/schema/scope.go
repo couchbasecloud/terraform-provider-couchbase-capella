@@ -1,7 +1,15 @@
 package schema
 
-import "github.com/hashicorp/terraform-plugin-framework/types"
+import (
+	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+)
+
+// Scope maps Scope resource schema data to the response received from V4 Capella Public API.
 type Scope struct {
 	// Collections is the array of Collections under a single scope
 	Collections []Collection `tfsdk:"collections"`
@@ -25,7 +33,7 @@ type Scope struct {
 	OrganizationId types.String `tfsdk:"organization_id"`
 }
 
-// Collection defines model for Collection.
+// Collection defines a Collection within the list of collections in a scope.
 type Collection struct {
 	// MaxTTL Max TTL of the collection.
 	MaxTTL types.Int64 `tfsdk:"max_ttl"`
@@ -37,7 +45,7 @@ type Collection struct {
 	Uid types.String `tfsdk:"uid"`
 }
 
-// Scopes defines attributes for the LIST scopes response received from V4 Capella Public API.
+// Scopes defines structure based on the response received from V4 Capella Public API when asked to list scopes.
 type Scopes struct {
 	// Array of scopes. The server returns an array of scopes in the bucket under the single Uid.
 	Scopes []OneScope `tfsdk:"scopes"`
@@ -58,6 +66,7 @@ type Scopes struct {
 	OrganizationId types.String `tfsdk:"organization_id"`
 }
 
+// OneScope defines attributes for a single Scope when fetched from the V4 Capella Public API.
 type OneScope struct {
 	Collections    []Collection `tfsdk:"collections"`
 	Name           types.String `tfsdk:"name"`
@@ -66,4 +75,40 @@ type OneScope struct {
 	ClusterId      types.String `tfsdk:"cluster_id"`
 	ProjectId      types.String `tfsdk:"project_id"`
 	OrganizationId types.String `tfsdk:"organization_id"`
+}
+
+// Validate will split the IDs by a delimiter i.e. comma , in case a terraform import CLI is invoked.
+func (s Scope) Validate() (map[Attr]string, error) {
+	state := map[Attr]basetypes.StringValue{
+		OrganizationId: s.OrganizationId,
+		ProjectId:      s.ProjectId,
+		ClusterId:      s.ClusterId,
+		BucketId:       s.BucketId,
+		ScopeName:      s.Name,
+	}
+
+	IDs, err := validateSchemaState(state)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
+	}
+
+	return IDs, nil
+}
+
+// Validate is used to verify that all the fields in the datasource have been populated.
+func (s Scopes) Validate() (bucketId, clusterId, projectId, organizationId string, err error) {
+	if s.BucketId.IsNull() {
+		return "", "", "", "", errors.ErrBucketIdMissing
+	}
+	if s.OrganizationId.IsNull() {
+		return "", "", "", "", errors.ErrOrganizationIdMissing
+	}
+	if s.ProjectId.IsNull() {
+		return "", "", "", "", errors.ErrProjectIdMissing
+	}
+	if s.ClusterId.IsNull() {
+		return "", "", "", "", errors.ErrClusterIdMissing
+	}
+
+	return s.BucketId.ValueString(), s.ClusterId.ValueString(), s.ProjectId.ValueString(), s.OrganizationId.ValueString(), nil
 }
