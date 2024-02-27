@@ -1,6 +1,13 @@
 package schema
 
-import "github.com/hashicorp/terraform-plugin-framework/types"
+import (
+	"fmt"
+
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+)
 
 type Scope struct {
 	// Collections is the array of Collections under a single scope
@@ -66,4 +73,41 @@ type OneScope struct {
 	ClusterId      types.String `tfsdk:"cluster_id"`
 	ProjectId      types.String `tfsdk:"project_id"`
 	OrganizationId types.String `tfsdk:"organization_id"`
+}
+
+// Validate will split the IDs by a delimiter i.e. comma , in case a terraform import CLI is invoked.
+func (s Scope) Validate() (map[Attr]string, error) {
+	state := map[Attr]basetypes.StringValue{
+		OrganizationId: s.OrganizationId,
+		ProjectId:      s.ProjectId,
+		ClusterId:      s.ClusterId,
+		BucketId:       s.BucketId,
+		ScopeName:      s.Name,
+	}
+
+	IDs, err := validateSchemaState(state)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
+	}
+
+	return IDs, nil
+}
+
+// Validate is used to verify that all the fields in the datasource
+// have been populated.
+func (s Scopes) Validate() (bucketId, clusterId, projectId, organizationId string, err error) {
+	if s.BucketId.IsNull() {
+		return "", "", "", "", errors.ErrBucketIdMissing
+	}
+	if s.OrganizationId.IsNull() {
+		return "", "", "", "", errors.ErrOrganizationIdMissing
+	}
+	if s.ProjectId.IsNull() {
+		return "", "", "", "", errors.ErrProjectIdMissing
+	}
+	if s.ClusterId.IsNull() {
+		return "", "", "", "", errors.ErrClusterIdMissing
+	}
+
+	return s.BucketId.ValueString(), s.ClusterId.ValueString(), s.ProjectId.ValueString(), s.OrganizationId.ValueString(), nil
 }
