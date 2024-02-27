@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	scope_api "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/scope"
@@ -216,9 +217,50 @@ func validateScopeNameIsSameInPlanAndState(planScopeName, stateScopeName string)
 	return strings.EqualFold(planScopeName, stateScopeName)
 }
 
-func (s Scope) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	//TODO implement me
-	panic("implement me")
+func (s *Scope) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state providerschema.Scope
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	IDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Scope in Capella",
+			"Could not read Capella Scope with name "+state.Name.String()+": "+err.Error(),
+		)
+		return
+	}
+	var (
+		organizationId = IDs[providerschema.OrganizationId]
+		projectId      = IDs[providerschema.ProjectId]
+		clusterId      = IDs[providerschema.ClusterId]
+		bucketId       = IDs[providerschema.BucketId]
+		scopeName      = IDs[providerschema.ScopeName]
+	)
+
+	refreshedState, err := s.retrieveScope(ctx, organizationId, projectId, clusterId, bucketId, scopeName)
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError(
+			"Error reading scope",
+			"Could not read scope name "+state.Name.String()+": "+errString,
+		)
+		return
+	}
+
+	diags = resp.State.Set(ctx, &refreshedState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 func (s Scope) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
