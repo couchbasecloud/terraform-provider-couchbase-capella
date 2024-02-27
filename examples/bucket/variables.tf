@@ -7,6 +7,10 @@ variable "auth_token" {
   sensitive   = true
 }
 
+variable "host" {
+  description = "The Host URL of Couchbase Cloud."
+}
+
 variable "project_id" {
   description = "Capella Project ID"
 }
