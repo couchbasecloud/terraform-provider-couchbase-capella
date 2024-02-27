@@ -173,7 +173,7 @@ func (s *Scope) validateScopeAttributesTrimmed(plan providerschema.Scope) error 
 // retrieveScope retrieves scope information from the specified organization and project
 // using the provided bucket ID by open-api call.
 func (s *Scope) retrieveScope(ctx context.Context, organizationId, projectId, clusterId, bucketId, scopeName string) (*providerschema.OneScope, error) {
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/scopes", s.HostURL, organizationId, projectId, clusterId, bucketId)
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/scopes/%s", s.HostURL, organizationId, projectId, clusterId, bucketId, scopeName)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := s.Client.ExecuteWithRetry(
 		ctx,
