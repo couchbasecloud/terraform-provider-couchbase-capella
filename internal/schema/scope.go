@@ -3,16 +3,18 @@ package schema
 import (
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/scope"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 )
 
 // Scope maps Scope resource schema data to the response received from V4 Capella Public API.
 type Scope struct {
 	// Collections is the array of Collections under a single scope
-	Collections []Collection `tfsdk:"collections"`
+	Collections types.Set `tfsdk:"collections"`
 
 	// Name is the name of the scope.
 	Name types.String `tfsdk:"name"`
@@ -43,6 +45,23 @@ type Collection struct {
 
 	// Uid is the UID of the collection.
 	Uid types.String `tfsdk:"uid"`
+}
+
+func CollectionAttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"max_ttl": types.Int64Type,
+		"name":    types.StringType,
+		"uid":     types.StringType,
+	}
+}
+
+func NewCollection(collection scope.Collection) Collection {
+	return Collection{
+		// check nil too
+		MaxTTL: types.Int64Value(*collection.MaxTTL),
+		Name:   types.StringValue(*collection.Name),
+		Uid:    types.StringValue(*collection.Uid),
+	}
 }
 
 // Scopes defines structure based on the response received from V4 Capella Public API when asked to list scopes.

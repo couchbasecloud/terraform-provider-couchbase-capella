@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -103,8 +104,8 @@ func (s *Scope) Create(ctx context.Context, req resource.CreateRequest, resp *re
 	var clusterId = plan.ClusterId.ValueString()
 	var bucketId = plan.BucketId.ValueString()
 
-	var scope *providerschema.Scope
-	diags.Append(req.Config.GetAttribute(ctx, path.Root("scope"), &scope)...)
+	//var scope *providerschema.Scope
+	//diags.Append(req.Config.GetAttribute(ctx, path.Root("scope"), &scope)...)
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/scopes", s.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
@@ -129,12 +130,16 @@ func (s *Scope) Create(ctx context.Context, req resource.CreateRequest, resp *re
 		return
 	}
 
-	refreshedState, err := s.retrieveScope(ctx, organizationId, projectId, clusterId, bucketId, scope.Name.ValueString())
+	refreshedState, err, diag := s.retrieveScope(ctx, organizationId, projectId, clusterId, bucketId, plan.Name.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddWarning(
+		resp.Diagnostics.AddError(
 			"Error Reading Capella Scope",
 			"Could not read Capella Scope for the bucket: %s "+bucketId+"."+errorMessageAfterScopeCreation+api.ParseError(err),
 		)
+		return
+	}
+	if diag.HasError() {
+		diags.Append(diag...)
 		return
 	}
 
@@ -172,7 +177,7 @@ func (s *Scope) validateScopeAttributesTrimmed(plan providerschema.Scope) error 
 
 // retrieveScope retrieves scope information from the specified organization and project
 // using the provided bucket ID by open-api call.
-func (s *Scope) retrieveScope(ctx context.Context, organizationId, projectId, clusterId, bucketId, scopeName string) (*providerschema.OneScope, error) {
+func (s *Scope) retrieveScope(ctx context.Context, organizationId, projectId, clusterId, bucketId, scopeName string) (*providerschema.Scope, error, diag.Diagnostics) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/scopes/%s", s.HostURL, organizationId, projectId, clusterId, bucketId, scopeName)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := s.Client.ExecuteWithRetry(
@@ -183,34 +188,93 @@ func (s *Scope) retrieveScope(ctx context.Context, organizationId, projectId, cl
 		nil,
 	)
 	if err != nil {
-		return nil, err
+		return nil, err, nil
 	}
 
 	scopeResp := scope_api.GetScopeResponse{}
 	err = json.Unmarshal(response.Body, &scopeResp)
 	if err != nil {
-		return nil, err
+		return nil, err, nil
 	}
 
 	if validateScopeNameIsSameInPlanAndState(scopeName, *scopeResp.Name) {
 		scopeResp.Name = &scopeName
 	}
 
-	refreshedState := providerschema.OneScope{
-		Name:        types.StringValue(*scopeResp.Name),
-		Uid:         types.StringValue(*scopeResp.Uid),
-		Collections: make([]providerschema.Collection, 0),
+	//types.ObjectValueFrom(ctx, providerschema.Collection.AttributeTypes())
+	//
+	//var objectList []types.Object
+	//
+	//types.ListValueFrom(ctx, types.ObjectType{}, objectList)
+	//
+	//var baseListType types.ListType
+
+	//types.
+
+	//types.SetValueFrom(ctx, types.ListType{}, baseListType)
+
+	//types.SetValueFrom()
+	//types.ObjectValueFrom()
+	//
+	//auditObj, diags := types.SetValueFrom(ctx, providerschema.Collection.AttributeTypes(), audit)
+	//if diags.HasError() {
+	//	resp.Diagnostics.AddError(
+	//		"Error listing ApiKeys",
+	//		fmt.Sprintf("Could not list api keys, unexpected error: %s", fmt.Errorf("error while audit conversion")),
+	//	)
+	//	return
+	//}
+
+	refreshedState := providerschema.Scope{
+		Name:           types.StringValue(*scopeResp.Name),
+		Uid:            types.StringValue(*scopeResp.Uid),
+		OrganizationId: types.StringValue(organizationId),
+		ProjectId:      types.StringValue(projectId),
+		ClusterId:      types.StringValue(clusterId),
+		BucketId:       types.StringValue(bucketId),
 	}
 
+	objectList := make([]types.Object, 0)
 	for _, apiCollection := range *scopeResp.Collections {
-		collection := providerschema.Collection{
-			MaxTTL: types.Int64Value(*apiCollection.MaxTTL),
-			Name:   types.StringValue(*apiCollection.Name),
-			Uid:    types.StringValue(*apiCollection.Uid),
+
+		providerschemaCollection := providerschema.NewCollection(apiCollection)
+
+		obj, diag := types.ObjectValueFrom(ctx, providerschema.CollectionAttributeTypes(), providerschemaCollection)
+		if diag.HasError() {
+			//diags.Append(diag...)
+			fmt.Println("************ERROR1***************")
+			return nil, fmt.Errorf("obj error"), diag
 		}
-		refreshedState.Collections = append(refreshedState.Collections, collection)
+		fmt.Println("***********API Collection****************")
+
+		data, _ := json.Marshal(apiCollection)
+
+		fmt.Println(string(data))
+		objectList = append(objectList, obj)
+
+		//collection := providerschema.Collection{
+		//	MaxTTL: types.Int64Value(*apiCollection.MaxTTL),
+		//	Name:   types.StringValue(*apiCollection.Name),
+		//	Uid:    types.StringValue(*apiCollection.Uid),
+		//}
+		//refreshedState.Collections = append(refreshedState.Collections, collection)
 	}
-	return &refreshedState, nil
+	//listValue, _ := types.ListValueFrom(ctx, types.ObjectType{}, objectList)
+	//collectionSet, _ := types.SetValueFrom(ctx, types.ListType{}, listValue)
+
+	//listValue, _ := types.ListValueFrom(ctx, types.ObjectType{}, objectList)
+
+	collectionSet, diag := types.SetValueFrom(ctx, types.ObjectType{}.WithAttributeTypes(providerschema.CollectionAttributeTypes()), objectList)
+	if diag.HasError() {
+		//diags.Append(diag...)
+		fmt.Println("************ERROR2***************")
+
+		return nil, fmt.Errorf("collectionSet error"), diag
+	}
+
+	refreshedState.Collections = collectionSet
+
+	return &refreshedState, nil, nil
 }
 
 func validateScopeNameIsSameInPlanAndState(planScopeName, stateScopeName string) bool {
@@ -241,7 +305,26 @@ func (s *Scope) Read(ctx context.Context, req resource.ReadRequest, resp *resour
 		scopeName      = IDs[providerschema.ScopeName]
 	)
 
-	refreshedState, err := s.retrieveScope(ctx, organizationId, projectId, clusterId, bucketId, scopeName)
+	//refreshedState, err, diag := s.retrieveScope(ctx, organizationId, projectId, clusterId, bucketId, plan.Name.ValueString())
+	//if err != nil {
+	//	resp.Diagnostics.AddWarning(
+	//		"Error Reading Capella Scope",
+	//		"Could not read Capella Scope for the bucket: %s "+bucketId+"."+errorMessageAfterScopeCreation+api.ParseError(err),
+	//	)
+	//	return
+	//}
+	//if diag.HasError() {
+	//	diags.Append(diag...)
+	//	return
+	//}
+
+	refreshedState, err, diag := s.retrieveScope(ctx, organizationId, projectId, clusterId, bucketId, scopeName)
+	if diag.HasError() {
+
+		diags.Append(diag...)
+		resp.Diagnostics.Append(diags...)
+		return
+	}
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {

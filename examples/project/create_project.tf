@@ -8,7 +8,7 @@ output "project_id" {
 
 resource "couchbase-capella_project" "new_project" {
   organization_id = var.organization_id
-  name            = var.project_name
+  name            = "project2"
   description     = "A Capella Project that will host many Capella clusters."
 }
 
