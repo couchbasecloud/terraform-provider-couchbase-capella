@@ -174,6 +174,10 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewApiKeys,
 		datasources.NewAppServices,
 		datasources.NewBackups,
+		datasources.NewAuditLogSettings,
+		datasources.NewAuditLogEventIDs,
+		datasources.NewAuditLogExport,
+		datasources.NewSampleBuckets,
 	}
 }
 
@@ -190,5 +194,8 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewAppService,
 		resources.NewBackup,
 		resources.NewBackupSchedule,
+		resources.NewAuditLogSettings,
+		resources.NewAuditLogExport,
+		resources.NewSampleBucket,
 	}
 }
