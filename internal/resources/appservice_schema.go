@@ -31,9 +31,10 @@ func AppServiceSchema() schema.Schema {
 					"ram": int64Attribute(required),
 				},
 			},
-			"audit":    computedAuditAttribute(),
-			"if_match": stringAttribute(optional),
-			"etag":     stringAttribute(computed),
+			"activation_state": boolDefaultAttribute(false, optional, computed),
+			"audit":            computedAuditAttribute(),
+			"if_match":         stringAttribute(optional),
+			"etag":             stringAttribute(computed),
 		},
 	}
 }
