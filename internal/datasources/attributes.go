@@ -43,6 +43,13 @@ var (
 		Computed:    true,
 	}
 
+	// computedIntListAttribute returns a Terraform list schema attribute
+	// which is configured to be computed and of type int64.
+	computedIntListAttribute = schema.ListAttribute{
+		ElementType: types.Int64Type,
+		Computed:    true,
+	}
+
 	// computedAuditAttribute returns a SingleNestedAttribute to
 	// represent couchbase audit data using terraform schema types.
 	computedAuditAttribute = schema.SingleNestedAttribute{
