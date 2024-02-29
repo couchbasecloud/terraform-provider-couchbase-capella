@@ -294,7 +294,53 @@ func (s Scope) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 	panic("implement me")
 }
 
-func (s Scope) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	//TODO implement me
-	panic("implement me")
+func (s *Scope) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state providerschema.Scope
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceIDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error deleting scope",
+			"Could not delete scope name "+state.Name.String()+" unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	var (
+		organizationId = resourceIDs[providerschema.OrganizationId]
+		projectId      = resourceIDs[providerschema.ProjectId]
+		clusterId      = resourceIDs[providerschema.ClusterId]
+		bucketId       = resourceIDs[providerschema.BucketId]
+		scopeName      = resourceIDs[providerschema.ScopeName]
+	)
+
+	// Delete existing scope
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/scopes/%s", s.HostURL, organizationId, projectId, clusterId, bucketId, scopeName)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
+	_, err = s.Client.ExecuteWithRetry(
+		ctx,
+		cfg,
+		nil,
+		s.Token,
+		nil,
+	)
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError(
+			"Error deleting scope",
+			"Could not delete scope name "+state.Name.String()+": "+errString,
+		)
+		return
+	}
+
 }
