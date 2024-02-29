@@ -57,7 +57,7 @@ func CollectionAttributeTypes() map[string]attr.Type {
 
 func NewCollection(collection scope.Collection) Collection {
 	return Collection{
-		// check nil too
+		//TODO: check nil too
 		MaxTTL: types.Int64Value(*collection.MaxTTL),
 		Name:   types.StringValue(*collection.Name),
 		Uid:    types.StringValue(*collection.Uid),
@@ -67,7 +67,7 @@ func NewCollection(collection scope.Collection) Collection {
 // Scopes defines structure based on the response received from V4 Capella Public API when asked to list scopes.
 type Scopes struct {
 	// Array of scopes. The server returns an array of scopes in the bucket under the single Uid.
-	Scopes []OneScope `tfsdk:"scopes"`
+	Scopes []ScopeData `tfsdk:"scopes"`
 
 	// Uid is the UID of the whole scope containing all scopes.
 	Uid types.String `tfsdk:"uid"`
@@ -85,8 +85,8 @@ type Scopes struct {
 	OrganizationId types.String `tfsdk:"organization_id"`
 }
 
-// OneScope defines attributes for a single Scope when fetched from the V4 Capella Public API.
-type OneScope struct {
+// ScopeData defines attributes for a single Scope when fetched from the V4 Capella Public API.
+type ScopeData struct {
 	Collections    []Collection `tfsdk:"collections"`
 	Name           types.String `tfsdk:"name"`
 	Uid            types.String `tfsdk:"uid"`
