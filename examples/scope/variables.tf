@@ -27,6 +27,6 @@ variable "scope" {
   description = "Scope configuration details useful for creation"
 
   type = object({
-    name                       = string
+    name = string
   })
 }
