@@ -55,6 +55,7 @@ func CollectionAttributeTypes() map[string]attr.Type {
 	}
 }
 
+// NewCollection creates a new collection object.
 func NewCollection(collection scope.Collection) Collection {
 	return Collection{
 		//TODO: check nil too

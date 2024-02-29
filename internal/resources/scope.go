@@ -104,9 +104,6 @@ func (s *Scope) Create(ctx context.Context, req resource.CreateRequest, resp *re
 	var clusterId = plan.ClusterId.ValueString()
 	var bucketId = plan.BucketId.ValueString()
 
-	//var scope *providerschema.Scope
-	//diags.Append(req.Config.GetAttribute(ctx, path.Root("scope"), &scope)...)
-
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/scopes", s.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
 	_, err := s.Client.ExecuteWithRetry(
@@ -175,8 +172,7 @@ func (s *Scope) validateScopeAttributesTrimmed(plan providerschema.Scope) error 
 	return nil
 }
 
-// retrieveScope retrieves scope information from the specified organization and project
-// using the provided bucket ID by open-api call.
+// retrieveScope retrieves scope information from the specified organization and project using the provided bucket ID by open-api call.
 func (s *Scope) retrieveScope(ctx context.Context, organizationId, projectId, clusterId, bucketId, scopeName string) (*providerschema.Scope, error, diag.Diagnostics) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/scopes/%s", s.HostURL, organizationId, projectId, clusterId, bucketId, scopeName)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
@@ -213,38 +209,22 @@ func (s *Scope) retrieveScope(ctx context.Context, organizationId, projectId, cl
 	objectList := make([]types.Object, 0)
 	//traverse collections
 	for _, apiCollection := range *scopeResp.Collections {
-		providerschemaCollection := providerschema.NewCollection(apiCollection)
 		//create object
+		providerschemaCollection := providerschema.NewCollection(apiCollection)
 		obj, diag := types.ObjectValueFrom(ctx, providerschema.CollectionAttributeTypes(), providerschemaCollection)
 		if diag.HasError() {
-			//diags.Append(diag...)
-			fmt.Println("************ERROR1***************")
 			return nil, fmt.Errorf("obj error"), diag
 		}
-		fmt.Println("***********API Collection****************")
 
 		data, _ := json.Marshal(apiCollection)
 
 		fmt.Println(string(data))
 		objectList = append(objectList, obj)
-
-		//collection := providerschema.Collection{
-		//	MaxTTL: types.Int64Value(*apiCollection.MaxTTL),
-		//	Name:   types.StringValue(*apiCollection.Name),
-		//	Uid:    types.StringValue(*apiCollection.Uid),
-		//}
-		//refreshedState.Collections = append(refreshedState.Collections, collection)
 	}
-	//listValue, _ := types.ListValueFrom(ctx, types.ObjectType{}, objectList)
-	//collectionSet, _ := types.SetValueFrom(ctx, types.ListType{}, listValue)
 
-	//listValue, _ := types.ListValueFrom(ctx, types.ObjectType{}, objectList)
 	//create collection set
 	collectionSet, diag := types.SetValueFrom(ctx, types.ObjectType{}.WithAttributeTypes(providerschema.CollectionAttributeTypes()), objectList)
 	if diag.HasError() {
-		//diags.Append(diag...)
-		fmt.Println("************ERROR2***************")
-
 		return nil, fmt.Errorf("collectionSet error"), diag
 	}
 
@@ -280,19 +260,6 @@ func (s *Scope) Read(ctx context.Context, req resource.ReadRequest, resp *resour
 		bucketId       = IDs[providerschema.BucketId]
 		scopeName      = IDs[providerschema.ScopeName]
 	)
-
-	//refreshedState, err, diag := s.retrieveScope(ctx, organizationId, projectId, clusterId, bucketId, plan.Name.ValueString())
-	//if err != nil {
-	//	resp.Diagnostics.AddWarning(
-	//		"Error Reading Capella Scope",
-	//		"Could not read Capella Scope for the bucket: %s "+bucketId+"."+errorMessageAfterScopeCreation+api.ParseError(err),
-	//	)
-	//	return
-	//}
-	//if diag.HasError() {
-	//	diags.Append(diag...)
-	//	return
-	//}
 
 	refreshedState, err, diag := s.retrieveScope(ctx, organizationId, projectId, clusterId, bucketId, scopeName)
 	if diag.HasError() {
