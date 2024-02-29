@@ -201,30 +201,6 @@ func (s *Scope) retrieveScope(ctx context.Context, organizationId, projectId, cl
 		scopeResp.Name = &scopeName
 	}
 
-	//types.ObjectValueFrom(ctx, providerschema.Collection.AttributeTypes())
-	//
-	//var objectList []types.Object
-	//
-	//types.ListValueFrom(ctx, types.ObjectType{}, objectList)
-	//
-	//var baseListType types.ListType
-
-	//types.
-
-	//types.SetValueFrom(ctx, types.ListType{}, baseListType)
-
-	//types.SetValueFrom()
-	//types.ObjectValueFrom()
-	//
-	//auditObj, diags := types.SetValueFrom(ctx, providerschema.Collection.AttributeTypes(), audit)
-	//if diags.HasError() {
-	//	resp.Diagnostics.AddError(
-	//		"Error listing ApiKeys",
-	//		fmt.Sprintf("Could not list api keys, unexpected error: %s", fmt.Errorf("error while audit conversion")),
-	//	)
-	//	return
-	//}
-
 	refreshedState := providerschema.Scope{
 		Name:           types.StringValue(*scopeResp.Name),
 		Uid:            types.StringValue(*scopeResp.Uid),
@@ -235,10 +211,10 @@ func (s *Scope) retrieveScope(ctx context.Context, organizationId, projectId, cl
 	}
 
 	objectList := make([]types.Object, 0)
+	//traverse collections
 	for _, apiCollection := range *scopeResp.Collections {
-
 		providerschemaCollection := providerschema.NewCollection(apiCollection)
-
+		//create object
 		obj, diag := types.ObjectValueFrom(ctx, providerschema.CollectionAttributeTypes(), providerschemaCollection)
 		if diag.HasError() {
 			//diags.Append(diag...)
@@ -263,7 +239,7 @@ func (s *Scope) retrieveScope(ctx context.Context, organizationId, projectId, cl
 	//collectionSet, _ := types.SetValueFrom(ctx, types.ListType{}, listValue)
 
 	//listValue, _ := types.ListValueFrom(ctx, types.ObjectType{}, objectList)
-
+	//create collection set
 	collectionSet, diag := types.SetValueFrom(ctx, types.ObjectType{}.WithAttributeTypes(providerschema.CollectionAttributeTypes()), objectList)
 	if diag.HasError() {
 		//diags.Append(diag...)
