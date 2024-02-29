@@ -64,11 +64,11 @@ type DayItem struct {
 type OnTimeBoundary struct {
 	// Hour of the time boundary.
 	// Default: 0
-	Hour int `json:"hour"`
+	Hour int64 `json:"hour"`
 
 	// Minute of the time boundary.
 	// Default: 0
-	Minute int `json:"minute"`
+	Minute int64 `json:"minute"`
 }
 
 // GetClusterOnOffScheduleResponse is the API response received from the Capella V4 Public API

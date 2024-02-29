@@ -3,6 +3,8 @@ package schema
 import (
 	"fmt"
 
+	scheduleapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster_onoff_schedule"
+
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -102,4 +104,35 @@ func (a *ClusterOnOffSchedule) Validate() (map[Attr]string, error) {
 	}
 
 	return IDs, nil
+}
+
+// NewClusterOnOffSchedule creates new cluster on/off schedule object.
+func NewClusterOnOffSchedule(onOffSchedule *scheduleapi.GetClusterOnOffScheduleResponse,
+	organizationId, projectId, clusterId string,
+) *ClusterOnOffSchedule {
+	var days = make([]DayItem, 0)
+
+	for _, d := range onOffSchedule.Days {
+		days = append(days, DayItem{
+			Day:   types.StringValue(d.Day),
+			State: types.StringValue(d.State),
+			From: &OnTimeBoundary{
+				Hour:   types.Int64Value(d.From.Hour),
+				Minute: types.Int64Value(d.From.Minute),
+			},
+			To: &OnTimeBoundary{
+				Hour:   types.Int64Value(d.To.Hour),
+				Minute: types.Int64Value(d.To.Minute),
+			},
+		})
+	}
+
+	newObj := ClusterOnOffSchedule{
+		OrganizationId: types.StringValue(organizationId),
+		ProjectId:      types.StringValue(projectId),
+		ClusterId:      types.StringValue(clusterId),
+		Timezone:       types.StringValue(onOffSchedule.Timezone),
+		Days:           days,
+	}
+	return &newObj
 }

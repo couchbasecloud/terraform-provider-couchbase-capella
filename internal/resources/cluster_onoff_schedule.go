@@ -23,6 +23,14 @@ var (
 	_ resource.ResourceWithImportState = &ClusterOnOffSchedule{}
 )
 
+const errorMessageAfterOnOffScheduleCreation = "Cluster On/Off Schedule creation is successful, but encountered an error while checking the current" +
+	" state of the cluster on/off schedule. Please run `terraform plan` after 1-2 minutes to know the" +
+	" current on/off schedule state. Additionally, run `terraform apply --refresh-only` to update" +
+	" the state from remote, unexpected error: "
+
+const errorMessageWhileOnOffScheduleCreation = "There is an error during cluster on/off schedule creation. Please check in Capella to see if any hanging resources" +
+	" have been created, unexpected error: "
+
 // ClusterOnOffSchedule is the OnOffSchedule resource implementation.
 type ClusterOnOffSchedule struct {
 	*providerschema.Data
@@ -68,11 +76,26 @@ func (c *ClusterOnOffSchedule) Create(ctx context.Context, req resource.CreateRe
 	var clusterId = plan.ClusterId.ValueString()
 
 	var days = make([]scheduleapi.DayItem, 0)
+	for _, d := range plan.Days {
+		days = append(days, scheduleapi.DayItem{
+			State: d.State.ValueString(),
+			Day:   d.Day.ValueString(),
+			From: &scheduleapi.OnTimeBoundary{
+				Hour:   d.From.Hour.ValueInt64(),
+				Minute: d.From.Minute.ValueInt64(),
+			},
+			To: &scheduleapi.OnTimeBoundary{
+				Hour:   d.To.Hour.ValueInt64(),
+				Minute: d.To.Minute.ValueInt64(),
+			},
+		})
+	}
 
 	scheduleRequest := scheduleapi.CreateClusterOnOffScheduleRequest{
 		Timezone: plan.Timezone.ValueString(),
 		Days:     days,
 	}
+
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/onOffSchedule", c.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusNoContent}
 	_, err = c.Client.ExecuteWithRetry(
@@ -85,7 +108,7 @@ func (c *ClusterOnOffSchedule) Create(ctx context.Context, req resource.CreateRe
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error executing request",
-			errorMessageWhileBackupScheduleCreation+api.ParseError(err),
+			errorMessageWhileOnOffScheduleCreation+api.ParseError(err),
 		)
 		return
 	}
@@ -132,8 +155,6 @@ func (c *ClusterOnOffSchedule) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	var days = make([]scheduleapi.DayItem, 0)
-
 	var (
 		organizationId = resourceIDs[providerschema.OrganizationId]
 		projectId      = resourceIDs[providerschema.ProjectId]
@@ -141,7 +162,7 @@ func (c *ClusterOnOffSchedule) Read(ctx context.Context, req resource.ReadReques
 	)
 
 	// Get refreshed backup schedule from Capella
-	refreshedState, err := c.retrieveBackupSchedule(ctx, organizationId, projectId, clusterId)
+	refreshedState, err := c.retrieveClusterOnOffSchedule(ctx, organizationId, projectId, clusterId)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -190,7 +211,20 @@ func (c *ClusterOnOffSchedule) Update(ctx context.Context, req resource.UpdateRe
 	)
 
 	var days = make([]scheduleapi.DayItem, 0)
-	// todo: add days
+	for _, d := range plan.Days {
+		days = append(days, scheduleapi.DayItem{
+			State: d.State.ValueString(),
+			Day:   d.Day.ValueString(),
+			From: &scheduleapi.OnTimeBoundary{
+				Hour:   d.From.Hour.ValueInt64(),
+				Minute: d.From.Minute.ValueInt64(),
+			},
+			To: &scheduleapi.OnTimeBoundary{
+				Hour:   d.To.Hour.ValueInt64(),
+				Minute: d.To.Minute.ValueInt64(),
+			},
+		})
+	}
 
 	BackupScheduleRequest := scheduleapi.UpdateClusterOnOffScheduleRequest{
 		Timezone: plan.Timezone.ValueString(),
@@ -316,7 +350,7 @@ func (c *ClusterOnOffSchedule) Configure(_ context.Context, req resource.Configu
 	c.Data = data
 }
 
-func (c *ClusterOnOffSchedule) validateCreateOnOffScheduleRequest(plan providerschema.ClusterOnOffSchedule) error {
+func (c *ClusterOnOffSchedule) validateCreateClusterOnOffScheduleRequest(plan providerschema.ClusterOnOffSchedule) error {
 	if plan.OrganizationId.IsNull() {
 		return errors.ErrOrganizationIdCannotBeEmpty
 	}
@@ -332,7 +366,7 @@ func (c *ClusterOnOffSchedule) validateCreateOnOffScheduleRequest(plan providers
 
 // retrieveOnOffSchedule retrieves on/off schedule information from the specified organization and project
 // using the provided cluster ID by open-api call.
-func (c *ClusterOnOffSchedule) retrieveOnOffSchedule(ctx context.Context, organizationId, projectId, clusterId string) (*providerschema.ClusterOnOffSchedule, error) {
+func (c *ClusterOnOffSchedule) retrieveClusterOnOffSchedule(ctx context.Context, organizationId, projectId, clusterId string) (*providerschema.ClusterOnOffSchedule, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/onOffSchedule", c.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := c.Client.ExecuteWithRetry(
@@ -347,11 +381,11 @@ func (c *ClusterOnOffSchedule) retrieveOnOffSchedule(ctx context.Context, organi
 	}
 
 	onOffScheduleResp := scheduleapi.GetClusterOnOffScheduleResponse{}
-	err = json.Unmarshal(response.Body, &backupScheduleResp)
+	err = json.Unmarshal(response.Body, &onOffScheduleResp)
 	if err != nil {
 		return nil, err
 	}
 
-	refreshedState := providerschema.NewClusterOnOffSchedule(&onOffScheduleResp, organizationId, projectId)
+	refreshedState := providerschema.NewClusterOnOffSchedule(&onOffScheduleResp, organizationId, projectId, clusterId)
 	return refreshedState, nil
 }
