@@ -119,16 +119,14 @@ func (s *SampleBucket) Create(ctx context.Context, req resource.CreateRequest, r
 		)
 		return
 	}
-	// Add validation on name. If name doesn't equal the sample names then you should throw an error here or
-	// you could just let the create throw an error for it.
+
 	plan.Id = types.StringValue(BucketResponse.Id)
-	//diags = resp.State.Set(ctx, initializeSampleBucketWithPlanAndId(plan, BucketResponse.Id))
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	// failed to retrieve the bucket
+
 	refreshedState, err := s.retrieveBucket(ctx, organizationId, projectId, clusterId, BucketResponse.Id)
 	if err != nil {
 		resp.Diagnostics.AddWarning(
@@ -280,14 +278,18 @@ func (r *SampleBucket) validateCreateBucket(plan providerschema.Bucket) error {
 	if plan.ClusterId.IsNull() {
 		return errors.ErrClusterIdMissing
 	}
-	return r.validateBucketAttributesTrimmed(plan)
+	return r.validateBucketName(plan)
 }
 
-// Add extra validaiton for
-func (r *SampleBucket) validateBucketAttributesTrimmed(plan providerschema.Bucket) error {
+func (r *SampleBucket) validateBucketName(plan providerschema.Bucket) error {
 	if (!plan.Name.IsNull() && !plan.Name.IsUnknown()) && !providerschema.IsTrimmed(plan.Name.ValueString()) {
 		return fmt.Errorf("name %s", errors.ErrNotTrimmed)
 	}
+
+	if !isValidSampleName(plan.Name.ValueString()) {
+		return errors.ErrInvalidSampleBucketName
+	}
+
 	return nil
 }
 
@@ -337,18 +339,13 @@ func (s *SampleBucket) retrieveBucket(ctx context.Context, organizationId, proje
 	return &refreshedState, nil
 }
 
-// initializeBucketWithPlanAndId initializes an instance of providerschema.Bucket
-// with the specified plan and ID. It marks all computed fields as null.
-func initializeSampleBucketWithPlanAndId(plan providerschema.Bucket, id string) providerschema.Bucket {
-	plan.Id = types.StringValue(id)
-	// Do I need this?
-	/*
-		if plan.StorageBackend.IsNull() || plan.StorageBackend.IsUnknown() {
-			plan.StorageBackend = types.StringNull()
-		}
-		if plan.EvictionPolicy.IsNull() || plan.EvictionPolicy.IsUnknown() {
-			plan.EvictionPolicy = types.StringNull()
-		}
-		plan.Stats = types.ObjectNull(providerschema.Stats{}.AttributeTypes())*/
-	return plan
+func isValidSampleName(category string) bool {
+	switch category {
+	case
+		"travel-sample",
+		"beer-sample",
+		"gamesim-sample":
+		return true
+	}
+	return false
 }
