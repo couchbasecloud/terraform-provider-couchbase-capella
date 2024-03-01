@@ -70,7 +70,7 @@ func (s *SampleBucket) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 }
 
 func (s *SampleBucket) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan providerschema.SampleBucket
+	var plan providerschema.Bucket
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 
@@ -119,6 +119,8 @@ func (s *SampleBucket) Create(ctx context.Context, req resource.CreateRequest, r
 		)
 		return
 	}
+	// Add validation on name. If name doesn't equal the sample names then you should throw an error here or
+	// you could just let the create throw an error for it.
 	plan.Id = types.StringValue(BucketResponse.Id)
 	//diags = resp.State.Set(ctx, initializeSampleBucketWithPlanAndId(plan, BucketResponse.Id))
 	diags = resp.State.Set(ctx, plan)
@@ -145,7 +147,7 @@ func (s *SampleBucket) Create(ctx context.Context, req resource.CreateRequest, r
 }
 
 func (s *SampleBucket) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state providerschema.SampleBucket
+	var state providerschema.Bucket
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -201,7 +203,7 @@ func (s *SampleBucket) Update(_ context.Context, _ resource.UpdateRequest, _ *re
 }
 
 func (s *SampleBucket) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state providerschema.SampleBucket
+	var state providerschema.Bucket
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -268,7 +270,7 @@ func (s *SampleBucket) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 }
 
-func (r *SampleBucket) validateCreateBucket(plan providerschema.SampleBucket) error {
+func (r *SampleBucket) validateCreateBucket(plan providerschema.Bucket) error {
 	if plan.OrganizationId.IsNull() {
 		return errors.ErrOrganizationIdMissing
 	}
@@ -282,7 +284,7 @@ func (r *SampleBucket) validateCreateBucket(plan providerschema.SampleBucket) er
 }
 
 // Add extra validaiton for
-func (r *SampleBucket) validateBucketAttributesTrimmed(plan providerschema.SampleBucket) error {
+func (r *SampleBucket) validateBucketAttributesTrimmed(plan providerschema.Bucket) error {
 	if (!plan.Name.IsNull() && !plan.Name.IsUnknown()) && !providerschema.IsTrimmed(plan.Name.ValueString()) {
 		return fmt.Errorf("name %s", errors.ErrNotTrimmed)
 	}
@@ -290,7 +292,7 @@ func (r *SampleBucket) validateBucketAttributesTrimmed(plan providerschema.Sampl
 }
 
 // retrieveBucket retrieves bucket information for a specified organization, project, cluster and bucket ID.
-func (s *SampleBucket) retrieveBucket(ctx context.Context, organizationId, projectId, clusterId, bucketId string) (*providerschema.OneSampleBucket, error) {
+func (s *SampleBucket) retrieveBucket(ctx context.Context, organizationId, projectId, clusterId, bucketId string) (*providerschema.OneBucket, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/sampleBuckets/%s", s.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := s.Client.ExecuteWithRetry(
@@ -309,7 +311,7 @@ func (s *SampleBucket) retrieveBucket(ctx context.Context, organizationId, proje
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
-	refreshedState := providerschema.OneSampleBucket{
+	refreshedState := providerschema.OneBucket{
 		Id:                       types.StringValue(bucketResp.Id),
 		Name:                     types.StringValue(bucketResp.Name),
 		OrganizationId:           types.StringValue(organizationId),
@@ -337,8 +339,9 @@ func (s *SampleBucket) retrieveBucket(ctx context.Context, organizationId, proje
 
 // initializeBucketWithPlanAndId initializes an instance of providerschema.Bucket
 // with the specified plan and ID. It marks all computed fields as null.
-func initializeSampleBucketWithPlanAndId(plan providerschema.SampleBucket, id string) providerschema.SampleBucket {
+func initializeSampleBucketWithPlanAndId(plan providerschema.Bucket, id string) providerschema.Bucket {
 	plan.Id = types.StringValue(id)
+	// Do I need this?
 	/*
 		if plan.StorageBackend.IsNull() || plan.StorageBackend.IsUnknown() {
 			plan.StorageBackend = types.StringNull()

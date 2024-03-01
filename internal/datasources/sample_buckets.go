@@ -130,7 +130,7 @@ func (s *SampleBuckets) Schema(_ context.Context, _ datasource.SchemaRequest, re
 
 // Read refreshes the Terraform state with the latest data of buckets.
 func (d *SampleBuckets) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state providerschema.SampleBuckets
+	var state providerschema.Buckets
 	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -160,7 +160,7 @@ func (d *SampleBuckets) Read(ctx context.Context, req datasource.ReadRequest, re
 
 	// Map response body to model
 	for _, bucket := range response {
-		bucketState := providerschema.OneSampleBucket{
+		bucketState := providerschema.OneBucket{
 			Id:                       types.StringValue(bucket.Id),
 			Name:                     types.StringValue(bucket.Name),
 			Type:                     types.StringValue(bucket.Type),
