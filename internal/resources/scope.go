@@ -211,21 +211,21 @@ func (s *Scope) retrieveScope(ctx context.Context, organizationId, projectId, cl
 	for _, apiCollection := range *scopeResp.Collections {
 		//create object
 		providerschemaCollection := providerschema.NewCollection(apiCollection)
-		obj, diag := types.ObjectValueFrom(ctx, providerschema.CollectionAttributeTypes(), providerschemaCollection)
+		collectionObj, diag := types.ObjectValueFrom(ctx, providerschema.CollectionAttributeTypes(), providerschemaCollection)
 		if diag.HasError() {
-			return nil, fmt.Errorf("obj error"), diag
+			return nil, fmt.Errorf("collection object error"), diag
 		}
-
+		//print data to check apiCollection
 		data, _ := json.Marshal(apiCollection)
-
 		fmt.Println(string(data))
-		objectList = append(objectList, obj)
+
+		objectList = append(objectList, collectionObj)
 	}
 
 	//create collection set
 	collectionSet, diag := types.SetValueFrom(ctx, types.ObjectType{}.WithAttributeTypes(providerschema.CollectionAttributeTypes()), objectList)
 	if diag.HasError() {
-		return nil, fmt.Errorf("collectionSet error"), diag
+		return nil, fmt.Errorf("collection set error"), diag
 	}
 
 	refreshedState.Collections = collectionSet
