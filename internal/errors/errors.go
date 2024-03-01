@@ -158,4 +158,7 @@ var (
 
 	// ErrIfMatchCannotBeSetWhileCreate is returned when if_match is set during create operation.
 	ErrIfMatchCannotBeSetWhileCreate = errors.New("if_match attribute cannot be set during create operation")
+
+	// ErrRatelimit is returned when an API key reaches the ratelimit
+	ErrRatelimit = errors.New("api key reached the ratelimit")
 )
