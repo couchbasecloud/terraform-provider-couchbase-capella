@@ -49,9 +49,13 @@ func (s *Scopes) Schema(_ context.Context, _ datasource.SchemaRequest, resp *dat
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"uid":  computedStringAttribute,
-						"name": computedStringAttribute,
-						"collections": schema.ListNestedAttribute{
+						"uid":             computedStringAttribute,
+						"organization_id": computedStringAttribute,
+						"project_id":      computedStringAttribute,
+						"cluster_id":      computedStringAttribute,
+						"bucket_id":       computedStringAttribute,
+						"name":            computedStringAttribute,
+						"collections": schema.SetNestedAttribute{
 							Computed: true,
 							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
@@ -115,22 +119,41 @@ func (s *Scopes) Read(ctx context.Context, req datasource.ReadRequest, resp *dat
 	}
 
 	for _, scope := range scopesResp.Scopes {
-		collections := make([]providerschema.Collection, 0)
+		objectList := make([]types.Object, 0)
 		for _, apiCollection := range *scope.Collections {
-			collection := providerschema.Collection{
-				MaxTTL: types.Int64Value(*apiCollection.MaxTTL),
-				Name:   types.StringValue(*apiCollection.Name),
-				Uid:    types.StringValue(*apiCollection.Uid),
+			providerschemaCollection := providerschema.NewCollection(apiCollection)
+			collectionObj, diag := types.ObjectValueFrom(ctx, providerschema.CollectionAttributeTypes(), providerschemaCollection)
+			if diag.HasError() {
+				resp.Diagnostics.AddError(
+					"Collection obj error",
+					fmt.Sprintf("Could not read collection object"),
+				)
 			}
-			collections = append(collections, collection)
+
+			objectList = append(objectList, collectionObj)
+
 		}
 
-		stateScopes := state.Scopes
-		newScope := providerschema.ScopeData{
-			Name:        types.StringValue(*scope.Name),
-			Uid:         types.StringValue(*scope.Uid),
-			Collections: collections,
+		collectionSet, diag := types.SetValueFrom(ctx, types.ObjectType{}.WithAttributeTypes(providerschema.CollectionAttributeTypes()), objectList)
+		if diag.HasError() {
+			resp.Diagnostics.AddError(
+				"collectionSet error",
+				fmt.Sprintf("Could not read collection set"),
+			)
 		}
+
+		//the array of scopes is listed together under one uid
+		stateScopes := state.Scopes
+		newScope := providerschema.Scope{
+			Name:           types.StringValue(*scope.Name),
+			Uid:            types.StringValue(*scope.Uid),
+			Collections:    collectionSet,
+			OrganizationId: types.StringValue(organizationId),
+			ProjectId:      types.StringValue(projectId),
+			ClusterId:      types.StringValue(clusterId),
+			BucketId:       types.StringValue(bucketId),
+		}
+
 		stateScopes = append(stateScopes, newScope)
 
 		scopeState := providerschema.Scopes{
