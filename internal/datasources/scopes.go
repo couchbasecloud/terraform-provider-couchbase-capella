@@ -129,6 +129,7 @@ func (s *Scopes) Read(ctx context.Context, req datasource.ReadRequest, resp *dat
 			collections = append(collections, collection)
 		}
 
+		stateScopes := state.Scopes
 		newScope := providerschema.ScopeData{
 			Name:           types.StringValue(*scope.Name),
 			Uid:            types.StringValue(*scope.Uid),
@@ -138,7 +139,14 @@ func (s *Scopes) Read(ctx context.Context, req datasource.ReadRequest, resp *dat
 			ClusterId:      types.StringValue(clusterId),
 			BucketId:       types.StringValue(bucketId),
 		}
-		state.Scopes = append(state.Scopes, newScope)
+		stateScopes = append(stateScopes, newScope)
+
+		scopeState := providerschema.Scopes{
+			Scopes: stateScopes,
+			Uid:    types.StringValue(*scopesResp.Uid),
+		}
+
+		state = scopeState
 	}
 
 	// Set state
