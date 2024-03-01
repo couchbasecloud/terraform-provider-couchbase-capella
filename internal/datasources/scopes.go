@@ -119,7 +119,6 @@ func (s *Scopes) Read(ctx context.Context, req datasource.ReadRequest, resp *dat
 	}
 
 	for _, scope := range scopesResp.Scopes {
-		//collections := make([]types.Object, 0)
 		collections := make([]providerschema.Collection, 0)
 		for _, apiCollection := range *scope.Collections {
 			collection := providerschema.Collection{
@@ -127,21 +126,9 @@ func (s *Scopes) Read(ctx context.Context, req datasource.ReadRequest, resp *dat
 				Name:   types.StringValue(*apiCollection.Name),
 				Uid:    types.StringValue(*apiCollection.Uid),
 			}
-			//collectionObj, diags := types.ObjectValueFrom(ctx, providerschema.CollectionAttributeTypes(), collection)
-			//if diags.HasError() {
-			//	fmt.Errorf("error Converting Collection to Object")
-			//	return
-			//}
-			//collections = append(collections, collectionObj)
 			collections = append(collections, collection)
 		}
-		//collectionSet, diags := types.SetValueFrom(ctx, types.ObjectType{}.WithAttributeTypes(providerschema.CollectionAttributeTypes()), collections)
-		//if diags.HasError() {
-		//	fmt.Errorf("error Converting Collection object to set")
-		//	return
-		//}
 
-		//newScope := providerschema.Scope{
 		newScope := providerschema.ScopeData{
 			Name:           types.StringValue(*scope.Name),
 			Uid:            types.StringValue(*scope.Uid),
