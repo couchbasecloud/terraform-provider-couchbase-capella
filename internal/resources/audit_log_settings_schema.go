@@ -20,8 +20,8 @@ func AuditLogSettingsSchema() schema.Schema {
 			"organization_id": stringAttribute(required, requiresReplace),
 			"project_id":      stringAttribute(required, requiresReplace),
 			"cluster_id":      stringAttribute(required, requiresReplace),
-			"auditEnabled":    boolAttribute(computed, optional, requiresReplace),
-			"enabledEventIDs": schema.ListAttribute{
+			"auditenabled":    boolAttribute(computed, optional, requiresReplace),
+			"enabledeventids": schema.ListAttribute{
 				Computed:    true,
 				Optional:    true,
 				ElementType: types.Int64Type,
@@ -29,7 +29,7 @@ func AuditLogSettingsSchema() schema.Schema {
 					listplanmodifier.RequiresReplace(),
 				},
 			},
-			"disabledUsers": schema.ListNestedAttribute{
+			"disabledusers": schema.ListNestedAttribute{
 				Computed: true,
 				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
