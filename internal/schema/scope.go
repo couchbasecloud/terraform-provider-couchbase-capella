@@ -88,13 +88,9 @@ type Scopes struct {
 
 // ScopeData defines attributes for a single Scope when fetched from the V4 Capella Public API.
 type ScopeData struct {
-	Collections    []Collection `tfsdk:"collections"`
-	Name           types.String `tfsdk:"name"`
-	Uid            types.String `tfsdk:"uid"`
-	BucketId       types.String `tfsdk:"bucket_id"`
-	ClusterId      types.String `tfsdk:"cluster_id"`
-	ProjectId      types.String `tfsdk:"project_id"`
-	OrganizationId types.String `tfsdk:"organization_id"`
+	Collections []Collection `tfsdk:"collections"`
+	Name        types.String `tfsdk:"name"`
+	Uid         types.String `tfsdk:"uid"`
 }
 
 // Validate will split the IDs by a delimiter i.e. comma , in case a terraform import CLI is invoked.
