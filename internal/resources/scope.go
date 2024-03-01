@@ -223,6 +223,7 @@ func (s *Scope) retrieveScope(ctx context.Context, organizationId, projectId, cl
 	}
 
 	//create collection set
+	//using a set instead of list as we need unique list of collections, no duplicates
 	collectionSet, diag := types.SetValueFrom(ctx, types.ObjectType{}.WithAttributeTypes(providerschema.CollectionAttributeTypes()), objectList)
 	if diag.HasError() {
 		return nil, fmt.Errorf("collection set error"), diag
