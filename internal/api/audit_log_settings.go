@@ -1,13 +1,13 @@
 package api
 
-// CreateClusterAuditSettingsRequest is the payload sent to the Capella V4 Public API when configuring audit log settings.
+// UpdateClusterAuditSettingsRequest is the payload sent to the Capella V4 Public API when configuring audit log settings.
 //
 //	In order to access this endpoint, the provided API key must have at least one of the following roles:
 //	- Organization Owner
 //	- Project Owner
 //	- Project Manager
 //	To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
-type CreateClusterAuditSettingsRequest struct {
+type UpdateClusterAuditSettingsRequest struct {
 	// AuditEnabled Determines whether audit logging is enabled or not on the cluster.
 	AuditEnabled bool `json:"auditEnabled"`
 
