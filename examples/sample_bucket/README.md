@@ -310,7 +310,7 @@ terraform plan
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/laurasilaja/code/Lagher0/terraform-provider-couchbase-capella/bin
+│  - couchbasecloud/couchbase-capella in $HOME/terraform-provider-couchbase-capella/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -340,7 +340,7 @@ Sample Output:
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/laurasilaja/code/Lagher0/terraform-provider-couchbase-capella/bin
+│  - couchbasecloud/couchbase-capella in $HOME/terraform-provider-couchbase-capella/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -505,7 +505,7 @@ Sample Output:
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/laurasilaja/code/Lagher0/terraform-provider-couchbase-capella/bin
+│  - couchbasecloud/couchbase-capella in $HOME/terraform-provider-couchbase-capella/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
