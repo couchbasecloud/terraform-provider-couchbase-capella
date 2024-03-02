@@ -99,8 +99,8 @@ func (a *AuditLogSettings) Read(ctx context.Context, req datasource.ReadRequest,
 	err = json.Unmarshal(response.Body, &auditResponse)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading audit settings",
-			"Could not read audit settings in cluster, unexpected error: "+err.Error(),
+			"Error reading audit log settings",
+			"Could not read audit log settings in cluster, unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -122,12 +122,12 @@ func (a *AuditLogSettings) Read(ctx context.Context, req datasource.ReadRequest,
 		disabledUsers = append(disabledUsers, disabledUser)
 	}
 
+	state.AuditEnabled = types.BoolValue(auditResponse.AuditEnabled)
 	state.DisabledUsers = disabledUsers
 	state.EnabledEventIDs = eventIDs
 
 	// Set state
 	diags = resp.State.Set(ctx, &state)
-
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
