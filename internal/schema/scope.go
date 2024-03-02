@@ -68,7 +68,7 @@ func NewCollection(collection scope.Collection) Collection {
 // Scopes defines structure based on the response received from V4 Capella Public API when asked to list scopes.
 type Scopes struct {
 	// Array of scopes. The server returns an array of scopes in the bucket under the single Uid.
-	Scopes []Scope `tfsdk:"scopes"`
+	Scopes []ScopeData `tfsdk:"scopes"`
 
 	// Uid is the UID of the whole scope containing all scopes.
 	Uid types.String `tfsdk:"uid"`
@@ -84,6 +84,25 @@ type Scopes struct {
 
 	// OrganizationId is the ID of the organization to which the Capella cluster belongs.
 	OrganizationId types.String `tfsdk:"organization_id"`
+}
+
+// ScopeData defines attributes for a single Scope when fetched from the V4 Capella Public API.
+type ScopeData struct {
+	Collections types.Set    `tfsdk:"collections"`
+	Name        types.String `tfsdk:"name"`
+	Uid         types.String `tfsdk:"uid"`
+}
+
+// NewScopeData creates new scope object.
+func NewScopeData(scope *scope.GetScopeResponse,
+	collectionSet basetypes.SetValue,
+) *ScopeData {
+	newScopeData := ScopeData{
+		Collections: collectionSet,
+		Name:        types.StringValue(*scope.Name),
+		Uid:         types.StringValue(*scope.Uid),
+	}
+	return &newScopeData
 }
 
 // Validate will split the IDs by a delimiter i.e. comma , in case a terraform import CLI is invoked.

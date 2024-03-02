@@ -49,12 +49,12 @@ func (s *Scopes) Schema(_ context.Context, _ datasource.SchemaRequest, resp *dat
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"uid":             computedStringAttribute,
-						"organization_id": computedStringAttribute,
-						"project_id":      computedStringAttribute,
-						"cluster_id":      computedStringAttribute,
-						"bucket_id":       computedStringAttribute,
-						"name":            computedStringAttribute,
+						"uid": computedStringAttribute,
+						//"organization_id": computedStringAttribute,
+						//"project_id":      computedStringAttribute,
+						//"cluster_id":      computedStringAttribute,
+						//"bucket_id":       computedStringAttribute,
+						"name": computedStringAttribute,
 						"collections": schema.SetNestedAttribute{
 							Computed: true,
 							NestedObject: schema.NestedAttributeObject{
@@ -144,17 +144,14 @@ func (s *Scopes) Read(ctx context.Context, req datasource.ReadRequest, resp *dat
 
 		//the array of scopes is listed together under one uid
 		stateScopes := state.Scopes
-		newScope := providerschema.Scope{
-			Name:           types.StringValue(*scope.Name),
-			Uid:            types.StringValue(*scope.Uid),
-			Collections:    collectionSet,
-			OrganizationId: types.StringValue(organizationId),
-			ProjectId:      types.StringValue(projectId),
-			ClusterId:      types.StringValue(clusterId),
-			BucketId:       types.StringValue(bucketId),
-		}
+		newScope := providerschema.NewScopeData(&scope, collectionSet)
+		//newScope := providerschema.ScopeData{
+		//	Name:        types.StringValue(*scope.Name),
+		//	Uid:         types.StringValue(*scope.Uid),
+		//	Collections: collectionSet,
+		//}
 
-		stateScopes = append(stateScopes, newScope)
+		stateScopes = append(stateScopes, *newScope)
 
 		scopeState := providerschema.Scopes{
 			Scopes:         stateScopes,
