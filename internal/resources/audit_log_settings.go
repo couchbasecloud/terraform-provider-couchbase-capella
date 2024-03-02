@@ -58,12 +58,79 @@ func (a *AuditLogSettings) Configure(_ context.Context, req resource.ConfigureRe
 }
 
 // AuditLogSettings does not have create endpoint
-func (a *AuditLogSettings) Create(_ context.Context, _ resource.CreateRequest, resp *resource.CreateResponse) {
-	resp.Diagnostics.AddError(
-		"create is not supported with audit log settings",
-		"create is not supported with audit log settings",
+func (a *AuditLogSettings) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var state providerschema.ClusterAuditSettings
+	diags := req.Plan.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var (
+		organizationId = state.OrganizationId.ValueString()
+		projectId      = state.ProjectId.ValueString()
+		clusterId      = state.ClusterId.ValueString()
 	)
-	return
+
+	eventIds := make([]int32, len(state.EnabledEventIDs))
+	for _, event := range state.EnabledEventIDs {
+		eventIds = append(eventIds, int32(event.ValueInt64()))
+	}
+
+	disabledUsers := make([]api.AuditSettingsDisabledUser, len(state.DisabledUsers))
+	for _, user := range state.DisabledUsers {
+		u := api.AuditSettingsDisabledUser{
+			Domain: user.Domain.ValueStringPointer(),
+			Name:   user.Name.ValueStringPointer(),
+		}
+		disabledUsers = append(disabledUsers, u)
+	}
+
+	auditLogUpdateRequest := api.UpdateClusterAuditSettingsRequest{
+		AuditEnabled:    state.AuditEnabled.ValueBool(),
+		EnabledEventIDs: eventIds,
+		DisabledUsers:   disabledUsers,
+	}
+
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/auditLog", a.HostURL, organizationId, projectId, clusterId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusOK}
+	_, err := a.Client.ExecuteWithRetry(
+		ctx,
+		cfg,
+		auditLogUpdateRequest,
+		a.Token,
+		nil,
+	)
+
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError(
+			"Error updating audit log settings",
+			"Could not update audit log settings, unexpected error: "+": "+errString,
+		)
+		return
+	}
+
+	currentState, err := a.getAuditLogSettings(ctx, organizationId, projectId, clusterId)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating audit log settings",
+			"Could not update audit log settings "+": "+api.ParseError(err),
+		)
+		return
+	}
+
+	// Set state to fully populated data
+	diags = resp.State.Set(ctx, currentState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 func (a *AuditLogSettings) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -191,15 +258,15 @@ func (a *AuditLogSettings) Update(ctx context.Context, req resource.UpdateReques
 // AuditLogSettings does not have delete endpoint
 func (a *AuditLogSettings) Delete(_ context.Context, _ resource.DeleteRequest, resp *resource.DeleteResponse) {
 	resp.Diagnostics.AddError(
-		"delete is not supported",
-		"delete is not supported",
+		"delete is not supported audit log settings",
+		"delete is not supported for audit log settings",
 	)
 	return
 }
 
 func (a *AuditLogSettings) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("cluster_id"), req, resp)
 }
 
 func (a *AuditLogSettings) getAuditLogSettings(ctx context.Context, organizationId, projectId, clusterId string) (*api.GetClusterAuditSettingsResponse, error) {

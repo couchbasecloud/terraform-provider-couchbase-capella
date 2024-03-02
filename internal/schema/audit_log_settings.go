@@ -27,10 +27,10 @@ type ClusterAuditSettings struct {
 
 type AuditSettingsDisabledUser struct {
 	// Domain Specifies whether the user is local or external.
-	Domain types.String `tfsdk:"domain,omitempty"`
+	Domain types.String `tfsdk:"domain"`
 
 	// Name The user name.
-	Name types.String `tfsdk:"name,omitempty"`
+	Name types.String `tfsdk:"name"`
 }
 
 // Validate is used to verify that IDs have been properly imported.
