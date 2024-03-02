@@ -114,7 +114,9 @@ func (s *Scopes) Read(ctx context.Context, req datasource.ReadRequest, resp *dat
 		return
 	}
 
-	for _, scope := range scopesResp.Scopes {
+	for i := range scopesResp.Scopes {
+		scope := scopesResp.Scopes[i]
+		//for _, scope := range scopesResp.Scopes {
 		objectList := make([]types.Object, 0)
 		for _, apiCollection := range *scope.Collections {
 			providerschemaCollection := providerschema.NewCollection(apiCollection)
@@ -122,7 +124,7 @@ func (s *Scopes) Read(ctx context.Context, req datasource.ReadRequest, resp *dat
 			if diag.HasError() {
 				resp.Diagnostics.AddError(
 					"Collection obj error",
-					fmt.Sprintf("Could not read collection object"),
+					"Could not read collection object",
 				)
 			}
 
@@ -134,7 +136,7 @@ func (s *Scopes) Read(ctx context.Context, req datasource.ReadRequest, resp *dat
 		if diag.HasError() {
 			resp.Diagnostics.AddError(
 				"collectionSet error",
-				fmt.Sprintf("Could not read collection set"),
+				"Could not read collection set",
 			)
 		}
 
