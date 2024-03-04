@@ -73,17 +73,17 @@ func (a *AuditLogSettings) Create(ctx context.Context, req resource.CreateReques
 	)
 
 	eventIds := make([]int32, len(state.EnabledEventIDs))
-	for _, event := range state.EnabledEventIDs {
-		eventIds = append(eventIds, int32(event.ValueInt64()))
+	for i, event := range state.EnabledEventIDs {
+		eventIds[i] = int32(event.ValueInt64())
 	}
 
 	disabledUsers := make([]api.AuditSettingsDisabledUser, len(state.DisabledUsers))
-	for _, user := range state.DisabledUsers {
+	for i, user := range state.DisabledUsers {
 		u := api.AuditSettingsDisabledUser{
 			Domain: user.Domain.ValueStringPointer(),
 			Name:   user.Name.ValueStringPointer(),
 		}
-		disabledUsers = append(disabledUsers, u)
+		disabledUsers[i] = u
 	}
 
 	auditLogUpdateRequest := api.UpdateClusterAuditSettingsRequest{
@@ -195,17 +195,17 @@ func (a *AuditLogSettings) Update(ctx context.Context, req resource.UpdateReques
 	)
 
 	eventIds := make([]int32, len(state.EnabledEventIDs))
-	for _, event := range state.EnabledEventIDs {
-		eventIds = append(eventIds, int32(event.ValueInt64()))
+	for i, event := range state.EnabledEventIDs {
+		eventIds[i] = int32(event.ValueInt64())
 	}
 
 	disabledUsers := make([]api.AuditSettingsDisabledUser, len(state.DisabledUsers))
-	for _, user := range state.DisabledUsers {
+	for i, user := range state.DisabledUsers {
 		u := api.AuditSettingsDisabledUser{
 			Domain: user.Domain.ValueStringPointer(),
 			Name:   user.Name.ValueStringPointer(),
 		}
-		disabledUsers = append(disabledUsers, u)
+		disabledUsers[i] = u
 	}
 
 	auditLogUpdateRequest := api.UpdateClusterAuditSettingsRequest{

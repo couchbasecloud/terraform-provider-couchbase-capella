@@ -106,12 +106,12 @@ func (a *AuditLogSettings) Read(ctx context.Context, req datasource.ReadRequest,
 	}
 
 	eventIDs := make([]types.Int64, len(auditResponse.EnabledEventIDs))
-	for _, e := range auditResponse.EnabledEventIDs {
-		eventIDs = append(eventIDs, types.Int64Value(int64(e)))
+	for i, e := range auditResponse.EnabledEventIDs {
+		eventIDs[i] = types.Int64Value(int64(e))
 	}
 
 	disabledUsers := make([]providerschema.AuditSettingsDisabledUser, len(auditResponse.DisabledUsers))
-	for _, u := range auditResponse.DisabledUsers {
+	for i, u := range auditResponse.DisabledUsers {
 		disabledUser := providerschema.AuditSettingsDisabledUser{}
 		if u.Domain != nil {
 			disabledUser.Domain = types.StringValue(*u.Domain)
@@ -119,7 +119,7 @@ func (a *AuditLogSettings) Read(ctx context.Context, req datasource.ReadRequest,
 		if u.Name != nil {
 			disabledUser.Name = types.StringValue(*u.Name)
 		}
-		disabledUsers = append(disabledUsers, disabledUser)
+		disabledUsers[i] = disabledUser
 	}
 
 	state.AuditEnabled = types.BoolValue(auditResponse.AuditEnabled)
