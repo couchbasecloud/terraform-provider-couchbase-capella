@@ -19,10 +19,6 @@ variable "bucket_id" {
   description = "Capella Bucket ID"
 }
 
-variable "host" {
-  description = "The Host URL of Couchbase Cloud."
-}
-
 variable "scope" {
   description = "Scope configuration details useful for creation"
 
