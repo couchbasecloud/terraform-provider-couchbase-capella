@@ -78,6 +78,7 @@ func (s *Scope) Configure(_ context.Context, req resource.ConfigureRequest, resp
 	s.Data = data
 }
 
+// Create creates a new scope.
 func (s *Scope) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan providerschema.Scope
 	diags := req.Plan.Get(ctx, &plan)
@@ -87,7 +88,7 @@ func (s *Scope) Create(ctx context.Context, req resource.CreateRequest, resp *re
 		return
 	}
 
-	ScopeRequest := scope_api.CreateScopeRequest{
+	scopeRequest := scope_api.CreateScopeRequest{
 		Name: plan.Name.ValueString(),
 	}
 
@@ -109,7 +110,7 @@ func (s *Scope) Create(ctx context.Context, req resource.CreateRequest, resp *re
 	_, err := s.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
-		ScopeRequest,
+		scopeRequest,
 		s.Token,
 		nil,
 	)
@@ -215,10 +216,6 @@ func (s *Scope) retrieveScope(ctx context.Context, organizationId, projectId, cl
 		if diag.HasError() {
 			return nil, fmt.Errorf("collection object error"), diag
 		}
-		//print data to check apiCollection
-		data, _ := json.Marshal(apiCollection)
-		fmt.Println(string(data))
-
 		objectList = append(objectList, collectionObj)
 	}
 
@@ -238,6 +235,7 @@ func validateScopeNameIsSameInPlanAndState(planScopeName, stateScopeName string)
 	return strings.EqualFold(planScopeName, stateScopeName)
 }
 
+// Read reads the scope information.
 func (s *Scope) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state providerschema.Scope
 	diags := req.State.Get(ctx, &state)
@@ -290,11 +288,18 @@ func (s *Scope) Read(ctx context.Context, req resource.ReadRequest, resp *resour
 	}
 }
 
+// Update updates the scope.
 func (s Scope) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	//TODO implement me
-	panic("implement me")
+	// Couchbase Capella's v4 does not support a PUT endpoint for scopes.
+	// Scopes can only be created, read and deleted.
+	// https://docs.couchbase.com/cloud/management-api-reference/index.html#tag/buckets-scopes-and-collections
+	//
+	// Note: In this situation, terraform apply will default to deleting and executing a new create.
+	// The update implementation should simply be left empty.
+	// https://developer.hashicorp.com/terraform/plugin/framework/resources/update
 }
 
+// Delete deletes the scope.
 func (s *Scope) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state providerschema.Scope
 	diags := req.State.Get(ctx, &state)
