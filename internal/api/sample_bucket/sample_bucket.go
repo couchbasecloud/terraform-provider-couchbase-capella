@@ -1,4 +1,4 @@
-package samplebucket
+package sample_bucket
 
 // CreateSampleBucketRequest is the payload passed to V4 Capella Public API to create a bucket in a Capella cluster.
 // Creates a new sample bucket configuration under a cluster.

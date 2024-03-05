@@ -7,9 +7,10 @@ import (
 	"net/http"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	samplebucket "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/sample_bucket"
+	samplebucketapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/sample_bucket"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -23,22 +24,30 @@ var (
 	_ resource.ResourceWithImportState = &SampleBucket{}
 )
 
-// Samples is the samples resource implementation.
+const errorMessageAfterSampleBucketCreation = "Sample bucket creation is successful, but encountered an error while checking the current" +
+	" state of the sample bucket. Please run `terraform plan` after 1-2 minutes to know the" +
+	" current sample bucket state. Additionally, run `terraform apply --refresh-only` to update" +
+	" the state from remote, unexpected error: "
+
+const errorMessageWhileSampleBucketCreation = "There is an error during sample bucket creation. Please check in Capella to see if any hanging resources" +
+	" have been created, unexpected error: "
+
+// SampleBucket is the sample bucket resource implementation.
 type SampleBucket struct {
 	*providerschema.Data
 }
 
-// NewSamples is a helper function to simplify the provider implementation.
+// NewSampleBucket is a helper function to simplify the provider implementation.
 func NewSampleBucket() resource.Resource {
 	return &SampleBucket{}
 }
 
-// Metadata returns the samples resource type name.
+// Metadata returns the SampleBucket resource type name.
 func (s *SampleBucket) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_samplebucket"
+	resp.TypeName = req.ProviderTypeName + "_sample_bucket"
 }
 
-// Configure It adds the provider configured api to the project resource.
+// Configure adds the configured client to the SampleBucket resource.
 func (s *SampleBucket) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -58,19 +67,20 @@ func (s *SampleBucket) Configure(ctx context.Context, req resource.ConfigureRequ
 	s.Data = data
 }
 
-// ImportState imports a remote sample cluster that is not created by Terraform.
+// ImportState imports a remote sample bucket that is not created by Terraform.
 func (s *SampleBucket) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-// Schema defines the schema for the samples resource.
+// Schema defines the schema for the SampleBucket resource.
 func (s *SampleBucket) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = SampleBucketSchema()
 }
 
+// Create creates a new sample bucket
 func (s *SampleBucket) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan providerschema.Bucket
+	var plan providerschema.SampleBucket
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 
@@ -78,7 +88,7 @@ func (s *SampleBucket) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	BucketRequest := samplebucket.CreateSampleBucketRequest{
+	sampleBucketRequest := samplebucketapi.CreateSampleBucketRequest{
 		Name: plan.Name.ValueString(),
 	}
 	if err := s.validateCreateBucket(plan); err != nil {
@@ -98,40 +108,39 @@ func (s *SampleBucket) Create(ctx context.Context, req resource.CreateRequest, r
 	response, err := s.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
-		BucketRequest,
+		sampleBucketRequest,
 		s.Token,
 		nil,
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating bucket",
-			errorMessageWhileBucketCreation+api.ParseError(err),
+			"Error creating sample bucket",
+			errorMessageWhileSampleBucketCreation+api.ParseError(err),
 		)
 		return
 	}
 
-	BucketResponse := samplebucket.CreateSampleBucketResponse{}
-	err = json.Unmarshal(response.Body, &BucketResponse)
+	sampleBucketResponse := samplebucketapi.CreateSampleBucketResponse{}
+	err = json.Unmarshal(response.Body, &sampleBucketResponse)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating bucket",
-			errorMessageWhileBucketCreation+"error during unmarshalling: "+err.Error(),
+			"Error creating sample bucket",
+			errorMessageWhileSampleBucketCreation+"error during unmarshalling: "+err.Error(),
 		)
 		return
 	}
 
-	plan.Id = types.StringValue(BucketResponse.Id)
-	diags = resp.State.Set(ctx, plan)
+	diags = resp.State.Set(ctx, initializeSampleBucketWithPlanAndId(plan, sampleBucketResponse.Id))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	refreshedState, err := s.retrieveBucket(ctx, organizationId, projectId, clusterId, BucketResponse.Id)
+	refreshedState, err := s.retrieveSampleBucket(ctx, organizationId, projectId, clusterId, sampleBucketResponse.Id)
 	if err != nil {
 		resp.Diagnostics.AddWarning(
-			"Error creating bucket "+BucketResponse.Id,
-			errorMessageAfterBucketCreation+api.ParseError(err),
+			"Error creating sample bucket "+sampleBucketResponse.Id,
+			errorMessageAfterSampleBucketCreation+api.ParseError(err),
 		)
 		return
 	}
@@ -144,8 +153,9 @@ func (s *SampleBucket) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 }
 
+// Read reads SampleBucket information.
 func (s *SampleBucket) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state providerschema.Bucket
+	var state providerschema.SampleBucket
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -155,8 +165,8 @@ func (s *SampleBucket) Read(ctx context.Context, req resource.ReadRequest, resp 
 	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Bucket in Capella",
-			"Could not read Capella Bucket with ID "+state.Id.String()+": "+err.Error(),
+			"Error Reading SampleBucket in Capella",
+			"Could not read Capella sample Bucket with ID "+state.Id.String()+": "+err.Error(),
 		)
 		return
 	}
@@ -168,7 +178,7 @@ func (s *SampleBucket) Read(ctx context.Context, req resource.ReadRequest, resp 
 		bucketId       = IDs[providerschema.Id]
 	)
 
-	refreshedState, err := s.retrieveBucket(ctx, organizationId, projectId, clusterId, bucketId)
+	refreshedState, err := s.retrieveSampleBucket(ctx, organizationId, projectId, clusterId, bucketId)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -177,8 +187,8 @@ func (s *SampleBucket) Read(ctx context.Context, req resource.ReadRequest, resp 
 			return
 		}
 		resp.Diagnostics.AddError(
-			"Error reading bucket",
-			"Could not read bucket with id "+state.Id.String()+": "+errString,
+			"Error reading Samplebucket",
+			"Could not read sample bucket with id "+state.Id.String()+": "+errString,
 		)
 		return
 	}
@@ -192,7 +202,7 @@ func (s *SampleBucket) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 func (s *SampleBucket) Update(_ context.Context, _ resource.UpdateRequest, _ *resource.UpdateResponse) {
 	// Couchbase Capella's v4 does not support a PUT endpoint for sample buckets.
-	// Allowlists can only be created, read and deleted.
+	// SampleBuckets can only be created, read and deleted.
 	// http://cbc-cp-api.s3-website-us-east-1.amazonaws.com/#tag/sampleBucket
 	//
 	// Note: In this situation, terraform apply will default to deleting and executing a new create.
@@ -200,8 +210,9 @@ func (s *SampleBucket) Update(_ context.Context, _ resource.UpdateRequest, _ *re
 	// https://developer.hashicorp.com/terraform/plugin/framework/resources/update
 }
 
+// Delete deletes the SampleBucket
 func (s *SampleBucket) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state providerschema.Bucket
+	var state providerschema.SampleBucket
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -210,8 +221,8 @@ func (s *SampleBucket) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	if state.OrganizationId.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error creating bucket",
-			"Could not create bucket, unexpected error: "+errors.ErrOrganizationIdCannotBeEmpty.Error(),
+			"Error creating sample bucket",
+			"Could not create sample bucket, unexpected error: "+errors.ErrOrganizationIdCannotBeEmpty.Error(),
 		)
 		return
 	}
@@ -219,8 +230,8 @@ func (s *SampleBucket) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	if state.ProjectId.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error creating bucket",
-			"Could not create bucket, unexpected error: "+errors.ErrProjectIdCannotBeEmpty.Error(),
+			"Error creating sample bucket",
+			"Could not create sample bucket, unexpected error: "+errors.ErrProjectIdCannotBeEmpty.Error(),
 		)
 		return
 	}
@@ -228,8 +239,8 @@ func (s *SampleBucket) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	if state.ClusterId.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error creating bucket",
-			"Could not create bucket, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
+			"Error creating sample bucket",
+			"Could not create sample bucket, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
 		)
 		return
 	}
@@ -237,8 +248,8 @@ func (s *SampleBucket) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	if state.Id.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error creating bucket",
-			"Could not create bucket, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
+			"Error creating sample bucket",
+			"Could not create sample bucket, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
 		)
 		return
 	}
@@ -261,14 +272,14 @@ func (s *SampleBucket) Delete(ctx context.Context, req resource.DeleteRequest, r
 			return
 		}
 		resp.Diagnostics.AddError(
-			"Error Deleting the Bucket",
-			"Could not delete Bucket associated with cluster "+clusterId+": "+errString,
+			"Error Deleting the SampleBucket",
+			"Could not delete sample Bucket associated with cluster "+clusterId+": "+errString,
 		)
 		return
 	}
 }
 
-func (r *SampleBucket) validateCreateBucket(plan providerschema.Bucket) error {
+func (r *SampleBucket) validateCreateBucket(plan providerschema.SampleBucket) error {
 	if plan.OrganizationId.IsNull() {
 		return errors.ErrOrganizationIdMissing
 	}
@@ -278,10 +289,10 @@ func (r *SampleBucket) validateCreateBucket(plan providerschema.Bucket) error {
 	if plan.ClusterId.IsNull() {
 		return errors.ErrClusterIdMissing
 	}
-	return r.validateBucketName(plan)
+	return r.validateSampleBucketName(plan)
 }
 
-func (r *SampleBucket) validateBucketName(plan providerschema.Bucket) error {
+func (r *SampleBucket) validateSampleBucketName(plan providerschema.SampleBucket) error {
 	if (!plan.Name.IsNull() && !plan.Name.IsUnknown()) && !providerschema.IsTrimmed(plan.Name.ValueString()) {
 		return fmt.Errorf("name %s", errors.ErrNotTrimmed)
 	}
@@ -293,8 +304,8 @@ func (r *SampleBucket) validateBucketName(plan providerschema.Bucket) error {
 	return nil
 }
 
-// retrieveBucket retrieves bucket information for a specified organization, project, cluster and bucket ID.
-func (s *SampleBucket) retrieveBucket(ctx context.Context, organizationId, projectId, clusterId, bucketId string) (*providerschema.OneBucket, error) {
+// retrieveSampleBucket retrieves sample bucket information for a specified organization, project, cluster and sample bucket ID.
+func (s *SampleBucket) retrieveSampleBucket(ctx context.Context, organizationId, projectId, clusterId, bucketId string) (*providerschema.SampleBucket, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/sampleBuckets/%s", s.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := s.Client.ExecuteWithRetry(
@@ -308,32 +319,33 @@ func (s *SampleBucket) retrieveBucket(ctx context.Context, organizationId, proje
 		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 	}
 
-	bucketResp := samplebucket.GetSampleBucketResponse{}
-	err = json.Unmarshal(response.Body, &bucketResp)
+	sampleBucketResp := samplebucketapi.GetSampleBucketResponse{}
+	err = json.Unmarshal(response.Body, &sampleBucketResp)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
-	refreshedState := providerschema.OneBucket{
-		Id:                       types.StringValue(bucketResp.Id),
-		Name:                     types.StringValue(bucketResp.Name),
+	sampleStats := providerschema.NewStats(*sampleBucketResp.Stats)
+	sampleBucketStatsObj, diags := types.ObjectValueFrom(ctx, sampleStats.AttributeTypes(), sampleStats)
+	if diags.HasError() {
+		return nil, errors.ErrUnableToConvertAuditData
+	}
+
+	refreshedState := providerschema.SampleBucket{
+		Id:                       types.StringValue(sampleBucketResp.Id),
+		Name:                     types.StringValue(sampleBucketResp.Name),
 		OrganizationId:           types.StringValue(organizationId),
 		ProjectId:                types.StringValue(projectId),
 		ClusterId:                types.StringValue(clusterId),
-		Type:                     types.StringValue(bucketResp.Type),
-		StorageBackend:           types.StringValue(bucketResp.StorageBackend),
-		MemoryAllocationInMB:     types.Int64Value(bucketResp.MemoryAllocationInMb),
-		BucketConflictResolution: types.StringValue(bucketResp.BucketConflictResolution),
-		DurabilityLevel:          types.StringValue(bucketResp.DurabilityLevel),
-		Replicas:                 types.Int64Value(bucketResp.Replicas),
-		Flush:                    types.BoolValue(bucketResp.Flush),
-		TimeToLiveInSeconds:      types.Int64Value(bucketResp.TimeToLiveInSeconds),
-		EvictionPolicy:           types.StringValue(bucketResp.EvictionPolicy),
-		Stats: &providerschema.Stats{
-			ItemCount:       types.Int64Value(bucketResp.Stats.ItemCount),
-			OpsPerSecond:    types.Int64Value(bucketResp.Stats.OpsPerSecond),
-			DiskUsedInMiB:   types.Int64Value(bucketResp.Stats.DiskUsedInMib),
-			MemoryUsedInMiB: types.Int64Value(bucketResp.Stats.MemoryUsedInMib),
-		},
+		Type:                     types.StringValue(sampleBucketResp.Type),
+		StorageBackend:           types.StringValue(sampleBucketResp.StorageBackend),
+		MemoryAllocationInMB:     types.Int64Value(sampleBucketResp.MemoryAllocationInMb),
+		BucketConflictResolution: types.StringValue(sampleBucketResp.BucketConflictResolution),
+		DurabilityLevel:          types.StringValue(sampleBucketResp.DurabilityLevel),
+		Replicas:                 types.Int64Value(sampleBucketResp.Replicas),
+		Flush:                    types.BoolValue(sampleBucketResp.Flush),
+		TimeToLiveInSeconds:      types.Int64Value(sampleBucketResp.TimeToLiveInSeconds),
+		EvictionPolicy:           types.StringValue(sampleBucketResp.EvictionPolicy),
+		Stats:                    sampleBucketStatsObj,
 	}
 
 	return &refreshedState, nil
@@ -348,4 +360,17 @@ func isValidSampleName(category string) bool {
 		return true
 	}
 	return false
+}
+
+// initializeBucketWithPlanAndId initializes an instance of providerschema.Bucket
+// with the specified plan and ID. It marks all computed fields as null.
+func initializeSampleBucketWithPlanAndId(plan providerschema.SampleBucket, id string) providerschema.SampleBucket {
+	plan.Id = types.StringValue(id)
+	if plan.StorageBackend.IsNull() || plan.StorageBackend.IsUnknown() {
+		plan.StorageBackend = types.StringNull()
+	}
+	if plan.EvictionPolicy.IsNull() || plan.EvictionPolicy.IsUnknown() {
+		plan.EvictionPolicy = types.StringNull()
+	}
+	return plan
 }

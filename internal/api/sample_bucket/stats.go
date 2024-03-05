@@ -1,4 +1,4 @@
-package samplebucket
+package sample_bucket
 
 // Stats are the bucket related statistics that are sent by the Capella V4 Public API for any existing bucket.
 type Stats struct {
