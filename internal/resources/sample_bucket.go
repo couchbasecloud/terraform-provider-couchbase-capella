@@ -78,7 +78,7 @@ func (s *SampleBucket) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 	resp.Schema = SampleBucketSchema()
 }
 
-// Create creates a new sample bucket
+// Create creates a new sample bucket.
 func (s *SampleBucket) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan providerschema.SampleBucket
 	diags := req.Plan.Get(ctx, &plan)
@@ -210,7 +210,7 @@ func (s *SampleBucket) Update(_ context.Context, _ resource.UpdateRequest, _ *re
 	// https://developer.hashicorp.com/terraform/plugin/framework/resources/update
 }
 
-// Delete deletes the SampleBucket
+// Delete deletes the SampleBucket.
 func (s *SampleBucket) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state providerschema.SampleBucket
 	diags := req.State.Get(ctx, &state)
