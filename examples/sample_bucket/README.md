@@ -36,16 +36,16 @@ Terraform plan
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
-data.couchbase-capella_samplebuckets.existing_samplebuckets: Reading...
-data.couchbase-capella_samplebuckets.existing_samplebuckets: Read complete after 0s
+data.couchbase-capella_sample_buckets.existing_sample_buckets: Reading...
+data.couchbase-capella_sample_buckets.existing_sample_buckets: Read complete after 0s
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   + create
 
 Terraform will perform the following actions:
 
-  # couchbase-capella_samplebucket.new_samplebucket will be created
-  + resource "couchbase-capella_samplebucket" "new_samplebucket" {
+  # couchbase-capella_sample_bucket.new_sample_bucket will be created
+  + resource "couchbase-capella_sample_bucket" "new_sample_bucket" {
       + bucket_conflict_resolution = "seqno"
       + cluster_id                 = "17619f3c-08f5-40a3-8c0c-d2e5b263a025"
       + durability_level           = "none"
@@ -66,7 +66,7 @@ Terraform will perform the following actions:
 Plan: 1 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
-  + new_samplebucket   = {
+  + new_sample_bucket   = {
       + bucket_conflict_resolution = "seqno"
       + cluster_id                 = "17619f3c-08f5-40a3-8c0c-d2e5b263a025"
       + durability_level           = "none"
@@ -111,16 +111,16 @@ terraform apply
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
-data.couchbase-capella_samplebuckets.existing_samplebuckets: Reading...
-data.couchbase-capella_samplebuckets.existing_samplebuckets: Read complete after 1s
+data.couchbase-capella_sample_buckets.existing_sample_buckets: Reading...
+data.couchbase-capella_sample_buckets.existing_sample_buckets: Read complete after 1s
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   + create
 
 Terraform will perform the following actions:
 
-  # couchbase-capella_samplebucket.new_samplebucket will be created
-  + resource "couchbase-capella_samplebucket" "new_samplebucket" {
+  # couchbase-capella_sample_bucket.new_sample_bucket will be created
+  + resource "couchbase-capella_sample_bucket" "new_sample_bucket" {
       + bucket_conflict_resolution = "seqno"
       + cluster_id                 = "17619f3c-08f5-40a3-8c0c-d2e5b263a025"
       + durability_level           = "none"
@@ -141,7 +141,7 @@ Terraform will perform the following actions:
 Plan: 1 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
-  + new_samplebucket   = {
+  + new_sample_bucket   = {
       + bucket_conflict_resolution = "seqno"
       + cluster_id                 = "17619f3c-08f5-40a3-8c0c-d2e5b263a025"
       + durability_level           = "none"
@@ -172,14 +172,14 @@ Do you want to perform these actions?
 
   Enter a value: yes
 
-couchbase-capella_samplebucket.new_samplebucket: Creating...
-couchbase-capella_samplebucket.new_samplebucket: Creation complete after 1s [id=Z2FtZXNpbS1zYW1wbGU=]
+couchbase-capella_sample_bucket.new_sample_bucket: Creating...
+couchbase-capella_sample_bucket.new_sample_bucket: Creation complete after 1s [id=Z2FtZXNpbS1zYW1wbGU=]
 
 Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
 
 Outputs:
 
-new_samplebucket = {
+new_sample_bucket = {
   "bucket_conflict_resolution" = "seqno"
   "cluster_id" = "17619f3c-08f5-40a3-8c0c-d2e5b263a025"
   "durability_level" = "none"
@@ -213,11 +213,11 @@ samplebuckets_list = {
 
 
 ### Note the Bucket ID for the new sample Bucket
-Command: `terraform output new_bucket`
+Command: `terraform output new_sample_bucket`
 
 Sample Output:
 ```
-terraform output new_samplebucket
+terraform output new_sample_bucket
 {
   "bucket_conflict_resolution" = "seqno"
   "cluster_id" = "17619f3c-08f5-40a3-8c0c-d2e5b263a025"
@@ -250,40 +250,40 @@ Command: `terraform state list`
 Sample Output:
 ```
  terraform state list
-data.couchbase-capella_samplebuckets.existing_samplebuckets
-couchbase-capella_samplebucket.new_samplebucket
+data.couchbase-capella_sample_buckets.existing_sample_buckets
+couchbase-capella_sample_bucket.new_sample_bucket
 ```
 
 
 ## IMPORT
-### Remove the resource `new_samplebucket` from the Terraform State file
+### Remove the resource `new_sample_bucket` from the Terraform State file
 
-Command: `terraform state rm couchbase-capella_samplebucket.new_samplebucket`
+Command: `terraform state rm couchbase-capella_sample_bucket.new_sample_bucket`
 
 Sample Output:
 
 ```
-terraform state rm couchbase-capella_samplebucket.new_samplebucket
-Removed couchbase-capella_samplebucket.new_samplebucket
+terraform state rm couchbase-capella_sample_bucket.new_sample_bucket
+Removed couchbase-capella_sample_bucket.new_sample_bucket
 Successfully removed 1 resource instance(s).
 ```
 
 
 ### Now, let's import the resource in Terraform
 
-Command: `terraform import couchbase-capella_samplebucket.new_samplebucket id=<bucket_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
+Command: `terraform import couchbase-capella_sample_bucket.new_sample_bucket id=<bucket_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
 In this case, the complete command is:
-`terraform import couchbase-capella_samplebucket.new_samplebucket  id=Z2FtZXNpbS1zYW1wbGU=,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,cluster_id=17619f3c-08f5-40a3-8c0c-d2e5b263a025`
+`terraform import couchbase-capella_sample_bucket.new_sample_bucket  id=Z2FtZXNpbS1zYW1wbGU=,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,cluster_id=17619f3c-08f5-40a3-8c0c-d2e5b263a025`
 
 ```
-terraform import couchbase-capella_samplebucket.new_samplebucket id=Z2FtZXNpbS1zYW1wbGU=,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,cluster_id=17619f3c-08f5-40a3-8c0c-d2e5b263a025
-couchbase-capella_samplebucket.new_samplebucket: Importing from ID "id=Z2FtZXNpbS1zYW1wbGU=,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,cluster_id=17619f3c-08f5-40a3-8c0c-d2e5b263a025"...
-couchbase-capella_samplebucket.new_samplebucket: Import prepared!
-  Prepared couchbase-capella_samplebucket for import
-data.couchbase-capella_samplebuckets.existing_samplebuckets: Reading...
-couchbase-capella_samplebucket.new_samplebucket: Refreshing state... [id=id=Z2FtZXNpbS1zYW1wbGU=,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,cluster_id=17619f3c-08f5-40a3-8c0c-d2e5b263a025]
-data.couchbase-capella_samplebuckets.existing_samplebuckets: Read complete after 2s
+terraform import couchbase-capella_sample_bucket.new_sample_bucket id=Z2FtZXNpbS1zYW1wbGU=,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,cluster_id=17619f3c-08f5-40a3-8c0c-d2e5b263a025
+couchbase-capella_sample_bucket.new_sample_bucket: Importing from ID "id=Z2FtZXNpbS1zYW1wbGU=,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,cluster_id=17619f3c-08f5-40a3-8c0c-d2e5b263a025"...
+couchbase-capella_sample_bucket.new_sample_bucket: Import prepared!
+  Prepared couchbase-capella_sample_bucket for import
+data.couchbase-capella_sample_buckets.existing_sample_buckets: Reading...
+couchbase-capella_sample_bucket.new_sample_bucket: Refreshing state... [id=id=Z2FtZXNpbS1zYW1wbGU=,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,cluster_id=17619f3c-08f5-40a3-8c0c-d2e5b263a025]
+data.couchbase-capella_sample_buckets.existing_sample_buckets: Read complete after 2s
 
 Import successful!
 
@@ -314,9 +314,9 @@ terraform plan
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
-data.couchbase-capella_samplebuckets.existing_samplebuckets: Reading...
-couchbase-capella_samplebucket.new_samplebucket: Refreshing state... [id=Z2FtZXNpbS1zYW1wbGU=]
-data.couchbase-capella_samplebuckets.existing_samplebuckets: Read complete after 1s
+data.couchbase-capella_sample_buckets.existing_sample_buckets: Reading...
+couchbase-capella_sample_bucket.new_sample_bucket: Refreshing state... [id=Z2FtZXNpbS1zYW1wbGU=]
+data.couchbase-capella_sample_buckets.existing_sample_buckets: Read complete after 1s
 
 No changes. Your infrastructure matches the configuration.
 
@@ -344,16 +344,16 @@ Sample Output:
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
-data.couchbase-capella_samplebuckets.existing_samplebuckets: Reading...
-couchbase-capella_samplebucket.new_samplebucket: Refreshing state... [id=Z2FtZXNpbS1zYW1wbGU=]
-data.couchbase-capella_samplebuckets.existing_samplebuckets: Read complete after 1s
+data.couchbase-capella_sample_buckets.existing_sample_buckets: Reading...
+couchbase-capella_sample_bucket.new_sample_bucket: Refreshing state... [id=Z2FtZXNpbS1zYW1wbGU=]
+data.couchbase-capella_sample_buckets.existing_sample_buckets: Read complete after 1s
 
 Note: Objects have changed outside of Terraform
 
 Terraform detected the following changes made outside of Terraform since the last "terraform apply" which may have affected this plan:
 
-  # couchbase-capella_samplebucket.new_samplebucket has changed
-  ~ resource "couchbase-capella_samplebucket" "new_samplebucket" {
+  # couchbase-capella_sample_bucket.new_sample_bucket has changed
+  ~ resource "couchbase-capella_sample_bucket" "new_sample_bucket" {
         id                         = "Z2FtZXNpbS1zYW1wbGU="
         name                       = "gamesim-sample"
       ~ stats                      = {
@@ -374,8 +374,8 @@ Terraform used the selected providers to generate the following execution plan. 
 
 Terraform will perform the following actions:
 
-  # couchbase-capella_samplebucket.new_samplebucket must be replaced
--/+ resource "couchbase-capella_samplebucket" "new_samplebucket" {
+  # couchbase-capella_sample_bucket.new_sample_bucket must be replaced
+-/+ resource "couchbase-capella_sample_bucket" "new_sample_bucket" {
       ~ eviction_policy            = "fullEviction" -> (known after apply)
       ~ id                         = "Z2FtZXNpbS1zYW1wbGU=" -> (known after apply)
       ~ name                       = "gamesim-sample" -> "travel-sample" # forces replacement
@@ -392,7 +392,7 @@ Terraform will perform the following actions:
 Plan: 1 to add, 0 to change, 1 to destroy.
 
 Changes to Outputs:
-  ~ new_samplebucket   = {
+  ~ new_sample_bucket   = {
       ~ eviction_policy            = "fullEviction" -> (known after apply)
       ~ id                         = "Z2FtZXNpbS1zYW1wbGU=" -> (known after apply)
       ~ name                       = "gamesim-sample" -> "travel-sample"
@@ -429,16 +429,16 @@ Do you want to perform these actions?
 
   Enter a value: yes
 
-couchbase-capella_samplebucket.new_samplebucket: Destroying... [id=Z2FtZXNpbS1zYW1wbGU=]
-couchbase-capella_samplebucket.new_samplebucket: Destruction complete after 1s
-couchbase-capella_samplebucket.new_samplebucket: Creating...
-couchbase-capella_samplebucket.new_samplebucket: Creation complete after 0s [id=dHJhdmVsLXNhbXBsZQ==]
+couchbase-capella_sample_bucket.new_sample_bucket: Destroying... [id=Z2FtZXNpbS1zYW1wbGU=]
+couchbase-capella_sample_bucket.new_sample_bucket: Destruction complete after 1s
+couchbase-capella_sample_bucket.new_sample_bucket: Creating...
+couchbase-capella_sample_bucket.new_sample_bucket: Creation complete after 0s [id=dHJhdmVsLXNhbXBsZQ==]
 
 Apply complete! Resources: 1 added, 0 changed, 1 destroyed.
 
 Outputs:
 
-new_samplebucket = {
+new_sample_bucket = {
   "bucket_conflict_resolution" = "seqno"
   "cluster_id" = "17619f3c-08f5-40a3-8c0c-d2e5b263a025"
   "durability_level" = "none"
@@ -509,17 +509,17 @@ Sample Output:
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
-data.couchbase-capella_samplebuckets.existing_samplebuckets: Reading...
-couchbase-capella_samplebucket.new_samplebucket: Refreshing state... [id=dHJhdmVsLXNhbXBsZQ==]
-data.couchbase-capella_samplebuckets.existing_samplebuckets: Read complete after 1s
+data.couchbase-capella_sample_buckets.existing_sample_buckets: Reading...
+couchbase-capella_sample_bucket.new_sample_bucket: Refreshing state... [id=dHJhdmVsLXNhbXBsZQ==]
+data.couchbase-capella_sample_buckets.existing_sample_buckets: Read complete after 1s
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   - destroy
 
 Terraform will perform the following actions:
 
-  # couchbase-capella_samplebucket.new_samplebucket will be destroyed
-  - resource "couchbase-capella_samplebucket" "new_samplebucket" {
+  # couchbase-capella_sample_bucket.new_sample_bucket will be destroyed
+  - resource "couchbase-capella_sample_bucket" "new_sample_bucket" {
       - bucket_conflict_resolution = "seqno" -> null
       - cluster_id                 = "17619f3c-08f5-40a3-8c0c-d2e5b263a025" -> null
       - durability_level           = "none" -> null
@@ -545,7 +545,7 @@ Terraform will perform the following actions:
 Plan: 0 to add, 0 to change, 1 to destroy.
 
 Changes to Outputs:
-  - new_samplebucket   = {
+  - new_sample_bucket   = {
       - bucket_conflict_resolution = "seqno"
       - cluster_id                 = "17619f3c-08f5-40a3-8c0c-d2e5b263a025"
       - durability_level           = "none"
@@ -604,8 +604,8 @@ Do you really want to destroy all resources?
 
   Enter a value: yes
 
-couchbase-capella_samplebucket.new_samplebucket: Destroying... [id=dHJhdmVsLXNhbXBsZQ==]
-couchbase-capella_samplebucket.new_samplebucket: Destruction complete after 2s
+couchbase-capella_sample_bucket.new_sample_bucket: Destroying... [id=dHJhdmVsLXNhbXBsZQ==]
+couchbase-capella_sample_bucket.new_sample_bucket: Destruction complete after 2s
 
 Destroy complete! Resources: 1 destroyed.
 ```
