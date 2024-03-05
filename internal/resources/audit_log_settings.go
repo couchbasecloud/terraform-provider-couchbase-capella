@@ -9,6 +9,7 @@ import (
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"net/http"
 )
@@ -116,7 +117,7 @@ func (a *AuditLogSettings) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	currentState, err := a.getAuditLogSettings(ctx, organizationId, projectId, clusterId)
+	currentState, err := a.refreshAuditLogSettingsState(ctx, organizationId, projectId, clusterId)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating audit log settings",
@@ -157,7 +158,7 @@ func (a *AuditLogSettings) Read(ctx context.Context, req resource.ReadRequest, r
 		clusterId      = state.ClusterId.ValueString()
 	)
 
-	refreshedState, err := a.getAuditLogSettings(ctx, organizationId, projectId, clusterId)
+	refreshedState, err := a.refreshAuditLogSettingsState(ctx, organizationId, projectId, clusterId)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -238,7 +239,7 @@ func (a *AuditLogSettings) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	currentState, err := a.getAuditLogSettings(ctx, organizationId, projectId, clusterId)
+	currentState, err := a.refreshAuditLogSettingsState(ctx, organizationId, projectId, clusterId)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating audit log settings",
@@ -269,7 +270,7 @@ func (a *AuditLogSettings) ImportState(ctx context.Context, req resource.ImportS
 	resource.ImportStatePassthroughID(ctx, path.Root("cluster_id"), req, resp)
 }
 
-func (a *AuditLogSettings) getAuditLogSettings(ctx context.Context, organizationId, projectId, clusterId string) (*api.GetClusterAuditSettingsResponse, error) {
+func (a *AuditLogSettings) refreshAuditLogSettingsState(ctx context.Context, organizationId, projectId, clusterId string) (*providerschema.ClusterAuditSettings, error) {
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/auditLog",
 		a.HostURL,
@@ -296,5 +297,26 @@ func (a *AuditLogSettings) getAuditLogSettings(ctx context.Context, organization
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
-	return &auditSettingsResp, nil
+
+	state := providerschema.ClusterAuditSettings{
+		OrganizationId: types.StringValue(organizationId),
+		ProjectId:      types.StringValue(projectId),
+		ClusterId:      types.StringValue(clusterId),
+		AuditEnabled:   types.BoolValue(auditSettingsResp.AuditEnabled),
+	}
+
+	eventIds := make([]types.Int64, len(auditSettingsResp.EnabledEventIDs))
+	for i, event := range auditSettingsResp.EnabledEventIDs {
+		eventIds[i] = types.Int64Value(int64(event))
+	}
+
+	disabledUsers := make([]providerschema.AuditSettingsDisabledUser, len(auditSettingsResp.DisabledUsers))
+	for i, user := range disabledUsers {
+		disabledUsers[i] = user
+	}
+
+	state.EnabledEventIDs = eventIds
+	state.DisabledUsers = disabledUsers
+
+	return &state, nil
 }
