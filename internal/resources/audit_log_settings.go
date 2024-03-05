@@ -59,6 +59,7 @@ func (a *AuditLogSettings) Configure(_ context.Context, req resource.ConfigureRe
 }
 
 // AuditLogSettings does not have create endpoint
+// as a workaround, create has same behavior as update
 func (a *AuditLogSettings) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var state providerschema.ClusterAuditSettings
 	diags := req.Plan.Get(ctx, &state)
