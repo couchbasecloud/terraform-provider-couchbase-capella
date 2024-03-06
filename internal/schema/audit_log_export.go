@@ -26,6 +26,9 @@ type AuditLogExport struct {
 	// CreatedAt The timestamp when the audit logs were exported.
 	CreatedAt types.String `tfsdk:"createdAt"`
 
+	// Status Indicates status of audit log creation.
+	Status types.String `tfsdk:"status"`
+
 	// OrganizationId is the organizationId of the capella tenant.
 	OrganizationId types.String `tfsdk:"organization_id"`
 
