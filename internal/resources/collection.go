@@ -288,9 +288,9 @@ func (c *Collection) Update(_ context.Context, _ resource.UpdateRequest, _ *reso
 	// https://developer.hashicorp.com/terraform/plugin/framework/resources/update
 }
 
-// Delete deletes the scope.
+// Delete deletes the collection.
 func (c *Collection) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state providerschema.Scope
+	var state providerschema.Collection
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -300,8 +300,8 @@ func (c *Collection) Delete(ctx context.Context, req resource.DeleteRequest, res
 	resourceIDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error deleting scope",
-			"Could not delete scope name "+state.Name.String()+" unexpected error: "+err.Error(),
+			"Error deleting collection",
+			"Could not delete collection name "+state.Name.String()+" unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -312,28 +312,29 @@ func (c *Collection) Delete(ctx context.Context, req resource.DeleteRequest, res
 		clusterId      = resourceIDs[providerschema.ClusterId]
 		bucketId       = resourceIDs[providerschema.BucketId]
 		scopeName      = resourceIDs[providerschema.ScopeName]
+		collectionName = resourceIDs[providerschema.CollectionName]
 	)
 
-	// Delete existing scope
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/scopes/%s", s.HostURL, organizationId, projectId, clusterId, bucketId, scopeName)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err = s.Client.ExecuteWithRetry(
+	// Delete existing collection
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/scopes/%s/collections/%s", c.HostURL, organizationId, projectId, clusterId, bucketId, scopeName, collectionName)
+	cfg := collection_api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
+	_, err = c.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
-		s.Token,
+		c.Token,
 		nil,
 	)
 	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		resourceNotFound, errString := collection_api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
 			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
 			resp.State.RemoveResource(ctx)
 			return
 		}
 		resp.Diagnostics.AddError(
-			"Error deleting scope",
-			"Could not delete scope name "+state.Name.String()+": "+errString,
+			"Error deleting collection",
+			"Could not delete collection name "+state.Name.String()+": "+errString,
 		)
 		return
 	}
