@@ -52,7 +52,7 @@ func (a *AuditLogExport) Schema(_ context.Context, _ datasource.SchemaRequest, r
 						"expiration":            computedStringAttribute,
 						"start":                 computedStringAttribute,
 						"end":                   computedStringAttribute,
-						"createdAt":             computedStringAttribute,
+						"created_at":            computedStringAttribute,
 						"status":                computedStringAttribute,
 					},
 				},

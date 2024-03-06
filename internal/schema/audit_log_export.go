@@ -24,7 +24,7 @@ type AuditLogExport struct {
 	End types.String `tfsdk:"end"`
 
 	// CreatedAt The timestamp when the audit logs were exported.
-	CreatedAt types.String `tfsdk:"createdAt"`
+	CreatedAt types.String `tfsdk:"created_at"`
 
 	// Status Indicates status of audit log creation.
 	Status types.String `tfsdk:"status"`
