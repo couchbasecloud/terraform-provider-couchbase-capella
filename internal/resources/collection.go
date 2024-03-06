@@ -235,8 +235,8 @@ func (c *Collection) Read(ctx context.Context, req resource.ReadRequest, resp *r
 	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Scope in Capella",
-			"Could not read Capella Scope with name "+state.Name.String()+": "+err.Error(),
+			"Error Reading Collection in Capella",
+			"Could not read Capella Collection with name "+state.Name.String()+": "+err.Error(),
 		)
 		return
 	}
@@ -246,9 +246,10 @@ func (c *Collection) Read(ctx context.Context, req resource.ReadRequest, resp *r
 		clusterId      = IDs[providerschema.ClusterId]
 		bucketId       = IDs[providerschema.BucketId]
 		scopeName      = IDs[providerschema.ScopeName]
+		collectionName = IDs[providerschema.CollectionName]
 	)
 
-	refreshedState, err, diag := s.retrieveScope(ctx, organizationId, projectId, clusterId, bucketId, scopeName)
+	refreshedState, err, diag := c.retrieveCollection(ctx, organizationId, projectId, clusterId, bucketId, scopeName, collectionName)
 	if diag.HasError() {
 
 		diags.Append(diag...)
@@ -256,15 +257,15 @@ func (c *Collection) Read(ctx context.Context, req resource.ReadRequest, resp *r
 		return
 	}
 	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		resourceNotFound, errString := collection_api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
 			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
 			resp.State.RemoveResource(ctx)
 			return
 		}
 		resp.Diagnostics.AddError(
-			"Error reading scope",
-			"Could not read scope name "+state.Name.String()+": "+errString,
+			"Error reading collection",
+			"Could not read collection name "+state.Name.String()+": "+errString,
 		)
 		return
 	}
@@ -276,10 +277,10 @@ func (c *Collection) Read(ctx context.Context, req resource.ReadRequest, resp *r
 	}
 }
 
-// Update updates the scope.
+// Update updates the collection.
 func (c *Collection) Update(_ context.Context, _ resource.UpdateRequest, _ *resource.UpdateResponse) {
-	// Couchbase Capella's v4 does not support a PUT endpoint for scopes.
-	// Scopes can only be created, read and deleted.
+	// Couchbase Capella's v4 does not support a PUT endpoint for collections.
+	// Collections can only be created, read and deleted.
 	// https://docs.couchbase.com/cloud/management-api-reference/index.html#tag/buckets-scopes-and-collections
 	//
 	// Note: In this situation, terraform apply will default to deleting and executing a new create.
