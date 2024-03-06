@@ -18,7 +18,7 @@ type Collection struct {
 	Uid types.String `tfsdk:"uid"`
 
 	// ScopeName is the name of the scope for which the collection needs to be created.
-	ScopeName types.String `tfsdk:"name"`
+	ScopeName types.String `tfsdk:"scope_name"`
 
 	// BucketId is the id of the bucket for which the collection needs to be created.
 	BucketId types.String `tfsdk:"bucket_id"`
