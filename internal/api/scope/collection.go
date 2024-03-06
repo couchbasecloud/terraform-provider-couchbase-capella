@@ -1,6 +1,6 @@
 package scope
 
-// Collection is the c sent by the Capella V4 Public API for any existing scope or collection.
+// Collection is the collection sent by the Capella V4 Public API for any existing scope or collection.
 type Collection struct {
 	// MaxTTL Max TTL of the collection.
 	MaxTTL *int64 `json:"maxTTL,omitempty"`
