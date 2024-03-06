@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -131,16 +130,12 @@ func (c *Collection) Create(ctx context.Context, req resource.CreateRequest, res
 		return
 	}
 
-	refreshedState, err, diag := c.retrieveCollection(ctx, organizationId, projectId, clusterId, bucketId, scopeName, plan.Name.ValueString())
+	refreshedState, err := c.retrieveCollection(ctx, organizationId, projectId, clusterId, bucketId, scopeName, plan.Name.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Collection",
 			"Could not read Capella Collection for the scope: %s "+scopeName+"."+errorMessageAfterCollectionCreation+collection_api.ParseError(err),
 		)
-		return
-	}
-	if diag.HasError() {
-		diags.Append(diag...)
 		return
 	}
 
@@ -181,7 +176,7 @@ func (c *Collection) validateCollectionAttributesTrimmed(plan providerschema.Col
 }
 
 // retrieveCollection retrieves collection information from the specified organization and project using the provided bucket ID and scope name by open-api call.
-func (c *Collection) retrieveCollection(ctx context.Context, organizationId, projectId, clusterId, bucketId, scopeName, collectionName string) (*providerschema.Collection, error, diag.Diagnostics) {
+func (c *Collection) retrieveCollection(ctx context.Context, organizationId, projectId, clusterId, bucketId, scopeName, collectionName string) (*providerschema.Collection, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/scopes/%s/collections/%s", c.HostURL, organizationId, projectId, clusterId, bucketId, scopeName, collectionName)
 	cfg := collection_api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := c.Client.ExecuteWithRetry(
@@ -192,13 +187,13 @@ func (c *Collection) retrieveCollection(ctx context.Context, organizationId, pro
 		nil,
 	)
 	if err != nil {
-		return nil, err, nil
+		return nil, err
 	}
 
 	collectionResp := collection_api.GetCollectionResponse{}
 	err = json.Unmarshal(response.Body, &collectionResp)
 	if err != nil {
-		return nil, err, nil
+		return nil, err
 	}
 
 	if validateCollectionNameIsSameInPlanAndState(collectionName, *collectionResp.Name) {
@@ -216,7 +211,7 @@ func (c *Collection) retrieveCollection(ctx context.Context, organizationId, pro
 		OrganizationId: types.StringValue(organizationId),
 	}
 
-	return &refreshedState, nil, nil
+	return &refreshedState, nil
 }
 
 func validateCollectionNameIsSameInPlanAndState(planCollectionName, stateCollectionName string) bool {
@@ -249,13 +244,7 @@ func (c *Collection) Read(ctx context.Context, req resource.ReadRequest, resp *r
 		collectionName = IDs[providerschema.CollectionName]
 	)
 
-	refreshedState, err, diag := c.retrieveCollection(ctx, organizationId, projectId, clusterId, bucketId, scopeName, collectionName)
-	if diag.HasError() {
-
-		diags.Append(diag...)
-		resp.Diagnostics.Append(diags...)
-		return
-	}
+	refreshedState, err := c.retrieveCollection(ctx, organizationId, projectId, clusterId, bucketId, scopeName, collectionName)
 	if err != nil {
 		resourceNotFound, errString := collection_api.CheckResourceNotFoundError(err)
 		if resourceNotFound {

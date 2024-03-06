@@ -19,7 +19,7 @@ variable "bucket_id" {
   description = "Capella Bucket ID"
 }
 
-variable "scope_name"{
+variable "scope_name" {
   description = "Capella Scope Name"
 }
 
@@ -27,7 +27,7 @@ variable "collection" {
   description = "Collection configuration details useful for creation"
 
   type = object({
-    name = string
+    name    = string
     max_ttl = number
   })
 }

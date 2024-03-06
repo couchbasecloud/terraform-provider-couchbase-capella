@@ -8,5 +8,5 @@ scope_name      = "<scope_name>"
 
 collection = {
   name    = "new_terraform_collection"
-  max_ttl =  200
+  max_ttl = 200
 }

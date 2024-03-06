@@ -55,10 +55,4 @@ var (
 			"version":     computedInt64Attribute,
 		},
 	}
-
-	// requiredInt64Attribute returns a Terraform schema attribute
-	// which is configured to be required.
-	requiredInt64Attribute = schema.Int64Attribute{
-		Required: true,
-	}
 )
