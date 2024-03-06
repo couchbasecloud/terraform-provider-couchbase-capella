@@ -57,12 +57,21 @@ func CollectionAttributeTypes() map[string]attr.Type {
 
 // NewCollection creates a new collection object.
 func NewCollection(collection scope.Collection) Collection {
-	return Collection{
-		//TODO: check nil too
-		MaxTTL: types.Int64Value(*collection.MaxTTL),
-		Name:   types.StringValue(*collection.Name),
-		Uid:    types.StringValue(*collection.Uid),
+	newCollection := Collection{}
+
+	if collection.MaxTTL != nil {
+		newCollection.MaxTTL = types.Int64Value(*collection.MaxTTL)
 	}
+
+	if collection.Name != nil {
+		newCollection.Name = types.StringValue(*collection.Name)
+	}
+
+	if collection.Uid != nil {
+		newCollection.Uid = types.StringValue(*collection.Uid)
+	}
+
+	return newCollection
 }
 
 // Scopes defines structure based on the response received from V4 Capella Public API when asked to list scopes.
