@@ -24,7 +24,7 @@ type CreateCollectionRequest struct {
 	Name string `json:"name"`
 
 	// MaxTTL Specify the time to live (TTL) value in seconds. Defines the duration (Seconds) for which the documents in a collection are kept before automatic removal from the database. -  For server versions < 7.6.0, this is a non-negative value. Set to 0 to use the bucket's maxTTL value. -  For server versions >= 7.6.0, this value should be >= -1. Set to -1 to disable expiry for that collection. Set to 0 to use the bucket's maxTTL value. -  The maximum value that can be set for maxTTL is 2147483647.
-	MaxTTL int `json:"maxTTL"`
+	MaxTTL int64 `json:"maxTTL"`
 }
 
 // GetCollectionResponse is the response received from Capella V4 Public API on requesting to information about an existing collection.
@@ -43,7 +43,7 @@ type CreateCollectionRequest struct {
 // To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
 type GetCollectionResponse struct {
 	// MaxTTL is the Max TTL of the collection.
-	MaxTTL *int `json:"maxTTL,omitempty"`
+	MaxTTL *int64 `json:"maxTTL,omitempty"`
 
 	// Name is the Name of the collection.
 	Name *string `json:"name,omitempty"`
