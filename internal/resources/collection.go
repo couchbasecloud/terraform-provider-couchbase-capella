@@ -46,7 +46,7 @@ func NewCollection() resource.Resource {
 // ImportState imports a remote collection that is not created by Terraform.
 func (c *Collection) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import name and save to id attribute
-	resource.ImportStatePassthroughID(ctx, path.Root("collection_name"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
 }
 
 // Metadata returns the Collection resource type name.

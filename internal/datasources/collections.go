@@ -43,9 +43,6 @@ func (c *Collections) Schema(_ context.Context, _ datasource.SchemaRequest, resp
 			"cluster_id":      requiredStringAttribute,
 			"bucket_id":       requiredStringAttribute,
 			"scope_name":      requiredStringAttribute,
-			"collection_name": requiredStringAttribute,
-			"max_ttl":         requiredInt64Attribute,
-			"uid":             computedStringAttribute,
 			"data": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{

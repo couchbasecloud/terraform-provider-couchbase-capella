@@ -12,7 +12,7 @@ func CollectionSchema() schema.Schema {
 			"cluster_id":      stringAttribute(required, requiresReplace),
 			"bucket_id":       stringAttribute(required, requiresReplace),
 			"scope_name":      stringAttribute(required, requiresReplace),
-			"collection_name": stringAttribute(required, requiresReplace),
+			"name":            stringAttribute(required, requiresReplace),
 			"max_ttl":         stringAttribute(required, requiresReplace),
 			"uid":             stringAttribute(computed),
 		},

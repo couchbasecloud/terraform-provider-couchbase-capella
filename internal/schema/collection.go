@@ -15,7 +15,7 @@ import (
 type Collection struct {
 
 	// Name is the name of the collection.
-	Name types.String `tfsdk:"collection_name"`
+	Name types.String `tfsdk:"name"`
 
 	// MaxTTL Max TTL of the collection.
 	MaxTTL types.Int64 `tfsdk:"max_ttl"`
