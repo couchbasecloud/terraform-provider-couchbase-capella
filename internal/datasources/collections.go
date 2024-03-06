@@ -8,9 +8,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	collection_api "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
@@ -61,94 +60,62 @@ func (c *Collections) Schema(_ context.Context, _ datasource.SchemaRequest, resp
 	}
 }
 
-// Read refreshes the Terraform state with the latest data of scopes.
+// Read refreshes the Terraform state with the latest data of collections.
 func (c *Collections) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state providerschema.Scopes
+	var state providerschema.Collections
 	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	bucketId, clusterId, projectId, organizationId, err := state.Validate()
+	bucketId, clusterId, projectId, organizationId, scopeName, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Scopes in Capella",
-			"Could not read Capella scopes in bucket "+bucketId+": "+err.Error(),
+			"Error Reading Collections in Capella",
+			"Could not read Capella collections in scope "+scopeName+": "+err.Error(),
 		)
 		return
 	}
 
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/scopes", s.HostURL, organizationId, projectId, clusterId, bucketId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/scopes/%s/collections", c.HostURL, organizationId, projectId, clusterId, bucketId, scopeName)
+	cfg := collection_api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
-	response, err := s.Client.ExecuteWithRetry(
+	response, err := c.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
-		s.Token,
+		c.Token,
 		nil,
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Capella Scopes",
-			fmt.Sprintf("Could not read scopes in bucket %s, unexpected error: %s", bucketId, api.ParseError(err)),
+			"Error Reading Capella Collections",
+			fmt.Sprintf("Could not read collections in scope %s, unexpected error: %s", scopeName, collection_api.ParseError(err)),
 		)
 		return
 	}
 
-	scopesResp := scope_api.GetScopesResponse{}
-	err = json.Unmarshal(response.Body, &scopesResp)
+	collectionsResp := collection_api.GetCollectionsResponse{}
+	err = json.Unmarshal(response.Body, &collectionsResp)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading scope",
-			"Could not read scope in bucket, unexpected error: "+err.Error(),
+			"Error reading collections",
+			"Could not read collections in scope, unexpected error: "+err.Error(),
 		)
 		return
 	}
-
-	for i := range scopesResp.Scopes {
-		scope := scopesResp.Scopes[i]
-		//for _, scope := range scopesResp.Scopes {
-		objectList := make([]types.Object, 0)
-		for _, apiCollection := range *scope.Collections {
-			providerschemaCollection := providerschema.NewCollection(apiCollection)
-			collectionObj, diag := types.ObjectValueFrom(ctx, providerschema.CollectionAttributeTypes(), providerschemaCollection)
-			if diag.HasError() {
-				resp.Diagnostics.AddError(
-					"Collection obj error",
-					"Could not read collection object",
-				)
-			}
-
-			objectList = append(objectList, collectionObj)
-
-		}
-
-		collectionSet, diag := types.SetValueFrom(ctx, types.ObjectType{}.WithAttributeTypes(providerschema.CollectionAttributeTypes()), objectList)
-		if diag.HasError() {
+	for i := range collectionsResp.Data {
+		collection := collectionsResp.Data[i]
+		newCollectionData, err := providerschema.NewCollectionData(&collection)
+		if err != nil {
 			resp.Diagnostics.AddError(
-				"collectionSet error",
-				"Could not read collection set",
+				"Error listing Collections",
+				fmt.Sprintf("Could not list collections, unexpected error: %s", err.Error()),
 			)
+			return
 		}
-
-		//the array of scopes is listed together under one uid
-		stateScopes := state.Scopes
-		newScope := providerschema.NewScopeData(&scope, collectionSet)
-
-		stateScopes = append(stateScopes, *newScope)
-
-		scopeState := providerschema.Scopes{
-			Scopes:         stateScopes,
-			Uid:            types.StringValue(*scopesResp.Uid),
-			OrganizationId: types.StringValue(organizationId),
-			ProjectId:      types.StringValue(projectId),
-			ClusterId:      types.StringValue(clusterId),
-			BucketId:       types.StringValue(bucketId),
-		}
-
-		state = scopeState
+		state.Data = append(state.Data, *newCollectionData)
 	}
 
 	// Set state
@@ -161,7 +128,7 @@ func (c *Collections) Read(ctx context.Context, req datasource.ReadRequest, resp
 
 }
 
-func (c *Collections) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (c *Collections) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -176,5 +143,5 @@ func (c *Collections) Configure(ctx context.Context, req datasource.ConfigureReq
 		return
 	}
 
-	s.Data = data
+	c.Data = data
 }

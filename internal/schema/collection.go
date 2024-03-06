@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 
+	collection "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 )
 
@@ -91,4 +92,35 @@ func (c *Collection) Validate() (map[Attr]string, error) {
 	}
 
 	return IDs, nil
+}
+
+// Validate is used to verify that all the fields in the datasource have been populated.
+func (c Collections) Validate() (bucketId, clusterId, projectId, organizationId, scopeName string, err error) {
+	if c.BucketId.IsNull() {
+		return "", "", "", "", "", errors.ErrBucketIdMissing
+	}
+	if c.OrganizationId.IsNull() {
+		return "", "", "", "", "", errors.ErrOrganizationIdMissing
+	}
+	if c.ProjectId.IsNull() {
+		return "", "", "", "", "", errors.ErrProjectIdMissing
+	}
+	if c.ClusterId.IsNull() {
+		return "", "", "", "", "", errors.ErrClusterIdMissing
+	}
+	if c.ScopeName.IsNull() {
+		return "", "", "", "", "", errors.ErrScopeNameMissing
+	}
+
+	return c.BucketId.ValueString(), c.ClusterId.ValueString(), c.ProjectId.ValueString(), c.OrganizationId.ValueString(), c.ScopeName.ValueString(), nil
+}
+
+// NewCollectionData creates a new collectionData object.
+func NewCollectionData(collection *collection.GetCollectionResponse) (*CollectionData, error) {
+	newCollectionData := CollectionData{
+		Name:   types.StringValue(*collection.Name),
+		MaxTTL: types.Int64Value(*collection.MaxTTL),
+		Uid:    types.StringValue(*collection.Uid),
+	}
+	return &newCollectionData, nil
 }
