@@ -44,7 +44,9 @@ func NewScope() resource.Resource {
 	return &Scope{}
 }
 
+// ImportState imports a remote scope that is not created by Terraform.
 func (s *Scope) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	// Retrieve import name and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
 }
 
@@ -289,7 +291,7 @@ func (s *Scope) Read(ctx context.Context, req resource.ReadRequest, resp *resour
 }
 
 // Update updates the scope.
-func (s Scope) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (s *Scope) Update(_ context.Context, _ resource.UpdateRequest, _ *resource.UpdateResponse) {
 	// Couchbase Capella's v4 does not support a PUT endpoint for scopes.
 	// Scopes can only be created, read and deleted.
 	// https://docs.couchbase.com/cloud/management-api-reference/index.html#tag/buckets-scopes-and-collections

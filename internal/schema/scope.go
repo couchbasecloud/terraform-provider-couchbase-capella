@@ -106,7 +106,7 @@ func NewScopeData(scope *scope.GetScopeResponse,
 }
 
 // Validate will split the IDs by a delimiter i.e. comma , in case a terraform import CLI is invoked.
-func (s Scope) Validate() (map[Attr]string, error) {
+func (s *Scope) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
 		OrganizationId: s.OrganizationId,
 		ProjectId:      s.ProjectId,
@@ -115,7 +115,7 @@ func (s Scope) Validate() (map[Attr]string, error) {
 		ScopeName:      s.Name,
 	}
 
-	IDs, err := validateSchemaState(state)
+	IDs, err := validateSchemaState(state, ScopeName)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
 	}
