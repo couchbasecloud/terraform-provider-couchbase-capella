@@ -47,9 +47,9 @@ func (c *Collections) Schema(_ context.Context, _ datasource.SchemaRequest, resp
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"name":    computedStringAttribute,
-						"max_ttl": computedInt64Attribute,
-						"uid":     computedStringAttribute,
+						"collection_name": computedStringAttribute,
+						"max_ttl":         computedInt64Attribute,
+						"uid":             computedStringAttribute,
 					},
 				},
 			},

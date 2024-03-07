@@ -45,7 +45,7 @@ func NewCollection() resource.Resource {
 // ImportState imports a remote collection that is not created by Terraform.
 func (c *Collection) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import name and save to id attribute
-	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("collection_name"), req, resp)
 }
 
 // Metadata returns the Collection resource type name.
@@ -170,7 +170,7 @@ func (c *Collection) validateCreateCollectionRequest(plan providerschema.Collect
 
 func (c *Collection) validateCollectionAttributesTrimmed(plan providerschema.Collection) error {
 	if (!plan.Name.IsNull() && !plan.Name.IsUnknown()) && !providerschema.IsTrimmed(plan.Name.ValueString()) {
-		return fmt.Errorf("name %s", errors.ErrNotTrimmed)
+		return fmt.Errorf("collection_name %s", errors.ErrNotTrimmed)
 	}
 	return nil
 }

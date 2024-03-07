@@ -15,7 +15,7 @@ import (
 type Collection struct {
 
 	// Name is the name of the collection.
-	Name types.String `tfsdk:"name"`
+	Name types.String `tfsdk:"collection_name"`
 
 	// MaxTTL Max TTL of the collection.
 	MaxTTL types.Int64 `tfsdk:"max_ttl"`
@@ -41,9 +41,9 @@ type Collection struct {
 
 func CollectionAttributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
-		"max_ttl": types.Int64Type,
-		"name":    types.StringType,
-		"uid":     types.StringType,
+		"max_ttl":         types.Int64Type,
+		"collection_name": types.StringType,
+		"uid":             types.StringType,
 	}
 }
 
@@ -70,7 +70,7 @@ type Collections struct {
 
 // CollectionData defines attributes for a single Collection when fetched from the V4 Capella Public API.
 type CollectionData struct {
-	Name   types.String `tfsdk:"name"`
+	Name   types.String `tfsdk:"collection_name"`
 	MaxTTL types.Int64  `tfsdk:"max_ttl"`
 	Uid    types.String `tfsdk:"uid"`
 }
