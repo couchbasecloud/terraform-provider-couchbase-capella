@@ -6,5 +6,5 @@ cluster_id      = "<cluster_id>"
 bucket_id       = "<bucket_id>"
 
 scope = {
-  name = "new_terraform_scope"
+  scope_name = "new_terraform_scope"
 }

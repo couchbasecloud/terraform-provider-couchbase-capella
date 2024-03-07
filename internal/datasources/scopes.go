@@ -49,8 +49,8 @@ func (s *Scopes) Schema(_ context.Context, _ datasource.SchemaRequest, resp *dat
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"uid":  computedStringAttribute,
-						"name": computedStringAttribute,
+						"uid":        computedStringAttribute,
+						"scope_name": computedStringAttribute,
 						"collections": schema.SetNestedAttribute{
 							Computed: true,
 							NestedObject: schema.NestedAttributeObject{

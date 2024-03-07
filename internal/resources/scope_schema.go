@@ -11,7 +11,7 @@ func ScopeSchema() schema.Schema {
 			"project_id":      stringAttribute(required, requiresReplace),
 			"cluster_id":      stringAttribute(required, requiresReplace),
 			"bucket_id":       stringAttribute(required, requiresReplace),
-			"name":            stringAttribute(required, requiresReplace),
+			"scope_name":      stringAttribute(required, requiresReplace),
 			"uid":             stringAttribute(computed),
 			"collections": schema.SetNestedAttribute{
 				Computed: true,

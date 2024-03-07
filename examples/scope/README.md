@@ -397,19 +397,19 @@ Please note, this command will only remove the resource from the Terraform State
 
 ### Now, let's import the resource in Terraform
 
-Command: `terraform import couchbase-capella_scope.new_scope name=<scopeName>,bucket_id=<bucket_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
+Command: `terraform import couchbase-capella_scope.new_scope scope_name=<scope_name>,bucket_id=<bucket_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
 In this case, the complete command is:
-`terraform import couchbase-capella_scope.new_scope name=new_terraform_scope,bucket_id=YjE=,cluster_id=0d9a6dd5-4d55-49be-8137-896f21425beb,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0`
+`terraform import couchbase-capella_scope.new_scope scope_name=new_terraform_scope,bucket_id=YjE=,cluster_id=0d9a6dd5-4d55-49be-8137-896f21425beb,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0`
 
 Sample Output:
 ```
-$ terraform import couchbase-capella_scope.new_scope name=new_terraform_scope,bucket_id=YjE=,cluster_id=0d9a6dd5-4d55-49be-8137-896f21425beb,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0
-couchbase-capella_scope.new_scope: Importing from ID "name=new_terraform_scope,bucket_id=YjE=,cluster_id=0d9a6dd5-4d55-49be-8137-896f21425beb,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0"...
+$ terraform import couchbase-capella_scope.new_scope scope_name=new_terraform_scope,bucket_id=YjE=,cluster_id=0d9a6dd5-4d55-49be-8137-896f21425beb,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0
+couchbase-capella_scope.new_scope: Importing from ID "scope_name=new_terraform_scope,bucket_id=YjE=,cluster_id=0d9a6dd5-4d55-49be-8137-896f21425beb,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0"...
 data.couchbase-capella_scopes.existing_scopes: Reading...
 couchbase-capella_scope.new_scope: Import prepared!
   Prepared couchbase-capella_scope for import
-couchbase-capella_scope.new_scope: Refreshing state... [name=name=new_terraform_scope,bucket_id=YjE=,cluster_id=0d9a6dd5-4d55-49be-8137-896f21425beb,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0]
+couchbase-capella_scope.new_scope: Refreshing state...
 data.couchbase-capella_scopes.existing_scopes: Read complete after 1s
 
 Import successful!

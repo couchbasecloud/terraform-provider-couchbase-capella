@@ -47,7 +47,7 @@ func NewScope() resource.Resource {
 // ImportState imports a remote scope that is not created by Terraform.
 func (s *Scope) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import name and save to id attribute
-	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("scope_name"), req, resp)
 }
 
 // Metadata returns the Scope resource type name.

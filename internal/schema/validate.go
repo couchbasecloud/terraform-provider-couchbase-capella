@@ -16,7 +16,7 @@ var (
 		"cluster_id":      ClusterId,
 		"bucket_id":       BucketId,
 		"id":              Id,
-		"name":            ScopeName,
+		"scope_name":      ScopeName,
 	}
 )
 

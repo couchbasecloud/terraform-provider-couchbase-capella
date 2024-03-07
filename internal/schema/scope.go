@@ -17,7 +17,7 @@ type Scope struct {
 	Collections types.Set `tfsdk:"collections"`
 
 	// Name is the name of the scope.
-	Name types.String `tfsdk:"name"`
+	Name types.String `tfsdk:"scope_name"`
 
 	// Uid is the UID of the scope.
 	Uid types.String `tfsdk:"uid"`
@@ -98,7 +98,7 @@ type Scopes struct {
 // ScopeData defines attributes for a single Scope when fetched from the V4 Capella Public API.
 type ScopeData struct {
 	Collections types.Set    `tfsdk:"collections"`
-	Name        types.String `tfsdk:"name"`
+	Name        types.String `tfsdk:"scope_name"`
 	Uid         types.String `tfsdk:"uid"`
 }
 
