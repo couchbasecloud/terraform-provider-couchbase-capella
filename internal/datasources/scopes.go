@@ -108,15 +108,14 @@ func (s *Scopes) Read(ctx context.Context, req datasource.ReadRequest, resp *dat
 	err = json.Unmarshal(response.Body, &scopesResp)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading scope",
-			"Could not read scope in bucket, unexpected error: "+err.Error(),
+			"Error reading scopes",
+			"Could not read scopes in bucket, unexpected error: "+err.Error(),
 		)
 		return
 	}
 
 	for i := range scopesResp.Scopes {
 		scope := scopesResp.Scopes[i]
-		//for _, scope := range scopesResp.Scopes {
 		objectList := make([]types.Object, 0)
 		for _, apiCollection := range *scope.Collections {
 			providerschemaCollection := providerschema.NewCollection(apiCollection)
@@ -168,7 +167,7 @@ func (s *Scopes) Read(ctx context.Context, req datasource.ReadRequest, resp *dat
 
 }
 
-func (s *Scopes) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (s *Scopes) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
