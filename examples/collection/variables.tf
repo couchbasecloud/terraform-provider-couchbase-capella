@@ -27,7 +27,7 @@ variable "collection" {
   description = "Collection configuration details useful for creation"
 
   type = object({
-    name    = string
-    max_ttl = number
+    collection_name = string
+    max_ttl         = number
   })
 }
