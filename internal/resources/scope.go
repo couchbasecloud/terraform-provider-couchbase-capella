@@ -124,7 +124,7 @@ func (s *Scope) Create(ctx context.Context, req resource.CreateRequest, resp *re
 		return
 	}
 
-	diags = resp.State.Set(ctx, plan)
+	diags = resp.State.Set(ctx, initializeScopeWithPlan(plan))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -150,6 +150,19 @@ func (s *Scope) Create(ctx context.Context, req resource.CreateRequest, resp *re
 		return
 	}
 
+}
+
+// initializeScopeWithPlan initializes an instance of providerschema.Scope
+// with the specified plan. It marks all computed fields as null.
+func initializeScopeWithPlan(plan providerschema.Scope) providerschema.Scope {
+	if plan.Uid.IsNull() || plan.Uid.IsUnknown() {
+		plan.Uid = types.StringNull()
+	}
+	if plan.Collections.IsNull() || plan.Collections.IsUnknown() {
+		plan.Collections = types.SetNull(types.ObjectType{}.WithAttributeTypes(providerschema.CollectionAttributeTypes()))
+	}
+	types.SetNull(types.SetType{})
+	return plan
 }
 
 func (s *Scope) validateCreateScopeRequest(plan providerschema.Scope) error {
