@@ -264,9 +264,153 @@ Terraform has compared your real infrastructure against your configuration and f
 ```
 
 ## UPDATE
-### Let us edit the terraform.tfvars file to change the scope configuration settings.
+### Let us edit the terraform.tfvars file to change the collection configuration settings.
 
-Command: `terraform apply -var 'collection={collection_name="new_terraform_collection2", max_ttl=300}'`
+1. Update name for server versions < 7.6.0 (destroy and replace)
+
+Sample Output:
+```
+$ terraform apply
+╷
+│ Warning: Provider development overrides are in effect
+│ 
+│ The following provider development overrides are set in the CLI configuration:
+│  - couchbasecloud/couchbase-capella in /Users/paulomee.de/go/bin
+│ 
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
+╵
+couchbase-capella_collection.new_collection: Refreshing state...
+data.couchbase-capella_collections.existing_collections: Reading...
+data.couchbase-capella_collections.existing_collections: Read complete after 0s
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+-/+ destroy and then create replacement
+
+Terraform will perform the following actions:
+
+  # couchbase-capella_collection.new_collection must be replaced
+-/+ resource "couchbase-capella_collection" "new_collection" {
+      ~ collection_name = "new_terraform_collection" -> "new_terraform_collection2" # forces replacement
+      ~ uid             = "8" -> (known after apply)
+        # (6 unchanged attributes hidden)
+    }
+
+Plan: 1 to add, 0 to change, 1 to destroy.
+
+Changes to Outputs:
+  ~ new_collection   = {
+      ~ collection_name = "new_terraform_collection" -> "new_terraform_collection2"
+      ~ uid             = "8" -> (known after apply)
+        # (6 unchanged attributes hidden)
+    }
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+couchbase-capella_collection.new_collection: Destroying...
+couchbase-capella_collection.new_collection: Destruction complete after 1s
+couchbase-capella_collection.new_collection: Creating...
+couchbase-capella_collection.new_collection: Creation complete after 0s
+
+Apply complete! Resources: 1 added, 0 changed, 1 destroyed.
+
+Outputs:
+
+collections_list = {
+  "bucket_id" = "YjE="
+  "cluster_id" = "cd9f5ea8-791a-48ce-b944-e0f2f328af1d"
+  "data" = tolist([
+    {
+      "collection_name" = "new_terraform_collection"
+      "max_ttl" = 100
+      "uid" = "8"
+    },
+  ])
+  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+  "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+  "scope_name" = "s1"
+}
+new_collection = {
+  "bucket_id" = "YjE="
+  "cluster_id" = "cd9f5ea8-791a-48ce-b944-e0f2f328af1d"
+  "collection_name" = "new_terraform_collection2"
+  "max_ttl" = 100
+  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+  "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+  "scope_name" = "s1"
+  "uid" = "9"
+}
+```
+2. Update maxTTL for server version < 7.6.0 (Error - Not Supported)
+
+ Sample Output:
+```
+$ terraform apply
+╷
+│ Warning: Provider development overrides are in effect
+│ 
+│ The following provider development overrides are set in the CLI configuration:
+│  - couchbasecloud/couchbase-capella in /Users/paulomee.de/go/bin
+│ 
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
+╵
+data.couchbase-capella_collections.existing_collections: Reading...
+couchbase-capella_collection.new_collection: Refreshing state...
+data.couchbase-capella_collections.existing_collections: Read complete after 0s
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  ~ update in-place
+
+Terraform will perform the following actions:
+
+  # couchbase-capella_collection.new_collection will be updated in-place
+  ~ resource "couchbase-capella_collection" "new_collection" {
+      ~ max_ttl         = 100 -> 2000
+      ~ uid             = "8" -> (known after apply)
+        # (6 unchanged attributes hidden)
+    }
+
+Plan: 0 to add, 1 to change, 0 to destroy.
+
+Changes to Outputs:
+  ~ collections_list = {
+      ~ data            = null -> [
+          + {
+              + collection_name = "new_terraform_collection"
+              + max_ttl         = 100
+              + uid             = "8"
+            },
+        ]
+        # (5 unchanged attributes hidden)
+    }
+  ~ new_collection   = {
+      ~ max_ttl         = 100 -> 2000
+      ~ uid             = "8" -> (known after apply)
+        # (6 unchanged attributes hidden)
+    }
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+couchbase-capella_collection.new_collection: Modifying...
+╷
+│ Error: Error updating collection
+│ 
+│   with couchbase-capella_collection.new_collection,
+│   on create_collection.tf line 5, in resource "couchbase-capella_collection" "new_collection":
+│    5: resource "couchbase-capella_collection" "new_collection" {
+│ 
+│ Could not update collection for scope"s1": {"hint":"Returned when attempting to modify a collection but the server version is not supported. This operation is only supported for server version 7.6.0 and
+│ above.","message":"Unable to modify the collection. Couchbase Server version '7.2.4' is not supported.","code":11014,"httpStatusCode":422}
+
+```
+3. Update maxTTL for server version >= 7.6.0 (Update in-place)
 
 Sample Output:
 ```
@@ -281,7 +425,94 @@ $ terraform apply
 ╵
 data.couchbase-capella_collections.existing_collections: Reading...
 couchbase-capella_collection.new_collection: Refreshing state...
-data.couchbase-capella_collections.existing_collections: Read complete after 0s
+data.couchbase-capella_collections.existing_collections: Read complete after 1s
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  ~ update in-place
+
+Terraform will perform the following actions:
+
+  # couchbase-capella_collection.new_collection will be updated in-place
+  ~ resource "couchbase-capella_collection" "new_collection" {
+      ~ max_ttl         = 500 -> 10000
+      ~ uid             = "a" -> (known after apply)
+        # (6 unchanged attributes hidden)
+    }
+
+Plan: 0 to add, 1 to change, 0 to destroy.
+
+Changes to Outputs:
+  ~ collections_list = {
+      ~ data            = null -> [
+          + {
+              + collection_name = "new_terraform_collection"
+              + max_ttl         = 500
+              + uid             = "a"
+            },
+        ]
+        # (5 unchanged attributes hidden)
+    }
+  ~ new_collection   = {
+      ~ max_ttl         = 500 -> 10000
+      ~ uid             = "a" -> (known after apply)
+        # (6 unchanged attributes hidden)
+    }
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+couchbase-capella_collection.new_collection: Modifying...
+couchbase-capella_collection.new_collection: Modifications complete after 1s
+
+Apply complete! Resources: 0 added, 1 changed, 0 destroyed.
+
+Outputs:
+
+collections_list = {
+  "bucket_id" = "YjE="
+  "cluster_id" = "89ab18f2-88dc-4b14-8b4e-4479b3651cfc"
+  "data" = tolist([
+    {
+      "collection_name" = "new_terraform_collection"
+      "max_ttl" = 500
+      "uid" = "a"
+    },
+  ])
+  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+  "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+  "scope_name" = "s1"
+}
+new_collection = {
+  "bucket_id" = "YjE="
+  "cluster_id" = "89ab18f2-88dc-4b14-8b4e-4479b3651cfc"
+  "collection_name" = "new_terraform_collection"
+  "max_ttl" = 10000
+  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+  "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+  "scope_name" = "s1"
+  "uid" = "a"
+}
+
+```
+4. Update name for server version >= 7.6.0 (destroy and replace)
+
+Sample Output:
+```
+terraform apply 
+╷
+│ Warning: Provider development overrides are in effect
+│ 
+│ The following provider development overrides are set in the CLI configuration:
+│  - couchbasecloud/couchbase-capella in /Users/paulomee.de/go/bin
+│ 
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
+╵
+data.couchbase-capella_collections.existing_collections: Reading...
+couchbase-capella_collection.new_collection: Refreshing state...
+data.couchbase-capella_collections.existing_collections: Read complete after 1s
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
 -/+ destroy and then create replacement
@@ -291,19 +522,26 @@ Terraform will perform the following actions:
   # couchbase-capella_collection.new_collection must be replaced
 -/+ resource "couchbase-capella_collection" "new_collection" {
       ~ collection_name = "new_terraform_collection" -> "new_terraform_collection2" # forces replacement
-      ~ max_ttl         = 200 -> 300 # forces replacement
       ~ uid             = "b" -> (known after apply)
-        # (5 unchanged attributes hidden)
+        # (6 unchanged attributes hidden)
     }
 
 Plan: 1 to add, 0 to change, 1 to destroy.
 
 Changes to Outputs:
+  ~ collections_list = {
+      ~ data            = [
+          ~ {
+              ~ max_ttl         = 100 -> 5000
+                # (2 unchanged attributes hidden)
+            },
+        ]
+        # (5 unchanged attributes hidden)
+    }
   ~ new_collection   = {
       ~ collection_name = "new_terraform_collection" -> "new_terraform_collection2"
-      ~ max_ttl         = 200 -> 300
       ~ uid             = "b" -> (known after apply)
-        # (5 unchanged attributes hidden)
+        # (6 unchanged attributes hidden)
     }
 
 Do you want to perform these actions?
@@ -323,17 +561,12 @@ Outputs:
 
 collections_list = {
   "bucket_id" = "YjE="
-  "cluster_id" = "0d9a6dd5-4d55-49be-8137-896f21425beb"
+  "cluster_id" = "89ab18f2-88dc-4b14-8b4e-4479b3651cfc"
   "data" = tolist([
     {
       "collection_name" = "new_terraform_collection"
-      "max_ttl" = 200
+      "max_ttl" = 5000
       "uid" = "b"
-    },
-    {
-      "collection_name" = "c1"
-      "max_ttl" = 100
-      "uid" = "8"
     },
   ])
   "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
@@ -342,16 +575,16 @@ collections_list = {
 }
 new_collection = {
   "bucket_id" = "YjE="
-  "cluster_id" = "0d9a6dd5-4d55-49be-8137-896f21425beb"
+  "cluster_id" = "89ab18f2-88dc-4b14-8b4e-4479b3651cfc"
   "collection_name" = "new_terraform_collection2"
-  "max_ttl" = 300
+  "max_ttl" = 5000
   "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
   "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
   "scope_name" = "s1"
   "uid" = "c"
 }
-```
 
+```
 ## DESTROY
 ### Finally, destroy the resources created by Terraform
 
