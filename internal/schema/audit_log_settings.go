@@ -1,8 +1,10 @@
 package schema
 
 import (
+	"fmt"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 type ClusterAuditSettings struct {
@@ -34,15 +36,17 @@ type AuditSettingsDisabledUser struct {
 }
 
 // Validate is used to verify that IDs have been properly imported.
-func (c *ClusterAuditSettings) Validate() error {
-	if c.OrganizationId.IsNull() {
-		return errors.ErrOrganizationIdMissing
+func (c *ClusterAuditSettings) Validate() (map[Attr]string, error) {
+	state := map[Attr]basetypes.StringValue{
+		OrganizationId: c.OrganizationId,
+		ProjectId:      c.ProjectId,
+		Id:             c.ClusterId,
 	}
-	if c.ProjectId.IsNull() {
-		return errors.ErrProjectIdMissing
+
+	IDs, err := validateSchemaState(state)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
 	}
-	if c.ClusterId.IsNull() {
-		return errors.ErrClusterIdMissing
-	}
-	return nil
+
+	return IDs, nil
 }

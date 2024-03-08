@@ -144,7 +144,7 @@ func (a *AuditLogSettings) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	err := state.Validate()
+	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Audit Log Settings",
@@ -154,9 +154,9 @@ func (a *AuditLogSettings) Read(ctx context.Context, req resource.ReadRequest, r
 	}
 
 	var (
-		organizationId = state.OrganizationId.ValueString()
-		projectId      = state.ProjectId.ValueString()
-		clusterId      = state.ClusterId.ValueString()
+		organizationId = IDs[providerschema.OrganizationId]
+		projectId      = IDs[providerschema.ProjectId]
+		clusterId      = IDs[providerschema.Id]
 	)
 
 	refreshedState, err := a.refreshAuditLogSettingsState(ctx, organizationId, projectId, clusterId)
