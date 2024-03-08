@@ -69,3 +69,26 @@ type GetCollectionResponse struct {
 type GetCollectionsResponse struct {
 	Data []GetCollectionResponse `json:"data"`
 }
+
+// UpdateCollectionRequest is the payload sent to the Capella V4 Public API when asked to update an existing collection.
+// Updates an existing collection.
+//
+//This operation is only allowed for a cluster with server version >= 7.6.0. A collection cannot be updated for the server versions lower than this.
+//
+//This allows to update the maxTTL of the given collection.
+//
+//To learn more about scopes and collections, see [Buckets, Scopes, and Collections](https://docs.couchbase.com/cloud/clusters/data-service/about-buckets-scopes-collections.html).
+//
+//In order to access this endpoint, the provided API key must have at least one of the following roles:
+//- Organization Owner
+//- Project Owner
+//- Project Manager
+//
+//To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
+type UpdateCollectionRequest struct {
+	// MaxTTL Specify the new time to live (TTL) value in seconds.
+	//  -  This value should be >= -1. Set to -1 to disable expiry for that collection.
+	//  -  Set to 0 to use the bucket's maxTTL value.
+	//  -  The maximum value that can be set for maxTTL is 2147483647.
+	MaxTTL int `json:"maxTTL"`
+}
