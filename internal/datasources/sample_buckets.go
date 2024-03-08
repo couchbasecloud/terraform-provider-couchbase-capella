@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	samplebucketapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/sample_bucket"
-
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	samplebucketapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/sample_bucket"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
