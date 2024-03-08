@@ -359,12 +359,12 @@ Sample Output:
 $ terraform output new_scope
 {
   "bucket_id" = "YjE="
-  "cluster_id" = "3733066f-ef48-42a4-95a5-2f7e44c09d72"
+  "cluster_id" = "0d9a6dd5-4d55-49be-8137-896f21425beb"
   "collections" = toset([])
-  "name" = "new_terraform_scope"
   "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
   "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
-  "uid" = "a"
+  "scope_name" = "new_terraform_scope"
+  "uid" = "17"
 }
 ```
 
@@ -442,7 +442,7 @@ $ terraform plan
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
 data.couchbase-capella_scopes.existing_scopes: Reading...
-couchbase-capella_scope.new_scope: Refreshing state... [name=new_terraform_scope]
+couchbase-capella_scope.new_scope: Refreshing state...
 data.couchbase-capella_scopes.existing_scopes: Read complete after 1s
 
 No changes. Your infrastructure matches the configuration.
@@ -453,7 +453,7 @@ Terraform has compared your real infrastructure against your configuration and f
 ## UPDATE
 ### Let us edit the terraform.tfvars file to change the scope configuration settings.
 
-Command: `terraform apply -var 'scope={name="terraform_scope_updated"}'`
+Command: `terraform apply -var 'scope={scope_name="terraform_scope_updated"}'`
 
 Sample Output:
 ```
