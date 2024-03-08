@@ -275,15 +275,79 @@ func (c *Collection) Read(ctx context.Context, req resource.ReadRequest, resp *r
 	}
 }
 
-// Update updates the collection.
-func (c *Collection) Update(_ context.Context, _ resource.UpdateRequest, _ *resource.UpdateResponse) {
-	// Couchbase Capella's v4 does not support a PUT endpoint for collections.
-	// Collections can only be created, read and deleted.
-	// https://docs.couchbase.com/cloud/management-api-reference/index.html#tag/buckets-scopes-and-collections
-	//
-	// Note: In this situation, terraform apply will default to deleting and executing a new create.
-	// The update implementation should simply be left empty.
-	// https://developer.hashicorp.com/terraform/plugin/framework/resources/update
+// Update updates the collection. Only maxTTL value for the collection can be updated. This endpoint only applies for clusters with server version >= 7.6.0.
+// Collections cannot be updated for clusters with server version < 7.6.0.
+func (c *Collection) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// Retrieve values from plan
+	var plan providerschema.Collection
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceIDs, err := plan.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating collection",
+			"Could not update collection for scope"+plan.ScopeName.String()+": "+err.Error(),
+		)
+		return
+	}
+
+	var (
+		organizationId = resourceIDs[providerschema.OrganizationId]
+		projectId      = resourceIDs[providerschema.ProjectId]
+		clusterId      = resourceIDs[providerschema.ClusterId]
+		bucketId       = resourceIDs[providerschema.BucketId]
+		scopeName      = resourceIDs[providerschema.ScopeName]
+		collectionName = resourceIDs[providerschema.CollectionName]
+	)
+
+	updateCollectionRequest := collection_api.UpdateCollectionRequest{
+		MaxTTL: plan.MaxTTL.ValueInt64(),
+	}
+
+	// Update existing collection
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/scopes/%s/collections/%s", c.HostURL, organizationId, projectId, clusterId, bucketId, scopeName, collectionName)
+	cfg := collection_api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
+	_, err = c.Client.ExecuteWithRetry(
+		ctx,
+		cfg,
+		updateCollectionRequest,
+		c.Token,
+		nil,
+	)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating collection",
+			"Could not update collection for scope"+plan.ScopeName.String()+": "+collection_api.ParseError(err),
+		)
+		return
+	}
+
+	currentState, err := c.retrieveCollection(ctx, organizationId, projectId, clusterId, bucketId, scopeName, collectionName)
+	if err != nil {
+		resourceNotFound, errString := collection_api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError(
+			"Error reading collection",
+			"Could not read collection name "+plan.Name.String()+": "+errString,
+		)
+		return
+	}
+
+	// Set state to fully populated data
+	diags = resp.State.Set(ctx, currentState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Delete deletes the collection.

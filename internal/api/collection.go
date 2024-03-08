@@ -90,5 +90,5 @@ type UpdateCollectionRequest struct {
 	//  -  This value should be >= -1. Set to -1 to disable expiry for that collection.
 	//  -  Set to 0 to use the bucket's maxTTL value.
 	//  -  The maximum value that can be set for maxTTL is 2147483647.
-	MaxTTL int `json:"maxTTL"`
+	MaxTTL int64 `json:"maxTTL"`
 }
