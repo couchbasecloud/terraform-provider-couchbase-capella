@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -63,7 +64,7 @@ func (a *AuditLogSettings) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	err := state.Validate()
+	err := a.validate(state)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Audit Log Settings",
@@ -150,4 +151,17 @@ func (a *AuditLogSettings) Configure(_ context.Context, req datasource.Configure
 	}
 
 	a.Data = data
+}
+
+func (a *AuditLogSettings) validate(state providerschema.ClusterAuditSettings) error {
+	if state.OrganizationId.IsNull() {
+		return errors.ErrOrganizationIdMissing
+	}
+	if state.ProjectId.IsNull() {
+		return errors.ErrProjectIdMissing
+	}
+	if state.ClusterId.IsNull() {
+		return errors.ErrClusterIdMissing
+	}
+	return nil
 }
