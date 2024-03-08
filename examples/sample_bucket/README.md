@@ -35,9 +35,8 @@ Terraform plan
 │  - couchbasecloud/couchbase-capella in /Users/$USER/workspace/code/Lagher0/terraform-provider-couchbase-capella/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
-╵
-data.couchbase-capella_sample_buckets.existing_sample_buckets: Reading...
-data.couchbase-capella_sample_buckets.existing_sample_buckets: Read complete after 0s
+╵data.couchbase-capella_sample_buckets.existing_sample_buckets: Reading...
+data.couchbase-capella_sample_buckets.existing_sample_buckets: Read complete after 1s
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   + create
@@ -46,46 +45,46 @@ Terraform will perform the following actions:
 
   # couchbase-capella_sample_bucket.new_sample_bucket will be created
   + resource "couchbase-capella_sample_bucket" "new_sample_bucket" {
-      + bucket_conflict_resolution = "seqno"
-      + cluster_id                 = "17619f3c-08f5-40a3-8c0c-d2e5b263a025"
-      + durability_level           = "none"
+      + bucket_conflict_resolution = (known after apply)
+      + cluster_id                 = "4ce95e43-106c-427f-b260-49fdb2c8b034"
+      + durability_level           = (known after apply)
       + eviction_policy            = (known after apply)
-      + flush                      = false
+      + flush                      = (known after apply)
       + id                         = (known after apply)
-      + memory_allocation_in_mb    = 200
+      + memory_allocation_in_mb    = (known after apply)
       + name                       = "gamesim-sample"
       + organization_id            = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
       + project_id                 = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
-      + replicas                   = 1
+      + replicas                   = (known after apply)
       + stats                      = (known after apply)
       + storage_backend            = (known after apply)
-      + time_to_live_in_seconds    = 0
-      + type                       = "couchbase"
+      + time_to_live_in_seconds    = (known after apply)
+      + type                       = (known after apply)
     }
 
 Plan: 1 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
-  + new_sample_bucket   = {
-      + bucket_conflict_resolution = "seqno"
-      + cluster_id                 = "17619f3c-08f5-40a3-8c0c-d2e5b263a025"
-      + durability_level           = "none"
+  + new_sample_bucket  = {
+      + bucket_conflict_resolution = (known after apply)
+      + cluster_id                 = "4ce95e43-106c-427f-b260-49fdb2c8b034"
+      + durability_level           = (known after apply)
       + eviction_policy            = (known after apply)
-      + flush                      = false
+      + flush                      = (known after apply)
       + id                         = (known after apply)
-      + memory_allocation_in_mb    = 200
+      + memory_allocation_in_mb    = (known after apply)
       + name                       = "gamesim-sample"
       + organization_id            = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
       + project_id                 = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
-      + replicas                   = 1
+      + replicas                   = (known after apply)
       + stats                      = (known after apply)
       + storage_backend            = (known after apply)
-      + time_to_live_in_seconds    = 0
-      + type                       = "couchbase"
+      + time_to_live_in_seconds    = (known after apply)
+      + type                       = (known after apply)
     }
   + samplebucket_id    = (known after apply)
   + samplebuckets_list = {
-      + cluster_id      = "17619f3c-08f5-40a3-8c0c-d2e5b263a025"
+      + cluster_id      = "4ce95e43-106c-427f-b260-49fdb2c8b034"
       + data            = null
       + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
       + project_id      = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
@@ -121,46 +120,46 @@ Terraform will perform the following actions:
 
   # couchbase-capella_sample_bucket.new_sample_bucket will be created
   + resource "couchbase-capella_sample_bucket" "new_sample_bucket" {
-      + bucket_conflict_resolution = "seqno"
-      + cluster_id                 = "17619f3c-08f5-40a3-8c0c-d2e5b263a025"
-      + durability_level           = "none"
+      + bucket_conflict_resolution = (known after apply)
+      + cluster_id                 = "4ce95e43-106c-427f-b260-49fdb2c8b034"
+      + durability_level           = (known after apply)
       + eviction_policy            = (known after apply)
-      + flush                      = false
+      + flush                      = (known after apply)
       + id                         = (known after apply)
-      + memory_allocation_in_mb    = 200
+      + memory_allocation_in_mb    = (known after apply)
       + name                       = "gamesim-sample"
       + organization_id            = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
       + project_id                 = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
-      + replicas                   = 1
+      + replicas                   = (known after apply)
       + stats                      = (known after apply)
       + storage_backend            = (known after apply)
-      + time_to_live_in_seconds    = 0
-      + type                       = "couchbase"
+      + time_to_live_in_seconds    = (known after apply)
+      + type                       = (known after apply)
     }
 
 Plan: 1 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
-  + new_sample_bucket   = {
-      + bucket_conflict_resolution = "seqno"
-      + cluster_id                 = "17619f3c-08f5-40a3-8c0c-d2e5b263a025"
-      + durability_level           = "none"
+  + new_sample_bucket  = {
+      + bucket_conflict_resolution = (known after apply)
+      + cluster_id                 = "4ce95e43-106c-427f-b260-49fdb2c8b034"
+      + durability_level           = (known after apply)
       + eviction_policy            = (known after apply)
-      + flush                      = false
+      + flush                      = (known after apply)
       + id                         = (known after apply)
-      + memory_allocation_in_mb    = 200
+      + memory_allocation_in_mb    = (known after apply)
       + name                       = "gamesim-sample"
       + organization_id            = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
       + project_id                 = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
-      + replicas                   = 1
+      + replicas                   = (known after apply)
       + stats                      = (known after apply)
       + storage_backend            = (known after apply)
-      + time_to_live_in_seconds    = 0
-      + type                       = "couchbase"
+      + time_to_live_in_seconds    = (known after apply)
+      + type                       = (known after apply)
     }
   + samplebucket_id    = (known after apply)
   + samplebuckets_list = {
-      + cluster_id      = "17619f3c-08f5-40a3-8c0c-d2e5b263a025"
+      + cluster_id      = "4ce95e43-106c-427f-b260-49fdb2c8b034"
       + data            = null
       + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
       + project_id      = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
@@ -173,7 +172,7 @@ Do you want to perform these actions?
   Enter a value: yes
 
 couchbase-capella_sample_bucket.new_sample_bucket: Creating...
-couchbase-capella_sample_bucket.new_sample_bucket: Creation complete after 1s [id=Z2FtZXNpbS1zYW1wbGU=]
+couchbase-capella_sample_bucket.new_sample_bucket: Creation complete after 0s [id=Z2FtZXNpbS1zYW1wbGU=]
 
 Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
 
@@ -181,7 +180,7 @@ Outputs:
 
 new_sample_bucket = {
   "bucket_conflict_resolution" = "seqno"
-  "cluster_id" = "17619f3c-08f5-40a3-8c0c-d2e5b263a025"
+  "cluster_id" = "4ce95e43-106c-427f-b260-49fdb2c8b034"
   "durability_level" = "none"
   "eviction_policy" = "fullEviction"
   "flush" = false
@@ -193,8 +192,8 @@ new_sample_bucket = {
   "replicas" = 1
   "stats" = {
     "disk_used_in_mib" = 0
-    "item_count" = 0
-    "memory_used_in_mib" = 0
+    "item_count" = 209
+    "memory_used_in_mib" = 20
     "ops_per_second" = 0
   }
   "storage_backend" = "couchstore"
@@ -203,11 +202,12 @@ new_sample_bucket = {
 }
 samplebucket_id = "Z2FtZXNpbS1zYW1wbGU="
 samplebuckets_list = {
-  "cluster_id" = "17619f3c-08f5-40a3-8c0c-d2e5b263a025"
+  "cluster_id" = "4ce95e43-106c-427f-b260-49fdb2c8b034"
   "data" = tolist(null) /* of object */
   "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
   "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
 }
+
 ```
 
 
@@ -220,20 +220,20 @@ Sample Output:
 terraform output new_sample_bucket
 {
   "bucket_conflict_resolution" = "seqno"
-  "cluster_id" = "17619f3c-08f5-40a3-8c0c-d2e5b263a025"
+  "cluster_id" = "4ce95e43-106c-427f-b260-49fdb2c8b034"
   "durability_level" = "none"
   "eviction_policy" = "fullEviction"
   "flush" = false
   "id" = "Z2FtZXNpbS1zYW1wbGU="
-  "memory_allocation_in_mb" = 200
+  "memory_allocation_in_mb" = 250
   "name" = "gamesim-sample"
   "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
   "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
   "replicas" = 1
   "stats" = {
-    "disk_used_in_mib" = 0
-    "item_count" = 0
-    "memory_used_in_mib" = 0
+    "disk_used_in_mib" = 19
+    "item_count" = 586
+    "memory_used_in_mib" = 62
     "ops_per_second" = 0
   }
   "storage_backend" = "couchstore"
@@ -274,10 +274,10 @@ Successfully removed 1 resource instance(s).
 Command: `terraform import couchbase-capella_sample_bucket.new_sample_bucket id=<bucket_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
 In this case, the complete command is:
-`terraform import couchbase-capella_sample_bucket.new_sample_bucket  id=Z2FtZXNpbS1zYW1wbGU=,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,cluster_id=17619f3c-08f5-40a3-8c0c-d2e5b263a025`
+`terraform import couchbase-capella_sample_bucket.new_sample_bucket id=YmVlci1zYW1wbGU=,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,cluster_id=4ce95e43-106c-427f-b260-49fdb2c8b034`
 
 ```
-terraform import couchbase-capella_sample_bucket.new_sample_bucket id=Z2FtZXNpbS1zYW1wbGU=,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,cluster_id=17619f3c-08f5-40a3-8c0c-d2e5b263a025
+terraform import couchbase-capella_sample_bucket.new_sample_bucket id=YmVlci1zYW1wbGU=,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,cluster_id=4ce95e43-106c-427f-b260-49fdb2c8b034
 couchbase-capella_sample_bucket.new_sample_bucket: Importing from ID "id=Z2FtZXNpbS1zYW1wbGU=,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,cluster_id=17619f3c-08f5-40a3-8c0c-d2e5b263a025"...
 couchbase-capella_sample_bucket.new_sample_bucket: Import prepared!
   Prepared couchbase-capella_sample_bucket for import
@@ -326,8 +326,7 @@ Terraform has compared your real infrastructure against your configuration and f
 ## UPDATE
 ### Let us edit the terraform.tfvars file to change the bucket configuration settings.
 
-Sample buckets does not support update functionality. To update the terraform state it recreates the
-sample bucket with the given changes
+Sample buckets does not support update functionality. We can only change the sample bucket name which destroys the current sample bucket and creates a new one. 
 
 Command: `terraform apply -var 'samplebucket={name="travel-sample"}'`
 
@@ -357,9 +356,10 @@ Terraform detected the following changes made outside of Terraform since the las
         id                         = "Z2FtZXNpbS1zYW1wbGU="
         name                       = "gamesim-sample"
       ~ stats                      = {
-          ~ item_count         = 196 -> 390
-          ~ memory_used_in_mib = 20 -> 42
-            # (2 unchanged attributes hidden)
+          ~ disk_used_in_mib   = 0 -> 19
+          ~ item_count         = 209 -> 586
+          ~ memory_used_in_mib = 20 -> 62
+            # (1 unchanged attribute hidden)
         }
         # (12 unchanged attributes hidden)
     }
@@ -367,7 +367,7 @@ Terraform detected the following changes made outside of Terraform since the las
 
 Unless you have made equivalent changes to your configuration, or ignored the relevant attributes using ignore_changes, the following plan may include actions to undo or respond to these changes.
 
-──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
 -/+ destroy and then create replacement
@@ -376,48 +376,73 @@ Terraform will perform the following actions:
 
   # couchbase-capella_sample_bucket.new_sample_bucket must be replaced
 -/+ resource "couchbase-capella_sample_bucket" "new_sample_bucket" {
+      ~ bucket_conflict_resolution = "seqno" -> (known after apply)
+      ~ durability_level           = "none" -> (known after apply)
       ~ eviction_policy            = "fullEviction" -> (known after apply)
+      ~ flush                      = false -> (known after apply)
       ~ id                         = "Z2FtZXNpbS1zYW1wbGU=" -> (known after apply)
+      ~ memory_allocation_in_mb    = 200 -> (known after apply)
       ~ name                       = "gamesim-sample" -> "travel-sample" # forces replacement
+      ~ replicas                   = 1 -> (known after apply)
       ~ stats                      = {
-          ~ disk_used_in_mib   = 0 -> (known after apply)
-          ~ item_count         = 390 -> (known after apply)
-          ~ memory_used_in_mib = 42 -> (known after apply)
+          ~ disk_used_in_mib   = 19 -> (known after apply)
+          ~ item_count         = 586 -> (known after apply)
+          ~ memory_used_in_mib = 62 -> (known after apply)
           ~ ops_per_second     = 0 -> (known after apply)
         } -> (known after apply)
       ~ storage_backend            = "couchstore" -> (known after apply)
-        # (10 unchanged attributes hidden)
+      ~ time_to_live_in_seconds    = 0 -> (known after apply)
+      ~ type                       = "couchbase" -> (known after apply)
+        # (3 unchanged attributes hidden)
     }
 
 Plan: 1 to add, 0 to change, 1 to destroy.
 
 Changes to Outputs:
-  ~ new_sample_bucket   = {
+  ~ new_sample_bucket  = {
+      ~ bucket_conflict_resolution = "seqno" -> (known after apply)
+      ~ durability_level           = "none" -> (known after apply)
       ~ eviction_policy            = "fullEviction" -> (known after apply)
+      ~ flush                      = false -> (known after apply)
       ~ id                         = "Z2FtZXNpbS1zYW1wbGU=" -> (known after apply)
+      ~ memory_allocation_in_mb    = 200 -> (known after apply)
       ~ name                       = "gamesim-sample" -> "travel-sample"
+      ~ replicas                   = 1 -> (known after apply)
       ~ stats                      = {
           - disk_used_in_mib   = 0
-          - item_count         = 196
+          - item_count         = 209
           - memory_used_in_mib = 20
           - ops_per_second     = 0
         } -> (known after apply)
       ~ storage_backend            = "couchstore" -> (known after apply)
-        # (10 unchanged attributes hidden)
+      ~ time_to_live_in_seconds    = 0 -> (known after apply)
+      ~ type                       = "couchbase" -> (known after apply)
+        # (3 unchanged attributes hidden)
     }
   ~ samplebucket_id    = "Z2FtZXNpbS1zYW1wbGU=" -> (known after apply)
   ~ samplebuckets_list = {
-      ~ data            = [
-          ~ {
-              ~ id                         = "dHJhdmVsLXNhbXBsZQ==" -> "Z2FtZXNpbS1zYW1wbGU="
-              ~ name                       = "travel-sample" -> "gamesim-sample"
-              ~ stats                      = {
-                  ~ disk_used_in_mib   = 15 -> 0
-                  ~ item_count         = 163 -> 390
-                  ~ memory_used_in_mib = 72 -> 42
-                    # (1 unchanged attribute hidden)
+      ~ data            = null -> [
+          + {
+              + bucket_conflict_resolution = "seqno"
+              + cluster_id                 = "4ce95e43-106c-427f-b260-49fdb2c8b034"
+              + durability_level           = "none"
+              + eviction_policy            = "fullEviction"
+              + flush                      = false
+              + id                         = "Z2FtZXNpbS1zYW1wbGU="
+              + memory_allocation_in_mb    = 200
+              + name                       = "gamesim-sample"
+              + organization_id            = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+              + project_id                 = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+              + replicas                   = 1
+              + stats                      = {
+                  + disk_used_in_mib   = 19
+                  + item_count         = 586
+                  + memory_used_in_mib = 62
+                  + ops_per_second     = 0
                 }
-                # (12 unchanged attributes hidden)
+              + storage_backend            = "couchstore"
+              + time_to_live_in_seconds    = 0
+              + type                       = "couchbase"
             },
         ]
         # (3 unchanged attributes hidden)
@@ -430,7 +455,7 @@ Do you want to perform these actions?
   Enter a value: yes
 
 couchbase-capella_sample_bucket.new_sample_bucket: Destroying... [id=Z2FtZXNpbS1zYW1wbGU=]
-couchbase-capella_sample_bucket.new_sample_bucket: Destruction complete after 1s
+couchbase-capella_sample_bucket.new_sample_bucket: Destruction complete after 2s
 couchbase-capella_sample_bucket.new_sample_bucket: Creating...
 couchbase-capella_sample_bucket.new_sample_bucket: Creation complete after 0s [id=dHJhdmVsLXNhbXBsZQ==]
 
@@ -440,7 +465,7 @@ Outputs:
 
 new_sample_bucket = {
   "bucket_conflict_resolution" = "seqno"
-  "cluster_id" = "17619f3c-08f5-40a3-8c0c-d2e5b263a025"
+  "cluster_id" = "4ce95e43-106c-427f-b260-49fdb2c8b034"
   "durability_level" = "none"
   "eviction_policy" = "fullEviction"
   "flush" = false
@@ -452,8 +477,8 @@ new_sample_bucket = {
   "replicas" = 1
   "stats" = {
     "disk_used_in_mib" = 0
-    "item_count" = 163
-    "memory_used_in_mib" = 33
+    "item_count" = 0
+    "memory_used_in_mib" = 0
     "ops_per_second" = 0
   }
   "storage_backend" = "couchstore"
@@ -462,11 +487,11 @@ new_sample_bucket = {
 }
 samplebucket_id = "dHJhdmVsLXNhbXBsZQ=="
 samplebuckets_list = {
-  "cluster_id" = "17619f3c-08f5-40a3-8c0c-d2e5b263a025"
+  "cluster_id" = "4ce95e43-106c-427f-b260-49fdb2c8b034"
   "data" = tolist([
     {
       "bucket_conflict_resolution" = "seqno"
-      "cluster_id" = "17619f3c-08f5-40a3-8c0c-d2e5b263a025"
+      "cluster_id" = "4ce95e43-106c-427f-b260-49fdb2c8b034"
       "durability_level" = "none"
       "eviction_policy" = "fullEviction"
       "flush" = false
@@ -477,9 +502,9 @@ samplebuckets_list = {
       "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
       "replicas" = 1
       "stats" = {
-        "disk_used_in_mib" = 0
-        "item_count" = 390
-        "memory_used_in_mib" = 42
+        "disk_used_in_mib" = 19
+        "item_count" = 586
+        "memory_used_in_mib" = 62
         "ops_per_second" = 0
       }
       "storage_backend" = "couchstore"
@@ -510,8 +535,8 @@ Sample Output:
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
 data.couchbase-capella_sample_buckets.existing_sample_buckets: Reading...
-couchbase-capella_sample_bucket.new_sample_bucket: Refreshing state... [id=dHJhdmVsLXNhbXBsZQ==]
-data.couchbase-capella_sample_buckets.existing_sample_buckets: Read complete after 1s
+couchbase-capella_sample_bucket.new_sample_bucket: Refreshing state... [id=Z2FtZXNpbS1zYW1wbGU=]
+data.couchbase-capella_sample_buckets.existing_sample_buckets: Read complete after 0s
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   - destroy
@@ -521,20 +546,20 @@ Terraform will perform the following actions:
   # couchbase-capella_sample_bucket.new_sample_bucket will be destroyed
   - resource "couchbase-capella_sample_bucket" "new_sample_bucket" {
       - bucket_conflict_resolution = "seqno" -> null
-      - cluster_id                 = "17619f3c-08f5-40a3-8c0c-d2e5b263a025" -> null
+      - cluster_id                 = "4ce95e43-106c-427f-b260-49fdb2c8b034" -> null
       - durability_level           = "none" -> null
       - eviction_policy            = "fullEviction" -> null
       - flush                      = false -> null
-      - id                         = "dHJhdmVsLXNhbXBsZQ==" -> null
+      - id                         = "Z2FtZXNpbS1zYW1wbGU=" -> null
       - memory_allocation_in_mb    = 200 -> null
-      - name                       = "travel-sample" -> null
+      - name                       = "gamesim-sample" -> null
       - organization_id            = "6af08c0a-8cab-4c1c-b257-b521575c16d0" -> null
       - project_id                 = "c1fade1a-9f27-4a3c-af73-d1b2301890e3" -> null
       - replicas                   = 1 -> null
       - stats                      = {
-          - disk_used_in_mib   = 120 -> null
-          - item_count         = 63288 -> null
-          - memory_used_in_mib = 165 -> null
+          - disk_used_in_mib   = 0 -> null
+          - item_count         = 586 -> null
+          - memory_used_in_mib = 62 -> null
           - ops_per_second     = 0 -> null
         } -> null
       - storage_backend            = "couchstore" -> null
@@ -545,48 +570,48 @@ Terraform will perform the following actions:
 Plan: 0 to add, 0 to change, 1 to destroy.
 
 Changes to Outputs:
-  - new_sample_bucket   = {
+  - new_sample_bucket  = {
       - bucket_conflict_resolution = "seqno"
-      - cluster_id                 = "17619f3c-08f5-40a3-8c0c-d2e5b263a025"
+      - cluster_id                 = "4ce95e43-106c-427f-b260-49fdb2c8b034"
       - durability_level           = "none"
       - eviction_policy            = "fullEviction"
       - flush                      = false
-      - id                         = "dHJhdmVsLXNhbXBsZQ=="
+      - id                         = "Z2FtZXNpbS1zYW1wbGU="
       - memory_allocation_in_mb    = 200
-      - name                       = "travel-sample"
+      - name                       = "gamesim-sample"
       - organization_id            = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
       - project_id                 = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
       - replicas                   = 1
       - stats                      = {
           - disk_used_in_mib   = 0
-          - item_count         = 163
-          - memory_used_in_mib = 33
+          - item_count         = 586
+          - memory_used_in_mib = 62
           - ops_per_second     = 0
         }
       - storage_backend            = "couchstore"
       - time_to_live_in_seconds    = 0
       - type                       = "couchbase"
     } -> null
-  - samplebucket_id    = "dHJhdmVsLXNhbXBsZQ==" -> null
+  - samplebucket_id    = "Z2FtZXNpbS1zYW1wbGU=" -> null
   - samplebuckets_list = {
-      - cluster_id      = "17619f3c-08f5-40a3-8c0c-d2e5b263a025"
+      - cluster_id      = "4ce95e43-106c-427f-b260-49fdb2c8b034"
       - data            = [
           - {
               - bucket_conflict_resolution = "seqno"
-              - cluster_id                 = "17619f3c-08f5-40a3-8c0c-d2e5b263a025"
+              - cluster_id                 = "4ce95e43-106c-427f-b260-49fdb2c8b034"
               - durability_level           = "none"
               - eviction_policy            = "fullEviction"
               - flush                      = false
-              - id                         = "dHJhdmVsLXNhbXBsZQ=="
+              - id                         = "Z2FtZXNpbS1zYW1wbGU="
               - memory_allocation_in_mb    = 200
-              - name                       = "travel-sample"
+              - name                       = "gamesim-sample"
               - organization_id            = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
               - project_id                 = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
               - replicas                   = 1
               - stats                      = {
-                  - disk_used_in_mib   = 120
-                  - item_count         = 63288
-                  - memory_used_in_mib = 165
+                  - disk_used_in_mib   = 0
+                  - item_count         = 586
+                  - memory_used_in_mib = 62
                   - ops_per_second     = 0
                 }
               - storage_backend            = "couchstore"
@@ -604,7 +629,7 @@ Do you really want to destroy all resources?
 
   Enter a value: yes
 
-couchbase-capella_sample_bucket.new_sample_bucket: Destroying... [id=dHJhdmVsLXNhbXBsZQ==]
+couchbase-capella_sample_bucket.new_sample_bucket: Destroying... [id=Z2FtZXNpbS1zYW1wbGU=]
 couchbase-capella_sample_bucket.new_sample_bucket: Destruction complete after 2s
 
 Destroy complete! Resources: 1 destroyed.
