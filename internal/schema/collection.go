@@ -3,7 +3,6 @@ package schema
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 
@@ -37,14 +36,6 @@ type Collection struct {
 
 	// OrganizationId is the ID of the organization to which the Capella cluster belongs.
 	OrganizationId types.String `tfsdk:"organization_id"`
-}
-
-func CollectionAttributeTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"max_ttl":         types.Int64Type,
-		"collection_name": types.StringType,
-		"uid":             types.StringType,
-	}
 }
 
 // Collections defines structure based on the response received from V4 Capella Public API when asked to list collections.

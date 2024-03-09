@@ -28,6 +28,6 @@ variable "collection" {
 
   type = object({
     collection_name = string
-    max_ttl         = number
+    max_ttl         = optional(number)
   })
 }
