@@ -68,6 +68,15 @@ func (a *AuditLogSettings) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
+	err := a.validateAuditSettingPlan(plan)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating audit log settings",
+			"Could not create audit log settings, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
 	var (
 		organizationId = plan.OrganizationId.ValueString()
 		projectId      = plan.ProjectId.ValueString()
@@ -96,7 +105,7 @@ func (a *AuditLogSettings) Create(ctx context.Context, req resource.CreateReques
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/auditLog", a.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusOK}
-	_, err := a.Client.ExecuteWithRetry(
+	_, err = a.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
 		auditLogUpdateRequest,
@@ -322,4 +331,24 @@ func (a *AuditLogSettings) refreshAuditLogSettingsState(ctx context.Context, org
 	state.DisabledUsers = disabledUsers
 
 	return &state, nil
+}
+
+func (a *AuditLogSettings) validateAuditSettingPlan(plan providerschema.ClusterAuditSettings) error {
+	if plan.OrganizationId.IsNull() {
+		return fmt.Errorf("organization Id cannot be empty")
+	}
+	if plan.ProjectId.IsNull() {
+		return fmt.Errorf("project Id cannot be empty")
+	}
+	if plan.ClusterId.IsNull() {
+		return fmt.Errorf("cluster Id cannot be empty")
+	}
+	if plan.AuditEnabled.IsUnknown() {
+		return fmt.Errorf("please specify value for audit_enabled")
+	}
+	if len(plan.EnabledEventIDs) == 0 {
+		return fmt.Errorf("please provide list of event ids")
+	}
+
+	return nil
 }
