@@ -37,12 +37,12 @@ func (a *AuditLogSettings) Metadata(_ context.Context, req datasource.MetadataRe
 func (a *AuditLogSettings) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"organization_id": requiredStringAttribute,
-			"project_id":      requiredStringAttribute,
-			"cluster_id":      requiredStringAttribute,
-			"auditenabled":    computedBoolAttribute,
-			"enabledeventids": computedIntListAttribute,
-			"disabledusers": schema.ListNestedAttribute{
+			"organization_id":   requiredStringAttribute,
+			"project_id":        requiredStringAttribute,
+			"cluster_id":        requiredStringAttribute,
+			"audit_enabled":     computedBoolAttribute,
+			"enabled_event_ids": computedIntListAttribute,
+			"disabled_users": schema.ListNestedAttribute{
 				Computed: true,
 				Optional: true,
 				NestedObject: schema.NestedAttributeObject{

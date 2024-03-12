@@ -9,13 +9,13 @@ import (
 
 type ClusterAuditSettings struct {
 	// AuditEnabled Determines whether audit logging is enabled or not on the cluster.
-	AuditEnabled types.Bool `tfsdk:"auditenabled"`
+	AuditEnabled types.Bool `tfsdk:"audit_enabled"`
 
 	// DisabledUsers List of users whose filterable events will not be logged.
-	DisabledUsers []AuditSettingsDisabledUser `tfsdk:"disabledusers"`
+	DisabledUsers []AuditSettingsDisabledUser `tfsdk:"disabled_users"`
 
 	// EnabledEventIDs List of enabled filterable audit events for the cluster.
-	EnabledEventIDs []types.Int64 `tfsdk:"enabledeventids"`
+	EnabledEventIDs []types.Int64 `tfsdk:"enabled_event_ids"`
 
 	// OrganizationId is the organizationId of the capella tenant.
 	OrganizationId types.String `tfsdk:"organization_id"`
