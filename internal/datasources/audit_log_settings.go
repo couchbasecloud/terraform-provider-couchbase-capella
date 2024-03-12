@@ -31,7 +31,7 @@ func NewAuditLogSettings() datasource.DataSource {
 
 // Metadata returns the certificates data source type name.
 func (a *AuditLogSettings) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_auditlogsettings"
+	resp.TypeName = req.ProviderTypeName + "_audit_log_settings"
 }
 
 func (a *AuditLogSettings) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {

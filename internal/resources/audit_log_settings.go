@@ -31,7 +31,7 @@ func NewAuditLogSettings() resource.Resource {
 
 // Metadata returns the audit log settings resource type name.
 func (a *AuditLogSettings) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_auditlogsettings"
+	resp.TypeName = req.ProviderTypeName + "_audit_log_settings"
 }
 
 // Schema defines the schema for the audit log settings resource.
