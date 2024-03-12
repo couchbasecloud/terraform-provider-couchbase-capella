@@ -19,9 +19,6 @@ type Scope struct {
 	// Name is the name of the scope.
 	Name types.String `tfsdk:"scope_name"`
 
-	// Uid is the UID of the scope.
-	Uid types.String `tfsdk:"uid"`
-
 	// BucketId is the id of the bucket for which the scope needs to be created.
 	BucketId types.String `tfsdk:"bucket_id"`
 
@@ -42,16 +39,12 @@ type Collection struct {
 
 	// Name is the name of the collection.
 	Name types.String `tfsdk:"name"`
-
-	// Uid is the UID of the collection.
-	Uid types.String `tfsdk:"uid"`
 }
 
 func CollectionAttributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"max_ttl": types.Int64Type,
 		"name":    types.StringType,
-		"uid":     types.StringType,
 	}
 }
 
@@ -67,10 +60,6 @@ func NewCollection(collection scope.Collection) Collection {
 		newCollection.Name = types.StringValue(*collection.Name)
 	}
 
-	if collection.Uid != nil {
-		newCollection.Uid = types.StringValue(*collection.Uid)
-	}
-
 	return newCollection
 }
 
@@ -78,9 +67,6 @@ func NewCollection(collection scope.Collection) Collection {
 type Scopes struct {
 	// Array of scopes. The server returns an array of scopes in the bucket under the single Uid.
 	Scopes []ScopeData `tfsdk:"scopes"`
-
-	// Uid is the UID of the whole scope containing all scopes.
-	Uid types.String `tfsdk:"uid"`
 
 	// BucketId is the id of the bucket for which the scope needs to be created.
 	BucketId types.String `tfsdk:"bucket_id"`
@@ -99,7 +85,6 @@ type Scopes struct {
 type ScopeData struct {
 	Collections types.Set    `tfsdk:"collections"`
 	Name        types.String `tfsdk:"scope_name"`
-	Uid         types.String `tfsdk:"uid"`
 }
 
 // NewScopeData creates new scope object.
@@ -109,7 +94,6 @@ func NewScopeData(scope *scope.GetScopeResponse,
 	newScopeData := ScopeData{
 		Collections: collectionSet,
 		Name:        types.StringValue(*scope.Name),
-		Uid:         types.StringValue(*scope.Uid),
 	}
 	return &newScopeData
 }

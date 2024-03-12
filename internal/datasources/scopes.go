@@ -44,12 +44,10 @@ func (s *Scopes) Schema(_ context.Context, _ datasource.SchemaRequest, resp *dat
 			"project_id":      requiredStringAttribute,
 			"cluster_id":      requiredStringAttribute,
 			"bucket_id":       requiredStringAttribute,
-			"uid":             computedStringAttribute,
 			"scopes": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"uid":        computedStringAttribute,
 						"scope_name": computedStringAttribute,
 						"collections": schema.SetNestedAttribute{
 							Computed: true,
@@ -57,7 +55,6 @@ func (s *Scopes) Schema(_ context.Context, _ datasource.SchemaRequest, resp *dat
 								Attributes: map[string]schema.Attribute{
 									"max_ttl": computedInt64Attribute,
 									"name":    computedStringAttribute,
-									"uid":     computedStringAttribute,
 								},
 							},
 						},
@@ -147,7 +144,6 @@ func (s *Scopes) Read(ctx context.Context, req datasource.ReadRequest, resp *dat
 
 		scopeState := providerschema.Scopes{
 			Scopes:         stateScopes,
-			Uid:            types.StringValue(*scopesResp.Uid),
 			OrganizationId: types.StringValue(organizationId),
 			ProjectId:      types.StringValue(projectId),
 			ClusterId:      types.StringValue(clusterId),

@@ -40,9 +40,6 @@ type GetScopeResponse struct {
 
 	// Name is the name of the scope.
 	Name *string `json:"name,omitempty"`
-
-	// Uid is the UID of the scope.
-	Uid *string `json:"uid,omitempty"`
 }
 
 // GetScopesResponse is the response received from the Capella V4 Public API when asked to list all scopes.
@@ -53,9 +50,5 @@ type GetScopeResponse struct {
 // Project Owner
 // To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
 type GetScopesResponse struct {
-
-	// Uid is the UID of the whole scope containing all scopes.
-	Uid *string `json:"uid,omitempty"`
-
 	Scopes []GetScopeResponse `json:"scopes"`
 }

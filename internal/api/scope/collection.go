@@ -7,7 +7,4 @@ type Collection struct {
 
 	// Name is the Name of the collection.
 	Name *string `json:"name,omitempty"`
-
-	// Uid is the UID of the collection.
-	Uid *string `json:"uid,omitempty"`
 }

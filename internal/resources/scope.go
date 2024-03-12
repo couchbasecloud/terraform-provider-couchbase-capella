@@ -155,9 +155,6 @@ func (s *Scope) Create(ctx context.Context, req resource.CreateRequest, resp *re
 // initializeScopeWithPlan initializes an instance of providerschema.Scope
 // with the specified plan. It marks all computed fields as null.
 func initializeScopeWithPlan(plan providerschema.Scope) providerschema.Scope {
-	if plan.Uid.IsNull() || plan.Uid.IsUnknown() {
-		plan.Uid = types.StringNull()
-	}
 	if plan.Collections.IsNull() || plan.Collections.IsUnknown() {
 		plan.Collections = types.SetNull(types.ObjectType{}.WithAttributeTypes(providerschema.CollectionAttributeTypes()))
 	}
@@ -215,7 +212,6 @@ func (s *Scope) retrieveScope(ctx context.Context, organizationId, projectId, cl
 
 	refreshedState := providerschema.Scope{
 		Name:           types.StringValue(*scopeResp.Name),
-		Uid:            types.StringValue(*scopeResp.Uid),
 		OrganizationId: types.StringValue(organizationId),
 		ProjectId:      types.StringValue(projectId),
 		ClusterId:      types.StringValue(clusterId),

@@ -12,7 +12,6 @@ func ScopeSchema() schema.Schema {
 			"cluster_id":      stringAttribute(required, requiresReplace),
 			"bucket_id":       stringAttribute(required, requiresReplace),
 			"scope_name":      stringAttribute(required, requiresReplace),
-			"uid":             stringAttribute(computed),
 			"collections": schema.SetNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
@@ -21,9 +20,6 @@ func ScopeSchema() schema.Schema {
 							Computed: true,
 						},
 						"name": schema.StringAttribute{
-							Computed: true,
-						},
-						"uid": schema.StringAttribute{
 							Computed: true,
 						},
 					},
