@@ -45,12 +45,11 @@ Terraform will perform the following actions:
   # couchbase-capella_scope.new_scope will be created
   + resource "couchbase-capella_scope" "new_scope" {
       + bucket_id       = "YjE="
-      + cluster_id      = "3733066f-ef48-42a4-95a5-2f7e44c09d72"
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + collections     = (known after apply)
       + name            = "new_terraform_scope"
-      + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      + project_id      = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
-      + uid             = (known after apply)
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
     }
 
 Plan: 1 to add, 0 to change, 0 to destroy.
@@ -58,81 +57,70 @@ Plan: 1 to add, 0 to change, 0 to destroy.
 Changes to Outputs:
   + new_scope   = {
       + bucket_id       = "YjE="
-      + cluster_id      = "3733066f-ef48-42a4-95a5-2f7e44c09d72"
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + collections     = (known after apply)
       + name            = "new_terraform_scope"
-      + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      + project_id      = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
-      + uid             = (known after apply)
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
     }
   + scopes_list = {
       + bucket_id       = "YjE="
-      + cluster_id      = "3733066f-ef48-42a4-95a5-2f7e44c09d72"
-      + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      + project_id      = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + scopes          = [
           + {
               + bucket_id       = "YjE="
-              + cluster_id      = "3733066f-ef48-42a4-95a5-2f7e44c09d72"
+              + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
               + collections     = [
                   + {
                       + max_ttl = 0
                       + name    = "c21"
-                      + uid     = "c"
                     },
                   + {
                       + max_ttl = 50
                       + name    = "c23"
-                      + uid     = "b"
                     },
                   + {
                       + max_ttl = 100
                       + name    = "c22"
-                      + uid     = "a"
                     },
                 ]
               + name            = "s2"
-              + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-              + project_id      = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
-              + uid             = "9"
+              + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+              + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
             },
           + {
               + bucket_id       = "YjE="
-              + cluster_id      = "3733066f-ef48-42a4-95a5-2f7e44c09d72"
+              + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
               + collections     = [
                   + {
                       + max_ttl = 0
                       + name    = "c12"
-                      + uid     = "9"
                     },
                   + {
                       + max_ttl = 0
                       + name    = "c11"
-                      + uid     = "8"
                     },
                 ]
               + name            = "s1"
-              + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-              + project_id      = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
-              + uid             = "8"
+              + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+              + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
             },
           + {
               + bucket_id       = "YjE="
-              + cluster_id      = "3733066f-ef48-42a4-95a5-2f7e44c09d72"
+              + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
               + collections     = [
                   + {
                       + max_ttl = 0
                       + name    = "_default"
-                      + uid     = "0"
                     },
                 ]
               + name            = "_default"
-              + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-              + project_id      = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
-              + uid             = "0"
+              + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+              + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
             },
         ]
-      + uid             = "8"
     }
 
 
@@ -167,12 +155,11 @@ Terraform will perform the following actions:
   # couchbase-capella_scope.new_scope will be created
   + resource "couchbase-capella_scope" "new_scope" {
       + bucket_id       = "YjE="
-      + cluster_id      = "3733066f-ef48-42a4-95a5-2f7e44c09d72"
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + collections     = (known after apply)
       + name            = "new_terraform_scope"
-      + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      + project_id      = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
-      + uid             = (known after apply)
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
     }
 
 Plan: 1 to add, 0 to change, 0 to destroy.
@@ -180,81 +167,70 @@ Plan: 1 to add, 0 to change, 0 to destroy.
 Changes to Outputs:
   + new_scope   = {
       + bucket_id       = "YjE="
-      + cluster_id      = "3733066f-ef48-42a4-95a5-2f7e44c09d72"
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + collections     = (known after apply)
       + name            = "new_terraform_scope"
-      + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      + project_id      = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
-      + uid             = (known after apply)
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
     }
   + scopes_list = {
       + bucket_id       = "YjE="
-      + cluster_id      = "3733066f-ef48-42a4-95a5-2f7e44c09d72"
-      + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      + project_id      = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + scopes          = [
           + {
               + bucket_id       = "YjE="
-              + cluster_id      = "3733066f-ef48-42a4-95a5-2f7e44c09d72"
+              + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
               + collections     = [
                   + {
                       + max_ttl = 0
                       + name    = "c21"
-                      + uid     = "c"
                     },
                   + {
                       + max_ttl = 50
                       + name    = "c23"
-                      + uid     = "b"
                     },
                   + {
                       + max_ttl = 100
                       + name    = "c22"
-                      + uid     = "a"
                     },
                 ]
               + name            = "s2"
-              + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-              + project_id      = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
-              + uid             = "9"
+              + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+              + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
             },
           + {
               + bucket_id       = "YjE="
-              + cluster_id      = "3733066f-ef48-42a4-95a5-2f7e44c09d72"
+              + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
               + collections     = [
                   + {
                       + max_ttl = 0
                       + name    = "c12"
-                      + uid     = "9"
                     },
                   + {
                       + max_ttl = 0
                       + name    = "c11"
-                      + uid     = "8"
                     },
                 ]
               + name            = "s1"
-              + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-              + project_id      = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
-              + uid             = "8"
+              + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+              + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
             },
           + {
               + bucket_id       = "YjE="
-              + cluster_id      = "3733066f-ef48-42a4-95a5-2f7e44c09d72"
+              + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
               + collections     = [
                   + {
                       + max_ttl = 0
                       + name    = "_default"
-                      + uid     = "0"
                     },
                 ]
               + name            = "_default"
-              + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-              + project_id      = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
-              + uid             = "0"
+              + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+              + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
             },
         ]
-      + uid             = "8"
     }
 
 Do you want to perform these actions?
@@ -272,81 +248,70 @@ Outputs:
 
 new_scope = {
   "bucket_id" = "YjE="
-  "cluster_id" = "3733066f-ef48-42a4-95a5-2f7e44c09d72"
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "collections" = toset([])
   "name" = "new_terraform_scope"
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-  "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
-  "uid" = "a"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
 }
 scopes_list = {
   "bucket_id" = "YjE="
-  "cluster_id" = "3733066f-ef48-42a4-95a5-2f7e44c09d72"
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-  "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "scopes" = tolist([
     {
       "bucket_id" = "YjE="
-      "cluster_id" = "3733066f-ef48-42a4-95a5-2f7e44c09d72"
+      "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
       "collections" = tolist([
         {
           "max_ttl" = 0
           "name" = "c21"
-          "uid" = "c"
         },
         {
           "max_ttl" = 50
           "name" = "c23"
-          "uid" = "b"
         },
         {
           "max_ttl" = 100
           "name" = "c22"
-          "uid" = "a"
         },
       ])
       "name" = "s2"
-      "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
-      "uid" = "9"
+      "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+      "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
     },
     {
       "bucket_id" = "YjE="
-      "cluster_id" = "3733066f-ef48-42a4-95a5-2f7e44c09d72"
+      "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
       "collections" = tolist([
         {
           "max_ttl" = 0
           "name" = "c12"
-          "uid" = "9"
         },
         {
           "max_ttl" = 0
           "name" = "c11"
-          "uid" = "8"
         },
       ])
       "name" = "s1"
-      "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
-      "uid" = "8"
+      "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+      "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
     },
     {
       "bucket_id" = "YjE="
-      "cluster_id" = "3733066f-ef48-42a4-95a5-2f7e44c09d72"
+      "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
       "collections" = tolist([
         {
           "max_ttl" = 0
           "name" = "_default"
-          "uid" = "0"
         },
       ])
       "name" = "_default"
-      "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
-      "uid" = "0"
+      "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+      "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
     },
   ])
-  "uid" = "8"
 }
 
 ```
@@ -359,12 +324,11 @@ Sample Output:
 $ terraform output new_scope
 {
   "bucket_id" = "YjE="
-  "cluster_id" = "0d9a6dd5-4d55-49be-8137-896f21425beb"
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "collections" = toset([])
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-  "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "scope_name" = "new_terraform_scope"
-  "uid" = "17"
 }
 ```
 
@@ -400,12 +364,12 @@ Please note, this command will only remove the resource from the Terraform State
 Command: `terraform import couchbase-capella_scope.new_scope scope_name=<scope_name>,bucket_id=<bucket_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
 In this case, the complete command is:
-`terraform import couchbase-capella_scope.new_scope scope_name=new_terraform_scope,bucket_id=YjE=,cluster_id=0d9a6dd5-4d55-49be-8137-896f21425beb,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0`
+`terraform import couchbase-capella_scope.new_scope scope_name=new_terraform_scope,bucket_id=YjE=,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000`
 
 Sample Output:
 ```
-$ terraform import couchbase-capella_scope.new_scope scope_name=new_terraform_scope,bucket_id=YjE=,cluster_id=0d9a6dd5-4d55-49be-8137-896f21425beb,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0
-couchbase-capella_scope.new_scope: Importing from ID "scope_name=new_terraform_scope,bucket_id=YjE=,cluster_id=0d9a6dd5-4d55-49be-8137-896f21425beb,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0"...
+$ terraform import couchbase-capella_scope.new_scope scope_name=new_terraform_scope,bucket_id=YjE=,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000
+couchbase-capella_scope.new_scope: Importing from ID "scope_name=new_terraform_scope,bucket_id=YjE=,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000"...
 data.couchbase-capella_scopes.existing_scopes: Reading...
 couchbase-capella_scope.new_scope: Import prepared!
   Prepared couchbase-capella_scope for import
@@ -479,7 +443,6 @@ Terraform will perform the following actions:
 -/+ resource "couchbase-capella_scope" "new_scope" {
       ~ collections     = [] -> (known after apply)
       ~ name            = "new_terraform_scope" -> "terraform_scope_updated" # forces replacement
-      ~ uid             = "f" -> (known after apply)
         # (4 unchanged attributes hidden)
     }
 
@@ -489,7 +452,6 @@ Changes to Outputs:
   ~ new_scope   = {
       ~ collections     = [] -> (known after apply)
       ~ name            = "new_terraform_scope" -> "terraform_scope_updated"
-      ~ uid             = "f" -> (known after apply)
         # (4 unchanged attributes hidden)
     }
   ~ scopes_list = {
@@ -497,16 +459,13 @@ Changes to Outputs:
           + {
               + collections = []
               + name        = "new_terraform_scope_example1"
-              + uid         = "10"
             },
             {
                 collections = []
                 name        = "new_terraform_scope"
-                uid         = "f"
             },
             # (3 unchanged elements hidden)
         ]
-      ~ uid             = "f" -> "10"
         # (4 unchanged attributes hidden)
     }
 
@@ -527,58 +486,49 @@ Outputs:
 
 new_scope = {
   "bucket_id" = "YjE="
-  "cluster_id" = "0d9a6dd5-4d55-49be-8137-896f21425beb"
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "collections" = toset([])
   "name" = "terraform_scope_updated"
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-  "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
-  "uid" = "11"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
 }
 scopes_list = {
   "bucket_id" = "YjE="
-  "cluster_id" = "0d9a6dd5-4d55-49be-8137-896f21425beb"
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-  "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "scopes" = tolist([
     {
       "collections" = toset([])
       "name" = "new_terraform_scope_example1"
-      "uid" = "10"
     },
     {
       "collections" = toset([])
       "name" = "new_terraform_scope"
-      "uid" = "f"
     },
     {
       "collections" = toset([])
       "name" = "s3"
-      "uid" = "b"
     },
     {
       "collections" = toset([
         {
           "max_ttl" = 100
           "name" = "c1"
-          "uid" = "8"
         },
       ])
       "name" = "s1"
-      "uid" = "9"
     },
     {
       "collections" = toset([
         {
           "max_ttl" = 0
           "name" = "_default"
-          "uid" = "0"
         },
       ])
       "name" = "_default"
-      "uid" = "0"
     },
   ])
-  "uid" = "10"
 }
 
 ```
@@ -611,18 +561,16 @@ Terraform will perform the following actions:
   # couchbase-capella_scope.new_scope will be destroyed
   - resource "couchbase-capella_scope" "new_scope" {
       - bucket_id       = "YjE=" -> null
-      - cluster_id      = "0d9a6dd5-4d55-49be-8137-896f21425beb" -> null
+      - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - collections     = [
           - {
               - max_ttl = 214748 -> null
               - name    = "abc" -> null
-              - uid     = "9" -> null
             },
         ] -> null
       - name            = "new_terraform_scope" -> null
-      - organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0" -> null
-      - project_id      = "c1fade1a-9f27-4a3c-af73-d1b2301890e3" -> null
-      - uid             = "a" -> null
+      - organization_id = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - project_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
     }
 
 Plan: 0 to add, 0 to change, 1 to destroy.
@@ -630,65 +578,55 @@ Plan: 0 to add, 0 to change, 1 to destroy.
 Changes to Outputs:
   - new_scope   = {
       - bucket_id       = "YjE="
-      - cluster_id      = "0d9a6dd5-4d55-49be-8137-896f21425beb"
+      - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       - collections     = [
           - {
               - max_ttl = 214748
               - name    = "abc"
-              - uid     = "9"
             },
         ]
       - name            = "new_terraform_scope"
-      - organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      - project_id      = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
-      - uid             = "a"
+      - organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      - project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
     } -> null
   - scopes_list = {
       - bucket_id       = "YjE="
-      - cluster_id      = "0d9a6dd5-4d55-49be-8137-896f21425beb"
-      - organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      - project_id      = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+      - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      - organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      - project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       - scopes          = [
           - {
               - collections = []
               - name        = "s3"
-              - uid         = "b"
             },
           - {
               - collections = [
                   - {
                       - max_ttl = 214748
                       - name    = "abc"
-                      - uid     = "9"
                     },
                 ]
               - name        = "new_terraform_scope"
-              - uid         = "a"
             },
           - {
               - collections = [
                   - {
                       - max_ttl = 100
                       - name    = "c1"
-                      - uid     = "8"
                     },
                 ]
               - name        = "s1"
-              - uid         = "9"
             },
           - {
               - collections = [
                   - {
                       - max_ttl = 0
                       - name    = "_default"
-                      - uid     = "0"
                     },
                 ]
               - name        = "_default"
-              - uid         = "0"
             },
         ]
-      - uid             = "d"
     } -> null
 
 Do you really want to destroy all resources?
