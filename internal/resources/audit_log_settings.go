@@ -61,26 +61,26 @@ func (a *AuditLogSettings) Configure(_ context.Context, req resource.ConfigureRe
 // AuditLogSettings does not have create endpoint
 // as a workaround, create has same behavior as update
 func (a *AuditLogSettings) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var state providerschema.ClusterAuditSettings
-	diags := req.Plan.Get(ctx, &state)
+	var plan providerschema.ClusterAuditSettings
+	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var (
-		organizationId = state.OrganizationId.ValueString()
-		projectId      = state.ProjectId.ValueString()
-		clusterId      = state.ClusterId.ValueString()
+		organizationId = plan.OrganizationId.ValueString()
+		projectId      = plan.ProjectId.ValueString()
+		clusterId      = plan.ClusterId.ValueString()
 	)
 
-	eventIds := make([]int32, len(state.EnabledEventIDs))
-	for i, event := range state.EnabledEventIDs {
+	eventIds := make([]int32, len(plan.EnabledEventIDs))
+	for i, event := range plan.EnabledEventIDs {
 		eventIds[i] = int32(event.ValueInt64())
 	}
 
-	disabledUsers := make([]api.AuditSettingsDisabledUser, len(state.DisabledUsers))
-	for i, user := range state.DisabledUsers {
+	disabledUsers := make([]api.AuditSettingsDisabledUser, len(plan.DisabledUsers))
+	for i, user := range plan.DisabledUsers {
 		u := api.AuditSettingsDisabledUser{
 			Domain: user.Domain.ValueStringPointer(),
 			Name:   user.Name.ValueStringPointer(),
@@ -89,7 +89,7 @@ func (a *AuditLogSettings) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	auditLogUpdateRequest := api.UpdateClusterAuditSettingsRequest{
-		AuditEnabled:    state.AuditEnabled.ValueBool(),
+		AuditEnabled:    plan.AuditEnabled.ValueBool(),
 		EnabledEventIDs: eventIds,
 		DisabledUsers:   disabledUsers,
 	}
