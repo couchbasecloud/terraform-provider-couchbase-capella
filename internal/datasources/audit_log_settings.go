@@ -56,6 +56,7 @@ func (a *AuditLogSettings) Schema(_ context.Context, _ datasource.SchemaRequest,
 	}
 }
 
+// Read refreshes the Terraform state with the latest audit log settings.
 func (a *AuditLogSettings) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state providerschema.ClusterAuditSettings
 	diags := req.Config.Get(ctx, &state)

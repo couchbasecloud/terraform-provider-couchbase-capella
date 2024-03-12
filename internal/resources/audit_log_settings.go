@@ -135,6 +135,7 @@ func (a *AuditLogSettings) Create(ctx context.Context, req resource.CreateReques
 	}
 }
 
+// Read retrieves audit log settings.
 func (a *AuditLogSettings) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state providerschema.ClusterAuditSettings
 	diags := req.State.Get(ctx, &state)
@@ -182,6 +183,7 @@ func (a *AuditLogSettings) Read(ctx context.Context, req resource.ReadRequest, r
 	}
 }
 
+// Update updates the audit log settings.
 func (a *AuditLogSettings) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var state providerschema.ClusterAuditSettings
 	diags := req.Plan.Get(ctx, &state)
