@@ -12,19 +12,16 @@ package sample_bucket
 // Project Manager
 // To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
 type CreateSampleBucketRequest struct {
-	// Name is the name of the bucket (up to 100 characters).
-	// This field cannot be changed later. The name should be according to the following rules:
-	// Characters used for the name should be in the ranges of A-Z, a-z, and 0-9; plus the underscore, period, dash, and percent characters.
-	// The name can be a maximum of 100 characters in length.
-	// The name cannot have 0 characters or empty. Minimum length of name is 1.
-	// The name cannot start with a . (period).
+	// Name is the name of the sample bucket (up to 100 characters).
+	// Enum: travel-sample, beer-sample, gamesim-sample
+	// This field cannot be changed later.
 	Name string `json:"name"`
 }
 
 // CreateBucketSampleResponse is the response received from Capella V4 Public API on requesting to load a new sample bucket.
 // Common response codes: 201, 403, 422, 429, 500.
 type CreateSampleBucketResponse struct {
-	// Id is unique ID of the bucket created.
+	// Id is unique ID of the sample bucket created.
 	Id string `json:"bucketId"`
 
 	// Name is the name of the cluster (up to 100 characters).

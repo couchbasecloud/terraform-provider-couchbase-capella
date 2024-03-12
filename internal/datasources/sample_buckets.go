@@ -131,7 +131,7 @@ func (d *SampleBuckets) Read(ctx context.Context, req datasource.ReadRequest, re
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Sample Buckets in Capella",
-			"Could not read Capella sample buckets in cluster "+clusterId+": "+err.Error(),
+			"Could not read sample buckets in cluster "+clusterId+": "+err.Error(),
 		)
 		return
 	}
@@ -141,7 +141,7 @@ func (d *SampleBuckets) Read(ctx context.Context, req datasource.ReadRequest, re
 	response, err := api.GetPaginated[[]samplebucketapi.GetSampleBucketResponse](ctx, d.Client, d.Token, cfg, api.SortById)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Capella Sample Buckets",
+			"Error Reading Sample Buckets in Capella",
 			"Could not read sample buckets in cluster "+clusterId+": "+api.ParseError(err),
 		)
 		return

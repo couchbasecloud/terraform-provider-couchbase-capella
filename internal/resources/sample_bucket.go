@@ -93,7 +93,7 @@ func (s *SampleBucket) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 	if err := s.validateCreateSampleBucket(plan); err != nil {
 		resp.Diagnostics.AddError(
-			"Error loading sample bucket",
+			"Error Loading Sample Bucket",
 			"Could not load sample bucket, unexpected error: "+err.Error(),
 		)
 		return
@@ -114,7 +114,7 @@ func (s *SampleBucket) Create(ctx context.Context, req resource.CreateRequest, r
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error loading sample bucket",
+			"Error Loading Sample Bucket",
 			errorMessageWhileSampleBucketCreation+api.ParseError(err),
 		)
 		return
@@ -124,7 +124,7 @@ func (s *SampleBucket) Create(ctx context.Context, req resource.CreateRequest, r
 	err = json.Unmarshal(response.Body, &sampleBucketResponse)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error loading sample bucket",
+			"Error Loading Sample Bucket",
 			errorMessageWhileSampleBucketCreation+"error during unmarshalling: "+err.Error(),
 		)
 		return
@@ -140,7 +140,7 @@ func (s *SampleBucket) Create(ctx context.Context, req resource.CreateRequest, r
 	refreshedState, err := s.retrieveSampleBucket(ctx, organizationId, projectId, clusterId, sampleBucketResponse.Id)
 	if err != nil {
 		resp.Diagnostics.AddWarning(
-			"Error loading sample bucket "+sampleBucketResponse.Id,
+			"Error Loading Sample Bucket "+sampleBucketResponse.Id,
 			errorMessageAfterSampleBucketCreation+api.ParseError(err),
 		)
 		return
@@ -188,7 +188,7 @@ func (s *SampleBucket) Read(ctx context.Context, req resource.ReadRequest, resp 
 			return
 		}
 		resp.Diagnostics.AddError(
-			"Error reading Sample Bucket",
+			"Error Reading Sample Bucket in Capella",
 			"Could not read sample bucket with id "+state.Id.String()+": "+errString,
 		)
 		return
@@ -222,7 +222,7 @@ func (s *SampleBucket) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	if state.OrganizationId.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error deleting sample bucket",
+			"Error Deleting Sample Bucket",
 			"Could not delete sample bucket, unexpected error: "+errors.ErrOrganizationIdCannotBeEmpty.Error(),
 		)
 		return
@@ -231,7 +231,7 @@ func (s *SampleBucket) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	if state.ProjectId.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error deleting sample bucket",
+			"Error Deleting Sample Bucket",
 			"Could not delete sample bucket, unexpected error: "+errors.ErrProjectIdCannotBeEmpty.Error(),
 		)
 		return
@@ -240,7 +240,7 @@ func (s *SampleBucket) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	if state.ClusterId.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error deleting sample bucket",
+			"Error Deleting Sample Bucket",
 			"Could not delete sample bucket, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
 		)
 		return
@@ -249,7 +249,7 @@ func (s *SampleBucket) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	if state.Id.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error deleting sample bucket",
+			"Error Deleting Sample Bucket",
 			"Could not delete sample bucket, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
 		)
 		return
@@ -273,7 +273,7 @@ func (s *SampleBucket) Delete(ctx context.Context, req resource.DeleteRequest, r
 			return
 		}
 		resp.Diagnostics.AddError(
-			"Error Deleting the Sample Bucket",
+			"Error Deleting Sample Bucket",
 			"Could not delete sample bucket associated with cluster "+clusterId+": "+errString,
 		)
 		return
