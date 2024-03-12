@@ -20,7 +20,7 @@ var (
 	_ datasource.DataSourceWithConfigure = &SampleBuckets{}
 )
 
-// Sample buckets is the bucket data source implementation.
+// Sample buckets is the sample bucket data source implementation.
 type SampleBuckets struct {
 	*providerschema.Data
 }
@@ -30,12 +30,12 @@ func NewSampleBuckets() datasource.DataSource {
 	return &SampleBuckets{}
 }
 
-// Metadata returns the bucket data source type name.
+// Metadata returns the sample bucket data source type name.
 func (d *SampleBuckets) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_sample_buckets"
 }
 
-// Schema defines the schema for the bucket data source.
+// Schema defines the schema for the sample bucket data source.
 func (s *SampleBuckets) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -118,7 +118,7 @@ func (s *SampleBuckets) Schema(_ context.Context, _ datasource.SchemaRequest, re
 	}
 }
 
-// Read refreshes the Terraform state with the latest data of buckets.
+// Read refreshes the Terraform state with the latest data of sample buckets.
 func (d *SampleBuckets) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state providerschema.SampleBuckets
 	diags := req.Config.Get(ctx, &state)
@@ -130,7 +130,7 @@ func (d *SampleBuckets) Read(ctx context.Context, req datasource.ReadRequest, re
 	clusterId, projectId, organizationId, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading SampleBuckets in Capella",
+			"Error Reading Sample Buckets in Capella",
 			"Could not read Capella sample buckets in cluster "+clusterId+": "+err.Error(),
 		)
 		return
@@ -141,7 +141,7 @@ func (d *SampleBuckets) Read(ctx context.Context, req datasource.ReadRequest, re
 	response, err := api.GetPaginated[[]samplebucketapi.GetSampleBucketResponse](ctx, d.Client, d.Token, cfg, api.SortById)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Capella SampleBuckets",
+			"Error Reading Capella Sample Buckets",
 			"Could not read sample buckets in cluster "+clusterId+": "+api.ParseError(err),
 		)
 		return
@@ -149,7 +149,12 @@ func (d *SampleBuckets) Read(ctx context.Context, req datasource.ReadRequest, re
 
 	// Map response body to model
 	for _, sampleBucket := range response {
-		sampleStats := providerschema.NewStats(*sampleBucket.Stats)
+		var sampleStats providerschema.Stats
+
+		if sampleBucket.Stats != nil {
+			sampleStats = providerschema.NewStats(*sampleBucket.Stats)
+		}
+
 		sampleBucketStatsObj, diags := types.ObjectValueFrom(ctx, sampleStats.AttributeTypes(), sampleStats)
 		if diags.HasError() {
 			resp.Diagnostics.AddError(

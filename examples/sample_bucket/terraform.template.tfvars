@@ -5,5 +5,5 @@ project_id      = "<project_id>"
 cluster_id      = "<cluster_id>"
 
 samplebucket = {
-  name = "new_terraform_sample_bucket"
+  name = "gamesim-sample"
 }

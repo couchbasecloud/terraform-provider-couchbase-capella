@@ -53,8 +53,8 @@ Terraform will perform the following actions:
       + id                         = (known after apply)
       + memory_allocation_in_mb    = (known after apply)
       + name                       = "gamesim-sample"
-      + organization_id            = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      + project_id                 = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+      + organization_id            = "6af08c0a-8cab-4c2d-c957-b521585c16d0"
+      + project_id                 = "c1fade1a-9f27-4a3c-ki90-g1b2301890e4"
       + replicas                   = (known after apply)
       + stats                      = (known after apply)
       + storage_backend            = (known after apply)
@@ -74,8 +74,8 @@ Changes to Outputs:
       + id                         = (known after apply)
       + memory_allocation_in_mb    = (known after apply)
       + name                       = "gamesim-sample"
-      + organization_id            = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      + project_id                 = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+      + organization_id            = "6af08c0a-8cab-4c2d-c957-b521585c16d0"
+      + project_id                 = "c1fade1a-9f27-4a3c-ki90-g1b2301890e4"
       + replicas                   = (known after apply)
       + stats                      = (known after apply)
       + storage_backend            = (known after apply)
@@ -86,8 +86,8 @@ Changes to Outputs:
   + samplebuckets_list = {
       + cluster_id      = "4ce95e43-106c-427f-b260-49fdb2c8b034"
       + data            = null
-      + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      + project_id      = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+      + organization_id = "6af08c0a-8cab-4c2d-c957-b521585c16d0"
+      + project_id      = "c1fade1a-9f27-4a3c-ki90-g1b2301890e4"
     }
 
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -128,8 +128,8 @@ Terraform will perform the following actions:
       + id                         = (known after apply)
       + memory_allocation_in_mb    = (known after apply)
       + name                       = "gamesim-sample"
-      + organization_id            = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      + project_id                 = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+      + organization_id            = "6af08c0a-8cab-4c2d-c957-b521585c16d0"
+      + project_id                 = "c1fade1a-9f27-4a3c-ki90-g1b2301890e4"
       + replicas                   = (known after apply)
       + stats                      = (known after apply)
       + storage_backend            = (known after apply)
@@ -149,8 +149,8 @@ Changes to Outputs:
       + id                         = (known after apply)
       + memory_allocation_in_mb    = (known after apply)
       + name                       = "gamesim-sample"
-      + organization_id            = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      + project_id                 = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+      + organization_id            = "6af08c0a-8cab-4c2d-c957-b521585c16d0"
+      + project_id                 = "c1fade1a-9f27-4a3c-ki90-g1b2301890e4"
       + replicas                   = (known after apply)
       + stats                      = (known after apply)
       + storage_backend            = (known after apply)
@@ -161,8 +161,8 @@ Changes to Outputs:
   + samplebuckets_list = {
       + cluster_id      = "4ce95e43-106c-427f-b260-49fdb2c8b034"
       + data            = null
-      + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      + project_id      = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+      + organization_id = "6af08c0a-8cab-4c2d-c957-b521585c16d0"
+      + project_id      = "c1fade1a-9f27-4a3c-ki90-g1b2301890e4"
     }
 
 Do you want to perform these actions?
@@ -187,8 +187,8 @@ new_sample_bucket = {
   "id" = "Z2FtZXNpbS1zYW1wbGU="
   "memory_allocation_in_mb" = 200
   "name" = "gamesim-sample"
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-  "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+  "organization_id" = "6af08c0a-8cab-4c2d-c957-b521585c16d0"
+  "project_id" = "c1fade1a-9f27-4a3c-ki90-g1b2301890e4"
   "replicas" = 1
   "stats" = {
     "disk_used_in_mib" = 0
@@ -204,8 +204,8 @@ samplebucket_id = "Z2FtZXNpbS1zYW1wbGU="
 samplebuckets_list = {
   "cluster_id" = "4ce95e43-106c-427f-b260-49fdb2c8b034"
   "data" = tolist(null) /* of object */
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-  "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+  "organization_id" = "6af08c0a-8cab-4c2d-c957-b521585c16d0"
+  "project_id" = "c1fade1a-9f27-4a3c-ki90-g1b2301890e4"
 }
 
 ```
@@ -227,8 +227,8 @@ terraform output new_sample_bucket
   "id" = "Z2FtZXNpbS1zYW1wbGU="
   "memory_allocation_in_mb" = 250
   "name" = "gamesim-sample"
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-  "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+  "organization_id" = "6af08c0a-8cab-4c2d-c957-b521585c16d0"
+  "project_id" = "c1fade1a-9f27-4a3c-ki90-g1b2301890e4"
   "replicas" = 1
   "stats" = {
     "disk_used_in_mib" = 19
@@ -274,15 +274,15 @@ Successfully removed 1 resource instance(s).
 Command: `terraform import couchbase-capella_sample_bucket.new_sample_bucket id=<bucket_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
 In this case, the complete command is:
-`terraform import couchbase-capella_sample_bucket.new_sample_bucket id=YmVlci1zYW1wbGU=,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,cluster_id=4ce95e43-106c-427f-b260-49fdb2c8b034`
+`terraform import couchbase-capella_sample_bucket.new_sample_bucket id=YmVlci1zYW1wbGU=,organization_id=6af08c0a-8cab-4c2d-c957-b521585c16d0,project_id=c1fade1a-9f27-4a3c-ki90-g1b2301890e4,cluster_id=4ce95e43-106c-427f-b260-49fdb2c8b034`
 
 ```
-terraform import couchbase-capella_sample_bucket.new_sample_bucket id=YmVlci1zYW1wbGU=,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,cluster_id=4ce95e43-106c-427f-b260-49fdb2c8b034
-couchbase-capella_sample_bucket.new_sample_bucket: Importing from ID "id=Z2FtZXNpbS1zYW1wbGU=,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,cluster_id=17619f3c-08f5-40a3-8c0c-d2e5b263a025"...
+terraform import couchbase-capella_sample_bucket.new_sample_bucket id=YmVlci1zYW1wbGU=,organization_id=6af08c0a-8cab-4c2d-c957-b521585c16d0,project_id=c1fade1a-9f27-4a3c-ki90-g1b2301890e4,cluster_id=4ce95e43-106c-427f-b260-49fdb2c8b034
+couchbase-capella_sample_bucket.new_sample_bucket: Importing from ID "id=Z2FtZXNpbS1zYW1wbGU=,organization_id=6af08c0a-8cab-4c2d-c957-b521585c16d0,project_id=c1fade1a-9f27-4a3c-ki90-g1b2301890e4,cluster_id=17619f3c-08f5-40a3-8c0c-d2e5b263a025"...
 couchbase-capella_sample_bucket.new_sample_bucket: Import prepared!
   Prepared couchbase-capella_sample_bucket for import
 data.couchbase-capella_sample_buckets.existing_sample_buckets: Reading...
-couchbase-capella_sample_bucket.new_sample_bucket: Refreshing state... [id=id=Z2FtZXNpbS1zYW1wbGU=,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,cluster_id=17619f3c-08f5-40a3-8c0c-d2e5b263a025]
+couchbase-capella_sample_bucket.new_sample_bucket: Refreshing state... [id=id=Z2FtZXNpbS1zYW1wbGU=,organization_id=6af08c0a-8cab-4c2d-c957-b521585c16d0,project_id=c1fade1a-9f27-4a3c-ki90-g1b2301890e4,cluster_id=17619f3c-08f5-40a3-8c0c-d2e5b263a025]
 data.couchbase-capella_sample_buckets.existing_sample_buckets: Read complete after 2s
 
 Import successful!
@@ -431,8 +431,8 @@ Changes to Outputs:
               + id                         = "Z2FtZXNpbS1zYW1wbGU="
               + memory_allocation_in_mb    = 200
               + name                       = "gamesim-sample"
-              + organization_id            = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-              + project_id                 = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+              + organization_id            = "6af08c0a-8cab-4c2d-c957-b521585c16d0"
+              + project_id                 = "c1fade1a-9f27-4a3c-ki90-g1b2301890e4"
               + replicas                   = 1
               + stats                      = {
                   + disk_used_in_mib   = 19
@@ -472,8 +472,8 @@ new_sample_bucket = {
   "id" = "dHJhdmVsLXNhbXBsZQ=="
   "memory_allocation_in_mb" = 200
   "name" = "travel-sample"
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-  "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+  "organization_id" = "6af08c0a-8cab-4c2d-c957-b521585c16d0"
+  "project_id" = "c1fade1a-9f27-4a3c-ki90-g1b2301890e4"
   "replicas" = 1
   "stats" = {
     "disk_used_in_mib" = 0
@@ -498,8 +498,8 @@ samplebuckets_list = {
       "id" = "Z2FtZXNpbS1zYW1wbGU="
       "memory_allocation_in_mb" = 200
       "name" = "gamesim-sample"
-      "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+      "organization_id" = "6af08c0a-8cab-4c2d-c957-b521585c16d0"
+      "project_id" = "c1fade1a-9f27-4a3c-ki90-g1b2301890e4"
       "replicas" = 1
       "stats" = {
         "disk_used_in_mib" = 19
@@ -512,8 +512,8 @@ samplebuckets_list = {
       "type" = "couchbase"
     },
   ])
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-  "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+  "organization_id" = "6af08c0a-8cab-4c2d-c957-b521585c16d0"
+  "project_id" = "c1fade1a-9f27-4a3c-ki90-g1b2301890e4"
 }
 ```
 
@@ -553,8 +553,8 @@ Terraform will perform the following actions:
       - id                         = "Z2FtZXNpbS1zYW1wbGU=" -> null
       - memory_allocation_in_mb    = 200 -> null
       - name                       = "gamesim-sample" -> null
-      - organization_id            = "6af08c0a-8cab-4c1c-b257-b521575c16d0" -> null
-      - project_id                 = "c1fade1a-9f27-4a3c-af73-d1b2301890e3" -> null
+      - organization_id            = "6af08c0a-8cab-4c2d-c957-b521585c16d0" -> null
+      - project_id                 = "c1fade1a-9f27-4a3c-ki90-g1b2301890e4" -> null
       - replicas                   = 1 -> null
       - stats                      = {
           - disk_used_in_mib   = 0 -> null
@@ -579,8 +579,8 @@ Changes to Outputs:
       - id                         = "Z2FtZXNpbS1zYW1wbGU="
       - memory_allocation_in_mb    = 200
       - name                       = "gamesim-sample"
-      - organization_id            = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      - project_id                 = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+      - organization_id            = "6af08c0a-8cab-4c2d-c957-b521585c16d0"
+      - project_id                 = "c1fade1a-9f27-4a3c-ki90-g1b2301890e4"
       - replicas                   = 1
       - stats                      = {
           - disk_used_in_mib   = 0
@@ -605,8 +605,8 @@ Changes to Outputs:
               - id                         = "Z2FtZXNpbS1zYW1wbGU="
               - memory_allocation_in_mb    = 200
               - name                       = "gamesim-sample"
-              - organization_id            = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-              - project_id                 = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+              - organization_id            = "6af08c0a-8cab-4c2d-c957-b521585c16d0"
+              - project_id                 = "c1fade1a-9f27-4a3c-ki90-g1b2301890e4"
               - replicas                   = 1
               - stats                      = {
                   - disk_used_in_mib   = 0
@@ -619,8 +619,8 @@ Changes to Outputs:
               - type                       = "couchbase"
             },
         ]
-      - organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      - project_id      = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+      - organization_id = "6af08c0a-8cab-4c2d-c957-b521585c16d0"
+      - project_id      = "c1fade1a-9f27-4a3c-ki90-g1b2301890e4"
     } -> null
 
 Do you really want to destroy all resources?

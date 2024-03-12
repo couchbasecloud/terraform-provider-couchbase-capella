@@ -1,7 +1,7 @@
 package sample_bucket
 
-// CreateSampleBucketRequest is the payload passed to V4 Capella Public API to create a bucket in a Capella cluster.
-// Creates a new sample bucket configuration under a cluster.
+// CreateSampleBucketRequest is the payload passed to V4 Capella Public API to load a sample bucket in a Capella cluster.
+// Loads a new sample bucket configuration under a cluster.
 //
 // To learn more about bucket configuration, see https://docs.couchbase.com/server/current/manage/manage-settings/install-sample-buckets.html.
 //
@@ -21,7 +21,7 @@ type CreateSampleBucketRequest struct {
 	Name string `json:"name"`
 }
 
-// CreateBucketSampleResponse is the response received from Capella V4 Public API on requesting to create a new bucket.
+// CreateBucketSampleResponse is the response received from Capella V4 Public API on requesting to load a new sample bucket.
 // Common response codes: 201, 403, 422, 429, 500.
 type CreateSampleBucketResponse struct {
 	// Id is unique ID of the bucket created.

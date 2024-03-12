@@ -11,44 +11,38 @@ import (
 )
 
 type SampleBucket struct {
-	// DurabilityLevel is the minimum level at which all writes to the bucket must occur.
+	// DurabilityLevel is the minimum level at which all writes to the sample bucket must occur.
 	// Default: "none"
 	// Enum: "none" "majority" "majorityAndPersistActive" "persistToMajority"
 	//
-	// The options for Durability level are as follows, according to the bucket type.
+	// The options for Durability level are as follows, according to the sample bucket type.
 	//
-	// For a Couchbase bucket:
+	// For a Couchbase sample bucket:
 	// None
 	// Replicate to Majority
 	// Majority and Persist to Active
 	// Persist to Majority
-	//
-	//For an Ephemeral bucket:
-	// None
-	// Replicate to Majority
 	DurabilityLevel types.String `tfsdk:"durability_level"`
 
-	// Stats has the bucket stats that are related to memory and disk consumption.
-	// itemCount: Number of documents in the bucket.
+	// Stats has the sample bucket stats that are related to memory and disk consumption.
+	// itemCount: Number of documents in the sample bucket.
 	// opsPerSecond: Number of operations per second.
 	// diskUsedInMib: The amount of disk used (in MiB).
 	// memoryUsedInMib: The amount of memory used (in MiB).
 	Stats types.Object `tfsdk:"stats"`
 
-	// Type defines the type of the bucket.
+	// Type defines the type of the sample bucket.
 	// Default: "couchbase"
-	// Enum: "couchbase" "ephemeral"
-	// If selected Ephemeral, it is not eligible for imports or App Endpoints creation. This field cannot be changed later.
+	//
+	// This field for sample buckets is always the default and cannot be changed.
 	// The options may also be referred to as Memory and Disk (Couchbase), Memory Only (Ephemeral) in the Couchbase documentation.
 	// To learn more, see https://docs.couchbase.com/cloud/clusters/data-service/manage-buckets.html#add-bucket
 	Type types.String `tfsdk:"type"`
 
-	// StorageBackend defines the storage engine that is used by the bucket.
+	// StorageBackend defines the storage engine that is used by the sample bucket.
 	// Default: "couchstore"
-	// Enum: "couchstore" "magma"
 	//
-	// Ephemeral buckets do not support StorageBackend, hence not applicable for Ephemeral buckets and throws an error if this field is added.
-	// This field is only applicable for a Couchbase bucket. The default value mentioned (Couchstore) is for Couchbase bucket.
+	// This field for sample buckets is always the default and cannot be changed.
 	// This field cannot be changed later.
 	// To learn more, see https://docs.couchbase.com/cloud/clusters/data-service/storage-engines.html
 	StorageBackend types.String `tfsdk:"storage_backend"`
@@ -58,21 +52,23 @@ type SampleBucket struct {
 
 	// BucketConflictResolution is the means by which conflicts are resolved during replication.
 	// Default: "seqno"
-	// Enum: "seqno" "lww"
+	//
+	// This field for sample buckets is always the default and cannot be changed.
 	// This field may be referred to as "conflict resolution" in the Couchbase documentation.
-	// seqno and lww may be referred to as "sequence number" and "timestamp" respectively.
+	// seqno may be referred to as "sequence number".
 	// This field cannot be changed later.
 	// To learn more, see https://docs.couchbase.com/cloud/clusters/xdcr/xdcr.html#conflict-resolution
 	BucketConflictResolution types.String `tfsdk:"bucket_conflict_resolution"`
 
-	// Name is the name of the bucket.
+	// Name is the name of the sample bucket.
+	// Enum: "travel-sample", "beer-sample", "gamesim-sample"
 	Name types.String `tfsdk:"name"`
 
 	// ProjectId is the ID of the project to which the Capella cluster belongs.
 	// The database credential will be created for the cluster.
 	ProjectId types.String `tfsdk:"project_id"`
 
-	// Id is the id of the created bucket.
+	// Id is the id of the created sample bucket.
 	Id types.String `tfsdk:"id"`
 
 	// OrganizationId is the ID of the organization to which the Capella cluster belongs.
@@ -82,39 +78,29 @@ type SampleBucket struct {
 	// EvictionPolicy is the policy which Capella adopts to prevent data loss due to memory exhaustion.
 	// This may be also known as Ejection Policy in the Couchbase documentation.
 	//
-	// For Couchbase bucket, Eviction Policy is fullEviction by default.
-	// For Ephemeral buckets, Eviction Policy is a required field, and should be one of the following:
-	// noEviction
-	// nruEviction
-	// Default: "fullEviction"
-	// Enum: "fullEviction" "noEviction" "nruEviction"
+	// For Couchbase sample bucket, Eviction Policy is fullEviction by default and cannot be changed
 	// To learn more, see https://docs.couchbase.com/server/current/rest-api/rest-bucket-create.html#evictionpolicy
 	EvictionPolicy types.String `tfsdk:"eviction_policy"`
 
-	// MemoryAllocationInMB is the amount of memory to allocate for the bucket memory in MiB.
+	// MemoryAllocationInMB is the amount of memory to allocate for the sample bucket memory in MiB.
 	// This is the maximum limit is dependent on the allocation of the KV service. For example, 80% of the allocation.
-	// Default: 100
+	// Default: 200
 	//
-	// The default value (100MiB) mentioned is for Couchbase type buckets with Couchstore as the Storage Backend.
-	//
-	// For Couchbase buckets, the default and minimum memory allocation changes according to the Storage Backend type as follows:
-	// For Couchstore, the default and minimum memory allocation is 100 MiB.
-	// For Magma, the default and minimum memory allocation is 1024 MiB.
-	// For Ephemeral buckets, the default and minimum memory allocation is 100 MiB.
+	// For Couchbase sample buckets, the default and minimum memory allocation is different. The minimum allocation is 100MiB
 	MemoryAllocationInMB types.Int64 `tfsdk:"memory_allocation_in_mb"`
 
 	// TimeToLiveInSeconds specifies the time to live (TTL) value in seconds.
-	// This is the maximum time to live for items in the bucket.
+	// This is the maximum time to live for items in the sample bucket.
 	// Default is 0, that means TTL is disabled. This is a non-negative value.
 	TimeToLiveInSeconds types.Int64 `tfsdk:"time_to_live_in_seconds"`
 
-	// Replicas is the number of replicas for the bucket.
+	// Replicas is the number of replicas for the sample bucket.
 	// Default: 1
 	// Enum: 1 2 3
 	Replicas types.Int64 `tfsdk:"replicas"`
 
-	// Flush determines whether flushing is enabled on the bucket.
-	// Enable Flush to delete all items in this bucket at the earliest opportunity.
+	// Flush determines whether flushing is enabled on the sample bucket.
+	// Enable Flush to delete all items in this sample bucket at the earliest opportunity.
 	// Disable Flush to avoid inadvertent data loss.
 	// Default: false
 	Flush types.Bool `tfsdk:"flush"`
@@ -137,7 +123,7 @@ type SampleBuckets struct {
 
 // Validate will split the IDs by a delimiter i.e. comma , in case a terraform import CLI is invoked.
 // The format of the terraform import CLI would include the IDs as follows -
-// `terraform import capella_bucket.new_bucket id=<uuid>,cluster_id=<uuid>,project_id=<uuid>,organization_id=<uuid>`.
+// `terraform import couchbase-capella_sample_bucket.new_sample_bucket id=<uuid>,cluster_id=<uuid>,project_id=<uuid>,organization_id=<uuid>`.
 func (b SampleBucket) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
 		OrganizationId: b.OrganizationId,

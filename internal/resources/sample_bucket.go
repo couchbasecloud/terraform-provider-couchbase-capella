@@ -24,13 +24,13 @@ var (
 	_ resource.ResourceWithImportState = &SampleBucket{}
 )
 
-const errorMessageAfterSampleBucketCreation = "Sample bucket creation is successful, but encountered an error while checking the current" +
+const errorMessageAfterSampleBucketCreation = "Sample bucket loading is successful, but encountered an error while checking the current" +
 	" state of the sample bucket. Please run `terraform plan` after 1-2 minutes to know the" +
 	" current sample bucket state. Additionally, run `terraform apply --refresh-only` to update" +
 	" the state from remote, unexpected error: "
 
-const errorMessageWhileSampleBucketCreation = "There is an error during sample bucket creation. Please check in Capella to see if any hanging resources" +
-	" have been created, unexpected error: "
+const errorMessageWhileSampleBucketCreation = "There is an error during sample bucket loading. Please check in Capella to see if any hanging resources" +
+	" have been loaded, unexpected error: "
 
 // SampleBucket is the sample bucket resource implementation.
 type SampleBucket struct {
@@ -78,7 +78,7 @@ func (s *SampleBucket) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 	resp.Schema = SampleBucketSchema()
 }
 
-// Create creates a new sample bucket.
+// Create loads a new sample bucket.
 func (s *SampleBucket) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan providerschema.SampleBucket
 	diags := req.Plan.Get(ctx, &plan)
@@ -91,10 +91,10 @@ func (s *SampleBucket) Create(ctx context.Context, req resource.CreateRequest, r
 	sampleBucketRequest := samplebucketapi.CreateSampleBucketRequest{
 		Name: plan.Name.ValueString(),
 	}
-	if err := s.validateCreateBucket(plan); err != nil {
+	if err := s.validateCreateSampleBucket(plan); err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating bucket",
-			"Could not create bucket, unexpected error: "+err.Error(),
+			"Error loading sample bucket",
+			"Could not load sample bucket, unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -114,7 +114,7 @@ func (s *SampleBucket) Create(ctx context.Context, req resource.CreateRequest, r
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating sample bucket",
+			"Error loading sample bucket",
 			errorMessageWhileSampleBucketCreation+api.ParseError(err),
 		)
 		return
@@ -124,13 +124,14 @@ func (s *SampleBucket) Create(ctx context.Context, req resource.CreateRequest, r
 	err = json.Unmarshal(response.Body, &sampleBucketResponse)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating sample bucket",
+			"Error loading sample bucket",
 			errorMessageWhileSampleBucketCreation+"error during unmarshalling: "+err.Error(),
 		)
 		return
 	}
 
-	diags = resp.State.Set(ctx, initializeSampleBucketWithPlanAndId(plan, sampleBucketResponse.Id))
+	plan.Id = types.StringValue(sampleBucketResponse.Id)
+	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -139,7 +140,7 @@ func (s *SampleBucket) Create(ctx context.Context, req resource.CreateRequest, r
 	refreshedState, err := s.retrieveSampleBucket(ctx, organizationId, projectId, clusterId, sampleBucketResponse.Id)
 	if err != nil {
 		resp.Diagnostics.AddWarning(
-			"Error creating sample bucket "+sampleBucketResponse.Id,
+			"Error loading sample bucket "+sampleBucketResponse.Id,
 			errorMessageAfterSampleBucketCreation+api.ParseError(err),
 		)
 		return
@@ -165,8 +166,8 @@ func (s *SampleBucket) Read(ctx context.Context, req resource.ReadRequest, resp 
 	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading SampleBucket in Capella",
-			"Could not read Capella sample Bucket with ID "+state.Id.String()+": "+err.Error(),
+			"Error Reading Sample Bucket in Capella",
+			"Could not read Capella sample bucket with ID "+state.Id.String()+": "+err.Error(),
 		)
 		return
 	}
@@ -187,7 +188,7 @@ func (s *SampleBucket) Read(ctx context.Context, req resource.ReadRequest, resp 
 			return
 		}
 		resp.Diagnostics.AddError(
-			"Error reading Samplebucket",
+			"Error reading Sample Bucket",
 			"Could not read sample bucket with id "+state.Id.String()+": "+errString,
 		)
 		return
@@ -221,8 +222,8 @@ func (s *SampleBucket) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	if state.OrganizationId.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error creating sample bucket",
-			"Could not create sample bucket, unexpected error: "+errors.ErrOrganizationIdCannotBeEmpty.Error(),
+			"Error deleting sample bucket",
+			"Could not delete sample bucket, unexpected error: "+errors.ErrOrganizationIdCannotBeEmpty.Error(),
 		)
 		return
 	}
@@ -230,8 +231,8 @@ func (s *SampleBucket) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	if state.ProjectId.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error creating sample bucket",
-			"Could not create sample bucket, unexpected error: "+errors.ErrProjectIdCannotBeEmpty.Error(),
+			"Error deleting sample bucket",
+			"Could not delete sample bucket, unexpected error: "+errors.ErrProjectIdCannotBeEmpty.Error(),
 		)
 		return
 	}
@@ -239,8 +240,8 @@ func (s *SampleBucket) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	if state.ClusterId.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error creating sample bucket",
-			"Could not create sample bucket, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
+			"Error deleting sample bucket",
+			"Could not delete sample bucket, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
 		)
 		return
 	}
@@ -248,8 +249,8 @@ func (s *SampleBucket) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	if state.Id.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error creating sample bucket",
-			"Could not create sample bucket, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
+			"Error deleting sample bucket",
+			"Could not delete sample bucket, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
 		)
 		return
 	}
@@ -272,14 +273,14 @@ func (s *SampleBucket) Delete(ctx context.Context, req resource.DeleteRequest, r
 			return
 		}
 		resp.Diagnostics.AddError(
-			"Error Deleting the SampleBucket",
-			"Could not delete sample Bucket associated with cluster "+clusterId+": "+errString,
+			"Error Deleting the Sample Bucket",
+			"Could not delete sample bucket associated with cluster "+clusterId+": "+errString,
 		)
 		return
 	}
 }
 
-func (r *SampleBucket) validateCreateBucket(plan providerschema.SampleBucket) error {
+func (r *SampleBucket) validateCreateSampleBucket(plan providerschema.SampleBucket) error {
 	if plan.OrganizationId.IsNull() {
 		return errors.ErrOrganizationIdMissing
 	}
@@ -324,7 +325,12 @@ func (s *SampleBucket) retrieveSampleBucket(ctx context.Context, organizationId,
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
-	sampleStats := providerschema.NewStats(*sampleBucketResp.Stats)
+
+	var sampleStats providerschema.Stats
+	if sampleBucketResp.Stats != nil {
+		sampleStats = providerschema.NewStats(*sampleBucketResp.Stats)
+	}
+
 	sampleBucketStatsObj, diags := types.ObjectValueFrom(ctx, sampleStats.AttributeTypes(), sampleStats)
 	if diags.HasError() {
 		return nil, errors.ErrUnableToConvertAuditData
@@ -360,17 +366,4 @@ func isValidSampleName(category string) bool {
 		return true
 	}
 	return false
-}
-
-// initializeBucketWithPlanAndId initializes an instance of providerschema.Bucket
-// with the specified plan and ID. It marks all computed fields as null.
-func initializeSampleBucketWithPlanAndId(plan providerschema.SampleBucket, id string) providerschema.SampleBucket {
-	plan.Id = types.StringValue(id)
-	if plan.StorageBackend.IsNull() || plan.StorageBackend.IsUnknown() {
-		plan.StorageBackend = types.StringNull()
-	}
-	if plan.EvictionPolicy.IsNull() || plan.EvictionPolicy.IsUnknown() {
-		plan.EvictionPolicy = types.StringNull()
-	}
-	return plan
 }
