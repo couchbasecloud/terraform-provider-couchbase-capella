@@ -49,7 +49,6 @@ func (c *Collections) Schema(_ context.Context, _ datasource.SchemaRequest, resp
 					Attributes: map[string]schema.Attribute{
 						"collection_name": computedStringAttribute,
 						"max_ttl":         computedInt64Attribute,
-						"uid":             computedStringAttribute,
 					},
 				},
 			},

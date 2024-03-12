@@ -14,7 +14,6 @@ func CollectionSchema() schema.Schema {
 			"scope_name":      stringAttribute(required, requiresReplace),
 			"collection_name": stringAttribute(required, requiresReplace),
 			"max_ttl":         int64Attribute(optional),
-			"uid":             stringAttribute(computed),
 		},
 	}
 

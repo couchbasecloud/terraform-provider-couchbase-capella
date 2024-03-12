@@ -19,9 +19,6 @@ type Collection struct {
 	// MaxTTL Max TTL of the collection.
 	MaxTTL types.Int64 `tfsdk:"max_ttl"`
 
-	// Uid is the UID of the collection.
-	Uid types.String `tfsdk:"uid"`
-
 	// ScopeName is the name of the scope for which the collection needs to be created.
 	ScopeName types.String `tfsdk:"scope_name"`
 
@@ -63,7 +60,6 @@ type Collections struct {
 type CollectionData struct {
 	Name   types.String `tfsdk:"collection_name"`
 	MaxTTL types.Int64  `tfsdk:"max_ttl"`
-	Uid    types.String `tfsdk:"uid"`
 }
 
 // Validate will split the IDs by a delimiter i.e. comma , in case a terraform import CLI is invoked.
@@ -111,7 +107,6 @@ func NewCollectionData(collection *collection.GetCollectionResponse) (*Collectio
 	newCollectionData := CollectionData{
 		Name:   types.StringValue(*collection.Name),
 		MaxTTL: types.Int64Value(*collection.MaxTTL),
-		Uid:    types.StringValue(*collection.Uid),
 	}
 	return &newCollectionData, nil
 }
