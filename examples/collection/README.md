@@ -45,11 +45,11 @@ Terraform will perform the following actions:
   # couchbase-capella_collection.new_collection will be created
   + resource "couchbase-capella_collection" "new_collection" {
       + bucket_id       = "YjE="
-      + cluster_id      = "0d9a6dd5-4d55-49be-8137-896f21425beb"
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + max_ttl         = 200
       + name            = "new_terraform_collection"
-      + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      + project_id      = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + scope_name      = "s1"
       + uid             = (known after apply)
     }
@@ -59,11 +59,11 @@ Plan: 1 to add, 0 to change, 0 to destroy.
 Changes to Outputs:
   + new_collection   = {
       + bucket_id       = "YjE="
-      + cluster_id      = "0d9a6dd5-4d55-49be-8137-896f21425beb"
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + max_ttl         = 200
       + name            = "new_terraform_collection"
-      + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      + project_id      = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + scope_name      = "s1"
       + uid             = (known after apply)
     }
@@ -98,11 +98,11 @@ Terraform will perform the following actions:
   # couchbase-capella_collection.new_collection will be created
   + resource "couchbase-capella_collection" "new_collection" {
       + bucket_id       = "YjE="
-      + cluster_id      = "0d9a6dd5-4d55-49be-8137-896f21425beb"
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + max_ttl         = 200
       + name            = "new_terraform_collection"
-      + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      + project_id      = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + scope_name      = "s1"
       + uid             = (known after apply)
     }
@@ -115,10 +115,9 @@ Changes to Outputs:
       + cluster_id      = "0d9a6dd5-4d55-49be-8137-896f21425beb"
       + max_ttl         = 200
       + name            = "new_terraform_collection"
-      + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      + project_id      = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + scope_name      = "s1"
-      + uid             = (known after apply)
     }
 
 Do you want to perform these actions?
@@ -136,27 +135,25 @@ Outputs:
 
 collections_list = {
   "bucket_id" = "YjE="
-  "cluster_id" = "0d9a6dd5-4d55-49be-8137-896f21425beb"
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "data" = tolist([
     {
       "max_ttl" = 100
       "name" = "c1"
-      "uid" = "8"
     },
   ])
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-  "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "scope_name" = "s1"
 }
 new_collection = {
   "bucket_id" = "YjE="
-  "cluster_id" = "0d9a6dd5-4d55-49be-8137-896f21425beb"
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "max_ttl" = 200
   "name" = "new_terraform_collection"
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-  "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "scope_name" = "s1"
-  "uid" = "a"
 }
 
 ```
@@ -169,13 +166,12 @@ Sample Output:
 $ terraform output new_collection
 {
   "bucket_id" = "YjE="
-  "cluster_id" = "0d9a6dd5-4d55-49be-8137-896f21425beb"
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "max_ttl" = 200
   "name" = "new_terraform_collection"
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-  "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "scope_name" = "s1"
-  "uid" = "a"
 }
 
 ```
@@ -212,12 +208,12 @@ Please note, this command will only remove the resource from the Terraform State
 Command: `terraform import couchbase-capella_collection.new_collection collection_name=<collection_name>,scope_name=<scope_name>,bucket_id=<bucket_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
 In this case, the complete command is:
-`terraform import couchbase-capella_collection.new_collection collection_name=new_terraform_collection,scope_name=s1,bucket_id=YjE=,cluster_id=0d9a6dd5-4d55-49be-8137-896f21425beb,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0`
+`terraform import couchbase-capella_collection.new_collection collection_name=c2,scope_name=s1,bucket_id=YjE=,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000`
 
 Sample Output:
 ```
-$ terraform import couchbase-capella_collection.new_collection collection_name=new_terraform_collection,scope_name=s1,bucket_id=YjE=,cluster_id=0d9a6dd5-4d55-49be-8137-896f21425beb,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0
-couchbase-capella_collection.new_collection: Importing from ID "collection_name=new_terraform_collection,scope_name=s1,bucket_id=YjE=,cluster_id=0d9a6dd5-4d55-49be-8137-896f21425beb,project_id=c1fade1a-9f27-4a3c-af73-d1b2301890e3,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0"...
+$ terraform import couchbase-capella_collection.new_collection collection_name=new_terraform_collection,scope_name=s1,bucket_id=YjE=,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000
+couchbase-capella_collection.new_collection: Importing from ID "collection_name=new_terraform_collection,scope_name=s1,bucket_id=YjE=,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000"...
 data.couchbase-capella_collections.existing_collections: Reading...
 couchbase-capella_collection.new_collection: Import prepared!
   Prepared couchbase-capella_collection for import
@@ -291,7 +287,6 @@ Terraform will perform the following actions:
   # couchbase-capella_collection.new_collection must be replaced
 -/+ resource "couchbase-capella_collection" "new_collection" {
       ~ collection_name = "new_terraform_collection" -> "new_terraform_collection2" # forces replacement
-      ~ uid             = "8" -> (known after apply)
         # (6 unchanged attributes hidden)
     }
 
@@ -300,7 +295,6 @@ Plan: 1 to add, 0 to change, 1 to destroy.
 Changes to Outputs:
   ~ new_collection   = {
       ~ collection_name = "new_terraform_collection" -> "new_terraform_collection2"
-      ~ uid             = "8" -> (known after apply)
         # (6 unchanged attributes hidden)
     }
 
@@ -321,27 +315,25 @@ Outputs:
 
 collections_list = {
   "bucket_id" = "YjE="
-  "cluster_id" = "cd9f5ea8-791a-48ce-b944-e0f2f328af1d"
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "data" = tolist([
     {
       "collection_name" = "new_terraform_collection"
       "max_ttl" = 100
-      "uid" = "8"
     },
   ])
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-  "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "scope_name" = "s1"
 }
 new_collection = {
   "bucket_id" = "YjE="
-  "cluster_id" = "cd9f5ea8-791a-48ce-b944-e0f2f328af1d"
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "collection_name" = "new_terraform_collection2"
   "max_ttl" = 100
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-  "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "scope_name" = "s1"
-  "uid" = "9"
 }
 ```
 2. Update maxTTL for server version < 7.6.0 (Error - Not Supported)
@@ -369,7 +361,6 @@ Terraform will perform the following actions:
   # couchbase-capella_collection.new_collection will be updated in-place
   ~ resource "couchbase-capella_collection" "new_collection" {
       ~ max_ttl         = 100 -> 2000
-      ~ uid             = "8" -> (known after apply)
         # (6 unchanged attributes hidden)
     }
 
@@ -381,14 +372,12 @@ Changes to Outputs:
           + {
               + collection_name = "new_terraform_collection"
               + max_ttl         = 100
-              + uid             = "8"
             },
         ]
         # (5 unchanged attributes hidden)
     }
   ~ new_collection   = {
       ~ max_ttl         = 100 -> 2000
-      ~ uid             = "8" -> (known after apply)
         # (6 unchanged attributes hidden)
     }
 
@@ -435,7 +424,6 @@ Terraform will perform the following actions:
   # couchbase-capella_collection.new_collection will be updated in-place
   ~ resource "couchbase-capella_collection" "new_collection" {
       ~ max_ttl         = 500 -> 10000
-      ~ uid             = "a" -> (known after apply)
         # (6 unchanged attributes hidden)
     }
 
@@ -447,14 +435,12 @@ Changes to Outputs:
           + {
               + collection_name = "new_terraform_collection"
               + max_ttl         = 500
-              + uid             = "a"
             },
         ]
         # (5 unchanged attributes hidden)
     }
   ~ new_collection   = {
       ~ max_ttl         = 500 -> 10000
-      ~ uid             = "a" -> (known after apply)
         # (6 unchanged attributes hidden)
     }
 
@@ -473,27 +459,25 @@ Outputs:
 
 collections_list = {
   "bucket_id" = "YjE="
-  "cluster_id" = "89ab18f2-88dc-4b14-8b4e-4479b3651cfc"
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "data" = tolist([
     {
       "collection_name" = "new_terraform_collection"
       "max_ttl" = 500
-      "uid" = "a"
     },
   ])
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-  "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "scope_name" = "s1"
 }
 new_collection = {
   "bucket_id" = "YjE="
-  "cluster_id" = "89ab18f2-88dc-4b14-8b4e-4479b3651cfc"
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "collection_name" = "new_terraform_collection"
   "max_ttl" = 10000
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-  "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "scope_name" = "s1"
-  "uid" = "a"
 }
 
 ```
@@ -522,7 +506,6 @@ Terraform will perform the following actions:
   # couchbase-capella_collection.new_collection must be replaced
 -/+ resource "couchbase-capella_collection" "new_collection" {
       ~ collection_name = "new_terraform_collection" -> "new_terraform_collection2" # forces replacement
-      ~ uid             = "b" -> (known after apply)
         # (6 unchanged attributes hidden)
     }
 
@@ -540,7 +523,6 @@ Changes to Outputs:
     }
   ~ new_collection   = {
       ~ collection_name = "new_terraform_collection" -> "new_terraform_collection2"
-      ~ uid             = "b" -> (known after apply)
         # (6 unchanged attributes hidden)
     }
 
@@ -561,27 +543,25 @@ Outputs:
 
 collections_list = {
   "bucket_id" = "YjE="
-  "cluster_id" = "89ab18f2-88dc-4b14-8b4e-4479b3651cfc"
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "data" = tolist([
     {
       "collection_name" = "new_terraform_collection"
       "max_ttl" = 5000
-      "uid" = "b"
     },
   ])
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-  "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "scope_name" = "s1"
 }
 new_collection = {
   "bucket_id" = "YjE="
-  "cluster_id" = "89ab18f2-88dc-4b14-8b4e-4479b3651cfc"
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "collection_name" = "new_terraform_collection2"
   "max_ttl" = 5000
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-  "project_id" = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "scope_name" = "s1"
-  "uid" = "c"
 }
 
 ```
@@ -613,13 +593,12 @@ Terraform will perform the following actions:
   # couchbase-capella_collection.new_collection will be destroyed
   - resource "couchbase-capella_collection" "new_collection" {
       - bucket_id       = "YjE=" -> null
-      - cluster_id      = "0d9a6dd5-4d55-49be-8137-896f21425beb" -> null
+      - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - collection_name = "new_terraform_collection2" -> null
       - max_ttl         = 300 -> null
-      - organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0" -> null
-      - project_id      = "c1fade1a-9f27-4a3c-af73-d1b2301890e3" -> null
+      - organization_id = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - project_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - scope_name      = "s1" -> null
-      - uid             = "c" -> null
     }
 
 Plan: 0 to add, 0 to change, 1 to destroy.
@@ -627,32 +606,29 @@ Plan: 0 to add, 0 to change, 1 to destroy.
 Changes to Outputs:
   - collections_list = {
       - bucket_id       = "YjE="
-      - cluster_id      = "0d9a6dd5-4d55-49be-8137-896f21425beb"
+      - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       - data            = [
           - {
               - collection_name = "new_terraform_collection2"
               - max_ttl         = 300
-              - uid             = "c"
             },
           - {
               - collection_name = "c1"
               - max_ttl         = 100
-              - uid             = "8"
             },
         ]
-      - organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      - project_id      = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+      - organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      - project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       - scope_name      = "s1"
     } -> null
   - new_collection   = {
       - bucket_id       = "YjE="
-      - cluster_id      = "0d9a6dd5-4d55-49be-8137-896f21425beb"
+      - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       - collection_name = "new_terraform_collection2"
       - max_ttl         = 300
-      - organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
-      - project_id      = "c1fade1a-9f27-4a3c-af73-d1b2301890e3"
+      - organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      - project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       - scope_name      = "s1"
-      - uid             = "c"
     } -> null
 
 Do you really want to destroy all resources?
