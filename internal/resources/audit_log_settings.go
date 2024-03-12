@@ -20,6 +20,9 @@ var (
 	_ resource.ResourceWithImportState = &AuditLogSettings{}
 )
 
+const errorMessageWhileAuditLogSettingsCreation = "There is an error during audit log settings creation. Please check in Capella to see if any hanging resources" +
+	" have been created, unexpected error: "
+
 // AuditLogSettings is the audit log settings resource implementation.
 type AuditLogSettings struct {
 	*providerschema.Data
@@ -114,15 +117,9 @@ func (a *AuditLogSettings) Create(ctx context.Context, req resource.CreateReques
 	)
 
 	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			resp.State.RemoveResource(ctx)
-			return
-		}
 		resp.Diagnostics.AddError(
-			"Error updating audit log settings",
-			"Could not update audit log settings, unexpected error: "+": "+errString,
+			"Error creating audit log settings",
+			errorMessageWhileAuditLogSettingsCreation+api.ParseError(err),
 		)
 		return
 	}
