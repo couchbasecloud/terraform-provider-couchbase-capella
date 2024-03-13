@@ -23,6 +23,11 @@ var (
 const errorMessageWhileAuditLogSettingsCreation = "There is an error during audit log settings creation. Please check in Capella to see if any hanging resources" +
 	" have been created, unexpected error: "
 
+const errorMessageAfterAuditLogSettingsCreation = "Audit log settings creation is successful, but encountered an error while checking the current" +
+	" state of the settings. Please run `terraform plan` after 1-2 minutes to know the" +
+	" current state of the setting. Additionally, run `terraform apply --refresh-only` to update" +
+	" the state from remote, unexpected error: "
+
 // AuditLogSettings is the audit log settings resource implementation.
 type AuditLogSettings struct {
 	*providerschema.Data
@@ -126,9 +131,9 @@ func (a *AuditLogSettings) Create(ctx context.Context, req resource.CreateReques
 
 	currentState, err := a.refreshAuditLogSettingsState(ctx, organizationId, projectId, clusterId)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error updating audit log settings",
-			"Could not update audit log settings "+": "+api.ParseError(err),
+		resp.Diagnostics.AddWarning(
+			"Error creating audit log settings",
+			errorMessageAfterAuditLogSettingsCreation+api.ParseError(err),
 		)
 		return
 	}
