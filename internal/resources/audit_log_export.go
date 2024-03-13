@@ -311,6 +311,8 @@ func (a *AuditLogExport) refreshAuditLogExport(ctx context.Context, organization
 
 	if auditLogExportResp.AuditLogDownloadURL != nil {
 		refreshedState.AuditLogDownloadURL = types.StringValue(*auditLogExportResp.AuditLogDownloadURL)
+	}
+	if auditLogExportResp.Expiration != nil {
 		refreshedState.Expiration = types.StringValue(auditLogExportResp.Expiration.String())
 	}
 
