@@ -12,12 +12,12 @@ func AuditLogSettingsSchema() schema.Schema {
 			"project_id":      stringAttribute(required),
 			"cluster_id":      stringAttribute(required),
 			"audit_enabled":   boolAttribute(computed, optional),
-			"enabled_event_ids": schema.ListAttribute{
+			"enabled_event_ids": schema.SetAttribute{
 				Computed:    true,
 				Optional:    true,
 				ElementType: types.Int64Type,
 			},
-			"disabled_users": schema.ListNestedAttribute{
+			"disabled_users": schema.SetNestedAttribute{
 				Computed: true,
 				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
