@@ -24,10 +24,13 @@ var (
 	_ resource.ResourceWithImportState = &AuditLogExport{}
 )
 
-const errorMessageAfterAuditLogExportCreation = "Allow list creation is successful, but encountered an error while checking the current" +
-	" state of the allow list. Please run `terraform plan` after 1-2 minutes to know the" +
-	" current allow list state. Additionally, run `terraform apply --refresh-only` to update" +
+const errorMessageAfterAuditLogExportCreation = "Audit log export job creating is successful, but encountered an error while checking the current" +
+	" state of the audit log export job. Please run `terraform plan` after 1-2 minutes to know the" +
+	" current audit log export job state. Additionally, run `terraform apply --refresh-only` to update" +
 	" the state from remote, unexpected error: "
+
+const errorMessageWhileAuditLogExportCreation = "There is an error during audit log export creating. Please check in Capella to see if any hanging resources" +
+	" have been created, unexpected error: "
 
 // AuditLogExport is the resource implementation.
 type AuditLogExport struct {
@@ -123,8 +126,8 @@ func (a *AuditLogExport) Create(ctx context.Context, req resource.CreateRequest,
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error executing request",
-			"Could not execute audit log job request: "+api.ParseError(err),
+			"Error creating audit log export job",
+			errorMessageWhileAuditLogExportCreation+api.ParseError(err),
 		)
 		return
 	}
@@ -133,8 +136,8 @@ func (a *AuditLogExport) Create(ctx context.Context, req resource.CreateRequest,
 	err = json.Unmarshal(response.Body, &auditLogExportResponse)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating allow list",
-			"An error occurred during unmarshalling: "+err.Error(),
+			"Error creating audit log export job",
+			errorMessageWhileAuditLogExportCreation+"An error occurred during unmarshalling: "+err.Error(),
 		)
 		return
 	}
