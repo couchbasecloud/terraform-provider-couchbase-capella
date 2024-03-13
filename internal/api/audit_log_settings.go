@@ -8,26 +8,16 @@ package api
 //	- Project Manager
 //	To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
 type UpdateClusterAuditSettingsRequest struct {
-	// AuditEnabled Determines whether audit logging is enabled or not on the cluster.
-	AuditEnabled bool `json:"auditEnabled"`
-
-	// DisabledUsers List of users whose filterable events will not be logged.
-	DisabledUsers AuditSettingsDisabledUsers `json:"disabledUsers"`
-
-	// EnabledEventIDs List of enabled filterable audit events for the cluster.
-	EnabledEventIDs []int32 `json:"enabledEventIDs"`
+	DisabledUsers   AuditSettingsDisabledUsers `json:"disabledUsers"`
+	EnabledEventIDs []int32                    `json:"enabledEventIDs"`
+	AuditEnabled    bool                       `json:"auditEnabled"`
 }
 
 // GetClusterAuditSettingsResponse is the response received from the Capella V4 Public API when retrieving cluster audit log settings.
 type GetClusterAuditSettingsResponse struct {
-	// AuditEnabled Determines whether audit logging is enabled or not on the cluster.
-	AuditEnabled bool `json:"auditEnabled"`
-
-	// DisabledUsers List of users whose filterable events will not be logged.
-	DisabledUsers AuditSettingsDisabledUsers `json:"disabledUsers"`
-
-	// EnabledEventIDs List of enabled filterable audit events for the cluster.
-	EnabledEventIDs []int32 `json:"enabledEventIDs"`
+	DisabledUsers   AuditSettingsDisabledUsers `json:"disabledUsers"`
+	EnabledEventIDs []int32                    `json:"enabledEventIDs"`
+	AuditEnabled    bool                       `json:"auditEnabled"`
 }
 
 // AuditSettingsDisabledUsers List of users whose filterable events will not be logged.

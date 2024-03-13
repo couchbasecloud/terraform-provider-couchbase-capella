@@ -4,13 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"net/http"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -31,24 +33,23 @@ func NewAuditLogSettings() datasource.DataSource {
 
 // Metadata returns the certificates data source type name.
 func (a *AuditLogSettings) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_auditlogsettings"
+	resp.TypeName = req.ProviderTypeName + "_audit_log_settings"
 }
 
 func (a *AuditLogSettings) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"organization_id": requiredStringAttribute,
-			"project_id":      requiredStringAttribute,
-			"cluster_id":      requiredStringAttribute,
-			"auditenabled":    computedBoolAttribute,
-			"enabledeventids": computedIntListAttribute,
-			"disabledusers": schema.ListNestedAttribute{
+			"organization_id":   requiredStringAttribute,
+			"project_id":        requiredStringAttribute,
+			"cluster_id":        requiredStringAttribute,
+			"audit_enabled":     computedBoolAttribute,
+			"enabled_event_ids": computedIntSetAttribute,
+			"disabled_users": schema.SetNestedAttribute{
 				Computed: true,
-				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"domain": schema.StringAttribute{Computed: true, Optional: true},
-						"name":   schema.StringAttribute{Computed: true, Optional: true},
+						"domain": schema.StringAttribute{Computed: true},
+						"name":   schema.StringAttribute{Computed: true},
 					},
 				},
 			},
@@ -56,6 +57,7 @@ func (a *AuditLogSettings) Schema(_ context.Context, _ datasource.SchemaRequest,
 	}
 }
 
+// Read refreshes the Terraform state with the latest audit log settings.
 func (a *AuditLogSettings) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state providerschema.ClusterAuditSettings
 	diags := req.Config.Get(ctx, &state)

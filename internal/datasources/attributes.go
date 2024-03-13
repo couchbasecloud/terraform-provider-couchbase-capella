@@ -43,9 +43,9 @@ var (
 		Computed:    true,
 	}
 
-	// computedIntListAttribute returns a Terraform list schema attribute
+	// computedIntSetAttribute returns a Terraform list schema attribute
 	// which is configured to be computed and of type int64.
-	computedIntListAttribute = schema.ListAttribute{
+	computedIntSetAttribute = schema.SetAttribute{
 		ElementType: types.Int64Type,
 		Computed:    true,
 	}
