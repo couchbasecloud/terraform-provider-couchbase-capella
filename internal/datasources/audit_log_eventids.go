@@ -35,7 +35,7 @@ func (a *AuditLogEventIDs) Metadata(_ context.Context, req datasource.MetadataRe
 	resp.TypeName = req.ProviderTypeName + "_audit_log_event_ids"
 }
 
-// AuditLogEventIDs defines the schema for the data source.
+// Schema defines the schema for the audit log event ids data source.
 func (a *AuditLogEventIDs) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
