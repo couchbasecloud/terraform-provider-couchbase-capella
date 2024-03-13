@@ -44,11 +44,10 @@ func (a *AuditLogSettings) Schema(_ context.Context, _ datasource.SchemaRequest,
 			"enabled_event_ids": computedIntSetAttribute,
 			"disabled_users": schema.SetNestedAttribute{
 				Computed: true,
-				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"domain": schema.StringAttribute{Computed: true, Optional: true},
-						"name":   schema.StringAttribute{Computed: true, Optional: true},
+						"domain": schema.StringAttribute{Computed: true},
+						"name":   schema.StringAttribute{Computed: true},
 					},
 				},
 			},
