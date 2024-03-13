@@ -4,14 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+
+	"github.com/hashicorp/terraform-plugin-framework/path"
+
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
-	"github.com/hashicorp/terraform-plugin-framework/path"
+
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"net/http"
 )
 
 var (
@@ -67,7 +70,7 @@ func (a *AuditLogSettings) Configure(_ context.Context, req resource.ConfigureRe
 }
 
 // Audit Log API does not have create endpoint
-// so create is treated as an update
+// so create is treated as an update.
 func (a *AuditLogSettings) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan providerschema.ClusterAuditSettings
 	diags := req.Plan.Get(ctx, &plan)
@@ -270,7 +273,7 @@ func (a *AuditLogSettings) Update(ctx context.Context, req resource.UpdateReques
 	}
 }
 
-// AuditLogSettings does not have delete endpoint
+// AuditLogSettings does not have delete endpoint.
 func (a *AuditLogSettings) Delete(_ context.Context, _ resource.DeleteRequest, resp *resource.DeleteResponse) {
 	resp.Diagnostics.AddError(
 		"delete is not supported audit log settings",
