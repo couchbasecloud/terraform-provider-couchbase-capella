@@ -130,8 +130,7 @@ func (s *SampleBucket) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	plan.Id = types.StringValue(sampleBucketResponse.Id)
-	diags = resp.State.Set(ctx, plan)
+	diags = resp.State.Set(ctx, initializeSampleBucketWithPlanAndId(plan, sampleBucketResponse.Id))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -366,4 +365,31 @@ func isValidSampleName(category string) bool {
 		return true
 	}
 	return false
+}
+
+// initializeBucketWithPlanAndId initializes an instance of providerschema.Bucket
+// with the specified plan and ID. It marks all computed fields as null.
+func initializeSampleBucketWithPlanAndId(plan providerschema.SampleBucket, id string) providerschema.SampleBucket {
+	plan.Id = types.StringValue(id)
+
+	plan.Type = types.StringNull()
+
+	plan.StorageBackend = types.StringNull()
+
+	plan.MemoryAllocationInMB = types.Int64Null()
+
+	plan.BucketConflictResolution = types.StringNull()
+
+	plan.DurabilityLevel = types.StringNull()
+
+	plan.Replicas = types.Int64Null()
+
+	plan.Flush = types.BoolNull()
+
+	plan.TimeToLiveInSeconds = types.Int64Null()
+
+	plan.EvictionPolicy = types.StringNull()
+
+	plan.Stats = types.ObjectNull(providerschema.Stats{}.AttributeTypes())
+	return plan
 }
