@@ -32,7 +32,7 @@ func NewAuditLogEventIDs() datasource.DataSource {
 
 // Metadata returns the certificates data source type name.
 func (a *AuditLogEventIDs) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_auditlogeventids"
+	resp.TypeName = req.ProviderTypeName + "_audit_log_event_ids"
 }
 
 // AuditLogEventIDs defines the schema for the data source.
