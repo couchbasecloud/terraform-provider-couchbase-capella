@@ -4,14 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+
+	"github.com/hashicorp/terraform-plugin-framework/path"
+
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
-	"github.com/hashicorp/terraform-plugin-framework/path"
+
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"net/http"
 )
 
 var (
@@ -19,6 +22,14 @@ var (
 	_ resource.ResourceWithConfigure   = &AuditLogSettings{}
 	_ resource.ResourceWithImportState = &AuditLogSettings{}
 )
+
+const errorMessageWhileAuditLogSettingsCreation = "There is an error during audit log settings creation. Please check in Capella to see if any hanging resources" +
+	" have been created, unexpected error: "
+
+const errorMessageAfterAuditLogSettingsCreation = "Audit log settings creation is successful, but encountered an error while checking the current" +
+	" state of the settings. Please run `terraform plan` after 1-2 minutes to know the" +
+	" current state of the setting. Additionally, run `terraform apply --refresh-only` to update" +
+	" the state from remote, unexpected error: "
 
 // AuditLogSettings is the audit log settings resource implementation.
 type AuditLogSettings struct {
@@ -31,7 +42,7 @@ func NewAuditLogSettings() resource.Resource {
 
 // Metadata returns the audit log settings resource type name.
 func (a *AuditLogSettings) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_auditlogsettings"
+	resp.TypeName = req.ProviderTypeName + "_audit_log_settings"
 }
 
 // Schema defines the schema for the audit log settings resource.
@@ -58,29 +69,38 @@ func (a *AuditLogSettings) Configure(_ context.Context, req resource.ConfigureRe
 	a.Data = data
 }
 
-// AuditLogSettings does not have create endpoint
-// as a workaround, create has same behavior as update
+// Audit Log API does not have create endpoint.
+// so create is treated as an update.
 func (a *AuditLogSettings) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var state providerschema.ClusterAuditSettings
-	diags := req.Plan.Get(ctx, &state)
+	var plan providerschema.ClusterAuditSettings
+	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	err := a.validateAuditSettingPlan(plan)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating audit log settings",
+			"Could not create audit log settings, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
 	var (
-		organizationId = state.OrganizationId.ValueString()
-		projectId      = state.ProjectId.ValueString()
-		clusterId      = state.ClusterId.ValueString()
+		organizationId = plan.OrganizationId.ValueString()
+		projectId      = plan.ProjectId.ValueString()
+		clusterId      = plan.ClusterId.ValueString()
 	)
 
-	eventIds := make([]int32, len(state.EnabledEventIDs))
-	for i, event := range state.EnabledEventIDs {
+	eventIds := make([]int32, len(plan.EnabledEventIDs))
+	for i, event := range plan.EnabledEventIDs {
 		eventIds[i] = int32(event.ValueInt64())
 	}
 
-	disabledUsers := make([]api.AuditSettingsDisabledUser, len(state.DisabledUsers))
-	for i, user := range state.DisabledUsers {
+	disabledUsers := make([]api.AuditSettingsDisabledUser, len(plan.DisabledUsers))
+	for i, user := range plan.DisabledUsers {
 		u := api.AuditSettingsDisabledUser{
 			Domain: user.Domain.ValueStringPointer(),
 			Name:   user.Name.ValueStringPointer(),
@@ -89,14 +109,14 @@ func (a *AuditLogSettings) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	auditLogUpdateRequest := api.UpdateClusterAuditSettingsRequest{
-		AuditEnabled:    state.AuditEnabled.ValueBool(),
+		AuditEnabled:    plan.AuditEnabled.ValueBool(),
 		EnabledEventIDs: eventIds,
 		DisabledUsers:   disabledUsers,
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/auditLog", a.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusOK}
-	_, err := a.Client.ExecuteWithRetry(
+	_, err = a.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
 		auditLogUpdateRequest,
@@ -105,24 +125,18 @@ func (a *AuditLogSettings) Create(ctx context.Context, req resource.CreateReques
 	)
 
 	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			resp.State.RemoveResource(ctx)
-			return
-		}
 		resp.Diagnostics.AddError(
-			"Error updating audit log settings",
-			"Could not update audit log settings, unexpected error: "+": "+errString,
+			"Error creating audit log settings",
+			errorMessageWhileAuditLogSettingsCreation+api.ParseError(err),
 		)
 		return
 	}
 
 	currentState, err := a.refreshAuditLogSettingsState(ctx, organizationId, projectId, clusterId)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error updating audit log settings",
-			"Could not update audit log settings "+": "+api.ParseError(err),
+		resp.Diagnostics.AddWarning(
+			"Error creating audit log settings",
+			errorMessageAfterAuditLogSettingsCreation+api.ParseError(err),
 		)
 		return
 	}
@@ -135,6 +149,7 @@ func (a *AuditLogSettings) Create(ctx context.Context, req resource.CreateReques
 	}
 }
 
+// Read retrieves audit log settings.
 func (a *AuditLogSettings) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state providerschema.ClusterAuditSettings
 	diags := req.State.Get(ctx, &state)
@@ -182,6 +197,7 @@ func (a *AuditLogSettings) Read(ctx context.Context, req resource.ReadRequest, r
 	}
 }
 
+// Update updates the audit log settings.
 func (a *AuditLogSettings) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var state providerschema.ClusterAuditSettings
 	diags := req.Plan.Get(ctx, &state)
@@ -257,13 +273,12 @@ func (a *AuditLogSettings) Update(ctx context.Context, req resource.UpdateReques
 	}
 }
 
-// AuditLogSettings does not have delete endpoint
+// AuditLogSettings does not have delete endpoint.
 func (a *AuditLogSettings) Delete(_ context.Context, _ resource.DeleteRequest, resp *resource.DeleteResponse) {
 	resp.Diagnostics.AddError(
-		"delete is not supported audit log settings",
+		"delete is not supported for audit log settings",
 		"delete is not supported for audit log settings",
 	)
-	return
 }
 
 func (a *AuditLogSettings) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
@@ -312,12 +327,37 @@ func (a *AuditLogSettings) refreshAuditLogSettingsState(ctx context.Context, org
 	}
 
 	disabledUsers := make([]providerschema.AuditSettingsDisabledUser, len(auditSettingsResp.DisabledUsers))
-	for i, user := range disabledUsers {
-		disabledUsers[i] = user
+	for i, user := range auditSettingsResp.DisabledUsers {
+		if user.Domain != nil {
+			disabledUsers[i].Domain = types.StringValue(*user.Domain)
+		}
+		if user.Name != nil {
+			disabledUsers[i].Name = types.StringValue(*user.Name)
+		}
 	}
 
 	state.EnabledEventIDs = eventIds
 	state.DisabledUsers = disabledUsers
 
 	return &state, nil
+}
+
+func (a *AuditLogSettings) validateAuditSettingPlan(plan providerschema.ClusterAuditSettings) error {
+	if plan.OrganizationId.IsNull() {
+		return fmt.Errorf("organization Id cannot be empty")
+	}
+	if plan.ProjectId.IsNull() {
+		return fmt.Errorf("project Id cannot be empty")
+	}
+	if plan.ClusterId.IsNull() {
+		return fmt.Errorf("cluster Id cannot be empty")
+	}
+	if plan.AuditEnabled.IsUnknown() {
+		return fmt.Errorf("please specify value for audit_enabled")
+	}
+	if len(plan.EnabledEventIDs) == 0 {
+		return fmt.Errorf("please provide list of event ids")
+	}
+
+	return nil
 }

@@ -1,8 +1,9 @@
 package schema
 
 import (
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 )
 
 type AuditLogEventIDs struct {

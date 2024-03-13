@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	"net/http"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"net/http"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -30,17 +32,17 @@ func NewAuditLogEventIDs() datasource.DataSource {
 
 // Metadata returns the certificates data source type name.
 func (a *AuditLogEventIDs) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_auditlogeventids"
+	resp.TypeName = req.ProviderTypeName + "_audit_log_event_ids"
 }
 
-// AuditLogEventIDs defines the schema for the data source.
+// Schema defines the schema for the audit log event ids data source.
 func (a *AuditLogEventIDs) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"organization_id": requiredStringAttribute,
 			"project_id":      requiredStringAttribute,
 			"cluster_id":      requiredStringAttribute,
-			"data": schema.ListNestedAttribute{
+			"data": schema.SetNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
