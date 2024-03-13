@@ -223,7 +223,6 @@ func (a *AuditLogExport) Update(_ context.Context, _ resource.UpdateRequest, res
 		"Audit Log Export does not support update",
 		"Audit Log Export does not support update",
 	)
-	return
 }
 
 // Delete is not supported as audit log export API does not have delete endpoint.
@@ -232,7 +231,6 @@ func (a *AuditLogExport) Delete(_ context.Context, _ resource.DeleteRequest, res
 		"Audit Log Export does not support delete",
 		"Audit Log Export does not support delete",
 	)
-	return
 }
 
 func (a *AuditLogExport) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
