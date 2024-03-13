@@ -69,7 +69,7 @@ func (a *AuditLogSettings) Configure(_ context.Context, req resource.ConfigureRe
 	a.Data = data
 }
 
-// Audit Log API does not have create endpoint
+// Audit Log API does not have create endpoint.
 // so create is treated as an update.
 func (a *AuditLogSettings) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan providerschema.ClusterAuditSettings
@@ -276,10 +276,9 @@ func (a *AuditLogSettings) Update(ctx context.Context, req resource.UpdateReques
 // AuditLogSettings does not have delete endpoint.
 func (a *AuditLogSettings) Delete(_ context.Context, _ resource.DeleteRequest, resp *resource.DeleteResponse) {
 	resp.Diagnostics.AddError(
-		"delete is not supported audit log settings",
+		"delete is not supported for audit log settings",
 		"delete is not supported for audit log settings",
 	)
-	return
 }
 
 func (a *AuditLogSettings) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
@@ -328,8 +327,13 @@ func (a *AuditLogSettings) refreshAuditLogSettingsState(ctx context.Context, org
 	}
 
 	disabledUsers := make([]providerschema.AuditSettingsDisabledUser, len(auditSettingsResp.DisabledUsers))
-	for i, user := range disabledUsers {
-		disabledUsers[i] = user
+	for i, user := range auditSettingsResp.DisabledUsers {
+		if user.Domain != nil {
+			disabledUsers[i].Domain = types.StringValue(*user.Domain)
+		}
+		if user.Name != nil {
+			disabledUsers[i].Name = types.StringValue(*user.Name)
+		}
 	}
 
 	state.EnabledEventIDs = eventIds
