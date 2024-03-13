@@ -20,7 +20,7 @@ variable "audit_log_export" {
 
   type = object({
     start = string
-    end = string
+    end   = string
   })
 }
 
