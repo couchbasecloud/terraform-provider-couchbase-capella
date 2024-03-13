@@ -276,6 +276,9 @@ func (a *AuditLogExport) getAuditLogExport(ctx context.Context, organizationId, 
 
 	auditExportResponse := api.GetClusterAuditLogExportResponse{}
 	err = json.Unmarshal(response.Body, &auditExportResponse)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
+	}
 
 	return &auditExportResponse, nil
 }
