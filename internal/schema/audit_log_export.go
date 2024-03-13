@@ -2,9 +2,11 @@ package schema
 
 import (
 	"fmt"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 )
 
 type AuditLogExport struct {
