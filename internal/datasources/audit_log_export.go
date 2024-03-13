@@ -32,7 +32,7 @@ func NewAuditLogExport() datasource.DataSource {
 
 // Metadata returns the audit log export data source type name.
 func (a *AuditLogExport) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_auditlogexport"
+	resp.TypeName = req.ProviderTypeName + "_audit_log_export"
 }
 
 // Schema defines the schema for the auditlogexport data source.

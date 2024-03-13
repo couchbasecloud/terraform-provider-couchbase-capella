@@ -40,7 +40,7 @@ func NewAuditLogExport() resource.Resource {
 
 // Metadata returns the auditlogexport resource type name.
 func (a *AuditLogExport) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_auditlogexport"
+	resp.TypeName = req.ProviderTypeName + "_audit_log_export"
 }
 
 // Schema defines the schema for the auditlogexport resource.
