@@ -30,7 +30,7 @@ $ terraform plan
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/terraform-provider-capella
+│  - hashicorp.com/couchbasecloud/capella in /Users/$USER/workspace/terraform-provider-capella
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
 │ published releases.
@@ -116,7 +116,7 @@ $ terraform apply
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/terraform-provider-capella
+│  - hashicorp.com/couchbasecloud/capella in /Users/$USER/workspace/terraform-provider-capella
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
 │ published releases.
@@ -276,19 +276,19 @@ Command: `terraform state list`
 Sample Output:
 ```
 $ terraform state list
-data.capella_allowlists.existing_allowlists
-capella_allowlist.new_allowlist
+data.couchbase-capella_allowlists.existing_allowlists
+couchbase-capella_allowlist.new_allowlist
 ```
 
 ## IMPORT
 ### Remove the resource `new_allowlist` from the Terraform State file
 
-Command: `terraform state rm capella_allowlist.new_allowlist`
+Command: `terraform state rm couchbase-capella_allowlist.new_allowlist`
 
 Sample Output:
 ```
-$ terraform state rm capella_allowlist.new_allowlist
-Removed capella_allowlist.new_allowlist
+$ terraform state rm couchbase-capella_allowlist.new_allowlist
+Removed couchbase-capella_allowlist.new_allowlist
 Successfully removed 1 resource instance(s).
 ```
 
@@ -296,14 +296,14 @@ Please note, this command will only remove the resource from the Terraform State
 
 ### Now, let's import the resource in Terraform
 
-Command: `terraform import capella_allowlist.new_allowlist id=<allowlist_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
+Command: `terraform import couchbase-capella_allowlist.new_allowlist id=<allowlist_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
 In this case, the complete command is:
-`terraform import capella_allowlist.new_allowlist id=854cbdf0-8ae3-4a42-9227-59c52a5ab4f2,cluster_id=f499a9e6-e5a1-4f3e-95a7-941a41d046e6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d`
+`terraform import couchbase-capella_allowlist.new_allowlist id=854cbdf0-8ae3-4a42-9227-59c52a5ab4f2,cluster_id=f499a9e6-e5a1-4f3e-95a7-941a41d046e6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d`
 
 Sample Output:
 ```
-$ terraform import capella_allowlist.new_allowlist id=854cbdf0-8ae3-4a42-9227-59c52a5ab4f2,cluster_id=f499a9e6-e5a1-4f3e-95a7-941a41d046e6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d
+$ terraform import couchbase-capella_allowlist.new_allowlist id=854cbdf0-8ae3-4a42-9227-59c52a5ab4f2,cluster_id=f499a9e6-e5a1-4f3e-95a7-941a41d046e6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d
 capella_allowlist.new_allowlist: Importing from ID "id=854cbdf0-8ae3-4a42-9227-59c52a5ab4f2,cluster_id=f499a9e6-e5a1-4f3e-95a7-941a41d046e6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d"...
 data.capella_allowlists.existing_allowlists: Reading...
 capella_allowlist.new_allowlist: Import prepared!
@@ -334,7 +334,7 @@ $ terraform plan
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/terraform-provider-capella
+│  - hashicorp.com/couchbasecloud/capella in /Users/$USER/workspace/terraform-provider-capella
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
 │ published releases.
@@ -360,7 +360,7 @@ $ terraform apply -var comment="updated allowlist comment"
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/terraform-provider-capella
+│  - hashicorp.com/couchbasecloud/capella in /Users/$USER/workspace/terraform-provider-capella
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
 │ published releases.
@@ -491,7 +491,7 @@ $ terraform destroy
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/terraform-provider-capella
+│  - hashicorp.com/couchbasecloud/capella in /Users/$USER/workspace/terraform-provider-capella
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
 │ published releases.

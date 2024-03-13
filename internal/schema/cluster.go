@@ -99,9 +99,10 @@ type Node struct {
 
 // Node_Disk is the type of disk on a particular node that is supported per cloud provider during cluster creation.
 type Node_Disk struct {
-	Type    types.String `tfsdk:"type"`
-	Storage types.Int64  `tfsdk:"storage"`
-	IOPS    types.Int64  `tfsdk:"iops"`
+	Type          types.String `tfsdk:"type"`
+	Storage       types.Int64  `tfsdk:"storage"`
+	IOPS          types.Int64  `tfsdk:"iops"`
+	Autoexpansion types.Bool   `tfsdk:"autoexpansion"`
 }
 
 // Support defines the support plan and timezone for this particular cluster.
@@ -245,9 +246,10 @@ func morphToTerraformServiceGroups(cluster *clusterapi.GetClusterResponse) ([]Se
 			}
 
 			newServiceGroup.Node.Disk = Node_Disk{
-				Type:    types.StringValue(string(azureDisk.Type)),
-				Storage: types.Int64Value(int64(*azureDisk.Storage)),
-				IOPS:    types.Int64Value(int64(*azureDisk.Iops)),
+				Type:          types.StringValue(string(azureDisk.Type)),
+				Storage:       types.Int64Value(int64(*azureDisk.Storage)),
+				IOPS:          types.Int64Value(int64(*azureDisk.Iops)),
+				Autoexpansion: types.BoolValue(*azureDisk.Autoexpansion),
 			}
 		case clusterapi.Gcp:
 			gcpDisk, err := serviceGroup.Node.AsDiskGCP()

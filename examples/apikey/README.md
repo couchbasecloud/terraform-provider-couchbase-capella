@@ -30,7 +30,7 @@ $ terraform plan
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/terraform-provider-capella
+│  - hashicorp.com/couchbasecloud/capella in /Users/$USER/workspace/terraform-provider-capella
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -168,7 +168,7 @@ $ terraform apply
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/terraform-provider-capella
+│  - hashicorp.com/couchbasecloud/capella in /Users/$USER/workspace/terraform-provider-capella
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -426,18 +426,18 @@ Command: `terraform state list`
 Sample Output:
 ```
 $ terraform state list
-data.capella_apikeys.existing_apikeys
-capella_apikey.new_apikey
+data.couchbase-capella_apikeys.existing_apikeys
+couchbase-capella_apikey.new_apikey
 ```
 
 ## IMPORT
 ### Remove the resource `new_apikey` from the Terraform State file
 
-Command: `terraform state rm capella_apikey.new_apikey`
+Command: `terraform state rm couchbase-capella_apikey.new_apikey`
 
 Sample Output:
 ```
-$ terraform state rm capella_apikey.new_apikey
+$ terraform state rm couchbase-capella_apikey.new_apikey
 Removed capella_apikey.new_apikey
 Successfully removed 1 resource instance(s).
 ```
@@ -446,14 +446,14 @@ Please note, this command will only remove the resource from the Terraform State
 
 ### Now, let's import the resource in Terraform
 
-Command: `terraform import capella_apikey.new_apikey id=<apikey_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
+Command: `terraform import couchbase-capella_apikey.new_apikey id=<apikey_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
 In this case, the complete command is:
-`terraform import capella_apikey.new_apikey id=bmV3X3RlcnJhZm9ybV9idWNrZXQ=,cluster_id=f499a9e6-e5a1-4f3e-95a7-941a41d046e6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d`
+`terraform import couchbase-capella_apikey.new_apikey id=bmV3X3RlcnJhZm9ybV9idWNrZXQ=,cluster_id=f499a9e6-e5a1-4f3e-95a7-941a41d046e6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d`
 
 Sample Output:
 ```
-$ terraform import capella_apikey.new_apikey id=8KEJ9ODUQHcpskP5anBOFTzV8ZezWJaH,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d
+$ terraform import couchbase-capella_apikey.new_apikey id=8KEJ9ODUQHcpskP5anBOFTzV8ZezWJaH,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d
 capella_apikey.new_apikey: Importing from ID "id=8KEJ9ODUQHcpskP5anBOFTzV8ZezWJaH,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d"...
 data.capella_apikeys.existing_apikeys: Reading...
 capella_apikey.new_apikey: Import prepared!
@@ -484,7 +484,7 @@ $ terraform plan
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/terraform-provider-capella
+│  - hashicorp.com/couchbasecloud/capella in /Users/$USER/workspace/terraform-provider-capella
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -509,7 +509,7 @@ $ terraform apply -var 'apikey={allowed_cidrs=["10.1.42.0/23", "10.1.43.0/23", "
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/terraform-provider-capella
+│  - hashicorp.com/couchbasecloud/capella in /Users/$USER/workspace/terraform-provider-capella
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -682,7 +682,7 @@ $ terraform destroy
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchabasecloud/capella in /Users/talina.shrotriya/workspace/terraform-provider-capella
+│  - hashicorp.com/couchbasecloud/capella in /Users/$USER/workspace/terraform-provider-capella
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
