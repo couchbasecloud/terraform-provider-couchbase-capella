@@ -4,7 +4,7 @@ project_id      = "<project_id>"
 cluster_id      = "<cluster_id>"
 
 auditlogsettings = {
-    auditenabled = true
-    enabledeventids = [20488, 20490, 20491]
-    disabledusers = []
+    audit_enabled = true
+    enabled_event_ids = [20488, 20490, 20491]
+    disabled_users = []
 }

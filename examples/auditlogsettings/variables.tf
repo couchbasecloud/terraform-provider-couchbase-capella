@@ -15,17 +15,13 @@ variable "auth_token" {
   sensitive   = true
 }
 
-variable "host" {
-  description = "The Host URL of Couchbase Cloud."
-}
-
 variable "auditlogsettings" {
   description = "configure cluster audit log settings"
 
   type = object({
-    auditenabled = bool
-    enabledeventids = list(number)
-    disabledusers = list(object({
+    audit_enabled = bool
+    enabled_event_ids = list(number)
+    disabled_users = list(object({
       name  = string
       domain    = string
     }))
