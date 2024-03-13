@@ -41,8 +41,8 @@ func (a *AuditLogSettings) Schema(_ context.Context, _ datasource.SchemaRequest,
 			"project_id":        requiredStringAttribute,
 			"cluster_id":        requiredStringAttribute,
 			"audit_enabled":     computedBoolAttribute,
-			"enabled_event_ids": computedIntListAttribute,
-			"disabled_users": schema.ListNestedAttribute{
+			"enabled_event_ids": computedIntSetAttribute,
+			"disabled_users": schema.SetNestedAttribute{
 				Computed: true,
 				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
