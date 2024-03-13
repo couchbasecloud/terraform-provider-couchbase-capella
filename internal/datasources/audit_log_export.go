@@ -42,7 +42,7 @@ func (a *AuditLogExport) Schema(_ context.Context, _ datasource.SchemaRequest, r
 			"organization_id": requiredStringAttribute,
 			"project_id":      requiredStringAttribute,
 			"cluster_id":      requiredStringAttribute,
-			"data": schema.ListNestedAttribute{
+			"data": schema.SetNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
