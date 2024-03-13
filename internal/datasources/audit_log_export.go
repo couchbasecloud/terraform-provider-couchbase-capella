@@ -35,7 +35,7 @@ func (a *AuditLogExport) Metadata(_ context.Context, req datasource.MetadataRequ
 	resp.TypeName = req.ProviderTypeName + "_audit_log_export"
 }
 
-// Schema defines the schema for the auditlogexport data source.
+// Schema defines the schema for the audit log export data source.
 func (a *AuditLogExport) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -63,7 +63,7 @@ func (a *AuditLogExport) Schema(_ context.Context, _ datasource.SchemaRequest, r
 	}
 }
 
-// Configure adds the provider configured client to the auditlogexport data source.
+// Configure adds the provider configured client to the audit log export data source.
 func (a *AuditLogExport) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -81,7 +81,7 @@ func (a *AuditLogExport) Configure(_ context.Context, req datasource.ConfigureRe
 	a.Data = data
 }
 
-// Read refreshes the Terraform state with the latest data of auditlogexport.
+// Read refreshes the Terraform state with the latest data of audit log export.
 func (a *AuditLogExport) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state providerschema.AuditLogExports
 	diags := req.Config.Get(ctx, &state)
@@ -141,8 +141,7 @@ func (a *AuditLogExport) listAuditLogExports(ctx context.Context, organizationId
 	return api.GetPaginated[[]api.GetClusterAuditLogExportResponse](ctx, a.Client, a.Token, cfg, "")
 }
 
-// validate is used to verify that all the fields in the datasource
-// have been populated.
+// validate is used to verify that all the fields in the datasource have been populated.
 func (a *AuditLogExport) validate(state providerschema.AuditLogExports) error {
 	if state.OrganizationId.IsNull() {
 		return errors.ErrOrganizationIdMissing

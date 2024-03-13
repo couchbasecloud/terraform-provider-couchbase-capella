@@ -38,12 +38,12 @@ func NewAuditLogExport() resource.Resource {
 	return &AuditLogExport{}
 }
 
-// Metadata returns the auditlogexport resource type name.
+// Metadata returns the audit log export resource type name.
 func (a *AuditLogExport) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_audit_log_export"
 }
 
-// Schema defines the schema for the auditlogexport resource.
+// Schema defines the schema for the audit log export resource.
 func (a *AuditLogExport) Schema(ctx context.Context, rsc resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = AuditLogExportSchema()
 }
@@ -163,6 +163,7 @@ func (a *AuditLogExport) Create(ctx context.Context, req resource.CreateRequest,
 	}
 }
 
+// Read gets audit log export information.
 func (a *AuditLogExport) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state providerschema.AuditLogExport
 	diags := req.State.Get(ctx, &state)
@@ -213,6 +214,7 @@ func (a *AuditLogExport) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 }
 
+// Update is not supported as audit log export API does not have update endpoint.
 func (a *AuditLogExport) Update(_ context.Context, _ resource.UpdateRequest, resp *resource.UpdateResponse) {
 	resp.Diagnostics.AddError(
 		"Audit Log Export does not support update",
@@ -221,6 +223,7 @@ func (a *AuditLogExport) Update(_ context.Context, _ resource.UpdateRequest, res
 	return
 }
 
+// Delete is not supported as audit log export API does not have delete endpoint.
 func (a *AuditLogExport) Delete(_ context.Context, _ resource.DeleteRequest, resp *resource.DeleteResponse) {
 	resp.Diagnostics.AddError(
 		"Audit Log Export does not support delete",
