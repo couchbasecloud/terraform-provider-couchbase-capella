@@ -89,8 +89,12 @@ func (c *Collection) Create(ctx context.Context, req resource.CreateRequest, res
 	}
 
 	collectionRequest := collection_api.CreateCollectionRequest{
-		Name:   plan.Name.ValueString(),
-		MaxTTL: plan.MaxTTL.ValueInt64(),
+		Name: plan.Name.ValueString(),
+	}
+
+	// Check for optional fields
+	if !plan.MaxTTL.IsNull() && !plan.MaxTTL.IsUnknown() {
+		collectionRequest.MaxTTL = plan.MaxTTL.ValueInt64Pointer()
 	}
 
 	if err := c.validateCreateCollectionRequest(plan); err != nil {
