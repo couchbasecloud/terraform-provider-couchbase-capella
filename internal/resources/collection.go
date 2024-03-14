@@ -200,7 +200,7 @@ func (c *Collection) retrieveCollection(ctx context.Context, organizationId, pro
 		return nil, err
 	}
 
-	if validateCollectionNameIsSameInPlanAndState(collectionName, *collectionResp.Name) {
+	if collectionResp.Name != nil && validateCollectionNameIsSameInPlanAndState(collectionName, *collectionResp.Name) {
 		collectionResp.Name = &collectionName
 	}
 
