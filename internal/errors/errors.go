@@ -158,4 +158,7 @@ var (
 
 	// ErrIfMatchCannotBeSetWhileCreate is returned when if_match is set during create operation.
 	ErrIfMatchCannotBeSetWhileCreate = errors.New("if_match attribute cannot be set during create operation")
+
+	// ErrIfMatchCannotBeSetWhileCreate is returned when if_match is set during create operation.
+	ErrInvalidSampleBucketName = errors.New("sample bucket name can only be travel-sample, beer-sample, gamesim-sample")
 )
