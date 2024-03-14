@@ -60,7 +60,7 @@ development, we want to test using a a local development build of the provider. 
 have an associated version number or an official set of checksums listed in a provider registry. 
 
 After successfully building the local provider binary for Couchbase Capella, the  next step is to instruct 
-Terraform to use local provider builds by setting a dev_overrides block in a  configuration file 
+Terraform to use local provider builds by setting a dev_overrides block in a configuration file 
 with ext .terraformrc or .tfrc. This block overrides all other configured installation methods. 
 When Terraform runs, it searches for any .terraformrc or .tfrc file in your home directory and applies any 
 configuration settings that have been set.
@@ -80,7 +80,7 @@ the following contents:
   provider_installation {
 
   dev_overrides {
-    "hashicorp.com/couchbasecloud/couchbase-capella" = "$HOME/bin/terraform-provider-couchbase-capella"
+    "couchbasecloud/couchbase-capella" = "$HOME/terraform-provider-couchbase-capella/bin"
   }
 
   # For all other providers, install them directly from their origin provider
