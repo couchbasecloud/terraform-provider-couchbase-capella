@@ -13,7 +13,7 @@ func CollectionSchema() schema.Schema {
 			"bucket_id":       stringAttribute(required, requiresReplace),
 			"scope_name":      stringAttribute(required, requiresReplace),
 			"collection_name": stringAttribute(required, requiresReplace),
-			"max_ttl":         int64Attribute(optional),
+			"max_ttl":         int64Attribute(optional, computed),
 		},
 	}
 
