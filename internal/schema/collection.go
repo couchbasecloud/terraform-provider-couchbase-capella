@@ -104,9 +104,14 @@ func (c Collections) Validate() (bucketId, clusterId, projectId, organizationId,
 
 // NewCollectionData creates a new collectionData object.
 func NewCollectionData(collection *collection.GetCollectionResponse) (*CollectionData, error) {
-	newCollectionData := CollectionData{
-		Name:   types.StringValue(*collection.Name),
-		MaxTTL: types.Int64Value(*collection.MaxTTL),
+	newCollectionData := CollectionData{}
+	if collection.MaxTTL != nil {
+		newCollectionData.MaxTTL = types.Int64Value(*collection.MaxTTL)
 	}
+
+	if collection.Name != nil {
+		newCollectionData.Name = types.StringValue(*collection.Name)
+	}
+
 	return &newCollectionData, nil
 }
