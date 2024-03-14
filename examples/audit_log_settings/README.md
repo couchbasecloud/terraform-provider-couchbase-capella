@@ -614,3 +614,126 @@ couchbase-capella_audit_log_settings.new_auditlogsettings: Destroying...
 │ delete is not supported for audit log settings
 ╵
 ```
+
+### This example shows how to configure a disabled user
+### We use an internal user @eventing in local domain
+### In terraform.tfvars set disabled_users = [{"domain": "local", "name": "@eventing"}]
+
+Command: `terraform apply`
+
+Sample Output:
+```
+
+terraform apply
+╷
+│ Warning: Provider development overrides are in effect
+│
+│ The following provider development overrides are set in the CLI configuration:
+│  - couchbasecloud/couchbase-capella in /Users/hiteshwalia/GolandProjects/terraform-provider-couchbase-capella/bin
+│
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
+│ published releases.
+╵
+data.couchbase-capella_audit_log_settings.existing_auditlogsettings: Reading...
+data.couchbase-capella_audit_log_settings.existing_auditlogsettings: Read complete after 1s
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # couchbase-capella_audit_log_settings.new_auditlogsettings will be created
+  + resource "couchbase-capella_audit_log_settings" "new_auditlogsettings" {
+      + audit_enabled     = true
+      + cluster_id        = "eb057928-b374-4a7f-a975-c495d7943594"
+      + disabled_users    = [
+          + {
+              + domain = "local"
+              + name   = "@eventing"
+            },
+        ]
+      + enabled_event_ids = [
+          + 20488,
+          + 20490,
+          + 20491,
+        ]
+      + organization_id   = "2cde9b42-0399-471c-a86d-c3f281eba5c0"
+      + project_id        = "3a5d9251-4247-4c51-aeb6-b799b41a91ba"
+    }
+
+Plan: 1 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + existing_auditlogsettings = {
+      + audit_enabled     = true
+      + cluster_id        = "eb057928-b374-4a7f-a975-c495d7943594"
+      + disabled_users    = []
+      + enabled_event_ids = [
+          + 20488,
+          + 20490,
+          + 20491,
+        ]
+      + organization_id   = "2cde9b42-0399-471c-a86d-c3f281eba5c0"
+      + project_id        = "3a5d9251-4247-4c51-aeb6-b799b41a91ba"
+    }
+  + new_auditlogsettings      = {
+      + audit_enabled     = true
+      + cluster_id        = "eb057928-b374-4a7f-a975-c495d7943594"
+      + disabled_users    = [
+          + {
+              + domain = "local"
+              + name   = "@eventing"
+            },
+        ]
+      + enabled_event_ids = [
+          + 20488,
+          + 20490,
+          + 20491,
+        ]
+      + organization_id   = "2cde9b42-0399-471c-a86d-c3f281eba5c0"
+      + project_id        = "3a5d9251-4247-4c51-aeb6-b799b41a91ba"
+    }
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+couchbase-capella_audit_log_settings.new_auditlogsettings: Creating...
+couchbase-capella_audit_log_settings.new_auditlogsettings: Creation complete after 3s
+
+Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+existing_auditlogsettings = {
+  "audit_enabled" = true
+  "cluster_id" = "eb057928-b374-4a7f-a975-c495d7943594"
+  "disabled_users" = toset([])
+  "enabled_event_ids" = toset([
+    20488,
+    20490,
+    20491,
+  ])
+  "organization_id" = "2cde9b42-0399-471c-a86d-c3f281eba5c0"
+  "project_id" = "3a5d9251-4247-4c51-aeb6-b799b41a91ba"
+}
+new_auditlogsettings = {
+  "audit_enabled" = true
+  "cluster_id" = "eb057928-b374-4a7f-a975-c495d7943594"
+  "disabled_users" = toset([
+    {
+      "domain" = "local"
+      "name" = "@eventing"
+    },
+  ])
+  "enabled_event_ids" = toset([
+    20488,
+    20490,
+    20491,
+  ])
+  "organization_id" = "2cde9b42-0399-471c-a86d-c3f281eba5c0"
+  "project_id" = "3a5d9251-4247-4c51-aeb6-b799b41a91ba"
+}
+```
