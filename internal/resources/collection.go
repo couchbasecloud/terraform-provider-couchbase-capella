@@ -205,8 +205,6 @@ func (c *Collection) retrieveCollection(ctx context.Context, organizationId, pro
 	}
 
 	refreshedState := providerschema.Collection{
-		Name:           types.StringValue(*collectionResp.Name),
-		MaxTTL:         types.Int64Value(*collectionResp.MaxTTL),
 		ScopeName:      types.StringValue(scopeName),
 		BucketId:       types.StringValue(bucketId),
 		ClusterId:      types.StringValue(clusterId),
@@ -214,6 +212,14 @@ func (c *Collection) retrieveCollection(ctx context.Context, organizationId, pro
 		OrganizationId: types.StringValue(organizationId),
 	}
 
+	//check nil pointers
+	if collectionResp.Name != nil {
+		refreshedState.Name = types.StringValue(*collectionResp.Name)
+	}
+
+	if collectionResp.MaxTTL != nil {
+		refreshedState.MaxTTL = types.Int64Value(*collectionResp.MaxTTL)
+	}
 	return &refreshedState, nil
 }
 
