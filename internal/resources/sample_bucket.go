@@ -203,7 +203,7 @@ func (s *SampleBucket) Read(ctx context.Context, req resource.ReadRequest, resp 
 func (s *SampleBucket) Update(_ context.Context, _ resource.UpdateRequest, _ *resource.UpdateResponse) {
 	// Couchbase Capella's v4 does not support a PUT endpoint for sample buckets.
 	// SampleBuckets can only be created, read and deleted.
-	// http://cbc-cp-api.s3-website-us-east-1.amazonaws.com/#tag/sampleBucket
+	// https://docs.couchbase.com/cloud/management-api-reference/index.html#tag/sampleBucket
 	//
 	// Note: In this situation, terraform apply will default to deleting and executing a new create.
 	// The update implementation should simply be left empty.
