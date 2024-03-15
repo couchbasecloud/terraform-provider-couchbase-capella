@@ -128,7 +128,7 @@ func (c *Collection) Create(ctx context.Context, req resource.CreateRequest, res
 		return
 	}
 
-	diags = resp.State.Set(ctx, plan)
+	diags = resp.State.Set(ctx, initializeCollectionWithPlan(plan))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -150,6 +150,15 @@ func (c *Collection) Create(ctx context.Context, req resource.CreateRequest, res
 		return
 	}
 
+}
+
+// initializeCollectionWithPlan initializes an instance of providerschema.Collection
+// with the specified plan. It marks all computed fields as null.
+func initializeCollectionWithPlan(plan providerschema.Collection) providerschema.Collection {
+	if plan.MaxTTL.IsNull() || plan.MaxTTL.IsUnknown() {
+		plan.MaxTTL = types.Int64Null()
+	}
+	return plan
 }
 
 func (c *Collection) validateCreateCollectionRequest(plan providerschema.Collection) error {
