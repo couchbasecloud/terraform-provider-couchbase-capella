@@ -33,8 +33,9 @@ build: fmt
 
 .PHONY: fmt
 fmt:
-	@echo "==> Fixing source code with gofmt..."
+	@echo "==> Fixing source code with gofmt and goimports..."
 	gofmt -s -w $(GOFMT_FILES)
+	find . -name "*.go" -exec goimports -w -local github.com/couchbasecloud/terraform-provider-couchbase-capella {} \;
 
 .PHONY: vet
 vet:
