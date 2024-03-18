@@ -117,7 +117,10 @@ func (d *Backups) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 
 		for i := range backupsResp.Data {
 			backup := backupsResp.Data[i]
-			backupStats := providerschema.NewBackupStats(*backup.BackupStats)
+			var backupStats providerschema.BackupStats
+			if backup.BackupStats != nil {
+				backupStats = providerschema.NewBackupStats(*backup.BackupStats)
+			}
 			backupStatsObj, diags := types.ObjectValueFrom(ctx, backupStats.AttributeTypes(), backupStats)
 			if diags.HasError() {
 				resp.Diagnostics.AddError(
@@ -126,8 +129,10 @@ func (d *Backups) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 				)
 				return
 			}
-
-			scheduleInfo := providerschema.NewScheduleInfo(*backup.ScheduleInfo)
+			var scheduleInfo providerschema.ScheduleInfo
+			if backup.ScheduleInfo != nil {
+				scheduleInfo = providerschema.NewScheduleInfo(*backup.ScheduleInfo)
+			}
 			scheduleInfoObj, diags := types.ObjectValueFrom(ctx, scheduleInfo.AttributeTypes(), scheduleInfo)
 			if diags.HasError() {
 				resp.Diagnostics.AddError(

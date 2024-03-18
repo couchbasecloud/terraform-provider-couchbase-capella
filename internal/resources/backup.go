@@ -116,7 +116,10 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		return
 	}
 
-	backupStats := providerschema.NewBackupStats(*backupResponse.BackupStats)
+	var backupStats providerschema.BackupStats
+	if backupResponse.BackupStats != nil {
+		backupStats = providerschema.NewBackupStats(*backupResponse.BackupStats)
+	}
 	backupStatsObj, diags := types.ObjectValueFrom(ctx, backupStats.AttributeTypes(), backupStats)
 	if diags.HasError() {
 		resp.Diagnostics.AddError(
@@ -128,7 +131,10 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		return
 	}
 
-	scheduleInfo := providerschema.NewScheduleInfo(*backupResponse.ScheduleInfo)
+	var scheduleInfo providerschema.ScheduleInfo
+	if backupResponse.ScheduleInfo != nil {
+		scheduleInfo = providerschema.NewScheduleInfo(*backupResponse.ScheduleInfo)
+	}
 	scheduleInfoObj, diags := types.ObjectValueFrom(ctx, scheduleInfo.AttributeTypes(), scheduleInfo)
 	if diags.HasError() {
 		resp.Diagnostics.AddError(
@@ -471,13 +477,19 @@ func (b *Backup) retrieveBackup(ctx context.Context, organizationId, projectId, 
 		return nil, err
 	}
 
-	bStats := providerschema.NewBackupStats(*backupResp.BackupStats)
+	var bStats providerschema.BackupStats
+	if backupResp.BackupStats != nil {
+		bStats = providerschema.NewBackupStats(*backupResp.BackupStats)
+	}
 	bStatsObj, diags := types.ObjectValueFrom(ctx, bStats.AttributeTypes(), bStats)
 	if diags.HasError() {
 		return nil, errors.ErrUnableToConvertAuditData
 	}
 
-	sInfo := providerschema.NewScheduleInfo(*backupResp.ScheduleInfo)
+	var sInfo providerschema.ScheduleInfo
+	if backupResp.ScheduleInfo != nil {
+		sInfo = providerschema.NewScheduleInfo(*backupResp.ScheduleInfo)
+	}
 	sInfoObj, diags := types.ObjectValueFrom(ctx, sInfo.AttributeTypes(), sInfo)
 	if diags.HasError() {
 		return nil, errors.ErrUnableToConvertAuditData
