@@ -19,5 +19,3 @@ This directory contains examples that are mostly used for documentation, but can
 [Allowlist](allowlist)
 
 [Bucket](bucket)
-
-[Collection](collection)
