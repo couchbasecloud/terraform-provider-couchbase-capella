@@ -5,9 +5,9 @@ output "scope" {
 }
 
 resource "couchbase-capella_scope" "new_scope" {
-  scope_name      = var.scope.scope_name
   organization_id = var.organization_id
-  project_id      = var.project_id
-  cluster_id      = var.cluster_id
-  bucket_id       = var.bucket_id
+  project_id      = couchbase-capella_project.new_project.id
+  cluster_id      = couchbase-capella_cluster.new_cluster.id
+  bucket_id       = couchbase-capella_bucket.new_bucket.id
+  scope_name      = var.scope.scope_name
 }
