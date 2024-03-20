@@ -94,3 +94,7 @@ app_service = {
     ram = 4
   }
 }
+
+samplebucket = {
+  name = "gamesim-sample"
+}

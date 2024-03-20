@@ -5,13 +5,14 @@ In this demo, we will perform the following operations:
 1. Fetch organization details based on the `organization_id`
 2. Create a new API Key in the organization.
 3. Invite a new user to the organization.
-4. Create a new project in the organization. 
+4. Create a new project in the organization.
 5. Create a new AWS cluster in the organization and the newly created project.
-6. Store the cluster certificate in an output variable. 
-7. Create a new database credential in the newly created cluster. 
-8. Add a new allowlist to the cluster. 
+6. Store the cluster certificate in an output variable.
+7. Create a new database credential in the newly created cluster.
+8. Add a new allowlist to the cluster.
 9. Create a new bucket in the cluster.
-10. Create a new app service in the cluster.
+10. Create a new sample bucket in the cluster.
+11. Create a new app service in the cluster.
 
 ## Pre-Requisites:
 
@@ -235,6 +236,25 @@ Terraform will perform the following actions:
       + organization_id = "7a99d00c-f55b-4b39-bc72-1b4cc68ba894"
     }
 
+  # couchbase-capella_sample_bucket.new_sample_bucket will be created
+  + resource "couchbase-capella_sample_bucket" "new_sample_bucket" {
+      + bucket_conflict_resolution = (known after apply)
+      + cluster_id                 = (known after apply)
+      + durability_level           = (known after apply)
+      + eviction_policy            = (known after apply)
+      + flush                      = (known after apply)
+      + id                         = (known after apply)
+      + memory_allocation_in_mb    = (known after apply)
+      + name                       = "gamesim-sample"
+      + organization_id            = "7a99d00c-f55b-4b39-bc72-1b4cc68ba894"
+      + project_id                 = (known after apply)
+      + replicas                   = (known after apply)
+      + stats                      = (known after apply)
+      + storage_backend            = (known after apply)
+      + time_to_live_in_seconds    = (known after apply)
+      + type                       = (known after apply)
+    }
+
   # capella_user.new_user will be created
   + resource "capella_user" "new_user" {
       + audit                = (known after apply)
@@ -365,6 +385,7 @@ Changes to Outputs:
         }
     }
   + project             = "My First Terraform Project"
+  + sample_bucket       = "gamesim-sample"
   + user                = {
       + audit                = (known after apply)
       + email                = "johndoe@couchbase.com"
@@ -614,6 +635,25 @@ Terraform will perform the following actions:
       + organization_id = "7a99d00c-f55b-4b39-bc72-1b4cc68ba894"
     }
 
+  # couchbase-capella_sample_bucket.new_sample_bucket will be created
+  + resource "couchbase-capella_sample_bucket" "new_sample_bucket" {
+      + bucket_conflict_resolution = (known after apply)
+      + cluster_id                 = (known after apply)
+      + durability_level           = (known after apply)
+      + eviction_policy            = (known after apply)
+      + flush                      = (known after apply)
+      + id                         = (known after apply)
+      + memory_allocation_in_mb    = (known after apply)
+      + name                       = "gamesim-sample"
+      + organization_id            = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+      + project_id                 = (known after apply)
+      + replicas                   = (known after apply)
+      + stats                      = (known after apply)
+      + storage_backend            = (known after apply)
+      + time_to_live_in_seconds    = (known after apply)
+      + type                       = (known after apply)
+    }
+
   # capella_user.new_user will be created
   + resource "capella_user" "new_user" {
       + audit                = (known after apply)
@@ -744,6 +784,7 @@ Changes to Outputs:
         }
     }
   + project             = "My First Terraform Project"
+  + sample_bucket       = "gamesim-sample"
   + user                = {
       + audit                = (known after apply)
       + email                = "johndoe@couchbase.com"
@@ -813,10 +854,12 @@ data.capella_certificate.existing_certificate: Reading...
 capella_app_service.new_app_service: Creating...
 capella_allowlist.new_allowlist: Creating...
 capella_bucket.new_bucket: Creating...
+couchbase-capella_sample_bucket.new_sample_bucket: Creating...
 capella_database_credential.new_database_credential: Creating...
 data.capella_certificate.existing_certificate: Read complete after 0s
 capella_allowlist.new_allowlist: Creation complete after 1s [id=b6cfe2a8-fbb8-4bba-ba38-b26a29974767]
 capella_bucket.new_bucket: Creation complete after 6s [id=bmV3X3RlcnJhZm9ybV9idWNrZXQ=]
+couchbase-capella_sample_bucket.new_sample_bucket: Creation complete after 1s [id=Z2FtZXNpbS1zYW1wbGU=]
 capella_database_credential.new_database_credential: Creation complete after 8s [id=62ad5f82-8100-4d6e-9216-70e1f82d0dbe]
 capella_app_service.new_app_service: Still creating... [10s elapsed]
 capella_app_service.new_app_service: Still creating... [20s elapsed]
@@ -962,6 +1005,7 @@ organization = {
   }
 }
 project = "My First Terraform Project"
+sample_bucket = "gamesim-sample"
 user = {
   "audit" = {
     "created_at" = "2023-10-24 20:55:30.005741097 +0000 UTC"
@@ -1136,6 +1180,7 @@ organization = {
   }
 }
 project = "My First Terraform Project"
+sample_bucket = "gamesim-sample"
 user = {
   "audit" = {
     "created_at" = "2023-10-24 20:55:30.005741097 +0000 UTC"
@@ -1200,6 +1245,7 @@ capella_database_credential.new_database_credential: Refreshing state... [id=62a
 data.capella_certificate.existing_certificate: Reading...
 capella_allowlist.new_allowlist: Refreshing state... [id=b6cfe2a8-fbb8-4bba-ba38-b26a29974767]
 capella_bucket.new_bucket: Refreshing state... [id=bmV3X3RlcnJhZm9ybV9idWNrZXQ=]
+couchbase-capella_sample_bucket.new_sample_bucket: Refreshing state... [id=Z2FtZXNpbS1zYW1wbGU=]
 capella_app_service.new_app_service: Refreshing state... [id=51b402e6-aa55-40bf-82ec-aae5ccf257cf]
 data.capella_certificate.existing_certificate: Read complete after 1s
 
@@ -1405,6 +1451,30 @@ Terraform will perform the following actions:
       - organization_id = "7a99d00c-f55b-4b39-bc72-1b4cc68ba894" -> null
     }
 
+  # couchbase-capella_sample_bucket.new_sample_bucket will be destroyed
+  - resource "couchbase-capella_sample_bucket" "new_sample_bucket" {
+      - bucket_conflict_resolution = "seqno" -> null
+      - cluster_id                 = "bb96d3bb-ea30-4f9b-aafa-fef8e4db9a48" -> null
+      - durability_level           = "none" -> null
+      - eviction_policy            = "fullEviction" -> null
+      - flush                      = false -> null
+      - id                         = "Z2FtZXNpbS1zYW1wbGU=" -> null
+      - memory_allocation_in_mb    = 200 -> null
+      - name                       = "gamesim-sample" -> null
+      - organization_id            = "6af08c0a-8cab-4c1c-b257-b521575c16d0" -> null
+      - project_id                 = "7ee0ced2-a2f6-44c2-8541-07d97d9e7670" -> null
+      - replicas                   = 1 -> null
+      - stats                      = {
+          - disk_used_in_mib   = 20 -> null
+          - item_count         = 586 -> null
+          - memory_used_in_mib = 62 -> null
+          - ops_per_second     = 0 -> null
+        } -> null
+      - storage_backend            = "couchstore" -> null
+      - time_to_live_in_seconds    = 0 -> null
+      - type                       = "couchbase" -> null
+    }
+
 Plan: 0 to add, 0 to change, 7 to destroy.
 
 Changes to Outputs:
@@ -1536,6 +1606,7 @@ Changes to Outputs:
         }
     } -> null
   - project             = "My First Terraform Project" -> null
+  - sample_bucket       = "gamesim-sample" -> null
   - user                = {
       - audit                = {
           - created_at  = "2023-10-24 20:55:30.005741097 +0000 UTC"
@@ -1587,9 +1658,11 @@ capella_database_credential.new_database_credential: Destroying... [id=62ad5f82-
 capella_app_service.new_app_service: Destroying... [id=51b402e6-aa55-40bf-82ec-aae5ccf257cf]
 capella_apikey.new_apikey: Destroying... [id=iCInIRNFQVGitmFQAjf1JD2FKf8PaLCD]
 capella_bucket.new_bucket: Destroying... [id=bmV3X3RlcnJhZm9ybV9idWNrZXQ=]
+couchbase-capella_sample_bucket.new_sample_bucket: Destroying... [id=Z2FtZXNpbS1zYW1wbGU=]
 capella_database_credential.new_database_credential: Destruction complete after 0s
 capella_apikey.new_apikey: Destruction complete after 0s
 capella_bucket.new_bucket: Destruction complete after 2s
+couchbase-capella_sample_bucket.new_sample_bucket: Destruction complete after 2s
 capella_allowlist.new_allowlist: Destruction complete after 8s
 capella_app_service.new_app_service: Still destroying... [id=51b402e6-aa55-40bf-82ec-aae5ccf257cf, 10s elapsed]
 capella_app_service.new_app_service: Still destroying... [id=51b402e6-aa55-40bf-82ec-aae5ccf257cf, 20s elapsed]

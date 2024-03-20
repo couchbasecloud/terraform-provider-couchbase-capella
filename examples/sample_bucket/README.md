@@ -1,7 +1,7 @@
 # Capella Sample Buckets Example
-This example shows how to create and manage sample Buckets in Capella.
+This example shows how to create and manage sample buckets in Capella.
 
-This creates a new bucket in the selected Capella cluster and lists existing sample buckets in the cluster. It uses the cluster ID to create and list buckets.
+This creates a new sample bucket in the selected Capella cluster and lists existing sample buckets in the cluster. It uses the cluster ID to create and list sample buckets.
 
 To run, configure your Couchbase Capella provider as described in README in the root of this project.
 
@@ -11,10 +11,10 @@ To run, configure your Couchbase Capella provider as described in README in the 
 In this example, we are going to do the following.
 
 1. CREATE: Create a new sample bucket in Capella as stated in the `create_sample_bucket.tf` file.
-2. UPDATE: Update the bucket configuration using Terraform.
+2. UPDATE: Update the sample bucket configuration using Terraform.
 3. LIST: List existing sample buckets in Capella as stated in the `list_sample_buckets.tf` file.
-4. IMPORT: Import a bucket that exists in Capella but not in the terraform state file.
-5. DELETE: Delete the newly created bucket from Capella.
+4. IMPORT: Import a sample bucket that exists in Capella but not in the terraform state file.
+5. DELETE: Delete the newly create sample bucket from Capella.
 c
 If you check the `terraform.template.tfvars` file - Make sure you copy the file to `terraform.tfvars` and update the values of the variables as per the correct organization access.
 
@@ -212,7 +212,7 @@ samplebuckets_list = {
 
 
 
-### Note the Bucket ID for the new sample Bucket
+### Note the ID for the new sample Bucket
 Command: `terraform output new_sample_bucket`
 
 Sample Output:
@@ -242,8 +242,7 @@ terraform output new_sample_bucket
 }
 ```
 
-
-### List the resources that are present in the Terraform State file.
+### List the resources that are present in the Terraform State file
 
 Command: `terraform state list`
 
@@ -324,9 +323,199 @@ Terraform has compared your real infrastructure against your configuration and f
 ```
 
 ## UPDATE
-### Let us edit the terraform.tfvars file to change the bucket configuration settings.
 
-Sample buckets does not support update functionality. We can only change the sample bucket name which destroys the current sample bucket and creates a new one. 
+### Let us make remote changes to the sample bucket and view the plan for it
+
+While terraform can't update the sample buckets, we can update the terraform resources to reflect changes made remotely on the sample bucket.
+
+Command: `terraform plan refresh-only`
+
+Sample Output:
+
+```
+╷
+│ Warning: Provider development overrides are in effect
+│ 
+│ The following provider development overrides are set in the CLI configuration:
+│  - couchbasecloud/couchbase-capella in $HOME/terraform-provider-couchbase-capella/bin
+│ 
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
+╵
+data.couchbase-capella_sample_buckets.existing_sample_buckets: Reading...
+couchbase-capella_sample_bucket.new_sample_bucket: Refreshing state... [id=Z2FtZXNpbS1zYW1wbGU=]
+data.couchbase-capella_sample_buckets.existing_sample_buckets: Read complete after 1s
+
+Note: Objects have changed outside of Terraform
+
+Terraform detected the following changes made outside of Terraform since the last "terraform apply" which may have affected this plan:
+
+  # couchbase-capella_sample_bucket.new_sample_bucket has changed
+  ~ resource "couchbase-capella_sample_bucket" "new_sample_bucket" {
+        id                         = "Z2FtZXNpbS1zYW1wbGU="
+      ~ memory_allocation_in_mb    = 200 -> 250
+        name                       = "gamesim-sample"
+        # (12 unchanged attributes hidden)
+    }
+
+
+This is a refresh-only plan, so Terraform will not take any actions to undo these. If you were expecting these changes then you can apply this plan to record the updated values in the Terraform state without changing any remote objects.
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+Changes to Outputs:
+  ~ new_sample_bucket  = {
+        id                         = "Z2FtZXNpbS1zYW1wbGU="
+      ~ memory_allocation_in_mb    = 200 -> 250
+        name                       = "gamesim-sample"
+        # (12 unchanged attributes hidden)
+    }
+  ~ samplebuckets_list = {
+      ~ data            = [
+          ~ {
+                id                         = "Z2FtZXNpbS1zYW1wbGU="
+              ~ memory_allocation_in_mb    = 200 -> 250
+                name                       = "gamesim-sample"
+                # (12 unchanged attributes hidden)
+            },
+        ]
+        # (3 unchanged attributes hidden)
+    }
+
+You can apply this plan to save these new output values to the Terraform state, without changing any real infrastructure.
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly these actions if you run "terraform apply" now.
+
+```
+
+### Apply the plan in order to update the terraform resources to reflect the state of the sample bucket
+
+Command: `terraform apply refresh-only`
+
+Sample Output:
+
+```
+╷
+│ Warning: Provider development overrides are in effect
+│ 
+│ The following provider development overrides are set in the CLI configuration:
+│  - couchbasecloud/couchbase-capella in $HOME/terraform-provider-couchbase-capella/bin
+│ 
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
+╵
+Data.couchbase-capella_sample_buckets.existing_sample_buckets: Reading...
+couchbase-capella_sample_bucket.new_sample_bucket: Refreshing state... [id=Z2FtZXNpbS1zYW1wbGU=]
+data.couchbase-capella_sample_buckets.existing_sample_buckets: Read complete after 1s
+
+Note: Objects have changed outside of Terraform
+
+Terraform detected the following changes made outside of Terraform since the last "terraform apply" which may have affected this plan:
+
+  # couchbase-capella_sample_bucket.new_sample_bucket has changed
+  ~ resource "couchbase-capella_sample_bucket" "new_sample_bucket" {
+        id                         = "Z2FtZXNpbS1zYW1wbGU="
+      ~ memory_allocation_in_mb    = 200 -> 250
+        name                       = "gamesim-sample"
+        # (12 unchanged attributes hidden)
+    }
+
+
+This is a refresh-only plan, so Terraform will not take any actions to undo these. If you were expecting these changes then you can apply this plan to record the updated values in the Terraform state without changing any remote objects.
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+Changes to Outputs:
+  ~ new_sample_bucket  = {
+        id                         = "Z2FtZXNpbS1zYW1wbGU="
+      ~ memory_allocation_in_mb    = 200 -> 250
+        name                       = "gamesim-sample"
+        # (12 unchanged attributes hidden)
+    }
+  ~ samplebuckets_list = {
+      ~ data            = [
+          ~ {
+                id                         = "Z2FtZXNpbS1zYW1wbGU="
+              ~ memory_allocation_in_mb    = 200 -> 250
+                name                       = "gamesim-sample"
+                # (12 unchanged attributes hidden)
+            },
+        ]
+        # (3 unchanged attributes hidden)
+    }
+
+You can apply this plan to save these new output values to the Terraform state, without changing any real infrastructure.
+
+Would you like to update the Terraform state to reflect these detected changes?
+  Terraform will write these changes to the state without modifying any real infrastructure.
+  There is no undo. Only 'yes' will be accepted to confirm.
+
+  Enter a value: yes
+
+
+Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+new_sample_bucket = {
+  "bucket_conflict_resolution" = "seqno"
+  "cluster_id" = "f83f7e73-5973-4b4b-a00e-509d6ea683e7"
+  "durability_level" = "none"
+  "eviction_policy" = "fullEviction"
+  "flush" = false
+  "id" = "Z2FtZXNpbS1zYW1wbGU="
+  "memory_allocation_in_mb" = 250
+  "name" = "gamesim-sample"
+  "organization_id" = "6af08c0a-8cab-4c2d-c957-b521585c16d0"
+  "project_id" = "c1fade1a-9f27-4a3c-ki90-g1b2301890e4""
+  "replicas" = 1
+  "stats" = {
+    "disk_used_in_mib" = 19
+    "item_count" = 586
+    "memory_used_in_mib" = 62
+    "ops_per_second" = 0
+  }
+  "storage_backend" = "couchstore"
+  "time_to_live_in_seconds" = 0
+  "type" = "couchbase"
+}
+samplebucket_id = "Z2FtZXNpbS1zYW1wbGU="
+samplebuckets_list = {
+  "cluster_id" = "f83f7e73-5973-4b4b-a00e-509d6ea683e7"
+  "data" = tolist([
+    {
+      "bucket_conflict_resolution" = "seqno"
+      "cluster_id" = "f83f7e73-5973-4b4b-a00e-509d6ea683e7"
+      "durability_level" = "none"
+      "eviction_policy" = "fullEviction"
+      "flush" = false
+      "id" = "Z2FtZXNpbS1zYW1wbGU="
+      "memory_allocation_in_mb" = 250
+      "name" = "gamesim-sample"
+      "organization_id" = "6af08c0a-8cab-4c2d-c957-b521585c16d0"
+      "project_id" = "c1fade1a-9f27-4a3c-ki90-g1b2301890e4""
+      "replicas" = 1
+      "stats" = {
+        "disk_used_in_mib" = 19
+        "item_count" = 586
+        "memory_used_in_mib" = 62
+        "ops_per_second" = 0
+      }
+      "storage_backend" = "couchstore"
+      "time_to_live_in_seconds" = 0
+      "type" = "couchbase"
+    },
+  ])
+  "organization_id" = "6af08c0a-8cab-4c2d-c957-b521585c16d0"
+  "project_id" = "c1fade1a-9f27-4a3c-ki90-g1b2301890e4""
+}
+
+```
+
+
+### Let us edit the terraform.tfvars file to change the bucket configuration settings
+
+Sample buckets does not support update functionality. We can only change the sample bucket name which destroys the current sample bucket and creates a new one.
 
 Command: `terraform apply -var 'samplebucket={name="travel-sample"}'`
 
