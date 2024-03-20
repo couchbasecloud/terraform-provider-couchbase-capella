@@ -154,3 +154,12 @@ variable "app_service" {
     })
   })
 }
+
+variable "scope" {
+  description = "Scope configuration details useful for creation"
+
+  type = object({
+    scope_name = string
+  })
+}
+
