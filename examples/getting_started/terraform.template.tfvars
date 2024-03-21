@@ -95,6 +95,10 @@ app_service = {
   }
 }
 
+scope = {
+  scope_name = "new_terraform_scope"
+}
+
 collection = {
   collection_name = "new_terraform_collection"
   max_ttl         = 200
