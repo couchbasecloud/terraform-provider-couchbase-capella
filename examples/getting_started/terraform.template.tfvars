@@ -94,3 +94,8 @@ app_service = {
     ram = 4
   }
 }
+
+collection = {
+  collection_name = "new_terraform_collection"
+  max_ttl         = 200
+}

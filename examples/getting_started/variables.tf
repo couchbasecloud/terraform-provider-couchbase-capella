@@ -154,3 +154,12 @@ variable "app_service" {
     })
   })
 }
+
+variable "collection" {
+  description = "Collection configuration details useful for creation"
+
+  type = object({
+    collection_name = string
+    max_ttl         = optional(number)
+  })
+}

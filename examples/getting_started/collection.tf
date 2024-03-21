@@ -6,10 +6,10 @@ output "collection" {
 
 resource "couchbase-capella_collection" "new_collection" {
   organization_id = var.organization_id
-  project_id      = var.project_id
-  cluster_id      = var.cluster_id
-  bucket_id       = var.bucket_id
-  scope_name      = var.scope_name
+  project_id      = couchbase-capella_project.new_project.id
+  cluster_id      = couchbase-capella_cluster.new_cluster.id
+  bucket_id       = couchbase-capella_bucket.new_bucket.id
+  scope_name      = couchbase-capella_scope.new_scope.scope_name
   collection_name = var.collection.collection_name
   max_ttl         = var.collection.max_ttl
 }
