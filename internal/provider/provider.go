@@ -175,6 +175,7 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewAppServices,
 		datasources.NewBackups,
 		datasources.NewScopes,
+		datasources.NewCollections,
 	}
 }
 
@@ -192,5 +193,6 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewBackup,
 		resources.NewBackupSchedule,
 		resources.NewScope,
+		resources.NewCollection,
 	}
 }

@@ -32,8 +32,8 @@ type Scope struct {
 	OrganizationId types.String `tfsdk:"organization_id"`
 }
 
-// Collection defines a Collection within the list of collections in a scope.
-type Collection struct {
+// ScopeCollection defines a Collection within the list of collections in a scope.
+type ScopeCollection struct {
 	// MaxTTL Max TTL of the collection.
 	MaxTTL types.Int64 `tfsdk:"max_ttl"`
 
@@ -49,8 +49,8 @@ func CollectionAttributeTypes() map[string]attr.Type {
 }
 
 // NewCollection creates a new collection object.
-func NewCollection(collection scope.Collection) Collection {
-	newCollection := Collection{}
+func NewCollection(collection scope.Collection) ScopeCollection {
+	newCollection := ScopeCollection{}
 
 	if collection.MaxTTL != nil {
 		newCollection.MaxTTL = types.Int64Value(*collection.MaxTTL)
