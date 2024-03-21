@@ -70,12 +70,12 @@ type Resources struct {
 type BucketResource struct {
 	Name types.String `tfsdk:"name"`
 	// Scopes is the details of the scopes inside the bucket to which we want to apply access privileges.
-	Scopes []Scope `tfsdk:"scopes"`
+	Scopes []ScopeResource `tfsdk:"scopes"`
 }
 
-// Scope is the details of a single scope inside the bucket, and it contains the collections details too.
+// ScopeResource is the details of a single scope inside the bucket, and it contains the collections details too.
 // This collections can be a subset of all collections inside the scope, since this is defined only to govern the access.
-type Scope struct {
+type ScopeResource struct {
 	Name        types.String   `tfsdk:"name"`
 	Collections []types.String `tfsdk:"collections"`
 }

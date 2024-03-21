@@ -95,6 +95,10 @@ app_service = {
   }
 }
 
+scope = {
+  scope_name = "new_terraform_scope"
+}
+
 audit_log_settings = {
   audit_enabled     = true
   enabled_event_ids = [20488, 20490, 20491]
