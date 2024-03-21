@@ -96,12 +96,12 @@ app_service = {
 }
 
 audit_log_settings = {
-    audit_enabled = true
-    enabled_event_ids = [20488, 20490, 20491]
-    disabled_users = []
+  audit_enabled     = true
+  enabled_event_ids = [20488, 20490, 20491]
+  disabled_users    = []
 }
 
 audit_log_export = {
-    start = "2024-03-18T18:57:19+00:00"
-    end = "2024-03-18T19:57:19+00:00"
+  start = "2024-03-18T18:57:19+00:00"
+  end   = "2024-03-18T19:57:19+00:00"
 }
