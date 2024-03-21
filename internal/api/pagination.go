@@ -83,7 +83,10 @@ func GetPaginated[DataSchema ~[]T, T any](
 	)
 
 	for {
-		cfg.Url = baseUrl + fmt.Sprintf("?page=%d&perPage=%d&sortBy=%s", page, perPage, string(sortBy))
+		cfg.Url = baseUrl + fmt.Sprintf("?page=%d&perPage=%d", page, perPage)
+		if string(sortBy) != "" {
+			cfg.Url += fmt.Sprintf("&sortBy=%s", string(sortBy))
+		}
 		cfg.Method = http.MethodGet
 
 		response, err := client.ExecuteWithRetry(
