@@ -188,7 +188,7 @@ func mapAccess(plan api.GetDatabaseCredentialResponse) []providerschema.Access {
 				for k, bucket := range acc.Resources.Buckets {
 					access[i].Resources.Buckets[k].Name = types.StringValue(acc.Resources.Buckets[k].Name)
 					if bucket.Scopes != nil {
-						access[i].Resources.Buckets[k].Scopes = make([]providerschema.Scope, len(bucket.Scopes))
+						access[i].Resources.Buckets[k].Scopes = make([]providerschema.ScopeResource, len(bucket.Scopes))
 						for s, scope := range bucket.Scopes {
 							access[i].Resources.Buckets[k].Scopes[s].Name = types.StringValue(scope.Name)
 							if scope.Collections != nil {
