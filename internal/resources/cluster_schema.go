@@ -20,12 +20,6 @@ func ClusterSchema() schema.Schema {
 			"project_id":      stringAttribute(required, requiresReplace),
 			"name":            stringAttribute(required),
 			"description":     stringAttribute(optional, computed),
-			"activation_state": schema.SingleNestedAttribute{
-				Optional: true,
-				Attributes: map[string]schema.Attribute{
-					"turn_on_linked_app_service": boolDefaultAttribute(false, optional, computed),
-				},
-			},
 			"cloud_provider": schema.SingleNestedAttribute{
 				Required: true,
 				Attributes: map[string]schema.Attribute{
