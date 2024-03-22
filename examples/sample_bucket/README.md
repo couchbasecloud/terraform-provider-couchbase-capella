@@ -32,7 +32,7 @@ Terraform plan
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/$USER/workspace/code/Lagher0/terraform-provider-couchbase-capella/bin
+│  - couchbasecloud/couchbase-capella in $HOME/terraform-provider-couchbase-capella/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵data.couchbase-capella_sample_buckets.existing_sample_buckets: Reading...
@@ -82,8 +82,8 @@ Changes to Outputs:
       + time_to_live_in_seconds    = (known after apply)
       + type                       = (known after apply)
     }
-  + samplebucket_id    = (known after apply)
-  + samplebuckets_list = {
+  + sample_bucket_id    = (known after apply)
+  + sample_buckets_list = {
       + cluster_id      = "4ce95e43-106c-427f-b260-49fdb2c8b034"
       + data            = null
       + organization_id = "6af08c0a-8cab-4c2d-c957-b521585c16d0"
@@ -106,7 +106,7 @@ terraform apply
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/$USER/workspace/code/Lagher0/terraform-provider-couchbase-capella/bin
+│  - couchbasecloud/couchbase-capella in $HOME/terraform-provider-couchbase-capella/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -157,8 +157,8 @@ Changes to Outputs:
       + time_to_live_in_seconds    = (known after apply)
       + type                       = (known after apply)
     }
-  + samplebucket_id    = (known after apply)
-  + samplebuckets_list = {
+  + sample_bucket_id    = (known after apply)
+  + sample_buckets_list = {
       + cluster_id      = "4ce95e43-106c-427f-b260-49fdb2c8b034"
       + data            = null
       + organization_id = "6af08c0a-8cab-4c2d-c957-b521585c16d0"
@@ -200,8 +200,8 @@ new_sample_bucket = {
   "time_to_live_in_seconds" = 0
   "type" = "couchbase"
 }
-samplebucket_id = "Z2FtZXNpbS1zYW1wbGU="
-samplebuckets_list = {
+sample_bucket_id = "Z2FtZXNpbS1zYW1wbGU="
+sample_buckets_list = {
   "cluster_id" = "4ce95e43-106c-427f-b260-49fdb2c8b034"
   "data" = tolist(null) /* of object */
   "organization_id" = "6af08c0a-8cab-4c2d-c957-b521585c16d0"
@@ -369,7 +369,7 @@ Changes to Outputs:
         name                       = "gamesim-sample"
         # (12 unchanged attributes hidden)
     }
-  ~ samplebuckets_list = {
+  ~ sample_buckets_list = {
       ~ data            = [
           ~ {
                 id                         = "Z2FtZXNpbS1zYW1wbGU="
@@ -432,7 +432,7 @@ Changes to Outputs:
         name                       = "gamesim-sample"
         # (12 unchanged attributes hidden)
     }
-  ~ samplebuckets_list = {
+  ~ sample_buckets_list = {
       ~ data            = [
           ~ {
                 id                         = "Z2FtZXNpbS1zYW1wbGU="
@@ -479,8 +479,8 @@ new_sample_bucket = {
   "time_to_live_in_seconds" = 0
   "type" = "couchbase"
 }
-samplebucket_id = "Z2FtZXNpbS1zYW1wbGU="
-samplebuckets_list = {
+sample_bucket_id = "Z2FtZXNpbS1zYW1wbGU="
+sample_buckets_list = {
   "cluster_id" = "f83f7e73-5973-4b4b-a00e-509d6ea683e7"
   "data" = tolist([
     {
@@ -517,13 +517,13 @@ samplebuckets_list = {
 
 Sample buckets does not support update functionality. We can only change the sample bucket name which destroys the current sample bucket and creates a new one.
 
-Command: `terraform apply -var 'samplebucket={name="travel-sample"}'`
+Command: `terraform apply -var 'sample_bucket={name="travel-sample"}'`
 
 Sample Output:
 
 ```
 
- terraform apply -var 'samplebucket={name="travel-sample"}'
+ terraform apply -var 'sample_bucket={name="travel-sample"}'
 ╷
 │ Warning: Provider development overrides are in effect
 │ 
@@ -608,8 +608,8 @@ Changes to Outputs:
       ~ type                       = "couchbase" -> (known after apply)
         # (3 unchanged attributes hidden)
     }
-  ~ samplebucket_id    = "Z2FtZXNpbS1zYW1wbGU=" -> (known after apply)
-  ~ samplebuckets_list = {
+  ~ sample_bucket_id    = "Z2FtZXNpbS1zYW1wbGU=" -> (known after apply)
+  ~ sample_buckets_list = {
       ~ data            = null -> [
           + {
               + bucket_conflict_resolution = "seqno"
@@ -674,8 +674,8 @@ new_sample_bucket = {
   "time_to_live_in_seconds" = 0
   "type" = "couchbase"
 }
-samplebucket_id = "dHJhdmVsLXNhbXBsZQ=="
-samplebuckets_list = {
+sample_bucket_id = "dHJhdmVsLXNhbXBsZQ=="
+sample_buckets_list = {
   "cluster_id" = "4ce95e43-106c-427f-b260-49fdb2c8b034"
   "data" = tolist([
     {
@@ -781,8 +781,8 @@ Changes to Outputs:
       - time_to_live_in_seconds    = 0
       - type                       = "couchbase"
     } -> null
-  - samplebucket_id    = "Z2FtZXNpbS1zYW1wbGU=" -> null
-  - samplebuckets_list = {
+  - sample_bucket_id    = "Z2FtZXNpbS1zYW1wbGU=" -> null
+  - sample_buckets_list = {
       - cluster_id      = "4ce95e43-106c-427f-b260-49fdb2c8b034"
       - data            = [
           - {

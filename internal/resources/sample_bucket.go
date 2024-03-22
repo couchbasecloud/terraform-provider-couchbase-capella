@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	samplebucketapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/sample_bucket"
@@ -102,7 +103,6 @@ func (s *SampleBucket) Create(ctx context.Context, req resource.CreateRequest, r
 	var organizationId = plan.OrganizationId.ValueString()
 	var projectId = plan.ProjectId.ValueString()
 	var clusterId = plan.ClusterId.ValueString()
-
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/sampleBuckets", s.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
 	response, err := s.Client.ExecuteWithRetry(
@@ -119,6 +119,8 @@ func (s *SampleBucket) Create(ctx context.Context, req resource.CreateRequest, r
 		)
 		return
 	}
+
+	time.Sleep(10 * time.Second)
 
 	sampleBucketResponse := samplebucketapi.CreateSampleBucketResponse{}
 	err = json.Unmarshal(response.Body, &sampleBucketResponse)
@@ -254,7 +256,6 @@ func (s *SampleBucket) Delete(ctx context.Context, req resource.DeleteRequest, r
 		return
 	}
 	var bucketId = state.Id.ValueString()
-
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/sampleBuckets/%s", s.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
 	_, err := s.Client.ExecuteWithRetry(

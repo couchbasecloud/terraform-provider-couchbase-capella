@@ -1,4 +1,4 @@
-output "samplebuckets_list" {
+output "sample_buckets_list" {
   value = data.couchbase-capella_sample_buckets.existing_sample_buckets
 }
 

@@ -132,6 +132,14 @@ variable "bucket" {
   })
 }
 
+variable "sample_bucket" {
+  description = "Bucket configuration details useful for creation"
+
+  type = object({
+    name = string
+  })
+}
+
 variable "user" {
   description = "User details useful for creation"
 

@@ -95,6 +95,6 @@ app_service = {
   }
 }
 
-samplebucket = {
+sample_bucket = {
   name = "gamesim-sample"
 }
