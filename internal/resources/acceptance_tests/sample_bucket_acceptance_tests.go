@@ -2,12 +2,12 @@ package acceptance_tests
 
 import (
 	"fmt"
-	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"regexp"
 	"testing"
 	"time"
+
+	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAccSampleBucketTestCases(t *testing.T) {
@@ -43,13 +43,6 @@ func TestAccSampleBucketTestCases(t *testing.T) {
 				),
 				ExpectNonEmptyPlan: true,
 			},
-			////Import Data
-			//{
-			//	ResourceName:      "couchbase-capella_sample_bucket.add_sample_bucket_travel",
-			//	ImportStateIdFunc: generateIdforImportSampleData("couchbase-capella_sample_bucket.add_sample_bucket_travel"),
-			//	ImportState:       true,
-			//},
-
 			{
 				Config: testAccSampleBucketWithAllBuckets(&testCfg),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -149,19 +142,4 @@ resource "couchbase-capella_sample_bucket" "add_sample_bucket_gamesim" {
 
 `, *cfg)
 	return *cfg
-}
-
-func generateIdforImportSampleData(resourceReference string) resource.ImportStateIdFunc {
-	return func(state *terraform.State) (string, error) {
-		var rawState map[string]string
-		for _, m := range state.Modules {
-			if len(m.Resources) > 0 {
-				if v, ok := m.Resources[resourceReference]; ok {
-					rawState = v.Primary.Attributes
-				}
-			}
-		}
-		fmt.Printf("raw state %s", rawState)
-		return fmt.Sprintf("id=%s,organization_id=%s,project_id=%s,cluster_id=%s", rawState["id"], rawState["organization_id"], rawState["project_id"], rawState["cluster_id"]), nil
-	}
 }
