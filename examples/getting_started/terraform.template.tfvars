@@ -98,3 +98,12 @@ app_service = {
 sample_bucket = {
   name = "gamesim-sample"
 }
+
+scope = {
+  scope_name = "new_terraform_scope"
+}
+
+collection = {
+  collection_name = "new_terraform_collection"
+  max_ttl         = 200
+}
