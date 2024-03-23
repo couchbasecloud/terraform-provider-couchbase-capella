@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 
 	scheduleapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster_onoff_schedule"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
@@ -43,7 +44,7 @@ func NewClusterOnOffSchedule() resource.Resource {
 
 // Metadata returns the OnOffSchedule resource type name.
 func (c *ClusterOnOffSchedule) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_cluster_onoff_schedule"
+	resp.TypeName = req.ProviderTypeName + "_onoff_schedule"
 
 }
 

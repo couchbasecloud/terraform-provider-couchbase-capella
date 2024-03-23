@@ -3,7 +3,12 @@ organization_id = "<organization_id>"
 project_id      = "<project_id>"
 cluster_id      = "<cluster_id>"
 
-days = [{
+onoff_schedule = {
+timezone = "US/Pacific"
+}
+
+days = [
+{
   day   = "monday"
   state = "custom"
   from  = {

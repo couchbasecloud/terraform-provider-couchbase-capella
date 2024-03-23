@@ -17,16 +17,18 @@ func OnOffScheduleSchema() schema.Schema {
 						"day":   stringAttribute(required),
 						"from": schema.SingleNestedAttribute{
 							Optional: true,
+							Computed: true,
 							Attributes: map[string]schema.Attribute{
-								"hour":   int64DefaultAttribute(0, optional),
-								"minute": int64DefaultAttribute(0, optional),
+								"hour":   int64DefaultAttribute(0, optional, computed),
+								"minute": int64DefaultAttribute(0, optional, computed),
 							},
 						},
 						"to": schema.SingleNestedAttribute{
 							Optional: true,
+							Computed: true,
 							Attributes: map[string]schema.Attribute{
-								"hour":   int64DefaultAttribute(0, optional),
-								"minute": int64DefaultAttribute(0, optional),
+								"hour":   int64DefaultAttribute(0, optional, computed),
+								"minute": int64DefaultAttribute(0, optional, computed),
 							},
 						},
 					},

@@ -15,7 +15,7 @@ variable "cluster_id" {
   description = "Capella Cluster ID"
 }
 
-variable "on_off_schedule" {
+variable "onoff_schedule" {
   description = "Cluster On Off Schedule configuration details useful for creation"
 
   type = object({
@@ -24,28 +24,21 @@ variable "on_off_schedule" {
 }
 
 variable "days" {
+
   description = "Days configuration useful for cluster on/off schedule creation"
 
-  type = list(object({
-    day     = string
-    state   = string
+  type = set(object({
+    state = string
+    day   = string
+    from  = optional(object({
+      hour   = optional(number)
+      minute = optional(number)
+    }))
+    to    = optional(object({
+      hour   = optional(number)
+      minute = optional(number)
+    }))
   }))
 }
 
-variable "from" {
-  description = "From time boundary details useful for cluster on/off schedule creation"
 
-  type = object({
-    hour    = optional(number)
-    minute  = optional(number)
-  })
-}
-
-variable "to" {
-  description = "To time boundary details useful for cluster on/off schedule creation"
-
-  type = object({
-    hour    = optional(number)
-    minute  = optional(number)
-  })
-}
