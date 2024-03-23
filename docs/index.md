@@ -229,7 +229,3 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 * [Configure Bucket Backup & Restore](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/backup)
 
   Create and manage Backups in Capella.
-
-* [Create & manage Collection](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/collection):
-
-  The [collections](https://docs.couchbase.com/cloud/clusters/data-service/about-buckets-scopes-collections.html#collections) is a data container that exists inside a Capella scope.
