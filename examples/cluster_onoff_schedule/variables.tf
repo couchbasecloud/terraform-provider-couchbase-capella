@@ -26,26 +26,26 @@ variable "on_off_schedule" {
 variable "days" {
   description = "Days configuration useful for cluster on/off schedule creation"
 
-  type = object({
+  type = list(object({
     day     = string
     state   = string
-  })
+  }))
 }
 
 variable "from" {
   description = "From time boundary details useful for cluster on/off schedule creation"
 
-  type = list(object({
+  type = object({
     hour    = optional(number)
     minute  = optional(number)
-  }))
+  })
 }
 
 variable "to" {
   description = "To time boundary details useful for cluster on/off schedule creation"
 
-  type = list(object({
+  type = object({
     hour    = optional(number)
     minute  = optional(number)
-  }))
+  })
 }
