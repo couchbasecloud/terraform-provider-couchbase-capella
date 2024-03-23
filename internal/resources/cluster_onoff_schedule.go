@@ -24,10 +24,10 @@ var (
 	_ resource.ResourceWithImportState = &ClusterOnOffSchedule{}
 )
 
-const errorMessageAfterOnOffScheduleCreation = "Cluster On/Off Schedule creation is successful, but encountered an error while checking the current" +
-	" state of the cluster on/off schedule. Please run `terraform plan` after 1-2 minutes to know the" +
-	" current on/off schedule state. Additionally, run `terraform apply --refresh-only` to update" +
-	" the state from remote, unexpected error: "
+//const errorMessageAfterOnOffScheduleCreation = "Cluster On/Off Schedule creation is successful, but encountered an error while checking the current" +
+//	" state of the cluster on/off schedule. Please run `terraform plan` after 1-2 minutes to know the" +
+//	" current on/off schedule state. Additionally, run `terraform apply --refresh-only` to update" +
+//	" the state from remote, unexpected error: "
 
 const errorMessageWhileOnOffScheduleCreation = "There is an error during cluster on/off schedule creation. Please check in Capella to see if any hanging resources" +
 	" have been created, unexpected error: "
