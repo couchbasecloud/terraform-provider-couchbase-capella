@@ -35,10 +35,22 @@ days = [
 {
   day   = "wednesday"
   state = "on"
+  from  = {
+      hour   = 12
+      minute = 30
+      }
+    to  = {
+        hour   = 14
+        minute = 30
+        }
 },
 {
   day   = "thursday"
   state = "on"
+  from  = {
+      }
+    to  = {
+        }
 },
 {
   day   = "friday"
@@ -55,9 +67,17 @@ days = [
 {
   day   = "saturday"
   state = "off"
+  from  = {
+      }
+    to  = {
+        }
 },
 {
   day   = "sunday"
   state = "off"
+  from  = {
+      }
+  to  = {
+        }
 }
 ]
