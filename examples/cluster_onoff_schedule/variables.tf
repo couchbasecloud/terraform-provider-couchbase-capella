@@ -19,8 +19,8 @@ variable "onoff_schedule" {
   description = "Cluster On Off Schedule configuration details useful for creation"
 
   type = object({
-      timezone  = string
-    })
+    timezone  = string
+  })
 }
 
 variable "days" {
@@ -30,11 +30,11 @@ variable "days" {
   type = set(object({
     state = string
     day   = string
-    from  = optional(object({
+    from = optional(object({
       hour   = optional(number)
       minute = optional(number)
     }))
-    to    = optional(object({
+    to = optional(object({
       hour   = optional(number)
       minute = optional(number)
     }))
