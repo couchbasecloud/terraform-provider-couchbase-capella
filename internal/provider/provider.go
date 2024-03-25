@@ -176,6 +176,7 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewBackups,
 		datasources.NewScopes,
 		datasources.NewCollections,
+		datasources.NewClusterOnOffSchedule,
 	}
 }
 
