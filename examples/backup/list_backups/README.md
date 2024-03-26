@@ -56,7 +56,7 @@ Terraform will perform the following actions:
       + elapsed_time_in_seconds = (known after apply)
       + id                      = (known after apply)
       + method                  = (known after apply)
-      + organization_id         = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+      + organization_id         = "c2e9ccf6-4293-4635-9205-1204d074447d"
       + project_id              = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
       + restore_before          = (known after apply)
       + schedule_info           = (known after apply)
@@ -91,7 +91,7 @@ Changes to Outputs:
               + elapsed_time_in_seconds = 6
               + id                      = "0a04a68d-7a05-4189-9d2b-9ae4b5e3e230"
               + method                  = "full"
-              + organization_id         = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+              + organization_id         = "c2e9ccf6-4293-4635-9205-1204d074447d"
               + project_id              = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
               + restore_before          = "2023-12-14T00:00:00Z"
               + schedule_info           = {
@@ -104,7 +104,7 @@ Changes to Outputs:
               + status                  = "ready"
             },
         ]
-      + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+      + organization_id = "c2e9ccf6-4293-4635-9205-1204d074447d"
       + project_id      = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
     }
   + new_backup   = {
@@ -118,7 +118,7 @@ Changes to Outputs:
       + elapsed_time_in_seconds = (known after apply)
       + id                      = (known after apply)
       + method                  = (known after apply)
-      + organization_id         = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+      + organization_id         = "c2e9ccf6-4293-4635-9205-1204d074447d"
       + project_id              = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
       + restore_before          = (known after apply)
       + schedule_info           = (known after apply)
@@ -164,7 +164,7 @@ Terraform will perform the following actions:
       + elapsed_time_in_seconds = (known after apply)
       + id                      = (known after apply)
       + method                  = (known after apply)
-      + organization_id         = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+      + organization_id         = "c2e9ccf6-4293-4635-9205-1204d074447d"
       + project_id              = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
       + restore_before          = (known after apply)
       + schedule_info           = (known after apply)
@@ -197,7 +197,7 @@ Changes to Outputs:
               + elapsed_time_in_seconds = 6
               + id                      = "92ca9452-e5cb-4c16-923b-985858448e09"
               + method                  = "full"
-              + organization_id         = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+              + organization_id         = "c2e9ccf6-4293-4635-9205-1204d074447d"
               + project_id              = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
               + restore_before          = "2023-12-14T00:00:00Z"
               + schedule_info           = {
@@ -229,7 +229,7 @@ Changes to Outputs:
                 elapsed_time_in_seconds = 6
                 id                      = "0a04a68d-7a05-4189-9d2b-9ae4b5e3e230"
                 method                  = "full"
-                organization_id         = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+                organization_id         = "c2e9ccf6-4293-4635-9205-1204d074447d"
                 project_id              = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
                 restore_before          = "2023-12-14T00:00:00Z"
                 schedule_info           = {
@@ -255,7 +255,7 @@ Changes to Outputs:
       + elapsed_time_in_seconds = (known after apply)
       + id                      = (known after apply)
       + method                  = (known after apply)
-      + organization_id         = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+      + organization_id         = "c2e9ccf6-4293-4635-9205-1204d074447d"
       + project_id              = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
       + restore_before          = (known after apply)
       + schedule_info           = (known after apply)
@@ -305,7 +305,7 @@ backups_list = {
       "elapsed_time_in_seconds" = 6
       "id" = "92ca9452-e5cb-4c16-923b-985858448e09"
       "method" = "full"
-      "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+      "organization_id" = "c2e9ccf6-4293-4635-9205-1204d074447d"
       "project_id" = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
       "restore_before" = "2023-12-14T00:00:00Z"
       "schedule_info" = {
@@ -337,7 +337,7 @@ backups_list = {
       "elapsed_time_in_seconds" = 6
       "id" = "0a04a68d-7a05-4189-9d2b-9ae4b5e3e230"
       "method" = "full"
-      "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+      "organization_id" = "c2e9ccf6-4293-4635-9205-1204d074447d"
       "project_id" = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
       "restore_before" = "2023-12-14T00:00:00Z"
       "schedule_info" = {
@@ -350,7 +350,7 @@ backups_list = {
       "status" = "ready"
     },
   ])
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+  "organization_id" = "c2e9ccf6-4293-4635-9205-1204d074447d"
   "project_id" = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
 }
 new_backup = {
@@ -373,7 +373,7 @@ new_backup = {
   "elapsed_time_in_seconds" = 8
   "id" = "58dd0f30-323b-461c-83a8-1d2719f4bcee"
   "method" = "full"
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+  "organization_id" = "c2e9ccf6-4293-4635-9205-1204d074447d"
   "project_id" = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
   "restore_before" = "2023-12-14T00:00:00Z"
   "schedule_info" = {
@@ -413,7 +413,7 @@ Sample Output:
   "elapsed_time_in_seconds" = 8
   "id" = "58dd0f30-323b-461c-83a8-1d2719f4bcee"
   "method" = "full"
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+  "organization_id" = "c2e9ccf6-4293-4635-9205-1204d074447d"
   "project_id" = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
   "restore_before" = "2023-12-14T00:00:00Z"
   "schedule_info" = {
@@ -458,16 +458,16 @@ Please note, this command will only remove the resource from the Terraform State
 Command: `terraform import couchbase-capella_backup.new_backup id=<backup_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
 In this case, the complete command is:
-`terraform import couchbase-capella_backup.new_backup id=58dd0f30-323b-461c-83a8-1d2719f4bcee,cluster_id=1f6bad22-602f-407b-a567-7a8f672db227,project_id=f14134f2-7943-4e7b-b2c5-fc2071728b6e,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0`
+`terraform import couchbase-capella_backup.new_backup id=58dd0f30-323b-461c-83a8-1d2719f4bcee,cluster_id=1f6bad22-602f-407b-a567-7a8f672db227,project_id=f14134f2-7943-4e7b-b2c5-fc2071728b6e,organization_id=c2e9ccf6-4293-4635-9205-1204d074447d`
 
 Sample Output:
 ``` 
-terraform import couchbase-capella_backup.new_backup id=58dd0f30-323b-461c-83a8-1d2719f4bcee,cluster_id=1f6bad22-602f-407b-a567-7a8f672db227,project_id=f14134f2-7943-4e7b-b2c5-fc2071728b6e,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0
-capella_backup.new_backup: Importing from ID "id=58dd0f30-323b-461c-83a8-1d2719f4bcee,cluster_id=1f6bad22-602f-407b-a567-7a8f672db227,project_id=f14134f2-7943-4e7b-b2c5-fc2071728b6e,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0"...
+terraform import couchbase-capella_backup.new_backup id=58dd0f30-323b-461c-83a8-1d2719f4bcee,cluster_id=1f6bad22-602f-407b-a567-7a8f672db227,project_id=f14134f2-7943-4e7b-b2c5-fc2071728b6e,organization_id=c2e9ccf6-4293-4635-9205-1204d074447d
+capella_backup.new_backup: Importing from ID "id=58dd0f30-323b-461c-83a8-1d2719f4bcee,cluster_id=1f6bad22-602f-407b-a567-7a8f672db227,project_id=f14134f2-7943-4e7b-b2c5-fc2071728b6e,organization_id=c2e9ccf6-4293-4635-9205-1204d074447d"...
 data.capella_backups.existing_backups: Reading...
 capella_backup.new_backup: Import prepared!
   Prepared capella_backup for import
-capella_backup.new_backup: Refreshing state... [id=id=58dd0f30-323b-461c-83a8-1d2719f4bcee,cluster_id=1f6bad22-602f-407b-a567-7a8f672db227,project_id=f14134f2-7943-4e7b-b2c5-fc2071728b6e,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0]
+capella_backup.new_backup: Refreshing state... [id=id=58dd0f30-323b-461c-83a8-1d2719f4bcee,cluster_id=1f6bad22-602f-407b-a567-7a8f672db227,project_id=f14134f2-7943-4e7b-b2c5-fc2071728b6e,organization_id=c2e9ccf6-4293-4635-9205-1204d074447d]
 data.capella_backups.existing_backups: Read complete after 2s
 
 Import successful!
@@ -652,7 +652,7 @@ new_backup = {
   "elapsed_time_in_seconds" = 6
   "id" = "b1e946dc-e72b-4547-97e2-4337eabf06af"
   "method" = "full"
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+  "organization_id" = "c2e9ccf6-4293-4635-9205-1204d074447d"
   "project_id" = "ad1b3554-0fc6-45f6-aec9-f994b4ad0729"
   "restore" = {
     "auto_remove_collections" = tobool(null)
@@ -738,7 +738,7 @@ Terraform will perform the following actions:
       - elapsed_time_in_seconds = 8 -> null
       - id                      = "58dd0f30-323b-461c-83a8-1d2719f4bcee" -> null
       - method                  = "full" -> null
-      - organization_id         = "6af08c0a-8cab-4c1c-b257-b521575c16d0" -> null
+      - organization_id         = "c2e9ccf6-4293-4635-9205-1204d074447d" -> null
       - project_id              = "f14134f2-7943-4e7b-b2c5-fc2071728b6e" -> null
       - restore_before          = "2023-12-14T00:00:00Z" -> null
       - schedule_info           = {
@@ -778,7 +778,7 @@ Changes to Outputs:
               - elapsed_time_in_seconds = 8
               - id                      = "58dd0f30-323b-461c-83a8-1d2719f4bcee"
               - method                  = "full"
-              - organization_id         = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+              - organization_id         = "c2e9ccf6-4293-4635-9205-1204d074447d"
               - project_id              = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
               - restore_before          = "2023-12-14T00:00:00Z"
               - schedule_info           = {
@@ -810,7 +810,7 @@ Changes to Outputs:
               - elapsed_time_in_seconds = 6
               - id                      = "92ca9452-e5cb-4c16-923b-985858448e09"
               - method                  = "full"
-              - organization_id         = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+              - organization_id         = "c2e9ccf6-4293-4635-9205-1204d074447d"
               - project_id              = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
               - restore_before          = "2023-12-14T00:00:00Z"
               - schedule_info           = {
@@ -842,7 +842,7 @@ Changes to Outputs:
               - elapsed_time_in_seconds = 6
               - id                      = "0a04a68d-7a05-4189-9d2b-9ae4b5e3e230"
               - method                  = "full"
-              - organization_id         = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+              - organization_id         = "c2e9ccf6-4293-4635-9205-1204d074447d"
               - project_id              = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
               - restore_before          = "2023-12-14T00:00:00Z"
               - schedule_info           = {
@@ -855,7 +855,7 @@ Changes to Outputs:
               - status                  = "ready"
             },
         ]
-      - organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+      - organization_id = "c2e9ccf6-4293-4635-9205-1204d074447d"
       - project_id      = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
     } -> null
   - new_backup   = {
@@ -878,7 +878,7 @@ Changes to Outputs:
       - elapsed_time_in_seconds = 8
       - id                      = "58dd0f30-323b-461c-83a8-1d2719f4bcee"
       - method                  = "full"
-      - organization_id         = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+      - organization_id         = "c2e9ccf6-4293-4635-9205-1204d074447d"
       - project_id              = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
       - restore_before          = "2023-12-14T00:00:00Z"
       - schedule_info           = {
