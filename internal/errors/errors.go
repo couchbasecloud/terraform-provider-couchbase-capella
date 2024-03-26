@@ -161,4 +161,8 @@ var (
 
 	// ErrRatelimit is returned when an API key reaches the ratelimit
 	ErrRatelimit = errors.New("api key reached the ratelimit")
+
+	// ErrScopeNameMissing is returned when an expected ScopeName was not found after an import.
+	ErrScopeNameMissing = errors.New("scope Name is missing or was passed incorrectly, please check provider documentation for syntax")
+
 )
