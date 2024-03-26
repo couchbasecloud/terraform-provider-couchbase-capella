@@ -105,10 +105,18 @@ func (c *ClusterOnOffSchedule) Read(ctx context.Context, req datasource.ReadRequ
 		c.Token,
 		nil,
 	)
+
 	if err != nil {
+		// Adding the condition to check if the error is 404-cluster on/off schedule not found, if yes, then skip throwing the error.
+		// This is because it always throws 404-schedule not found as initially no schedule exists.
+		var apiError api.Error
+		json.Unmarshal([]byte(err.Error()), &apiError)
+		if apiError.Code == 11040 {
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Cluster On/off schedule",
-			"Could not read  On/off schedule in cluster "+state.ClusterId.String()+": "+api.ParseError(err),
+			"Could not read On/off schedule in cluster "+state.ClusterId.String()+": "+api.ParseError(err),
 		)
 		return
 	}
