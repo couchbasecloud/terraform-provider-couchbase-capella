@@ -34,7 +34,7 @@ func NewClusterOnOffSchedule() datasource.DataSource {
 
 // Metadata returns the certificates data source type name.
 func (c *ClusterOnOffSchedule) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_onoff_schedule"
+	resp.TypeName = req.ProviderTypeName + "_cluster_onoff_schedule"
 }
 
 // Schema defines the schema for the allowlist data source.
@@ -109,8 +109,7 @@ func (c *ClusterOnOffSchedule) Read(ctx context.Context, req datasource.ReadRequ
 	if err != nil {
 		// Adding the condition to check if the error is 404-cluster on/off schedule not found, if yes, then skip throwing the error.
 		// This is because it always throws 404-schedule not found as initially no schedule exists.
-		var apiError api.Error
-		json.Unmarshal([]byte(err.Error()), &apiError)
+		apiError := err.(*api.Error)
 		if apiError.Code == 11040 {
 			return
 		}
