@@ -44,7 +44,7 @@ func NewClusterOnOffSchedule() resource.Resource {
 
 // Metadata returns the OnOffSchedule resource type name.
 func (c *ClusterOnOffSchedule) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_onoff_schedule"
+	resp.TypeName = req.ProviderTypeName + "_cluster_onoff_schedule"
 
 }
 
