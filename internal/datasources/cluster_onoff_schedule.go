@@ -45,7 +45,7 @@ func (c *ClusterOnOffSchedule) Schema(_ context.Context, _ datasource.SchemaRequ
 			"project_id":      requiredStringAttribute,
 			"cluster_id":      requiredStringAttribute,
 			"timezone":        computedStringAttribute,
-			"days": schema.SetNestedAttribute{
+			"days": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{

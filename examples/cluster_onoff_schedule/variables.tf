@@ -3,6 +3,10 @@ variable "auth_token" {
   sensitive   = true
 }
 
+variable "host" {
+  description = "The Host URL of Couchbase Cloud."
+}
+
 variable "organization_id" {
   description = "Capella Organization ID"
 }
@@ -27,7 +31,7 @@ variable "days" {
 
   description = "Days configuration useful for cluster on/off schedule creation"
 
-  type = set(object({
+  type = list(object({
     state = string
     day   = string
     from = optional(object({

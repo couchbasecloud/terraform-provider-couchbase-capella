@@ -9,7 +9,7 @@ func OnOffScheduleSchema() schema.Schema {
 			"project_id":      stringAttribute(required, requiresReplace),
 			"cluster_id":      stringAttribute(required, requiresReplace),
 			"timezone":        stringAttribute(required, requiresReplace),
-			"days": schema.SetNestedAttribute{
+			"days": schema.ListNestedAttribute{
 				Required: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
