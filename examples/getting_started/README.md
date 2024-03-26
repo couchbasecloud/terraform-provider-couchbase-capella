@@ -11,15 +11,16 @@ In this demo, we will perform the following operations:
 7. Create a new database credential in the newly created cluster.
 8. Add a new allowlist to the cluster.
 9. Create a new bucket in the cluster.
-10. Create a new app service in the cluster.
-11. Create a new scope in the bucket of the cluster.
-12. Create a new collection in the scope of a bucket.
+10. Create a new sample bucket in the cluster.
+11. Create a new app service in the cluster.
+12. Create a new scope in the bucket of the cluster.
+13. Create a new collection in the scope of a bucket.
 
 ## Pre-Requisites:
 
 Make sure you have followed the pre-requisite steps from the parent readme that builds the binary and stores the path in a .terraformrc file.
 
-### Variables file.
+### Variables file
 
 - Copy the `terraform.template.tfvars` file to `terraform.tfvars` file in the same directory
 - Create 1 V4 API key in your organization using the Capella UI.
@@ -36,7 +37,7 @@ $  terraform plan
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchbasecloud/capella in /Users/$USER/workspace/terraform-provider-capella
+│  - couchbasecloud/capella in /Users/$USER/workspace/terraform-provider-capella
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -246,6 +247,25 @@ Terraform will perform the following actions:
       + name            = "My First Terraform Project"
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
     }
+  
+  # couchbase-capella_sample_bucket.new_sample_bucket will be created
+  + resource "couchbase-capella_sample_bucket" "new_sample_bucket" {
+      + bucket_conflict_resolution = (known after apply)
+      + cluster_id                 = (known after apply)
+      + durability_level           = (known after apply)
+      + eviction_policy            = (known after apply)
+      + flush                      = (known after apply)
+      + id                         = (known after apply)
+      + memory_allocation_in_mb    = (known after apply)
+      + name                       = "gamesim-sample"
+      + organization_id            = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id                 = (known after apply)
+      + replicas                   = (known after apply)
+      + stats                      = (known after apply)
+      + storage_backend            = (known after apply)
+      + time_to_live_in_seconds    = (known after apply)
+      + type                       = (known after apply)
+    }
 
   # couchbase-capella_scope.new_scope will be created
   + resource "couchbase-capella_scope" "new_scope" {
@@ -390,6 +410,7 @@ Changes to Outputs:
         }
     }
   + project             = "My First Terraform Project"
+  + sample_bucket       = "gamesim-sample"
   + scope               = {
       + bucket_id       = (known after apply)
       + cluster_id      = (known after apply)
@@ -442,7 +463,7 @@ $  terraform apply
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchbasecloud/capella in /Users/$USER/workspace/terraform-provider-capella
+│  - couchbasecloud/capella in /Users/$USER/workspace/terraform-provider-capella
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -651,6 +672,25 @@ Terraform will perform the following actions:
       + id              = (known after apply)
       + name            = "My First Terraform Project"
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+    }
+
+  # couchbase-capella_sample_bucket.new_sample_bucket will be created
+  + resource "couchbase-capella_sample_bucket" "new_sample_bucket" {
+      + bucket_conflict_resolution = (known after apply)
+      + cluster_id                 = (known after apply)
+      + durability_level           = (known after apply)
+      + eviction_policy            = (known after apply)
+      + flush                      = (known after apply)
+      + id                         = (known after apply)
+      + memory_allocation_in_mb    = (known after apply)
+      + name                       = "gamesim-sample"
+      + organization_id            = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id                 = (known after apply)
+      + replicas                   = (known after apply)
+      + stats                      = (known after apply)
+      + storage_backend            = (known after apply)
+      + time_to_live_in_seconds    = (known after apply)
+      + type                       = (known after apply)
     }
 
   # couchbase-capella_scope.new_scope will be created
@@ -863,6 +903,7 @@ couchbase-capella_cluster.new_cluster: Still creating... [2m30s elapsed]
 couchbase-capella_cluster.new_cluster: Still creating... [2m40s elapsed]
 couchbase-capella_cluster.new_cluster: Creation complete after 2m45s [id=ffffffff-aaaa-1414-eeee-000000000000]
 couchbase-capella_allowlist.new_allowlist: Creating...
+couchbase-capella_sample_bucket.new_sample_bucket: Creating...
 data.couchbase-capella_certificate.existing_certificate: Reading...
 couchbase-capella_bucket.new_bucket: Creating...
 couchbase-capella_database_credential.new_database_credential: Creating...
@@ -876,6 +917,8 @@ couchbase-capella_app_service.new_app_service: Creating...
 couchbase-capella_scope.new_scope: Creation complete after 1s
 couchbase-capella_collection.new_collection: Creating...
 couchbase-capella_collection.new_collection: Creation complete after 0s
+couchbase-capella_sample_bucket.new_sample_bucket: Still creating... [10s elapsed]
+couchbase-capella_sample_bucket.new_sample_bucket: Creation complete after 11s [id=Z2FtZXNpbS1zYW1wbGU=]
 couchbase-capella_app_service.new_app_service: Still creating... [10s elapsed]
 couchbase-capella_app_service.new_app_service: Still creating... [20s elapsed]
 couchbase-capella_app_service.new_app_service: Still creating... [30s elapsed]
@@ -935,7 +978,7 @@ couchbase-capella_app_service.new_app_service: Still creating... [9m20s elapsed]
 couchbase-capella_app_service.new_app_service: Still creating... [9m30s elapsed]
 couchbase-capella_app_service.new_app_service: Creation complete after 9m37s [id=bc14c00f-debe-4824-80a0-2020ba72c71a]
 
-Apply complete! Resources: 10 added, 0 changed, 0 destroyed.
+Apply complete! Resources: 11 added, 0 changed, 0 destroyed.
 
 Outputs:
 
@@ -1078,6 +1121,7 @@ organization = {
   }
 }
 project = "My First Terraform Project"
+sample_bucket = "gamesim-sample"
 scope = {
   "bucket_id" = "bmV3X3RlcnJhZm9ybV9idWNrZXQ="
   "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
@@ -1266,6 +1310,7 @@ organization = {
   }
 }
 project = "My First Terraform Project"
+sample_bucket = "gamesim-sample"
 scope = {
   "bucket_id" = "bmV3X3RlcnJhZm9ybV9idWNrZXQ="
   "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
@@ -1318,7 +1363,7 @@ $  terraform destroy
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchbasecloud/capella in /Users/$USER/workspace/terraform-provider-capella
+│  - couchbasecloud/capella in /Users/$USER/workspace/terraform-provider-capella
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -1330,6 +1375,7 @@ couchbase-capella_apikey.new_apikey: Refreshing state... [id=3ERCbMRFfE5FS4kuVvB
 couchbase-capella_cluster.new_cluster: Refreshing state... [id=ffffffff-aaaa-1414-eeee-000000000000]
 data.couchbase-capella_certificate.existing_certificate: Reading...
 couchbase-capella_allowlist.new_allowlist: Refreshing state... [id=ffffffff-aaaa-1414-eeee-000000000000]
+couchbase-capella_sample_bucket.new_sample_bucket: Refreshing state... [id=Z2FtZXNpbS1zYW1wbGU=]
 couchbase-capella_bucket.new_bucket: Refreshing state... [id=bmV3X3RlcnJhZm9ybV9idWNrZXQ=]
 couchbase-capella_database_credential.new_database_credential: Refreshing state... [id=20d7fbe6-013a-499d-9a6d-f4085c5fe729]
 data.couchbase-capella_certificate.existing_certificate: Read complete after 0s
@@ -1570,6 +1616,30 @@ Terraform will perform the following actions:
       - organization_id = "ffffffff-aaaa-1414-eeee-000000000000" -> null
     }
 
+  # couchbase-capella_sample_bucket.new_sample_bucket will be destroyed
+  - resource "couchbase-capella_sample_bucket" "new_sample_bucket" {
+      - bucket_conflict_resolution = "seqno" -> null
+      - cluster_id                 = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - durability_level           = "none" -> null
+      - eviction_policy            = "fullEviction" -> null
+      - flush                      = false -> null
+      - id                         = "Z2FtZXNpbS1zYW1wbGU=" -> null
+      - memory_allocation_in_mb    = 200 -> null
+      - name                       = "gamesim-sample" -> null
+      - organization_id            = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - project_id                 = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - replicas                   = 1 -> null
+      - stats                      = {
+          - disk_used_in_mib   = 20 -> null
+          - item_count         = 586 -> null
+          - memory_used_in_mib = 62 -> null
+          - ops_per_second     = 0 -> null
+        } -> null
+      - storage_backend            = "couchstore" -> null
+      - time_to_live_in_seconds    = 0 -> null
+      - type                       = "couchbase" -> null
+    }
+
   # couchbase-capella_scope.new_scope will be destroyed
   - resource "couchbase-capella_scope" "new_scope" {
       - bucket_id       = "bmV3X3RlcnJhZm9ybV9idWNrZXQ=" -> null
@@ -1759,6 +1829,7 @@ Changes to Outputs:
         }
     } -> null
   - project             = "My First Terraform Project" -> null
+  - sample_bucket       = "gamesim-sample" -> null 
   - scope               = {
       - bucket_id       = "bmV3X3RlcnJhZm9ybV9idWNrZXQ="
       - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
@@ -1843,8 +1914,10 @@ couchbase-capella_app_service.new_app_service: Still destroying... [id=fdb1657d-
 couchbase-capella_app_service.new_app_service: Still destroying... [id=fdb1657d-bfde-4634-9ebe-552648d0da9c, 2m40s elapsed]
 couchbase-capella_app_service.new_app_service: Still destroying... [id=fdb1657d-bfde-4634-9ebe-552648d0da9c, 2m50s elapsed]
 couchbase-capella_app_service.new_app_service: Destruction complete after 2m58s
+couchbase-capella_sample_bucket.new_sample_bucket: Destroying... [id=Z2FtZXNpbS1zYW1wbGU=]
 couchbase-capella_bucket.new_bucket: Destroying... [id=bmV3X3RlcnJhZm9ybV9idWNrZXQ=]
 couchbase-capella_bucket.new_bucket: Destruction complete after 1s
+couchbase-capella_sample_bucket.new_sample_bucket: Destruction complete after 2s
 couchbase-capella_cluster.new_cluster: Destroying... [id=ffffffff-aaaa-1414-eeee-000000000000]
 couchbase-capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 10s elapsed]
 couchbase-capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 20s elapsed]
@@ -1909,5 +1982,5 @@ couchbase-capella_cluster.new_cluster: Destruction complete after 9m58s
 couchbase-capella_project.new_project: Destroying... [id=ffffffff-aaaa-1414-eeee-000000000000]
 couchbase-capella_project.new_project: Destruction complete after 2s
 
-Destroy complete! Resources: 10 destroyed.
+Destroy complete! Resources: 11 destroyed.
 ```
