@@ -5,7 +5,7 @@ package cluster_onoff_schedule
 // In order to access this endpoint, the provided API key must have at least one of the roles referenced below:
 //
 // Organization Owner
-// Project Owner
+// Project Owner.
 type CreateClusterOnOffScheduleRequest struct {
 	// Timezone for the schedule
 	// Enum: "Pacific/Midway" "US/Hawaii" "US/Alaska" "US/Pacific" "US/Mountain" "US/Central" "US/Eastern"
@@ -76,7 +76,7 @@ type OnTimeBoundary struct {
 // In order to access this endpoint, the provided API key must have at least one of the roles referenced below:
 //
 // Organization Owner
-// Project Owner
+// Project Owner.
 type GetClusterOnOffScheduleResponse struct {
 	Timezone string    `json:"timezone"`
 	Days     []DayItem `json:"days"`
@@ -87,7 +87,7 @@ type GetClusterOnOffScheduleResponse struct {
 // In order to access this endpoint, the provided API key must have at least one of the roles referenced below:
 //
 // Organization Owner
-// Project Owner
+// Project Owner.
 type UpdateClusterOnOffScheduleRequest struct {
 	Timezone string    `json:"timezone"`
 	Days     []DayItem `json:"days"`

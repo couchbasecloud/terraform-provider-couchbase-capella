@@ -19,7 +19,7 @@ variable "cluster_onoff_schedule" {
   description = "Cluster On Off Schedule configuration details useful for creation"
 
   type = object({
-    timezone  = string
+    timezone = string
   })
 }
 

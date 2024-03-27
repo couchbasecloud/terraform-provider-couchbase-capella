@@ -8,11 +8,11 @@ resource "couchbase-capella_cluster_onoff_schedule" "new_cluster_onoff_schedule"
   cluster_id      = var.cluster_id
   timezone        = var.cluster_onoff_schedule.timezone
   days = [
-      for day in var.days : {
-        state = day.state
-        day   = day.day
-        from  = day.from
-        to    = day.to
-      }
-    ]
+    for day in var.days : {
+      state = day.state
+      day   = day.day
+      from  = day.from
+      to    = day.to
+    }
+  ]
 }

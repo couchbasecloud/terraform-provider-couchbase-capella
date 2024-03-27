@@ -5,7 +5,7 @@ package cluster
 // In order to access this endpoint, the provided API key must have at least one of the roles referenced below:
 //
 // Organization Owner
-// Project Owner
+// Project Owner.
 type ClusterActivationRequest struct {
 	// TurnOnLinkedAppService if true will turn on the app service linked with the cluster,
 	// and if false, will keep it turned off.
