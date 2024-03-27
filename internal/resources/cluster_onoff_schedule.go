@@ -25,15 +25,15 @@ var (
 	_ resource.ResourceWithImportState = &ClusterOnOffSchedule{}
 )
 
-//const errorMessageAfterOnOffScheduleCreation = "Cluster On/Off Schedule creation is successful, but encountered an error while checking the current" +
-//	" state of the cluster on/off schedule. Please run `terraform plan` after 1-2 minutes to know the" +
-//	" current on/off schedule state. Additionally, run `terraform apply --refresh-only` to update" +
-//	" the state from remote, unexpected error: "
+const errorMessageAfterOnOffScheduleCreation = "Cluster On/Off Schedule creation is successful, but encountered an error while checking the current" +
+	" state of the cluster on/off schedule. Please run `terraform plan` after 1-2 minutes to know the" +
+	" current on/off schedule state. Additionally, run `terraform apply --refresh-only` to update" +
+	" the state from remote, unexpected error: "
 
 const errorMessageWhileOnOffScheduleCreation = "There is an error during cluster on/off schedule creation. Please check in Capella to see if any hanging resources" +
 	" have been created, unexpected error: "
 
-// ClusterOnOffSchedule is the OnOffSchedule resource implementation.
+// ClusterOnOffSchedule is the cluster OnOffSchedule resource implementation.
 type ClusterOnOffSchedule struct {
 	*providerschema.Data
 }
@@ -132,7 +132,7 @@ func (c *ClusterOnOffSchedule) Create(ctx context.Context, req resource.CreateRe
 	if err != nil {
 		resp.Diagnostics.AddWarning(
 			"Error Reading Capella Cluster On/Off Schedule",
-			"Could not read Capella Cluster On/Off Schedule for the cluster: %s "+clusterId+"."+errorMessageAfterBackupScheduleCreation+api.ParseError(err),
+			"Could not read Capella Cluster On/Off Schedule for the cluster: %s "+clusterId+"."+errorMessageAfterOnOffScheduleCreation+api.ParseError(err),
 		)
 		return
 	}
@@ -194,7 +194,7 @@ func (c *ClusterOnOffSchedule) Read(ctx context.Context, req resource.ReadReques
 		clusterId      = resourceIDs[providerschema.ClusterId]
 	)
 
-	// Get refreshed backup schedule from Capella
+	// Get refreshed on/off schedule from Capella
 	refreshedState, err := c.retrieveClusterOnOffSchedule(ctx, organizationId, projectId, clusterId)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
@@ -218,7 +218,6 @@ func (c *ClusterOnOffSchedule) Read(ctx context.Context, req resource.ReadReques
 	}
 }
 
-// Update updates the OnOffSchedule.
 func (c *ClusterOnOffSchedule) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan providerschema.ClusterOnOffSchedule
 	diags := req.Plan.Get(ctx, &plan)
@@ -311,7 +310,6 @@ func (c *ClusterOnOffSchedule) Update(ctx context.Context, req resource.UpdateRe
 	}
 }
 
-// Delete deletes the OnOffSchedule.
 func (c *ClusterOnOffSchedule) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// Retrieve values from state
 	var state providerschema.ClusterOnOffSchedule
@@ -371,6 +369,7 @@ func (c *ClusterOnOffSchedule) ImportState(ctx context.Context, req resource.Imp
 	resource.ImportStatePassthroughID(ctx, path.Root("cluster_id"), req, resp)
 }
 
+// Configure adds the provider configured client to the cluster on-off schedule resource.
 func (c *ClusterOnOffSchedule) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -404,7 +403,7 @@ func (c *ClusterOnOffSchedule) validateCreateClusterOnOffScheduleRequest(plan pr
 	return nil
 }
 
-// retrieveOnOffSchedule retrieves on/off schedule information from the specified organization and project
+// retrieveOnOffSchedule retrieves cluster on/off schedule information from the specified organization and project
 // using the provided cluster ID by open-api call.
 func (c *ClusterOnOffSchedule) retrieveClusterOnOffSchedule(ctx context.Context, organizationId, projectId, clusterId string) (*providerschema.ClusterOnOffSchedule, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/onOffSchedule", c.HostURL, organizationId, projectId, clusterId)

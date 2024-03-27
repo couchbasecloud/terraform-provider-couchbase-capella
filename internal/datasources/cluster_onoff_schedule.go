@@ -34,12 +34,12 @@ func NewClusterOnOffSchedule() datasource.DataSource {
 	return &ClusterOnOffSchedule{}
 }
 
-// Metadata returns the certificates data source type name.
+// Metadata returns the cluster on/off schedule data source type name.
 func (c *ClusterOnOffSchedule) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_cluster_onoff_schedule"
 }
 
-// Schema defines the schema for the allowlist data source.
+// Schema defines the schema for the cluster on/off schedule data source.
 func (c *ClusterOnOffSchedule) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -74,7 +74,7 @@ func (c *ClusterOnOffSchedule) Schema(_ context.Context, _ datasource.SchemaRequ
 	}
 }
 
-// Read refreshes the Terraform state with the latest data of projects.
+// Read refreshes the Terraform state with the latest data of cluster on/off schedules.
 func (c *ClusterOnOffSchedule) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state providerschema.ClusterOnOffSchedule
 	diags := req.Config.Get(ctx, &state)
@@ -177,7 +177,7 @@ func (c *ClusterOnOffSchedule) Read(ctx context.Context, req datasource.ReadRequ
 	}
 }
 
-// Configure adds the provider configured client to the project data source.
+// Configure adds the provider configured client to the cluster on/off schedule data source.
 func (c *ClusterOnOffSchedule) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
