@@ -323,8 +323,8 @@ func (r *DatabaseCredential) Delete(ctx context.Context, req resource.DeleteRequ
 	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Database Credentials in Capella",
-			"Could not read Capella database credential with ID "+state.Id.String()+": "+err.Error(),
+			"Error Deleting Database Credentials in Capella",
+			"Could not delete Capella database credential with ID "+state.Id.String()+": "+err.Error(),
 		)
 		return
 	}

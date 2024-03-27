@@ -176,6 +176,7 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewBackups,
 		datasources.NewScopes,
 		datasources.NewCollections,
+		datasources.NewSampleBuckets,
 		datasources.NewClusterOnOffSchedule,
 	}
 }
@@ -195,6 +196,7 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewBackupSchedule,
 		resources.NewScope,
 		resources.NewCollection,
+		resources.NewSampleBucket,
 		resources.NewClusterOnOffSchedule,
 	}
 }
