@@ -22,6 +22,8 @@ var (
 	_ datasource.DataSourceWithConfigure = &ClusterOnOffSchedule{}
 )
 
+const errorCodeForOnOffScheduleNotFound = 11040
+
 // ClusterOnOffSchedule is the OnOffSchedule data source implementation.
 type ClusterOnOffSchedule struct {
 	*providerschema.Data
@@ -109,8 +111,14 @@ func (c *ClusterOnOffSchedule) Read(ctx context.Context, req datasource.ReadRequ
 	if err != nil {
 		// Adding the condition to check if the error is 404-cluster on/off schedule not found, if yes, then skip throwing the error.
 		// This is because it always throws 404-schedule not found as initially no schedule exists.
-		apiError := err.(*api.Error)
-		if apiError.Code == 11040 {
+		apiError, ok := err.(*api.Error)
+		if !ok {
+			resp.Diagnostics.AddError(
+				"Type assertion error",
+				"Could not do type assertion for the error:"+apiError.Error(),
+			)
+		}
+		if apiError.Code == errorCodeForOnOffScheduleNotFound {
 			return
 		}
 		resp.Diagnostics.AddError(
