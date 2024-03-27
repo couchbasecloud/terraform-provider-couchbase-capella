@@ -25,59 +25,48 @@ days = [
   state = "custom"
   from  = {
     hour   = 12
-    minute = 30
     }
   to  = {
-      hour   = 14
+      hour   = 19
       minute = 30
       }
 },
 {
   day   = "wednesday"
   state = "on"
+},
+{
+  day   = "thursday"
+  state = "custom"
+ from  = {
+     hour   = 12
+     minute = 30
+     }
+},
+{
+  day   = "friday"
+  state = "custom"
+  from  = {
+
+    }
+  to  = {
+     hour   = 12
+     minute = 30
+      }
+},
+{
+  day   = "saturday"
+  state = "custom"
   from  = {
       hour   = 12
       minute = 30
       }
     to  = {
         hour   = 14
-        minute = 30
-        }
-},
-{
-  day   = "thursday"
-  state = "on"
-  from  = {
-      }
-    to  = {
-        }
-},
-{
-  day   = "friday"
-  state = "custom"
-  from  = {
-    hour   = 12
-    minute = 30
-    }
-  to  = {
-      hour   = 14
-      minute = 30
-      }
-},
-{
-  day   = "saturday"
-  state = "off"
-  from  = {
-      }
-    to  = {
         }
 },
 {
   day   = "sunday"
   state = "off"
-  from  = {
-      }
-  to  = {
-        }
 }
 ]
