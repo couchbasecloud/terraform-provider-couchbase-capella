@@ -150,24 +150,27 @@ func (c *ClusterOnOffSchedule) Create(ctx context.Context, req resource.CreateRe
 // with the specified plan. It marks all computed fields as null.
 func initializeScheduleWithPlan(plan providerschema.ClusterOnOffSchedule) providerschema.ClusterOnOffSchedule {
 	for _, d := range plan.Days {
-		if d.From.Hour.IsUnknown() || d.From.Hour.IsNull() {
-			d.From.Hour = types.Int64Null()
+		if d.From != nil {
+			if d.From.Hour.IsUnknown() || d.From.Hour.IsNull() {
+				d.From.Hour = types.Int64Null()
+			}
+			if d.From.Minute.IsUnknown() || d.From.Minute.IsNull() {
+				d.From.Minute = types.Int64Null()
+			}
 		}
-		if d.From.Minute.IsUnknown() || d.From.Minute.IsNull() {
-			d.From.Minute = types.Int64Null()
-		}
-		if d.To.Hour.IsUnknown() || d.To.Hour.IsNull() {
-			d.To.Hour = types.Int64Null()
-		}
-		if d.To.Minute.IsUnknown() || d.To.Minute.IsNull() {
-			d.To.Minute = types.Int64Null()
+		if d.To != nil {
+			if d.To.Hour.IsUnknown() || d.To.Hour.IsNull() {
+				d.To.Hour = types.Int64Null()
+			}
+			if d.To.Minute.IsUnknown() || d.To.Minute.IsNull() {
+				d.To.Minute = types.Int64Null()
+			}
 		}
 	}
 
 	return plan
 }
 
-// Read reads OnOffSchedule information.
 func (c *ClusterOnOffSchedule) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state providerschema.ClusterOnOffSchedule
 	diags := req.State.Get(ctx, &state)

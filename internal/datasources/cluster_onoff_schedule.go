@@ -52,14 +52,14 @@ func (c *ClusterOnOffSchedule) Schema(_ context.Context, _ datasource.SchemaRequ
 						"state": computedStringAttribute,
 						"day":   computedStringAttribute,
 						"from": schema.SingleNestedAttribute{
-							Computed: true,
+							Optional: true,
 							Attributes: map[string]schema.Attribute{
 								"hour":   computedInt64Attribute,
 								"minute": computedInt64Attribute,
 							},
 						},
 						"to": schema.SingleNestedAttribute{
-							Computed: true,
+							Optional: true,
 							Attributes: map[string]schema.Attribute{
 								"hour":   computedInt64Attribute,
 								"minute": computedInt64Attribute,
