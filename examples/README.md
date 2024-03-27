@@ -19,3 +19,11 @@ This directory contains examples that are mostly used for documentation, but can
 [Allowlist](allowlist)
 
 [Bucket](bucket)
+
+[Scope](scope)
+
+[Collection](collection)
+
+[Sample Bucket](sample_bucket)
+
+[Cluster On Off Schedule](cluster_onoff_schedule)
