@@ -11,14 +11,8 @@ resource "couchbase-capella_cluster_onoff_schedule" "new_cluster_onoff_schedule"
       for day in var.days : {
         state = day.state
         day   = day.day
-        from  = {
-          hour   = day.from.hour
-          minute = day.from.minute
-        }
-        to    = {
-          hour   = day.to.hour
-          minute = day.to.minute
-        }
+        from  = day.from
+        to    = day.to
       }
     ]
 }

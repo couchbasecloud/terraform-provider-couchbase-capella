@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -78,17 +79,24 @@ func (c *ClusterOnOffSchedule) Create(ctx context.Context, req resource.CreateRe
 
 	var days = make([]scheduleapi.DayItem, 0)
 	for _, d := range plan.Days {
+		var from, to *scheduleapi.OnTimeBoundary
+		if d.From != nil {
+			from = &scheduleapi.OnTimeBoundary{
+				Hour:   d.From.Hour.ValueInt64(),
+				Minute: d.From.Minute.ValueInt64(),
+			}
+		}
+		if d.To != nil {
+			to = &scheduleapi.OnTimeBoundary{
+				Hour:   d.To.Hour.ValueInt64(),
+				Minute: d.To.Minute.ValueInt64(),
+			}
+		}
 		days = append(days, scheduleapi.DayItem{
 			State: d.State.ValueString(),
 			Day:   d.Day.ValueString(),
-			From: &scheduleapi.OnTimeBoundary{
-				Hour:   d.From.Hour.ValueInt64(),
-				Minute: d.From.Minute.ValueInt64(),
-			},
-			To: &scheduleapi.OnTimeBoundary{
-				Hour:   d.To.Hour.ValueInt64(),
-				Minute: d.To.Minute.ValueInt64(),
-			},
+			From:  from,
+			To:    to,
 		})
 	}
 
@@ -114,7 +122,7 @@ func (c *ClusterOnOffSchedule) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	diags = resp.State.Set(ctx, plan)
+	diags = resp.State.Set(ctx, initializeScheduleWithPlan(plan))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -136,6 +144,27 @@ func (c *ClusterOnOffSchedule) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
+}
+
+// initializeScheduleWithPlan initializes an instance of providerschema.ClusterOnOffSchedule
+// with the specified plan. It marks all computed fields as null.
+func initializeScheduleWithPlan(plan providerschema.ClusterOnOffSchedule) providerschema.ClusterOnOffSchedule {
+	for _, d := range plan.Days {
+		if d.From.Hour.IsUnknown() || d.From.Hour.IsNull() {
+			d.From.Hour = types.Int64Null()
+		}
+		if d.From.Minute.IsUnknown() || d.From.Minute.IsNull() {
+			d.From.Minute = types.Int64Null()
+		}
+		if d.To.Hour.IsUnknown() || d.To.Hour.IsNull() {
+			d.To.Hour = types.Int64Null()
+		}
+		if d.To.Minute.IsUnknown() || d.To.Minute.IsNull() {
+			d.To.Minute = types.Int64Null()
+		}
+	}
+
+	return plan
 }
 
 // Read reads OnOffSchedule information.
@@ -213,17 +242,24 @@ func (c *ClusterOnOffSchedule) Update(ctx context.Context, req resource.UpdateRe
 
 	var days = make([]scheduleapi.DayItem, 0)
 	for _, d := range plan.Days {
+		var from, to *scheduleapi.OnTimeBoundary
+		if d.From != nil {
+			from = &scheduleapi.OnTimeBoundary{
+				Hour:   d.From.Hour.ValueInt64(),
+				Minute: d.From.Minute.ValueInt64(),
+			}
+		}
+		if d.To != nil {
+			to = &scheduleapi.OnTimeBoundary{
+				Hour:   d.To.Hour.ValueInt64(),
+				Minute: d.To.Minute.ValueInt64(),
+			}
+		}
 		days = append(days, scheduleapi.DayItem{
 			State: d.State.ValueString(),
 			Day:   d.Day.ValueString(),
-			From: &scheduleapi.OnTimeBoundary{
-				Hour:   d.From.Hour.ValueInt64(),
-				Minute: d.From.Minute.ValueInt64(),
-			},
-			To: &scheduleapi.OnTimeBoundary{
-				Hour:   d.To.Hour.ValueInt64(),
-				Minute: d.To.Minute.ValueInt64(),
-			},
+			From:  from,
+			To:    to,
 		})
 	}
 
