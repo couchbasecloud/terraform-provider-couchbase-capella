@@ -114,7 +114,7 @@ Plan: 1 to add, 0 to change, 0 to destroy.
 
 ```
 
-### Apply the Plan, in order to create a new Bucket
+### Apply the Plan, in order to create a new Cluster On/Off schedule
 
 Command: `terraform apply`
 
@@ -300,7 +300,7 @@ new_cluster_onoff_schedule = {
 ```
 
 ## UPDATE
-### Let us edit the terraform.tfvars file to change the cluster configuration settings.
+### Let us edit the terraform.tfvars file to change the cluster on/off schedule configuration settings.
 
 Sample Output:
 ```
@@ -608,7 +608,7 @@ new_cluster_onoff_schedule = {
 }
 ```
 
-### Note the Bucket ID for the new Bucket
+### Note the output for the new Cluster On/Off schedule
 Command: `terraform output new_cluster_onoff_schedule`
 
 Sample Output:
@@ -688,9 +688,6 @@ $ terraform output new_cluster_onoff_schedule
 
 ```
 
-
-In this case, the cluster ID for my new cluster is `f90c1d8a-c01f-4faa-860d-71cdcdf454f6`
-
 ### List the resources that are present in the Terraform State file.
 
 Command: `terraform state list`
@@ -703,9 +700,9 @@ couchbase-capella_cluster_onoff_schedule.new_cluster_onoff_schedule
 ```
 
 ## IMPORT
-### Remove the resource `new_cluster` from the Terraform State file
+### Remove the resource `new_cluster_onoff_schedule` from the Terraform State file
 
-Command: `terraform state rm couchbase-capella_cluster.new_cluster`
+Command: `terraform state rm couchbase-capella_cluster_onoff_schedule.new_cluster_onoff_schedule`
 
 Sample Output:
 ```
