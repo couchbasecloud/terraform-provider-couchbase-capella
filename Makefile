@@ -73,6 +73,11 @@ docs-lint:
 docs:
 	@echo "Use this site to preview markdown rendering: https://registry.terraform.io/tools/doc-preview"
 
+.PHONT: build-docs
+build-docs:
+	go get github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
+	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
+
 .PHONY: terraform-check tfcheck
 tfcheck: terraform-check
 terraform-check:

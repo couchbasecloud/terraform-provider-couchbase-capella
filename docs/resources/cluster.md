@@ -93,6 +93,7 @@ Required:
 
 Optional:
 
+- `autoexpansion` (Boolean)
 - `iops` (Number)
 - `storage` (Number)
 
