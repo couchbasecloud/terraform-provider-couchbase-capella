@@ -15,5 +15,4 @@ resource "couchbase-capella_app_service" "new_app_service" {
     cpu = var.app_service.compute.cpu
     ram = var.app_service.compute.ram
   }
-  depends_on = [couchbase-capella_cluster.new_cluster, couchbase-capella_bucket.new_bucket, couchbase-capella_sample_bucket.new_sample_bucket]
 }
