@@ -3,7 +3,8 @@ auth_token = "<v4-api-key-secret>"
 organization_id = "<organization_id>"
 project_id      = "<project_id>"
 cluster_id      = "<cluster_id>"
+bucket_id       = "<bucket_id>"
 
-sample_bucket = {
-  name = "gamesim-sample"
+scope = {
+  scope_name = "new_terraform_scope"
 }

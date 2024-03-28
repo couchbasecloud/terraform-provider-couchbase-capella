@@ -323,8 +323,8 @@ func (r *DatabaseCredential) Delete(ctx context.Context, req resource.DeleteRequ
 	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Database Credentials in Capella",
-			"Could not read Capella database credential with ID "+state.Id.String()+": "+err.Error(),
+			"Error Deleting Database Credentials in Capella",
+			"Could not delete Capella database credential with ID "+state.Id.String()+": "+err.Error(),
 		)
 		return
 	}
@@ -485,7 +485,7 @@ func mapAccess(plan providerschema.DatabaseCredential) []providerschema.Access {
 				for k, bucket := range acc.Resources.Buckets {
 					access[i].Resources.Buckets[k].Name = acc.Resources.Buckets[k].Name
 					if bucket.Scopes != nil {
-						access[i].Resources.Buckets[k].Scopes = make([]providerschema.Scope, len(bucket.Scopes))
+						access[i].Resources.Buckets[k].Scopes = make([]providerschema.ScopeResource, len(bucket.Scopes))
 						for s, scope := range bucket.Scopes {
 							access[i].Resources.Buckets[k].Scopes[s].Name = scope.Name
 							if scope.Collections != nil {

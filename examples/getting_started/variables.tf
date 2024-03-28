@@ -132,6 +132,14 @@ variable "bucket" {
   })
 }
 
+variable "sample_bucket" {
+  description = "Bucket configuration details useful for creation"
+
+  type = object({
+    name = string
+  })
+}
+
 variable "user" {
   description = "User details useful for creation"
 
@@ -152,5 +160,23 @@ variable "app_service" {
       cpu = number
       ram = number
     })
+  })
+}
+
+variable "scope" {
+  description = "Scope configuration details useful for creation"
+
+  type = object({
+    scope_name = string
+  })
+}
+
+
+variable "collection" {
+  description = "Collection configuration details useful for creation"
+
+  type = object({
+    collection_name = string
+    max_ttl         = optional(number)
   })
 }

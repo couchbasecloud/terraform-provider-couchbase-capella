@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	samplebucketapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/sample_bucket"
@@ -102,7 +103,6 @@ func (s *SampleBucket) Create(ctx context.Context, req resource.CreateRequest, r
 	var organizationId = plan.OrganizationId.ValueString()
 	var projectId = plan.ProjectId.ValueString()
 	var clusterId = plan.ClusterId.ValueString()
-
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/sampleBuckets", s.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
 	response, err := s.Client.ExecuteWithRetry(
@@ -119,6 +119,8 @@ func (s *SampleBucket) Create(ctx context.Context, req resource.CreateRequest, r
 		)
 		return
 	}
+
+	time.Sleep(10 * time.Second)
 
 	sampleBucketResponse := samplebucketapi.CreateSampleBucketResponse{}
 	err = json.Unmarshal(response.Body, &sampleBucketResponse)
@@ -203,7 +205,7 @@ func (s *SampleBucket) Read(ctx context.Context, req resource.ReadRequest, resp 
 func (s *SampleBucket) Update(_ context.Context, _ resource.UpdateRequest, _ *resource.UpdateResponse) {
 	// Couchbase Capella's v4 does not support a PUT endpoint for sample buckets.
 	// SampleBuckets can only be created, read and deleted.
-	// http://cbc-cp-api.s3-website-us-east-1.amazonaws.com/#tag/sampleBucket
+	// https://docs.couchbase.com/cloud/management-api-reference/index.html#tag/sampleBucket
 	//
 	// Note: In this situation, terraform apply will default to deleting and executing a new create.
 	// The update implementation should simply be left empty.
@@ -254,7 +256,6 @@ func (s *SampleBucket) Delete(ctx context.Context, req resource.DeleteRequest, r
 		return
 	}
 	var bucketId = state.Id.ValueString()
-
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/sampleBuckets/%s", s.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
 	_, err := s.Client.ExecuteWithRetry(

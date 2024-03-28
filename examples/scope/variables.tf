@@ -15,10 +15,14 @@ variable "cluster_id" {
   description = "Capella Cluster ID"
 }
 
-variable "sample_bucket" {
-  description = "Bucket configuration details useful for creation"
+variable "bucket_id" {
+  description = "Capella Bucket ID"
+}
+
+variable "scope" {
+  description = "Scope configuration details useful for creation"
 
   type = object({
-    name = string
+    scope_name = string
   })
 }
