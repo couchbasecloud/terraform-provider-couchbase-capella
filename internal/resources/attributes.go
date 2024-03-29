@@ -32,9 +32,7 @@ func stringAttribute(fields []string, validators ...validator.String) *schema.St
 	attribute := schema.StringAttribute{}
 	attribute.Validators = make([]validator.String, 0)
 
-	for _, v := range validators {
-		attribute.Validators = append(attribute.Validators, v)
-	}
+	attribute.Validators = append(attribute.Validators, validators...)
 
 	for _, field := range fields {
 		switch field {
