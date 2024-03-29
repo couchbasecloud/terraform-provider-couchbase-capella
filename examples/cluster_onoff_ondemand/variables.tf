@@ -16,13 +16,13 @@ variable "cluster_id" {
 }
 
 variable "state" {
-   description = "Provides the state cluster to be switched to- on or off"
+  description = "Provides the state cluster to be switched to- on or off"
 }
 
 variable "cluster_onoff_ondemand" {
-    description = "Provides the means to turn the given cluster to on or off state"
+  description = "Provides the means to turn the given cluster to on or off state"
 
-    type = object({
-        turn_on_linked_app_service = optional(bool)
-      })
+  type = object({
+    turn_on_linked_app_service = optional(bool)
+  })
 }
