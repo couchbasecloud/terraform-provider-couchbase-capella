@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	cluster_onoff_api "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	cluster_api "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
@@ -162,7 +163,7 @@ func (c *ClusterOnOffOnDemand) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	refreshedState, err := c.retrieveClusterOnOff(ctx, organizationId, projectId, clusterId, plan.State.String(), plan.TurnOnLinkedAppService.ValueBool())
+	refreshedState, err := c.retrieveClusterOnOff(ctx, organizationId, projectId, clusterId, plan.State.ValueString(), plan.TurnOnLinkedAppService.ValueBool())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella ClusterOnOffOnDemand",
@@ -206,7 +207,7 @@ func (c *ClusterOnOffOnDemand) validateCreateClusterOnOffRequest(plan providersc
 	return nil
 }
 
-// retrieveClusterOnOff retrieves onDemandClusterOnOff information from the specified organization and project using the provided cluster ID by open-api call.
+// retrieveClusterOnOff retrieves onDemandClusterOnOff information from the specified organization and project using the provided cluster ID by Get cluster open-api call.
 func (c *ClusterOnOffOnDemand) retrieveClusterOnOff(ctx context.Context, organizationId, projectId, clusterId, state string, linkedApp bool) (*providerschema.ClusterOnOffOnDemand, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", c.HostURL, organizationId, projectId, clusterId)
 	cfg := cluster_onoff_api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
@@ -247,10 +248,11 @@ func validateClusterStateIsSameInPlanAndState(planClusterState, stateClusterStat
 	return strings.EqualFold(planClusterState, stateClusterState)
 }
 
+// Couchbase Capella's v4 does not support a GET endpoint for cluster on/off.
+// Cluster on/off can only access the POST and DELETE endpoint for switching the cluster to on and off state respectively.
+// https://docs.couchbase.com/cloud/management-api-reference/index.html#tag/clusters/operation/clusterOn
+// This read is calling the retrieveClusterOnOff func to verify the state with the cluster response.
 func (c *ClusterOnOffOnDemand) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// Couchbase Capella's v4 does not support a GET endpoint for cluster on/off.
-	// Cluster on/off can only access the POST and DELETE endpoint for switching the cluster to on and off state respectively.
-	// https://docs.couchbase.com/cloud/management-api-reference/index.html#tag/clusters/operation/clusterOn
 	var state providerschema.ClusterOnOffOnDemand
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -274,12 +276,12 @@ func (c *ClusterOnOffOnDemand) Read(ctx context.Context, req resource.ReadReques
 
 	refreshedState, err := c.retrieveClusterOnOff(ctx, organizationId, projectId, clusterId, state.State.String(), state.TurnOnLinkedAppService.ValueBool())
 	if err != nil {
-		//resourceNotFound, errString := cluster_onoff_api.CheckResourceNotFoundError(err)
-		//if resourceNotFound {
-		//	tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-		//	resp.State.RemoveResource(ctx)
-		//	return
-		//}
+		resourceNotFound, _ := cluster_onoff_api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error parsing read onDemandClusterOnOff request",
 			"Could not read the cluster details, unexpected error: "+err.Error(),
@@ -317,7 +319,7 @@ func (c *ClusterOnOffOnDemand) Update(ctx context.Context, req resource.UpdateRe
 	if err := c.validateCreateClusterOnOffRequest(plan); err != nil {
 		resp.Diagnostics.AddError(
 			"Error parsing create onDemandClusterOnOff request",
-			"Could not switch on the cluster, unexpected error: "+err.Error(),
+			"Could not switch on/off the cluster, unexpected error: "+err.Error(),
 		)
 		return
 	}
