@@ -10,6 +10,7 @@ func AppServiceOnOffOnDemandSchema() schema.Schema {
 			"organization_id": stringAttribute(required, requiresReplace),
 			"project_id":      stringAttribute(required, requiresReplace),
 			"cluster_id":      stringAttribute(required, requiresReplace),
+			"app_service_id":  stringAttribute(required, requiresReplace),
 			"state":           stringAttribute(required),
 		},
 	}

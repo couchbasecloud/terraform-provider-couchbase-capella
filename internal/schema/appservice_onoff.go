@@ -1,6 +1,11 @@
 package schema
 
-import "github.com/hashicorp/terraform-plugin-framework/types"
+import (
+	"fmt"
+
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+)
 
 type AppServiceOnOffOnDemand struct {
 	// OrganizationId is the organizationId of the capella tenant.
@@ -13,8 +18,24 @@ type AppServiceOnOffOnDemand struct {
 	ClusterId types.String `tfsdk:"cluster_id"`
 
 	// AppServiceId is the appServiceId of the capella tenant.
-	AppServiceId types.String `tfsdk:"appService_id"`
+	AppServiceId types.String `tfsdk:"app_service_id"`
 
 	// State is the state to which the app service needs to be turned to i.e. on or off.
 	State types.String `tfsdk:"state"`
+}
+
+func (a *AppServiceOnOffOnDemand) Validate() (map[Attr]string, error) {
+	state := map[Attr]basetypes.StringValue{
+		OrganizationId: a.OrganizationId,
+		ProjectId:      a.ProjectId,
+		ClusterId:      a.ClusterId,
+		AppServiceId:   a.AppServiceId,
+	}
+
+	IDs, err := validateSchemaState(state)
+	if err != nil {
+		return nil, fmt.Errorf("failed to validate resource state: %s", err)
+	}
+
+	return IDs, nil
 }
