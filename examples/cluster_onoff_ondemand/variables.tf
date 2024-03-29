@@ -20,6 +20,6 @@ variable "cluster_onoff_ondemand" {
 
     type = object({
         state = string
-        turn_on_linked_app_service = optional(string)
+        turn_on_linked_app_service = optional(bool)
       })
 }

@@ -78,7 +78,7 @@ func (c *ClusterOnOffOnDemand) Configure(_ context.Context, req resource.Configu
 	c.Data = data
 }
 
-// Create allows to switch the cluster to ON state.
+// Create allows to switch the cluster to ON or OFF state.
 func (c *ClusterOnOffOnDemand) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan providerschema.ClusterOnOffOnDemand
 	diags := req.Plan.Get(ctx, &plan)
@@ -89,6 +89,7 @@ func (c *ClusterOnOffOnDemand) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	clusterOnRequest := cluster_onoff_api.CreateClusterOnRequest{}
+	clusterOffRequest := cluster_onoff_api.CreateClusterOffRequest{}
 
 	// Check for optional fields
 	if !plan.TurnOnLinkedAppService.IsNull() && !plan.TurnOnLinkedAppService.IsUnknown() {
@@ -107,19 +108,44 @@ func (c *ClusterOnOffOnDemand) Create(ctx context.Context, req resource.CreateRe
 	var projectId = plan.ProjectId.ValueString()
 	var clusterId = plan.ClusterId.ValueString()
 
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/activationState", c.HostURL, organizationId, projectId, clusterId)
-	cfg := cluster_onoff_api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
-	_, err := c.Client.ExecuteWithRetry(
-		ctx,
-		cfg,
-		clusterOnRequest,
-		c.Token,
-		nil,
-	)
-	if err != nil {
+	if plan.State.ValueString() == "on" {
+		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/activationState", c.HostURL, organizationId, projectId, clusterId)
+		cfg := cluster_onoff_api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
+		_, err := c.Client.ExecuteWithRetry(
+			ctx,
+			cfg,
+			clusterOnRequest,
+			c.Token,
+			nil,
+		)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error executing the operation to switch on the cluster",
+				errorMessageWhileClusterOnOffCreation+cluster_onoff_api.ParseError(err),
+			)
+			return
+		}
+	} else if plan.State.ValueString() == "off" {
+		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/activationState", c.HostURL, organizationId, projectId, clusterId)
+		cfg := cluster_onoff_api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
+		_, err := c.Client.ExecuteWithRetry(
+			ctx,
+			cfg,
+			clusterOffRequest,
+			c.Token,
+			nil,
+		)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error executing the operation to switch off the cluster",
+				errorMessageWhileClusterOnOffCreation+cluster_onoff_api.ParseError(err),
+			)
+			return
+		}
+	} else {
 		resp.Diagnostics.AddError(
-			"Error executing the operation to switch on the cluster",
-			errorMessageWhileClusterOnOffCreation+cluster_onoff_api.ParseError(err),
+			"Invalid state value",
+			"State must be either 'on' or 'off'",
 		)
 		return
 	}
@@ -145,7 +171,6 @@ func (c *ClusterOnOffOnDemand) Create(ctx context.Context, req resource.CreateRe
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 }
 
 // initializeClusterOnOffWithPlan initializes an instance of providerschema.ClusterOnOffOnDemand
@@ -260,8 +285,9 @@ func (c *ClusterOnOffOnDemand) Read(ctx context.Context, req resource.ReadReques
 	}
 }
 
-// Update allows to switch the cluster to OFF state.
+// Update allows to update the cluster to ON or OFF state.
 func (c *ClusterOnOffOnDemand) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+
 	// Retrieve values from plan
 	var plan providerschema.ClusterOnOffOnDemand
 	diags := req.Plan.Get(ctx, &plan)
@@ -271,16 +297,8 @@ func (c *ClusterOnOffOnDemand) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
+	clusterOnRequest := cluster_onoff_api.CreateClusterOnRequest{}
 	clusterOffRequest := cluster_onoff_api.CreateClusterOffRequest{}
-
-	//resourceIDs, err := plan.Validate()
-	//if err != nil {
-	//	resp.Diagnostics.AddError(
-	//		"Error updating onDemandClusterOnOff",
-	//		"Could not switch off the cluster, unexpected error: "+err.Error(),
-	//	)
-	//	return
-	//}
 
 	if err := c.validateCreateClusterOnOffRequest(plan); err != nil {
 		resp.Diagnostics.AddError(
@@ -294,29 +312,44 @@ func (c *ClusterOnOffOnDemand) Update(ctx context.Context, req resource.UpdateRe
 	var projectId = plan.ProjectId.ValueString()
 	var clusterId = plan.ClusterId.ValueString()
 
-	//var (
-	//	organizationId = resourceIDs[providerschema.OrganizationId]
-	//	projectId      = resourceIDs[providerschema.ProjectId]
-	//	clusterId      = resourceIDs[providerschema.ClusterId]
-	//	bucketId       = resourceIDs[providerschema.BucketId]
-	//	scopeName      = resourceIDs[providerschema.ScopeName]
-	//	collectionName = resourceIDs[providerschema.CollectionName]
-	//)
-
-	// Update existing onDemandClusterOnOff
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/activationState", c.HostURL, organizationId, projectId, clusterId)
-	cfg := cluster_onoff_api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
-	_, err := c.Client.ExecuteWithRetry(
-		ctx,
-		cfg,
-		clusterOffRequest,
-		c.Token,
-		nil,
-	)
-	if err != nil {
+	if plan.State.ValueString() == "on" {
+		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/activationState", c.HostURL, organizationId, projectId, clusterId)
+		cfg := cluster_onoff_api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
+		_, err := c.Client.ExecuteWithRetry(
+			ctx,
+			cfg,
+			clusterOnRequest,
+			c.Token,
+			nil,
+		)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error executing the operation to switch on the cluster",
+				errorMessageWhileClusterOnOffCreation+cluster_onoff_api.ParseError(err),
+			)
+			return
+		}
+	} else if plan.State.ValueString() == "off" {
+		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/activationState", c.HostURL, organizationId, projectId, clusterId)
+		cfg := cluster_onoff_api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
+		_, err := c.Client.ExecuteWithRetry(
+			ctx,
+			cfg,
+			clusterOffRequest,
+			c.Token,
+			nil,
+		)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error executing the operation to switch off the cluster",
+				errorMessageWhileClusterOnOffCreation+cluster_onoff_api.ParseError(err),
+			)
+			return
+		}
+	} else {
 		resp.Diagnostics.AddError(
-			"Error executing the operation to switch off the cluster",
-			errorMessageWhileClusterOnOffCreation+cluster_onoff_api.ParseError(err),
+			"Invalid state value",
+			"State must be either 'on' or 'off'",
 		)
 		return
 	}
