@@ -37,8 +37,8 @@ type ClusterOnOffOnDemand struct {
 	*providerschema.Data
 }
 
-// NewOnDemandClusterOnOff is a helper function to simplify the provider implementation.
-func NewOnDemandClusterOnOff() resource.Resource {
+// NewClusterOnOffOnDemand is a helper function to simplify the provider implementation.
+func NewClusterOnOffOnDemand() resource.Resource {
 	return &ClusterOnOffOnDemand{}
 }
 

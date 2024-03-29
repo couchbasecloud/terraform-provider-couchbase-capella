@@ -164,4 +164,7 @@ var (
 
 	// ErrIfMatchCannotBeSetWhileCreate is returned when if_match is set during create operation.
 	ErrInvalidSampleBucketName = errors.New("sample bucket name can only be travel-sample, beer-sample, gamesim-sample")
+
+	// ErrOnoffStateCannotBeEmpty is returned when cluster on/off state is required for a request but was not included.
+	ErrOnoffStateCannotBeEmpty = errors.New("On/off state cannot be empty, please mention the state in which you want your cluster to be")
 )
