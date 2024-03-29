@@ -133,6 +133,7 @@ func (c *ClusterOnOffOnDemand) Create(ctx context.Context, req resource.CreateRe
 		//if !plan.TurnOnLinkedAppService.IsNull() && !plan.TurnOnLinkedAppService.IsUnknown() {
 		//	plan.TurnOnLinkedAppService = types.BoolNull()
 		//}
+
 		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/activationState", c.HostURL, organizationId, projectId, clusterId)
 		cfg := cluster_onoff_api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
 		_, err := c.Client.ExecuteWithRetry(
@@ -234,11 +235,16 @@ func (c *ClusterOnOffOnDemand) retrieveClusterOnOff(ctx context.Context, organiz
 	}
 
 	refreshedState := providerschema.ClusterOnOffOnDemand{
-		ClusterId:              types.StringValue(clusterId),
-		ProjectId:              types.StringValue(projectId),
-		OrganizationId:         types.StringValue(organizationId),
-		State:                  types.StringValue(state),
-		TurnOnLinkedAppService: types.BoolValue(linkedApp),
+		ClusterId:      types.StringValue(clusterId),
+		ProjectId:      types.StringValue(projectId),
+		OrganizationId: types.StringValue(organizationId),
+		State:          types.StringValue(state),
+	}
+
+	if state == "off" {
+		refreshedState.TurnOnLinkedAppService = types.BoolNull()
+	} else {
+		refreshedState.TurnOnLinkedAppService = types.BoolValue(linkedApp)
 	}
 
 	return &refreshedState, nil
