@@ -7,11 +7,11 @@ import (
 func ScopeSchema() schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"organization_id": stringAttribute(required, requiresReplace),
-			"project_id":      stringAttribute(required, requiresReplace),
-			"cluster_id":      stringAttribute(required, requiresReplace),
-			"bucket_id":       stringAttribute(required, requiresReplace),
-			"scope_name":      stringAttribute(required, requiresReplace),
+			"organization_id": stringAttribute([]string{required, requiresReplace}),
+			"project_id":      stringAttribute([]string{required, requiresReplace}),
+			"cluster_id":      stringAttribute([]string{required, requiresReplace}),
+			"bucket_id":       stringAttribute([]string{required, requiresReplace}),
+			"scope_name":      stringAttribute([]string{required, requiresReplace}),
 			"collections": schema.SetNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
