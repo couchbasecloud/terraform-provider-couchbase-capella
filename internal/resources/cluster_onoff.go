@@ -13,6 +13,7 @@ import (
 
 	cluster_onoff_api "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	cluster_api "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
+
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
@@ -24,11 +25,11 @@ var (
 	_ resource.ResourceWithImportState = &ClusterOnOffOnDemand{}
 )
 
-const errorMessageWhileClusterOnOffCreation = "There is an error during switching on the cluster. Please check in Capella to see if any hanging resources" +
+const errorMessageWhileClusterOnOffCreation = "There is an error during switching on/off the cluster. Please check in Capella to see if any hanging resources" +
 	" have been created, unexpected error: "
 
-const errorMessageAfterClusterOnOffCreation = "Cluster switch on is successful, but encountered an error while checking the current" +
-	" state of the switched on cluster. Please run `terraform plan` after 1-2 minutes to know the" +
+const errorMessageAfterClusterOnOffCreation = "Cluster switch on/off is successful, but encountered an error while checking the current" +
+	" state of the switched on/off cluster. Please run `terraform plan` after 1-2 minutes to know the" +
 	" current state. Additionally, run `terraform apply --refresh-only` to update" +
 	" the state from remote, unexpected error: "
 
@@ -89,12 +90,13 @@ func (c *ClusterOnOffOnDemand) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	clusterOnRequest := cluster_onoff_api.CreateClusterOnRequest{}
-	clusterOffRequest := cluster_onoff_api.CreateClusterOffRequest{}
 
 	// Check for optional fields
 	if !plan.TurnOnLinkedAppService.IsNull() && !plan.TurnOnLinkedAppService.IsUnknown() {
 		clusterOnRequest.TurnOnLinkedAppService = plan.TurnOnLinkedAppService.ValueBool()
 	}
+
+	clusterOffRequest := cluster_onoff_api.CreateClusterOffRequest{}
 
 	if err := c.validateCreateClusterOnOffRequest(plan); err != nil {
 		resp.Diagnostics.AddError(
@@ -109,6 +111,7 @@ func (c *ClusterOnOffOnDemand) Create(ctx context.Context, req resource.CreateRe
 	var clusterId = plan.ClusterId.ValueString()
 
 	if plan.State.ValueString() == "on" {
+
 		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/activationState", c.HostURL, organizationId, projectId, clusterId)
 		cfg := cluster_onoff_api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
 		_, err := c.Client.ExecuteWithRetry(
@@ -126,6 +129,9 @@ func (c *ClusterOnOffOnDemand) Create(ctx context.Context, req resource.CreateRe
 			return
 		}
 	} else if plan.State.ValueString() == "off" {
+		//if !plan.TurnOnLinkedAppService.IsNull() && !plan.TurnOnLinkedAppService.IsUnknown() {
+		//	plan.TurnOnLinkedAppService = types.BoolNull()
+		//}
 		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/activationState", c.HostURL, organizationId, projectId, clusterId)
 		cfg := cluster_onoff_api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
 		_, err := c.Client.ExecuteWithRetry(
@@ -156,7 +162,7 @@ func (c *ClusterOnOffOnDemand) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	refreshedState, err := c.retrieveClusterOnOff(ctx, organizationId, projectId, clusterId, plan.State.ValueString())
+	refreshedState, err := c.retrieveClusterOnOff(ctx, organizationId, projectId, clusterId, plan.State.String(), plan.TurnOnLinkedAppService.ValueBool())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella ClusterOnOffOnDemand",
@@ -164,6 +170,8 @@ func (c *ClusterOnOffOnDemand) Create(ctx context.Context, req resource.CreateRe
 		)
 		return
 	}
+
+	//refreshedState := providerschema.NewClusterOnOffOnDemand(plan.State.String(), organizationId, projectId, clusterId, plan.TurnOnLinkedAppService.ValueBool())
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
@@ -199,7 +207,7 @@ func (c *ClusterOnOffOnDemand) validateCreateClusterOnOffRequest(plan providersc
 }
 
 // retrieveClusterOnOff retrieves onDemandClusterOnOff information from the specified organization and project using the provided cluster ID by open-api call.
-func (c *ClusterOnOffOnDemand) retrieveClusterOnOff(ctx context.Context, organizationId, projectId, clusterId, state string) (*providerschema.ClusterOnOffOnDemand, error) {
+func (c *ClusterOnOffOnDemand) retrieveClusterOnOff(ctx context.Context, organizationId, projectId, clusterId, state string, linkedApp bool) (*providerschema.ClusterOnOffOnDemand, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", c.HostURL, organizationId, projectId, clusterId)
 	cfg := cluster_onoff_api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := c.Client.ExecuteWithRetry(
@@ -225,10 +233,11 @@ func (c *ClusterOnOffOnDemand) retrieveClusterOnOff(ctx context.Context, organiz
 	}
 
 	refreshedState := providerschema.ClusterOnOffOnDemand{
-		ClusterId:      types.StringValue(clusterId),
-		ProjectId:      types.StringValue(projectId),
-		OrganizationId: types.StringValue(organizationId),
-		State:          types.StringValue(state),
+		ClusterId:              types.StringValue(clusterId),
+		ProjectId:              types.StringValue(projectId),
+		OrganizationId:         types.StringValue(organizationId),
+		State:                  types.StringValue(state),
+		TurnOnLinkedAppService: types.BoolValue(linkedApp),
 	}
 
 	return &refreshedState, nil
@@ -263,7 +272,7 @@ func (c *ClusterOnOffOnDemand) Read(ctx context.Context, req resource.ReadReques
 		clusterId      = IDs[providerschema.ClusterId]
 	)
 
-	refreshedState, err := c.retrieveClusterOnOff(ctx, organizationId, projectId, clusterId, state.State.String())
+	refreshedState, err := c.retrieveClusterOnOff(ctx, organizationId, projectId, clusterId, state.State.String(), state.TurnOnLinkedAppService.ValueBool())
 	if err != nil {
 		//resourceNotFound, errString := cluster_onoff_api.CheckResourceNotFoundError(err)
 		//if resourceNotFound {
@@ -298,6 +307,11 @@ func (c *ClusterOnOffOnDemand) Update(ctx context.Context, req resource.UpdateRe
 	}
 
 	clusterOnRequest := cluster_onoff_api.CreateClusterOnRequest{}
+	// Check for optional fields
+	if !plan.TurnOnLinkedAppService.IsNull() && !plan.TurnOnLinkedAppService.IsUnknown() {
+		clusterOnRequest.TurnOnLinkedAppService = plan.TurnOnLinkedAppService.ValueBool()
+	}
+
 	clusterOffRequest := cluster_onoff_api.CreateClusterOffRequest{}
 
 	if err := c.validateCreateClusterOnOffRequest(plan); err != nil {
@@ -354,13 +368,7 @@ func (c *ClusterOnOffOnDemand) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	diags = resp.State.Set(ctx, plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	refreshedState, err := c.retrieveClusterOnOff(ctx, organizationId, projectId, clusterId, plan.State.ValueString())
+	refreshedState, err := c.retrieveClusterOnOff(ctx, organizationId, projectId, clusterId, plan.State.ValueString(), plan.TurnOnLinkedAppService.ValueBool())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella ClusterOnOffOnDemand",
@@ -377,7 +385,6 @@ func (c *ClusterOnOffOnDemand) Update(ctx context.Context, req resource.UpdateRe
 	}
 }
 
-// Delete deletes the onDemandClusterOnOff.
 func (c *ClusterOnOffOnDemand) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// Couchbase Capella's v4 does not support a DELETION/destroying resource for cluster on/off.
 	// Cluster on/off can only access the POST and DELETE endpoint which are used for switching the cluster to on and off state respectively.
