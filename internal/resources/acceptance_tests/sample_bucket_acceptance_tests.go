@@ -6,8 +6,9 @@ import (
 	"testing"
 	"time"
 
-	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+
+	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 )
 
 func TestAccSampleBucketTestCases(t *testing.T) {

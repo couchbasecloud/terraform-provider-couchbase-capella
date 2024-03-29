@@ -5,16 +5,16 @@ import "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 func OnOffScheduleSchema() schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"organization_id": stringAttribute(required, requiresReplace),
-			"project_id":      stringAttribute(required, requiresReplace),
-			"cluster_id":      stringAttribute(required, requiresReplace),
-			"timezone":        stringAttribute(required, requiresReplace),
+			"organization_id": stringAttribute([]string{required, requiresReplace}),
+			"project_id":      stringAttribute([]string{required, requiresReplace}),
+			"cluster_id":      stringAttribute([]string{required, requiresReplace}),
+			"timezone":        stringAttribute([]string{required, requiresReplace}),
 			"days": schema.ListNestedAttribute{
 				Required: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"state": stringAttribute(required),
-						"day":   stringAttribute(required),
+						"state": stringAttribute([]string{required}),
+						"day":   stringAttribute([]string{required}),
 						"from": schema.SingleNestedAttribute{
 							Optional: true,
 							Attributes: map[string]schema.Attribute{
