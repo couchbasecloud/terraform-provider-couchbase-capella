@@ -39,17 +39,3 @@ func (c *ClusterOnOffOnDemand) Validate() (map[Attr]string, error) {
 
 	return IDs, nil
 }
-
-//// NewClusterOnOffOnDemand creates new cluster on/off object.
-//func NewClusterOnOffOnDemand(state, organizationId, projectId, clusterId string,
-//	turnOnLinkedAppservice bool,
-//) *ClusterOnOffOnDemand {
-//	newBackup := ClusterOnOffOnDemand{
-//		OrganizationId:         types.StringValue(organizationId),
-//		ProjectId:              types.StringValue(projectId),
-//		ClusterId:              types.StringValue(clusterId),
-//		State:                  types.StringValue(state),
-//		TurnOnLinkedAppService: types.BoolValue(turnOnLinkedAppservice),
-//	}
-//	return &newBackup
-//}

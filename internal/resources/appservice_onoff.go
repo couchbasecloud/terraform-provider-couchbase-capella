@@ -25,10 +25,10 @@ var (
 	_ resource.ResourceWithImportState = &AppServiceOnOffOnDemand{}
 )
 
-const errorMessageWhileAppserviceOnOffCreation = "There is an error during switching on/off the cluster. Please check in Capella to see if any hanging resources" +
+const errorMessageWhileAppServiceOnOffCreation = "There is an error during switching on/off the cluster. Please check in Capella to see if any hanging resources" +
 	" have been created, unexpected error: "
 
-const errorMessageAfterAppserviceOnOffCreation = "Cluster switch on/off is successful, but encountered an error while checking the current" +
+const errorMessageAfterAppServiceOnOffCreation = "Cluster switch on/off is successful, but encountered an error while checking the current" +
 	" state of the switched on/off cluster. Please run `terraform plan` after 1-2 minutes to know the" +
 	" current state. Additionally, run `terraform apply --refresh-only` to update" +
 	" the state from remote, unexpected error: "
@@ -119,7 +119,7 @@ func (c *AppServiceOnOffOnDemand) Create(ctx context.Context, req resource.Creat
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error executing the operation to switch on the cluster",
-				errorMessageWhileAppserviceOnOffCreation+app_service_onoff_api.ParseError(err),
+				errorMessageWhileAppServiceOnOffCreation+app_service_onoff_api.ParseError(err),
 			)
 			return
 		}
@@ -136,7 +136,7 @@ func (c *AppServiceOnOffOnDemand) Create(ctx context.Context, req resource.Creat
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error executing the operation to switch off the cluster",
-				errorMessageWhileAppserviceOnOffCreation+app_service_onoff_api.ParseError(err),
+				errorMessageWhileAppServiceOnOffCreation+app_service_onoff_api.ParseError(err),
 			)
 			return
 		}
@@ -158,12 +158,10 @@ func (c *AppServiceOnOffOnDemand) Create(ctx context.Context, req resource.Creat
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella AppServiceOnOffOnDemand",
-			"Could not read Capella AppServiceOnOffOnDemand for the cluster: %s "+clusterId+"."+errorMessageAfterAppserviceOnOffCreation+app_service_onoff_api.ParseError(err),
+			"Could not read Capella AppServiceOnOffOnDemand for the cluster: %s "+clusterId+"."+errorMessageAfterAppServiceOnOffCreation+app_service_onoff_api.ParseError(err),
 		)
 		return
 	}
-
-	//refreshedState := providerschema.NewAppserviceOnOffOnDemand(plan.State.String(), organizationId, projectId, clusterId, plan.TurnOnLinkedAppService.ValueBool())
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
@@ -323,7 +321,7 @@ func (c *AppServiceOnOffOnDemand) Update(ctx context.Context, req resource.Updat
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error executing the operation to switch on the cluster",
-				errorMessageWhileAppserviceOnOffCreation+app_service_onoff_api.ParseError(err),
+				errorMessageWhileAppServiceOnOffCreation+app_service_onoff_api.ParseError(err),
 			)
 			return
 		}
@@ -340,7 +338,7 @@ func (c *AppServiceOnOffOnDemand) Update(ctx context.Context, req resource.Updat
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error executing the operation to switch off the cluster",
-				errorMessageWhileAppserviceOnOffCreation+app_service_onoff_api.ParseError(err),
+				errorMessageWhileAppServiceOnOffCreation+app_service_onoff_api.ParseError(err),
 			)
 			return
 		}
@@ -356,7 +354,7 @@ func (c *AppServiceOnOffOnDemand) Update(ctx context.Context, req resource.Updat
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella AppserviceOnOffOnDemand",
-			"Could not read Capella AppserviceOnOffOnDemand for the cluster: %s "+clusterId+"."+errorMessageAfterAppserviceOnOffCreation+app_service_onoff_api.ParseError(err),
+			"Could not read Capella AppserviceOnOffOnDemand for the cluster: %s "+clusterId+"."+errorMessageAfterAppServiceOnOffCreation+app_service_onoff_api.ParseError(err),
 		)
 		return
 	}
@@ -369,7 +367,7 @@ func (c *AppServiceOnOffOnDemand) Update(ctx context.Context, req resource.Updat
 	}
 }
 
-func (c *AppServiceOnOffOnDemand) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (c *AppServiceOnOffOnDemand) Delete(_ context.Context, _ resource.DeleteRequest, _ *resource.DeleteResponse) {
 	// Couchbase Capella's v4 does not support a DELETION/destroying resource for cluster on/off.
 	// Cluster on/off can only access the POST and DELETE endpoint which are used for switching the cluster to on and off state respectively.
 	// https://docs.couchbase.com/cloud/management-api-reference/index.html#tag/clusters/operation/clusterOn
