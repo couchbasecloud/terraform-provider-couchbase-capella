@@ -159,7 +159,7 @@ var (
 	// ErrIfMatchCannotBeSetWhileCreate is returned when if_match is set during create operation.
 	ErrIfMatchCannotBeSetWhileCreate = errors.New("if_match attribute cannot be set during create operation")
 
-	// ErrRatelimit is returned when an API key reaches the ratelimit
+	// ErrRatelimit is returned when the Capella API reaches a rate limit for the same API key.
 	ErrRatelimit = errors.New("api key reached the ratelimit")
 
 	// ErrScopeNameMissing is returned when an expected ScopeName was not found after an import.
