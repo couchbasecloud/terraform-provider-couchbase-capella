@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -27,8 +28,11 @@ const (
 
 // stringAttribute is a variadic function which sets the requested fields
 // in a string attribute to true and then returns the string attribute.
-func stringAttribute(fields ...string) *schema.StringAttribute {
+func stringAttribute(fields []string, validators ...validator.String) *schema.StringAttribute {
 	attribute := schema.StringAttribute{}
+	attribute.Validators = make([]validator.String, 0)
+
+	attribute.Validators = append(attribute.Validators, validators...)
 
 	for _, field := range fields {
 		switch field {
@@ -57,7 +61,7 @@ func stringAttribute(fields ...string) *schema.StringAttribute {
 
 // stringDefaultAttribute sets the default values for a string field and returns the string attribute.
 func stringDefaultAttribute(defaultValue string, fields ...string) *schema.StringAttribute {
-	attribute := stringAttribute(fields...)
+	attribute := stringAttribute(fields)
 	attribute.Default = stringdefault.StaticString(defaultValue)
 	return attribute
 }
@@ -248,10 +252,10 @@ func computedAuditAttribute() *schema.SingleNestedAttribute {
 	return &schema.SingleNestedAttribute{
 		Computed: true,
 		Attributes: map[string]schema.Attribute{
-			"created_at":  stringAttribute(computed),
-			"created_by":  stringAttribute(computed),
-			"modified_at": stringAttribute(computed),
-			"modified_by": stringAttribute(computed),
+			"created_at":  stringAttribute([]string{computed}),
+			"created_by":  stringAttribute([]string{computed}),
+			"modified_at": stringAttribute([]string{computed}),
+			"modified_by": stringAttribute([]string{computed}),
 			"version":     int64Attribute(computed),
 		},
 	}

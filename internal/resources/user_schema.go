@@ -7,24 +7,24 @@ import (
 func UserSchema() schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id":                   stringAttribute(computed),
-			"name":                 stringAttribute(optional, computed),
-			"status":               stringAttribute(computed),
+			"id":                   stringAttribute([]string{computed}),
+			"name":                 stringAttribute([]string{optional, computed}),
+			"status":               stringAttribute([]string{computed}),
 			"inactive":             boolAttribute(computed),
-			"email":                stringAttribute(required, requiresReplace),
-			"organization_id":      stringAttribute(required, requiresReplace),
+			"email":                stringAttribute([]string{required, requiresReplace}),
+			"organization_id":      stringAttribute([]string{required, requiresReplace}),
 			"organization_roles":   stringListAttribute(required),
-			"last_login":           stringAttribute(computed),
-			"region":               stringAttribute(computed),
-			"time_zone":            stringAttribute(computed),
+			"last_login":           stringAttribute([]string{computed}),
+			"region":               stringAttribute([]string{computed}),
+			"time_zone":            stringAttribute([]string{computed}),
 			"enable_notifications": boolAttribute(computed),
-			"expires_at":           stringAttribute(computed),
+			"expires_at":           stringAttribute([]string{computed}),
 			"resources": schema.SetNestedAttribute{
 				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"type":  stringDefaultAttribute("project", optional, computed),
-						"id":    stringAttribute(required),
+						"id":    stringAttribute([]string{required}),
 						"roles": stringSetAttribute(required),
 					},
 				},

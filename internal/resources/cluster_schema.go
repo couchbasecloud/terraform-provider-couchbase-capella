@@ -16,27 +16,27 @@ func ClusterSchema() schema.Schema {
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"organization_id": stringAttribute(required, requiresReplace),
-			"project_id":      stringAttribute(required, requiresReplace),
-			"name":            stringAttribute(required),
-			"description":     stringAttribute(optional, computed),
+			"organization_id": stringAttribute([]string{required, requiresReplace}),
+			"project_id":      stringAttribute([]string{required, requiresReplace}),
+			"name":            stringAttribute([]string{required}),
+			"description":     stringAttribute([]string{optional, computed}),
 			"cloud_provider": schema.SingleNestedAttribute{
 				Required: true,
 				Attributes: map[string]schema.Attribute{
-					"type":   stringAttribute(required),
-					"region": stringAttribute(required),
-					"cidr":   stringAttribute(required),
+					"type":   stringAttribute([]string{required}),
+					"region": stringAttribute([]string{required}),
+					"cidr":   stringAttribute([]string{required}),
 				},
 				PlanModifiers: []planmodifier.Object{
 					objectplanmodifier.RequiresReplace(),
 				},
 			},
-			"configuration_type": stringAttribute(optional, computed, requiresReplace, useStateForUnknown),
+			"configuration_type": stringAttribute([]string{optional, computed, requiresReplace, useStateForUnknown}),
 			"couchbase_server": schema.SingleNestedAttribute{
 				Optional: true,
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"version": stringAttribute(optional, computed),
+					"version": stringAttribute([]string{optional, computed}),
 				},
 				PlanModifiers: []planmodifier.Object{
 					objectplanmodifier.RequiresReplace(),
@@ -63,7 +63,7 @@ func ClusterSchema() schema.Schema {
 										"In the case of GCP, only 'pd ssd' disk type is available, and you cannot set the 'IOPS' field.",
 									Required: true,
 									Attributes: map[string]schema.Attribute{
-										"type":          stringAttribute(required),
+										"type":          stringAttribute([]string{required}),
 										"storage":       int64Attribute(optional, computed),
 										"iops":          int64Attribute(optional, computed),
 										"autoexpansion": boolAttribute(optional, computed),
@@ -79,7 +79,7 @@ func ClusterSchema() schema.Schema {
 			"availability": schema.SingleNestedAttribute{
 				Required: true,
 				Attributes: map[string]schema.Attribute{
-					"type": stringAttribute(required),
+					"type": stringAttribute([]string{required}),
 				},
 				PlanModifiers: []planmodifier.Object{
 					objectplanmodifier.RequiresReplace(),
@@ -88,16 +88,16 @@ func ClusterSchema() schema.Schema {
 			"support": schema.SingleNestedAttribute{
 				Required: true,
 				Attributes: map[string]schema.Attribute{
-					"plan":     stringAttribute(required),
-					"timezone": stringAttribute(required),
+					"plan":     stringAttribute([]string{required}),
+					"timezone": stringAttribute([]string{required}),
 				},
 			},
-			"current_state":  stringAttribute(computed),
-			"app_service_id": stringAttribute(computed),
+			"current_state":  stringAttribute([]string{computed}),
+			"app_service_id": stringAttribute([]string{computed}),
 			"audit":          computedAuditAttribute(),
 			// if_match is only required during update call
-			"if_match": stringAttribute(optional),
-			"etag":     stringAttribute(computed),
+			"if_match": stringAttribute([]string{optional}),
+			"etag":     stringAttribute([]string{computed}),
 		},
 	}
 }

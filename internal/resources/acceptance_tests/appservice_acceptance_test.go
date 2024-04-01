@@ -3,10 +3,6 @@ package acceptance_tests
 import (
 	"context"
 	"fmt"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	appserviceapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/appservice"
-	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"log"
 	"net/http"
 	"os"
@@ -14,9 +10,16 @@ import (
 	"testing"
 	"time"
 
-	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	appserviceapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/appservice"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
+	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 )
 
 func TestAppServiceResource(t *testing.T) {
