@@ -1,4 +1,4 @@
-package cluster_onoff_schedule
+package api
 
 // CreateClusterOnOffScheduleRequest is the request payload sent to the Capella V4 Public API
 // in order to create a new cluster on/off schedule.

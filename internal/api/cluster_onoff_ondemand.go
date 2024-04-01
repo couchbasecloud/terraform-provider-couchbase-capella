@@ -14,5 +14,3 @@ type CreateClusterOnRequest struct {
 	// Default value for this is false, which means the linked app service will be kept off.
 	TurnOnLinkedAppService bool `json:"turnOnLinkedAppService"`
 }
-
-type CreateClusterOffRequest struct{}

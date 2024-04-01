@@ -44,23 +44,23 @@ func NewAppServiceOnOffOnDemand() resource.Resource {
 }
 
 // ImportState imports a remote AppserviceOnOffOnDemand app service that is not created by Terraform.
-func (c *AppServiceOnOffOnDemand) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (a *AppServiceOnOffOnDemand) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import name and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("_app_service_id"), req, resp)
 }
 
 // Metadata returns the AppServiceOnOffOnDemand cluster resource type name.
-func (c *AppServiceOnOffOnDemand) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (a *AppServiceOnOffOnDemand) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_app_service_onoff_ondemand"
 }
 
 // Schema defines the schema for AppServiceOnOffOnDemand.
-func (c *AppServiceOnOffOnDemand) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = ClusterOnOffOnDemandSchema()
+func (a *AppServiceOnOffOnDemand) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = AppServiceOnOffOnDemandSchema()
 }
 
 // Configure It adds the provider configured api to ClusterOnOff.
-func (c *AppServiceOnOffOnDemand) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (a *AppServiceOnOffOnDemand) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -76,11 +76,11 @@ func (c *AppServiceOnOffOnDemand) Configure(_ context.Context, req resource.Conf
 		return
 	}
 
-	c.Data = data
+	a.Data = data
 }
 
 // Create allows to switch the cluster to ON or OFF state.
-func (c *AppServiceOnOffOnDemand) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (a *AppServiceOnOffOnDemand) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan providerschema.AppServiceOnOffOnDemand
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -89,61 +89,25 @@ func (c *AppServiceOnOffOnDemand) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	appServiceOnRequest := app_service_onoff_api.CreateAppServiceOnRequest{}
-	appServiceOffRequest := app_service_onoff_api.CreateAppServiceOffRequest{}
-
-	if err := c.validateCreateAppServiceOnOffRequest(plan); err != nil {
+	if err := a.validateAppServiceOnOffRequest(plan); err != nil {
 		resp.Diagnostics.AddError(
-			"Error parsing create onDemandClusterOnOff request",
+			"Error parsing create onDemandAppServiceOnOff request",
 			"Could not switch on the app service, unexpected error: "+err.Error(),
 		)
 		return
 	}
 
-	var organizationId = plan.OrganizationId.ValueString()
-	var projectId = plan.ProjectId.ValueString()
-	var clusterId = plan.ClusterId.ValueString()
-	var appServiceId = plan.AppServiceId.ValueString()
+	var (
+		organizationId = plan.OrganizationId.ValueString()
+		projectId      = plan.ProjectId.ValueString()
+		clusterId      = plan.ClusterId.ValueString()
+		appServiceId   = plan.AppServiceId.ValueString()
+	)
 
-	if plan.State.ValueString() == "on" {
-
-		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/activationState", c.HostURL, organizationId, projectId, clusterId, appServiceId)
-		cfg := app_service_onoff_api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
-		_, err := c.Client.ExecuteWithRetry(
-			ctx,
-			cfg,
-			appServiceOnRequest,
-			c.Token,
-			nil,
-		)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error executing the operation to switch on the cluster",
-				errorMessageWhileAppServiceOnOffCreation+app_service_onoff_api.ParseError(err),
-			)
-			return
-		}
-	} else if plan.State.ValueString() == "off" {
-		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/activationState", c.HostURL, organizationId, projectId, clusterId, appServiceId)
-		cfg := app_service_onoff_api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
-		_, err := c.Client.ExecuteWithRetry(
-			ctx,
-			cfg,
-			appServiceOffRequest,
-			c.Token,
-			nil,
-		)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error executing the operation to switch off the cluster",
-				errorMessageWhileAppServiceOnOffCreation+app_service_onoff_api.ParseError(err),
-			)
-			return
-		}
-	} else {
+	if err := a.manageAppServiceActivation(ctx, plan.State.ValueString(), organizationId, projectId, clusterId, appServiceId); err != nil {
 		resp.Diagnostics.AddError(
-			"Invalid state value",
-			"State must be either 'on' or 'off'",
+			"App Service activation failed",
+			err.Error(),
 		)
 		return
 	}
@@ -154,11 +118,11 @@ func (c *AppServiceOnOffOnDemand) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	refreshedState, err := c.retrieveAppServiceOnOff(ctx, organizationId, projectId, clusterId, appServiceId, plan.State.ValueString())
+	refreshedState, err := a.retrieveAppServiceOnOff(ctx, organizationId, projectId, clusterId, appServiceId, plan.State.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella AppServiceOnOffOnDemand",
-			"Could not read Capella AppServiceOnOffOnDemand for the cluster: %s "+clusterId+"."+errorMessageAfterAppServiceOnOffCreation+app_service_onoff_api.ParseError(err),
+			fmt.Sprintf("Could not read Capella AppServiceOnOffOnDemand for the app service: %s associated to cluster: %s: %s", appServiceId, clusterId, errorMessageAfterAppServiceOnOffCreation+app_service_onoff_api.ParseError(err)),
 		)
 		return
 	}
@@ -171,7 +135,36 @@ func (c *AppServiceOnOffOnDemand) Create(ctx context.Context, req resource.Creat
 	}
 }
 
-func (c *AppServiceOnOffOnDemand) validateCreateAppServiceOnOffRequest(plan providerschema.AppServiceOnOffOnDemand) error {
+func (a *AppServiceOnOffOnDemand) manageAppServiceActivation(ctx context.Context, state, organizationId, projectId, clusterId, appServiceId string) error {
+	var (
+		url    = fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/activationState", a.HostURL, organizationId, projectId, clusterId, appServiceId)
+		method string
+	)
+
+	switch state {
+	case "on":
+		method = http.MethodPost
+	case "off":
+		method = http.MethodDelete
+	default:
+		return fmt.Errorf("invalid state value: state must be either 'on' or 'off'")
+	}
+
+	cfg := app_service_onoff_api.EndpointCfg{Url: url, Method: method, SuccessStatus: http.StatusAccepted}
+	_, err := a.Client.ExecuteWithRetry(
+		ctx,
+		cfg,
+		nil,
+		a.Token,
+		nil,
+	)
+	if err != nil {
+		return fmt.Errorf(errorMessageWhileAppServiceOnOffCreation + app_service_onoff_api.ParseError(err))
+	}
+	return nil
+}
+
+func (a *AppServiceOnOffOnDemand) validateAppServiceOnOffRequest(plan providerschema.AppServiceOnOffOnDemand) error {
 	if plan.OrganizationId.IsNull() {
 		return errors.ErrOrganizationIdCannotBeEmpty
 	}
@@ -191,14 +184,14 @@ func (c *AppServiceOnOffOnDemand) validateCreateAppServiceOnOffRequest(plan prov
 }
 
 // retrieveAppServiceOnOff retrieves AppServiceOnOff information from the specified organization and project using the provided cluster ID by Get cluster open-api call.
-func (c *AppServiceOnOffOnDemand) retrieveAppServiceOnOff(ctx context.Context, organizationId, projectId, clusterId, appServiceId, state string) (*providerschema.AppServiceOnOffOnDemand, error) {
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s", c.HostURL, organizationId, projectId, clusterId, appServiceId)
+func (a *AppServiceOnOffOnDemand) retrieveAppServiceOnOff(ctx context.Context, organizationId, projectId, clusterId, appServiceId, state string) (*providerschema.AppServiceOnOffOnDemand, error) {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s", a.HostURL, organizationId, projectId, clusterId, appServiceId)
 	cfg := app_service_onoff_api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := c.Client.ExecuteWithRetry(
+	response, err := a.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
-		c.Token,
+		a.Token,
 		nil,
 	)
 	if err != nil {
@@ -235,7 +228,7 @@ func validateAppserviceStateIsSameInPlanAndState(planAppServiceState, stateAppSe
 // App service on/off can only access the POST and DELETE endpoint for switching the app service to on and off state respectively.
 // https://docs.couchbase.com/cloud/management-api-reference/index.html#tag/appServices/operation/appServiceOn
 // This read is calling the retrieveAppServiceOnOff func to verify the state with the cluster response.
-func (c *AppServiceOnOffOnDemand) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (a *AppServiceOnOffOnDemand) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state providerschema.AppServiceOnOffOnDemand
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -258,7 +251,7 @@ func (c *AppServiceOnOffOnDemand) Read(ctx context.Context, req resource.ReadReq
 		appServiceId   = IDs[providerschema.AppServiceId]
 	)
 
-	refreshedState, err := c.retrieveAppServiceOnOff(ctx, organizationId, projectId, clusterId, appServiceId, state.State.String())
+	refreshedState, err := a.retrieveAppServiceOnOff(ctx, organizationId, projectId, clusterId, appServiceId, state.State.String())
 	if err != nil {
 		resourceNotFound, _ := app_service_onoff_api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -281,7 +274,7 @@ func (c *AppServiceOnOffOnDemand) Read(ctx context.Context, req resource.ReadReq
 }
 
 // Update allows to update the cluster to ON or OFF state.
-func (c *AppServiceOnOffOnDemand) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (a *AppServiceOnOffOnDemand) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 
 	// Retrieve values from plan
 	var plan providerschema.AppServiceOnOffOnDemand
@@ -292,65 +285,30 @@ func (c *AppServiceOnOffOnDemand) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	appServiceOnRequest := app_service_onoff_api.CreateClusterOnRequest{}
-	appServiceOffRequest := app_service_onoff_api.CreateClusterOffRequest{}
-
-	if err := c.validateCreateAppServiceOnOffRequest(plan); err != nil {
+	if err := a.validateAppServiceOnOffRequest(plan); err != nil {
 		resp.Diagnostics.AddError(
-			"Error parsing create AppServiceOnOffOnDemand request",
-			"Could not switch on/off the app service, unexpected error: "+err.Error(),
+			"Error parsing create onDemandAppServiceOnOff request",
+			"Could not switch on the app service, unexpected error: "+err.Error(),
 		)
 		return
 	}
 
-	var organizationId = plan.OrganizationId.ValueString()
-	var projectId = plan.ProjectId.ValueString()
-	var clusterId = plan.ClusterId.ValueString()
-	var appServiceId = plan.AppServiceId.ValueString()
+	var (
+		organizationId = plan.OrganizationId.ValueString()
+		projectId      = plan.ProjectId.ValueString()
+		clusterId      = plan.ClusterId.ValueString()
+		appServiceId   = plan.AppServiceId.ValueString()
+	)
 
-	if plan.State.ValueString() == "on" {
-		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/activationState", c.HostURL, organizationId, projectId, clusterId, appServiceId)
-		cfg := app_service_onoff_api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
-		_, err := c.Client.ExecuteWithRetry(
-			ctx,
-			cfg,
-			appServiceOnRequest,
-			c.Token,
-			nil,
-		)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error executing the operation to switch on the cluster",
-				errorMessageWhileAppServiceOnOffCreation+app_service_onoff_api.ParseError(err),
-			)
-			return
-		}
-	} else if plan.State.ValueString() == "off" {
-		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/activationState", c.HostURL, organizationId, projectId, clusterId, appServiceId)
-		cfg := app_service_onoff_api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
-		_, err := c.Client.ExecuteWithRetry(
-			ctx,
-			cfg,
-			appServiceOffRequest,
-			c.Token,
-			nil,
-		)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error executing the operation to switch off the cluster",
-				errorMessageWhileAppServiceOnOffCreation+app_service_onoff_api.ParseError(err),
-			)
-			return
-		}
-	} else {
+	if err := a.manageAppServiceActivation(ctx, plan.State.ValueString(), organizationId, projectId, clusterId, appServiceId); err != nil {
 		resp.Diagnostics.AddError(
-			"Invalid state value",
-			"State must be either 'on' or 'off'",
+			"app service activation failed",
+			err.Error(),
 		)
 		return
 	}
 
-	refreshedState, err := c.retrieveAppServiceOnOff(ctx, organizationId, projectId, clusterId, appServiceId, plan.State.ValueString())
+	refreshedState, err := a.retrieveAppServiceOnOff(ctx, organizationId, projectId, clusterId, appServiceId, plan.State.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella AppserviceOnOffOnDemand",
@@ -367,7 +325,7 @@ func (c *AppServiceOnOffOnDemand) Update(ctx context.Context, req resource.Updat
 	}
 }
 
-func (c *AppServiceOnOffOnDemand) Delete(_ context.Context, _ resource.DeleteRequest, _ *resource.DeleteResponse) {
+func (a *AppServiceOnOffOnDemand) Delete(_ context.Context, _ resource.DeleteRequest, _ *resource.DeleteResponse) {
 	// Couchbase Capella's v4 does not support a DELETION/destroying resource for cluster on/off.
 	// Cluster on/off can only access the POST and DELETE endpoint which are used for switching the cluster to on and off state respectively.
 	// https://docs.couchbase.com/cloud/management-api-reference/index.html#tag/clusters/operation/clusterOn

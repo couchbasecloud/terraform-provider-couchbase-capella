@@ -13,7 +13,6 @@ import (
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 
-	scheduleapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster_onoff_schedule"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
@@ -77,22 +76,22 @@ func (c *ClusterOnOffSchedule) Create(ctx context.Context, req resource.CreateRe
 	var projectId = plan.ProjectId.ValueString()
 	var clusterId = plan.ClusterId.ValueString()
 
-	var days = make([]scheduleapi.DayItem, 0)
+	var days = make([]api.DayItem, 0)
 	for _, d := range plan.Days {
-		var from, to *scheduleapi.OnTimeBoundary
+		var from, to *api.OnTimeBoundary
 		if d.From != nil {
-			from = &scheduleapi.OnTimeBoundary{
+			from = &api.OnTimeBoundary{
 				Hour:   d.From.Hour.ValueInt64(),
 				Minute: d.From.Minute.ValueInt64(),
 			}
 		}
 		if d.To != nil {
-			to = &scheduleapi.OnTimeBoundary{
+			to = &api.OnTimeBoundary{
 				Hour:   d.To.Hour.ValueInt64(),
 				Minute: d.To.Minute.ValueInt64(),
 			}
 		}
-		days = append(days, scheduleapi.DayItem{
+		days = append(days, api.DayItem{
 			State: d.State.ValueString(),
 			Day:   d.Day.ValueString(),
 			From:  from,
@@ -100,7 +99,7 @@ func (c *ClusterOnOffSchedule) Create(ctx context.Context, req resource.CreateRe
 		})
 	}
 
-	scheduleRequest := scheduleapi.CreateClusterOnOffScheduleRequest{
+	scheduleRequest := api.CreateClusterOnOffScheduleRequest{
 		Timezone: plan.Timezone.ValueString(),
 		Days:     days,
 	}
@@ -242,22 +241,22 @@ func (c *ClusterOnOffSchedule) Update(ctx context.Context, req resource.UpdateRe
 		clusterId      = resourceIDs[providerschema.ClusterId]
 	)
 
-	var days = make([]scheduleapi.DayItem, 0)
+	var days = make([]api.DayItem, 0)
 	for _, d := range plan.Days {
-		var from, to *scheduleapi.OnTimeBoundary
+		var from, to *api.OnTimeBoundary
 		if d.From != nil {
-			from = &scheduleapi.OnTimeBoundary{
+			from = &api.OnTimeBoundary{
 				Hour:   d.From.Hour.ValueInt64(),
 				Minute: d.From.Minute.ValueInt64(),
 			}
 		}
 		if d.To != nil {
-			to = &scheduleapi.OnTimeBoundary{
+			to = &api.OnTimeBoundary{
 				Hour:   d.To.Hour.ValueInt64(),
 				Minute: d.To.Minute.ValueInt64(),
 			}
 		}
-		days = append(days, scheduleapi.DayItem{
+		days = append(days, api.DayItem{
 			State: d.State.ValueString(),
 			Day:   d.Day.ValueString(),
 			From:  from,
@@ -265,7 +264,7 @@ func (c *ClusterOnOffSchedule) Update(ctx context.Context, req resource.UpdateRe
 		})
 	}
 
-	BackupScheduleRequest := scheduleapi.UpdateClusterOnOffScheduleRequest{
+	BackupScheduleRequest := api.UpdateClusterOnOffScheduleRequest{
 		Timezone: plan.Timezone.ValueString(),
 		Days:     days,
 	}
@@ -419,7 +418,7 @@ func (c *ClusterOnOffSchedule) retrieveClusterOnOffSchedule(ctx context.Context,
 		return nil, err
 	}
 
-	onOffScheduleResp := scheduleapi.GetClusterOnOffScheduleResponse{}
+	onOffScheduleResp := api.GetClusterOnOffScheduleResponse{}
 	err = json.Unmarshal(response.Body, &onOffScheduleResp)
 	if err != nil {
 		return nil, err

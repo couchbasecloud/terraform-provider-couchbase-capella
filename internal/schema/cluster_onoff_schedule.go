@@ -3,7 +3,7 @@ package schema
 import (
 	"fmt"
 
-	scheduleapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster_onoff_schedule"
+	scheduleapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 
