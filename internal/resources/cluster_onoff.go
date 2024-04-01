@@ -134,8 +134,6 @@ func (c *ClusterOnOffOnDemand) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	//refreshedState := providerschema.NewClusterOnOffOnDemand(plan.State.String(), organizationId, projectId, clusterId, plan.TurnOnLinkedAppService.ValueBool())
-
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
@@ -227,16 +225,11 @@ func (c *ClusterOnOffOnDemand) retrieveClusterOnOff(ctx context.Context, organiz
 	}
 
 	refreshedState := providerschema.ClusterOnOffOnDemand{
-		ClusterId:      types.StringValue(clusterId),
-		ProjectId:      types.StringValue(projectId),
-		OrganizationId: types.StringValue(organizationId),
-		State:          types.StringValue(state),
-	}
-
-	if state == "off" {
-		refreshedState.TurnOnLinkedAppService = types.BoolNull()
-	} else {
-		refreshedState.TurnOnLinkedAppService = types.BoolValue(linkedApp)
+		ClusterId:              types.StringValue(clusterId),
+		ProjectId:              types.StringValue(projectId),
+		OrganizationId:         types.StringValue(organizationId),
+		State:                  types.StringValue(state),
+		TurnOnLinkedAppService: types.BoolValue(linkedApp),
 	}
 
 	return &refreshedState, nil

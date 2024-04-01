@@ -32,7 +32,7 @@ func (c *ClusterOnOffOnDemand) Validate() (map[Attr]string, error) {
 		ClusterId:      c.ClusterId,
 	}
 
-	IDs, err := validateSchemaState(state)
+	IDs, err := validateSchemaState(state, ClusterId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to validate resource state: %s", err)
 	}

@@ -32,7 +32,7 @@ func (a *AppServiceOnOffOnDemand) Validate() (map[Attr]string, error) {
 		AppServiceId:   a.AppServiceId,
 	}
 
-	IDs, err := validateSchemaState(state)
+	IDs, err := validateSchemaState(state, AppServiceId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to validate resource state: %s", err)
 	}

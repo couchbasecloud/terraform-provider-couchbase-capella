@@ -46,7 +46,7 @@ func NewAppServiceOnOffOnDemand() resource.Resource {
 // ImportState imports a remote AppserviceOnOffOnDemand app service that is not created by Terraform.
 func (a *AppServiceOnOffOnDemand) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import name and save to id attribute
-	resource.ImportStatePassthroughID(ctx, path.Root("_app_service_id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("app_service_id"), req, resp)
 }
 
 // Metadata returns the AppServiceOnOffOnDemand cluster resource type name.
