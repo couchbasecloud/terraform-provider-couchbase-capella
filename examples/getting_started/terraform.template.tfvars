@@ -175,3 +175,11 @@ days = [
     state = "off"
   }
 ]
+
+state = "off"
+
+cluster_onoff_ondemand = {
+    turn_on_linked_app_service = false
+}
+
+app_service_state = "off"
