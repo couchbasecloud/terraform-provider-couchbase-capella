@@ -1,4 +1,4 @@
-# Capella Cluster On/Off Example
+# Capella App Service On/Off Example
 
 This example shows how to switch the app service to on or off state on demand in Capella.
 
@@ -10,9 +10,9 @@ To run, configure your Couchbase Capella provider as described in README in the 
 
 In this example, we are going to do the following.
 
-1. CREATE: Switch the cluster to on/off state as mentioned in the `create_cluster_onoff_ondemand.tf` file.
-2. UPDATE: Update the current cluster state to on/off.
-3. IMPORT: Import a cluster state that exists in Capella but not in the terraform state file.
+1. CREATE: Switch the app service to on/off state as mentioned in the `create_app_service_onoff_ondemand.tf` file.
+2. UPDATE: Update the current app service state to on/off.
+3. IMPORT: Import an app service state that exists in Capella but not in the terraform state file.
 
 If you check the `terraform.template.tfvars` file - Make sure you copy the file to `terraform.tfvars` and update the values of the variables as per the correct organization access.
 
