@@ -243,8 +243,8 @@ func (r *Bucket) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 
 	if state.OrganizationId.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error creating bucket",
-			"Could not create bucket, unexpected error: "+errors.ErrOrganizationIdCannotBeEmpty.Error(),
+			"Error deleting bucket",
+			"Could not delete bucket, unexpected error: "+errors.ErrOrganizationIdCannotBeEmpty.Error(),
 		)
 		return
 	}
@@ -252,8 +252,8 @@ func (r *Bucket) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 
 	if state.ProjectId.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error creating bucket",
-			"Could not create bucket, unexpected error: "+errors.ErrProjectIdCannotBeEmpty.Error(),
+			"Error deleting bucket",
+			"Could not delete bucket, unexpected error: "+errors.ErrProjectIdCannotBeEmpty.Error(),
 		)
 		return
 	}
@@ -261,8 +261,8 @@ func (r *Bucket) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 
 	if state.ClusterId.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error creating bucket",
-			"Could not create bucket, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
+			"Error deleting bucket",
+			"Could not delete bucket, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
 		)
 		return
 	}
@@ -270,8 +270,8 @@ func (r *Bucket) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 
 	if state.Id.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error creating bucket",
-			"Could not create bucket, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
+			"Error deleting bucket",
+			"Could not delete bucket, unexpected error: "+errors.ErrClusterIdCannotBeEmpty.Error(),
 		)
 		return
 	}

@@ -15,15 +15,15 @@ func AppServiceSchema() schema.Schema {
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"organization_id": stringAttribute(required, requiresReplace),
-			"project_id":      stringAttribute(required, requiresReplace),
-			"cluster_id":      stringAttribute(required, requiresReplace),
-			"name":            stringAttribute(required, requiresReplace),
+			"organization_id": stringAttribute([]string{required, requiresReplace}),
+			"project_id":      stringAttribute([]string{required, requiresReplace}),
+			"cluster_id":      stringAttribute([]string{required, requiresReplace}),
+			"name":            stringAttribute([]string{required, requiresReplace}),
 			"description":     stringDefaultAttribute("", optional, computed, requiresReplace),
 			"nodes":           int64Attribute(optional, computed),
-			"cloud_provider":  stringAttribute(optional, computed),
-			"current_state":   stringAttribute(computed),
-			"version":         stringAttribute(computed),
+			"cloud_provider":  stringAttribute([]string{optional, computed}),
+			"current_state":   stringAttribute([]string{computed}),
+			"version":         stringAttribute([]string{computed}),
 			"compute": schema.SingleNestedAttribute{
 				Required: true,
 				Attributes: map[string]schema.Attribute{
@@ -32,8 +32,8 @@ func AppServiceSchema() schema.Schema {
 				},
 			},
 			"audit":    computedAuditAttribute(),
-			"if_match": stringAttribute(optional),
-			"etag":     stringAttribute(computed),
+			"if_match": stringAttribute([]string{optional}),
+			"etag":     stringAttribute([]string{computed}),
 		},
 	}
 }

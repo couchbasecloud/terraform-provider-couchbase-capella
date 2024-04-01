@@ -11,15 +11,17 @@ In this demo, we will perform the following operations:
 7. Create a new database credential in the newly created cluster.
 8. Add a new allowlist to the cluster.
 9. Create a new bucket in the cluster.
-10. Create a new app service in the cluster.
-11. Create a new scope in the bucket of the cluster.
-12. Create a new collection in the scope of a bucket.
+10. Create a new sample bucket in the cluster.
+11. Create a new app service in the cluster.
+12. Create a new scope in the bucket of the cluster.
+13. Create a new collection in the scope of a bucket.
+14. Create a new on/off schedule for the cluster.
 
 ## Pre-Requisites:
 
 Make sure you have followed the pre-requisite steps from the parent readme that builds the binary and stores the path in a .terraformrc file.
 
-### Variables file.
+### Variables file
 
 - Copy the `terraform.template.tfvars` file to `terraform.tfvars` file in the same directory
 - Create 1 V4 API key in your organization using the Capella UI.
@@ -36,7 +38,21 @@ $  terraform plan
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchbasecloud/capella in /Users/$USER/workspace/terraform-provider-capella
+│  - couchbasecloud/couchbase-capella in /Users/paulomee.de/go/bin
+│ 
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
+╵
+var.collection
+  Collection configuration details useful for creation
+
+  Enter a value: ^Z
+zsh: suspended  terraform plan
+paulomee.de@FJL6N0YK9X getting_started % terraform plan
+╷
+│ Warning: Provider development overrides are in effect
+│ 
+│ The following provider development overrides are set in the CLI configuration:
+│  - couchbasecloud/couchbase-capella in /Users/paulomee.de/go/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -75,7 +91,7 @@ Terraform will perform the following actions:
       + allowed_cidrs      = [
           + "10.1.42.0/23",
           + "10.1.43.0/23",
-          + "73.71.238.143/23",
+          + "10.5.30.0/23",
         ]
       + audit              = (known after apply)
       + expiry             = 180
@@ -100,7 +116,7 @@ Terraform will perform the following actions:
       + token              = (sensitive value)
     }
 
-  # couchbase-capella_app_service.new_app_service will be created
+        # couchbase-capella_app_service.new_app_service will be created
   + resource "couchbase-capella_app_service" "new_app_service" {
       + audit           = (known after apply)
       + cloud_provider  = (known after apply)
@@ -147,7 +163,7 @@ Terraform will perform the following actions:
           + type = "multi"
         }
       + cloud_provider     = {
-          + cidr   = "10.10.30.0/23"
+          + cidr   = "10.5.30.0/23"
           + region = "us-east-1"
           + type   = "aws"
         }
@@ -186,6 +202,80 @@ Terraform will perform the following actions:
           + plan     = "developer pro"
           + timezone = "PT"
         }
+    }
+
+  # couchbase-capella_cluster_onoff_schedule.new_cluster_onoff_schedule will be created
+  + resource "couchbase-capella_cluster_onoff_schedule" "new_cluster_onoff_schedule" {
+      + cluster_id      = (known after apply)
+      + days            = [
+          + {
+              + day   = "monday"
+              + from  = {
+                  + hour   = 12
+                  + minute = 30
+                }
+              + state = "custom"
+              + to    = {
+                  + hour   = 14
+                  + minute = 30
+                }
+            },
+          + {
+              + day   = "tuesday"
+              + from  = {
+                  + hour   = 12
+                  + minute = 0
+                }
+              + state = "custom"
+              + to    = {
+                  + hour   = 19
+                  + minute = 30
+                }
+            },
+          + {
+              + day   = "wednesday"
+              + state = "on"
+            },
+          + {
+              + day   = "thursday"
+              + from  = {
+                  + hour   = 12
+                  + minute = 30
+                }
+              + state = "custom"
+            },
+          + {
+              + day   = "friday"
+              + from  = {
+                  + hour   = 0
+                  + minute = 0
+                }
+              + state = "custom"
+              + to    = {
+                  + hour   = 12
+                  + minute = 30
+                }
+            },
+          + {
+              + day   = "saturday"
+              + from  = {
+                  + hour   = 12
+                  + minute = 30
+                }
+              + state = "custom"
+              + to    = {
+                  + hour   = 14
+                  + minute = 0
+                }
+            },
+          + {
+              + day   = "sunday"
+              + state = "off"
+            },
+        ]
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = (known after apply)
+      + timezone        = "US/Pacific"
     }
 
   # couchbase-capella_collection.new_collection will be created
@@ -247,6 +337,25 @@ Terraform will perform the following actions:
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
     }
 
+  # couchbase-capella_sample_bucket.new_sample_bucket will be created
+  + resource "couchbase-capella_sample_bucket" "new_sample_bucket" {
+      + bucket_conflict_resolution = (known after apply)
+      + cluster_id                 = (known after apply)
+      + durability_level           = (known after apply)
+      + eviction_policy            = (known after apply)
+      + flush                      = (known after apply)
+      + id                         = (known after apply)
+      + memory_allocation_in_mb    = (known after apply)
+      + name                       = "gamesim-sample"
+      + organization_id            = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id                 = (known after apply)
+      + replicas                   = (known after apply)
+      + stats                      = (known after apply)
+      + storage_backend            = (known after apply)
+      + time_to_live_in_seconds    = (known after apply)
+      + type                       = (known after apply)
+    }
+
   # couchbase-capella_scope.new_scope will be created
   + resource "couchbase-capella_scope" "new_scope" {
       + bucket_id       = (known after apply)
@@ -286,11 +395,11 @@ Terraform will perform the following actions:
       + time_zone            = (known after apply)
     }
 
-Plan: 10 to add, 0 to change, 0 to destroy.
+Plan: 12 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
-  + apikey              = (sensitive value)
-  + app_service         = {
+  + apikey                 = (sensitive value)
+  + app_service            = {
       + audit           = (known after apply)
       + cloud_provider  = (known after apply)
       + cluster_id      = (known after apply)
@@ -309,21 +418,21 @@ Changes to Outputs:
       + project_id      = (known after apply)
       + version         = (known after apply)
     }
-  + bucket              = "new_terraform_bucket"
-  + certificate         = {
+  + bucket                 = "new_terraform_bucket"
+  + certificate            = {
       + cluster_id      = (known after apply)
       + data            = (known after apply)
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id      = (known after apply)
     }
-  + cluster             = {
+  + cluster                = {
       + app_service_id     = (known after apply)
       + audit              = (known after apply)
       + availability       = {
           + type = "multi"
         }
       + cloud_provider     = {
-          + cidr   = "10.10.30.0/23"
+          + cidr   = "10.5.30.0/23"
           + region = "us-east-1"
           + type   = "aws"
         }
@@ -364,7 +473,84 @@ Changes to Outputs:
           + timezone = "PT"
         }
     }
-  + collection          = {
+  + cluster_onoff_schedule = {
+      + cluster_id      = (known after apply)
+      + days            = [
+          + {
+              + day   = "monday"
+              + from  = {
+                  + hour   = 12
+                  + minute = 30
+                }
+              + state = "custom"
+              + to    = {
+                  + hour   = 14
+                  + minute = 30
+                }
+            },
+          + {
+              + day   = "tuesday"
+              + from  = {
+                  + hour   = 12
+                  + minute = 0
+                }
+              + state = "custom"
+              + to    = {
+                  + hour   = 19
+                  + minute = 30
+                }
+            },
+          + {
+              + day   = "wednesday"
+              + from  = null
+              + state = "on"
+              + to    = null
+            },
+          + {
+              + day   = "thursday"
+              + from  = {
+                  + hour   = 12
+                  + minute = 30
+                }
+              + state = "custom"
+              + to    = null
+            },
+          + {
+              + day   = "friday"
+              + from  = {
+                  + hour   = 0
+                  + minute = 0
+                }
+              + state = "custom"
+              + to    = {
+                  + hour   = 12
+                  + minute = 30
+                }
+            },
+          + {
+              + day   = "saturday"
+              + from  = {
+                  + hour   = 12
+                  + minute = 30
+                }
+              + state = "custom"
+              + to    = {
+                  + hour   = 14
+                  + minute = 0
+                }
+            },
+          + {
+              + day   = "sunday"
+              + from  = null
+              + state = "off"
+              + to    = null
+            },
+        ]
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = (known after apply)
+      + timezone        = "US/Pacific"
+    }
+  + collection             = {
       + bucket_id       = (known after apply)
       + cluster_id      = (known after apply)
       + collection_name = "new_terraform_collection"
@@ -373,24 +559,25 @@ Changes to Outputs:
       + project_id      = (known after apply)
       + scope_name      = "new_terraform_scope"
     }
-  + database_credential = (sensitive value)
-  + organization        = {
+  + database_credential    = (sensitive value)
+  + organization           = {
       + audit           = {
           + created_at  = "2020-07-22 12:38:57.437248116 +0000 UTC"
           + created_by  = ""
-          + modified_at = "2024-03-20 15:47:16.386378004 +0000 UTC"
-          + modified_by = "SampleApiKeyM02xhF8sv3GgpeKKKKKK"
+          + modified_at = "2024-03-23 20:41:47.693734149 +0000 UTC"
+          + modified_by = "ffffffff-aaaa-1414-eeee-000000000000"
           + version     = 0
         }
       + description     = ""
       + name            = "cbc-dev"
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + preferences     = {
-          + session_duration = 0
+          + session_duration = 7200
         }
     }
-  + project             = "My First Terraform Project"
-  + scope               = {
+  + project                = "My First Terraform Project"
+  + sample_bucket          = "gamesim-sample"
+  + scope                  = {
       + bucket_id       = (known after apply)
       + cluster_id      = (known after apply)
       + collections     = (known after apply)
@@ -398,7 +585,7 @@ Changes to Outputs:
       + project_id      = (known after apply)
       + scope_name      = "new_terraform_scope"
     }
-  + user                = {
+  + user                   = {
       + audit                = (known after apply)
       + email                = "johndoe@couchbase.com"
       + enable_notifications = (known after apply)
@@ -426,7 +613,7 @@ Changes to Outputs:
       + time_zone            = (known after apply)
     }
 
-─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly these actions if you run "terraform apply" now.
 
@@ -437,17 +624,17 @@ Command: `terraform apply`
 
 Sample Output:
 ```
-$  terraform apply
+$  terraform apply   
 ╷
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchbasecloud/capella in /Users/$USER/workspace/terraform-provider-capella
+│  - couchbasecloud/couchbase-capella in /Users/paulomee.de/go/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
 data.couchbase-capella_organization.existing_organization: Reading...
-data.couchbase-capella_organization.existing_organization: Read complete after 0s [name=cbc-dev]
+data.couchbase-capella_organization.existing_organization: Read complete after 1s [name=cbc-dev]
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   + create
@@ -481,7 +668,7 @@ Terraform will perform the following actions:
       + allowed_cidrs      = [
           + "10.1.42.0/23",
           + "10.1.43.0/23",
-          + "73.71.238.143/23",
+          + "10.5.30.0/23",
         ]
       + audit              = (known after apply)
       + expiry             = 180
@@ -553,7 +740,7 @@ Terraform will perform the following actions:
           + type = "multi"
         }
       + cloud_provider     = {
-          + cidr   = "10.10.30.0/23"
+          + cidr   = "10.5.30.0/23"
           + region = "us-east-1"
           + type   = "aws"
         }
@@ -592,6 +779,80 @@ Terraform will perform the following actions:
           + plan     = "developer pro"
           + timezone = "PT"
         }
+    }
+
+  # couchbase-capella_cluster_onoff_schedule.new_cluster_onoff_schedule will be created
+  + resource "couchbase-capella_cluster_onoff_schedule" "new_cluster_onoff_schedule" {
+      + cluster_id      = (known after apply)
+      + days            = [
+          + {
+              + day   = "monday"
+              + from  = {
+                  + hour   = 12
+                  + minute = 30
+                }
+              + state = "custom"
+              + to    = {
+                  + hour   = 14
+                  + minute = 30
+                }
+            },
+          + {
+              + day   = "tuesday"
+              + from  = {
+                  + hour   = 12
+                  + minute = 0
+                }
+              + state = "custom"
+              + to    = {
+                  + hour   = 19
+                  + minute = 30
+                }
+            },
+          + {
+              + day   = "wednesday"
+              + state = "on"
+            },
+          + {
+              + day   = "thursday"
+              + from  = {
+                  + hour   = 12
+                  + minute = 30
+                }
+              + state = "custom"
+            },
+          + {
+              + day   = "friday"
+              + from  = {
+                  + hour   = 0
+                  + minute = 0
+                }
+              + state = "custom"
+              + to    = {
+                  + hour   = 12
+                  + minute = 30
+                }
+            },
+          + {
+              + day   = "saturday"
+              + from  = {
+                  + hour   = 12
+                  + minute = 30
+                }
+              + state = "custom"
+              + to    = {
+                  + hour   = 14
+                  + minute = 0
+                }
+            },
+          + {
+              + day   = "sunday"
+              + state = "off"
+            },
+        ]
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = (known after apply)
+      + timezone        = "US/Pacific"
     }
 
   # couchbase-capella_collection.new_collection will be created
@@ -653,6 +914,25 @@ Terraform will perform the following actions:
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
     }
 
+  # couchbase-capella_sample_bucket.new_sample_bucket will be created
+  + resource "couchbase-capella_sample_bucket" "new_sample_bucket" {
+      + bucket_conflict_resolution = (known after apply)
+      + cluster_id                 = (known after apply)
+      + durability_level           = (known after apply)
+      + eviction_policy            = (known after apply)
+      + flush                      = (known after apply)
+      + id                         = (known after apply)
+      + memory_allocation_in_mb    = (known after apply)
+      + name                       = "gamesim-sample"
+      + organization_id            = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id                 = (known after apply)
+      + replicas                   = (known after apply)
+      + stats                      = (known after apply)
+      + storage_backend            = (known after apply)
+      + time_to_live_in_seconds    = (known after apply)
+      + type                       = (known after apply)
+    }
+
   # couchbase-capella_scope.new_scope will be created
   + resource "couchbase-capella_scope" "new_scope" {
       + bucket_id       = (known after apply)
@@ -692,11 +972,11 @@ Terraform will perform the following actions:
       + time_zone            = (known after apply)
     }
 
-Plan: 10 to add, 0 to change, 0 to destroy.
+Plan: 12 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
-  + apikey              = (sensitive value)
-  + app_service         = {
+  + apikey                 = (sensitive value)
+  + app_service            = {
       + audit           = (known after apply)
       + cloud_provider  = (known after apply)
       + cluster_id      = (known after apply)
@@ -715,21 +995,21 @@ Changes to Outputs:
       + project_id      = (known after apply)
       + version         = (known after apply)
     }
-  + bucket              = "new_terraform_bucket"
-  + certificate         = {
+  + bucket                 = "new_terraform_bucket"
+  + certificate            = {
       + cluster_id      = (known after apply)
       + data            = (known after apply)
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id      = (known after apply)
     }
-  + cluster             = {
+  + cluster                = {
       + app_service_id     = (known after apply)
       + audit              = (known after apply)
       + availability       = {
           + type = "multi"
         }
       + cloud_provider     = {
-          + cidr   = "10.10.30.0/23"
+          + cidr   = "10.5.30.0/23"
           + region = "us-east-1"
           + type   = "aws"
         }
@@ -770,7 +1050,84 @@ Changes to Outputs:
           + timezone = "PT"
         }
     }
-  + collection          = {
+  + cluster_onoff_schedule = {
+      + cluster_id      = (known after apply)
+      + days            = [
+          + {
+              + day   = "monday"
+              + from  = {
+                  + hour   = 12
+                  + minute = 30
+                }
+              + state = "custom"
+              + to    = {
+                  + hour   = 14
+                  + minute = 30
+                }
+            },
+          + {
+              + day   = "tuesday"
+              + from  = {
+                  + hour   = 12
+                  + minute = 0
+                }
+              + state = "custom"
+              + to    = {
+                  + hour   = 19
+                  + minute = 30
+                }
+            },
+          + {
+              + day   = "wednesday"
+              + from  = null
+              + state = "on"
+              + to    = null
+            },
+          + {
+              + day   = "thursday"
+              + from  = {
+                  + hour   = 12
+                  + minute = 30
+                }
+              + state = "custom"
+              + to    = null
+            },
+          + {
+              + day   = "friday"
+              + from  = {
+                  + hour   = 0
+                  + minute = 0
+                }
+              + state = "custom"
+              + to    = {
+                  + hour   = 12
+                  + minute = 30
+                }
+            },
+          + {
+              + day   = "saturday"
+              + from  = {
+                  + hour   = 12
+                  + minute = 30
+                }
+              + state = "custom"
+              + to    = {
+                  + hour   = 14
+                  + minute = 0
+                }
+            },
+          + {
+              + day   = "sunday"
+              + from  = null
+              + state = "off"
+              + to    = null
+            },
+        ]
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = (known after apply)
+      + timezone        = "US/Pacific"
+    }
+  + collection             = {
       + bucket_id       = (known after apply)
       + cluster_id      = (known after apply)
       + collection_name = "new_terraform_collection"
@@ -779,24 +1136,25 @@ Changes to Outputs:
       + project_id      = (known after apply)
       + scope_name      = "new_terraform_scope"
     }
-  + database_credential = (sensitive value)
-  + organization        = {
+  + database_credential    = (sensitive value)
+  + organization           = {
       + audit           = {
           + created_at  = "2020-07-22 12:38:57.437248116 +0000 UTC"
           + created_by  = ""
-          + modified_at = "2024-03-20 15:47:16.386378004 +0000 UTC"
-          + modified_by = "SampleApiKeyM02xhF8sv3GgpeKKKKKK"
+          + modified_at = "2024-03-23 20:41:47.693734149 +0000 UTC"
+          + modified_by = "ffffffff-aaaa-1414-eeee-000000000000"
           + version     = 0
         }
       + description     = ""
       + name            = "cbc-dev"
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + preferences     = {
-          + session_duration = 0
+          + session_duration = 7200
         }
     }
-  + project             = "My First Terraform Project"
-  + scope               = {
+  + project                = "My First Terraform Project"
+  + sample_bucket          = "gamesim-sample"
+  + scope                  = {
       + bucket_id       = (known after apply)
       + cluster_id      = (known after apply)
       + collections     = (known after apply)
@@ -804,7 +1162,7 @@ Changes to Outputs:
       + project_id      = (known after apply)
       + scope_name      = "new_terraform_scope"
     }
-  + user                = {
+  + user                   = {
       + audit                = (known after apply)
       + email                = "johndoe@couchbase.com"
       + enable_notifications = (known after apply)
@@ -840,11 +1198,11 @@ Do you want to perform these actions?
 
 couchbase-capella_project.new_project: Creating...
 couchbase-capella_project.new_project: Creation complete after 0s [id=ffffffff-aaaa-1414-eeee-000000000000]
-couchbase-capella_apikey.new_apikey: Creating...
 couchbase-capella_user.new_user: Creating...
+couchbase-capella_apikey.new_apikey: Creating...
 couchbase-capella_cluster.new_cluster: Creating...
-couchbase-capella_apikey.new_apikey: Creation complete after 1s [id=vqFT21as0oT3XpUEEGXK9ZDr54FG04WI]
-couchbase-capella_user.new_user: Creation complete after 2s [id=261ea041-b036-4ed0-8455-9aa48d58c0b9]
+couchbase-capella_apikey.new_apikey: Creation complete after 1s [id=nTEg9sAJ6DMWSXlq68G1yQpMiqv7PFTE]
+couchbase-capella_user.new_user: Creation complete after 3s [id=ffffffff-aaaa-1414-eeee-000000000000]
 couchbase-capella_cluster.new_cluster: Still creating... [10s elapsed]
 couchbase-capella_cluster.new_cluster: Still creating... [20s elapsed]
 couchbase-capella_cluster.new_cluster: Still creating... [30s elapsed]
@@ -858,24 +1216,25 @@ couchbase-capella_cluster.new_cluster: Still creating... [1m40s elapsed]
 couchbase-capella_cluster.new_cluster: Still creating... [1m50s elapsed]
 couchbase-capella_cluster.new_cluster: Still creating... [2m0s elapsed]
 couchbase-capella_cluster.new_cluster: Still creating... [2m10s elapsed]
-couchbase-capella_cluster.new_cluster: Still creating... [2m20s elapsed]
-couchbase-capella_cluster.new_cluster: Still creating... [2m30s elapsed]
-couchbase-capella_cluster.new_cluster: Still creating... [2m40s elapsed]
-couchbase-capella_cluster.new_cluster: Creation complete after 2m45s [id=ffffffff-aaaa-1414-eeee-000000000000]
-couchbase-capella_allowlist.new_allowlist: Creating...
+couchbase-capella_cluster.new_cluster: Creation complete after 2m20s [id=ffffffff-aaaa-1414-eeee-000000000000]
 data.couchbase-capella_certificate.existing_certificate: Reading...
+couchbase-capella_allowlist.new_allowlist: Creating...
 couchbase-capella_bucket.new_bucket: Creating...
+couchbase-capella_sample_bucket.new_sample_bucket: Creating...
+couchbase-capella_cluster_onoff_schedule.new_cluster_onoff_schedule: Creating...
 couchbase-capella_database_credential.new_database_credential: Creating...
 data.couchbase-capella_certificate.existing_certificate: Read complete after 0s
-couchbase-capella_allowlist.new_allowlist: Creation complete after 8s [id=b388aea4-95a7-4cb4-bdaa-271111a53118]
-couchbase-capella_database_credential.new_database_credential: Creation complete after 8s [id=40940146-2229-46a9-808a-c3cf43812e83]
-couchbase-capella_bucket.new_bucket: Still creating... [10s elapsed]
-couchbase-capella_bucket.new_bucket: Creation complete after 13s [id=bmV3X3RlcnJhZm9ybV9idWNrZXQ=]
+couchbase-capella_cluster_onoff_schedule.new_cluster_onoff_schedule: Creation complete after 1s
+couchbase-capella_bucket.new_bucket: Creation complete after 7s [id=bmV3X3RlcnJhZm9ybV9idWNrZXQ=]
 couchbase-capella_scope.new_scope: Creating...
-couchbase-capella_app_service.new_app_service: Creating...
-couchbase-capella_scope.new_scope: Creation complete after 1s
+couchbase-capella_database_credential.new_database_credential: Creation complete after 7s [id=ffffffff-aaaa-1414-eeee-000000000000]
+couchbase-capella_scope.new_scope: Creation complete after 0s
 couchbase-capella_collection.new_collection: Creating...
-couchbase-capella_collection.new_collection: Creation complete after 0s
+couchbase-capella_allowlist.new_allowlist: Creation complete after 8s [id=ffffffff-aaaa-1414-eeee-000000000000]
+couchbase-capella_collection.new_collection: Creation complete after 1s
+couchbase-capella_sample_bucket.new_sample_bucket: Still creating... [10s elapsed]
+couchbase-capella_sample_bucket.new_sample_bucket: Creation complete after 17s [id=Z2FtZXNpbS1zYW1wbGU=]
+couchbase-capella_app_service.new_app_service: Creating...
 couchbase-capella_app_service.new_app_service: Still creating... [10s elapsed]
 couchbase-capella_app_service.new_app_service: Still creating... [20s elapsed]
 couchbase-capella_app_service.new_app_service: Still creating... [30s elapsed]
@@ -905,47 +1264,19 @@ couchbase-capella_app_service.new_app_service: Still creating... [4m20s elapsed]
 couchbase-capella_app_service.new_app_service: Still creating... [4m30s elapsed]
 couchbase-capella_app_service.new_app_service: Still creating... [4m40s elapsed]
 couchbase-capella_app_service.new_app_service: Still creating... [4m50s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [5m0s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [5m10s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [5m20s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [5m30s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [5m40s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [5m50s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [6m0s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [6m10s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [6m20s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [6m30s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [6m40s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [6m50s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [7m0s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [7m10s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [7m20s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [7m30s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [7m40s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [7m50s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [8m0s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [8m10s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [8m20s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [8m30s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [8m40s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [8m50s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [9m0s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [9m10s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [9m20s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [9m30s elapsed]
-couchbase-capella_app_service.new_app_service: Creation complete after 9m37s [id=bc14c00f-debe-4824-80a0-2020ba72c71a]
+couchbase-capella_app_service.new_app_service: Creation complete after 4m55s [id=ffffffff-aaaa-1414-eeee-000000000000]
 
-Apply complete! Resources: 10 added, 0 changed, 0 destroyed.
+Apply complete! Resources: 12 added, 0 changed, 0 destroyed.
 
 Outputs:
 
 apikey = <sensitive>
 app_service = {
   "audit" = {
-    "created_at" = "2024-03-21 19:26:50.768011475 +0000 UTC"
-    "created_by" = "ckqEnNwA3pfwAY3MgddFfbHTDsl5KKpL"
-    "modified_at" = "2024-03-21 19:36:26.535125773 +0000 UTC"
-    "modified_by" = "ckqEnNwA3pfwAY3MgddFfbHTDsl5KKpL"
+    "created_at" = "2024-03-27 22:48:25.514164834 +0000 UTC"
+    "created_by" = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT"
+    "modified_at" = "2024-03-27 22:53:18.418467595 +0000 UTC"
+    "modified_by" = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT"
     "version" = 7
   }
   "cloud_provider" = "AWS"
@@ -957,7 +1288,7 @@ app_service = {
   "current_state" = "healthy"
   "description" = "My first test app service."
   "etag" = "Version: 7"
-  "id" = "bc14c00f-debe-4824-80a0-2020ba72c71a"
+  "id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "if_match" = tostring(null)
   "name" = "new-terraform-app-service"
   "nodes" = 2
@@ -999,17 +1330,17 @@ certificate = {
 cluster = {
   "app_service_id" = tostring(null)
   "audit" = {
-    "created_at" = "2024-03-21 19:23:52.736276989 +0000 UTC"
-    "created_by" = "ckqEnNwA3pfwAY3MgddFfbHTDsl5KKpL"
-    "modified_at" = "2024-03-21 19:26:35.557497442 +0000 UTC"
-    "modified_by" = "ckqEnNwA3pfwAY3MgddFfbHTDsl5KKpL"
+    "created_at" = "2024-03-27 22:45:48.671838974 +0000 UTC"
+    "created_by" = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT"
+    "modified_at" = "2024-03-27 22:48:07.649855589 +0000 UTC"
+    "modified_by" = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT"
     "version" = 5
   }
   "availability" = {
     "type" = "multi"
   }
   "cloud_provider" = {
-    "cidr" = "10.10.30.0/23"
+    "cidr" = "10.5.30.0/23"
     "region" = "us-east-1"
     "type" = "aws"
   }
@@ -1052,6 +1383,83 @@ cluster = {
     "timezone" = "PT"
   }
 }
+cluster_onoff_schedule = {
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "days" = tolist([
+    {
+      "day" = "monday"
+      "from" = {
+        "hour" = 12
+        "minute" = 30
+      }
+      "state" = "custom"
+      "to" = {
+        "hour" = 14
+        "minute" = 30
+      }
+    },
+    {
+      "day" = "tuesday"
+      "from" = {
+        "hour" = 12
+        "minute" = 0
+      }
+      "state" = "custom"
+      "to" = {
+        "hour" = 19
+        "minute" = 30
+      }
+    },
+    {
+      "day" = "wednesday"
+      "from" = null /* object */
+      "state" = "on"
+      "to" = null /* object */
+    },
+    {
+      "day" = "thursday"
+      "from" = {
+        "hour" = 12
+        "minute" = 30
+      }
+      "state" = "custom"
+      "to" = null /* object */
+    },
+    {
+      "day" = "friday"
+      "from" = {
+        "hour" = 0
+        "minute" = 0
+      }
+      "state" = "custom"
+      "to" = {
+        "hour" = 12
+        "minute" = 30
+      }
+    },
+    {
+      "day" = "saturday"
+      "from" = {
+        "hour" = 12
+        "minute" = 30
+      }
+      "state" = "custom"
+      "to" = {
+        "hour" = 14
+        "minute" = 0
+      }
+    },
+    {
+      "day" = "sunday"
+      "from" = null /* object */
+      "state" = "off"
+      "to" = null /* object */
+    },
+  ])
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "timezone" = "US/Pacific"
+}
 collection = {
   "bucket_id" = "bmV3X3RlcnJhZm9ybV9idWNrZXQ="
   "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
@@ -1066,18 +1474,19 @@ organization = {
   "audit" = {
     "created_at" = "2020-07-22 12:38:57.437248116 +0000 UTC"
     "created_by" = ""
-    "modified_at" = "2024-03-20 15:47:16.386378004 +0000 UTC"
-    "modified_by" = "SampleApiKeyM02xhF8sv3GgpeKKKKKK"
+    "modified_at" = "2024-03-23 20:41:47.693734149 +0000 UTC"
+    "modified_by" = "ffffffff-aaaa-1414-eeee-000000000000"
     "version" = 0
   }
   "description" = ""
   "name" = "cbc-dev"
   "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "preferences" = {
-    "session_duration" = 0
+    "session_duration" = 7200
   }
 }
 project = "My First Terraform Project"
+sample_bucket = "gamesim-sample"
 scope = {
   "bucket_id" = "bmV3X3RlcnJhZm9ybV9idWNrZXQ="
   "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
@@ -1088,16 +1497,16 @@ scope = {
 }
 user = {
   "audit" = {
-    "created_at" = "2024-03-21 19:23:53.344136434 +0000 UTC"
-    "created_by" = "261ea041-b036-4ed0-8455-9aa48d58c0b9"
-    "modified_at" = "2024-03-21 19:23:53.344136434 +0000 UTC"
-    "modified_by" = "261ea041-b036-4ed0-8455-9aa48d58c0b9"
+    "created_at" = "2024-03-27 22:45:49.332340465 +0000 UTC"
+    "created_by" = "ffffffff-aaaa-1414-eeee-000000000000"
+    "modified_at" = "2024-03-27 22:45:49.332340465 +0000 UTC"
+    "modified_by" = "ffffffff-aaaa-1414-eeee-000000000000"
     "version" = 1
   }
   "email" = "johndoe@couchbase.com"
   "enable_notifications" = false
-  "expires_at" = "2024-06-19T19:23:53.344137525Z"
-  "id" = "261ea041-b036-4ed0-8455-9aa48d58c0b9"
+  "expires_at" = "2024-06-25T22:45:49.332341187Z"
+  "id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "inactive" = true
   "last_login" = ""
   "name" = "John Doe"
@@ -1130,10 +1539,10 @@ $ terraform output
 apikey = <sensitive>
 app_service = {
   "audit" = {
-    "created_at" = "2024-03-21 19:26:50.768011475 +0000 UTC"
-    "created_by" = "ckqEnNwA3pfwAY3MgddFfbHTDsl5KKpL"
-    "modified_at" = "2024-03-21 19:36:26.535125773 +0000 UTC"
-    "modified_by" = "ckqEnNwA3pfwAY3MgddFfbHTDsl5KKpL"
+    "created_at" = "2024-03-27 22:48:25.514164834 +0000 UTC"
+    "created_by" = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT"
+    "modified_at" = "2024-03-27 22:53:18.418467595 +0000 UTC"
+    "modified_by" = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT"
     "version" = 7
   }
   "cloud_provider" = "AWS"
@@ -1145,7 +1554,7 @@ app_service = {
   "current_state" = "healthy"
   "description" = "My first test app service."
   "etag" = "Version: 7"
-  "id" = "bc14c00f-debe-4824-80a0-2020ba72c71a"
+  "id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "if_match" = tostring(null)
   "name" = "new-terraform-app-service"
   "nodes" = 2
@@ -1187,17 +1596,17 @@ certificate = {
 cluster = {
   "app_service_id" = tostring(null)
   "audit" = {
-    "created_at" = "2024-03-21 19:23:52.736276989 +0000 UTC"
-    "created_by" = "ckqEnNwA3pfwAY3MgddFfbHTDsl5KKpL"
-    "modified_at" = "2024-03-21 19:26:35.557497442 +0000 UTC"
-    "modified_by" = "ckqEnNwA3pfwAY3MgddFfbHTDsl5KKpL"
+    "created_at" = "2024-03-27 22:45:48.671838974 +0000 UTC"
+    "created_by" = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT"
+    "modified_at" = "2024-03-27 22:48:07.649855589 +0000 UTC"
+    "modified_by" = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT"
     "version" = 5
   }
   "availability" = {
     "type" = "multi"
   }
   "cloud_provider" = {
-    "cidr" = "10.10.30.0/23"
+    "cidr" = "10.5.30.0/23"
     "region" = "us-east-1"
     "type" = "aws"
   }
@@ -1240,6 +1649,83 @@ cluster = {
     "timezone" = "PT"
   }
 }
+cluster_onoff_schedule = {
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "days" = tolist([
+    {
+      "day" = "monday"
+      "from" = {
+        "hour" = 12
+        "minute" = 30
+      }
+      "state" = "custom"
+      "to" = {
+        "hour" = 14
+        "minute" = 30
+      }
+    },
+    {
+      "day" = "tuesday"
+      "from" = {
+        "hour" = 12
+        "minute" = 0
+      }
+      "state" = "custom"
+      "to" = {
+        "hour" = 19
+        "minute" = 30
+      }
+    },
+    {
+      "day" = "wednesday"
+      "from" = null /* object */
+      "state" = "on"
+      "to" = null /* object */
+    },
+    {
+      "day" = "thursday"
+      "from" = {
+        "hour" = 12
+        "minute" = 30
+      }
+      "state" = "custom"
+      "to" = null /* object */
+    },
+    {
+      "day" = "friday"
+      "from" = {
+        "hour" = 0
+        "minute" = 0
+      }
+      "state" = "custom"
+      "to" = {
+        "hour" = 12
+        "minute" = 30
+      }
+    },
+    {
+      "day" = "saturday"
+      "from" = {
+        "hour" = 12
+        "minute" = 30
+      }
+      "state" = "custom"
+      "to" = {
+        "hour" = 14
+        "minute" = 0
+      }
+    },
+    {
+      "day" = "sunday"
+      "from" = null /* object */
+      "state" = "off"
+      "to" = null /* object */
+    },
+  ])
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "timezone" = "US/Pacific"
+}
 collection = {
   "bucket_id" = "bmV3X3RlcnJhZm9ybV9idWNrZXQ="
   "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
@@ -1254,18 +1740,19 @@ organization = {
   "audit" = {
     "created_at" = "2020-07-22 12:38:57.437248116 +0000 UTC"
     "created_by" = ""
-    "modified_at" = "2024-03-20 15:47:16.386378004 +0000 UTC"
-    "modified_by" = "SampleApiKeyM02xhF8sv3GgpeKKKKKK"
+    "modified_at" = "2024-03-23 20:41:47.693734149 +0000 UTC"
+    "modified_by" = "ffffffff-aaaa-1414-eeee-000000000000"
     "version" = 0
   }
   "description" = ""
   "name" = "cbc-dev"
   "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "preferences" = {
-    "session_duration" = 0
+    "session_duration" = 7200
   }
 }
 project = "My First Terraform Project"
+sample_bucket = "gamesim-sample"
 scope = {
   "bucket_id" = "bmV3X3RlcnJhZm9ybV9idWNrZXQ="
   "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
@@ -1276,16 +1763,16 @@ scope = {
 }
 user = {
   "audit" = {
-    "created_at" = "2024-03-21 19:23:53.344136434 +0000 UTC"
-    "created_by" = "261ea041-b036-4ed0-8455-9aa48d58c0b9"
-    "modified_at" = "2024-03-21 19:23:53.344136434 +0000 UTC"
-    "modified_by" = "261ea041-b036-4ed0-8455-9aa48d58c0b9"
+    "created_at" = "2024-03-27 22:45:49.332340465 +0000 UTC"
+    "created_by" = "ffffffff-aaaa-1414-eeee-000000000000"
+    "modified_at" = "2024-03-27 22:45:49.332340465 +0000 UTC"
+    "modified_by" = "ffffffff-aaaa-1414-eeee-000000000000"
     "version" = 1
   }
   "email" = "johndoe@couchbase.com"
   "enable_notifications" = false
-  "expires_at" = "2024-06-19T19:23:53.344137525Z"
-  "id" = "261ea041-b036-4ed0-8455-9aa48d58c0b9"
+  "expires_at" = "2024-06-25T22:45:49.332341187Z"
+  "id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "inactive" = true
   "last_login" = ""
   "name" = "John Doe"
@@ -1313,28 +1800,30 @@ All these resources can be destroyed using the `terraform destroy` command
 
 Sample Output:
 ```
-$  terraform destroy
+$ terraform destroy
 ╷
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - hashicorp.com/couchbasecloud/capella in /Users/$USER/workspace/terraform-provider-capella
+│  - couchbasecloud/couchbase-capella in /Users/paulomee.de/go/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
-couchbase-capella_project.new_project: Refreshing state... [id=ffffffff-aaaa-1414-eeee-000000000000]
 data.couchbase-capella_organization.existing_organization: Reading...
-data.couchbase-capella_organization.existing_organization: Read complete after 0s [name=cbc-dev]
-couchbase-capella_user.new_user: Refreshing state... [id=2da3a84d-f97d-4d13-96bd-3e0950638484]
-couchbase-capella_apikey.new_apikey: Refreshing state... [id=3ERCbMRFfE5FS4kuVvBWbVSRZ0KgNYGg]
+couchbase-capella_project.new_project: Refreshing state... [id=ffffffff-aaaa-1414-eeee-000000000000]
+data.couchbase-capella_organization.existing_organization: Read complete after 1s [name=cbc-dev]
+couchbase-capella_apikey.new_apikey: Refreshing state... [id=nTEg9sAJ6DMWSXlq68G1yQpMiqv7PFTE]
+couchbase-capella_user.new_user: Refreshing state... [id=ffffffff-aaaa-1414-eeee-000000000000]
 couchbase-capella_cluster.new_cluster: Refreshing state... [id=ffffffff-aaaa-1414-eeee-000000000000]
-data.couchbase-capella_certificate.existing_certificate: Reading...
 couchbase-capella_allowlist.new_allowlist: Refreshing state... [id=ffffffff-aaaa-1414-eeee-000000000000]
+couchbase-capella_database_credential.new_database_credential: Refreshing state... [id=ffffffff-aaaa-1414-eeee-000000000000]
+data.couchbase-capella_certificate.existing_certificate: Reading...
+couchbase-capella_sample_bucket.new_sample_bucket: Refreshing state... [id=Z2FtZXNpbS1zYW1wbGU=]
 couchbase-capella_bucket.new_bucket: Refreshing state... [id=bmV3X3RlcnJhZm9ybV9idWNrZXQ=]
-couchbase-capella_database_credential.new_database_credential: Refreshing state... [id=20d7fbe6-013a-499d-9a6d-f4085c5fe729]
+couchbase-capella_cluster_onoff_schedule.new_cluster_onoff_schedule: Refreshing state...
 data.couchbase-capella_certificate.existing_certificate: Read complete after 0s
 couchbase-capella_scope.new_scope: Refreshing state...
-couchbase-capella_app_service.new_app_service: Refreshing state... [id=fdb1657d-bfde-4634-9ebe-552648d0da9c]
+couchbase-capella_app_service.new_app_service: Refreshing state... [id=ffffffff-aaaa-1414-eeee-000000000000]
 couchbase-capella_collection.new_collection: Refreshing state...
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
@@ -1345,10 +1834,10 @@ Terraform will perform the following actions:
   # couchbase-capella_allowlist.new_allowlist will be destroyed
   - resource "couchbase-capella_allowlist" "new_allowlist" {
       - audit           = {
-          - created_at  = "2024-03-21 18:25:53.500004479 +0000 UTC" -> null
-          - created_by  = "SampleApiKeyM02xhF8sv3GgpeKKKKKK" -> null
-          - modified_at = "2024-03-21 18:25:53.500004479 +0000 UTC" -> null
-          - modified_by = "SampleApiKeyM02xhF8sv3GgpeKKKKKK" -> null
+          - created_at  = "2024-03-27 22:48:15.382200967 +0000 UTC" -> null
+          - created_by  = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT" -> null
+          - modified_at = "2024-03-27 22:48:15.382200967 +0000 UTC" -> null
+          - modified_by = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT" -> null
           - version     = 1 -> null
         } -> null
       - cidr            = "8.8.8.8/32" -> null
@@ -1365,17 +1854,17 @@ Terraform will perform the following actions:
       - allowed_cidrs      = [
           - "10.1.42.0/23",
           - "10.1.43.0/23",
-          - "73.71.238.143/23",
+          - "10.5.30.0/23",
         ] -> null
       - audit              = {
-          - created_at  = "2024-03-21 18:23:39.577721505 +0000 UTC" -> null
-          - created_by  = "SampleApiKeyM02xhF8sv3GgpeKKKKKK" -> null
-          - modified_at = "2024-03-21 18:23:39.577721505 +0000 UTC" -> null
-          - modified_by = "SampleApiKeyM02xhF8sv3GgpeKKKKKK" -> null
+          - created_at  = "2024-03-27 22:45:48.449403667 +0000 UTC" -> null
+          - created_by  = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT" -> null
+          - modified_at = "2024-03-27 22:45:48.449403667 +0000 UTC" -> null
+          - modified_by = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT" -> null
           - version     = 1 -> null
         } -> null
       - expiry             = 180 -> null
-      - id                 = "3ERCbMRFfE5FS4kuVvBWbVSRZ0KgNYGg" -> null
+      - id                 = "nTEg9sAJ6DMWSXlq68G1yQpMiqv7PFTE" -> null
       - name               = "My First Terraform API Key" -> null
       - organization_id    = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - organization_roles = [
@@ -1397,10 +1886,10 @@ Terraform will perform the following actions:
   # couchbase-capella_app_service.new_app_service will be destroyed
   - resource "couchbase-capella_app_service" "new_app_service" {
       - audit           = {
-          - created_at  = "2024-03-21 18:25:53.6358642 +0000 UTC" -> null
-          - created_by  = "SampleApiKeyM02xhF8sv3GgpeKKKKKK" -> null
-          - modified_at = "2024-03-21 18:30:22.04434427 +0000 UTC" -> null
-          - modified_by = "SampleApiKeyM02xhF8sv3GgpeKKKKKK" -> null
+          - created_at  = "2024-03-27 22:48:25.514164834 +0000 UTC" -> null
+          - created_by  = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT" -> null
+          - modified_at = "2024-03-27 22:53:18.418467595 +0000 UTC" -> null
+          - modified_by = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT" -> null
           - version     = 7 -> null
         } -> null
       - cloud_provider  = "AWS" -> null
@@ -1412,7 +1901,7 @@ Terraform will perform the following actions:
       - current_state   = "healthy" -> null
       - description     = "My first test app service." -> null
       - etag            = "Version: 7" -> null
-      - id              = "fdb1657d-bfde-4634-9ebe-552648d0da9c" -> null
+      - id              = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - name            = "new-terraform-app-service" -> null
       - nodes           = 2 -> null
       - organization_id = "ffffffff-aaaa-1414-eeee-000000000000" -> null
@@ -1434,7 +1923,7 @@ Terraform will perform the following actions:
       - project_id                 = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - replicas                   = 1 -> null
       - stats                      = {
-          - disk_used_in_mib   = 26 -> null
+          - disk_used_in_mib   = 34 -> null
           - item_count         = 0 -> null
           - memory_used_in_mib = 55 -> null
           - ops_per_second     = 0 -> null
@@ -1447,17 +1936,17 @@ Terraform will perform the following actions:
   # couchbase-capella_cluster.new_cluster will be destroyed
   - resource "couchbase-capella_cluster" "new_cluster" {
       - audit              = {
-          - created_at  = "2024-03-21 18:23:39.830331234 +0000 UTC" -> null
-          - created_by  = "SampleApiKeyM02xhF8sv3GgpeKKKKKK" -> null
-          - modified_at = "2024-03-21 18:25:51.030842533 +0000 UTC" -> null
-          - modified_by = "SampleApiKeyM02xhF8sv3GgpeKKKKKK" -> null
+          - created_at  = "2024-03-27 22:45:48.671838974 +0000 UTC" -> null
+          - created_by  = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT" -> null
+          - modified_at = "2024-03-27 22:48:07.649855589 +0000 UTC" -> null
+          - modified_by = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT" -> null
           - version     = 5 -> null
         } -> null
       - availability       = {
           - type = "multi" -> null
         } -> null
       - cloud_provider     = {
-          - cidr   = "10.10.30.0/23" -> null
+          - cidr   = "10.5.30.0/23" -> null
           - region = "us-east-1" -> null
           - type   = "aws" -> null
         } -> null
@@ -1497,6 +1986,80 @@ Terraform will perform the following actions:
           - plan     = "developer pro" -> null
           - timezone = "PT" -> null
         } -> null
+    }
+
+  # couchbase-capella_cluster_onoff_schedule.new_cluster_onoff_schedule will be destroyed
+  - resource "couchbase-capella_cluster_onoff_schedule" "new_cluster_onoff_schedule" {
+      - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - days            = [
+          - {
+              - day   = "monday" -> null
+              - from  = {
+                  - hour   = 12 -> null
+                  - minute = 30 -> null
+                } -> null
+              - state = "custom" -> null
+              - to    = {
+                  - hour   = 14 -> null
+                  - minute = 30 -> null
+                } -> null
+            },
+          - {
+              - day   = "tuesday" -> null
+              - from  = {
+                  - hour   = 12 -> null
+                  - minute = 0 -> null
+                } -> null
+              - state = "custom" -> null
+              - to    = {
+                  - hour   = 19 -> null
+                  - minute = 30 -> null
+                } -> null
+            },
+          - {
+              - day   = "wednesday" -> null
+              - state = "on" -> null
+            },
+          - {
+              - day   = "thursday" -> null
+              - from  = {
+                  - hour   = 12 -> null
+                  - minute = 30 -> null
+                } -> null
+              - state = "custom" -> null
+            },
+          - {
+              - day   = "friday" -> null
+              - from  = {
+                  - hour   = 0 -> null
+                  - minute = 0 -> null
+                } -> null
+              - state = "custom" -> null
+              - to    = {
+                  - hour   = 12 -> null
+                  - minute = 30 -> null
+                } -> null
+            },
+          - {
+              - day   = "saturday" -> null
+              - from  = {
+                  - hour   = 12 -> null
+                  - minute = 30 -> null
+                } -> null
+              - state = "custom" -> null
+              - to    = {
+                  - hour   = 14 -> null
+                  - minute = 0 -> null
+                } -> null
+            },
+          - {
+              - day   = "sunday" -> null
+              - state = "off" -> null
+            },
+        ] -> null
+      - organization_id = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - project_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - timezone        = "US/Pacific" -> null
     }
 
   # couchbase-capella_collection.new_collection will be destroyed
@@ -1540,14 +2103,14 @@ Terraform will perform the following actions:
             },
         ] -> null
       - audit           = {
-          - created_at  = "2024-03-21 18:25:54.129601643 +0000 UTC" -> null
-          - created_by  = "SampleApiKeyM02xhF8sv3GgpeKKKKKK" -> null
-          - modified_at = "2024-03-21 18:25:54.129601643 +0000 UTC" -> null
-          - modified_by = "SampleApiKeyM02xhF8sv3GgpeKKKKKK" -> null
+          - created_at  = "2024-03-27 22:48:14.886768871 +0000 UTC" -> null
+          - created_by  = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT" -> null
+          - modified_at = "2024-03-27 22:48:14.886768871 +0000 UTC" -> null
+          - modified_by = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT" -> null
           - version     = 1 -> null
         } -> null
       - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
-      - id              = "20d7fbe6-013a-499d-9a6d-f4085c5fe729" -> null
+      - id              = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - name            = "terraform_db_credential" -> null
       - organization_id = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - password        = (sensitive value) -> null
@@ -1557,10 +2120,10 @@ Terraform will perform the following actions:
   # couchbase-capella_project.new_project will be destroyed
   - resource "couchbase-capella_project" "new_project" {
       - audit           = {
-          - created_at  = "2024-03-21 18:23:39.236167774 +0000 UTC" -> null
-          - created_by  = "SampleApiKeyM02xhF8sv3GgpeKKKKKK" -> null
-          - modified_at = "2024-03-21 18:23:39.236187916 +0000 UTC" -> null
-          - modified_by = "SampleApiKeyM02xhF8sv3GgpeKKKKKK" -> null
+          - created_at  = "2024-03-27 22:45:48.038234717 +0000 UTC" -> null
+          - created_by  = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT" -> null
+          - modified_at = "2024-03-27 22:45:48.038250937 +0000 UTC" -> null
+          - modified_by = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT" -> null
           - version     = 1 -> null
         } -> null
       - description     = "A Capella Project that will host many Capella clusters." -> null
@@ -1568,6 +2131,30 @@ Terraform will perform the following actions:
       - id              = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - name            = "My First Terraform Project" -> null
       - organization_id = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+    }
+
+  # couchbase-capella_sample_bucket.new_sample_bucket will be destroyed
+  - resource "couchbase-capella_sample_bucket" "new_sample_bucket" {
+      - bucket_conflict_resolution = "seqno" -> null
+      - cluster_id                 = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - durability_level           = "none" -> null
+      - eviction_policy            = "fullEviction" -> null
+      - flush                      = false -> null
+      - id                         = "Z2FtZXNpbS1zYW1wbGU=" -> null
+      - memory_allocation_in_mb    = 200 -> null
+      - name                       = "gamesim-sample" -> null
+      - organization_id            = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - project_id                 = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - replicas                   = 1 -> null
+      - stats                      = {
+          - disk_used_in_mib   = 20 -> null
+          - item_count         = 586 -> null
+          - memory_used_in_mib = 62 -> null
+          - ops_per_second     = 2 -> null
+        } -> null
+      - storage_backend            = "couchstore" -> null
+      - time_to_live_in_seconds    = 0 -> null
+      - type                       = "couchbase" -> null
     }
 
   # couchbase-capella_scope.new_scope will be destroyed
@@ -1588,16 +2175,16 @@ Terraform will perform the following actions:
   # couchbase-capella_user.new_user will be destroyed
   - resource "couchbase-capella_user" "new_user" {
       - audit                = {
-          - created_at  = "2024-03-21 18:23:40.338767933 +0000 UTC" -> null
-          - created_by  = "2da3a84d-f97d-4d13-96bd-3e0950638484" -> null
-          - modified_at = "2024-03-21 18:23:40.338767933 +0000 UTC" -> null
-          - modified_by = "2da3a84d-f97d-4d13-96bd-3e0950638484" -> null
+          - created_at  = "2024-03-27 22:45:49.332340465 +0000 UTC" -> null
+          - created_by  = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+          - modified_at = "2024-03-27 22:45:49.332340465 +0000 UTC" -> null
+          - modified_by = "ffffffff-aaaa-1414-eeee-000000000000" -> null
           - version     = 1 -> null
         } -> null
       - email                = "johndoe@couchbase.com" -> null
       - enable_notifications = false -> null
-      - expires_at           = "2024-06-19T18:23:40.338768382Z" -> null
-      - id                   = "2da3a84d-f97d-4d13-96bd-3e0950638484" -> null
+      - expires_at           = "2024-06-25T22:45:49.332341187Z" -> null
+      - id                   = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - inactive             = true -> null
       - name                 = "John Doe" -> null
       - organization_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
@@ -1617,16 +2204,16 @@ Terraform will perform the following actions:
       - status               = "not-verified" -> null
     }
 
-Plan: 0 to add, 0 to change, 10 to destroy.
+Plan: 0 to add, 0 to change, 12 to destroy.
 
 Changes to Outputs:
-  - apikey              = (sensitive value) -> null
-  - app_service         = {
+  - apikey                 = (sensitive value) -> null
+  - app_service            = {
       - audit           = {
-          - created_at  = "2024-03-21 18:25:53.6358642 +0000 UTC"
-          - created_by  = "SampleApiKeyM02xhF8sv3GgpeKKKKKK"
-          - modified_at = "2024-03-21 18:30:22.04434427 +0000 UTC"
-          - modified_by = "SampleApiKeyM02xhF8sv3GgpeKKKKKK"
+          - created_at  = "2024-03-27 22:48:25.514164834 +0000 UTC"
+          - created_by  = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT"
+          - modified_at = "2024-03-27 22:53:18.418467595 +0000 UTC"
+          - modified_by = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT"
           - version     = 7
         }
       - cloud_provider  = "AWS"
@@ -1638,7 +2225,7 @@ Changes to Outputs:
       - current_state   = "healthy"
       - description     = "My first test app service."
       - etag            = "Version: 7"
-      - id              = "fdb1657d-bfde-4634-9ebe-552648d0da9c"
+      - id              = "ffffffff-aaaa-1414-eeee-000000000000"
       - if_match        = null
       - name            = "new-terraform-app-service"
       - nodes           = 2
@@ -1646,8 +2233,8 @@ Changes to Outputs:
       - project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       - version         = "3.1.4-1.0.0"
     } -> null
-  - bucket              = "new_terraform_bucket" -> null
-  - certificate         = {
+  - bucket                 = "new_terraform_bucket" -> null
+  - certificate            = {
       - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       - data            = [
           - {
@@ -1677,20 +2264,20 @@ Changes to Outputs:
       - organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       - project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
     } -> null
-  - cluster             = {
+  - cluster                = {
       - app_service_id     = null
       - audit              = {
-          - created_at  = "2024-03-21 18:23:39.830331234 +0000 UTC"
-          - created_by  = "SampleApiKeyM02xhF8sv3GgpeKKKKKK"
-          - modified_at = "2024-03-21 18:25:51.030842533 +0000 UTC"
-          - modified_by = "SampleApiKeyM02xhF8sv3GgpeKKKKKK"
+          - created_at  = "2024-03-27 22:45:48.671838974 +0000 UTC"
+          - created_by  = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT"
+          - modified_at = "2024-03-27 22:48:07.649855589 +0000 UTC"
+          - modified_by = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT"
           - version     = 5
         }
       - availability       = {
           - type = "multi"
         }
       - cloud_provider     = {
-          - cidr   = "10.10.30.0/23"
+          - cidr   = "10.5.30.0/23"
           - region = "us-east-1"
           - type   = "aws"
         }
@@ -1733,7 +2320,84 @@ Changes to Outputs:
           - timezone = "PT"
         }
     } -> null
-  - collection          = {
+  - cluster_onoff_schedule = {
+      - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      - days            = [
+          - {
+              - day   = "monday"
+              - from  = {
+                  - hour   = 12
+                  - minute = 30
+                }
+              - state = "custom"
+              - to    = {
+                  - hour   = 14
+                  - minute = 30
+                }
+            },
+          - {
+              - day   = "tuesday"
+              - from  = {
+                  - hour   = 12
+                  - minute = 0
+                }
+              - state = "custom"
+              - to    = {
+                  - hour   = 19
+                  - minute = 30
+                }
+            },
+          - {
+              - day   = "wednesday"
+              - from  = null
+              - state = "on"
+              - to    = null
+            },
+          - {
+              - day   = "thursday"
+              - from  = {
+                  - hour   = 12
+                  - minute = 30
+                }
+              - state = "custom"
+              - to    = null
+            },
+          - {
+              - day   = "friday"
+              - from  = {
+                  - hour   = 0
+                  - minute = 0
+                }
+              - state = "custom"
+              - to    = {
+                  - hour   = 12
+                  - minute = 30
+                }
+            },
+          - {
+              - day   = "saturday"
+              - from  = {
+                  - hour   = 12
+                  - minute = 30
+                }
+              - state = "custom"
+              - to    = {
+                  - hour   = 14
+                  - minute = 0
+                }
+            },
+          - {
+              - day   = "sunday"
+              - from  = null
+              - state = "off"
+              - to    = null
+            },
+        ]
+      - organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      - project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      - timezone        = "US/Pacific"
+    } -> null
+  - collection             = {
       - bucket_id       = "bmV3X3RlcnJhZm9ybV9idWNrZXQ="
       - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       - collection_name = "new_terraform_collection"
@@ -1742,24 +2406,25 @@ Changes to Outputs:
       - project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       - scope_name      = "new_terraform_scope"
     } -> null
-  - database_credential = (sensitive value) -> null
-  - organization        = {
+  - database_credential    = (sensitive value) -> null
+  - organization           = {
       - audit           = {
           - created_at  = "2020-07-22 12:38:57.437248116 +0000 UTC"
           - created_by  = ""
-          - modified_at = "2024-03-20 15:47:16.386378004 +0000 UTC"
-          - modified_by = "SampleApiKeyM02xhF8sv3GgpeKKKKKK"
+          - modified_at = "2024-03-23 20:41:47.693734149 +0000 UTC"
+          - modified_by = "ffffffff-aaaa-1414-eeee-000000000000"
           - version     = 0
         }
       - description     = ""
       - name            = "cbc-dev"
       - organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       - preferences     = {
-          - session_duration = 0
+          - session_duration = 7200
         }
     } -> null
-  - project             = "My First Terraform Project" -> null
-  - scope               = {
+  - project                = "My First Terraform Project" -> null
+  - sample_bucket          = "gamesim-sample" -> null
+  - scope                  = {
       - bucket_id       = "bmV3X3RlcnJhZm9ybV9idWNrZXQ="
       - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       - collections     = [
@@ -1772,18 +2437,18 @@ Changes to Outputs:
       - project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       - scope_name      = "new_terraform_scope"
     } -> null
-  - user                = {
+  - user                   = {
       - audit                = {
-          - created_at  = "2024-03-21 18:23:40.338767933 +0000 UTC"
-          - created_by  = "2da3a84d-f97d-4d13-96bd-3e0950638484"
-          - modified_at = "2024-03-21 18:23:40.338767933 +0000 UTC"
-          - modified_by = "2da3a84d-f97d-4d13-96bd-3e0950638484"
+          - created_at  = "2024-03-27 22:45:49.332340465 +0000 UTC"
+          - created_by  = "ffffffff-aaaa-1414-eeee-000000000000"
+          - modified_at = "2024-03-27 22:45:49.332340465 +0000 UTC"
+          - modified_by = "ffffffff-aaaa-1414-eeee-000000000000"
           - version     = 1
         }
       - email                = "johndoe@couchbase.com"
       - enable_notifications = false
-      - expires_at           = "2024-06-19T18:23:40.338768382Z"
-      - id                   = "2da3a84d-f97d-4d13-96bd-3e0950638484"
+      - expires_at           = "2024-06-25T22:45:49.332341187Z"
+      - id                   = "ffffffff-aaaa-1414-eeee-000000000000"
       - inactive             = true
       - last_login           = ""
       - name                 = "John Doe"
@@ -1813,11 +2478,13 @@ Do you really want to destroy all resources?
   Enter a value: yes
 
 couchbase-capella_allowlist.new_allowlist: Destroying... [id=ffffffff-aaaa-1414-eeee-000000000000]
-couchbase-capella_apikey.new_apikey: Destroying... [id=3ERCbMRFfE5FS4kuVvBWbVSRZ0KgNYGg]
-couchbase-capella_user.new_user: Destroying... [id=2da3a84d-f97d-4d13-96bd-3e0950638484]
-couchbase-capella_app_service.new_app_service: Destroying... [id=fdb1657d-bfde-4634-9ebe-552648d0da9c]
+couchbase-capella_user.new_user: Destroying... [id=ffffffff-aaaa-1414-eeee-000000000000]
 couchbase-capella_collection.new_collection: Destroying...
-couchbase-capella_database_credential.new_database_credential: Destroying... [id=20d7fbe6-013a-499d-9a6d-f4085c5fe729]
+couchbase-capella_app_service.new_app_service: Destroying... [id=ffffffff-aaaa-1414-eeee-000000000000]
+couchbase-capella_apikey.new_apikey: Destroying... [id=nTEg9sAJ6DMWSXlq68G1yQpMiqv7PFTE]
+couchbase-capella_database_credential.new_database_credential: Destroying... [id=ffffffff-aaaa-1414-eeee-000000000000]
+couchbase-capella_cluster_onoff_schedule.new_cluster_onoff_schedule: Destroying...
+couchbase-capella_cluster_onoff_schedule.new_cluster_onoff_schedule: Destruction complete after 0s
 couchbase-capella_apikey.new_apikey: Destruction complete after 1s
 couchbase-capella_database_credential.new_database_credential: Destruction complete after 1s
 couchbase-capella_collection.new_collection: Destruction complete after 1s
@@ -1825,26 +2492,26 @@ couchbase-capella_scope.new_scope: Destroying...
 couchbase-capella_scope.new_scope: Destruction complete after 0s
 couchbase-capella_user.new_user: Destruction complete after 3s
 couchbase-capella_allowlist.new_allowlist: Destruction complete after 8s
-couchbase-capella_app_service.new_app_service: Still destroying... [id=fdb1657d-bfde-4634-9ebe-552648d0da9c, 10s elapsed]
-couchbase-capella_app_service.new_app_service: Still destroying... [id=fdb1657d-bfde-4634-9ebe-552648d0da9c, 20s elapsed]
-couchbase-capella_app_service.new_app_service: Still destroying... [id=fdb1657d-bfde-4634-9ebe-552648d0da9c, 30s elapsed]
-couchbase-capella_app_service.new_app_service: Still destroying... [id=fdb1657d-bfde-4634-9ebe-552648d0da9c, 40s elapsed]
-couchbase-capella_app_service.new_app_service: Still destroying... [id=fdb1657d-bfde-4634-9ebe-552648d0da9c, 50s elapsed]
-couchbase-capella_app_service.new_app_service: Still destroying... [id=fdb1657d-bfde-4634-9ebe-552648d0da9c, 1m0s elapsed]
-couchbase-capella_app_service.new_app_service: Still destroying... [id=fdb1657d-bfde-4634-9ebe-552648d0da9c, 1m10s elapsed]
-couchbase-capella_app_service.new_app_service: Still destroying... [id=fdb1657d-bfde-4634-9ebe-552648d0da9c, 1m20s elapsed]
-couchbase-capella_app_service.new_app_service: Still destroying... [id=fdb1657d-bfde-4634-9ebe-552648d0da9c, 1m30s elapsed]
-couchbase-capella_app_service.new_app_service: Still destroying... [id=fdb1657d-bfde-4634-9ebe-552648d0da9c, 1m40s elapsed]
-couchbase-capella_app_service.new_app_service: Still destroying... [id=fdb1657d-bfde-4634-9ebe-552648d0da9c, 1m50s elapsed]
-couchbase-capella_app_service.new_app_service: Still destroying... [id=fdb1657d-bfde-4634-9ebe-552648d0da9c, 2m0s elapsed]
-couchbase-capella_app_service.new_app_service: Still destroying... [id=fdb1657d-bfde-4634-9ebe-552648d0da9c, 2m10s elapsed]
-couchbase-capella_app_service.new_app_service: Still destroying... [id=fdb1657d-bfde-4634-9ebe-552648d0da9c, 2m20s elapsed]
-couchbase-capella_app_service.new_app_service: Still destroying... [id=fdb1657d-bfde-4634-9ebe-552648d0da9c, 2m30s elapsed]
-couchbase-capella_app_service.new_app_service: Still destroying... [id=fdb1657d-bfde-4634-9ebe-552648d0da9c, 2m40s elapsed]
-couchbase-capella_app_service.new_app_service: Still destroying... [id=fdb1657d-bfde-4634-9ebe-552648d0da9c, 2m50s elapsed]
-couchbase-capella_app_service.new_app_service: Destruction complete after 2m58s
+couchbase-capella_app_service.new_app_service: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 10s elapsed]
+couchbase-capella_app_service.new_app_service: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 20s elapsed]
+couchbase-capella_app_service.new_app_service: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 30s elapsed]
+couchbase-capella_app_service.new_app_service: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 40s elapsed]
+couchbase-capella_app_service.new_app_service: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 50s elapsed]
+couchbase-capella_app_service.new_app_service: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 1m0s elapsed]
+couchbase-capella_app_service.new_app_service: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 1m10s elapsed]
+couchbase-capella_app_service.new_app_service: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 1m20s elapsed]
+couchbase-capella_app_service.new_app_service: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 1m30s elapsed]
+couchbase-capella_app_service.new_app_service: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 1m40s elapsed]
+couchbase-capella_app_service.new_app_service: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 1m50s elapsed]
+couchbase-capella_app_service.new_app_service: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 2m0s elapsed]
+couchbase-capella_app_service.new_app_service: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 2m10s elapsed]
+couchbase-capella_app_service.new_app_service: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 2m20s elapsed]
+couchbase-capella_app_service.new_app_service: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 2m30s elapsed]
+couchbase-capella_app_service.new_app_service: Destruction complete after 2m40s
+couchbase-capella_sample_bucket.new_sample_bucket: Destroying... [id=Z2FtZXNpbS1zYW1wbGU=]
 couchbase-capella_bucket.new_bucket: Destroying... [id=bmV3X3RlcnJhZm9ybV9idWNrZXQ=]
 couchbase-capella_bucket.new_bucket: Destruction complete after 1s
+couchbase-capella_sample_bucket.new_sample_bucket: Destruction complete after 2s
 couchbase-capella_cluster.new_cluster: Destroying... [id=ffffffff-aaaa-1414-eeee-000000000000]
 couchbase-capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 10s elapsed]
 couchbase-capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 20s elapsed]
@@ -1897,17 +2564,12 @@ couchbase-capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-141
 couchbase-capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 8m10s elapsed]
 couchbase-capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 8m20s elapsed]
 couchbase-capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 8m30s elapsed]
-couchbase-capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 8m40s elapsed]
-couchbase-capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 8m50s elapsed]
-couchbase-capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 9m0s elapsed]
-couchbase-capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 9m10s elapsed]
-couchbase-capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 9m20s elapsed]
-couchbase-capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 9m30s elapsed]
-couchbase-capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 9m40s elapsed]
-couchbase-capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-000000000000, 9m50s elapsed]
-couchbase-capella_cluster.new_cluster: Destruction complete after 9m58s
+couchbase-capella_cluster.new_cluster: Destruction complete after 8m40s
 couchbase-capella_project.new_project: Destroying... [id=ffffffff-aaaa-1414-eeee-000000000000]
 couchbase-capella_project.new_project: Destruction complete after 2s
 
-Destroy complete! Resources: 10 destroyed.
+Destroy complete! Resources: 12 destroyed.
+ 
+
+
 ```
