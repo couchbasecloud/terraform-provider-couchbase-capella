@@ -179,53 +179,82 @@ As per HashiCorp's recommendations, we fully support the following operating sys
 
 To get started, see the [Provider Example Configs](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/getting_started):
 
-* [Retrieve organization details in Capella](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/organization):
+* [Retrieve Organization Details in Capella](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/organization):
 
   Couchbase Capella uses an ordered hierarchy to help you keep all of your data organized and securely accessible.
   The entity at the top of the hierarchy is called an organization.
   Everything you do in Capella  --  whether it’s creating a cluster or managing billing  --  happens within the scope of an [organization](https://docs.couchbase.com/cloud/organizations/organizations.html).
 
-* [Create and manage users](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/user):
+* [Create and Manage Users](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/user):
 
   Users have roles within an [organization](https://docs.couchbase.com/cloud/organizations/manage-organization-users.html), and within [individual projects](https://docs.couchbase.com/cloud/projects/manage-project-users.html).
 
-* [Create and manage API Keys](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/apikey):
+* [Create and Manage API Keys](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/apikey):
 
   Every API key is associated with an allowed IP Address list, and one or more organization roles, which determine the [privileges that the API key has](https://docs.couchbase.com/cloud/management-api-guide/management-api-start.html#understand-management-api-keys) within the organization.
 
-* [Create & manage projects](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/project):
+* [Create & Manage Projects](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/project):
 
   Within organizations, [projects](https://docs.couchbase.com/cloud/projects/projects.html) are used to organize and manage groups of Couchbase databases.
   An organization can contain any number of projects, and a project can contain any number of databases.
 
-* [Create & manage Capella clusters (databases)](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/cluster):
+* [Create & Manage Capella Clusters (databases)](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/cluster):
 
   The Cluster is the individual instance of a [Couchbase Database](https://docs.couchbase.com/cloud/clusters/databases.html), spanning one or more nodes on your Cloud Service Provider, and containing the Data Service, and any other services which you choose to deploy.
   Within this sits the hierarchy of bucket, scope, collection, and document.
 
-* [Retrieve cluster certificate details](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/certificate):
+* [Retrieve Cluster Certificate Details](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/certificate):
 
   Retrieve the certificate details for a Capella cluster;
   list the certificate details based on the cluster ID and authentication access token.
 
-* [Manage database credential](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/database_credential):
+* [Manage Database Credentials](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/database_credential):
 
   Database credentials are separate from organization roles and project roles.
   A [database credential](https://docs.couchbase.com/cloud/clusters/manage-database-users.html#about-database-credentials) is specific to a database and consists of a database access name, secret, and a set of bucket and scope access levels.
   It’s required for applications to remotely authenticate on a database and access bucket data.
 
-* [Create & manage allowlists](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/allowlist):
+* [Create & Manage Allowlists](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/allowlist):
 
   More than one [allowlist](https://docs.couchbase.com/cloud/security/security.html#access-management) gives extra security across testing, development, and deployment infrastructure, and different projects.
 
-* [Create & manage buckets](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/bucket):
+* [Create & Manage Buckets](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/bucket):
 
   The [buckets](https://docs.couchbase.com/cloud/clusters/data-service/about-buckets-scopes-collections.html#buckets) is the top-level storage container for data in a Capella database.
 
 * [Configure App Services](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/appservice)
 
-  Create and manage App Services in Capella.
+  Create and Manage App Services in Capella.
 
 * [Configure Bucket Backup & Restore](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/backup)
 
-  Create and manage Backups in Capella.
+  Create and Manage Backups in Capella.
+
+* [Create & Manage Scopes](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/bucket/scopes)
+
+  Create and Manage Scopes within a bucket.
+
+* [Create & Manage Collections](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/bucket/collections)
+
+  Create and Manage Collections within a bucket.
+
+* [Configure Cluster On/Off Schedule](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/cluster_onoff_schedule)
+
+  Configure cluster on/off schedule.
+
+* [Turn Clusters On/Off On Demand](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/cluster_onoff_ondemand)
+
+  Turn Clusters on/off on demand.
+
+* [Turn App Service On/Off On Demand](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/app_service_onoff_ondemand)
+
+  Turn App Services on/off on-demand.
+
+* [Import Sample Dataset Buckets](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/sample_bucket)
+
+  Import Sample Dataset Buckets.
+
+* [Manage Storage Auto Expansion for Azure Clusters](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/cluster/autoexpansion)
+
+  Manage Storage Auto-expansion for Azure Clusters.
+

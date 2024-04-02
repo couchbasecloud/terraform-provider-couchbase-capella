@@ -21,8 +21,4 @@ variable "bucket_id" {
 
 variable "scope" {
   description = "Scope configuration details useful for creation"
-
-  type = object({
-    scope_name = string
-  })
 }

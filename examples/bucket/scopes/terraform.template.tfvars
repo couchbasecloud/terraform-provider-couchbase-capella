@@ -5,6 +5,4 @@ project_id      = "<project_id>"
 cluster_id      = "<cluster_id>"
 bucket_id       = "<bucket_id>"
 
-scope = {
-  scope_name = "new_terraform_scope"
-}
+scope = "new_terraform_scope"
