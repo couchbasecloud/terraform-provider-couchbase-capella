@@ -15,10 +15,6 @@ variable "cluster_id" {
   description = "Capella Cluster ID"
 }
 
-variable "sample_bucket" {
+variable "sample_bucket_name" {
   description = "Bucket configuration details useful for creation"
-
-  type = object({
-    name = string
-  })
 }

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
@@ -118,6 +119,7 @@ func (c *Client) ExecuteWithRetry(
 	headers map[string]string,
 ) (response *Response, err error) {
 	var requestBody []byte
+	var dur time.Duration
 	if payload != nil {
 		requestBody, err = json.Marshal(payload)
 		if err != nil {
@@ -125,20 +127,19 @@ func (c *Client) ExecuteWithRetry(
 		}
 	}
 
-	req, err := http.NewRequest(endpointCfg.Method, endpointCfg.Url, bytes.NewReader(requestBody))
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrConstructingRequest, err)
-	}
+	var fn = func() (response *Response, backoff time.Duration, err error) {
+		req, err := http.NewRequest(endpointCfg.Method, endpointCfg.Url, bytes.NewReader(requestBody))
+		if err != nil {
+			return nil, dur, fmt.Errorf("%s: %w", errors.ErrConstructingRequest, err)
+		}
 
-	req.Header.Set("Authorization", "Bearer "+authToken)
-	for header, value := range headers {
-		req.Header.Set(header, value)
-	}
-
-	var fn = func() (response *Response, err error) {
+		req.Header.Set("Authorization", "Bearer "+authToken)
+		for header, value := range headers {
+			req.Header.Set(header, value)
+		}
 		apiRes, err := c.Do(req)
 		if err != nil {
-			return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
+			return nil, dur, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 		}
 		defer apiRes.Body.Close()
 
@@ -150,38 +151,47 @@ func (c *Client) ExecuteWithRetry(
 		switch apiRes.StatusCode {
 		case endpointCfg.SuccessStatus:
 			// success case
+		case http.StatusTooManyRequests:
+			header := apiRes.Header.Get("Retry-After")
+			retryAfter, err := strconv.Atoi(header)
+			if err != nil {
+				return nil, dur, fmt.Errorf("error parsing Retry-After value from response header")
+			}
+			dur = time.Second * time.Duration(retryAfter)
+			return nil, dur, errors.ErrRatelimit
 		case http.StatusGatewayTimeout:
-			return nil, errors.ErrGatewayTimeout
+			return nil, dur, errors.ErrGatewayTimeout
 		default:
 			var apiError Error
 			if err := json.Unmarshal(responseBody, &apiError); err != nil {
-				return nil, fmt.Errorf(
+				return nil, dur, fmt.Errorf(
 					"unexpected code: %d, expected: %d, body: %s",
 					apiRes.StatusCode, endpointCfg.SuccessStatus, responseBody)
 			}
 			if apiError.Code == 0 {
-				return nil, fmt.Errorf(
+				return nil, dur, fmt.Errorf(
 					"unexpected code: %d, expected: %d, body: %s",
 					apiRes.StatusCode, endpointCfg.SuccessStatus, responseBody)
 
 			}
-			return nil, &apiError
+			return nil, dur, &apiError
 		}
 
 		return &Response{
 			Response: apiRes,
 			Body:     responseBody,
-		}, nil
+		}, dur, nil
 	}
 
 	return exec(ctx, fn, defaultWaitAttempt)
 }
 
-func exec(ctx context.Context, fn func() (response *Response, err error), waitOnReattempt time.Duration) (*Response, error) {
+func exec(ctx context.Context, fn func() (response *Response, dur time.Duration, err error), waitOnReattempt time.Duration) (*Response, error) {
 	timer := time.NewTimer(time.Millisecond)
 
 	var (
 		err      error
+		backOff  time.Duration
 		response *Response
 	)
 
@@ -196,14 +206,20 @@ func exec(ctx context.Context, fn func() (response *Response, err error), waitOn
 		case <-ctx.Done():
 			return nil, fmt.Errorf("timed out executing request against api: %w", err)
 		case <-timer.C:
-			response, err = fn()
+			response, backOff, err = fn()
 			switch {
 			case err == nil:
 				return response, nil
+			case goer.Is(err, errors.ErrRatelimit):
 			case !goer.Is(err, errors.ErrGatewayTimeout):
 				return response, err
 			}
-			timer.Reset(waitOnReattempt)
+
+			if backOff > 0 {
+				timer.Reset(backOff)
+			} else {
+				timer.Reset(waitOnReattempt)
+			}
 		}
 	}
 }

@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	scheduleapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster_onoff_schedule"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -128,7 +127,7 @@ func (c *ClusterOnOffSchedule) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	onOffScheduleResp := scheduleapi.GetClusterOnOffScheduleResponse{}
+	onOffScheduleResp := api.GetClusterOnOffScheduleResponse{}
 	err = json.Unmarshal(response.Body, &onOffScheduleResp)
 	if err != nil {
 		resp.Diagnostics.AddError(

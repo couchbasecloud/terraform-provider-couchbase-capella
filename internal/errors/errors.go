@@ -159,9 +159,15 @@ var (
 	// ErrIfMatchCannotBeSetWhileCreate is returned when if_match is set during create operation.
 	ErrIfMatchCannotBeSetWhileCreate = errors.New("if_match attribute cannot be set during create operation")
 
+	// ErrRatelimit is returned when the Capella API reaches a rate limit for the same API key.
+	ErrRatelimit = errors.New("api key reached the ratelimit")
+
 	// ErrScopeNameMissing is returned when an expected ScopeName was not found after an import.
 	ErrScopeNameMissing = errors.New("scope Name is missing or was passed incorrectly, please check provider documentation for syntax")
 
 	// ErrIfMatchCannotBeSetWhileCreate is returned when if_match is set during create operation.
 	ErrInvalidSampleBucketName = errors.New("sample bucket name can only be travel-sample, beer-sample, gamesim-sample")
+
+	// ErrOnoffStateCannotBeEmpty is returned when cluster on/off state is required for a request but was not included.
+	ErrOnoffStateCannotBeEmpty = errors.New("On/off state cannot be empty, please mention the state in which you want your cluster to be")
 )

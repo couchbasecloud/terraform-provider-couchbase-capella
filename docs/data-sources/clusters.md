@@ -112,6 +112,7 @@ Read-Only:
 
 Read-Only:
 
+- `autoexpansion` (Boolean)
 - `iops` (Number)
 - `storage` (Number)
 - `type` (String)
