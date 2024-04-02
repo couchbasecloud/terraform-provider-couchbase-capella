@@ -9,46 +9,51 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 )
 
-func TestNewClusterOnOffScheduleSchemaValidate(t *testing.T) {
+func TestNewAppServiceOnOffSchemaValidate(t *testing.T) {
 	type test struct {
 		expectedErr            error
-		input                  ClusterOnOffSchedule
+		input                  AppServiceOnOffOnDemand
 		name                   string
 		expectedOrganizationId string
 		expectedProjectId      string
 		expectedClusterId      string
-		expectedTimeZone       string
+		expectedState          string
+		expectedAppServiceId   string
 	}
 
 	tests := []test{
 		{
-			name: "[POSITIVE] organization ID, project ID, cluster ID are passed via terraform apply",
-			input: ClusterOnOffSchedule{
+			name: "[POSITIVE] organization ID, project ID, cluster ID, app service ID are passed via terraform apply",
+			input: AppServiceOnOffOnDemand{
 				OrganizationId: basetypes.NewStringValue("100"),
 				ProjectId:      basetypes.NewStringValue("200"),
 				ClusterId:      basetypes.NewStringValue("300"),
+				AppServiceId:   basetypes.NewStringValue("400"),
 			},
 			expectedOrganizationId: "100",
 			expectedProjectId:      "200",
 			expectedClusterId:      "300",
+			expectedAppServiceId:   "400",
 		},
 		{
-			name: "[POSITIVE] project ID, organization ID, and cluster ID, timezone, are passed via terraform apply",
-			input: ClusterOnOffSchedule{
+			name: "[POSITIVE] project ID, organization ID, cluster ID, app service ID and state are passed via terraform apply",
+			input: AppServiceOnOffOnDemand{
 				ClusterId:      basetypes.NewStringValue("100"),
 				ProjectId:      basetypes.NewStringValue("200"),
 				OrganizationId: basetypes.NewStringValue("300"),
-				Timezone:       basetypes.NewStringValue("US/Pacific"),
+				AppServiceId:   basetypes.NewStringValue("400"),
+				State:          basetypes.NewStringValue("off"),
 			},
 			expectedClusterId:      "100",
 			expectedProjectId:      "200",
 			expectedOrganizationId: "300",
-			expectedTimeZone:       "US/Pacific",
+			expectedAppServiceId:   "400",
+			expectedState:          "off",
 		},
 		{
-			name: "[NEGATIVE] only timezone is passed via terraform apply",
-			input: ClusterOnOffSchedule{
-				Timezone: basetypes.NewStringValue("US/Pacific"),
+			name: "[NEGATIVE] only state is passed via terraform apply",
+			input: AppServiceOnOffOnDemand{
+				State: basetypes.NewStringValue("on"),
 			},
 			expectedErr: errors.ErrInvalidImport,
 		},

@@ -18,6 +18,7 @@ var (
 		"id":              Id,
 		"scope_name":      ScopeName,
 		"collection_name": CollectionName,
+		"app_service_id":  AppServiceId,
 	}
 )
 

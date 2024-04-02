@@ -198,5 +198,7 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewCollection,
 		resources.NewSampleBucket,
 		resources.NewClusterOnOffSchedule,
+		resources.NewClusterOnOffOnDemand,
+		resources.NewAppServiceOnOffOnDemand,
 	}
 }
