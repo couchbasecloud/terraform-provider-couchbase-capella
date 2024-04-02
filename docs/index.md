@@ -254,7 +254,7 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 
   Import Sample Dataset Buckets.
 
-* [Manage Storage Auto Expansion for Azure Clusters](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/cluster/autoexpansion)
+* [Manage Storage Auto Expansion for Azure Clusters](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/cluster/azure)
 
   Manage Storage Auto-expansion for Azure Clusters.
 
