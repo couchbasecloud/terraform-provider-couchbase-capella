@@ -1,5 +1,37 @@
 # Changelog
 
+## [v1.0.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.0.0) (2024-04-02)
+
+[Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.0.0...v1.0.0)
+
+**Implemented enhancements:**
+
+- \[AV-75849\] Cluster and App service On Demand On/Off [\#181](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/181) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-74366\] Bucket Collections [\#163](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/163) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-73526\] Add support for rate-limiting retries [\#157](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/157) ([ajsqr](https://github.com/ajsqr))
+- \[AV-70846\] Import sample buckets [\#156](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/156) ([Lagher0](https://github.com/Lagher0))
+- \[AV-73296\] Bucket Scopes [\#153](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/153) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-71279\] Support autoexpansion for Azure cluster\(s\) [\#143](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/143) ([l0n3star](https://github.com/l0n3star))
+
+**Fixed bugs:**
+
+- \[AV-70854\] Fixed optional fields during cluster creation | Azure & GCP [\#141](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/141) ([nidhi07kumar](https://github.com/nidhi07kumar))
+
+**Merged pull requests:**
+
+- Bump github.com/hashicorp/terraform-plugin-go from 0.21.0 to 0.22.1 [\#165](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/165) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump github.com/hashicorp/terraform-plugin-testing from 1.6.0 to 1.7.0 [\#162](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/162) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump github.com/hashicorp/terraform-plugin-framework from 1.5.0 to 1.6.1 [\#161](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/161) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump github.com/stretchr/testify from 1.8.4 to 1.9.0 [\#160](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/160) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump github.com/hashicorp/terraform-plugin-go from 0.20.0 to 0.21.0 [\#148](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/148) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump github.com/google/uuid from 1.5.0 to 1.6.0 [\#145](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/145) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump github.com/hashicorp/terraform-plugin-framework from 1.4.2 to 1.5.0 [\#142](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/142) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump github.com/couchbase/tools-common/functional from 1.1.1 to 1.2.0 [\#140](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/140) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump github.com/cloudflare/circl from 1.3.3 to 1.3.7 [\#139](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/139) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump github.com/hashicorp/terraform-plugin-go from 0.19.1 to 0.20.0 [\#138](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/138) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump golang.org/x/crypto from 0.16.0 to 0.17.0 [\#136](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/136) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump github.com/google/uuid from 1.4.0 to 1.5.0 [\#132](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/132) ([dependabot[bot]](https://github.com/apps/dependabot))
+
 ## [v1.0.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.0.0) (2023-11-10)
 
 [Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/d9a774ce9a0731bd15a6ca9eb9b7ea4d7f4e1d33...v1.0.0)
