@@ -1,4 +1,4 @@
-****# Capella Cluster On/Off Example
+# Capella Cluster On/Off Example
 
 This example shows how to switch the cluster to on or off state on demand in Capella.
 
