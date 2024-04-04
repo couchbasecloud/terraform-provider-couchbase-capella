@@ -355,9 +355,6 @@ func (a *AuditLogSettings) validateAuditSettingPlan(plan providerschema.ClusterA
 	if plan.AuditEnabled.IsUnknown() {
 		return fmt.Errorf("please specify value for audit_enabled")
 	}
-	if len(plan.EnabledEventIDs) == 0 {
-		return fmt.Errorf("please provide list of event ids")
-	}
 
 	return nil
 }
