@@ -175,8 +175,7 @@ variable "audit_log_settings" {
   description = "configure cluster audit log settings"
 
   type = object({
-    audit_enabled     = bool
-    enabled_event_ids = list(number)
+    audit_enabled = bool
     disabled_users = list(object({
       name   = string
       domain = string
