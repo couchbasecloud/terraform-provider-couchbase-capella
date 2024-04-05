@@ -301,8 +301,8 @@ func (r *Project) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Updating Capella Project",
-			"Could not update Capella project ID "+state.Id.String()+": "+err.Error(),
+			"Error Deleting Capella Project",
+			"Could not delete Capella project ID "+state.Id.String()+": "+err.Error(),
 		)
 		return
 	}

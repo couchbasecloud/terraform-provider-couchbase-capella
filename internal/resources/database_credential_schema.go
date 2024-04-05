@@ -18,11 +18,11 @@ func DatabaseCredentialSchema() schema.Schema {
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name":            stringAttribute(required, requiresReplace),
-			"password":        stringAttribute(optional, computed, sensitive, useStateForUnknown),
-			"organization_id": stringAttribute(required, requiresReplace),
-			"project_id":      stringAttribute(required, requiresReplace),
-			"cluster_id":      stringAttribute(required, requiresReplace),
+			"name":            stringAttribute([]string{required, requiresReplace}),
+			"password":        stringAttribute([]string{optional, computed, sensitive, useStateForUnknown}),
+			"organization_id": stringAttribute([]string{required, requiresReplace}),
+			"project_id":      stringAttribute([]string{required, requiresReplace}),
+			"cluster_id":      stringAttribute([]string{required, requiresReplace}),
 			"audit":           computedAuditAttribute(),
 			"access": schema.SetNestedAttribute{
 				Required: true,
@@ -36,12 +36,12 @@ func DatabaseCredentialSchema() schema.Schema {
 									Optional: true,
 									NestedObject: schema.NestedAttributeObject{
 										Attributes: map[string]schema.Attribute{
-											"name": stringAttribute(required),
+											"name": stringAttribute([]string{required}),
 											"scopes": schema.SetNestedAttribute{
 												Optional: true,
 												NestedObject: schema.NestedAttributeObject{
 													Attributes: map[string]schema.Attribute{
-														"name":        stringAttribute(required),
+														"name":        stringAttribute([]string{required}),
 														"collections": stringSetAttribute(optional),
 													},
 												},

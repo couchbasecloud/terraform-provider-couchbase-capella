@@ -9,4 +9,6 @@ const (
 	BucketId       Attr = "bucketId"
 	Id             Attr = "id"
 	ScopeName      Attr = "scopeName"
+	CollectionName Attr = "collectionName"
+	AppServiceId   Attr = "appServiceId"
 )

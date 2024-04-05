@@ -58,7 +58,7 @@ Terraform will perform the following actions:
       + id              = (known after apply)
       + name            = "new-terraform-app-service"
       + nodes           = 3
-      + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+      + organization_id = "c2e9ccf6-4293-4635-9205-1204d074447d"
       + project_id      = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
       + version         = (known after apply)
     }
@@ -87,7 +87,7 @@ Changes to Outputs:
               + id              = "80bef88f-d38b-4cb3-9c72-80e34c4da112"
               + name            = "test-appservice"
               + nodes           = 2
-              + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+              + organization_id = "c2e9ccf6-4293-4635-9205-1204d074447d"
               + version         = "3.0.8-1.0.0"
             },
           + {
@@ -109,7 +109,7 @@ Changes to Outputs:
               + id              = "b0a70b56-ea7b-4877-af1e-a569571cb058"
               + name            = "test"
               + nodes           = 2
-              + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+              + organization_id = "c2e9ccf6-4293-4635-9205-1204d074447d"
               + version         = "3.0.8-1.0.0"
             },
           + {
@@ -131,7 +131,7 @@ Changes to Outputs:
               + id              = "cac46b6a-cc5d-49fb-aa39-d942a2f44603"
               + name            = "test"
               + nodes           = 2
-              + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+              + organization_id = "c2e9ccf6-4293-4635-9205-1204d074447d"
               + version         = "3.0.8-1.0.0"
             },
           + {
@@ -153,11 +153,11 @@ Changes to Outputs:
               + id              = "d2777afb-5c31-4a35-ab46-38bb9e6be84f"
               + name            = "temp-app-service"
               + nodes           = 2
-              + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+              + organization_id = "c2e9ccf6-4293-4635-9205-1204d074447d"
               + version         = "3.0.8-1.0.0"
             },
         ]
-      + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+      + organization_id = "c2e9ccf6-4293-4635-9205-1204d074447d"
     }
   + new_app_service   = {
       + audit           = (known after apply)
@@ -174,7 +174,7 @@ Changes to Outputs:
       + if_match        = null
       + name            = "new-terraform-app-service"
       + nodes           = 3
-      + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+      + organization_id = "c2e9ccf6-4293-4635-9205-1204d074447d"
       + project_id      = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
       + version         = (known after apply)
     }
@@ -223,7 +223,7 @@ Terraform will perform the following actions:
       + id              = (known after apply)
       + name            = "new-terraform-app-service"
       + nodes           = 3
-      + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+      + organization_id = "c2e9ccf6-4293-4635-9205-1204d074447d"
       + project_id      = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
       + version         = (known after apply)
     }
@@ -246,7 +246,7 @@ Changes to Outputs:
       + if_match        = null
       + name            = "new-terraform-app-service"
       + nodes           = 3
-      + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+      + organization_id = "c2e9ccf6-4293-4635-9205-1204d074447d"
       + project_id      = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
       + version         = (known after apply)
     }
@@ -308,7 +308,7 @@ app_services_list = {
       "id" = "80bef88f-d38b-4cb3-9c72-80e34c4da112"
       "name" = "test-appservice"
       "nodes" = 2
-      "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+      "organization_id" = "c2e9ccf6-4293-4635-9205-1204d074447d"
       "version" = "3.0.8-1.0.0"
     },
     {
@@ -330,7 +330,7 @@ app_services_list = {
       "id" = "b0a70b56-ea7b-4877-af1e-a569571cb058"
       "name" = "test"
       "nodes" = 2
-      "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+      "organization_id" = "c2e9ccf6-4293-4635-9205-1204d074447d"
       "version" = "3.0.8-1.0.0"
     },
     {
@@ -352,7 +352,7 @@ app_services_list = {
       "id" = "cac46b6a-cc5d-49fb-aa39-d942a2f44603"
       "name" = "test"
       "nodes" = 2
-      "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+      "organization_id" = "c2e9ccf6-4293-4635-9205-1204d074447d"
       "version" = "3.0.8-1.0.0"
     },
     {
@@ -374,11 +374,11 @@ app_services_list = {
       "id" = "d2777afb-5c31-4a35-ab46-38bb9e6be84f"
       "name" = "temp-app-service"
       "nodes" = 2
-      "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+      "organization_id" = "c2e9ccf6-4293-4635-9205-1204d074447d"
       "version" = "3.0.8-1.0.0"
     },
   ])
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+  "organization_id" = "c2e9ccf6-4293-4635-9205-1204d074447d"
 }
 new_app_service = {
   "audit" = {
@@ -401,7 +401,7 @@ new_app_service = {
   "if_match" = tostring(null)
   "name" = "new-terraform-app-service"
   "nodes" = 3
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+  "organization_id" = "c2e9ccf6-4293-4635-9205-1204d074447d"
   "project_id" = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
   "version" = "3.0.8-1.0.0"
 }
@@ -433,7 +433,7 @@ Sample Output:
   "if_match" = tostring(null)
   "name" = "new-terraform-app-service"
   "nodes" = 3
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+  "organization_id" = "c2e9ccf6-4293-4635-9205-1204d074447d"
   "project_id" = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
   "version" = "3.0.8-1.0.0"
 }
@@ -470,16 +470,16 @@ Please note, this command will only remove the resource from the Terraform State
 Command: `terraform import couchbase-capella_app_service.new_app_service id=<appservice_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
 In this case, the complete command is:
-`terraform import couchbase-capella_app_service.new_app_service id=e57494b4-c791-44b6-8e7a-ee20db89a7f0,cluster_id=b74f5350-f727-427e-8cad-623a691b1cfe,project_id=f14134f2-7943-4e7b-b2c5-fc2071728b6e,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0`
+`terraform import couchbase-capella_app_service.new_app_service id=e57494b4-c791-44b6-8e7a-ee20db89a7f0,cluster_id=b74f5350-f727-427e-8cad-623a691b1cfe,project_id=f14134f2-7943-4e7b-b2c5-fc2071728b6e,organization_id=c2e9ccf6-4293-4635-9205-1204d074447d`
 
 Sample Output:
 ``` 
-terraform import couchbase-capella_app_service.new_app_service id=e57494b4-c791-44b6-8e7a-ee20db89a7f0,cluster_id=b74f5350-f727-427e-8cad-623a691b1cfe,project_id=f14134f2-7943-4e7b-b2c5-fc2071728b6e,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0
-capella_app_service.new_app_service: Importing from ID "id=e57494b4-c791-44b6-8e7a-ee20db89a7f0,cluster_id=b74f5350-f727-427e-8cad-623a691b1cfe,project_id=f14134f2-7943-4e7b-b2c5-fc2071728b6e,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0"...
+terraform import couchbase-capella_app_service.new_app_service id=e57494b4-c791-44b6-8e7a-ee20db89a7f0,cluster_id=b74f5350-f727-427e-8cad-623a691b1cfe,project_id=f14134f2-7943-4e7b-b2c5-fc2071728b6e,organization_id=c2e9ccf6-4293-4635-9205-1204d074447d
+capella_app_service.new_app_service: Importing from ID "id=e57494b4-c791-44b6-8e7a-ee20db89a7f0,cluster_id=b74f5350-f727-427e-8cad-623a691b1cfe,project_id=f14134f2-7943-4e7b-b2c5-fc2071728b6e,organization_id=c2e9ccf6-4293-4635-9205-1204d074447d"...
 data.capella_app_services.existing_app_services: Reading...
 capella_app_service.new_app_service: Import prepared!
   Prepared capella_app_service for import
-capella_app_service.new_app_service: Refreshing state... [id=id=e57494b4-c791-44b6-8e7a-ee20db89a7f0,cluster_id=b74f5350-f727-427e-8cad-623a691b1cfe,project_id=f14134f2-7943-4e7b-b2c5-fc2071728b6e,organization_id=6af08c0a-8cab-4c1c-b257-b521575c16d0]
+capella_app_service.new_app_service: Refreshing state... [id=id=e57494b4-c791-44b6-8e7a-ee20db89a7f0,cluster_id=b74f5350-f727-427e-8cad-623a691b1cfe,project_id=f14134f2-7943-4e7b-b2c5-fc2071728b6e,organization_id=c2e9ccf6-4293-4635-9205-1204d074447d]
 data.capella_app_services.existing_app_services: Read complete after 1s
 
 Import successful!
@@ -566,7 +566,7 @@ Changes to Outputs:
               + id              = "80bef88f-d38b-4cb3-9c72-80e34c4da112"
               + name            = "test-appservice"
               + nodes           = 2
-              + organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+              + organization_id = "c2e9ccf6-4293-4635-9205-1204d074447d"
               + version         = "3.0.8-1.0.0"
             },
             {
@@ -588,7 +588,7 @@ Changes to Outputs:
                 id              = "b0a70b56-ea7b-4877-af1e-a569571cb058"
                 name            = "test"
                 nodes           = 2
-                organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+                organization_id = "c2e9ccf6-4293-4635-9205-1204d074447d"
                 version         = "3.0.8-1.0.0"
             },
             # (2 unchanged elements hidden)
@@ -611,7 +611,7 @@ Changes to Outputs:
                 id              = "e57494b4-c791-44b6-8e7a-ee20db89a7f0"
                 name            = "new-terraform-app-service"
                 nodes           = 3
-                organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+                organization_id = "c2e9ccf6-4293-4635-9205-1204d074447d"
                 version         = "3.0.8-1.0.0"
             },
           - {
@@ -633,7 +633,7 @@ Changes to Outputs:
               - id              = "80bef88f-d38b-4cb3-9c72-80e34c4da112"
               - name            = "test-appservice"
               - nodes           = 2
-              - organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+              - organization_id = "c2e9ccf6-4293-4635-9205-1204d074447d"
               - version         = "3.0.8-1.0.0"
             },
         ]
@@ -737,7 +737,7 @@ app_services_list = {
       "id" = "80bef88f-d38b-4cb3-9c72-80e34c4da112"
       "name" = "test-appservice"
       "nodes" = 2
-      "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+      "organization_id" = "c2e9ccf6-4293-4635-9205-1204d074447d"
       "version" = "3.0.8-1.0.0"
     },
     {
@@ -759,7 +759,7 @@ app_services_list = {
       "id" = "b0a70b56-ea7b-4877-af1e-a569571cb058"
       "name" = "test"
       "nodes" = 2
-      "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+      "organization_id" = "c2e9ccf6-4293-4635-9205-1204d074447d"
       "version" = "3.0.8-1.0.0"
     },
     {
@@ -781,7 +781,7 @@ app_services_list = {
       "id" = "cac46b6a-cc5d-49fb-aa39-d942a2f44603"
       "name" = "test"
       "nodes" = 2
-      "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+      "organization_id" = "c2e9ccf6-4293-4635-9205-1204d074447d"
       "version" = "3.0.8-1.0.0"
     },
     {
@@ -803,7 +803,7 @@ app_services_list = {
       "id" = "d2777afb-5c31-4a35-ab46-38bb9e6be84f"
       "name" = "temp-app-service"
       "nodes" = 2
-      "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+      "organization_id" = "c2e9ccf6-4293-4635-9205-1204d074447d"
       "version" = "3.0.8-1.0.0"
     },
     {
@@ -825,11 +825,11 @@ app_services_list = {
       "id" = "e57494b4-c791-44b6-8e7a-ee20db89a7f0"
       "name" = "new-terraform-app-service"
       "nodes" = 3
-      "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+      "organization_id" = "c2e9ccf6-4293-4635-9205-1204d074447d"
       "version" = "3.0.8-1.0.0"
     },
   ])
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+  "organization_id" = "c2e9ccf6-4293-4635-9205-1204d074447d"
 }
 new_app_service = {
   "audit" = {
@@ -852,7 +852,7 @@ new_app_service = {
   "if_match" = tostring(null)
   "name" = "new-terraform-app-service"
   "nodes" = 2
-  "organization_id" = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+  "organization_id" = "c2e9ccf6-4293-4635-9205-1204d074447d"
   "project_id" = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
   "version" = "3.0.8-1.0.0"
 }
@@ -907,7 +907,7 @@ Terraform will perform the following actions:
       - id              = "e57494b4-c791-44b6-8e7a-ee20db89a7f0" -> null
       - name            = "new-terraform-app-service" -> null
       - nodes           = 2 -> null
-      - organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0" -> null
+      - organization_id = "c2e9ccf6-4293-4635-9205-1204d074447d" -> null
       - project_id      = "f14134f2-7943-4e7b-b2c5-fc2071728b6e" -> null
       - version         = "3.0.8-1.0.0" -> null
     }
@@ -936,7 +936,7 @@ Changes to Outputs:
               - id              = "b0a70b56-ea7b-4877-af1e-a569571cb058"
               - name            = "test"
               - nodes           = 2
-              - organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+              - organization_id = "c2e9ccf6-4293-4635-9205-1204d074447d"
               - version         = "3.0.8-1.0.0"
             },
           - {
@@ -958,7 +958,7 @@ Changes to Outputs:
               - id              = "cac46b6a-cc5d-49fb-aa39-d942a2f44603"
               - name            = "test"
               - nodes           = 2
-              - organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+              - organization_id = "c2e9ccf6-4293-4635-9205-1204d074447d"
               - version         = "3.0.8-1.0.0"
             },
           - {
@@ -980,7 +980,7 @@ Changes to Outputs:
               - id              = "d2777afb-5c31-4a35-ab46-38bb9e6be84f"
               - name            = "temp-app-service"
               - nodes           = 2
-              - organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+              - organization_id = "c2e9ccf6-4293-4635-9205-1204d074447d"
               - version         = "3.0.8-1.0.0"
             },
           - {
@@ -1002,7 +1002,7 @@ Changes to Outputs:
               - id              = "e57494b4-c791-44b6-8e7a-ee20db89a7f0"
               - name            = "new-terraform-app-service"
               - nodes           = 2
-              - organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+              - organization_id = "c2e9ccf6-4293-4635-9205-1204d074447d"
               - version         = "3.0.8-1.0.0"
             },
           - {
@@ -1024,11 +1024,11 @@ Changes to Outputs:
               - id              = "80bef88f-d38b-4cb3-9c72-80e34c4da112"
               - name            = "test-appservice"
               - nodes           = 2
-              - organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+              - organization_id = "c2e9ccf6-4293-4635-9205-1204d074447d"
               - version         = "3.0.8-1.0.0"
             },
         ]
-      - organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+      - organization_id = "c2e9ccf6-4293-4635-9205-1204d074447d"
     } -> null
   - new_app_service   = {
       - audit           = {
@@ -1051,7 +1051,7 @@ Changes to Outputs:
       - if_match        = null
       - name            = "new-terraform-app-service"
       - nodes           = 2
-      - organization_id = "6af08c0a-8cab-4c1c-b257-b521575c16d0"
+      - organization_id = "c2e9ccf6-4293-4635-9205-1204d074447d"
       - project_id      = "f14134f2-7943-4e7b-b2c5-fc2071728b6e"
       - version         = "3.0.8-1.0.0"
     } -> null

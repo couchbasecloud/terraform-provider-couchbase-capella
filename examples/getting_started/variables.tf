@@ -132,6 +132,14 @@ variable "bucket" {
   })
 }
 
+variable "sample_bucket" {
+  description = "Bucket configuration details useful for creation"
+
+  type = object({
+    name = string
+  })
+}
+
 variable "user" {
   description = "User details useful for creation"
 
@@ -185,3 +193,38 @@ variable "audit_log_export" {
   })
 }
 
+
+variable "collection" {
+  description = "Collection configuration details useful for creation"
+
+  type = object({
+    collection_name = string
+    max_ttl         = optional(number)
+  })
+}
+
+variable "cluster_onoff_schedule" {
+  description = "Cluster On Off Schedule configuration details useful for creation"
+
+  type = object({
+    timezone = string
+  })
+}
+
+variable "days" {
+
+  description = "Days configuration useful for cluster on/off schedule creation"
+
+  type = list(object({
+    state = string
+    day   = string
+    from = optional(object({
+      hour   = optional(number)
+      minute = optional(number)
+    }))
+    to = optional(object({
+      hour   = optional(number)
+      minute = optional(number)
+    }))
+  }))
+}

@@ -21,8 +21,8 @@ func ApiKeySchema() schema.Schema {
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"organization_id": stringAttribute(required, requiresReplace),
-			"name":            stringAttribute(required, requiresReplace),
+			"organization_id": stringAttribute([]string{required, requiresReplace}),
+			"name":            stringAttribute([]string{required, requiresReplace}),
 			"description":     stringDefaultAttribute("", optional, computed, requiresReplace, useStateForUnknown),
 			"expiry":          float64DefaultAttribute(180, optional, computed, requiresReplace, useStateForUnknown),
 			"allowed_cidrs": schema.SetAttribute{
@@ -43,7 +43,7 @@ func ApiKeySchema() schema.Schema {
 				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"id":    stringAttribute(required),
+						"id":    stringAttribute([]string{required}),
 						"roles": stringSetAttribute(required),
 						"type":  stringDefaultAttribute("project", optional, computed),
 					},
@@ -56,8 +56,8 @@ func ApiKeySchema() schema.Schema {
 				Optional: true,
 				Computed: true,
 			},
-			"secret": stringAttribute(optional, computed, sensitive),
-			"token":  stringAttribute(computed, sensitive),
+			"secret": stringAttribute([]string{optional, computed, sensitive}),
+			"token":  stringAttribute([]string{computed, sensitive}),
 			"audit":  computedAuditAttribute(),
 		},
 	}

@@ -33,8 +33,9 @@ build: fmt
 
 .PHONY: fmt
 fmt:
-	@echo "==> Fixing source code with gofmt..."
+	@echo "==> Fixing source code with gofmt and goimports..."
 	gofmt -s -w $(GOFMT_FILES)
+	find . -name "*.go" -exec goimports -w -local github.com/couchbasecloud/terraform-provider-couchbase-capella {} \;
 
 .PHONY: vet
 vet:
@@ -57,6 +58,7 @@ setup:  ## Install dev tools
 	@echo "==> Installing dependencies..."
 	go install github.com/client9/misspell/cmd/misspell@latest
 	go install golang.org/x/tools/go/analysis/passes/fieldalignment/cmd/fieldalignment@latest
+	go install golang.org/x/tools/cmd/goimports@latest
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin $(GOLANGCI_VERSION)
 
 .PHONY: check
@@ -70,6 +72,11 @@ docs-lint:
 .PHONY: docs
 docs:
 	@echo "Use this site to preview markdown rendering: https://registry.terraform.io/tools/doc-preview"
+
+.PHONT: build-docs
+build-docs:
+	go get github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
+	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 
 .PHONY: terraform-check tfcheck
 tfcheck: terraform-check
