@@ -22,8 +22,8 @@ func AuditLogSettingsSchema() schema.Schema {
 				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"domain": stringAttribute([]string{required, optional}),
-						"name":   stringAttribute([]string{required, optional}),
+						"domain": stringAttribute([]string{required}),
+						"name":   stringAttribute([]string{required}),
 					},
 				},
 			},
