@@ -171,6 +171,27 @@ variable "scope" {
   })
 }
 
+variable "audit_log_settings" {
+  description = "configure cluster audit log settings"
+
+  type = object({
+    audit_enabled = bool
+    disabled_users = list(object({
+      name   = string
+      domain = string
+    }))
+  })
+}
+
+variable "audit_log_export" {
+  description = "create audit log export job"
+
+  type = object({
+    start = string
+    end   = string
+  })
+}
+
 
 variable "collection" {
   description = "Collection configuration details useful for creation"

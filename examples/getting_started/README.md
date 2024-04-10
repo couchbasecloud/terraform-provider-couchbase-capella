@@ -2573,3 +2573,476 @@ Destroy complete! Resources: 12 destroyed.
 
 
 ```
+
+#  Example to obtain audit logs for a cluster
+
+In this example, we will show how to enable and obtain audit logs for your cluster for event ids 20488, 20490, 20491.
+We will do the following:
+
+1.  Enable audit logs for certain events
+2.  Submit an audit log export job
+
+Please note you should create an export job as needed.   
+
+This example assumes you already have a cluster created on Capella.  
+
+## Pre-Requisites:
+
+- Ensure you have created a V4 API key
+- Ensure you have created a cluster created in Capella
+- Copy the `terraform.template.tfvars` file to `terraform.tfvars` file in the same directory
+- Create variables `audit_log_settings` and `audit_log_export` in `variables.tf` and `terraform.tfvars` files
+
+## Execution
+### Here we enable audit logging for all n1ql (ie query) events.
+### This is achieved with the following local variable:
+### locals {
+###     n1ql_event_ids = [for event in data.couchbase-capella_audit_log_event_ids.event_list.data : event.id if event.module == "n1ql"]
+### }
+###
+### Reference the local variable n1ql_event_ids in the resource block.  Refer to audit_logs.tf for complete configuration.
+
+Commands: `terraform apply`
+
+Sample Output:
+```
+terraform apply
+╷
+│ Warning: Provider development overrides are in effect
+│
+│ The following provider development overrides are set in the CLI configuration:
+│  - couchbasecloud/couchbase-capella in /Users/hiteshwalia/GolandProjects/terraform-provider-couchbase-capella/bin
+│
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become
+│ incompatible with published releases.
+╵
+data.couchbase-capella_audit_log_event_ids.event_list: Reading...
+data.couchbase-capella_audit_log_event_ids.event_list: Read complete after 1s
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following
+symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # couchbase-capella_audit_log_settings.new_auditlogsettings will be created
+  + resource "couchbase-capella_audit_log_settings" "new_auditlogsettings" {
+      + audit_enabled     = true
+      + cluster_id        = "afa42987-f773-49f5-9e61-57293f4fd838"
+      + disabled_users    = []
+      + enabled_event_ids = [
+          + 28672,
+          + 28673,
+          + 28674,
+          + 28675,
+          + 28676,
+          + 28677,
+          + 28678,
+          + 28679,
+          + 28680,
+          + 28681,
+          + 28682,
+          + 28683,
+          + 28684,
+          + 28685,
+          + 28686,
+          + 28687,
+          + 28688,
+          + 28689,
+          + 28690,
+          + 28691,
+          + 28692,
+          + 28693,
+          + 28694,
+          + 28695,
+          + 28697,
+          + 28698,
+          + 28699,
+          + 28700,
+          + 28701,
+          + 28702,
+          + 28704,
+          + 28705,
+          + 28706,
+          + 28707,
+          + 28708,
+          + 28709,
+          + 28710,
+          + 28711,
+          + 28712,
+          + 28713,
+          + 28714,
+          + 28715,
+          + 28716,
+          + 28717,
+          + 28718,
+          + 28719,
+          + 28720,
+          + 28721,
+          + 28722,
+          + 28723,
+          + 28724,
+          + 28725,
+          + 28726,
+          + 28727,
+          + 28728,
+          + 28729,
+          + 28730,
+          + 28731,
+        ]
+      + organization_id   = "4b88f3ad-15ac-4744-ba8c-b8671a9503d7"
+      + project_id        = "06c37683-ff2a-412b-873a-c7eec2ba7ccb"
+    }
+
+Plan: 1 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + new_auditlogsettings = {
+      + audit_enabled     = true
+      + cluster_id        = "afa42987-f773-49f5-9e61-57293f4fd838"
+      + disabled_users    = []
+      + enabled_event_ids = [
+          + 28672,
+          + 28673,
+          + 28674,
+          + 28675,
+          + 28676,
+          + 28677,
+          + 28678,
+          + 28679,
+          + 28680,
+          + 28681,
+          + 28682,
+          + 28683,
+          + 28684,
+          + 28685,
+          + 28686,
+          + 28687,
+          + 28688,
+          + 28689,
+          + 28690,
+          + 28691,
+          + 28692,
+          + 28693,
+          + 28694,
+          + 28695,
+          + 28697,
+          + 28698,
+          + 28699,
+          + 28700,
+          + 28701,
+          + 28702,
+          + 28704,
+          + 28705,
+          + 28706,
+          + 28707,
+          + 28708,
+          + 28709,
+          + 28710,
+          + 28711,
+          + 28712,
+          + 28713,
+          + 28714,
+          + 28715,
+          + 28716,
+          + 28717,
+          + 28718,
+          + 28719,
+          + 28720,
+          + 28721,
+          + 28722,
+          + 28723,
+          + 28724,
+          + 28725,
+          + 28726,
+          + 28727,
+          + 28728,
+          + 28729,
+          + 28730,
+          + 28731,
+        ]
+      + organization_id   = "4b88f3ad-15ac-4744-ba8c-b8671a9503d7"
+      + project_id        = "06c37683-ff2a-412b-873a-c7eec2ba7ccb"
+    }
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+couchbase-capella_audit_log_settings.new_auditlogsettings: Creating...
+couchbase-capella_audit_log_settings.new_auditlogsettings: Creation complete after 5s
+
+Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+new_auditlogsettings = {
+  "audit_enabled" = true
+  "cluster_id" = "afa42987-f773-49f5-9e61-57293f4fd838"
+  "disabled_users" = toset([])
+  "enabled_event_ids" = toset([
+    28672,
+    28673,
+    28674,
+    28675,
+    28676,
+    28677,
+    28678,
+    28679,
+    28680,
+    28681,
+    28682,
+    28683,
+    28684,
+    28685,
+    28686,
+    28687,
+    28688,
+    28689,
+    28690,
+    28691,
+    28692,
+    28693,
+    28694,
+    28695,
+    28697,
+    28698,
+    28699,
+    28700,
+    28701,
+    28702,
+    28704,
+    28705,
+    28706,
+    28707,
+    28708,
+    28709,
+    28710,
+    28711,
+    28712,
+    28713,
+    28714,
+    28715,
+    28716,
+    28717,
+    28718,
+    28719,
+    28720,
+    28721,
+    28722,
+    28723,
+    28724,
+    28725,
+    28726,
+    28727,
+    28728,
+    28729,
+    28730,
+    28731,
+  ])
+  "organization_id" = "4b88f3ad-15ac-4744-ba8c-b8671a9503d7"
+  "project_id" = "06c37683-ff2a-412b-873a-c7eec2ba7ccb"
+}
+```
+
+### Configure an export job 
+
+```
+terraform apply
+╷
+│ Warning: Provider development overrides are in effect
+│
+│ The following provider development overrides are set in the CLI configuration:
+│  - couchbasecloud/couchbase-capella in /Users/hiteshwalia/GolandProjects/terraform-provider-couchbase-capella/bin
+│
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become
+│ incompatible with published releases.
+╵
+data.couchbase-capella_audit_log_event_ids.event_list: Reading...
+data.couchbase-capella_audit_log_event_ids.event_list: Read complete after 1s
+couchbase-capella_audit_log_settings.new_auditlogsettings: Refreshing state...
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following
+symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # couchbase-capella_audit_log_export.new_auditlogexport will be created
+  + resource "couchbase-capella_audit_log_export" "new_auditlogexport" {
+      + audit_log_download_url = (known after apply)
+      + cluster_id             = "afa42987-f773-49f5-9e61-57293f4fd838"
+      + created_at             = (known after apply)
+      + end                    = "2024-04-05T22:29:55+00:00"
+      + expiration             = (known after apply)
+      + id                     = (known after apply)
+      + organization_id        = "4b88f3ad-15ac-4744-ba8c-b8671a9503d7"
+      + project_id             = "06c37683-ff2a-412b-873a-c7eec2ba7ccb"
+      + start                  = "2024-04-05T21:29:55+00:00"
+      + status                 = (known after apply)
+    }
+
+Plan: 1 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + new_auditlogexport   = {
+      + audit_log_download_url = (known after apply)
+      + cluster_id             = "afa42987-f773-49f5-9e61-57293f4fd838"
+      + created_at             = (known after apply)
+      + end                    = "2024-04-05T22:29:55+00:00"
+      + expiration             = (known after apply)
+      + id                     = (known after apply)
+      + organization_id        = "4b88f3ad-15ac-4744-ba8c-b8671a9503d7"
+      + project_id             = "06c37683-ff2a-412b-873a-c7eec2ba7ccb"
+      + start                  = "2024-04-05T21:29:55+00:00"
+      + status                 = (known after apply)
+    }
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+couchbase-capella_audit_log_export.new_auditlogexport: Creating...
+couchbase-capella_audit_log_export.new_auditlogexport: Creation complete after 0s [id=6c452752-2381-4555-b4f3-40dd1ba192dc]
+
+Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+new_auditlogexport = {
+  "audit_log_download_url" = tostring(null)
+  "cluster_id" = "afa42987-f773-49f5-9e61-57293f4fd838"
+  "created_at" = "2024-04-05 22:31:31.169761596 +0000 UTC"
+  "end" = "2024-04-05T22:29:55+00:00"
+  "expiration" = tostring(null)
+  "id" = "6c452752-2381-4555-b4f3-40dd1ba192dc"
+  "organization_id" = "4b88f3ad-15ac-4744-ba8c-b8671a9503d7"
+  "project_id" = "06c37683-ff2a-412b-873a-c7eec2ba7ccb"
+  "start" = "2024-04-05T21:29:55+00:00"
+  "status" = tostring(null)
+}
+new_auditlogsettings = {
+  "audit_enabled" = true
+  "cluster_id" = "afa42987-f773-49f5-9e61-57293f4fd838"
+  "disabled_users" = toset([])
+  "enabled_event_ids" = toset([
+    28672,
+    28673,
+    28674,
+    28675,
+    28676,
+    28677,
+    28678,
+    28679,
+    28680,
+    28681,
+    28682,
+    28683,
+    28684,
+    28685,
+    28686,
+    28687,
+    28688,
+    28689,
+    28690,
+    28691,
+    28692,
+    28693,
+    28694,
+    28695,
+    28697,
+    28698,
+    28699,
+    28700,
+    28701,
+    28702,
+    28704,
+    28705,
+    28706,
+    28707,
+    28708,
+    28709,
+    28710,
+    28711,
+    28712,
+    28713,
+    28714,
+    28715,
+    28716,
+    28717,
+    28718,
+    28719,
+    28720,
+    28721,
+    28722,
+    28723,
+    28724,
+    28725,
+    28726,
+    28727,
+    28728,
+    28729,
+    28730,
+    28731,
+  ])
+  "organization_id" = "4b88f3ad-15ac-4744-ba8c-b8671a9503d7"
+  "project_id" = "06c37683-ff2a-412b-873a-c7eec2ba7ccb"
+}
+```
+
+### Run terraform plan to get the download url.
+
+```
+terraform plan
+╷
+│ Warning: Provider development overrides are in effect
+│
+│ The following provider development overrides are set in the CLI configuration:
+│  - couchbasecloud/couchbase-capella in /Users/hiteshwalia/GolandProjects/terraform-provider-couchbase-capella/bin
+│
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become
+│ incompatible with published releases.
+╵
+data.couchbase-capella_audit_log_event_ids.event_list: Reading...
+couchbase-capella_audit_log_export.new_auditlogexport: Refreshing state... [id=6c452752-2381-4555-b4f3-40dd1ba192dc]
+data.couchbase-capella_audit_log_event_ids.event_list: Read complete after 1s
+couchbase-capella_audit_log_settings.new_auditlogsettings: Refreshing state...
+
+Note: Objects have changed outside of Terraform
+
+Terraform detected the following changes made outside of Terraform since the last "terraform apply" which may have affected this
+plan:
+
+  # couchbase-capella_audit_log_export.new_auditlogexport has changed
+  ~ resource "couchbase-capella_audit_log_export" "new_auditlogexport" {
+      + audit_log_download_url = "https://cb-audit-logs-1234.s3.amazonaws.com/export/cluster-audit-logs-5678-from-2000-01-01-to-2000-01-02.tar.gz?X-Amz-Algorithm=X&X-Amz-Credential=XXX&X-Amz-Date=1999&X-Amz-Expires=1&X-Amz-Security-Token=XXX&X-Amz-SignedHeaders=host&X-Amz-Signature=XXX"
+      + expiration             = "2024-04-08 22:31:32.802045106 +0000 UTC"
+        id                     = "6c452752-2381-4555-b4f3-40dd1ba192dc"
+        # (6 unchanged attributes hidden)
+    }
+
+
+Unless you have made equivalent changes to your configuration, or ignored the relevant attributes using ignore_changes, the
+following plan may include actions to undo or respond to these changes.
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+Changes to Outputs:
+  ~ new_auditlogexport   = {
+      ~ audit_log_download_url = null -> "https://cb-audit-logs-1234.s3.amazonaws.com/export/cluster-audit-logs-5678-from-2000-01-01-to-2000-01-02.tar.gz?X-Amz-Algorithm=X&X-Amz-Credential=XXX&X-Amz-Date=1999&X-Amz-Expires=1&X-Amz-Security-Token=XXX&X-Amz-SignedHeaders=host&X-Amz-Signature=XXX"
+      ~ expiration             = null -> "2024-04-08 22:31:32.802045106 +0000 UTC"
+        id                     = "6c452752-2381-4555-b4f3-40dd1ba192dc"
+        # (7 unchanged attributes hidden)
+    }
+
+You can apply this plan to save these new output values to the Terraform state, without changing any real infrastructure.
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly these actions if you run
+"terraform apply" now.
+```

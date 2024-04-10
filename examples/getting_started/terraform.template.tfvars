@@ -175,3 +175,12 @@ days = [
     state = "off"
   }
 ]
+audit_log_settings = {
+  audit_enabled  = true
+  disabled_users = []
+}
+
+audit_log_export = {
+  start = "2024-04-05T21:29:55+00:00"
+  end   = "2024-04-05T22:29:55+00:00"
+}
