@@ -8,9 +8,9 @@ import (
 func AuditLogSettingsSchema() schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"organization_id": stringAttribute(required),
-			"project_id":      stringAttribute(required),
-			"cluster_id":      stringAttribute(required),
+			"organization_id": stringAttribute([]string{required}),
+			"project_id":      stringAttribute([]string{required}),
+			"cluster_id":      stringAttribute([]string{required}),
 			"audit_enabled":   boolAttribute(computed, optional),
 			"enabled_event_ids": schema.SetAttribute{
 				Computed:    true,
@@ -22,8 +22,8 @@ func AuditLogSettingsSchema() schema.Schema {
 				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"domain": stringAttribute(computed, optional),
-						"name":   stringAttribute(computed, optional),
+						"domain": stringAttribute([]string{required, optional}),
+						"name":   stringAttribute([]string{required, optional}),
 					},
 				},
 			},
