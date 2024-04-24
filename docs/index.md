@@ -258,15 +258,15 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 
   Manage Storage Auto-expansion for Azure Clusters.
 
-* [Create Audit Log Export Job in Capella](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/audit_log_export)
-
-  Create Audit Log Export Jobs.
-
 * [Manage Audit Log Settings in Capella](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/audit_log_settings)
    
   Manage Audit Log Settings.
 
-* [List Audit Logs EventIds in Capella](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/audit_logs_event_ids)
+* [Export Capella Audit Logs](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/audit_log_export)
+
+  Export Audit Logs.
+
+* [Retrieve Audit Log Events for a Cluster](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/audit_logs_event_ids)
   
-  List Audit Logs EventIds.
+  Retrieve Audit Logs Events.
 
