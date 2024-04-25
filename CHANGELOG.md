@@ -6,7 +6,7 @@
 
 **Implemented enhancements:**
 
-- \[AV-73782, AV-74127, AV-74312\] Audit Log API [\#158](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/158) ([l0n3star](https://github.com/l0n3star))
+- \[AV-73782\] Couchbase Server Audit Events Support [\#158](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/158) ([l0n3star](https://github.com/l0n3star))
 
 ## [v1.1.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.1.0) (2024-04-02)
 
