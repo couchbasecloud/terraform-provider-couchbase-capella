@@ -8,15 +8,15 @@ func AuditLogExportSchema() schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"id":                     stringAttribute([]string{computed, useStateForUnknown}),
-			"organization_id":        stringAttribute([]string{required}),
-			"project_id":             stringAttribute([]string{required}),
-			"cluster_id":             stringAttribute([]string{required}),
-			"audit_log_download_url": stringAttribute([]string{computed}),
-			"expiration":             stringAttribute([]string{computed}),
-			"start":                  stringAttribute([]string{required}),
-			"end":                    stringAttribute([]string{required}),
-			"created_at":             stringAttribute([]string{computed}),
-			"status":                 stringAttribute([]string{computed}),
+			"organization_id":        stringAttribute([]string{required, requiresReplace}),
+			"project_id":             stringAttribute([]string{required, requiresReplace}),
+			"cluster_id":             stringAttribute([]string{required, requiresReplace}),
+			"audit_log_download_url": stringAttribute([]string{computed, requiresReplace}),
+			"expiration":             stringAttribute([]string{computed, requiresReplace}),
+			"start":                  stringAttribute([]string{required, requiresReplace}),
+			"end":                    stringAttribute([]string{required, requiresReplace}),
+			"created_at":             stringAttribute([]string{computed, requiresReplace}),
+			"status":                 stringAttribute([]string{computed, requiresReplace}),
 		},
 	}
 }
