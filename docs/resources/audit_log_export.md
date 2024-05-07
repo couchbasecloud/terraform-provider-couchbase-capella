@@ -17,16 +17,16 @@ description: |-
 
 ### Required
 
-- `audit_log_download_url` (String)
 - `cluster_id` (String)
-- `created_at` (String)
 - `end` (String)
-- `expiration` (String)
 - `organization_id` (String)
 - `project_id` (String)
 - `start` (String)
-- `status` (String)
 
 ### Read-Only
 
+- `audit_log_download_url` (String)
+- `created_at` (String)
+- `expiration` (String)
 - `id` (String) The ID of this resource.
+- `status` (String)
