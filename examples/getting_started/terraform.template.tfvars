@@ -175,3 +175,9 @@ days = [
     state = "off"
   }
 ]
+
+audit_log_settings = {
+  audit_enabled  = true
+  disabled_users = []
+}
+

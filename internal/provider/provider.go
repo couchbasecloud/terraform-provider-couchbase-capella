@@ -178,6 +178,9 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewCollections,
 		datasources.NewSampleBuckets,
 		datasources.NewClusterOnOffSchedule,
+		datasources.NewAuditLogSettings,
+		datasources.NewAuditLogEventIDs,
+		datasources.NewAuditLogExport,
 	}
 }
 
@@ -200,5 +203,7 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewClusterOnOffSchedule,
 		resources.NewClusterOnOffOnDemand,
 		resources.NewAppServiceOnOffOnDemand,
+		resources.NewAuditLogSettings,
+		resources.NewAuditLogExport,
 	}
 }

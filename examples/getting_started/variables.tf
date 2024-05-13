@@ -171,7 +171,6 @@ variable "scope" {
   })
 }
 
-
 variable "collection" {
   description = "Collection configuration details useful for creation"
 
@@ -205,4 +204,16 @@ variable "days" {
       minute = optional(number)
     }))
   }))
+}
+
+variable "audit_log_settings" {
+  description = "configure cluster audit log settings"
+
+  type = object({
+    audit_enabled = bool
+    disabled_users = list(object({
+      name   = string
+      domain = string
+    }))
+  })
 }

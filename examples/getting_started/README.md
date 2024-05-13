@@ -16,6 +16,7 @@ In this demo, we will perform the following operations:
 12. Create a new scope in the bucket of the cluster.
 13. Create a new collection in the scope of a bucket.
 14. Create a new on/off schedule for the cluster.
+15. Create a new audit log settings.
 
 ## Pre-Requisites:
 
@@ -394,8 +395,77 @@ Terraform will perform the following actions:
       + status               = (known after apply)
       + time_zone            = (known after apply)
     }
+    
+ # couchbase-capella_audit_log_settings.new_auditlogsettings will be created
+  + resource "couchbase-capella_audit_log_settings" "new_auditlogsettings" {
+      + audit_enabled     = true
+      + cluster_id        = "ffffffff-aaaa-1414-eeee-000000000000"
+      + disabled_users    = []
+      + enabled_event_ids = [
+          + 28672,
+          + 28673,
+          + 28674,
+          + 28675,
+          + 28676,
+          + 28677,
+          + 28678,
+          + 28679,
+          + 28680,
+          + 28681,
+          + 28682,
+          + 28683,
+          + 28684,
+          + 28685,
+          + 28686,
+          + 28687,
+          + 28688,
+          + 28689,
+          + 28690,
+          + 28691,
+          + 28692,
+          + 28693,
+          + 28694,
+          + 28695,
+          + 28697,
+          + 28698,
+          + 28699,
+          + 28700,
+          + 28701,
+          + 28702,
+          + 28704,
+          + 28705,
+          + 28706,
+          + 28707,
+          + 28708,
+          + 28709,
+          + 28710,
+          + 28711,
+          + 28712,
+          + 28713,
+          + 28714,
+          + 28715,
+          + 28716,
+          + 28717,
+          + 28718,
+          + 28719,
+          + 28720,
+          + 28721,
+          + 28722,
+          + 28723,
+          + 28724,
+          + 28725,
+          + 28726,
+          + 28727,
+          + 28728,
+          + 28729,
+          + 28730,
+          + 28731,
+        ]
+      + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id        = "ffffffff-aaaa-1414-eeee-000000000000"
+    }
 
-Plan: 12 to add, 0 to change, 0 to destroy.
+Plan: 13 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
   + apikey                 = (sensitive value)
@@ -611,6 +681,73 @@ Changes to Outputs:
         ]
       + status               = (known after apply)
       + time_zone            = (known after apply)
+    }
+  + new_auditlogsettings = {
+      + audit_enabled     = true
+      + cluster_id        = "ffffffff-aaaa-1414-eeee-000000000000"
+      + disabled_users    = []
+      + enabled_event_ids = [
+          + 28672,
+          + 28673,
+          + 28674,
+          + 28675,
+          + 28676,
+          + 28677,
+          + 28678,
+          + 28679,
+          + 28680,
+          + 28681,
+          + 28682,
+          + 28683,
+          + 28684,
+          + 28685,
+          + 28686,
+          + 28687,
+          + 28688,
+          + 28689,
+          + 28690,
+          + 28691,
+          + 28692,
+          + 28693,
+          + 28694,
+          + 28695,
+          + 28697,
+          + 28698,
+          + 28699,
+          + 28700,
+          + 28701,
+          + 28702,
+          + 28704,
+          + 28705,
+          + 28706,
+          + 28707,
+          + 28708,
+          + 28709,
+          + 28710,
+          + 28711,
+          + 28712,
+          + 28713,
+          + 28714,
+          + 28715,
+          + 28716,
+          + 28717,
+          + 28718,
+          + 28719,
+          + 28720,
+          + 28721,
+          + 28722,
+          + 28723,
+          + 28724,
+          + 28725,
+          + 28726,
+          + 28727,
+          + 28728,
+          + 28729,
+          + 28730,
+          + 28731,
+        ]
+      + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id        = "ffffffff-aaaa-1414-eeee-000000000000"
     }
 
 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -971,8 +1108,77 @@ Terraform will perform the following actions:
       + status               = (known after apply)
       + time_zone            = (known after apply)
     }
+    
+  # couchbase-capella_audit_log_settings.new_auditlogsettings will be created
+  + resource "couchbase-capella_audit_log_settings" "new_auditlogsettings" {
+      + audit_enabled     = true
+      + cluster_id        = "ffffffff-aaaa-1414-eeee-000000000000"
+      + disabled_users    = []
+      + enabled_event_ids = [
+          + 28672,
+          + 28673,
+          + 28674,
+          + 28675,
+          + 28676,
+          + 28677,
+          + 28678,
+          + 28679,
+          + 28680,
+          + 28681,
+          + 28682,
+          + 28683,
+          + 28684,
+          + 28685,
+          + 28686,
+          + 28687,
+          + 28688,
+          + 28689,
+          + 28690,
+          + 28691,
+          + 28692,
+          + 28693,
+          + 28694,
+          + 28695,
+          + 28697,
+          + 28698,
+          + 28699,
+          + 28700,
+          + 28701,
+          + 28702,
+          + 28704,
+          + 28705,
+          + 28706,
+          + 28707,
+          + 28708,
+          + 28709,
+          + 28710,
+          + 28711,
+          + 28712,
+          + 28713,
+          + 28714,
+          + 28715,
+          + 28716,
+          + 28717,
+          + 28718,
+          + 28719,
+          + 28720,
+          + 28721,
+          + 28722,
+          + 28723,
+          + 28724,
+          + 28725,
+          + 28726,
+          + 28727,
+          + 28728,
+          + 28729,
+          + 28730,
+          + 28731,
+        ]
+      + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id        = "ffffffff-aaaa-1414-eeee-000000000000"
+    }
 
-Plan: 12 to add, 0 to change, 0 to destroy.
+Plan: 13 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
   + apikey                 = (sensitive value)
@@ -1189,6 +1395,73 @@ Changes to Outputs:
       + status               = (known after apply)
       + time_zone            = (known after apply)
     }
+  + new_auditlogsettings = {
+      + audit_enabled     = true
+      + cluster_id        = "ffffffff-aaaa-1414-eeee-000000000000"
+      + disabled_users    = []
+      + enabled_event_ids = [
+          + 28672,
+          + 28673,
+          + 28674,
+          + 28675,
+          + 28676,
+          + 28677,
+          + 28678,
+          + 28679,
+          + 28680,
+          + 28681,
+          + 28682,
+          + 28683,
+          + 28684,
+          + 28685,
+          + 28686,
+          + 28687,
+          + 28688,
+          + 28689,
+          + 28690,
+          + 28691,
+          + 28692,
+          + 28693,
+          + 28694,
+          + 28695,
+          + 28697,
+          + 28698,
+          + 28699,
+          + 28700,
+          + 28701,
+          + 28702,
+          + 28704,
+          + 28705,
+          + 28706,
+          + 28707,
+          + 28708,
+          + 28709,
+          + 28710,
+          + 28711,
+          + 28712,
+          + 28713,
+          + 28714,
+          + 28715,
+          + 28716,
+          + 28717,
+          + 28718,
+          + 28719,
+          + 28720,
+          + 28721,
+          + 28722,
+          + 28723,
+          + 28724,
+          + 28725,
+          + 28726,
+          + 28727,
+          + 28728,
+          + 28729,
+          + 28730,
+          + 28731,
+        ]
+      + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id        = "ffffffff-aaaa-1414-eeee-000000000000"
+    }
 
 Do you want to perform these actions?
   Terraform will perform the actions described above.
@@ -1265,8 +1538,10 @@ couchbase-capella_app_service.new_app_service: Still creating... [4m30s elapsed]
 couchbase-capella_app_service.new_app_service: Still creating... [4m40s elapsed]
 couchbase-capella_app_service.new_app_service: Still creating... [4m50s elapsed]
 couchbase-capella_app_service.new_app_service: Creation complete after 4m55s [id=ffffffff-aaaa-1414-eeee-000000000000]
+couchbase-capella_audit_log_export.new_auditlogexport: Creating...
+couchbase-capella_audit_log_export.new_auditlogexport: Creation complete after 0s [id=ffffffff-aaaa-1414-eeee-000000000000]
 
-Apply complete! Resources: 12 added, 0 changed, 0 destroyed.
+Apply complete! Resources: 13 added, 0 changed, 0 destroyed.
 
 Outputs:
 
@@ -1527,6 +1802,73 @@ user = {
   ])
   "status" = "not-verified"
   "time_zone" = ""
+}
+new_auditlogsettings = {
+  "audit_enabled" = true
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "disabled_users" = toset([])
+  "enabled_event_ids" = toset([
+    28672,
+    28673,
+    28674,
+    28675,
+    28676,
+    28677,
+    28678,
+    28679,
+    28680,
+    28681,
+    28682,
+    28683,
+    28684,
+    28685,
+    28686,
+    28687,
+    28688,
+    28689,
+    28690,
+    28691,
+    28692,
+    28693,
+    28694,
+    28695,
+    28697,
+    28698,
+    28699,
+    28700,
+    28701,
+    28702,
+    28704,
+    28705,
+    28706,
+    28707,
+    28708,
+    28709,
+    28710,
+    28711,
+    28712,
+    28713,
+    28714,
+    28715,
+    28716,
+    28717,
+    28718,
+    28719,
+    28720,
+    28721,
+    28722,
+    28723,
+    28724,
+    28725,
+    28726,
+    28727,
+    28728,
+    28729,
+    28730,
+    28731,
+  ])
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
 }
 
 ```
@@ -1794,9 +2136,76 @@ user = {
   "status" = "not-verified"
   "time_zone" = ""
 }
+new_auditlogsettings = {
+  "audit_enabled" = true
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "disabled_users" = toset([])
+  "enabled_event_ids" = toset([
+    28672,
+    28673,
+    28674,
+    28675,
+    28676,
+    28677,
+    28678,
+    28679,
+    28680,
+    28681,
+    28682,
+    28683,
+    28684,
+    28685,
+    28686,
+    28687,
+    28688,
+    28689,
+    28690,
+    28691,
+    28692,
+    28693,
+    28694,
+    28695,
+    28697,
+    28698,
+    28699,
+    28700,
+    28701,
+    28702,
+    28704,
+    28705,
+    28706,
+    28707,
+    28708,
+    28709,
+    28710,
+    28711,
+    28712,
+    28713,
+    28714,
+    28715,
+    28716,
+    28717,
+    28718,
+    28719,
+    28720,
+    28721,
+    28722,
+    28723,
+    28724,
+    28725,
+    28726,
+    28727,
+    28728,
+    28729,
+    28730,
+    28731,
+  ])
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+}
 ```
 
-All these resources can be destroyed using the `terraform destroy` command
+All these resources (except audit log settings) can be destroyed using the `terraform destroy` command
 
 Sample Output:
 ```
@@ -2203,8 +2612,76 @@ Terraform will perform the following actions:
         ] -> null
       - status               = "not-verified" -> null
     }
+  # couchbase-capella_audit_log_settings.new_auditlogsettings will be destroyed
+  - resource "couchbase-capella_audit_log_settings" "new_auditlogsettings" {
+      - audit_enabled     = true -> null
+      - cluster_id        = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - disabled_users    = [] -> null
+      - enabled_event_ids = [
+          - 28672,
+          - 28673,
+          - 28674,
+          - 28675,
+          - 28676,
+          - 28677,
+          - 28678,
+          - 28679,
+          - 28680,
+          - 28681,
+          - 28682,
+          - 28683,
+          - 28684,
+          - 28685,
+          - 28686,
+          - 28687,
+          - 28688,
+          - 28689,
+          - 28690,
+          - 28691,
+          - 28692,
+          - 28693,
+          - 28694,
+          - 28695,
+          - 28697,
+          - 28698,
+          - 28699,
+          - 28700,
+          - 28701,
+          - 28702,
+          - 28704,
+          - 28705,
+          - 28706,
+          - 28707,
+          - 28708,
+          - 28709,
+          - 28710,
+          - 28711,
+          - 28712,
+          - 28713,
+          - 28714,
+          - 28715,
+          - 28716,
+          - 28717,
+          - 28718,
+          - 28719,
+          - 28720,
+          - 28721,
+          - 28722,
+          - 28723,
+          - 28724,
+          - 28725,
+          - 28726,
+          - 28727,
+          - 28728,
+          - 28729,
+          - 28730,
+          - 28731,
+        ] -> null
+      - organization_id   = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - project_id        = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+    }
 
-Plan: 0 to add, 0 to change, 12 to destroy.
+Plan: 0 to add, 0 to change, 13 to destroy.
 
 Changes to Outputs:
   - apikey                 = (sensitive value) -> null
@@ -2567,8 +3044,11 @@ couchbase-capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-141
 couchbase-capella_cluster.new_cluster: Destruction complete after 8m40s
 couchbase-capella_project.new_project: Destroying... [id=ffffffff-aaaa-1414-eeee-000000000000]
 couchbase-capella_project.new_project: Destruction complete after 2s
-
-Destroy complete! Resources: 12 destroyed.
+couchbase-capella_audit_log_settings.new_auditlogsettings: Destroying...
+╷
+│ Error: delete is not supported for audit log settings
+│
+│ delete is not supported for audit log settings
  
 
 

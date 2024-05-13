@@ -99,7 +99,7 @@ Read-Only:
 - `disk` (Attributes) (see [below for nested schema](#nestedatt--data--service_groups--node--disk))
 
 <a id="nestedatt--data--service_groups--node--compute"></a>
-### Nested Schema for `data.service_groups.node.disk`
+### Nested Schema for `data.service_groups.node.compute`
 
 Read-Only:
 

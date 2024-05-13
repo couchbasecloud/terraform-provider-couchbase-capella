@@ -719,7 +719,7 @@ Please note, this command will only remove the resource from the Terraform State
 Command: `terraform import couchbase-capella_cluster_onoff_schedule.new_cluster_onoff_schedule cluster_id=<cluster_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
 In this case, the complete command is:
-`terraform import couchbase-capella_cluster_onoff_schedule.new_cluster_onoff_schedule cluster_id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d`
+`terraform import couchbase-capella_cluster_onoff_schedule.new_cluster_onoff_schedule cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000`
 
 Sample Output:
 ```
@@ -746,7 +746,7 @@ your Terraform state and will henceforth be managed by Terraform.
 ```
 
 Here, we pass the IDs as a single comma-separated string.
-The first ID in the string is the cluster ID i.e. the ID of the resource that we want to import.
+The first ID in the string is the cluster ID i.e. the ID of the cluster schedule that we want to import.
 The second ID is the project ID i.e. the ID of the project to which the cluster belongs.
 The third ID is the organization ID i.e. the ID of the organization to which the project belongs.
 

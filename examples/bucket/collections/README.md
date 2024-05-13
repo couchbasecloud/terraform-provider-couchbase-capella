@@ -112,7 +112,7 @@ Plan: 1 to add, 0 to change, 0 to destroy.
 Changes to Outputs:
   + new_collection   = {
       + bucket_id       = "YjE="
-      + cluster_id      = "0d9a6dd5-4d55-49be-8137-896f21425beb"
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + max_ttl         = 200
       + name            = "new_terraform_collection"
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"

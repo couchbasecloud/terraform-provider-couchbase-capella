@@ -60,7 +60,7 @@ var (
 	// ErrUnableToUpdateAvailabilityType is returned when it is not possible to update the availability type.
 	ErrUnableToUpdateAvailabilityType = errors.New("unable to update availability type")
 
-	// ErrUnableToUpdateCloudProvider is returned when when it is not possible to update the cloud provider.
+	// ErrUnableToUpdateCloudProvider is returned when it is not possible to update the cloud provider.
 	ErrUnableToUpdateCloudProvider = errors.New("unable to update cloud provider")
 
 	// ErrMarshallingPayload is returned when a payload has failed to marshal into a request body.
@@ -165,9 +165,9 @@ var (
 	// ErrScopeNameMissing is returned when an expected ScopeName was not found after an import.
 	ErrScopeNameMissing = errors.New("scope Name is missing or was passed incorrectly, please check provider documentation for syntax")
 
-	// ErrIfMatchCannotBeSetWhileCreate is returned when if_match is set during create operation.
+	// ErrInvalidSampleBucketName is returned when sample bucket name is not valid.
 	ErrInvalidSampleBucketName = errors.New("sample bucket name can only be travel-sample, beer-sample, gamesim-sample")
 
 	// ErrOnoffStateCannotBeEmpty is returned when cluster on/off state is required for a request but was not included.
-	ErrOnoffStateCannotBeEmpty = errors.New("On/off state cannot be empty, please mention the state in which you want your cluster to be")
+	ErrOnoffStateCannotBeEmpty = errors.New("on/off state cannot be empty, please mention the state in which you want your cluster to be")
 )
