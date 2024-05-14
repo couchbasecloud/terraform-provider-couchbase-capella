@@ -32,6 +32,9 @@ const errorMessageAfterAuditLogExportCreation = "Audit log export job creating i
 const errorMessageWhileAuditLogExportCreation = "There is an error during audit log export creating. Please check in Capella to see if any hanging resources" +
 	" have been created, unexpected error: "
 
+// specifying customer layout due to AV-78493.
+const layout = "2006-01-02T15:04:05-07:00"
+
 // AuditLogExport is the resource implementation.
 type AuditLogExport struct {
 	*providerschema.Data
@@ -86,20 +89,20 @@ func (a *AuditLogExport) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	start, err := time.Parse(time.RFC3339, plan.Start.ValueString())
+	start, err := time.Parse(layout, plan.Start.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating audit log export job",
-			"Could not parse start time, unexpected error: "+err.Error(),
+			"Could not parse start time.  Please ensure it's in format 2024-05-05T15:04:11+00:00.  Error: "+err.Error(),
 		)
 		return
 	}
 
-	end, err := time.Parse(time.RFC3339, plan.End.ValueString())
+	end, err := time.Parse(layout, plan.End.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating audit log export job",
-			"Could not parse end time, unexpected error: "+err.Error(),
+			"Could not parse end time.  Please ensure it's in format 2024-05-05T15:04:11+00:00.  Error: "+err.Error(),
 		)
 		return
 	}
@@ -156,7 +159,6 @@ func (a *AuditLogExport) Create(ctx context.Context, req resource.CreateRequest,
 		)
 		return
 	}
-
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
 
