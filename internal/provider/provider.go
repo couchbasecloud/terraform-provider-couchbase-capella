@@ -206,5 +206,6 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewAppServiceOnOffOnDemand,
 		resources.NewAuditLogSettings,
 		resources.NewAuditLogExport,
+		resources.NewPrivateEndpointService,
 	}
 }
