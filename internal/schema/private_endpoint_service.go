@@ -1,7 +1,10 @@
 package schema
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 )
@@ -16,15 +19,17 @@ type PrivateEndpointService struct {
 	Enabled types.Bool `tfsdk:"enabled"`
 }
 
-func (p *PrivateEndpointService) Validate() error {
-	if p.OrganizationId.IsNull() {
-		return errors.ErrOrganizationIdMissing
+func (p *PrivateEndpointService) Validate() (map[Attr]string, error) {
+	state := map[Attr]basetypes.StringValue{
+		OrganizationId: p.OrganizationId,
+		ProjectId:      p.ProjectId,
+		ClusterId:      p.ClusterId,
 	}
-	if p.ProjectId.IsNull() {
-		return errors.ErrProjectIdMissing
+
+	IDs, err := validateSchemaState(state, ClusterId)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
 	}
-	if p.ClusterId.IsNull() {
-		return errors.ErrClusterIdMissing
-	}
-	return nil
+
+	return IDs, nil
 }

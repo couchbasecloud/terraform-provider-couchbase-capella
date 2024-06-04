@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -54,7 +56,7 @@ func (p *PrivateEndpointService) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	err := state.Validate()
+	err := p.validate(state)
 	if err != nil {
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -122,4 +124,17 @@ func (p *PrivateEndpointService) Configure(_ context.Context, req datasource.Con
 	}
 
 	p.Data = data
+}
+
+func (p *PrivateEndpointService) validate(state providerschema.PrivateEndpointService) error {
+	if state.OrganizationId.IsNull() {
+		return errors.ErrOrganizationIdMissing
+	}
+	if state.ProjectId.IsNull() {
+		return errors.ErrProjectIdMissing
+	}
+	if state.ClusterId.IsNull() {
+		return errors.ErrClusterIdMissing
+	}
+	return nil
 }

@@ -61,7 +61,7 @@ func (p *PrivateEndpointService) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	err := validate(plan)
+	err := validateCreateEndpointService(plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error validating private endpoint service request",
@@ -139,10 +139,19 @@ func (p *PrivateEndpointService) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
+	IDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Private Endpoint Service in Capella",
+			"Could not read Capella private endpoint service on cluster "+state.ClusterId.String()+": "+err.Error(),
+		)
+		return
+	}
+
 	var (
-		organizationId = state.OrganizationId.ValueString()
-		projectId      = state.ProjectId.ValueString()
-		clusterId      = state.ClusterId.ValueString()
+		organizationId = IDs[providerschema.OrganizationId]
+		projectId      = IDs[providerschema.ProjectId]
+		clusterId      = IDs[providerschema.ClusterId]
 	)
 
 	refreshedState, err := p.getServiceState(ctx, organizationId, projectId, clusterId)
@@ -179,10 +188,19 @@ func (p *PrivateEndpointService) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
+	IDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Private Endpoint Service in Capella",
+			"Could not read Capella private endpoint service on cluster "+state.ClusterId.String()+": "+err.Error(),
+		)
+		return
+	}
+
 	var (
-		organizationId = state.OrganizationId.ValueString()
-		projectId      = state.ProjectId.ValueString()
-		clusterId      = state.ClusterId.ValueString()
+		organizationId = IDs[providerschema.OrganizationId]
+		projectId      = IDs[providerschema.ProjectId]
+		clusterId      = IDs[providerschema.ClusterId]
 	)
 
 	// Disable private endpoint service.
@@ -194,7 +212,7 @@ func (p *PrivateEndpointService) Delete(ctx context.Context, req resource.Delete
 		clusterId,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
-	_, err := p.Client.ExecuteWithRetry(
+	_, err = p.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -241,7 +259,7 @@ func (p *PrivateEndpointService) ImportState(ctx context.Context, req resource.I
 	resource.ImportStatePassthroughID(ctx, path.Root("cluster_id"), req, resp)
 }
 
-func validate(plan providerschema.PrivateEndpointService) error {
+func validateCreateEndpointService(plan providerschema.PrivateEndpointService) error {
 	if plan.OrganizationId.IsNull() {
 		return errors.ErrOrganizationIdCannotBeEmpty
 	}
