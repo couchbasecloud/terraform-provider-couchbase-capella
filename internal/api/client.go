@@ -134,6 +134,7 @@ func (c *Client) ExecuteWithRetry(
 		}
 
 		req.Header.Set("Authorization", "Bearer "+authToken)
+		req.Header.Set("User-Agent", userAgent)
 		for header, value := range headers {
 			req.Header.Set(header, value)
 		}

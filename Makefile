@@ -7,9 +7,9 @@ GOFLAGS=-mod=vendor
 GOOPTS="-p 2"
 GOFMT_FILES?=$$(find . -name '*.go')
 
-GITTAG=$(shell git describe --always --tags)
+GITTAG=$(shell git describe --tags --abbrev=0)
 VERSION=$(GITTAG:v%=%)
-LINKER_FLAGS=-s -w -X 'github.com/couchbasecloud/terraform-provider-couchbase-cloud/version.ProviderVersion=${VERSION}'
+LINKER_FLAGS=-s -w -X 'github.com/couchbasecloud/terraform-provider-couchbase-capella/version.ProviderVersion=${VERSION}'
 
 GOLANGCI_VERSION=v1.55.2
 
