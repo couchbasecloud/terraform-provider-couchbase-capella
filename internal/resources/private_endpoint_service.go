@@ -100,7 +100,7 @@ func (p *PrivateEndpointService) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	diags = resp.State.Set(ctx, initializePlan(plan))
+	diags = resp.State.Set(ctx, initializePrivateEndpointServicePlan(plan))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -177,7 +177,6 @@ func (p *PrivateEndpointService) Update(ctx context.Context, req resource.Update
 		"No update API for private endpoint service",
 		"No update API for private endpoint service",
 	)
-	return
 }
 
 func (p *PrivateEndpointService) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -275,7 +274,7 @@ func validateCreateEndpointService(plan providerschema.PrivateEndpointService) e
 
 // initializePlan initializes an instance of providerschema.PrivateEndpointService
 // with the specified plan. It marks all computed fields as null.
-func initializePlan(plan providerschema.PrivateEndpointService) providerschema.PrivateEndpointService {
+func initializePrivateEndpointServicePlan(plan providerschema.PrivateEndpointService) providerschema.PrivateEndpointService {
 	if plan.Enabled.IsNull() || plan.Enabled.IsUnknown() {
 		plan.Enabled = types.BoolNull()
 	}

@@ -29,17 +29,10 @@ type PrivateEndpoint struct {
 
 // PrivateEndpoints defines a structure used by the LIST endpoint for private endpoints.
 type PrivateEndpoints struct {
-	// Data is an array of private endpoints.
-	Data []PrivateEndpointData `tfsdk:"data"`
-
-	// ClusterId is the ID of the cluster for which the collection needs to be created.
-	ClusterId types.String `tfsdk:"cluster_id"`
-
-	// ProjectId is the ID of the project to which the Capella cluster belongs.
-	ProjectId types.String `tfsdk:"project_id"`
-
-	// OrganizationId is the ID of the organization to which the Capella cluster belongs.
-	OrganizationId types.String `tfsdk:"organization_id"`
+	ClusterId      types.String          `tfsdk:"cluster_id"`
+	ProjectId      types.String          `tfsdk:"project_id"`
+	OrganizationId types.String          `tfsdk:"organization_id"`
+	Data           []PrivateEndpointData `tfsdk:"data"`
 }
 
 // PrivateEndpointData defines a single private endpoint.

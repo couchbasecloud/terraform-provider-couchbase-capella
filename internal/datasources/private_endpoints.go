@@ -21,12 +21,12 @@ var (
 	_ datasource.DataSourceWithConfigure = &PrivateEndpoints{}
 )
 
-// PrivateEndpoint is the data source implementation.
+// PrivateEndpoints is the data source implementation.
 type PrivateEndpoints struct {
 	*providerschema.Data
 }
 
-// NewPrivateEndpoint is a helper function to simplify the provider implementation.
+// NewPrivateEndpoints is a helper function to simplify the provider implementation.
 func NewPrivateEndpoints() datasource.DataSource {
 	return &PrivateEndpoints{}
 }
@@ -36,7 +36,7 @@ func (p *PrivateEndpoints) Metadata(_ context.Context, req datasource.MetadataRe
 	resp.TypeName = req.ProviderTypeName + "_private_endpoints"
 }
 
-func (p *PrivateEndpoints) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (p *PrivateEndpoints) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"organization_id": requiredStringAttribute,

@@ -168,7 +168,6 @@ func (p *PrivateEndpoint) Update(_ context.Context, _ resource.UpdateRequest, re
 		"No update API for a private endpoint",
 		"No update API for a private endpoint",
 	)
-	return
 }
 
 // Delete rejects a private endpoint on the CSP.
