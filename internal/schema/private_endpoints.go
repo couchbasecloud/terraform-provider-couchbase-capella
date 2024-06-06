@@ -1,11 +1,21 @@
 package schema
 
-import "github.com/hashicorp/terraform-plugin-framework/types"
+import (
+	"fmt"
+
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+)
 
 // PrivateEndpoint represents a private endpoint resource.
 type PrivateEndpoint struct {
 	// EndpointId is the id of the bucket for which the collection needs to be created.
 	EndpointId types.String `tfsdk:"endpoint_id"`
+
+	// Status is the endpoint status.  Possible values are failed, linked, pending, pendingAcceptance, rejected and unrecognized.
+	Status types.String `tfsdk:"status"`
 
 	// ClusterId is the ID of the cluster for which the collection needs to be created.
 	ClusterId types.String `tfsdk:"cluster_id"`
@@ -38,4 +48,20 @@ type PrivateEndpointData struct {
 	Id types.String `tfsdk:"id"`
 	// Status is the endpoint status.  Possible values are failed, linked, pending, pendingAcceptance, rejected and unrecognized.
 	Status types.String `tfsdk:"status"`
+}
+
+func (p *PrivateEndpoint) Validate() (map[Attr]string, error) {
+	state := map[Attr]basetypes.StringValue{
+		OrganizationId: p.OrganizationId,
+		ProjectId:      p.ProjectId,
+		ClusterId:      p.ClusterId,
+		EndpointId:     p.EndpointId,
+	}
+
+	IDs, err := validateSchemaState(state, EndpointId)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
+	}
+
+	return IDs, nil
 }
