@@ -173,4 +173,7 @@ var (
 
 	// ErrEndpointIdMissing is returned when an expected endpoint ID was not found after an import.
 	ErrEndpointIdMissing = errors.New("endpoint ID is missing or was passed incorrectly, please check provider documentation for syntax")
+
+	// ErrVPCIDMissing is returned when an expected AWS VPC ID was not found after an import.
+	ErrVPCIDMissing = errors.New("AWS VPC ID is missing or was passed incorrectly, please check provider documentation for syntax")
 )
