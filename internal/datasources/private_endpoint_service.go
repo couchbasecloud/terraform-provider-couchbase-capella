@@ -58,13 +58,11 @@ func (p *PrivateEndpointService) Read(ctx context.Context, req datasource.ReadRe
 
 	err := p.validate(state)
 	if err != nil {
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error Reading Capella Private Endpoint Service",
-				"Could not read private endpoint service in cluster "+state.ClusterId.String()+": "+err.Error(),
-			)
-			return
-		}
+		resp.Diagnostics.AddError(
+			"Error validating Capella Private Endpoint Service",
+			"Could not validate private endpoint service in cluster "+state.ClusterId.String()+": "+err.Error(),
+		)
+		return
 	}
 
 	var (

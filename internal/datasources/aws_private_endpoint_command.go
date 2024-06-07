@@ -4,13 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
-	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	"net/http"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"net/http"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
 var (
@@ -53,7 +55,7 @@ func (a *AWSPrivateEndpointCommand) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	err := validateAWSCommand(state)
+	err := a.validate(state)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error validating AWS private endpoint command request",
@@ -126,7 +128,7 @@ func (a *AWSPrivateEndpointCommand) Configure(_ context.Context, req datasource.
 	a.Data = data
 }
 
-func validateAWSCommand(config providerschema.AWSCommandRequest) error {
+func (a *AWSPrivateEndpointCommand) validate(config providerschema.AWSCommandRequest) error {
 	if config.OrganizationId.IsNull() {
 		return errors.ErrOrganizationIdMissing
 	}

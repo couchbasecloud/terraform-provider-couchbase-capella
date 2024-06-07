@@ -176,4 +176,10 @@ var (
 
 	// ErrVPCIDMissing is returned when an expected AWS VPC ID was not found after an import.
 	ErrVPCIDMissing = errors.New("AWS VPC ID is missing or was passed incorrectly, please check provider documentation for syntax")
+
+	// ErrVirtualNetworkMissing is returned when an expected Azure virtual network was not found after an import.
+	ErrVirtualNetworkMissing = errors.New("Azure virtual network is missing or was passed incorrectly, please check provider documentation for syntax")
+
+	// ErrResourceGroupName is returned when an expected Azure resource group was not found after an import.
+	ErrResourceGroupName = errors.New("Azure resource group is missing or was passed incorrectly, please check provider documentation for syntax")
 )

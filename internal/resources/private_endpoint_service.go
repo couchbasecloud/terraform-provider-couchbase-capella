@@ -190,8 +190,8 @@ func (p *PrivateEndpointService) Delete(ctx context.Context, req resource.Delete
 	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Private Endpoint Service in Capella",
-			"Could not read Capella private endpoint service on cluster "+state.ClusterId.String()+": "+err.Error(),
+			"Error validating Private Endpoint Service in Capella",
+			"Could not validate Capella private endpoint service on cluster "+state.ClusterId.String()+": "+err.Error(),
 		)
 		return
 	}
