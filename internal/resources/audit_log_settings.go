@@ -273,12 +273,9 @@ func (a *AuditLogSettings) Update(ctx context.Context, req resource.UpdateReques
 	}
 }
 
-// AuditLogSettings does not have delete endpoint.
-func (a *AuditLogSettings) Delete(_ context.Context, _ resource.DeleteRequest, resp *resource.DeleteResponse) {
-	resp.Diagnostics.AddError(
-		"delete is not supported for audit log settings",
-		"delete is not supported for audit log settings",
-	)
+// AuditLogSettings does not have delete endpoint, so we do a noop.
+func (a *AuditLogSettings) Delete(ctx context.Context, _ resource.DeleteRequest, resp *resource.DeleteResponse) {
+	resp.State.RemoveResource(ctx)
 }
 
 func (a *AuditLogSettings) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

@@ -225,12 +225,9 @@ func (a *AuditLogExport) Update(_ context.Context, _ resource.UpdateRequest, res
 	)
 }
 
-// Delete is not supported as audit log export API does not have delete endpoint.
-func (a *AuditLogExport) Delete(_ context.Context, _ resource.DeleteRequest, resp *resource.DeleteResponse) {
-	resp.Diagnostics.AddError(
-		"Audit Log Export does not support delete",
-		"Audit Log Export does not support delete",
-	)
+// Delete is not supported as audit log export API does not have delete endpoint, so we do a noop.
+func (a *AuditLogExport) Delete(ctx context.Context, _ resource.DeleteRequest, resp *resource.DeleteResponse) {
+	resp.State.RemoveResource(ctx)
 }
 
 func (a *AuditLogExport) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
