@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -31,6 +32,8 @@ const errorMessageAfterAuditLogExportCreation = "Audit log export job creating i
 
 const errorMessageWhileAuditLogExportCreation = "There is an error during audit log export creating. Please check in Capella to see if any hanging resources" +
 	" have been created, unexpected error: "
+
+const APIServerTimeLayout = "2006-01-02 15:04:05 -0700 MST"
 
 // AuditLogExport is the resource implementation.
 type AuditLogExport struct {
@@ -156,6 +159,38 @@ func (a *AuditLogExport) Create(ctx context.Context, req resource.CreateRequest,
 		)
 		return
 	}
+
+	// API server returns time using offset.  If user specifies UTC in zulu format,
+	// this will cause state mismatch.  First validate the times are the same
+	// regardless of format.
+	refreshedStart, err := time.Parse(APIServerTimeLayout, refreshedState.Start.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error on refresh of audit log export job",
+			"Could not parse refreshed start time, unexpected error: "+err.Error(),
+		)
+		return
+	}
+	refreshedEnd, err := time.Parse(APIServerTimeLayout, refreshedState.End.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error on refresh of audit log export job",
+			"Could not parse refreshed end time, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	if !start.Equal(refreshedStart) || !end.Equal(refreshedEnd) {
+		resp.Diagnostics.AddError(
+			"Error on refresh of audit log export job",
+			fmt.Sprintf("Refreshed start/end times do not match plan. Refreshed start time: %s. Refreshed end time: %s.\nPlan start time: %s.  Plan end time: %s.", refreshedStart.String(), refreshedEnd.String(), start.String(), end.String()),
+		)
+		return
+	}
+
+	// Second, overwrite API response with what's in the plan.
+	refreshedState.Start = types.StringValue(strings.Trim(plan.Start.String(), "\""))
+	refreshedState.End = types.StringValue(strings.Trim(plan.End.String(), "\""))
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
@@ -287,23 +322,13 @@ func (a *AuditLogExport) refreshAuditLogExport(ctx context.Context, organization
 		return nil, fmt.Errorf("%s: %w", errors.ErrNotFound, err)
 	}
 
-	auditStart, err := time.Parse("2006-01-02 15:04:05 -0700 UTC", auditLogExportResp.Start.String())
-	if err != nil {
-		return nil, err
-	}
-
-	auditEnd, err := time.Parse("2006-01-02 15:04:05 -0700 UTC", auditLogExportResp.End.String())
-	if err != nil {
-		return nil, err
-	}
-
 	refreshedState := providerschema.AuditLogExport{
 		Id:             types.StringValue(exportId),
 		OrganizationId: types.StringValue(organizationId),
 		ProjectId:      types.StringValue(projectId),
 		ClusterId:      types.StringValue(clusterId),
-		Start:          types.StringValue(auditStart.Format("2006-01-02T15:04:05-07:00")),
-		End:            types.StringValue(auditEnd.Format("2006-01-02T15:04:05-07:00")),
+		Start:          types.StringValue(auditLogExportResp.Start.String()),
+		End:            types.StringValue(auditLogExportResp.End.String()),
 		CreatedAt:      types.StringValue(auditLogExportResp.CreatedAt.String()),
 	}
 
