@@ -8,12 +8,11 @@ To run, configure your Couchbase Capella provider as described in README in the 
 
 In this example, we are going to do the following.
 
-1.  CREATE: Create a new audit log export job in Capella per the `create_audit_log_exports.tf` file.
-2.  LIST: List existing audit log export jobs in Capella as stated in the `list_audit_log_exports.tf` file, and
+1. CREATE: Create a new audit log export job in Capella per the `create_audit_log_exports.tf` file.
+2. LIST: List existing audit log export jobs in Capella as stated in the `list_audit_log_exports.tf` file, and
           detecting if resource was updated outside terraform. 
-3.  UPDATE: Show it is not supported
-4.  DELETE: Show it is not supported
-5.  IMPORT:  Import an existing audit log export job
+3. UPDATE: Show it is not supported
+4. IMPORT:  Import an existing audit log export job
 
 
 If you check the `terraform.template.tfvars` file - Make sure you copy the file to `terraform.tfvars` and update the values of the variables as per the correct organization access.
@@ -315,80 +314,6 @@ couchbase-capella_audit_log_export.new_auditlogexport: Modifying... [id=b173a42e
 │
 │ Audit Log Export does not support update
 ╵
-```
-
-###  Delete is not supported
-
-Command: `terraform destroy`
-
-Sample output:
-```
-terraform destroy
-╷
-│ Warning: Provider development overrides are in effect
-│
-│ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/$USER/workspace/terraform-provider-couchbase-capella/bin
-│
-│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
-│ published releases.
-╵
-couchbase-capella_audit_log_export.new_auditlogexport: Refreshing state... [id=b173a42e-3c2c-4245-af81-f8615d63b5ce]
-data.couchbase-capella_audit_log_export.existing_auditlogexport: Reading...
-data.couchbase-capella_audit_log_export.existing_auditlogexport: Read complete after 0s
-
-Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
-  - destroy
-
-Terraform will perform the following actions:
-
-  # couchbase-capella_audit_log_export.new_auditlogexport will be destroyed
-  - resource "couchbase-capella_audit_log_export" "new_auditlogexport" {
-      - audit_log_download_url = "https://cb-audit-logs-1234.s3.amazonaws.com/export/cluster-audit-logs-5678-from-2000-01-01-to-2000-01-02.tar.gz?X-Amz-Algorithm=X&X-Amz-Credential=XXX&X-Amz-Date=1999&X-Amz-Expires=1&X-Amz-Security-Token=XXX&X-Amz-SignedHeaders=host&X-Amz-Signature=XXX" -> null
-      - cluster_id            = "41938b91-66ed-4c84-b70c-55c3f0ae4266" -> null
-      - created_at            = "2024-03-13 06:48:43.596764031 +0000 UTC" -> null
-      - end                   = "2024-03-13T06:44:15+00:00" -> null
-      - expiration            = "2024-03-16 06:48:46.64587117 +0000 UTC" -> null
-      - id                    = "b173a42e-3c2c-4245-af81-f8615d63b5ce" -> null
-      - organization_id       = "637cea1d-fce5-40a5-9d48-8d0690e656ee" -> null
-      - project_id            = "6aa13dbf-69cb-48e3-97af-d89f57ea7f90" -> null
-      - start                 = "2024-03-13T04:44:15+00:00" -> null
-    }
-
-Plan: 0 to add, 0 to change, 1 to destroy.
-
-Changes to Outputs:
-  - existing_auditlogexport = {
-      - cluster_id      = "41938b91-66ed-4c84-b70c-55c3f0ae4266"
-      - data            = [
-          - {
-              - audit_log_download_url = "https://cb-audit-logs-1234.s3.amazonaws.com/export/cluster-audit-logs-5678-from-2000-01-01-to-2000-01-02.tar.gz?X-Amz-Algorithm=X&X-Amz-Credential=XXX&X-Amz-Date=1999&X-Amz-Expires=1&X-Amz-Security-Token=XXX&X-Amz-SignedHeaders=host&X-Amz-Signature=XXX"
-              - cluster_id            = "41938b91-66ed-4c84-b70c-55c3f0ae4266"
-              - created_at            = "2024-03-13 06:48:43.596764031 +0000 UTC"
-              - end                   = "2024-03-13 06:44:15 +0000 UTC"
-              - expiration            = "2024-03-16 06:48:46.64587117 +0000 UTC"
-              - id                    = "b173a42e-3c2c-4245-af81-f8615d63b5ce"
-              - organization_id       = "637cea1d-fce5-40a5-9d48-8d0690e656ee"
-              - project_id            = "6aa13dbf-69cb-48e3-97af-d89f57ea7f90"
-              - start                 = "2024-03-13 04:44:15 +0000 UTC"
-              - status                = "Completed"
-            },
-        ]
-      - organization_id = "637cea1d-fce5-40a5-9d48-8d0690e656ee"
-      - project_id      = "6aa13dbf-69cb-48e3-97af-d89f57ea7f90"
-    } -> null
-
-Do you really want to destroy all resources?
-  Terraform will destroy all your managed infrastructure, as shown above.
-  There is no undo. Only 'yes' will be accepted to confirm.
-
-  Enter a value: yes
-
-couchbase-capella_audit_log_export.new_auditlogexport: Destroying... [id=b173a42e-3c2c-4245-af81-f8615d63b5ce]
-╷
-│ Error: Audit Log Export does not support delete
-│
-│ Audit Log Export does not support delete
 ```
 
 ## IMPORT

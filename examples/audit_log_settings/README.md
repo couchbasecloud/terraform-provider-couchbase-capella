@@ -12,7 +12,6 @@ In this example, we are going to do the following.
 2.  UPDATE: Update the audit log settings configuration using Terraform.
 3.  Detect the resource was updated from outside of Terraform
 4.  IMPORT: Import audit log settings that exists in Capella but not in the terraform state file.
-5.  DELETE: Show it is not supported
 
 If you check the `terraform.template.tfvars` file - Make sure you copy the file to `terraform.tfvars` and update the values of the variables as per the correct organization access.
 
@@ -541,79 +540,6 @@ Here, we pass the IDs as a single comma-separated string.
 The first ID in the string is the cluster ID.
 The second ID is the project ID i.e. the ID of the project to which the cluster belongs.
 The third ID is the organization ID i.e. the ID of the organization to which the project belongs.
-
-## DESTROY
-### The audit log settings API does not support delete, so it will throw an error
-
-Command: `terraform destroy`
-
-Sample output:
-```
-terraform apply
-╷
-│ Warning: Provider development overrides are in effect
-│
-│ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/$USER/workspace/terraform-provider-couchbase-capella/bin
-│
-│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
-│ published releases.
-╵
-data.couchbase-capella_audit_log_settings.existing_auditlogsettings: Reading...
-couchbase-capella_audit_log_settings.new_auditlogsettings: Refreshing state...
-data.couchbase-capella_audit_log_settings.existing_auditlogsettings: Read complete after 0s
-
-Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
-  - destroy
-
-Terraform will perform the following actions:
-
-  # couchbase-capella_audit_log_settings.new_auditlogsettings will be destroyed
-  # (because couchbase-capella_audit_log_settings.new_auditlogsettings is not in configuration)
-  - resource "couchbase-capella_audit_log_settings" "new_auditlogsettings" {
-      - audit_enabled     = true -> null
-      - cluster_id        = "41938b91-66ed-4c84-b70c-55c3f0ae4266" -> null
-      - disabled_users    = [] -> null
-      - enabled_event_ids = [
-          - 20488,
-          - 20490,
-          - 20491,
-        ] -> null
-      - organization_id   = "637cea1d-fce5-40a5-9d48-8d0690e656ee" -> null
-      - project_id        = "6aa13dbf-69cb-48e3-97af-d89f57ea7f90" -> null
-    }
-
-Plan: 0 to add, 0 to change, 1 to destroy.
-
-Changes to Outputs:
-  - new_auditlogsettings      = {
-      - audit_enabled     = true
-      - cluster_id        = "41938b91-66ed-4c84-b70c-55c3f0ae4266"
-      - disabled_users    = []
-      - enabled_event_ids = [
-          - 20488,
-          - 20490,
-          - 20491,
-        ]
-      - organization_id   = "637cea1d-fce5-40a5-9d48-8d0690e656ee"
-      - project_id        = "6aa13dbf-69cb-48e3-97af-d89f57ea7f90"
-    } -> null
-
-Do you want to perform these actions?
-  Terraform will perform the actions described above.
-  Only 'yes' will be accepted to approve.
-
-  Enter a value: yes
-
-couchbase-capella_audit_log_settings.new_auditlogsettings: Destroying...
-2024-03-12T20:41:15.279-0700 [ERROR] provider.terraform-provider-couchbase-capella: Response contains error diagnostic: tf_provider_addr=hashicorp.com/couchbasecloud/couchbase-capella tf_rpc=ApplyResourceChange @caller=/Users/hiteshwalia/.gvm/pkgsets/go1.21.6/global/pkg/mod/github.com/hashicorp/terraform-plugin-go@v0.21.0/tfprotov6/internal/diag/diagnostics.go:62 diagnostic_severity=ERROR tf_proto_version=6.4 diagnostic_detail="delete is not supported for audit log settings" tf_req_id=7b0196ba-cd83-fb99-256c-78373905e16b @module=sdk.proto diagnostic_summary="delete is not supported audit log settings" tf_resource_type=couchbase-capella_audit_log_settings timestamp=2024-03-12T20:41:15.278-0700
-2024-03-12T20:41:15.303-0700 [ERROR] vertex "couchbase-capella_audit_log_settings.new_auditlogsettings (destroy)" error: delete is not supported audit log settings
-╷
-│ Error: delete is not supported audit log settings
-│
-│ delete is not supported for audit log settings
-╵
-```
 
 ### This example shows how to configure a disabled user
 ### We use an internal user @eventing in local domain
