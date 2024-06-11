@@ -273,9 +273,11 @@ func (a *AuditLogSettings) Update(ctx context.Context, req resource.UpdateReques
 	}
 }
 
-// AuditLogSettings does not have delete endpoint, so we do a noop.
 func (a *AuditLogSettings) Delete(ctx context.Context, _ resource.DeleteRequest, resp *resource.DeleteResponse) {
-	resp.State.RemoveResource(ctx)
+	// There is no V4 API to delete audit log settings, so we do a noop.
+	//
+	// The framework will automatically update the state file. See:
+	// https://developer.hashicorp.com/terraform/plugin/framework/resources/delete#recommendations
 }
 
 func (a *AuditLogSettings) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

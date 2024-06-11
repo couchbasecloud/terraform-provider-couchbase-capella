@@ -225,9 +225,11 @@ func (a *AuditLogExport) Update(_ context.Context, _ resource.UpdateRequest, res
 	)
 }
 
-// Delete is not supported as audit log export API does not have delete endpoint, so we do a noop.
 func (a *AuditLogExport) Delete(ctx context.Context, _ resource.DeleteRequest, resp *resource.DeleteResponse) {
-	resp.State.RemoveResource(ctx)
+	// There is no V4 API to delete audit log export, so we do a noop.
+	//
+	// The framework will automatically update the state file. See:
+	// https://developer.hashicorp.com/terraform/plugin/framework/resources/delete#recommendations
 }
 
 func (a *AuditLogExport) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
