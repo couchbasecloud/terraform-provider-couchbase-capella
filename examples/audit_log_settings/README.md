@@ -12,6 +12,7 @@ In this example, we are going to do the following.
 2.  UPDATE: Update the audit log settings configuration using Terraform.
 3.  Detect the resource was updated from outside of Terraform
 4.  IMPORT: Import audit log settings that exists in Capella but not in the terraform state file.
+5.  DELETE:  It is not supported by API server so it's just a noop (ie removes resource from state file).
 
 If you check the `terraform.template.tfvars` file - Make sure you copy the file to `terraform.tfvars` and update the values of the variables as per the correct organization access.
 
@@ -43,15 +44,15 @@ Terraform will perform the following actions:
   # couchbase-capella_audit_log_settings.new_auditlogsettings will be created
   + resource "couchbase-capella_audit_log_settings" "new_auditlogsettings" {
       + audit_enabled     = true
-      + cluster_id        = "41938b91-66ed-4c84-b70c-55c3f0ae4266"
+      + cluster_id        = "ffffffff-aaaa-1414-eeee-000000000000"
       + disabled_users    = []
       + enabled_event_ids = [
           + 20488,
           + 20490,
           + 20491,
         ]
-      + organization_id   = "637cea1d-fce5-40a5-9d48-8d0690e656ee"
-      + project_id        = "6aa13dbf-69cb-48e3-97af-d89f57ea7f90"
+      + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id        = "ffffffff-aaaa-1414-eeee-000000000000"
     }
 
 Plan: 1 to add, 0 to change, 0 to destroy.
@@ -59,7 +60,7 @@ Plan: 1 to add, 0 to change, 0 to destroy.
 Changes to Outputs:
   + existing_auditlogsettings = {
       + audit_enabled     = false
-      + cluster_id        = "41938b91-66ed-4c84-b70c-55c3f0ae4266"
+      + cluster_id        = "ffffffff-aaaa-1414-eeee-000000000000"
       + disabled_users    = []
       + enabled_event_ids = [
           + 8243,
@@ -110,20 +111,20 @@ Changes to Outputs:
           + 45073,
           + 45074,
         ]
-      + organization_id   = "637cea1d-fce5-40a5-9d48-8d0690e656ee"
-      + project_id        = "6aa13dbf-69cb-48e3-97af-d89f57ea7f90"
+      + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id        = "ffffffff-aaaa-1414-eeee-000000000000"
     }
   + new_auditlogsettings      = {
       + audit_enabled     = true
-      + cluster_id        = "41938b91-66ed-4c84-b70c-55c3f0ae4266"
+      + cluster_id        = "ffffffff-aaaa-1414-eeee-000000000000"
       + disabled_users    = []
       + enabled_event_ids = [
           + 20488,
           + 20490,
           + 20491,
         ]
-      + organization_id   = "637cea1d-fce5-40a5-9d48-8d0690e656ee"
-      + project_id        = "6aa13dbf-69cb-48e3-97af-d89f57ea7f90"
+      + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id        = "ffffffff-aaaa-1414-eeee-000000000000"
     }
 
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -159,15 +160,15 @@ Terraform will perform the following actions:
   # couchbase-capella_audit_log_settings.new_auditlogsettings will be created
   + resource "couchbase-capella_audit_log_settings" "new_auditlogsettings" {
       + audit_enabled     = true
-      + cluster_id        = "41938b91-66ed-4c84-b70c-55c3f0ae4266"
+      + cluster_id        = "ffffffff-aaaa-1414-eeee-000000000000"
       + disabled_users    = []
       + enabled_event_ids = [
           + 20488,
           + 20490,
           + 20491,
         ]
-      + organization_id   = "637cea1d-fce5-40a5-9d48-8d0690e656ee"
-      + project_id        = "6aa13dbf-69cb-48e3-97af-d89f57ea7f90"
+      + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id        = "ffffffff-aaaa-1414-eeee-000000000000"
     }
 
 Plan: 1 to add, 0 to change, 0 to destroy.
@@ -175,7 +176,7 @@ Plan: 1 to add, 0 to change, 0 to destroy.
 Changes to Outputs:
   + existing_auditlogsettings = {
       + audit_enabled     = false
-      + cluster_id        = "41938b91-66ed-4c84-b70c-55c3f0ae4266"
+      + cluster_id        = "ffffffff-aaaa-1414-eeee-000000000000"
       + disabled_users    = []
       + enabled_event_ids = [
           + 8243,
@@ -226,20 +227,20 @@ Changes to Outputs:
           + 45073,
           + 45074,
         ]
-      + organization_id   = "637cea1d-fce5-40a5-9d48-8d0690e656ee"
-      + project_id        = "6aa13dbf-69cb-48e3-97af-d89f57ea7f90"
+      + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id        = "ffffffff-aaaa-1414-eeee-000000000000"
     }
   + new_auditlogsettings      = {
       + audit_enabled     = true
-      + cluster_id        = "41938b91-66ed-4c84-b70c-55c3f0ae4266"
+      + cluster_id        = "ffffffff-aaaa-1414-eeee-000000000000"
       + disabled_users    = []
       + enabled_event_ids = [
           + 20488,
           + 20490,
           + 20491,
         ]
-      + organization_id   = "637cea1d-fce5-40a5-9d48-8d0690e656ee"
-      + project_id        = "6aa13dbf-69cb-48e3-97af-d89f57ea7f90"
+      + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id        = "ffffffff-aaaa-1414-eeee-000000000000"
     }
 
 Do you want to perform these actions?
@@ -257,7 +258,7 @@ Outputs:
 
 existing_auditlogsettings = {
   "audit_enabled" = false
-  "cluster_id" = "41938b91-66ed-4c84-b70c-55c3f0ae4266"
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "disabled_users" = toset([])
   "enabled_event_ids" = toset([
     8243,
@@ -308,20 +309,20 @@ existing_auditlogsettings = {
     45073,
     45074,
   ])
-  "organization_id" = "637cea1d-fce5-40a5-9d48-8d0690e656ee"
-  "project_id" = "6aa13dbf-69cb-48e3-97af-d89f57ea7f90"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
 }
 new_auditlogsettings = {
   "audit_enabled" = true
-  "cluster_id" = "41938b91-66ed-4c84-b70c-55c3f0ae4266"
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "disabled_users" = tolist([])
   "enabled_event_ids" = tolist([
     20488,
     20490,
     20491,
   ])
-  "organization_id" = "637cea1d-fce5-40a5-9d48-8d0690e656ee"
-  "project_id" = "6aa13dbf-69cb-48e3-97af-d89f57ea7f90"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
 }
 
 ```
@@ -436,27 +437,27 @@ Outputs:
 
 existing_auditlogsettings = {
   "audit_enabled" = true
-  "cluster_id" = "41938b91-66ed-4c84-b70c-55c3f0ae4266"
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "disabled_users" = toset([])
   "enabled_event_ids" = toset([
     20488,
     20490,
     20491,
   ])
-  "organization_id" = "637cea1d-fce5-40a5-9d48-8d0690e656ee"
-  "project_id" = "6aa13dbf-69cb-48e3-97af-d89f57ea7f90"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
 }
 new_auditlogsettings = {
   "audit_enabled" = false
-  "cluster_id" = "41938b91-66ed-4c84-b70c-55c3f0ae4266"
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "disabled_users" = tolist([])
   "enabled_event_ids" = tolist([
     20488,
     20490,
     20491,
   ])
-  "organization_id" = "637cea1d-fce5-40a5-9d48-8d0690e656ee"
-  "project_id" = "6aa13dbf-69cb-48e3-97af-d89f57ea7f90"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
 }
 ```
 
@@ -515,8 +516,8 @@ Command: `terraform import couchbase-capella_audit_log_settings.new_auditlogsett
 
 Sample Output:
 ```
-terraform import couchbase-capella_audit_log_settings.new_auditlogsettings id=41938b91-66ed-4c84-b70c-55c3f0ae4266,project_id=6aa13dbf-69cb-48e3-97af-d89f57ea7f90,organization_id=637cea1d-fce5-40a5-9d48-8d0690e656ee
-couchbase-capella_audit_log_settings.new_auditlogsettings: Importing from ID "id=41938b91-66ed-4c84-b70c-55c3f0ae4266,project_id=6aa13dbf-69cb-48e3-97af-d89f57ea7f90,organization_id=637cea1d-fce5-40a5-9d48-8d0690e656ee"...
+terraform import couchbase-capella_audit_log_settings.new_auditlogsettings id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000
+couchbase-capella_audit_log_settings.new_auditlogsettings: Importing from ID "id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000"...
 data.couchbase-capella_audit_log_settings.existing_auditlogsettings: Reading...
 couchbase-capella_audit_log_settings.new_auditlogsettings: Import prepared!
   Prepared couchbase-capella_audit_log_settings for import
@@ -524,10 +525,10 @@ couchbase-capella_audit_log_settings.new_auditlogsettings: Refreshing state...
 data.couchbase-capella_audit_log_settings.existing_auditlogsettings: Read complete after 1s
 2024-03-12T20:35:56.149-0700 [WARN]  Provider "registry.terraform.io/couchbasecloud/couchbase-capella" produced an unexpected new value for couchbase-capella_audit_log_settings.new_auditlogsettings during refresh.
       - .enabled_event_ids: was null, but now cty.ListVal([]cty.Value{cty.NumberIntVal(20488), cty.NumberIntVal(20490), cty.NumberIntVal(20491)})
-      - .organization_id: was null, but now cty.StringVal("637cea1d-fce5-40a5-9d48-8d0690e656ee")
-      - .project_id: was null, but now cty.StringVal("6aa13dbf-69cb-48e3-97af-d89f57ea7f90")
+      - .organization_id: was null, but now cty.StringVal("ffffffff-aaaa-1414-eeee-000000000000")
+      - .project_id: was null, but now cty.StringVal("ffffffff-aaaa-1414-eeee-000000000000")
       - .audit_enabled: was null, but now cty.True
-      - .cluster_id: was cty.StringVal("id=41938b91-66ed-4c84-b70c-55c3f0ae4266,project_id=6aa13dbf-69cb-48e3-97af-d89f57ea7f90,organization_id=637cea1d-fce5-40a5-9d48-8d0690e656ee"), but now cty.StringVal("41938b91-66ed-4c84-b70c-55c3f0ae4266")
+      - .cluster_id: was cty.StringVal("id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000"), but now cty.StringVal("ffffffff-aaaa-1414-eeee-000000000000")
       - .disabled_users: was null, but now cty.ListValEmpty(cty.Object(map[string]cty.Type{"domain":cty.String, "name":cty.String}))
 
 Import successful!
@@ -571,7 +572,7 @@ Terraform will perform the following actions:
   # couchbase-capella_audit_log_settings.new_auditlogsettings will be created
   + resource "couchbase-capella_audit_log_settings" "new_auditlogsettings" {
       + audit_enabled     = true
-      + cluster_id        = "eb057928-b374-4a7f-a975-c495d7943594"
+      + cluster_id        = "ffffffff-aaaa-1414-eeee-000000000000"
       + disabled_users    = [
           + {
               + domain = "local"
@@ -583,8 +584,8 @@ Terraform will perform the following actions:
           + 20490,
           + 20491,
         ]
-      + organization_id   = "2cde9b42-0399-471c-a86d-c3f281eba5c0"
-      + project_id        = "3a5d9251-4247-4c51-aeb6-b799b41a91ba"
+      + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id        = "ffffffff-aaaa-1414-eeee-000000000000"
     }
 
 Plan: 1 to add, 0 to change, 0 to destroy.
@@ -592,19 +593,19 @@ Plan: 1 to add, 0 to change, 0 to destroy.
 Changes to Outputs:
   + existing_auditlogsettings = {
       + audit_enabled     = true
-      + cluster_id        = "eb057928-b374-4a7f-a975-c495d7943594"
+      + cluster_id        = "ffffffff-aaaa-1414-eeee-000000000000"
       + disabled_users    = []
       + enabled_event_ids = [
           + 20488,
           + 20490,
           + 20491,
         ]
-      + organization_id   = "2cde9b42-0399-471c-a86d-c3f281eba5c0"
-      + project_id        = "3a5d9251-4247-4c51-aeb6-b799b41a91ba"
+      + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id        = "ffffffff-aaaa-1414-eeee-000000000000"
     }
   + new_auditlogsettings      = {
       + audit_enabled     = true
-      + cluster_id        = "eb057928-b374-4a7f-a975-c495d7943594"
+      + cluster_id        = "ffffffff-aaaa-1414-eeee-000000000000"
       + disabled_users    = [
           + {
               + domain = "local"
@@ -616,8 +617,8 @@ Changes to Outputs:
           + 20490,
           + 20491,
         ]
-      + organization_id   = "2cde9b42-0399-471c-a86d-c3f281eba5c0"
-      + project_id        = "3a5d9251-4247-4c51-aeb6-b799b41a91ba"
+      + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id        = "ffffffff-aaaa-1414-eeee-000000000000"
     }
 
 Do you want to perform these actions?
@@ -635,19 +636,19 @@ Outputs:
 
 existing_auditlogsettings = {
   "audit_enabled" = true
-  "cluster_id" = "eb057928-b374-4a7f-a975-c495d7943594"
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "disabled_users" = toset([])
   "enabled_event_ids" = toset([
     20488,
     20490,
     20491,
   ])
-  "organization_id" = "2cde9b42-0399-471c-a86d-c3f281eba5c0"
-  "project_id" = "3a5d9251-4247-4c51-aeb6-b799b41a91ba"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
 }
 new_auditlogsettings = {
   "audit_enabled" = true
-  "cluster_id" = "eb057928-b374-4a7f-a975-c495d7943594"
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "disabled_users" = toset([
     {
       "domain" = "local"
@@ -659,7 +660,74 @@ new_auditlogsettings = {
     20490,
     20491,
   ])
-  "organization_id" = "2cde9b42-0399-471c-a86d-c3f281eba5c0"
-  "project_id" = "3a5d9251-4247-4c51-aeb6-b799b41a91ba"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
 }
+```
+
+## DESTROY
+### This only removes resource from the state file.
+
+Command: `terraform destroy`
+
+Sample Output:
+```
+terraform destroy
+╷
+│ Warning: Provider development overrides are in effect
+│
+│ The following provider development overrides are set in the CLI configuration:
+│  - couchbasecloud/couchbase-capella in /Users/$USER/GolandProjects/terraform-provider-couchbase-capella/bin
+│
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
+╵
+data.couchbase-capella_audit_log_settings.existing_auditlogsettings: Reading...
+couchbase-capella_audit_log_settings.new_auditlogsettings: Refreshing state...
+data.couchbase-capella_audit_log_settings.existing_auditlogsettings: Read complete after 1s
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  - destroy
+
+Terraform will perform the following actions:
+
+  # couchbase-capella_audit_log_settings.new_auditlogsettings will be destroyed
+  - resource "couchbase-capella_audit_log_settings" "new_auditlogsettings" {
+      - audit_enabled     = true -> null
+      - cluster_id        = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - disabled_users    = [] -> null
+      - enabled_event_ids = [
+          - 20488,
+          - 20490,
+          - 20491,
+        ] -> null
+      - organization_id   = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - project_id        = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+    }
+
+Plan: 0 to add, 0 to change, 1 to destroy.
+
+Changes to Outputs:
+  - existing_auditlogsettings = {
+      - audit_enabled     = true
+      - cluster_id        = "ffffffff-aaaa-1414-eeee-000000000000"
+      - disabled_users    = []
+      - enabled_event_ids = [
+          - 20488,
+          - 20490,
+          - 20491,
+        ]
+      - organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      - project_id        = "ffffffff-aaaa-1414-eeee-000000000000"
+    } -> null
+
+Do you really want to destroy all resources?
+  Terraform will destroy all your managed infrastructure, as shown above.
+  There is no undo. Only 'yes' will be accepted to confirm.
+
+  Enter a value: yes
+
+couchbase-capella_audit_log_settings.new_auditlogsettings: Destroying...
+couchbase-capella_audit_log_settings.new_auditlogsettings: Destruction complete after 0s
+
+Destroy complete! Resources: 1 destroyed.
 ```
