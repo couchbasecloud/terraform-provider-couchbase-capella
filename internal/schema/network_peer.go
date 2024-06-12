@@ -56,10 +56,10 @@ type PeeringStatus struct {
 // ProviderConfig provides details about the configuration and the ID of the VPC peer on AWS, GCP.
 type ProviderConfig struct {
 	// AWSConfig AWS config data required to establish a VPC peering relationship. Refer to the docs for other limitations to AWS VPC Peering - [ref](https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html#vpc-peering-limitations).
-	AWSConfig *AWSConfigData `tfsdk:"AWS_config"`
+	AWSConfig *AWSConfig `tfsdk:"AWS_config"`
 
 	// GCPConfig GCP config data required to establish a VPC peering relationship. Refer to the docs for other limitations to GCP VPC Peering - [ref](https://cloud.google.com/vpc/docs/vpc-peering).
-	GCPConfig *GCPConfigData `tfsdk:"GCP_config"`
+	GCPConfig *GCPConfig `tfsdk:"GCP_config"`
 
 	// ProviderId The ID of the VPC peer on AWS or GCP.
 	ProviderId types.String `tfsdk:"provider_id"`
@@ -81,10 +81,10 @@ type ProviderConfig struct {
 //	ProviderId types.String `json:"providerId"`
 //}
 
-// AWSConfigData AWS config data required to establish a VPC peering relationship.
+// AWSConfig AWS config data required to establish a VPC peering relationship.
 //
 //	Refer to the docs for other limitations to AWS VPC Peering - [ref](https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html#vpc-peering-limitations).
-type AWSConfigData struct {
+type AWSConfig struct {
 	// AccountId The numeric AWS Account ID or Owner ID.
 	AccountId types.String `tfsdk:"account_id"`
 
@@ -101,10 +101,10 @@ type AWSConfigData struct {
 	//ProviderId types.String `json:"providerId"`
 }
 
-// GCPConfigData GCP config data required to establish a VPC peering relationship.
+// GCPConfig GCP config data required to establish a VPC peering relationship.
 //
 //	Refer to the docs for other limitations to GCP VPC Peering - [ref](https://cloud.google.com/vpc/docs/vpc-peering).
-type GCPConfigData struct {
+type GCPConfig struct {
 	// Cidr The GCP VPC CIDR block of network in which your application runs. This cannot overlap with your Capella CIDR Block.
 	Cidr types.String `tfsdk:"cidr"`
 

@@ -37,7 +37,7 @@ func NewNetworkPeer() resource.Resource {
 }
 
 func (n *NetworkPeer) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_private_endpoints"
+	resp.TypeName = req.ProviderTypeName + "_network_peer"
 }
 
 func (n *NetworkPeer) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
