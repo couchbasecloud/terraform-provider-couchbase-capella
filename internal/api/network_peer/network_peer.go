@@ -24,10 +24,10 @@ type CreateNetworkPeeringRequest struct {
 	//ProviderConfig json.RawMessage `json:"providerConfig"`
 
 	// AWSConfig AWS config data required to establish a VPC peering relationship. Refer to the docs for other limitations to AWS VPC Peering - [ref](https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html#vpc-peering-limitations).
-	AWSConfig AWSConfigData `json:"AWSConfig"`
+	AWSConfig AWSConfig `json:"AWSConfig"`
 
 	// GCPConfig GCP config data required to establish a VPC peering relationship. Refer to the docs for other limitations to GCP VPC Peering - [ref](https://cloud.google.com/vpc/docs/vpc-peering).
-	GCPConfig GCPConfigData `json:"GCPConfig"`
+	GCPConfig GCPConfig `json:"GCPConfig"`
 
 	// ProviderType Type of the cloud provider for which the peering connection is created. Which are- 1. aws 2. gcp
 	ProviderType string `json:"providerType"`
@@ -85,10 +85,10 @@ type GetNetworkPeeringRecordResponse struct {
 //	ProviderId *string `json:"providerId"`
 //}
 
-// AWSConfigData is the AWS config data required to establish a VPC peering relationship.
+// AWSConfig is the AWS config data required to establish a VPC peering relationship.
 //
 //	Refer to the docs for other limitations to AWS VPC Peering - [ref](https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html#vpc-peering-limitations).
-type AWSConfigData struct {
+type AWSConfig struct {
 	// AccountId The numeric AWS Account ID or Owner ID.
 	AccountId string `json:"accountId"`
 
@@ -105,8 +105,8 @@ type AWSConfigData struct {
 	//ProviderId *string `json:"providerId"`
 }
 
-// GCPConfigData GCP config data required to establish a VPC peering relationship. Refer to the docs for other limitations to GCP VPC Peering - [ref](https://cloud.google.com/vpc/docs/vpc-peering).
-type GCPConfigData struct {
+// GCPConfig GCP config data required to establish a VPC peering relationship. Refer to the docs for other limitations to GCP VPC Peering - [ref](https://cloud.google.com/vpc/docs/vpc-peering).
+type GCPConfig struct {
 	// Cidr The GCP VPC CIDR block of network in which your application runs. This cannot overlap with your Capella CIDR Block.
 	Cidr string `json:"cidr"`
 

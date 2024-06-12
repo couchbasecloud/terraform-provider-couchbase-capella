@@ -62,8 +62,8 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	var providerConfigAWS network_peer_api.AWSConfigData
-	var providerConfigGCP network_peer_api.GCPConfigData
+	var providerConfigAWS network_peer_api.AWSConfig
+	var providerConfigGCP network_peer_api.GCPConfig
 
 	networkPeerRequest := network_peer_api.CreateNetworkPeeringRequest{
 		Name:         plan.Name.ValueString(),
@@ -71,7 +71,7 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 	//check type conversion here
 	if plan.ProviderType.ValueString() == "aws" {
-		providerConfigAWS = network_peer_api.AWSConfigData{
+		providerConfigAWS = network_peer_api.AWSConfig{
 			AccountId: plan.ProviderConfig.AWSConfig.AccountId.ValueString(),
 			Cidr:      plan.ProviderConfig.AWSConfig.Cidr.ValueString(),
 			Region:    plan.ProviderConfig.AWSConfig.Region.ValueString(),
@@ -83,7 +83,7 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 		//}
 		networkPeerRequest.AWSConfig = providerConfigAWS
 	} else if plan.ProviderType.ValueString() == "gcp" {
-		providerConfigGCP = network_peer_api.GCPConfigData{
+		providerConfigGCP = network_peer_api.GCPConfig{
 			NetworkName:    plan.ProviderConfig.GCPConfig.NetworkName.ValueString(),
 			ProjectId:      plan.ProviderConfig.GCPConfig.ProjectId.ValueString(),
 			Cidr:           plan.ProviderConfig.GCPConfig.Cidr.ValueString(),

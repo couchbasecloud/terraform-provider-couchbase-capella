@@ -30,17 +30,17 @@ func NewNetworkPeers() datasource.DataSource {
 	return &NetworkPeers{}
 }
 
-// Metadata returns the cluster data source type name.
+// Metadata returns the network peers data source type name.
 func (n *NetworkPeers) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_network_peers"
 }
 
-// Schema defines the schema for the Clusters data source.
+// Schema defines the schema for the NetworkPeers data source.
 func (n *NetworkPeers) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = NetworkPeerSchema()
 }
 
-// Read refreshes the Terraform state with the latest data of clusters.
+// Read refreshes the Terraform state with the latest data of network peers.
 func (n *NetworkPeers) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state providerschema.NetworkPeers
 	diags := req.Config.Get(ctx, &state)
