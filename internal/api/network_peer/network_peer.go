@@ -1,8 +1,6 @@
 package network_peer
 
 import (
-	"encoding/json"
-
 	"github.com/google/uuid"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -23,7 +21,13 @@ type CreateNetworkPeeringRequest struct {
 	Name string `json:"name"`
 
 	// ProviderConfig The config data for a peering relationship for a cluster on AWS, GCP.
-	ProviderConfig json.RawMessage `json:"providerConfig"`
+	//ProviderConfig json.RawMessage `json:"providerConfig"`
+
+	// AWSConfig AWS config data required to establish a VPC peering relationship. Refer to the docs for other limitations to AWS VPC Peering - [ref](https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html#vpc-peering-limitations).
+	AWSConfig AWSConfigData `json:"AWSConfig"`
+
+	// GCPConfig GCP config data required to establish a VPC peering relationship. Refer to the docs for other limitations to GCP VPC Peering - [ref](https://cloud.google.com/vpc/docs/vpc-peering).
+	GCPConfig GCPConfigData `json:"GCPConfig"`
 
 	// ProviderType Type of the cloud provider for which the peering connection is created. Which are- 1. aws 2. gcp
 	ProviderType string `json:"providerType"`
@@ -50,12 +54,103 @@ type GetNetworkPeeringRecordResponse struct {
 	Commands []string `json:"commands"`
 
 	// Id The ID is the unique UUID generated when a VPC record is created.
-	Id string `json:"id"`
+	Id uuid.UUID `json:"id"`
 
 	// Name is the name of the peering relationship.
 	Name string `json:"name"`
 
 	// ProviderConfig This provides details about the configuration and the ID of the VPC peer on AWS, GCP.
-	ProviderConfig json.RawMessage `json:"providerConfig"`
-	Status         PeeringStatus   `json:"status"`
+	ProviderConfig ProviderConfig `json:"providerConfig"`
+
+	//AWS AWS `json:"aws"`
+	//
+	//GCP GCP `json:"gcp"`
+
+	Status PeeringStatus `json:"status"`
 }
+
+//type AWS struct {
+//	// AWSConfig AWS config data required to establish a VPC peering relationship. Refer to the docs for other limitations to AWS VPC Peering - [ref](https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html#vpc-peering-limitations).
+//	AWSConfig *AWSConfigData `json:"AWSConfig"`
+//
+//	// ProviderId The ID of the VPC peer on AWS.
+//	ProviderId *string `json:"providerId"`
+//}
+//
+//type GCP struct {
+//	// GCPConfig GCP config data required to establish a VPC peering relationship. Refer to the docs for other limitations to GCP VPC Peering - [ref](https://cloud.google.com/vpc/docs/vpc-peering).
+//	GCPConfig *GCPConfigData `json:"GCPConfig"`
+//
+//	// ProviderId The ID of the VPC peer on GCP.
+//	ProviderId *string `json:"providerId"`
+//}
+
+// AWSConfigData is the AWS config data required to establish a VPC peering relationship.
+//
+//	Refer to the docs for other limitations to AWS VPC Peering - [ref](https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html#vpc-peering-limitations).
+type AWSConfigData struct {
+	// AccountId The numeric AWS Account ID or Owner ID.
+	AccountId string `json:"accountId"`
+
+	// Cidr The AWS VPC CIDR block of network in which your application runs. This cannot overlap with your Capella CIDR Block.
+	Cidr string `json:"cidr"`
+
+	// Region The AWS region where your VPC is deployed.
+	Region string `json:"region"`
+
+	// VpcId The alphanumeric VPC ID which starts with \"vpc-\". This is also known as the networkId.
+	VpcId string `json:"vpcId"`
+
+	//// ProviderId The ID of the VPC peer on GCP.
+	//ProviderId *string `json:"providerId"`
+}
+
+// GCPConfigData GCP config data required to establish a VPC peering relationship. Refer to the docs for other limitations to GCP VPC Peering - [ref](https://cloud.google.com/vpc/docs/vpc-peering).
+type GCPConfigData struct {
+	// Cidr The GCP VPC CIDR block of network in which your application runs. This cannot overlap with your Capella CIDR Block.
+	Cidr string `json:"cidr"`
+
+	// NetworkName The name of the network that you want to peer with.
+	NetworkName string `json:"networkName"`
+
+	// ProjectId The unique identifier for your GCP project.
+	ProjectId string `json:"projectId"`
+
+	// ServiceAccount is the ServiceAccount created or assigned on the external VPC project. GCP Service Account with below permissions
+	// - DNS Admin
+	// - Compute.NetworkAdmin
+	// It should be in the form of an email that is shown under `gcloud iam service-accounts list` command.
+	// [Reference](https://cloud.google.com/iam/docs/creating-managing-service-accounts#creating)
+	ServiceAccount string `json:"serviceAccount"`
+
+	//// ProviderId The ID of the VPC peer on GCP.
+	//ProviderId *string `json:"providerId"`
+}
+
+//// AsAWS returns the union data inside the GetNetworkPeeringRecordResponse_ProviderConfig as a AWS
+//func (t *GetNetworkPeeringRecordResponse) AsAWS() (AWS, error) {
+//	var body AWS
+//	err := json.Unmarshal(t.ProviderConfig, &body)
+//	return body, err
+//}
+
+//// FromAWS overwrites any union data inside the GetNetworkPeeringRecordResponse_ProviderConfig as the provided AWS
+//func (t *CreateNetworkPeeringRequest) FromAWS(v AWSConfigData) error {
+//	b, err := json.Marshal(v)
+//	t.AWSConfig = b
+//	return err
+//}
+//
+//// AsGCP returns the union data inside the GetNetworkPeeringRecordResponse_ProviderConfig as a GCP
+//func (t *GetNetworkPeeringRecordResponse) AsGCP() (GCP, error) {
+//	var body GCP
+//	err := json.Unmarshal(t.ProviderConfig, &body)
+//	return body, err
+//}
+
+// FromGCP overwrites any union data inside the GetNetworkPeeringRecordResponse_ProviderConfig as the provided GCP
+//func (t *CreateNetworkPeeringRequest) FromGCP(v GCPConfigData) error {
+//	b, err := json.Marshal(v)
+//	t.ProviderConfig = b
+//	return err
+//}
