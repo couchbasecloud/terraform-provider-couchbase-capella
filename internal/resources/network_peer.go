@@ -355,7 +355,8 @@ func (n *NetworkPeer) retrieveNetworkPeer(ctx context.Context, organizationId, p
 		return nil, fmt.Errorf("%s: %w", errors.ErrUnableToConvertAuditData, err)
 	}
 
-	refreshedState, err := providerschema.NewNetworkPeer(networkPeerResp, organizationId, projectId, clusterId, providerschema.MorphCommands(networkPeerResp.Commands), auditObj)
+	//refreshedState, err := providerschema.NewNetworkPeer(networkPeerResp, organizationId, projectId, clusterId, providerschema.MorphCommands(networkPeerResp.Commands), auditObj)
+	refreshedState, err := providerschema.NewNetworkPeer(networkPeerResp, organizationId, projectId, clusterId, auditObj)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrRefreshingState, err)
 	}

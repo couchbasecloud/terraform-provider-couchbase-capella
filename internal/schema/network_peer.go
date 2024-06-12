@@ -125,6 +125,58 @@ type GCPConfigData struct {
 	//ProviderId types.String `json:"providerId"`
 }
 
+// NetworkPeerData defines attributes for a single network peer when fetched from the V4 Capella Public API.
+type NetworkPeerData struct {
+	// OrganizationId is the ID of the organization to which the Capella cluster belongs.
+	OrganizationId types.String `tfsdk:"organization_id"`
+
+	// ProjectId is the ID of the project to which the Capella cluster belongs.
+	ProjectId types.String `tfsdk:"project_id"`
+
+	// ClusterId is the ID of the cluster for which the network peer needs to be created.
+	ClusterId types.String `tfsdk:"cluster_id"`
+
+	// Id is the ID is the unique UUID generated when a VPC record is created.
+	Id types.String `tfsdk:"id"`
+
+	// Commands Commands contains the list of commands that the user must execute in order to complete the association of the network.
+	Commands []types.String `tfsdk:"commands"`
+
+	// Name is the Name of the peering relationship.
+	Name types.String `tfsdk:"name"`
+
+	//ProviderType is the type of the cloud provider for which the peering connection is created. Which are-
+	//     1. aws
+	//     2. gcp
+	ProviderType types.String `tfsdk:"provider_type"`
+
+	// ProviderConfig This provides details about the configuration and the ID of the VPC peer on AWS, GCP.
+	ProviderConfig ProviderConfig `tfsdk:"provider_config"`
+
+	//AWS   AWS  `tfsdk:"aws"`
+	//
+	//GCP   GCP  `tfsdk:"gcp"`
+	// Status communicates the state of the VPC peering relationship. It is the state and reasoning for VPC peer.
+	Status PeeringStatus `tfsdk:"status"`
+
+	Audit types.Object `tfsdk:"audit"`
+}
+
+// NetworkPeers defines structure based on the response received from V4 Capella Public API when asked to list network peers.
+type NetworkPeers struct {
+	// OrganizationId is the organizationId of the capella.
+	OrganizationId types.String `tfsdk:"organization_id"`
+
+	// ProjectId is the projectId of the cluster
+	ProjectId types.String `tfsdk:"project_id"`
+
+	// ClusterId is the ID of the cluster for which the network peer needs to be created.
+	ClusterId types.String `tfsdk:"cluster_id"`
+
+	// Data It contains the list of resources.
+	Data []NetworkPeerData `tfsdk:"data"`
+}
+
 func (n *NetworkPeer) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
 		OrganizationId: n.OrganizationId,
@@ -142,22 +194,25 @@ func (n *NetworkPeer) Validate() (map[Attr]string, error) {
 }
 
 // NewNetworkPeer create new network peer object.
-func NewNetworkPeer(networkPeer *network_peer_api.GetNetworkPeeringRecordResponse, organizationId, projectId, clusterId string, commands []types.String, auditObject basetypes.ObjectValue) (*NetworkPeer, error) {
+// func NewNetworkPeer(networkPeer *network_peer_api.GetNetworkPeeringRecordResponse, organizationId, projectId, clusterId string, commands []types.String, auditObject basetypes.ObjectValue) (*NetworkPeer, error) {
+func NewNetworkPeer(networkPeer *network_peer_api.GetNetworkPeeringRecordResponse, organizationId, projectId, clusterId string, auditObject basetypes.ObjectValue) (*NetworkPeer, error) {
 	newNetworkPeer := NetworkPeer{
 		Id:             types.StringValue(networkPeer.Id.String()),
 		OrganizationId: types.StringValue(organizationId),
 		ProjectId:      types.StringValue(projectId),
 		ClusterId:      types.StringValue(clusterId),
 		Name:           types.StringValue(networkPeer.Name),
-		Commands:       commands,
-		Audit:          auditObject,
+		//Commands:       commands,
+		Audit: auditObject,
 		Status: PeeringStatus{
 			State:     types.StringValue(*networkPeer.Status.State),
 			Reasoning: types.StringValue(*networkPeer.Status.Reasoning),
 		},
 	}
 
-	newConfig, err := morphToTerraformAWSConfig(networkPeer)
+	newNetworkPeer.Commands = MorphCommands(networkPeer.Commands)
+
+	newConfig, err := morphToTerraformConfig(networkPeer)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrConvertingProviderConfig, err)
 	}
@@ -166,7 +221,7 @@ func NewNetworkPeer(networkPeer *network_peer_api.GetNetworkPeeringRecordRespons
 	return &newNetworkPeer, nil
 }
 
-func morphToTerraformAWSConfig(networkPeer *network_peer_api.GetNetworkPeeringRecordResponse) (*ProviderConfig, error) {
+func morphToTerraformConfig(networkPeer *network_peer_api.GetNetworkPeeringRecordResponse) (*ProviderConfig, error) {
 	var newConfig ProviderConfig
 
 	newConfig = ProviderConfig{
@@ -192,9 +247,41 @@ func morphToTerraformAWSConfig(networkPeer *network_peer_api.GetNetworkPeeringRe
 // MorphCommands is used to convert nested Commands from
 // strings to terraform type.String.
 func MorphCommands(commands []string) []basetypes.StringValue {
-	var morphedCommands []basetypes.StringValue
+	var morphedCommands []types.String
 	for _, command := range commands {
 		morphedCommands = append(morphedCommands, types.StringValue(command))
 	}
 	return morphedCommands
+}
+
+// NewNetworkPeerData create new network peer data object.
+// func NewNetworkPeer(networkPeer *network_peer_api.GetNetworkPeeringRecordResponse, organizationId, projectId, clusterId string, commands []types.String, auditObject basetypes.ObjectValue) (*NetworkPeer, error) {
+func NewNetworkPeerData(networkPeer *network_peer_api.GetNetworkPeeringRecordResponse, organizationId, projectId, clusterId string, auditObject basetypes.ObjectValue) (*NetworkPeerData, error) {
+	newNetworkPeerData := NetworkPeerData{
+		Id:             types.StringValue(networkPeer.Id.String()),
+		OrganizationId: types.StringValue(organizationId),
+		ProjectId:      types.StringValue(projectId),
+		ClusterId:      types.StringValue(clusterId),
+		Name:           types.StringValue(networkPeer.Name),
+		//Commands:       commands,
+		Audit: auditObject,
+		Status: PeeringStatus{
+			State:     types.StringValue(*networkPeer.Status.State),
+			Reasoning: types.StringValue(*networkPeer.Status.Reasoning),
+		},
+	}
+
+	var newCommands []types.String
+	for _, command := range networkPeer.Commands {
+		newCommands = append(newCommands, types.StringValue(command))
+	}
+	newNetworkPeerData.Commands = newCommands
+
+	newConfig, err := morphToTerraformConfig(networkPeer)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", errors.ErrConvertingProviderConfig, err)
+	}
+	newNetworkPeerData.ProviderConfig = *newConfig
+
+	return &newNetworkPeerData, nil
 }
