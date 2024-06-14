@@ -673,6 +673,9 @@ resource "couchbase-capella_cluster" "%[2]s" {
     region = "us-east-1"
     cidr   = "%[5]s"
   }
+  couchbase_server = {
+    version = "7.6.1"
+  }
   service_groups = [
     {
       node = {
@@ -719,7 +722,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
   name            = "Terraform Acceptance Test Cluster"
   description     = "My first test cluster for multiple services."
   couchbase_server = {
-    version = "7.2"
+    version = "7.6.1"
   }
   configuration_type = "multiNode"
   cloud_provider = {
@@ -740,23 +743,8 @@ resource "couchbase-capella_cluster" "%[2]s" {
           iops    = 3000
         }
       }
-      num_of_nodes = 2
-      services     = ["index", "query"]
-    },
-    {
-      node = {
-        compute = {
-          cpu = 4
-          ram = 16
-        }
-        disk = {
-          storage = 50
-          type    = "gp3"
-          iops    = 3000
-        }
-      }
       num_of_nodes = 3
-      services     = ["data"]
+      services     = ["data", index", "query"]
     }
   ]
   availability = {
@@ -808,23 +796,8 @@ resource "couchbase-capella_cluster" "%[2]s" {
           iops    = 3000
         }
       }
-      num_of_nodes = 2
-      services     = ["index", "query"]
-    },
-    {
-      node = {
-        compute = {
-          cpu = 4
-          ram = 16
-        }
-        disk = {
-          storage = 50
-          type    = "gp3"
-          iops    = 3000
-        }
-      }
       num_of_nodes = 3
-      services     = ["data"]
+      services     = ["data", index", "query"]
     }
   ]
   availability = {
@@ -964,7 +937,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
     cidr   = "%[5]s"
   }
   couchbase_server = {
-    version = "7.2"
+    version = "7.6.1"
   }
   service_groups = [
     {
@@ -1098,8 +1071,8 @@ resource "couchbase-capella_cluster" "%[2]s" {
           type    = "P6"
         }
       }
-      num_of_nodes = 2
-      services     = ["index", "query"]
+      num_of_nodes = 3
+      services     = ["data", index", "query"]
     }
   ]
   availability = {
@@ -1254,23 +1227,8 @@ resource "couchbase-capella_cluster" "%[2]s" {
           iops    = 3001
         }
       }
-      num_of_nodes = 2
-      services     = ["index", "query"]
-    },
-    {
-      node = {
-        compute = {
-          cpu = 4
-          ram = 16
-        }
-        disk = {
-          storage = 51
-          type    = "gp3"
-          iops    = 3001
-        }
-      }
       num_of_nodes = 3
-      services     = ["data"]
+      services     = ["data", "index", "query"]
     }
   ]
   availability = {
@@ -1563,7 +1521,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
         }
       }
       num_of_nodes = 3
-      services     = ["data",index", "query"]
+      services     = ["data", index", "query"]
     }
   ]
   availability = {
