@@ -1562,23 +1562,8 @@ resource "couchbase-capella_cluster" "%[2]s" {
           iops    = 3000
         }
       }
-      num_of_nodes = 2
-      services     = ["index", "query"]
-    },
-    {
-      node = {
-        compute = {
-          cpu = 4
-          ram = 16
-        }
-        disk = {
-          storage = 50
-          type    = "gp3"
-          iops    = 3000
-        }
-      }
       num_of_nodes = 3
-      services     = ["data"]
+      services     = ["data",index", "query"]
     }
   ]
   availability = {
