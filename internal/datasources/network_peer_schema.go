@@ -17,30 +17,32 @@ func NetworkPeerSchema() schema.Schema {
 						"id":       computedStringAttribute,
 						"name":     computedStringAttribute,
 						"commands": computedListAttribute,
-						"provider_config": schema.SingleNestedAttribute{
+						//"provider_config": schema.SingleNestedAttribute{
+						//	Computed: true,
+						//	Attributes: map[string]schema.Attribute{
+						//		"provider_id": computedStringAttribute,
+						"aws_config": schema.SingleNestedAttribute{
 							Computed: true,
 							Attributes: map[string]schema.Attribute{
+								"account_id":  computedStringAttribute,
+								"vpc_id":      computedStringAttribute,
+								"region":      computedStringAttribute,
+								"cidr":        computedStringAttribute,
 								"provider_id": computedStringAttribute,
-								"AWS_config": schema.SingleNestedAttribute{
-									Attributes: map[string]schema.Attribute{
-										"accountId": computedStringAttribute,
-										"vpcId":     computedStringAttribute,
-										"region":    computedStringAttribute,
-										"cidr":      computedStringAttribute,
-										//"provider_id":    computedStringAttribute,
-									},
-								},
-								"GCP_config": schema.SingleNestedAttribute{
-									Attributes: map[string]schema.Attribute{
-										"cidr":           computedStringAttribute,
-										"networkName":    computedStringAttribute,
-										"projectId":      computedStringAttribute,
-										"serviceAccount": computedStringAttribute,
-										//"provider_id":    computedStringAttribute,
-									},
-								},
 							},
 						},
+						"gcp_config": schema.SingleNestedAttribute{
+							Computed: true,
+							Attributes: map[string]schema.Attribute{
+								"cidr":            computedStringAttribute,
+								"network_name":    computedStringAttribute,
+								"project_id":      computedStringAttribute,
+								"service_account": computedStringAttribute,
+								"provider_id":     computedStringAttribute,
+							},
+						},
+						//},
+						//},
 						"status": schema.SingleNestedAttribute{
 							Computed: true,
 							Attributes: map[string]schema.Attribute{

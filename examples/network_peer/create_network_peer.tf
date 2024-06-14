@@ -11,14 +11,11 @@ resource "couchbase-capella_network_peer" "new_network_peer" {
   project_id      = var.project_id
   cluster_id      = var.cluster_id
   name            = var.network_peer.name
-  provider_type   = var.network_peer.provider_type
-  provider_config =
-    {
-      GCP_config = {
-        network_name    = var.GCP_config.network_name
-        project_id      = var.GCP_config.project_id
-        cidr            = var.GCP_config.cidr
-        service_account = var.GCP_config.service_account
+  aws_config = {
+          account_id =  var.aws_config.account_id
+          vpc_id     =  var.aws_config.vpc_id
+          cidr       =  var.aws_config.cidr
+          region     =  var.aws_config.region
+        }
       }
-    }
-}
+

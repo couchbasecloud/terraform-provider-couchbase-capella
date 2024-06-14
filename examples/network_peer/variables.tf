@@ -35,13 +35,6 @@ variable "AWS_config" {
   })
 }
 
-variable "GCP_config" {
-  description = "GCP configuration details useful for network peer creation"
-
-  type = object({
-    network_name    = optional(string)
-    project_id      = optional(string)
-    cidr            = string
-    service_account = optional(string)
-  })
+variable "host" {
+  description = "The Host URL of Couchbase Cloud."
 }

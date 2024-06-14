@@ -23,34 +23,36 @@ func NetworkPeerSchema() schema.Schema {
 			//	Computed:    true,
 			//	ElementType: types.StringType,
 			//},
-			"commands":      stringSetAttribute(computed),
-			"provider_type": stringAttribute([]string{required}),
-			"provider_config": schema.SingleNestedAttribute{
-				Description: "The 'accountId', 'vpcId', 'region', and 'cidr' fields are required for AWS VPC peering. " +
-					"For GCP, the 'networkName', 'projectId', 'serviceAccount', and 'cidr' fields are required for VPC peering. ",
-				Required: true,
+			"commands": stringSetAttribute(computed),
+			//"provider_type": stringAttribute([]string{required}),
+			//"provider_config": schema.SingleNestedAttribute{
+			//	Description: "The 'accountId', 'vpcId', 'region', and 'cidr' fields are required for AWS VPC peering. " +
+			//		"For GCP, the 'networkName', 'projectId', 'serviceAccount', and 'cidr' fields are required for VPC peering. ",
+			//	Required: true,
+			//	Attributes: map[string]schema.Attribute{
+			//		"provider_id": stringAttribute([]string{computed}),
+			"aws_config": schema.SingleNestedAttribute{
+				Optional: true,
 				Attributes: map[string]schema.Attribute{
+					"account_id":  stringAttribute([]string{optional}),
+					"vpc_id":      stringAttribute([]string{optional}),
+					"region":      stringAttribute([]string{optional}),
+					"cidr":        stringAttribute([]string{optional}),
 					"provider_id": stringAttribute([]string{computed}),
-					"AWS_config": schema.SingleNestedAttribute{
-						Attributes: map[string]schema.Attribute{
-							"accountId": stringAttribute([]string{optional}),
-							"vpcId":     stringAttribute([]string{optional}),
-							"region":    stringAttribute([]string{optional}),
-							"cidr":      stringAttribute([]string{required}),
-							//"provider_id":    stringAttribute([]string{computed}),
-						},
-					},
-					"GCP_config": schema.SingleNestedAttribute{
-						Attributes: map[string]schema.Attribute{
-							"cidr":           stringAttribute([]string{required}),
-							"networkName":    stringAttribute([]string{optional}),
-							"projectId":      stringAttribute([]string{optional}),
-							"serviceAccount": stringAttribute([]string{optional}),
-							//"provider_id":    stringAttribute([]string{computed}),
-						},
-					},
 				},
 			},
+			"gcp_config": schema.SingleNestedAttribute{
+				Optional: true,
+				Attributes: map[string]schema.Attribute{
+					"cidr":            stringAttribute([]string{optional}),
+					"network_name":    stringAttribute([]string{optional}),
+					"project_id":      stringAttribute([]string{optional}),
+					"service_account": stringAttribute([]string{optional}),
+					"provider_id":     stringAttribute([]string{computed}),
+				},
+			},
+			//},
+			//},
 			"status": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{

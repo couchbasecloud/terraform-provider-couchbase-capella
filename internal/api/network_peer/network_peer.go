@@ -24,13 +24,13 @@ type CreateNetworkPeeringRequest struct {
 	//ProviderConfig json.RawMessage `json:"providerConfig"`
 
 	// AWSConfig AWS config data required to establish a VPC peering relationship. Refer to the docs for other limitations to AWS VPC Peering - [ref](https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html#vpc-peering-limitations).
-	AWSConfig AWSConfig `json:"AWSConfig"`
+	AWSConfig AWSConfig `json:"awsConfig"`
 
 	// GCPConfig GCP config data required to establish a VPC peering relationship. Refer to the docs for other limitations to GCP VPC Peering - [ref](https://cloud.google.com/vpc/docs/vpc-peering).
-	GCPConfig GCPConfig `json:"GCPConfig"`
+	GCPConfig GCPConfig `json:"gcpConfig"`
 
-	// ProviderType Type of the cloud provider for which the peering connection is created. Which are- 1. aws 2. gcp
-	ProviderType string `json:"providerType"`
+	//// ProviderType Type of the cloud provider for which the peering connection is created. Which are- 1. aws 2. gcp
+	//ProviderType string `json:"providerType"`
 }
 
 // CreateNetworkPeeringResponse is the response received from the Capella V4 Public API when asked to create a new network peering connection.
@@ -59,12 +59,12 @@ type GetNetworkPeeringRecordResponse struct {
 	// Name is the name of the peering relationship.
 	Name string `json:"name"`
 
-	// ProviderConfig This provides details about the configuration and the ID of the VPC peer on AWS, GCP.
-	ProviderConfig ProviderConfig `json:"providerConfig"`
+	//// ProviderConfig This provides details about the configuration and the ID of the VPC peer on AWS, GCP.
+	//ProviderConfig ProviderConfig `json:"providerConfig"`
 
-	//AWS AWS `json:"aws"`
-	//
-	//GCP GCP `json:"gcp"`
+	AWSConfig AWSConfig `json:"awsConfig"`
+
+	GCPConfig GCPConfig `json:"gcpConfig"`
 
 	Status PeeringStatus `json:"status"`
 }
@@ -101,8 +101,8 @@ type AWSConfig struct {
 	// VpcId The alphanumeric VPC ID which starts with \"vpc-\". This is also known as the networkId.
 	VpcId string `json:"vpcId"`
 
-	//// ProviderId The ID of the VPC peer on GCP.
-	//ProviderId *string `json:"providerId"`
+	// ProviderId The ID of the VPC peer on GCP.
+	ProviderId string `json:"providerId"`
 }
 
 // GCPConfig GCP config data required to establish a VPC peering relationship. Refer to the docs for other limitations to GCP VPC Peering - [ref](https://cloud.google.com/vpc/docs/vpc-peering).
@@ -123,8 +123,8 @@ type GCPConfig struct {
 	// [Reference](https://cloud.google.com/iam/docs/creating-managing-service-accounts#creating)
 	ServiceAccount string `json:"serviceAccount"`
 
-	//// ProviderId The ID of the VPC peer on GCP.
-	//ProviderId *string `json:"providerId"`
+	// ProviderId The ID of the VPC peer on GCP.
+	ProviderId string `json:"providerId"`
 }
 
 //// AsAWS returns the union data inside the GetNetworkPeeringRecordResponse_ProviderConfig as a AWS

@@ -62,38 +62,66 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	var providerConfigAWS network_peer_api.AWSConfig
-	var providerConfigGCP network_peer_api.GCPConfig
+	var awsConfig network_peer_api.AWSConfig
+	var gcpConfig network_peer_api.GCPConfig
 
 	networkPeerRequest := network_peer_api.CreateNetworkPeeringRequest{
-		Name:         plan.Name.ValueString(),
-		ProviderType: plan.ProviderType.ValueString(),
+		Name: plan.Name.ValueString(),
+		//ProviderType: plan.ProviderType.ValueString(),
 	}
 	//check type conversion here
-	if plan.ProviderType.ValueString() == "aws" {
-		providerConfigAWS = network_peer_api.AWSConfig{
-			AccountId: plan.ProviderConfig.AWSConfig.AccountId.ValueString(),
-			Cidr:      plan.ProviderConfig.AWSConfig.Cidr.ValueString(),
-			Region:    plan.ProviderConfig.AWSConfig.Region.ValueString(),
-			VpcId:     plan.ProviderConfig.AWSConfig.VpcId.ValueString(),
+	//if plan.ProviderType.ValueString() == "aws" {
+	if plan.AWSConfig != nil && plan.GCPConfig != nil {
+		resp.Diagnostics.AddError(
+			"Error creating network peer",
+			"Cannot have both aws and gcp provider config for network peering, only one of them can be added for network peering with either AWS or GCP.",
+		)
+		return
+	} else if plan.AWSConfig != nil {
+		awsConfig = network_peer_api.AWSConfig{
+			AccountId: plan.AWSConfig.AccountId.ValueString(),
+			Cidr:      plan.AWSConfig.Cidr.ValueString(),
+			Region:    plan.AWSConfig.Region.ValueString(),
+			VpcId:     plan.AWSConfig.VpcId.ValueString(),
 		}
+		//}
+		//providerConfigAWS = network_peer_api.AWSConfig{
+		//	AccountId: plan.ProviderConfig.AWSConfig.AccountId.ValueString(),
+		//	Cidr:      plan.ProviderConfig.AWSConfig.Cidr.ValueString(),
+		//	Region:    plan.ProviderConfig.AWSConfig.Region.ValueString(),
+		//	VpcId:     plan.ProviderConfig.AWSConfig.VpcId.ValueString(),
+		//}
 		//err := networkPeerRequest.FromAWS(providerConfigAWS)
 		//if err != nil {
 		//	fmt.Errorf("for AWS %s: %w", errors.ErrConvertingProviderConfig, err)
 		//}
-		networkPeerRequest.AWSConfig = providerConfigAWS
-	} else if plan.ProviderType.ValueString() == "gcp" {
-		providerConfigGCP = network_peer_api.GCPConfig{
-			NetworkName:    plan.ProviderConfig.GCPConfig.NetworkName.ValueString(),
-			ProjectId:      plan.ProviderConfig.GCPConfig.ProjectId.ValueString(),
-			Cidr:           plan.ProviderConfig.GCPConfig.Cidr.ValueString(),
-			ServiceAccount: plan.ProviderConfig.GCPConfig.ServiceAccount.ValueString(),
-		}
+		networkPeerRequest.AWSConfig = awsConfig
+		//} else if plan.ProviderType.ValueString() == "gcp" {
+		//	providerConfigGCP = network_peer_api.GCPConfig{
+		//		NetworkName:    plan.ProviderConfig.GCPConfig.NetworkName.ValueString(),
+		//		ProjectId:      plan.ProviderConfig.GCPConfig.ProjectId.ValueString(),
+		//		Cidr:           plan.ProviderConfig.GCPConfig.Cidr.ValueString(),
+		//		ServiceAccount: plan.ProviderConfig.GCPConfig.ServiceAccount.ValueString(),
+		//	}
 		//err := networkPeerRequest.FromGCP(providerConfigGCP)
 		//if err != nil {
 		//	fmt.Errorf("for GCP %s: %w", errors.ErrConvertingProviderConfig, err)
 		//}
-		networkPeerRequest.GCPConfig = providerConfigGCP
+	} else if plan.GCPConfig != nil {
+		gcpConfig = network_peer_api.GCPConfig{
+			NetworkName:    plan.GCPConfig.NetworkName.ValueString(),
+			ProjectId:      plan.GCPConfig.ProjectId.ValueString(),
+			Cidr:           plan.GCPConfig.Cidr.ValueString(),
+			ServiceAccount: plan.GCPConfig.ServiceAccount.ValueString(),
+		}
+
+		networkPeerRequest.GCPConfig = gcpConfig
+	} else {
+		resp.Diagnostics.AddError(
+			"Error creating network peer",
+			"Incorrect provider config, neither aws or gcp.",
+		)
+		return
 	}
 
 	var (
@@ -313,9 +341,9 @@ func (n *NetworkPeer) validateNetworkPeerAttributesTrimmed(plan providerschema.N
 	if (!plan.Name.IsNull() && !plan.Name.IsUnknown()) && !providerschema.IsTrimmed(plan.Name.ValueString()) {
 		return fmt.Errorf("name %s", errors.ErrNotTrimmed)
 	}
-	if (!plan.ProviderType.IsNull() && !plan.ProviderType.IsUnknown()) && !providerschema.IsTrimmed(plan.ProviderType.ValueString()) {
-		return fmt.Errorf("providerType %s", errors.ErrNotTrimmed)
-	}
+	//if (!plan.ProviderType.IsNull() && !plan.ProviderType.IsUnknown()) && !providerschema.IsTrimmed(plan.ProviderType.ValueString()) {
+	//	return fmt.Errorf("providerType %s", errors.ErrNotTrimmed)
+	//}
 	return nil
 }
 
@@ -328,8 +356,14 @@ func initializeNetworkPeerPlanId(plan providerschema.NetworkPeer, id string) pro
 			command = types.StringNull()
 		}
 	}
-	if plan.ProviderConfig.ProviderId.IsNull() || plan.ProviderConfig.ProviderId.IsUnknown() {
-		plan.ProviderConfig.ProviderId = types.StringNull()
+	//if plan.ProviderConfig.ProviderId.IsNull() || plan.ProviderConfig.ProviderId.IsUnknown() {
+	//	plan.ProviderConfig.ProviderId = types.StringNull()
+	//}
+	if plan.AWSConfig.ProviderId.IsNull() || plan.AWSConfig.ProviderId.IsUnknown() {
+		plan.AWSConfig.ProviderId = types.StringNull()
+	}
+	if plan.GCPConfig.ProviderId.IsNull() || plan.GCPConfig.ProviderId.IsUnknown() {
+		plan.GCPConfig.ProviderId = types.StringNull()
 	}
 	if plan.Status.Reasoning.IsNull() || plan.Status.Reasoning.IsUnknown() {
 		plan.Status.Reasoning = types.StringNull()
