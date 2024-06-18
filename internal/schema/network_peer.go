@@ -97,22 +97,6 @@ type ProviderConfig struct {
 	ProviderId types.String `tfsdk:"provider_id"`
 }
 
-//type AWS struct {
-//	// AWSConfig AWS config data required to establish a VPC peering relationship. Refer to the docs for other limitations to AWS VPC Peering - [ref](https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html#vpc-peering-limitations).
-//	AWSConfig *AWSConfigData `json:"AWSConfig"`
-//
-//	// ProviderId The ID of the VPC peer on AWS.
-//	ProviderId types.String `json:"providerId"`
-//}
-//
-//type GCP struct {
-//	// GCPConfig GCP config data required to establish a VPC peering relationship. Refer to the docs for other limitations to GCP VPC Peering - [ref](https://cloud.google.com/vpc/docs/vpc-peering).
-//	GCPConfig *GCPConfigData `json:"GCPConfig"`
-//
-//	// ProviderId The ID of the VPC peer on GCP.
-//	ProviderId types.String `json:"providerId"`
-//}
-
 // AWSConfig AWS config data required to establish a VPC peering relationship.
 //
 //	Refer to the docs for other limitations to AWS VPC Peering - [ref](https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html#vpc-peering-limitations).
@@ -237,25 +221,6 @@ func NewNetworkPeer(ctx context.Context, networkPeer *network_peer_api.GetNetwor
 		Name:           types.StringValue(networkPeer.Name),
 		Audit:          auditObject,
 		//Commands:       commands,
-		//AWSConfig: &AWSConfig{
-		//	//ProviderId: types.StringValue(networkPeer.AWSConfig.ProviderId),
-		//	AccountId: types.StringValue(networkPeer.AWSConfig.AccountId),
-		//	VpcId:     types.StringValue(networkPeer.AWSConfig.VpcId),
-		//	Region:    types.StringValue(networkPeer.AWSConfig.Region),
-		//	Cidr:      types.StringValue(networkPeer.AWSConfig.Cidr),
-		//},
-		//GCPConfig: &GCPConfig{
-		//	//ProviderId:     types.StringValue(networkPeer.GCPConfig.ProviderId),
-		//	NetworkName:    types.StringValue(networkPeer.GCPConfig.NetworkName),
-		//	ProjectId:      types.StringValue(networkPeer.GCPConfig.ProjectId),
-		//	ServiceAccount: types.StringValue(networkPeer.GCPConfig.ServiceAccount),
-		//	Cidr:           types.StringValue(networkPeer.AWSConfig.Cidr),
-		//},
-
-		//Status: PeeringStatus{
-		//	State:     types.StringValue(*networkPeer.Status.State),
-		//	Reasoning: types.StringValue(*networkPeer.Status.Reasoning),
-		//},
 	}
 
 	//newNetworkPeer.Commands = MorphCommands(networkPeer.Commands)
@@ -369,10 +334,7 @@ func MorphCommands(commands []string) (basetypes.SetValue, error) {
 // func NewNetworkPeerData(networkPeer *network_peer_api.GetNetworkPeeringRecordResponse, organizationId, projectId, clusterId string, commands []types.String, auditObject basetypes.ObjectValue) (*NetworkPeer, error) {
 func NewNetworkPeerData(networkPeer *network_peer_api.GetNetworkPeeringRecordResponse, organizationId, projectId, clusterId string, auditObject basetypes.ObjectValue) (*NetworkPeerData, error) {
 	newNetworkPeerData := NetworkPeerData{
-		Id: types.StringValue(networkPeer.Id.String()),
-		//OrganizationId: types.StringValue(organizationId),
-		//ProjectId:      types.StringValue(projectId),
-		//ClusterId:      types.StringValue(clusterId),
+		Id:   types.StringValue(networkPeer.Id.String()),
 		Name: types.StringValue(networkPeer.Name),
 		//Commands:       commands,
 		Audit: auditObject,
@@ -381,26 +343,6 @@ func NewNetworkPeerData(networkPeer *network_peer_api.GetNetworkPeeringRecordRes
 			Reasoning: types.StringValue(*networkPeer.Status.Reasoning),
 		},
 	}
-
-	//if networkPeer.AWSConfig != nil {
-	//	newNetworkPeerData.AWSConfig = &AWSConfig{
-	//		AccountId:  types.StringValue(networkPeer.AWSConfig.AccountId),
-	//		VpcId:      types.StringValue(networkPeer.AWSConfig.VpcId),
-	//		Region:     types.StringValue(networkPeer.AWSConfig.Region),
-	//		Cidr:       types.StringValue(networkPeer.AWSConfig.Cidr),
-	//		ProviderId: types.StringValue(networkPeer.AWSConfig.ProviderId),
-	//	}
-	//}
-	//
-	//if networkPeer.GCPConfig != nil {
-	//	newNetworkPeerData.GCPConfig = &GCPConfig{
-	//		NetworkName:    types.StringValue(networkPeer.GCPConfig.NetworkName),
-	//		ProjectId:      types.StringValue(networkPeer.GCPConfig.ProjectId),
-	//		ServiceAccount: types.StringValue(networkPeer.GCPConfig.ServiceAccount),
-	//		Cidr:           types.StringValue(networkPeer.GCPConfig.Cidr),
-	//		ProviderId:     types.StringValue(networkPeer.GCPConfig.ProviderId),
-	//	}
-	//}
 
 	var newCommand []attr.Value
 	for _, command := range networkPeer.Commands {
@@ -428,29 +370,3 @@ func NewNetworkPeerData(networkPeer *network_peer_api.GetNetworkPeeringRecordRes
 
 	return &newNetworkPeerData, nil
 }
-
-//func morphToTerraformConfig(networkPeer *network_peer_api.GetNetworkPeeringRecordResponse) (*ProviderConfig, error) {
-//	var newConfig ProviderConfig
-//	newConfig = ProviderConfig{
-//		ProviderId: types.StringValue(networkPeer.ProviderConfig.ProviderId),
-//	}
-//
-//	if networkPeer.ProviderConfig.AWSConfig != nil {
-//		newConfig.AWSConfig = &AWSConfig{
-//			AccountId: types.StringValue(networkPeer.ProviderConfig.AWSConfig.AccountId),
-//			VpcId:     types.StringValue(networkPeer.ProviderConfig.AWSConfig.VpcId),
-//			Region:    types.StringValue(networkPeer.ProviderConfig.AWSConfig.Region),
-//			Cidr:      types.StringValue(networkPeer.ProviderConfig.AWSConfig.Cidr),
-//		}
-//	}
-//
-//	if networkPeer.ProviderConfig.GCPConfig != nil {
-//		newConfig.GCPConfig = &GCPConfig{
-//			NetworkName:    types.StringValue(networkPeer.ProviderConfig.GCPConfig.NetworkName),
-//			ProjectId:      types.StringValue(networkPeer.ProviderConfig.GCPConfig.ProjectId),
-//			Cidr:           types.StringValue(networkPeer.ProviderConfig.GCPConfig.Cidr),
-//			ServiceAccount: types.StringValue(networkPeer.ProviderConfig.GCPConfig.ServiceAccount),
-//		}
-//	}
-//	return &newConfig, nil
-//}
