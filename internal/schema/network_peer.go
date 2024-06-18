@@ -2,6 +2,7 @@ package schema
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -41,9 +42,9 @@ type NetworkPeer struct {
 	// ProviderConfig This provides details about the configuration and the ID of the VPC peer on AWS, GCP.
 	ProviderConfig ProviderConfig `tfsdk:"provider_config"`
 
-	AWSConfig *AWSConfig `tfsdk:"aws_config"`
-
-	GCPConfig *GCPConfig `tfsdk:"gcp_config"`
+	//AWSConfig AWSConfig `tfsdk:"aws_config"`
+	//
+	//GCPConfig GCPConfig `tfsdk:"gcp_config"`
 	// Status communicates the state of the VPC peering relationship. It is the state and reasoning for VPC peer.
 	Status types.Object `tfsdk:"status"`
 
@@ -59,12 +60,40 @@ type PeeringStatus struct {
 // ProviderConfig provides details about the configuration and the ID of the VPC peer on AWS, GCP.
 type ProviderConfig struct {
 	// AWSConfig AWS config data required to establish a VPC peering relationship. Refer to the docs for other limitations to AWS VPC Peering - [ref](https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html#vpc-peering-limitations).
-	AWSConfig *AWSConfig `tfsdk:"aws_config"`
+	//AWSConfig AWSConfig `tfsdk:"aws_config"`
 
 	// GCPConfig GCP config data required to establish a VPC peering relationship. Refer to the docs for other limitations to GCP VPC Peering - [ref](https://cloud.google.com/vpc/docs/vpc-peering).
-	GCPConfig *GCPConfig `tfsdk:"gcp_config"`
+	//GCPConfig GCPConfig `tfsdk:"gcp_config"`
 
 	// ProviderId The ID of the VPC peer on AWS or GCP.
+	//ProviderId types.String `tfsdk:"provider_id"`
+
+	// AccountId The numeric AWS Account ID or Owner ID.
+	AccountId types.String `tfsdk:"account_id"`
+
+	// Cidr The AWS VPC CIDR block of network in which your application runs. This cannot overlap with your Capella CIDR Block.
+	Cidr types.String `tfsdk:"cidr"`
+
+	// Region The AWS region where your VPC is deployed.
+	Region types.String `tfsdk:"region"`
+
+	// VpcId The alphanumeric VPC ID which starts with \"vpc-\". This is also known as the networkId.
+	VpcId types.String `tfsdk:"vpc_id"`
+
+	// NetworkName The name of the network that you want to peer with.
+	NetworkName types.String `tfsdk:"network_name"`
+
+	// ProjectId The unique identifier for your GCP project.
+	ProjectId types.String `tfsdk:"project_id"`
+
+	// ServiceAccount is the service account created or assigned on the external VPC project. GCP Service Account with below permissions
+	// - DNS Admin
+	// - Compute.NetworkAdmin
+	// It should be in the form of an email that is shown under `gcloud iam service-accounts list` command.
+	// [Reference](https://cloud.google.com/iam/docs/creating-managing-service-accounts#creating)
+	ServiceAccount types.String `tfsdk:"service_account"`
+
+	// ProviderId The ID of the VPC peer on GCP.
 	ProviderId types.String `tfsdk:"provider_id"`
 }
 
@@ -101,7 +130,7 @@ type AWSConfig struct {
 	VpcId types.String `tfsdk:"vpc_id"`
 
 	// ProviderId The ID of the VPC peer on GCP.
-	//ProviderId types.String `tfsdk:"provider_id"`
+	ProviderId types.String `tfsdk:"provider_id"`
 }
 
 // GCPConfig GCP config data required to establish a VPC peering relationship.
@@ -125,7 +154,7 @@ type GCPConfig struct {
 	ServiceAccount types.String `tfsdk:"service_account"`
 
 	// ProviderId The ID of the VPC peer on GCP.
-	//ProviderId types.String `tfsdk:"provider_id"`
+	ProviderId types.String `tfsdk:"provider_id"`
 }
 
 // NetworkPeers defines structure based on the response received from V4 Capella Public API when asked to list network peers.
@@ -171,9 +200,9 @@ type NetworkPeerData struct {
 	// ProviderConfig This provides details about the configuration and the ID of the VPC peer on AWS, GCP.
 	ProviderConfig ProviderConfig `tfsdk:"provider_config"`
 
-	//AWSConfig *AWSConfig `tfsdk:"aws_config"`
+	//AWSConfig AWSConfig `tfsdk:"aws_config"`
 	//
-	//GCPConfig *GCPConfig `tfsdk:"gcp_config"`
+	//GCPConfig GCPConfig `tfsdk:"gcp_config"`
 
 	// Status communicates the state of the VPC peering relationship. It is the state and reasoning for VPC peer.
 	Status PeeringStatus `tfsdk:"status"`
@@ -206,23 +235,23 @@ func NewNetworkPeer(ctx context.Context, networkPeer *network_peer_api.GetNetwor
 		ProjectId:      types.StringValue(projectId),
 		ClusterId:      types.StringValue(clusterId),
 		Name:           types.StringValue(networkPeer.Name),
+		Audit:          auditObject,
 		//Commands:       commands,
-		ProviderConfig: ProviderConfig{},
-		AWSConfig: &AWSConfig{
-			//ProviderId: types.StringValue(networkPeer.AWSConfig.ProviderId),
-			AccountId: types.StringValue(networkPeer.AWSConfig.AccountId),
-			VpcId:     types.StringValue(networkPeer.AWSConfig.VpcId),
-			Region:    types.StringValue(networkPeer.AWSConfig.Region),
-			Cidr:      types.StringValue(networkPeer.AWSConfig.Cidr),
-		},
-		GCPConfig: &GCPConfig{
-			//ProviderId:     types.StringValue(networkPeer.GCPConfig.ProviderId),
-			NetworkName:    types.StringValue(networkPeer.GCPConfig.NetworkName),
-			ProjectId:      types.StringValue(networkPeer.GCPConfig.ProjectId),
-			ServiceAccount: types.StringValue(networkPeer.GCPConfig.ServiceAccount),
-			Cidr:           types.StringValue(networkPeer.AWSConfig.Cidr),
-		},
-		Audit: auditObject,
+		//AWSConfig: &AWSConfig{
+		//	//ProviderId: types.StringValue(networkPeer.AWSConfig.ProviderId),
+		//	AccountId: types.StringValue(networkPeer.AWSConfig.AccountId),
+		//	VpcId:     types.StringValue(networkPeer.AWSConfig.VpcId),
+		//	Region:    types.StringValue(networkPeer.AWSConfig.Region),
+		//	Cidr:      types.StringValue(networkPeer.AWSConfig.Cidr),
+		//},
+		//GCPConfig: &GCPConfig{
+		//	//ProviderId:     types.StringValue(networkPeer.GCPConfig.ProviderId),
+		//	NetworkName:    types.StringValue(networkPeer.GCPConfig.NetworkName),
+		//	ProjectId:      types.StringValue(networkPeer.GCPConfig.ProjectId),
+		//	ServiceAccount: types.StringValue(networkPeer.GCPConfig.ServiceAccount),
+		//	Cidr:           types.StringValue(networkPeer.AWSConfig.Cidr),
+		//},
+
 		//Status: PeeringStatus{
 		//	State:     types.StringValue(*networkPeer.Status.State),
 		//	Reasoning: types.StringValue(*networkPeer.Status.Reasoning),
@@ -230,6 +259,12 @@ func NewNetworkPeer(ctx context.Context, networkPeer *network_peer_api.GetNetwor
 	}
 
 	//newNetworkPeer.Commands = MorphCommands(networkPeer.Commands)
+
+	newProviderConfig, err := morphToProviderConfig(networkPeer)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", errors.ErrConvertingProviderConfig, err)
+	}
+	newNetworkPeer.ProviderConfig = newProviderConfig
 
 	if networkPeer.Status.State != nil {
 		state := *networkPeer.Status.State
@@ -259,6 +294,45 @@ func NewNetworkPeer(ctx context.Context, networkPeer *network_peer_api.GetNetwor
 	//newNetworkPeer.ProviderConfig = *newConfig
 
 	return &newNetworkPeer, nil
+}
+
+func morphToProviderConfig(networkPeer *network_peer_api.GetNetworkPeeringRecordResponse) (ProviderConfig, error) {
+	var rawConfig map[string]interface{}
+
+	// Unmarshal the provider config into a map
+	err := json.Unmarshal(networkPeer.ProviderConfig, &rawConfig)
+	if err != nil {
+		return ProviderConfig{}, err
+	}
+
+	var newProviderConfig ProviderConfig
+
+	// Check for the existence of keys and unmarshal accordingly for aws and gcp config.
+	if _, ok := rawConfig["aws_config"]; ok {
+		awsConfig, err := networkPeer.AsAWS()
+		if err != nil {
+			return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingAWSConfig, err)
+		}
+		newProviderConfig.AccountId = types.StringValue(awsConfig.AccountId)
+		newProviderConfig.VpcId = types.StringValue(awsConfig.VpcId)
+		newProviderConfig.Cidr = types.StringValue(awsConfig.Cidr)
+		newProviderConfig.Region = types.StringValue(awsConfig.Region)
+		newProviderConfig.ProviderId = types.StringValue(awsConfig.ProviderId)
+
+	} else if _, ok := rawConfig["gcp_config"]; ok {
+		gcpConfig, err := networkPeer.AsGCP()
+		if err != nil {
+			return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingGCPConfig, err)
+		}
+		newProviderConfig.ProjectId = types.StringValue(gcpConfig.ProjectId)
+		newProviderConfig.NetworkName = types.StringValue(gcpConfig.NetworkName)
+		newProviderConfig.Cidr = types.StringValue(gcpConfig.Cidr)
+		newProviderConfig.ServiceAccount = types.StringValue(gcpConfig.ServiceAccount)
+		newProviderConfig.ProviderId = types.StringValue(gcpConfig.ProviderId)
+	}
+
+	return newProviderConfig, nil
+
 }
 
 // AttributeTypes returns a mapping of field names to their respective attribute types for the CouchbaseServer struct.
@@ -346,37 +420,37 @@ func NewNetworkPeerData(networkPeer *network_peer_api.GetNetworkPeeringRecordRes
 	//}
 	//newNetworkPeerData.Commands = newCommands
 
-	newConfig, err := morphToTerraformConfig(networkPeer)
+	newProviderConfig, err := morphToProviderConfig(networkPeer)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrConvertingProviderConfig, err)
 	}
-	newNetworkPeerData.ProviderConfig = *newConfig
+	newNetworkPeerData.ProviderConfig = newProviderConfig
 
 	return &newNetworkPeerData, nil
 }
 
-func morphToTerraformConfig(networkPeer *network_peer_api.GetNetworkPeeringRecordResponse) (*ProviderConfig, error) {
-	var newConfig ProviderConfig
-	newConfig = ProviderConfig{
-		ProviderId: types.StringValue(networkPeer.ProviderConfig.ProviderId),
-	}
-
-	if networkPeer.ProviderConfig.AWSConfig != nil {
-		newConfig.AWSConfig = &AWSConfig{
-			AccountId: types.StringValue(networkPeer.ProviderConfig.AWSConfig.AccountId),
-			VpcId:     types.StringValue(networkPeer.ProviderConfig.AWSConfig.VpcId),
-			Region:    types.StringValue(networkPeer.ProviderConfig.AWSConfig.Region),
-			Cidr:      types.StringValue(networkPeer.ProviderConfig.AWSConfig.Cidr),
-		}
-	}
-
-	if networkPeer.ProviderConfig.GCPConfig != nil {
-		newConfig.GCPConfig = &GCPConfig{
-			NetworkName:    types.StringValue(networkPeer.ProviderConfig.GCPConfig.NetworkName),
-			ProjectId:      types.StringValue(networkPeer.ProviderConfig.GCPConfig.ProjectId),
-			Cidr:           types.StringValue(networkPeer.ProviderConfig.GCPConfig.Cidr),
-			ServiceAccount: types.StringValue(networkPeer.ProviderConfig.GCPConfig.ServiceAccount),
-		}
-	}
-	return &newConfig, nil
-}
+//func morphToTerraformConfig(networkPeer *network_peer_api.GetNetworkPeeringRecordResponse) (*ProviderConfig, error) {
+//	var newConfig ProviderConfig
+//	newConfig = ProviderConfig{
+//		ProviderId: types.StringValue(networkPeer.ProviderConfig.ProviderId),
+//	}
+//
+//	if networkPeer.ProviderConfig.AWSConfig != nil {
+//		newConfig.AWSConfig = &AWSConfig{
+//			AccountId: types.StringValue(networkPeer.ProviderConfig.AWSConfig.AccountId),
+//			VpcId:     types.StringValue(networkPeer.ProviderConfig.AWSConfig.VpcId),
+//			Region:    types.StringValue(networkPeer.ProviderConfig.AWSConfig.Region),
+//			Cidr:      types.StringValue(networkPeer.ProviderConfig.AWSConfig.Cidr),
+//		}
+//	}
+//
+//	if networkPeer.ProviderConfig.GCPConfig != nil {
+//		newConfig.GCPConfig = &GCPConfig{
+//			NetworkName:    types.StringValue(networkPeer.ProviderConfig.GCPConfig.NetworkName),
+//			ProjectId:      types.StringValue(networkPeer.ProviderConfig.GCPConfig.ProjectId),
+//			Cidr:           types.StringValue(networkPeer.ProviderConfig.GCPConfig.Cidr),
+//			ServiceAccount: types.StringValue(networkPeer.ProviderConfig.GCPConfig.ServiceAccount),
+//		}
+//	}
+//	return &newConfig, nil
+//}

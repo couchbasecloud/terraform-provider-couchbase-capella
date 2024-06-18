@@ -135,6 +135,13 @@ var (
 
 	// ErrReadingGCPDisk is returned when a GCP disk read fails.
 	ErrReadingGCPDisk = errors.New("failed to read GCP disk, please contact Couchbase Capella Support")
+
+	// ErrReadingAWSConfig is returned when an AWS disk read fails.
+	ErrReadingAWSConfig = errors.New("failed to read AWS config, please contact Couchbase Capella Support")
+
+	// ErrReadingGCPConfig is returned when a GCP disk read fails.
+	ErrReadingGCPConfig = errors.New("failed to read GCP config, please contact Couchbase Capella Support")
+
 	// ErrBucketIdMissing is returned when an expected Bucket Id was not found after an import.
 	ErrBucketIdMissing = errors.New("bucket ID is missing or was passed incorrectly, please check provider documentation for syntax")
 

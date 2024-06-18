@@ -15,7 +15,7 @@ import (
 // In order to access this endpoint, the provided API key must have at least one of the following roles:
 // - Organization Owner
 // - Project Owner
-// - Project Manager
+// - Cluster Owner
 //
 // To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
 type CreateNetworkPeeringRequest struct {
@@ -46,7 +46,7 @@ type CreateNetworkPeeringResponse struct {
 //	In order to access this endpoint, the provided API key must have at least one of the following roles:
 //	 - Organization Owner
 //	 - Project Owner
-//	 - Project Manager
+//	 - Cluster Owner
 //
 //	To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
 type GetNetworkPeeringRecordResponse struct {
