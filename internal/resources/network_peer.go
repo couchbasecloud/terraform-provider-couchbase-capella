@@ -63,62 +63,47 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	var awsConfig network_peer_api.AWSConfig
-	var gcpConfig network_peer_api.GCPConfig
-
 	networkPeerRequest := network_peer_api.CreateNetworkPeeringRequest{
 		Name:         plan.Name.ValueString(),
 		ProviderType: plan.ProviderType.ValueString(),
 	}
-	//check type conversion here
-	//if plan.ProviderType.ValueString() == "aws" {
-	if plan.AWSConfig != nil && plan.GCPConfig != nil {
-		resp.Diagnostics.AddError(
-			"Error creating network peer",
-			"Cannot have both aws and gcp provider config for network peering, only one of them can be added for network peering with either AWS or GCP.",
-		)
-		return
-	} else if plan.AWSConfig != nil {
-		awsConfig = network_peer_api.AWSConfig{
-			AccountId: plan.AWSConfig.AccountId.ValueString(),
-			Cidr:      plan.AWSConfig.Cidr.ValueString(),
-			Region:    plan.AWSConfig.Region.ValueString(),
-			VpcId:     plan.AWSConfig.VpcId.ValueString(),
+
+	switch plan.ProviderType.ValueString() {
+	case "aws":
+		awsConfig := network_peer_api.AWSConfig{
+			AccountId:  plan.ProviderConfig.AccountId.ValueString(),
+			Cidr:       plan.ProviderConfig.Cidr.ValueString(),
+			Region:     plan.ProviderConfig.Region.ValueString(),
+			VpcId:      plan.ProviderConfig.VpcId.ValueString(),
+			ProviderId: plan.ProviderConfig.ProviderId.ValueString(),
 		}
 
-		networkPeerRequest.AWSConfig = awsConfig
-		//err := networkPeerRequest.FromAWS(awsConfig)
-		//if err != nil {
-		//	resp.Diagnostics.AddError(
-		//		"Error creating network peer",
-		//		errors.ErrConvertingServiceGroups.Error(),
-		//	)
-		//	return
-		//}
-	} else if plan.GCPConfig != nil {
-		gcpConfig = network_peer_api.GCPConfig{
-			NetworkName:    plan.GCPConfig.NetworkName.ValueString(),
-			ProjectId:      plan.GCPConfig.ProjectId.ValueString(),
-			Cidr:           plan.GCPConfig.Cidr.ValueString(),
-			ServiceAccount: plan.GCPConfig.ServiceAccount.ValueString(),
+		err := networkPeerRequest.FromAWS(awsConfig)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error creating network peer for AWS",
+				errors.ErrConvertingProviderConfig.Error(),
+			)
+			return
 		}
 
-		networkPeerRequest.GCPConfig = gcpConfig
-		//err := networkPeerRequest.FromGCP(gcpConfig)
-		//if err != nil {
-		//	resp.Diagnostics.AddError(
-		//		"Error creating network peer",
-		//		errors.ErrConvertingServiceGroups.Error(),
-		//	)
-		//	return
-		//}
+	case "gcp":
+		gcpConfig := network_peer_api.GCPConfig{
+			NetworkName:    plan.ProviderConfig.NetworkName.ValueString(),
+			Cidr:           plan.ProviderConfig.Cidr.ValueString(),
+			ProjectId:      plan.ProviderConfig.ProjectId.ValueString(),
+			ServiceAccount: plan.ProviderConfig.ServiceAccount.ValueString(),
+			ProviderId:     plan.ProviderConfig.ProviderId.ValueString(),
+		}
 
-	} else {
-		resp.Diagnostics.AddError(
-			"Error creating network peer",
-			"Incorrect provider config, neither aws or gcp.",
-		)
-		return
+		err := networkPeerRequest.FromGCP(gcpConfig)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error creating network peer for GCP",
+				errors.ErrConvertingProviderConfig.Error(),
+			)
+			return
+		}
 	}
 
 	log.Print("*********PAULO********** networkPeerRequest", networkPeerRequest)

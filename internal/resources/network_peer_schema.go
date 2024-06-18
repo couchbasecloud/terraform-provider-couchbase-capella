@@ -2,6 +2,7 @@ package resources
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -29,16 +30,19 @@ func NetworkPeerSchema() schema.Schema {
 				//	Description: "The 'accountId', 'vpcId', 'region', and 'cidr' fields are required for AWS VPC peering. " +
 				//		"For GCP, the 'networkName', 'projectId', 'serviceAccount', and 'cidr' fields are required for VPC peering. ",
 				Required: true,
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.RequiresReplace(),
+				},
 				Attributes: map[string]schema.Attribute{
-					"provider_id": stringAttribute([]string{computed}),
+					//"provider_id": stringAttribute([]string{computed}),
 					"aws_config": schema.SingleNestedAttribute{
 						Optional: true,
 						Attributes: map[string]schema.Attribute{
-							"account_id": stringAttribute([]string{optional}),
-							"vpc_id":     stringAttribute([]string{optional}),
-							"region":     stringAttribute([]string{optional}),
-							"cidr":       stringAttribute([]string{optional}),
-							//"provider_id": stringAttribute([]string{computed}),
+							"account_id":  stringAttribute([]string{optional}),
+							"vpc_id":      stringAttribute([]string{optional}),
+							"region":      stringAttribute([]string{optional}),
+							"cidr":        stringAttribute([]string{optional}),
+							"provider_id": stringAttribute([]string{computed}),
 						},
 					},
 					"gcp_config": schema.SingleNestedAttribute{
@@ -48,7 +52,7 @@ func NetworkPeerSchema() schema.Schema {
 							"network_name":    stringAttribute([]string{optional}),
 							"project_id":      stringAttribute([]string{optional}),
 							"service_account": stringAttribute([]string{optional}),
-							//"provider_id":     stringAttribute([]string{computed}),
+							"provider_id":     stringAttribute([]string{computed}),
 						},
 					},
 				},

@@ -141,3 +141,17 @@ func (t *GetNetworkPeeringRecordResponse) FromGCP(v GCPConfig) error {
 	t.ProviderConfig = b
 	return err
 }
+
+// FromAWS overwrites any union data inside the GetNetworkPeeringRecordResponse_ProviderConfig as the provided AWS
+func (t *CreateNetworkPeeringRequest) FromAWS(v AWSConfig) error {
+	b, err := json.Marshal(v)
+	t.ProviderConfig = b
+	return err
+}
+
+// FromGCP overwrites any union data inside the GetNetworkPeeringRecordResponse_ProviderConfig as the provided GCP
+func (t *CreateNetworkPeeringRequest) FromGCP(v GCPConfig) error {
+	b, err := json.Marshal(v)
+	t.ProviderConfig = b
+	return err
+}
