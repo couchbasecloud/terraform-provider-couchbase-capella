@@ -69,22 +69,6 @@ type GetNetworkPeeringRecordResponse struct {
 	Status PeeringStatus `json:"status"`
 }
 
-//type AWS struct {
-//	// AWSConfig AWS config data required to establish a VPC peering relationship. Refer to the docs for other limitations to AWS VPC Peering - [ref](https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html#vpc-peering-limitations).
-//	AWSConfig *AWSConfigData `json:"AWSConfig"`
-//
-//	// ProviderId The ID of the VPC peer on AWS.
-//	ProviderId *string `json:"providerId"`
-//}
-//
-//type GCP struct {
-//	// GCPConfig GCP config data required to establish a VPC peering relationship. Refer to the docs for other limitations to GCP VPC Peering - [ref](https://cloud.google.com/vpc/docs/vpc-peering).
-//	GCPConfig *GCPConfigData `json:"GCPConfig"`
-//
-//	// ProviderId The ID of the VPC peer on GCP.
-//	ProviderId *string `json:"providerId"`
-//}
-
 // AWSConfig is the AWS config data required to establish a VPC peering relationship.
 //
 //	Refer to the docs for other limitations to AWS VPC Peering - [ref](https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html#vpc-peering-limitations).

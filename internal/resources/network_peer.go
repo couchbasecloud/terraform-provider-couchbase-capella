@@ -354,26 +354,11 @@ func initializeNetworkPeerPlanId(plan providerschema.NetworkPeer, id string) pro
 		plan.Commands = types.SetNull(types.ObjectType{})
 	}
 	types.SetNull(types.SetType{})
-	//if plan.ProviderConfig.ProviderId.IsNull() || plan.ProviderConfig.ProviderId.IsUnknown() {
-	//	plan.ProviderConfig.ProviderId = types.StringNull()
-	//}
-	//if plan.AWSConfig.ProviderId.IsNull() || plan.AWSConfig.ProviderId.IsUnknown() {
-	//	plan.AWSConfig.ProviderId = types.StringNull()
-	//}
-	//if plan.GCPConfig.ProviderId.IsNull() || plan.GCPConfig.ProviderId.IsUnknown() {
-	//	plan.GCPConfig.ProviderId = types.StringNull()
-	//}
 
 	if plan.Status.IsNull() || plan.Status.IsUnknown() {
 		plan.Status = types.ObjectNull(providerschema.PeeringStatus{}.AttributeTypes())
 	}
 
-	//if plan.Status.Reasoning.IsNull() || plan.Status.Reasoning.IsUnknown() {
-	//	plan.Status.Reasoning = types.StringNull()
-	//}
-	//if plan.Status.State.IsNull() || plan.Status.State.IsUnknown() {
-	//	plan.Status.State = types.StringNull()
-	//}
 	plan.Audit = types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
 	return plan
 }
