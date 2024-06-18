@@ -30,7 +30,7 @@ type CreateNetworkPeeringRequest struct {
 	GCPConfig GCPConfig `json:"gcpConfig"`
 
 	//// ProviderType Type of the cloud provider for which the peering connection is created. Which are- 1. aws 2. gcp
-	//ProviderType string `json:"providerType"`
+	ProviderType string `json:"providerType"`
 }
 
 // CreateNetworkPeeringResponse is the response received from the Capella V4 Public API when asked to create a new network peering connection.
@@ -59,12 +59,12 @@ type GetNetworkPeeringRecordResponse struct {
 	// Name is the name of the peering relationship.
 	Name string `json:"name"`
 
-	//// ProviderConfig This provides details about the configuration and the ID of the VPC peer on AWS, GCP.
-	//ProviderConfig ProviderConfig `json:"providerConfig"`
+	// ProviderConfig This provides details about the configuration and the ID of the VPC peer on AWS, GCP.
+	ProviderConfig ProviderConfig `json:"providerConfig"`
 
-	AWSConfig AWSConfig `json:"awsConfig"`
+	AWSConfig *AWSConfig `json:"awsConfig"`
 
-	GCPConfig GCPConfig `json:"gcpConfig"`
+	GCPConfig *GCPConfig `json:"gcpConfig"`
 
 	Status PeeringStatus `json:"status"`
 }
@@ -124,32 +124,33 @@ type GCPConfig struct {
 	ServiceAccount string `json:"serviceAccount"`
 
 	// ProviderId The ID of the VPC peer on GCP.
-	ProviderId string `json:"providerId"`
+	//ProviderId string `json:"providerId"`
 }
 
+//
 //// AsAWS returns the union data inside the GetNetworkPeeringRecordResponse_ProviderConfig as a AWS
-//func (t *GetNetworkPeeringRecordResponse) AsAWS() (AWS, error) {
-//	var body AWS
+//func (t *CreateNetworkPeeringRequest) AsAWS() (AWSConfig, error) {
+//	var body AWSConfig
 //	err := json.Unmarshal(t.ProviderConfig, &body)
 //	return body, err
 //}
-
+//
 //// FromAWS overwrites any union data inside the GetNetworkPeeringRecordResponse_ProviderConfig as the provided AWS
-//func (t *CreateNetworkPeeringRequest) FromAWS(v AWSConfigData) error {
+//func (t *CreateNetworkPeeringRequest) FromAWS(v AWSConfig) error {
 //	b, err := json.Marshal(v)
-//	t.AWSConfig = b
+//	t.ProviderConfig = b
 //	return err
 //}
 //
 //// AsGCP returns the union data inside the GetNetworkPeeringRecordResponse_ProviderConfig as a GCP
-//func (t *GetNetworkPeeringRecordResponse) AsGCP() (GCP, error) {
-//	var body GCP
+//func (t *CreateNetworkPeeringRequest) AsGCP() (GCPConfig, error) {
+//	var body GCPConfig
 //	err := json.Unmarshal(t.ProviderConfig, &body)
 //	return body, err
 //}
-
-// FromGCP overwrites any union data inside the GetNetworkPeeringRecordResponse_ProviderConfig as the provided GCP
-//func (t *CreateNetworkPeeringRequest) FromGCP(v GCPConfigData) error {
+//
+//// FromGCP overwrites any union data inside the GetNetworkPeeringRecordResponse_ProviderConfig as the provided GCP
+//func (t *CreateNetworkPeeringRequest) FromGCP(v GCPConfig) error {
 //	b, err := json.Marshal(v)
 //	t.ProviderConfig = b
 //	return err

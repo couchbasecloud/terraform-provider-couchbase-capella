@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -66,8 +67,8 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 	var gcpConfig network_peer_api.GCPConfig
 
 	networkPeerRequest := network_peer_api.CreateNetworkPeeringRequest{
-		Name: plan.Name.ValueString(),
-		//ProviderType: plan.ProviderType.ValueString(),
+		Name:         plan.Name.ValueString(),
+		ProviderType: plan.ProviderType.ValueString(),
 	}
 	//check type conversion here
 	//if plan.ProviderType.ValueString() == "aws" {
@@ -84,28 +85,15 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 			Region:    plan.AWSConfig.Region.ValueString(),
 			VpcId:     plan.AWSConfig.VpcId.ValueString(),
 		}
-		//}
-		//providerConfigAWS = network_peer_api.AWSConfig{
-		//	AccountId: plan.ProviderConfig.AWSConfig.AccountId.ValueString(),
-		//	Cidr:      plan.ProviderConfig.AWSConfig.Cidr.ValueString(),
-		//	Region:    plan.ProviderConfig.AWSConfig.Region.ValueString(),
-		//	VpcId:     plan.ProviderConfig.AWSConfig.VpcId.ValueString(),
-		//}
-		//err := networkPeerRequest.FromAWS(providerConfigAWS)
-		//if err != nil {
-		//	fmt.Errorf("for AWS %s: %w", errors.ErrConvertingProviderConfig, err)
-		//}
+
 		networkPeerRequest.AWSConfig = awsConfig
-		//} else if plan.ProviderType.ValueString() == "gcp" {
-		//	providerConfigGCP = network_peer_api.GCPConfig{
-		//		NetworkName:    plan.ProviderConfig.GCPConfig.NetworkName.ValueString(),
-		//		ProjectId:      plan.ProviderConfig.GCPConfig.ProjectId.ValueString(),
-		//		Cidr:           plan.ProviderConfig.GCPConfig.Cidr.ValueString(),
-		//		ServiceAccount: plan.ProviderConfig.GCPConfig.ServiceAccount.ValueString(),
-		//	}
-		//err := networkPeerRequest.FromGCP(providerConfigGCP)
+		//err := networkPeerRequest.FromAWS(awsConfig)
 		//if err != nil {
-		//	fmt.Errorf("for GCP %s: %w", errors.ErrConvertingProviderConfig, err)
+		//	resp.Diagnostics.AddError(
+		//		"Error creating network peer",
+		//		errors.ErrConvertingServiceGroups.Error(),
+		//	)
+		//	return
 		//}
 	} else if plan.GCPConfig != nil {
 		gcpConfig = network_peer_api.GCPConfig{
@@ -116,6 +104,15 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 		}
 
 		networkPeerRequest.GCPConfig = gcpConfig
+		//err := networkPeerRequest.FromGCP(gcpConfig)
+		//if err != nil {
+		//	resp.Diagnostics.AddError(
+		//		"Error creating network peer",
+		//		errors.ErrConvertingServiceGroups.Error(),
+		//	)
+		//	return
+		//}
+
 	} else {
 		resp.Diagnostics.AddError(
 			"Error creating network peer",
@@ -124,6 +121,7 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
+	log.Print("*********PAULO********** networkPeerRequest", networkPeerRequest)
 	var (
 		organizationId = plan.OrganizationId.ValueString()
 		projectId      = plan.ProjectId.ValueString()
@@ -351,26 +349,31 @@ func (n *NetworkPeer) validateNetworkPeerAttributesTrimmed(plan providerschema.N
 // with the specified plan. It marks all computed fields as null.
 func initializeNetworkPeerPlanId(plan providerschema.NetworkPeer, id string) providerschema.NetworkPeer {
 	plan.Id = types.StringValue(id)
-	for _, command := range plan.Commands {
-		if command.IsNull() || command.IsUnknown() {
-			command = types.StringNull()
-		}
+
+	if plan.Commands.IsNull() || plan.Commands.IsUnknown() {
+		plan.Commands = types.SetNull(types.ObjectType{})
 	}
+	types.SetNull(types.SetType{})
 	//if plan.ProviderConfig.ProviderId.IsNull() || plan.ProviderConfig.ProviderId.IsUnknown() {
 	//	plan.ProviderConfig.ProviderId = types.StringNull()
 	//}
-	if plan.AWSConfig.ProviderId.IsNull() || plan.AWSConfig.ProviderId.IsUnknown() {
-		plan.AWSConfig.ProviderId = types.StringNull()
+	//if plan.AWSConfig.ProviderId.IsNull() || plan.AWSConfig.ProviderId.IsUnknown() {
+	//	plan.AWSConfig.ProviderId = types.StringNull()
+	//}
+	//if plan.GCPConfig.ProviderId.IsNull() || plan.GCPConfig.ProviderId.IsUnknown() {
+	//	plan.GCPConfig.ProviderId = types.StringNull()
+	//}
+
+	if plan.Status.IsNull() || plan.Status.IsUnknown() {
+		plan.Status = types.ObjectNull(providerschema.PeeringStatus{}.AttributeTypes())
 	}
-	if plan.GCPConfig.ProviderId.IsNull() || plan.GCPConfig.ProviderId.IsUnknown() {
-		plan.GCPConfig.ProviderId = types.StringNull()
-	}
-	if plan.Status.Reasoning.IsNull() || plan.Status.Reasoning.IsUnknown() {
-		plan.Status.Reasoning = types.StringNull()
-	}
-	if plan.Status.State.IsNull() || plan.Status.State.IsUnknown() {
-		plan.Status.State = types.StringNull()
-	}
+
+	//if plan.Status.Reasoning.IsNull() || plan.Status.Reasoning.IsUnknown() {
+	//	plan.Status.Reasoning = types.StringNull()
+	//}
+	//if plan.Status.State.IsNull() || plan.Status.State.IsUnknown() {
+	//	plan.Status.State = types.StringNull()
+	//}
 	plan.Audit = types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
 	return plan
 }
@@ -390,7 +393,7 @@ func (n *NetworkPeer) retrieveNetworkPeer(ctx context.Context, organizationId, p
 	}
 
 	//refreshedState, err := providerschema.NewNetworkPeer(networkPeerResp, organizationId, projectId, clusterId, providerschema.MorphCommands(networkPeerResp.Commands), auditObj)
-	refreshedState, err := providerschema.NewNetworkPeer(networkPeerResp, organizationId, projectId, clusterId, auditObj)
+	refreshedState, err := providerschema.NewNetworkPeer(ctx, networkPeerResp, organizationId, projectId, clusterId, auditObj)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrRefreshingState, err)
 	}

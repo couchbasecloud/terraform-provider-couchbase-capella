@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 func NetworkPeerSchema() schema.Schema {
@@ -19,40 +20,40 @@ func NetworkPeerSchema() schema.Schema {
 			"project_id":      stringAttribute([]string{required, requiresReplace}),
 			"cluster_id":      stringAttribute([]string{required, requiresReplace}),
 			"name":            stringAttribute([]string{required}),
-			//"commands": schema.SetAttribute{
-			//	Computed:    true,
-			//	ElementType: types.StringType,
-			//},
-			"commands": stringSetAttribute(computed),
-			//"provider_type": stringAttribute([]string{required}),
-			//"provider_config": schema.SingleNestedAttribute{
-			//	Description: "The 'accountId', 'vpcId', 'region', and 'cidr' fields are required for AWS VPC peering. " +
-			//		"For GCP, the 'networkName', 'projectId', 'serviceAccount', and 'cidr' fields are required for VPC peering. ",
-			//	Required: true,
-			//	Attributes: map[string]schema.Attribute{
-			//		"provider_id": stringAttribute([]string{computed}),
-			"aws_config": schema.SingleNestedAttribute{
-				Optional: true,
+			"provider_type":   stringAttribute([]string{required}),
+			"commands": schema.SetAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+			},
+			//"commands": stringSetAttribute(computed),
+			"provider_config": schema.SingleNestedAttribute{
+				//	Description: "The 'accountId', 'vpcId', 'region', and 'cidr' fields are required for AWS VPC peering. " +
+				//		"For GCP, the 'networkName', 'projectId', 'serviceAccount', and 'cidr' fields are required for VPC peering. ",
+				Required: true,
 				Attributes: map[string]schema.Attribute{
-					"account_id":  stringAttribute([]string{optional}),
-					"vpc_id":      stringAttribute([]string{optional}),
-					"region":      stringAttribute([]string{optional}),
-					"cidr":        stringAttribute([]string{optional}),
 					"provider_id": stringAttribute([]string{computed}),
+					"aws_config": schema.SingleNestedAttribute{
+						Optional: true,
+						Attributes: map[string]schema.Attribute{
+							"account_id": stringAttribute([]string{optional}),
+							"vpc_id":     stringAttribute([]string{optional}),
+							"region":     stringAttribute([]string{optional}),
+							"cidr":       stringAttribute([]string{optional}),
+							//"provider_id": stringAttribute([]string{computed}),
+						},
+					},
+					"gcp_config": schema.SingleNestedAttribute{
+						Optional: true,
+						Attributes: map[string]schema.Attribute{
+							"cidr":            stringAttribute([]string{optional}),
+							"network_name":    stringAttribute([]string{optional}),
+							"project_id":      stringAttribute([]string{optional}),
+							"service_account": stringAttribute([]string{optional}),
+							//"provider_id":     stringAttribute([]string{computed}),
+						},
+					},
 				},
 			},
-			"gcp_config": schema.SingleNestedAttribute{
-				Optional: true,
-				Attributes: map[string]schema.Attribute{
-					"cidr":            stringAttribute([]string{optional}),
-					"network_name":    stringAttribute([]string{optional}),
-					"project_id":      stringAttribute([]string{optional}),
-					"service_account": stringAttribute([]string{optional}),
-					"provider_id":     stringAttribute([]string{computed}),
-				},
-			},
-			//},
-			//},
 			"status": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
