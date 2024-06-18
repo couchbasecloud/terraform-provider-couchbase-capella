@@ -8,7 +8,7 @@ network_peer = {
   provider_type      = "aws"
 }
 
-AWS_config = {
+aws_config = {
     account_id = "123456789123"
     vpc_id     = "vpc-141f0fffff141aa00"
     region     = "us-east-1"

@@ -24,7 +24,7 @@ variable "network_peer" {
   })
 }
 
-variable "AWS_config" {
+variable "aws_config" {
   description = "AWS configuration details useful for network peer creation"
 
   type = object({
