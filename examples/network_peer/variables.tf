@@ -35,6 +35,23 @@ variable "AWS_config" {
   })
 }
 
+# variable "gcp_config" {
+#   description = "GCP configuration details useful for network peer creation"
+#
+#   type = object({
+#     network_name    = string
+#     project_id      = string
+#     cidr            = string
+#     service_account = string
+#   })
+# }
+
+# locals {
+#   config_check = (var.aws_config != null && var.gcp_config != null) ?
+#     error("Only one of aws_config or gcp_config should be provided") :
+#     (var.aws_config != null ? var.aws_config : var.gcp_config)
+# }
+
 variable "host" {
   description = "The Host URL of Couchbase Cloud."
 }
