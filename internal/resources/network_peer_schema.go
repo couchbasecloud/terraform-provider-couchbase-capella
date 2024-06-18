@@ -41,14 +41,14 @@ func NetworkPeerSchema() schema.Schema {
 							"account_id":  stringAttribute([]string{optional}),
 							"vpc_id":      stringAttribute([]string{optional}),
 							"region":      stringAttribute([]string{optional}),
-							"cidr":        stringAttribute([]string{optional}),
+							"cidr":        stringAttribute([]string{required}),
 							"provider_id": stringAttribute([]string{computed}),
 						},
 					},
 					"gcp_config": schema.SingleNestedAttribute{
 						Optional: true,
 						Attributes: map[string]schema.Attribute{
-							"cidr":            stringAttribute([]string{optional}),
+							"cidr":            stringAttribute([]string{required}),
 							"network_name":    stringAttribute([]string{optional}),
 							"project_id":      stringAttribute([]string{optional}),
 							"service_account": stringAttribute([]string{optional}),

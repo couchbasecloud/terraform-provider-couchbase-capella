@@ -324,9 +324,9 @@ func (n *NetworkPeer) validateNetworkPeerAttributesTrimmed(plan providerschema.N
 	if (!plan.Name.IsNull() && !plan.Name.IsUnknown()) && !providerschema.IsTrimmed(plan.Name.ValueString()) {
 		return fmt.Errorf("name %s", errors.ErrNotTrimmed)
 	}
-	//if (!plan.ProviderType.IsNull() && !plan.ProviderType.IsUnknown()) && !providerschema.IsTrimmed(plan.ProviderType.ValueString()) {
-	//	return fmt.Errorf("providerType %s", errors.ErrNotTrimmed)
-	//}
+	if (!plan.ProviderType.IsNull() && !plan.ProviderType.IsUnknown()) && !providerschema.IsTrimmed(plan.ProviderType.ValueString()) {
+		return fmt.Errorf("providerType %s", errors.ErrNotTrimmed)
+	}
 	return nil
 }
 
