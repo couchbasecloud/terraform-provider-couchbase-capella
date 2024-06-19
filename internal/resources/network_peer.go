@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -70,15 +69,14 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 
 	switch plan.ProviderType.ValueString() {
 	case "aws":
-		awsConfig := network_peer_api.AWSConfig{
-			AccountId:  plan.ProviderConfig.AccountId.ValueString(),
-			Cidr:       plan.ProviderConfig.Cidr.ValueString(),
-			Region:     plan.ProviderConfig.Region.ValueString(),
-			VpcId:      plan.ProviderConfig.VpcId.ValueString(),
-			ProviderId: plan.ProviderConfig.ProviderId.ValueString(),
+		awsConfig := network_peer_api.AWSConfigData{
+			AccountId: plan.ProviderConfig.AWSConfig.AccountId.ValueString(),
+			Cidr:      plan.ProviderConfig.AWSConfig.Cidr.ValueString(),
+			Region:    plan.ProviderConfig.AWSConfig.Region.ValueString(),
+			VpcId:     plan.ProviderConfig.AWSConfig.VpcId.ValueString(),
 		}
 
-		err := networkPeerRequest.FromAWS(awsConfig)
+		err := networkPeerRequest.FromAWSConfigData(awsConfig)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error creating network peer for AWS",
@@ -88,15 +86,14 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 		}
 
 	case "gcp":
-		gcpConfig := network_peer_api.GCPConfig{
-			NetworkName:    plan.ProviderConfig.NetworkName.ValueString(),
-			Cidr:           plan.ProviderConfig.Cidr.ValueString(),
-			ProjectId:      plan.ProviderConfig.ProjectId.ValueString(),
-			ServiceAccount: plan.ProviderConfig.ServiceAccount.ValueString(),
-			ProviderId:     plan.ProviderConfig.ProviderId.ValueString(),
+		gcpConfig := network_peer_api.GCPConfigData{
+			NetworkName:    plan.ProviderConfig.GCPConfig.NetworkName.ValueString(),
+			Cidr:           plan.ProviderConfig.GCPConfig.Cidr.ValueString(),
+			ProjectId:      plan.ProviderConfig.GCPConfig.ProjectId.ValueString(),
+			ServiceAccount: plan.ProviderConfig.GCPConfig.ServiceAccount.ValueString(),
 		}
 
-		err := networkPeerRequest.FromGCP(gcpConfig)
+		err := networkPeerRequest.FromGCPConfigData(gcpConfig)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error creating network peer for GCP",
@@ -106,7 +103,7 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 		}
 	}
 
-	log.Print("*********PAULO********** networkPeerRequest", networkPeerRequest)
+	//log.Print("*********PAULO********** networkPeerRequest", networkPeerRequest)
 	var (
 		organizationId = plan.OrganizationId.ValueString()
 		projectId      = plan.ProjectId.ValueString()
@@ -300,7 +297,7 @@ func (n *NetworkPeer) Configure(_ context.Context, req resource.ConfigureRequest
 }
 
 func (n *NetworkPeer) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("endpoint_id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (n *NetworkPeer) validateCreateNetworkPeer(plan providerschema.NetworkPeer) error {

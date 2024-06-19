@@ -95,7 +95,7 @@ func (n *NetworkPeers) Read(ctx context.Context, req datasource.ReadRequest, res
 		return
 	}
 
-	log.Print("PAULO response", response)
+	log.Print("***********************RESPONSE******************", response)
 	for i := range response {
 		networkPeer := response[i]
 		audit := providerschema.NewCouchbaseAuditData(networkPeer.Audit)
@@ -108,7 +108,6 @@ func (n *NetworkPeers) Read(ctx context.Context, req datasource.ReadRequest, res
 			)
 		}
 
-		log.Print("PAULO networkPeer", networkPeer)
 		newNetworkPeerData, err := providerschema.NewNetworkPeerData(&networkPeer, organizationId, projectId, clusterId, auditObj)
 		if err != nil {
 			resp.Diagnostics.AddError(
