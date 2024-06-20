@@ -60,10 +60,10 @@ type PeeringStatus struct {
 // ProviderConfig provides details about the configuration and the ID of the VPC peer on AWS, GCP.
 type ProviderConfig struct {
 	// AWSConfig AWS config data required to establish a VPC peering relationship. Refer to the docs for other limitations to AWS VPC Peering - [ref](https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html#vpc-peering-limitations).
-	AWSConfig AWSConfig `tfsdk:"aws_config"`
+	AWSConfig *AWSConfig `tfsdk:"aws_config"`
 
 	// GCPConfig GCP config data required to establish a VPC peering relationship. Refer to the docs for other limitations to GCP VPC Peering - [ref](https://cloud.google.com/vpc/docs/vpc-peering).
-	GCPConfig GCPConfig `tfsdk:"gcp_config"`
+	GCPConfig *GCPConfig `tfsdk:"gcp_config"`
 
 	// ProviderId The ID of the VPC peer on AWS or GCP.
 	//ProviderId types.String `tfsdk:"provider_id"`
@@ -270,41 +270,48 @@ func NewNetworkPeer(ctx context.Context, networkPeer *network_peer_api.GetNetwor
 }
 
 func morphToProviderConfig(networkPeer *network_peer_api.GetNetworkPeeringRecordResponse) (ProviderConfig, error) {
-	//var rawConfig map[string]interface{}
-
-	//Unmarshal the provider config into a map
-	//err := json.Unmarshal(networkPeer.ProviderConfig, &rawConfig)
-	//if err != nil {
-	//	return ProviderConfig{}, err
-	//}
-
 	var newProviderConfig ProviderConfig
-
-	// Check for the existence of keys and unmarshal accordingly for aws and gcp config.
-	//if _, ok := rawConfig["aws_config"]; ok {
 	aws, err := networkPeer.AsAWS()
-	if err != nil {
+	if err == nil && aws.AWSConfigData.VpcId != "" {
+		newProviderConfig.AWSConfig = &AWSConfig{
+			ProviderId: types.StringValue(aws.ProviderId),
+			AccountId:  types.StringValue(aws.AWSConfigData.AccountId),
+			VpcId:      types.StringValue(aws.AWSConfigData.VpcId),
+			Cidr:       types.StringValue(aws.AWSConfigData.Cidr),
+			Region:     types.StringValue(aws.AWSConfigData.Region),
+		}
+		//newProviderConfig.AWSConfig.ProviderId = types.StringValue(aws.ProviderId)
+		//newProviderConfig.AWSConfig.AccountId = types.StringValue(aws.AWSConfigData.AccountId)
+		//newProviderConfig.AWSConfig.VpcId = types.StringValue(aws.AWSConfigData.VpcId)
+		//newProviderConfig.AWSConfig.Cidr = types.StringValue(aws.AWSConfigData.Cidr)
+		//newProviderConfig.AWSConfig.Region = types.StringValue(aws.AWSConfigData.Region)
+
+		return newProviderConfig, nil
+	} else if err != nil {
 		return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingAWSConfig, err)
 	}
+
 	log.Print("*************PAULO MORPH************", aws)
 
-	newProviderConfig.AWSConfig.ProviderId = types.StringValue(aws.ProviderId)
-	newProviderConfig.AWSConfig.AccountId = types.StringValue(aws.AWSConfigData.AccountId)
-	newProviderConfig.AWSConfig.VpcId = types.StringValue(aws.AWSConfigData.VpcId)
-	newProviderConfig.AWSConfig.Cidr = types.StringValue(aws.AWSConfigData.Cidr)
-	newProviderConfig.AWSConfig.Region = types.StringValue(aws.AWSConfigData.Region)
-
-	//} else if _, ok := rawConfig["gcp_config"]; ok {
 	gcp, err := networkPeer.AsGCP()
-	if err != nil {
+	if err == nil && gcp.GCPConfigData.ProjectId != "" {
+		newProviderConfig.GCPConfig = &GCPConfig{
+			ProviderId:     types.StringValue(gcp.ProviderId),
+			Cidr:           types.StringValue(gcp.GCPConfigData.Cidr),
+			ProjectId:      types.StringValue(gcp.GCPConfigData.ProjectId),
+			NetworkName:    types.StringValue(gcp.GCPConfigData.NetworkName),
+			ServiceAccount: types.StringValue(gcp.GCPConfigData.ServiceAccount),
+		}
+		//newProviderConfig.GCPConfig.ProjectId = types.StringValue(gcp.GCPConfigData.ProjectId)
+		//newProviderConfig.GCPConfig.NetworkName = types.StringValue(gcp.GCPConfigData.NetworkName)
+		//newProviderConfig.GCPConfig.Cidr = types.StringValue(gcp.GCPConfigData.Cidr)
+		//newProviderConfig.GCPConfig.ServiceAccount = types.StringValue(gcp.GCPConfigData.ServiceAccount)
+		//newProviderConfig.GCPConfig.ProviderId = types.StringValue(gcp.ProviderId)
+
+		return newProviderConfig, nil
+	} else if err != nil {
 		return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingGCPConfig, err)
 	}
-	newProviderConfig.GCPConfig.ProjectId = types.StringValue(gcp.GCPConfigData.ProjectId)
-	newProviderConfig.GCPConfig.NetworkName = types.StringValue(gcp.GCPConfigData.NetworkName)
-	newProviderConfig.GCPConfig.Cidr = types.StringValue(gcp.GCPConfigData.Cidr)
-	newProviderConfig.GCPConfig.ServiceAccount = types.StringValue(gcp.GCPConfigData.ServiceAccount)
-	newProviderConfig.GCPConfig.ProviderId = types.StringValue(gcp.ProviderId)
-	//}
 	return newProviderConfig, nil
 }
 
