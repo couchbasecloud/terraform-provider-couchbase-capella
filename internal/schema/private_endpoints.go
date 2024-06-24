@@ -11,13 +11,13 @@ import (
 
 // PrivateEndpoint represents a private endpoint resource.
 type PrivateEndpoint struct {
-	// EndpointId is the id of the bucket for which the collection needs to be created.
+	// EndpointId is the id of the private endpoint.
 	EndpointId types.String `tfsdk:"endpoint_id"`
 
 	// Status is the endpoint status.  Possible values are failed, linked, pending, pendingAcceptance, rejected and unrecognized.
 	Status types.String `tfsdk:"status"`
 
-	// ClusterId is the ID of the cluster for which the collection needs to be created.
+	// ClusterId is the ID of the cluster associated with the private endpoint.
 	ClusterId types.String `tfsdk:"cluster_id"`
 
 	// ProjectId is the ID of the project to which the Capella cluster belongs.

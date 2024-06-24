@@ -3,7 +3,7 @@ package schema
 import "github.com/hashicorp/terraform-plugin-framework/types"
 
 type AWSCommandRequest struct {
-	// ClusterId is the ID of the cluster for which the collection needs to be created.
+	// ClusterId is the ID of the cluster associated with the private endpoint.
 	ClusterId types.String `tfsdk:"cluster_id"`
 
 	// ProjectId is the ID of the project to which the Capella cluster belongs.
@@ -21,7 +21,7 @@ type AWSCommandRequest struct {
 }
 
 type AzureCommandRequest struct {
-	// ClusterId is the ID of the cluster for which the collection needs to be created.
+	// ClusterId is the ID of the cluster associated with the private endpoint.
 	ClusterId types.String `tfsdk:"cluster_id"`
 
 	// ProjectId is the ID of the project to which the Capella cluster belongs.
