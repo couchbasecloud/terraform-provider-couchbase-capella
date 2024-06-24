@@ -22,10 +22,17 @@ func NetworkPeerSchema() schema.Schema {
 			"cluster_id":      stringAttribute([]string{required, requiresReplace}),
 			"name":            stringAttribute([]string{required}),
 			"provider_type":   stringAttribute([]string{required}),
+			//"provider_type": schema.StringAttribute{
+			//	Required: true,
+			//	PlanModifiers: []planmodifier.String{
+			//		stringplanmodifier.UseStateForUnknown(),
+			//	},
+			//},
 			"commands": schema.SetAttribute{
 				Computed:    true,
 				ElementType: types.StringType,
 			},
+			//"commands": stringListAttribute(computed),
 			"provider_config": schema.SingleNestedAttribute{
 				//	Description: "The 'accountId', 'vpcId', 'region', and 'cidr' fields are required for AWS VPC peering. " +
 				//		"For GCP, the 'networkName', 'projectId', 'serviceAccount', and 'cidr' fields are required for VPC peering. ",

@@ -31,7 +31,7 @@ type CreateNetworkPeeringRequest struct {
 	//// GCPConfig GCP config data required to establish a VPC peering relationship. Refer to the docs for other limitations to GCP VPC Peering - [ref](https://cloud.google.com/vpc/docs/vpc-peering).
 	//GCPConfig GCPConfig `json:"gcpConfig"`
 
-	//// ProviderType Type of the cloud provider for which the peering connection is created. Which are- 1. aws 2. gcp
+	// ProviderType Type of the cloud provider for which the peering connection is created. Which are- 1. aws 2. gcp
 	ProviderType string `json:"providerType"`
 }
 
@@ -61,6 +61,9 @@ type GetNetworkPeeringRecordResponse struct {
 
 	// Name is the name of the peering relationship.
 	Name string `json:"name"`
+
+	// ProviderType Type of the cloud provider for which the peering connection is created. Which are- 1. aws 2. gcp
+	ProviderType string `json:"providerType"`
 
 	// ProviderConfig This provides details about the configuration and the ID of the VPC peer on AWS, GCP.
 	ProviderConfig json.RawMessage `json:"providerConfig"`
@@ -152,15 +155,15 @@ func (t GetNetworkPeeringRecordResponse) AsGCP() (GCP, error) {
 //}
 
 // FromAWSConfigData overwrites any union data inside the CreateNetworkPeeringRequest_ProviderConfig as the provided AWSConfigData
-func (t CreateNetworkPeeringRequest) FromAWSConfigData(v AWSConfigData) error {
-	b, err := json.Marshal(v)
-	t.ProviderConfig = b
-	return err
-}
-
-// FromGCPConfigData overwrites any union data inside the CreateNetworkPeeringRequest_ProviderConfig as the provided GCPConfigData
-func (t CreateNetworkPeeringRequest) FromGCPConfigData(v GCPConfigData) error {
-	b, err := json.Marshal(v)
-	t.ProviderConfig = b
-	return err
-}
+//func (t CreateNetworkPeeringRequest) FromAWSConfigData(v AWSConfigData) error {
+//	b, err := json.Marshal(v)
+//	t.ProviderConfig = b
+//	return err
+//}
+//
+//// FromGCPConfigData overwrites any union data inside the CreateNetworkPeeringRequest_ProviderConfig as the provided GCPConfigData
+//func (t CreateNetworkPeeringRequest) FromGCPConfigData(v GCPConfigData) error {
+//	b, err := json.Marshal(v)
+//	t.ProviderConfig = b
+//	return err
+//}

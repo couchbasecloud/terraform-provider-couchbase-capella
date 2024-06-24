@@ -68,44 +68,91 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 		ProviderType: plan.ProviderType.ValueString(),
 	}
 
-	switch plan.ProviderType.ValueString() {
-	case "aws":
-		if plan.ProviderConfig.AWSConfig != nil {
-			awsConfig := network_peer_api.AWSConfigData{
-				AccountId: plan.ProviderConfig.AWSConfig.AccountId.ValueString(),
-				Cidr:      plan.ProviderConfig.AWSConfig.Cidr.ValueString(),
-				Region:    plan.ProviderConfig.AWSConfig.Region.ValueString(),
-				VpcId:     plan.ProviderConfig.AWSConfig.VpcId.ValueString(),
-			}
-
-			err := networkPeerRequest.FromAWSConfigData(awsConfig)
-			if err != nil {
-				resp.Diagnostics.AddError(
-					"Error creating network peer for AWS",
-					errors.ErrConvertingProviderConfig.Error(),
-				)
-				return
-			}
+	//switch plan.ProviderType.ValueString() {
+	//case "aws":
+	//	if plan.ProviderConfig.AWSConfig != nil {
+	//		awsConfig := network_peer_api.AWSConfigData{
+	//			AccountId: plan.ProviderConfig.AWSConfig.AccountId.ValueString(),
+	//			Cidr:      plan.ProviderConfig.AWSConfig.Cidr.ValueString(),
+	//			Region:    plan.ProviderConfig.AWSConfig.Region.ValueString(),
+	//			VpcId:     plan.ProviderConfig.AWSConfig.VpcId.ValueString(),
+	//		}
+	//
+	//		err := networkPeerRequest.FromAWSConfigData(awsConfig)
+	//		if err != nil {
+	//			resp.Diagnostics.AddError(
+	//				"Error creating network peer for AWS",
+	//				errors.ErrConvertingProviderConfig.Error(),
+	//			)
+	//			return
+	//		}
+	//	}
+	//case "gcp":
+	//	if plan.ProviderConfig.GCPConfig != nil {
+	//		gcpConfig := network_peer_api.GCPConfigData{
+	//			NetworkName:    plan.ProviderConfig.GCPConfig.NetworkName.ValueString(),
+	//			Cidr:           plan.ProviderConfig.GCPConfig.Cidr.ValueString(),
+	//			ProjectId:      plan.ProviderConfig.GCPConfig.ProjectId.ValueString(),
+	//			ServiceAccount: plan.ProviderConfig.GCPConfig.ServiceAccount.ValueString(),
+	//		}
+	//
+	//		err := networkPeerRequest.FromGCPConfigData(gcpConfig)
+	//		if err != nil {
+	//			resp.Diagnostics.AddError(
+	//				"Error creating network peer for GCP",
+	//				errors.ErrConvertingProviderConfig.Error(),
+	//			)
+	//			return
+	//		}
+	//	}
+	//}
+	//Check if AWSConfig or GCPConfig is not nil and marshal it
+	if plan.ProviderConfig.AWSConfig != nil {
+		awsConfigForJSON := network_peer_api.AWSConfigData{
+			AccountId: plan.ProviderConfig.AWSConfig.AccountId.ValueString(),
+			Cidr:      plan.ProviderConfig.AWSConfig.Cidr.ValueString(),
+			Region:    plan.ProviderConfig.AWSConfig.Region.ValueString(),
+			VpcId:     plan.ProviderConfig.AWSConfig.VpcId.ValueString(),
 		}
-	case "gcp":
-		if plan.ProviderConfig.GCPConfig != nil {
-			gcpConfig := network_peer_api.GCPConfigData{
-				NetworkName:    plan.ProviderConfig.GCPConfig.NetworkName.ValueString(),
-				Cidr:           plan.ProviderConfig.GCPConfig.Cidr.ValueString(),
-				ProjectId:      plan.ProviderConfig.GCPConfig.ProjectId.ValueString(),
-				ServiceAccount: plan.ProviderConfig.GCPConfig.ServiceAccount.ValueString(),
-			}
 
-			err := networkPeerRequest.FromGCPConfigData(gcpConfig)
-			if err != nil {
-				resp.Diagnostics.AddError(
-					"Error creating network peer for GCP",
-					errors.ErrConvertingProviderConfig.Error(),
-				)
-				return
-			}
+		providerConfigJSON, err := json.Marshal(awsConfigForJSON)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error creating network peer for AWS",
+				errors.ErrConvertingProviderConfig.Error(),
+			)
+			return
 		}
+		//providerConfigJSONString := string(providerConfigJSON)
+		log.Print("*********Paulomee ********** providerConfigJSON ", providerConfigJSON)
+
+		//test := json.RawMessage(providerConfigJSON)
+		//log.Print("*********Paulomee ********** test ", test)
+
+		//networkPeerRequest.ProviderConfig = test
+		networkPeerRequest.ProviderConfig = providerConfigJSON
+		plan.ProviderConfig.GCPConfig = nil
+
+	} else if plan.ProviderConfig.GCPConfig != nil {
+		gcpConfigJSON := network_peer_api.GCPConfigData{
+			NetworkName:    plan.ProviderConfig.GCPConfig.NetworkName.ValueString(),
+			ProjectId:      plan.ProviderConfig.GCPConfig.ProviderId.ValueString(),
+			Cidr:           plan.ProviderConfig.GCPConfig.Cidr.ValueString(),
+			ServiceAccount: plan.ProviderConfig.GCPConfig.ServiceAccount.ValueString(),
+		}
+		providerConfigJSON, err := json.Marshal(gcpConfigJSON)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error creating network peer for GCP",
+				errors.ErrConvertingProviderConfig.Error(),
+			)
+			return
+		}
+		networkPeerRequest.ProviderConfig = providerConfigJSON
+		plan.ProviderConfig.AWSConfig = nil
 	}
+	log.Print("*********PAULO********** networkPeerRequest", networkPeerRequest)
+
 	log.Print("*********PAULO********** networkPeerRequest", networkPeerRequest)
 
 	var (
@@ -126,7 +173,7 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 	response, err := n.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
-		nil,
+		networkPeerRequest,
 		n.Token,
 		nil,
 	)
@@ -141,6 +188,8 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 	networkPeerResponse := network_peer_api.GetNetworkPeeringRecordResponse{}
 	err = json.Unmarshal(response.Body, &networkPeerResponse)
 	if err != nil {
+		log.Print("Paulomee 2")
+
 		resp.Diagnostics.AddError(
 			"Error creating network peer",
 			errorMessageWhileNetworkPeerCreation+"error during unmarshalling:"+err.Error(),
@@ -314,9 +363,6 @@ func (n *NetworkPeer) validateCreateNetworkPeer(plan providerschema.NetworkPeer)
 	if plan.ClusterId.IsNull() {
 		return errors.ErrClusterIdMissing
 	}
-	if plan.Id.IsNull() {
-		return errors.ErrPeerIdMissing
-	}
 
 	return n.validateNetworkPeerAttributesTrimmed(plan)
 }
@@ -337,7 +383,7 @@ func initializeNetworkPeerPlanId(plan providerschema.NetworkPeer, id string) pro
 	plan.Id = types.StringValue(id)
 
 	if plan.Commands.IsNull() || plan.Commands.IsUnknown() {
-		plan.Commands = types.SetNull(types.ObjectType{})
+		plan.Commands = types.SetNull(types.StringType)
 	}
 	types.SetNull(types.SetType{})
 
@@ -363,7 +409,7 @@ func (n *NetworkPeer) retrieveNetworkPeer(ctx context.Context, organizationId, p
 		return nil, fmt.Errorf("%s: %w", errors.ErrUnableToConvertAuditData, err)
 	}
 
-	//refreshedState, err := providerschema.NewNetworkPeer(networkPeerResp, organizationId, projectId, clusterId, providerschema.MorphCommands(networkPeerResp.Commands), auditObj)
+	//refreshedState, err := providerschema.NewNetworkPeer(ctx, networkPeerResp, organizationId, projectId, clusterId, providerschema.MorphCommands(networkPeerResp.Commands), auditObj)
 	refreshedState, err := providerschema.NewNetworkPeer(ctx, networkPeerResp, organizationId, projectId, clusterId, auditObj)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrRefreshingState, err)
@@ -391,6 +437,27 @@ func (n *NetworkPeer) getNetworkPeer(ctx context.Context, organizationId, projec
 	err = json.Unmarshal(response.Body, &networkResp)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
+	}
+
+	awsConfig := network_peer_api.AWSConfigData{}
+	err = json.Unmarshal(networkResp.ProviderConfig, &awsConfig)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingAWSConfigResponse, err)
+	}
+
+	// If err is nil, it means that ProviderConfig could be unmarshalled into an AWSConfig struct
+	if err == nil {
+		networkResp.ProviderType = "aws"
+	} else { //else check for GCPConfig
+		gcpConfig := network_peer_api.GCPConfigData{}
+		err = json.Unmarshal(networkResp.ProviderConfig, &gcpConfig)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingGCPConfigResponse, err)
+		}
+		// If err is nil, it means that ProviderConfig could be unmarshalled into a GCPConfig struct
+		if err == nil {
+			networkResp.ProviderType = "gcp"
+		}
 	}
 
 	return &networkResp, nil

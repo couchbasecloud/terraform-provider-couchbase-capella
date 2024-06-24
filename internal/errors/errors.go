@@ -69,8 +69,14 @@ var (
 	// ErrMarshallingPayload is returned when a payload has failed to marshal into a request body.
 	ErrMarshallingPayload = errors.New("failed to marshal payload")
 
-	// ErrUnmarshallingResponse is returned when a HTTP response failrf to unmarshal.
+	// ErrUnmarshallingResponse is returned when a HTTP response failed to unmarshal.
 	ErrUnmarshallingResponse = errors.New("failed to unmarshal response")
+
+	// ErrUnmarshallingAWSConfigResponse is returned when a HTTP response failed to unmarshal.
+	ErrUnmarshallingAWSConfigResponse = errors.New("failed to unmarshal aws config response")
+
+	// ErrUnmarshallingGCPConfigResponse is returned when a HTTP response failed to unmarshal.
+	ErrUnmarshallingGCPConfigResponse = errors.New("failed to unmarshal GCP config response")
 
 	// ErrConstructingRequest is returned when a HTTP.NewRequest has failed.
 	ErrConstructingRequest = errors.New("failed to construct request")

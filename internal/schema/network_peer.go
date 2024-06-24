@@ -179,15 +179,15 @@ type NetworkPeerData struct {
 	Id types.String `tfsdk:"id"`
 
 	// Commands Commands contains the list of commands that the user must execute in order to complete the association of the network.
-	Commands types.List `tfsdk:"commands"`
+	//Commands types.List `tfsdk:"commands"`
 
 	// Name is the Name of the peering relationship.
 	Name types.String `tfsdk:"name"`
 
-	////ProviderType is the type of the cloud provider for which the peering connection is created. Which are-
-	////     1. aws
-	////     2. gcp
-	//ProviderType types.String `tfsdk:"provider_type"`
+	//ProviderType is the type of the cloud provider for which the peering connection is created. Which are-
+	//     1. aws
+	//     2. gcp
+	ProviderType types.String `tfsdk:"provider_type"`
 
 	// ProviderConfig This provides details about the configuration and the ID of the VPC peer on AWS, GCP.
 	ProviderConfig ProviderConfig `tfsdk:"provider_config"`
@@ -219,7 +219,7 @@ func (n *NetworkPeer) Validate() (map[Attr]string, error) {
 }
 
 // NewNetworkPeer create new network peer object.
-// func NewNetworkPeer(networkPeer *network_peer_api.GetNetworkPeeringRecordResponse, organizationId, projectId, clusterId string, commands []types.String, auditObject basetypes.ObjectValue) (*NetworkPeer, error) {
+// func NewNetworkPeer(ctx context.Context, networkPeer *network_peer_api.GetNetworkPeeringRecordResponse, organizationId, projectId, clusterId string, commands []types.String, auditObject basetypes.ObjectValue) (*NetworkPeer, error) {
 func NewNetworkPeer(ctx context.Context, networkPeer *network_peer_api.GetNetworkPeeringRecordResponse, organizationId, projectId, clusterId string, auditObject basetypes.ObjectValue) (*NetworkPeer, error) {
 	newNetworkPeer := NetworkPeer{
 		Id:             types.StringValue(networkPeer.Id.String()),
@@ -227,10 +227,16 @@ func NewNetworkPeer(ctx context.Context, networkPeer *network_peer_api.GetNetwor
 		ProjectId:      types.StringValue(projectId),
 		ClusterId:      types.StringValue(clusterId),
 		Name:           types.StringValue(networkPeer.Name),
-		Audit:          auditObject,
+		//ProviderType:   types.StringValue(networkPeer.ProviderType),
+		Audit: auditObject,
 		//Commands:       commands,
 	}
-
+	log.Print("****PDE TYPE****", newNetworkPeer.ProviderType)
+	if networkPeer.ProviderType == "aws" {
+		newNetworkPeer.ProviderType = types.StringValue("aws")
+	} else if networkPeer.ProviderType == "gcp" {
+		newNetworkPeer.ProviderType = types.StringValue("gcp")
+	}
 	//newNetworkPeer.Commands = MorphCommands(networkPeer.Commands)
 
 	newProviderConfig, err := morphToProviderConfig(networkPeer)
@@ -265,6 +271,7 @@ func NewNetworkPeer(ctx context.Context, networkPeer *network_peer_api.GetNetwor
 	//	return nil, fmt.Errorf("%s: %w", errors.ErrConvertingProviderConfig, err)
 	//}
 	//newNetworkPeer.ProviderConfig = *newConfig
+	// Convert []string to types.Set of types.String
 
 	return &newNetworkPeer, nil
 }
@@ -352,24 +359,25 @@ func NewNetworkPeerData(networkPeer *network_peer_api.GetNetworkPeeringRecordRes
 		Id:   types.StringValue(networkPeer.Id.String()),
 		Name: types.StringValue(networkPeer.Name),
 		//Commands:       commands,
-		Audit: auditObject,
+		ProviderType: types.StringValue(networkPeer.ProviderType),
+		Audit:        auditObject,
 		Status: PeeringStatus{
 			State:     types.StringValue(*networkPeer.Status.State),
 			Reasoning: types.StringValue(*networkPeer.Status.Reasoning),
 		},
 	}
 
-	var newCommand []attr.Value
-	for _, command := range networkPeer.Commands {
-		newCommand = append(newCommand, types.StringValue(command))
-	}
+	//var newCommand []attr.Value
+	//for _, command := range networkPeer.Commands {
+	//	newCommand = append(newCommand, types.StringValue(command))
+	//}
 
-	commands, diags := types.ListValue(types.StringType, newCommand)
-	if diags.HasError() {
-		return &NetworkPeerData{}, fmt.Errorf("error while converting commands")
-	}
-
-	newNetworkPeerData.Commands = commands
+	//commands, diags := types.ListValue(types.StringType, newCommand)
+	//if diags.HasError() {
+	//	return &NetworkPeerData{}, fmt.Errorf("error while converting commands")
+	//}
+	//
+	//newNetworkPeerData.Commands = commands
 
 	//var newCommands []types.String
 	//for _, command := range networkPeer.Commands {
