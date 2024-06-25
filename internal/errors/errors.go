@@ -170,4 +170,16 @@ var (
 
 	// ErrOnoffStateCannotBeEmpty is returned when cluster on/off state is required for a request but was not included.
 	ErrOnoffStateCannotBeEmpty = errors.New("on/off state cannot be empty, please mention the state in which you want your cluster to be")
+
+	// ErrEndpointIdMissing is returned when an expected endpoint ID was not found after an import.
+	ErrEndpointIdMissing = errors.New("endpoint ID is missing or was passed incorrectly, please check provider documentation for syntax")
+
+	// ErrVPCIDMissing is returned when an expected AWS VPC ID was not found after an import.
+	ErrVPCIDMissing = errors.New("AWS VPC ID is missing or was passed incorrectly, please check provider documentation for syntax")
+
+	// ErrVirtualNetworkMissing is returned when an expected Azure virtual network was not found after an import.
+	ErrVirtualNetworkMissing = errors.New("Azure virtual network is missing or was passed incorrectly, please check provider documentation for syntax")
+
+	// ErrResourceGroupName is returned when an expected Azure resource group was not found after an import.
+	ErrResourceGroupName = errors.New("Azure resource group is missing or was passed incorrectly, please check provider documentation for syntax")
 )

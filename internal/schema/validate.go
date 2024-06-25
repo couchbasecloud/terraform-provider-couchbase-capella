@@ -19,6 +19,7 @@ var (
 		"scope_name":      ScopeName,
 		"collection_name": CollectionName,
 		"app_service_id":  AppServiceId,
+		"endpoint_id":     EndpointId,
 	}
 )
 
