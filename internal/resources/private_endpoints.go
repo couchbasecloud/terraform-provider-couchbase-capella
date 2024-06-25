@@ -39,9 +39,9 @@ func (p *PrivateEndpoint) Metadata(_ context.Context, req resource.MetadataReque
 func (p *PrivateEndpoint) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"organization_id": stringAttribute([]string{required}),
-			"project_id":      stringAttribute([]string{required}),
-			"cluster_id":      stringAttribute([]string{required}),
+			"organization_id": stringAttribute([]string{required, requiresReplace}),
+			"project_id":      stringAttribute([]string{required, requiresReplace}),
+			"cluster_id":      stringAttribute([]string{required, requiresReplace}),
 			"endpoint_id":     stringAttribute([]string{required}),
 			"status":          stringAttribute([]string{computed}),
 		},
