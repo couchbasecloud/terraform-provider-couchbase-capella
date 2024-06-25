@@ -119,8 +119,8 @@ terraform plan
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become
 │ incompatible with published releases.
 ╵
-data.couchbase-capella_private_endpoint_service.service_stats: Reading...
-data.couchbase-capella_private_endpoint_service.service_stats: Read complete after 0s
+data.couchbase-capella_private_endpoint_service.service_status: Reading...
+data.couchbase-capella_private_endpoint_service.service_status: Read complete after 0s
 
 Changes to Outputs:
   + existing_auditlogexport = {
