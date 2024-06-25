@@ -171,12 +171,12 @@ func (p *PrivateEndpointService) Read(ctx context.Context, req resource.ReadRequ
 	}
 }
 
-// Update there is not update API for private endpoint service.
+// Update there is no update API for private endpoint service.
 func (p *PrivateEndpointService) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	resp.Diagnostics.AddError(
-		"No update API for private endpoint service",
-		"No update API for private endpoint service",
-	)
+	// From https://developer.hashicorp.com/terraform/plugin/framework/resources/update#caveats
+	// If the resource does not support modification and should always be recreated on configuration value updates,
+	// the Update logic can be left empty and ensure all configurable schema attributes
+	// implement the resource.RequiresReplace() attribute plan modifier.
 }
 
 func (p *PrivateEndpointService) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

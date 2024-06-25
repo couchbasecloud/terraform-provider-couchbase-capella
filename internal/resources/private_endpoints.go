@@ -164,10 +164,10 @@ func (p *PrivateEndpoint) Read(ctx context.Context, req resource.ReadRequest, re
 
 // Update there is no update API so returns an error.
 func (p *PrivateEndpoint) Update(_ context.Context, _ resource.UpdateRequest, resp *resource.UpdateResponse) {
-	resp.Diagnostics.AddError(
-		"No update API for a private endpoint",
-		"No update API for a private endpoint",
-	)
+	// From https://developer.hashicorp.com/terraform/plugin/framework/resources/update#caveats
+	// If the resource does not support modification and should always be recreated on configuration value updates,
+	// the Update logic can be left empty and ensure all configurable schema attributes
+	// implement the resource.RequiresReplace() attribute plan modifier.
 }
 
 // Delete rejects a private endpoint on the CSP.
