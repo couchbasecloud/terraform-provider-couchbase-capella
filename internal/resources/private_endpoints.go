@@ -42,7 +42,7 @@ func (p *PrivateEndpoint) Schema(_ context.Context, _ resource.SchemaRequest, re
 			"organization_id": stringAttribute([]string{required, requiresReplace}),
 			"project_id":      stringAttribute([]string{required, requiresReplace}),
 			"cluster_id":      stringAttribute([]string{required, requiresReplace}),
-			"endpoint_id":     stringAttribute([]string{required}),
+			"endpoint_id":     stringAttribute([]string{required, requiresReplace}),
 			"status":          stringAttribute([]string{computed}),
 		},
 	}
