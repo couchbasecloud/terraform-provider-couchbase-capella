@@ -35,21 +35,16 @@ variable "aws_config" {
   })
 }
 
+# Reference variable for GCP Config to create a network peer on GCP and use these in the create_network_peer.tf file under provider_config.
 # variable "gcp_config" {
 #   description = "GCP configuration details useful for network peer creation"
 #
 #   type = object({
-#     network_name    = string
-#     project_id      = string
+#     network_name    = optional(string)
+#     project_id      = optional(string)
 #     cidr            = string
-#     service_account = string
+#     service_account = optional(string)
 #   })
-# }
-
-# locals {
-#   config_check = (var.aws_config != null && var.gcp_config != null) ?
-#     error("Only one of aws_config or gcp_config should be provided") :
-#     (var.aws_config != null ? var.aws_config : var.gcp_config)
 # }
 
 variable "host" {

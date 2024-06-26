@@ -14,3 +14,11 @@ aws_config = {
     region     = "us-east-1"
     cidr       = "10.0.0.0/16"
 }
+
+# Example GCP Config for creating network peer on GCP. Use this if you want to create a network peer for GCP.
+# gcp_config = {
+#     project_id = "rock-galaxy-123456"
+#     network_name  = "cc-ffffffff-aaaa-1414-eeee-000000000000"
+#     service_account = "service-account-name@project-id.iam.gserviceaccount.com"
+#     cidr       = "10.0.0.0/16"
+# }
