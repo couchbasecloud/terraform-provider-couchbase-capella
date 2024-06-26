@@ -3,7 +3,6 @@ package datasources
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -95,7 +94,6 @@ func (n *NetworkPeers) Read(ctx context.Context, req datasource.ReadRequest, res
 		return
 	}
 
-	log.Print("***********************RESPONSE******************", response)
 	for i := range response {
 		networkPeer := response[i]
 		audit := providerschema.NewCouchbaseAuditData(networkPeer.Audit)

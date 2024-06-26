@@ -14,13 +14,12 @@ func NetworkPeerSchema() schema.Schema {
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"id":   computedStringAttribute,
-						"name": computedStringAttribute,
-						//"commands": computedListAttribute,
+						"id":            computedStringAttribute,
+						"name":          computedStringAttribute,
+						"provider_type": computedStringAttribute,
 						"provider_config": schema.SingleNestedAttribute{
 							Computed: true,
 							Attributes: map[string]schema.Attribute{
-								//"provider_id": computedStringAttribute,
 								"aws_config": schema.SingleNestedAttribute{
 									Computed: true,
 									Attributes: map[string]schema.Attribute{

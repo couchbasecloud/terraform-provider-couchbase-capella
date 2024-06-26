@@ -25,12 +25,6 @@ type CreateNetworkPeeringRequest struct {
 	// ProviderConfig The config data for a peering relationship for a cluster on AWS, GCP.
 	ProviderConfig json.RawMessage `json:"providerConfig"`
 
-	//// AWSConfig AWS config data required to establish a VPC peering relationship. Refer to the docs for other limitations to AWS VPC Peering - [ref](https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html#vpc-peering-limitations).
-	//AWSConfig AWSConfig `json:"awsConfig"`
-	//
-	//// GCPConfig GCP config data required to establish a VPC peering relationship. Refer to the docs for other limitations to GCP VPC Peering - [ref](https://cloud.google.com/vpc/docs/vpc-peering).
-	//GCPConfig GCPConfig `json:"gcpConfig"`
-
 	// ProviderType Type of the cloud provider for which the peering connection is created. Which are- 1. aws 2. gcp
 	ProviderType string `json:"providerType"`
 }
@@ -56,7 +50,6 @@ type GetNetworkPeeringRecordResponse struct {
 	Commands []string `json:"commands"`
 
 	// Id The ID is the unique UUID generated when a VPC record is created.
-	//TODO: check if string
 	Id uuid.UUID `json:"id"`
 
 	// Name is the name of the peering relationship.
@@ -68,12 +61,7 @@ type GetNetworkPeeringRecordResponse struct {
 	// ProviderConfig This provides details about the configuration and the ID of the VPC peer on AWS, GCP.
 	ProviderConfig json.RawMessage `json:"providerConfig"`
 
-	//ProviderConfig ProviderConfig `json:"providerConfig"`
-
-	//AWSConfig *AWSConfig `json:"awsConfig"`
-	//
-	//GCPConfig *GCPConfig `json:"gcpConfig"`
-
+	// PeeringStatus communicates the state of the VPC peering relationship. It is the state and reasoning for VPC peer.
 	Status PeeringStatus `json:"status"`
 }
 
@@ -114,7 +102,8 @@ type AWSConfigData struct {
 	VpcId string `json:"vpcId"`
 }
 
-// GCPConfigData GCP config data required to establish a VPC peering relationship. Refer to the docs for other limitations to GCP VPC Peering - [ref](https://cloud.google.com/vpc/docs/vpc-peering).
+// GCPConfigData GCP config data required to establish a VPC peering relationship.
+// Refer to the docs for other limitations to GCP VPC Peering - [ref](https://cloud.google.com/vpc/docs/vpc-peering).
 type GCPConfigData struct {
 	// Cidr The GCP VPC CIDR block of network in which your application runs. This cannot overlap with your Capella CIDR Block.
 	Cidr string `json:"cidr"`
@@ -146,24 +135,3 @@ func (t GetNetworkPeeringRecordResponse) AsGCP() (GCP, error) {
 	err := json.Unmarshal(t.ProviderConfig, &body)
 	return body, err
 }
-
-// AsAWSConfigData returns the union data inside the CreateNetworkPeeringRequest as a AWSConfigData
-//func (t CreateNetworkPeeringRequest) AsAWSConfigData() (AWSConfigData, error) {
-//	var body AWSConfigData
-//	err := json.Unmarshal(t.ProviderConfig, &body)
-//	return body, err
-//}
-
-// FromAWSConfigData overwrites any union data inside the CreateNetworkPeeringRequest_ProviderConfig as the provided AWSConfigData
-//func (t CreateNetworkPeeringRequest) FromAWSConfigData(v AWSConfigData) error {
-//	b, err := json.Marshal(v)
-//	t.ProviderConfig = b
-//	return err
-//}
-//
-//// FromGCPConfigData overwrites any union data inside the CreateNetworkPeeringRequest_ProviderConfig as the provided GCPConfigData
-//func (t CreateNetworkPeeringRequest) FromGCPConfigData(v GCPConfigData) error {
-//	b, err := json.Marshal(v)
-//	t.ProviderConfig = b
-//	return err
-//}
