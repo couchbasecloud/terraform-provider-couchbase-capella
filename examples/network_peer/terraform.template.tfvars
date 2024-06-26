@@ -16,6 +16,10 @@ aws_config = {
 }
 
 # Example GCP Config for creating network peer on GCP. Use this if you want to create a network peer for GCP.
+# network_peer = {
+#   name               = "VPCPeerTFTestGCP"
+#   provider_type      = "gcp"
+# }
 # gcp_config = {
 #     project_id = "rock-galaxy-123456"
 #     network_name  = "cc-ffffffff-aaaa-1414-eeee-000000000000"
