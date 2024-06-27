@@ -37,9 +37,9 @@ func NetworkPeerSchema() schema.Schema {
 					"aws_config": schema.SingleNestedAttribute{
 						Optional: true,
 						Attributes: map[string]schema.Attribute{
-							"account_id":  stringAttribute([]string{required}),
-							"vpc_id":      stringAttribute([]string{required}),
-							"region":      stringAttribute([]string{required}),
+							"account_id":  stringAttribute([]string{optional}),
+							"vpc_id":      stringAttribute([]string{optional}),
+							"region":      stringAttribute([]string{optional}),
 							"cidr":        stringAttribute([]string{required}),
 							"provider_id": stringAttribute([]string{computed}),
 						},
@@ -48,9 +48,9 @@ func NetworkPeerSchema() schema.Schema {
 						Optional: true,
 						Attributes: map[string]schema.Attribute{
 							"cidr":            stringAttribute([]string{required}),
-							"network_name":    stringAttribute([]string{required}),
-							"project_id":      stringAttribute([]string{required}),
-							"service_account": stringAttribute([]string{required}),
+							"network_name":    stringAttribute([]string{optional}),
+							"project_id":      stringAttribute([]string{optional}),
+							"service_account": stringAttribute([]string{optional}),
 							"provider_id":     stringAttribute([]string{computed}),
 						},
 					},

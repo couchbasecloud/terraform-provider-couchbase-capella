@@ -83,6 +83,14 @@ type AWSConfig struct {
 	ProviderId types.String `tfsdk:"provider_id"`
 }
 
+//// GCP
+//type GCP struct {
+//	// ProviderId The ID of the VPC peer on GCP.
+//	ProviderId types.String `tfsdk:"provider_id"`
+//
+//	GCPConfig GCPConfig `tfsdk:"gcp_config"`
+//}
+
 // GCPConfig GCP config data required to establish a VPC peering relationship.
 //
 //	Refer to the docs for other limitations to GCP VPC Peering - [ref](https://cloud.google.com/vpc/docs/vpc-peering).
@@ -103,7 +111,7 @@ type GCPConfig struct {
 	// [Reference](https://cloud.google.com/iam/docs/creating-managing-service-accounts#creating)
 	ServiceAccount types.String `tfsdk:"service_account"`
 
-	// ProviderId The ID of the VPC peer on GCP.
+	//// ProviderId The ID of the VPC peer on GCP.
 	ProviderId types.String `tfsdk:"provider_id"`
 }
 
@@ -190,6 +198,8 @@ func NewNetworkPeer(ctx context.Context, networkPeer *network_peer_api.GetNetwor
 	}
 	newNetworkPeer.ProviderConfig = &newProviderConfig
 
+	log.Print("************* PDE PROV CONFIG IN NewNetworkPeer", newNetworkPeer.ProviderConfig)
+
 	if networkPeer.Status.State != nil {
 		state := *networkPeer.Status.State
 		reasoning := *networkPeer.Status.Reasoning
@@ -217,7 +227,9 @@ func NewNetworkPeer(ctx context.Context, networkPeer *network_peer_api.GetNetwor
 func morphToProviderConfig(networkPeer *network_peer_api.GetNetworkPeeringRecordResponse) (ProviderConfig, error) {
 	var newProviderConfig ProviderConfig
 	aws, err := networkPeer.AsAWS()
+	log.Print("*************PAULO MORPH outside aws condition************", err)
 	if err == nil && aws.AWSConfigData.VpcId != "" {
+		log.Print("*************PAULO MORPH inside aws condition************")
 		newProviderConfig.AWSConfig = &AWSConfig{
 			ProviderId: types.StringValue(aws.ProviderId),
 			AccountId:  types.StringValue(aws.AWSConfigData.AccountId),
@@ -225,7 +237,6 @@ func morphToProviderConfig(networkPeer *network_peer_api.GetNetworkPeeringRecord
 			Cidr:       types.StringValue(aws.AWSConfigData.Cidr),
 			Region:     types.StringValue(aws.AWSConfigData.Region),
 		}
-
 		return newProviderConfig, nil
 	} else if err != nil {
 		return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingAWSConfig, err)
@@ -234,6 +245,7 @@ func morphToProviderConfig(networkPeer *network_peer_api.GetNetworkPeeringRecord
 	log.Print("*************PAULO MORPH************", aws)
 
 	gcp, err := networkPeer.AsGCP()
+	log.Print("*************PAULO MORPH************", gcp)
 	if err == nil && gcp.GCPConfigData.ProjectId != "" {
 		newProviderConfig.GCPConfig = &GCPConfig{
 			ProviderId:     types.StringValue(gcp.ProviderId),
@@ -242,7 +254,7 @@ func morphToProviderConfig(networkPeer *network_peer_api.GetNetworkPeeringRecord
 			NetworkName:    types.StringValue(gcp.GCPConfigData.NetworkName),
 			ServiceAccount: types.StringValue(gcp.GCPConfigData.ServiceAccount),
 		}
-
+		log.Print("*************PAULO MORPH newProviderConfig************", newProviderConfig)
 		return newProviderConfig, nil
 	} else if err != nil {
 		return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingGCPConfig, err)

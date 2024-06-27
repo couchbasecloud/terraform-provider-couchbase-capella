@@ -46,3 +46,7 @@ variable "aws_config" {
 #     service_account = optional(string)
 #   })
 # }
+
+variable "host" {
+  description = "The Host URL of Couchbase Cloud."
+}

@@ -149,21 +149,21 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 
 	// Set the ProviderType based on the request
-	if networkPeerRequest.ProviderType == "aws" {
-		networkPeerResponse.ProviderType = "aws"
-	} else if networkPeerRequest.ProviderType == "gcp" {
-		networkPeerResponse.ProviderType = "gcp"
-	}
+	//if networkPeerRequest.ProviderType == "aws" {
+	//	networkPeerResponse.ProviderType = "aws"
+	//} else if networkPeerRequest.ProviderType == "gcp" {
+	//	networkPeerResponse.ProviderType = "gcp"
+	//}
 
 	log.Print("***********PAULOMEE PROVIDER TYPE************", networkPeerResponse.ProviderType)
 
-	diags = resp.State.Set(ctx, initializeNetworkPeerPlanId(plan, networkPeerResponse.Id.String(), networkPeerResponse.ProviderType))
+	diags = resp.State.Set(ctx, initializeNetworkPeerPlanId(plan, networkPeerResponse.Id.String()))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	refreshedState, err := n.retrieveNetworkPeer(ctx, organizationId, projectId, clusterId, networkPeerResponse.Id.String(), networkPeerResponse.ProviderType)
+	refreshedState, err := n.retrieveNetworkPeer(ctx, organizationId, projectId, clusterId, networkPeerResponse.Id.String())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading network peering service status",
@@ -172,6 +172,8 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 
 		return
 	}
+
+	refreshedState.ProviderType = plan.ProviderType
 
 	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
@@ -204,7 +206,7 @@ func (n *NetworkPeer) Read(ctx context.Context, req resource.ReadRequest, resp *
 		peerId         = IDs[providerschema.Id]
 	)
 
-	refreshedState, err := n.retrieveNetworkPeer(ctx, organizationId, projectId, clusterId, peerId, state.ProviderType.String())
+	refreshedState, err := n.retrieveNetworkPeer(ctx, organizationId, projectId, clusterId, peerId)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -219,6 +221,16 @@ func (n *NetworkPeer) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 		return
 	}
+
+	if state.ProviderConfig != nil && state.ProviderConfig.AWSConfig != nil {
+		state.ProviderType = types.StringValue("aws")
+	} else if state.ProviderConfig != nil && state.ProviderConfig.GCPConfig != nil {
+		state.ProviderType = types.StringValue("gcp")
+	}
+
+	refreshedState.ProviderType = state.ProviderType
+
+	log.Print("***********READ refreshedState PROV TYPE************", state.ProviderType, refreshedState.ProviderType)
 
 	diags = resp.State.Set(ctx, &refreshedState)
 	resp.Diagnostics.Append(diags...)
@@ -339,10 +351,10 @@ func (n *NetworkPeer) validateNetworkPeerAttributesTrimmed(plan providerschema.N
 
 // initializeNetworkPeerPlanId initializes an instance of providerschema.NetworkPeer
 // with the specified plan. It marks all computed fields as null.
-func initializeNetworkPeerPlanId(plan providerschema.NetworkPeer, id, providerType string) providerschema.NetworkPeer {
+func initializeNetworkPeerPlanId(plan providerschema.NetworkPeer, id string) providerschema.NetworkPeer {
 	plan.Id = types.StringValue(id)
-	log.Print("*****************  initializeNetworkPeerPlanId *************", providerType)
-	plan.ProviderType = types.StringValue(providerType)
+	//log.Print("*****************  initializeNetworkPeerPlanId *************", providerType)
+	//plan.ProviderType = types.StringValue(providerType)
 
 	if plan.Commands.IsNull() || plan.Commands.IsUnknown() {
 		plan.Commands = types.SetNull(types.StringType)
@@ -358,7 +370,7 @@ func initializeNetworkPeerPlanId(plan providerschema.NetworkPeer, id, providerTy
 }
 
 // retrieveNetworkPeer retrieves network peer information for a specified organization, project, cluster, and peer ID.
-func (n *NetworkPeer) retrieveNetworkPeer(ctx context.Context, organizationId, projectId, clusterId, peerId, providerType string) (*providerschema.NetworkPeer, error) {
+func (n *NetworkPeer) retrieveNetworkPeer(ctx context.Context, organizationId, projectId, clusterId, peerId string) (*providerschema.NetworkPeer, error) {
 	networkPeerResp, err := n.getNetworkPeer(ctx, organizationId, projectId, clusterId, peerId)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrNotFound, err)
@@ -375,8 +387,7 @@ func (n *NetworkPeer) retrieveNetworkPeer(ctx context.Context, organizationId, p
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrRefreshingState, err)
 	}
-	refreshedState.ProviderType = types.StringValue(providerType)
-	log.Print("*****************  retrieveNetworkPeer *************", providerType)
+
 	return refreshedState, nil
 }
 

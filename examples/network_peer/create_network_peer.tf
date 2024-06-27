@@ -19,6 +19,12 @@ resource "couchbase-capella_network_peer" "new_network_peer" {
             cidr       =  var.aws_config.cidr
             region     =  var.aws_config.region
           }
+#      gcp_config = {
+#             project_id = var.gcp_config.project_id
+#             network_name = var.gcp_config.network_name
+#             service_account = var.gcp_config.service_account
+#             cidr  = var.gcp_config.cidr
+#              }
         }
    }
 
