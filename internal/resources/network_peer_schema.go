@@ -22,17 +22,10 @@ func NetworkPeerSchema() schema.Schema {
 			"cluster_id":      stringAttribute([]string{required, requiresReplace}),
 			"name":            stringAttribute([]string{required}),
 			"provider_type":   stringAttribute([]string{required}),
-			//"provider_type": schema.StringAttribute{
-			//	Required: true,
-			//	PlanModifiers: []planmodifier.String{
-			//		stringplanmodifier.UseStateForUnknown(),
-			//	},
-			//},
 			"commands": schema.SetAttribute{
 				Computed:    true,
 				ElementType: types.StringType,
 			},
-			//"commands": stringListAttribute(computed),
 			"provider_config": schema.SingleNestedAttribute{
 				//	Description: "The 'accountId', 'vpcId', 'region', and 'cidr' fields are required for AWS VPC peering. " +
 				//		"For GCP, the 'networkName', 'projectId', 'serviceAccount', and 'cidr' fields are required for VPC peering. ",
@@ -41,13 +34,12 @@ func NetworkPeerSchema() schema.Schema {
 					objectplanmodifier.RequiresReplace(),
 				},
 				Attributes: map[string]schema.Attribute{
-					//"provider_id": stringAttribute([]string{computed}),
 					"aws_config": schema.SingleNestedAttribute{
 						Optional: true,
 						Attributes: map[string]schema.Attribute{
-							"account_id":  stringAttribute([]string{optional}),
-							"vpc_id":      stringAttribute([]string{optional}),
-							"region":      stringAttribute([]string{optional}),
+							"account_id":  stringAttribute([]string{required}),
+							"vpc_id":      stringAttribute([]string{required}),
+							"region":      stringAttribute([]string{required}),
 							"cidr":        stringAttribute([]string{required}),
 							"provider_id": stringAttribute([]string{computed}),
 						},
@@ -56,9 +48,9 @@ func NetworkPeerSchema() schema.Schema {
 						Optional: true,
 						Attributes: map[string]schema.Attribute{
 							"cidr":            stringAttribute([]string{required}),
-							"network_name":    stringAttribute([]string{optional}),
-							"project_id":      stringAttribute([]string{optional}),
-							"service_account": stringAttribute([]string{optional}),
+							"network_name":    stringAttribute([]string{required}),
+							"project_id":      stringAttribute([]string{required}),
+							"service_account": stringAttribute([]string{required}),
 							"provider_id":     stringAttribute([]string{computed}),
 						},
 					},

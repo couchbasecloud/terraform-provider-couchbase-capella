@@ -145,7 +145,7 @@ type NetworkPeerData struct {
 	//ProviderType is the type of the cloud provider for which the peering connection is created. Which are-
 	//     1. aws
 	//     2. gcp
-	ProviderType types.String `tfsdk:"provider_type"`
+	//ProviderType types.String `tfsdk:"provider_type"`
 
 	// ProviderConfig This provides details about the configuration and the ID of the VPC peer on AWS, GCP.
 	ProviderConfig ProviderConfig `tfsdk:"provider_config"`
@@ -278,10 +278,10 @@ func MorphCommands(commands []string) (basetypes.SetValue, error) {
 // NewNetworkPeerData create new network peer data object.
 func NewNetworkPeerData(networkPeer *network_peer_api.GetNetworkPeeringRecordResponse, organizationId, projectId, clusterId string, auditObject basetypes.ObjectValue) (*NetworkPeerData, error) {
 	newNetworkPeerData := NetworkPeerData{
-		Id:           types.StringValue(networkPeer.Id.String()),
-		Name:         types.StringValue(networkPeer.Name),
-		ProviderType: types.StringValue(networkPeer.ProviderType),
-		Audit:        auditObject,
+		Id:   types.StringValue(networkPeer.Id.String()),
+		Name: types.StringValue(networkPeer.Name),
+		//ProviderType: types.StringValue(networkPeer.ProviderType),
+		Audit: auditObject,
 		Status: PeeringStatus{
 			State:     types.StringValue(*networkPeer.Status.State),
 			Reasoning: types.StringValue(*networkPeer.Status.Reasoning),
