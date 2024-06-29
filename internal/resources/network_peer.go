@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -148,22 +149,13 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	// Set the ProviderType based on the request
-	//if networkPeerRequest.ProviderType == "aws" {
-	//	networkPeerResponse.ProviderType = "aws"
-	//} else if networkPeerRequest.ProviderType == "gcp" {
-	//	networkPeerResponse.ProviderType = "gcp"
-	//}
-
-	log.Print("***********PAULOMEE PROVIDER TYPE************", networkPeerResponse.ProviderType)
-
 	diags = resp.State.Set(ctx, initializeNetworkPeerPlanId(plan, networkPeerResponse.Id.String()))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	refreshedState, err := n.retrieveNetworkPeer(ctx, organizationId, projectId, clusterId, networkPeerResponse.Id.String())
+	refreshedState, err := n.retrieveNetworkPeer(ctx, organizationId, projectId, clusterId, networkPeerResponse.Id.String(), plan.ProviderType.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading network peering service status",
@@ -206,7 +198,7 @@ func (n *NetworkPeer) Read(ctx context.Context, req resource.ReadRequest, resp *
 		peerId         = IDs[providerschema.Id]
 	)
 
-	refreshedState, err := n.retrieveNetworkPeer(ctx, organizationId, projectId, clusterId, peerId)
+	refreshedState, err := n.retrieveNetworkPeer(ctx, organizationId, projectId, clusterId, peerId, state.ProviderType.ValueString())
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -222,13 +214,15 @@ func (n *NetworkPeer) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return
 	}
 
-	if state.ProviderConfig != nil && state.ProviderConfig.AWSConfig != nil {
-		state.ProviderType = types.StringValue("aws")
-	} else if state.ProviderConfig != nil && state.ProviderConfig.GCPConfig != nil {
-		state.ProviderType = types.StringValue("gcp")
-	}
+	//if state.ProviderType.IsUnknown() || state.ProviderType.IsNull(){
+	//if state.ProviderConfig != nil && state.ProviderConfig.AWSConfig != nil {
+	//	state.ProviderType = types.StringValue("aws")
+	//} else if state.ProviderConfig != nil && state.ProviderConfig.GCPConfig != nil {
+	//	state.ProviderType = types.StringValue("gcp")
+	//}
+	//}
 
-	refreshedState.ProviderType = state.ProviderType
+	//refreshedState.ProviderType = state.ProviderType
 
 	log.Print("***********READ refreshedState PROV TYPE************", state.ProviderType, refreshedState.ProviderType)
 
@@ -370,7 +364,7 @@ func initializeNetworkPeerPlanId(plan providerschema.NetworkPeer, id string) pro
 }
 
 // retrieveNetworkPeer retrieves network peer information for a specified organization, project, cluster, and peer ID.
-func (n *NetworkPeer) retrieveNetworkPeer(ctx context.Context, organizationId, projectId, clusterId, peerId string) (*providerschema.NetworkPeer, error) {
+func (n *NetworkPeer) retrieveNetworkPeer(ctx context.Context, organizationId, projectId, clusterId, peerId, providerType string) (*providerschema.NetworkPeer, error) {
 	networkPeerResp, err := n.getNetworkPeer(ctx, organizationId, projectId, clusterId, peerId)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrNotFound, err)
@@ -382,6 +376,12 @@ func (n *NetworkPeer) retrieveNetworkPeer(ctx context.Context, organizationId, p
 	if diags.HasError() {
 		return nil, fmt.Errorf("%s: %w", errors.ErrUnableToConvertAuditData, err)
 	}
+
+	if validateProviderTypeIsSameInPlanAndState(providerType, networkPeerResp.ProviderType) {
+		networkPeerResp.ProviderType = providerType
+	}
+
+	log.Print("***********READ retrieveNetworkPeer PROVIDER TYPE************", networkPeerResp.ProviderType)
 
 	refreshedState, err := providerschema.NewNetworkPeer(ctx, networkPeerResp, organizationId, projectId, clusterId, auditObj)
 	if err != nil {
@@ -413,5 +413,23 @@ func (n *NetworkPeer) getNetworkPeer(ctx context.Context, organizationId, projec
 		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
 
+	gcp, err := networkResp.AsGCP()
+	if err == nil && gcp.GCPConfigData.ProjectId != "" {
+		networkResp.ProviderType = "gcp"
+	} else if err != nil {
+		return nil, fmt.Errorf("%s: %w", errors.ErrReadingGCPConfig, err)
+	}
+
+	aws, err := networkResp.AsAWS()
+	if err == nil && aws.AWSConfigData.VpcId != "" {
+		networkResp.ProviderType = "aws"
+	} else if err != nil {
+		return nil, fmt.Errorf("%s: %w", errors.ErrReadingAWSConfig, err)
+	}
+
 	return &networkResp, nil
+}
+
+func validateProviderTypeIsSameInPlanAndState(planProviderType, stateProviderType string) bool {
+	return strings.EqualFold(planProviderType, stateProviderType)
 }
