@@ -17,6 +17,7 @@ In this demo, we will perform the following operations:
 13. Create a new collection in the scope of a bucket.
 14. Create a new on/off schedule for the cluster.
 15. Create a new audit log settings.
+16. Create a new network peer.
 
 ## Pre-Requisites:
 
@@ -39,7 +40,7 @@ $  terraform plan
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/paulomee.de/go/bin
+│  - couchbasecloud/couchbase-capella in /Users/$USER/go/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -48,12 +49,12 @@ var.collection
 
   Enter a value: ^Z
 zsh: suspended  terraform plan
-paulomee.de@FJL6N0YK9X getting_started % terraform plan
+$USER@FJL6N0YK9X getting_started % terraform plan
 ╷
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/paulomee.de/go/bin
+│  - couchbasecloud/couchbase-capella in /Users/$USER/go/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -465,7 +466,7 @@ Terraform will perform the following actions:
       + project_id        = "ffffffff-aaaa-1414-eeee-000000000000"
     }
 
-Plan: 13 to add, 0 to change, 0 to destroy.
+Plan: 14 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
   + apikey                 = (sensitive value)
@@ -630,6 +631,27 @@ Changes to Outputs:
       + scope_name      = "new_terraform_scope"
     }
   + database_credential    = (sensitive value)
+  + network_peer           = {
+      + audit           = (known after apply)
+      + cluster_id      = (known after apply)
+      + commands        = (known after apply)
+      + id              = (known after apply)
+      + name            = "VPCPeerTFTestAWS"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = (known after apply)
+      + provider_config = {
+          + aws_config = {
+              + account_id  = "123456789123"
+              + cidr        = "10.2.0.0/23"
+              + provider_id = (known after apply)
+              + region      = "us-east-1"
+              + vpc_id      = "vpc-12345678912345678"
+            }
+          + gcp_config = null
+        }
+      + provider_type   = "aws"
+      + status          = (known after apply)
+    }
   + organization           = {
       + audit           = {
           + created_at  = "2020-07-22 12:38:57.437248116 +0000 UTC"
@@ -766,7 +788,7 @@ $  terraform apply
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/paulomee.de/go/bin
+│  - couchbasecloud/couchbase-capella in /Users/$USER/go/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -1040,6 +1062,28 @@ Terraform will perform the following actions:
       + password        = (sensitive value)
       + project_id      = (known after apply)
     }
+    
+   # couchbase-capella_network_peer.new_network_peer will be created
+  + resource "couchbase-capella_network_peer" "new_network_peer" {
+      + audit           = (known after apply)
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      + commands        = (known after apply)
+      + id              = (known after apply)
+      + name            = "VPCPeerTFTestGCP"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      + provider_config = {
+          + gcp_config = {
+              + cidr            = "10.0.4.0/23"
+              + network_name    = "cc-ffffffff-aaaa-1414-eeee-000000000000"
+              + project_id      = "test-123456789012345"
+              + provider_id     = (known after apply)
+              + service_account = "testiam.gserviceaccount.com"
+            }
+        }
+      + provider_type   = "gcp"
+      + status          = (known after apply)
+    }
 
   # couchbase-capella_project.new_project will be created
   + resource "couchbase-capella_project" "new_project" {
@@ -1178,7 +1222,7 @@ Terraform will perform the following actions:
       + project_id        = "ffffffff-aaaa-1414-eeee-000000000000"
     }
 
-Plan: 13 to add, 0 to change, 0 to destroy.
+Plan: 14 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
   + apikey                 = (sensitive value)
@@ -1358,6 +1402,28 @@ Changes to Outputs:
           + session_duration = 7200
         }
     }
+  + network_peer   = {
+      + audit           = (known after apply)
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      + commands        = (known after apply)
+      + id              = (known after apply)
+      + name            = "VPCPeerTFTestGCP"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      + provider_config = {
+          + aws_config = null
+          + gcp_config = {
+              + cidr            = "10.0.4.0/23"
+              + network_name    = "cc-ffffffff-aaaa-1414-eeee-000000000000"
+              + project_id      = "test-123456789012345"
+              + provider_id     = (known after apply)
+              + service_account = "testiam.gserviceaccount.com"
+            }
+        }
+      + provider_type   = "gcp"
+      + status          = (known after apply)
+    }
+  + peer_id            = (known after apply)
   + project                = "My First Terraform Project"
   + sample_bucket          = "gamesim-sample"
   + scope                  = {
@@ -1745,6 +1811,40 @@ collection = {
   "scope_name" = "new_terraform_scope"
 }
 database_credential = <sensitive>
+network_peer = {
+  "audit" = {
+    "created_at" = "2024-06-27 19:34:00.202552084 +0000 UTC"
+    "created_by" = "OqrQXTvtsD6PjHiP9Tt4ZhggaCzQVpPi"
+    "modified_at" = "2024-06-27 19:34:18.661844385 +0000 UTC"
+    "modified_by" = "OqrQXTvtsD6PjHiP9Tt4ZhggaCzQVpPi"
+    "version" = 2
+  }
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "commands" = toset([
+    "gcloud compute networks peerings create cc-ffffffff-aaaa-1414-eeee-000000000000-cc-12345678901234567 --network=cc-ffffffff-aaaa-1414-eeee-000000000000 --peer-project test-123456789012345 --peer-network cc-ffffffff-aaaa-1414-eeee-000000000000",
+    "gcloud dns managed-zones create cc-ffffffff-aaaa-1414-eeee-000000000000-cc-12345678901234567 --description=\"Peering Zone to Capella\" --dns-name=test --account=testiam.gserviceaccount.com --networks=cc-ffffffff-aaaa-1414-eeee-000000000000 --target-network=cc-ffffffff-aaaa-1414-eeee-000000000000 --target-project=test-123456789012345 --visibility=private",
+  ])
+  "id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "name" = "VPCPeerTFTestGCP"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "provider_config" = {
+    "aws_config" = null /* object */
+    "gcp_config" = {
+      "cidr" = "10.0.4.0/23"
+      "network_name" = "cc-ffffffff-aaaa-1414-eeee-000000000000"
+      "project_id" = "test-123456789012345"
+      "provider_id" = "cc-ffffffff-aaaa-1414-eeee-000000000000-cc-12345678901234567"
+      "service_account" = "testiam.gserviceaccount.com"
+    }
+  }
+  "provider_type" = "gcp"
+  "status" = {
+    "reasoning" = ""
+    "state" = "complete"
+  }
+}
+peer_id = "ffffffff-aaaa-1414-eeee-000000000000"
 organization = {
   "audit" = {
     "created_at" = "2020-07-22 12:38:57.437248116 +0000 UTC"
@@ -2093,6 +2193,39 @@ organization = {
     "session_duration" = 7200
   }
 }
+network_peer = {
+  "audit" = {
+    "created_at" = "2024-06-27 19:34:00.202552084 +0000 UTC"
+    "created_by" = "OqrQXTvtsD6PjHiP9Tt4ZhggaCzQVpPi"
+    "modified_at" = "2024-06-27 19:34:18.661844385 +0000 UTC"
+    "modified_by" = "OqrQXTvtsD6PjHiP9Tt4ZhggaCzQVpPi"
+    "version" = 2
+  }
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "commands" = toset([
+    "gcloud compute networks peerings create cc-ffffffff-aaaa-1414-eeee-000000000000-cc-12345678901234567 --network=cc-ffffffff-aaaa-1414-eeee-000000000000 --peer-project test-123456789012345 --peer-network cc-ffffffff-aaaa-1414-eeee-000000000000",
+    "gcloud dns managed-zones create cc-ffffffff-aaaa-1414-eeee-000000000000-cc-12345678901234567 --description=\"Peering Zone to Capella\" --dns-name=test --account=testiam.gserviceaccount.com --networks=cc-ffffffff-aaaa-1414-eeee-000000000000 --target-network=cc-ffffffff-aaaa-1414-eeee-000000000000 --target-project=test-123456789012345 --visibility=private",
+  ])
+  "id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "name" = "VPCPeerTFTestGCP"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "provider_config" = {
+    "aws_config" = null /* object */
+    "gcp_config" = {
+      "cidr" = "10.0.4.0/23"
+      "network_name" = "cc-ffffffff-aaaa-1414-eeee-000000000000"
+      "project_id" = "test-123456789012345"
+      "provider_id" = "cc-ffffffff-aaaa-1414-eeee-000000000000-cc-12345678901234567"
+      "service_account" = "testiam.gserviceaccount.com"
+    }
+  }
+  "provider_type" = "gcp"
+  "status" = {
+    "reasoning" = ""
+    "state" = "complete"
+  }
+}
 project = "My First Terraform Project"
 sample_bucket = "gamesim-sample"
 scope = {
@@ -2214,7 +2347,7 @@ $ terraform destroy
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/paulomee.de/go/bin
+│  - couchbasecloud/couchbase-capella in /Users/$USER/go/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -2525,6 +2658,42 @@ Terraform will perform the following actions:
       - password        = (sensitive value) -> null
       - project_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
     }
+ 
+  Terraform will perform the following actions:
+
+  # couchbase-capella_network_peer.new_network_peer will be destroyed
+  - resource "couchbase-capella_network_peer" "new_network_peer" {
+      - audit           = {
+          - created_at  = "2024-06-29 00:37:45.4338168 +0000 UTC" -> null
+          - created_by  = "OqrQXTvtsD6PjHiP9Tt4ZhggaCzQVpPi" -> null
+          - modified_at = "2024-06-29 00:38:04.635673378 +0000 UTC" -> null
+          - modified_by = "OqrQXTvtsD6PjHiP9Tt4ZhggaCzQVpPi" -> null
+          - version     = 2 -> null
+        } -> null
+      - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - commands        = [
+          - "gcloud compute networks peerings create cc-ffffffff-aaaa-1414-eeee-000000000000-cc-12345678901234567 --network=cc-ffffffff-aaaa-1414-eeee-000000000000 --peer-project test-123456789012345 --peer-network cc-ffffffff-aaaa-1414-eeee-000000000000",
+          - "gcloud dns managed-zones create cc-ffffffff-aaaa-1414-eeee-000000000000-cc-12345678901234567 --description=\"Peering Zone to Capella\" --dns-name=test --account=testiam.gserviceaccount.com --networks=cc-ffffffff-aaaa-1414-eeee-000000000000 --target-network=cc-ffffffff-aaaa-1414-eeee-000000000000 --target-project=test-123456789012345 --visibility=private",
+        ] -> null
+      - id              = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - name            = "VPCPeerTFTestGCP" -> null
+      - organization_id = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - project_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - provider_config = {
+          - gcp_config = {
+              - cidr            = "10.0.4.0/23" -> null
+              - network_name    = "cc-ffffffff-aaaa-1414-eeee-000000000000" -> null
+              - project_id      = "test-123456789012345" -> null
+              - provider_id     = "cc-ffffffff-aaaa-1414-eeee-000000000000-cc-12345678901234567" -> null
+              - service_account = "testiam.gserviceaccount.com" -> null
+            } -> null
+        } -> null
+      - provider_type   = "gcp" -> null
+      - status          = {
+          - reasoning = "" -> null
+          - state     = "complete" -> null
+        } -> null
+    }
 
   # couchbase-capella_project.new_project will be destroyed
   - resource "couchbase-capella_project" "new_project" {
@@ -2681,7 +2850,7 @@ Terraform will perform the following actions:
       - project_id        = "ffffffff-aaaa-1414-eeee-000000000000" -> null
     }
 
-Plan: 0 to add, 0 to change, 13 to destroy.
+Plan: 0 to add, 0 to change, 14 to destroy.
 
 Changes to Outputs:
   - apikey                 = (sensitive value) -> null
@@ -2884,6 +3053,40 @@ Changes to Outputs:
       - scope_name      = "new_terraform_scope"
     } -> null
   - database_credential    = (sensitive value) -> null
+  - network_peer   = {
+      - audit           = {
+          - created_at  = "2024-06-29 00:37:45.4338168 +0000 UTC"
+          - created_by  = "OqrQXTvtsD6PjHiP9Tt4ZhggaCzQVpPi"
+          - modified_at = "2024-06-29 00:38:04.635673378 +0000 UTC"
+          - modified_by = "OqrQXTvtsD6PjHiP9Tt4ZhggaCzQVpPi"
+          - version     = 2
+        }
+      - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      - commands        = [
+          - "gcloud compute networks peerings create cc-ffffffff-aaaa-1414-eeee-000000000000-cc-12345678901234567 --network=cc-ffffffff-aaaa-1414-eeee-000000000000 --peer-project test-123456789012345 --peer-network cc-ffffffff-aaaa-1414-eeee-000000000000",
+          - "gcloud dns managed-zones create cc-ffffffff-aaaa-1414-eeee-000000000000-cc-12345678901234567 --description=\"Peering Zone to Capella\" --dns-name=test --account=testiam.gserviceaccount.com --networks=cc-ffffffff-aaaa-1414-eeee-000000000000 --target-network=cc-ffffffff-aaaa-1414-eeee-000000000000 --target-project=test-123456789012345 --visibility=private",
+        ]
+      - id              = "ffffffff-aaaa-1414-eeee-000000000000"
+      - name            = "VPCPeerTFTestGCP"
+      - organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      - project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      - provider_config = {
+          - aws_config = null
+          - gcp_config = {
+              - cidr            = "10.0.4.0/23"
+              - network_name    = "cc-ffffffff-aaaa-1414-eeee-000000000000"
+              - project_id      = "test-123456789012345"
+              - provider_id     = "cc-ffffffff-aaaa-1414-eeee-000000000000-cc-12345678901234567"
+              - service_account = "testiam.gserviceaccount.com"
+            }
+        }
+      - provider_type   = "gcp"
+      - status          = {
+          - reasoning = ""
+          - state     = "complete"
+        }
+    } -> null
+  - peer_id            = "ffffffff-aaaa-1414-eeee-000000000000" -> null
   - organization           = {
       - audit           = {
           - created_at  = "2020-07-22 12:38:57.437248116 +0000 UTC"
