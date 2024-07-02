@@ -19,12 +19,13 @@ resource "couchbase-capella_network_peer" "new_network_peer" {
             cidr       =  var.aws_config.cidr
             region     =  var.aws_config.region
           }
+        }
+   }
+
+# Example GCP Config for creating network peer on GCP. Use this instead of aws_config above if you want to create a network peer for GCP.
 #      gcp_config = {
 #             project_id = var.gcp_config.project_id
 #             network_name = var.gcp_config.network_name
 #             service_account = var.gcp_config.service_account
 #             cidr  = var.gcp_config.cidr
 #              }
-        }
-   }
-
