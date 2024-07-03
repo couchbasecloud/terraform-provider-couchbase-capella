@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 
@@ -214,18 +213,6 @@ func (n *NetworkPeer) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return
 	}
 
-	//if state.ProviderType.IsUnknown() || state.ProviderType.IsNull(){
-	//if state.ProviderConfig != nil && state.ProviderConfig.AWSConfig != nil {
-	//	state.ProviderType = types.StringValue("aws")
-	//} else if state.ProviderConfig != nil && state.ProviderConfig.GCPConfig != nil {
-	//	state.ProviderType = types.StringValue("gcp")
-	//}
-	//}
-
-	//refreshedState.ProviderType = state.ProviderType
-
-	log.Print("***********READ refreshedState PROV TYPE************", state.ProviderType, refreshedState.ProviderType)
-
 	diags = resp.State.Set(ctx, &refreshedState)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -347,8 +334,6 @@ func (n *NetworkPeer) validateNetworkPeerAttributesTrimmed(plan providerschema.N
 // with the specified plan. It marks all computed fields as null.
 func initializeNetworkPeerPlanId(plan providerschema.NetworkPeer, id string) providerschema.NetworkPeer {
 	plan.Id = types.StringValue(id)
-	//log.Print("*****************  initializeNetworkPeerPlanId *************", providerType)
-	//plan.ProviderType = types.StringValue(providerType)
 
 	if plan.Commands.IsNull() || plan.Commands.IsUnknown() {
 		plan.Commands = types.SetNull(types.StringType)
@@ -380,8 +365,6 @@ func (n *NetworkPeer) retrieveNetworkPeer(ctx context.Context, organizationId, p
 	if validateProviderTypeIsSameInPlanAndState(providerType, networkPeerResp.ProviderType) {
 		networkPeerResp.ProviderType = providerType
 	}
-
-	log.Print("***********READ retrieveNetworkPeer PROVIDER TYPE************", networkPeerResp.ProviderType)
 
 	refreshedState, err := providerschema.NewNetworkPeer(ctx, networkPeerResp, organizationId, projectId, clusterId, auditObj)
 	if err != nil {

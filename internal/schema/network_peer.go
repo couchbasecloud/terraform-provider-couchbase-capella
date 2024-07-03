@@ -3,7 +3,6 @@ package schema
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -83,14 +82,6 @@ type AWSConfig struct {
 	ProviderId types.String `tfsdk:"provider_id"`
 }
 
-//// GCP
-//type GCP struct {
-//	// ProviderId The ID of the VPC peer on GCP.
-//	ProviderId types.String `tfsdk:"provider_id"`
-//
-//	GCPConfig GCPConfig `tfsdk:"gcp_config"`
-//}
-
 // GCPConfig GCP config data required to establish a VPC peering relationship.
 //
 //	Refer to the docs for other limitations to GCP VPC Peering - [ref](https://cloud.google.com/vpc/docs/vpc-peering).
@@ -132,28 +123,12 @@ type NetworkPeers struct {
 
 // NetworkPeerData defines attributes for a single network peer when fetched from the V4 Capella Public API.
 type NetworkPeerData struct {
-	//// OrganizationId is the ID of the organization to which the Capella cluster belongs.
-	//OrganizationId types.String `tfsdk:"organization_id"`
-	//
-	//// ProjectId is the ID of the project to which the Capella cluster belongs.
-	//ProjectId types.String `tfsdk:"project_id"`
-	//
-	//// ClusterId is the ID of the cluster for which the network peer needs to be created.
-	//ClusterId types.String `tfsdk:"cluster_id"`
 
 	// Id is the ID is the unique UUID generated when a VPC record is created.
 	Id types.String `tfsdk:"id"`
 
-	// Commands Commands contains the list of commands that the user must execute in order to complete the association of the network.
-	//Commands types.List `tfsdk:"commands"`
-
 	// Name is the Name of the peering relationship.
 	Name types.String `tfsdk:"name"`
-
-	//ProviderType is the type of the cloud provider for which the peering connection is created. Which are-
-	//     1. aws
-	//     2. gcp
-	//ProviderType types.String `tfsdk:"provider_type"`
 
 	// ProviderConfig This provides details about the configuration and the ID of the VPC peer on AWS, GCP.
 	ProviderConfig ProviderConfig `tfsdk:"provider_config"`
@@ -198,8 +173,6 @@ func NewNetworkPeer(ctx context.Context, networkPeer *network_peer_api.GetNetwor
 	}
 	newNetworkPeer.ProviderConfig = &newProviderConfig
 
-	log.Print("************* PDE PROV CONFIG IN NewNetworkPeer", newNetworkPeer.ProviderConfig)
-
 	if networkPeer.Status.State != nil {
 		state := *networkPeer.Status.State
 		reasoning := *networkPeer.Status.Reasoning
@@ -224,12 +197,11 @@ func NewNetworkPeer(ctx context.Context, networkPeer *network_peer_api.GetNetwor
 	return &newNetworkPeer, nil
 }
 
+// morphToProviderConfig is used to convert ProviderConfig from json.RawMessage format to ProviderConfig type.
 func morphToProviderConfig(networkPeer *network_peer_api.GetNetworkPeeringRecordResponse) (ProviderConfig, error) {
 	var newProviderConfig ProviderConfig
 	aws, err := networkPeer.AsAWS()
-	log.Print("*************PAULO MORPH outside aws condition************", err)
 	if err == nil && aws.AWSConfigData.VpcId != "" {
-		log.Print("*************PAULO MORPH inside aws condition************")
 		newProviderConfig.AWSConfig = &AWSConfig{
 			ProviderId: types.StringValue(aws.ProviderId),
 			AccountId:  types.StringValue(aws.AWSConfigData.AccountId),
@@ -242,10 +214,7 @@ func morphToProviderConfig(networkPeer *network_peer_api.GetNetworkPeeringRecord
 		return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingAWSConfig, err)
 	}
 
-	log.Print("*************PAULO MORPH************", aws)
-
 	gcp, err := networkPeer.AsGCP()
-	log.Print("*************PAULO MORPH************", gcp)
 	if err == nil && gcp.GCPConfigData.ProjectId != "" {
 		newProviderConfig.GCPConfig = &GCPConfig{
 			ProviderId:     types.StringValue(gcp.ProviderId),
@@ -254,7 +223,6 @@ func morphToProviderConfig(networkPeer *network_peer_api.GetNetworkPeeringRecord
 			NetworkName:    types.StringValue(gcp.GCPConfigData.NetworkName),
 			ServiceAccount: types.StringValue(gcp.GCPConfigData.ServiceAccount),
 		}
-		log.Print("*************PAULO MORPH newProviderConfig************", newProviderConfig)
 		return newProviderConfig, nil
 	} else if err != nil {
 		return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingGCPConfig, err)
@@ -262,8 +230,8 @@ func morphToProviderConfig(networkPeer *network_peer_api.GetNetworkPeeringRecord
 	return newProviderConfig, nil
 }
 
-// AttributeTypes returns a mapping of field names to their respective attribute types for the CouchbaseServer struct.
-// It is used during the conversion of a types.Object field to a CouchbaseServer type.
+// AttributeTypes returns a mapping of field names to their respective attribute types for the PeeringStatus struct.
+// It is used during the conversion of a types.Object field to a PeeringStatus type.
 func (p PeeringStatus) AttributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"state":     types.StringType,
@@ -290,9 +258,8 @@ func MorphCommands(commands []string) (basetypes.SetValue, error) {
 // NewNetworkPeerData create new network peer data object.
 func NewNetworkPeerData(networkPeer *network_peer_api.GetNetworkPeeringRecordResponse, organizationId, projectId, clusterId string, auditObject basetypes.ObjectValue) (*NetworkPeerData, error) {
 	newNetworkPeerData := NetworkPeerData{
-		Id:   types.StringValue(networkPeer.Id.String()),
-		Name: types.StringValue(networkPeer.Name),
-		//ProviderType: types.StringValue(networkPeer.ProviderType),
+		Id:    types.StringValue(networkPeer.Id.String()),
+		Name:  types.StringValue(networkPeer.Name),
 		Audit: auditObject,
 		Status: PeeringStatus{
 			State:     types.StringValue(*networkPeer.Status.State),
@@ -306,6 +273,5 @@ func NewNetworkPeerData(networkPeer *network_peer_api.GetNetworkPeeringRecordRes
 	}
 	newNetworkPeerData.ProviderConfig = newProviderConfig
 
-	log.Print("***************PROVIDER CONFIG*******************", newProviderConfig)
 	return &newNetworkPeerData, nil
 }
