@@ -182,13 +182,13 @@ audit_log_settings = {
 }
 
 network_peer = {
-  name               = "VPCPeerTFTestAWS"
-  provider_type      = "aws"
+  name          = "VPCPeerTFTestAWS"
+  provider_type = "aws"
 }
 
 aws_config = {
-    account_id = "123456789123"
-    vpc_id     = "vpc-141f0fffff141aa00"
-    region     = "us-east-1"
-    cidr       = "10.0.0.0/16"
+  account_id = "123456789123"
+  vpc_id     = "vpc-141f0fffff141aa00"
+  region     = "us-east-1"
+  cidr       = "10.0.0.0/16"
 }

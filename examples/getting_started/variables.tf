@@ -222,8 +222,8 @@ variable "network_peer" {
   description = "Network Peer configuration details useful for creation"
 
   type = object({
-    name               = string
-    provider_type      = string
+    name          = string
+    provider_type = string
   })
 }
 

@@ -122,14 +122,14 @@ type GCPConfigData struct {
 	ServiceAccount string `json:"serviceAccount"`
 }
 
-// AsAWS returns the union data inside the GetNetworkPeeringRecordResponse as a AWS
+// AsAWS returns the union data inside the GetNetworkPeeringRecordResponse as a AWS.
 func (t GetNetworkPeeringRecordResponse) AsAWS() (AWS, error) {
 	var body AWS
 	err := json.Unmarshal(t.ProviderConfig, &body)
 	return body, err
 }
 
-// AsGCP returns the union data inside the GetNetworkPeeringRecordResponse_ProviderConfig as a GCP
+// AsGCP returns the union data inside the GetNetworkPeeringRecordResponse_ProviderConfig as a GCP.
 func (t GetNetworkPeeringRecordResponse) AsGCP() (GCP, error) {
 	var body GCP
 	err := json.Unmarshal(t.ProviderConfig, &body)

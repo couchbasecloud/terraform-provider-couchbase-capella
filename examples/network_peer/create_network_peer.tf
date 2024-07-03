@@ -13,14 +13,14 @@ resource "couchbase-capella_network_peer" "new_network_peer" {
   name            = var.network_peer.name
   provider_type   = var.network_peer.provider_type
   provider_config = {
-   aws_config = {
-            account_id =  var.aws_config.account_id
-            vpc_id     =  var.aws_config.vpc_id
-            cidr       =  var.aws_config.cidr
-            region     =  var.aws_config.region
-          }
-        }
-   }
+    aws_config = {
+      account_id = var.aws_config.account_id
+      vpc_id     = var.aws_config.vpc_id
+      cidr       = var.aws_config.cidr
+      region     = var.aws_config.region
+    }
+  }
+}
 
 # Example GCP Config for creating network peer on GCP. Use this instead of aws_config above if you want to create a network peer for GCP.
 #      gcp_config = {
