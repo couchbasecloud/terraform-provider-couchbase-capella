@@ -201,7 +201,7 @@ Terraform will perform the following actions:
             },
         ]
       + support            = {
-          + plan     = "developer pro"
+          + plan     = "enterprise"
           + timezone = "PT"
         }
     }
@@ -540,7 +540,7 @@ Changes to Outputs:
             },
         ]
       + support            = {
-          + plan     = "developer pro"
+          + plan     = "enterprise"
           + timezone = "PT"
         }
     }
@@ -934,7 +934,7 @@ Terraform will perform the following actions:
             },
         ]
       + support            = {
-          + plan     = "developer pro"
+          + plan     = "enterprise"
           + timezone = "PT"
         }
     }
@@ -1296,7 +1296,7 @@ Changes to Outputs:
             },
         ]
       + support            = {
-          + plan     = "developer pro"
+          + plan     = "enterprise"
           + timezone = "PT"
         }
     }
@@ -1719,7 +1719,7 @@ cluster = {
     },
   ])
   "support" = {
-    "plan" = "developer pro"
+    "plan" = "enterprise"
     "timezone" = "PT"
   }
 }
@@ -2086,7 +2086,7 @@ cluster = {
     },
   ])
   "support" = {
-    "plan" = "developer pro"
+    "plan" = "enterprise"
     "timezone" = "PT"
   }
 }
@@ -2524,7 +2524,7 @@ Terraform will perform the following actions:
             },
         ] -> null
       - support            = {
-          - plan     = "developer pro" -> null
+          - plan     = "enterprise" -> null
           - timezone = "PT" -> null
         } -> null
     }
@@ -2961,7 +2961,7 @@ Changes to Outputs:
             },
         ]
       - support            = {
-          - plan     = "developer pro"
+          - plan     = "enterprise"
           - timezone = "PT"
         }
     } -> null
