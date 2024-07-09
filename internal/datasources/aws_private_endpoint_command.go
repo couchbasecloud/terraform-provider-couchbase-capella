@@ -30,10 +30,12 @@ func NewAWSPrivateEndpointCommand() datasource.DataSource {
 	return &AWSPrivateEndpointCommand{}
 }
 
+// Metadata returns the data source type name.
 func (a *AWSPrivateEndpointCommand) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_aws_private_endpoint_command"
 }
 
+// Schema defines the schema for the private endpoint command data source.
 func (a *AWSPrivateEndpointCommand) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -47,6 +49,7 @@ func (a *AWSPrivateEndpointCommand) Schema(_ context.Context, _ datasource.Schem
 	}
 }
 
+// Read refreshes the Terraform state with the latest data of private endpoint.
 func (a *AWSPrivateEndpointCommand) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state providerschema.AWSCommandRequest
 	diags := req.Config.Get(ctx, &state)
@@ -110,6 +113,7 @@ func (a *AWSPrivateEndpointCommand) Read(ctx context.Context, req datasource.Rea
 	}
 }
 
+// Configure adds the provider configured client to the private endpoint command data source.
 func (a *AWSPrivateEndpointCommand) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -128,6 +132,7 @@ func (a *AWSPrivateEndpointCommand) Configure(_ context.Context, req datasource.
 	a.Data = data
 }
 
+// validate ensures organization id, project id, cluster id, and VPC id are valued.
 func (a *AWSPrivateEndpointCommand) validate(config providerschema.AWSCommandRequest) error {
 	if config.OrganizationId.IsNull() {
 		return errors.ErrOrganizationIdMissing
@@ -144,6 +149,7 @@ func (a *AWSPrivateEndpointCommand) validate(config providerschema.AWSCommandReq
 	return nil
 }
 
+// convertSubnetIDs converts terraform string to go string.
 func convertSubnetIDs(subnets []types.String) *[]string {
 	var convertedSubnets []string
 	for _, s := range subnets {

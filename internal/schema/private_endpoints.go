@@ -43,6 +43,7 @@ type PrivateEndpointData struct {
 	Status types.String `tfsdk:"status"`
 }
 
+// Validate is used to verify that IDs have been properly imported.
 func (p *PrivateEndpoint) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
 		OrganizationId: p.OrganizationId,

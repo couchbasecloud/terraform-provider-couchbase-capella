@@ -37,6 +37,7 @@ func (p *PrivateEndpointService) Metadata(_ context.Context, req datasource.Meta
 	resp.TypeName = req.ProviderTypeName + "_private_endpoint_service"
 }
 
+// Schema defines schema for private endpoint service resource.
 func (p *PrivateEndpointService) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -48,6 +49,7 @@ func (p *PrivateEndpointService) Schema(_ context.Context, _ datasource.SchemaRe
 	}
 }
 
+// Read refreshes the Terraform state with the latest data of the private endpoint service.
 func (p *PrivateEndpointService) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state providerschema.PrivateEndpointService
 	diags := req.Config.Get(ctx, &state)
@@ -106,6 +108,7 @@ func (p *PrivateEndpointService) Read(ctx context.Context, req datasource.ReadRe
 	}
 }
 
+// Configure adds the provider configured client to the private endpoint service data source.
 func (p *PrivateEndpointService) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -124,6 +127,7 @@ func (p *PrivateEndpointService) Configure(_ context.Context, req datasource.Con
 	p.Data = data
 }
 
+// validate ensures organization id, project id and cluster id are valued.
 func (p *PrivateEndpointService) validate(state providerschema.PrivateEndpointService) error {
 	if state.OrganizationId.IsNull() {
 		return errors.ErrOrganizationIdMissing

@@ -9,6 +9,7 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 )
 
+// PrivateEndpointService represents the status of private endpoint service on a cluster.
 type PrivateEndpointService struct {
 	// OrganizationId is the ID of the organization to which the Capella cluster belongs.
 	OrganizationId types.String `tfsdk:"organization_id"`
@@ -23,6 +24,7 @@ type PrivateEndpointService struct {
 	Enabled types.Bool `tfsdk:"enabled"`
 }
 
+// Validate is used to verify that IDs have been properly imported.
 func (p *PrivateEndpointService) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
 		OrganizationId: p.OrganizationId,

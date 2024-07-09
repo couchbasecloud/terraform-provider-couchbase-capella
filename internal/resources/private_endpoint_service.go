@@ -29,18 +29,22 @@ const (
 	errorMessageWhileEnablingPrivateEndpointService = "There is an error while enabling private endpoint service. Please check in Capella to see if there are any hanging resources\" +\n\t\" have been created, unexpected error: "
 )
 
+// PrivateEndpointService is the scope resource implementation.
 type PrivateEndpointService struct {
 	*providerschema.Data
 }
 
+// NewPrivateEndpointService is a helper function to simplify the provider implementation.
 func NewPrivateEndpointService() resource.Resource {
 	return &PrivateEndpointService{}
 }
 
+// Metadata returns the private endpoint service resource type name.
 func (p *PrivateEndpointService) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_private_endpoint_service"
 }
 
+// Schema defines the schema for a private endpoint service resource.
 func (p *PrivateEndpointService) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -131,6 +135,7 @@ func (p *PrivateEndpointService) Create(ctx context.Context, req resource.Create
 	}
 }
 
+// Read reads the private endpoint service status.
 func (p *PrivateEndpointService) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state providerschema.PrivateEndpointService
 	diags := req.State.Get(ctx, &state)
@@ -179,6 +184,7 @@ func (p *PrivateEndpointService) Update(ctx context.Context, req resource.Update
 	// implement the resource.RequiresReplace() attribute plan modifier.
 }
 
+// Delete disables private endpoint service on the cluster.
 func (p *PrivateEndpointService) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state providerschema.PrivateEndpointService
 	diags := req.State.Get(ctx, &state)
@@ -236,6 +242,7 @@ func (p *PrivateEndpointService) Delete(ctx context.Context, req resource.Delete
 
 }
 
+// Configure It adds the provider configured api to the private endpoint service resource.
 func (p *PrivateEndpointService) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -254,10 +261,12 @@ func (p *PrivateEndpointService) Configure(ctx context.Context, req resource.Con
 	p.Data = data
 }
 
+// ImportState imports a private endpoint service status.
 func (p *PrivateEndpointService) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("cluster_id"), req, resp)
 }
 
+// validateCreateEndpointService ensures organization id, project id and cluster id are valued.
 func validateCreateEndpointService(plan providerschema.PrivateEndpointService) error {
 	if plan.OrganizationId.IsNull() {
 		return errors.ErrOrganizationIdCannotBeEmpty
@@ -281,6 +290,7 @@ func initializePrivateEndpointServicePlan(plan providerschema.PrivateEndpointSer
 	return plan
 }
 
+// waitUntilStatusChanges terraform will wait until the service status changes on the cluster.
 func (p *PrivateEndpointService) waitUntilStatusChanges(ctx context.Context, finalState bool, organizationId, projectId, clusterId string) error {
 	var cancel context.CancelFunc
 	ctx, cancel = context.WithTimeout(ctx, time.Minute*60)
@@ -308,6 +318,7 @@ func (p *PrivateEndpointService) waitUntilStatusChanges(ctx context.Context, fin
 	}
 }
 
+// getServiceStatus retrieves current private endpoint service status.
 func (p *PrivateEndpointService) getServiceStatus(ctx context.Context, organizationId, projectId, clusterId string) (*api.GetPrivateEndpointServiceStatusResponse, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/privateEndpointService", p.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
@@ -331,6 +342,7 @@ func (p *PrivateEndpointService) getServiceStatus(ctx context.Context, organizat
 	return &status, nil
 }
 
+// getServiceState morphs service status into a terraform schema.
 func (p *PrivateEndpointService) getServiceState(ctx context.Context, organizationId, projectId, clusterId string) (*providerschema.PrivateEndpointService, error) {
 	response, err := p.getServiceStatus(ctx, organizationId, projectId, clusterId)
 	if err != nil {

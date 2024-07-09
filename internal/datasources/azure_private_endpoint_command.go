@@ -30,10 +30,12 @@ func NewAzurePrivateEndpointCommand() datasource.DataSource {
 	return &AzurePrivateEndpointCommand{}
 }
 
+// Metadata returns the data source type name.
 func (a *AzurePrivateEndpointCommand) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_azure_private_endpoint_command"
 }
 
+// Schema defines the schema for the private endpoint command data source.
 func (a *AzurePrivateEndpointCommand) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -47,6 +49,7 @@ func (a *AzurePrivateEndpointCommand) Schema(_ context.Context, _ datasource.Sch
 	}
 }
 
+// Read refreshes the Terraform state with the latest data of private endpoint command .
 func (a *AzurePrivateEndpointCommand) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state providerschema.AzureCommandRequest
 	diags := req.Config.Get(ctx, &state)
@@ -110,6 +113,7 @@ func (a *AzurePrivateEndpointCommand) Read(ctx context.Context, req datasource.R
 	}
 }
 
+// Configure adds the provider configured client to the private endpoint command data source.
 func (a *AzurePrivateEndpointCommand) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -128,6 +132,7 @@ func (a *AzurePrivateEndpointCommand) Configure(_ context.Context, req datasourc
 	a.Data = data
 }
 
+// validateAzureCommand ensures organization id, project id, cluster id, virtual network and resource group are valued.
 func validateAzureCommand(config providerschema.AzureCommandRequest) error {
 	if config.OrganizationId.IsNull() {
 		return errors.ErrOrganizationIdMissing

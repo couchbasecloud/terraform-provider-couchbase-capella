@@ -24,18 +24,22 @@ var (
 	_ resource.ResourceWithImportState = &PrivateEndpoint{}
 )
 
+// PrivateEndpoint is the private endpoint resource implementation.
 type PrivateEndpoint struct {
 	*providerschema.Data
 }
 
+// NewPrivateEndpoint is a helper function to simplify the provider implementation.
 func NewPrivateEndpoint() resource.Resource {
 	return &PrivateEndpoint{}
 }
 
+// Metadata returns the private endpoint resource type name.
 func (p *PrivateEndpoint) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_private_endpoints"
 }
 
+// Schema defines the schema for the private endpoint resource.
 func (p *PrivateEndpoint) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -121,6 +125,7 @@ func (p *PrivateEndpoint) Create(ctx context.Context, req resource.CreateRequest
 	}
 }
 
+// Read reads the private endpoint status.
 func (p *PrivateEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state providerschema.PrivateEndpoint
 	diags := req.State.Get(ctx, &state)
@@ -220,6 +225,7 @@ func (p *PrivateEndpoint) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 }
 
+// Configure adds the provider configured client to the private endpoint resource.
 func (p *PrivateEndpoint) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -238,10 +244,12 @@ func (p *PrivateEndpoint) Configure(_ context.Context, req resource.ConfigureReq
 	p.Data = data
 }
 
+// ImportState imports a private endpoint to be managed by terraform.
 func (p *PrivateEndpoint) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("endpoint_id"), req, resp)
 }
 
+// validateAcceptPrivateEndpoint ensures organization id, project id, cluster id, and endpoint id are valued.
 func validateAcceptPrivateEndpoint(plan providerschema.PrivateEndpoint) error {
 	if plan.OrganizationId.IsNull() {
 		return errors.ErrOrganizationIdCannotBeEmpty
@@ -268,6 +276,7 @@ func initializePrivateEndpointPlan(plan providerschema.PrivateEndpoint) provider
 	return plan
 }
 
+// getPrivateEndpointState morphs private endpoint status to terraform schema.
 func (p *PrivateEndpoint) getPrivateEndpointState(ctx context.Context, organizationId, projectId, clusterId, endpointId string) (*providerschema.PrivateEndpoint, error) {
 	status, err := p.getPrivateEndpointStatus(ctx, organizationId, projectId, clusterId, endpointId)
 	if err != nil {
@@ -285,7 +294,7 @@ func (p *PrivateEndpoint) getPrivateEndpointState(ctx context.Context, organizat
 	return &state, nil
 }
 
-// There is no V4 endpoint to get a single private endpoint.  We have to loop through the entire list to find
+// There is currently no V4 endpoint to get a single private endpoint.  We have to loop through the entire list to find
 // the desired private endpoint.
 func (p *PrivateEndpoint) getPrivateEndpointStatus(ctx context.Context, organizationId, projectId, clusterId, endpointId string) (string, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/privateEndpointService/endpoints", p.HostURL, organizationId, projectId, clusterId)
