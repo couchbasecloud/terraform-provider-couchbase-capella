@@ -181,6 +181,10 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewAuditLogSettings,
 		datasources.NewAuditLogEventIDs,
 		datasources.NewAuditLogExport,
+		datasources.NewEvents,
+		datasources.NewEvent,
+		datasources.NewProjectEvents,
+		datasources.NewProjectEvent,
 	}
 }
 
