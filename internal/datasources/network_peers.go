@@ -95,7 +95,6 @@ func (n *NetworkPeers) Read(ctx context.Context, req datasource.ReadRequest, res
 		state.Data = append(state.Data, *newNetworkPeerData)
 	}
 
-	// Set state
 	diags = resp.State.Set(ctx, &state)
 
 	resp.Diagnostics.Append(diags...)
