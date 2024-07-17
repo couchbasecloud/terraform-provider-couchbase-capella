@@ -67,7 +67,6 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 		ProviderType: plan.ProviderType.ValueString(),
 	}
 
-	//Check if AWSConfig or GCPConfig is not nil and marshal it
 	if plan.ProviderConfig.AWSConfig != nil {
 		awsConfigForJSON := network_peer_api.AWSConfigData{
 			AccountId: plan.ProviderConfig.AWSConfig.AccountId.ValueString(),
