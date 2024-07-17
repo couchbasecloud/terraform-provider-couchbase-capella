@@ -49,35 +49,14 @@ func (n *NetworkPeers) Read(ctx context.Context, req datasource.ReadRequest, res
 		return
 	}
 
-	if state.OrganizationId.IsNull() {
+	clusterId, projectId, organizationId, err := state.Validate()
+	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading network peer",
-			"Could not read network peer, unexpected error: organization ID cannot be empty.",
+			"Error Reading Network peers in Capella",
+			"Could not read Capella Network peers in cluster "+clusterId+": "+err.Error(),
 		)
 		return
 	}
-
-	if state.ProjectId.IsNull() {
-		resp.Diagnostics.AddError(
-			"Error reading network peer",
-			"Could not read network peer, unexpected error: project ID cannot be empty.",
-		)
-		return
-	}
-
-	if state.ClusterId.IsNull() {
-		resp.Diagnostics.AddError(
-			"Error reading network peer",
-			"Could not read network peer, unexpected error: cluster ID cannot be empty.",
-		)
-		return
-	}
-
-	var (
-		organizationId = state.OrganizationId.ValueString()
-		projectId      = state.ProjectId.ValueString()
-		clusterId      = state.ClusterId.ValueString()
-	)
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/networkPeers", n.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}

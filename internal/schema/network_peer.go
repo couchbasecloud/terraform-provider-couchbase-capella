@@ -278,3 +278,18 @@ func NewNetworkPeerData(networkPeer *network_peer_api.GetNetworkPeeringRecordRes
 
 	return &newNetworkPeerData, nil
 }
+
+// Validate is used to verify that all the fields in the datasource
+// have been populated.
+func (n NetworkPeers) Validate() (clusterId, projectId, organizationId string, err error) {
+	if n.OrganizationId.IsNull() {
+		return "", "", "", errors.ErrOrganizationIdMissing
+	}
+	if n.ProjectId.IsNull() {
+		return "", "", "", errors.ErrProjectIdMissing
+	}
+	if n.ClusterId.IsNull() {
+		return "", "", "", errors.ErrClusterIdMissing
+	}
+	return n.ClusterId.ValueString(), n.ProjectId.ValueString(), n.OrganizationId.ValueString(), nil
+}
