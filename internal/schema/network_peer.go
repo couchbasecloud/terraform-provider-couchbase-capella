@@ -139,6 +139,9 @@ type NetworkPeerData struct {
 	Audit types.Object `tfsdk:"audit"`
 }
 
+// Validate will split the IDs by a delimiter i.e. comma , in case a terraform import CLI is invoked.
+// The format of the terraform import CLI would include the IDs as follows -
+// `terraform import capella_network_peer.new_network_peer id=<uuid>,cluster_id=<uuid>,project_id=<uuid>,organization_id=<uuid>`.
 func (n *NetworkPeer) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
 		OrganizationId: n.OrganizationId,
