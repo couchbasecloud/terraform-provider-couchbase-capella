@@ -27,7 +27,6 @@ type NetworkPeer struct {
 	Id types.String `tfsdk:"id"`
 
 	// Commands Commands contains the list of commands that the user must execute in order to complete the association of the network.
-	//Commands []types.String `tfsdk:"commands"`
 	Commands types.Set `tfsdk:"commands"`
 
 	// Name is the Name of the peering relationship.
@@ -78,7 +77,7 @@ type AWSConfig struct {
 	// VpcId The alphanumeric VPC ID which starts with \"vpc-\". This is also known as the networkId.
 	VpcId types.String `tfsdk:"vpc_id"`
 
-	// ProviderId The ID of the VPC peer on GCP.
+	// ProviderId The ID of the VPC peer on AWS.
 	ProviderId types.String `tfsdk:"provider_id"`
 }
 

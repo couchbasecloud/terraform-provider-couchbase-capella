@@ -16,7 +16,6 @@ func NetworkPeerSchema() schema.Schema {
 					Attributes: map[string]schema.Attribute{
 						"id":   computedStringAttribute,
 						"name": computedStringAttribute,
-						//"provider_type": computedStringAttribute,
 						"provider_config": schema.SingleNestedAttribute{
 							Computed: true,
 							Attributes: map[string]schema.Attribute{
