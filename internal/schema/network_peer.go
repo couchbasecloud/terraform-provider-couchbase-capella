@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	network_peer_api "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/network_peer"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-
-	network_peer_api "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/network_peer"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 )
 
 // NetworkPeer defines the response as received from V4 Capella Public API when asked to create a new network peer.
