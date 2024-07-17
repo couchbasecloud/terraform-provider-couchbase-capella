@@ -183,8 +183,8 @@ func (n *NetworkPeer) Read(ctx context.Context, req resource.ReadRequest, resp *
 	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Private Endpoint",
-			"Could not validate private endpoint "+state.Id.String()+": "+err.Error(),
+			"Error Reading Network peer",
+			"Could not validate Network peer "+state.Id.String()+": "+err.Error(),
 		)
 		return
 	}
