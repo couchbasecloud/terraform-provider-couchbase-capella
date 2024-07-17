@@ -171,6 +171,7 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 }
 
+// Read reads the NetworkPeer information.
 func (n *NetworkPeer) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state providerschema.NetworkPeer
 	diags := req.State.Get(ctx, &state)
