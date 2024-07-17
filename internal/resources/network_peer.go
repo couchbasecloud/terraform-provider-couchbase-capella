@@ -221,10 +221,13 @@ func (n *NetworkPeer) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 // Update there is no update API so returns an error.
 func (n *NetworkPeer) Update(_ context.Context, _ resource.UpdateRequest, resp *resource.UpdateResponse) {
-	resp.Diagnostics.AddError(
-		"No update API for network peering",
-		"There doesn't exist an update API for network peering",
-	)
+	// Couchbase Capella's v4 does not support a PUT endpoint for Network Peers.
+	// Network Peers can only be created, read and deleted.
+	// https://docs.couchbase.com/cloud/management-api-reference/index.html#tag/Network-Peers
+	//
+	// Note: In this situation, terraform apply will default to deleting and executing a new create.
+	// The update implementation should simply be left empty.
+	// https://developer.hashicorp.com/terraform/plugin/framework/resources/update
 }
 
 // Delete deletes a network peer of the CSP.
