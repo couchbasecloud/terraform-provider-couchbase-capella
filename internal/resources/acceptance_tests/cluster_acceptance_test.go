@@ -495,7 +495,6 @@ func TestAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenario(t *testin
 	})
 }
 
-
 // TestAccClusterResourceNotFound is a Terraform acceptance test that simulates the scenario where a cluster is created
 // from Terraform, but it is deleted by a REST API call and the deletion is successful. Then, updating the cluster via Terraform
 // should not cause any issues and should create a new cluster with the updated configuration.
