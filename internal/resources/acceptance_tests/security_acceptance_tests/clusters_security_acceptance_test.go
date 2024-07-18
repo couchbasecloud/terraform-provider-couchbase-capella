@@ -61,7 +61,7 @@ func TestAccCreateClusterOrgOwner(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east-1"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
 					resource.TestCheckResourceAttr(resourceReference, "couchbase_server.version", "7.1"),
-					resource.TestCheckResourceAttr(resourceReference, "configuration_type", "multiNode"),
+					//resource.TestCheckResourceAttr(resourceReference, "configuration_type", "multiNode"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "50"),
@@ -152,7 +152,7 @@ func TestAccCreateClusterProjOwner(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east-1"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
 					resource.TestCheckResourceAttr(resourceReference, "couchbase_server.version", "7.1"),
-					resource.TestCheckResourceAttr(resourceReference, "configuration_type", "multiNode"),
+					//resource.TestCheckResourceAttr(resourceReference, "configuration_type", "multiNode"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "50"),
@@ -201,7 +201,7 @@ func TestAccCreateClusterProjManager(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east-1"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
 					resource.TestCheckResourceAttr(resourceReference, "couchbase_server.version", "7.1"),
-					resource.TestCheckResourceAttr(resourceReference, "configuration_type", "multiNode"),
+					//resource.TestCheckResourceAttr(resourceReference, "configuration_type", "multiNode"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "50"),
@@ -304,7 +304,6 @@ resource "capella_cluster" "%[2]s" {
   couchbase_server = {
     version = "7.1"
   }
-  configuration_type = "multiNode"
   cloud_provider = {
     type   = "aws"
     region = "us-east-1"
