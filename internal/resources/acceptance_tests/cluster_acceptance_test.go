@@ -44,7 +44,11 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
-	cidr := "10.255.250.0/23"
+	cidr, err := acctest.GetCIDR("aws")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
@@ -170,7 +174,11 @@ func TestAccClusterResourceWithOptionalFieldAWS(t *testing.T) {
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
-	cidr := "10.251.250.0/23"
+	cidr, err := acctest.GetCIDR("aws")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
@@ -233,7 +241,11 @@ func TestAccClusterResourceAzure(t *testing.T) {
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
-	cidr := "10.252.250.0/23"
+	cidr, err := acctest.GetCIDR("aws")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
@@ -374,7 +386,11 @@ func TestAccClusterResourceGCP(t *testing.T) {
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
-	cidr := "10.253.250.0/23"
+	cidr, err := acctest.GetCIDR("aws")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.TestAccPreCheck(t)
@@ -458,7 +474,11 @@ func TestAccClusterResourceWithOptionalFieldAWSInvalidScenario(t *testing.T) {
 	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
-	cidr := "10.251.250.0/23"
+	cidr, err := acctest.GetCIDR("aws")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
@@ -480,7 +500,11 @@ func TestAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenario(t *testin
 	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
-	cidr := "10.248.250.0/23"
+	cidr, err := acctest.GetCIDR("aws")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
@@ -506,7 +530,11 @@ func TestAccClusterResourceNotFound(t *testing.T) {
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
 	projectResourceReference := "couchbase-capella_project." + projectResourceName
-	cidr := "10.254.250.0/23"
+	cidr, err := acctest.GetCIDR("aws")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
