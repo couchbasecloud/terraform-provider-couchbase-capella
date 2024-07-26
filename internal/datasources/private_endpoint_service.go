@@ -84,7 +84,7 @@ func (p *PrivateEndpointService) Read(ctx context.Context, req datasource.ReadRe
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Private Endpoint Service",
-			"Could not read private endpoint service in cluster "+state.OrganizationId.String()+": "+api.ParseError(err),
+			"Could not read private endpoint service in cluster "+state.ClusterId.String()+": "+api.ParseError(err),
 		)
 		return
 	}
