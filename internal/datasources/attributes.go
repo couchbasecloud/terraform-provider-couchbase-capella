@@ -43,9 +43,9 @@ var (
 		Computed:    true,
 	}
 
-	optionalStringSetAttribute = schema.SetAttribute{
+	requiredStringSetAttribute = schema.SetAttribute{
 		ElementType: types.StringType,
-		Optional:    true,
+		Required:    true,
 	}
 
 	// computedIntSetAttribute returns a Terraform list schema attribute

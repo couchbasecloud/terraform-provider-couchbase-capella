@@ -43,7 +43,7 @@ func (a *AWSPrivateEndpointCommand) Schema(_ context.Context, _ datasource.Schem
 			"project_id":      requiredStringAttribute,
 			"cluster_id":      requiredStringAttribute,
 			"vpc_id":          requiredStringAttribute,
-			"subnet_ids":      optionalStringSetAttribute,
+			"subnet_ids":      requiredStringSetAttribute,
 			"command":         computedStringAttribute,
 		},
 	}
