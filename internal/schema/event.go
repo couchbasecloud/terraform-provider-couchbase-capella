@@ -101,7 +101,7 @@ func NewEventItem(event *api.GetEventResponse, incidentIdsSet types.Set, kvStrin
 		newEventItem.UserName = types.StringValue(*event.UserName)
 	}
 	if event.UserId != nil {
-		newEventItem.UserId = types.StringValue(event.UserId.String())
+		newEventItem.UserId = types.StringValue(*event.UserId)
 	}
 
 	return &newEventItem, nil
@@ -186,7 +186,7 @@ func NewEvent(event *api.GetEventResponse, organizationId types.String, incident
 		newEvent.UserName = types.StringValue(*event.UserName)
 	}
 	if event.UserId != nil {
-		newEvent.UserId = types.StringValue(event.UserId.String())
+		newEvent.UserId = types.StringValue(*event.UserId)
 	}
 
 	return &newEvent, nil

@@ -69,7 +69,7 @@ type GetEventResponse struct {
 	UserEmail *string `json:"userEmail,omitempty"`
 
 	// UserId User id that initiated the request for this Event.
-	UserId *uuid.UUID `json:"userId,omitempty"`
+	UserId *string `json:"userId,omitempty"`
 
 	// UserName Name of the associated user at the time of event emission.
 	UserName *string `json:"userName,omitempty"`
