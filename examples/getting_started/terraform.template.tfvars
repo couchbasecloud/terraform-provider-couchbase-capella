@@ -28,7 +28,7 @@ disk = {
 }
 
 support = {
-  plan     = "enterprise"
+  plan     = "developer pro"
   timezone = "PT"
 }
 
