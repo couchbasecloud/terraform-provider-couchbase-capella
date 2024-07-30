@@ -44,7 +44,6 @@ access = [
         scopes = [
           {
             name        = "_default"
-            collections = ["_default"]
           }
         ]
       }]
