@@ -235,7 +235,7 @@ peer_id = "ffffffff-aaaa-1414-eeee-000000000000"
 
 ```
 
-### Note the Scope name for the new Network Peer
+### Note the peer id for the new Network Peer
 Command: `terraform output new_network_peer`
 
 Sample Output:
@@ -307,7 +307,7 @@ Please note, this command will only remove the resource from the Terraform State
 
 ### Now, let's import the resource in Terraform
 
-Command: `terraform import couchbase-capella_scope.new_scope scope_name=<scope_name>,bucket_id=<bucket_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
+Command: `terraform import couchbase-capella_network_peer.new_network_peer id=<peer_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
 In this case, the complete command is:
 `terraform import couchbase-capella_network_peer.new_network_peer id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000`
@@ -916,7 +916,7 @@ peer_id = "ffffffff-aaaa-1414-eeee-000000000000"
 
 ```
 
-### Note the Scope name for the new Network Peer
+### Note the peer id for the new Network Peer
 Command: `terraform output new_network_peer`
 
 Sample Output:
@@ -988,7 +988,7 @@ Please note, this command will only remove the resource from the Terraform State
 
 ### Now, let's import the resource in Terraform
 
-Command: `terraform import couchbase-capella_scope.new_scope scope_name=<scope_name>,bucket_id=<bucket_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
+Command: `terraform import couchbase-capella_network_peer.new_network_peer id=<peer_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
 In this case, the complete command is:
 `terraform import couchbase-capella_network_peer.new_network_peer id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000`
