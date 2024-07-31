@@ -12,11 +12,11 @@ In this example, we are going to do the following.
 
 ## GET
 
-Command: `terraform plan`
+Command: `terraform apply`
 
 Sample Output:
 ```
-terraform plan
+terraform apply
 ╷
 │ Warning: Provider development overrides are in effect
 │
@@ -31,17 +31,36 @@ data.couchbase-capella_aws_private_endpoint_command.aws_command: Read complete a
 Changes to Outputs:
   + aws_command = {
       + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
-      + command         = "aws ec2 create-vpc-endpoint --vpc-id vpc-1234 --region us-east-1 --service-name com.amazonaws.vpce.us-east-1.vpce-svc-1234 --vpc-endpoint-type Interface --subnet-ids "
+      + command         = "aws ec2 create-vpc-endpoint --vpc-id vpc-1234 --region us-east-1 --service-name com.amazonaws.vpce.us-east-1.vpce-svc-1234 --vpc-endpoint-type Interface --subnet-ids subnet-1234"
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
-      + subnet_ids      = null
+      + subnet_ids      = [
+          + "subnet-1234",
+        ]
       + vpc_id          = "vpc-1234"
     }
 
 You can apply this plan to save these new output values to the Terraform state, without changing any real infrastructure.
 
-───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
 
-Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly these actions if you run "terraform apply" now.
+  Enter a value: yes
 
+
+Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+aws_command = {
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "command" = "aws ec2 create-vpc-endpoint --vpc-id vpc-1234 --region us-east-1 --service-name com.amazonaws.vpce.us-east-1.vpce-svc-1234 --vpc-endpoint-type Interface --subnet-ids subnet-1234"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "subnet_ids" = toset([
+    "subnet-1234",
+  ])
+  "vpc_id" = "vpc-1234"
+}
 ```

@@ -7,4 +7,5 @@ data "couchbase-capella_aws_private_endpoint_command" "aws_command" {
   project_id      = var.project_id
   cluster_id      = var.cluster_id
   vpc_id          = var.vpc_id
+  subnet_ids      = var.subnet_ids
 }

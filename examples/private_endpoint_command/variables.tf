@@ -14,6 +14,11 @@ variable "vpc_id" {
   description = "VPC ID"
 }
 
+variable "subnet_ids" {
+  description = "subnet IDs"
+  type        = list(string)
+}
+
 variable "auth_token" {
   description = "Authentication API Key"
   sensitive   = true
