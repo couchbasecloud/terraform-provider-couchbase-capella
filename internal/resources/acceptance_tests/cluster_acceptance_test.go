@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
+//adding random comment
 // TODO: AV-66543 - Make Acceptance test concurrent
 // Concurrent Project creation is failing.
 
@@ -1199,6 +1200,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
     plan     = "enterprise"
     timezone = "IST"
   }
+  if_match = 5
 }
 `, cfg, resourceName, projectResourceName, projectResourceReference, cidr)
 }
