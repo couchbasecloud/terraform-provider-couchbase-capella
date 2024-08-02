@@ -1199,7 +1199,6 @@ resource "couchbase-capella_cluster" "%[2]s" {
     plan     = "enterprise"
     timezone = "IST"
   }
-  if_match = 5
 }
 `, cfg, resourceName, projectResourceName, projectResourceReference, cidr)
 }
