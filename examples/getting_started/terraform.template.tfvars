@@ -28,7 +28,7 @@ disk = {
 }
 
 support = {
-  plan     = "developer pro"
+  plan     = "enterprise"
   timezone = "PT"
 }
 
@@ -43,8 +43,7 @@ access = [
         name = "new_terraform_bucket"
         scopes = [
           {
-            name        = "_default"
-            collections = ["_default"]
+            name = "_default"
           }
         ]
       }]
