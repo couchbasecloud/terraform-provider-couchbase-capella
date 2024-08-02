@@ -57,7 +57,6 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 					testAccExistsClusterResource(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
 					resource.TestCheckResourceAttr(resourceReference, "description", ""),
-					resource.TestCheckResourceAttr(resourceReference, "enable_private_dns_resolution", "false"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east-1"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
@@ -585,7 +584,6 @@ resource "couchbase-capella_project" "%[3]s" {
     organization_id = var.organization_id
 	name            = "acc_test_project_name"
 	description     = "description"
-    enable_private_dns_resolution = "false"
 }
 
 resource "couchbase-capella_cluster" "%[2]s" {
