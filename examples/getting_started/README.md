@@ -3045,11 +3045,8 @@ couchbase-capella_cluster.new_cluster: Destruction complete after 8m40s
 couchbase-capella_project.new_project: Destroying... [id=ffffffff-aaaa-1414-eeee-000000000000]
 couchbase-capella_project.new_project: Destruction complete after 2s
 couchbase-capella_audit_log_settings.new_auditlogsettings: Destroying...
-╷
-│ Error: delete is not supported for audit log settings
-│
-│ delete is not supported for audit log settings
- 
-
+couchbase-capella_audit_log_settings.new_auditlogsettings: Destruction complete after 0s
+couchbase-capella_audit_log_export.new_auditlogexport: Destroying... [id=ffffffff-aaaa-1414-eeee-000000000000]
+couchbase-capella_audit_log_export.new_auditlogexport: Destruction complete after 0s
 
 ```
