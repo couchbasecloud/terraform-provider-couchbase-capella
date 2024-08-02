@@ -135,7 +135,7 @@ type Cluster struct {
 
 	// EnablePrivateDNSResolution signals that the cluster should have hostnames that are hosted in a public DNS zone that resolve to a private DNS address.
 	// This exists to support the use case of customers connecting from their own data centers where it is not possible to make use of a cloud service provider DNS zone.
-	EnablePrivateDNSResolution types.Bool `tfsdk:"enablePrivateDNSResolution"`
+	EnablePrivateDNSResolution types.Bool `tfsdk:"enable_private_dns_resolution"`
 
 	// Name of the cluster (up to 256 characters).
 	Name types.String `tfsdk:"name"`
@@ -319,7 +319,7 @@ type ClusterData struct {
 	Id                         types.String     `tfsdk:"id"`
 	Audit                      types.Object     `tfsdk:"audit"`
 	Description                types.String     `tfsdk:"description"`
-	EnablePrivateDNSResolution types.Bool       `tfsdk:"enablePrivateDNSResolution"`
+	EnablePrivateDNSResolution types.Bool       `tfsdk:"enable_private_dns_resolution"`
 	Name                       types.String     `tfsdk:"name"`
 	AppServiceId               types.String     `tfsdk:"app_service_id"`
 	CurrentState               types.String     `tfsdk:"current_state"`

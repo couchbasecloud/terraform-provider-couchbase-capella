@@ -16,11 +16,11 @@ func ClusterSchema() schema.Schema {
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"organization_id":            stringAttribute([]string{required, requiresReplace}),
-			"project_id":                 stringAttribute([]string{required, requiresReplace}),
-			"name":                       stringAttribute([]string{required}),
-			"description":                stringAttribute([]string{optional, computed}),
-			"enablePrivateDNSResolution": stringAttribute([]string{optional, computed, requiresReplace}),
+			"organization_id":               stringAttribute([]string{required, requiresReplace}),
+			"project_id":                    stringAttribute([]string{required, requiresReplace}),
+			"name":                          stringAttribute([]string{required}),
+			"description":                   stringAttribute([]string{optional, computed}),
+			"enable_private_dns_resolution": boolAttribute(optional, computed, requiresReplace),
 			"cloud_provider": schema.SingleNestedAttribute{
 				Required: true,
 				Attributes: map[string]schema.Attribute{
