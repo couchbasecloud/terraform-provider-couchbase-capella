@@ -128,9 +128,7 @@ type Cluster struct {
 	OrganizationId types.String   `tfsdk:"organization_id"`
 	Audit          types.Object   `tfsdk:"audit"`
 
-	// ConfigurationType represents whether a cluster is configured as a single-node or multi-node cluster.
-	ConfigurationType types.String `tfsdk:"configuration_type"`
-	CouchbaseServer   types.Object `tfsdk:"couchbase_server"`
+	CouchbaseServer types.Object `tfsdk:"couchbase_server"`
 
 	// Description of the cluster (up to 1024 characters).
 	Description types.String `tfsdk:"description"`
@@ -184,7 +182,6 @@ func NewCluster(ctx context.Context, cluster *clusterapi.GetClusterResponse, org
 			Region: types.StringValue(cluster.CloudProvider.Region),
 			Type:   types.StringValue(string(cluster.CloudProvider.Type)),
 		},
-		ConfigurationType: types.StringValue(string(cluster.ConfigurationType)),
 		Support: &Support{
 			Plan:     types.StringValue(string(cluster.Support.Plan)),
 			Timezone: types.StringValue(string(cluster.Support.Timezone)),
