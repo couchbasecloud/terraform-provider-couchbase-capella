@@ -51,7 +51,7 @@ type EventItem struct {
 }
 
 // NewEventItem creates a new EventItem instance from the provided API response.
-func NewEventItem(event *api.GetEventResponse, incidentIdsSet types.Set, kvString types.String) (*EventItem, error) {
+func NewEventItem(event api.GetEventResponse, incidentIdsSet types.Set, kvString types.String) (*EventItem, error) {
 	newEventItem := EventItem{
 		Id:          types.StringValue(event.Id.String()),
 		Key:         types.StringValue(event.Key),

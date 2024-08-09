@@ -59,7 +59,7 @@ func MapResponseEventsBody(
 			return nil, err
 		}
 
-		newEventItem, err := providerschema.NewEventItem(&event, incidentIdsSet, kvString)
+		newEventItem, err := providerschema.NewEventItem(event, incidentIdsSet, kvString)
 		if err != nil {
 			return nil, err
 		}
@@ -102,7 +102,7 @@ func ConvertIncidents(ctx context.Context, incidentIds *[]uuid.UUID) (types.Set,
 	return incidentIdsSet, nil
 }
 
-// ConvertKV converts a map to a JSON string
+// ConvertKV converts a map to a JSON string.
 func ConvertKV(mp *map[string]interface{}) (types.String, error) {
 	jsonData, err := json.Marshal(mp)
 	if err != nil {
