@@ -181,6 +181,7 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewAuditLogSettings,
 		datasources.NewAuditLogEventIDs,
 		datasources.NewAuditLogExport,
+		datasources.NewNetworkPeers,
 	}
 }
 
@@ -205,5 +206,6 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewAppServiceOnOffOnDemand,
 		resources.NewAuditLogSettings,
 		resources.NewAuditLogExport,
+		resources.NewNetworkPeer,
 	}
 }
