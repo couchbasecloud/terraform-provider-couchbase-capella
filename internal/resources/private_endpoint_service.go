@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
-
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
@@ -161,9 +161,15 @@ func (p *PrivateEndpointService) Read(ctx context.Context, req resource.ReadRequ
 
 	refreshedState, err := p.getServiceState(ctx, organizationId, projectId, clusterId)
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error reading private endpoint service status",
-			"Error reading private endpoint service status, unexpected error: "+err.Error(),
+			"Error reading private endpoint service status, unexpected error: "+errString,
 		)
 
 		return
