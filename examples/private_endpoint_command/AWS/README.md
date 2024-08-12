@@ -8,7 +8,7 @@ To run, configure your Couchbase Capella provider as described in README in the 
 
 In this example, we are going to do the following.
 
-1. GET: Display the AWS command as stated in the `get_config.tf` file.
+1. GET: Display the AWS command as stated in the `get_command.tf` file.
 
 ## GET
 
