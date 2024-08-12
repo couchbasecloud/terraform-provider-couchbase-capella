@@ -20,7 +20,7 @@ func ClusterSchema() schema.Schema {
 			"project_id":                    stringAttribute([]string{required, requiresReplace}),
 			"name":                          stringAttribute([]string{required}),
 			"description":                   stringAttribute([]string{optional, computed}),
-			"enable_private_dns_resolution": boolAttribute(optional, computed, requiresReplace),
+			"enable_private_dns_resolution": boolDefaultAttribute(false, optional, requiresReplace),
 			"cloud_provider": schema.SingleNestedAttribute{
 				Required: true,
 				Attributes: map[string]schema.Attribute{
