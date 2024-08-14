@@ -85,9 +85,12 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 			Type:   clusterapi.CloudProviderType(plan.CloudProvider.Type.ValueString()),
 		},
 		Support: clusterapi.Support{
-			Plan:     clusterapi.SupportPlan(plan.Support.Plan.ValueString()),
-			Timezone: clusterapi.SupportTimezone(plan.Support.Timezone.ValueString()),
+			Plan: clusterapi.SupportPlan(plan.Support.Plan.ValueString()),
 		},
+	}
+
+	if !plan.Support.Timezone.IsNull() && !plan.Support.Timezone.IsUnknown() {
+		clusterRequest.Support.Timezone = clusterapi.SupportTimezone(plan.Support.Timezone.ValueString())
 	}
 
 	if !plan.Description.IsNull() && !plan.Description.IsUnknown() {
@@ -322,9 +325,12 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		Description: plan.Description.ValueString(),
 		Name:        plan.Name.ValueString(),
 		Support: clusterapi.Support{
-			Plan:     clusterapi.SupportPlan(plan.Support.Plan.ValueString()),
-			Timezone: clusterapi.SupportTimezone(plan.Support.Timezone.ValueString()),
+			Plan: clusterapi.SupportPlan(plan.Support.Plan.ValueString()),
 		},
+	}
+
+	if !plan.Support.Timezone.IsNull() && !plan.Support.Timezone.IsUnknown() {
+		ClusterRequest.Support.Timezone = clusterapi.SupportTimezone(plan.Support.Timezone.ValueString())
 	}
 
 	serviceGroups, err := c.morphToApiServiceGroups(plan)

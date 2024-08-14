@@ -88,7 +88,7 @@ func ClusterSchema() schema.Schema {
 				Required: true,
 				Attributes: map[string]schema.Attribute{
 					"plan":     stringAttribute([]string{required}),
-					"timezone": stringAttribute([]string{required}),
+					"timezone": stringAttribute([]string{computed, optional}),
 				},
 			},
 			"current_state":  stringAttribute([]string{computed}),
