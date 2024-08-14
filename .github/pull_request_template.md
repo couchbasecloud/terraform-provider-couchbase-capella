@@ -44,5 +44,5 @@ Please include a summary of the fix/feature/change, including any relevant motiv
 - [ ] I have added tests that prove my fix is effective or that my feature works per HashiCorp requirements
 - [ ] I have added any necessary documentation (if required)
 - [ ] I have run make fmt and formatted my code
-
+- [ ] I have made sure that no schema field is marked with both requiresReplace and computed
 ## Further comments
