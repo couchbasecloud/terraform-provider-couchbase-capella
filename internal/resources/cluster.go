@@ -91,6 +91,14 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 
 	if !plan.Support.Timezone.IsNull() && !plan.Support.Timezone.IsUnknown() {
 		clusterRequest.Support.Timezone = clusterapi.SupportTimezone(plan.Support.Timezone.ValueString())
+
+		if clusterRequest.Support.Plan == clusterapi.SupportPlan("basic") && clusterRequest.Support.Timezone != clusterapi.SupportTimezone("PT") {
+			resp.Diagnostics.AddError(
+				"Error creating cluster",
+				"Could not create cluster, unexpected error: Invalid timezone provided for basic cluster",
+			)
+			return
+		}
 	}
 
 	if !plan.Description.IsNull() && !plan.Description.IsUnknown() {
@@ -331,6 +339,14 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 
 	if !plan.Support.Timezone.IsNull() && !plan.Support.Timezone.IsUnknown() {
 		ClusterRequest.Support.Timezone = clusterapi.SupportTimezone(plan.Support.Timezone.ValueString())
+
+		if ClusterRequest.Support.Plan == clusterapi.SupportPlan("basic") && ClusterRequest.Support.Timezone != clusterapi.SupportTimezone("PT") {
+			resp.Diagnostics.AddError(
+				"Error creating cluster",
+				"Could not update cluster, unexpected error: Invalid timezone provided for basic cluster",
+			)
+			return
+		}
 	}
 
 	serviceGroups, err := c.morphToApiServiceGroups(plan)
