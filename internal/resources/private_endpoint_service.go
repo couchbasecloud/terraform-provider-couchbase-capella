@@ -384,8 +384,7 @@ func (p *PrivateEndpointService) waitUntilStatusChanges(ctx context.Context, fin
 	for {
 		select {
 		case <-ctx.Done():
-			const msg = "changing private endpoint service status timed out after initiation"
-			return fmt.Errorf(msg)
+			return errors.ErrPrivateEndpointServiceTimeout
 
 		case <-timer.C:
 			response, err := p.getServiceStatus(ctx, organizationId, projectId, clusterId)

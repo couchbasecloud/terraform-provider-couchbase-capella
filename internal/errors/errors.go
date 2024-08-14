@@ -201,4 +201,10 @@ var (
 
 	// ErrConvertingProviderConfig is returned when terraform fails to convert a network peer provider config.
 	ErrConvertingProviderConfig = errors.New("failed to convert network peer provider config, please contact Couchbase Capella Support")
+
+	ErrPrivateEndpointServiceTimeout = errors.New("changing private endpoint service status timed out after initiation")
+
+	ErrBucketCreationStatusTimeout = errors.New("bucket backup creation status transition timed out after initiation")
+
+	ErrAppServiceCreationStatusTimeout = errors.New("app service creation status transition timed out after initiation")
 )
