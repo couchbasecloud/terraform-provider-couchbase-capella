@@ -7,6 +7,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -15,6 +18,7 @@ import (
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	custommodifier "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources/custom_plan_modifiers"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
@@ -51,7 +55,12 @@ func (p *PrivateEndpointService) Schema(_ context.Context, _ resource.SchemaRequ
 			"organization_id": stringAttribute([]string{required, requiresReplace}),
 			"project_id":      stringAttribute([]string{required, requiresReplace}),
 			"cluster_id":      stringAttribute([]string{required, requiresReplace}),
-			"enabled":         boolDefaultAttribute(true, optional, computed),
+			"enabled": schema.BoolAttribute{
+				Default:       booldefault.StaticBool(true),
+				Optional:      true,
+				Computed:      true,
+				PlanModifiers: []planmodifier.Bool{custommodifier.BlockCreateWhenEnabledSetToFalse()},
+			},
 		},
 	}
 }
@@ -73,7 +82,6 @@ func (p *PrivateEndpointService) Create(ctx context.Context, req resource.Create
 		)
 		return
 	}
-
 	var (
 		organizationId = plan.OrganizationId.ValueString()
 		projectId      = plan.ProjectId.ValueString()
