@@ -6,6 +6,7 @@ data "couchbase-capella_private_endpoint_service" "service_status" {
   organization_id = var.organization_id
   project_id      = var.project_id
   cluster_id      = var.cluster_id
+  enabled         = var.enabled
 }
 
 resource "couchbase-capella_private_endpoint_service" "new_service" {

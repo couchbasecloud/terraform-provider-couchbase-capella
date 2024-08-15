@@ -42,7 +42,7 @@ Terraform will perform the following actions:
   # couchbase-capella_private_endpoint_service.new_service will be created
   + resource "couchbase-capella_private_endpoint_service" "new_service" {
       + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
-      + enabled         = (known after apply)
+      + enabled         = true
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
     }
@@ -125,7 +125,7 @@ data.couchbase-capella_private_endpoint_service.service_status: Read complete af
 Changes to Outputs:
   + existing_auditlogexport = {
       + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
-      + enabled         = false
+      + enabled         = true
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
     }
