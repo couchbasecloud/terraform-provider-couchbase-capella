@@ -51,7 +51,7 @@ func (p *PrivateEndpointService) Schema(_ context.Context, _ resource.SchemaRequ
 			"organization_id": stringAttribute([]string{required, requiresReplace}),
 			"project_id":      stringAttribute([]string{required, requiresReplace}),
 			"cluster_id":      stringAttribute([]string{required, requiresReplace}),
-			"enabled":         boolAttribute(computed),
+			"enabled":         boolDefaultAttribute(true, optional, computed),
 		},
 	}
 }
@@ -182,12 +182,77 @@ func (p *PrivateEndpointService) Read(ctx context.Context, req resource.ReadRequ
 	}
 }
 
-// Update there is no update API for private endpoint service.
+// Update will enable/disable the private endpoint service.
 func (p *PrivateEndpointService) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// From https://developer.hashicorp.com/terraform/plugin/framework/resources/update#caveats
-	// If the resource does not support modification and should always be recreated on configuration value updates,
-	// the Update logic can be left empty and ensure all configurable schema attributes
-	// implement the resource.RequiresReplace() attribute plan modifier.
+	var config providerschema.PrivateEndpointService
+	diags := req.Config.Get(ctx, &config)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	url := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/privateEndpointService",
+		p.HostURL,
+		config.OrganizationId.ValueString(),
+		config.ProjectId.ValueString(),
+		config.ClusterId.ValueString(),
+	)
+
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
+	status := "enabling"
+
+	if !config.Enabled.ValueBool() {
+		cfg.Method = http.MethodDelete
+		status = "disabling"
+	}
+
+	_, err := p.Client.ExecuteWithRetry(
+		ctx,
+		cfg,
+		nil,
+		p.Token,
+		nil,
+	)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error "+status+" private endpoint service",
+			"Error "+status+" private endpoint service, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	err = p.waitUntilStatusChanges(ctx,
+		config.Enabled.ValueBool(),
+		config.OrganizationId.ValueString(),
+		config.ProjectId.ValueString(),
+		config.ClusterId.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error "+status+" private endpoint service",
+			"Error "+status+"private endpoint service, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	refreshedState, err := p.getServiceState(ctx,
+		config.OrganizationId.ValueString(),
+		config.ProjectId.ValueString(),
+		config.ClusterId.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error reading private endpoint service status",
+			"Error reading private endpoint service status, unexpected error: "+err.Error(),
+		)
+
+		return
+	}
+
+	diags = resp.State.Set(ctx, refreshedState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Delete disables private endpoint service on the cluster.
@@ -214,7 +279,11 @@ func (p *PrivateEndpointService) Delete(ctx context.Context, req resource.Delete
 		clusterId      = IDs[providerschema.ClusterId]
 	)
 
-	// Disable private endpoint service.
+	// If private endpoint service is already disabled, just remove the resource from the state file.
+	if !state.Enabled.ValueBool() {
+		return
+	}
+
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/privateEndpointService",
 		p.HostURL,
