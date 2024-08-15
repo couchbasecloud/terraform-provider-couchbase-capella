@@ -7,18 +7,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources/custom_plan_modifier"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
@@ -55,11 +51,7 @@ func (p *PrivateEndpointService) Schema(_ context.Context, _ resource.SchemaRequ
 			"organization_id": stringAttribute([]string{required, requiresReplace}),
 			"project_id":      stringAttribute([]string{required, requiresReplace}),
 			"cluster_id":      stringAttribute([]string{required, requiresReplace}),
-			"enabled": schema.BoolAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.Bool{
-					custom_plan_modifier.TriggerUpdateOnExternalStatusChange()},
-			},
+			"enabled":         boolAttribute(computed),
 		},
 	}
 }
@@ -141,10 +133,6 @@ func (p *PrivateEndpointService) Create(ctx context.Context, req resource.Create
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	// we store the status in a private state variable to be used by a custom plan modifier.
-	diags = resp.Private.SetKey(ctx, "is_enabled", []byte("true"))
-	resp.Diagnostics.Append(diags...)
 }
 
 // Read reads the private endpoint service status.
@@ -194,77 +182,12 @@ func (p *PrivateEndpointService) Read(ctx context.Context, req resource.ReadRequ
 	}
 }
 
-// Update is only used when external change occurs.
+// Update there is no update API for private endpoint service.
 func (p *PrivateEndpointService) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan providerschema.PrivateEndpointService
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	err := validateCreateEndpointService(plan)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error validating private endpoint service request",
-			"Could not validate private endpoint service request, unexpected error: "+err.Error(),
-		)
-		return
-	}
-
-	var (
-		organizationId = plan.OrganizationId.ValueString()
-		projectId      = plan.ProjectId.ValueString()
-		clusterId      = plan.ClusterId.ValueString()
-	)
-
-	url := fmt.Sprintf(
-		"%s/v4/organizations/%s/projects/%s/clusters/%s/privateEndpointService",
-		p.HostURL,
-		organizationId,
-		projectId,
-		clusterId,
-	)
-
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
-	_, err = p.Client.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		p.Token,
-		nil,
-	)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error enabling private endpoint service",
-			errorMessageWhileEnablingPrivateEndpointService+api.ParseError(err),
-		)
-		return
-	}
-
-	err = p.waitUntilStatusChanges(ctx, true, organizationId, projectId, clusterId)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error could not enable private endpoint service",
-			"Error could not enable private endpoint service, unexpected error: "+err.Error(),
-		)
-	}
-
-	refreshedState, err := p.getServiceState(ctx, organizationId, projectId, clusterId)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error reading private endpoint service status",
-			"Error reading private endpoint service status, unexpected error: "+err.Error(),
-		)
-
-		return
-	}
-
-	diags = resp.State.Set(ctx, refreshedState)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	// From https://developer.hashicorp.com/terraform/plugin/framework/resources/update#caveats
+	// If the resource does not support modification and should always be recreated on configuration value updates,
+	// the Update logic can be left empty and ensure all configurable schema attributes
+	// implement the resource.RequiresReplace() attribute plan modifier.
 }
 
 // Delete disables private endpoint service on the cluster.
