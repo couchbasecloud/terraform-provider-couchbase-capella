@@ -27,6 +27,21 @@ var (
 	// ErrPeerIdMissing is returned when an expected Peer Id was not found after an import.
 	ErrPeerIdMissing = errors.New("peer ID is missing or was passed incorrectly, please check provider documentation for syntax")
 
+	// ErrAzureTenantIdMissing is returned when an expected Azure Tenant Id was not found after an import.
+	ErrAzureTenantIdMissing = errors.New("azure Tenant ID is missing or was passed incorrectly, please check provider documentation for syntax")
+
+	// ErrSubscriptionIdMissing is returned when an expected Azure Subscription Id was not found after an import.
+	ErrSubscriptionIdMissing = errors.New("azure Subscription ID is missing or was passed incorrectly, please check provider documentation for syntax")
+
+	// ErrVNetIdMissing is returned when an expected Azure Vnet Id was not found after an import.
+	ErrVNetIdMissing = errors.New("azure Vnet name is missing or was passed incorrectly, please check provider documentation for syntax")
+
+	// ErrResourceGroup is returned when an expected Azure Vnet Resource group was not found after an import.
+	ErrResourceGroup = errors.New("azure Vnet Resource group is missing or was passed incorrectly, please check provider documentation for syntax")
+
+	// ErrVnetPeeringServicePrincipal is returned when an expected Azure Vnet Service Principal or object id was not found after an import.
+	ErrVnetPeeringServicePrincipal = errors.New("azure object id or the Azure Vnet Service Principal is missing or was passed incorrectly, please check provider documentation for syntax")
+
 	// ErrProjectIdCannotBeEmpty is returned when a Project Id was required for a request but was not included.
 	ErrProjectIdCannotBeEmpty = errors.New("project ID cannot be empty, please contact Couchbase Capella Support")
 

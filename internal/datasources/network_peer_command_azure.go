@@ -150,21 +150,21 @@ func validateAzurePeeringCommand(config providerschema.AzureVNetPeeringCommandRe
 	if config.ClusterId.IsNull() {
 		return errors.ErrClusterIdMissing
 	}
-	//if config.TenantId.IsNull() {
-	//	return errors.ErrTenantIdMissing
-	//}
-	//if config.SubscriptionId.IsNull() {
-	//	return errors.ErrSubscriptionIdMissing
-	//}
-	//if config.VnetId.IsNull() {
-	//	return errors.ErrVNetIdMissing
-	//}
-	//if config.ResourceGroup.IsNull() {
-	//	return errors.ErrResourceGroup
-	//}
-	//if config.VnetPeeringServicePrincipal.IsNull() {
-	//	return errors.ErrVnetPeeringServicePrincipal
-	//}
+	if config.TenantId.IsNull() {
+		return errors.ErrAzureTenantIdMissing
+	}
+	if config.SubscriptionId.IsNull() {
+		return errors.ErrSubscriptionIdMissing
+	}
+	if config.VnetId.IsNull() {
+		return errors.ErrVNetIdMissing
+	}
+	if config.ResourceGroup.IsNull() {
+		return errors.ErrResourceGroup
+	}
+	if config.VnetPeeringServicePrincipal.IsNull() {
+		return errors.ErrVnetPeeringServicePrincipal
+	}
 
 	return nil
 }
