@@ -86,6 +86,7 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 
 		networkPeerRequest.ProviderConfig = providerConfigJSON
 		plan.ProviderConfig.GCPConfig = nil
+		plan.ProviderConfig.AzureConfig = nil
 
 	} else if plan.ProviderConfig.GCPConfig != nil {
 		gcpConfigJSON := network_peer_api.GCPConfigData{
@@ -104,6 +105,23 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 		}
 		networkPeerRequest.ProviderConfig = providerConfigJSON
 		plan.ProviderConfig.AWSConfig = nil
+		plan.ProviderConfig.AzureConfig = nil
+
+	} else if plan.ProviderConfig.AzureConfig != nil {
+		azureConfigJSON := network_peer_api.AzureConfigData{
+			Cidr: plan.ProviderConfig.AzureConfig.Cidr.ValueString(),
+		}
+		providerConfigJSON, err := json.Marshal(azureConfigJSON)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error creating network peer for Azure",
+				errors.ErrConvertingProviderConfig.Error(),
+			)
+			return
+		}
+		networkPeerRequest.ProviderConfig = providerConfigJSON
+		plan.ProviderConfig.AWSConfig = nil
+		plan.ProviderConfig.GCPConfig = nil
 	}
 
 	var (
@@ -396,6 +414,13 @@ func (n *NetworkPeer) getNetworkPeer(ctx context.Context, organizationId, projec
 	err = json.Unmarshal(response.Body, &networkResp)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
+	}
+
+	azure, err := networkResp.AsAZURE()
+	if err == nil && azure.AzureConfigData.AzureTenantId != "" {
+		networkResp.ProviderType = "azure"
+	} else if err != nil {
+		return nil, fmt.Errorf("%s: %w", errors.ErrReadingAzureConfig, err)
 	}
 
 	gcp, err := networkResp.AsGCP()
