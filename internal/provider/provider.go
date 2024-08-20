@@ -182,6 +182,7 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewAuditLogEventIDs,
 		datasources.NewAuditLogExport,
 		datasources.NewNetworkPeers,
+		datasources.NewAzureNetworkPeerCommand,
 	}
 }
 
