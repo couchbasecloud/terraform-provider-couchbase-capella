@@ -65,8 +65,8 @@ func (a *AzureNetworkPeerCommand) Read(ctx context.Context, req datasource.ReadR
 	err := validateAzurePeeringCommand(state)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error validating Azure private endpoint command request",
-			"Could not validate Azure private endpoint command request: "+err.Error(),
+			"Error validating Azure network peer command request",
+			"Could not validate Azure network peer command request: "+err.Error(),
 		)
 		return
 	}
@@ -85,7 +85,7 @@ func (a *AzureNetworkPeerCommand) Read(ctx context.Context, req datasource.ReadR
 		VnetPeeringServicePrincipal: state.VnetPeeringServicePrincipal.ValueString(),
 	}
 
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/networkPeers/networkPeerCommand:", a.HostURL, organizationId, projectId, clusterId)
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/networkPeers/networkPeerCommand", a.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusOK}
 	response, err := a.Client.ExecuteWithRetry(
 		ctx,
