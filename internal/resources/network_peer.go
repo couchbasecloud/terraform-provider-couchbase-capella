@@ -109,7 +109,11 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 
 	} else if plan.ProviderConfig.AzureConfig != nil {
 		azureConfigJSON := network_peer_api.AzureConfigData{
-			Cidr: plan.ProviderConfig.AzureConfig.Cidr.ValueString(),
+			AzureTenantId:  plan.ProviderConfig.AzureConfig.AzureTenantId.ValueString(),
+			ResourceGroup:  plan.ProviderConfig.AzureConfig.ResourceGroup.ValueString(),
+			SubscriptionId: plan.ProviderConfig.AzureConfig.SubscriptionId.ValueString(),
+			VnetId:         plan.ProviderConfig.AzureConfig.VnetId.ValueString(),
+			Cidr:           plan.ProviderConfig.AzureConfig.Cidr.ValueString(),
 		}
 		providerConfigJSON, err := json.Marshal(azureConfigJSON)
 		if err != nil {

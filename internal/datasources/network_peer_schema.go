@@ -47,6 +47,7 @@ func NetworkPeerSchema() schema.Schema {
 										"resource_group":  computedStringAttribute,
 										"subscription_id": computedStringAttribute,
 										"vnet_id":         computedStringAttribute,
+										"provider_id":     computedStringAttribute,
 									},
 								},
 							},
