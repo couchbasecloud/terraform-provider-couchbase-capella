@@ -38,5 +38,5 @@ aws_config = {
 #   subscription_id = "ffffffff-aaaa-1414-eeee-000000000000"
 #   cidr            = "10.0.0.0/16"
 #   resource_group  = "test-rg"
-#   vnet_id         = "ffffffff-aaaa-1414-eeee-000000000000"
+#   vnet_id         = "test-vnet"
 # }
