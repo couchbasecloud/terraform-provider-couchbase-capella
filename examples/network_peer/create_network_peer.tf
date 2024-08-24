@@ -32,10 +32,10 @@ resource "couchbase-capella_network_peer" "new_network_peer" {
 
 
 # Example Azure Config for creating network peer on Azure. Use this instead of aws_config above if you want to create a network peer for Azure.
-# azure_config = {
-#   tenant_id       = var.azure_config.tenant_id
-#   resource_group  = var.azure_config.resource_group
-#   subscription_id = var.azure_config.subscription_id
-#   cidr            = var.azure_config.cidr
-#   vnet_id         = var.azure_config.vnet_id
-# }
+#      azure_config = {
+#             tenant_id       = var.azure_config.tenant_id
+#             resource_group  = var.azure_config.resource_group
+#             subscription_id = var.azure_config.subscription_id
+#             cidr            = var.azure_config.cidr
+#             vnet_id         = var.azure_config.vnet_id
+#              }
