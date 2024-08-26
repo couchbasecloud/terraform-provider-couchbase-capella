@@ -91,9 +91,10 @@ func ClusterSchema() schema.Schema {
 					"timezone": stringAttribute([]string{required}),
 				},
 			},
-			"current_state":  stringAttribute([]string{computed}),
-			"app_service_id": stringAttribute([]string{computed}),
-			"audit":          computedAuditAttribute(),
+			"current_state":     stringAttribute([]string{computed}),
+			"connection_string": stringAttribute([]string{computed}),
+			"app_service_id":    stringAttribute([]string{computed}),
+			"audit":             computedAuditAttribute(),
 			// if_match is only required during update call
 			"if_match": stringAttribute([]string{optional}),
 			"etag":     stringAttribute([]string{computed}),

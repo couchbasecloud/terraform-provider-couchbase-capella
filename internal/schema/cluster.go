@@ -138,6 +138,10 @@ type Cluster struct {
 
 	// AppServiceId is the ID of the linked app service.
 	AppServiceId types.String `tfsdk:"app_service_id"`
+
+	// ConnectionString specifies the Capella database endpoint for your client connection.
+	ConnectionString types.String `tfsdk:"connection_string"`
+
 	CurrentState types.String `tfsdk:"current_state"`
 	Etag         types.String `tfsdk:"etag"`
 	IfMatch      types.String `tfsdk:"if_match"`
@@ -186,9 +190,10 @@ func NewCluster(ctx context.Context, cluster *clusterapi.GetClusterResponse, org
 			Plan:     types.StringValue(string(cluster.Support.Plan)),
 			Timezone: types.StringValue(string(cluster.Support.Timezone)),
 		},
-		CurrentState: types.StringValue(string(cluster.CurrentState)),
-		Audit:        auditObject,
-		Etag:         types.StringValue(cluster.Etag),
+		ConnectionString: types.StringValue(cluster.ConnectionString),
+		CurrentState:     types.StringValue(string(cluster.CurrentState)),
+		Audit:            auditObject,
+		Etag:             types.StringValue(cluster.Etag),
 	}
 
 	if cluster.CouchbaseServer.Version != nil {
@@ -305,19 +310,20 @@ type Clusters struct {
 
 // ClusterData defines attributes for a single cluster when fetched from the V4 Capella Public API.
 type ClusterData struct {
-	Availability    *Availability    `tfsdk:"availability"`
-	Support         *Support         `tfsdk:"support"`
-	CouchbaseServer *CouchbaseServer `tfsdk:"couchbase_server"`
-	CloudProvider   *CloudProvider   `tfsdk:"cloud_provider"`
-	OrganizationId  types.String     `tfsdk:"organization_id"`
-	ProjectId       types.String     `tfsdk:"project_id"`
-	Id              types.String     `tfsdk:"id"`
-	Audit           types.Object     `tfsdk:"audit"`
-	Description     types.String     `tfsdk:"description"`
-	Name            types.String     `tfsdk:"name"`
-	AppServiceId    types.String     `tfsdk:"app_service_id"`
-	CurrentState    types.String     `tfsdk:"current_state"`
-	ServiceGroups   []ServiceGroup   `tfsdk:"service_groups"`
+	Availability     *Availability    `tfsdk:"availability"`
+	Support          *Support         `tfsdk:"support"`
+	CouchbaseServer  *CouchbaseServer `tfsdk:"couchbase_server"`
+	CloudProvider    *CloudProvider   `tfsdk:"cloud_provider"`
+	OrganizationId   types.String     `tfsdk:"organization_id"`
+	ProjectId        types.String     `tfsdk:"project_id"`
+	Id               types.String     `tfsdk:"id"`
+	Audit            types.Object     `tfsdk:"audit"`
+	Description      types.String     `tfsdk:"description"`
+	Name             types.String     `tfsdk:"name"`
+	AppServiceId     types.String     `tfsdk:"app_service_id"`
+	ConnectionString types.String     `tfsdk:"connection_string"`
+	CurrentState     types.String     `tfsdk:"current_state"`
+	ServiceGroups    []ServiceGroup   `tfsdk:"service_groups"`
 }
 
 // NewClusterData creates a new cluster data object.
@@ -340,8 +346,9 @@ func NewClusterData(cluster *clusterapi.GetClusterResponse, organizationId, proj
 			Plan:     types.StringValue(string(cluster.Support.Plan)),
 			Timezone: types.StringValue(string(cluster.Support.Timezone)),
 		},
-		CurrentState: types.StringValue(string(cluster.CurrentState)),
-		Audit:        auditObject,
+		ConnectionString: types.StringValue(cluster.ConnectionString),
+		CurrentState:     types.StringValue(string(cluster.CurrentState)),
+		Audit:            auditObject,
 	}
 
 	if cluster.CouchbaseServer.Version != nil {
