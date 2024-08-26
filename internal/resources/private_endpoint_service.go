@@ -199,24 +199,18 @@ func (p *PrivateEndpointService) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	var (
-		organizationId = config.OrganizationId.ValueString()
-		projectId      = config.ProjectId.ValueString()
-		clusterId      = config.ClusterId.ValueString()
-	)
-
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/privateEndpointService",
 		p.HostURL,
-		organizationId,
-		projectId,
-		clusterId,
+		config.OrganizationId.ValueString(),
+		config.ProjectId.ValueString(),
+		config.ClusterId.ValueString(),
 	)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
 	status := "enabling"
 
-	if !config.Enabled.IsNull() && !config.Enabled.ValueBool() {
+	if !config.Enabled.ValueBool() {
 		cfg.Method = http.MethodDelete
 		status = "disabling"
 	}
@@ -236,20 +230,11 @@ func (p *PrivateEndpointService) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	// if service is enabled (without setting enabled flag in terraform config),
-	// but then service is disabled from UI, the final state should be true.
-	var finalState bool
-	if config.Enabled.IsNull() {
-		finalState = true
-	} else {
-		finalState = config.Enabled.ValueBool()
-	}
-
 	err = p.waitUntilStatusChanges(ctx,
-		finalState,
-		organizationId,
-		projectId,
-		clusterId)
+		config.Enabled.ValueBool(),
+		config.OrganizationId.ValueString(),
+		config.ProjectId.ValueString(),
+		config.ClusterId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error "+status+" private endpoint service",
@@ -259,9 +244,9 @@ func (p *PrivateEndpointService) Update(ctx context.Context, req resource.Update
 	}
 
 	refreshedState, err := p.getServiceState(ctx,
-		organizationId,
-		projectId,
-		clusterId)
+		config.OrganizationId.ValueString(),
+		config.ProjectId.ValueString(),
+		config.ClusterId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading private endpoint service status",
