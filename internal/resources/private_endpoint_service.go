@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -56,9 +55,7 @@ func (p *PrivateEndpointService) Schema(_ context.Context, _ resource.SchemaRequ
 			"project_id":      stringAttribute([]string{required, requiresReplace}),
 			"cluster_id":      stringAttribute([]string{required, requiresReplace}),
 			"enabled": schema.BoolAttribute{
-				Default:       booldefault.StaticBool(true),
-				Optional:      true,
-				Computed:      true,
+				Required:      true,
 				PlanModifiers: []planmodifier.Bool{custommodifier.BlockCreateWhenEnabledSetToFalse()},
 			},
 		},
