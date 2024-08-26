@@ -1172,7 +1172,7 @@ Terraform will perform the following actions:
           - region = "us-east-1" -> null
           - type   = "aws" -> null
         }
-      - connection_string = "couchbases://cb.irxmynm6vekhe5.cloud.couchbase.com"
+      - connection_string = "couchbases://cb.irxmynm6vekhe5.cloud.couchbase.com" -> null
       - couchbase_server = {
           - version = "7.1.5" -> null
         }

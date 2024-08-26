@@ -117,17 +117,22 @@ type Support struct {
 
 // Cluster defines the response as received from V4 Capella Public API when asked to create a new cluster.
 type Cluster struct {
+	// Availability zone type, either 'single' or 'multi'.
 	Availability *Availability `tfsdk:"availability"`
-	Support      *Support      `tfsdk:"support"`
+
+	// Support defines the support plan and timezone for this particular cluster.
+	Support *Support `tfsdk:"support"`
 
 	// CloudProvider The cloud provider where the cluster will be hosted.
 	// To learn more, see [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html).
-	CloudProvider  *CloudProvider `tfsdk:"cloud_provider"`
-	ProjectId      types.String   `tfsdk:"project_id"`
-	Id             types.String   `tfsdk:"id"`
-	OrganizationId types.String   `tfsdk:"organization_id"`
-	Audit          types.Object   `tfsdk:"audit"`
+	CloudProvider *CloudProvider `tfsdk:"cloud_provider"`
 
+	ProjectId      types.String `tfsdk:"project_id"`
+	Id             types.String `tfsdk:"id"`
+	OrganizationId types.String `tfsdk:"organization_id"`
+	Audit          types.Object `tfsdk:"audit"`
+
+	// CouchbaseServer is the version of the Couchbase Server to be installed in the cluster.
 	CouchbaseServer types.Object `tfsdk:"couchbase_server"`
 
 	// Description of the cluster (up to 1024 characters).
@@ -142,9 +147,12 @@ type Cluster struct {
 	// ConnectionString specifies the Capella database endpoint for your client connection.
 	ConnectionString types.String `tfsdk:"connection_string"`
 
+	// CurrentState tells the status of the cluster - if it's healthy or degraded.
 	CurrentState types.String `tfsdk:"current_state"`
-	Etag         types.String `tfsdk:"etag"`
-	IfMatch      types.String `tfsdk:"if_match"`
+
+	// Etag represents the version of the document
+	Etag    types.String `tfsdk:"etag"`
+	IfMatch types.String `tfsdk:"if_match"`
 
 	// ServiceGroups is the couchbase service groups to be run. At least one service group must contain the data service.
 	ServiceGroups []ServiceGroup `tfsdk:"service_groups"`
