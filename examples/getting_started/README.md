@@ -171,6 +171,7 @@ Terraform will perform the following actions:
           + type   = "aws"
         }
       + configuration_type = (known after apply)
+      + connection_string  = (known after apply)
       + couchbase_server   = (known after apply)
       + current_state      = (known after apply)
       + description        = "My first test cluster for multiple services."
@@ -517,6 +518,7 @@ Changes to Outputs:
           + type   = "aws"
         }
       + configuration_type = (known after apply)
+      + connection_string  = (known after apply)
       + couchbase_server   = (known after apply)
       + current_state      = (known after apply)
       + description        = "My first test cluster for multiple services."
@@ -919,6 +921,7 @@ Terraform will perform the following actions:
           + type   = "aws"
         }
       + configuration_type = (known after apply)
+      + connection_string  = (known after apply)
       + couchbase_server   = (known after apply)
       + current_state      = (known after apply)
       + description        = "My first test cluster for multiple services."
@@ -1288,6 +1291,7 @@ Changes to Outputs:
           + type   = "aws"
         }
       + configuration_type = (known after apply)
+      + connection_string  = (known after apply)
       + couchbase_server   = (known after apply)
       + current_state      = (known after apply)
       + description        = "My first test cluster for multiple services."
@@ -1760,6 +1764,7 @@ cluster = {
     "type" = "aws"
   }
   "configuration_type" = "multiNode"
+  "connection_string" = "couchbases://cb.irxmynm6vekhe5.cloud.couchbase.com"
   "couchbase_server" = {
     "version" = "7.2"
   }
@@ -2133,6 +2138,7 @@ cluster = {
     "type" = "aws"
   }
   "configuration_type" = "multiNode"
+  "connection_string" = "couchbases://cb.irxmynm6vekhe5.cloud.couchbase.com"
   "couchbase_server" = {
     "version" = "7.2"
   }
@@ -2583,6 +2589,7 @@ Terraform will perform the following actions:
           - type   = "aws" -> null
         } -> null
       - configuration_type = "multiNode" -> null
+      - connection_string  = "couchbases://cb.irxmynm6vekhe5.cloud.couchbase.com" -> null
       - couchbase_server   = {
           - version = "7.2" -> null
         } -> null
@@ -3026,6 +3033,7 @@ Changes to Outputs:
           - type   = "aws"
         }
       - configuration_type = "multiNode"
+      - connection_string  = "couchbases://cb.irxmynm6vekhe5.cloud.couchbase.com"
       - couchbase_server   = {
           - version = "7.2"
         }
