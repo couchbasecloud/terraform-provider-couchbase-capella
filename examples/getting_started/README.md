@@ -17,7 +17,8 @@ In this demo, we will perform the following operations:
 13. Create a new collection in the scope of a bucket.
 14. Create a new on/off schedule for the cluster.
 15. Create a new audit log settings.
-16. Create a new network peer.
+16. Enable private endpoint service on the cluster.
+17. Create a new network peer.
 
 ## Pre-Requisites:
 
@@ -465,6 +466,14 @@ Terraform will perform the following actions:
       + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id        = "ffffffff-aaaa-1414-eeee-000000000000"
     }
+    
+    # couchbase-capella_private_endpoint_service.new_service will be created
+      + resource "couchbase-capella_private_endpoint_service" "new_service" {
+          + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+          + enabled         = (known after apply)
+          + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+          + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+        }
 
 Plan: 14 to add, 0 to change, 0 to destroy.
 
@@ -769,6 +778,13 @@ Changes to Outputs:
         ]
       + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id        = "ffffffff-aaaa-1414-eeee-000000000000"
+    }
+    
+    + service_status = {
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      + enabled         = true
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
     }
 
 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -1221,6 +1237,14 @@ Terraform will perform the following actions:
       + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id        = "ffffffff-aaaa-1414-eeee-000000000000"
     }
+    
+  # couchbase-capella_private_endpoint_service.new_service will be created
+  + resource "couchbase-capella_private_endpoint_service" "new_service" {
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      + enabled         = (known after apply)
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+    }
 
 Plan: 14 to add, 0 to change, 0 to destroy.
 
@@ -1527,6 +1551,13 @@ Changes to Outputs:
       + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id        = "ffffffff-aaaa-1414-eeee-000000000000"
     }
+    
+    + service_status = {
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      + enabled         = false
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+    }
 
 Do you want to perform these actions?
   Terraform will perform the actions described above.
@@ -1605,8 +1636,52 @@ couchbase-capella_app_service.new_app_service: Still creating... [4m50s elapsed]
 couchbase-capella_app_service.new_app_service: Creation complete after 4m55s [id=ffffffff-aaaa-1414-eeee-000000000000]
 couchbase-capella_audit_log_export.new_auditlogexport: Creating...
 couchbase-capella_audit_log_export.new_auditlogexport: Creation complete after 0s [id=ffffffff-aaaa-1414-eeee-000000000000]
+couchbase-capella_private_endpoint_service.new_service: Creating...
+couchbase-capella_private_endpoint_service.new_service: Still creating... [10s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [20s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [30s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [40s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [50s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [1m0s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [1m10s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [1m20s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [1m30s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [1m40s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [1m50s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [2m0s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [2m10s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [2m20s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [2m30s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [2m40s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [2m50s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [3m0s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [3m10s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [3m20s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [3m30s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [3m40s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [3m50s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [4m0s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [4m10s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [4m20s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [4m30s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [4m40s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [4m50s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [5m0s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [5m10s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [5m20s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [5m30s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [5m40s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [5m50s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [6m0s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [6m10s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [6m20s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [6m30s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [6m40s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [6m50s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [7m0s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Creation complete after 7m0s
 
-Apply complete! Resources: 13 added, 0 changed, 0 destroyed.
+Apply complete! Resources: 14 added, 0 changed, 0 destroyed.
 
 Outputs:
 
@@ -1970,6 +2045,12 @@ new_auditlogsettings = {
   "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
 }
 
+service_status = {
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "enabled" = false
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+}
 ```
 
 Finally, you can view the outputs using the `terraform output` command
@@ -2335,6 +2416,13 @@ new_auditlogsettings = {
   "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
 }
+
+service_status = {
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "enabled" = false
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+}
 ```
 
 All these resources (except audit log settings) can be destroyed using the `terraform destroy` command
@@ -2366,6 +2454,9 @@ data.couchbase-capella_certificate.existing_certificate: Read complete after 0s
 couchbase-capella_scope.new_scope: Refreshing state...
 couchbase-capella_app_service.new_app_service: Refreshing state... [id=ffffffff-aaaa-1414-eeee-000000000000]
 couchbase-capella_collection.new_collection: Refreshing state...
+data.couchbase-capella_private_endpoint_service.service_status: Reading...
+couchbase-capella_private_endpoint_service.new_service: Refreshing state...
+data.couchbase-capella_private_endpoint_service.service_status: Read complete after 0s
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   - destroy
@@ -2848,6 +2939,14 @@ Terraform will perform the following actions:
       - organization_id   = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - project_id        = "ffffffff-aaaa-1414-eeee-000000000000" -> null
     }
+    
+  # couchbase-capella_private_endpoint_service.new_service will be destroyed
+  - resource "couchbase-capella_private_endpoint_service" "new_service" {
+      - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - enabled         = true -> null
+      - organization_id = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - project_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+    }
 
 Plan: 0 to add, 0 to change, 14 to destroy.
 
@@ -3148,6 +3247,13 @@ Changes to Outputs:
         ]
       - status               = "not-verified"
       - time_zone            = ""
+    } -> null
+    
+    - service_status = {
+      - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      - enabled         = true
+      - organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      - project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
     } -> null
 
 Do you really want to destroy all resources?
