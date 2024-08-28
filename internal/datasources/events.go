@@ -52,99 +52,15 @@ func (d *Events) Read(ctx context.Context, req datasource.ReadRequest, resp *dat
 
 	var (
 		organizationId = state.OrganizationId.ValueString()
-		projectIds     []string
-		clusterIds     []string
-		userIds        []string
-		severityLevels []string
-		tags           []string
-		from           string
-		to             string
-		page           int
-		perPage        int
-		sortBy         string
-		sortDir        string
 		err            error
 	)
-	queryParam := make(map[string][]string)
-
-	if !state.ProjectIds.IsNull() && !state.ProjectIds.IsUnknown() {
-		projectIds, err = ConvertToList(ctx, state.ProjectIds)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error Reading Capella Events",
-				"Could not read events : "+err.Error(),
-			)
-			return
-		}
-		queryParam["projectIds"] = projectIds
-	}
-	if !state.ClusterIds.IsNull() && !state.ClusterIds.IsUnknown() {
-		clusterIds, err = ConvertToList(ctx, state.ClusterIds)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error Reading Capella Events",
-				"Could not read events : "+err.Error(),
-			)
-			return
-		}
-		queryParam["clusterIds"] = clusterIds
-	}
-	if !state.UserIds.IsNull() && !state.UserIds.IsUnknown() {
-		userIds, err = ConvertToList(ctx, state.UserIds)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error Reading Capella Events",
-				"Could not read events : "+err.Error(),
-			)
-			return
-		}
-		queryParam["userIds"] = userIds
-	}
-	if !state.SeverityLevels.IsNull() && !state.SeverityLevels.IsUnknown() {
-		severityLevels, err = ConvertToList(ctx, state.SeverityLevels)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error Reading Capella Events",
-				"Could not read events : "+err.Error(),
-			)
-			return
-		}
-		queryParam["severityLevels"] = severityLevels
-	}
-	if !state.Tags.IsNull() && !state.Tags.IsUnknown() {
-		tags, err = ConvertToList(ctx, state.Tags)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error Reading Capella Events",
-				"Could not read events : "+err.Error(),
-			)
-			return
-		}
-		queryParam["tags"] = tags
-	}
-	if !state.From.IsNull() && !state.From.IsUnknown() {
-		from = state.From.ValueString()
-		queryParam["from"] = []string{from}
-	}
-	if !state.To.IsNull() && !state.To.IsUnknown() {
-		to = state.To.ValueString()
-		queryParam["to"] = []string{to}
-	}
-	if !state.Page.IsNull() && !state.Page.IsUnknown() {
-		page = int(state.Page.ValueInt64())
-		queryParam["page"] = []string{strconv.Itoa(page)}
-	}
-	if !state.PerPage.IsNull() && !state.PerPage.IsUnknown() {
-		perPage = int(state.PerPage.ValueInt64())
-		queryParam["perPage"] = []string{strconv.Itoa(perPage)}
-	}
-	if !state.SortBy.IsNull() && !state.SortBy.IsUnknown() {
-		sortBy = state.SortBy.ValueString()
-		queryParam["sortBy"] = []string{sortBy}
-	}
-	if !state.SortDirection.IsNull() && !state.SortDirection.IsUnknown() {
-		sortDir = state.SortDirection.ValueString()
-		queryParam["sortDirection"] = []string{sortDir}
+	queryParam, err := d.buildQueryParams(ctx, &state)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Capella Events",
+			"Could not read events : "+err.Error(),
+		)
+		return
 	}
 
 	finalUrl := fmt.Sprintf("%s/v4/organizations/%s/events", d.HostURL, organizationId)
@@ -234,4 +150,68 @@ func (d *Events) listEvents(ctx context.Context, url string) (api.GetEventsRespo
 		return api.GetEventsResponse{}, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
 	return events, nil
+}
+
+func (d *Events) buildQueryParams(ctx context.Context, state *providerschema.Events) (map[string][]string, error) {
+	queryParam := make(map[string][]string)
+	if !state.ProjectIds.IsNull() && !state.ProjectIds.IsUnknown() {
+		projectIds, err := ConvertToList(ctx, state.ProjectIds)
+		if err != nil {
+			return nil, err
+		}
+		queryParam["projectIds"] = projectIds
+	}
+	if !state.ClusterIds.IsNull() && !state.ClusterIds.IsUnknown() {
+		clusterIds, err := ConvertToList(ctx, state.ClusterIds)
+		if err != nil {
+			return nil, err
+		}
+		queryParam["clusterIds"] = clusterIds
+	}
+	if !state.UserIds.IsNull() && !state.UserIds.IsUnknown() {
+		userIds, err := ConvertToList(ctx, state.UserIds)
+		if err != nil {
+			return nil, err
+		}
+		queryParam["userIds"] = userIds
+	}
+	if !state.SeverityLevels.IsNull() && !state.SeverityLevels.IsUnknown() {
+		severityLevels, err := ConvertToList(ctx, state.SeverityLevels)
+		if err != nil {
+			return nil, err
+		}
+		queryParam["severityLevels"] = severityLevels
+	}
+	if !state.Tags.IsNull() && !state.Tags.IsUnknown() {
+		tags, err := ConvertToList(ctx, state.Tags)
+		if err != nil {
+			return nil, err
+		}
+		queryParam["tags"] = tags
+	}
+	if !state.From.IsNull() && !state.From.IsUnknown() {
+		from := state.From.ValueString()
+		queryParam["from"] = []string{from}
+	}
+	if !state.To.IsNull() && !state.To.IsUnknown() {
+		to := state.To.ValueString()
+		queryParam["to"] = []string{to}
+	}
+	if !state.Page.IsNull() && !state.Page.IsUnknown() {
+		page := int(state.Page.ValueInt64())
+		queryParam["page"] = []string{strconv.Itoa(page)}
+	}
+	if !state.PerPage.IsNull() && !state.PerPage.IsUnknown() {
+		perPage := int(state.PerPage.ValueInt64())
+		queryParam["perPage"] = []string{strconv.Itoa(perPage)}
+	}
+	if !state.SortBy.IsNull() && !state.SortBy.IsUnknown() {
+		sortBy := state.SortBy.ValueString()
+		queryParam["sortBy"] = []string{sortBy}
+	}
+	if !state.SortDirection.IsNull() && !state.SortDirection.IsUnknown() {
+		sortDir := state.SortDirection.ValueString()
+		queryParam["sortDirection"] = []string{sortDir}
+	}
+	return queryParam, nil
 }
