@@ -218,6 +218,10 @@ variable "audit_log_settings" {
   })
 }
 
+variable "enabled" {
+  description = "Enable or disable private endpoint service"
+}
+
 variable "network_peer" {
   description = "Network Peer configuration details useful for creation"
 

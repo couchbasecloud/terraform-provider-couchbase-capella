@@ -180,6 +180,8 @@ audit_log_settings = {
   disabled_users = []
 }
 
+enabled = true
+
 network_peer = {
   name          = "VPCPeerTFTestAWS"
   provider_type = "aws"

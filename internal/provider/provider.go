@@ -181,6 +181,10 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewAuditLogSettings,
 		datasources.NewAuditLogEventIDs,
 		datasources.NewAuditLogExport,
+		datasources.NewPrivateEndpointService,
+		datasources.NewPrivateEndpoints,
+		datasources.NewAWSPrivateEndpointCommand,
+		datasources.NewAzurePrivateEndpointCommand,
 		datasources.NewNetworkPeers,
 		datasources.NewEvents,
 		datasources.NewEvent,
@@ -210,6 +214,8 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewAppServiceOnOffOnDemand,
 		resources.NewAuditLogSettings,
 		resources.NewAuditLogExport,
+		resources.NewPrivateEndpointService,
+		resources.NewPrivateEndpoint,
 		resources.NewNetworkPeer,
 	}
 }

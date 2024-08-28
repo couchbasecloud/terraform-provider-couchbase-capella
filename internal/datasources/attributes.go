@@ -56,6 +56,12 @@ var (
 	}
 
 	// computedIntSetAttribute returns a Terraform set schema attribute
+	requiredStringSetAttribute = schema.SetAttribute{
+		ElementType: types.StringType,
+		Required:    true,
+	}
+
+	// computedIntSetAttribute returns a Terraform list schema attribute
 	// which is configured to be computed and of type int64.
 	computedIntSetAttribute = schema.SetAttribute{
 		ElementType: types.Int64Type,
