@@ -73,9 +73,7 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
 					resource.TestCheckResourceAttr(resourceReference, "support.plan", "developer pro"),
 					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
-
-					//When the cluster is created for the first time, the ETag of the created cluster is 5
-					//resource.TestCheckResourceAttr(resourceReference, "etag", "Version: 5"),
+					resource.TestCheckResourceAttrSet(resourceReference, "etag"),
 				),
 			},
 			//// ImportState testing
@@ -84,6 +82,10 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 				ImportStateIdFunc: generateClusterImportIdForResource(resourceReference),
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"audit.modified_at",
+					"audit.version",
+				},
 			},
 			// Update number of nodes, compute type, disk size and type, cluster name, support plan, time zone and description from empty string,
 			// and Read testing
