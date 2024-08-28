@@ -1,5 +1,5 @@
 variable "organization_id" {
-description = "Capella Organization ID"
+  description = "Capella Organization ID"
 }
 
 variable "project_id" {

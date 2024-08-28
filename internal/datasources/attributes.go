@@ -55,7 +55,7 @@ var (
 		Computed:    true,
 	}
 
-	// computedIntSetAttribute returns a Terraform set schema attribute
+	// computedIntSetAttribute returns a Terraform set schema attribute.
 	requiredStringSetAttribute = schema.SetAttribute{
 		ElementType: types.StringType,
 		Required:    true,
