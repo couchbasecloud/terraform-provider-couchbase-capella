@@ -18,10 +18,22 @@ var (
 		Required: true,
 	}
 
+	// optionalStringAttribute returns a Terraform schema attribute
+	// which is configured to be optional.
+	optionalStringAttribute = schema.StringAttribute{
+		Optional: true,
+	}
+
 	// computedBoolAttribute returns a Terraform schema attribute
 	// which is configured to be computed.
 	computedBoolAttribute = schema.BoolAttribute{
 		Computed: true,
+	}
+
+	// optionalInt64Attribute returns a Terraform schema attribute
+	// which is configured to be optional.
+	optionalInt64Attribute = schema.Int64Attribute{
+		Optional: true,
 	}
 
 	// computedBoolAttribute returns a Terraform schema attribute
@@ -43,6 +55,7 @@ var (
 		Computed:    true,
 	}
 
+	// computedIntSetAttribute returns a Terraform set schema attribute.
 	requiredStringSetAttribute = schema.SetAttribute{
 		ElementType: types.StringType,
 		Required:    true,
@@ -55,6 +68,20 @@ var (
 		Computed:    true,
 	}
 
+	// computedStringSetAttribute returns a Terraform set schema attribute
+	// which is configured to be computed and of type string.
+	computedStringSetAttribute = schema.SetAttribute{
+		ElementType: types.StringType,
+		Computed:    true,
+	}
+
+	// optionalStringSetAttribute returns a Terraform set schema attribute
+	// which is configured to be optional and of type string.
+	optionalStringSetAttribute = schema.SetAttribute{
+		ElementType: types.StringType,
+		Optional:    true,
+	}
+
 	// computedAuditAttribute returns a SingleNestedAttribute to
 	// represent couchbase audit data using terraform schema types.
 	computedAuditAttribute = schema.SingleNestedAttribute{
@@ -65,6 +92,66 @@ var (
 			"modified_at": computedStringAttribute,
 			"modified_by": computedStringAttribute,
 			"version":     computedInt64Attribute,
+		},
+	}
+
+	// computedCursorAttribute returns a Terraform single nested schema attribute
+	// which is configured to be computed and of custom type cursor.
+	computedCursorAttribute = schema.SingleNestedAttribute{
+		Computed: true,
+		Attributes: map[string]schema.Attribute{
+			"hrefs": schema.SingleNestedAttribute{
+				Computed: true,
+				Attributes: map[string]schema.Attribute{
+					"first":    computedStringAttribute,
+					"last":     computedStringAttribute,
+					"next":     computedStringAttribute,
+					"previous": computedStringAttribute,
+				},
+			},
+			"pages": schema.SingleNestedAttribute{
+				Computed: true,
+				Attributes: map[string]schema.Attribute{
+					"last":        computedInt64Attribute,
+					"next":        computedInt64Attribute,
+					"page":        computedInt64Attribute,
+					"per_page":    computedInt64Attribute,
+					"previous":    computedInt64Attribute,
+					"total_items": computedInt64Attribute,
+				},
+			},
+		},
+	}
+
+	// computedEventAttributes returns a Terraform list nested schema attribute
+	// which is configured to be computed and of custom type event.
+	computedEventAttributes = schema.ListNestedAttribute{
+		Computed: true,
+		NestedObject: schema.NestedAttributeObject{
+			Attributes: map[string]schema.Attribute{
+				"alert_key":        computedStringAttribute,
+				"app_service_id":   computedStringAttribute,
+				"app_service_name": computedStringAttribute,
+				"cluster_id":       computedStringAttribute,
+				"cluster_name":     computedStringAttribute,
+				"id":               computedStringAttribute,
+				"image_url":        computedStringAttribute,
+				"incident_ids":     computedStringSetAttribute,
+				"key":              computedStringAttribute,
+				"kv":               computedStringAttribute,
+				"occurrence_count": computedInt64Attribute,
+				"project_id":       computedStringAttribute,
+				"project_name":     computedStringAttribute,
+				"request_id":       computedStringAttribute,
+				"session_id":       computedStringAttribute,
+				"severity":         computedStringAttribute,
+				"source":           computedStringAttribute,
+				"summary":          computedStringAttribute,
+				"timestamp":        computedStringAttribute,
+				"user_email":       computedStringAttribute,
+				"user_id":          computedStringAttribute,
+				"user_name":        computedStringAttribute,
+			},
 		},
 	}
 )
