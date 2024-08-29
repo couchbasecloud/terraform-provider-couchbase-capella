@@ -126,6 +126,12 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 		networkPeerRequest.ProviderConfig = providerConfigJSON
 		plan.ProviderConfig.AWSConfig = nil
 		plan.ProviderConfig.GCPConfig = nil
+	} else {
+		resp.Diagnostics.AddError(
+			"Provider Config cannot be empty",
+			errors.ErrProviderConfigCannotBeEmpty.Error(),
+		)
+		return
 	}
 
 	var (

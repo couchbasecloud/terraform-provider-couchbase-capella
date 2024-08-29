@@ -207,4 +207,7 @@ var (
 
 	// ErrConvertingProviderConfig is returned when terraform fails to convert a network peer provider config.
 	ErrConvertingProviderConfig = errors.New("failed to convert network peer provider config, please contact Couchbase Capella Support")
+
+	// ErrProviderConfigCannotBeEmpty is returned when the provider_config was required for a request but was empty.
+	ErrProviderConfigCannotBeEmpty = errors.New("provider_config cannot be empty, it should be populated with one of- aws_config, gcp_config or azure_config. Please contact Couchbase Capella Support")
 )
