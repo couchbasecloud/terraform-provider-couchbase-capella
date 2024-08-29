@@ -1764,7 +1764,7 @@ cluster = {
     "type" = "aws"
   }
   "configuration_type" = "multiNode"
-  "connection_string" = "couchbases://cb.irxmynm6vekhe5.cloud.couchbase.com"
+  "connection_string" = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
   "couchbase_server" = {
     "version" = "7.2"
   }
@@ -2138,7 +2138,7 @@ cluster = {
     "type" = "aws"
   }
   "configuration_type" = "multiNode"
-  "connection_string" = "couchbases://cb.irxmynm6vekhe5.cloud.couchbase.com"
+  "connection_string" = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
   "couchbase_server" = {
     "version" = "7.2"
   }
@@ -2589,7 +2589,7 @@ Terraform will perform the following actions:
           - type   = "aws" -> null
         } -> null
       - configuration_type = "multiNode" -> null
-      - connection_string  = "couchbases://cb.irxmynm6vekhe5.cloud.couchbase.com" -> null
+      - connection_string  = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com" -> null
       - couchbase_server   = {
           - version = "7.2" -> null
         } -> null
@@ -3033,7 +3033,7 @@ Changes to Outputs:
           - type   = "aws"
         }
       - configuration_type = "multiNode"
-      - connection_string  = "couchbases://cb.irxmynm6vekhe5.cloud.couchbase.com"
+      - connection_string  = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
       - couchbase_server   = {
           - version = "7.2"
         }

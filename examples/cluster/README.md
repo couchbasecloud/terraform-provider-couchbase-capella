@@ -120,7 +120,7 @@ Changes to Outputs:
                   + region = "af-south-1"
                   + type   = "aws"
                 }
-              + connection_string = "couchbases://cb.irxmynm6vekhe5.cloud.couchbase.com"
+              + connection_string = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
               + couchbase_server = {
                   + version = "7.2.2"
                 }
@@ -317,7 +317,7 @@ Changes to Outputs:
                   + region = "af-south-1"
                   + type   = "aws"
                 }
-              + connection_string = "couchbases://cb.irxmynm6vekhe5.cloud.couchbase.com" 
+              + connection_string = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com" 
               + couchbase_server = {
                   + version = "7.2.2"
                 }
@@ -458,7 +458,7 @@ clusters_list = {
         "region" = "af-south-1"
         "type" = "aws"
       }
-      "connection_string" = "couchbases://cb.irxmynm6vekhe5.cloud.couchbase.com"
+      "connection_string" = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
       "couchbase_server" = {
         "version" = "7.2.2"
       }
@@ -516,7 +516,7 @@ new_cluster = {
     "region" = "us-east-1"
     "type" = "aws"
   }
-  "connection_string" = "couchbases://cb.irxmynm6vekhe5.cloud.couchbase.com"
+  "connection_string" = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
   "couchbase_server" = {
     "version" = "7.1"
   }
@@ -580,7 +580,7 @@ $ terraform output new_cluster
     "region" = "us-east-1"
     "type" = "aws"
   }
-  "connection_string" = "couchbases://cb.irxmynm6vekhe5.cloud.couchbase.com"
+  "connection_string" = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
   "couchbase_server" = {
     "version" = "7.1"
   }
@@ -756,7 +756,7 @@ Changes to Outputs:
                   - region = "af-south-1"
                   - type   = "aws"
                 }
-              - connection_string = "couchbases://cb.irxmynm6vekhe5.cloud.couchbase.com"
+              - connection_string = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
               - couchbase_server = {
                   - version = "7.2.2"
                 }
@@ -810,7 +810,7 @@ Changes to Outputs:
                     region = "us-east-1"
                     type   = "aws"
                 }
-                connection_string = "couchbases://cb.irxmynm6vekhe5.cloud.couchbase.com"
+                connection_string = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
                 couchbase_server = {
                     version = "7.1.5"
                 }
@@ -863,7 +863,7 @@ Changes to Outputs:
                   + region = "af-south-1"
                   + type   = "aws"
                 }
-              + connection_string = "couchbases://cb.irxmynm6vekhe5.cloud.couchbase.com"
+              + connection_string = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
               + couchbase_server = {
                   + version = "7.2.2"
                 }
@@ -912,7 +912,7 @@ Changes to Outputs:
           - modified_by = "FYcHU0XHvw5tuQl4smAwyCKbGPMUZKUC"
           - version     = 5
         } -> (known after apply)
-      ~ connection_string = "couchbases://cb.irxmynm6vekhe5.cloud.couchbase.com" -> (known after apply)
+      ~ connection_string = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com" -> (known after apply)
       ~ current_state    = "healthy" -> (known after apply)
       ~ etag             = "Version: 5" -> (known after apply)
         id               = "ffffffff-aaaa-1414-eeee-00000000000"
@@ -979,7 +979,7 @@ clusters_list = {
         "region" = "us-east-1"
         "type" = "aws"
       }
-      "connection_string" = "couchbases://cb.irxmynm6vekhe5.cloud.couchbase.com"
+      "connection_string" = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
       "couchbase_server" = {
         "version" = "7.1.5"
       }
@@ -1032,7 +1032,7 @@ clusters_list = {
         "region" = "af-south-1"
         "type" = "aws"
       }
-      "connection_string" = "couchbases://cb.irxmynm6vekhe5.cloud.couchbase.com"
+      "connection_string" = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
       "couchbase_server" = {
         "version" = "7.2.2"
       }
@@ -1090,7 +1090,7 @@ new_cluster = {
     "region" = "us-east-1"
     "type" = "aws"
   }
-  "connection_string" = "couchbases://cb.irxmynm6vekhe5.cloud.couchbase.com"
+  "connection_string" = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
   "couchbase_server" = {
     "version" = "7.1.5"
   }
@@ -1172,7 +1172,7 @@ Terraform will perform the following actions:
           - region = "us-east-1" -> null
           - type   = "aws" -> null
         }
-      - connection_string = "couchbases://cb.irxmynm6vekhe5.cloud.couchbase.com" -> null
+      - connection_string = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com" -> null
       - couchbase_server = {
           - version = "7.1.5" -> null
         }
@@ -1232,7 +1232,7 @@ Changes to Outputs:
                   - region = "us-east-1"
                   - type   = "aws"
                 }
-              - connection_string = "couchbases://cb.irxmynm6vekhe5.cloud.couchbase.com"
+              - connection_string = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
               - couchbase_server = {
                   - version = "7.1.5"
                 }
@@ -1285,7 +1285,7 @@ Changes to Outputs:
                   - region = "af-south-1"
                   - type   = "aws"
                 }
-              - connection_string = "couchbases://cb.irxmynm6vekhe5.cloud.couchbase.com"
+              - connection_string = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
               - couchbase_server = {
                   - version = "7.2.2"
                 }
@@ -1343,7 +1343,7 @@ Changes to Outputs:
           - region = "us-east-1"
           - type   = "aws"
         }
-      - connection_string = "couchbases://cb.irxmynm6vekhe5.cloud.couchbase.com"
+      - connection_string = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
       - couchbase_server = {
           - version = "7.1.5"
         }
