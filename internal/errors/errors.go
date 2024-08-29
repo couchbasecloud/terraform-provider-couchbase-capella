@@ -205,9 +205,27 @@ var (
 	// ErrOnoffStateCannotBeEmpty is returned when cluster on/off state is required for a request but was not included.
 	ErrOnoffStateCannotBeEmpty = errors.New("on/off state cannot be empty, please mention the state in which you want your cluster to be")
 
+	// ErrEndpointIdMissing is returned when an expected endpoint ID was not found after an import.
+	ErrEndpointIdMissing = errors.New("endpoint ID is missing or was passed incorrectly, please check provider documentation for syntax")
+
+	// ErrVPCIDMissing is returned when an expected AWS VPC ID was not found after an import.
+	ErrVPCIDMissing = errors.New("AWS VPC ID is missing or was passed incorrectly, please check provider documentation for syntax")
+
+	// ErrVirtualNetworkMissing is returned when an expected Azure virtual network was not found after an import.
+	ErrVirtualNetworkMissing = errors.New("Azure virtual network is missing or was passed incorrectly, please check provider documentation for syntax")
+
+	// ErrResourceGroupName is returned when an expected Azure resource group was not found after an import.
+	ErrResourceGroupName = errors.New("Azure resource group is missing or was passed incorrectly, please check provider documentation for syntax")
+
 	// ErrConvertingProviderConfig is returned when terraform fails to convert a network peer provider config.
 	ErrConvertingProviderConfig = errors.New("failed to convert network peer provider config, please contact Couchbase Capella Support")
 
 	// ErrProviderConfigCannotBeEmpty is returned when the provider_config was required for a request but was empty.
 	ErrProviderConfigCannotBeEmpty = errors.New("provider_config cannot be empty, it should be populated with one of- aws_config, gcp_config or azure_config. Please contact Couchbase Capella Support")
+
+	ErrPrivateEndpointServiceTimeout = errors.New("changing private endpoint service status timed out after initiation")
+
+	ErrBucketCreationStatusTimeout = errors.New("bucket backup creation status transition timed out after initiation")
+
+	ErrAppServiceCreationStatusTimeout = errors.New("app service creation status transition timed out after initiation")
 )

@@ -425,8 +425,7 @@ func (b *Backup) checkLatestBackupStatus(ctx context.Context, organizationId, pr
 	for {
 		select {
 		case <-ctx.Done():
-			const msg = "bucket backup creation status transition timed out after initiation"
-			return nil, fmt.Errorf(msg)
+			return nil, errors.ErrBucketCreationStatusTimeout
 
 		case <-timer.C:
 			backupResp, err = b.getLatestBackup(ctx, organizationId, projectId, clusterId, bucketId)
