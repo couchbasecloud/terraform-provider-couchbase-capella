@@ -803,6 +803,7 @@ func initializePendingClusterWithPlanAndId(plan providerschema.Cluster, id strin
 		plan.CouchbaseServer = types.ObjectNull(providerschema.CouchbaseServer{}.AttributeTypes())
 	}
 	plan.AppServiceId = types.StringNull()
+	plan.ConnectionString = types.StringNull()
 	plan.Audit = types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
 	plan.Etag = types.StringNull()
 

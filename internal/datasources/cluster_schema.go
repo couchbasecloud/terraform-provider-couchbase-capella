@@ -13,11 +13,12 @@ func ClusterSchema() schema.Schema {
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"id":              computedStringAttribute,
-						"organization_id": computedStringAttribute,
-						"project_id":      computedStringAttribute,
-						"name":            computedStringAttribute,
-						"description":     computedStringAttribute,
+						"id":                computedStringAttribute,
+						"organization_id":   computedStringAttribute,
+						"project_id":        computedStringAttribute,
+						"name":              computedStringAttribute,
+						"description":       computedStringAttribute,
+						"connection_string": computedStringAttribute,
 						"cloud_provider": schema.SingleNestedAttribute{
 							Computed: true,
 							Attributes: map[string]schema.Attribute{
