@@ -69,14 +69,7 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 
 	switch {
 	case plan.ProviderConfig.AWSConfig != nil:
-		awsConfigForJSON := network_peer_api.AWSConfigData{
-			AccountId: plan.ProviderConfig.AWSConfig.AccountId.ValueString(),
-			Cidr:      plan.ProviderConfig.AWSConfig.Cidr.ValueString(),
-			Region:    plan.ProviderConfig.AWSConfig.Region.ValueString(),
-			VpcId:     plan.ProviderConfig.AWSConfig.VpcId.ValueString(),
-		}
-
-		providerConfigJSON, err := json.Marshal(awsConfigForJSON)
+		providerConfigJSON, err := createAWSProviderConfig(plan)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error creating network peer for AWS",
@@ -84,18 +77,9 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 			)
 			return
 		}
-
 		networkPeerRequest.ProviderConfig = providerConfigJSON
-		plan.ProviderConfig.GCPConfig = nil
-		plan.ProviderConfig.AzureConfig = nil
 	case plan.ProviderConfig.GCPConfig != nil:
-		gcpConfigJSON := network_peer_api.GCPConfigData{
-			NetworkName:    plan.ProviderConfig.GCPConfig.NetworkName.ValueString(),
-			ProjectId:      plan.ProviderConfig.GCPConfig.ProjectId.ValueString(),
-			Cidr:           plan.ProviderConfig.GCPConfig.Cidr.ValueString(),
-			ServiceAccount: plan.ProviderConfig.GCPConfig.ServiceAccount.ValueString(),
-		}
-		providerConfigJSON, err := json.Marshal(gcpConfigJSON)
+		providerConfigJSON, err := createGCPProviderConfig(plan)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error creating network peer for GCP",
@@ -104,17 +88,8 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 			return
 		}
 		networkPeerRequest.ProviderConfig = providerConfigJSON
-		plan.ProviderConfig.AWSConfig = nil
-		plan.ProviderConfig.AzureConfig = nil
 	case plan.ProviderConfig.AzureConfig != nil:
-		azureConfigJSON := network_peer_api.AzureConfigData{
-			AzureTenantId:  plan.ProviderConfig.AzureConfig.AzureTenantId.ValueString(),
-			ResourceGroup:  plan.ProviderConfig.AzureConfig.ResourceGroup.ValueString(),
-			SubscriptionId: plan.ProviderConfig.AzureConfig.SubscriptionId.ValueString(),
-			VnetId:         plan.ProviderConfig.AzureConfig.VnetId.ValueString(),
-			Cidr:           plan.ProviderConfig.AzureConfig.Cidr.ValueString(),
-		}
-		providerConfigJSON, err := json.Marshal(azureConfigJSON)
+		providerConfigJSON, err := createAzureProviderConfig(plan)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error creating network peer for Azure",
@@ -123,8 +98,6 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 			return
 		}
 		networkPeerRequest.ProviderConfig = providerConfigJSON
-		plan.ProviderConfig.AWSConfig = nil
-		plan.ProviderConfig.GCPConfig = nil
 	default:
 		resp.Diagnostics.AddError(
 			"Provider Config cannot be empty",
@@ -132,72 +105,6 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 		)
 		return
 	}
-	//if plan.ProviderConfig.AWSConfig != nil {
-	//	awsConfigForJSON := network_peer_api.AWSConfigData{
-	//		AccountId: plan.ProviderConfig.AWSConfig.AccountId.ValueString(),
-	//		Cidr:      plan.ProviderConfig.AWSConfig.Cidr.ValueString(),
-	//		Region:    plan.ProviderConfig.AWSConfig.Region.ValueString(),
-	//		VpcId:     plan.ProviderConfig.AWSConfig.VpcId.ValueString(),
-	//	}
-	//
-	//	providerConfigJSON, err := json.Marshal(awsConfigForJSON)
-	//	if err != nil {
-	//		resp.Diagnostics.AddError(
-	//			"Error creating network peer for AWS",
-	//			errors.ErrConvertingProviderConfig.Error(),
-	//		)
-	//		return
-	//	}
-	//
-	//	networkPeerRequest.ProviderConfig = providerConfigJSON
-	//	plan.ProviderConfig.GCPConfig = nil
-	//	plan.ProviderConfig.AzureConfig = nil
-
-	//} else if plan.ProviderConfig.GCPConfig != nil {
-	//	gcpConfigJSON := network_peer_api.GCPConfigData{
-	//		NetworkName:    plan.ProviderConfig.GCPConfig.NetworkName.ValueString(),
-	//		ProjectId:      plan.ProviderConfig.GCPConfig.ProjectId.ValueString(),
-	//		Cidr:           plan.ProviderConfig.GCPConfig.Cidr.ValueString(),
-	//		ServiceAccount: plan.ProviderConfig.GCPConfig.ServiceAccount.ValueString(),
-	//	}
-	//	providerConfigJSON, err := json.Marshal(gcpConfigJSON)
-	//	if err != nil {
-	//		resp.Diagnostics.AddError(
-	//			"Error creating network peer for GCP",
-	//			errors.ErrConvertingProviderConfig.Error(),
-	//		)
-	//		return
-	//	}
-	//	networkPeerRequest.ProviderConfig = providerConfigJSON
-	//	plan.ProviderConfig.AWSConfig = nil
-	//	plan.ProviderConfig.AzureConfig = nil
-
-	//} else if plan.ProviderConfig.AzureConfig != nil {
-	//	azureConfigJSON := network_peer_api.AzureConfigData{
-	//		AzureTenantId:  plan.ProviderConfig.AzureConfig.AzureTenantId.ValueString(),
-	//		ResourceGroup:  plan.ProviderConfig.AzureConfig.ResourceGroup.ValueString(),
-	//		SubscriptionId: plan.ProviderConfig.AzureConfig.SubscriptionId.ValueString(),
-	//		VnetId:         plan.ProviderConfig.AzureConfig.VnetId.ValueString(),
-	//		Cidr:           plan.ProviderConfig.AzureConfig.Cidr.ValueString(),
-	//	}
-	//	providerConfigJSON, err := json.Marshal(azureConfigJSON)
-	//	if err != nil {
-	//		resp.Diagnostics.AddError(
-	//			"Error creating network peer for Azure",
-	//			errors.ErrConvertingProviderConfig.Error(),
-	//		)
-	//		return
-	//	}
-	//	networkPeerRequest.ProviderConfig = providerConfigJSON
-	//	plan.ProviderConfig.AWSConfig = nil
-	//	plan.ProviderConfig.GCPConfig = nil
-	//} else {
-	//	resp.Diagnostics.AddError(
-	//		"Provider Config cannot be empty",
-	//		errors.ErrProviderConfigCannotBeEmpty.Error(),
-	//	)
-	//	return
-	//}
 
 	var (
 		organizationId = plan.OrganizationId.ValueString()
@@ -262,6 +169,67 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
+}
+
+// Extracted function to handle AWS configuration
+func createAWSProviderConfig(plan providerschema.NetworkPeer) ([]byte, error) {
+	awsConfigForJSON := network_peer_api.AWSConfigData{
+		AccountId: plan.ProviderConfig.AWSConfig.AccountId.ValueString(),
+		Cidr:      plan.ProviderConfig.AWSConfig.Cidr.ValueString(),
+		Region:    plan.ProviderConfig.AWSConfig.Region.ValueString(),
+		VpcId:     plan.ProviderConfig.AWSConfig.VpcId.ValueString(),
+	}
+
+	providerConfigJSON, err := json.Marshal(awsConfigForJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	plan.ProviderConfig.GCPConfig = nil
+	plan.ProviderConfig.AzureConfig = nil
+
+	return providerConfigJSON, nil
+}
+
+// Extracted function to handle GCP configuration
+func createGCPProviderConfig(plan providerschema.NetworkPeer) ([]byte, error) {
+	gcpConfigJSON := network_peer_api.GCPConfigData{
+		NetworkName:    plan.ProviderConfig.GCPConfig.NetworkName.ValueString(),
+		ProjectId:      plan.ProviderConfig.GCPConfig.ProjectId.ValueString(),
+		Cidr:           plan.ProviderConfig.GCPConfig.Cidr.ValueString(),
+		ServiceAccount: plan.ProviderConfig.GCPConfig.ServiceAccount.ValueString(),
+	}
+
+	providerConfigJSON, err := json.Marshal(gcpConfigJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	plan.ProviderConfig.AWSConfig = nil
+	plan.ProviderConfig.AzureConfig = nil
+
+	return providerConfigJSON, nil
+}
+
+// Extracted function to handle Azure configuration
+func createAzureProviderConfig(plan providerschema.NetworkPeer) ([]byte, error) {
+	azureConfigJSON := network_peer_api.AzureConfigData{
+		AzureTenantId:  plan.ProviderConfig.AzureConfig.AzureTenantId.ValueString(),
+		ResourceGroup:  plan.ProviderConfig.AzureConfig.ResourceGroup.ValueString(),
+		SubscriptionId: plan.ProviderConfig.AzureConfig.SubscriptionId.ValueString(),
+		VnetId:         plan.ProviderConfig.AzureConfig.VnetId.ValueString(),
+		Cidr:           plan.ProviderConfig.AzureConfig.Cidr.ValueString(),
+	}
+
+	providerConfigJSON, err := json.Marshal(azureConfigJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	plan.ProviderConfig.AWSConfig = nil
+	plan.ProviderConfig.GCPConfig = nil
+
+	return providerConfigJSON, nil
 }
 
 // Read reads the NetworkPeer information.
