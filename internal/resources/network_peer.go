@@ -171,7 +171,7 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 }
 
-// createAWSProviderConfig is the function to handle AWS configuration
+// createAWSProviderConfig is the function to handle AWS configuration.
 func createAWSProviderConfig(plan providerschema.NetworkPeer) ([]byte, error) {
 	awsConfigForJSON := network_peer_api.AWSConfigData{
 		AccountId: plan.ProviderConfig.AWSConfig.AccountId.ValueString(),
@@ -191,7 +191,7 @@ func createAWSProviderConfig(plan providerschema.NetworkPeer) ([]byte, error) {
 	return providerConfigJSON, nil
 }
 
-// createGCPProviderConfig is the function to handle GCP configuration
+// createGCPProviderConfig is the function to handle GCP configuration.
 func createGCPProviderConfig(plan providerschema.NetworkPeer) ([]byte, error) {
 	gcpConfigJSON := network_peer_api.GCPConfigData{
 		NetworkName:    plan.ProviderConfig.GCPConfig.NetworkName.ValueString(),
@@ -211,7 +211,7 @@ func createGCPProviderConfig(plan providerschema.NetworkPeer) ([]byte, error) {
 	return providerConfigJSON, nil
 }
 
-// createAzureProviderConfig is the function to handle Azure configuration
+// createAzureProviderConfig is the function to handle Azure configuration.
 func createAzureProviderConfig(plan providerschema.NetworkPeer) ([]byte, error) {
 	azureConfigJSON := network_peer_api.AzureConfigData{
 		AzureTenantId:  plan.ProviderConfig.AzureConfig.AzureTenantId.ValueString(),
