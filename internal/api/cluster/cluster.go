@@ -85,6 +85,9 @@ type GetClusterResponse struct {
 	// AppServiceId is the ID of the linked app service.
 	AppServiceId *uuid.UUID `json:"appServiceId,omitempty"`
 
+	// ConnectionString specifies the Capella database endpoint for your client connection.
+	ConnectionString string `json:"connectionString"`
+
 	// CloudProvider is the cloud provider where the cluster will be hosted.
 	// To learn more, see:
 	// [AWS] https://docs.couchbase.com/cloud/reference/aws.html

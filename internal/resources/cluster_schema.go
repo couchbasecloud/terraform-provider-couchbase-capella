@@ -88,12 +88,13 @@ func ClusterSchema() schema.Schema {
 				Required: true,
 				Attributes: map[string]schema.Attribute{
 					"plan":     stringAttribute([]string{required}),
-					"timezone": stringAttribute([]string{required}),
+					"timezone": stringAttribute([]string{computed, optional}),
 				},
 			},
-			"current_state":  stringAttribute([]string{computed}),
-			"app_service_id": stringAttribute([]string{computed}),
-			"audit":          computedAuditAttribute(),
+			"current_state":     stringAttribute([]string{computed}),
+			"connection_string": stringAttribute([]string{computed}),
+			"app_service_id":    stringAttribute([]string{computed}),
+			"audit":             computedAuditAttribute(),
 			// if_match is only required during update call
 			"if_match": stringAttribute([]string{optional}),
 			"etag":     stringAttribute([]string{computed}),
