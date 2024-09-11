@@ -16,8 +16,7 @@ access = [
         name = "new_terraform_bucket"
         scopes = [
           {
-            name        = "_default"
-            collections = ["_default"]
+            name = "_default"
           }
         ]
       }]

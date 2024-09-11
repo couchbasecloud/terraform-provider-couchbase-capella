@@ -15,9 +15,6 @@ type Availability struct {
 // AvailabilityType is availability zone type, either 'single' or 'multi'.
 type AvailabilityType string
 
-// ConfigurationType defines model for ConfigurationType, either 'multiNode' or 'singleNode'.
-type ConfigurationType string
-
 // CreateClusterRequest is the request payload sent to the Capella V4 Public API in order to create a new cluster.
 // A Couchbase cluster consists of one or more instances of Couchbase Capella, each running on an independent node.
 // Data and services are shared across the cluster.
@@ -52,9 +49,6 @@ type CreateClusterRequest struct {
 	// Availability zone type, either 'single' or 'multi'.
 	// Enum: "single" "multi"
 	Availability Availability `json:"availability"`
-
-	// ConfigurationType defines model for ConfigurationType, either 'multiNode' or 'singleNode'
-	ConfigurationType ConfigurationType `json:"configurationType"`
 
 	// Name is the name of the cluster (up to 256 characters).
 	Name string `json:"name"`
@@ -91,6 +85,9 @@ type GetClusterResponse struct {
 	// AppServiceId is the ID of the linked app service.
 	AppServiceId *uuid.UUID `json:"appServiceId,omitempty"`
 
+	// ConnectionString specifies the Capella database endpoint for your client connection.
+	ConnectionString string `json:"connectionString"`
+
 	// CloudProvider is the cloud provider where the cluster will be hosted.
 	// To learn more, see:
 	// [AWS] https://docs.couchbase.com/cloud/reference/aws.html
@@ -103,9 +100,6 @@ type GetClusterResponse struct {
 
 	// CurrentState tells the status of the cluster - if it's healthy or degraded.
 	CurrentState State `json:"currentState"`
-
-	// ConfigurationType defines model for ConfigurationType, either 'multiNode' or 'singleNode'
-	ConfigurationType ConfigurationType `json:"configurationType"`
 
 	// Availability zone type, either 'single' or 'multi'.
 	// Enum: "single" "multi"

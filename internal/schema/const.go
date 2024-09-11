@@ -11,4 +11,5 @@ const (
 	ScopeName      Attr = "scopeName"
 	CollectionName Attr = "collectionName"
 	AppServiceId   Attr = "appServiceId"
+	EndpointId     Attr = "endpointId"
 )

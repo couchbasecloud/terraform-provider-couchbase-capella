@@ -191,7 +191,6 @@ resource "couchbase-capella_cluster" "%[2]s" {
   project_id      = %[4]s.id
   name            = "Terraform Acceptance Test Cluster"
   description     = "terraform acceptance test cluster"
-  configuration_type = "multiNode"
   cloud_provider = {
     type   = "aws"
     region = "us-east-1"
