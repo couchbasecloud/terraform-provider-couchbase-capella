@@ -5,7 +5,7 @@ go 1.21.4
 require (
 	github.com/couchbase/tools-common/functional v1.2.0
 	github.com/google/uuid v1.6.0
-	github.com/hashicorp/terraform-plugin-framework v1.6.1
+	github.com/hashicorp/terraform-plugin-framework v1.9.0
 	github.com/hashicorp/terraform-plugin-framework-validators v0.12.0
 	github.com/hashicorp/terraform-plugin-go v0.23.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
