@@ -15,14 +15,21 @@ type QueryError struct {
 
 // IndexDDLResponse has an array of errors returned by query service.
 type IndexDDLResponse struct {
-	Errors *[]QueryError `json:"errors,omitempty"`
+	Errors []QueryError `json:"errors,omitempty"`
 }
 
 // IndexDefinitionResponse represents a single index definition.
 type IndexDefinitionResponse struct {
-	Definition string `json:"definition"`
-	IndexName  string `json:"indexName"`
-	NumReplica int    `json:"numReplica"`
+	Bucket       string   `json:"bucket"`
+	Scope        string   `json:"scope"`
+	Collection   string   `json:"collection"`
+	IsPrimary    bool     `json:"is_primary"`
+	IndexName    string   `json:"indexName"`
+	SecExprs     []string `json:"secExprs"`
+	PartitionBy  string   `json:"partition_by"`
+	Where        string   `json:"where"`
+	NumReplica   int      `json:"numReplica"`
+	NumPartition int      `json:"numPartition"`
 }
 
 // ListIndexDefinitionsResponse represents a list of index definitions.
