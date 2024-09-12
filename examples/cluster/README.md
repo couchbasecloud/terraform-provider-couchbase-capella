@@ -60,6 +60,7 @@ Terraform will perform the following actions:
           + region = "us-east-1"
           + type   = "aws"
         }
+      + connection_string = (known after apply)
       + couchbase_server = {
           + version = "7.1"
         }
@@ -68,8 +69,8 @@ Terraform will perform the following actions:
       + etag             = (known after apply)
       + id               = (known after apply)
       + name             = "New Terraform Cluster"
-      + organization_id  = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      + project_id       = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+      + organization_id  = "ffffffff-aaaa-1414-eeee-00000000000"
+      + project_id       = "ffffffff-aaaa-1414-eeee-00000000000"
       + service_groups   = [
           + {
               + node         = {
@@ -106,9 +107,9 @@ Changes to Outputs:
               + app_service_id   = null
               + audit            = {
                   + created_at  = "2023-10-03 21:04:45.895255387 +0000 UTC"
-                  + created_by  = "7dfc7b93-a71b-4a2e-b5a7-4255ab29cab9"
+                  + created_by  = "ffffffff-aaaa-1414-eeee-00000000000"
                   + modified_at = "2023-10-03 21:08:45.110430897 +0000 UTC"
-                  + modified_by = "7dfc7b93-a71b-4a2e-b5a7-4255ab29cab9"
+                  + modified_by = "ffffffff-aaaa-1414-eeee-00000000000"
                   + version     = 5
                 }
               + availability     = {
@@ -119,15 +120,16 @@ Changes to Outputs:
                   + region = "af-south-1"
                   + type   = "aws"
                 }
+              + connection_string = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
               + couchbase_server = {
                   + version = "7.2.2"
                 }
               + current_state    = "healthy"
               + description      = ""
-              + id               = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+              + id               = "ffffffff-aaaa-1414-eeee-00000000000"
               + name             = "quickrobertekahn"
-              + organization_id  = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-              + project_id       = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+              + organization_id  = "ffffffff-aaaa-1414-eeee-00000000000"
+              + project_id       = "ffffffff-aaaa-1414-eeee-00000000000"
               + service_groups   = [
                   + {
                       + node         = {
@@ -156,8 +158,8 @@ Changes to Outputs:
                 }
             },
         ]
-      + organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      + project_id      = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+      + organization_id = "ffffffff-aaaa-1414-eeee-00000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-00000000000"
     }
   + new_cluster   = {
       + app_service_id   = (known after apply)
@@ -170,6 +172,7 @@ Changes to Outputs:
           + region = "us-east-1"
           + type   = "aws"
         }
+      + connection_string = (known after apply)
       + couchbase_server = {
           + version = "7.1"
         }
@@ -179,8 +182,8 @@ Changes to Outputs:
       + id               = (known after apply)
       + if_match         = null
       + name             = "New Terraform Cluster"
-      + organization_id  = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      + project_id       = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+      + organization_id  = "ffffffff-aaaa-1414-eeee-00000000000"
+      + project_id       = "ffffffff-aaaa-1414-eeee-00000000000"
       + service_groups   = [
           + {
               + node         = {
@@ -254,6 +257,7 @@ Terraform will perform the following actions:
           + region = "us-east-1"
           + type   = "aws"
         }
+      + connection_string = (known after apply)
       + couchbase_server = {
           + version = "7.1"
         }
@@ -262,8 +266,8 @@ Terraform will perform the following actions:
       + etag             = (known after apply)
       + id               = (known after apply)
       + name             = "New Terraform Cluster"
-      + organization_id  = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      + project_id       = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+      + organization_id  = "ffffffff-aaaa-1414-eeee-00000000000"
+      + project_id       = "ffffffff-aaaa-1414-eeee-00000000000"
       + service_groups   = [
           + {
               + node         = {
@@ -300,9 +304,9 @@ Changes to Outputs:
               + app_service_id   = null
               + audit            = {
                   + created_at  = "2023-10-03 21:04:45.895255387 +0000 UTC"
-                  + created_by  = "7dfc7b93-a71b-4a2e-b5a7-4255ab29cab9"
+                  + created_by  = "ffffffff-aaaa-1414-eeee-00000000000"
                   + modified_at = "2023-10-03 21:08:45.110430897 +0000 UTC"
-                  + modified_by = "7dfc7b93-a71b-4a2e-b5a7-4255ab29cab9"
+                  + modified_by = "ffffffff-aaaa-1414-eeee-00000000000"
                   + version     = 5
                 }
               + availability     = {
@@ -313,15 +317,16 @@ Changes to Outputs:
                   + region = "af-south-1"
                   + type   = "aws"
                 }
+              + connection_string = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com" 
               + couchbase_server = {
                   + version = "7.2.2"
                 }
               + current_state    = "healthy"
               + description      = ""
-              + id               = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+              + id               = "ffffffff-aaaa-1414-eeee-00000000000"
               + name             = "quickrobertekahn"
-              + organization_id  = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-              + project_id       = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+              + organization_id  = "ffffffff-aaaa-1414-eeee-00000000000"
+              + project_id       = "ffffffff-aaaa-1414-eeee-00000000000"
               + service_groups   = [
                   + {
                       + node         = {
@@ -350,8 +355,8 @@ Changes to Outputs:
                 }
             },
         ]
-      + organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      + project_id      = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+      + organization_id = "ffffffff-aaaa-1414-eeee-00000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-00000000000"
     }
   + new_cluster   = {
       + app_service_id   = (known after apply)
@@ -367,14 +372,15 @@ Changes to Outputs:
       + couchbase_server = {
           + version = "7.1"
         }
+      + connection_string = (known after apply)
       + current_state    = (known after apply)
       + description      = "My first test cluster for multiple services."
       + etag             = (known after apply)
       + id               = (known after apply)
       + if_match         = null
       + name             = "New Terraform Cluster"
-      + organization_id  = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      + project_id       = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+      + organization_id  = "ffffffff-aaaa-1414-eeee-00000000000"
+      + project_id       = "ffffffff-aaaa-1414-eeee-00000000000"
       + service_groups   = [
           + {
               + node         = {
@@ -427,7 +433,7 @@ capella_cluster.new_cluster: Still creating... [2m30s elapsed]
 capella_cluster.new_cluster: Still creating... [2m40s elapsed]
 capella_cluster.new_cluster: Still creating... [2m50s elapsed]
 capella_cluster.new_cluster: Still creating... [3m0s elapsed]
-capella_cluster.new_cluster: Creation complete after 3m4s [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6]
+capella_cluster.new_cluster: Creation complete after 3m4s [id=ffffffff-aaaa-1414-eeee-00000000000]
 
 Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
 
@@ -439,9 +445,9 @@ clusters_list = {
       "app_service_id" = tostring(null)
       "audit" = {
         "created_at" = "2023-10-03 21:04:45.895255387 +0000 UTC"
-        "created_by" = "7dfc7b93-a71b-4a2e-b5a7-4255ab29cab9"
+        "created_by" = "ffffffff-aaaa-1414-eeee-00000000000"
         "modified_at" = "2023-10-03 21:08:45.110430897 +0000 UTC"
-        "modified_by" = "7dfc7b93-a71b-4a2e-b5a7-4255ab29cab9"
+        "modified_by" = "ffffffff-aaaa-1414-eeee-00000000000"
         "version" = 5
       }
       "availability" = {
@@ -452,15 +458,16 @@ clusters_list = {
         "region" = "af-south-1"
         "type" = "aws"
       }
+      "connection_string" = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
       "couchbase_server" = {
         "version" = "7.2.2"
       }
       "current_state" = "healthy"
       "description" = ""
-      "id" = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+      "id" = "ffffffff-aaaa-1414-eeee-00000000000"
       "name" = "quickrobertekahn"
-      "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+      "organization_id" = "ffffffff-aaaa-1414-eeee-00000000000"
+      "project_id" = "ffffffff-aaaa-1414-eeee-00000000000"
       "service_groups" = tolist([
         {
           "node" = {
@@ -489,8 +496,8 @@ clusters_list = {
       }
     },
   ])
-  "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-  "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-00000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-00000000000"
 }
 new_cluster = {
   "app_service_id" = tostring(null)
@@ -509,17 +516,18 @@ new_cluster = {
     "region" = "us-east-1"
     "type" = "aws"
   }
+  "connection_string" = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
   "couchbase_server" = {
     "version" = "7.1"
   }
   "current_state" = "healthy"
   "description" = "My first test cluster for multiple services."
   "etag" = "Version: 5"
-  "id" = "f90c1d8a-c01f-4faa-860d-71cdcdf454f6"
+  "id" = "ffffffff-aaaa-1414-eeee-00000000000"
   "if_match" = tostring(null)
   "name" = "New Terraform Cluster"
-  "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-  "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-00000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-00000000000"
   "service_groups" = tolist([
     {
       "node" = {
@@ -572,17 +580,18 @@ $ terraform output new_cluster
     "region" = "us-east-1"
     "type" = "aws"
   }
+  "connection_string" = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
   "couchbase_server" = {
     "version" = "7.1"
   }
   "current_state" = "healthy"
   "description" = "My first test cluster for multiple services."
   "etag" = "Version: 5"
-  "id" = "f90c1d8a-c01f-4faa-860d-71cdcdf454f6"
+  "id" = "ffffffff-aaaa-1414-eeee-00000000000"
   "if_match" = tostring(null)
   "name" = "New Terraform Cluster"
-  "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-  "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-00000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-00000000000"
   "service_groups" = tolist([
     {
       "node" = {
@@ -612,7 +621,7 @@ $ terraform output new_cluster
 ```
 
 
-In this case, the cluster ID for my new cluster is `f90c1d8a-c01f-4faa-860d-71cdcdf454f6`
+In this case, the cluster ID for my new cluster is `ffffffff-aaaa-1414-eeee-00000000000`
 
 ### List the resources that are present in the Terraform State file.
 
@@ -644,16 +653,16 @@ Please note, this command will only remove the resource from the Terraform State
 Command: `terraform import couchbase-capella_cluster.new_cluster id=<cluster_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
 In this case, the complete command is:
-`terraform import couchbase-capella_cluster.new_cluster id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d`
+`terraform import couchbase-capella_cluster.new_cluster id=ffffffff-aaaa-1414-eeee-00000000000,project_id=ffffffff-aaaa-1414-eeee-00000000000,organization_id=ffffffff-aaaa-1414-eeee-00000000000`
 
 Sample Output:
 ```
-$ terraform import couchbase-capella_cluster.new_cluster id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d
-capella_cluster.new_cluster: Importing from ID "id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d"...
+$ terraform import couchbase-capella_cluster.new_cluster id=ffffffff-aaaa-1414-eeee-00000000000,project_id=ffffffff-aaaa-1414-eeee-00000000000,organization_id=ffffffff-aaaa-1414-eeee-00000000000
+capella_cluster.new_cluster: Importing from ID "id=ffffffff-aaaa-1414-eeee-00000000000,project_id=ffffffff-aaaa-1414-eeee-00000000000,organization_id=ffffffff-aaaa-1414-eeee-00000000000"...
 data.capella_clusters.existing_clusters: Reading...
 capella_cluster.new_cluster: Import prepared!
   Prepared capella_cluster for import
-capella_cluster.new_cluster: Refreshing state... [id=id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d]
+capella_cluster.new_cluster: Refreshing state... [id=id=ffffffff-aaaa-1414-eeee-00000000000,project_id=ffffffff-aaaa-1414-eeee-00000000000,organization_id=ffffffff-aaaa-1414-eeee-00000000000]
 data.capella_clusters.existing_clusters: Read complete after 1s
 
 Import successful!
@@ -685,7 +694,7 @@ $ terraform apply -var 'support={plan="enterprise", timezone="IST"}'
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
 data.capella_clusters.existing_clusters: Reading...
-capella_cluster.new_cluster: Refreshing state... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6]
+capella_cluster.new_cluster: Refreshing state... [id=ffffffff-aaaa-1414-eeee-00000000000]
 data.capella_clusters.existing_clusters: Read complete after 1s
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
@@ -705,7 +714,7 @@ Terraform will perform the following actions:
         }
       ~ current_state    = "healthy" -> (known after apply)
       ~ etag             = "Version: 5" -> (known after apply)
-        id               = "f90c1d8a-c01f-4faa-860d-71cdcdf454f6"
+        id               = "ffffffff-aaaa-1414-eeee-00000000000"
         name             = "New Terraform Cluster"
       ~ service_groups   = [
           ~ {
@@ -734,9 +743,9 @@ Changes to Outputs:
               - app_service_id   = null
               - audit            = {
                   - created_at  = "2023-10-03 21:04:45.895255387 +0000 UTC"
-                  - created_by  = "7dfc7b93-a71b-4a2e-b5a7-4255ab29cab9"
+                  - created_by  = "ffffffff-aaaa-1414-eeee-00000000000"
                   - modified_at = "2023-10-03 21:08:45.110430897 +0000 UTC"
-                  - modified_by = "7dfc7b93-a71b-4a2e-b5a7-4255ab29cab9"
+                  - modified_by = "ffffffff-aaaa-1414-eeee-00000000000"
                   - version     = 5
                 }
               - availability     = {
@@ -747,15 +756,16 @@ Changes to Outputs:
                   - region = "af-south-1"
                   - type   = "aws"
                 }
+              - connection_string = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
               - couchbase_server = {
                   - version = "7.2.2"
                 }
               - current_state    = "healthy"
               - description      = ""
-              - id               = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+              - id               = "ffffffff-aaaa-1414-eeee-00000000000"
               - name             = "quickrobertekahn"
-              - organization_id  = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-              - project_id       = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+              - organization_id  = "ffffffff-aaaa-1414-eeee-00000000000"
+              - project_id       = "ffffffff-aaaa-1414-eeee-00000000000"
               - service_groups   = [
                   - {
                       - node         = {
@@ -800,15 +810,16 @@ Changes to Outputs:
                     region = "us-east-1"
                     type   = "aws"
                 }
+                connection_string = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
                 couchbase_server = {
                     version = "7.1.5"
                 }
                 current_state    = "healthy"
                 description      = "My first test cluster for multiple services."
-                id               = "f90c1d8a-c01f-4faa-860d-71cdcdf454f6"
+                id               = "ffffffff-aaaa-1414-eeee-00000000000"
                 name             = "New Terraform Cluster"
-                organization_id  = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-                project_id       = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+                organization_id  = "ffffffff-aaaa-1414-eeee-00000000000"
+                project_id       = "ffffffff-aaaa-1414-eeee-00000000000"
                 service_groups   = [
                     {
                         node         = {
@@ -839,9 +850,9 @@ Changes to Outputs:
               + app_service_id   = null
               + audit            = {
                   + created_at  = "2023-10-03 21:04:45.895255387 +0000 UTC"
-                  + created_by  = "7dfc7b93-a71b-4a2e-b5a7-4255ab29cab9"
+                  + created_by  = "ffffffff-aaaa-1414-eeee-00000000000"
                   + modified_at = "2023-10-03 21:08:45.110430897 +0000 UTC"
-                  + modified_by = "7dfc7b93-a71b-4a2e-b5a7-4255ab29cab9"
+                  + modified_by = "ffffffff-aaaa-1414-eeee-00000000000"
                   + version     = 5
                 }
               + availability     = {
@@ -852,15 +863,16 @@ Changes to Outputs:
                   + region = "af-south-1"
                   + type   = "aws"
                 }
+              + connection_string = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
               + couchbase_server = {
                   + version = "7.2.2"
                 }
               + current_state    = "healthy"
               + description      = ""
-              + id               = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+              + id               = "ffffffff-aaaa-1414-eeee-00000000000"
               + name             = "quickrobertekahn"
-              + organization_id  = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-              + project_id       = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+              + organization_id  = "ffffffff-aaaa-1414-eeee-00000000000"
+              + project_id       = "ffffffff-aaaa-1414-eeee-00000000000"
               + service_groups   = [
                   + {
                       + node         = {
@@ -900,9 +912,10 @@ Changes to Outputs:
           - modified_by = "FYcHU0XHvw5tuQl4smAwyCKbGPMUZKUC"
           - version     = 5
         } -> (known after apply)
+      ~ connection_string = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com" -> (known after apply)
       ~ current_state    = "healthy" -> (known after apply)
       ~ etag             = "Version: 5" -> (known after apply)
-        id               = "f90c1d8a-c01f-4faa-860d-71cdcdf454f6"
+        id               = "ffffffff-aaaa-1414-eeee-00000000000"
         name             = "New Terraform Cluster"
       ~ service_groups   = [
           ~ {
@@ -928,20 +941,20 @@ Do you want to perform these actions?
 
   Enter a value: yes
 
-capella_cluster.new_cluster: Modifying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6]
-capella_cluster.new_cluster: Still modifying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 10s elapsed]
-capella_cluster.new_cluster: Still modifying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 20s elapsed]
-capella_cluster.new_cluster: Still modifying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 30s elapsed]
-capella_cluster.new_cluster: Still modifying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 40s elapsed]
-capella_cluster.new_cluster: Still modifying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 50s elapsed]
-capella_cluster.new_cluster: Still modifying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 1m0s elapsed]
-capella_cluster.new_cluster: Still modifying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 1m10s elapsed]
-capella_cluster.new_cluster: Still modifying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 1m20s elapsed]
-capella_cluster.new_cluster: Still modifying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 1m30s elapsed]
-capella_cluster.new_cluster: Still modifying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 1m40s elapsed]
-capella_cluster.new_cluster: Still modifying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 1m50s elapsed]
-capella_cluster.new_cluster: Still modifying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 2m0s elapsed]
-capella_cluster.new_cluster: Modifications complete after 2m7s [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6]
+capella_cluster.new_cluster: Modifying... [id=ffffffff-aaaa-1414-eeee-00000000000]
+capella_cluster.new_cluster: Still modifying... [id=ffffffff-aaaa-1414-eeee-00000000000, 10s elapsed]
+capella_cluster.new_cluster: Still modifying... [id=ffffffff-aaaa-1414-eeee-00000000000, 20s elapsed]
+capella_cluster.new_cluster: Still modifying... [id=ffffffff-aaaa-1414-eeee-00000000000, 30s elapsed]
+capella_cluster.new_cluster: Still modifying... [id=ffffffff-aaaa-1414-eeee-00000000000, 40s elapsed]
+capella_cluster.new_cluster: Still modifying... [id=ffffffff-aaaa-1414-eeee-00000000000, 50s elapsed]
+capella_cluster.new_cluster: Still modifying... [id=ffffffff-aaaa-1414-eeee-00000000000, 1m0s elapsed]
+capella_cluster.new_cluster: Still modifying... [id=ffffffff-aaaa-1414-eeee-00000000000, 1m10s elapsed]
+capella_cluster.new_cluster: Still modifying... [id=ffffffff-aaaa-1414-eeee-00000000000, 1m20s elapsed]
+capella_cluster.new_cluster: Still modifying... [id=ffffffff-aaaa-1414-eeee-00000000000, 1m30s elapsed]
+capella_cluster.new_cluster: Still modifying... [id=ffffffff-aaaa-1414-eeee-00000000000, 1m40s elapsed]
+capella_cluster.new_cluster: Still modifying... [id=ffffffff-aaaa-1414-eeee-00000000000, 1m50s elapsed]
+capella_cluster.new_cluster: Still modifying... [id=ffffffff-aaaa-1414-eeee-00000000000, 2m0s elapsed]
+capella_cluster.new_cluster: Modifications complete after 2m7s [id=ffffffff-aaaa-1414-eeee-00000000000]
 
 Apply complete! Resources: 0 added, 1 changed, 0 destroyed.
 
@@ -966,15 +979,16 @@ clusters_list = {
         "region" = "us-east-1"
         "type" = "aws"
       }
+      "connection_string" = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
       "couchbase_server" = {
         "version" = "7.1.5"
       }
       "current_state" = "healthy"
       "description" = "My first test cluster for multiple services."
-      "id" = "f90c1d8a-c01f-4faa-860d-71cdcdf454f6"
+      "id" = "ffffffff-aaaa-1414-eeee-00000000000"
       "name" = "New Terraform Cluster"
-      "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+      "organization_id" = "ffffffff-aaaa-1414-eeee-00000000000"
+      "project_id" = "ffffffff-aaaa-1414-eeee-00000000000"
       "service_groups" = tolist([
         {
           "node" = {
@@ -1005,9 +1019,9 @@ clusters_list = {
       "app_service_id" = tostring(null)
       "audit" = {
         "created_at" = "2023-10-03 21:04:45.895255387 +0000 UTC"
-        "created_by" = "7dfc7b93-a71b-4a2e-b5a7-4255ab29cab9"
+        "created_by" = "ffffffff-aaaa-1414-eeee-00000000000"
         "modified_at" = "2023-10-03 21:08:45.110430897 +0000 UTC"
-        "modified_by" = "7dfc7b93-a71b-4a2e-b5a7-4255ab29cab9"
+        "modified_by" = "ffffffff-aaaa-1414-eeee-00000000000"
         "version" = 5
       }
       "availability" = {
@@ -1018,15 +1032,16 @@ clusters_list = {
         "region" = "af-south-1"
         "type" = "aws"
       }
+      "connection_string" = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
       "couchbase_server" = {
         "version" = "7.2.2"
       }
       "current_state" = "healthy"
       "description" = ""
-      "id" = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+      "id" = "ffffffff-aaaa-1414-eeee-00000000000"
       "name" = "quickrobertekahn"
-      "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+      "organization_id" = "ffffffff-aaaa-1414-eeee-00000000000"
+      "project_id" = "ffffffff-aaaa-1414-eeee-00000000000"
       "service_groups" = tolist([
         {
           "node" = {
@@ -1055,8 +1070,8 @@ clusters_list = {
       }
     },
   ])
-  "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-  "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-00000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-00000000000"
 }
 new_cluster = {
   "app_service_id" = tostring(null)
@@ -1075,17 +1090,18 @@ new_cluster = {
     "region" = "us-east-1"
     "type" = "aws"
   }
+  "connection_string" = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
   "couchbase_server" = {
     "version" = "7.1.5"
   }
   "current_state" = "healthy"
   "description" = "My first test cluster for multiple services."
   "etag" = "Version: 10"
-  "id" = "f90c1d8a-c01f-4faa-860d-71cdcdf454f6"
+  "id" = "ffffffff-aaaa-1414-eeee-00000000000"
   "if_match" = tostring(null)
   "name" = "New Terraform Cluster"
-  "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-  "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-00000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-00000000000"
   "service_groups" = tolist([
     {
       "node" = {
@@ -1131,7 +1147,7 @@ $ terraform destroy
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
 data.capella_clusters.existing_clusters: Reading...
-capella_cluster.new_cluster: Refreshing state... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6]
+capella_cluster.new_cluster: Refreshing state... [id=ffffffff-aaaa-1414-eeee-00000000000]
 data.capella_clusters.existing_clusters: Read complete after 1s
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
@@ -1156,16 +1172,17 @@ Terraform will perform the following actions:
           - region = "us-east-1" -> null
           - type   = "aws" -> null
         }
+      - connection_string = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com" -> null
       - couchbase_server = {
           - version = "7.1.5" -> null
         }
       - current_state    = "healthy" -> null
       - description      = "My first test cluster for multiple services." -> null
       - etag             = "Version: 10" -> null
-      - id               = "f90c1d8a-c01f-4faa-860d-71cdcdf454f6" -> null
+      - id               = "ffffffff-aaaa-1414-eeee-00000000000" -> null
       - name             = "New Terraform Cluster" -> null
-      - organization_id  = "0783f698-ac58-4018-84a3-31c3b6ef785d" -> null
-      - project_id       = "958ad6b5-272d-49f0-babd-cc98c6b54a81" -> null
+      - organization_id  = "ffffffff-aaaa-1414-eeee-00000000000" -> null
+      - project_id       = "ffffffff-aaaa-1414-eeee-00000000000" -> null
       - service_groups   = [
           - {
               - node         = {
@@ -1215,15 +1232,16 @@ Changes to Outputs:
                   - region = "us-east-1"
                   - type   = "aws"
                 }
+              - connection_string = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
               - couchbase_server = {
                   - version = "7.1.5"
                 }
               - current_state    = "healthy"
               - description      = "My first test cluster for multiple services."
-              - id               = "f90c1d8a-c01f-4faa-860d-71cdcdf454f6"
+              - id               = "ffffffff-aaaa-1414-eeee-00000000000"
               - name             = "New Terraform Cluster"
-              - organization_id  = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-              - project_id       = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+              - organization_id  = "ffffffff-aaaa-1414-eeee-00000000000"
+              - project_id       = "ffffffff-aaaa-1414-eeee-00000000000"
               - service_groups   = [
                   - {
                       - node         = {
@@ -1254,9 +1272,9 @@ Changes to Outputs:
               - app_service_id   = null
               - audit            = {
                   - created_at  = "2023-10-03 21:04:45.895255387 +0000 UTC"
-                  - created_by  = "7dfc7b93-a71b-4a2e-b5a7-4255ab29cab9"
+                  - created_by  = "ffffffff-aaaa-1414-eeee-00000000000"
                   - modified_at = "2023-10-03 21:08:45.110430897 +0000 UTC"
-                  - modified_by = "7dfc7b93-a71b-4a2e-b5a7-4255ab29cab9"
+                  - modified_by = "ffffffff-aaaa-1414-eeee-00000000000"
                   - version     = 5
                 }
               - availability     = {
@@ -1267,15 +1285,16 @@ Changes to Outputs:
                   - region = "af-south-1"
                   - type   = "aws"
                 }
+              - connection_string = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
               - couchbase_server = {
                   - version = "7.2.2"
                 }
               - current_state    = "healthy"
               - description      = ""
-              - id               = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+              - id               = "ffffffff-aaaa-1414-eeee-00000000000"
               - name             = "quickrobertekahn"
-              - organization_id  = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-              - project_id       = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+              - organization_id  = "ffffffff-aaaa-1414-eeee-00000000000"
+              - project_id       = "ffffffff-aaaa-1414-eeee-00000000000"
               - service_groups   = [
                   - {
                       - node         = {
@@ -1304,8 +1323,8 @@ Changes to Outputs:
                 }
             },
         ]
-      - organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      - project_id      = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+      - organization_id = "ffffffff-aaaa-1414-eeee-00000000000"
+      - project_id      = "ffffffff-aaaa-1414-eeee-00000000000"
     } -> null
   - new_cluster   = {
       - app_service_id   = null
@@ -1324,17 +1343,18 @@ Changes to Outputs:
           - region = "us-east-1"
           - type   = "aws"
         }
+      - connection_string = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
       - couchbase_server = {
           - version = "7.1.5"
         }
       - current_state    = "healthy"
       - description      = "My first test cluster for multiple services."
       - etag             = "Version: 10"
-      - id               = "f90c1d8a-c01f-4faa-860d-71cdcdf454f6"
+      - id               = "ffffffff-aaaa-1414-eeee-00000000000"
       - if_match         = null
       - name             = "New Terraform Cluster"
-      - organization_id  = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      - project_id       = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+      - organization_id  = "ffffffff-aaaa-1414-eeee-00000000000"
+      - project_id       = "ffffffff-aaaa-1414-eeee-00000000000"
       - service_groups   = [
           - {
               - node         = {
@@ -1368,28 +1388,28 @@ Do you really want to destroy all resources?
 
   Enter a value: yes
 
-capella_cluster.new_cluster: Destroying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6]
-capella_cluster.new_cluster: Still destroying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 10s elapsed]
-capella_cluster.new_cluster: Still destroying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 20s elapsed]
-capella_cluster.new_cluster: Still destroying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 30s elapsed]
-capella_cluster.new_cluster: Still destroying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 40s elapsed]
-capella_cluster.new_cluster: Still destroying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 50s elapsed]
-capella_cluster.new_cluster: Still destroying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 1m0s elapsed]
-capella_cluster.new_cluster: Still destroying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 1m10s elapsed]
-capella_cluster.new_cluster: Still destroying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 1m20s elapsed]
-capella_cluster.new_cluster: Still destroying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 1m30s elapsed]
-capella_cluster.new_cluster: Still destroying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 1m40s elapsed]
-capella_cluster.new_cluster: Still destroying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 1m50s elapsed]
-capella_cluster.new_cluster: Still destroying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 2m0s elapsed]
-capella_cluster.new_cluster: Still destroying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 2m10s elapsed]
-capella_cluster.new_cluster: Still destroying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 2m20s elapsed]
-capella_cluster.new_cluster: Still destroying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 2m30s elapsed]
-capella_cluster.new_cluster: Still destroying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 2m40s elapsed]
-capella_cluster.new_cluster: Still destroying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 2m50s elapsed]
-capella_cluster.new_cluster: Still destroying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 3m0s elapsed]
-capella_cluster.new_cluster: Still destroying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 3m10s elapsed]
-capella_cluster.new_cluster: Still destroying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 3m20s elapsed]
-capella_cluster.new_cluster: Still destroying... [id=f90c1d8a-c01f-4faa-860d-71cdcdf454f6, 3m30s elapsed]
+capella_cluster.new_cluster: Destroying... [id=ffffffff-aaaa-1414-eeee-00000000000]
+capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-00000000000, 10s elapsed]
+capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-00000000000, 20s elapsed]
+capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-00000000000, 30s elapsed]
+capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-00000000000, 40s elapsed]
+capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-00000000000, 50s elapsed]
+capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-00000000000, 1m0s elapsed]
+capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-00000000000, 1m10s elapsed]
+capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-00000000000, 1m20s elapsed]
+capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-00000000000, 1m30s elapsed]
+capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-00000000000, 1m40s elapsed]
+capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-00000000000, 1m50s elapsed]
+capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-00000000000, 2m0s elapsed]
+capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-00000000000, 2m10s elapsed]
+capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-00000000000, 2m20s elapsed]
+capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-00000000000, 2m30s elapsed]
+capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-00000000000, 2m40s elapsed]
+capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-00000000000, 2m50s elapsed]
+capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-00000000000, 3m0s elapsed]
+capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-00000000000, 3m10s elapsed]
+capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-00000000000, 3m20s elapsed]
+capella_cluster.new_cluster: Still destroying... [id=ffffffff-aaaa-1414-eeee-00000000000, 3m30s elapsed]
 capella_cluster.new_cluster: Destruction complete after 3m32s
 
 Destroy complete! Resources: 1 destroyed.

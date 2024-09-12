@@ -73,6 +73,8 @@ touch $HOME/dev.terraformrc
 
 #### Open and edit the configuration file
 
+**LINUX SPECIFIC STEPS:**
+
 Navigate to `dev.terraformrc` either using console or your preferred text editor and paste in
 the following contents:
 
@@ -89,6 +91,28 @@ the following contents:
   direct {}
 }
   ```
+**WINDOWS SPECIFIC STEPS:**
+
+Step 1: Find your %APPDATA% path from powershell
+(reference: https://developer.hashicorp.com/terraform/cli/config/config-file#locations)
+
+Step 2: Create a terraform.rc file in the path above
+
+```terraform
+  provider_installation {
+
+  dev_overrides {
+    "couchbasecloud/couchbase-capella" = "C:\\Users\\Administrator\\couchbasecapella"
+  }
+
+  # For all other providers, install them directly from their origin provider
+  # registries as normal. If you omit this, Terraform will _only_ use
+  # the dev_overrides block, and so no other providers will be available.
+  direct {}
+}
+
+  ```
+**NOTE: Please make sure you are escaping the backslashes in the path.**
 
 #### Define the env var `TF_CLI_CONFIG_FILE` in your console session
 
