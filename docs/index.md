@@ -270,3 +270,31 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
   
   Retrieve Audit Logs Events.
 
+* [Manage Network Peer](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/network_peer)
+
+  Manage Network Peer
+
+* [Retrieve Specific Event](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/event)
+
+  Retrieve Specific Event
+
+* [Retrieve All Events](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/events)
+
+  Retrieve All Events
+
+* [Retrieve Private Endpoint Command for AWS](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoint_command/AWS)
+
+  Retrieve Private Endpoint Command for AWS
+
+* [Retrieve Private Endpoint Command for Azure](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoint_command/Azure)
+
+  Retrieve Private Endpoint Command for Azure
+
+* [Manage Private Endpoint Service](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoint_service)
+
+  Manage Private Endpoint Service
+
+* [Manage Private Endpoints](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoints)
+
+  Manage Private Endpoints
+
