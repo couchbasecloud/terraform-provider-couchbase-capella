@@ -1,5 +1,13 @@
 # Changelog
 
+## [v1.2.1](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.2.1) (2024-05-07)
+
+[Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.2.0...v1.2.1)
+
+**Fixed bugs:**
+
+- \[AV-77464\] fix export schema [\#191](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/191) ([l0n3star](https://github.com/l0n3star))
+
 ## [v1.2.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.2.0) (2024-04-25)
 
 [Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.1.0...v1.2.0)

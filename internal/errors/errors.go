@@ -24,6 +24,9 @@ var (
 	// ErrClusterIdMissing is returned when an expected Cluster Id was not found after an import.
 	ErrClusterIdMissing = errors.New("cluster ID is missing or was passed incorrectly, please check provider documentation for syntax")
 
+	// ErrPeerIdMissing is returned when an expected Peer Id was not found after an import.
+	ErrPeerIdMissing = errors.New("peer ID is missing or was passed incorrectly, please check provider documentation for syntax")
+
 	// ErrProjectIdCannotBeEmpty is returned when a Project Id was required for a request but was not included.
 	ErrProjectIdCannotBeEmpty = errors.New("project ID cannot be empty, please contact Couchbase Capella Support")
 
@@ -66,8 +69,14 @@ var (
 	// ErrMarshallingPayload is returned when a payload has failed to marshal into a request body.
 	ErrMarshallingPayload = errors.New("failed to marshal payload")
 
-	// ErrUnmarshallingResponse is returned when a HTTP response failrf to unmarshal.
+	// ErrUnmarshallingResponse is returned when a HTTP response failed to unmarshal.
 	ErrUnmarshallingResponse = errors.New("failed to unmarshal response")
+
+	// ErrUnmarshallingAWSConfigResponse is returned when a HTTP response failed to unmarshal.
+	ErrUnmarshallingAWSConfigResponse = errors.New("failed to unmarshal aws config response")
+
+	// ErrUnmarshallingGCPConfigResponse is returned when a HTTP response failed to unmarshal.
+	ErrUnmarshallingGCPConfigResponse = errors.New("failed to unmarshal GCP config response")
 
 	// ErrConstructingRequest is returned when a HTTP.NewRequest has failed.
 	ErrConstructingRequest = errors.New("failed to construct request")
@@ -132,6 +141,13 @@ var (
 
 	// ErrReadingGCPDisk is returned when a GCP disk read fails.
 	ErrReadingGCPDisk = errors.New("failed to read GCP disk, please contact Couchbase Capella Support")
+
+	// ErrReadingAWSConfig is returned when an AWS disk read fails.
+	ErrReadingAWSConfig = errors.New("failed to read AWS config, please contact Couchbase Capella Support")
+
+	// ErrReadingGCPConfig is returned when a GCP disk read fails.
+	ErrReadingGCPConfig = errors.New("failed to read GCP config, please contact Couchbase Capella Support")
+
 	// ErrBucketIdMissing is returned when an expected Bucket Id was not found after an import.
 	ErrBucketIdMissing = errors.New("bucket ID is missing or was passed incorrectly, please check provider documentation for syntax")
 
@@ -170,4 +186,25 @@ var (
 
 	// ErrOnoffStateCannotBeEmpty is returned when cluster on/off state is required for a request but was not included.
 	ErrOnoffStateCannotBeEmpty = errors.New("on/off state cannot be empty, please mention the state in which you want your cluster to be")
+
+	// ErrEndpointIdMissing is returned when an expected endpoint ID was not found after an import.
+	ErrEndpointIdMissing = errors.New("endpoint ID is missing or was passed incorrectly, please check provider documentation for syntax")
+
+	// ErrVPCIDMissing is returned when an expected AWS VPC ID was not found after an import.
+	ErrVPCIDMissing = errors.New("AWS VPC ID is missing or was passed incorrectly, please check provider documentation for syntax")
+
+	// ErrVirtualNetworkMissing is returned when an expected Azure virtual network was not found after an import.
+	ErrVirtualNetworkMissing = errors.New("Azure virtual network is missing or was passed incorrectly, please check provider documentation for syntax")
+
+	// ErrResourceGroupName is returned when an expected Azure resource group was not found after an import.
+	ErrResourceGroupName = errors.New("Azure resource group is missing or was passed incorrectly, please check provider documentation for syntax")
+
+	// ErrConvertingProviderConfig is returned when terraform fails to convert a network peer provider config.
+	ErrConvertingProviderConfig = errors.New("failed to convert network peer provider config, please contact Couchbase Capella Support")
+
+	ErrPrivateEndpointServiceTimeout = errors.New("changing private endpoint service status timed out after initiation")
+
+	ErrBucketCreationStatusTimeout = errors.New("bucket backup creation status transition timed out after initiation")
+
+	ErrAppServiceCreationStatusTimeout = errors.New("app service creation status transition timed out after initiation")
 )

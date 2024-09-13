@@ -497,8 +497,7 @@ func (a *AppService) checkAppServiceStatus(ctx context.Context, organizationId, 
 	for {
 		select {
 		case <-ctx.Done():
-			const msg = "app service creation status transition timed out after initiation"
-			return fmt.Errorf(msg)
+			return errors.ErrAppServiceCreationStatusTimeout
 
 		case <-timer.C:
 			appServiceResp, err = a.getAppService(ctx, organizationId, projectId, clusterId, appServiceId)
