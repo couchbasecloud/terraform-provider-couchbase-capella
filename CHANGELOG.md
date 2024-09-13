@@ -22,6 +22,11 @@
 **Documentation Enhancement:**
 - \[AV-83061\] Updating contributing.md with windows steps [#208](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/208) ([Talina06](https://github.com/Talina06))
 
+**Merged pull requests:**
+- Bump github.com/hashicorp/terraform-plugin-framework from 1.6.1 to 1.9.0 [#201](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/201) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump github.com/hashicorp/terraform-plugin-go from 0.22.1 to 0.23.0 [#193](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/193) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+
 ## [v1.2.1](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.2.1) (2024-05-07)
 
 [Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.2.0...v1.2.1)
