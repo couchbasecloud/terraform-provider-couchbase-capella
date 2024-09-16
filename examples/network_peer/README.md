@@ -1439,7 +1439,7 @@ Changes to Outputs:
           + {
               + audit           = {
                   + created_at  = "2024-08-23 23:30:39.790107885 +0000 UTC"
-                  + created_by  = "s10qrydhDaic9GsWZ6BYpJfSK7wARDCv"
+                  + created_by  = "sample_apikey"
                   + modified_at = "2024-08-23 23:35:39.359925093 +0000 UTC"
                   + modified_by = "ffffffff-aaaa-1414-eeee-00000000000"
                   + version     = 6
@@ -1509,7 +1509,7 @@ $  terraform apply
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/paulomee.de/go/bin
+│  - couchbasecloud/couchbase-capella in /Users/$USER/go/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -1553,7 +1553,7 @@ Changes to Outputs:
           + {
               + audit           = {
                   + created_at  = "2024-08-23 23:30:39.790107885 +0000 UTC"
-                  + created_by  = "s10qrydhDaic9GsWZ6BYpJfSK7wARDCv"
+                  + created_by  = "sample_apikey"
                   + modified_at = "2024-08-23 23:35:39.359925093 +0000 UTC"
                   + modified_by = "ffffffff-aaaa-1414-eeee-00000000000"
                   + version     = 6
@@ -1629,7 +1629,7 @@ network_peers_list = {
     {
       "audit" = {
         "created_at" = "2024-08-23 23:30:39.790107885 +0000 UTC"
-        "created_by" = "s10qrydhDaic9GsWZ6BYpJfSK7wARDCv"
+        "created_by" = "sample_apikey"
         "modified_at" = "2024-08-23 23:35:39.359925093 +0000 UTC"
         "modified_by" = "ffffffff-aaaa-1414-eeee-00000000000"
         "version" = 6
@@ -1660,9 +1660,9 @@ network_peers_list = {
 new_network_peer = {
   "audit" = {
     "created_at" = "2024-08-24 00:01:23.524305127 +0000 UTC"
-    "created_by" = "s10qrydhDaic9GsWZ6BYpJfSK7wARDCv"
+    "created_by" = "sample_apikey"
     "modified_at" = "2024-08-24 00:02:05.606678591 +0000 UTC"
-    "modified_by" = "s10qrydhDaic9GsWZ6BYpJfSK7wARDCv"
+    "modified_by" = "sample_apikey"
     "version" = 2
   }
   "cluster_id" = "ffffffff-aaaa-1414-eeee-00000000000"
@@ -1702,9 +1702,9 @@ $ terraform output new_network_peer
 {
   "audit" = {
     "created_at" = "2024-08-24 00:01:23.524305127 +0000 UTC"
-    "created_by" = "s10qrydhDaic9GsWZ6BYpJfSK7wARDCv"
+    "created_by" = "sample_apikey"
     "modified_at" = "2024-08-24 00:02:05.606678591 +0000 UTC"
-    "modified_by" = "s10qrydhDaic9GsWZ6BYpJfSK7wARDCv"
+    "modified_by" = "sample_apikey"
     "version" = 2
   }
   "cluster_id" = "ffffffff-aaaa-1414-eeee-00000000000"
@@ -1831,7 +1831,7 @@ $ terraform apply
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/paulomee.de/go/bin
+│  - couchbasecloud/couchbase-capella in /Users/$USER/go/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -1848,9 +1848,9 @@ Terraform will perform the following actions:
 -/+ resource "couchbase-capella_network_peer" "new_network_peer" {
       ~ audit           = {
           ~ created_at  = "2024-08-24 00:01:23.524305127 +0000 UTC" -> (known after apply)
-          ~ created_by  = "s10qrydhDaic9GsWZ6BYpJfSK7wARDCv" -> (known after apply)
+          ~ created_by  = "sample_apikey" -> (known after apply)
           ~ modified_at = "2024-08-24 00:02:05.606678591 +0000 UTC" -> (known after apply)
-          ~ modified_by = "s10qrydhDaic9GsWZ6BYpJfSK7wARDCv" -> (known after apply)
+          ~ modified_by = "sample_apikey" -> (known after apply)
           ~ version     = 2 -> (known after apply)
         } -> (known after apply)
       ~ commands        = [] -> (known after apply)
@@ -1875,9 +1875,9 @@ Changes to Outputs:
   ~ new_network_peer   = {
       ~ audit           = {
           - created_at  = "2024-08-24 00:01:23.524305127 +0000 UTC"
-          - created_by  = "s10qrydhDaic9GsWZ6BYpJfSK7wARDCv"
+          - created_by  = "sample_apikey"
           - modified_at = "2024-08-24 00:02:05.606678591 +0000 UTC"
-          - modified_by = "s10qrydhDaic9GsWZ6BYpJfSK7wARDCv"
+          - modified_by = "sample_apikey"
           - version     = 2
         } -> (known after apply)
       ~ commands        = [] -> (known after apply)
@@ -1925,7 +1925,7 @@ network_peers_list = {
     {
       "audit" = {
         "created_at" = "2024-08-23 23:30:39.790107885 +0000 UTC"
-        "created_by" = "s10qrydhDaic9GsWZ6BYpJfSK7wARDCv"
+        "created_by" = "sample_apikey"
         "modified_at" = "2024-08-23 23:35:39.359925093 +0000 UTC"
         "modified_by" = "418653cc-a3c5-4943-9ff0-ee4d36a49ca3"
         "version" = 6
@@ -1952,9 +1952,9 @@ network_peers_list = {
     {
       "audit" = {
         "created_at" = "2024-08-24 00:01:23.524305127 +0000 UTC"
-        "created_by" = "s10qrydhDaic9GsWZ6BYpJfSK7wARDCv"
+        "created_by" = "sample_apikey"
         "modified_at" = "2024-08-24 00:02:05.606678591 +0000 UTC"
-        "modified_by" = "s10qrydhDaic9GsWZ6BYpJfSK7wARDCv"
+        "modified_by" = "sample_apikey"
         "version" = 2
       }
       "id" = "ffffffff-aaaa-1414-eeee-00000000000"
@@ -1983,9 +1983,9 @@ network_peers_list = {
 new_network_peer = {
   "audit" = {
     "created_at" = "2024-08-24 00:10:56.415670004 +0000 UTC"
-    "created_by" = "s10qrydhDaic9GsWZ6BYpJfSK7wARDCv"
+    "created_by" = "sample_apikey"
     "modified_at" = "2024-08-24 00:11:37.523742051 +0000 UTC"
-    "modified_by" = "s10qrydhDaic9GsWZ6BYpJfSK7wARDCv"
+    "modified_by" = "sample_apikey"
     "version" = 2
   }
   "cluster_id" = "ffffffff-aaaa-1414-eeee-00000000000"
@@ -2029,7 +2029,7 @@ $  terraform destroy
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/paulomee.de/go/bin
+│  - couchbasecloud/couchbase-capella in /Users/$USER/go/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -2046,9 +2046,9 @@ Terraform will perform the following actions:
   - resource "couchbase-capella_network_peer" "new_network_peer" {
       - audit           = {
           - created_at  = "2024-08-24 00:10:56.415670004 +0000 UTC" -> null
-          - created_by  = "s10qrydhDaic9GsWZ6BYpJfSK7wARDCv" -> null
+          - created_by  = "sample_apikey" -> null
           - modified_at = "2024-08-24 00:11:37.523742051 +0000 UTC" -> null
-          - modified_by = "s10qrydhDaic9GsWZ6BYpJfSK7wARDCv" -> null
+          - modified_by = "sample_apikey" -> null
           - version     = 2 -> null
         } -> null
       - cluster_id      = "ffffffff-aaaa-1414-eeee-00000000000" -> null
@@ -2083,9 +2083,9 @@ Changes to Outputs:
           - {
               - audit           = {
                   - created_at  = "2024-08-24 00:10:56.415670004 +0000 UTC"
-                  - created_by  = "s10qrydhDaic9GsWZ6BYpJfSK7wARDCv"
+                  - created_by  = "sample_apikey"
                   - modified_at = "2024-08-24 00:11:37.523742051 +0000 UTC"
-                  - modified_by = "s10qrydhDaic9GsWZ6BYpJfSK7wARDCv"
+                  - modified_by = "sample_apikey"
                   - version     = 2
                 }
               - id              = "ffffffff-aaaa-1414-eeee-00000000000"
@@ -2110,7 +2110,7 @@ Changes to Outputs:
           - {
               - audit           = {
                   - created_at  = "2024-08-23 23:30:39.790107885 +0000 UTC"
-                  - created_by  = "s10qrydhDaic9GsWZ6BYpJfSK7wARDCv"
+                  - created_by  = "sample_apikey"
                   - modified_at = "2024-08-23 23:35:39.359925093 +0000 UTC"
                   - modified_by = "418653cc-a3c5-4943-9ff0-ee4d36a49ca3"
                   - version     = 6
@@ -2141,9 +2141,9 @@ Changes to Outputs:
   - new_network_peer   = {
       - audit           = {
           - created_at  = "2024-08-24 00:10:56.415670004 +0000 UTC"
-          - created_by  = "s10qrydhDaic9GsWZ6BYpJfSK7wARDCv"
+          - created_by  = "sample_apikey"
           - modified_at = "2024-08-24 00:11:37.523742051 +0000 UTC"
-          - modified_by = "s10qrydhDaic9GsWZ6BYpJfSK7wARDCv"
+          - modified_by = "sample_apikey"
           - version     = 2
         }
       - cluster_id      = "ffffffff-aaaa-1414-eeee-00000000000"
