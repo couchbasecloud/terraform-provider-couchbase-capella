@@ -132,6 +132,9 @@ type Cluster struct {
 	OrganizationId types.String `tfsdk:"organization_id"`
 	Audit          types.Object `tfsdk:"audit"`
 
+	// ConfigurationType represents whether a cluster is configured as a single-node or multi-node cluster.
+	ConfigurationType types.String `tfsdk:"configuration_type"`
+
 	// CouchbaseServer is the version of the Couchbase Server to be installed in the cluster.
 	CouchbaseServer types.Object `tfsdk:"couchbase_server"`
 
@@ -194,6 +197,7 @@ func NewCluster(ctx context.Context, cluster *clusterapi.GetClusterResponse, org
 			Region: types.StringValue(cluster.CloudProvider.Region),
 			Type:   types.StringValue(string(cluster.CloudProvider.Type)),
 		},
+		ConfigurationType: types.StringValue(string(cluster.ConfigurationType)),
 		Support: &Support{
 			Plan:     types.StringValue(string(cluster.Support.Plan)),
 			Timezone: types.StringValue(string(cluster.Support.Timezone)),
