@@ -459,28 +459,44 @@ func (n *NetworkPeer) getNetworkPeer(ctx context.Context, organizationId, projec
 		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
 
-	azure, err := networkResp.AsAZURE()
-	if err == nil && azure.AzureConfigData.AzureTenantId != "" {
-		networkResp.ProviderType = "azure"
-	} else if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrReadingAzureConfig, err)
-	}
-
-	gcp, err := networkResp.AsGCP()
-	if err == nil && gcp.GCPConfigData.ProjectId != "" {
-		networkResp.ProviderType = "gcp"
-	} else if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrReadingGCPConfig, err)
-	}
-
-	aws, err := networkResp.AsAWS()
-	if err == nil && aws.AWSConfigData.VpcId != "" {
-		networkResp.ProviderType = "aws"
-	} else if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrReadingAWSConfig, err)
+	if err := defineProviderForResponse(networkResp); err != nil {
+		return nil, err
 	}
 
 	return &networkResp, nil
+}
+
+// defineProviderForResponse sets the provider type in the retrieved network peer as per the fields populated in the provider config.
+// If the provider type is not set through terraform separately in this manner, it will throw error as v4 get doesn't return it, but it's a field in resources.
+func defineProviderForResponse(networkResp network_peer_api.GetNetworkPeeringRecordResponse) error {
+	azure, err := networkResp.AsAZURE()
+	if err != nil {
+		return fmt.Errorf("%s: %w", errors.ErrReadingAzureConfig, err)
+	}
+
+	gcp, err := networkResp.AsGCP()
+	if err != nil {
+		return fmt.Errorf("%s: %w", errors.ErrReadingGCPConfig, err)
+	}
+
+	aws, err := networkResp.AsAWS()
+	if err != nil {
+		return fmt.Errorf("%s: %w", errors.ErrReadingAWSConfig, err)
+	}
+
+	// if there is no error, set the provider type for the provider config as per the populated fields in the get response.
+	switch {
+	case azure.AzureConfigData.AzureTenantId != "":
+		networkResp.ProviderType = "azure"
+	case gcp.GCPConfigData.ProjectId != "":
+		networkResp.ProviderType = "gcp"
+	case aws.AWSConfigData.VpcId != "":
+		networkResp.ProviderType = "aws"
+	default:
+		return fmt.Errorf("%s: %w", errors.ErrReadingProviderConfig, err)
+	}
+
+	return nil
 }
 
 func validateProviderTypeIsSameInPlanAndState(planProviderType, stateProviderType string) bool {

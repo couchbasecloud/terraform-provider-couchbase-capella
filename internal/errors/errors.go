@@ -166,6 +166,9 @@ var (
 	// ErrReadingAzureConfig is returned when a GCP disk read fails.
 	ErrReadingAzureConfig = errors.New("failed to read Azure config, please contact Couchbase Capella Support")
 
+	// ErrReadingProviderConfig is returned when one or more of the fields in the provider config of the csp is missing.
+	ErrReadingProviderConfig = errors.New("failed to read the provider config as one or more of the fields in the config is missing, please contact Couchbase Capella Support")
+
 	// ErrBucketIdMissing is returned when an expected Bucket Id was not found after an import.
 	ErrBucketIdMissing = errors.New("bucket ID is missing or was passed incorrectly, please check provider documentation for syntax")
 
