@@ -233,24 +233,8 @@ func NewNetworkPeer(ctx context.Context, networkPeer *network_peer_api.GetNetwor
 // morphToProviderConfig is used to convert ProviderConfig from json.RawMessage format to ProviderConfig type.
 func morphToProviderConfig(networkPeer *network_peer_api.GetNetworkPeeringRecordResponse) (ProviderConfig, error) {
 	var newProviderConfig ProviderConfig
-
 	aws, err := networkPeer.AsAWS()
-	if err != nil {
-		return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingAWSConfig, err)
-	}
-
-	gcp, err := networkPeer.AsGCP()
-	if err != nil {
-		return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingGCPConfig, err)
-	}
-
-	azure, err := networkPeer.AsAZURE()
-	if err != nil {
-		return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingAzureConfig, err)
-	}
-
-	switch {
-	case aws.AWSConfigData.VpcId != "":
+	if err == nil && aws.AWSConfigData.VpcId != "" {
 		newProviderConfig.AWSConfig = &AWSConfig{
 			ProviderId: types.StringValue(aws.ProviderId),
 			AccountId:  types.StringValue(aws.AWSConfigData.AccountId),
@@ -259,7 +243,12 @@ func morphToProviderConfig(networkPeer *network_peer_api.GetNetworkPeeringRecord
 			Region:     types.StringValue(aws.AWSConfigData.Region),
 		}
 		return newProviderConfig, nil
-	case gcp.GCPConfigData.ProjectId != "":
+	} else if err != nil {
+		return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingAWSConfig, err)
+	}
+
+	gcp, err := networkPeer.AsGCP()
+	if err == nil && gcp.GCPConfigData.ProjectId != "" {
 		newProviderConfig.GCPConfig = &GCPConfig{
 			ProviderId:     types.StringValue(gcp.ProviderId),
 			Cidr:           types.StringValue(gcp.GCPConfigData.Cidr),
@@ -268,7 +257,11 @@ func morphToProviderConfig(networkPeer *network_peer_api.GetNetworkPeeringRecord
 			ServiceAccount: types.StringValue(gcp.GCPConfigData.ServiceAccount),
 		}
 		return newProviderConfig, nil
-	case azure.AzureConfigData.AzureTenantId != "":
+	} else if err != nil {
+		return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingGCPConfig, err)
+	}
+	azure, err := networkPeer.AsAZURE()
+	if err == nil && azure.AzureConfigData.AzureTenantId != "" {
 		newProviderConfig.AzureConfig = &AzureConfig{
 			ProviderId:     types.StringValue(azure.ProviderId),
 			Cidr:           types.StringValue(azure.AzureConfigData.Cidr),
@@ -278,8 +271,8 @@ func morphToProviderConfig(networkPeer *network_peer_api.GetNetworkPeeringRecord
 			AzureTenantId:  types.StringValue(azure.AzureConfigData.AzureTenantId),
 		}
 		return newProviderConfig, nil
-	default:
-		return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingProviderConfig, err)
+	} else if err != nil {
+		return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingAzureConfig, err)
 	}
 	return newProviderConfig, nil
 }
