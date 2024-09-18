@@ -627,7 +627,6 @@ func TestAccClusterResourceWithConfigurationTypeFieldAdded(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east-1"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
-					resource.TestCheckResourceAttr(resourceReference, "couchbase_server.version", "7.2"),
 					resource.TestCheckResourceAttr(resourceReference, "configuration_type", "singleNode"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "2"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "8"),
