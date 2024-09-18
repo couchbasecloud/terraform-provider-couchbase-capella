@@ -5,6 +5,7 @@
 [Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.2.1...v1.3.0)
 
 **Implemented enhancements:**
+- \[AV-86845\] Deprecate the `configurationType` attribute in the cluster resource [\#222](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/222) ([aniket-Kumar-c](https://github.com/aniket-Kumar-c))
 - \[AV-85326\] Display the cluster connection string for the cluster resource [\#219](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/219) ([PaulomeeCb](https://github.com/PaulomeeCb))
 - \[AV-82517\] Remove the configuration type from the cluster resource [#207](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/207) ([PaulomeeCb](https://github.com/PaulomeeCb))
 - \[AV-76499\] Support Capella System Events and Activity Logs [\#206](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/206) ([aniket-Kumar-c](https://github.com/aniket-Kumar-c))
