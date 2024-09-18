@@ -118,6 +118,10 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		}
 	}
 
+	if !plan.ConfigurationType.IsNull() && !plan.ConfigurationType.IsUnknown() {
+		clusterRequest.ConfigurationType = clusterapi.ConfigurationType(plan.ConfigurationType.ValueString())
+	}
+
 	serviceGroups, err := c.morphToApiServiceGroups(plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -798,7 +802,9 @@ func initializePendingClusterWithPlanAndId(plan providerschema.Cluster, id strin
 	if plan.Description.IsNull() || plan.Description.IsUnknown() {
 		plan.Description = types.StringNull()
 	}
-
+	if plan.ConfigurationType.IsNull() || plan.ConfigurationType.IsUnknown() {
+		plan.ConfigurationType = types.StringNull()
+	}
 	if plan.CouchbaseServer.IsNull() || plan.CouchbaseServer.IsUnknown() {
 		plan.CouchbaseServer = types.ObjectNull(providerschema.CouchbaseServer{}.AttributeTypes())
 	}

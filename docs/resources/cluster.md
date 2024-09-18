@@ -27,6 +27,7 @@ description: |-
 
 ### Optional
 
+- `configuration_type` (String, Deprecated)
 - `couchbase_server` (Attributes) (see [below for nested schema](#nestedatt--couchbase_server))
 - `description` (String)
 - `if_match` (String)

@@ -60,6 +60,7 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east-1"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
+					resource.TestCheckResourceAttr(resourceReference, "configuration_type", "multiNode"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "50"),
@@ -98,6 +99,7 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east-1"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
+					resource.TestCheckResourceAttr(resourceReference, "configuration_type", "multiNode"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.compute.cpu", "8"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.compute.ram", "32"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.disk.storage", "51"),
@@ -129,6 +131,7 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east-1"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
+					resource.TestCheckResourceAttr(resourceReference, "configuration_type", "multiNode"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.compute.cpu", "8"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.compute.ram", "32"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.disk.storage", "51"),
@@ -598,6 +601,59 @@ func TestAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenario(t *testin
 	})
 }
 
+// TestAccClusterResourceWithConfigurationTypeFieldAdded is a Terraform acceptance test that validates
+// the creation of a cluster resource with the addition of the "configuration_type" field set to "singleNode"
+// for an AWS (Amazon Web Services) cloud provider.
+//
+// This test ensures that a cluster resource can be successfully created with the specified configuration type.
+func TestAccClusterResourceWithConfigurationTypeFieldAdded(t *testing.T) {
+	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
+	resourceReference := "couchbase-capella_cluster." + resourceName
+	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
+	projectResourceReference := "couchbase-capella_project." + projectResourceName
+	cidr := "10.249.250.0/23"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create and Read testing
+			{
+				PreConfig: testAccProjecCreationWaitTime(),
+				Config:    testAccClusterResourceConfigWithConfigurationTypeFieldAdded(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccExistsClusterResource(resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
+					resource.TestCheckResourceAttr(resourceReference, "description", ""),
+					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
+					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east-1"),
+					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
+					resource.TestCheckResourceAttr(resourceReference, "configuration_type", "singleNode"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "2"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "8"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "50"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "gp3"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.iops", "3000"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "1"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "3"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "data"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.1", "index"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.2", "query"),
+					resource.TestCheckResourceAttr(resourceReference, "availability.type", "single"),
+					resource.TestCheckResourceAttr(resourceReference, "support.plan", "developer pro"),
+					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
+				),
+			},
+			//// ImportState testing
+			{
+				ResourceName:      resourceReference,
+				ImportStateIdFunc: generateClusterImportIdForResource(resourceReference),
+				ImportState:       true,
+				ImportStateVerify: false,
+			},
+		},
+	})
+}
+
 // TestAccClusterResourceNotFound is a Terraform acceptance test that simulates the scenario where a cluster is created
 // from Terraform, but it is deleted by a REST API call and the deletion is successful. Then, updating the cluster via Terraform
 // should not cause any issues and should create a new cluster with the updated configuration.
@@ -956,6 +1012,54 @@ resource "couchbase-capella_cluster" "%[2]s" {
   ]
   availability = {
     "type" : "multi"
+  }
+  support = {
+    plan     = "developer pro"
+    timezone = "PT"
+  }
+}
+`, cfg, resourceName, projectResourceName, projectResourceReference, cidr)
+}
+
+// testAccClusterResourceConfigWithConfigurationTypeFieldAdded generates a Terraform configuration string for testing an
+// acceptance test scenario where a cluster is created with the "configuration_type" field set to "singleNode".
+func testAccClusterResourceConfigWithConfigurationTypeFieldAdded(cfg, resourceName, projectResourceName, projectResourceReference, cidr string) string {
+	return fmt.Sprintf(`
+%[1]s
+resource "couchbase-capella_project" "%[3]s" {
+    organization_id = var.organization_id
+	name            = "acc_test_project_name"
+	description     = "description"
+}
+resource "couchbase-capella_cluster" "%[2]s" {
+  organization_id = var.organization_id
+  project_id      = %[4]s.id
+  name            = "%[2]s"
+  cloud_provider = {
+    type   = "aws"
+    region = "us-east-1"
+    cidr   = "%[5]s"
+  }
+  configuration_type = "singleNode"
+  service_groups = [
+    {
+      node = {
+        compute = {
+          cpu = 2
+          ram = 8
+        }
+        disk = {
+          storage = 50
+          type    = "gp3"
+          iops    = 3000
+        }
+      }
+      num_of_nodes = 1
+      services     = ["data", "index", "query"]
+    }
+  ]
+  availability = {
+    "type" : "single"
   }
   support = {
     plan     = "developer pro"

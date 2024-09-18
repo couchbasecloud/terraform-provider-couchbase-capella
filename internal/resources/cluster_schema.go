@@ -31,6 +31,7 @@ func ClusterSchema() schema.Schema {
 					objectplanmodifier.RequiresReplace(),
 				},
 			},
+			"configuration_type": stringAttribute([]string{optional, computed, requiresReplace, useStateForUnknown, deprecated}),
 			"couchbase_server": schema.SingleNestedAttribute{
 				Optional: true,
 				Computed: true,
