@@ -19,9 +19,10 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource                = (*GSI)(nil)
-	_ resource.ResourceWithConfigure   = (*GSI)(nil)
-	_ resource.ResourceWithImportState = (*GSI)(nil)
+	_ resource.Resource                   = (*GSI)(nil)
+	_ resource.ResourceWithConfigure      = (*GSI)(nil)
+	_ resource.ResourceWithImportState    = (*GSI)(nil)
+	_ resource.ResourceWithValidateConfig = (*GSI)(nil)
 )
 
 // GSI is the GSI resource implementation.
@@ -397,6 +398,69 @@ func (g *GSI) Configure(_ context.Context, req resource.ConfigureRequest, resp *
 	}
 
 	g.Data = data
+}
+
+func (g *GSI) ValidateConfig(
+	ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse,
+) {
+	var config providerschema.GsiDefinition
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if config.OrganizationId.IsUnknown() {
+		return
+	}
+
+	if !config.BuildIndexes.IsNull() {
+		if !config.IsPrimary.IsNull() ||
+			!config.IndexName.IsNull() ||
+			!config.IndexKeys.IsNull() ||
+			!config.Where.IsNull() ||
+			!config.PartitionBy.IsNull() ||
+			config.With != nil {
+
+			resp.Diagnostics.AddAttributeError(
+				path.Root("build_indexes"),
+				"Invalid Attribute Configuration",
+				"build_indexes is set so other optional attributes must be null",
+			)
+			return
+		}
+	}
+
+	if !config.IsPrimary.ValueBool() {
+		if config.IndexName.ValueString() == "" {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("index_name"),
+				"Missing Attribute Configuration",
+				"Expected index_name to be configured but is null",
+			)
+			return
+		}
+
+		if config.IndexKeys.IsNull() {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("index_keys"),
+				"Missing Attribute Configuration",
+				"Expected index_keys to be configured but is null",
+			)
+			return
+		}
+
+	}
+
+	if config.IsPrimary.ValueBool() {
+		if !config.IndexKeys.IsNull() || !config.Where.IsNull() || !config.PartitionBy.IsNull() {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("is_primary"),
+				"Invalid Attribute Configuration",
+				"A primary index cannot have index keys, where clause or partition by clause",
+			)
+			return
+		}
+	}
 }
 
 func (g *GSI) executeGsiDdl(ctx context.Context, plan *providerschema.GsiDefinition, ddl string) error {
