@@ -25,7 +25,7 @@ const (
 	requiresReplace    = "requiresReplace"
 	useStateForUnknown = "useStateForUnknown"
 	deprecated         = "deprecated"
-	deprecationMessage = "Remove this attribute's configuration as it no longer is used and the attribute will be removed in the next major version of the provider."
+	deprecationMessage = "Remove this attribute's configuration as it no longer in use and the attribute will be removed in the next major version of the provider."
 )
 
 // stringAttribute is a variadic function which sets the requested fields
