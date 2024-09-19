@@ -820,6 +820,9 @@ func initializePendingClusterWithPlanAndId(plan providerschema.Cluster, id strin
 		if serviceGroup.Node != nil && (serviceGroup.Node.Disk.IOPS.IsNull() || serviceGroup.Node.Disk.IOPS.IsUnknown()) {
 			serviceGroup.Node.Disk.IOPS = types.Int64Null()
 		}
+		if serviceGroup.Node != nil && (serviceGroup.Node.Disk.Autoexpansion.IsNull() || serviceGroup.Node.Disk.Autoexpansion.IsUnknown()) {
+			serviceGroup.Node.Disk.Autoexpansion = types.BoolNull()
+		}
 	}
 	return plan
 }
