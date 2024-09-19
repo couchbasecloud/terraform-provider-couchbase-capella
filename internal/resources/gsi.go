@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -54,158 +55,79 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 
 	var ddl string
 
-	// generate build index statement
+	// create build index statement
 	if !plan.BuildIndexes.IsNull() {
-		elements := plan.BuildIndexes.Elements()
-		var indexes string
-		for i, index := range elements {
-			indexes += index.String()
-
-			if i < len(elements)-1 {
-				indexes += ","
-			}
-		}
-		indexes = strings.ReplaceAll(indexes, "\"", "")
-
 		ddl = fmt.Sprintf(
 			"BUILD INDEX ON `%s`.`%s`.`%s`(%s)",
 			plan.BucketName.ValueString(),
 			plan.ScopeName.ValueString(),
 			plan.CollectionName.ValueString(),
-			indexes,
+			listStringValues(plan.BuildIndexes),
 		)
-
 	} else {
+		// create primary index statement
 		if plan.IsPrimary.ValueBool() {
-			// named primary index
-			if plan.IndexName.ValueString() != "" {
-				ddl = fmt.Sprintf(
-					"CREATE PRIMARY INDEX `%s` ON `%s`.`%s`.`%s`",
-					plan.IndexName.ValueString(),
-					plan.BucketName.ValueString(),
-					plan.ScopeName.ValueString(),
-					plan.CollectionName.ValueString(),
-				)
-
-				if plan.With != nil {
-					var deferBuild bool
-					var replicas int64 = 0
-					if !plan.With.DeferBuild.IsNull() {
-						deferBuild = plan.With.DeferBuild.ValueBool()
-					}
-					if !plan.With.NumReplica.IsNull() {
-						replicas = plan.With.NumReplica.ValueInt64()
-					}
-					with := fmt.Sprintf(
-						" WITH { \"defer_build\": %t,  \"num_replica\": %d }",
-						deferBuild,
-						replicas,
-					)
-
-					ddl += with
-				}
+			var indexName string
+			if !plan.IndexName.IsNull() {
+				indexName = plan.IndexName.ValueString()
 			} else {
-				// unamed primary index
-				ddl = fmt.Sprintf(
-					"CREATE PRIMARY INDEX ON `%s`.`%s`.`%s` WITH { \"defer_build\": %t,  \"num_replica\": %d }",
-					plan.BucketName.ValueString(),
-					plan.ScopeName.ValueString(),
-					plan.CollectionName.ValueString(),
-				)
-
-				if plan.With != nil {
-					var deferBuild bool
-					var replicas int64 = 0
-					if !plan.With.DeferBuild.IsNull() {
-						deferBuild = plan.With.DeferBuild.ValueBool()
-					}
-					if !plan.With.NumReplica.IsNull() {
-						replicas = plan.With.NumReplica.ValueInt64()
-					}
-					with := fmt.Sprintf(
-						" WITH { \"defer_build\": %t,  \"num_replica\": %d }",
-						deferBuild,
-						replicas,
-					)
-
-					ddl += with
-				}
+				indexName = "#primary"
 			}
+			ddl = fmt.Sprintf(
+				"CREATE PRIMARY INDEX `%s` ON `%s`.`%s`.`%s`  WITH { \"defer_build\": %t,  \"num_replica\": %d }",
+				indexName,
+				plan.BucketName.ValueString(),
+				plan.ScopeName.ValueString(),
+				plan.CollectionName.ValueString(),
+				plan.With.DeferBuild.ValueBool(),
+				plan.With.NumReplica.ValueInt64(),
+			)
 		} else {
-			// secondary index
-			elements := plan.IndexKeys.Elements()
-			var keys string
-			for i, k := range elements {
-				keys += k.String()
-
-				if i < len(elements)-1 {
-					keys += ","
-				}
-			}
-			keys = strings.ReplaceAll(keys, "\"", "")
-
+			// create secondary index statement
 			ddl = fmt.Sprintf(
 				"CREATE INDEX `%s` ON `%s`.`%s`.`%s`(%s) ",
 				plan.IndexName.ValueString(),
 				plan.BucketName.ValueString(),
 				plan.ScopeName.ValueString(),
 				plan.CollectionName.ValueString(),
-				keys,
+				listStringValues(plan.IndexKeys),
 			)
 
-			if plan.PartitionBy.ValueString() != "" {
-				ddl += fmt.Sprintf(" PARTITION BY HASH(%s) ", plan.PartitionBy.String())
+			if !plan.PartitionBy.IsNull() {
+				ddl += fmt.Sprintf(" PARTITION BY HASH(%s) ", listStringValues(plan.PartitionBy))
 			}
 
-			if plan.Where.ValueString() != "" {
+			if !plan.Where.IsNull() {
 				ddl += fmt.Sprintf(" WHERE %s ", plan.Where.String())
 			}
 
-			if plan.With != nil {
-				var with string
-				if !plan.PartitionBy.IsNull() && !plan.With.NumPartitions.IsNull() {
-					var deferBuild bool
-					var replicas, partitions int64 = 0, 1
-					if !plan.With.DeferBuild.IsNull() {
-						deferBuild = plan.With.DeferBuild.ValueBool()
-					}
-					if !plan.With.NumReplica.IsNull() {
-						replicas = plan.With.NumReplica.ValueInt64()
-					}
-					if !plan.With.NumPartitions.IsNull() {
-						partitions = plan.With.NumReplica.ValueInt64()
-					}
-					with = fmt.Sprintf(
-						" WITH { \"defer_build\": %t,  \"num_replica\": %d, \"num_partition\": %d } ",
-						deferBuild,
-						replicas,
-						partitions,
-					)
-				} else {
-					var deferBuild bool
-					var replicas int64 = 0
-					if !plan.With.DeferBuild.IsNull() {
-						deferBuild = plan.With.DeferBuild.ValueBool()
-					}
-					if !plan.With.NumReplica.IsNull() {
-						replicas = plan.With.NumReplica.ValueInt64()
-					}
+			if !plan.PartitionBy.IsNull() {
+				withClause := fmt.Sprintf(
+					" WITH { \"defer_build\": %t,  \"num_replica\": %d,  \"num_partition\": %d } ",
+					plan.With.DeferBuild.ValueBool(),
+					plan.With.NumReplica.ValueInt64(),
+					plan.With.NumPartition.ValueInt64(),
+				)
 
-					with = fmt.Sprintf(
-						" WITH { \"defer_build\": %t,  \"num_replica\": %d } ",
-						deferBuild,
-						replicas,
-					)
-				}
-				ddl += with
+				ddl += withClause
+			} else {
+				// should not set num_partition for non-partitioned index
+				withClause := fmt.Sprintf(
+					" WITH { \"defer_build\": %t,  \"num_replica\": %d} ",
+					plan.With.DeferBuild.ValueBool(),
+					plan.With.NumReplica.ValueInt64(),
+				)
+
+				ddl += withClause
 			}
+
 		}
 	}
 
 	if err := g.executeGsiDdl(ctx, &plan, ddl); err != nil {
 		resp.Diagnostics.AddError(
 			"An error occurred while executing index DDL",
-			"Error during index DDL execution: "+err.Error(),
+			"Error executing index DDL: "+ddl+"\nError: "+err.Error(),
 		)
 		return
 	}
@@ -227,11 +149,11 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 		return
 	}
 
-	attrs, err := state.Validate()
+	attrs, err := state.GetAttributeValues()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error during GSI state validation",
-			"Could not validate state for "+state.IndexName.ValueString()+": "+err.Error(),
+			"Error validating import",
+			"Error validating import: "+err.Error(),
 		)
 		return
 	}
@@ -240,9 +162,22 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 		organizationID = attrs[providerschema.OrganizationId]
 		projectID      = attrs[providerschema.ProjectId]
 		clusterID      = attrs[providerschema.ClusterId]
+		bucketName     = attrs[providerschema.BucketName]
+		scopeName      = attrs[providerschema.ScopeName]
+		collectionName = attrs[providerschema.CollectionName]
+		indexName      = attrs[providerschema.IndexName]
 	)
 
-	index, err := g.getQueryIndex(ctx, &state)
+	index, err := g.getQueryIndex(
+		ctx,
+		organizationID,
+		projectID,
+		clusterID,
+		bucketName,
+		scopeName,
+		collectionName,
+		indexName,
+	)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading query index",
@@ -251,23 +186,27 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 		return
 	}
 
-	// when importing index, set all state values
-	if state.OrganizationId.IsNull() {
+	if !state.OrganizationId.IsNull() {
+		// when reading an index, only update number of replicas
+		state.With.NumReplica = types.Int64Value(int64(index.NumReplica))
+
+	} else {
+		// when importing index, set all attributes
 		state.OrganizationId = types.StringValue(organizationID)
 		state.ProjectId = types.StringValue(projectID)
 		state.ClusterId = types.StringValue(clusterID)
-		state.BucketName = types.StringValue(index.Bucket)
-		state.ScopeName = types.StringValue(index.Scope)
-		state.CollectionName = types.StringValue(index.Collection)
+		state.BucketName = types.StringValue(bucketName)
+		state.ScopeName = types.StringValue(scopeName)
+		state.CollectionName = types.StringValue(collectionName)
 		state.IsPrimary = types.BoolValue(index.IsPrimary)
-		state.IndexName = types.StringValue(index.IndexName)
+		state.IndexName = types.StringValue(indexName)
 
 		var keys []attr.Value
 		for _, key := range index.SecExprs {
 			keys = append(keys, types.StringValue(key))
 		}
 
-		keyList, newDiags := types.SetValue(types.StringType, keys)
+		keyList, newDiags := types.ListValue(types.StringType, keys)
 		if newDiags.HasError() {
 			resp.Diagnostics.AddError(
 				"Error converting index keys to set type",
@@ -277,19 +216,10 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 		}
 
 		state.IndexKeys = keyList
-		state.PartitionBy = types.StringValue(index.PartitionBy)
+		// TODO:  set partition by
 		state.Where = types.StringValue(index.Where)
-		if state.With != nil {
-			state.With.NumReplica = types.Int64Value(int64(index.NumReplica))
-			state.With.NumPartitions = types.Int64Value(int64(index.NumPartition))
-		}
-
-	} else {
-		// when reading an index, only update number of replicas
-		if state.With != nil {
-			state.With.NumReplica = types.Int64Value(int64(index.NumReplica))
-		}
-
+		state.With.NumReplica = types.Int64Value(int64(index.NumReplica))
+		state.With.NumPartition = types.Int64Value(int64(index.NumPartition))
 	}
 
 	resp.State.Set(ctx, state)
@@ -340,25 +270,20 @@ func (g *GSI) Delete(ctx context.Context, req resource.DeleteRequest, resp *reso
 		return
 	}
 
-	var ddl string
-	// DROP PRIMARY INDEX is only used for unamed primary indexes.
-	if state.IsPrimary.ValueBool() && state.IndexName.ValueString() == "" {
-		ddl = fmt.Sprintf(
-			"DROP PRIMARY INDEX ON `%s`.`%s`.`%s`",
-			state.BucketName.ValueString(),
-			state.ScopeName.ValueString(),
-			state.CollectionName.ValueString(),
-		)
+	var indexName string
+	if state.IsPrimary.ValueBool() && state.IndexName.IsNull() {
+		indexName = "#primary"
 	} else {
-		//	DROP INDEX is for named primary index or secondary indexes.
-		ddl = fmt.Sprintf(
-			"DROP INDEX `%s` ON `%s`.`%s`.`%s`",
-			state.IndexName.ValueString(),
-			state.BucketName.ValueString(),
-			state.ScopeName.ValueString(),
-			state.CollectionName.ValueString(),
-		)
+		indexName = state.IndexName.ValueString()
 	}
+
+	ddl := fmt.Sprintf(
+		"DROP INDEX `%s` ON `%s`.`%s`.`%s`",
+		indexName,
+		state.BucketName.ValueString(),
+		state.ScopeName.ValueString(),
+		state.CollectionName.ValueString(),
+	)
 
 	if err := g.executeGsiDdl(ctx, &state, ddl); err != nil {
 		resp.Diagnostics.AddError(
@@ -418,8 +343,7 @@ func (g *GSI) ValidateConfig(
 			!config.IndexName.IsNull() ||
 			!config.IndexKeys.IsNull() ||
 			!config.Where.IsNull() ||
-			!config.PartitionBy.IsNull() ||
-			config.With != nil {
+			!config.PartitionBy.IsNull() {
 
 			resp.Diagnostics.AddAttributeError(
 				path.Root("build_indexes"),
@@ -507,22 +431,26 @@ func (g *GSI) executeGsiDdl(ctx context.Context, plan *providerschema.GsiDefinit
 	return nil
 }
 
-func (g *GSI) getQueryIndex(ctx context.Context, plan *providerschema.GsiDefinition) (
+func (g *GSI) getQueryIndex(
+	ctx context.Context, organizationID, projectID, clusterID, bucketName, scopeName, collectionName, indexName string,
+) (
 	*api.IndexDefinitionResponse, error,
 ) {
-	url := fmt.Sprintf(
+	uri := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/queryService/indexes/%s?bucket=%s&scope=%s&collection=%s",
 		g.HostURL,
-		plan.OrganizationId.ValueString(),
-		plan.ProjectId.ValueString(),
-		plan.ClusterId.ValueString(),
-		plan.IndexName.ValueString(),
-		plan.BucketName.ValueString(),
-		plan.ScopeName.ValueString(),
-		plan.CollectionName.ValueString(),
+		organizationID,
+		projectID,
+		clusterID,
+		url.QueryEscape(indexName),
+		bucketName,
+		scopeName,
+		collectionName,
 	)
 
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	fmt.Println("###WALIA### uri: ", uri)
+
+	cfg := api.EndpointCfg{Url: uri, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := g.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
@@ -540,4 +468,44 @@ func (g *GSI) getQueryIndex(ctx context.Context, plan *providerschema.GsiDefinit
 	}
 
 	return &index, nil
+}
+
+func getAttributes(importString string) map[providerschema.Attr]string {
+	var (
+		importIds = map[string]providerschema.Attr{
+			"organization_id": providerschema.OrganizationId,
+			"project_id":      providerschema.ProjectId,
+			"cluster_id":      providerschema.ClusterId,
+			"bucket_id":       providerschema.BucketId,
+			"scope_name":      providerschema.ScopeName,
+			"collection_name": providerschema.CollectionName,
+			"index_name":      providerschema.IndexName,
+		}
+	)
+
+	pairs := strings.Split(importString, ",")
+
+	attrs := make(map[providerschema.Attr]string)
+
+	for _, pair := range pairs {
+		keyValue := strings.SplitN(pair, "=", 2)
+		attrs[importIds[keyValue[0]]] = keyValue[1]
+	}
+
+	return attrs
+}
+
+// joins a list of strings
+func listStringValues(s types.List) string {
+	elements := s.Elements()
+	var str string
+	for i, e := range elements {
+		str += e.String()
+
+		if i < len(elements)-1 {
+			str += ","
+		}
+	}
+	str = strings.ReplaceAll(str, "\"", "")
+	return str
 }

@@ -1,12 +1,7 @@
 package schema
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 )
 
 // GsiDefinition represents the primary or secondary index.
@@ -36,10 +31,10 @@ type GsiDefinition struct {
 	IsPrimary types.Bool `tfsdk:"is_primary"`
 
 	// IndexKeys is a list of index keys.
-	IndexKeys types.Set `tfsdk:"index_keys"`
+	IndexKeys types.List `tfsdk:"index_keys"`
 
 	// PartitionBy is the partition by clause.
-	PartitionBy types.String `tfsdk:"partition_by"`
+	PartitionBy types.List `tfsdk:"partition_by"`
 
 	// Where is the where clause.
 	Where types.String `tfsdk:"where"`
@@ -47,7 +42,7 @@ type GsiDefinition struct {
 	// With represents the WITH clause of an index.
 	With *WithOptions `tfsdk:"with"`
 
-	BuildIndexes types.Set `tfsdk:"build_indexes"`
+	BuildIndexes types.List `tfsdk:"build_indexes"`
 }
 
 // WithOptions represents the attributes of the WITH clause.
@@ -58,26 +53,46 @@ type WithOptions struct {
 	// NumReplica is the number of replicas for the index.
 	NumReplica types.Int64 `tfsdk:"num_replica"`
 
-	// NumPartitions is the number of partitions for a partitioned index.
-	NumPartitions types.Int64 `tfsdk:"num_partitions"`
+	// NumPartition is the number of partitions for a partitioned index.
+	NumPartition types.Int64 `tfsdk:"num_partition"`
 }
 
-// Validate will split the IDs by comma, if a terraform import CLI is invoked.
-func (g *GsiDefinition) Validate() (map[Attr]string, error) {
-	state := map[Attr]basetypes.StringValue{
-		OrganizationId: g.OrganizationId,
-		ProjectId:      g.ProjectId,
-		ClusterId:      g.ClusterId,
-		BucketName:     g.BucketName,
-		ScopeName:      g.ScopeName,
-		CollectionName: g.CollectionName,
-		IndexName:      g.IndexName,
+func (g *GsiDefinition) GetAttributeValues() (map[Attr]string, error) {
+	// handle terraform import
+	if g.OrganizationId.IsNull() {
+		attrs, err := splitImportString(
+			g.IndexName.ValueString(),
+			[]Attr{OrganizationId,
+				ProjectId,
+				ClusterId,
+				BucketName,
+				ScopeName,
+				CollectionName,
+				IndexName},
+		)
+		if err != nil {
+			return nil, err
+		}
+		return attrs, nil
 	}
 
-	IDs, err := validateSchemaState(state, IndexName)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
+	// handle Read()
+	attrs := map[Attr]string{
+		OrganizationId: g.OrganizationId.ValueString(),
+		ProjectId:      g.ProjectId.ValueString(),
+		ClusterId:      g.ClusterId.ValueString(),
+		BucketName:     g.BucketName.ValueString(),
+		ScopeName:      g.ScopeName.ValueString(),
+		CollectionName: g.CollectionName.ValueString(),
+		IndexName:      "",
+	}
+	// if a primary index was created without a name,
+	// indexer uses name #primary
+	if !g.IsPrimary.IsNull() && g.IndexName.IsNull() {
+		attrs[IndexName] = "#primary"
+	} else {
+		attrs[IndexName] = g.IndexName.ValueString()
 	}
 
-	return IDs, nil
+	return attrs, nil
 }
