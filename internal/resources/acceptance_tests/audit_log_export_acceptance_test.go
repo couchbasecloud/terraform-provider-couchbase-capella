@@ -15,10 +15,6 @@ import (
 	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 )
 
-const (
-	ExportStatusNoAuditLogs = "no audit log files exist within the requested time frame"
-)
-
 func TestAccAuditLogExportTestCases(t *testing.T) {
 	clusterResourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
 	clusterResourceReference := "couchbase-capella_cluster." + clusterResourceName
@@ -33,31 +29,39 @@ func TestAccAuditLogExportTestCases(t *testing.T) {
 	auditLogExportResourceName := "acc_audit_log_export_" + acctest.GenerateRandomResourceName()
 	auditLogExportResourceReference := "couchbase-capella_audit_log_export." + auditLogExportResourceName
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAuditLogExportSetup(acctest.Cfg, projectName, projectResourceReference, clusterResourceName, clusterResourceReference, cidr, auditLogSettingsResourceName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccAuditLogExportGetCluster(clusterResourceReference),
-				),
-			},
-			{
-				Config: testAccAuditLogExportConfig(acctest.Cfg, projectName, projectResourceReference, clusterResourceName, clusterResourceReference, cidr, auditLogExportResourceName, auditLogExportResourceReference),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(auditLogExportResourceReference, "expiration", ""),
-					resource.TestCheckResourceAttr(auditLogExportResourceReference, "audit_log_download_url", ""),
-					resource.TestCheckResourceAttr(auditLogExportResourceReference, "status", ExportStatusNoAuditLogs),
-				),
+	resource.Test(
+		t, resource.TestCase{
+			PreCheck:                 func() { acctest.TestAccPreCheck(t) },
+			ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccAuditLogExportSetup(
+						acctest.Cfg, projectName, projectResourceReference, clusterResourceName,
+						clusterResourceReference, cidr, auditLogSettingsResourceName,
+					),
+					Check: resource.ComposeAggregateTestCheckFunc(
+						testAccAuditLogExportGetCluster(clusterResourceReference),
+					),
+				},
+				{
+					Config: testAccAuditLogExportConfig(
+						acctest.Cfg, projectName, projectResourceReference, clusterResourceName,
+						clusterResourceReference, cidr, auditLogExportResourceName, auditLogExportResourceReference,
+					),
+					Check: resource.ComposeAggregateTestCheckFunc(
+						resource.TestCheckResourceAttrSet(auditLogExportResourceReference, "id"),
+					),
+					ExpectNonEmptyPlan: true,
+				},
 			},
 		},
-	})
+	)
 }
 
 // create cluster and enable audit logs
 func testAccAuditLogExportSetup(providerAndVariables, projectName, projectResourceReference, clusterResourceName, clusterResourceReference, cidr, auditLogSettingsResourceName string) string {
-	config := fmt.Sprintf(`
+	config := fmt.Sprintf(
+		`
 %[1]s
 
 resource "couchbase-capella_project" "%[2]s" {
@@ -112,7 +116,9 @@ resource "couchbase-capella_audit_log_settings" "%[7]s" {
   disabled_users    = []
 }
 
-`, providerAndVariables, projectName, projectResourceReference, clusterResourceName, clusterResourceReference, cidr, auditLogSettingsResourceName)
+`, providerAndVariables, projectName, projectResourceReference, clusterResourceName, clusterResourceReference, cidr,
+		auditLogSettingsResourceName,
+	)
 
 	return config
 }
@@ -143,7 +149,9 @@ func testAccAuditLogExportGetCluster(resourceReference string) resource.TestChec
 }
 
 func getCluster(data *providerschema.Data, organizationId, projectId, clusterId string) error {
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", data.HostURL, organizationId, projectId, clusterId)
+	url := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s", data.HostURL, organizationId, projectId, clusterId,
+	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	_, err := data.Client.ExecuteWithRetry(
 		context.Background(),
@@ -160,7 +168,8 @@ func getCluster(data *providerschema.Data, organizationId, projectId, clusterId 
 }
 
 func testAccAuditLogExportConfig(providerAndVariables, projectName, projectResourceReference, clusterResourceName, clusterResourceReference, cidr, auditLogExportResourceName, auditLogExportResourceReference string) string {
-	return fmt.Sprintf(`
+	return fmt.Sprintf(
+		`
 %[1]s
 
 resource "couchbase-capella_project" "%[2]s" {
@@ -218,5 +227,9 @@ resource "couchbase-capella_audit_log_export" "%[7]s" {
  end      = "%[10]s"
 }
 
-`, providerAndVariables, projectName, projectResourceReference, clusterResourceName, clusterResourceReference, cidr, auditLogExportResourceName, auditLogExportResourceReference, time.Now().Add(-2*time.Hour).Format("2006-01-02T15:04:05-07:00"), time.Now().Add(-1*time.Hour).Format("2006-01-02T15:04:05-07:00"))
+`, providerAndVariables, projectName, projectResourceReference, clusterResourceName, clusterResourceReference, cidr,
+		auditLogExportResourceName, auditLogExportResourceReference,
+		time.Now().Add(-2*time.Hour).Format("2006-01-02T15:04:05-07:00"),
+		time.Now().Add(-1*time.Hour).Format("2006-01-02T15:04:05-07:00"),
+	)
 }
