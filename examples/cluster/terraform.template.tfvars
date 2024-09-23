@@ -30,3 +30,33 @@ support = {
   plan     = "developer pro"
   timezone = "PT"
 }
+
+# Example cluster Config for creating a single-node cluster.
+# cloud_provider = {
+#   name   = "aws",
+#   region = "us-east-1"
+# }
+#
+# cluster = {
+#   name               = "New Terraform Single Node Cluster"
+#   cidr               = "10.4.0.0/23"
+#   node_count         = 1
+#   couchbase_services = ["data", "index", "query"]
+#   availability_zone  = "single"
+# }
+#
+# compute = {
+#   cpu = 2
+#   ram = 8
+# }
+#
+# disk = {
+#   size = 50
+#   type = "gp3"
+#   iops = 3000
+# }
+#
+# support = {
+#   plan     = "basic"
+#   timezone = "PT"
+# }

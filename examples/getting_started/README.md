@@ -17,6 +17,8 @@ In this demo, we will perform the following operations:
 13. Create a new collection in the scope of a bucket.
 14. Create a new on/off schedule for the cluster.
 15. Create a new audit log settings.
+16. Enable private endpoint service on the cluster.
+17. Create a new network peer.
 
 ## Pre-Requisites:
 
@@ -39,7 +41,7 @@ $  terraform plan
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/paulomee.de/go/bin
+│  - couchbasecloud/couchbase-capella in /Users/$USER/go/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -48,12 +50,12 @@ var.collection
 
   Enter a value: ^Z
 zsh: suspended  terraform plan
-paulomee.de@FJL6N0YK9X getting_started % terraform plan
+$USER@FJL6N0YK9X getting_started % terraform plan
 ╷
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/paulomee.de/go/bin
+│  - couchbasecloud/couchbase-capella in /Users/$USER/go/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -169,6 +171,7 @@ Terraform will perform the following actions:
           + type   = "aws"
         }
       + configuration_type = (known after apply)
+      + connection_string  = (known after apply)
       + couchbase_server   = (known after apply)
       + current_state      = (known after apply)
       + description        = "My first test cluster for multiple services."
@@ -200,7 +203,7 @@ Terraform will perform the following actions:
             },
         ]
       + support            = {
-          + plan     = "developer pro"
+          + plan     = "enterprise"
           + timezone = "PT"
         }
     }
@@ -464,8 +467,16 @@ Terraform will perform the following actions:
       + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id        = "ffffffff-aaaa-1414-eeee-000000000000"
     }
+    
+    # couchbase-capella_private_endpoint_service.new_service will be created
+      + resource "couchbase-capella_private_endpoint_service" "new_service" {
+          + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+          + enabled         = (known after apply)
+          + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+          + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+        }
 
-Plan: 13 to add, 0 to change, 0 to destroy.
+Plan: 14 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
   + apikey                 = (sensitive value)
@@ -507,6 +518,7 @@ Changes to Outputs:
           + type   = "aws"
         }
       + configuration_type = (known after apply)
+      + connection_string  = (known after apply)
       + couchbase_server   = (known after apply)
       + current_state      = (known after apply)
       + description        = "My first test cluster for multiple services."
@@ -539,7 +551,7 @@ Changes to Outputs:
             },
         ]
       + support            = {
-          + plan     = "developer pro"
+          + plan     = "enterprise"
           + timezone = "PT"
         }
     }
@@ -630,6 +642,26 @@ Changes to Outputs:
       + scope_name      = "new_terraform_scope"
     }
   + database_credential    = (sensitive value)
+  + network_peer           = {
+      + audit           = (known after apply)
+      + cluster_id      = (known after apply)
+      + commands        = (known after apply)
+      + id              = (known after apply)
+      + name            = "VPCPeerTFTestAWS"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = (known after apply)
+      + provider_config = {
+          + aws_config = {
+              + account_id  = "123456789123"
+              + cidr        = "10.1.0.0/23"
+              + provider_id = (known after apply)
+              + region      = "us-east-1"
+              + vpc_id      = "vpc-141f0fffff141aa00ff"
+            }
+        }
+      + provider_type   = "aws"
+      + status          = (known after apply)
+    }
   + organization           = {
       + audit           = {
           + created_at  = "2020-07-22 12:38:57.437248116 +0000 UTC"
@@ -749,6 +781,13 @@ Changes to Outputs:
       + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id        = "ffffffff-aaaa-1414-eeee-000000000000"
     }
+    
+    + service_status = {
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      + enabled         = true
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+    }
 
 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -766,7 +805,7 @@ $  terraform apply
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/paulomee.de/go/bin
+│  - couchbasecloud/couchbase-capella in /Users/$USER/go/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -882,6 +921,7 @@ Terraform will perform the following actions:
           + type   = "aws"
         }
       + configuration_type = (known after apply)
+      + connection_string  = (known after apply)
       + couchbase_server   = (known after apply)
       + current_state      = (known after apply)
       + description        = "My first test cluster for multiple services."
@@ -913,7 +953,7 @@ Terraform will perform the following actions:
             },
         ]
       + support            = {
-          + plan     = "developer pro"
+          + plan     = "enterprise"
           + timezone = "PT"
         }
     }
@@ -1039,6 +1079,29 @@ Terraform will perform the following actions:
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + password        = (sensitive value)
       + project_id      = (known after apply)
+    }
+    
+   # couchbase-capella_network_peer.new_network_peer will be created
+  + resource "couchbase-capella_network_peer" "new_network_peer" {
+      + audit           = (known after apply)
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      + commands        = (known after apply)
+      + id              = (known after apply)
+      + name            = "VPCPeerTFTestAWS"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      + provider_config = {
+          + aws_config = {
+              + account_id  = "123456789123"
+              + cidr        = "10.1.0.0/23"
+              + provider_id = (known after apply)
+              + region      = "us-east-1"
+              + vpc_id      = "vpc-141f0fffff141aa00ff"
+            }
+          + gcp_config = null
+        }
+      + provider_type   = "aws"
+      + status          = (known after apply)
     }
 
   # couchbase-capella_project.new_project will be created
@@ -1177,8 +1240,16 @@ Terraform will perform the following actions:
       + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id        = "ffffffff-aaaa-1414-eeee-000000000000"
     }
+    
+  # couchbase-capella_private_endpoint_service.new_service will be created
+  + resource "couchbase-capella_private_endpoint_service" "new_service" {
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      + enabled         = (known after apply)
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+    }
 
-Plan: 13 to add, 0 to change, 0 to destroy.
+Plan: 14 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
   + apikey                 = (sensitive value)
@@ -1220,6 +1291,7 @@ Changes to Outputs:
           + type   = "aws"
         }
       + configuration_type = (known after apply)
+      + connection_string  = (known after apply)
       + couchbase_server   = (known after apply)
       + current_state      = (known after apply)
       + description        = "My first test cluster for multiple services."
@@ -1252,7 +1324,7 @@ Changes to Outputs:
             },
         ]
       + support            = {
-          + plan     = "developer pro"
+          + plan     = "enterprise"
           + timezone = "PT"
         }
     }
@@ -1358,6 +1430,27 @@ Changes to Outputs:
           + session_duration = 7200
         }
     }
+  + network_peer   = {
+      + audit           = (known after apply)
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      + commands        = (known after apply)
+      + id              = (known after apply)
+      + name            = "VPCPeerTFTestAWS"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      + provider_config = {
+          + aws_config = {
+              + account_id  = "123456789123"
+              + cidr        = "10.1.0.0/23"
+              + provider_id = (known after apply)
+              + region      = "us-east-1"
+              + vpc_id      = "vpc-141f0fffff141aa00ff"
+            }
+        }
+      + provider_type   = "aws"
+      + status          = (known after apply)
+    }
+  + peer_id            = (known after apply)
   + project                = "My First Terraform Project"
   + sample_bucket          = "gamesim-sample"
   + scope                  = {
@@ -1462,6 +1555,13 @@ Changes to Outputs:
       + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id        = "ffffffff-aaaa-1414-eeee-000000000000"
     }
+    
+    + service_status = {
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      + enabled         = false
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+    }
 
 Do you want to perform these actions?
   Terraform will perform the actions described above.
@@ -1540,8 +1640,52 @@ couchbase-capella_app_service.new_app_service: Still creating... [4m50s elapsed]
 couchbase-capella_app_service.new_app_service: Creation complete after 4m55s [id=ffffffff-aaaa-1414-eeee-000000000000]
 couchbase-capella_audit_log_export.new_auditlogexport: Creating...
 couchbase-capella_audit_log_export.new_auditlogexport: Creation complete after 0s [id=ffffffff-aaaa-1414-eeee-000000000000]
+couchbase-capella_private_endpoint_service.new_service: Creating...
+couchbase-capella_private_endpoint_service.new_service: Still creating... [10s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [20s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [30s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [40s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [50s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [1m0s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [1m10s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [1m20s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [1m30s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [1m40s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [1m50s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [2m0s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [2m10s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [2m20s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [2m30s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [2m40s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [2m50s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [3m0s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [3m10s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [3m20s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [3m30s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [3m40s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [3m50s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [4m0s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [4m10s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [4m20s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [4m30s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [4m40s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [4m50s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [5m0s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [5m10s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [5m20s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [5m30s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [5m40s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [5m50s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [6m0s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [6m10s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [6m20s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [6m30s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [6m40s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [6m50s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [7m0s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Creation complete after 7m0s
 
-Apply complete! Resources: 13 added, 0 changed, 0 destroyed.
+Apply complete! Resources: 14 added, 0 changed, 0 destroyed.
 
 Outputs:
 
@@ -1620,6 +1764,7 @@ cluster = {
     "type" = "aws"
   }
   "configuration_type" = "multiNode"
+  "connection_string" = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
   "couchbase_server" = {
     "version" = "7.2"
   }
@@ -1654,7 +1799,7 @@ cluster = {
     },
   ])
   "support" = {
-    "plan" = "developer pro"
+    "plan" = "enterprise"
     "timezone" = "PT"
   }
 }
@@ -1745,6 +1890,40 @@ collection = {
   "scope_name" = "new_terraform_scope"
 }
 database_credential = <sensitive>
+network_peer = {
+  "audit" = {
+    "created_at" = "2024-06-27 19:34:00.202552084 +0000 UTC"
+    "created_by" = "OqrQXTvtsD6PjHiP9Tt4ZhggaCzQVpPi"
+    "modified_at" = "2024-06-27 19:34:18.661844385 +0000 UTC"
+    "modified_by" = "OqrQXTvtsD6PjHiP9Tt4ZhggaCzQVpPi"
+    "version" = 2
+  }
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+ "commands" = toset([
+    "aws ec2 accept-vpc-peering-connection --region=us-east-1 --vpc-peering-connection-id=pcx-12345678912345678",
+    "aws route53 associate-vpc-with-hosted-zone --hosted-zone-id=AAAAA000000FFFFFAAAAAA --vpc=VPCId=vpc-141f0fffff141aa00ff,VPCRegion=us-east-1 --region=us-east-1",
+  ])
+  "id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "name" = "VPCPeerTFTestAWS"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "provider_config" = {
+    "aws_config" = {
+      "account_id" = "123456789123"
+      "cidr" = "10.1.0.0/23"
+      "provider_id" = "pcx-12345678912345678"
+      "region" = "us-east-1"
+      "vpc_id" = "vpc-141f0fffff141aa00ff"
+    }
+    "gcp_config" = null /* object */
+  }
+  "provider_type" = "aws"
+  "status" = {
+    "reasoning" = ""
+    "state" = "complete"
+  }
+}
+peer_id = "ffffffff-aaaa-1414-eeee-000000000000"
 organization = {
   "audit" = {
     "created_at" = "2020-07-22 12:38:57.437248116 +0000 UTC"
@@ -1871,6 +2050,12 @@ new_auditlogsettings = {
   "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
 }
 
+service_status = {
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "enabled" = false
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+}
 ```
 
 Finally, you can view the outputs using the `terraform output` command
@@ -1953,6 +2138,7 @@ cluster = {
     "type" = "aws"
   }
   "configuration_type" = "multiNode"
+  "connection_string" = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
   "couchbase_server" = {
     "version" = "7.2"
   }
@@ -1987,7 +2173,7 @@ cluster = {
     },
   ])
   "support" = {
-    "plan" = "developer pro"
+    "plan" = "enterprise"
     "timezone" = "PT"
   }
 }
@@ -2091,6 +2277,39 @@ organization = {
   "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "preferences" = {
     "session_duration" = 7200
+  }
+}
+network_peer = {
+  "audit" = {
+    "created_at" = "2024-06-27 19:34:00.202552084 +0000 UTC"
+    "created_by" = "OqrQXTvtsD6PjHiP9Tt4ZhggaCzQVpPi"
+    "modified_at" = "2024-06-27 19:34:18.661844385 +0000 UTC"
+    "modified_by" = "OqrQXTvtsD6PjHiP9Tt4ZhggaCzQVpPi"
+    "version" = 2
+  }
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "commands" = toset([
+    "aws ec2 accept-vpc-peering-connection --region=us-east-1 --vpc-peering-connection-id=pcx-12345678912345678",
+    "aws route53 associate-vpc-with-hosted-zone --hosted-zone-id=AAAAA000000FFFFFAAAAAA --vpc=VPCId=vpc-141f0fffff141aa00ff,VPCRegion=us-east-1 --region=us-east-1",
+  ])
+  "id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "name" = "VPCPeerTFTestAWS"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "provider_config" = {
+    "aws_config" = {
+      "account_id" = "123456789123"
+      "cidr" = "10.1.0.0/23"
+      "provider_id" = "pcx-12345678912345678"
+      "region" = "us-east-1"
+      "vpc_id" = "vpc-141f0fffff141aa00ff"
+    }
+    "gcp_config" = null /* object */
+  }
+  "provider_type" = "aws"
+  "status" = {
+    "reasoning" = ""
+    "state" = "complete"
   }
 }
 project = "My First Terraform Project"
@@ -2203,6 +2422,13 @@ new_auditlogsettings = {
   "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
 }
+
+service_status = {
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "enabled" = false
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+}
 ```
 
 All these resources (except audit log settings) can be destroyed using the `terraform destroy` command
@@ -2214,7 +2440,7 @@ $ terraform destroy
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/paulomee.de/go/bin
+│  - couchbasecloud/couchbase-capella in /Users/$USER/go/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -2234,6 +2460,9 @@ data.couchbase-capella_certificate.existing_certificate: Read complete after 0s
 couchbase-capella_scope.new_scope: Refreshing state...
 couchbase-capella_app_service.new_app_service: Refreshing state... [id=ffffffff-aaaa-1414-eeee-000000000000]
 couchbase-capella_collection.new_collection: Refreshing state...
+data.couchbase-capella_private_endpoint_service.service_status: Reading...
+couchbase-capella_private_endpoint_service.new_service: Refreshing state...
+data.couchbase-capella_private_endpoint_service.service_status: Read complete after 0s
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   - destroy
@@ -2360,6 +2589,7 @@ Terraform will perform the following actions:
           - type   = "aws" -> null
         } -> null
       - configuration_type = "multiNode" -> null
+      - connection_string  = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com" -> null
       - couchbase_server   = {
           - version = "7.2" -> null
         } -> null
@@ -2392,7 +2622,7 @@ Terraform will perform the following actions:
             },
         ] -> null
       - support            = {
-          - plan     = "developer pro" -> null
+          - plan     = "enterprise" -> null
           - timezone = "PT" -> null
         } -> null
     }
@@ -2524,6 +2754,42 @@ Terraform will perform the following actions:
       - organization_id = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - password        = (sensitive value) -> null
       - project_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+    }
+ 
+  Terraform will perform the following actions:
+
+  # couchbase-capella_network_peer.new_network_peer will be destroyed
+  - resource "couchbase-capella_network_peer" "new_network_peer" {
+      - audit           = {
+          - created_at  = "2024-06-29 00:37:45.4338168 +0000 UTC" -> null
+          - created_by  = "OqrQXTvtsD6PjHiP9Tt4ZhggaCzQVpPi" -> null
+          - modified_at = "2024-06-29 00:38:04.635673378 +0000 UTC" -> null
+          - modified_by = "OqrQXTvtsD6PjHiP9Tt4ZhggaCzQVpPi" -> null
+          - version     = 2 -> null
+        } -> null
+      - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+       - commands        = [
+          - "aws ec2 accept-vpc-peering-connection --region=us-east-1 --vpc-peering-connection-id=pcx-1234567891234567",
+          - "aws route53 associate-vpc-with-hosted-zone --hosted-zone-id=AAAAA000000FFFFFAAAAAA --vpc=VPCId=vpc-12345678912345678,VPCRegion=us-east-1 --region=us-east-1",
+        ] -> null
+      - id              = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - name            = "VPCPeerTFTestAWS" -> null
+      - organization_id = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - project_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - provider_config = {
+          - aws_config = {
+              - account_id  = "123456789123" -> null
+              - cidr        = "10.2.0.0/23" -> null
+              - provider_id = "pcx-1234567891234567" -> null
+              - region      = "us-east-1" -> null
+              - vpc_id      = "vpc-12345678912345678" -> null
+            } -> null
+        } -> null
+      - provider_type   = "aws" -> null
+      - status          = {
+          - reasoning = "" -> null
+          - state     = "complete" -> null
+        } -> null
     }
 
   # couchbase-capella_project.new_project will be destroyed
@@ -2680,8 +2946,16 @@ Terraform will perform the following actions:
       - organization_id   = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - project_id        = "ffffffff-aaaa-1414-eeee-000000000000" -> null
     }
+    
+  # couchbase-capella_private_endpoint_service.new_service will be destroyed
+  - resource "couchbase-capella_private_endpoint_service" "new_service" {
+      - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - enabled         = true -> null
+      - organization_id = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - project_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+    }
 
-Plan: 0 to add, 0 to change, 13 to destroy.
+Plan: 0 to add, 0 to change, 14 to destroy.
 
 Changes to Outputs:
   - apikey                 = (sensitive value) -> null
@@ -2759,6 +3033,7 @@ Changes to Outputs:
           - type   = "aws"
         }
       - configuration_type = "multiNode"
+      - connection_string  = "couchbases://cb.xxxxxxxxxxxxxx.cloud.couchbase.com"
       - couchbase_server   = {
           - version = "7.2"
         }
@@ -2793,7 +3068,7 @@ Changes to Outputs:
             },
         ]
       - support            = {
-          - plan     = "developer pro"
+          - plan     = "enterprise"
           - timezone = "PT"
         }
     } -> null
@@ -2884,6 +3159,40 @@ Changes to Outputs:
       - scope_name      = "new_terraform_scope"
     } -> null
   - database_credential    = (sensitive value) -> null
+  - network_peer   = {
+      - audit           = {
+          - created_at  = "2024-06-29 00:37:45.4338168 +0000 UTC"
+          - created_by  = "OqrQXTvtsD6PjHiP9Tt4ZhggaCzQVpPi"
+          - modified_at = "2024-06-29 00:38:04.635673378 +0000 UTC"
+          - modified_by = "OqrQXTvtsD6PjHiP9Tt4ZhggaCzQVpPi"
+          - version     = 2
+        }
+      - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      - commands        = [
+          - "aws ec2 accept-vpc-peering-connection --region=us-east-1 --vpc-peering-connection-id=pcx-1234567891234567",
+          - "aws route53 associate-vpc-with-hosted-zone --hosted-zone-id=AAAAA000000FFFFFAAAAAA --vpc=VPCId=vpc-12345678912345678,VPCRegion=us-east-1 --region=us-east-1",
+        ]
+      - id              = "ffffffff-aaaa-1414-eeee-000000000000"
+      - name            = "VPCPeerTFTestAWS"
+      - organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      - project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      - provider_config = {
+          - aws_config = {
+              - account_id  = "123456789123"
+              - cidr        = "10.2.0.0/23"
+              - provider_id = "pcx-1234567891234567"
+              - region      = "us-east-1"
+              - vpc_id      = "vpc-12345678912345678"
+            }
+          - gcp_config = null
+        }
+      - provider_type   = "aws"
+      - status          = {
+          - reasoning = ""
+          - state     = "complete"
+        }
+    } -> null
+  - peer_id            = "ffffffff-aaaa-1414-eeee-000000000000" -> null
   - organization           = {
       - audit           = {
           - created_at  = "2020-07-22 12:38:57.437248116 +0000 UTC"
@@ -2946,6 +3255,13 @@ Changes to Outputs:
         ]
       - status               = "not-verified"
       - time_zone            = ""
+    } -> null
+    
+    - service_status = {
+      - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      - enabled         = true
+      - organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      - project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
     } -> null
 
 Do you really want to destroy all resources?
