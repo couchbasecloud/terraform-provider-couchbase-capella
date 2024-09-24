@@ -32,9 +32,14 @@ type IndexDefinitionResponse struct {
 	NumPartition int      `json:"numPartition"`
 }
 
+type IndexDefinition struct {
+	IndexName  string `json:"indexName"`
+	Definition string `json:"definition"`
+}
+
 // ListIndexDefinitionsResponse represents a list of index definitions.
 type ListIndexDefinitionsResponse struct {
-	Definitions []IndexDefinitionResponse `json:"definitions"`
+	Definitions []IndexDefinition `json:"definitions"`
 }
 
 // IndexBuildStatusResponse is the build status for an index.
