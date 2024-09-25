@@ -86,12 +86,12 @@ func (g *GsiDefinitions) Read(ctx context.Context, req datasource.ReadRequest, r
 	if config.ScopeName.IsNull() {
 		scope = "_default"
 	} else {
-		scope = scope
+		scope = config.ScopeName.ValueString()
 	}
 	if config.CollectionName.IsNull() {
 		collection = "_default"
 	} else {
-		collection = collection
+		collection = config.CollectionName.ValueString()
 	}
 
 	url := fmt.Sprintf(
