@@ -193,6 +193,7 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewProjectEvents,
 		datasources.NewProjectEvent,
 		datasources.NewGsiDefinitions,
+		datasources.NewGsiMonitor,
 	}
 }
 

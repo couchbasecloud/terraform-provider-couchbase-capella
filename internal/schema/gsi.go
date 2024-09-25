@@ -87,6 +87,32 @@ type GsiData struct {
 	Definition types.String `tfsdk:"definition"`
 }
 
+type GsiBuildStatus struct {
+	// OrganizationId is the ID of the organization to which the Capella cluster belongs.
+	OrganizationId types.String `tfsdk:"organization_id"`
+
+	// ProjectId is the ID of the project to which the Capella cluster belongs.
+	ProjectId types.String `tfsdk:"project_id"`
+
+	// ClusterId is the ID of the cluster for which the scope needs to be created.
+	ClusterId types.String `tfsdk:"cluster_id"`
+
+	// BucketName is the bucket for the index.
+	BucketName types.String `tfsdk:"bucket_name"`
+
+	// ScopeName is the scope for the index.
+	ScopeName types.String `tfsdk:"scope_name"`
+
+	// CollectionName is the collection for the index.
+	CollectionName types.String `tfsdk:"collection_name"`
+
+	// IndexName is the name of the index.
+	IndexName types.String `tfsdk:"index_name"`
+
+	// Status is the build status of the index.
+	Status types.String `tfsdk:"status"`
+}
+
 func (g *GsiDefinition) GetAttributeValues() (map[Attr]string, error) {
 	// handle terraform import
 	if g.OrganizationId.IsNull() {
