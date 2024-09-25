@@ -448,8 +448,6 @@ func (g *GSI) getQueryIndex(
 		collectionName,
 	)
 
-	fmt.Println("###WALIA### uri: ", uri)
-
 	cfg := api.EndpointCfg{Url: uri, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := g.Client.ExecuteWithRetry(
 		ctx,
@@ -468,31 +466,6 @@ func (g *GSI) getQueryIndex(
 	}
 
 	return &index, nil
-}
-
-func getAttributes(importString string) map[providerschema.Attr]string {
-	var (
-		importIds = map[string]providerschema.Attr{
-			"organization_id": providerschema.OrganizationId,
-			"project_id":      providerschema.ProjectId,
-			"cluster_id":      providerschema.ClusterId,
-			"bucket_id":       providerschema.BucketId,
-			"scope_name":      providerschema.ScopeName,
-			"collection_name": providerschema.CollectionName,
-			"index_name":      providerschema.IndexName,
-		}
-	)
-
-	pairs := strings.Split(importString, ",")
-
-	attrs := make(map[providerschema.Attr]string)
-
-	for _, pair := range pairs {
-		keyValue := strings.SplitN(pair, "=", 2)
-		attrs[importIds[keyValue[0]]] = keyValue[1]
-	}
-
-	return attrs
 }
 
 // joins a list of strings
