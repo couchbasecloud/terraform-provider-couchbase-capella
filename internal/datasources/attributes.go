@@ -154,4 +154,14 @@ var (
 			},
 		},
 	}
+
+	computedGsiAttributes = schema.SetNestedAttribute{
+		Computed: true,
+		NestedObject: schema.NestedAttributeObject{
+			Attributes: map[string]schema.Attribute{
+				"index_name": computedStringAttribute,
+				"definition": computedStringAttribute,
+			},
+		},
+	}
 )

@@ -68,7 +68,9 @@ func (p *capellaProvider) Schema(_ context.Context, _ provider.SchemaRequest, re
 }
 
 // Configure configures the Capella client.
-func (p *capellaProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+func (p *capellaProvider) Configure(
+	ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse,
+) {
 	tflog.Info(ctx, "Configuring the Capella Client")
 
 	// Retrieve provider data from configuration
@@ -191,6 +193,8 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewEvent,
 		datasources.NewProjectEvents,
 		datasources.NewProjectEvent,
+		datasources.NewGsiDefinitions,
+		datasources.NewGsiMonitor,
 	}
 }
 
@@ -218,5 +222,6 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewPrivateEndpointService,
 		resources.NewPrivateEndpoint,
 		resources.NewNetworkPeer,
+		resources.NewGSI,
 	}
 }
