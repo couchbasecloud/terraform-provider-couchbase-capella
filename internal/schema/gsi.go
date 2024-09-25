@@ -83,7 +83,7 @@ type GsiData struct {
 	// IndexName is the name of the index.
 	IndexName types.String `tfsdk:"index_name"`
 
-	// Definition is the index definition
+	// Definition is the index definition.
 	Definition types.String `tfsdk:"definition"`
 }
 
@@ -114,7 +114,7 @@ type GsiBuildStatus struct {
 }
 
 func (g *GsiDefinition) GetAttributeValues() (map[Attr]string, error) {
-	// handle terraform import
+	// handle terraform import.
 	if g.OrganizationId.IsNull() {
 		attrs, err := splitImportString(
 			g.IndexName.ValueString(),
@@ -132,7 +132,7 @@ func (g *GsiDefinition) GetAttributeValues() (map[Attr]string, error) {
 		return attrs, nil
 	}
 
-	// handle Read()
+	// handle Read().
 	attrs := map[Attr]string{
 		OrganizationId: g.OrganizationId.ValueString(),
 		ProjectId:      g.ProjectId.ValueString(),
@@ -143,7 +143,7 @@ func (g *GsiDefinition) GetAttributeValues() (map[Attr]string, error) {
 		IndexName:      "",
 	}
 	// if a primary index was created without a name,
-	// indexer uses name #primary
+	// indexer uses name #primary.
 	if !g.IsPrimary.IsNull() && g.IndexName.IsNull() {
 		attrs[IndexName] = "#primary"
 	} else {

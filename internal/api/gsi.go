@@ -9,7 +9,7 @@ type IndexDDLRequest struct {
 
 // QueryError is the error message returned by query service.
 type QueryError struct {
-	// Msg The error message
+	// Msg The error message.
 	Msg string `json:"msg"`
 }
 

@@ -80,8 +80,8 @@ func (g *GsiDefinitions) Read(ctx context.Context, req datasource.ReadRequest, r
 		return
 	}
 
-	// data sources don't support Default
-	// https://github.com/hashicorp/terraform-plugin-framework/issues/751
+	// data sources don't support Default.
+	// https://github.com/hashicorp/terraform-plugin-framework/issues/751 .
 	var scope, collection string
 	if config.ScopeName.IsNull() {
 		scope = "_default"

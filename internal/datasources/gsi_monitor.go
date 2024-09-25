@@ -84,8 +84,8 @@ func (g *GsiMonitor) Read(ctx context.Context, req datasource.ReadRequest, resp 
 		return
 	}
 
-	// data sources don't support Default
-	// https://github.com/hashicorp/terraform-plugin-framework/issues/751
+	// data sources don't support Default.
+	// https://github.com/hashicorp/terraform-plugin-framework/issues/751 .
 	var scope, collection string
 	if config.ScopeName.IsNull() {
 		scope = "_default"
@@ -112,7 +112,7 @@ func (g *GsiMonitor) Read(ctx context.Context, req datasource.ReadRequest, resp 
 
 	cfg := api.EndpointCfg{Url: uri, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
-	// 60 min is arbitrary
+	// 60 min is arbitrary.
 	const timeout = time.Minute * 60
 
 	var cancel context.CancelFunc
@@ -186,7 +186,7 @@ func (g *GsiMonitor) Read(ctx context.Context, req datasource.ReadRequest, resp 
 			}
 
 			attempt++
-			// exponential backoff upto a max of 20 min
+			// exponential backoff upto a max of 20 min.
 			d := min(20, 1<<attempt)
 			timer.Reset(time.Duration(d) * time.Minute)
 		}

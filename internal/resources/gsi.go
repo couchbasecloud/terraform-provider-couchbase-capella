@@ -55,7 +55,7 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 
 	var ddl string
 
-	// create build index statement
+	// create build index statement.
 	if !plan.BuildIndexes.IsNull() {
 		ddl = fmt.Sprintf(
 			"BUILD INDEX ON `%s`.`%s`.`%s`(%s)",
@@ -65,7 +65,7 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 			listStringValues(plan.BuildIndexes),
 		)
 	} else {
-		// create primary index statement
+		// create primary index statement.
 		if plan.IsPrimary.ValueBool() {
 			var indexName string
 			if !plan.IndexName.IsNull() {
@@ -83,7 +83,7 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 				plan.With.NumReplica.ValueInt64(),
 			)
 		} else {
-			// create secondary index statement
+			// create secondary index statement.
 			ddl = fmt.Sprintf(
 				"CREATE INDEX `%s` ON `%s`.`%s`.`%s`(%s) ",
 				plan.IndexName.ValueString(),
@@ -111,7 +111,7 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 
 				ddl += withClause
 			} else {
-				// should not set num_partition for non-partitioned index
+				// should not set num_partition for non-partitioned index.
 				withClause := fmt.Sprintf(
 					" WITH { \"defer_build\": %t,  \"num_replica\": %d} ",
 					plan.With.DeferBuild.ValueBool(),
@@ -187,11 +187,11 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 	}
 
 	if !state.OrganizationId.IsNull() {
-		// when reading an index, only update number of replicas
+		// when reading an index, only update number of replicas.
 		state.With.NumReplica = types.Int64Value(int64(index.NumReplica))
 
 	} else {
-		// when importing index, set all attributes
+		// when importing index, set all attributes.
 		state.OrganizationId = types.StringValue(organizationID)
 		state.ProjectId = types.StringValue(projectID)
 		state.ClusterId = types.StringValue(clusterID)
@@ -216,7 +216,7 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 		}
 
 		state.IndexKeys = keyList
-		// TODO:  set partition by
+		// TODO:  set partition by.
 		state.Where = types.StringValue(index.Where)
 		if state.With != nil {
 			state.With.NumReplica = types.Int64Value(int64(index.NumReplica))
@@ -470,7 +470,7 @@ func (g *GSI) getQueryIndex(
 	return &index, nil
 }
 
-// joins a list of strings
+// joins a list of strings.
 func listStringValues(s types.List) string {
 	elements := s.Elements()
 	var str string
