@@ -7,10 +7,6 @@ variable "organization_id" {
   description = "Capella Organization ID"
 }
 
-variable "host"{
- description = "host "
-}
-
 variable "project_id" {
   description = "Project Name for Project Created via Terraform"
 }
