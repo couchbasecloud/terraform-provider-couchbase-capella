@@ -20,9 +20,9 @@ compute = {
 }
 
 
-disk={
- storage = 64
- type="pd-ssd"
+disk = {
+  storage = 64
+  type    = "pd-ssd"
 }
 
 support = {

@@ -46,7 +46,7 @@ variable "disk" {
 
   type = object({
     storage = optional(number)
-    type = string
+    type    = string
   })
 }
 
