@@ -35,9 +35,10 @@ type NetworkPeer struct {
 	//ProviderType is the type of the cloud provider for which the peering connection is created. Which are-
 	//     1. aws
 	//     2. gcp
+	//     3. azure
 	ProviderType types.String `tfsdk:"provider_type"`
 
-	// ProviderConfig This provides details about the configuration and the ID of the VPC peer on AWS, GCP.
+	// ProviderConfig This provides details about the configuration and the ID of the VPC peer on AWS, GCP, or Azure.
 	ProviderConfig *ProviderConfig `tfsdk:"provider_config"`
 
 	// Status communicates the state of the VPC peering relationship. It is the state and reasoning for VPC peer.
@@ -52,13 +53,16 @@ type PeeringStatus struct {
 	State     types.String `tfsdk:"state"`
 }
 
-// ProviderConfig provides details about the configuration and the ID of the VPC peer on AWS, GCP.
+// ProviderConfig provides details about the configuration and the ID of the VPC peer on AWS, GCP, or Azure.
 type ProviderConfig struct {
 	// AWSConfig AWS config data required to establish a VPC peering relationship. Refer to the docs for other limitations to AWS VPC Peering - [ref](https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html#vpc-peering-limitations).
 	AWSConfig *AWSConfig `tfsdk:"aws_config"`
 
 	// GCPConfig GCP config data required to establish a VPC peering relationship. Refer to the docs for other limitations to GCP VPC Peering - [ref](https://cloud.google.com/vpc/docs/vpc-peering).
 	GCPConfig *GCPConfig `tfsdk:"gcp_config"`
+
+	// AzureConfig Azure config data required to establish a VNet peering relationship.  Refer to the docs for other limitations to Azure VNet Peering - [ref](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-peering-overview#constraints-for-peered-virtual-networks)
+	AzureConfig *AzureConfig `tfsdk:"azure_config"`
 }
 
 // AWSConfig AWS config data required to establish a VPC peering relationship.
@@ -101,7 +105,34 @@ type GCPConfig struct {
 	// [Reference](https://cloud.google.com/iam/docs/creating-managing-service-accounts#creating)
 	ServiceAccount types.String `tfsdk:"service_account"`
 
-	//// ProviderId The ID of the VPC peer on GCP.
+	// ProviderId The ID of the VPC peer on GCP.
+	ProviderId types.String `tfsdk:"provider_id"`
+}
+
+// AzureConfig Azure config data required to establish a VNet peering relationship.
+//
+// Refer to the docs for other limitations to Azure VNet Peering - [ref](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-peering-overview#constraints-for-peered-virtual-networks)
+type AzureConfig struct {
+	// AzureTenantId The tenant ID.
+	//
+	// To find your tenant ID, see [How to find your Azure Active Directory tenant ID](https://learn.microsoft.com/en-us/entra/fundamentals/how-to-find-tenant).
+	AzureTenantId types.String `tfsdk:"tenant_id"`
+
+	// Cidr The CIDR block from the virtual network that you created in Azure.
+	Cidr types.String `tfsdk:"cidr"`
+
+	// ResourceGroup The resource group name holding the resource you’re connecting with Capella.
+	ResourceGroup types.String `tfsdk:"resource_group"`
+
+	// SubscriptionId The subscription ID.
+	//
+	// To find your subscription ID, see [Find your Azure subscription](https://learn.microsoft.com/en-us/azure/azure-portal/get-subscription-tenant-id#find-your-azure-subscription).
+	SubscriptionId types.String `tfsdk:"subscription_id"`
+
+	// VnetId The VNet ID is the name of the virtual network peering in Azure.
+	VnetId types.String `tfsdk:"vnet_id"`
+
+	// ProviderId The ID of the VPC peer on Azure.
 	ProviderId types.String `tfsdk:"provider_id"`
 }
 
@@ -129,7 +160,7 @@ type NetworkPeerData struct {
 	// Name is the Name of the peering relationship.
 	Name types.String `tfsdk:"name"`
 
-	// ProviderConfig This provides details about the configuration and the ID of the VPC peer on AWS, GCP.
+	// ProviderConfig This provides details about the configuration and the ID of the VPC peer on AWS, GCP, or Azure.
 	ProviderConfig ProviderConfig `tfsdk:"provider_config"`
 
 	// Status communicates the state of the VPC peering relationship. It is the state and reasoning for VPC peer.
@@ -202,8 +233,24 @@ func NewNetworkPeer(ctx context.Context, networkPeer *network_peer_api.GetNetwor
 // morphToProviderConfig is used to convert ProviderConfig from json.RawMessage format to ProviderConfig type.
 func morphToProviderConfig(networkPeer *network_peer_api.GetNetworkPeeringRecordResponse) (ProviderConfig, error) {
 	var newProviderConfig ProviderConfig
+
 	aws, err := networkPeer.AsAWS()
-	if err == nil && aws.AWSConfigData.VpcId != "" {
+	if err != nil {
+		return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingAWSConfig, err)
+	}
+
+	gcp, err := networkPeer.AsGCP()
+	if err != nil {
+		return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingGCPConfig, err)
+	}
+
+	azure, err := networkPeer.AsAZURE()
+	if err != nil {
+		return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingAzureConfig, err)
+	}
+
+	switch {
+	case aws.AWSConfigData.VpcId != "":
 		newProviderConfig.AWSConfig = &AWSConfig{
 			ProviderId: types.StringValue(aws.ProviderId),
 			AccountId:  types.StringValue(aws.AWSConfigData.AccountId),
@@ -212,12 +259,7 @@ func morphToProviderConfig(networkPeer *network_peer_api.GetNetworkPeeringRecord
 			Region:     types.StringValue(aws.AWSConfigData.Region),
 		}
 		return newProviderConfig, nil
-	} else if err != nil {
-		return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingAWSConfig, err)
-	}
-
-	gcp, err := networkPeer.AsGCP()
-	if err == nil && gcp.GCPConfigData.ProjectId != "" {
+	case gcp.GCPConfigData.ProjectId != "":
 		newProviderConfig.GCPConfig = &GCPConfig{
 			ProviderId:     types.StringValue(gcp.ProviderId),
 			Cidr:           types.StringValue(gcp.GCPConfigData.Cidr),
@@ -226,10 +268,20 @@ func morphToProviderConfig(networkPeer *network_peer_api.GetNetworkPeeringRecord
 			ServiceAccount: types.StringValue(gcp.GCPConfigData.ServiceAccount),
 		}
 		return newProviderConfig, nil
-	} else if err != nil {
-		return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingGCPConfig, err)
+	case azure.AzureConfigData.AzureTenantId != "":
+		newProviderConfig.AzureConfig = &AzureConfig{
+			ProviderId:     types.StringValue(azure.ProviderId),
+			Cidr:           types.StringValue(azure.AzureConfigData.Cidr),
+			SubscriptionId: types.StringValue(azure.AzureConfigData.SubscriptionId),
+			ResourceGroup:  types.StringValue(azure.AzureConfigData.ResourceGroup),
+			VnetId:         types.StringValue(azure.AzureConfigData.VnetId),
+			AzureTenantId:  types.StringValue(azure.AzureConfigData.AzureTenantId),
+		}
+		return newProviderConfig, nil
+	default:
+		return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingProviderConfig, err)
 	}
-	return newProviderConfig, nil
+
 }
 
 // AttributeTypes returns a mapping of field names to their respective attribute types for the PeeringStatus struct.

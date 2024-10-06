@@ -67,15 +67,9 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 		ProviderType: plan.ProviderType.ValueString(),
 	}
 
-	if plan.ProviderConfig.AWSConfig != nil {
-		awsConfigForJSON := network_peer_api.AWSConfigData{
-			AccountId: plan.ProviderConfig.AWSConfig.AccountId.ValueString(),
-			Cidr:      plan.ProviderConfig.AWSConfig.Cidr.ValueString(),
-			Region:    plan.ProviderConfig.AWSConfig.Region.ValueString(),
-			VpcId:     plan.ProviderConfig.AWSConfig.VpcId.ValueString(),
-		}
-
-		providerConfigJSON, err := json.Marshal(awsConfigForJSON)
+	switch {
+	case plan.ProviderConfig.AWSConfig != nil:
+		providerConfigJSON, err := createAWSProviderConfig(plan)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error creating network peer for AWS",
@@ -83,18 +77,9 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 			)
 			return
 		}
-
 		networkPeerRequest.ProviderConfig = providerConfigJSON
-		plan.ProviderConfig.GCPConfig = nil
-
-	} else if plan.ProviderConfig.GCPConfig != nil {
-		gcpConfigJSON := network_peer_api.GCPConfigData{
-			NetworkName:    plan.ProviderConfig.GCPConfig.NetworkName.ValueString(),
-			ProjectId:      plan.ProviderConfig.GCPConfig.ProjectId.ValueString(),
-			Cidr:           plan.ProviderConfig.GCPConfig.Cidr.ValueString(),
-			ServiceAccount: plan.ProviderConfig.GCPConfig.ServiceAccount.ValueString(),
-		}
-		providerConfigJSON, err := json.Marshal(gcpConfigJSON)
+	case plan.ProviderConfig.GCPConfig != nil:
+		providerConfigJSON, err := createGCPProviderConfig(plan)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error creating network peer for GCP",
@@ -103,7 +88,22 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 			return
 		}
 		networkPeerRequest.ProviderConfig = providerConfigJSON
-		plan.ProviderConfig.AWSConfig = nil
+	case plan.ProviderConfig.AzureConfig != nil:
+		providerConfigJSON, err := createAzureProviderConfig(plan)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error creating network peer for Azure",
+				errors.ErrConvertingProviderConfig.Error(),
+			)
+			return
+		}
+		networkPeerRequest.ProviderConfig = providerConfigJSON
+	default:
+		resp.Diagnostics.AddError(
+			"Provider Config cannot be empty",
+			errors.ErrProviderConfigCannotBeEmpty.Error(),
+		)
+		return
 	}
 
 	var (
@@ -169,6 +169,67 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
+}
+
+// createAWSProviderConfig is the function to handle AWS configuration.
+func createAWSProviderConfig(plan providerschema.NetworkPeer) ([]byte, error) {
+	awsConfigForJSON := network_peer_api.AWSConfigData{
+		AccountId: plan.ProviderConfig.AWSConfig.AccountId.ValueString(),
+		Cidr:      plan.ProviderConfig.AWSConfig.Cidr.ValueString(),
+		Region:    plan.ProviderConfig.AWSConfig.Region.ValueString(),
+		VpcId:     plan.ProviderConfig.AWSConfig.VpcId.ValueString(),
+	}
+
+	providerConfigJSON, err := json.Marshal(awsConfigForJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	plan.ProviderConfig.GCPConfig = nil
+	plan.ProviderConfig.AzureConfig = nil
+
+	return providerConfigJSON, nil
+}
+
+// createGCPProviderConfig is the function to handle GCP configuration.
+func createGCPProviderConfig(plan providerschema.NetworkPeer) ([]byte, error) {
+	gcpConfigJSON := network_peer_api.GCPConfigData{
+		NetworkName:    plan.ProviderConfig.GCPConfig.NetworkName.ValueString(),
+		ProjectId:      plan.ProviderConfig.GCPConfig.ProjectId.ValueString(),
+		Cidr:           plan.ProviderConfig.GCPConfig.Cidr.ValueString(),
+		ServiceAccount: plan.ProviderConfig.GCPConfig.ServiceAccount.ValueString(),
+	}
+
+	providerConfigJSON, err := json.Marshal(gcpConfigJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	plan.ProviderConfig.AWSConfig = nil
+	plan.ProviderConfig.AzureConfig = nil
+
+	return providerConfigJSON, nil
+}
+
+// createAzureProviderConfig is the function to handle Azure configuration.
+func createAzureProviderConfig(plan providerschema.NetworkPeer) ([]byte, error) {
+	azureConfigJSON := network_peer_api.AzureConfigData{
+		AzureTenantId:  plan.ProviderConfig.AzureConfig.AzureTenantId.ValueString(),
+		ResourceGroup:  plan.ProviderConfig.AzureConfig.ResourceGroup.ValueString(),
+		SubscriptionId: plan.ProviderConfig.AzureConfig.SubscriptionId.ValueString(),
+		VnetId:         plan.ProviderConfig.AzureConfig.VnetId.ValueString(),
+		Cidr:           plan.ProviderConfig.AzureConfig.Cidr.ValueString(),
+	}
+
+	providerConfigJSON, err := json.Marshal(azureConfigJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	plan.ProviderConfig.AWSConfig = nil
+	plan.ProviderConfig.GCPConfig = nil
+
+	return providerConfigJSON, nil
 }
 
 // Read reads the NetworkPeer information.
@@ -398,21 +459,44 @@ func (n *NetworkPeer) getNetworkPeer(ctx context.Context, organizationId, projec
 		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
 
-	gcp, err := networkResp.AsGCP()
-	if err == nil && gcp.GCPConfigData.ProjectId != "" {
-		networkResp.ProviderType = "gcp"
-	} else if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrReadingGCPConfig, err)
-	}
-
-	aws, err := networkResp.AsAWS()
-	if err == nil && aws.AWSConfigData.VpcId != "" {
-		networkResp.ProviderType = "aws"
-	} else if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrReadingAWSConfig, err)
+	if err := defineProviderForResponse(networkResp); err != nil {
+		return nil, err
 	}
 
 	return &networkResp, nil
+}
+
+// defineProviderForResponse sets the provider type in the retrieved network peer as per the fields populated in the provider config.
+// If the provider type is not set through terraform separately in this manner, it will throw error as v4 get doesn't return it, but it's a field in resources.
+func defineProviderForResponse(networkResp network_peer_api.GetNetworkPeeringRecordResponse) error {
+	azure, err := networkResp.AsAZURE()
+	if err != nil {
+		return fmt.Errorf("%s: %w", errors.ErrReadingAzureConfig, err)
+	}
+
+	gcp, err := networkResp.AsGCP()
+	if err != nil {
+		return fmt.Errorf("%s: %w", errors.ErrReadingGCPConfig, err)
+	}
+
+	aws, err := networkResp.AsAWS()
+	if err != nil {
+		return fmt.Errorf("%s: %w", errors.ErrReadingAWSConfig, err)
+	}
+
+	// if there is no error, set the provider type for the provider config as per the populated fields in the get response.
+	switch {
+	case azure.AzureConfigData.AzureTenantId != "":
+		networkResp.ProviderType = "azure"
+	case gcp.GCPConfigData.ProjectId != "":
+		networkResp.ProviderType = "gcp"
+	case aws.AWSConfigData.VpcId != "":
+		networkResp.ProviderType = "aws"
+	default:
+		return fmt.Errorf("%s: %w", errors.ErrReadingProviderConfig, err)
+	}
+
+	return nil
 }
 
 func validateProviderTypeIsSameInPlanAndState(planProviderType, stateProviderType string) bool {

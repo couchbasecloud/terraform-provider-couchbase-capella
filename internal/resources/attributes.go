@@ -24,6 +24,8 @@ const (
 	sensitive          = "sensitive"
 	requiresReplace    = "requiresReplace"
 	useStateForUnknown = "useStateForUnknown"
+	deprecated         = "deprecated"
+	deprecationMessage = "Remove this attribute's configuration as it no longer in use and the attribute will be removed in the next major version of the provider."
 )
 
 // stringAttribute is a variadic function which sets the requested fields
@@ -54,6 +56,8 @@ func stringAttribute(fields []string, validators ...validator.String) *schema.St
 				stringplanmodifier.UseStateForUnknown(),
 			}
 			attribute.PlanModifiers = append(attribute.PlanModifiers, planModifiers...)
+		case deprecated:
+			attribute.DeprecationMessage = deprecationMessage
 		}
 	}
 	return &attribute

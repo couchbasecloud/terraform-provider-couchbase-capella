@@ -46,3 +46,17 @@ variable "aws_config" {
 #     service_account = optional(string)
 #   })
 # }
+
+
+# Reference variable for Azure Config to create a network peer on Azure and use these in the create_network_peer.tf file under provider_config.
+# variable "azure_config" {
+#   description = "Azure configuration details useful for network peer creation"
+#
+#   type = object({
+#     tenant_id       = optional(string)
+#     resource_group  = optional(string)
+#     cidr            = string
+#     subscription_id = optional(string)
+#     vnet_id         = optional(string)
+#   })
+# }
