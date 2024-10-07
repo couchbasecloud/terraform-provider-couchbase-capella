@@ -120,7 +120,7 @@ func (c *FlushBucket) ImportState(_ context.Context, _ resource.ImportStateReque
 	// Flush endpoint is not a managed resource on capella. It is purely managed by terraform.
 }
 
-// Flushes the bucket. Never updates as the resouce consits only of id's.
+// Flushes the bucket. Never updates as the resource consits only of id's.
 func (c *FlushBucket) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan providerschema.FlushBucket
 	diags := req.Plan.Get(ctx, &plan)
