@@ -102,6 +102,8 @@ new_flush = {
 
 ## UPDATE
 
+### Run terraform apply again
+
 Sample Output:
 ```
 ╵$ terraform apply
@@ -137,6 +139,93 @@ terraform output new_flush
   "organization_id" = "ffffffff-aaaa-1414-eeee-000000000001"
   "project_id" = "ffffffff-aaaa-1414-eeee-000000000002"
 }
+
+```
+
+
+### Change the bucket or one of the other id's.
+
+Command: `terraform plan`
+
+Sample Output:
+```
+╵$ terraform plan
+
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+-/+ destroy and then create replacement
+
+Terraform will perform the following actions:
+
+  # couchbase-capella_flush.new_flush must be replaced
+-/+ resource "couchbase-capella_flush" "new_flush" {
+      ~ bucket_id       = "dHJhdmVsLXNhbXBsZQ%3D%3D" -> "Z2FtZXNpbS1zYW1wbGU%3D" # forces replacement
+        # (3 unchanged attributes hidden)
+    }
+
+Plan: 1 to add, 0 to change, 1 to destroy.
+
+Changes to Outputs:
+  ~ new_flush = {
+      ~ bucket_id       = "dHJhdmVsLXNhbXBsZQ%3D%3D" -> "Z2FtZXNpbS1zYW1wbGU%3D"
+        # (3 unchanged attributes hidden)
+    }
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly these actions if you run "terraform apply" now.
+
+```
+
+Command: `terraform apply`
+
+Sample Output:
+```
+╵$ terraform apply
+couchbase-capella_flush.new_flush: Refreshing state...
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+-/+ destroy and then create replacement
+
+Terraform will perform the following actions:
+
+  # couchbase-capella_flush.new_flush must be replaced
+-/+ resource "couchbase-capella_flush" "new_flush" {
+      ~ bucket_id       = "dHJhdmVsLXNhbXBsZQ%3D%3D" -> "Z2FtZXNpbS1zYW1wbGU%3D" # forces replacement
+        # (3 unchanged attributes hidden)
+    }
+
+Plan: 1 to add, 0 to change, 1 to destroy.
+
+Changes to Outputs:
+  ~ new_flush = {
+      ~ bucket_id       = "dHJhdmVsLXNhbXBsZQ%3D%3D" -> "Z2FtZXNpbS1zYW1wbGU%3D"
+        # (3 unchanged attributes hidden)
+    }
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+couchbase-capella_flush.new_flush: Destroying...
+couchbase-capella_flush.new_flush: Destruction complete after 0s
+couchbase-capella_flush.new_flush: Creating...
+couchbase-capella_flush.new_flush: Still creating... [10s elapsed]
+couchbase-capella_flush.new_flush: Creation complete after 11s
+
+Apply complete! Resources: 1 added, 0 changed, 1 destroyed.
+
+Outputs:
+
+new_flush = {
+  "bucket_id" = "Z2FtZXNpbS1zYW1wbGU%3D"
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000001"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000002"
+}
+
 
 ```
 
