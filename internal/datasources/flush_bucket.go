@@ -43,12 +43,11 @@ func (s *FlushBucket) Schema(_ context.Context, _ datasource.SchemaRequest, resp
 	}
 }
 
-// Read refreshes the Terraform state with the latest data of buckets.
 func (d *FlushBucket) Read(_ context.Context, _ datasource.ReadRequest, _ *datasource.ReadResponse) {
-	// Do we even need this? Flush bucket information is all purely in terraform and not Capella.
+	// There is no Capella resource to get.
 }
 
-// Configure adds the provider configured client to the bucket data source.
+// Configure adds the provider configured client to the flush bucket data source.
 func (d *FlushBucket) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return

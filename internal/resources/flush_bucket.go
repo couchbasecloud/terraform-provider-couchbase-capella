@@ -88,7 +88,7 @@ func (c *FlushBucket) Create(ctx context.Context, req resource.CreateRequest, re
 	})
 }
 
-// Configure It adds the provider configured api to the project resource.
+// Configure adds the provider configured api to the project resource.
 func (c *FlushBucket) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -113,14 +113,14 @@ func (c *FlushBucket) Read(_ context.Context, _ resource.ReadRequest, _ *resourc
 }
 
 func (r *FlushBucket) Delete(_ context.Context, _ resource.DeleteRequest, _ *resource.DeleteResponse) {
-	// Flush endpoint does not support delete.
+	// Flush endpoint does not support delete as there is nothing on Capella to delete for this resource.
 }
 
 func (c *FlushBucket) ImportState(_ context.Context, _ resource.ImportStateRequest, _ *resource.ImportStateResponse) {
-	// Flush endpoint is not a managed resource on capella. It is purely managed by terraform
+	// Flush endpoint is not a managed resource on capella. It is purely managed by terraform.
 }
 
-// Flushes the bucket. Identical to Create.
+// Flushes the bucket. Never updates as the resouce consits only of id's
 func (c *FlushBucket) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan providerschema.FlushBucket
 	diags := req.Plan.Get(ctx, &plan)
