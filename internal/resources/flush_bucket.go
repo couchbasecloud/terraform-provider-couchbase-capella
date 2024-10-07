@@ -20,27 +20,27 @@ var (
 	_ resource.ResourceWithImportState = &FlushBucket{}
 )
 
-// Bucket is the bucket resource implementation.
+// FlushBucket is the bucket resource implementation.
 type FlushBucket struct {
 	*providerschema.Data
 }
 
-// NewBucket is a helper function to simplify the provider implementation.
+// NewFlushBucket is a helper function to simplify the provider implementation.
 func NewFlushBucket() resource.Resource {
 	return &FlushBucket{}
 }
 
-// Metadata returns the Bucket resource type name.
+// Metadata returns the flush Bucket resource type name.
 func (c *FlushBucket) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_flush"
 }
 
-// Schema defines the schema for the Bucket resource.
+// Schema defines the schema for the flush Bucket resource.
 func (c *FlushBucket) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = FlushBucketSchema()
 }
 
-// Create creates a new Bucket.
+// Create creates a new flush Bucket.
 func (c *FlushBucket) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan providerschema.FlushBucket
 	diags := req.Plan.Get(ctx, &plan)
@@ -62,7 +62,7 @@ func (c *FlushBucket) Create(ctx context.Context, req resource.CreateRequest, re
 	var clusterId = plan.ClusterId.ValueString()
 	var bucketId = plan.BucketId.ValueString()
 
-	// Execute flush bucke. Nothing gets returned for it.
+	// Execute flush bucket. Nothing gets returned for it.
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/flush", c.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusOK}
 	_, err := c.Client.ExecuteWithRetry(
@@ -120,7 +120,7 @@ func (c *FlushBucket) ImportState(_ context.Context, _ resource.ImportStateReque
 	// Flush endpoint is not a managed resource on capella. It is purely managed by terraform.
 }
 
-// Flushes the bucket. Only updates, if we change the flush bucket resource. Can't re-execute the flush on the same bucket.
+// Flushes the bucket.
 func (c *FlushBucket) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan providerschema.FlushBucket
 	diags := req.Plan.Get(ctx, &plan)
