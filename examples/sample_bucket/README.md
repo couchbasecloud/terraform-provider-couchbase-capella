@@ -15,7 +15,7 @@ In this example, we are going to do the following.
 3. LIST: List existing sample buckets in Capella as stated in the `list_sample_buckets.tf` file.
 4. IMPORT: Import a sample bucket that exists in Capella but not in the terraform state file.
 5. DELETE: Delete the newly create sample bucket from Capella.
-c
+
 If you check the `terraform.template.tfvars` file - Make sure you copy the file to `terraform.tfvars` and update the values of the variables as per the correct organization access.
 
 
