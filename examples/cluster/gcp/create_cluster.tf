@@ -11,7 +11,7 @@ resource "couchbase-capella_cluster" "new_cluster" {
   project_id                    = var.project_id
   name                          = var.cluster.name
   description                   = "My first test cluster for multiple services."
-  enable_private_dns_resolution = true
+  enable_private_dns_resolution = false
   cloud_provider = {
     type   = var.cloud_provider.name
     region = var.cloud_provider.region
@@ -25,9 +25,8 @@ resource "couchbase-capella_cluster" "new_cluster" {
           ram = var.compute.ram
         }
         disk = {
-          storage = var.disk.size
+          storage = var.disk.storage
           type    = var.disk.type
-          iops    = var.disk.iops
         }
       }
       num_of_nodes = var.cluster.node_count

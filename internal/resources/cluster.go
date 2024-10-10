@@ -105,6 +105,10 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		clusterRequest.Description = plan.Description.ValueStringPointer()
 	}
 
+	if !plan.EnablePrivateDNSResolution.IsNull() && !plan.EnablePrivateDNSResolution.IsUnknown() {
+		clusterRequest.EnablePrivateDNSResolution = plan.EnablePrivateDNSResolution.ValueBoolPointer()
+	}
+
 	var couchbaseServer providerschema.CouchbaseServer
 	if !plan.CouchbaseServer.IsUnknown() && !plan.CouchbaseServer.IsNull() {
 		couchbaseServerAtt := getCouchbaseServer(ctx, req.Config, &resp.Diagnostics)
@@ -805,6 +809,11 @@ func initializePendingClusterWithPlanAndId(plan providerschema.Cluster, id strin
 	if plan.ConfigurationType.IsNull() || plan.ConfigurationType.IsUnknown() {
 		plan.ConfigurationType = types.StringNull()
 	}
+
+	if plan.EnablePrivateDNSResolution.IsNull() || plan.EnablePrivateDNSResolution.IsUnknown() {
+		plan.EnablePrivateDNSResolution = types.BoolNull()
+	}
+
 	if plan.CouchbaseServer.IsNull() || plan.CouchbaseServer.IsUnknown() {
 		plan.CouchbaseServer = types.ObjectNull(providerschema.CouchbaseServer{}.AttributeTypes())
 	}
