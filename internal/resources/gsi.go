@@ -408,6 +408,20 @@ func (g *GSI) executeGsiDdl(ctx context.Context, plan *providerschema.GsiDefinit
 		nil,
 	)
 	if err != nil {
+		// Indexer returns an error if there is a build already in progress.
+		// It's not really an error because indexer will retry the build.
+		// This is problematic because if indexes are built in bulk the user
+		// will be spammed with errors.
+		//
+		// In this case we can ignore the error.
+		apiError := err.(*api.Error)
+		if apiError.HttpStatusCode == http.StatusInternalServerError &&
+			strings.Contains(
+				strings.ToLower(apiError.Message), "build already in progress",
+			) {
+			return nil
+		}
+
 		return err
 	}
 
