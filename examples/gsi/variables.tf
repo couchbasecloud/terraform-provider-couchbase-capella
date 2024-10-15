@@ -14,32 +14,3 @@ variable "project_id" {
 variable "cluster_id" {
   description = "Capella Cluster ID"
 }
-
-variable "bucket_name" {
-  description = "Bucket Name"
-}
-
-variable "scope_name" {
-  description = "Scope Name"
-}
-
-variable "collection_name" {
-  description = "collection Name"
-}
-
-variable "index_name" {
-  description = "index Name"
-}
-
-variable "index_keys" {
-  description = "index keys"
-}
-
-variable "partition_by" {
-  description = "partition_by"
-}
-
-variable "with" {
-  description = "WITH clause"
-}
-
