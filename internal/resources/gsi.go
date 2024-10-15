@@ -414,12 +414,13 @@ func (g *GSI) executeGsiDdl(ctx context.Context, plan *providerschema.GsiDefinit
 		// will be spammed with errors.
 		//
 		// In this case we can ignore the error.
-		apiError := err.(*api.Error)
-		if apiError.HttpStatusCode == http.StatusInternalServerError &&
-			strings.Contains(
-				strings.ToLower(apiError.Message), "build already in progress",
-			) {
-			return nil
+		if apiError, ok := err.(*api.Error); ok {
+			if apiError.HttpStatusCode == http.StatusInternalServerError &&
+				strings.Contains(
+					strings.ToLower(apiError.Message), "build already in progress",
+				) {
+				return nil
+			}
 		}
 
 		return err
