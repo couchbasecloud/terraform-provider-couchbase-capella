@@ -14,3 +14,15 @@ variable "project_id" {
 variable "cluster_id" {
   description = "Capella Cluster ID"
 }
+
+variable "bucket_name" {
+  description = "Bucket Name"
+}
+
+variable "scope_name" {
+  description = "Scope Name"
+}
+
+variable "collection_name" {
+  description = "collection Name"
+}
