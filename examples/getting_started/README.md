@@ -19,6 +19,7 @@ In this demo, we will perform the following operations:
 15. Create a new audit log settings.
 16. Enable private endpoint service on the cluster.
 17. Create a new network peer.
+18. Create an index.
 
 ## Pre-Requisites:
 

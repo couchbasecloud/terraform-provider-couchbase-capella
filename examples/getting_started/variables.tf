@@ -241,3 +241,25 @@ variable "aws_config" {
     region     = optional(string)
   })
 }
+
+variable "index_name" {
+  description = "index Name"
+}
+
+variable "index_keys" {
+  description = "index keys"
+}
+
+variable "partition_by" {
+  description = "partition_by"
+}
+
+variable "with" {
+  description = "WITH clause"
+
+  type = object({
+    defer_build   = bool
+    num_replica   = number
+    num_partition = number
+  })
+}
