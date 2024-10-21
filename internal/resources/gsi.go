@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"net/http"
 	"net/url"
 	"strings"
@@ -139,7 +140,6 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 }
 
 func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	fmt.Println("###WALIA### Read()")
 	var state providerschema.GsiDefinition
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -180,16 +180,22 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 		indexName,
 	)
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
+
 		resp.Diagnostics.AddError(
 			"Error reading query index",
-			"Could not read query index "+state.IndexName.ValueString()+": "+err.Error(),
+			"Could not read query index "+state.IndexName.ValueString()+": "+errString,
 		)
 		return
 	}
 
 	if !state.OrganizationId.IsNull() {
 		// when reading an index, only update number of replicas.
-		fmt.Println("###WALIA### index.NumReplica", index.NumReplica)
 		state.With.NumReplica = types.Int64Value(int64(index.NumReplica))
 
 	} else {
@@ -225,7 +231,7 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 			state.With.NumPartition = types.Int64Value(int64(index.NumPartition))
 		}
 	}
-	
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 	if resp.Diagnostics.HasError() {
 		return
