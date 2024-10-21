@@ -98,7 +98,7 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 			}
 
 			if !plan.Where.IsNull() {
-				ddl += fmt.Sprintf(" WHERE %s ", plan.Where.String())
+				ddl += fmt.Sprintf(" WHERE %s ", plan.Where.ValueString())
 			}
 
 			if !plan.PartitionBy.IsNull() {
