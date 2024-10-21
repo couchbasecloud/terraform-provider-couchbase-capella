@@ -139,6 +139,7 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 }
 
 func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	fmt.Println("###WALIA### Read()")
 	var state providerschema.GsiDefinition
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -188,6 +189,7 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 
 	if !state.OrganizationId.IsNull() {
 		// when reading an index, only update number of replicas.
+		fmt.Println("###WALIA### index.NumReplica", index.NumReplica)
 		state.With.NumReplica = types.Int64Value(int64(index.NumReplica))
 
 	} else {
@@ -223,8 +225,7 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 			state.With.NumPartition = types.Int64Value(int64(index.NumPartition))
 		}
 	}
-
-	resp.State.Set(ctx, state)
+	
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 	if resp.Diagnostics.HasError() {
 		return
