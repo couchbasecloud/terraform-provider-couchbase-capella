@@ -208,6 +208,7 @@ func TestAccClusterResourceWithOptionalFieldAWS(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
 					resource.TestCheckResourceAttr(resourceReference, "support.plan", "developer pro"),
 					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
+					resource.TestCheckResourceAttr(resourceReference, "enable_private_dns_resolution", "false"),
 				),
 			},
 			// ImportState testing
@@ -263,6 +264,7 @@ func TestAccClusterResourceAzure(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
 					resource.TestCheckResourceAttr(resourceReference, "support.plan", "developer pro"),
 					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
+					resource.TestCheckResourceAttr(resourceReference, "enable_private_dns_resolution", "false"),
 				),
 			},
 			//// ImportState testing
@@ -401,6 +403,7 @@ func TestAccClusterResourceGCP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
 					resource.TestCheckResourceAttr(resourceReference, "support.plan", "developer pro"),
 					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
+					resource.TestCheckResourceAttr(resourceReference, "enable_private_dns_resolution", "false"),
 				),
 			},
 			//// ImportState testing
@@ -855,6 +858,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
   project_id      = %[4]s.id
   name            = "Terraform Acceptance Test Cluster"
   description     = "My first test cluster for multiple services."
+  enable_private_dns_resolution = false
 
   cloud_provider = {
     type   = "aws"
@@ -987,6 +991,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
   project_id      = %[4]s.id
   name            = "Terraform Acceptance Test Cluster"
   description     = "My first test cluster for multiple services."
+  enable_private_dns_resolution = false
   cloud_provider = {
     type   = "azure"
     region = "eastus"
@@ -1252,6 +1257,7 @@ resource "couchbase-capella_cluster"  "%[2]s" {
   project_id      = %[4]s.id
   name            = "Terraform Acceptance Test Cluster"
   description     = "My first test cluster for multiple services."
+  enable_private_dns_resolution = false
   cloud_provider = {
 	type = "gcp",
 	region = "us-east1",

@@ -62,6 +62,10 @@ type CreateClusterRequest struct {
 	// ServiceGroups is the couchbase service groups to be run. At least one
 	// service group must contain the data service.
 	ServiceGroups []ServiceGroup `json:"serviceGroups"`
+
+	// EnablePrivateDNSResolution signals that the cluster should have hostnames that are hosted in a public DNS zone that resolve to a private DNS address.
+	// This exists to support the use case of customers connecting from their own data centers where it is not possible to make use of a cloud service provider DNS zone.
+	EnablePrivateDNSResolution *bool `json:"enablePrivateDNSResolution,omitempty"`
 }
 
 // CreateClusterResponse is the response received from the Capella V4 Public API when asked to create a new cluster.
@@ -116,6 +120,10 @@ type GetClusterResponse struct {
 
 	// Description depicts description of the cluster (up to 1024 characters).
 	Description string `json:"description"`
+
+	// EnablePrivateDNSResolution signals that the cluster should have hostnames that are hosted in a public DNS zone that resolve to a private DNS address.
+	// This exists to support the use case of customers connecting from their own data centers where it is not possible to make use of a cloud service provider DNS zone.
+	EnablePrivateDNSResolution bool `json:"enablePrivateDNSResolution"`
 
 	// Name is the name of the cluster (up to 256 characters).
 	Name string `json:"name"`
