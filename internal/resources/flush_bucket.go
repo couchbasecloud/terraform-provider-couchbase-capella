@@ -8,17 +8,17 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
-
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource                = &FlushBucket{}
-	_ resource.ResourceWithConfigure   = &FlushBucket{}
-	_ resource.ResourceWithImportState = &FlushBucket{}
+	_ resource.Resource              = &FlushBucket{}
+	_ resource.ResourceWithConfigure = &FlushBucket{}
 )
+
+const errorMessageFlushingBucket = "There is an error during execution of bucket flush. Please check in Capella to see if the documents for" +
+	" have been deleted, unexpected error: "
 
 // FlushBucket is the bucket resource implementation.
 type FlushBucket struct {
@@ -43,8 +43,7 @@ func (c *FlushBucket) Schema(_ context.Context, _ resource.SchemaRequest, resp *
 // Create creates a new flush Bucket.
 func (c *FlushBucket) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan providerschema.FlushBucket
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -75,20 +74,15 @@ func (c *FlushBucket) Create(ctx context.Context, req resource.CreateRequest, re
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error flushing the bucket",
-			errorMessageWhileBucketCreation+api.ParseError(err),
+			errorMessageFlushingBucket+api.ParseError(err),
 		)
 		return
 	}
 
-	resp.State.Set(ctx, providerschema.FlushBucket{
-		BucketId:       types.StringValue(bucketId),
-		OrganizationId: types.StringValue(organizationId),
-		ProjectId:      types.StringValue(projectId),
-		ClusterId:      types.StringValue(clusterId),
-	})
+	resp.State.Set(ctx, plan)
 }
 
-// Configure adds the provider configured api to the project resource.
+// Configure adds the provider configured api to the flush bucket resource.
 func (c *FlushBucket) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -120,53 +114,8 @@ func (c *FlushBucket) ImportState(_ context.Context, _ resource.ImportStateReque
 	// Flush endpoint is not a managed resource on capella. It is purely managed by terraform.
 }
 
-// Flushes the bucket.
 func (c *FlushBucket) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan providerschema.FlushBucket
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if err := c.validateFlushBucketRequest(plan); err != nil {
-		resp.Diagnostics.AddError(
-			"Error executing bucket flush",
-			"Could not flush the bucket, unexpected error: "+err.Error(),
-		)
-		return
-	}
-	var organizationId = plan.OrganizationId.ValueString()
-	var projectId = plan.ProjectId.ValueString()
-	var clusterId = plan.ClusterId.ValueString()
-	var bucketId = plan.BucketId.ValueString()
-
-	// Execute flush bucket. Nothing gets returned for it.
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/flush", c.HostURL, organizationId, projectId, clusterId, bucketId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusOK}
-	_, err := c.Client.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		c.Token,
-		nil,
-	)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error flushing the bucket",
-			errorMessageWhileBucketCreation+api.ParseError(err),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(diags...)
-	resp.State.Set(ctx, providerschema.FlushBucket{
-		BucketId:       types.StringValue(bucketId),
-		OrganizationId: types.StringValue(organizationId),
-		ProjectId:      types.StringValue(projectId),
-		ClusterId:      types.StringValue(clusterId),
-	})
+	// Flush endpoint does not update the resource at any time other than the create.
 }
 
 func (r *FlushBucket) validateFlushBucketRequest(plan providerschema.FlushBucket) error {

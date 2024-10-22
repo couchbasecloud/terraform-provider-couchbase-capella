@@ -191,7 +191,6 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewEvent,
 		datasources.NewProjectEvents,
 		datasources.NewProjectEvent,
-		datasources.NewFlushBucket,
 	}
 }
 
