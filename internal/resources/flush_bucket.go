@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 )
@@ -49,13 +48,6 @@ func (c *FlushBucket) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	if err := c.validateFlushBucketRequest(plan); err != nil {
-		resp.Diagnostics.AddError(
-			"Error executing bucket flush",
-			"Could not flush the bucket, unexpected error: "+err.Error(),
-		)
-		return
-	}
 	var organizationId = plan.OrganizationId.ValueString()
 	var projectId = plan.ProjectId.ValueString()
 	var clusterId = plan.ClusterId.ValueString()
@@ -116,20 +108,4 @@ func (c *FlushBucket) ImportState(_ context.Context, _ resource.ImportStateReque
 
 func (c *FlushBucket) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// Flush endpoint does not update the resource at any time other than the create.
-}
-
-func (r *FlushBucket) validateFlushBucketRequest(plan providerschema.FlushBucket) error {
-	if plan.OrganizationId.IsNull() {
-		return errors.ErrOrganizationIdMissing
-	}
-	if plan.ProjectId.IsNull() {
-		return errors.ErrProjectIdMissing
-	}
-	if plan.ClusterId.IsNull() {
-		return errors.ErrClusterIdMissing
-	}
-	if plan.BucketId.IsNull() {
-		return errors.ErrBucketIdMissing
-	}
-	return nil
 }
