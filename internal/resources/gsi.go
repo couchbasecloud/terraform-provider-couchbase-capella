@@ -17,7 +17,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	internalerrors "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/utils"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -127,11 +129,34 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 	}
 
 	if err := g.executeGsiDdl(ctx, &plan, ddl); err != nil {
-		resp.Diagnostics.AddError(
-			"An error occurred while executing index DDL",
-			"Error executing index DDL: "+ddl+"\nError: "+err.Error(),
-		)
-		return
+		switch err {
+		case nil:
+		case internalerrors.ErrLongIndexBuildTime:
+			resp.Diagnostics.AddWarning(
+				"Index build did not complete",
+				fmt.Sprintf(
+					"Index build for %s in %s.%s.%s did not complete",
+					plan.IndexName.ValueString(),
+					plan.BucketName.ValueString(),
+					plan.ScopeName.ValueString(),
+					plan.CollectionName.ValueString(),
+				),
+			)
+			return
+
+		default:
+			fmt.Println("###WALIA### failed to execute index ", ddl)
+			resp.Diagnostics.AddError(
+				"Failed to get execute index DDL",
+				fmt.Sprintf(
+					"Could not execute index %s\nError: %s",
+					ddl,
+					err.Error(),
+				),
+			)
+
+			return
+		}
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
@@ -398,7 +423,7 @@ func (g *GSI) ValidateConfig(
 }
 
 func (g *GSI) executeGsiDdl(ctx context.Context, plan *providerschema.GsiDefinition, ddl string) error {
-	url := fmt.Sprintf(
+	uri := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/queryService/indexes",
 		g.HostURL,
 		plan.OrganizationId.ValueString(),
@@ -406,8 +431,9 @@ func (g *GSI) executeGsiDdl(ctx context.Context, plan *providerschema.GsiDefinit
 		plan.ClusterId.ValueString(),
 	)
 
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusOK}
+	cfg := api.EndpointCfg{Url: uri, Method: http.MethodPost, SuccessStatus: http.StatusOK}
 	ddlRequest := api.IndexDDLRequest{Definition: ddl}
+
 	response, err := g.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
@@ -421,13 +447,38 @@ func (g *GSI) executeGsiDdl(ctx context.Context, plan *providerschema.GsiDefinit
 		// This is problematic because if indexes are built in bulk the user
 		// will be spammed with errors.
 		//
-		// In this case we can ignore the error.
+		// In this case ignore the error and poll build status.
 		if apiError, ok := err.(*api.Error); ok {
 			if apiError.HttpStatusCode == http.StatusInternalServerError &&
 				strings.Contains(
 					strings.ToLower(apiError.Message), "build already in progress",
 				) {
-				return nil
+
+				newURI := fmt.Sprintf(
+					"%s/v4/organizations/%s/projects/%s/clusters/%s/queryService/indexBuildStatus/%s?bucket=%s&scope=%s&collection=%s",
+					g.HostURL,
+					plan.OrganizationId.ValueString(),
+					plan.ProjectId.ValueString(),
+					plan.ClusterId.ValueString(),
+					url.QueryEscape(plan.IndexName.ValueString()),
+					plan.BucketName.ValueString(),
+					plan.ScopeName.ValueString(),
+					plan.CollectionName.ValueString(),
+				)
+
+				newConfig := api.EndpointCfg{Url: newURI, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+				monitor := func() (response *api.Response, err error) {
+					return g.Client.ExecuteWithRetry(
+						ctx,
+						newConfig,
+						nil,
+						g.Token,
+						nil,
+					)
+				}
+
+				fmt.Println("###WALIA### build in progress for ", ddl)
+				return utils.PollIndex(ctx, monitor)
 			}
 		}
 

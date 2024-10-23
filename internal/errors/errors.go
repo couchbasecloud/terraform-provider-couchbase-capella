@@ -207,4 +207,6 @@ var (
 	ErrBucketCreationStatusTimeout = errors.New("bucket backup creation status transition timed out after initiation")
 
 	ErrAppServiceCreationStatusTimeout = errors.New("app service creation status transition timed out after initiation")
+
+	ErrLongIndexBuildTime = errors.New("index build is taking a very long time")
 )
