@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -100,10 +101,6 @@ func (c *FlushBucket) Read(_ context.Context, _ resource.ReadRequest, _ *resourc
 
 func (r *FlushBucket) Delete(_ context.Context, _ resource.DeleteRequest, _ *resource.DeleteResponse) {
 	// Flush endpoint does not support delete as there is nothing on Capella to delete for this resource.
-}
-
-func (c *FlushBucket) ImportState(_ context.Context, _ resource.ImportStateRequest, _ *resource.ImportStateResponse) {
-	// Flush endpoint is not a managed resource on capella. It is purely managed by terraform.
 }
 
 func (c *FlushBucket) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
