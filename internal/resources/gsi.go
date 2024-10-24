@@ -146,7 +146,7 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 
 		default:
 			resp.Diagnostics.AddError(
-				"Failed to get execute index DDL",
+				"Failed to execute index DDL",
 				fmt.Sprintf(
 					"Could not execute index %s\nError: %s",
 					ddl,
