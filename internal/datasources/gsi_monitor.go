@@ -2,11 +2,9 @@ package datasources
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 
@@ -16,7 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	internalerrors "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/utils"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -111,86 +111,50 @@ func (g *GsiMonitor) Read(ctx context.Context, req datasource.ReadRequest, resp 
 	)
 
 	cfg := api.EndpointCfg{Url: uri, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	monitor := func() (response *api.Response, err error) {
+		return g.Client.ExecuteWithRetry(
+			ctx,
+			cfg,
+			nil,
+			g.Token,
+			nil,
+		)
+	}
 
-	// 60 min is arbitrary.
-	const timeout = time.Minute * 60
+	err := utils.PollIndex(ctx, monitor)
+	switch err {
+	case nil:
+	case internalerrors.ErrLongIndexBuildTime:
+		resp.Diagnostics.AddWarning(
+			"Index build did not complete",
+			fmt.Sprintf(
+				"Index build for %s in %s.%s.%s did not complete",
+				config.IndexName.ValueString(),
+				config.BucketName.ValueString(),
+				scope,
+				collection,
+			),
+		)
+		return
+	default:
+		resp.Diagnostics.AddError(
+			"Error getting index build status",
+			fmt.Sprintf(
+				"Could not get index build status for %s in %s.%s.%s.  Error: %s",
+				config.IndexName.ValueString(),
+				config.BucketName.ValueString(),
+				scope,
+				collection,
+				err.Error(),
+			),
+		)
+		return
+	}
 
-	var cancel context.CancelFunc
-	ctx, cancel = context.WithTimeout(ctx, timeout)
-	defer cancel()
-
-	attempt := 0
-	timer := time.NewTimer((1 << attempt) * time.Minute)
-
-	for {
-		select {
-		case <-ctx.Done():
-			resp.Diagnostics.AddWarning(
-				"Index build did not complete",
-				fmt.Sprintf(
-					"Index build for %s in %s.%s.%s did not complete",
-					config.IndexName.ValueString(),
-					config.BucketName.ValueString(),
-					scope,
-					collection,
-				),
-			)
-			return
-		case <-timer.C:
-			response, err := g.Client.ExecuteWithRetry(
-				ctx,
-				cfg,
-				nil,
-				g.Token,
-				nil,
-			)
-
-			if err != nil {
-				resp.Diagnostics.AddError(
-					"Error getting index build status",
-					fmt.Sprintf(
-						"Could not get index build status for %s in %s.%s.%s.  Error: %s",
-						config.IndexName.ValueString(),
-						config.BucketName.ValueString(),
-						scope,
-						collection,
-						err.Error(),
-					),
-				)
-				return
-			}
-
-			status := api.IndexBuildStatusResponse{}
-			if err = json.Unmarshal(response.Body, &status); err != nil {
-				resp.Diagnostics.AddError(
-					"Error unmarshaling index build status response",
-					fmt.Sprintf(
-						"Could not get index build status for %s in %s.%s.%s.  Error: %s",
-						config.IndexName.ValueString(),
-						config.BucketName.ValueString(),
-						scope,
-						collection,
-						err.Error(),
-					),
-				)
-				return
-			}
-
-			if status.Status == "Ready" {
-				config.Status = types.StringValue(status.Status)
-				resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
-				if resp.Diagnostics.HasError() {
-					return
-				}
-				return
-			}
-
-			attempt++
-			// exponential backoff upto a max of 20 min.
-			d := min(20, 1<<attempt)
-			timer.Reset(time.Duration(d) * time.Minute)
-		}
-
+	config.Status = types.StringValue("Ready")
+	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 }
 

@@ -145,7 +145,6 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 			return
 
 		default:
-			fmt.Println("###WALIA### failed to execute index ", ddl)
 			resp.Diagnostics.AddError(
 				"Failed to get execute index DDL",
 				fmt.Sprintf(
@@ -477,7 +476,6 @@ func (g *GSI) executeGsiDdl(ctx context.Context, plan *providerschema.GsiDefinit
 					)
 				}
 
-				fmt.Println("###WALIA### build in progress for ", ddl)
 				return utils.PollIndex(ctx, monitor)
 			}
 		}
