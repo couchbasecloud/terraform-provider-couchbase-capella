@@ -9,12 +9,12 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	internalerrors "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
@@ -68,6 +68,7 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 			plan.CollectionName.ValueString(),
 			listStringValues(plan.BuildIndexes),
 		)
+
 	} else {
 		// create primary index statement.
 		if plan.IsPrimary.ValueBool() {
@@ -384,8 +385,9 @@ func (g *GSI) ValidateConfig(
 				"Invalid Attribute Configuration",
 				"build_indexes is set so other optional attributes must be null",
 			)
-			return
 		}
+
+		return
 	}
 
 	if !config.IsPrimary.ValueBool() {
