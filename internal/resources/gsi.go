@@ -129,17 +129,30 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 			)
 		} else {
 			// create secondary index statement.
+			var index_keys []string
+			diags := plan.IndexKeys.ElementsAs(ctx, &index_keys, false)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
 			ddl = fmt.Sprintf(
 				"CREATE INDEX `%s` ON `%s`.`%s`.`%s`(%s) ",
 				plan.IndexName.ValueString(),
 				plan.BucketName.ValueString(),
 				plan.ScopeName.ValueString(),
 				plan.CollectionName.ValueString(),
-				listStringValues(plan.IndexKeys),
+				strings.Join(index_keys, ","),
 			)
 
 			if !plan.PartitionBy.IsNull() {
-				ddl += fmt.Sprintf(" PARTITION BY HASH(%s) ", listStringValues(plan.PartitionBy))
+				var partition_keys []string
+				diags := plan.PartitionBy.ElementsAs(ctx, &partition_keys, false)
+				resp.Diagnostics.Append(diags...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+				ddl += fmt.Sprintf(" PARTITION BY HASH(%s) ", strings.Join(partition_keys, ","))
 			}
 
 			if !plan.Where.IsNull() {
@@ -582,19 +595,4 @@ func (g *GSI) getQueryIndex(
 	}
 
 	return &index, nil
-}
-
-// joins a list of strings.
-func listStringValues(s types.List) string {
-	elements := s.Elements()
-	var str string
-	for i, e := range elements {
-		str += e.String()
-
-		if i < len(elements)-1 {
-			str += ","
-		}
-	}
-	str = strings.ReplaceAll(str, "\"", "")
-	return str
 }
