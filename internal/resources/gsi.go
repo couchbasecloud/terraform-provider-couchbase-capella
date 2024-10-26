@@ -61,13 +61,53 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 
 	// create build index statement.
 	if !plan.BuildIndexes.IsNull() {
+		var indexes []string
+		diags := plan.BuildIndexes.ElementsAs(ctx, &indexes, false)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
 		ddl = fmt.Sprintf(
 			"BUILD INDEX ON `%s`.`%s`.`%s`(%s)",
 			plan.BucketName.ValueString(),
 			plan.ScopeName.ValueString(),
 			plan.CollectionName.ValueString(),
-			listStringValues(plan.BuildIndexes),
+			strings.Join(indexes, ","),
 		)
+
+		monitor := func(cfg api.EndpointCfg) (response *api.Response, err error) {
+			return g.Client.ExecuteWithRetry(
+				ctx,
+				cfg,
+				nil,
+				g.Token,
+				nil,
+			)
+		}
+
+		// must ensure all indexes are in created state
+		// before executing build statement
+		err := utils.WatchIndexes(
+			"Created", indexes, monitor, utils.WatchOptions{
+				g.HostURL,
+				plan.OrganizationId.ValueString(),
+				plan.ProjectId.ValueString(),
+				plan.ClusterId.ValueString(),
+				plan.BucketName.ValueString(),
+				plan.ScopeName.ValueString(),
+				plan.CollectionName.ValueString(),
+			},
+		)
+
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Watch Indexes Failed",
+				fmt.Sprintf("Error: ", err.Error()),
+			)
+
+			return
+		}
 
 	} else {
 		// create primary index statement.
