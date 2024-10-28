@@ -199,6 +199,11 @@ It is recommended to use deferred builds.  Please see documentation for details.
 					plan.CollectionName.ValueString(),
 				),
 			)
+
+			// save to state file so that refresh can work.
+			// this is preferrable to import as there can be many indexes in this state.
+			resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+
 			return
 
 		default:
