@@ -185,11 +185,14 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 	if err := g.executeGsiDdl(ctx, &plan, ddl); err != nil {
 		switch err {
 		case nil:
-		case internalerrors.ErrLongIndexBuildTime:
-			resp.Diagnostics.AddWarning(
-				"Index build did not complete",
+		case internalerrors.ErrIndexBuildInProgress:
+			resp.Diagnostics.AddError(
+				"Index build is currently in progress",
 				fmt.Sprintf(
-					"Index build for %s in %s.%s.%s did not complete",
+					`Could not build index %s in %s.%s.%s as there is another index build already in progress.
+The index build will automatically be retried in the background.  Please run "terraform apply --refresh-only".
+
+It is recommended to use deferred builds.  Please see documentation for details.`,
 					plan.IndexName.ValueString(),
 					plan.BucketName.ValueString(),
 					plan.ScopeName.ValueString(),
@@ -497,41 +500,17 @@ func (g *GSI) executeGsiDdl(ctx context.Context, plan *providerschema.GsiDefinit
 	)
 	if err != nil {
 		// Indexer returns an error if there is a build already in progress.
-		// It's not really an error because indexer will retry the build.
-		// This is problematic because if indexes are built in bulk the user
-		// will be spammed with errors.
+		// Index build is resource intensive operation from indexer and KV perspective
+		// as indexer will request data the keyspace from the beginning.
 		//
-		// In this case ignore the error and poll build status.
+		// Indexer will automatically retry in the background.
 		if apiError, ok := err.(*api.Error); ok {
 			if apiError.HttpStatusCode == http.StatusInternalServerError &&
 				strings.Contains(
 					strings.ToLower(apiError.Message), "build already in progress",
 				) {
 
-				newURI := fmt.Sprintf(
-					"%s/v4/organizations/%s/projects/%s/clusters/%s/queryService/indexBuildStatus/%s?bucket=%s&scope=%s&collection=%s",
-					g.HostURL,
-					plan.OrganizationId.ValueString(),
-					plan.ProjectId.ValueString(),
-					plan.ClusterId.ValueString(),
-					url.QueryEscape(plan.IndexName.ValueString()),
-					plan.BucketName.ValueString(),
-					plan.ScopeName.ValueString(),
-					plan.CollectionName.ValueString(),
-				)
-
-				newConfig := api.EndpointCfg{Url: newURI, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-				monitor := func() (response *api.Response, err error) {
-					return g.Client.ExecuteWithRetry(
-						ctx,
-						newConfig,
-						nil,
-						g.Token,
-						nil,
-					)
-				}
-
-				return utils.PollIndex(ctx, monitor)
+				return internalerrors.ErrIndexBuildInProgress
 			}
 		}
 

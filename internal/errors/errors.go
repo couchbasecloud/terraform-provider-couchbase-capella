@@ -211,4 +211,6 @@ var (
 	ErrLongIndexBuildTime = errors.New("index build is taking a very long time")
 
 	ErrMaxAttemptsExceeded = errors.New("all indexes are not in created state after 5 attempts")
+
+	ErrIndexBuildInProgress = errors.New("an index build is currently in progress")
 )
