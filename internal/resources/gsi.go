@@ -182,42 +182,42 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 		}
 	}
 
-	if err := g.executeGsiDdl(ctx, &plan, ddl); err != nil {
-		switch err {
-		case nil:
-		case internalerrors.ErrIndexBuildInProgress:
-			resp.Diagnostics.AddError(
-				"Index build is currently in progress",
-				fmt.Sprintf(
-					`Could not build index %s in %s.%s.%s as there is another index build already in progress.
+	err := g.executeGsiDdl(ctx, &plan, ddl)
+	switch err {
+	case nil:
+	case internalerrors.ErrIndexBuildInProgress:
+		resp.Diagnostics.AddError(
+			"Index build is currently in progress",
+			fmt.Sprintf(
+				`Could not build index %s in %s.%s.%s as there is another index build already in progress.
 The index build will automatically be retried in the background.  Please run "terraform apply --refresh-only".
 
 It is recommended to use deferred builds.  Please see documentation for details.`,
-					plan.IndexName.ValueString(),
-					plan.BucketName.ValueString(),
-					plan.ScopeName.ValueString(),
-					plan.CollectionName.ValueString(),
-				),
-			)
+				plan.IndexName.ValueString(),
+				plan.BucketName.ValueString(),
+				plan.ScopeName.ValueString(),
+				plan.CollectionName.ValueString(),
+			),
+		)
 
-			// save to state file so that refresh can work.
-			// this is preferrable to import as there can be many indexes in this state.
-			resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+		// save to state file so that refresh can work.
+		// this is preferrable to import as there can be many indexes in this state.
+		resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 
-			return
+		return
 
-		default:
-			resp.Diagnostics.AddError(
-				"Failed to execute index DDL",
-				fmt.Sprintf(
-					"Could not execute index %s\nError: %s",
-					ddl,
-					err.Error(),
-				),
-			)
+	default:
+		resp.Diagnostics.AddError(
+			"Failed to execute index DDL",
+			fmt.Sprintf(
+				"Could not execute index %s\nError: %s",
+				ddl,
+				err.Error(),
+			),
+		)
 
-			return
-		}
+		return
+
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
