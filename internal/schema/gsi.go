@@ -106,11 +106,8 @@ type GsiBuildStatus struct {
 	// CollectionName is the collection for the index.
 	CollectionName types.String `tfsdk:"collection_name"`
 
-	// IndexName is the name of the index.
-	IndexName types.String `tfsdk:"index_name"`
-
-	// Status is the build status of the index.
-	Status types.String `tfsdk:"status"`
+	// Indexes are the list of indexes.
+	Indexes types.Set `tfsdk:"indexes"`
 }
 
 func (g *GsiDefinition) GetAttributeValues() (map[Attr]string, error) {

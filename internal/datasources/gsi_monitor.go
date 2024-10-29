@@ -3,18 +3,14 @@ package datasources
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	internalerrors "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/utils"
 )
@@ -71,8 +67,7 @@ func (g *GsiMonitor) Schema(
 			},
 			"scope_name":      optionalStringAttribute,
 			"collection_name": optionalStringAttribute,
-			"index_name":      requiredStringAttribute,
-			"status":          computedStringAttribute,
+			"indexes":         requiredStringSetAttribute,
 		},
 	}
 }
@@ -98,20 +93,14 @@ func (g *GsiMonitor) Read(ctx context.Context, req datasource.ReadRequest, resp 
 		collection = config.CollectionName.ValueString()
 	}
 
-	uri := fmt.Sprintf(
-		"%s/v4/organizations/%s/projects/%s/clusters/%s/queryService/indexBuildStatus/%s?bucket=%s&scope=%s&collection=%s",
-		g.HostURL,
-		config.OrganizationId.ValueString(),
-		config.ProjectId.ValueString(),
-		config.ClusterId.ValueString(),
-		url.QueryEscape(config.IndexName.ValueString()),
-		config.BucketName.ValueString(),
-		scope,
-		collection,
-	)
+	var indexes []string
+	diags := config.Indexes.ElementsAs(ctx, &indexes, false)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	cfg := api.EndpointCfg{Url: uri, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	monitor := func() (response *api.Response, err error) {
+	monitor := func(cfg api.EndpointCfg) (response *api.Response, err error) {
 		return g.Client.ExecuteWithRetry(
 			ctx,
 			cfg,
@@ -121,37 +110,27 @@ func (g *GsiMonitor) Read(ctx context.Context, req datasource.ReadRequest, resp 
 		)
 	}
 
-	err := utils.PollIndex(ctx, monitor)
+	err := utils.WatchIndexes(
+		"Ready", indexes, monitor, utils.WatchOptions{
+			g.HostURL,
+			config.OrganizationId.ValueString(),
+			config.ProjectId.ValueString(),
+			config.ClusterId.ValueString(),
+			config.BucketName.ValueString(),
+			scope,
+			collection,
+		},
+	)
 	switch err {
 	case nil:
-	case internalerrors.ErrLongIndexBuildTime:
-		resp.Diagnostics.AddWarning(
-			"Index build did not complete",
-			fmt.Sprintf(
-				"Index build for %s in %s.%s.%s did not complete",
-				config.IndexName.ValueString(),
-				config.BucketName.ValueString(),
-				scope,
-				collection,
-			),
-		)
-		return
 	default:
-		resp.Diagnostics.AddError(
-			"Error getting index build status",
-			fmt.Sprintf(
-				"Could not get index build status for %s in %s.%s.%s.  Error: %s",
-				config.IndexName.ValueString(),
-				config.BucketName.ValueString(),
-				scope,
-				collection,
-				err.Error(),
-			),
+		resp.Diagnostics.AddWarning(
+			"All provided indexes are not ready",
+			"All indexes have not completed building.  Please check the status on Capella.",
 		)
 		return
 	}
 
-	config.Status = types.StringValue("Ready")
 	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
