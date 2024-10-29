@@ -1,11 +1,10 @@
 package resources
 
 import (
-	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources/custom_plan_modifiers"
 )
@@ -30,32 +29,22 @@ func GsiSchema() schema.Schema {
 			"partition_by": stringListAttribute(optional, requiresReplace),
 			"with": schema.SingleNestedAttribute{
 				Optional: true,
-				Computed: true,
 				Attributes: map[string]schema.Attribute{
 					"defer_build": schema.BoolAttribute{
 						Optional:      true,
 						PlanModifiers: []planmodifier.Bool{custom_plan_modifiers.ImmutableBoolAttribute()},
 					},
-					"num_replica": int64Attribute(optional),
+					"num_replica": schema.Int64Attribute{
+						Optional: true,
+					},
 					"num_partition": schema.Int64Attribute{
-						Optional:      true,
+						Optional: true,
+						Validators: []validator.Int64{
+							int64validator.AtLeast(1),
+						},
 						PlanModifiers: []planmodifier.Int64{custom_plan_modifiers.ImmutableInt64Attribute()},
 					},
 				},
-				Default: objectdefault.StaticValue(
-					types.ObjectValueMust(
-						map[string]attr.Type{
-							"defer_build":   types.BoolType,
-							"num_replica":   types.Int64Type,
-							"num_partition": types.Int64Type,
-						},
-						map[string]attr.Value{
-							"defer_build":   types.BoolValue(false),
-							"num_replica":   types.Int64Value(0),
-							"num_partition": types.Int64Value(8),
-						},
-					),
-				),
 			},
 			"build_indexes": stringListAttribute(optional),
 		},

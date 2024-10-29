@@ -159,26 +159,37 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 				ddl += fmt.Sprintf(" WHERE %s ", plan.Where.ValueString())
 			}
 
-			if !plan.PartitionBy.IsNull() {
-				withClause := fmt.Sprintf(
-					" WITH { \"defer_build\": %t,  \"num_replica\": %d,  \"num_partition\": %d } ",
-					plan.With.DeferBuild.ValueBool(),
-					plan.With.NumReplica.ValueInt64(),
-					plan.With.NumPartition.ValueInt64(),
-				)
+			if plan.With != nil {
+				type with struct {
+					Defer_build   bool  `json:"defer_build,omitempty"`
+					Num_replica   int64 `json:"num_replica,omitempty"`
+					Num_partition int64 `json:"num_partition,omitempty"`
+				}
 
-				ddl += withClause
-			} else {
-				// should not set num_partition for non-partitioned index.
-				withClause := fmt.Sprintf(
-					" WITH { \"defer_build\": %t,  \"num_replica\": %d} ",
-					plan.With.DeferBuild.ValueBool(),
-					plan.With.NumReplica.ValueInt64(),
-				)
+				var w with
 
-				ddl += withClause
+				if !plan.With.DeferBuild.IsNull() {
+					w.Defer_build = plan.With.DeferBuild.ValueBool()
+				}
+				if !plan.With.NumReplica.IsNull() {
+					w.Num_replica = plan.With.NumReplica.ValueInt64()
+				}
+				if !plan.With.NumPartition.IsNull() {
+					w.Num_partition = plan.With.NumPartition.ValueInt64()
+				}
+
+				b, err := json.Marshal(w)
+				if err != nil {
+					resp.Diagnostics.AddError(
+						"Could not marshal with clause",
+						"Unable to marshal with clause.  Error: "+err.Error(),
+					)
+				}
+
+				if string(b) != "{}" {
+					ddl = ddl + " WITH " + string(b)
+				}
 			}
-
 		}
 	}
 
@@ -468,6 +479,17 @@ func (g *GSI) ValidateConfig(
 				"Expected index_keys to be configured but is null",
 			)
 			return
+		}
+
+		if config.PartitionBy.IsNull() {
+			if config.With != nil && !config.With.NumPartition.IsNull() {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("with"),
+					"Invalid Attribute Configuration",
+					"Cannot set num_partition for a non-partitioned index",
+				)
+				return
+			}
 		}
 
 	}
