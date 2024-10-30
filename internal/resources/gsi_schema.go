@@ -22,10 +22,10 @@ func GsiSchema() schema.Schema {
 			"collection_name": stringDefaultAttribute(
 				"_default", optional, computed, useStateForUnknown, requiresReplace,
 			),
-			"index_name":   stringAttribute([]string{optional, useStateForUnknown, requiresReplace}),
+			"index_name":   stringAttribute([]string{optional, requiresReplace}),
 			"is_primary":   boolAttribute(optional),
 			"index_keys":   stringListAttribute(optional, requiresReplace),
-			"where":        stringAttribute([]string{optional, useStateForUnknown, requiresReplace}),
+			"where":        stringAttribute([]string{optional, requiresReplace}),
 			"partition_by": stringListAttribute(optional, requiresReplace),
 			"with": schema.SingleNestedAttribute{
 				Optional: true,
