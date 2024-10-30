@@ -46,7 +46,7 @@ func GsiSchema() schema.Schema {
 					},
 				},
 			},
-			"build_indexes": stringListAttribute(optional),
+			"build_indexes": stringSetAttribute(optional),
 		},
 	}
 }

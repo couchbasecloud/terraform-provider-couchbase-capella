@@ -42,7 +42,7 @@ type GsiDefinition struct {
 	// With represents the WITH clause of an index.
 	With *WithOptions `tfsdk:"with"`
 
-	BuildIndexes types.List `tfsdk:"build_indexes"`
+	BuildIndexes types.Set `tfsdk:"build_indexes"`
 }
 
 // WithOptions represents the attributes of the WITH clause.
