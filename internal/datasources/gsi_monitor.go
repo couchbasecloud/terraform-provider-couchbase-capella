@@ -12,7 +12,6 @@ import (
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/utils"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -110,8 +109,11 @@ func (g *GsiMonitor) Read(ctx context.Context, req datasource.ReadRequest, resp 
 		)
 	}
 
-	err := utils.WatchIndexes(
-		"Ready", indexes, monitor, utils.WatchOptions{
+	err := api.WatchIndexes(
+		ctx,
+		indexes,
+		monitor,
+		api.Options{
 			g.HostURL,
 			config.OrganizationId.ValueString(),
 			config.ProjectId.ValueString(),

@@ -19,7 +19,6 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	internalerrors "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/utils"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -86,10 +85,10 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 			)
 		}
 
-		// must ensure all indexes are in created state
-		// before executing build statement
-		err := utils.WatchIndexes(
-			"Created", indexes, monitor, utils.WatchOptions{
+		err := api.EnsureIndexesAreCreated(
+			indexes,
+			monitor,
+			api.Options{
 				g.HostURL,
 				plan.OrganizationId.ValueString(),
 				plan.ProjectId.ValueString(),
