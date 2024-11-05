@@ -2,7 +2,7 @@
 
 This example shows how to create secondary indexes on a Capella cluster.
 
-This creates 5 indexes in test.test.test
+This creates 5 non-deferred indexes in test.test.test.  Non-deferred indexes are best suited when creating small indexes.
 
 To run configure your Couchbase Capella provider as described in README in the root of this project.
 
