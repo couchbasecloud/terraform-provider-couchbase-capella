@@ -108,7 +108,11 @@ func WatchIndexes(
 				cfg := EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 				response, err := exec(cfg)
 				if err != nil {
-					break
+					// exponential backoff upto a max of 20 min.
+					d := min(maxDuration, 1<<attempt)
+					timer.Reset(time.Duration(d) * time.Minute)
+					attempt++
+					continue
 				}
 
 				status := IndexBuildStatusResponse{}
@@ -117,13 +121,18 @@ func WatchIndexes(
 				}
 
 				if status.Status != "Ready" {
-					break
+					// exponential backoff upto a max of 20 min.
+					d := min(maxDuration, 1<<attempt)
+					timer.Reset(time.Duration(d) * time.Minute)
+					attempt++
+					continue
 				}
+
+				i++
 			}
 
-			// exponential backoff upto a max of 20 min.
-			d := min(maxDuration, 1<<attempt)
-			timer.Reset(time.Duration(d) * time.Minute)
+			// all indexes are ready
+			return nil
 		}
 	}
 }
