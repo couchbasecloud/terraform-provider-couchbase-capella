@@ -350,38 +350,6 @@ Terraform will perform the following actions:
 
 Plan: 0 to add, 0 to change, 5 to destroy.
 
-Changes to Outputs:
-  + list_indexes = {
-      + bucket_name     = "test"
-      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
-      + collection_name = "test"
-      + data            = [
-          + {
-              + definition = "CREATE INDEX `idx1` ON `test`.`test`.`test`(`field1`)"
-              + index_name = "idx1"
-            },
-          + {
-              + definition = "CREATE INDEX `idx2` ON `test`.`test`.`test`(`field2`)"
-              + index_name = "idx2"
-            },
-          + {
-              + definition = "CREATE INDEX `idx3` ON `test`.`test`.`test`(`field3`)"
-              + index_name = "idx3"
-            },
-          + {
-              + definition = "CREATE INDEX `idx4` ON `test`.`test`.`test`(`field5`)"
-              + index_name = "idx4"
-            },
-          + {
-              + definition = "CREATE INDEX `idx5` ON `test`.`test`.`test`(`field5`)"
-              + index_name = "idx5"
-            },
-        ]
-      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
-      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
-      + scope_name      = "test"
-    }
-
 Do you want to perform these actions?
   Terraform will perform the actions described above.
   Only 'yes' will be accepted to approve.
@@ -401,37 +369,7 @@ couchbase-capella_query_indexes.new_indexes["idx4"]: Destruction complete after 
 
 Apply complete! Resources: 0 added, 0 changed, 5 destroyed.
 
-Outputs:
 
-list_indexes = {
-  "bucket_name" = "test"
-  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
-  "collection_name" = "test"
-  "data" = toset([
-    {
-      "definition" = "CREATE INDEX `idx1` ON `test`.`test`.`test`(`field1`)"
-      "index_name" = "idx1"
-    },
-    {
-      "definition" = "CREATE INDEX `idx2` ON `test`.`test`.`test`(`field2`)"
-      "index_name" = "idx2"
-    },
-    {
-      "definition" = "CREATE INDEX `idx3` ON `test`.`test`.`test`(`field3`)"
-      "index_name" = "idx3"
-    },
-    {
-      "definition" = "CREATE INDEX `idx4` ON `test`.`test`.`test`(`field5`)"
-      "index_name" = "idx4"
-    },
-    {
-      "definition" = "CREATE INDEX `idx5` ON `test`.`test`.`test`(`field5`)"
-      "index_name" = "idx5"
-    },
-  ])
-  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
-  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
-  "scope_name" = "test"
 }
 ```
 
