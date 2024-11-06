@@ -399,10 +399,6 @@ func (g *GSI) Delete(ctx context.Context, req resource.DeleteRequest, resp *reso
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 }
 
 func (g *GSI) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
