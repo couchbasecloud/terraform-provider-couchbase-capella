@@ -327,21 +327,21 @@ type Clusters struct {
 
 // ClusterData defines attributes for a single cluster when fetched from the V4 Capella Public API.
 type ClusterData struct {
-	Availability     *Availability    `tfsdk:"availability"`
-	Support          *Support         `tfsdk:"support"`
-	CouchbaseServer  *CouchbaseServer `tfsdk:"couchbase_server"`
-	CloudProvider    *CloudProvider   `tfsdk:"cloud_provider"`
-	OrganizationId   types.String     `tfsdk:"organization_id"`
-	ProjectId        types.String     `tfsdk:"project_id"`
-	Id               types.String     `tfsdk:"id"`
-	Audit            types.Object     `tfsdk:"audit"`
-	Description      types.String     `tfsdk:"description"`
+	Availability               *Availability    `tfsdk:"availability"`
+	Support                    *Support         `tfsdk:"support"`
+	CouchbaseServer            *CouchbaseServer `tfsdk:"couchbase_server"`
+	CloudProvider              *CloudProvider   `tfsdk:"cloud_provider"`
+	OrganizationId             types.String     `tfsdk:"organization_id"`
+	ProjectId                  types.String     `tfsdk:"project_id"`
+	Id                         types.String     `tfsdk:"id"`
+	Audit                      types.Object     `tfsdk:"audit"`
+	Description                types.String     `tfsdk:"description"`
 	EnablePrivateDNSResolution types.Bool       `tfsdk:"enable_private_dns_resolution"`
-	Name             types.String     `tfsdk:"name"`
-	AppServiceId     types.String     `tfsdk:"app_service_id"`
-	ConnectionString types.String     `tfsdk:"connection_string"`
-	CurrentState     types.String     `tfsdk:"current_state"`
-	ServiceGroups    []ServiceGroup   `tfsdk:"service_groups"`
+	Name                       types.String     `tfsdk:"name"`
+	AppServiceId               types.String     `tfsdk:"app_service_id"`
+	ConnectionString           types.String     `tfsdk:"connection_string"`
+	CurrentState               types.String     `tfsdk:"current_state"`
+	ServiceGroups              []ServiceGroup   `tfsdk:"service_groups"`
 }
 
 // NewClusterData creates a new cluster data object.
