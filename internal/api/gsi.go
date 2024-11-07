@@ -36,7 +36,7 @@ type IndexDefinitionResponse struct {
 	Collection   string   `json:"collection"`
 	IsPrimary    bool     `json:"is_primary"`
 	IndexName    string   `json:"indexName"`
-	SecExprs     []string `json:"secExprs"`
+	SecExprs     []string `json:"secExprs"` // these are index keys
 	PartitionBy  string   `json:"partition_by"`
 	Where        string   `json:"where"`
 	NumReplica   int      `json:"numReplica"`

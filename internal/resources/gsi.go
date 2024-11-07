@@ -243,6 +243,7 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 		return
 	}
 
+	// when building deferred indexes, there is nothing to read so noop.
 	if !state.BuildIndexes.IsNull() {
 		return
 	}
@@ -372,6 +373,7 @@ func (g *GSI) Delete(ctx context.Context, req resource.DeleteRequest, resp *reso
 		return
 	}
 
+	// when a resource is used for deferred indexes, just remove it from state file.
 	if !state.BuildIndexes.IsNull() {
 		return
 	}
