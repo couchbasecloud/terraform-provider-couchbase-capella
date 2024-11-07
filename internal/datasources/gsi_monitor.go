@@ -114,13 +114,13 @@ func (g *GsiMonitor) Read(ctx context.Context, req datasource.ReadRequest, resp 
 		indexes,
 		monitor,
 		api.Options{
-			g.HostURL,
-			config.OrganizationId.ValueString(),
-			config.ProjectId.ValueString(),
-			config.ClusterId.ValueString(),
-			config.BucketName.ValueString(),
-			scope,
-			collection,
+			Host:       g.HostURL,
+			OrgId:      config.OrganizationId.ValueString(),
+			ProjectId:  config.ProjectId.ValueString(),
+			ClusterId:  config.ClusterId.ValueString(),
+			Bucket:     config.BucketName.ValueString(),
+			Scope:      scope,
+			Collection: collection,
 		},
 	)
 	switch err {

@@ -89,20 +89,20 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 			indexes,
 			monitor,
 			api.Options{
-				g.HostURL,
-				plan.OrganizationId.ValueString(),
-				plan.ProjectId.ValueString(),
-				plan.ClusterId.ValueString(),
-				plan.BucketName.ValueString(),
-				plan.ScopeName.ValueString(),
-				plan.CollectionName.ValueString(),
+				Host:       g.HostURL,
+				OrgId:      plan.OrganizationId.ValueString(),
+				ProjectId:  plan.ProjectId.ValueString(),
+				ClusterId:  plan.ClusterId.ValueString(),
+				Bucket:     plan.BucketName.ValueString(),
+				Scope:      plan.ScopeName.ValueString(),
+				Collection: plan.CollectionName.ValueString(),
 			},
 		)
 
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Watch Indexes Failed",
-				fmt.Sprintf("Error: ", err.Error()),
+				fmt.Sprintln("Error: ", err.Error()),
 			)
 
 			return
