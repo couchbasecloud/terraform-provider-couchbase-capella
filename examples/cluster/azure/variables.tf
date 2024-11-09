@@ -45,7 +45,7 @@ variable "disk" {
   description = "All nodes' disk configuration"
 
   type = object({
-    storage          = optional(number)
+    storage       = optional(number)
     type          = string
     iops          = optional(number)
     autoexpansion = optional(bool)
