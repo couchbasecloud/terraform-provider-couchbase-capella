@@ -263,7 +263,7 @@ func TestAccClusterResourceAzure(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.2", "query"),
 					resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
 					resource.TestCheckResourceAttr(resourceReference, "support.plan", "developer pro"),
-					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
+					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "GMT"),
 					resource.TestCheckResourceAttr(resourceReference, "enable_private_dns_resolution", "false"),
 				),
 			},
@@ -276,7 +276,7 @@ func TestAccClusterResourceAzure(t *testing.T) {
 			},
 
 			{
-				Config: testAccClusterResourceConfigAzureUpdateToDiskTypeP6(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
+				Config: testAccClusterResourceConfigAzureUpdateTimezone(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsClusterResource(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", "Terraform Acceptance Test Cluster"),
@@ -1020,7 +1020,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
   }
   support = {
     plan     = "developer pro"
-    timezone = "PT"
+    timezone = "GMT"
   }
 }
 `, cfg, resourceName, projectResourceName, projectResourceReference, cidr)
@@ -1076,7 +1076,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
 
 // testAccClusterResourceConfigAzureUpdateToDiskTypeP6 generates a Terraform configuration string for testing an acceptance test scenario
 // where a cluster resource is updated to change the disk type to "P6".
-func testAccClusterResourceConfigAzureUpdateToDiskTypeP6(cfg, resourceName, projectResourceName, projectResourceReference, cidr string) string {
+func testAccClusterResourceConfigAzureUpdateTimezone(cfg, resourceName, projectResourceName, projectResourceReference, cidr string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -1105,7 +1105,9 @@ resource "couchbase-capella_cluster" "%[2]s" {
           ram = 32
         }
         disk = {
-          type    = "P6"
+          storage = 1024,
+          type    = "Ultra"
+          iops    = 17000
         }
       }
       num_of_nodes = 3
