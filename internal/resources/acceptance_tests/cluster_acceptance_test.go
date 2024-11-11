@@ -338,7 +338,7 @@ func TestAccClusterResourceAzure(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "1024"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "Ultra"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.iops", "2000"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.iops", "17000"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "3"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "1"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "data"),
@@ -1211,7 +1211,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
         disk = {
           storage = 1024,
           type    = "Ultra"
-          iops    = 2000
+          iops    = 17000
         }
       }
       num_of_nodes = 3
