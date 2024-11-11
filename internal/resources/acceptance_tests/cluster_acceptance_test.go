@@ -253,9 +253,8 @@ func TestAccClusterResourceAzure(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "1024"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "Ultra"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.iops", "17000"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "P6"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.iops", "240"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "3"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "3"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "data"),
@@ -286,9 +285,9 @@ func TestAccClusterResourceAzure(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "32"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "64"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "P6"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.iops", "240"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "1024"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "Ultra"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.iops", "17000"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "3"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "3"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "data"),
@@ -1006,9 +1005,9 @@ resource "couchbase-capella_cluster" "%[2]s" {
           ram = 16
         }
         disk = {
-          storage = 1024,
-          type    = "Ultra"
-          iops    = 17000
+          type    = "P6"
+          autoexpansion = true
+
         }
       }
       num_of_nodes = 3
