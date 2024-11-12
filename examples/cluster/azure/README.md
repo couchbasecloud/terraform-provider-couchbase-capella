@@ -1,3 +1,10 @@
+# Important notes:
+
+1. Please rename the terraform.premium.tfvars and terraform.ultra.tfvars files to `terraform.template.tfvars` to use the configurations for Premium and Ultra type disks respectively.
+
+2. Then please check the `terraform.template.tfvars` file - Make sure you copy the file to `terraform.tfvars` and update the values of the variables as per the correct organization access.
+
+# TODO: add examples for Premium and Ultra type disks
 # Azure Cluster Example
 
 This example shows how to create a Cluster on Azure, with autoexpansion enabled.
