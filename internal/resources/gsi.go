@@ -8,6 +8,9 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
+
+	"golang.org/x/time/rate"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -28,6 +31,11 @@ var (
 	_ resource.ResourceWithImportState    = (*GSI)(nil)
 	_ resource.ResourceWithValidateConfig = (*GSI)(nil)
 )
+
+// rate limit create index requests to 60 req/min
+// higher rates will (suprisingly) cause indexer to choke
+// do not remove this
+var limiter = rate.NewLimiter(rate.Every(1*time.Second), 1)
 
 // GSI is the GSI resource implementation.
 type GSI struct {
@@ -50,6 +58,12 @@ func (g *GSI) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource
 
 // Create will create/drop/build/alter a primary or secondary index.
 func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+
+	if err := limiter.Wait(ctx); err != nil {
+		// do not block if rate limiter fails
+		tflog.Error(ctx, "rate limiter error: "+err.Error())
+	}
+
 	var plan providerschema.GsiDefinition
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -425,7 +439,6 @@ func (g *GSI) Configure(_ context.Context, req resource.ConfigureRequest, resp *
 
 		return
 	}
-
 	g.Data = data
 }
 
