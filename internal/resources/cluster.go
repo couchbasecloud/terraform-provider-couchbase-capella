@@ -213,7 +213,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 
 		// This is for the case when for Azure clusters - Premium disk types, if the user provides the storage and iops values (these values are ignored), then put the value provided in state file,
 		// as otherwise there will be a type mismatch with the actual value - i.e. the default values for premium disks.
-		if refreshedState.CloudProvider.Type == types.StringValue("Azure") {
+		if refreshedState.CloudProvider.Type.ValueString() == string(clusterapi.Azure) {
 			if refreshedState.ServiceGroups[i].Node.Disk.Type != types.StringValue("Ultra") {
 				refreshedState.ServiceGroups[i].Node.Disk.Storage = plan.ServiceGroups[i].Node.Disk.Storage
 				refreshedState.ServiceGroups[i].Node.Disk.IOPS = plan.ServiceGroups[i].Node.Disk.IOPS
@@ -436,7 +436,7 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 
 		// for Azure clusters - Premium disk types, if the user provides the storage and iops values (these values are ignored), then put the value provided in state file,
 		// as otherwise there will be a type mismatch with the actual value - i.e. the default values for premium disks.
-		if currentState.CloudProvider.Type == types.StringValue("Azure") {
+		if currentState.CloudProvider.Type.ValueString() == string(clusterapi.Azure) {
 			if currentState.ServiceGroups[i].Node.Disk.Type != types.StringValue("Ultra") {
 				currentState.ServiceGroups[i].Node.Disk.Storage = plan.ServiceGroups[i].Node.Disk.Storage
 				currentState.ServiceGroups[i].Node.Disk.IOPS = plan.ServiceGroups[i].Node.Disk.IOPS
@@ -696,14 +696,6 @@ func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]cluste
 			if err := node.FromDiskAzure(diskAzure); err != nil {
 				return nil, fmt.Errorf("%s: %w", errors.ErrConvertingServiceGroups, err)
 			}
-
-			//fmt.Printf("************************PAULOMEE Create/Update DISKAzure  %#v \n", diskAzure)
-			//b, _ := json.Marshal(diskAzure)
-			//fmt.Print(string(b))
-			//
-			//fmt.Printf("************************PAULOMEE Create/Update node  %#v \n", node)
-			//b, _ = json.Marshal(node)
-			//fmt.Print(string(b))
 
 			newServiceGroup.Node.Disk = node.Disk
 
