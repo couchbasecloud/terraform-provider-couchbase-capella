@@ -210,16 +210,6 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		if clusterapi.AreEqual(plan.ServiceGroups[i].Services, serviceGroup.Services) {
 			refreshedState.ServiceGroups[i].Services = plan.ServiceGroups[i].Services
 		}
-
-		// This is for the case when for Azure clusters - Premium disk types, if the user provides the storage and iops values (these values are ignored), then put the value provided in state file,
-		// as otherwise there will be a type mismatch with the actual value - i.e. the default values for premium disks.
-		if refreshedState.CloudProvider.Type.ValueString() == string(clusterapi.Azure) {
-			if refreshedState.ServiceGroups[i].Node.Disk.Type != types.StringValue("Ultra") {
-				refreshedState.ServiceGroups[i].Node.Disk.Storage = plan.ServiceGroups[i].Node.Disk.Storage
-				refreshedState.ServiceGroups[i].Node.Disk.IOPS = plan.ServiceGroups[i].Node.Disk.IOPS
-			}
-		}
-
 	}
 
 	// Set state to fully populated data
@@ -433,16 +423,6 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		if clusterapi.AreEqual(plan.ServiceGroups[i].Services, serviceGroup.Services) {
 			currentState.ServiceGroups[i].Services = plan.ServiceGroups[i].Services
 		}
-
-		// for Azure clusters - Premium disk types, if the user provides the storage and iops values (these values are ignored), then put the value provided in state file,
-		// as otherwise there will be a type mismatch with the actual value - i.e. the default values for premium disks.
-		if currentState.CloudProvider.Type.ValueString() == string(clusterapi.Azure) {
-			if currentState.ServiceGroups[i].Node.Disk.Type != types.StringValue("Ultra") {
-				currentState.ServiceGroups[i].Node.Disk.Storage = plan.ServiceGroups[i].Node.Disk.Storage
-				currentState.ServiceGroups[i].Node.Disk.IOPS = plan.ServiceGroups[i].Node.Disk.IOPS
-			}
-		}
-
 	}
 
 	// Set state to fully populated data
@@ -675,17 +655,14 @@ func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]cluste
 				Type: clusterapi.DiskAzureType(serviceGroup.Node.Disk.Type.ValueString()),
 			}
 
-			// only allow setting storage and iops values for Ultra type disks, not for Premium type disks
-			if diskAzure.Type == "Ultra" {
-				if serviceGroup.Node != nil && !serviceGroup.Node.Disk.Storage.IsNull() && !serviceGroup.Node.Disk.Storage.IsUnknown() {
-					storage := int(serviceGroup.Node.Disk.Storage.ValueInt64())
-					diskAzure.Storage = &storage
-				}
+			if serviceGroup.Node != nil && !serviceGroup.Node.Disk.Storage.IsNull() && !serviceGroup.Node.Disk.Storage.IsUnknown() {
+				storage := int(serviceGroup.Node.Disk.Storage.ValueInt64())
+				diskAzure.Storage = &storage
+			}
 
-				if serviceGroup.Node != nil && !serviceGroup.Node.Disk.IOPS.IsNull() && !serviceGroup.Node.Disk.Storage.IsUnknown() {
-					iops := int(serviceGroup.Node.Disk.IOPS.ValueInt64())
-					diskAzure.Iops = &iops
-				}
+			if serviceGroup.Node != nil && !serviceGroup.Node.Disk.IOPS.IsNull() && !serviceGroup.Node.Disk.Storage.IsUnknown() {
+				iops := int(serviceGroup.Node.Disk.IOPS.ValueInt64())
+				diskAzure.Iops = &iops
 			}
 
 			if serviceGroup.Node != nil && !serviceGroup.Node.Disk.Autoexpansion.IsNull() {
@@ -696,7 +673,6 @@ func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]cluste
 			if err := node.FromDiskAzure(diskAzure); err != nil {
 				return nil, fmt.Errorf("%s: %w", errors.ErrConvertingServiceGroups, err)
 			}
-
 			newServiceGroup.Node.Disk = node.Disk
 
 		case string(clusterapi.Gcp):
