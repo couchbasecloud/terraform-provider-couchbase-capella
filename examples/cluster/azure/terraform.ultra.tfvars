@@ -21,7 +21,7 @@ compute = {
 
 disk = {
   type          = "Ultra"
-  size       = 128
+  size          = 128
   iops          = 5000
   autoexpansion = true
 }
