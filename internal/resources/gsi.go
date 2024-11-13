@@ -56,7 +56,7 @@ func (g *GSI) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource
 	resp.Schema = GsiSchema()
 }
 
-// Create will create/drop/build/alter a primary or secondary index.
+// Create will send a request to create a primary or secondary index.
 func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 
 	if err := limiter.Wait(ctx); err != nil {
@@ -250,6 +250,7 @@ It is recommended to use deferred builds.  Please see documentation for details.
 	}
 }
 
+// Read will get index properties like index keys, number of replicas, etc.
 func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state providerschema.GsiDefinition
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -350,6 +351,7 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 	}
 }
 
+// Update will send a request to alter an index.
 func (g *GSI) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan providerschema.GsiDefinition
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -380,6 +382,7 @@ func (g *GSI) Update(ctx context.Context, req resource.UpdateRequest, resp *reso
 	}
 }
 
+// Delete will send a request to drop an index.
 func (g *GSI) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state providerschema.GsiDefinition
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -417,6 +420,7 @@ func (g *GSI) Delete(ctx context.Context, req resource.DeleteRequest, resp *reso
 
 }
 
+// Importstate is used to import an index on the data plane cluster.
 func (g *GSI) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("index_name"), req, resp)
 }
@@ -442,6 +446,11 @@ func (g *GSI) Configure(_ context.Context, req resource.ConfigureRequest, resp *
 	g.Data = data
 }
 
+// ValidateConfig is used to validate multiple attributes in a resource.
+//
+// a.	For primary indexes, index_keys, where and parition_by must be null.  index_name and with are optional.
+// b.	For secondary indexes, index_name and index_keys must be valued.  where, partition_by and with are optional.
+// c.	If build_indexes is provided, all of the other optional properties (except scope_name and collection_name) must be null.
 func (g *GSI) ValidateConfig(
 	ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse,
 ) {
