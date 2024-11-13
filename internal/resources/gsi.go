@@ -115,8 +115,8 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 
 		if err != nil {
 			resp.Diagnostics.AddError(
-				"Watch Indexes Failed",
-				fmt.Sprintln("Error: ", err.Error()),
+				"Ensure Indexes Are Created Failed",
+				fmt.Sprintln("Cannot do build index as indexes are not in created state.  Error: ", err.Error()),
 			)
 
 			return

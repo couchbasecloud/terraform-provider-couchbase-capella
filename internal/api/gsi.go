@@ -141,7 +141,7 @@ func EnsureIndexesAreCreated(
 	indexes []string, exec func(cfg EndpointCfg) (response *Response, err error),
 	options Options,
 ) error {
-	const maxAttempts = 5
+	const maxAttempts = 10
 	attempts := 0
 
 	for i := 0; i < len(indexes); {
