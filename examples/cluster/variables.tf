@@ -29,6 +29,7 @@ variable "cluster" {
     node_count         = number
     couchbase_services = list(string)
     availability_zone  = string
+    zones = list(string)
   })
 }
 
