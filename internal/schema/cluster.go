@@ -235,7 +235,7 @@ func NewCluster(ctx context.Context, cluster *clusterapi.GetClusterResponse, org
 	}
 	newCluster.ServiceGroups = newServiceGroups
 
-	var zones []types.String
+	var zones []basetypes.StringValue
 	for _, zone := range cluster.Zones {
 		zones = append(zones, types.StringValue(zone))
 	}

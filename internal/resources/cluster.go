@@ -8,6 +8,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
@@ -107,6 +109,16 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 
 	if !plan.EnablePrivateDNSResolution.IsNull() && !plan.EnablePrivateDNSResolution.IsUnknown() {
 		clusterRequest.EnablePrivateDNSResolution = plan.EnablePrivateDNSResolution.ValueBoolPointer()
+	}
+
+	if len(plan.Zones) > 0 {
+		var validZones []basetypes.StringValue
+		for _, zone := range plan.Zones {
+			if !zone.IsNull() && !zone.IsUnknown() {
+				validZones = append(validZones, zone)
+			}
+		}
+		clusterRequest.Zones = c.convertZones(validZones)
 	}
 
 	var couchbaseServer providerschema.CouchbaseServer
@@ -814,6 +826,12 @@ func initializePendingClusterWithPlanAndId(plan providerschema.Cluster, id strin
 		plan.EnablePrivateDNSResolution = types.BoolNull()
 	}
 
+	for _, zone := range plan.Zones {
+		if zone.IsNull() || zone.IsUnknown() {
+			zone = types.StringNull()
+		}
+	}
+
 	if plan.CouchbaseServer.IsNull() || plan.CouchbaseServer.IsUnknown() {
 		plan.CouchbaseServer = types.ObjectNull(providerschema.CouchbaseServer{}.AttributeTypes())
 	}
@@ -834,4 +852,12 @@ func initializePendingClusterWithPlanAndId(plan providerschema.Cluster, id strin
 		}
 	}
 	return plan
+}
+
+func (c *Cluster) convertZones(zones []basetypes.StringValue) []string {
+	var convertedZones []string
+	for _, zone := range zones {
+		convertedZones = append(convertedZones, zone.ValueString())
+	}
+	return convertedZones
 }
