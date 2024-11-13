@@ -1,6 +1,6 @@
 # Important notes:
 
-1. Please rename the terraform.premium.tfvars and terraform.ultra.tfvars files to `terraform.template.tfvars` to use the configurations for Premium and Ultra type disks respectively.
+1. Please rename the `terraform.premium.tfvars` and `terraform.ultra.tfvars` files to `terraform.template.tfvars` to use the configurations for Premium and Ultra type disks respectively.
 
 2. To run `terraform apply` directly - please check the `terraform.template.tfvars` file, make sure you copy the file to `terraform.tfvars` and update the values of the variables as per the correct organization access.
 
