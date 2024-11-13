@@ -32,9 +32,9 @@ var (
 	_ resource.ResourceWithValidateConfig = (*GSI)(nil)
 )
 
-// rate limit create index requests to 60 req/min
-// higher rates will (suprisingly) cause indexer to choke
-// do not remove this
+// rate limit create index requests to 60 req/min.
+// higher rates will (surprisingly) cause indexer to choke
+// do not remove this.
 var limiter = rate.NewLimiter(rate.Every(1*time.Second), 1)
 
 // GSI is the GSI resource implementation.
