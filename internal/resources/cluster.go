@@ -126,6 +126,18 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		clusterRequest.ConfigurationType = clusterapi.ConfigurationType(plan.ConfigurationType.ValueString())
 	}
 
+	//check disk values provided for Azure
+	if plan.CloudProvider.Type.ValueString() == string(clusterapi.Azure) {
+		err := c.checkDisk(plan)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error creating cluster",
+				"Could not create cluster, unexpected error: "+err.Error(),
+			)
+			return
+		}
+	}
+
 	serviceGroups, err := c.morphToApiServiceGroups(plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -352,6 +364,18 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 			resp.Diagnostics.AddError(
 				"Error creating cluster",
 				"Could not update cluster, unexpected error: Invalid timezone provided for basic cluster",
+			)
+			return
+		}
+	}
+
+	//check disk values provided for Azure
+	if plan.CloudProvider.Type.ValueString() == string(clusterapi.Azure) {
+		err := c.checkDisk(plan)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error creating cluster",
+				"Could not create cluster, unexpected error: "+err.Error(),
 			)
 			return
 		}
@@ -834,4 +858,17 @@ func initializePendingClusterWithPlanAndId(plan providerschema.Cluster, id strin
 		}
 	}
 	return plan
+}
+
+func (c *Cluster) checkDisk(plan providerschema.Cluster) error {
+	for _, serviceGroup := range plan.ServiceGroups {
+		// Check if Disk.Type is not "Ultra" but either Storage or IOPS is non-null
+		if serviceGroup.Node.Disk.Type.ValueString() != "Ultra" &&
+			(serviceGroup.Node.Disk.Storage != types.Int64Null() ||
+				serviceGroup.Node.Disk.IOPS != types.Int64Null()) {
+
+			return fmt.Errorf("invalid configuration: Storage and IOPS cannot be specified when Disk.Type is Premium.")
+		}
+	}
+	return nil
 }
