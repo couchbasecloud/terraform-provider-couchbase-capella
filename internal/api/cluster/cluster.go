@@ -68,7 +68,7 @@ type CreateClusterRequest struct {
 	EnablePrivateDNSResolution *bool `json:"enablePrivateDNSResolution,omitempty"`
 
 	// Zones is the cloud services provider availability zones for the cluster. Currently Supported only for single AZ clusters so only 1 zone is allowed in list.
-	Zones []string `json:"zones"`
+	Zones *[]string `json:"zones"`
 }
 
 // CreateClusterResponse is the response received from the Capella V4 Public API when asked to create a new cluster.

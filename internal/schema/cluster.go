@@ -146,7 +146,7 @@ type Cluster struct {
 	EnablePrivateDNSResolution types.Bool `tfsdk:"enable_private_dns_resolution"`
 
 	// Zones is the cloud services provider availability zones for the cluster. Currently Supported only for single AZ clusters so only 1 zone is allowed in list.
-	Zones []types.String `tfsdk:"zones"`
+	Zones types.Set `tfsdk:"zones"`
 
 	// Name of the cluster (up to 256 characters).
 	Name types.String `tfsdk:"name"`
@@ -235,13 +235,28 @@ func NewCluster(ctx context.Context, cluster *clusterapi.GetClusterResponse, org
 	}
 	newCluster.ServiceGroups = newServiceGroups
 
-	var zones []basetypes.StringValue
-	for _, zone := range cluster.Zones {
-		zones = append(zones, types.StringValue(zone))
+	newZones, err := MorphZones(cluster.Zones)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", errors.ErrConvertingZone, err)
 	}
-	newCluster.Zones = zones
+
+	newCluster.Zones = newZones
 
 	return &newCluster, nil
+}
+
+func MorphZones(zones []string) (basetypes.SetValue, error) {
+	var newZone []attr.Value
+	for _, zone := range zones {
+		newZone = append(newZone, types.StringValue(zone))
+	}
+
+	newZones, diags := types.SetValue(types.StringType, newZone)
+	if diags.HasError() {
+		return types.SetUnknown(types.StringType), fmt.Errorf("error while converting zones")
+	}
+
+	return newZones, nil
 }
 
 func morphToTerraformServiceGroups(cluster *clusterapi.GetClusterResponse) ([]ServiceGroup, error) {
@@ -347,7 +362,7 @@ type ClusterData struct {
 	Audit                      types.Object     `tfsdk:"audit"`
 	Description                types.String     `tfsdk:"description"`
 	EnablePrivateDNSResolution types.Bool       `tfsdk:"enable_private_dns_resolution"`
-	Zones                      []types.String   `tfsdk:"zones"`
+	Zones                      types.List       `tfsdk:"zones"`
 	Name                       types.String     `tfsdk:"name"`
 	AppServiceId               types.String     `tfsdk:"app_service_id"`
 	ConnectionString           types.String     `tfsdk:"connection_string"`
@@ -394,10 +409,16 @@ func NewClusterData(cluster *clusterapi.GetClusterResponse, organizationId, proj
 	}
 	newClusterData.ServiceGroups = newServiceGroups
 
-	var zones []types.String
+	var newZone []attr.Value
 	for _, zone := range cluster.Zones {
-		zones = append(zones, types.StringValue(zone))
+		newZone = append(newZone, types.StringValue(zone))
 	}
+
+	zones, diags := types.ListValue(types.StringType, newZone)
+	if diags.HasError() {
+		return &ClusterData{}, fmt.Errorf("error while converting zones")
+	}
+
 	newClusterData.Zones = zones
 
 	return &newClusterData, nil

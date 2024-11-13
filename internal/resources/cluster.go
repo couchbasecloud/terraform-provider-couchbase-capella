@@ -8,8 +8,6 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
@@ -111,14 +109,16 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		clusterRequest.EnablePrivateDNSResolution = plan.EnablePrivateDNSResolution.ValueBoolPointer()
 	}
 
-	if len(plan.Zones) > 0 {
-		var validZones []basetypes.StringValue
-		for _, zone := range plan.Zones {
-			if !zone.IsNull() && !zone.IsUnknown() {
-				validZones = append(validZones, zone)
-			}
+	if !plan.Zones.IsNull() && !plan.Zones.IsUnknown() {
+		convertedZone, err := c.convertZones(ctx, plan.Zones)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error creating Cluster",
+				"Could not create Cluster, unexpected error:"+err.Error(),
+			)
+			return
 		}
-		clusterRequest.Zones = c.convertZones(validZones)
+		clusterRequest.Zones = &convertedZone
 	}
 
 	var couchbaseServer providerschema.CouchbaseServer
@@ -826,12 +826,6 @@ func initializePendingClusterWithPlanAndId(plan providerschema.Cluster, id strin
 		plan.EnablePrivateDNSResolution = types.BoolNull()
 	}
 
-	for _, zone := range plan.Zones {
-		if zone.IsNull() || zone.IsUnknown() {
-			zone = types.StringNull()
-		}
-	}
-
 	if plan.CouchbaseServer.IsNull() || plan.CouchbaseServer.IsUnknown() {
 		plan.CouchbaseServer = types.ObjectNull(providerschema.CouchbaseServer{}.AttributeTypes())
 	}
@@ -854,10 +848,17 @@ func initializePendingClusterWithPlanAndId(plan providerschema.Cluster, id strin
 	return plan
 }
 
-func (c *Cluster) convertZones(zones []basetypes.StringValue) []string {
+// convertZones is used to convert zones in types.List to array of string.
+func (c *Cluster) convertZones(ctx context.Context, zones types.Set) ([]string, error) {
+	elements := make([]types.String, 0, len(zones.Elements()))
+	diags := zones.ElementsAs(ctx, &elements, false)
+	if diags.HasError() {
+		return nil, fmt.Errorf("error while extracting zones elements")
+	}
+
 	var convertedZones []string
-	for _, zone := range zones {
+	for _, zone := range elements {
 		convertedZones = append(convertedZones, zone.ValueString())
 	}
-	return convertedZones
+	return convertedZones, nil
 }
