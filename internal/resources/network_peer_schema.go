@@ -54,6 +54,17 @@ func NetworkPeerSchema() schema.Schema {
 							"provider_id":     stringAttribute([]string{computed}),
 						},
 					},
+					"azure_config": schema.SingleNestedAttribute{
+						Optional: true,
+						Attributes: map[string]schema.Attribute{
+							"tenant_id":       stringAttribute([]string{optional}),
+							"cidr":            stringAttribute([]string{required}),
+							"resource_group":  stringAttribute([]string{optional}),
+							"subscription_id": stringAttribute([]string{optional}),
+							"vnet_id":         stringAttribute([]string{optional}),
+							"provider_id":     stringAttribute([]string{computed}),
+						},
+					},
 				},
 			},
 			"status": schema.SingleNestedAttribute{

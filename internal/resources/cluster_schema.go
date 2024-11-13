@@ -16,10 +16,11 @@ func ClusterSchema() schema.Schema {
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"organization_id": stringAttribute([]string{required, requiresReplace}),
-			"project_id":      stringAttribute([]string{required, requiresReplace}),
-			"name":            stringAttribute([]string{required}),
-			"description":     stringAttribute([]string{optional, computed}),
+			"organization_id":               stringAttribute([]string{required, requiresReplace}),
+			"project_id":                    stringAttribute([]string{required, requiresReplace}),
+			"name":                          stringAttribute([]string{required}),
+			"description":                   stringAttribute([]string{optional, computed}),
+			"enable_private_dns_resolution": boolDefaultAttribute(false, optional, computed, requiresReplace),
 			"cloud_provider": schema.SingleNestedAttribute{
 				Required: true,
 				Attributes: map[string]schema.Attribute{
@@ -31,6 +32,7 @@ func ClusterSchema() schema.Schema {
 					objectplanmodifier.RequiresReplace(),
 				},
 			},
+			"configuration_type": stringAttribute([]string{optional, computed, requiresReplace, useStateForUnknown, deprecated}),
 			"couchbase_server": schema.SingleNestedAttribute{
 				Optional: true,
 				Computed: true,

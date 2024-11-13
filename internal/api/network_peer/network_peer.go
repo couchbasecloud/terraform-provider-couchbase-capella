@@ -22,10 +22,10 @@ type CreateNetworkPeeringRequest struct {
 	// Name is the name of the peering relationship. -  The name of the peering relationship must be at least 2 characters long. -  The name can not exceed 128 characters.
 	Name string `json:"name"`
 
-	// ProviderConfig The config data for a peering relationship for a cluster on AWS, GCP.
+	// ProviderConfig The config data for a peering relationship for a cluster on AWS, GCP or Azure.
 	ProviderConfig json.RawMessage `json:"providerConfig"`
 
-	// ProviderType Type of the cloud provider for which the peering connection is created. Which are- 1. aws 2. gcp
+	// ProviderType Type of the cloud provider for which the peering connection is created. Which are- 1. aws 2. gcp 3. azure
 	ProviderType string `json:"providerType"`
 }
 
@@ -55,10 +55,10 @@ type GetNetworkPeeringRecordResponse struct {
 	// Name is the name of the peering relationship.
 	Name string `json:"name"`
 
-	// ProviderType Type of the cloud provider for which the peering connection is created. Which are- 1. aws 2. gcp
+	// ProviderType Type of the cloud provider for which the peering connection is created. Which are- 1. aws 2. gcp 3. azure
 	ProviderType string `json:"providerType"`
 
-	// ProviderConfig This provides details about the configuration and the ID of the VPC peer on AWS, GCP.
+	// ProviderConfig This provides details about the configuration and the ID of the VPC peer on AWS, GCP, or Azure.
 	ProviderConfig json.RawMessage `json:"providerConfig"`
 
 	// PeeringStatus communicates the state of the VPC peering relationship. It is the state and reasoning for VPC peer.
@@ -67,7 +67,7 @@ type GetNetworkPeeringRecordResponse struct {
 
 // AWS provides details about the configuration and the ID of the VPC peer on AWS.
 type AWS struct {
-	// ProviderId The ID of the VPC peer on GCP.
+	// ProviderId The ID of the VPC peer on AWS.
 	ProviderId string `json:"ProviderId"`
 	// AWSConfigData is the AWS config data required to establish a VPC peering relationship.
 	AWSConfigData AWSConfigData `json:"AWSConfig"`
@@ -79,6 +79,14 @@ type GCP struct {
 	ProviderId string `json:"ProviderId"`
 	// GCPConfigData GCP config data required to establish a VPC peering relationship.
 	GCPConfigData GCPConfigData `json:"GCPConfig"`
+}
+
+// Azure provides details about the configuration and the ID of the VNET peer on Azure.
+type Azure struct {
+	// ProviderId The ID of the VNET peer on Azure.
+	ProviderId string `json:"ProviderId"`
+	// AzureConfigData Azure config data required to establish a VNET peering relationship.
+	AzureConfigData AzureConfigData `json:"AzureConfig"`
 }
 
 // AWSConfigData is the AWS config data required to establish a VPC peering relationship.
@@ -118,6 +126,25 @@ type GCPConfigData struct {
 	ServiceAccount string `json:"serviceAccount"`
 }
 
+// AzureConfigData Azure config data required to establish a VNet peering relationship.
+// Refer to the docs for other limitations to Azure VNet Peering - [ref](https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-peering-overview#constraints-for-peered-virtual-networks)
+type AzureConfigData struct {
+	// AzureTenantId The tenant ID. To find your tenant ID, see [How to find your Azure Active Directory tenant ID](https://learn.microsoft.com/en-us/entra/fundamentals/how-to-find-tenant).
+	AzureTenantId string `json:"azureTenantId"`
+
+	// Cidr The CIDR block from the virtual network that you created in Azure.
+	Cidr string `json:"cidr"`
+
+	// ResourceGroup The resource group name holding the resource you’re connecting with Capella.
+	ResourceGroup string `json:"resourceGroup"`
+
+	// SubscriptionId The subscription ID. To find your subscription ID, see [Find your Azure subscription](https://learn.microsoft.com/en-us/azure/azure-portal/get-subscription-tenant-id#find-your-azure-subscription).
+	SubscriptionId string `json:"subscriptionId"`
+
+	// VnetId The VNet ID is the name of the virtual network peering in Azure.
+	VnetId string `json:"vnetId"`
+}
+
 // AsAWS returns the union data inside the GetNetworkPeeringRecordResponse as a AWS.
 func (t GetNetworkPeeringRecordResponse) AsAWS() (AWS, error) {
 	var body AWS
@@ -128,6 +155,13 @@ func (t GetNetworkPeeringRecordResponse) AsAWS() (AWS, error) {
 // AsGCP returns the union data inside the GetNetworkPeeringRecordResponse_ProviderConfig as a GCP.
 func (t GetNetworkPeeringRecordResponse) AsGCP() (GCP, error) {
 	var body GCP
+	err := json.Unmarshal(t.ProviderConfig, &body)
+	return body, err
+}
+
+// AsAZURE returns the union data inside the GetNetworkPeeringRecordResponse_ProviderConfig as a AZURE.
+func (t GetNetworkPeeringRecordResponse) AsAZURE() (Azure, error) {
+	var body Azure
 	err := json.Unmarshal(t.ProviderConfig, &body)
 	return body, err
 }

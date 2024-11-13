@@ -33,6 +33,7 @@ Read-Only:
 - `audit` (Attributes) (see [below for nested schema](#nestedatt--data--audit))
 - `availability` (Attributes) (see [below for nested schema](#nestedatt--data--availability))
 - `cloud_provider` (Attributes) (see [below for nested schema](#nestedatt--data--cloud_provider))
+- `connection_string` (String)
 - `couchbase_server` (Attributes) (see [below for nested schema](#nestedatt--data--couchbase_server))
 - `current_state` (String)
 - `description` (String)
