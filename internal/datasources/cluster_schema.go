@@ -19,6 +19,7 @@ func ClusterSchema() schema.Schema {
 						"name":                          computedStringAttribute,
 						"description":                   computedStringAttribute,
 						"enable_private_dns_resolution": computedBoolAttribute,
+						"zones":                         computedListAttribute,
 						"connection_string":             computedStringAttribute,
 						"cloud_provider": schema.SingleNestedAttribute{
 							Computed: true,
