@@ -41,7 +41,6 @@ output "mon_idx1" {
 }
 
 data "couchbase-capella_query_index_monitor" "mon" {
-  for_each        = toset(local.index_names)
   organization_id = var.organization_id
   project_id      = var.project_id
   cluster_id      = var.cluster_id
