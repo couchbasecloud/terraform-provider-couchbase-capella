@@ -232,9 +232,7 @@ var (
 
 	ErrAppServiceCreationStatusTimeout = errors.New("app service creation status transition timed out after initiation")
 
-	ErrLongIndexBuildTime = errors.New("index build is taking a very long time")
-
-	ErrMaxAttemptsExceeded = errors.New("all indexes are not in created state after 5 attempts")
+	ErrMonitorTimeout = errors.New("timed out while watching indexes")
 
 	ErrIndexBuildInProgress = errors.New("an index build is currently in progress")
 )

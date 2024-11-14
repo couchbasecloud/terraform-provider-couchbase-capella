@@ -59,7 +59,6 @@ type IndexBuildStatusResponse struct {
 }
 
 // TODO: get build status for all indexes in 1 API call
-// TODO: combine WatchIndexes and EnsureIndexesAreCreated
 
 type Options struct {
 	Host       string
@@ -72,7 +71,8 @@ type Options struct {
 }
 
 func WatchIndexes(
-	ctx context.Context, indexes []string, exec func(cfg EndpointCfg) (response *Response, err error),
+	ctx context.Context, desiredState string, indexes []string,
+	exec func(cfg EndpointCfg) (response *Response, err error),
 	options Options,
 ) error {
 
@@ -90,7 +90,7 @@ func WatchIndexes(
 	for {
 		select {
 		case <-ctx.Done():
-			return internalerrors.ErrLongIndexBuildTime
+			return internalerrors.ErrMonitorTimeout
 		case <-timer.C:
 			for i := 0; i < len(indexes); {
 				url := fmt.Sprintf(
@@ -107,6 +107,8 @@ func WatchIndexes(
 
 				cfg := EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 				response, err := exec(cfg)
+				// retry even on 404 because the index may not have been created yet.
+				// so wait and check again.
 				if err != nil {
 					// exponential backoff upto a max of 20 min.
 					d := min(maxDuration, 1<<attempt)
@@ -120,7 +122,7 @@ func WatchIndexes(
 					return err
 				}
 
-				if status.Status != "Ready" {
+				if status.Status != desiredState {
 					// exponential backoff upto a max of 20 min.
 					d := min(maxDuration, 1<<attempt)
 					timer.Reset(time.Duration(d) * time.Minute)
@@ -131,61 +133,8 @@ func WatchIndexes(
 				i++
 			}
 
-			// all indexes are ready
+			// all indexes are created/ready
 			return nil
 		}
 	}
-}
-
-func EnsureIndexesAreCreated(
-	indexes []string, exec func(cfg EndpointCfg) (response *Response, err error),
-	options Options,
-) error {
-	const maxAttempts = 10
-	attempts := 0
-
-	for i := 0; i < len(indexes); {
-		url := fmt.Sprintf(
-			"%s/v4/organizations/%s/projects/%s/clusters/%s/queryService/indexBuildStatus/%s?bucket=%s&scope=%s&collection=%s",
-			options.Host,
-			options.OrgId,
-			options.ProjectId,
-			options.ClusterId,
-			url.QueryEscape(indexes[i]),
-			options.Bucket,
-			options.Scope,
-			options.Collection,
-		)
-
-		cfg := EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-		response, err := exec(cfg)
-		// retry even on 404 because the index may not have been created yet
-		// so wait and check again
-		if err != nil {
-			attempts++
-			if attempts > maxAttempts {
-				return internalerrors.ErrMaxAttemptsExceeded
-			}
-			time.Sleep(10 * time.Second)
-			continue
-		}
-
-		status := IndexBuildStatusResponse{}
-		if err = json.Unmarshal(response.Body, &status); err != nil {
-			return err
-		}
-
-		if status.Status != "Created" {
-			attempts++
-			if attempts > maxAttempts {
-				return internalerrors.ErrMaxAttemptsExceeded
-			}
-			time.Sleep(10 * time.Second)
-			continue
-		}
-
-		i++
-	}
-
-	return nil
 }

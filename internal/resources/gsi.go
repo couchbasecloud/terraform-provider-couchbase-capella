@@ -99,7 +99,9 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 			)
 		}
 
-		err := api.EnsureIndexesAreCreated(
+		err := api.WatchIndexes(
+			ctx,
+			"Created",
 			indexes,
 			monitor,
 			api.Options{
@@ -116,7 +118,7 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Ensure Indexes Are Created Failed",
-				fmt.Sprintln("Cannot do build index as indexes are not in created state.  Error: ", err.Error()),
+				fmt.Sprintf("Cannot do build index as all indexes are not in created state.  Error: %v\n", err.Error()),
 			)
 
 			return

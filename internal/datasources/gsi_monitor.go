@@ -111,6 +111,7 @@ func (g *GsiMonitor) Read(ctx context.Context, req datasource.ReadRequest, resp 
 
 	err := api.WatchIndexes(
 		ctx,
+		"Ready",
 		indexes,
 		monitor,
 		api.Options{
@@ -126,7 +127,7 @@ func (g *GsiMonitor) Read(ctx context.Context, req datasource.ReadRequest, resp 
 	switch err {
 	case nil:
 	default:
-		resp.Diagnostics.AddWarning(
+		resp.Diagnostics.AddError(
 			"All provided indexes are not ready",
 			"All indexes have not completed building.  Please check the status on Capella.",
 		)
