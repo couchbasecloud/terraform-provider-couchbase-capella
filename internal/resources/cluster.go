@@ -826,6 +826,10 @@ func initializePendingClusterWithPlanAndId(plan providerschema.Cluster, id strin
 		plan.EnablePrivateDNSResolution = types.BoolNull()
 	}
 
+	if plan.Zones.IsNull() || plan.Zones.IsUnknown() {
+		plan.Zones = types.SetNull(types.StringType)
+	}
+
 	if plan.CouchbaseServer.IsNull() || plan.CouchbaseServer.IsUnknown() {
 		plan.CouchbaseServer = types.ObjectNull(providerschema.CouchbaseServer{}.AttributeTypes())
 	}
