@@ -126,7 +126,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		clusterRequest.ConfigurationType = clusterapi.ConfigurationType(plan.ConfigurationType.ValueString())
 	}
 
-	//check disk values provided for Azure, if Premium type disks, then do not allow setting storage, iops
+	//check disk values provided for Azure, if Premium type disks, then do not allow setting storage, iops.
 	if plan.CloudProvider.Type.ValueString() == string(clusterapi.Azure) {
 		err := c.checkDisk(plan)
 		if err != nil {
@@ -369,8 +369,8 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		}
 	}
 
-	//check disk values provided for Azure, if Premium type disks, then do not allow setting storage, iops
-	// and if the values in plan are set as default values, then ignore as that is correct configuration.
+	//Check disk values provided for Azure, if Premium type disks, then do not allow setting storage, iops.
+	//And if the values in plan are set as default values, then ignore as that is correct configuration.
 	if plan.CloudProvider.Type.ValueString() == string(clusterapi.Azure) {
 		err := c.checkDiskUpdate(plan)
 		if err != nil {
@@ -866,7 +866,7 @@ func initializePendingClusterWithPlanAndId(plan providerschema.Cluster, id strin
 
 func (c *Cluster) checkDisk(plan providerschema.Cluster) error {
 	for _, serviceGroup := range plan.ServiceGroups {
-		// Check if Disk.Type is not "Ultra" but either Storage or IOPS is non-null
+		// Check if Disk.Type is not "Ultra" but either Storage or IOPS is non-null.
 		if serviceGroup.Node.Disk.Type.ValueString() != string(clusterapi.Ultra) {
 			if (!serviceGroup.Node.Disk.Storage.IsNull() && !serviceGroup.Node.Disk.Storage.IsUnknown()) || (!serviceGroup.Node.Disk.IOPS.IsNull() && !serviceGroup.Node.Disk.IOPS.IsUnknown()) {
 				return fmt.Errorf("invalid configuration: Storage and IOPS cannot be specified when Disk.Type is Premium")
@@ -878,10 +878,10 @@ func (c *Cluster) checkDisk(plan providerschema.Cluster) error {
 
 func (c *Cluster) checkDiskUpdate(plan providerschema.Cluster) error {
 	for _, serviceGroup := range plan.ServiceGroups {
-		// Check if Disk.Type is not "Ultra" but either Storage or IOPS is non-null
+		// Check if Disk.Type is not "Ultra" but either Storage or IOPS is non-null.
 		if serviceGroup.Node.Disk.Type.ValueString() != string(clusterapi.Ultra) {
 			if (!serviceGroup.Node.Disk.Storage.IsNull() && !serviceGroup.Node.Disk.Storage.IsUnknown()) || (!serviceGroup.Node.Disk.IOPS.IsNull() && !serviceGroup.Node.Disk.IOPS.IsUnknown()) {
-				// Check what is coming from the existing plan, throw error, if non-default values
+				// Check what is coming from the existing plan, throw error, if non-default values.
 				if !isDefaultStorageAndIOPS(serviceGroup.Node.Disk.Type, serviceGroup.Node.Disk.Storage, serviceGroup.Node.Disk.IOPS) {
 					return fmt.Errorf("invalid configuration: Storage and IOPS cannot be specified when Disk.Type is Premium")
 				}
@@ -891,7 +891,7 @@ func (c *Cluster) checkDiskUpdate(plan providerschema.Cluster) error {
 	return nil
 }
 
-// Helper function to check if Storage and IOPS are set to default values
+// Helper function to check if Storage and IOPS are set to default values.
 func isDefaultStorageAndIOPS(diskType types.String, storage types.Int64, iops types.Int64) bool {
 	switch diskType.ValueString() {
 	case string(clusterapi.P6):
