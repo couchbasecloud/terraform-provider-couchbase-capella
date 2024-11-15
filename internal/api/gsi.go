@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"time"
 
+	"golang.org/x/time/rate"
+
 	internalerrors "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 )
 
@@ -69,6 +71,11 @@ type Options struct {
 	Scope      string
 	Collection string
 }
+
+// rate limits api requests to 60 req/min.
+// higher rates will (surprisingly) cause indexer to choke
+// do not remove this.
+var Limiter = rate.NewLimiter(rate.Every(1*time.Second), 1)
 
 func WatchIndexes(
 	ctx context.Context, desiredState string, indexes []string,

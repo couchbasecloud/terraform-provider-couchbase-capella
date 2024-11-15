@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -100,6 +102,11 @@ func (g *GsiMonitor) Read(ctx context.Context, req datasource.ReadRequest, resp 
 	}
 
 	monitor := func(cfg api.EndpointCfg) (response *api.Response, err error) {
+		if err := api.Limiter.Wait(ctx); err != nil {
+			// do not block if rate limiter fails
+			tflog.Error(ctx, "rate limiter error: "+err.Error())
+		}
+
 		return g.Client.ExecuteWithRetry(
 			ctx,
 			cfg,
