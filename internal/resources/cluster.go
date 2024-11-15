@@ -126,7 +126,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		clusterRequest.ConfigurationType = clusterapi.ConfigurationType(plan.ConfigurationType.ValueString())
 	}
 
-	//check disk values provided for Azure
+	//check disk values provided for Azure, if Premium type disks, then do not allow setting storage, iops
 	if plan.CloudProvider.Type.ValueString() == string(clusterapi.Azure) {
 		err := c.checkDisk(plan)
 		if err != nil {
@@ -369,9 +369,10 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		}
 	}
 
-	//check disk values provided for Azure
+	//check disk values provided for Azure, if Premium type disks, then do not allow setting storage, iops
+	// and if the values in plan are set as default values, then ignore as that is correct configuration.
 	if plan.CloudProvider.Type.ValueString() == string(clusterapi.Azure) {
-		err := c.checkDisk(plan)
+		err := c.checkDiskUpdate(plan)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error creating cluster",
@@ -679,14 +680,17 @@ func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]cluste
 				Type: clusterapi.DiskAzureType(serviceGroup.Node.Disk.Type.ValueString()),
 			}
 
-			if serviceGroup.Node != nil && !serviceGroup.Node.Disk.Storage.IsNull() && !serviceGroup.Node.Disk.Storage.IsUnknown() {
-				storage := int(serviceGroup.Node.Disk.Storage.ValueInt64())
-				diskAzure.Storage = &storage
-			}
+			//only set values for Ultra type disk, not for Premium type
+			if diskAzure.Type == clusterapi.Ultra {
+				if serviceGroup.Node != nil && !serviceGroup.Node.Disk.Storage.IsNull() && !serviceGroup.Node.Disk.Storage.IsUnknown() {
+					storage := int(serviceGroup.Node.Disk.Storage.ValueInt64())
+					diskAzure.Storage = &storage
+				}
 
-			if serviceGroup.Node != nil && !serviceGroup.Node.Disk.IOPS.IsNull() && !serviceGroup.Node.Disk.Storage.IsUnknown() {
-				iops := int(serviceGroup.Node.Disk.IOPS.ValueInt64())
-				diskAzure.Iops = &iops
+				if serviceGroup.Node != nil && !serviceGroup.Node.Disk.IOPS.IsNull() && !serviceGroup.Node.Disk.Storage.IsUnknown() {
+					iops := int(serviceGroup.Node.Disk.IOPS.ValueInt64())
+					diskAzure.Iops = &iops
+				}
 			}
 
 			if serviceGroup.Node != nil && !serviceGroup.Node.Disk.Autoexpansion.IsNull() {
@@ -863,12 +867,50 @@ func initializePendingClusterWithPlanAndId(plan providerschema.Cluster, id strin
 func (c *Cluster) checkDisk(plan providerschema.Cluster) error {
 	for _, serviceGroup := range plan.ServiceGroups {
 		// Check if Disk.Type is not "Ultra" but either Storage or IOPS is non-null
-		if serviceGroup.Node.Disk.Type.ValueString() != "Ultra" &&
-			(serviceGroup.Node.Disk.Storage != types.Int64Null() ||
-				serviceGroup.Node.Disk.IOPS != types.Int64Null()) {
-
-			return fmt.Errorf("invalid configuration: Storage and IOPS cannot be specified when Disk.Type is Premium.")
+		if serviceGroup.Node.Disk.Type.ValueString() != string(clusterapi.Ultra) {
+			if (!serviceGroup.Node.Disk.Storage.IsNull() && !serviceGroup.Node.Disk.Storage.IsUnknown()) || (!serviceGroup.Node.Disk.IOPS.IsNull() && !serviceGroup.Node.Disk.IOPS.IsUnknown()) {
+				return fmt.Errorf("invalid configuration: Storage and IOPS cannot be specified when Disk.Type is Premium")
+			}
 		}
 	}
 	return nil
+}
+
+func (c *Cluster) checkDiskUpdate(plan providerschema.Cluster) error {
+	for _, serviceGroup := range plan.ServiceGroups {
+		// Check if Disk.Type is not "Ultra" but either Storage or IOPS is non-null
+		if serviceGroup.Node.Disk.Type.ValueString() != string(clusterapi.Ultra) {
+			if (!serviceGroup.Node.Disk.Storage.IsNull() && !serviceGroup.Node.Disk.Storage.IsUnknown()) || (!serviceGroup.Node.Disk.IOPS.IsNull() && !serviceGroup.Node.Disk.IOPS.IsUnknown()) {
+				// Check what is coming from the existing plan, throw error, if non-default values
+				if !isDefaultStorageAndIOPS(serviceGroup.Node.Disk.Type, serviceGroup.Node.Disk.Storage, serviceGroup.Node.Disk.IOPS) {
+					return fmt.Errorf("invalid configuration: Storage and IOPS cannot be specified when Disk.Type is Premium")
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// Helper function to check if Storage and IOPS are set to default values
+func isDefaultStorageAndIOPS(diskType types.String, storage types.Int64, iops types.Int64) bool {
+	switch diskType.ValueString() {
+	case string(clusterapi.P6):
+		return storage.ValueInt64() == clusterapi.DefaultP6Storage && iops.ValueInt64() == clusterapi.DefaultP6IOPS
+	case string(clusterapi.P10):
+		return storage.ValueInt64() == clusterapi.DefaultP10Storage && iops.ValueInt64() == clusterapi.DefaultP10IOPS
+	case string(clusterapi.P15):
+		return storage.ValueInt64() == clusterapi.DefaultP15Storage && iops.ValueInt64() == clusterapi.DefaultP15IOPS
+	case string(clusterapi.P20):
+		return storage.ValueInt64() == clusterapi.DefaultP20Storage && iops.ValueInt64() == clusterapi.DefaultP20IOPS
+	case string(clusterapi.P30):
+		return storage.ValueInt64() == clusterapi.DefaultP30Storage && iops.ValueInt64() == clusterapi.DefaultP30IOPS
+	case string(clusterapi.P40):
+		return storage.ValueInt64() == clusterapi.DefaultP40Storage && iops.ValueInt64() == clusterapi.DefaultP40IOPS
+	case string(clusterapi.P50):
+		return storage.ValueInt64() == clusterapi.DefaultP50Storage && iops.ValueInt64() == clusterapi.DefaultP50IOPS
+	case string(clusterapi.P60):
+		return storage.ValueInt64() == clusterapi.DefaultP60Storage && iops.ValueInt64() == clusterapi.DefaultP60IOPS
+	}
+
+	return false
 }
