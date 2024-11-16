@@ -8,6 +8,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
@@ -75,7 +77,8 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	}
 
 	clusterRequest := clusterapi.CreateClusterRequest{
-		Name: plan.Name.ValueString(),
+		Name:  plan.Name.ValueString(),
+		Zones: c.convertZones(plan.Zones),
 		Availability: clusterapi.Availability{
 			Type: clusterapi.AvailabilityType(plan.Availability.Type.ValueString()),
 		},
@@ -109,17 +112,17 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		clusterRequest.EnablePrivateDNSResolution = plan.EnablePrivateDNSResolution.ValueBoolPointer()
 	}
 
-	if !plan.Zones.IsNull() && !plan.Zones.IsUnknown() {
-		convertedZone, err := c.convertZones(ctx, plan.Zones)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error creating Cluster",
-				"Could not create Cluster, unexpected error:"+err.Error(),
-			)
-			return
-		}
-		clusterRequest.Zones = &convertedZone
-	}
+	//if !plan.Zones.IsNull() && !plan.Zones.IsUnknown() {
+	//	convertedZone, err := c.convertZones(ctx, plan.Zones)
+	//	if err != nil {
+	//		resp.Diagnostics.AddError(
+	//			"Error creating Cluster",
+	//			"Could not create Cluster, unexpected error:"+err.Error(),
+	//		)
+	//		return
+	//	}
+	//	clusterRequest.Zones = &convertedZone
+	//}
 
 	var couchbaseServer providerschema.CouchbaseServer
 	if !plan.CouchbaseServer.IsUnknown() && !plan.CouchbaseServer.IsNull() {
@@ -218,6 +221,23 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		return
 	}
 
+	fmt.Printf("***************PDE Plan ", plan)
+	fmt.Printf("***************PDE Refreshed state Create", refreshedState)
+
+	//if refreshedState.Zones == nil || (!clusterapi.AreEqual(plan.Zones, refreshedState.Zones)) {
+	refreshedState.Zones = plan.Zones
+	//}
+
+	fmt.Printf("***************PDE Refreshed state Create ZONES", refreshedState.Zones)
+	if !clusterapi.AreEqual(plan.Zones, refreshedState.Zones) {
+		refreshedState.Zones = plan.Zones
+	}
+	//if plan.Zones != nil {
+	//	refreshedState.Zones = plan.Zones
+	//} else {
+	//	refreshedState.Zones = nil
+	//}
+
 	for i, serviceGroup := range refreshedState.ServiceGroups {
 		if clusterapi.AreEqual(plan.ServiceGroups[i].Services, serviceGroup.Services) {
 			refreshedState.ServiceGroups[i].Services = plan.ServiceGroups[i].Services
@@ -291,6 +311,24 @@ func (c *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 		)
 		return
 	}
+
+	//if state.Zones != nil {
+	//	refreshedState.Zones = state.Zones
+	//} else {
+	//	refreshedState.Zones = nil
+	//}
+
+	fmt.Printf("***************PDE READ STATE ", state)
+	fmt.Printf("***************PDE Refreshed state ", refreshedState)
+
+	//if refreshedState.Zones == nil || (!clusterapi.AreEqual(state.Zones, refreshedState.Zones)) {
+	refreshedState.Zones = state.Zones
+	//}
+
+	fmt.Printf("***************PDE Refreshed state ZONES 2", refreshedState.Zones)
+	//if !clusterapi.AreEqual(state.Zones, refreshedState.Zones) {
+	//	refreshedState.Zones = state.Zones
+	//}
 
 	if len(state.ServiceGroups) == len(refreshedState.ServiceGroups) {
 		for i, serviceGroup := range refreshedState.ServiceGroups {
@@ -430,6 +468,8 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 	if !plan.IfMatch.IsUnknown() && !plan.IfMatch.IsNull() {
 		currentState.IfMatch = plan.IfMatch
 	}
+
+	currentState.Zones = plan.Zones
 
 	for i, serviceGroup := range currentState.ServiceGroups {
 		if clusterapi.AreEqual(plan.ServiceGroups[i].Services, serviceGroup.Services) {
@@ -826,9 +866,9 @@ func initializePendingClusterWithPlanAndId(plan providerschema.Cluster, id strin
 		plan.EnablePrivateDNSResolution = types.BoolNull()
 	}
 
-	if plan.Zones.IsNull() || plan.Zones.IsUnknown() {
-		plan.Zones = types.SetNull(types.StringType)
-	}
+	//if plan.Zones.IsNull() || plan.Zones.IsUnknown() {
+	//	plan.Zones = types.SetNull(types.StringType)
+	//}
 
 	if plan.CouchbaseServer.IsNull() || plan.CouchbaseServer.IsUnknown() {
 		plan.CouchbaseServer = types.ObjectNull(providerschema.CouchbaseServer{}.AttributeTypes())
@@ -852,17 +892,27 @@ func initializePendingClusterWithPlanAndId(plan providerschema.Cluster, id strin
 	return plan
 }
 
-// convertZones is used to convert zones in types.List to array of string.
-func (c *Cluster) convertZones(ctx context.Context, zones types.Set) ([]string, error) {
-	elements := make([]types.String, 0, len(zones.Elements()))
-	diags := zones.ElementsAs(ctx, &elements, false)
-	if diags.HasError() {
-		return nil, fmt.Errorf("error while extracting zones elements")
-	}
+//// convertZones is used to convert zones in types.List to array of string.
+//func (c *Cluster) convertZones(ctx context.Context, zones types.Set) ([]string, error) {
+//	elements := make([]types.String, 0, len(zones.Elements()))
+//	diags := zones.ElementsAs(ctx, &elements, false)
+//	if diags.HasError() {
+//		return nil, fmt.Errorf("error while extracting zones elements")
+//	}
+//
+//	var convertedZones []string
+//	for _, zone := range elements {
+//		convertedZones = append(convertedZones, zone.ValueString())
+//	}
+//	return convertedZones, nil
+//}
 
+// convertZones is used to convert all roles
+// in an array of basetypes.StringValue to strings.
+func (c *Cluster) convertZones(zones []basetypes.StringValue) []string {
 	var convertedZones []string
-	for _, zone := range elements {
+	for _, zone := range zones {
 		convertedZones = append(convertedZones, zone.ValueString())
 	}
-	return convertedZones, nil
+	return convertedZones
 }

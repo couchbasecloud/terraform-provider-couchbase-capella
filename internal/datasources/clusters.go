@@ -104,9 +104,11 @@ func (d *Clusters) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 				fmt.Sprintf("Could not read clusters in organization %s and project %s, unexpected error: %s", organizationId, projectId, err.Error()),
 			)
 		}
+		fmt.Printf("$$$$$$$$$$$$$$$ newClusterData", newClusterData)
 		state.Data = append(state.Data, *newClusterData)
 	}
 
+	fmt.Printf("$$$$$$$$$$$$$$$ Response", response)
 	// Set state
 	diags = resp.State.Set(ctx, &state)
 
