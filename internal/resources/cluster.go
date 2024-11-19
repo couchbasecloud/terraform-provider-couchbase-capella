@@ -77,8 +77,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	}
 
 	clusterRequest := clusterapi.CreateClusterRequest{
-		Name:  plan.Name.ValueString(),
-		Zones: c.convertZones(plan.Zones),
+		Name: plan.Name.ValueString(),
 		Availability: clusterapi.Availability{
 			Type: clusterapi.AvailabilityType(plan.Availability.Type.ValueString()),
 		},
@@ -112,17 +111,15 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		clusterRequest.EnablePrivateDNSResolution = plan.EnablePrivateDNSResolution.ValueBoolPointer()
 	}
 
-	//if !plan.Zones.IsNull() && !plan.Zones.IsUnknown() {
-	//	convertedZone, err := c.convertZones(ctx, plan.Zones)
-	//	if err != nil {
-	//		resp.Diagnostics.AddError(
-	//			"Error creating Cluster",
-	//			"Could not create Cluster, unexpected error:"+err.Error(),
-	//		)
-	//		return
-	//	}
-	//	clusterRequest.Zones = &convertedZone
-	//}
+	if plan.Zones != nil && (plan.CloudProvider.Type.ValueString() != string(clusterapi.Aws) || plan.Availability.Type.ValueString() != "single") {
+		resp.Diagnostics.AddError(
+			"Error creating cluster",
+			"Could not create cluster, unexpected error: Invalid zones provided. Zones can only be provided for single AZ AWS clusters.",
+		)
+		return
+	} else {
+		clusterRequest.Zones = c.convertZones(plan.Zones)
+	}
 
 	var couchbaseServer providerschema.CouchbaseServer
 	if !plan.CouchbaseServer.IsUnknown() && !plan.CouchbaseServer.IsNull() {
@@ -856,21 +853,6 @@ func initializePendingClusterWithPlanAndId(plan providerschema.Cluster, id strin
 	}
 	return plan
 }
-
-//// convertZones is used to convert zones in types.List to array of string.
-//func (c *Cluster) convertZones(ctx context.Context, zones types.Set) ([]string, error) {
-//	elements := make([]types.String, 0, len(zones.Elements()))
-//	diags := zones.ElementsAs(ctx, &elements, false)
-//	if diags.HasError() {
-//		return nil, fmt.Errorf("error while extracting zones elements")
-//	}
-//
-//	var convertedZones []string
-//	for _, zone := range elements {
-//		convertedZones = append(convertedZones, zone.ValueString())
-//	}
-//	return convertedZones, nil
-//}
 
 // convertZones is used to convert all roles
 // in an array of basetypes.StringValue to strings.
