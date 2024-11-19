@@ -296,7 +296,9 @@ func (c *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 		return
 	}
 
-	refreshedState.Zones = state.Zones
+	if state.Zones != nil {
+		refreshedState.Zones = state.Zones
+	}
 
 	if len(state.ServiceGroups) == len(refreshedState.ServiceGroups) {
 		for i, serviceGroup := range refreshedState.ServiceGroups {
