@@ -218,7 +218,9 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		return
 	}
 
-	refreshedState.Zones = plan.Zones
+	if plan.Zones != nil {
+		refreshedState.Zones = plan.Zones
+	}
 
 	for i, serviceGroup := range refreshedState.ServiceGroups {
 		if clusterapi.AreEqual(plan.ServiceGroups[i].Services, serviceGroup.Services) {
@@ -435,7 +437,9 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		currentState.IfMatch = plan.IfMatch
 	}
 
-	currentState.Zones = plan.Zones
+	if plan.Zones != nil {
+		currentState.Zones = plan.Zones
+	}
 
 	for i, serviceGroup := range currentState.ServiceGroups {
 		if clusterapi.AreEqual(plan.ServiceGroups[i].Services, serviceGroup.Services) {
