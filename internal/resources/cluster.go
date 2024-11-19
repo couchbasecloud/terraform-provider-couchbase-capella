@@ -221,22 +221,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		return
 	}
 
-	fmt.Printf("***************PDE Plan ", plan)
-	fmt.Printf("***************PDE Refreshed state Create", refreshedState)
-
-	//if refreshedState.Zones == nil || (!clusterapi.AreEqual(plan.Zones, refreshedState.Zones)) {
 	refreshedState.Zones = plan.Zones
-	//}
-
-	fmt.Printf("***************PDE Refreshed state Create ZONES", refreshedState.Zones)
-	if !clusterapi.AreEqual(plan.Zones, refreshedState.Zones) {
-		refreshedState.Zones = plan.Zones
-	}
-	//if plan.Zones != nil {
-	//	refreshedState.Zones = plan.Zones
-	//} else {
-	//	refreshedState.Zones = nil
-	//}
 
 	for i, serviceGroup := range refreshedState.ServiceGroups {
 		if clusterapi.AreEqual(plan.ServiceGroups[i].Services, serviceGroup.Services) {
@@ -312,23 +297,7 @@ func (c *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 		return
 	}
 
-	//if state.Zones != nil {
-	//	refreshedState.Zones = state.Zones
-	//} else {
-	//	refreshedState.Zones = nil
-	//}
-
-	fmt.Printf("***************PDE READ STATE ", state)
-	fmt.Printf("***************PDE Refreshed state ", refreshedState)
-
-	//if refreshedState.Zones == nil || (!clusterapi.AreEqual(state.Zones, refreshedState.Zones)) {
 	refreshedState.Zones = state.Zones
-	//}
-
-	fmt.Printf("***************PDE Refreshed state ZONES 2", refreshedState.Zones)
-	//if !clusterapi.AreEqual(state.Zones, refreshedState.Zones) {
-	//	refreshedState.Zones = state.Zones
-	//}
 
 	if len(state.ServiceGroups) == len(refreshedState.ServiceGroups) {
 		for i, serviceGroup := range refreshedState.ServiceGroups {
@@ -865,10 +834,6 @@ func initializePendingClusterWithPlanAndId(plan providerschema.Cluster, id strin
 	if plan.EnablePrivateDNSResolution.IsNull() || plan.EnablePrivateDNSResolution.IsUnknown() {
 		plan.EnablePrivateDNSResolution = types.BoolNull()
 	}
-
-	//if plan.Zones.IsNull() || plan.Zones.IsUnknown() {
-	//	plan.Zones = types.SetNull(types.StringType)
-	//}
 
 	if plan.CouchbaseServer.IsNull() || plan.CouchbaseServer.IsUnknown() {
 		plan.CouchbaseServer = types.ObjectNull(providerschema.CouchbaseServer{}.AttributeTypes())
