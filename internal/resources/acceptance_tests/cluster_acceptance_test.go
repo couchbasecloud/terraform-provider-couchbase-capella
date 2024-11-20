@@ -265,6 +265,7 @@ func TestAccClusterResourceAzure(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "support.plan", "developer pro"),
 					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
 					resource.TestCheckResourceAttr(resourceReference, "enable_private_dns_resolution", "false"),
+					resource.TestCheckResourceAttr(resourceReference, "zones.0", "use1-az1"),
 				),
 			},
 			//// ImportState testing
@@ -296,6 +297,7 @@ func TestAccClusterResourceAzure(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.2", "query"),
 					resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
 					resource.TestCheckResourceAttr(resourceReference, "support.plan", "developer pro"),
+					resource.TestCheckResourceAttr(resourceReference, "zones.0", "use1-az1"),
 					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
 				),
 			},
@@ -321,6 +323,7 @@ func TestAccClusterResourceAzure(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.2", "query"),
 					resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
 					resource.TestCheckResourceAttr(resourceReference, "support.plan", "developer pro"),
+					resource.TestCheckResourceAttr(resourceReference, "zones.0", "use1-az1"),
 					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
 				),
 			},
@@ -353,6 +356,7 @@ func TestAccClusterResourceAzure(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.services.1", "query"),
 					resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
 					resource.TestCheckResourceAttr(resourceReference, "support.plan", "enterprise"),
+					resource.TestCheckResourceAttr(resourceReference, "zones.0", "use1-az1"),
 					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "ET"),
 				),
 			},
@@ -992,6 +996,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
   name            = "Terraform Acceptance Test Cluster"
   description     = "My first test cluster for multiple services."
   enable_private_dns_resolution = false
+  zones = ["use1-az1"]
   cloud_provider = {
     type   = "azure"
     region = "eastus"
@@ -1091,6 +1096,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
   project_id      = %[4]s.id
   name            = "Terraform Acceptance Test Cluster"
   description     = "My first test cluster for multiple services."
+  zones = ["use1-az1"]
   cloud_provider = {
     type   = "azure"
     region = "eastus"
@@ -1140,6 +1146,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
   project_id      = %[4]s.id
   name            = "Terraform Acceptance Test Cluster"
   description     = "My first test cluster for multiple services."
+  zones = ["use1-az1"]
   cloud_provider = {
     type   = "azure"
     region = "eastus"
@@ -1193,6 +1200,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
   project_id      = %[4]s.id
   name            = "Terraform Acceptance Test Cluster"
   description     = "My first test cluster for multiple services."
+  zones = ["use1-az1"]
   cloud_provider = {
     type   = "azure"
     region = "eastus"
