@@ -298,3 +298,11 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 
   Manage Private Endpoints
 
+* [Manage Azure Network Peer](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/network_peer)
+
+  Manage Azure Network Peer
+
+* [Manage Flush Bucket](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/flush_bucket)
+
+  Manage Flush Bucket
+

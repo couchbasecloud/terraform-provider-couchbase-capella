@@ -37,6 +37,7 @@ description: |-
 Optional:
 
 - `aws_config` (Attributes) (see [below for nested schema](#nestedatt--provider_config--aws_config))
+- `azure_config` (Attributes) (see [below for nested schema](#nestedatt--provider_config--azure_config))
 - `gcp_config` (Attributes) (see [below for nested schema](#nestedatt--provider_config--gcp_config))
 
 <a id="nestedatt--provider_config--aws_config"></a>
@@ -51,6 +52,25 @@ Optional:
 - `account_id` (String)
 - `region` (String)
 - `vpc_id` (String)
+
+Read-Only:
+
+- `provider_id` (String)
+
+
+<a id="nestedatt--provider_config--azure_config"></a>
+### Nested Schema for `provider_config.azure_config`
+
+Required:
+
+- `cidr` (String)
+
+Optional:
+
+- `resource_group` (String)
+- `subscription_id` (String)
+- `tenant_id` (String)
+- `vnet_id` (String)
 
 Read-Only:
 
