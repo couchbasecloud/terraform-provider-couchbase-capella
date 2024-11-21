@@ -265,6 +265,7 @@ func TestAccClusterResourceAzure(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "support.plan", "developer pro"),
 					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
 					resource.TestCheckResourceAttr(resourceReference, "enable_private_dns_resolution", "false"),
+					resource.TestCheckResourceAttr(resourceReference, "enable_public_ip", "false"),
 				),
 			},
 			//// ImportState testing
@@ -644,6 +645,7 @@ func TestAccClusterResourceWithConfigurationTypeFieldAdded(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "availability.type", "single"),
 					resource.TestCheckResourceAttr(resourceReference, "support.plan", "developer pro"),
 					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
+					resource.TestCheckResourceAttr(resourceReference, "zones.0", "use1-az1"),
 				),
 			},
 			//// ImportState testing
@@ -1026,6 +1028,57 @@ resource "couchbase-capella_cluster" "%[2]s" {
 `, cfg, resourceName, projectResourceName, projectResourceReference, cidr)
 }
 
+// func testAccClusterCreateSingleNodeAWS((cfg, resourceName, projectResourceName, projectResourceReference, cidr string) string {
+// return fmt.Sprintf(`
+// %[1]s
+//
+//	resource "couchbase-capella_project" "%[3]s" {
+//	   organization_id = var.organization_id
+//		name            = "acc_test_project_name"
+//		description     = "description"
+//	}
+//
+//	resource "couchbase-capella_cluster" "%[2]s" {
+//	 organization_id = var.organization_id
+//	 project_id      = %[4]s.id
+//	 name            = "Terraform Single Node"
+//	 description     = "My first test cluster for multiple services."
+//	 enable_private_dns_resolution = false
+//	 zones = ["use1-az1"]
+//	 cloud_provider = {
+//	   type   = "aws"
+//	   region = "us-east-1"
+//	   cidr   = "%[5]s"
+//	 }
+//
+//	 service_groups = [
+//	   {
+//	     node = {
+//	       compute = {
+//	         cpu = 2
+//	         ram = 8
+//	       }
+//	        disk = {
+//	  			size = 50
+//	  			type = "gp3"
+//	  			iops = 3000
+//			 }
+//	     }
+//	     num_of_nodes = 1
+//	     services     = ["data", "index", "query"]
+//	   }
+//	 ]
+//	 availability = {
+//	   "type" : "single"
+//	 }
+//	 support = {
+//	   plan     = "developer pro"
+//	   timezone = "PT"
+//	 }
+//	}
+//
+// `, cfg, resourceName, projectResourceName, projectResourceReference, cidr)
+// }
 // testAccClusterResourceConfigWithConfigurationTypeFieldAdded generates a Terraform configuration string for testing an
 // acceptance test scenario where a cluster is created with the "configuration_type" field set to "singleNode".
 func testAccClusterResourceConfigWithConfigurationTypeFieldAdded(cfg, resourceName, projectResourceName, projectResourceReference, cidr string) string {
@@ -1046,6 +1099,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
     cidr   = "%[5]s"
   }
   configuration_type = "singleNode"
+  zones = ["use1-az1"]
   service_groups = [
     {
       node = {

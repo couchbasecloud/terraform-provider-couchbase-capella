@@ -8,6 +8,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
@@ -109,6 +111,16 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		clusterRequest.EnablePrivateDNSResolution = plan.EnablePrivateDNSResolution.ValueBoolPointer()
 	}
 
+	if plan.Zones != nil && (plan.CloudProvider.Type.ValueString() != string(clusterapi.Aws) || plan.Availability.Type.ValueString() != "single") {
+		resp.Diagnostics.AddError(
+			"Error creating cluster",
+			"Could not create cluster, unexpected error: Invalid zones provided. Zones can only be provided for single AZ AWS clusters.",
+		)
+		return
+	} else {
+		clusterRequest.Zones = c.convertZones(plan.Zones)
+	}
+
 	var couchbaseServer providerschema.CouchbaseServer
 	if !plan.CouchbaseServer.IsUnknown() && !plan.CouchbaseServer.IsNull() {
 		couchbaseServerAtt := getCouchbaseServer(ctx, req.Config, &resp.Diagnostics)
@@ -206,6 +218,10 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		return
 	}
 
+	if plan.Zones != nil {
+		refreshedState.Zones = plan.Zones
+	}
+
 	for i, serviceGroup := range refreshedState.ServiceGroups {
 		if clusterapi.AreEqual(plan.ServiceGroups[i].Services, serviceGroup.Services) {
 			refreshedState.ServiceGroups[i].Services = plan.ServiceGroups[i].Services
@@ -278,6 +294,10 @@ func (c *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 			"Could Not Read Capella Cluster "+state.Id.String()+": "+errString,
 		)
 		return
+	}
+
+	if state.Zones != nil {
+		refreshedState.Zones = state.Zones
 	}
 
 	if len(state.ServiceGroups) == len(refreshedState.ServiceGroups) {
@@ -417,6 +437,10 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 
 	if !plan.IfMatch.IsUnknown() && !plan.IfMatch.IsNull() {
 		currentState.IfMatch = plan.IfMatch
+	}
+
+	if plan.Zones != nil {
+		currentState.Zones = plan.Zones
 	}
 
 	for i, serviceGroup := range currentState.ServiceGroups {
@@ -834,4 +858,14 @@ func initializePendingClusterWithPlanAndId(plan providerschema.Cluster, id strin
 		}
 	}
 	return plan
+}
+
+// convertZones is used to convert all roles
+// in an array of basetypes.StringValue to strings.
+func (c *Cluster) convertZones(zones []basetypes.StringValue) []string {
+	var convertedZones []string
+	for _, zone := range zones {
+		convertedZones = append(convertedZones, zone.ValueString())
+	}
+	return convertedZones
 }
