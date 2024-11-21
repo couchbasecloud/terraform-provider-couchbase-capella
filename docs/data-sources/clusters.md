@@ -37,6 +37,7 @@ Read-Only:
 - `couchbase_server` (Attributes) (see [below for nested schema](#nestedatt--data--couchbase_server))
 - `current_state` (String)
 - `description` (String)
+- `enable_private_dns_resolution` (Boolean)
 - `id` (String)
 - `name` (String)
 - `organization_id` (String)

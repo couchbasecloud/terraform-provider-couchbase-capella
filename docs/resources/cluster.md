@@ -30,6 +30,7 @@ description: |-
 - `configuration_type` (String, Deprecated)
 - `couchbase_server` (Attributes) (see [below for nested schema](#nestedatt--couchbase_server))
 - `description` (String)
+- `enable_private_dns_resolution` (Boolean)
 - `if_match` (String)
 
 ### Read-Only
