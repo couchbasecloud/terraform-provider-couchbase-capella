@@ -306,3 +306,7 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 
   Manage Flush Bucket
 
+* [Manage GSI](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/gsi)
+
+  Manage GSI
+
