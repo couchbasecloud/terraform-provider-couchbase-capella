@@ -1,17 +1,17 @@
-# Capella Create Secondary Index Example
+# Capella Create Deferred Secondary Index Example
 
-This example shows how to create secondary indexes on a Capella cluster.
+This example shows how to create deferred secondary indexes on a Capella cluster.
 
 This creates 5 deferred indexes in test.test.test.  Deferred indexes are best suited for large indexes, or when creating many indexes.
 When in doubt, use deferred indexes.
 
 If creating indexes in bulk, it is strongly recommended to create indexes in batches of 100 or less.
 
-To run configure your Couchbase Capella provider as described in README in the root of this project.
+To try this example, configure your Couchbase Capella provider as described in README in the root of this project.
 
 ## CREATE INDEXES
-### Ensure you create indexes.json which is a file with indexes
-### Place this file in the same directory as the terraform script.
+**Ensure you create `indexes.json`, which is a file with indexes.**
+**Place this file in the same directory as the terraform script.**
 
 Command: `terraform apply`
 
