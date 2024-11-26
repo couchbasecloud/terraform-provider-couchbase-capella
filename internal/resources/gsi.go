@@ -200,7 +200,12 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 		}
 	}
 
-	err := g.executeGsiDdl(ctx, &plan, ddl)
+	state := plan
+
+	// initialize computed attributes
+	state.With.NumReplica = types.Int64Null()
+
+	err := g.executeGsiDdl(ctx, &state, ddl)
 	switch err {
 	case nil:
 	case internalerrors.ErrIndexBuildInProgress:
@@ -238,7 +243,30 @@ It is recommended to use deferred builds.  Please see documentation for details.
 
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	// only
+	if state.BuildIndexes.IsNull() {
+		index, err := g.getQueryIndex(
+			ctx,
+			state.OrganizationId.ValueString(),
+			state.ProjectId.ValueString(),
+			state.ClusterId.ValueString(),
+			state.BucketName.ValueString(),
+			state.ScopeName.ValueString(),
+			state.CollectionName.ValueString(),
+			state.IndexName.ValueString(),
+		)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error reading query index",
+				"Could not read query index "+state.IndexName.ValueString()+": "+err.Error(),
+			)
+			return
+		}
+
+		state.With.NumReplica = types.Int64Value(int64(index.NumReplica))
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
