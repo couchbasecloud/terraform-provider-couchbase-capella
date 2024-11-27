@@ -5,7 +5,7 @@ This example shows how to create deferred secondary indexes on a Capella cluster
 This creates 5 deferred indexes in test.test.test.  Deferred indexes are best suited for large indexes, or when creating many indexes.
 When in doubt, use deferred indexes.
 
-If creating indexes in bulk, it is strongly recommended to create indexes in batches of 100 or less.
+If creating indexes in bulk, it is strongly recommended to build indexes in batches of 100 or less.
 
 To try this example, configure your Couchbase Capella provider as described in README in the root of this project.
 
