@@ -148,6 +148,9 @@ var (
 	// ErrConvertingCidr is returned when terraform fails to convert a CIDR.
 	ErrConvertingCidr = errors.New("failed to convert CIDR, please contact Couchbase Capella Support")
 
+	// ErrConvertingZone is returned when terraform fails to convert a Zone.
+	ErrConvertingZone = errors.New("failed to convert Zones, please contact Couchbase Capella Support")
+
 	// ErrReadingAWSDisk is returned when an AWS disk read fails.
 	ErrReadingAWSDisk = errors.New("failed to read AWS disk, please contact Couchbase Capella Support")
 
