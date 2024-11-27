@@ -234,5 +234,5 @@ var (
 
 	ErrMonitorTimeout = errors.New("timed out while watching indexes")
 
-	ErrIndexBuildInProgress = errors.New("an index build is currently in progress")
+	ErrConcurrentIndexCreation = errors.New("another index create request is in progress")
 )
