@@ -471,6 +471,7 @@ func (g *GSI) Configure(_ context.Context, req resource.ConfigureRequest, resp *
 // a.	For primary indexes, index_keys, where and parition_by must be null.  index_name and with are optional.
 // b.	For secondary indexes, index_name and index_keys must be valued.  where, partition_by and with are optional.
 // c.	If build_indexes is provided, all of the other optional properties (except scope_name and collection_name) must be null.
+// d.   num_partition can only be set for a partitioned index ie partition_by is valued.
 func (g *GSI) ValidateConfig(
 	ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse,
 ) {
