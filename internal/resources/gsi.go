@@ -208,14 +208,12 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 	err := g.executeGsiDdl(ctx, &state, ddl)
 	switch err {
 	case nil:
-	case internalerrors.ErrIndexBuildInProgress:
+	case internalerrors.ErrConcurrentIndexCreation:
 		resp.Diagnostics.AddError(
-			"Index build is currently in progress",
+			"Another index creation is currently in progress",
 			fmt.Sprintf(
-				`Could not build index %s in %s.%s.%s as there is another index build already in progress.
-The index build will automatically be retried in the background.  Please run "terraform apply --refresh-only".
-
-It is recommended to use deferred builds.  Please see documentation for details.`,
+				`Could not create index %s in %s.%s.%s as there is another index creation already in progress.
+This will automatically be retried in the background.  Please run "terraform apply --refresh-only" after some time.`,
 				plan.IndexName.ValueString(),
 				plan.BucketName.ValueString(),
 				plan.ScopeName.ValueString(),
@@ -571,18 +569,16 @@ func (g *GSI) executeGsiDdl(ctx context.Context, plan *providerschema.GsiDefinit
 		nil,
 	)
 	if err != nil {
-		// Indexer returns an error if there is a build already in progress.
+		// Indexer doesn't allow concurrent index builds.
 		// Index build is resource intensive operation from indexer and KV perspective
 		// as indexer will request data the keyspace from the beginning.
 		//
 		// Indexer will automatically retry in the background.
 		if apiError, ok := err.(*api.Error); ok {
-			if apiError.HttpStatusCode == http.StatusInternalServerError &&
-				strings.Contains(
-					strings.ToLower(apiError.Message), "build already in progress",
-				) {
+			if strings.Contains(strings.ToLower(apiError.Message), "build already in progress") ||
+				strings.Contains(strings.ToLower(apiError.Message), "concurrent create index request") {
 
-				return internalerrors.ErrIndexBuildInProgress
+				return internalerrors.ErrConcurrentIndexCreation
 			}
 		}
 
