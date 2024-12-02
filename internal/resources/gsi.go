@@ -209,7 +209,7 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 	switch err {
 	case nil:
 	case internalerrors.ErrConcurrentIndexCreation:
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"Another index creation is currently in progress",
 			fmt.Sprintf(
 				`Could not create index %s in %s.%s.%s as there is another index creation already in progress.
