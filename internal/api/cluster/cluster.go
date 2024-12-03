@@ -6,6 +6,34 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	DefaultP6Storage                = 64
+	DefaultP6IOPS                   = 240
+	DefaultP10Storage               = 128
+	DefaultP10IOPS                  = 500
+	DefaultP15Storage               = 256
+	DefaultP15IOPS                  = 1100
+	DefaultP20Storage               = 512
+	DefaultP20IOPS                  = 2300
+	DefaultP30Storage               = 1024
+	DefaultP30IOPS                  = 5000
+	DefaultP40Storage               = 2048
+	DefaultP40IOPS                  = 7500
+	DefaultP50Storage               = 4096
+	DefaultP50IOPS                  = 7500
+	DefaultP60Storage               = 8192
+	DefaultP60IOPS                  = 16000
+	Ultra             DiskAzureType = "Ultra"
+	P6                DiskAzureType = "P6"
+	P10               DiskAzureType = "P10"
+	P15               DiskAzureType = "P15"
+	P20               DiskAzureType = "P20"
+	P30               DiskAzureType = "P30"
+	P40               DiskAzureType = "P40"
+	P50               DiskAzureType = "P50"
+	P60               DiskAzureType = "P60"
+)
+
 // Availability defines if the cluster nodes will be deployed in multiple or single availability zones in the cloud.
 type Availability struct {
 	// Type is availability zone type, either 'single' or 'multi'.

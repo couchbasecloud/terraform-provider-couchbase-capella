@@ -6,12 +6,11 @@ cloud_provider = {
   name   = "azure",
   region = "eastus"
 }
-
 cluster = {
-  name               = "New Terraform Azure Cluster 6"
-  cidr               = "10.0.6.0/23"
+  name               = "TF Azure Ultra"
+  cidr               = "10.10.0.0/23"
   node_count         = 3
-  couchbase_services = ["data"]
+  couchbase_services = ["data", "index", "query", "search"]
   availability_zone  = "single"
 }
 
@@ -21,11 +20,13 @@ compute = {
 }
 
 disk = {
-  type          = "P6"
+  type          = "Ultra"
+  size          = 128
+  iops          = 5000
   autoexpansion = true
 }
 
 support = {
-  plan     = "basic"
+  plan     = "developer pro"
   timezone = "PT"
 }

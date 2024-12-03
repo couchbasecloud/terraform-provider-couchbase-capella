@@ -253,9 +253,8 @@ func TestAccClusterResourceAzure(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "1024"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "Ultra"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.iops", "17000"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "P6"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.iops", "240"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "3"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "3"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "data"),
@@ -263,7 +262,7 @@ func TestAccClusterResourceAzure(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.2", "query"),
 					resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
 					resource.TestCheckResourceAttr(resourceReference, "support.plan", "developer pro"),
-					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
+					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "GMT"),
 					resource.TestCheckResourceAttr(resourceReference, "enable_private_dns_resolution", "false"),
 					resource.TestCheckResourceAttr(resourceReference, "enable_public_ip", "false"),
 				),
@@ -277,7 +276,7 @@ func TestAccClusterResourceAzure(t *testing.T) {
 			},
 
 			{
-				Config: testAccClusterResourceConfigAzureUpdateToDiskTypeP6(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
+				Config: testAccClusterResourceConfigAzureUpdateTimezone(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsClusterResource(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", "Terraform Acceptance Test Cluster"),
@@ -287,9 +286,32 @@ func TestAccClusterResourceAzure(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "32"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "64"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "3"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "3"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "data"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.1", "index"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.2", "query"),
+					resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
+					resource.TestCheckResourceAttr(resourceReference, "support.plan", "developer pro"),
+					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "P6"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.iops", "240"),
+				),
+			},
+			{
+				Config: testAccClusterResourceConfigAzureUpdateToUltraDisk(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccExistsClusterResource(resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "name", "Terraform Acceptance Test Cluster"),
+					resource.TestCheckResourceAttr(resourceReference, "description", "My first test cluster for multiple services."),
+					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "azure"),
+					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "eastus"),
+					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "32"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "1024"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "Ultra"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.iops", "17000"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "3"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "3"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "data"),
@@ -339,7 +361,7 @@ func TestAccClusterResourceAzure(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "1024"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "Ultra"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.iops", "2000"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.iops", "17000"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "3"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "1"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "data"),
@@ -1008,9 +1030,9 @@ resource "couchbase-capella_cluster" "%[2]s" {
           ram = 16
         }
         disk = {
-          storage = 1024,
-          type    = "Ultra"
-          iops    = 17000
+          type    = "P6"
+          autoexpansion = true
+
         }
       }
       num_of_nodes = 3
@@ -1022,7 +1044,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
   }
   support = {
     plan     = "developer pro"
-    timezone = "PT"
+    timezone = "GMT"
   }
 }
 `, cfg, resourceName, projectResourceName, projectResourceReference, cidr)
@@ -1128,9 +1150,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
 `, cfg, resourceName, projectResourceName, projectResourceReference, cidr)
 }
 
-// testAccClusterResourceConfigAzureUpdateToDiskTypeP6 generates a Terraform configuration string for testing an acceptance test scenario
-// where a cluster resource is updated to change the disk type to "P6".
-func testAccClusterResourceConfigAzureUpdateToDiskTypeP6(cfg, resourceName, projectResourceName, projectResourceReference, cidr string) string {
+func testAccClusterResourceConfigAzureUpdateToUltraDisk(cfg, resourceName, projectResourceName, projectResourceReference, cidr string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -1158,8 +1178,57 @@ resource "couchbase-capella_cluster" "%[2]s" {
           cpu = 4
           ram = 32
         }
-        disk = {
+		disk = {
+			storage = 1024,
+			type    = "Ultra"
+			iops    = 17000
+		}
+      }
+      num_of_nodes = 3
+      services     = ["data", "index", "query"]
+    }
+  ]
+  availability = {
+    "type" : "multi"
+  }
+  support = {
+    plan     = "developer pro"
+    timezone = "PT"
+  }
+}
+`, cfg, resourceName, projectResourceName, projectResourceReference, cidr)
+}
+func testAccClusterResourceConfigAzureUpdateTimezone(cfg, resourceName, projectResourceName, projectResourceReference, cidr string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_project" "%[3]s" {
+    organization_id = var.organization_id
+	name            = "acc_test_project_name"
+	description     = "description"
+}
+
+resource "couchbase-capella_cluster" "%[2]s" {
+  organization_id = var.organization_id
+  project_id      = %[4]s.id
+  name            = "Terraform Acceptance Test Cluster"
+  description     = "My first test cluster for multiple services."
+  cloud_provider = {
+    type   = "azure"
+    region = "eastus"
+    cidr   = "%[5]s"
+  }
+
+  service_groups = [
+    {
+      node = {
+        compute = {
+          cpu = 4
+          ram = 32
+        }
+		disk = {
           type    = "P6"
+          autoexpansion = true
         }
       }
       num_of_nodes = 3
@@ -1263,7 +1332,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
         disk = {
           storage = 1024,
           type    = "Ultra"
-          iops    = 2000
+          iops    = 17000
         }
       }
       num_of_nodes = 3
