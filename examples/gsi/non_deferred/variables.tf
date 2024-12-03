@@ -26,3 +26,11 @@ variable "scope_name" {
 variable "collection_name" {
   description = "collection Name"
 }
+
+variable "index_name" {
+  description = "index Name"
+}
+
+variable "index_keys" {
+  description = "index keys"
+}
