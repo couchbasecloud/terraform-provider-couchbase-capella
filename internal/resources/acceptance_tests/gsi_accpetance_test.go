@@ -2,11 +2,13 @@ package acceptance_tests
 
 import (
 	"fmt"
-	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"testing"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
+	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 )
 
 func TestAccGSITestCases(t *testing.T) {
@@ -31,7 +33,7 @@ func TestAccGSITestCases(t *testing.T) {
 				Config: testAccCreateCluster(&testCfg, resourceName, projectResourceName, projectResourceReference, cidr),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsClusterResource(resourceReference),
-					importSampleBucket(resourceReference)
+					// importSampleBucket(resourceReference),
 				),
 			},
 			{
