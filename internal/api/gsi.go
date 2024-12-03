@@ -42,6 +42,7 @@ type IndexDefinitionResponse struct {
 	PartitionBy  string   `json:"partition_by"`
 	Where        string   `json:"where"`
 	NumReplica   int      `json:"numReplica"`
+	Status       string   `json:"status"`
 	NumPartition int      `json:"numPartition"`
 }
 
@@ -73,7 +74,7 @@ type Options struct {
 }
 
 // rate limits api requests to 60 req/min.
-// higher rates will (surprisingly) cause indexer to choke
+// higher rates will (surprisingly) cause indexer to choke.
 // do not remove this.
 var Limiter = rate.NewLimiter(rate.Every(1*time.Second), 1)
 

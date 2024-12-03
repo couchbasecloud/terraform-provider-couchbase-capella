@@ -133,10 +133,12 @@ func (g *GsiMonitor) Read(ctx context.Context, req datasource.ReadRequest, resp 
 	)
 	switch err {
 	case nil:
+		const msg = `All indexes are ready. Please run "terraform apply --refresh-only" to update state.`
+		tflog.Info(ctx, msg)
 	default:
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"All provided indexes are not ready",
-			"All indexes have not completed building.  Please check the status on Capella.",
+			"All provided indexes have not completed building.  Please run \"terraform apply --refresh-only\" after some time.",
 		)
 		return
 	}

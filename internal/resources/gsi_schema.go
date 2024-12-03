@@ -42,6 +42,7 @@ func GsiSchema() schema.Schema {
 			"is_primary":   boolAttribute(optional),
 			"index_keys":   stringListAttribute(optional, requiresReplace),
 			"where":        stringAttribute([]string{optional, requiresReplace}),
+			"status":       stringAttribute([]string{computed, useStateForUnknown}),
 			"partition_by": stringListAttribute(optional, requiresReplace),
 			"with": schema.SingleNestedAttribute{
 				Optional: true,

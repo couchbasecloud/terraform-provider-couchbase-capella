@@ -50,12 +50,15 @@ func (g *GSI) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource
 
 // Create will send a request to create a primary or secondary index.
 func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-
 	var plan providerschema.GsiDefinition
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// initialize computed attributes
+	plan.Status = types.StringNull()
+	plan.With.NumReplica = types.Int64Null()
 
 	var ddl string
 
@@ -202,9 +205,6 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 
 	state := plan
 
-	// initialize computed attributes
-	state.With.NumReplica = types.Int64Null()
-
 	err := g.executeGsiDdl(ctx, &state, ddl)
 	switch err {
 	case nil:
@@ -241,7 +241,7 @@ This will automatically be retried in the background.  Please run "terraform app
 
 	}
 
-	// only
+	// no need to get index properties for build statement
 	if state.BuildIndexes.IsNull() {
 		index, err := g.getQueryIndex(
 			ctx,
@@ -261,6 +261,7 @@ This will automatically be retried in the background.  Please run "terraform app
 			return
 		}
 
+		state.Status = types.StringValue(index.Status)
 		state.With.NumReplica = types.Int64Value(int64(index.NumReplica))
 	}
 
@@ -328,7 +329,8 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 	}
 
 	if !state.OrganizationId.IsNull() {
-		// when reading an index, only update number of replicas.
+		// when reading an index, update state and number of replicas.
+		state.Status = types.StringValue(index.Status)
 		state.With.NumReplica = types.Int64Value(int64(index.NumReplica))
 
 	} else {
@@ -341,6 +343,7 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 		state.CollectionName = types.StringValue(collectionName)
 		state.IsPrimary = types.BoolValue(index.IsPrimary)
 		state.IndexName = types.StringValue(indexName)
+		state.Status = types.StringValue(index.Status)
 
 		var keys []attr.Value
 		for _, key := range index.SecExprs {

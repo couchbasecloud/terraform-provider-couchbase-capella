@@ -39,6 +39,9 @@ type GsiDefinition struct {
 	// Where is the where clause.
 	Where types.String `tfsdk:"where"`
 
+	// Status is the index state such as Ready, etc
+	Status types.String `tfsdk:"status"`
+
 	// With represents the WITH clause of an index.
 	With *WithOptions `tfsdk:"with"`
 
