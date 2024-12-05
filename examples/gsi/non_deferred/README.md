@@ -4,7 +4,7 @@ This example shows how to create secondary indexes on a Capella cluster.
 
 This creates 1 non-deferred indexes in api.metrics.memory.  Non-deferred indexes are best suited when creating 1 small index.
 
-To run configure your Couchbase Capella provider as described in README in the root of this project.
+To try this example, configure your Couchbase Capella provider as described in README in the root of this project.
 
 # Example Walkthrough
 
@@ -15,7 +15,7 @@ In this example, we are going to do the following.
 3. DELETE: Delete the indexes.
 5. IMPORT: Import an index to the state file.
 
-If you check the `terraform.template.tfvars` file - Make sure you copy the file to `terraform.tfvars` and update the values of the variables as per the correct organization access.
+Check the `terraform.template.tfvars` file. Make sure you copy the file to `terraform.tfvars` and update the values of the variables for your organization access.
 
 ## CREATE INDEX
 
