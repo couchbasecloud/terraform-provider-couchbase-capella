@@ -43,6 +43,7 @@ support = {
 #   node_count         = 1
 #   couchbase_services = ["data", "index", "query"]
 #   availability_zone  = "single"
+#   zones  =  ["use1-az1"]
 # }
 #
 # compute = {

@@ -12,6 +12,7 @@ resource "couchbase-capella_cluster" "new_cluster" {
   name                          = var.cluster.name
   description                   = "My first test cluster for multiple services."
   enable_private_dns_resolution = true
+  zones                         = var.cluster.zones
   cloud_provider = {
     type   = var.cloud_provider.name
     region = var.cloud_provider.region

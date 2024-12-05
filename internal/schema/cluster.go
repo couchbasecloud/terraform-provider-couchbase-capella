@@ -145,6 +145,9 @@ type Cluster struct {
 	// This exists to support the use case of customers connecting from their own data centers where it is not possible to make use of a cloud service provider DNS zone.
 	EnablePrivateDNSResolution types.Bool `tfsdk:"enable_private_dns_resolution"`
 
+	// Zones is the cloud services provider availability zones for the cluster. Currently Supported only for single AZ clusters so only 1 zone is allowed in list.
+	Zones []types.String `tfsdk:"zones"`
+
 	// Name of the cluster (up to 256 characters).
 	Name types.String `tfsdk:"name"`
 
@@ -231,6 +234,7 @@ func NewCluster(ctx context.Context, cluster *clusterapi.GetClusterResponse, org
 		return nil, fmt.Errorf("%s: %w", errors.ErrConvertingServiceGroups, err)
 	}
 	newCluster.ServiceGroups = newServiceGroups
+
 	return &newCluster, nil
 }
 
@@ -382,5 +386,6 @@ func NewClusterData(cluster *clusterapi.GetClusterResponse, organizationId, proj
 		return nil, fmt.Errorf("%s: %w", errors.ErrConvertingServiceGroups, err)
 	}
 	newClusterData.ServiceGroups = newServiceGroups
+
 	return &newClusterData, nil
 }

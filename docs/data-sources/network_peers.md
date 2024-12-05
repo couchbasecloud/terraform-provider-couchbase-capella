@@ -54,6 +54,7 @@ Read-Only:
 Read-Only:
 
 - `aws_config` (Attributes) (see [below for nested schema](#nestedatt--data--provider_config--aws_config))
+- `azure_config` (Attributes) (see [below for nested schema](#nestedatt--data--provider_config--azure_config))
 - `gcp_config` (Attributes) (see [below for nested schema](#nestedatt--data--provider_config--gcp_config))
 
 <a id="nestedatt--data--provider_config--aws_config"></a>
@@ -66,6 +67,19 @@ Read-Only:
 - `provider_id` (String)
 - `region` (String)
 - `vpc_id` (String)
+
+
+<a id="nestedatt--data--provider_config--azure_config"></a>
+### Nested Schema for `data.provider_config.azure_config`
+
+Read-Only:
+
+- `cidr` (String)
+- `provider_id` (String)
+- `resource_group` (String)
+- `subscription_id` (String)
+- `tenant_id` (String)
+- `vnet_id` (String)
 
 
 <a id="nestedatt--data--provider_config--gcp_config"></a>

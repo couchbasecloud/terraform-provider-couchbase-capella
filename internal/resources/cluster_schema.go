@@ -20,6 +20,7 @@ func ClusterSchema() schema.Schema {
 			"project_id":                    stringAttribute([]string{required, requiresReplace}),
 			"name":                          stringAttribute([]string{required}),
 			"description":                   stringAttribute([]string{optional, computed}),
+			"zones":                         stringSetAttribute(optional, requiresReplace),
 			"enable_private_dns_resolution": boolDefaultAttribute(false, optional, computed, requiresReplace),
 			"cloud_provider": schema.SingleNestedAttribute{
 				Required: true,
@@ -60,7 +61,7 @@ func ClusterSchema() schema.Schema {
 								},
 								"disk": schema.SingleNestedAttribute{
 									Description: "The 'storage' and 'IOPS' fields are required for AWS. " +
-										"For Azure, only the 'disktype' field is required, and for Ultra, you can provide all three fields. " +
+										"For Azure, only the 'disktype' field is required, and for Ultra disk type, you can provide all 3 - storage, iops and autoexpansion fields. For Premium type, you can only provide the autoexpansion field, others can't be set." +
 										"In the case of GCP, only 'pd ssd' disk type is available, and you cannot set the 'IOPS' field.",
 									Required: true,
 									Attributes: map[string]schema.Attribute{

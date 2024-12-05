@@ -6,6 +6,34 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	DefaultP6Storage                = 64
+	DefaultP6IOPS                   = 240
+	DefaultP10Storage               = 128
+	DefaultP10IOPS                  = 500
+	DefaultP15Storage               = 256
+	DefaultP15IOPS                  = 1100
+	DefaultP20Storage               = 512
+	DefaultP20IOPS                  = 2300
+	DefaultP30Storage               = 1024
+	DefaultP30IOPS                  = 5000
+	DefaultP40Storage               = 2048
+	DefaultP40IOPS                  = 7500
+	DefaultP50Storage               = 4096
+	DefaultP50IOPS                  = 7500
+	DefaultP60Storage               = 8192
+	DefaultP60IOPS                  = 16000
+	Ultra             DiskAzureType = "Ultra"
+	P6                DiskAzureType = "P6"
+	P10               DiskAzureType = "P10"
+	P15               DiskAzureType = "P15"
+	P20               DiskAzureType = "P20"
+	P30               DiskAzureType = "P30"
+	P40               DiskAzureType = "P40"
+	P50               DiskAzureType = "P50"
+	P60               DiskAzureType = "P60"
+)
+
 // Availability defines if the cluster nodes will be deployed in multiple or single availability zones in the cloud.
 type Availability struct {
 	// Type is availability zone type, either 'single' or 'multi'.
@@ -66,6 +94,9 @@ type CreateClusterRequest struct {
 	// EnablePrivateDNSResolution signals that the cluster should have hostnames that are hosted in a public DNS zone that resolve to a private DNS address.
 	// This exists to support the use case of customers connecting from their own data centers where it is not possible to make use of a cloud service provider DNS zone.
 	EnablePrivateDNSResolution *bool `json:"enablePrivateDNSResolution,omitempty"`
+
+	// Zones is the cloud services provider availability zones for the cluster. Currently Supported only for single AZ clusters so only 1 zone is allowed in list.
+	Zones []string `json:"zones"`
 }
 
 // CreateClusterResponse is the response received from the Capella V4 Public API when asked to create a new cluster.
@@ -120,6 +151,9 @@ type GetClusterResponse struct {
 
 	// Description depicts description of the cluster (up to 1024 characters).
 	Description string `json:"description"`
+
+	// Zones is the cloud services provider availability zones for the cluster. Currently Supported only for single AZ clusters so only 1 zone is allowed in list.
+	Zones []string `json:"zones"`
 
 	// EnablePrivateDNSResolution signals that the cluster should have hostnames that are hosted in a public DNS zone that resolve to a private DNS address.
 	// This exists to support the use case of customers connecting from their own data centers where it is not possible to make use of a cloud service provider DNS zone.
