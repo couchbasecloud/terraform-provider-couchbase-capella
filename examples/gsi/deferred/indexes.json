@@ -1,0 +1,81 @@
+{
+  "resource": {
+    "couchbase-capella_indexes": {
+      "idx1": {
+        "organization_id": "${organization_id}",
+        "project_id": "${project_id}",
+        "cluster_id": "${cluster_id}",
+        "bucket_name": "test",
+        "scope_name": "metrics",
+        "scope_name": "memory",
+        "index_name": "idx1",
+        "index_keys": [
+          "field1"
+        ],
+        "with": {
+          "defer_build": true
+        }
+      },
+      "idx2": {
+        "organization_id": "${organization_id}",
+        "project_id": "${project_id}",
+        "cluster_id": "${cluster_id}",
+        "bucket_name": "test",
+        "scope_name": "metrics",
+        "scope_name": "memory",
+        "index_name": "idx2",
+        "index_keys": [
+          "field2"
+        ],
+        "with": {
+          "defer_build": true
+        }
+      },
+      "idx3": {
+        "organization_id": "${organization_id}",
+        "project_id": "${project_id}",
+        "cluster_id": "${cluster_id}",
+        "bucket_name": "test",
+        "scope_name": "metrics",
+        "scope_name": "memory",
+        "index_name": "idx3",
+        "index_keys": [
+          "field3"
+        ],
+        "with": {
+          "defer_build": true
+        }
+      },
+      "idx4": {
+        "organization_id": "${organization_id}",
+        "project_id": "${project_id}",
+        "cluster_id": "${cluster_id}",
+        "bucket_name": "test",
+        "scope_name": "metrics",
+        "scope_name": "memory",
+        "index_name": "idx4",
+        "index_keys": [
+          "field5"
+        ],
+        "with": {
+          "defer_build": true
+        }
+      },
+      "idx5": {
+        "organization_id": "${organization_id}",
+        "project_id": "${project_id}",
+        "cluster_id": "${cluster_id}",
+        "bucket_name": "test",
+        "scope_name": "metrics",
+        "scope_name": "memory",
+        "index_name": "idx5",
+        "index_keys": [
+          "field5"
+        ],
+        "with": {
+          "defer_build": true
+        }
+      }
+    }
+  }
+}
