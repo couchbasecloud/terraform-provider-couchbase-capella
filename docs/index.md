@@ -222,79 +222,89 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 
   The [buckets](https://docs.couchbase.com/cloud/clusters/data-service/about-buckets-scopes-collections.html#buckets) is the top-level storage container for data in a Capella database.
 
-* [Configure App Services](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/appservice)
+* [Configure App Services](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/appservice):
 
-  Create and Manage App Services in Capella.
+  App Services synchronizes data between the Couchbase Capella database and your apps running on mobile applications.
 
-* [Configure Bucket Backup & Restore](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/backup)
+* [Configure Bucket Backup & Restore](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/backup):
 
+  A bucket is the fundamental space for storing data in Couchbase Capella.
   Create and Manage Backups in Capella.
 
-* [Create & Manage Scopes](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/bucket/scopes)
+* [Create & Manage Scopes](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/bucket/scopes):
 
-  Create and Manage Scopes within a bucket.
+  Create and Manage Scopes within a bucket. A scope is a mechanism for the grouping of multiple collections.
 
-* [Create & Manage Collections](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/bucket/collections)
+* [Create & Manage Collections](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/bucket/collections):
 
-  Create and Manage Collections within a bucket.
+  Create and Manage Collections within a bucket. A collection is a data container for related documents.
 
-* [Configure Cluster On/Off Schedule](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/cluster_onoff_schedule)
+* [Configure Cluster On/Off Schedule](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/cluster_onoff_schedule):
 
-  Configure cluster on/off schedule.
+  The On/Off Schedule endpoint enables you to schedule when your provisioned database should turn on or off to save costs.
 
-* [Turn Clusters On/Off On Demand](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/cluster_onoff_ondemand)
+* [Turn Clusters On/Off On Demand](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/cluster_onoff_ondemand):
 
-  Turn Clusters on/off on demand.
+  Turning off your database only turns off the compute. All of your data, schema (buckets, scopes, and collections), and indexes remain, as well as your cluster configuration, including users and allow lists.
+  When you turn your provisioned database off, you will be charged the OFF amount for the database.
 
-* [Turn App Service On/Off On Demand](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/app_service_onoff_ondemand)
+* [Turn App Service On/Off On Demand](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/app_service_onoff_ondemand):
 
-  Turn App Services on/off on-demand.
+  You can turn the cluster and any linked app services on or off on demand using the [cluster API](https://docs.couchbase.com/cloud/management-api-reference/index.html#tag/clusters).
 
-* [Import Sample Dataset Buckets](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/sample_bucket)
+* [Import Sample Dataset Buckets](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/sample_bucket):
 
-  Import Sample Dataset Buckets.
+  The sampleBucket endpoint lets users easily create a bucket filled with sample data. This is a quick way for users to try out features and learn how things work with ready-to-use data.
 
-* [Manage Storage Auto Expansion for Azure Clusters](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/cluster/azure)
+* [Manage Storage Auto Expansion for Azure Clusters](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/cluster/azure):
 
   Manage Storage Auto-expansion for Azure Clusters.
 
-* [Manage Audit Log Settings in Capella](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/audit_log_settings)
-   
-  Manage Audit Log Settings.
+* [Manage Audit Log Settings in Capella](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/audit_log_settings):
 
-* [Export Capella Audit Logs](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/audit_log_export)
+  Users can easily configure audit log support on Capella database.
 
-  Export Audit Logs.
+* [Export Capella Audit Logs](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/audit_log_export):
 
-* [Retrieve Audit Log Events for a Cluster](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/audit_logs_event_ids)
-  
-  Retrieve Audit Logs Events.
+  Users can export audit logs from cloud blob storage to an AWS S3 bucket.
 
-* [Manage Network Peer](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/network_peer)
+* [Retrieve Audit Log Events for a Cluster](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/audit_logs_event_ids):
 
-  Manage Network Peer
+  Users can retrieve audit logs from a pre-signed download URL. Logs are retained for 30 days.
 
-* [Retrieve Specific Event](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/event)
+* [Manage Network Peer](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/network_peer):
+
+  Network Peering enables you to configure a secure private network connection between the Virtual Private Cloud (VPC) hosting your applications and the VPC of your Couchbase Capella database.
+
+* [Retrieve Specific Event](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/event):
 
   Retrieve Specific Event
 
-* [Retrieve All Events](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/events)
+* [Retrieve All Events](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/events):
 
   Retrieve All Events
 
-* [Retrieve Private Endpoint Command for AWS](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoint_command/AWS)
+* [Retrieve Private Endpoint Command for AWS](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoint_command/AWS):
 
   Retrieve Private Endpoint Command for AWS
 
-* [Retrieve Private Endpoint Command for Azure](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoint_command/Azure)
+* [Retrieve Private Endpoint Command for Azure](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoint_command/Azure):
 
   Retrieve Private Endpoint Command for Azure
 
-* [Manage Private Endpoint Service](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoint_service)
+* [Manage Private Endpoint Service](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoint_service):
 
-  Manage Private Endpoint Service
+  Access your Capella cluster from your cloud provider's private network.
 
-* [Manage Private Endpoints](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoints)
+* [Manage Private Endpoints](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoints):
 
   Manage Private Endpoints
+
+* [Manage Azure Network Peer](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/network_peer):
+
+  Manage Azure Network Peer
+
+* [Manage Flush Bucket](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/flush_bucket):
+
+  Manage Flush Bucket
 
