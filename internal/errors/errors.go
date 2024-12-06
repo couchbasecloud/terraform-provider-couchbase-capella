@@ -234,4 +234,8 @@ var (
 	ErrBucketCreationStatusTimeout = errors.New("bucket backup creation status transition timed out after initiation")
 
 	ErrAppServiceCreationStatusTimeout = errors.New("app service creation status transition timed out after initiation")
+
+	ErrMonitorTimeout = errors.New("timed out while watching indexes")
+
+	ErrConcurrentIndexCreation = errors.New("another index create request is in progress")
 )
