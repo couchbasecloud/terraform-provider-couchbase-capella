@@ -6,15 +6,15 @@
 
 **Implemented enhancements:**
 - \[AV-90715\] Add support for `zones` in Cluster [\#241](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/241) ([PaulomeeCb](https://github.com/PaulomeeCb))
-- \[AV-82735\] Add Support for Bucket Flush [\#234](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/234) ([Lagher0](https://github.com/Lagher0))
-- \[AV-76498\] Add Support for GSI Index Management [\#233](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/233) ([l0n3star](https://github.com/l0n3star))
-- \[AV-87139\] Updated gorunner version [\#229](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/229)([a-atri](https://github.com/a-atri))
+- \[AV-82735\] Add support for Flush Bucket Data [\#234](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/234) ([Lagher0](https://github.com/Lagher0))
+- \[AV-76498\] Add support for GSI Index Management [\#233](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/233) ([l0n3star](https://github.com/l0n3star))
+- \[AV-87139\] Update gorunner version [\#229](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/229)([a-atri](https://github.com/a-atri))
 - \[AV-78889\] Add support for Azure VNET Peering [\#216](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/216) ([PaulomeeCb](https://github.com/PaulomeeCb))
 
 **Fixed bugs:**
-- \[AV-90385\] Added check for unsupported `storage` and `IOPS` values in case of `Azure Premium Disk` [\#240](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/240) ([PaulomeeCb](https://github.com/PaulomeeCb))
-- \[AV-87077\] Resolved false positives in acceptance tests by correcting handling of computed values [\#227](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/202) ([l0n3star](https://github.com/l0n3star))
-- \[AV-86105\] Initialized `autoexpansion` field with null value [\#226](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/226) ([aniket-Kumar-c](https://github.com/aniket-Kumar-c))
+- \[AV-90385\] Add check for unsupported `storage` and `IOPS` values in case of `Azure Premium Disk` [\#240](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/240) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-87077\] Resolve false positives in acceptance tests by correcting the handling of computed values [\#227](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/202) ([l0n3star](https://github.com/l0n3star))
+- \[AV-86105\] Initialize `autoexpansion` field with a null value [\#226](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/226) ([aniket-Kumar-c](https://github.com/aniket-Kumar-c))
 
 
 
