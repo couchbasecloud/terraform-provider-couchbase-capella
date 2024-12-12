@@ -1,5 +1,3 @@
-auth_token = "<v4-api-key-secret>"
-
 organization_id = "<organization_id>"
 project_name    = "My First Terraform Project"
 

@@ -29,7 +29,12 @@ Make sure you have followed the pre-requisite steps from the parent readme that 
 
 - Copy the `terraform.template.tfvars` file to `terraform.tfvars` file in the same directory
 - Create 1 V4 API key in your organization using the Capella UI.
-- Replace all placeholders with actual values. Use the above created API Key secret as the value for `auth_token`
+- Replace all placeholders with actual values. 
+- Set the auth token as an environment variable:
+
+```
+export TF_VAR_auth_token='<v4-api-key-secret>'
+```
 
 ## Execution
 
