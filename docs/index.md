@@ -278,33 +278,37 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 
 * [Retrieve Specific Event](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/event):
 
-  Retrieve Specific Event
+  Uses can retrieve any specific event using the eventId and organizationId. The results are always limited by the role and scope of the caller's privileges.
 
 * [Retrieve All Events](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/events):
 
-  Retrieve All Events
+  Lists all the events information under an organization. The list can be customised using filters
 
 * [Retrieve Private Endpoint Command for AWS](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoint_command/AWS):
 
-  Retrieve Private Endpoint Command for AWS
+  Use this to retrieve the AWS command used to configure a VPC endpoint.
 
 * [Retrieve Private Endpoint Command for Azure](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoint_command/Azure):
 
-  Retrieve Private Endpoint Command for Azure
+  Use this to retrieve the Azure command used to configure a private endpoint.
 
 * [Manage Private Endpoint Service](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoint_service):
 
-  Access your Capella cluster from your cloud provider's private network.
+  Use this feature to enable/disable Private Endpoint Service in Capella.
 
 * [Manage Private Endpoints](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoints):
 
-  Manage Private Endpoints
+  Use this feature to accept and reject a private endpoint in Capella.
 
 * [Manage Azure Network Peer](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/network_peer):
 
-  Manage Azure Network Peer
+  Use this feature to configure a secure private network connection between the Azure VNet hosting your applications and the VNet of your Couchbase Capella database.
 
 * [Manage Flush Bucket](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/flush_bucket):
 
-  Manage Flush Bucket
+  Use this feature to Flush a bucket. Flushing causes all items in a bucket to be deleted by the system at earliest opportunity.
+
+* [Manage GSI](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/gsi):
+
+  Manage secondary indexes on Capella cluster. It is recommended to use deferred index builds, especially for larger indexes.
 
