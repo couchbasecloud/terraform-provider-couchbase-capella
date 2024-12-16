@@ -276,39 +276,39 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 
   Network Peering enables you to configure a secure private network connection between the Virtual Private Cloud (VPC) hosting your applications and the VPC of your Couchbase Capella database.
 
-* [Retrieve Specific Event](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/event):
+* [Retrieve a Specific Event](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/event):
 
-  Uses can retrieve any specific event using the eventId and organizationId. The results are always limited by the role and scope of the caller's privileges.
+  Fetch the details of any specific event using the eventId and organizationId. The results are always limited by the role and scope of the caller's privileges.
 
 * [Retrieve All Events](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/events):
 
-  Lists all the events information under an organization. The list can be customised using filters
+  List the information of all the events within an organization. The list can be customized using filters.
 
 * [Retrieve Private Endpoint Command for AWS](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoint_command/AWS):
 
-  Use this to retrieve the AWS command used to configure a VPC endpoint.
+  Retrieve the AWS command used to configure a VPC endpoint.
 
 * [Retrieve Private Endpoint Command for Azure](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoint_command/Azure):
 
-  Use this to retrieve the Azure command used to configure a private endpoint.
+  Retrieve the Azure command used to configure a private endpoint.
 
 * [Manage Private Endpoint Service](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoint_service):
 
-  Use this feature to enable/disable Private Endpoint Service in Capella.
+  Enable or disable the Private Endpoint Service in Capella.
 
 * [Manage Private Endpoints](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoints):
 
-  Use this feature to accept and reject a private endpoint in Capella.
+  Accept or reject a private endpoint in Capella.
 
 * [Manage Azure Network Peer](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/network_peer):
 
-  Use this feature to configure a secure private network connection between the Azure VNet hosting your applications and the VNet of your Couchbase Capella database.
+  Configure a secure private network connection between the Azure VNet hosting your applications and the VNet of your Couchbase Capella operational cluster.
 
 * [Manage Flush Bucket](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/flush_bucket):
 
-  Use this feature to Flush a bucket. Flushing causes all items in a bucket to be deleted by the system at earliest opportunity.
+  Flush a bucket to have the system delete all its data at the earliest opportunity available. 
 
 * [Manage GSI](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/gsi):
 
-  Manage secondary indexes on Capella cluster. It is recommended to use deferred index builds, especially for larger indexes.
+  Manage secondary indexes on a Capella operational cluster. It's recommended to use deferred index builds, especially for larger indexes.
 
