@@ -1,5 +1,5 @@
 locals {
-  index_template = templatefile("${path.module}/indexes3.json", {
+  index_template = templatefile("${path.module}/indexes.json", {
     organization_id = var.organization_id
     project_id      = var.project_id
     cluster_id      = var.cluster_id
