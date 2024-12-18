@@ -87,6 +87,23 @@ func createCluster(ctx context.Context, client api.Client) error {
 	return nil
 }
 
+func destroyCluster(ctx context.Context, client api.Client) error {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", Host, OrgId, ProjectId, ClusterId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
+	_, err := client.ExecuteWithRetry(
+		context.Background(),
+		cfg,
+		nil,
+		Token,
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func getCIDR(ctx context.Context, client api.Client, CSP string) (string, error) {
 	hostName := ""
 	switch {
