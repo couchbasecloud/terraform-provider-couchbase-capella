@@ -17,7 +17,7 @@ import (
 	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
 )
 
-func createCluster(ctx context.Context, client api.Client) error {
+func createCluster(ctx context.Context, client *api.Client) error {
 	cidr, err := getCIDR(ctx, client, "aws")
 	if err != nil {
 		return err
@@ -87,7 +87,7 @@ func createCluster(ctx context.Context, client api.Client) error {
 	return nil
 }
 
-func destroyCluster(ctx context.Context, client api.Client) error {
+func destroyCluster(ctx context.Context, client *api.Client) error {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", Host, OrgId, ProjectId, ClusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
 	_, err := client.ExecuteWithRetry(
@@ -104,7 +104,7 @@ func destroyCluster(ctx context.Context, client api.Client) error {
 	return nil
 }
 
-func getCIDR(ctx context.Context, client api.Client, CSP string) (string, error) {
+func getCIDR(ctx context.Context, client *api.Client, CSP string) (string, error) {
 	hostName := ""
 	switch {
 	case strings.Contains(Host, "localhost"):
@@ -161,7 +161,7 @@ func getCIDR(ctx context.Context, client api.Client, CSP string) (string, error)
 	return options.SuggestedCidr, nil
 }
 
-func getJWT(ctx context.Context, client api.Client, hostName string) (string, error) {
+func getJWT(ctx context.Context, client *api.Client, hostName string) (string, error) {
 	url := hostName + "/sessions"
 
 	authToken := createBasicAuthToken(Username, Password)
@@ -205,7 +205,7 @@ func createBasicAuthToken(username, password string) string {
 	return base64.StdEncoding.EncodeToString([]byte(auth))
 }
 
-func wait(ctx context.Context, client api.Client) error {
+func wait(ctx context.Context, client *api.Client, destroy bool) error {
 	const maxWaitTime = 60 * time.Minute
 
 	var cancel context.CancelFunc
@@ -230,6 +230,13 @@ func wait(ctx context.Context, client api.Client) error {
 				nil,
 			)
 			if err != nil {
+				if destroy {
+					if apiError, ok := err.(*api.Error); ok {
+						if apiError.HttpStatusCode == http.StatusNotFound {
+							return nil
+						}
+					}
+				}
 				return err
 			}
 
@@ -239,7 +246,7 @@ func wait(ctx context.Context, client api.Client) error {
 				return err
 			}
 
-			if clusterapi.IsFinalState(clusterResp.CurrentState) {
+			if clusterResp.CurrentState == clusterapi.Healthy {
 				return nil
 			}
 		}
