@@ -82,15 +82,15 @@ apikey = {
   expiry             = 180
 }
 
-# app_service = {
-#   name        = "new-terraform-app-service"
-#   description = "My first test app service."
-#   nodes       = 2
-#   compute = {
-#     cpu = 2
-#     ram = 4
-#   }
-# }
+app_service = {
+  name        = "new-terraform-app-service"
+  description = "My first test app service."
+  nodes       = 2
+  compute = {
+    cpu = 2
+    ram = 4
+  }
+}
 
 sample_bucket = {
   name = "gamesim-sample"
@@ -180,10 +180,10 @@ audit_log_settings = {
 
 enabled = true
 
-# network_peer = {
-#   name          = "VPCPeerTFTestAWS"
-#   provider_type = "aws"
-# }
+network_peer = {
+  name          = "VPCPeerTFTestAWS"
+  provider_type = "aws"
+}
 
 aws_config = {
   account_id = "123456789123"
