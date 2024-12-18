@@ -9,9 +9,11 @@ import (
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 )
 
-func getCIDR(ctx context.Context, CSP string) (string, error) {
+func getCIDR(ctx context.Context, client api.Client, CSP string) (string, error) {
 	hostName := ""
 	switch {
 	case strings.Contains(Host, "localhost"):
@@ -24,7 +26,7 @@ func getCIDR(ctx context.Context, CSP string) (string, error) {
 		return "", ErrUnknownHost
 	}
 
-	jwt, err := getJWT(ctx, hostName)
+	jwt, err := getJWT(ctx, client, hostName)
 	if err != nil {
 		return "", err
 	}
@@ -36,7 +38,6 @@ func getCIDR(ctx context.Context, CSP string) (string, error) {
 		CSP,
 	)
 
-	client := &http.Client{}
 	request, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return "", err
@@ -69,12 +70,10 @@ func getCIDR(ctx context.Context, CSP string) (string, error) {
 	return options.SuggestedCidr, nil
 }
 
-func getJWT(ctx context.Context, hostName string) (string, error) {
+func getJWT(ctx context.Context, client api.Client, hostName string) (string, error) {
 	url := hostName + "/sessions"
 
 	authToken := createBasicAuthToken(Username, Password)
-
-	client := &http.Client{}
 
 	request, err := http.NewRequestWithContext(ctx, "POST", url, nil)
 	if err != nil {
