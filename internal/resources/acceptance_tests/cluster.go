@@ -9,8 +9,10 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
 )
 
 func getCIDR(ctx context.Context, client api.Client, CSP string) (string, error) {
@@ -112,4 +114,45 @@ func getJWT(ctx context.Context, client api.Client, hostName string) (string, er
 func createBasicAuthToken(username, password string) string {
 	auth := username + ":" + password
 	return base64.StdEncoding.EncodeToString([]byte(auth))
+}
+
+func wait(ctx context.Context, client api.Client) error {
+	const maxWaitTime = 60 * time.Minute
+
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithTimeout(ctx, maxWaitTime)
+	defer cancel()
+
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ErrTimeoutWaitingForCluster
+		case <-ticker.C:
+			url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", Host, OrgId, ProjectId, ClusterId)
+			cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+			response, err := client.ExecuteWithRetry(
+				ctx,
+				cfg,
+				nil,
+				Token,
+				nil,
+			)
+			if err != nil {
+				return err
+			}
+
+			clusterResp := clusterapi.GetClusterResponse{}
+			err = json.Unmarshal(response.Body, &clusterResp)
+			if err != nil {
+				return err
+			}
+
+			if clusterapi.IsFinalState(clusterResp.CurrentState) {
+				return nil
+			}
+		}
+	}
 }
