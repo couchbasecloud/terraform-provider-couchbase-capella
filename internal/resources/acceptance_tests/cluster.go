@@ -4,10 +4,70 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"strings"
 )
+
+func getCIDR(ctx context.Context, CSP string) (string, error) {
+	hostName := ""
+	switch {
+	case strings.Contains(Host, "localhost"):
+		hostName = "http://localhost:8080"
+	case strings.Contains(Host, "cloudapi"):
+		hostName = strings.Replace(Host, "cloudapi", "api", 1)
+	default:
+		const msg = "unknown host"
+		log.Print(msg, Host)
+		return "", ErrUnknownHost
+	}
+
+	jwt, err := getJWT(ctx, hostName)
+	if err != nil {
+		return "", err
+	}
+
+	url := fmt.Sprintf(
+		"%s/v2/organizations/%s/clusters/deployment-options?provider=%s",
+		hostName,
+		OrgId,
+		CSP,
+	)
+
+	client := &http.Client{}
+	request, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+	request.Header.Set("Authorization", "Bearer "+jwt)
+
+	response, err := client.Do(request)
+	if err != nil {
+		return "", err
+	}
+	defer response.Body.Close()
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return "", err
+	}
+
+	options := struct {
+		SuggestedCidr string `json:"suggestedCidr"`
+	}{}
+	if err = json.Unmarshal(body, &options); err != nil {
+		return "", err
+	}
+
+	if options.SuggestedCidr == "" {
+		const msg = "no CIDR"
+		log.Print(msg, string(body))
+		return "", ErrNoCIDR
+	}
+	return options.SuggestedCidr, nil
+}
 
 func getJWT(ctx context.Context, hostName string) (string, error) {
 	url := hostName + "/sessions"

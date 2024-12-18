@@ -10,4 +10,5 @@ const (
 	ErrPasswordMissing = errors.Sentinel("Username is missing.  Set this in CAPELLA_PASSWORD env var.")
 	ErrNoJWT           = errors.Sentinel("Could not get JWT token.")
 	ErrNoCIDR          = errors.Sentinel("Could not get suggested CIDR.")
+	ErrUnknownHost     = errors.Sentinel("Unknown host name.")
 )
