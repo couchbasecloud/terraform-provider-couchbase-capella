@@ -250,16 +250,16 @@ variable "index_keys" {
   description = "index keys"
 }
 
-variable "partition_by" {
-  description = "partition_by"
+variable "where" {
+  description = "WHERE clause"
 }
 
 variable "with" {
   description = "WITH clause"
 
   type = object({
-    defer_build   = bool
-    num_replica   = number
-    num_partition = number
+    defer_build   = optional(bool)
+    num_replica   = optional(number)
+    num_partition = optional(number)
   })
 }
