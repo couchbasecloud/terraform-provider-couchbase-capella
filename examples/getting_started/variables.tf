@@ -217,3 +217,49 @@ variable "audit_log_settings" {
     }))
   })
 }
+
+variable "enabled" {
+  description = "Enable or disable private endpoint service"
+}
+
+variable "network_peer" {
+  description = "Network Peer configuration details useful for creation"
+
+  type = object({
+    name          = string
+    provider_type = string
+  })
+}
+
+variable "aws_config" {
+  description = "AWS configuration details useful for network peer creation"
+
+  type = object({
+    account_id = optional(string)
+    vpc_id     = optional(string)
+    cidr       = string
+    region     = optional(string)
+  })
+}
+
+variable "index_name" {
+  description = "index Name"
+}
+
+variable "index_keys" {
+  description = "index keys"
+}
+
+variable "where" {
+  description = "WHERE clause"
+}
+
+variable "with" {
+  description = "WITH clause"
+
+  type = object({
+    defer_build   = optional(bool)
+    num_replica   = optional(number)
+    num_partition = optional(number)
+  })
+}

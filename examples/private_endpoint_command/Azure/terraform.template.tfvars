@@ -1,0 +1,6 @@
+auth_token          = "<v4-api-key-secret>"
+organization_id     = "<organization_id>"
+project_id          = "<project_id>"
+cluster_id          = "<cluster_id>"
+resource_group_name = "test-rg"
+virtual_network     = "vnet-1/subnet-1"

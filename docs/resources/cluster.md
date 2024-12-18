@@ -27,15 +27,17 @@ description: |-
 
 ### Optional
 
-- `configuration_type` (String)
+- `configuration_type` (String, Deprecated)
 - `couchbase_server` (Attributes) (see [below for nested schema](#nestedatt--couchbase_server))
 - `description` (String)
+- `enable_private_dns_resolution` (Boolean)
 - `if_match` (String)
 
 ### Read-Only
 
 - `app_service_id` (String)
 - `audit` (Attributes) (see [below for nested schema](#nestedatt--audit))
+- `connection_string` (String)
 - `current_state` (String)
 - `etag` (String)
 - `id` (String) The ID of this resource.
@@ -106,6 +108,9 @@ Optional:
 Required:
 
 - `plan` (String)
+
+Optional:
+
 - `timezone` (String)
 
 

@@ -16,10 +16,12 @@ func ClusterSchema() schema.Schema {
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"organization_id": stringAttribute([]string{required, requiresReplace}),
-			"project_id":      stringAttribute([]string{required, requiresReplace}),
-			"name":            stringAttribute([]string{required}),
-			"description":     stringAttribute([]string{optional, computed}),
+			"organization_id":               stringAttribute([]string{required, requiresReplace}),
+			"project_id":                    stringAttribute([]string{required, requiresReplace}),
+			"name":                          stringAttribute([]string{required}),
+			"description":                   stringAttribute([]string{optional, computed}),
+			"zones":                         stringSetAttribute(optional, requiresReplace),
+			"enable_private_dns_resolution": boolDefaultAttribute(false, optional, computed, requiresReplace),
 			"cloud_provider": schema.SingleNestedAttribute{
 				Required: true,
 				Attributes: map[string]schema.Attribute{
@@ -31,7 +33,7 @@ func ClusterSchema() schema.Schema {
 					objectplanmodifier.RequiresReplace(),
 				},
 			},
-			"configuration_type": stringAttribute([]string{optional, computed, requiresReplace, useStateForUnknown}),
+			"configuration_type": stringAttribute([]string{optional, computed, requiresReplace, useStateForUnknown, deprecated}),
 			"couchbase_server": schema.SingleNestedAttribute{
 				Optional: true,
 				Computed: true,
@@ -59,7 +61,7 @@ func ClusterSchema() schema.Schema {
 								},
 								"disk": schema.SingleNestedAttribute{
 									Description: "The 'storage' and 'IOPS' fields are required for AWS. " +
-										"For Azure, only the 'disktype' field is required, and for Ultra, you can provide all three fields. " +
+										"For Azure, only the 'disktype' field is required, and for Ultra disk type, you can provide all 3 - storage, iops and autoexpansion fields. For Premium type, you can only provide the autoexpansion field, others can't be set." +
 										"In the case of GCP, only 'pd ssd' disk type is available, and you cannot set the 'IOPS' field.",
 									Required: true,
 									Attributes: map[string]schema.Attribute{
@@ -89,12 +91,13 @@ func ClusterSchema() schema.Schema {
 				Required: true,
 				Attributes: map[string]schema.Attribute{
 					"plan":     stringAttribute([]string{required}),
-					"timezone": stringAttribute([]string{required}),
+					"timezone": stringAttribute([]string{computed, optional}),
 				},
 			},
-			"current_state":  stringAttribute([]string{computed}),
-			"app_service_id": stringAttribute([]string{computed}),
-			"audit":          computedAuditAttribute(),
+			"current_state":     stringAttribute([]string{computed}),
+			"connection_string": stringAttribute([]string{computed}),
+			"app_service_id":    stringAttribute([]string{computed}),
+			"audit":             computedAuditAttribute(),
 			// if_match is only required during update call
 			"if_match": stringAttribute([]string{optional}),
 			"etag":     stringAttribute([]string{computed}),
