@@ -11,9 +11,81 @@ import (
 	"strings"
 	"time"
 
+	"github.com/couchbase/tools-common/types/ptr"
+
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
 )
+
+func createCluster(ctx context.Context, client api.Client) error {
+	cidr, err := getCIDR(ctx, client, "aws")
+	if err != nil {
+		return err
+	}
+
+	node := clusterapi.Node{}
+	diskAws := clusterapi.DiskAWS{
+		Type:    clusterapi.DiskAWSType("gp3"),
+		Storage: 50,
+		Iops:    3000,
+	}
+
+	_ = node.FromDiskAWS(diskAws)
+
+	clusterRequest := clusterapi.CreateClusterRequest{
+		Name: "tf_acc_test_cluster_common",
+		Availability: clusterapi.Availability{
+			Type: "multi",
+		},
+		CloudProvider: clusterapi.CloudProvider{
+			Cidr:   cidr,
+			Region: "us-east-1",
+			Type:   "aws",
+		},
+		ServiceGroups: []clusterapi.ServiceGroup{
+			{
+				Node: &clusterapi.Node{
+					Compute: clusterapi.Compute{
+						Cpu: 4,
+						Ram: 16,
+					},
+					Disk: node.Disk,
+				},
+				Services: &[]clusterapi.Service{
+					clusterapi.Service("data"),
+					clusterapi.Service("index"),
+					clusterapi.Service("query")},
+				NumOfNodes: ptr.To(3),
+			},
+		},
+		Support: clusterapi.Support{
+			Plan:     "enterprise",
+			Timezone: "PT",
+		},
+	}
+
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", Host, OrgId, ProjectId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
+	response, err := client.ExecuteWithRetry(
+		context.Background(),
+		cfg,
+		clusterRequest,
+		Token,
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+
+	clusterResponse := clusterapi.GetClusterResponse{}
+	if err = json.Unmarshal(response.Body, &clusterResponse); err != nil {
+		return err
+	}
+
+	ClusterId = clusterResponse.Id.String()
+
+	return nil
+}
 
 func getCIDR(ctx context.Context, client api.Client, CSP string) (string, error) {
 	hostName := ""
