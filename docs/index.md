@@ -21,36 +21,15 @@ This API key is then used for authenticating the Terraform Provider against Couc
 
 
 **IMPORTANT**  
-Although in examples below, the API key secret is specified as a environmental variable and hardcoded in a config file, it is recommend that the API secret credentials be stored in a remote secrets manager such as Hashicorp Vault or AWS Secrets Manager that the Terraform Provider can then retrieve and use for authentication.
+Although in examples below, the API key secret is specified as an environmental variable and hardcoded in a config file, it is recommended that the API secret credentials be stored in a remote secrets manager such as Hashicorp Vault or AWS Secrets Manager that the Terraform Provider can then retrieve and use for authentication.
 
 
 ### Terraform Environment Variables
 
-Environment variables can be set by terraform by creating and adding terraform.template.tfvars
-```terraform
-auth_token = "<v4-api-key-secret>"
-organization_id = "<replace with organization id>"
-```
+The provider configuration block accepts the following arguments. In most cases it is recommended to set them via the indicated environment variables in order to keep credential information out of the configuration.
 
-A variables.tf should also be added to define the variables for terraform.
-```terraform
-variable "organization_id" {
-  description = "Capella Organization ID"
-}
-
-variable "auth_token" {
-  description = "Authentication API Key"
-}
-```
-
-Set the environment variables by using the following notation:
-```terraform
-resource "couchbase-capella_project" "example" {
-  organization_id = var.organization_id
-  name = var.project_name
-  description = "A Capella Project that will host many Capella clusters."
-}
-```
+* `host` - Allows you to specify the host for the capella API. This can be useful if you are behind a reverse proxy. May be set vai the `CAPELLA_HOST` environment variable. If not provided will default to "https://cloudapi.cloud.couchbase.com"
+* `authentication_token` - A valid [V4 REST API Key](https://docs.couchbase.com/cloud/management-api-guide/management-api-start.html#understand-management-api-keys) for authenticating with the Couchbase Capella API. May be set via the `CAPELLA_AUTH_TOKEN` environment variable.
 
 ## Create and manage resources using terraform
 
