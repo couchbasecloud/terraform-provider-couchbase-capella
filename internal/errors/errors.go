@@ -148,6 +148,9 @@ var (
 	// ErrConvertingCidr is returned when terraform fails to convert a CIDR.
 	ErrConvertingCidr = errors.New("failed to convert CIDR, please contact Couchbase Capella Support")
 
+	// ErrConvertingZone is returned when terraform fails to convert a Zone.
+	ErrConvertingZone = errors.New("failed to convert Zones, please contact Couchbase Capella Support")
+
 	// ErrReadingAWSDisk is returned when an AWS disk read fails.
 	ErrReadingAWSDisk = errors.New("failed to read AWS disk, please contact Couchbase Capella Support")
 
@@ -231,4 +234,8 @@ var (
 	ErrBucketCreationStatusTimeout = errors.New("bucket backup creation status transition timed out after initiation")
 
 	ErrAppServiceCreationStatusTimeout = errors.New("app service creation status transition timed out after initiation")
+
+	ErrMonitorTimeout = errors.New("timed out while watching indexes")
+
+	ErrConcurrentIndexCreation = errors.New("another index create request is in progress")
 )

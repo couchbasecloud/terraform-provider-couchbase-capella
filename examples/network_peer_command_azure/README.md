@@ -2,6 +2,9 @@
 
 This example shows how to retrieve the Azure role assignment command to be run in the Azure CLI that is used to configure a network peer.
 
+Note: Before retrieving this Azure role assignment command, please make sure that the Admin consent granting process has been completed through the Capella UI. 
+For more information, please refer to the [steps here](https://docs.couchbase.com/cloud/management-api-reference/index.html#tag/Network-Peers/operation/getAzureVnetPeeringCommand)
+
 To run, configure your Couchbase Capella provider as described in README in the root of this project.
 
 # Example Walkthrough
