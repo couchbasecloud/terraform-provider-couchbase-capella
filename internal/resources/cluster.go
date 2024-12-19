@@ -8,6 +8,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
@@ -105,6 +107,20 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		clusterRequest.Description = plan.Description.ValueStringPointer()
 	}
 
+	if !plan.EnablePrivateDNSResolution.IsNull() && !plan.EnablePrivateDNSResolution.IsUnknown() {
+		clusterRequest.EnablePrivateDNSResolution = plan.EnablePrivateDNSResolution.ValueBoolPointer()
+	}
+
+	if plan.Zones != nil && (plan.CloudProvider.Type.ValueString() != string(clusterapi.Aws) || plan.Availability.Type.ValueString() != "single") {
+		resp.Diagnostics.AddError(
+			"Error creating cluster",
+			"Could not create cluster, unexpected error: Invalid zones provided. Zones can only be provided for single AZ AWS clusters.",
+		)
+		return
+	} else {
+		clusterRequest.Zones = c.convertZones(plan.Zones)
+	}
+
 	var couchbaseServer providerschema.CouchbaseServer
 	if !plan.CouchbaseServer.IsUnknown() && !plan.CouchbaseServer.IsNull() {
 		couchbaseServerAtt := getCouchbaseServer(ctx, req.Config, &resp.Diagnostics)
@@ -115,6 +131,22 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		version := couchbaseServer.Version.ValueString()
 		clusterRequest.CouchbaseServer = &clusterapi.CouchbaseServer{
 			Version: &version,
+		}
+	}
+
+	if !plan.ConfigurationType.IsNull() && !plan.ConfigurationType.IsUnknown() {
+		clusterRequest.ConfigurationType = clusterapi.ConfigurationType(plan.ConfigurationType.ValueString())
+	}
+
+	//check disk values provided for Azure, if Premium type disks, then do not allow setting storage, iops.
+	if plan.CloudProvider.Type.ValueString() == string(clusterapi.Azure) {
+		err := c.checkDisk(plan)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error creating cluster",
+				"Could not create cluster, unexpected error: "+err.Error(),
+			)
+			return
 		}
 	}
 
@@ -198,6 +230,10 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		return
 	}
 
+	if plan.Zones != nil {
+		refreshedState.Zones = plan.Zones
+	}
+
 	for i, serviceGroup := range refreshedState.ServiceGroups {
 		if clusterapi.AreEqual(plan.ServiceGroups[i].Services, serviceGroup.Services) {
 			refreshedState.ServiceGroups[i].Services = plan.ServiceGroups[i].Services
@@ -270,6 +306,10 @@ func (c *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 			"Could Not Read Capella Cluster "+state.Id.String()+": "+errString,
 		)
 		return
+	}
+
+	if state.Zones != nil {
+		refreshedState.Zones = state.Zones
 	}
 
 	if len(state.ServiceGroups) == len(refreshedState.ServiceGroups) {
@@ -349,6 +389,19 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		}
 	}
 
+	//Check disk values provided for Azure, if Premium type disks, then do not allow setting storage, iops.
+	//And if the values in plan are set as default values, then ignore as that is correct configuration.
+	if plan.CloudProvider.Type.ValueString() == string(clusterapi.Azure) {
+		err := c.checkDiskUpdate(plan)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error creating cluster",
+				"Could not create cluster, unexpected error: "+err.Error(),
+			)
+			return
+		}
+	}
+
 	serviceGroups, err := c.morphToApiServiceGroups(plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -409,6 +462,10 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 
 	if !plan.IfMatch.IsUnknown() && !plan.IfMatch.IsNull() {
 		currentState.IfMatch = plan.IfMatch
+	}
+
+	if plan.Zones != nil {
+		currentState.Zones = plan.Zones
 	}
 
 	for i, serviceGroup := range currentState.ServiceGroups {
@@ -647,14 +704,17 @@ func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]cluste
 				Type: clusterapi.DiskAzureType(serviceGroup.Node.Disk.Type.ValueString()),
 			}
 
-			if serviceGroup.Node != nil && !serviceGroup.Node.Disk.Storage.IsNull() && !serviceGroup.Node.Disk.Storage.IsUnknown() {
-				storage := int(serviceGroup.Node.Disk.Storage.ValueInt64())
-				diskAzure.Storage = &storage
-			}
+			//only set values for Ultra type disk, not for Premium type
+			if diskAzure.Type == clusterapi.Ultra {
+				if serviceGroup.Node != nil && !serviceGroup.Node.Disk.Storage.IsNull() && !serviceGroup.Node.Disk.Storage.IsUnknown() {
+					storage := int(serviceGroup.Node.Disk.Storage.ValueInt64())
+					diskAzure.Storage = &storage
+				}
 
-			if serviceGroup.Node != nil && !serviceGroup.Node.Disk.IOPS.IsNull() && !serviceGroup.Node.Disk.Storage.IsUnknown() {
-				iops := int(serviceGroup.Node.Disk.IOPS.ValueInt64())
-				diskAzure.Iops = &iops
+				if serviceGroup.Node != nil && !serviceGroup.Node.Disk.IOPS.IsNull() && !serviceGroup.Node.Disk.Storage.IsUnknown() {
+					iops := int(serviceGroup.Node.Disk.IOPS.ValueInt64())
+					diskAzure.Iops = &iops
+				}
 			}
 
 			if serviceGroup.Node != nil && !serviceGroup.Node.Disk.Autoexpansion.IsNull() {
@@ -798,6 +858,13 @@ func initializePendingClusterWithPlanAndId(plan providerschema.Cluster, id strin
 	if plan.Description.IsNull() || plan.Description.IsUnknown() {
 		plan.Description = types.StringNull()
 	}
+	if plan.ConfigurationType.IsNull() || plan.ConfigurationType.IsUnknown() {
+		plan.ConfigurationType = types.StringNull()
+	}
+
+	if plan.EnablePrivateDNSResolution.IsNull() || plan.EnablePrivateDNSResolution.IsUnknown() {
+		plan.EnablePrivateDNSResolution = types.BoolNull()
+	}
 
 	if plan.CouchbaseServer.IsNull() || plan.CouchbaseServer.IsUnknown() {
 		plan.CouchbaseServer = types.ObjectNull(providerschema.CouchbaseServer{}.AttributeTypes())
@@ -814,6 +881,70 @@ func initializePendingClusterWithPlanAndId(plan providerschema.Cluster, id strin
 		if serviceGroup.Node != nil && (serviceGroup.Node.Disk.IOPS.IsNull() || serviceGroup.Node.Disk.IOPS.IsUnknown()) {
 			serviceGroup.Node.Disk.IOPS = types.Int64Null()
 		}
+		if serviceGroup.Node != nil && (serviceGroup.Node.Disk.Autoexpansion.IsNull() || serviceGroup.Node.Disk.Autoexpansion.IsUnknown()) {
+			serviceGroup.Node.Disk.Autoexpansion = types.BoolNull()
+		}
 	}
 	return plan
+}
+
+// convertZones is used to convert all roles
+// in an array of basetypes.StringValue to strings.
+func (c *Cluster) convertZones(zones []basetypes.StringValue) []string {
+	var convertedZones []string
+	for _, zone := range zones {
+		convertedZones = append(convertedZones, zone.ValueString())
+	}
+	return convertedZones
+}
+
+func (c *Cluster) checkDisk(plan providerschema.Cluster) error {
+	for _, serviceGroup := range plan.ServiceGroups {
+		// Check if Disk.Type is not "Ultra" but either Storage or IOPS is non-null.
+		if serviceGroup.Node.Disk.Type.ValueString() != string(clusterapi.Ultra) {
+			if (!serviceGroup.Node.Disk.Storage.IsNull() && !serviceGroup.Node.Disk.Storage.IsUnknown()) || (!serviceGroup.Node.Disk.IOPS.IsNull() && !serviceGroup.Node.Disk.IOPS.IsUnknown()) {
+				return fmt.Errorf("invalid configuration: Storage and IOPS cannot be specified when Disk.Type is Premium")
+			}
+		}
+	}
+	return nil
+}
+
+func (c *Cluster) checkDiskUpdate(plan providerschema.Cluster) error {
+	for _, serviceGroup := range plan.ServiceGroups {
+		// Check if Disk.Type is not "Ultra" but either Storage or IOPS is non-null.
+		if serviceGroup.Node.Disk.Type.ValueString() != string(clusterapi.Ultra) {
+			if (!serviceGroup.Node.Disk.Storage.IsNull() && !serviceGroup.Node.Disk.Storage.IsUnknown()) || (!serviceGroup.Node.Disk.IOPS.IsNull() && !serviceGroup.Node.Disk.IOPS.IsUnknown()) {
+				// Check what is coming from the existing plan, throw error, if non-default values.
+				if !isDefaultStorageAndIOPS(serviceGroup.Node.Disk.Type, serviceGroup.Node.Disk.Storage, serviceGroup.Node.Disk.IOPS) {
+					return fmt.Errorf("invalid configuration: Storage and IOPS cannot be specified when Disk.Type is Premium")
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// Helper function to check if Storage and IOPS are set to default values.
+func isDefaultStorageAndIOPS(diskType types.String, storage types.Int64, iops types.Int64) bool {
+	switch diskType.ValueString() {
+	case string(clusterapi.P6):
+		return storage.ValueInt64() == clusterapi.DefaultP6Storage && iops.ValueInt64() == clusterapi.DefaultP6IOPS
+	case string(clusterapi.P10):
+		return storage.ValueInt64() == clusterapi.DefaultP10Storage && iops.ValueInt64() == clusterapi.DefaultP10IOPS
+	case string(clusterapi.P15):
+		return storage.ValueInt64() == clusterapi.DefaultP15Storage && iops.ValueInt64() == clusterapi.DefaultP15IOPS
+	case string(clusterapi.P20):
+		return storage.ValueInt64() == clusterapi.DefaultP20Storage && iops.ValueInt64() == clusterapi.DefaultP20IOPS
+	case string(clusterapi.P30):
+		return storage.ValueInt64() == clusterapi.DefaultP30Storage && iops.ValueInt64() == clusterapi.DefaultP30IOPS
+	case string(clusterapi.P40):
+		return storage.ValueInt64() == clusterapi.DefaultP40Storage && iops.ValueInt64() == clusterapi.DefaultP40IOPS
+	case string(clusterapi.P50):
+		return storage.ValueInt64() == clusterapi.DefaultP50Storage && iops.ValueInt64() == clusterapi.DefaultP50IOPS
+	case string(clusterapi.P60):
+		return storage.ValueInt64() == clusterapi.DefaultP60Storage && iops.ValueInt64() == clusterapi.DefaultP60IOPS
+	}
+
+	return false
 }

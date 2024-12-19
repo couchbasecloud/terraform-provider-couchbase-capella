@@ -39,6 +39,17 @@ func NetworkPeerSchema() schema.Schema {
 										"provider_id":     computedStringAttribute,
 									},
 								},
+								"azure_config": schema.SingleNestedAttribute{
+									Computed: true,
+									Attributes: map[string]schema.Attribute{
+										"tenant_id":       computedStringAttribute,
+										"cidr":            computedStringAttribute,
+										"resource_group":  computedStringAttribute,
+										"subscription_id": computedStringAttribute,
+										"vnet_id":         computedStringAttribute,
+										"provider_id":     computedStringAttribute,
+									},
+								},
 							},
 						},
 						"status": schema.SingleNestedAttribute{

@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -59,7 +60,7 @@ func (p *capellaProvider) Schema(_ context.Context, _ provider.SchemaRequest, re
 				Description: "Capella Public API HTTPS Host URL",
 			},
 			capellaAuthenticationTokenField: schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
 				Sensitive:   true,
 				Description: "Capella API Token that serves as an authentication mechanism.",
 			},
@@ -82,9 +83,18 @@ func (p *capellaProvider) Configure(ctx context.Context, req provider.ConfigureR
 	// If practitioner provided a configuration value for any of the
 	// attributes, it must be a known value.
 
-	// if the host URL is not provided, connect to the production Capella API host url by default.
+	// if the host URL is not provided, check for an ENV_VAR, otherwise connect to the production Capella API host url by default.
 	if config.Host.IsNull() {
-		config.Host = types.StringValue(defaultAPIHostURL)
+		envHost, exists := os.LookupEnv("CAPELLA_HOST")
+		if exists {
+			config.Host = types.StringValue(envHost)
+		} else {
+			config.Host = types.StringValue(defaultAPIHostURL)
+		}
+	}
+
+	if config.AuthenticationToken.IsNull() {
+		config.AuthenticationToken = types.StringValue(os.Getenv("CAPELLA_AUTHENTICATION_TOKEN"))
 	}
 
 	if config.AuthenticationToken.IsUnknown() {
@@ -122,7 +132,7 @@ func (p *capellaProvider) Configure(ctx context.Context, req provider.ConfigureR
 			path.Root(capellaAuthenticationTokenField),
 			"Missing Capella Authentication Token",
 			"The provider cannot create the Capella API client as there is a missing or empty value for the capella authentication token. "+
-				"Set the password value in the configuration or use the TF_VAR_auth_token environment variable. "+
+				"Set the password value in the configuration or use the CAPELLA_AUTHENTICATION_TOKEN environment variable. "+
 				"If either is already set, ensure the value is not empty.",
 		)
 	}
@@ -186,10 +196,13 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewAWSPrivateEndpointCommand,
 		datasources.NewAzurePrivateEndpointCommand,
 		datasources.NewNetworkPeers,
+		datasources.NewAzureNetworkPeerCommand,
 		datasources.NewEvents,
 		datasources.NewEvent,
 		datasources.NewProjectEvents,
 		datasources.NewProjectEvent,
+		datasources.NewGsiDefinitions,
+		datasources.NewGsiMonitor,
 	}
 }
 
@@ -217,5 +230,7 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewPrivateEndpointService,
 		resources.NewPrivateEndpoint,
 		resources.NewNetworkPeer,
+		resources.NewFlushBucket,
+		resources.NewGSI,
 	}
 }

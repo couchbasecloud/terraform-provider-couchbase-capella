@@ -27,15 +27,18 @@ description: |-
 
 ### Optional
 
-- `configuration_type` (String)
+- `configuration_type` (String, Deprecated)
 - `couchbase_server` (Attributes) (see [below for nested schema](#nestedatt--couchbase_server))
 - `description` (String)
+- `enable_private_dns_resolution` (Boolean)
 - `if_match` (String)
+- `zones` (Set of String)
 
 ### Read-Only
 
 - `app_service_id` (String)
 - `audit` (Attributes) (see [below for nested schema](#nestedatt--audit))
+- `connection_string` (String)
 - `current_state` (String)
 - `etag` (String)
 - `id` (String) The ID of this resource.
@@ -73,7 +76,7 @@ Required:
 Required:
 
 - `compute` (Attributes) (see [below for nested schema](#nestedatt--service_groups--node--compute))
-- `disk` (Attributes) The 'storage' and 'IOPS' fields are required for AWS. For Azure, only the 'disktype' field is required, and for Ultra, you can provide all three fields. In the case of GCP, only 'pd ssd' disk type is available, and you cannot set the 'IOPS' field. (see [below for nested schema](#nestedatt--service_groups--node--disk))
+- `disk` (Attributes) For AWS, the 'storage' and 'IOPS' fields are required. For Azure, only the 'disktype' field is required. For Ultra disk type, you can provide all 3 fields: 'storage', 'IOPS' and 'auto-expansion'. For Premium type, you can set the 'auto-expansion' field only. For GCP, only the 'pd ssd' disk type is available, and you cannot set the 'IOPS' field. (See [below for nested schema](#nestedatt--service_groups--node--disk))
 
 <a id="nestedatt--service_groups--node--compute"></a>
 ### Nested Schema for `service_groups.node.compute`
@@ -106,6 +109,9 @@ Optional:
 Required:
 
 - `plan` (String)
+
+Optional:
+
 - `timezone` (String)
 
 

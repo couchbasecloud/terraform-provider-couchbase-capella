@@ -132,11 +132,21 @@ type Cluster struct {
 	OrganizationId types.String `tfsdk:"organization_id"`
 	Audit          types.Object `tfsdk:"audit"`
 
+	// ConfigurationType represents whether a cluster is configured as a single-node or multi-node cluster.
+	ConfigurationType types.String `tfsdk:"configuration_type"`
+
 	// CouchbaseServer is the version of the Couchbase Server to be installed in the cluster.
 	CouchbaseServer types.Object `tfsdk:"couchbase_server"`
 
 	// Description of the cluster (up to 1024 characters).
 	Description types.String `tfsdk:"description"`
+
+	// EnablePrivateDNSResolution signals that the cluster should have hostnames that are hosted in a public DNS zone that resolve to a private DNS address.
+	// This exists to support the use case of customers connecting from their own data centers where it is not possible to make use of a cloud service provider DNS zone.
+	EnablePrivateDNSResolution types.Bool `tfsdk:"enable_private_dns_resolution"`
+
+	// Zones is the cloud services provider availability zones for the cluster. Currently Supported only for single AZ clusters so only 1 zone is allowed in list.
+	Zones []types.String `tfsdk:"zones"`
 
 	// Name of the cluster (up to 256 characters).
 	Name types.String `tfsdk:"name"`
@@ -181,11 +191,12 @@ func removePatch(version string) string {
 // NewCluster create new cluster object.
 func NewCluster(ctx context.Context, cluster *clusterapi.GetClusterResponse, organizationId, projectId string, auditObject basetypes.ObjectValue) (*Cluster, error) {
 	newCluster := Cluster{
-		Id:             types.StringValue(cluster.Id.String()),
-		OrganizationId: types.StringValue(organizationId),
-		ProjectId:      types.StringValue(projectId),
-		Name:           types.StringValue(cluster.Name),
-		Description:    types.StringValue(cluster.Description),
+		Id:                         types.StringValue(cluster.Id.String()),
+		OrganizationId:             types.StringValue(organizationId),
+		ProjectId:                  types.StringValue(projectId),
+		Name:                       types.StringValue(cluster.Name),
+		Description:                types.StringValue(cluster.Description),
+		EnablePrivateDNSResolution: types.BoolValue(cluster.EnablePrivateDNSResolution),
 		Availability: &Availability{
 			Type: types.StringValue(string(cluster.Availability.Type)),
 		},
@@ -194,6 +205,7 @@ func NewCluster(ctx context.Context, cluster *clusterapi.GetClusterResponse, org
 			Region: types.StringValue(cluster.CloudProvider.Region),
 			Type:   types.StringValue(string(cluster.CloudProvider.Type)),
 		},
+		ConfigurationType: types.StringValue(string(cluster.ConfigurationType)),
 		Support: &Support{
 			Plan:     types.StringValue(string(cluster.Support.Plan)),
 			Timezone: types.StringValue(string(cluster.Support.Timezone)),
@@ -222,6 +234,7 @@ func NewCluster(ctx context.Context, cluster *clusterapi.GetClusterResponse, org
 		return nil, fmt.Errorf("%s: %w", errors.ErrConvertingServiceGroups, err)
 	}
 	newCluster.ServiceGroups = newServiceGroups
+
 	return &newCluster, nil
 }
 
@@ -318,30 +331,32 @@ type Clusters struct {
 
 // ClusterData defines attributes for a single cluster when fetched from the V4 Capella Public API.
 type ClusterData struct {
-	Availability     *Availability    `tfsdk:"availability"`
-	Support          *Support         `tfsdk:"support"`
-	CouchbaseServer  *CouchbaseServer `tfsdk:"couchbase_server"`
-	CloudProvider    *CloudProvider   `tfsdk:"cloud_provider"`
-	OrganizationId   types.String     `tfsdk:"organization_id"`
-	ProjectId        types.String     `tfsdk:"project_id"`
-	Id               types.String     `tfsdk:"id"`
-	Audit            types.Object     `tfsdk:"audit"`
-	Description      types.String     `tfsdk:"description"`
-	Name             types.String     `tfsdk:"name"`
-	AppServiceId     types.String     `tfsdk:"app_service_id"`
-	ConnectionString types.String     `tfsdk:"connection_string"`
-	CurrentState     types.String     `tfsdk:"current_state"`
-	ServiceGroups    []ServiceGroup   `tfsdk:"service_groups"`
+	Availability               *Availability    `tfsdk:"availability"`
+	Support                    *Support         `tfsdk:"support"`
+	CouchbaseServer            *CouchbaseServer `tfsdk:"couchbase_server"`
+	CloudProvider              *CloudProvider   `tfsdk:"cloud_provider"`
+	OrganizationId             types.String     `tfsdk:"organization_id"`
+	ProjectId                  types.String     `tfsdk:"project_id"`
+	Id                         types.String     `tfsdk:"id"`
+	Audit                      types.Object     `tfsdk:"audit"`
+	Description                types.String     `tfsdk:"description"`
+	EnablePrivateDNSResolution types.Bool       `tfsdk:"enable_private_dns_resolution"`
+	Name                       types.String     `tfsdk:"name"`
+	AppServiceId               types.String     `tfsdk:"app_service_id"`
+	ConnectionString           types.String     `tfsdk:"connection_string"`
+	CurrentState               types.String     `tfsdk:"current_state"`
+	ServiceGroups              []ServiceGroup   `tfsdk:"service_groups"`
 }
 
 // NewClusterData creates a new cluster data object.
 func NewClusterData(cluster *clusterapi.GetClusterResponse, organizationId, projectId string, auditObject basetypes.ObjectValue) (*ClusterData, error) {
 	newClusterData := ClusterData{
-		Id:             types.StringValue(cluster.Id.String()),
-		OrganizationId: types.StringValue(organizationId),
-		ProjectId:      types.StringValue(projectId),
-		Name:           types.StringValue(cluster.Name),
-		Description:    types.StringValue(cluster.Description),
+		Id:                         types.StringValue(cluster.Id.String()),
+		OrganizationId:             types.StringValue(organizationId),
+		ProjectId:                  types.StringValue(projectId),
+		Name:                       types.StringValue(cluster.Name),
+		Description:                types.StringValue(cluster.Description),
+		EnablePrivateDNSResolution: types.BoolValue(cluster.EnablePrivateDNSResolution),
 		Availability: &Availability{
 			Type: types.StringValue(string(cluster.Availability.Type)),
 		},
@@ -371,5 +386,6 @@ func NewClusterData(cluster *clusterapi.GetClusterResponse, organizationId, proj
 		return nil, fmt.Errorf("%s: %w", errors.ErrConvertingServiceGroups, err)
 	}
 	newClusterData.ServiceGroups = newServiceGroups
+
 	return &newClusterData, nil
 }

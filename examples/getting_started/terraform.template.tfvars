@@ -1,5 +1,3 @@
-auth_token = "<v4-api-key-secret>"
-
 organization_id = "<organization_id>"
 project_name    = "My First Terraform Project"
 
@@ -192,4 +190,13 @@ aws_config = {
   vpc_id     = "vpc-141f0fffff141aa00"
   region     = "us-east-1"
   cidr       = "10.0.0.0/16"
+}
+
+index_name = "idx1"
+index_keys = ["id", "age", "name"]
+where      = "dept = 'sales'"
+
+with = {
+  defer_build = false
+  num_replica = 1
 }

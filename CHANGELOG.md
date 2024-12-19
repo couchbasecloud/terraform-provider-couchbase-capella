@@ -1,5 +1,51 @@
 # Changelog
 
+## [v1.4.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.4.0) (2024-12-09)
+
+[Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.3.0...v1.4.0)
+
+**Implemented enhancements:**
+- \[AV-90715\] Add support for `zones` in Cluster [\#241](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/241) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-82735\] Add support for Flush Bucket Data [\#234](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/234) ([Lagher0](https://github.com/Lagher0))
+- \[AV-76498\] Add support for GSI Index Management [\#233](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/233) ([l0n3star](https://github.com/l0n3star))
+- \[AV-87139\] Update gorunner version [\#229](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/229)([a-atri](https://github.com/a-atri))
+- \[AV-78889\] Add support for Azure VNET Peering [\#216](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/216) ([PaulomeeCb](https://github.com/PaulomeeCb))
+
+**Fixed bugs:**
+- \[AV-90385\] Add check for unsupported `storage` and `IOPS` values in case of `Azure Premium Disk` [\#240](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/240) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-87077\] Resolve false positives in acceptance tests by correcting the handling of computed values [\#227](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/202) ([l0n3star](https://github.com/l0n3star))
+- \[AV-86105\] Initialize `autoexpansion` field with a null value [\#226](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/226) ([aniket-Kumar-c](https://github.com/aniket-Kumar-c))
+
+
+
+## [v1.3.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.3.0) (2024-09-11)
+
+[Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.2.1...v1.3.0)
+
+**Implemented enhancements:**
+- \[AV-86845\] Deprecate the `configurationType` attribute in the cluster resource [\#222](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/222) ([aniket-Kumar-c](https://github.com/aniket-Kumar-c))
+- \[AV-85326\] Display the cluster connection string for the cluster resource [\#219](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/219) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-82517\] Remove the configuration type from the cluster resource [#207](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/207) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-76499\] Support Capella System Events and Activity Logs [\#206](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/206) ([aniket-Kumar-c](https://github.com/aniket-Kumar-c))
+- \[AV-78888\] Add Support for VPC peering for AWS and GCP [\#205](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/205) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-76500\] Support for Private Endpoints for AWS and Azure [\#202](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/202) ([l0n3star](https://github.com/l0n3star))
+- \[AV-79411\] Add a Custom User-Agent HTTP header for Terraform Provider Client [\#200](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/200) ([l0n3star](https://github.com/l0n3star))
+
+**Fixed bugs:**
+- \[AV-85326\] Fix Private Endpoints examples [\#218](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/218) ([l0n3star](https://github.com/l0n3star))
+- \[AV-84160\] Make cluster timezone optional [\#215](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/215) ([Lagher0](https://github.com/Lagher0))
+- \[AV-83067\] Remove server version check for acceptance tests [\#210](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/210) ([l0n3star](https://github.com/l0n3star))
+- \[AV-83066\] Resolve getting-started folder bugs [\#209](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/209) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-79969\] Use noop when resource is destroyed for audit logs [\#203](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/203) ([l0n3star](https://github.com/l0n3star))
+
+**Documentation Enhancement:**
+- \[AV-83061\] Update contributing.md with windows steps [#208](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/208) ([Talina06](https://github.com/Talina06))
+
+**Merged pull requests:**
+- Bump github.com/hashicorp/terraform-plugin-framework from 1.6.1 to 1.9.0 [#201](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/201) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump github.com/hashicorp/terraform-plugin-go from 0.22.1 to 0.23.0 [#193](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/193) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+
 ## [v1.2.1](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.2.1) (2024-05-07)
 
 [Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.2.0...v1.2.1)
