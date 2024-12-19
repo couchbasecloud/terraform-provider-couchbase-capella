@@ -12,31 +12,11 @@ import (
 )
 
 func TestAccSampleBucketTestCases(t *testing.T) {
-	resourceName := "new_cluster"
-	resourceReference := "couchbase-capella_cluster." + resourceName
-	projectResourceName := "terraform_project"
-	projectResourceReference := "couchbase-capella_project." + projectResourceName
-	cidr, err := acctest.GetCIDR("aws")
-	fmt.Println(cidr)
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-
-	testCfg := acctest.ProjectCfg
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
-			//Creating cluster to check the sample bucket configs
 			{
-				Config: testAccCreateCluster(&testCfg, resourceName, projectResourceName, projectResourceReference, cidr),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExistsClusterResource(resourceReference),
-				),
-			},
-			{
-				Config: testAccSampleBucketWithTravelSample(testCfg),
+				Config: testAccSampleBucketWithTravelSampleConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.TestAccWait(time.Second*10),
 					resource.TestCheckResourceAttr("couchbase-capella_sample_bucket.add_sample_bucket_travel", "name", "travel-sample"),
@@ -45,7 +25,7 @@ func TestAccSampleBucketTestCases(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccSampleBucketWithAllBuckets(&testCfg),
+				Config: testAccSampleBucketWithAllBucketsConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("couchbase-capella_sample_bucket.add_sample_bucket_travel", "name", "travel-sample"),
 					resource.TestCheckResourceAttrSet("couchbase-capella_sample_bucket.add_sample_bucket_travel", "id"),
@@ -61,56 +41,45 @@ func TestAccSampleBucketTestCases(t *testing.T) {
 
 			//Invalid Sample Data input
 			{
-				Config:      testAccWithInvalidSampleInput(testCfg),
+				Config:      testAccWithInvalidSampleInputConfig(),
 				ExpectError: regexp.MustCompile("Could not load sample bucket"),
-			},
-
-			{
-				Config: testCfg,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccDeleteClusterResource(resourceReference),
-				),
-				ExpectNonEmptyPlan: true,
-				RefreshState:       false,
 			},
 		},
 	})
 }
 
-func testAccWithInvalidSampleInput(cfg string) string {
-	cfg = fmt.Sprintf(`
+func testAccWithInvalidSampleInputConfig() string {
+	return fmt.Sprintf(`
 %[1]s
 output "sample_bucket_invalid"{
   value = couchbase-capella_sample_bucket.add_sample_bucket_invalid
 }
 resource "couchbase-capella_sample_bucket" "add_sample_bucket_invalid" {
-  organization_id = var.organization_id
-  project_id      = couchbase-capella_project.terraform_project.id
-  cluster_id      = couchbase-capella_cluster.new_cluster.id
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  cluster_id      = "%[4]s"
   name			  = "invalid-sample"
 }
-`, cfg)
-	return cfg
+`, ProviderBlock, OrgId, ProjectId, ClusterId)
 }
 
-func testAccSampleBucketWithTravelSample(cfg string) string {
-	cfg = fmt.Sprintf(`
+func testAccSampleBucketWithTravelSampleConfig() string {
+	return fmt.Sprintf(`
 %[1]s
 output "sample_bucket_travel"{
   value = couchbase-capella_sample_bucket.add_sample_bucket_travel
 }
 resource "couchbase-capella_sample_bucket" "add_sample_bucket_travel" {
-  organization_id = var.organization_id
-  project_id      = couchbase-capella_project.terraform_project.id
-  cluster_id      = couchbase-capella_cluster.new_cluster.id
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  cluster_id      = "%[4]s"
   name			  = "travel-sample"
 }
-`, cfg)
-	return cfg
+`, ProviderBlock, OrgId, ProjectId, ClusterId)
 }
 
-func testAccSampleBucketWithAllBuckets(cfg *string) string {
-	*cfg = fmt.Sprintf(`
+func testAccSampleBucketWithAllBucketsConfig() string {
+	return fmt.Sprintf(`
 %[1]s
 
 output "sample_bucket_beer"{
@@ -123,24 +92,24 @@ output "sample_bucket_travel"{
   value = couchbase-capella_sample_bucket.add_sample_bucket_travel
 }
 resource "couchbase-capella_sample_bucket" "add_sample_bucket_travel" {
-  organization_id = var.organization_id
-  project_id      = couchbase-capella_project.terraform_project.id
-  cluster_id      = couchbase-capella_cluster.new_cluster.id
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  cluster_id      = "%[4]s"
   name			  = "travel-sample"
 }
 resource "couchbase-capella_sample_bucket" "add_sample_bucket_beer" {
-  organization_id = var.organization_id
-  project_id      = couchbase-capella_project.terraform_project.id
-  cluster_id      = couchbase-capella_cluster.new_cluster.id
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  cluster_id      = "%[4]s"
   name			  = "beer-sample"
 }
 resource "couchbase-capella_sample_bucket" "add_sample_bucket_gamesim" {
-  organization_id = var.organization_id
-  project_id      = couchbase-capella_project.terraform_project.id
-  cluster_id      = couchbase-capella_cluster.new_cluster.id
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  cluster_id      = "%[4]s"
   name			  = "gamesim-sample"
 }
 
-`, *cfg)
-	return *cfg
+`, ProviderBlock, OrgId, ProjectId, ClusterId)
+
 }
