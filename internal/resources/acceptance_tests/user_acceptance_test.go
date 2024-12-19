@@ -16,16 +16,13 @@ import (
 func TestAccUserResource(t *testing.T) {
 	resourceName := "acc_user_" + cfg.GenerateRandomResourceName()
 	resourceReference := "couchbase-capella_user." + resourceName
-	projectResourceName := "acc_project_" + cfg.GenerateRandomResourceName()
-	projectResourceReference := "couchbase-capella_project." + projectResourceName
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { cfg.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: cfg.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read
 			{
-				Config: testAccUserResourceConfig(cfg.Cfg, resourceName, projectResourceName, projectResourceReference),
+				Config: testAccUserResourceConfig(resourceName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
 					resource.TestCheckResourceAttr(resourceReference, "email", "terraformacceptancetest@couchbase.com"),
@@ -41,7 +38,7 @@ func TestAccUserResource(t *testing.T) {
 			},
 			// Update and Read
 			{
-				Config: testAccUserResourceConfigUpdate(cfg.Cfg, resourceName, projectResourceName, projectResourceReference),
+				Config: testAccUserResourceConfigUpdate(resourceName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
 					resource.TestCheckResourceAttr(resourceReference, "email", "terraformacceptancetest@couchbase.com"),
@@ -51,6 +48,42 @@ func TestAccUserResource(t *testing.T) {
 				),
 			},
 			// NOTE: No delete case is provided - this occurs automatically
+		},
+	})
+}
+
+func TestAccUserResourceResourceNotFound(t *testing.T) {
+	resourceName := "acc_user_" + cfg.GenerateRandomResourceName()
+	resourceReference := "couchbase-capella_user." + resourceName
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: cfg.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create and Read testing
+			{
+				Config: testAccUserResourceConfig(resourceName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
+					resource.TestCheckResourceAttr(resourceReference, "email", "terraformacceptancetest@couchbase.com"),
+					resource.TestCheckResourceAttr(resourceReference, "organization_roles.0", "organizationOwner"),
+					// Delete the user from the server and wait until deletion is successful
+					testAccDeleteUserResource(resourceReference),
+				),
+				ExpectNonEmptyPlan: true,
+				RefreshState:       false,
+			},
+
+			// Attempt to update - since the orginal has been deleted, a new user will be created.
+			{
+				Config: testAccUserResourceConfigUpdate(resourceName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
+					resource.TestCheckResourceAttr(resourceReference, "email", "terraformacceptancetest@couchbase.com"),
+					resource.TestCheckResourceAttr(resourceReference, "organization_roles.0", "organizationMember"),
+					resource.TestCheckResourceAttr(resourceReference, "resources.0.type", "project"),
+					resource.TestCheckResourceAttr(resourceReference, "resources.0.roles.0", "projectViewer"),
+				),
+			},
 		},
 	})
 }
@@ -80,13 +113,11 @@ func testAccDeleteUserResource(resourceReference string) resource.TestCheckFunc 
 		if err != nil {
 			return err
 		}
-		fmt.Printf("delete initiated")
 		err = readUserFromServer(data, rawState["organization_id"], rawState["id"])
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if !resourceNotFound {
 			return fmt.Errorf(errString)
 		}
-		fmt.Printf("successfully deleted")
 		return nil
 	}
 }
@@ -123,56 +154,12 @@ func readUserFromServer(data *providerschema.Data, organizationId, clusterId str
 	return nil
 }
 
-func TestAccUserResourceResourceNotFound(t *testing.T) {
-	resourceName := "acc_user_" + cfg.GenerateRandomResourceName()
-	resourceReference := "couchbase-capella_user." + resourceName
-	projectResourceName := "acc_project_" + cfg.GenerateRandomResourceName()
-	projectResourceReference := "couchbase-capella_project." + projectResourceName
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { cfg.TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: cfg.TestAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			// Create and Read testing
-			{
-				Config: testAccUserResourceConfig(cfg.Cfg, resourceName, projectResourceName, projectResourceReference),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
-					resource.TestCheckResourceAttr(resourceReference, "email", "terraformacceptancetest@couchbase.com"),
-					resource.TestCheckResourceAttr(resourceReference, "organization_roles.0", "organizationOwner"),
-					// Delete the user from the server and wait until deletion is successful
-					testAccDeleteUserResource(resourceReference),
-				),
-				ExpectNonEmptyPlan: true,
-				RefreshState:       false,
-			},
-
-			// Attempt to update - since the orginal has been deleted, a new user will be created.
-			{
-				Config: testAccUserResourceConfigUpdate(cfg.Cfg, resourceName, projectResourceName, projectResourceReference),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
-					resource.TestCheckResourceAttr(resourceReference, "email", "terraformacceptancetest@couchbase.com"),
-					resource.TestCheckResourceAttr(resourceReference, "organization_roles.0", "organizationMember"),
-					resource.TestCheckResourceAttr(resourceReference, "resources.0.type", "project"),
-					resource.TestCheckResourceAttr(resourceReference, "resources.0.roles.0", "projectViewer"),
-				),
-			},
-		},
-	})
-}
-
-func testAccUserResourceConfig(cfg, resourceReference, projectResourceName, projectResourceReference string) string {
+func testAccUserResourceConfig(resourceReference string) string {
 	return fmt.Sprintf(`
 	%[1]s
-	  
-	resource "couchbase-capella_project" "%[3]s" {
-		organization_id = var.organization_id
-		name            = "acc_test_project_name"
-		description     = "description"
-	}
 	
 	resource "couchbase-capella_user" "%[2]s" {
-		organization_id = var.organization_id
+		organization_id = "%[3]s"
 	  
 		name  = "acc_test_user_name"
 		email = "terraformacceptancetest@couchbase.com"
@@ -181,21 +168,14 @@ func testAccUserResourceConfig(cfg, resourceReference, projectResourceName, proj
 			"organizationOwner"
 		]
 	  }
-	`, cfg, resourceReference, projectResourceName, projectResourceReference)
+	`, ProviderBlock, resourceReference, OrgId)
 }
 
-func testAccUserResourceConfigUpdate(cfg, resourceReference, projectResourceName, projectResourceReference string) string {
+func testAccUserResourceConfigUpdate(resourceReference string) string {
 	return fmt.Sprintf(`
 	%[1]s
-	  
-	resource "couchbase-capella_project" "%[3]s" {
-		organization_id = var.organization_id
-		name            = "acc_test_project_name"
-		description     = "description"
-	}
-	
 	resource "couchbase-capella_user" "%[2]s" {
-		organization_id = var.organization_id
+		organization_id = "%[3]s"
 	  
 		name  = "acc_test_user_name"
 		email = "terraformacceptancetest@couchbase.com"
@@ -207,14 +187,14 @@ func testAccUserResourceConfigUpdate(cfg, resourceReference, projectResourceName
 		resources = [
 		  {
 			type = "project"
-			id   = %[4]s.id
+			id   = "%[4]s"
 			roles = [
 			  "projectViewer",
 			]
 		  }
 		]
 	  }
-	`, cfg, resourceReference, projectResourceName, projectResourceReference)
+	`, ProviderBlock, resourceReference, OrgId, ProjectId)
 }
 
 func generateUserImportIdForResource(resourceReference string) resource.ImportStateIdFunc {
@@ -227,7 +207,6 @@ func generateUserImportIdForResource(resourceReference string) resource.ImportSt
 				}
 			}
 		}
-		fmt.Printf("raw state %s", rawState)
-		return fmt.Sprintf("id=%s,organization_id=%s", rawState["id"], rawState["organization_id"]), nil
+		return fmt.Sprintf("id=%s,organization_id=%s", rawState["id"], OrgId), nil
 	}
 }
