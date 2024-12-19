@@ -1,5 +1,25 @@
 # Changelog
 
+## [v1.4.1](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.4.1) (2024-12-20)
+
+[Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.4.0...v1.4.1)
+
+**Implemented enhancements:**
+- Allows setting the provider host and authorization_token via CAPELLA prefixed environment variables [\#239](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/239) ([cdsre](https://github.com/cdsre))
+
+**Fixed bugs:**
+- \[AV-92771\] Fix GSI documentation link  [\#248](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/248) ([a-atri](https://github.com/a-atri))
+
+**Documentation Enhancement:**
+- \[AV-92775\] Update getting started GSI example to create non deferred secondary index [\#247](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/247) ([l0n3star](https://github.com/l0n3star))
+
+**Merged pull requests:**
+- Bump github.com/stretchr/testify from 1.9.0 to 1.10.0 [#251](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/251) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump golang.org/x/crypto from 0.30.0 to 0.31.0 [#249](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/249) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump github.com/couchbase/tools-common/functional from 1.2.0 to 1.3.1 [#246](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/246) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+
+
 ## [v1.4.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.4.0) (2024-12-09)
 
 [Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.3.0...v1.4.0)
