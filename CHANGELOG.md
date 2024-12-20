@@ -5,13 +5,13 @@
 [Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.4.0...v1.4.1)
 
 **Implemented enhancements:**
-- Allows setting the provider host and authorization_token via CAPELLA prefixed environment variables [\#239](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/239) ([cdsre](https://github.com/cdsre))
+- Allows the provider `host` and and `authentication_token` to be set through environment variables prefixed with `CAPELLA_HOST` and `CAPELLA_AUTH_TOKEN`. [\#239](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/239) ([cdsre](https://github.com/cdsre))
 
 **Fixed bugs:**
 - \[AV-92771\] Fix GSI documentation link  [\#248](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/248) ([a-atri](https://github.com/a-atri))
 
 **Documentation Enhancement:**
-- \[AV-92775\] Update getting started GSI example to create non deferred secondary index [\#247](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/247) ([l0n3star](https://github.com/l0n3star))
+- \[AV-92775\] Update the Getting Started GSI example to create a non-deferred secondary index [\#247](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/247) ([l0n3star](https://github.com/l0n3star))
 
 **Merged pull requests:**
 - Bump github.com/stretchr/testify from 1.9.0 to 1.10.0 [#251](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/251) ([dependabot[bot]](https://github.com/apps/dependabot))
