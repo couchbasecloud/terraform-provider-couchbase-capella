@@ -5,7 +5,7 @@
 [Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.4.0...v1.4.1)
 
 **Implemented enhancements:**
-- Allows the provider `host` and and `authentication_token` to be set through environment variables prefixed with `CAPELLA_HOST` and `CAPELLA_AUTH_TOKEN`. [\#239](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/239) ([cdsre](https://github.com/cdsre))
+- Allows the provider `host` and `authentication_token` to be set through environment variables prefixed with `CAPELLA_HOST` and `CAPELLA_AUTHENTICATION_TOKEN`. [\#239](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/239) ([cdsre](https://github.com/cdsre))
 
 **Fixed bugs:**
 - \[AV-92771\] Fix GSI documentation link  [\#248](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/248) ([a-atri](https://github.com/a-atri))
@@ -17,6 +17,7 @@
 - Bump github.com/stretchr/testify from 1.9.0 to 1.10.0 [#251](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/251) ([dependabot[bot]](https://github.com/apps/dependabot))
 - Bump golang.org/x/crypto from 0.30.0 to 0.31.0 [#249](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/249) ([dependabot[bot]](https://github.com/apps/dependabot))
 - Bump github.com/couchbase/tools-common/functional from 1.2.0 to 1.3.1 [#246](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/246) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump github.com/hashicorp/terraform-plugin-framework-validators from 0.12.0 to 0.16.0 [#237](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/237) ([dependabot[bot]](https://github.com/apps/dependabot))
 
 
 
