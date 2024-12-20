@@ -3,10 +3,11 @@ package acceptance_tests
 import (
 	"context"
 	"fmt"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 )
 
 func TestMain(m *testing.M) {
@@ -47,6 +48,9 @@ func setup(ctx context.Context, client *api.Client) error {
 		return err
 	}
 	if err := wait(ctx, client, false); err != nil {
+		return err
+	}
+	if err := createBucket(ctx, client); err != nil {
 		return err
 	}
 

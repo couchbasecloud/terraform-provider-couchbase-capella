@@ -5,16 +5,18 @@ import (
 )
 
 var (
-	Host  string
-	Token string
+	ProviderBlock string
+	Host          string
+	Token         string
 
 	Username string
 	Password string
 
-	OrgId         string
-	ProjectId     string
-	ClusterId     string
-	ProviderBlock string
+	OrgId     string
+	ProjectId string
+	ClusterId string
+
+	Bucket string
 )
 
 const (
