@@ -1,4 +1,4 @@
-package security_acceptance_tests
+package security
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAccCreateBackupRestoreNoAuth(t *testing.T) {
+func TestAccCreateBackupScheduleNoAuth(t *testing.T) {
 
 	tempId := os.Getenv("TF_VAR_auth_token")
 	os.Setenv("TF_VAR_auth_token", "")
@@ -21,7 +21,7 @@ func TestAccCreateBackupRestoreNoAuth(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccBackupRestoreResourceConfigRequired(acctest.Cfg),
+				Config:      testAccBackupScheduleResourceConfigRequired(acctest.Cfg),
 				ExpectError: regexp.MustCompile("Missing Capella Authentication Token"),
 			},
 		},
@@ -29,7 +29,7 @@ func TestAccCreateBackupRestoreNoAuth(t *testing.T) {
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func TestAccCreateBackupRestoreOrgOwner(t *testing.T) {
+func TestAccCreateBackupScheduleOrgOwner(t *testing.T) {
 
 	tempId := os.Getenv("TF_VAR_auth_token")
 	organizationId := os.Getenv("TF_VAR_organization_id")
@@ -42,11 +42,14 @@ func TestAccCreateBackupRestoreOrgOwner(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccBackupRestoreResourceConfigRequired(acctest.Cfg),
+				Config: testAccBackupScheduleResourceConfigRequired(acctest.Cfg),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("capella_backup.new_backup", "organization_id", organizationId),
-					resource.TestCheckResourceAttr("capella_backup.new_backup", "project_id", projectId),
-					resource.TestCheckResourceAttr("capella_backup.new_backup", "cluster_id", clusterId),
+					resource.TestCheckResourceAttr("capella_backup_schedule.new_backup_schedule", "organization_id", organizationId),
+					resource.TestCheckResourceAttr("capella_backup_schedule.new_backup_schedule", "project_id", projectId),
+					resource.TestCheckResourceAttr("capella_backup_schedule.new_backup_schedule", "cluster_id", clusterId),
+					resource.TestCheckResourceAttr("capella_backup_schedule.new_backup_schedule", "weekly_schedule.day_of_week", "sunday"),
+					resource.TestCheckResourceAttr("capella_backup_schedule.new_backup_schedule", "weekly_schedule.start_at", "10"),
+					resource.TestCheckResourceAttr("capella_backup_schedule.new_backup_schedule", "weekly_schedule.incremental_every", "4"),
 				),
 			},
 		},
@@ -54,7 +57,7 @@ func TestAccCreateBackupRestoreOrgOwner(t *testing.T) {
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func TestAccCreateBackupRestoreOrgMember(t *testing.T) {
+func TestAccCreateBackupScheduleOrgMember(t *testing.T) {
 
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationMember")
@@ -64,7 +67,7 @@ func TestAccCreateBackupRestoreOrgMember(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccBackupRestoreResourceConfigRequired(acctest.Cfg),
+				Config:      testAccBackupScheduleResourceConfigRequired(acctest.Cfg),
 				ExpectError: regexp.MustCompile("Could not create bucket"),
 			},
 		},
@@ -72,7 +75,7 @@ func TestAccCreateBackupRestoreOrgMember(t *testing.T) {
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func TestAccCreateBackupRestoreProjCreator(t *testing.T) {
+func TestAccCreateBackupScheduleProjCreator(t *testing.T) {
 
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("projectCreator")
@@ -82,7 +85,7 @@ func TestAccCreateBackupRestoreProjCreator(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccBackupRestoreResourceConfigRequired(acctest.Cfg),
+				Config:      testAccBackupScheduleResourceConfigRequired(acctest.Cfg),
 				ExpectError: regexp.MustCompile("Could not create bucket"),
 			},
 		},
@@ -90,8 +93,7 @@ func TestAccCreateBackupRestoreProjCreator(t *testing.T) {
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func TestAccCreateBackupRestoreProjOwner(t *testing.T) {
-
+func TestAccCreateBackupScheduleProjOwner(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	organizationId := os.Getenv("TF_VAR_organization_id")
 	projectId := os.Getenv("TF_VAR_project_id")
@@ -103,11 +105,14 @@ func TestAccCreateBackupRestoreProjOwner(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccBackupRestoreResourceConfigRequired(acctest.Cfg),
+				Config: testAccBackupScheduleResourceConfigRequired(acctest.Cfg),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("capella_backup.new_backup", "organization_id", organizationId),
-					resource.TestCheckResourceAttr("capella_backup.new_backup", "project_id", projectId),
-					resource.TestCheckResourceAttr("capella_backup.new_backup", "cluster_id", clusterId),
+					resource.TestCheckResourceAttr("capella_backup_schedule.new_backup_schedule", "organization_id", organizationId),
+					resource.TestCheckResourceAttr("capella_backup_schedule.new_backup_schedule", "project_id", projectId),
+					resource.TestCheckResourceAttr("capella_backup_schedule.new_backup_schedule", "cluster_id", clusterId),
+					resource.TestCheckResourceAttr("capella_backup_schedule.new_backup_schedule", "weekly_schedule.day_of_week", "sunday"),
+					resource.TestCheckResourceAttr("capella_backup_schedule.new_backup_schedule", "weekly_schedule.start_at", "10"),
+					resource.TestCheckResourceAttr("capella_backup_schedule.new_backup_schedule", "weekly_schedule.incremental_every", "4"),
 				),
 			},
 		},
@@ -115,26 +120,34 @@ func TestAccCreateBackupRestoreProjOwner(t *testing.T) {
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func TestAccCreateBackupRestoreProjManager(t *testing.T) {
+func TestAccCreateBackupScheduleProjManager(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
-	projId := os.Getenv("TF_VAR_project_id")
-	testAccCreateProjAPI("projectCreator", projId, "projectManager")
+	organizationId := os.Getenv("TF_VAR_organization_id")
+	projectId := os.Getenv("TF_VAR_project_id")
+	clusterId := os.Getenv("TF_VAR_cluster_id")
+	testAccCreateProjAPI("projectCreator", projectId, "projectManager")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccBackupRestoreResourceConfigRequired(acctest.Cfg),
-				ExpectError: regexp.MustCompile("Could not get the latest bucket backup"),
+				Config: testAccBackupScheduleResourceConfigRequired(acctest.Cfg),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("capella_backup_schedule.new_backup_schedule", "organization_id", organizationId),
+					resource.TestCheckResourceAttr("capella_backup_schedule.new_backup_schedule", "project_id", projectId),
+					resource.TestCheckResourceAttr("capella_backup_schedule.new_backup_schedule", "cluster_id", clusterId),
+					resource.TestCheckResourceAttr("capella_backup_schedule.new_backup_schedule", "weekly_schedule.day_of_week", "sunday"),
+					resource.TestCheckResourceAttr("capella_backup_schedule.new_backup_schedule", "weekly_schedule.start_at", "10"),
+					resource.TestCheckResourceAttr("capella_backup_schedule.new_backup_schedule", "weekly_schedule.incremental_every", "4"),
+				),
 			},
 		},
 	})
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func TestAccCreateBackupRestoreProjViewer(t *testing.T) {
-
+func TestAccCreateBackupScheduleProjViewer(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("projectCreator", projId, "projectViewer")
@@ -144,7 +157,7 @@ func TestAccCreateBackupRestoreProjViewer(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccBackupRestoreResourceConfigRequired(acctest.Cfg),
+				Config:      testAccBackupScheduleResourceConfigRequired(acctest.Cfg),
 				ExpectError: regexp.MustCompile("Could not create bucket"),
 			},
 		},
@@ -152,7 +165,7 @@ func TestAccCreateBackupRestoreProjViewer(t *testing.T) {
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func TestAccCreateBackupRestoreDatabaseReaderWriter(t *testing.T) {
+func TestAccCreateBackupScheduleDatabaseReaderWriter(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("projectCreator", projId, "projectDataReaderWriter")
@@ -162,7 +175,7 @@ func TestAccCreateBackupRestoreDatabaseReaderWriter(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccBackupRestoreResourceConfigRequired(acctest.Cfg),
+				Config:      testAccBackupScheduleResourceConfigRequired(acctest.Cfg),
 				ExpectError: regexp.MustCompile("Could not create bucket"),
 			},
 		},
@@ -170,7 +183,7 @@ func TestAccCreateBackupRestoreDatabaseReaderWriter(t *testing.T) {
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func TestAccCreateBackupRestoreDatabaseReader(t *testing.T) {
+func TestAccCreateBackupScheduleDatabaseReader(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("projectCreator", projId, "projectDataReader")
@@ -180,7 +193,7 @@ func TestAccCreateBackupRestoreDatabaseReader(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccBackupRestoreResourceConfigRequired(acctest.Cfg),
+				Config:      testAccBackupScheduleResourceConfigRequired(acctest.Cfg),
 				ExpectError: regexp.MustCompile("Could not create bucket"),
 			},
 		},
@@ -188,7 +201,7 @@ func TestAccCreateBackupRestoreDatabaseReader(t *testing.T) {
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func testAccBackupRestoreResourceConfigRequired(cfg string) string {
+func testAccBackupScheduleResourceConfigRequired(cfg string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -201,7 +214,7 @@ output "bucket_id" {
 }
 
 resource "capella_bucket" "new_bucket" {
-	name                       = "terraform-security-bucket"
+	name                       = "terraform-bucket"
 	organization_id            = var.organization_id
 	project_id                 = var.project_id
 	cluster_id                 = var.cluster_id
@@ -215,15 +228,23 @@ resource "capella_bucket" "new_bucket" {
 	time_to_live_in_seconds    = 100
 }
 
-output "new_backup" {
-	value = capella_backup.new_backup
-}
+output "new_backup_schedule" {
+	value = capella_backup_schedule.new_backup_schedule
+  }
 
-resource "capella_backup" "new_backup" {
+  resource "capella_backup_schedule" "new_backup_schedule" {
 	organization_id            = var.organization_id
 	project_id                 = var.project_id
 	cluster_id                 = var.cluster_id
 	bucket_id                  = capella_bucket.new_bucket.id
+	type = "weekly"
+	weekly_schedule = {
+	  day_of_week = "sunday"
+	  start_at = 10
+	  incremental_every = 4
+	  retention_time = "90days"
+	  cost_optimized_retention = false
+	  }
 }
 
 `, cfg)

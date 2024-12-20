@@ -3,6 +3,7 @@ package acceptance_tests
 import (
 	"context"
 	"fmt"
+
 	"log"
 	"os"
 	"testing"
@@ -23,7 +24,7 @@ provider "couchbase-capella" {
 }`, Host, Token)
 
 	ctx := context.Background()
-	client := api.NewClient(timeout)
+	client := api.NewClient(Timeout)
 
 	if err := setup(ctx, client); err != nil {
 		log.Print(err)
@@ -41,16 +42,16 @@ provider "couchbase-capella" {
 }
 
 func setup(ctx context.Context, client *api.Client) error {
-	if err := createProject(ctx, client); err != nil {
+	if err := CreateProject(ctx, client); err != nil {
 		return err
 	}
-	if err := createCluster(ctx, client); err != nil {
+	if err := CreateCluster(ctx, client); err != nil {
 		return err
 	}
-	if err := wait(ctx, client, false); err != nil {
+	if err := Wait(ctx, client, false); err != nil {
 		return err
 	}
-	if err := createBucket(ctx, client); err != nil {
+	if err := CreateBucket(ctx, client); err != nil {
 		return err
 	}
 
@@ -58,13 +59,13 @@ func setup(ctx context.Context, client *api.Client) error {
 }
 
 func cleanup(ctx context.Context, client *api.Client) error {
-	if err := destroyCluster(ctx, client); err != nil {
+	if err := DestroyCluster(ctx, client); err != nil {
 		return err
 	}
-	if err := wait(ctx, client, true); err != nil {
+	if err := Wait(ctx, client, true); err != nil {
 		return err
 	}
-	if err := destroyProject(ctx, client); err != nil {
+	if err := DestroyProject(ctx, client); err != nil {
 		return err
 	}
 

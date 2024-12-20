@@ -17,7 +17,7 @@ import (
 	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
 )
 
-func createCluster(ctx context.Context, client *api.Client) error {
+func CreateCluster(ctx context.Context, client *api.Client) error {
 	cidr, err := getCIDR(ctx, client, "aws")
 	if err != nil {
 		return err
@@ -87,7 +87,7 @@ func createCluster(ctx context.Context, client *api.Client) error {
 	return nil
 }
 
-func destroyCluster(ctx context.Context, client *api.Client) error {
+func DestroyCluster(ctx context.Context, client *api.Client) error {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", Host, OrgId, ProjectId, ClusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
 	_, err := client.ExecuteWithRetry(
@@ -205,7 +205,7 @@ func createBasicAuthToken(username, password string) string {
 	return base64.StdEncoding.EncodeToString([]byte(auth))
 }
 
-func wait(ctx context.Context, client *api.Client, destroy bool) error {
+func Wait(ctx context.Context, client *api.Client, destroy bool) error {
 	const maxWaitTime = 60 * time.Minute
 
 	var cancel context.CancelFunc

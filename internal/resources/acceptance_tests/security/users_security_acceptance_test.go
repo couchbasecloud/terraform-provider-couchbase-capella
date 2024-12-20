@@ -1,4 +1,4 @@
-package security_acceptance_tests
+package security
 
 import (
 	"fmt"
@@ -11,17 +11,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAccCreateBucketNoAuth(t *testing.T) {
+func TestAccCreateUserNoAuth(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	os.Setenv("TF_VAR_auth_token", "")
-	name := "terraform_security_bucket"
+	name := "terraform_security"
+	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccBucketsResourceConfigRequired(acctest.Cfg, name),
+				Config:      testAccUsersResourceConfigRequired(acctest.Cfg, name, email),
 				ExpectError: regexp.MustCompile("Missing Capella Authentication Token"),
 			},
 		},
@@ -29,23 +30,22 @@ func TestAccCreateBucketNoAuth(t *testing.T) {
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func TestAccCreateBucketOrgOwner(t *testing.T) {
+func TestAccCreateUserOrgOwner(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationOwner")
-	name := "terraform_security_bucket"
+	name := "terraform_security"
+	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccBucketsResourceConfigRequired(acctest.Cfg, name),
+				Config: testAccUsersResourceConfigRequired(acctest.Cfg, name, email),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("capella_bucket.new_bucket", "name", name),
-					resource.TestCheckResourceAttr("capella_bucket.new_bucket", "type", "couchbase"),
-					resource.TestCheckResourceAttr("capella_bucket.new_bucket", "storage_backend", "couchstore"),
-					resource.TestCheckResourceAttrSet("capella_bucket.new_bucket", "id"),
-					resource.TestCheckResourceAttr("capella_bucket.new_bucket", "memory_allocation_in_mb", "105"),
+					resource.TestCheckResourceAttr("capella_user.new_user", "name", name),
+					resource.TestCheckResourceAttr("capella_user.new_user", "email", email),
+					resource.TestCheckResourceAttrSet("capella_user.new_user", "id"),
 				),
 			},
 		},
@@ -53,176 +53,169 @@ func TestAccCreateBucketOrgOwner(t *testing.T) {
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func TestAccCreateBucketOrgMember(t *testing.T) {
+func TestAccCreateUserOrgMember(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationMember")
-	name := "terraform_security_bucket"
+	name := "terraform_security"
+	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccBucketsResourceConfigRequired(acctest.Cfg, name),
-				ExpectError: regexp.MustCompile("Could not create bucket"),
+				Config:      testAccUsersResourceConfigRequired(acctest.Cfg, name, email),
+				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
 	})
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func TestAccCreateBucketProjCreator(t *testing.T) {
+func TestAccCreateUserProjCreator(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("projectCreator")
-	name := "terraform_security_bucket"
+	name := "terraform_security"
+	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccBucketsResourceConfigRequired(acctest.Cfg, name),
-				ExpectError: regexp.MustCompile("Could not create bucket"),
+				Config:      testAccUsersResourceConfigRequired(acctest.Cfg, name, email),
+				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
 	})
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func TestAccCreateBucketProjOwner(t *testing.T) {
+func TestAccCreateUserProjOwner(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectOwner")
-	name := "terraform_security_bucket"
+	name := "terraform_security"
+	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccBucketsResourceConfigRequired(acctest.Cfg, name),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("capella_bucket.new_bucket", "name", name),
-					resource.TestCheckResourceAttr("capella_bucket.new_bucket", "type", "couchbase"),
-					resource.TestCheckResourceAttr("capella_bucket.new_bucket", "storage_backend", "couchstore"),
-					resource.TestCheckResourceAttrSet("capella_bucket.new_bucket", "id"),
-					resource.TestCheckResourceAttr("capella_bucket.new_bucket", "memory_allocation_in_mb", "105"),
-				),
+				Config:      testAccUsersResourceConfigRequired(acctest.Cfg, name, email),
+				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
 	})
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func TestAccCreateBucketProjManager(t *testing.T) {
+func TestAccCreateUserProjManager(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectManager")
-	name := "terraform_security_bucket"
+	name := "terraform_security"
+	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccBucketsResourceConfigRequired(acctest.Cfg, name),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("capella_bucket.new_bucket", "name", name),
-					resource.TestCheckResourceAttr("capella_bucket.new_bucket", "type", "couchbase"),
-					resource.TestCheckResourceAttr("capella_bucket.new_bucket", "storage_backend", "couchstore"),
-					resource.TestCheckResourceAttrSet("capella_bucket.new_bucket", "id"),
-					resource.TestCheckResourceAttr("capella_bucket.new_bucket", "memory_allocation_in_mb", "105"),
-				),
+				Config:      testAccUsersResourceConfigRequired(acctest.Cfg, name, email),
+				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
 	})
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func TestAccCreateBucketProjViewer(t *testing.T) {
+func TestAccCreateUserProjViewer(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectViewer")
-	name := "terraform_security_bucket"
+	name := "terraform_security"
+	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccBucketsResourceConfigRequired(acctest.Cfg, name),
-				ExpectError: regexp.MustCompile("Could not create bucket"),
+				Config:      testAccUsersResourceConfigRequired(acctest.Cfg, name, email),
+				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
 	})
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func TestAccCreateBucketDatabaseReaderWriter(t *testing.T) {
+func TestAccCreateUserDatabaseReaderWriter(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectDataReaderWriter")
-	name := "terraform_security_bucket"
+	name := "terraform_security"
+	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccBucketsResourceConfigRequired(acctest.Cfg, name),
-				ExpectError: regexp.MustCompile("Could not create bucket"),
+				Config:      testAccUsersResourceConfigRequired(acctest.Cfg, name, email),
+				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
 	})
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func TestAccCreateBucketDatabaseReader(t *testing.T) {
+func TestAccCreateUserDatabaseReader(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectDataReader")
-	name := "terraform_security_bucket"
+	name := "terraform_security"
+	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccBucketsResourceConfigRequired(acctest.Cfg, name),
-				ExpectError: regexp.MustCompile("Could not create bucket"),
+				Config:      testAccUsersResourceConfigRequired(acctest.Cfg, name, email),
+				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
 	})
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func testAccBucketsResourceConfigRequired(cfg string, name string) string {
+func testAccUsersResourceConfigRequired(cfg string, name string, email string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-output "new_bucket" {
-	value = capella_bucket.new_bucket
+output "new_user" {
+	value = capella_user.new_user
 }
 
-output "bucket_id" {
-	value = capella_bucket.new_bucket.id
+output "user_id" {
+	value = capella_user.new_user.id
 }
 
-resource "capella_bucket" "new_bucket" {
-	name                       = "%[2]s"
-	organization_id            = var.organization_id
-	project_id                 = var.project_id
-	cluster_id                 = var.cluster_id
-	type                       = "couchbase"
-	storage_backend            = "couchstore"
-	memory_allocation_in_mb    = 105
-	bucket_conflict_resolution = "seqno"
-	durability_level           = "majorityAndPersistActive"
-	replicas                   = 2
-	flush                      = true
-	time_to_live_in_seconds    = 100
+resource "capella_user" "new_user" {
+	organization_id = var.organization_id
+	name = "%[2]s"
+	email = "%[3]s"
+	organization_roles = ["organizationMember"]
+	resources = [
+		{
+			type = "project"
+			id = var.project_id
+			roles = ["projectOwner"]
+		}
+	]
 }
 
-`, cfg, name)
-
+`, cfg, name, email)
 }

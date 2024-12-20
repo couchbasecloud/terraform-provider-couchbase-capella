@@ -14,7 +14,7 @@ import (
 func TestAccClusterResourceAzureDiskAutoExpansion(t *testing.T) {
 	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
 	resourceReference := "couchbase-capella_cluster." + resourceName
-	cidr, err := getCIDR(context.Background(), api.NewClient(timeout), "azure")
+	cidr, err := getCIDR(context.Background(), api.NewClient(Timeout), "azure")
 	if err != nil {
 		t.Error(err)
 		t.FailNow()

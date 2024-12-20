@@ -31,7 +31,7 @@ func TestAppServiceResource(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-			
+
 			// Delete testing automatically occurs in TestCase
 		},
 	})

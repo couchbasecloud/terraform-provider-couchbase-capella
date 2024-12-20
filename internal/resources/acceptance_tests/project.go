@@ -9,7 +9,7 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 )
 
-func createProject(ctx context.Context, client *api.Client) error {
+func CreateProject(ctx context.Context, client *api.Client) error {
 	projectRequest := api.CreateProjectRequest{
 		Name: "tf_acc_test_project_common",
 	}
@@ -37,7 +37,7 @@ func createProject(ctx context.Context, client *api.Client) error {
 	return nil
 }
 
-func destroyProject(ctx context.Context, client *api.Client) error {
+func DestroyProject(ctx context.Context, client *api.Client) error {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s", Host, OrgId, ProjectId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
 	_, err := client.ExecuteWithRetry(

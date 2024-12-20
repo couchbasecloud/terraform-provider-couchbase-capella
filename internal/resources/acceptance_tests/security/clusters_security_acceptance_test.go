@@ -1,4 +1,4 @@
-package security_acceptance_tests
+package security
 
 import (
 	"encoding/json"
@@ -345,7 +345,9 @@ resource "capella_cluster" "%[2]s" {
 }
 
 // retrieveClusterFromServer checks cluster exists in server.
-func retrieveClusterFromServer(data *providerschema.Data, organizationId, projectId, clusterId string) (*clusterapi.GetClusterResponse, error) {
+func retrieveClusterFromServer(
+	data *providerschema.Data, organizationId, projectId, clusterId string,
+) (*clusterapi.GetClusterResponse, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", data.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := data.Client.Execute(

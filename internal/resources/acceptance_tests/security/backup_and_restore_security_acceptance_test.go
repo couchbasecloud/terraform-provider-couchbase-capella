@@ -1,4 +1,4 @@
-package security_acceptance_tests
+package security
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAppServiceResourceNoAuth(t *testing.T) {
+func TestAccCreateBackupRestoreNoAuth(t *testing.T) {
 
 	tempId := os.Getenv("TF_VAR_auth_token")
 	os.Setenv("TF_VAR_auth_token", "")
@@ -21,7 +21,7 @@ func TestAppServiceResourceNoAuth(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccAppServiceResourceConfig(acctest.Cfg),
+				Config:      testAccBackupRestoreResourceConfigRequired(acctest.Cfg),
 				ExpectError: regexp.MustCompile("Missing Capella Authentication Token"),
 			},
 		},
@@ -29,9 +29,12 @@ func TestAppServiceResourceNoAuth(t *testing.T) {
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func TestAppServiceResourceOrgOwner(t *testing.T) {
+func TestAccCreateBackupRestoreOrgOwner(t *testing.T) {
 
 	tempId := os.Getenv("TF_VAR_auth_token")
+	organizationId := os.Getenv("TF_VAR_organization_id")
+	projectId := os.Getenv("TF_VAR_project_id")
+	clusterId := os.Getenv("TF_VAR_cluster_id")
 	testAccCreateOrgAPI("organizationOwner")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
@@ -39,13 +42,11 @@ func TestAppServiceResourceOrgOwner(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccAppServiceResourceConfig(acctest.Cfg),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "name", "test-terraform-app-service"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "description", "description"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "compute.cpu", "2"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "compute.ram", "4"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "nodes", "2"),
+				Config: testAccBackupRestoreResourceConfigRequired(acctest.Cfg),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("capella_backup.new_backup", "organization_id", organizationId),
+					resource.TestCheckResourceAttr("capella_backup.new_backup", "project_id", projectId),
+					resource.TestCheckResourceAttr("capella_backup.new_backup", "cluster_id", clusterId),
 				),
 			},
 		},
@@ -53,7 +54,7 @@ func TestAppServiceResourceOrgOwner(t *testing.T) {
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func TestAppServiceResourceOrgMember(t *testing.T) {
+func TestAccCreateBackupRestoreOrgMember(t *testing.T) {
 
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationMember")
@@ -63,15 +64,15 @@ func TestAppServiceResourceOrgMember(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccAppServiceResourceConfig(acctest.Cfg),
-				ExpectError: regexp.MustCompile("Access Denied"),
+				Config:      testAccBackupRestoreResourceConfigRequired(acctest.Cfg),
+				ExpectError: regexp.MustCompile("Could not create bucket"),
 			},
 		},
 	})
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func TestAppServiceResourceProjCreator(t *testing.T) {
+func TestAccCreateBackupRestoreProjCreator(t *testing.T) {
 
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("projectCreator")
@@ -81,32 +82,32 @@ func TestAppServiceResourceProjCreator(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccAppServiceResourceConfig(acctest.Cfg),
-				ExpectError: regexp.MustCompile("Access Denied"),
+				Config:      testAccBackupRestoreResourceConfigRequired(acctest.Cfg),
+				ExpectError: regexp.MustCompile("Could not create bucket"),
 			},
 		},
 	})
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func TestAppServiceResourceProjOwner(t *testing.T) {
+func TestAccCreateBackupRestoreProjOwner(t *testing.T) {
 
 	tempId := os.Getenv("TF_VAR_auth_token")
-	projId := os.Getenv("TF_VAR_project_id")
-	testAccCreateProjAPI("projectCreator", projId, "projectOwner")
+	organizationId := os.Getenv("TF_VAR_organization_id")
+	projectId := os.Getenv("TF_VAR_project_id")
+	clusterId := os.Getenv("TF_VAR_cluster_id")
+	testAccCreateProjAPI("projectCreator", projectId, "projectOwner")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccAppServiceResourceConfig(acctest.Cfg),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "name", "test-terraform-app-service"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "description", "description"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "compute.cpu", "2"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "compute.ram", "4"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "nodes", "2"),
+				Config: testAccBackupRestoreResourceConfigRequired(acctest.Cfg),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("capella_backup.new_backup", "organization_id", organizationId),
+					resource.TestCheckResourceAttr("capella_backup.new_backup", "project_id", projectId),
+					resource.TestCheckResourceAttr("capella_backup.new_backup", "cluster_id", clusterId),
 				),
 			},
 		},
@@ -114,8 +115,7 @@ func TestAppServiceResourceProjOwner(t *testing.T) {
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func TestAppServiceResourceProjManager(t *testing.T) {
-
+func TestAccCreateBackupRestoreProjManager(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("projectCreator", projId, "projectManager")
@@ -125,21 +125,15 @@ func TestAppServiceResourceProjManager(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccAppServiceResourceConfig(acctest.Cfg),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "name", "test-terraform-app-service"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "description", "description"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "compute.cpu", "2"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "compute.ram", "4"),
-					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "nodes", "2"),
-				),
+				Config:      testAccBackupRestoreResourceConfigRequired(acctest.Cfg),
+				ExpectError: regexp.MustCompile("Could not get the latest bucket backup"),
 			},
 		},
 	})
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func TestAppServiceResourceProjViewer(t *testing.T) {
+func TestAccCreateBackupRestoreProjViewer(t *testing.T) {
 
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
@@ -150,16 +144,15 @@ func TestAppServiceResourceProjViewer(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccAppServiceResourceConfig(acctest.Cfg),
-				ExpectError: regexp.MustCompile("Access Denied"),
+				Config:      testAccBackupRestoreResourceConfigRequired(acctest.Cfg),
+				ExpectError: regexp.MustCompile("Could not create bucket"),
 			},
 		},
 	})
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func TestAppServiceResourceDatabaseDataReaderWriter(t *testing.T) {
-
+func TestAccCreateBackupRestoreDatabaseReaderWriter(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("projectCreator", projId, "projectDataReaderWriter")
@@ -169,16 +162,15 @@ func TestAppServiceResourceDatabaseDataReaderWriter(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccAppServiceResourceConfig(acctest.Cfg),
-				ExpectError: regexp.MustCompile("Access Denied"),
+				Config:      testAccBackupRestoreResourceConfigRequired(acctest.Cfg),
+				ExpectError: regexp.MustCompile("Could not create bucket"),
 			},
 		},
 	})
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func TestAppServiceResourceDatabaseDataReader(t *testing.T) {
-
+func TestAccCreateBackupRestoreDatabaseReader(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("projectCreator", projId, "projectDataReader")
@@ -188,29 +180,52 @@ func TestAppServiceResourceDatabaseDataReader(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccAppServiceResourceConfig(acctest.Cfg),
-				ExpectError: regexp.MustCompile("Access Denied"),
+				Config:      testAccBackupRestoreResourceConfigRequired(acctest.Cfg),
+				ExpectError: regexp.MustCompile("Could not create bucket"),
 			},
 		},
 	})
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func testAccAppServiceResourceConfig(cfg string) string {
+func testAccBackupRestoreResourceConfigRequired(cfg string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "capella_app_service" "new_app_service" {
-  organization_id = var.organization_id
-  project_id      = var.project_id
-  cluster_id      = var.cluster_id
-  name            = "test-terraform-app-service"
-  description     = "description"
-  compute = {
-    cpu = 2
-    ram = 4
-  }
-  nodes = 2
+output "new_bucket" {
+	value = capella_bucket.new_bucket
 }
+
+output "bucket_id" {
+	value = capella_bucket.new_bucket.id
+}
+
+resource "capella_bucket" "new_bucket" {
+	name                       = "terraform-security-bucket"
+	organization_id            = var.organization_id
+	project_id                 = var.project_id
+	cluster_id                 = var.cluster_id
+	type                       = "couchbase"
+	storage_backend            = "couchstore"
+	memory_allocation_in_mb    = 105
+	bucket_conflict_resolution = "seqno"
+	durability_level           = "majorityAndPersistActive"
+	replicas                   = 2
+	flush                      = true
+	time_to_live_in_seconds    = 100
+}
+
+output "new_backup" {
+	value = capella_backup.new_backup
+}
+
+resource "capella_backup" "new_backup" {
+	organization_id            = var.organization_id
+	project_id                 = var.project_id
+	cluster_id                 = var.cluster_id
+	bucket_id                  = capella_bucket.new_bucket.id
+}
+
 `, cfg)
+
 }

@@ -1,4 +1,4 @@
-package security_acceptance_tests
+package security
 
 import (
 	"encoding/json"

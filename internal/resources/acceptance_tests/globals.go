@@ -6,19 +6,19 @@ import (
 
 var (
 	ProviderBlock string
-	Host          string
-	Token         string
+Host          string
+Token         string
 
-	Username string
-	Password string
+Username string
+Password string
 
-	OrgId     string
-	ProjectId string
-	ClusterId string
+OrgId     string
+ProjectId string
+ClusterId string
 
-	Bucket string
+Bucket string
 )
 
 const (
-	timeout = 60 * time.Second
+	Timeout = 60 * time.Second
 )

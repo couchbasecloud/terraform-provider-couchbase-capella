@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-func createBucket(ctx context.Context, client *api.Client) error {
+func CreateBucket(ctx context.Context, client *api.Client) error {
 	bucketRequest := bucketapi.CreateBucketRequest{
 		Name: "default",
 	}

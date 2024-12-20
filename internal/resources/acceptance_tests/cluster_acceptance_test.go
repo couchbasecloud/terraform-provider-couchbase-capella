@@ -1777,7 +1777,9 @@ func deleteClusterFromServer(data *providerschema.Data, organizationId, projectI
 }
 
 // checkClusterStatus checks the current state of cluster.
-func checkClusterStatus(data *providerschema.Data, ctx context.Context, organizationId, projectId, ClusterId string) error {
+func checkClusterStatus(
+	data *providerschema.Data, ctx context.Context, organizationId, projectId, ClusterId string,
+) error {
 	var (
 		clusterResp *clusterapi.GetClusterResponse
 		err         error
@@ -1834,7 +1836,9 @@ func generateClusterImportIdForResource(resourceReference string) resource.Impor
 	}
 }
 
-func testAccCreateCluster(cfg *string, resourceName, projectResourceName, projectResourceReference, cidr string) string {
+func testAccCreateCluster(
+	cfg *string, resourceName, projectResourceName, projectResourceReference, cidr string,
+) string {
 	log.Println("Creating cluster")
 	*cfg = fmt.Sprintf(`
 %[1]s
@@ -1946,7 +1950,9 @@ func testAccDeleteCluster(clusterResourceReference, projectResourceReference str
 }
 
 // retrieveClusterFromServer checks cluster exists in server.
-func retrieveClusterFromServer(data *providerschema.Data, organizationId, projectId, clusterId string) (*clusterapi.GetClusterResponse, error) {
+func retrieveClusterFromServer(
+	data *providerschema.Data, organizationId, projectId, clusterId string,
+) (*clusterapi.GetClusterResponse, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", data.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := data.Client.ExecuteWithRetry(
