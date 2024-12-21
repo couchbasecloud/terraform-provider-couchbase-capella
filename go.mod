@@ -5,12 +5,15 @@ go 1.22.7
 toolchain go1.22.9
 
 require (
+	emperror.dev/errors v0.8.1
 	github.com/couchbase/tools-common/functional v1.2.0
+	github.com/couchbase/tools-common/types v1.1.4
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/terraform-plugin-framework v1.9.0
 	github.com/hashicorp/terraform-plugin-framework-validators v0.12.0
 	github.com/hashicorp/terraform-plugin-go v0.23.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
+	github.com/hashicorp/terraform-plugin-sdk v1.17.2
 	github.com/hashicorp/terraform-plugin-testing v1.7.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/time v0.8.0
@@ -18,12 +21,11 @@ require (
 )
 
 require (
-	emperror.dev/errors v0.8.1 // indirect
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2 // indirect
 	github.com/agext/levenshtein v1.2.2 // indirect
+	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
-	github.com/couchbase/tools-common/types v1.1.4 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
