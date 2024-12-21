@@ -15,7 +15,7 @@ func TestAccApiKeyResource(t *testing.T) {
 	resourceName := "tf_acc_apikey_" + acctest.GenerateRandomResourceName()
 	resourceReference := "couchbase-capella_apikey." + resourceName
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -49,7 +49,7 @@ func TestAccApiKeyResourceWithOnlyReqField(t *testing.T) {
 	resourceName := "acc_apikey_" + acctest.GenerateRandomResourceName()
 	resourceReference := "couchbase-capella_apikey." + resourceName
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -93,7 +93,7 @@ func TestAccApiKeyResourceWithOnlyReqField(t *testing.T) {
 func TestAccApiKeyResourceForOrgOwner(t *testing.T) {
 	resourceName := "acc_apikey_" + acctest.GenerateRandomResourceName()
 	resourceReference := "couchbase-capella_apikey." + resourceName
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -124,7 +124,7 @@ func TestAccApiKeyResourceForOrgOwner(t *testing.T) {
 
 func TestAccApiKeyResourceInvalidScenarioRotateShouldNotPassedWhileCreate(t *testing.T) {
 	resourceName := "acc_apikey_" + acctest.GenerateRandomResourceName()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing

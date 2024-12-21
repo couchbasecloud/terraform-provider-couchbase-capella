@@ -17,15 +17,15 @@ func TestAccUserResource(t *testing.T) {
 	resourceName := "acc_user_" + cfg.GenerateRandomResourceName()
 	resourceReference := "couchbase-capella_user." + resourceName
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: cfg.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read
 			{
-				Config: testAccUserResourceConfig(resourceName),
+				Config: testAccUserResourceConfig(resourceName, "terraform_acceptance_test1"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
-					resource.TestCheckResourceAttr(resourceReference, "email", "terraformacceptancetest@couchbase.com"),
+					resource.TestCheckResourceAttr(resourceReference, "name", "terraform_acceptance_test1"),
+					resource.TestCheckResourceAttr(resourceReference, "email", "terraform_acceptance_test1@couchbase.com"),
 					resource.TestCheckResourceAttr(resourceReference, "organization_roles.0", "organizationOwner"),
 				),
 			},
@@ -38,10 +38,10 @@ func TestAccUserResource(t *testing.T) {
 			},
 			// Update and Read
 			{
-				Config: testAccUserResourceConfigUpdate(resourceName),
+				Config: testAccUserResourceConfigUpdate(resourceName, "terraform_acceptance_test1"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
-					resource.TestCheckResourceAttr(resourceReference, "email", "terraformacceptancetest@couchbase.com"),
+					resource.TestCheckResourceAttr(resourceReference, "name", "terraform_acceptance_test1"),
+					resource.TestCheckResourceAttr(resourceReference, "email", "terraform_acceptance_test1@couchbase.com"),
 					resource.TestCheckResourceAttr(resourceReference, "organization_roles.0", "organizationMember"),
 					resource.TestCheckResourceAttr(resourceReference, "resources.0.type", "project"),
 					resource.TestCheckResourceAttr(resourceReference, "resources.0.roles.0", "projectViewer"),
@@ -56,15 +56,15 @@ func TestAccUserResourceResourceNotFound(t *testing.T) {
 	resourceName := "acc_user_" + cfg.GenerateRandomResourceName()
 	resourceReference := "couchbase-capella_user." + resourceName
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: cfg.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccUserResourceConfig(resourceName),
+				Config: testAccUserResourceConfig(resourceName, "terraform_acceptance_test2"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
-					resource.TestCheckResourceAttr(resourceReference, "email", "terraformacceptancetest@couchbase.com"),
+					resource.TestCheckResourceAttr(resourceReference, "name", "terraform_acceptance_test2"),
+					resource.TestCheckResourceAttr(resourceReference, "email", "terraform_acceptance_test2@couchbase.com"),
 					resource.TestCheckResourceAttr(resourceReference, "organization_roles.0", "organizationOwner"),
 					// Delete the user from the server and wait until deletion is successful
 					testAccDeleteUserResource(resourceReference),
@@ -75,10 +75,10 @@ func TestAccUserResourceResourceNotFound(t *testing.T) {
 
 			// Attempt to update - since the orginal has been deleted, a new user will be created.
 			{
-				Config: testAccUserResourceConfigUpdate(resourceName),
+				Config: testAccUserResourceConfigUpdate(resourceName, "terraform_acceptance_test2"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "name", "acc_test_user_name"),
-					resource.TestCheckResourceAttr(resourceReference, "email", "terraformacceptancetest@couchbase.com"),
+					resource.TestCheckResourceAttr(resourceReference, "name", "terraform_acceptance_test2"),
+					resource.TestCheckResourceAttr(resourceReference, "email", "terraform_acceptance_test2_update@couchbase.com"),
 					resource.TestCheckResourceAttr(resourceReference, "organization_roles.0", "organizationMember"),
 					resource.TestCheckResourceAttr(resourceReference, "resources.0.type", "project"),
 					resource.TestCheckResourceAttr(resourceReference, "resources.0.roles.0", "projectViewer"),
@@ -154,31 +154,31 @@ func readUserFromServer(data *providerschema.Data, organizationId, clusterId str
 	return nil
 }
 
-func testAccUserResourceConfig(resourceReference string) string {
+func testAccUserResourceConfig(resourceReference, username string) string {
 	return fmt.Sprintf(`
 	%[1]s
 	
 	resource "couchbase-capella_user" "%[2]s" {
 		organization_id = "%[3]s"
 	  
-		name  = "acc_test_user_name"
-		email = "terraformacceptancetest@couchbase.com"
+		name  = "%[4]s"
+		email = "%[5]s"
 	  
 		organization_roles = [
 			"organizationOwner"
 		]
 	  }
-	`, ProviderBlock, resourceReference, OrgId)
+	`, ProviderBlock, resourceReference, OrgId, username, username+"@couchbase.com")
 }
 
-func testAccUserResourceConfigUpdate(resourceReference string) string {
+func testAccUserResourceConfigUpdate(resourceReference, username string) string {
 	return fmt.Sprintf(`
 	%[1]s
 	resource "couchbase-capella_user" "%[2]s" {
 		organization_id = "%[3]s"
 	  
-		name  = "acc_test_user_name"
-		email = "terraformacceptancetest@couchbase.com"
+		name  = "%[5]s"
+		email = "%[6]s"
 	  
 		organization_roles = [
 			"organizationMember"
@@ -194,7 +194,7 @@ func testAccUserResourceConfigUpdate(resourceReference string) string {
 		  }
 		]
 	  }
-	`, ProviderBlock, resourceReference, OrgId, ProjectId)
+	`, ProviderBlock, resourceReference, OrgId, ProjectId, username, username+"@couchbase.com")
 }
 
 func generateUserImportIdForResource(resourceReference string) resource.ImportStateIdFunc {

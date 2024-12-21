@@ -10,7 +10,7 @@ import (
 )
 
 func TestAccDatabaseCredentialTestCases(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			//database_credential with required fields

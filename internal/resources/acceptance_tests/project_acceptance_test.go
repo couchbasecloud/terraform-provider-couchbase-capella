@@ -36,7 +36,7 @@ var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServe
 func TestAccProjectResource(t *testing.T) {
 	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
 	resourceName := "couchbase-capella_project" + "." + rnd
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -80,7 +80,7 @@ func TestAccProjectResource(t *testing.T) {
 func TestAccCreateProjectWithReqFields(t *testing.T) {
 	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
 	resourceName := "couchbase-capella_project" + "." + rnd
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -100,7 +100,7 @@ func TestAccCreateProjectWithReqFields(t *testing.T) {
 func TestAccValidProjectUpdate(t *testing.T) {
 	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
 	resourceName := "couchbase-capella_project" + "." + rnd
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -127,7 +127,7 @@ func TestAccValidProjectUpdate(t *testing.T) {
 func TestAccInvalidProjectResource(t *testing.T) {
 	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
 	resourceName := "couchbase-capella_project" + "." + rnd
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Invalid field in create testing
