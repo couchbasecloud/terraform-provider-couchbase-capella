@@ -14,7 +14,7 @@ import (
 )
 
 func TestAccUserResource(t *testing.T) {
-	resourceName := "acc_user_" + cfg.GenerateRandomResourceName()
+	resourceName := "tf_acc_user_" + cfg.GenerateRandomResourceName()
 	resourceReference := "couchbase-capella_user." + resourceName
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -53,7 +53,7 @@ func TestAccUserResource(t *testing.T) {
 }
 
 func TestAccUserResourceResourceNotFound(t *testing.T) {
-	resourceName := "acc_user_" + cfg.GenerateRandomResourceName()
+	resourceName := "tf_acc_user_" + cfg.GenerateRandomResourceName()
 	resourceReference := "couchbase-capella_user." + resourceName
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -78,7 +78,7 @@ func TestAccUserResourceResourceNotFound(t *testing.T) {
 				Config: testAccUserResourceConfigUpdate(resourceName, "terraform_acceptance_test2"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", "terraform_acceptance_test2"),
-					resource.TestCheckResourceAttr(resourceReference, "email", "terraform_acceptance_test2_update@couchbase.com"),
+					resource.TestCheckResourceAttr(resourceReference, "email", "terraform_acceptance_test2@couchbase.com"),
 					resource.TestCheckResourceAttr(resourceReference, "organization_roles.0", "organizationMember"),
 					resource.TestCheckResourceAttr(resourceReference, "resources.0.type", "project"),
 					resource.TestCheckResourceAttr(resourceReference, "resources.0.roles.0", "projectViewer"),
@@ -154,7 +154,7 @@ func readUserFromServer(data *providerschema.Data, organizationId, clusterId str
 	return nil
 }
 
-func testAccUserResourceConfig(resourceReference, username string) string {
+func testAccUserResourceConfig(resourceName, username string) string {
 	return fmt.Sprintf(`
 	%[1]s
 	
@@ -168,10 +168,10 @@ func testAccUserResourceConfig(resourceReference, username string) string {
 			"organizationOwner"
 		]
 	  }
-	`, ProviderBlock, resourceReference, OrgId, username, username+"@couchbase.com")
+	`, ProviderBlock, resourceName, OrgId, username, username+"@couchbase.com")
 }
 
-func testAccUserResourceConfigUpdate(resourceReference, username string) string {
+func testAccUserResourceConfigUpdate(resourceName, username string) string {
 	return fmt.Sprintf(`
 	%[1]s
 	resource "couchbase-capella_user" "%[2]s" {
@@ -194,7 +194,7 @@ func testAccUserResourceConfigUpdate(resourceReference, username string) string 
 		  }
 		]
 	  }
-	`, ProviderBlock, resourceReference, OrgId, ProjectId, username, username+"@couchbase.com")
+	`, ProviderBlock, resourceName, OrgId, ProjectId, username, username+"@couchbase.com")
 }
 
 func generateUserImportIdForResource(resourceReference string) resource.ImportStateIdFunc {
