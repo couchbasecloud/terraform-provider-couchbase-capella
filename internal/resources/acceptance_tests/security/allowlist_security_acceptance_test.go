@@ -2,6 +2,7 @@ package security
 
 import (
 	"fmt"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources/acceptance_tests"
 	"os"
 	"regexp"
 	"testing"
@@ -13,15 +14,13 @@ import (
 )
 
 func TestAccAllowListOrgOwner(t *testing.T) {
-	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// IP with required fields
 			{
 				PreConfig: func() { testAccCreateOrgAPI("organizationOwner") },
-				Config:    testAccAddIpWithReqFields(&testCfg),
+				Config:    testAccAddIpWithReqFields(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("capella_allowlist.add_allowlist_req", "cidr", "10.1.1.0/32"),
 					resource.TestCheckResourceAttrSet("capella_allowlist.add_allowlist_req", "id"),
@@ -33,21 +32,19 @@ func TestAccAllowListOrgOwner(t *testing.T) {
 
 func TestAccAllowListOrgMember(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
-	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			//IP with required fields
 			{
 				PreConfig:   func() { testAccCreateOrgAPI("organizationMember") },
-				Config:      testAccAddIpWithReqFields(&testCfg),
+				Config:      testAccAddIpWithReqFields(),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 			{
 				// Dummy Test Step to set the Auth token to its original value
 				PreConfig: func() { testSetAuthToken(tempId) },
-				Config:    testCfg,
+				Config:    acceptance_tests.ProviderBlock,
 			},
 		},
 	})
@@ -55,21 +52,19 @@ func TestAccAllowListOrgMember(t *testing.T) {
 
 func TestAccAllowListProjCreator(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
-	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			//IP with required fields
 			{
 				PreConfig:   func() { testAccCreateOrgAPI("projectCreator") },
-				Config:      testAccAddIpWithReqFields(&testCfg),
+				Config:      testAccAddIpWithReqFields(),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 			{
 				// Dummy Test Step to set the Auth token to its original value
 				PreConfig: func() { testSetAuthToken(tempId) },
-				Config:    testCfg,
+				Config:    acceptance_tests.ProviderBlock,
 			},
 		},
 	})
@@ -79,15 +74,13 @@ func TestAccAllowListProjOwner(t *testing.T) {
 
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
-	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			//IP with required fields
 			{
 				PreConfig: func() { testAccCreateProjAPI("organizationMember", projId, "projectOwner") },
-				Config:    testAccAddIpWithReqFields(&testCfg),
+				Config:    testAccAddIpWithReqFields(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("capella_allowlist.add_allowlist_req", "cidr", "10.1.1.0/32"),
 					resource.TestCheckResourceAttrSet("capella_allowlist.add_allowlist_req", "id"),
@@ -96,17 +89,15 @@ func TestAccAllowListProjOwner(t *testing.T) {
 			{
 				// Dummy Test Step to set the Auth token to its original value
 				PreConfig: func() { testSetAuthToken(tempId) },
-				Config:    testCfg,
+				Config:    acceptance_tests.ProviderBlock,
 			},
 		},
 	})
 }
 
 func TestAccAllowListProjManager(t *testing.T) {
-
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
-	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
@@ -114,7 +105,7 @@ func TestAccAllowListProjManager(t *testing.T) {
 			//IP with required fields
 			{
 				PreConfig: func() { testAccCreateProjAPI("organizationMember", projId, "projectManager") },
-				Config:    testAccAddIpWithReqFields(&testCfg),
+				Config:    testAccAddIpWithReqFields(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("capella_allowlist.add_allowlist_req", "cidr", "10.1.1.0/32"),
 					resource.TestCheckResourceAttrSet("capella_allowlist.add_allowlist_req", "id"),
@@ -123,7 +114,7 @@ func TestAccAllowListProjManager(t *testing.T) {
 			{
 				// Dummy Test Step to set the Auth token to its original value
 				PreConfig: func() { testSetAuthToken(tempId) },
-				Config:    testCfg,
+				Config:    acceptance_tests.ProviderBlock,
 			},
 		},
 	})
@@ -133,7 +124,6 @@ func TestAccAllowListProjViewer(t *testing.T) {
 
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
-	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
@@ -141,13 +131,13 @@ func TestAccAllowListProjViewer(t *testing.T) {
 			//IP with required fields
 			{
 				PreConfig:   func() { testAccCreateProjAPI("organizationMember", projId, "projectViewer") },
-				Config:      testAccAddIpWithReqFields(&testCfg),
+				Config:      testAccAddIpWithReqFields(),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 			{
 				// Dummy Test Step to set the Auth token to its original value
 				PreConfig: func() { testSetAuthToken(tempId) },
-				Config:    testCfg,
+				Config:    acceptance_tests.ProviderBlock,
 			},
 		},
 	})
@@ -157,7 +147,6 @@ func TestAccAllowListDatabaseReaderWriter(t *testing.T) {
 
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
-	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
@@ -165,13 +154,13 @@ func TestAccAllowListDatabaseReaderWriter(t *testing.T) {
 			//IP with required fields
 			{
 				PreConfig:   func() { testAccCreateProjAPI("organizationMember", projId, "projectDataReaderWriter") },
-				Config:      testAccAddIpWithReqFields(&testCfg),
+				Config:      testAccAddIpWithReqFields(),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 			{
 				// Dummy Test Step to set the Auth token to its original value
 				PreConfig: func() { testSetAuthToken(tempId) },
-				Config:    testCfg,
+				Config:    acceptance_tests.ProviderBlock,
 			},
 		},
 	})
@@ -181,7 +170,6 @@ func TestAccAllowListDatabaseReader(t *testing.T) {
 
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
-	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
@@ -189,13 +177,13 @@ func TestAccAllowListDatabaseReader(t *testing.T) {
 			//IP with required fields
 			{
 				PreConfig:   func() { testAccCreateProjAPI("organizationMember", projId, "projectDataReader") },
-				Config:      testAccAddIpWithReqFields(&testCfg),
+				Config:      testAccAddIpWithReqFields(),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 			{
 				// Dummy Test Step to set the Auth token to its original value
 				PreConfig: func() { testSetAuthToken(tempId) },
-				Config:    testCfg,
+				Config:    acceptance_tests.ProviderBlock,
 			},
 		},
 	})
@@ -209,9 +197,8 @@ func testSetAuthToken(tempId string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAddIpWithReqFields(cfg *string) string {
-
-	*cfg = fmt.Sprintf(`
+func testAccAddIpWithReqFields() string {
+	return fmt.Sprintf(`
 %[1]s
 
 output "add_allowlist_req"{
@@ -225,6 +212,5 @@ resource "capella_allowlist" "add_allowlist_req" {
   cidr            = "10.1.1.0/32"
 }
 
-`, *cfg)
-	return *cfg
+`, acceptance_tests.ProviderBlock)
 }

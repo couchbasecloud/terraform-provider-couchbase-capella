@@ -3,6 +3,7 @@ package security
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources/acceptance_tests"
 	"log"
 	"net/http"
 	"os"
@@ -12,8 +13,6 @@ import (
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
-	cfg "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
-
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
@@ -48,11 +47,10 @@ func TestAccOrganizationDataSourceNoAuth(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	os.Setenv("TF_VAR_auth_token", "")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccOrganizationResourceConfig(cfg.Cfg, organizationId),
+				Config:      testAccOrganizationResourceConfig(organizationId),
 				ExpectError: regexp.MustCompile("Missing Capella Authentication Token"),
 			},
 		},
@@ -65,11 +63,10 @@ func TestAccOrganizationDataSourceRbacOrgOwner(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationOwner")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationResourceConfig(cfg.Cfg, organizationId),
+				Config: testAccOrganizationResourceConfig(organizationId),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.capella_organization.get_organization", "name"),
 					resource.TestCheckResourceAttr("data.capella_organization.get_organization", "organization_id", organizationId),
@@ -89,11 +86,10 @@ func TestAccOrganizationDataSourceRbacOrgMember(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationMember")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationResourceConfig(cfg.Cfg, organizationId),
+				Config: testAccOrganizationResourceConfig(organizationId),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.capella_organization.get_organization", "name"),
 					resource.TestCheckResourceAttr("data.capella_organization.get_organization", "organization_id", organizationId),
@@ -113,11 +109,10 @@ func TestAccOrganizationDataSourceRbacProjCreator(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("projectCreator")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationResourceConfig(cfg.Cfg, organizationId),
+				Config: testAccOrganizationResourceConfig(organizationId),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.capella_organization.get_organization", "name"),
 					resource.TestCheckResourceAttr("data.capella_organization.get_organization", "organization_id", organizationId),
@@ -132,7 +127,7 @@ func TestAccOrganizationDataSourceRbacProjCreator(t *testing.T) {
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func testAccOrganizationResourceConfig(cfg string, organizationId string) string {
+func testAccOrganizationResourceConfig(organizationId string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -144,7 +139,7 @@ data "capella_organization" "get_organization" {
   organization_id = "%[2]s"
 }
 
-`, cfg, organizationId)
+`, acceptance_tests.ProviderBlock, organizationId)
 }
 
 func testAccCreateOrgAPI(role string) string {

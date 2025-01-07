@@ -2,6 +2,7 @@ package security
 
 import (
 	"fmt"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources/acceptance_tests"
 	"os"
 	"regexp"
 	"testing"
@@ -16,12 +17,11 @@ func TestAccCreateBucketNoAuth(t *testing.T) {
 	os.Setenv("TF_VAR_auth_token", "")
 	name := "terraform_security_bucket"
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccBucketsResourceConfigRequired(acctest.Cfg, name),
+				Config:      testAccBucketsResourceConfigRequired(name),
 				ExpectError: regexp.MustCompile("Missing Capella Authentication Token"),
 			},
 		},
@@ -34,12 +34,11 @@ func TestAccCreateBucketOrgOwner(t *testing.T) {
 	testAccCreateOrgAPI("organizationOwner")
 	name := "terraform_security_bucket"
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccBucketsResourceConfigRequired(acctest.Cfg, name),
+				Config: testAccBucketsResourceConfigRequired(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("capella_bucket.new_bucket", "name", name),
 					resource.TestCheckResourceAttr("capella_bucket.new_bucket", "type", "couchbase"),
@@ -58,12 +57,11 @@ func TestAccCreateBucketOrgMember(t *testing.T) {
 	testAccCreateOrgAPI("organizationMember")
 	name := "terraform_security_bucket"
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccBucketsResourceConfigRequired(acctest.Cfg, name),
+				Config:      testAccBucketsResourceConfigRequired(name),
 				ExpectError: regexp.MustCompile("Could not create bucket"),
 			},
 		},
@@ -76,12 +74,11 @@ func TestAccCreateBucketProjCreator(t *testing.T) {
 	testAccCreateOrgAPI("projectCreator")
 	name := "terraform_security_bucket"
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccBucketsResourceConfigRequired(acctest.Cfg, name),
+				Config:      testAccBucketsResourceConfigRequired(name),
 				ExpectError: regexp.MustCompile("Could not create bucket"),
 			},
 		},
@@ -95,12 +92,11 @@ func TestAccCreateBucketProjOwner(t *testing.T) {
 	testAccCreateProjAPI("organizationMember", projId, "projectOwner")
 	name := "terraform_security_bucket"
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccBucketsResourceConfigRequired(acctest.Cfg, name),
+				Config: testAccBucketsResourceConfigRequired(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("capella_bucket.new_bucket", "name", name),
 					resource.TestCheckResourceAttr("capella_bucket.new_bucket", "type", "couchbase"),
@@ -120,12 +116,11 @@ func TestAccCreateBucketProjManager(t *testing.T) {
 	testAccCreateProjAPI("organizationMember", projId, "projectManager")
 	name := "terraform_security_bucket"
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccBucketsResourceConfigRequired(acctest.Cfg, name),
+				Config: testAccBucketsResourceConfigRequired(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("capella_bucket.new_bucket", "name", name),
 					resource.TestCheckResourceAttr("capella_bucket.new_bucket", "type", "couchbase"),
@@ -145,12 +140,11 @@ func TestAccCreateBucketProjViewer(t *testing.T) {
 	testAccCreateProjAPI("organizationMember", projId, "projectViewer")
 	name := "terraform_security_bucket"
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccBucketsResourceConfigRequired(acctest.Cfg, name),
+				Config:      testAccBucketsResourceConfigRequired(name),
 				ExpectError: regexp.MustCompile("Could not create bucket"),
 			},
 		},
@@ -164,12 +158,11 @@ func TestAccCreateBucketDatabaseReaderWriter(t *testing.T) {
 	testAccCreateProjAPI("organizationMember", projId, "projectDataReaderWriter")
 	name := "terraform_security_bucket"
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccBucketsResourceConfigRequired(acctest.Cfg, name),
+				Config:      testAccBucketsResourceConfigRequired(name),
 				ExpectError: regexp.MustCompile("Could not create bucket"),
 			},
 		},
@@ -183,12 +176,11 @@ func TestAccCreateBucketDatabaseReader(t *testing.T) {
 	testAccCreateProjAPI("organizationMember", projId, "projectDataReader")
 	name := "terraform_security_bucket"
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccBucketsResourceConfigRequired(acctest.Cfg, name),
+				Config:      testAccBucketsResourceConfigRequired(name),
 				ExpectError: regexp.MustCompile("Could not create bucket"),
 			},
 		},
@@ -196,7 +188,7 @@ func TestAccCreateBucketDatabaseReader(t *testing.T) {
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func testAccBucketsResourceConfigRequired(cfg string, name string) string {
+func testAccBucketsResourceConfigRequired(name string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -223,6 +215,6 @@ resource "capella_bucket" "new_bucket" {
 	time_to_live_in_seconds    = 100
 }
 
-`, cfg, name)
+`, acceptance_tests.ProviderBlock, name)
 
 }

@@ -2,6 +2,7 @@ package security
 
 import (
 	"fmt"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources/acceptance_tests"
 	"os"
 	"regexp"
 	"testing"
@@ -17,12 +18,11 @@ func TestAccCreateUserNoAuth(t *testing.T) {
 	name := "terraform_security"
 	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccUsersResourceConfigRequired(acctest.Cfg, name, email),
+				Config:      testAccUsersResourceConfigRequired(name, email),
 				ExpectError: regexp.MustCompile("Missing Capella Authentication Token"),
 			},
 		},
@@ -36,12 +36,11 @@ func TestAccCreateUserOrgOwner(t *testing.T) {
 	name := "terraform_security"
 	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccUsersResourceConfigRequired(acctest.Cfg, name, email),
+				Config: testAccUsersResourceConfigRequired(name, email),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("capella_user.new_user", "name", name),
 					resource.TestCheckResourceAttr("capella_user.new_user", "email", email),
@@ -59,12 +58,11 @@ func TestAccCreateUserOrgMember(t *testing.T) {
 	name := "terraform_security"
 	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccUsersResourceConfigRequired(acctest.Cfg, name, email),
+				Config:      testAccUsersResourceConfigRequired(name, email),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -78,12 +76,11 @@ func TestAccCreateUserProjCreator(t *testing.T) {
 	name := "terraform_security"
 	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccUsersResourceConfigRequired(acctest.Cfg, name, email),
+				Config:      testAccUsersResourceConfigRequired(name, email),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -98,12 +95,11 @@ func TestAccCreateUserProjOwner(t *testing.T) {
 	name := "terraform_security"
 	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccUsersResourceConfigRequired(acctest.Cfg, name, email),
+				Config:      testAccUsersResourceConfigRequired(name, email),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -118,12 +114,11 @@ func TestAccCreateUserProjManager(t *testing.T) {
 	name := "terraform_security"
 	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccUsersResourceConfigRequired(acctest.Cfg, name, email),
+				Config:      testAccUsersResourceConfigRequired(name, email),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -138,12 +133,11 @@ func TestAccCreateUserProjViewer(t *testing.T) {
 	name := "terraform_security"
 	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccUsersResourceConfigRequired(acctest.Cfg, name, email),
+				Config:      testAccUsersResourceConfigRequired(name, email),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -158,12 +152,11 @@ func TestAccCreateUserDatabaseReaderWriter(t *testing.T) {
 	name := "terraform_security"
 	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccUsersResourceConfigRequired(acctest.Cfg, name, email),
+				Config:      testAccUsersResourceConfigRequired(name, email),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -178,12 +171,11 @@ func TestAccCreateUserDatabaseReader(t *testing.T) {
 	name := "terraform_security"
 	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccUsersResourceConfigRequired(acctest.Cfg, name, email),
+				Config:      testAccUsersResourceConfigRequired(name, email),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -191,7 +183,7 @@ func TestAccCreateUserDatabaseReader(t *testing.T) {
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func testAccUsersResourceConfigRequired(cfg string, name string, email string) string {
+func testAccUsersResourceConfigRequired(name, email string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -217,5 +209,5 @@ resource "capella_user" "new_user" {
 	]
 }
 
-`, cfg, name, email)
+`, acceptance_tests.ProviderBlock, name, email)
 }

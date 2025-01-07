@@ -2,6 +2,7 @@ package security
 
 import (
 	"fmt"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources/acceptance_tests"
 	"os"
 	"regexp"
 	"testing"
@@ -16,12 +17,11 @@ func TestAppServiceResourceNoAuth(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	os.Setenv("TF_VAR_auth_token", "")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccAppServiceResourceConfig(acctest.Cfg),
+				Config:      testAccAppServiceResourceConfig(),
 				ExpectError: regexp.MustCompile("Missing Capella Authentication Token"),
 			},
 		},
@@ -34,12 +34,11 @@ func TestAppServiceResourceOrgOwner(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationOwner")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccAppServiceResourceConfig(acctest.Cfg),
+				Config: testAccAppServiceResourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "name", "test-terraform-app-service"),
 					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "description", "description"),
@@ -58,12 +57,11 @@ func TestAppServiceResourceOrgMember(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationMember")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccAppServiceResourceConfig(acctest.Cfg),
+				Config:      testAccAppServiceResourceConfig(),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -76,12 +74,11 @@ func TestAppServiceResourceProjCreator(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("projectCreator")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccAppServiceResourceConfig(acctest.Cfg),
+				Config:      testAccAppServiceResourceConfig(),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -95,12 +92,11 @@ func TestAppServiceResourceProjOwner(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("projectCreator", projId, "projectOwner")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccAppServiceResourceConfig(acctest.Cfg),
+				Config: testAccAppServiceResourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "name", "test-terraform-app-service"),
 					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "description", "description"),
@@ -120,12 +116,11 @@ func TestAppServiceResourceProjManager(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("projectCreator", projId, "projectManager")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccAppServiceResourceConfig(acctest.Cfg),
+				Config: testAccAppServiceResourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "name", "test-terraform-app-service"),
 					resource.TestCheckResourceAttr("capella_app_service.new_app_service", "description", "description"),
@@ -145,12 +140,11 @@ func TestAppServiceResourceProjViewer(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("projectCreator", projId, "projectViewer")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccAppServiceResourceConfig(acctest.Cfg),
+				Config:      testAccAppServiceResourceConfig(),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -164,12 +158,11 @@ func TestAppServiceResourceDatabaseDataReaderWriter(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("projectCreator", projId, "projectDataReaderWriter")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccAppServiceResourceConfig(acctest.Cfg),
+				Config:      testAccAppServiceResourceConfig(),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -183,12 +176,11 @@ func TestAppServiceResourceDatabaseDataReader(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("projectCreator", projId, "projectDataReader")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccAppServiceResourceConfig(acctest.Cfg),
+				Config:      testAccAppServiceResourceConfig(),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -196,7 +188,7 @@ func TestAppServiceResourceDatabaseDataReader(t *testing.T) {
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func testAccAppServiceResourceConfig(cfg string) string {
+func testAccAppServiceResourceConfig() string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -212,5 +204,5 @@ resource "capella_app_service" "new_app_service" {
   }
   nodes = 2
 }
-`, cfg)
+`, acceptance_tests.ProviderBlock)
 }

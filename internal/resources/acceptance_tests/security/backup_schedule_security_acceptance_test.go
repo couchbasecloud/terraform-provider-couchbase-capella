@@ -2,6 +2,7 @@ package security
 
 import (
 	"fmt"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources/acceptance_tests"
 	"os"
 	"regexp"
 	"testing"
@@ -12,16 +13,14 @@ import (
 )
 
 func TestAccCreateBackupScheduleNoAuth(t *testing.T) {
-
 	tempId := os.Getenv("TF_VAR_auth_token")
 	os.Setenv("TF_VAR_auth_token", "")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccBackupScheduleResourceConfigRequired(acctest.Cfg),
+				Config:      testAccBackupScheduleResourceConfigRequired(),
 				ExpectError: regexp.MustCompile("Missing Capella Authentication Token"),
 			},
 		},
@@ -30,19 +29,17 @@ func TestAccCreateBackupScheduleNoAuth(t *testing.T) {
 }
 
 func TestAccCreateBackupScheduleOrgOwner(t *testing.T) {
-
 	tempId := os.Getenv("TF_VAR_auth_token")
 	organizationId := os.Getenv("TF_VAR_organization_id")
 	projectId := os.Getenv("TF_VAR_project_id")
 	clusterId := os.Getenv("TF_VAR_cluster_id")
 	testAccCreateOrgAPI("organizationOwner")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccBackupScheduleResourceConfigRequired(acctest.Cfg),
+				Config: testAccBackupScheduleResourceConfigRequired(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("capella_backup_schedule.new_backup_schedule", "organization_id", organizationId),
 					resource.TestCheckResourceAttr("capella_backup_schedule.new_backup_schedule", "project_id", projectId),
@@ -58,16 +55,14 @@ func TestAccCreateBackupScheduleOrgOwner(t *testing.T) {
 }
 
 func TestAccCreateBackupScheduleOrgMember(t *testing.T) {
-
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationMember")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccBackupScheduleResourceConfigRequired(acctest.Cfg),
+				Config:      testAccBackupScheduleResourceConfigRequired(),
 				ExpectError: regexp.MustCompile("Could not create bucket"),
 			},
 		},
@@ -76,16 +71,14 @@ func TestAccCreateBackupScheduleOrgMember(t *testing.T) {
 }
 
 func TestAccCreateBackupScheduleProjCreator(t *testing.T) {
-
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("projectCreator")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccBackupScheduleResourceConfigRequired(acctest.Cfg),
+				Config:      testAccBackupScheduleResourceConfigRequired(),
 				ExpectError: regexp.MustCompile("Could not create bucket"),
 			},
 		},
@@ -100,12 +93,11 @@ func TestAccCreateBackupScheduleProjOwner(t *testing.T) {
 	clusterId := os.Getenv("TF_VAR_cluster_id")
 	testAccCreateProjAPI("projectCreator", projectId, "projectOwner")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccBackupScheduleResourceConfigRequired(acctest.Cfg),
+				Config: testAccBackupScheduleResourceConfigRequired(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("capella_backup_schedule.new_backup_schedule", "organization_id", organizationId),
 					resource.TestCheckResourceAttr("capella_backup_schedule.new_backup_schedule", "project_id", projectId),
@@ -127,12 +119,11 @@ func TestAccCreateBackupScheduleProjManager(t *testing.T) {
 	clusterId := os.Getenv("TF_VAR_cluster_id")
 	testAccCreateProjAPI("projectCreator", projectId, "projectManager")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccBackupScheduleResourceConfigRequired(acctest.Cfg),
+				Config: testAccBackupScheduleResourceConfigRequired(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("capella_backup_schedule.new_backup_schedule", "organization_id", organizationId),
 					resource.TestCheckResourceAttr("capella_backup_schedule.new_backup_schedule", "project_id", projectId),
@@ -152,12 +143,11 @@ func TestAccCreateBackupScheduleProjViewer(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("projectCreator", projId, "projectViewer")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccBackupScheduleResourceConfigRequired(acctest.Cfg),
+				Config:      testAccBackupScheduleResourceConfigRequired(),
 				ExpectError: regexp.MustCompile("Could not create bucket"),
 			},
 		},
@@ -170,12 +160,11 @@ func TestAccCreateBackupScheduleDatabaseReaderWriter(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("projectCreator", projId, "projectDataReaderWriter")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccBackupScheduleResourceConfigRequired(acctest.Cfg),
+				Config:      testAccBackupScheduleResourceConfigRequired(),
 				ExpectError: regexp.MustCompile("Could not create bucket"),
 			},
 		},
@@ -188,12 +177,11 @@ func TestAccCreateBackupScheduleDatabaseReader(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("projectCreator", projId, "projectDataReader")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccBackupScheduleResourceConfigRequired(acctest.Cfg),
+				Config:      testAccBackupScheduleResourceConfigRequired(),
 				ExpectError: regexp.MustCompile("Could not create bucket"),
 			},
 		},
@@ -201,7 +189,7 @@ func TestAccCreateBackupScheduleDatabaseReader(t *testing.T) {
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func testAccBackupScheduleResourceConfigRequired(cfg string) string {
+func testAccBackupScheduleResourceConfigRequired() string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -247,6 +235,5 @@ output "new_backup_schedule" {
 	  }
 }
 
-`, cfg)
-
+`, acceptance_tests.ProviderBlock)
 }

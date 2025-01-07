@@ -2,6 +2,7 @@ package security
 
 import (
 	"fmt"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources/acceptance_tests"
 	"os"
 	"regexp"
 	"testing"
@@ -16,12 +17,11 @@ func TestAccCreateProjectNoAuth(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	os.Setenv("TF_VAR_auth_token", "")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccProjectResourceConfigRequired(acctest.ProjectCfg, rnd),
+				Config:      testAccProjectResourceConfigRequired(rnd),
 				ExpectError: regexp.MustCompile("Missing Capella Authentication Token"),
 			},
 		},
@@ -35,12 +35,11 @@ func TestAccCreateProjectOrgOwner(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationOwner")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccProjectResourceConfigRequired(acctest.ProjectCfg, rnd),
+				Config: testAccProjectResourceConfigRequired(rnd),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rnd),
 					resource.TestCheckResourceAttr(resourceName, "description", "terraform acceptance test project"),
@@ -58,12 +57,11 @@ func TestAccCreateProjectProjCreator(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("projectCreator")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccProjectResourceConfigRequired(acctest.ProjectCfg, rnd),
+				Config: testAccProjectResourceConfigRequired(rnd),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rnd),
 					resource.TestCheckResourceAttr(resourceName, "description", "terraform acceptance test project"),
@@ -80,12 +78,11 @@ func TestAccCreateProjectOrgMember(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationMember")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccProjectResourceConfigRequired(acctest.ProjectCfg, rnd),
+				Config:      testAccProjectResourceConfigRequired(rnd),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -99,12 +96,11 @@ func TestAccCreateProjectProjOwner(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectOwner")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccProjectResourceConfigRequired(acctest.ProjectCfg, rnd),
+				Config:      testAccProjectResourceConfigRequired(rnd),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -118,12 +114,11 @@ func TestAccCreateProjectProjManager(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectManager")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccProjectResourceConfigRequired(acctest.ProjectCfg, rnd),
+				Config:      testAccProjectResourceConfigRequired(rnd),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -137,12 +132,11 @@ func TestAccCreateProjectProjViewer(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectViewer")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccProjectResourceConfigRequired(acctest.ProjectCfg, rnd),
+				Config:      testAccProjectResourceConfigRequired(rnd),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -156,12 +150,11 @@ func TestAccCreateProjectDatabaseDataReaderWriter(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectDataReaderWriter")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccProjectResourceConfigRequired(acctest.ProjectCfg, rnd),
+				Config:      testAccProjectResourceConfigRequired(rnd),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -175,12 +168,11 @@ func TestAccCreateProjectDatabaseDataReader(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectDataReader")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccProjectResourceConfigRequired(acctest.ProjectCfg, rnd),
+				Config:      testAccProjectResourceConfigRequired(rnd),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -188,7 +180,7 @@ func TestAccCreateProjectDatabaseDataReader(t *testing.T) {
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func testAccProjectResourceConfigRequired(cfg string, rnd string) string {
+func testAccProjectResourceConfigRequired(rnd string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -197,5 +189,5 @@ resource "capella_project" "%[2]s" {
 	name            = "%[2]s"
 	description     = "terraform acceptance test project"
 }
-`, cfg, rnd)
+`, acceptance_tests.ProviderBlock, rnd)
 }

@@ -2,14 +2,13 @@ package security
 
 import (
 	"fmt"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources/acceptance_tests"
 	"os"
 
 	"regexp"
 	"testing"
 
 	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
-	cfg "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
-
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
@@ -17,11 +16,10 @@ func TestAccCertificateDataSourceNoAuth(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	os.Setenv("TF_VAR_auth_token", "")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccCertificateResourceConfig(cfg.Cfg),
+				Config:      testAccCertificateResourceConfig(),
 				ExpectError: regexp.MustCompile("Missing Capella Authentication Token"),
 			},
 		},
@@ -36,11 +34,10 @@ func TestAccCertificateDataSourceRbacOrgOwner(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationOwner")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateResourceConfig(cfg.Cfg),
+				Config: testAccCertificateResourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// resource.TestCheckResourceAttrSet("data.capella_certificate.existing_certificate", "certificate"),
 					resource.TestCheckResourceAttr("data.capella_certificate.existing_certificate", "organization_id", organizationId),
@@ -57,11 +54,10 @@ func TestAccCertificateDataSourceRbacOrgMember(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationMember")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccCertificateResourceConfig(cfg.Cfg),
+				Config:      testAccCertificateResourceConfig(),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -73,11 +69,10 @@ func TestAccCertificateDataSourceRbacProjCreator(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("projectCreator")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccCertificateResourceConfig(cfg.Cfg),
+				Config:      testAccCertificateResourceConfig(),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -93,11 +88,10 @@ func TestAccCertificateDataSourceRbacProjOwner(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("projectCreator", projId, "projectOwner")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateResourceConfig(cfg.Cfg),
+				Config: testAccCertificateResourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// resource.TestCheckResourceAttrSet("data.capella_certificate.existing_certificate", "certificate"),
 					resource.TestCheckResourceAttr("data.capella_certificate.existing_certificate", "organization_id", organizationId),
@@ -118,11 +112,10 @@ func TestAccCertificateDataSourceRbacProjManager(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("projectCreator", projId, "projectManager")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateResourceConfig(cfg.Cfg),
+				Config: testAccCertificateResourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// resource.TestCheckResourceAttrSet("data.capella_certificate.existing_certificate", "certificate"),
 					resource.TestCheckResourceAttr("data.capella_certificate.existing_certificate", "organization_id", organizationId),
@@ -143,11 +136,10 @@ func TestAccCertificateDataSourceRbacProjViewer(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("projectCreator", projId, "projectViewer")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateResourceConfig(cfg.Cfg),
+				Config: testAccCertificateResourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// resource.TestCheckResourceAttrSet("data.capella_certificate.existing_certificate", "certificate"),
 					resource.TestCheckResourceAttr("data.capella_certificate.existing_certificate", "organization_id", organizationId),
@@ -168,11 +160,10 @@ func TestAccCertificateDataSourceRbacProjDataReaderWriter(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("projectCreator", projId, "projectDataReaderWriter")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateResourceConfig(cfg.Cfg),
+				Config: testAccCertificateResourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// resource.TestCheckResourceAttrSet("data.capella_certificate.existing_certificate", "certificate"),
 					resource.TestCheckResourceAttr("data.capella_certificate.existing_certificate", "organization_id", organizationId),
@@ -193,11 +184,10 @@ func TestAccCertificateDataSourceRbacProjDataReader(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("projectCreator", projId, "projectDataReader")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateResourceConfig(cfg.Cfg),
+				Config: testAccCertificateResourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// resource.TestCheckResourceAttrSet("data.capella_certificate.existing_certificate", "certificate"),
 					resource.TestCheckResourceAttr("data.capella_certificate.existing_certificate", "organization_id", organizationId),
@@ -210,7 +200,7 @@ func TestAccCertificateDataSourceRbacProjDataReader(t *testing.T) {
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func testAccCertificateResourceConfig(cfg string) string {
+func testAccCertificateResourceConfig() string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -224,5 +214,5 @@ data "capella_certificate" "existing_certificate" {
 	cluster_id      = var.cluster_id
 }
 
-`, cfg)
+`, acceptance_tests.ProviderBlock)
 }

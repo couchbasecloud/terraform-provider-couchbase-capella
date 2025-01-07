@@ -3,6 +3,7 @@ package security
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources/acceptance_tests"
 	"net/http"
 	"os"
 	"regexp"
@@ -25,12 +26,11 @@ func TestAccCreateClusterNoAuth(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	os.Setenv("TF_VAR_auth_token", "")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccClusterResourceConfig(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
+				Config:      testAccClusterResourceConfig(resourceName, projectResourceName, projectResourceReference, cidr),
 				ExpectError: regexp.MustCompile("Missing Capella Authentication Token"),
 			},
 		},
@@ -47,12 +47,11 @@ func TestAccCreateClusterOrgOwner(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationOwner")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccClusterResourceConfig(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
+				Config: testAccClusterResourceConfig(resourceName, projectResourceName, projectResourceReference, cidr),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsClusterResource(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", "Terraform Acceptance Test Cluster"),
@@ -92,12 +91,11 @@ func TestAccCreateClusterOrgMember(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationMember")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccClusterResourceConfig(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
+				Config:      testAccClusterResourceConfig(resourceName, projectResourceName, projectResourceReference, cidr),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -113,12 +111,11 @@ func TestAccCreateClusterProjCreator(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("projectCreator")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccClusterResourceConfig(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
+				Config:      testAccClusterResourceConfig(resourceName, projectResourceName, projectResourceReference, cidr),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -136,12 +133,11 @@ func TestAccCreateClusterProjOwner(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectOwner")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccClusterResourceConfig(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
+				Config: testAccClusterResourceConfig(resourceName, projectResourceName, projectResourceReference, cidr),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsClusterResource(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", "Terraform Acceptance Test Cluster"),
@@ -183,12 +179,11 @@ func TestAccCreateClusterProjManager(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectManager")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccClusterResourceConfig(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
+				Config: testAccClusterResourceConfig(resourceName, projectResourceName, projectResourceReference, cidr),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsClusterResource(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", "Terraform Acceptance Test Cluster"),
@@ -229,12 +224,11 @@ func TestAccCreateClusterProjViewer(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectViewer")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccClusterResourceConfig(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
+				Config:      testAccClusterResourceConfig(resourceName, projectResourceName, projectResourceReference, cidr),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -251,12 +245,11 @@ func TestAccCreateClusterDatabaseReaderWriter(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectDataReaderWriter")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccClusterResourceConfig(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
+				Config:      testAccClusterResourceConfig(resourceName, projectResourceName, projectResourceReference, cidr),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -273,12 +266,11 @@ func TestAccCreateClusterDatabaseReader(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectDataReader")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config:      testAccClusterResourceConfig(acctest.Cfg, resourceName, projectResourceName, projectResourceReference, cidr),
+				Config:      testAccClusterResourceConfig(resourceName, projectResourceName, projectResourceReference, cidr),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -286,7 +278,7 @@ func TestAccCreateClusterDatabaseReader(t *testing.T) {
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func testAccClusterResourceConfig(cfg, resourceName, projectResourceName, projectResourceReference, cidr string) string {
+func testAccClusterResourceConfig(resourceName, projectResourceName, projectResourceReference, cidr string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -341,7 +333,7 @@ resource "capella_cluster" "%[2]s" {
     timezone = "PT"
   }
 }
-`, cfg, resourceName, projectResourceName, projectResourceReference, cidr)
+`, acceptance_tests.ProviderBlock, resourceName, projectResourceName, projectResourceReference, cidr)
 }
 
 // retrieveClusterFromServer checks cluster exists in server.

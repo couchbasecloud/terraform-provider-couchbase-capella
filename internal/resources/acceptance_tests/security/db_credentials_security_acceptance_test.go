@@ -2,6 +2,7 @@ package security
 
 import (
 	"fmt"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources/acceptance_tests"
 	"os"
 	"regexp"
 	"testing"
@@ -14,14 +15,12 @@ import (
 func TestAccOrgOwnerDatabaseCredentialTest(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationOwner")
-	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Database Credential with required fields
 			{
-				Config: testAccAddDatabaseCredWithReqFields(&testCfg),
+				Config: testAccAddDatabaseCredWithReqFields(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("capella_database_credential.add_database_credential_req", "id"),
 					resource.TestCheckResourceAttr("capella_database_credential.add_database_credential_req", "name", "acc_test_database_credential_name"),
@@ -33,17 +32,14 @@ func TestAccOrgOwnerDatabaseCredentialTest(t *testing.T) {
 }
 
 func TestAccOrgMemberDatabaseCredentialTest(t *testing.T) {
-
 	tempId := os.Getenv("TF_VAR_auth_token")
-	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Database Credential with required fields
 			{
 				PreConfig:   func() { testAccCreateOrgAPI("organizationMember") },
-				Config:      testAccAddDatabaseCredWithReqFields(&testCfg),
+				Config:      testAccAddDatabaseCredWithReqFields(),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -52,17 +48,14 @@ func TestAccOrgMemberDatabaseCredentialTest(t *testing.T) {
 }
 
 func TestAccProjCreatorDatabaseCredentialTest(t *testing.T) {
-
 	tempId := os.Getenv("TF_VAR_auth_token")
-	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Database Credential with required fields
 			{
 				PreConfig:   func() { testAccCreateOrgAPI("projectCreator") },
-				Config:      testAccAddDatabaseCredWithReqFields(&testCfg),
+				Config:      testAccAddDatabaseCredWithReqFields(),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -71,18 +64,15 @@ func TestAccProjCreatorDatabaseCredentialTest(t *testing.T) {
 }
 
 func TestAccProjOwnerDatabaseCredentialTest(t *testing.T) {
-
 	projId := os.Getenv("TF_VAR_project_id")
 	tempId := os.Getenv("TF_VAR_auth_token")
-	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Database Credential with required fields
 			{
 				PreConfig: func() { testAccCreateProjAPI("organizationMember", projId, "projectOwner") },
-				Config:    testAccAddDatabaseCredWithReqFields(&testCfg),
+				Config:    testAccAddDatabaseCredWithReqFields(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("capella_database_credential.add_database_credential_req", "id"),
 					resource.TestCheckResourceAttr("capella_database_credential.add_database_credential_req", "name", "acc_test_database_credential_name"),
@@ -94,18 +84,15 @@ func TestAccProjOwnerDatabaseCredentialTest(t *testing.T) {
 }
 
 func TestAccProjManagerDatabaseCredentialTest(t *testing.T) {
-
 	projId := os.Getenv("TF_VAR_project_id")
 	tempId := os.Getenv("TF_VAR_auth_token")
-	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Database Credential with required fields
 			{
 				PreConfig:   func() { testAccCreateProjAPI("organizationMember", projId, "projectManager") },
-				Config:      testAccAddDatabaseCredWithReqFields(&testCfg),
+				Config:      testAccAddDatabaseCredWithReqFields(),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -114,18 +101,15 @@ func TestAccProjManagerDatabaseCredentialTest(t *testing.T) {
 }
 
 func TestAccProjViewerDatabaseCredentialTest(t *testing.T) {
-
 	projId := os.Getenv("TF_VAR_project_id")
 	tempId := os.Getenv("TF_VAR_auth_token")
-	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Database Credential with required fields
 			{
 				PreConfig:   func() { testAccCreateProjAPI("organizationMember", projId, "projectViewer") },
-				Config:      testAccAddDatabaseCredWithReqFields(&testCfg),
+				Config:      testAccAddDatabaseCredWithReqFields(),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -134,18 +118,15 @@ func TestAccProjViewerDatabaseCredentialTest(t *testing.T) {
 }
 
 func TestAccDatabaseReaderWriterDatabaseCredentialTest(t *testing.T) {
-
 	projId := os.Getenv("TF_VAR_project_id")
 	tempId := os.Getenv("TF_VAR_auth_token")
-	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Database Credential with required fields
 			{
 				PreConfig:   func() { testAccCreateProjAPI("organizationMember", projId, "projectDataReaderWriter") },
-				Config:      testAccAddDatabaseCredWithReqFields(&testCfg),
+				Config:      testAccAddDatabaseCredWithReqFields(),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -154,18 +135,15 @@ func TestAccDatabaseReaderWriterDatabaseCredentialTest(t *testing.T) {
 }
 
 func TestAccDatabaseReaderDatabaseCredentialTest(t *testing.T) {
-
 	projId := os.Getenv("TF_VAR_project_id")
 	tempId := os.Getenv("TF_VAR_auth_token")
-	testCfg := acctest.Cfg
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Database Credential with required fields
 			{
 				PreConfig:   func() { testAccCreateProjAPI("organizationMember", projId, "projectDataReader") },
-				Config:      testAccAddDatabaseCredWithReqFields(&testCfg),
+				Config:      testAccAddDatabaseCredWithReqFields(),
 				ExpectError: regexp.MustCompile("Access Denied"),
 			},
 		},
@@ -173,8 +151,8 @@ func TestAccDatabaseReaderDatabaseCredentialTest(t *testing.T) {
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func testAccAddDatabaseCredWithReqFields(cfg *string) string {
-	*cfg = fmt.Sprintf(`
+func testAccAddDatabaseCredWithReqFields() string {
+	return fmt.Sprintf(`
 	%[1]s
 
 	output "add_database_credential_req"{
@@ -194,6 +172,5 @@ func testAccAddDatabaseCredWithReqFields(cfg *string) string {
 		]
 	}
 
-	`, *cfg)
-	return *cfg
+	`, acceptance_tests.ProviderBlock)
 }

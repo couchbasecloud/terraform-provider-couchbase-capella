@@ -2,14 +2,13 @@ package security
 
 import (
 	"fmt"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources/acceptance_tests"
 	"os"
 
 	"regexp"
 	"testing"
 
 	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
-	cfg "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
-
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
@@ -17,11 +16,10 @@ func TestAccDataSourceNoAuth(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	os.Setenv("TF_VAR_auth_token", "")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccOrgAPIKeysConfig(cfg.ProjectCfg, "organizationOwner"),
+				Config:      testAccOrgAPIKeysConfig("organizationOwner"),
 				ExpectError: regexp.MustCompile("empty value for the capella authentication token"),
 			},
 		},
@@ -33,11 +31,10 @@ func TestAccAPIKeyRbacOrgOwner(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationOwner")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrgAPIKeysConfig(cfg.ProjectCfg, "organizationOwner"),
+				Config: testAccOrgAPIKeysConfig("organizationOwner"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("capella_apikey.new_apikey", "id"),
 					resource.TestCheckResourceAttrSet("capella_apikey.new_apikey", "token"),
@@ -52,11 +49,10 @@ func TestAccAPIKeyRbacOrgMember(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationMember")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccOrgAPIKeysConfig(cfg.ProjectCfg, "organizationOwner"),
+				Config:      testAccOrgAPIKeysConfig("organizationOwner"),
 				ExpectError: regexp.MustCompile("Could not create ApiKey"),
 			},
 		},
@@ -68,11 +64,10 @@ func TestAccAPIKeyRbacProjCreator(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("projectCreator")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccOrgAPIKeysConfig(cfg.ProjectCfg, "organizationOwner"),
+				Config:      testAccOrgAPIKeysConfig("organizationOwner"),
 				ExpectError: regexp.MustCompile("Could not create ApiKey"),
 			},
 		},
@@ -86,15 +81,14 @@ func TestAccAPIKeyRbacProjOwner(t *testing.T) {
 
 	testAccCreateProjAPI("organizationMember", projId, "projectOwner")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccOrgAPIKeysConfig(cfg.ProjectCfg, "organizationOwner"),
+				Config:      testAccOrgAPIKeysConfig("organizationOwner"),
 				ExpectError: regexp.MustCompile("Could not create ApiKey"),
 			},
 			{
-				Config: testAccProjAPIKeysConfig(cfg.ProjectCfg, "organizationMember", projId, "projectViewer"),
+				Config: testAccProjAPIKeysConfig("organizationMember", projId, "projectViewer"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("capella_apikey.new_apikey", "id"),
 					resource.TestCheckResourceAttrSet("capella_apikey.new_apikey", "token"),
@@ -111,15 +105,14 @@ func TestAccAPIKeyRbacProjManager(t *testing.T) {
 
 	testAccCreateProjAPI("organizationMember", projId, "projectManager")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccOrgAPIKeysConfig(cfg.ProjectCfg, "organizationOwner"),
+				Config:      testAccOrgAPIKeysConfig("organizationOwner"),
 				ExpectError: regexp.MustCompile("Could not create ApiKey"),
 			},
 			{
-				Config:      testAccProjAPIKeysConfig(cfg.ProjectCfg, "organizationMember", projId, "projectViewer"),
+				Config:      testAccProjAPIKeysConfig("organizationMember", projId, "projectViewer"),
 				ExpectError: regexp.MustCompile("Could not create ApiKey"),
 			},
 		},
@@ -133,15 +126,14 @@ func TestAccAPIKeyRbacProjViewer(t *testing.T) {
 
 	testAccCreateProjAPI("organizationMember", projId, "projectManager")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccOrgAPIKeysConfig(cfg.ProjectCfg, "organizationOwner"),
+				Config:      testAccOrgAPIKeysConfig("organizationOwner"),
 				ExpectError: regexp.MustCompile("Could not create ApiKey"),
 			},
 			{
-				Config:      testAccProjAPIKeysConfig(cfg.ProjectCfg, "organizationMember", projId, "projectViewer"),
+				Config:      testAccProjAPIKeysConfig("organizationMember", projId, "projectViewer"),
 				ExpectError: regexp.MustCompile("Could not create ApiKey"),
 			},
 		},
@@ -155,15 +147,14 @@ func TestAccAPIKeyRbacDatabaseReaderWriter(t *testing.T) {
 
 	testAccCreateProjAPI("organizationMember", projId, "projectDataReaderWriter")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccOrgAPIKeysConfig(cfg.ProjectCfg, "organizationOwner"),
+				Config:      testAccOrgAPIKeysConfig("organizationOwner"),
 				ExpectError: regexp.MustCompile("Could not create ApiKey"),
 			},
 			{
-				Config:      testAccProjAPIKeysConfig(cfg.ProjectCfg, "organizationMember", projId, "projectViewer"),
+				Config:      testAccProjAPIKeysConfig("organizationMember", projId, "projectViewer"),
 				ExpectError: regexp.MustCompile("Could not create ApiKey"),
 			},
 		},
@@ -177,15 +168,14 @@ func TestAccAPIKeyRbacDatabaseReader(t *testing.T) {
 
 	testAccCreateProjAPI("organizationMember", projId, "projectDataReader")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccOrgAPIKeysConfig(cfg.ProjectCfg, "organizationOwner"),
+				Config:      testAccOrgAPIKeysConfig("organizationOwner"),
 				ExpectError: regexp.MustCompile("Could not create ApiKey"),
 			},
 			{
-				Config:      testAccProjAPIKeysConfig(cfg.ProjectCfg, "organizationMember", projId, "projectViewer"),
+				Config:      testAccProjAPIKeysConfig("organizationMember", projId, "projectViewer"),
 				ExpectError: regexp.MustCompile("Could not create ApiKey"),
 			},
 		},
@@ -193,7 +183,7 @@ func TestAccAPIKeyRbacDatabaseReader(t *testing.T) {
 	os.Setenv("TF_VAR_auth_token", tempId)
 }
 
-func testAccOrgAPIKeysConfig(cfg string, organizationRole string) string {
+func testAccOrgAPIKeysConfig(organizationRole string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -216,10 +206,10 @@ allowed_cidrs      = ["0.0.0.0/0"]
 resources 		   = []
 }
 
-`, cfg, organizationRole)
+`, acceptance_tests.ProviderBlock, organizationRole)
 }
 
-func testAccProjAPIKeysConfig(cfg string, organizationRole string, projId string, projectRole string) string {
+func testAccProjAPIKeysConfig(organizationRole, projId, projectRole string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -246,6 +236,5 @@ resources 		   = [
 	}
 ]
 }
-
-`, cfg, organizationRole, projId, projectRole)
+`, acceptance_tests.ProviderBlock, organizationRole, projId, projectRole)
 }
