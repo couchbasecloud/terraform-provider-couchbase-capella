@@ -5,16 +5,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"testing"
-
-	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 )
 
 func TestAccGSI(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_gsi_")
+	resourceName := RandomStringWithPrefix("tf_acc_gsi_")
 	resourceReference := "couchbase-capella_query_indexes." + resourceName
 
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCreateGSINonDeferredIndexConfig(resourceName),

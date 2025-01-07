@@ -7,8 +7,6 @@ import (
 	"regexp"
 	"testing"
 
-	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
-
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
@@ -17,7 +15,7 @@ func TestAccCreateBucketNoAuth(t *testing.T) {
 	os.Setenv("TF_VAR_auth_token", "")
 	name := "terraform_security_bucket"
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -34,7 +32,7 @@ func TestAccCreateBucketOrgOwner(t *testing.T) {
 	testAccCreateOrgAPI("organizationOwner")
 	name := "terraform_security_bucket"
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -57,7 +55,7 @@ func TestAccCreateBucketOrgMember(t *testing.T) {
 	testAccCreateOrgAPI("organizationMember")
 	name := "terraform_security_bucket"
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -74,7 +72,7 @@ func TestAccCreateBucketProjCreator(t *testing.T) {
 	testAccCreateOrgAPI("projectCreator")
 	name := "terraform_security_bucket"
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -92,7 +90,7 @@ func TestAccCreateBucketProjOwner(t *testing.T) {
 	testAccCreateProjAPI("organizationMember", projId, "projectOwner")
 	name := "terraform_security_bucket"
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -116,7 +114,7 @@ func TestAccCreateBucketProjManager(t *testing.T) {
 	testAccCreateProjAPI("organizationMember", projId, "projectManager")
 	name := "terraform_security_bucket"
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -140,7 +138,7 @@ func TestAccCreateBucketProjViewer(t *testing.T) {
 	testAccCreateProjAPI("organizationMember", projId, "projectViewer")
 	name := "terraform_security_bucket"
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -158,7 +156,7 @@ func TestAccCreateBucketDatabaseReaderWriter(t *testing.T) {
 	testAccCreateProjAPI("organizationMember", projId, "projectDataReaderWriter")
 	name := "terraform_security_bucket"
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -176,7 +174,7 @@ func TestAccCreateBucketDatabaseReader(t *testing.T) {
 	testAccCreateProjAPI("organizationMember", projId, "projectDataReader")
 	name := "terraform_security_bucket"
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{

@@ -6,17 +6,15 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-
-	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 )
 
 // This test is not parallel so it's done before all the other tests.
 // The reason is buckets cannot be deleted while app service is being deleted.
 func TestAppServiceResource(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_app_svc_")
+	resourceName := RandomStringWithPrefix("tf_acc_app_svc_")
 	resourceReference := "couchbase-capella_app_service." + resourceName
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{

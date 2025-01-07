@@ -7,15 +7,13 @@ import (
 	"regexp"
 	"testing"
 
-	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
-
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccAllowListOrgOwner(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// IP with required fields
 			{
@@ -33,7 +31,7 @@ func TestAccAllowListOrgOwner(t *testing.T) {
 func TestAccAllowListOrgMember(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			//IP with required fields
 			{
@@ -53,7 +51,7 @@ func TestAccAllowListOrgMember(t *testing.T) {
 func TestAccAllowListProjCreator(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			//IP with required fields
 			{
@@ -75,7 +73,7 @@ func TestAccAllowListProjOwner(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			//IP with required fields
 			{
@@ -99,8 +97,7 @@ func TestAccAllowListProjManager(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			//IP with required fields
 			{
@@ -125,8 +122,7 @@ func TestAccAllowListProjViewer(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			//IP with required fields
 			{
@@ -148,8 +144,7 @@ func TestAccAllowListDatabaseReaderWriter(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			//IP with required fields
 			{
@@ -171,8 +166,7 @@ func TestAccAllowListDatabaseReader(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			//IP with required fields
 			{

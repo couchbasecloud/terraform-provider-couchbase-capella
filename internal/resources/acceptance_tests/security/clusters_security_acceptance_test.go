@@ -12,21 +12,19 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
-	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
-
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccCreateClusterNoAuth(t *testing.T) {
-	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
-	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
+	resourceName := acceptance_tests.RandomStringWithPrefix("tf_acc_cluster_")
+	projectResourceName := acceptance_tests.RandomStringWithPrefix("tf_acc_project_")
 	projectResourceReference := "capella_project." + projectResourceName
 	cidr := "10.252.250.0/23"
 	tempId := os.Getenv("TF_VAR_auth_token")
 	os.Setenv("TF_VAR_auth_token", "")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -39,15 +37,15 @@ func TestAccCreateClusterNoAuth(t *testing.T) {
 }
 
 func TestAccCreateClusterOrgOwner(t *testing.T) {
-	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
+	resourceName := acceptance_tests.RandomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "capella_cluster." + resourceName
-	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
+	projectResourceName := acceptance_tests.RandomStringWithPrefix("tf_acc_project_")
 	projectResourceReference := "capella_project." + projectResourceName
 	cidr := "10.252.250.0/23"
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationOwner")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -84,14 +82,14 @@ func TestAccCreateClusterOrgOwner(t *testing.T) {
 }
 
 func TestAccCreateClusterOrgMember(t *testing.T) {
-	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
-	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
+	resourceName := acceptance_tests.RandomStringWithPrefix("tf_acc_cluster_")
+	projectResourceName := acceptance_tests.RandomStringWithPrefix("tf_acc_project_")
 	projectResourceReference := "capella_project." + projectResourceName
 	cidr := "10.254.250.0/23"
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationMember")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -104,14 +102,14 @@ func TestAccCreateClusterOrgMember(t *testing.T) {
 }
 
 func TestAccCreateClusterProjCreator(t *testing.T) {
-	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
-	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
+	resourceName := acceptance_tests.RandomStringWithPrefix("tf_acc_cluster_")
+	projectResourceName := acceptance_tests.RandomStringWithPrefix("tf_acc_project_")
 	projectResourceReference := "capella_project." + projectResourceName
 	cidr := "10.254.250.0/23"
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("projectCreator")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -124,16 +122,16 @@ func TestAccCreateClusterProjCreator(t *testing.T) {
 }
 
 func TestAccCreateClusterProjOwner(t *testing.T) {
-	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
+	resourceName := acceptance_tests.RandomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "capella_cluster." + resourceName
-	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
+	projectResourceName := acceptance_tests.RandomStringWithPrefix("tf_acc_project_")
 	projectResourceReference := "capella_project." + projectResourceName
 	cidr := "10.252.250.0/23"
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectOwner")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -170,16 +168,16 @@ func TestAccCreateClusterProjOwner(t *testing.T) {
 }
 
 func TestAccCreateClusterProjManager(t *testing.T) {
-	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
+	resourceName := acceptance_tests.RandomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "capella_cluster." + resourceName
-	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
+	projectResourceName := acceptance_tests.RandomStringWithPrefix("tf_acc_project_")
 	projectResourceReference := "capella_project." + projectResourceName
 	cidr := "10.242.250.0/23"
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectManager")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -216,15 +214,15 @@ func TestAccCreateClusterProjManager(t *testing.T) {
 }
 
 func TestAccCreateClusterProjViewer(t *testing.T) {
-	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
-	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
+	resourceName := acceptance_tests.RandomStringWithPrefix("tf_acc_cluster_")
+	projectResourceName := acceptance_tests.RandomStringWithPrefix("tf_acc_project_")
 	projectResourceReference := "capella_project." + projectResourceName
 	cidr := "10.256.250.0/23"
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectViewer")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -237,15 +235,15 @@ func TestAccCreateClusterProjViewer(t *testing.T) {
 }
 
 func TestAccCreateClusterDatabaseReaderWriter(t *testing.T) {
-	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
-	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
+	resourceName := acceptance_tests.RandomStringWithPrefix("tf_acc_cluster_")
+	projectResourceName := acceptance_tests.RandomStringWithPrefix("tf_acc_project_")
 	projectResourceReference := "capella_project." + projectResourceName
 	cidr := "10.256.250.0/23"
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectDataReaderWriter")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -258,15 +256,15 @@ func TestAccCreateClusterDatabaseReaderWriter(t *testing.T) {
 }
 
 func TestAccCreateClusterDatabaseReader(t *testing.T) {
-	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
-	projectResourceName := "acc_project_" + acctest.GenerateRandomResourceName()
+	resourceName := acceptance_tests.RandomStringWithPrefix("tf_acc_cluster_")
+	projectResourceName := acceptance_tests.RandomStringWithPrefix("tf_acc_project_")
 	projectResourceReference := "capella_project." + projectResourceName
 	cidr := "10.256.250.0/23"
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectDataReader")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -375,12 +373,9 @@ func testAccExistsClusterResource(resourceReference string) resource.TestCheckFu
 				}
 			}
 		}
-		fmt.Printf("raw state %s", rawState)
-		data, err := acctest.TestClient()
-		if err != nil {
-			return err
-		}
-		_, err = retrieveClusterFromServer(data, rawState["organization_id"], rawState["project_id"], rawState["id"])
+
+		data := acceptance_tests.NewTestClient()
+		_, err := retrieveClusterFromServer(data, rawState["organization_id"], rawState["project_id"], rawState["id"])
 		if err != nil {
 			return err
 		}

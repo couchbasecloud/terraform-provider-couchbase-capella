@@ -8,10 +8,10 @@ import (
 )
 
 func TestAccReadOrganization(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_org_")
+	resourceName := RandomStringWithPrefix("tf_acc_org_")
 	resourceReference := "data.couchbase-capella_organization." + resourceName
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationResourceConfig(resourceName),

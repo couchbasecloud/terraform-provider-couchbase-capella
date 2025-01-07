@@ -5,22 +5,9 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/provider"
-	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
-
-const providerName = "couchbase-capella"
-
-// testAccProtoV6ProviderFactories are used to instantiate a provider during
-// acceptance testing. The factory function will be invoked for every Terraform
-// CLI command executed to create a provider server to which the CLI can
-// reattach.
-var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-	providerName: providerserver.NewProtocol6WithError(provider.New()()),
-}
 
 // TestAccProjectResource is a Terraform acceptance test that covers the lifecycle of a Capella project resource.
 //
@@ -32,10 +19,10 @@ var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServe
 //  4. Update and Read Testing: Modify the project's attributes and ensure the changes are applied successfully.
 //  5. Delete Testing: Automatically occurs in the TestCase as part of cleanup.
 func TestAccProjectResource(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_project_")
+	resourceName := RandomStringWithPrefix("tf_acc_project_")
 	resourceReference := "couchbase-capella_project." + resourceName
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -76,10 +63,10 @@ func TestAccProjectResource(t *testing.T) {
 }
 
 func TestAccProjectCreateWithReqFields(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_project_")
+	resourceName := RandomStringWithPrefix("tf_acc_project_")
 	resourceReference := "couchbase-capella_project." + resourceName
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -95,10 +82,10 @@ func TestAccProjectCreateWithReqFields(t *testing.T) {
 }
 
 func TestAccProjectValidUpdate(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_project_")
+	resourceName := RandomStringWithPrefix("tf_acc_project_")
 	resourceReference := "couchbase-capella_project." + resourceName
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectResourceConfig(resourceName),
@@ -122,10 +109,10 @@ func TestAccProjectValidUpdate(t *testing.T) {
 }
 
 func TestAccProjectInvalidResource(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_project_")
+	resourceName := RandomStringWithPrefix("tf_acc_project_")
 	resourceReference := "couchbase-capella_project." + resourceName
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Invalid field in create testing
 			{

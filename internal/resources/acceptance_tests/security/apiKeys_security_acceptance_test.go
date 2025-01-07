@@ -8,7 +8,6 @@ import (
 	"regexp"
 	"testing"
 
-	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
@@ -16,7 +15,7 @@ func TestAccDataSourceNoAuth(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	os.Setenv("TF_VAR_auth_token", "")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccOrgAPIKeysConfig("organizationOwner"),
@@ -31,7 +30,7 @@ func TestAccAPIKeyRbacOrgOwner(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationOwner")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrgAPIKeysConfig("organizationOwner"),
@@ -49,7 +48,7 @@ func TestAccAPIKeyRbacOrgMember(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationMember")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccOrgAPIKeysConfig("organizationOwner"),
@@ -64,7 +63,7 @@ func TestAccAPIKeyRbacProjCreator(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("projectCreator")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccOrgAPIKeysConfig("organizationOwner"),
@@ -81,7 +80,7 @@ func TestAccAPIKeyRbacProjOwner(t *testing.T) {
 
 	testAccCreateProjAPI("organizationMember", projId, "projectOwner")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccOrgAPIKeysConfig("organizationOwner"),
@@ -105,7 +104,7 @@ func TestAccAPIKeyRbacProjManager(t *testing.T) {
 
 	testAccCreateProjAPI("organizationMember", projId, "projectManager")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccOrgAPIKeysConfig("organizationOwner"),
@@ -126,7 +125,7 @@ func TestAccAPIKeyRbacProjViewer(t *testing.T) {
 
 	testAccCreateProjAPI("organizationMember", projId, "projectManager")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccOrgAPIKeysConfig("organizationOwner"),
@@ -147,7 +146,7 @@ func TestAccAPIKeyRbacDatabaseReaderWriter(t *testing.T) {
 
 	testAccCreateProjAPI("organizationMember", projId, "projectDataReaderWriter")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccOrgAPIKeysConfig("organizationOwner"),
@@ -168,7 +167,7 @@ func TestAccAPIKeyRbacDatabaseReader(t *testing.T) {
 
 	testAccCreateProjAPI("organizationMember", projId, "projectDataReader")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccOrgAPIKeysConfig("organizationOwner"),

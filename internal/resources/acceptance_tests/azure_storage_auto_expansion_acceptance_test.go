@@ -4,15 +4,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	"testing"
-
-	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
-
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"testing"
 )
 
 func TestAccClusterResourceAzureDiskAutoExpansion(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_cluster_")
+	resourceName := RandomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	cidr, err := getCIDR(context.Background(), api.NewClient(Timeout), "azure")
 	if err != nil {
@@ -21,7 +18,7 @@ func TestAccClusterResourceAzureDiskAutoExpansion(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfigAzureDiskAutoExpansion(resourceName, cidr),

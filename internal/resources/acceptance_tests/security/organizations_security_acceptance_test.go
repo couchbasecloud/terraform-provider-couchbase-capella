@@ -12,7 +12,6 @@ import (
 	"testing"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
@@ -47,7 +46,7 @@ func TestAccOrganizationDataSourceNoAuth(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	os.Setenv("TF_VAR_auth_token", "")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccOrganizationResourceConfig(organizationId),
@@ -63,7 +62,7 @@ func TestAccOrganizationDataSourceRbacOrgOwner(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationOwner")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationResourceConfig(organizationId),
@@ -86,7 +85,7 @@ func TestAccOrganizationDataSourceRbacOrgMember(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationMember")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationResourceConfig(organizationId),
@@ -109,7 +108,7 @@ func TestAccOrganizationDataSourceRbacProjCreator(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("projectCreator")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationResourceConfig(organizationId),
@@ -144,10 +143,7 @@ data "capella_organization" "get_organization" {
 
 func testAccCreateOrgAPI(role string) string {
 	log.Println("Creating api keys for Organization role")
-	data, err := acctest.TestClient()
-	if err != nil {
-		fmt.Println("Error in Test Client")
-	}
+	data := acceptance_tests.NewTestClient()
 
 	host := os.Getenv("TF_VAR_host")
 	orgid := os.Getenv("TF_VAR_organization_id")
@@ -189,10 +185,7 @@ func testAccCreateOrgAPI(role string) string {
 
 func testAccCreateProjAPI(orgRole string, projId string, projRole string) string {
 	log.Println("Creating api keys for Project role")
-	data, err := acctest.TestClient()
-	if err != nil {
-		fmt.Println("Error in Test Client")
-	}
+	data := acceptance_tests.NewTestClient()
 
 	host := os.Getenv("TF_VAR_host")
 	orgid := os.Getenv("TF_VAR_organization_id")

@@ -4,16 +4,14 @@ import (
 	"fmt"
 	"testing"
 
-	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
-
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAccDatabaseCredentialWithReqFields(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_database_credential_")
+	resourceName := RandomStringWithPrefix("tf_acc_database_credential_")
 	resourceReference := "couchbase-capella_database_credential." + resourceName
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddDatabaseCredWithReqFieldsConfig(resourceName),
@@ -27,10 +25,10 @@ func TestAccDatabaseCredentialWithReqFields(t *testing.T) {
 }
 
 func TestAccDatabaseCredentialWithOptionalFields(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_database_credential_")
+	resourceName := RandomStringWithPrefix("tf_acc_database_credential_")
 	resourceReference := "couchbase-capella_database_credential." + resourceName
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddDatabaseCredWithOptionalFieldsConfig(resourceName),

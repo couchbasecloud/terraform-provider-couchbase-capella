@@ -7,8 +7,6 @@ import (
 	"regexp"
 	"testing"
 
-	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
-
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
@@ -16,7 +14,7 @@ func TestAccOrgOwnerDatabaseCredentialTest(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationOwner")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Database Credential with required fields
 			{
@@ -34,7 +32,7 @@ func TestAccOrgOwnerDatabaseCredentialTest(t *testing.T) {
 func TestAccOrgMemberDatabaseCredentialTest(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Database Credential with required fields
 			{
@@ -50,7 +48,7 @@ func TestAccOrgMemberDatabaseCredentialTest(t *testing.T) {
 func TestAccProjCreatorDatabaseCredentialTest(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Database Credential with required fields
 			{
@@ -67,7 +65,7 @@ func TestAccProjOwnerDatabaseCredentialTest(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	tempId := os.Getenv("TF_VAR_auth_token")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Database Credential with required fields
 			{
@@ -87,7 +85,7 @@ func TestAccProjManagerDatabaseCredentialTest(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	tempId := os.Getenv("TF_VAR_auth_token")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Database Credential with required fields
 			{
@@ -104,7 +102,7 @@ func TestAccProjViewerDatabaseCredentialTest(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	tempId := os.Getenv("TF_VAR_auth_token")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Database Credential with required fields
 			{
@@ -121,7 +119,7 @@ func TestAccDatabaseReaderWriterDatabaseCredentialTest(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	tempId := os.Getenv("TF_VAR_auth_token")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Database Credential with required fields
 			{
@@ -138,7 +136,7 @@ func TestAccDatabaseReaderDatabaseCredentialTest(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	tempId := os.Getenv("TF_VAR_auth_token")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Database Credential with required fields
 			{

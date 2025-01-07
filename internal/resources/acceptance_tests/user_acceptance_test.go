@@ -2,23 +2,20 @@ package acceptance_tests
 
 import (
 	"fmt"
-	"net/http"
-	"testing"
-
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
-	cfg "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
-
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"net/http"
+	"testing"
 )
 
 func TestAccUserResource(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_user_")
+	resourceName := RandomStringWithPrefix("tf_acc_user_")
 	resourceReference := "couchbase-capella_user." + resourceName
 
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: cfg.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read
 			{
@@ -53,11 +50,11 @@ func TestAccUserResource(t *testing.T) {
 }
 
 func TestAccUserResourceResourceNotFound(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_user_")
+	resourceName := RandomStringWithPrefix("tf_acc_user_")
 	resourceReference := "couchbase-capella_user." + resourceName
 
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: cfg.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -105,11 +102,8 @@ func testAccDeleteUserResource(resourceReference string) resource.TestCheckFunc 
 			}
 		}
 
-		data, err := cfg.TestClient()
-		if err != nil {
-			return err
-		}
-		err = deleteUserFromServer(data, rawState["organization_id"], rawState["id"])
+		data := NewTestClient()
+		err := deleteUserFromServer(data, rawState["organization_id"], rawState["id"])
 		if err != nil {
 			return err
 		}

@@ -8,16 +8,14 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-
-	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 )
 
 func TestAccCreateProjectNoAuth(t *testing.T) {
-	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
+	rnd := acceptance_tests.RandomStringWithPrefix("tf_acc_project_")
 	tempId := os.Getenv("TF_VAR_auth_token")
 	os.Setenv("TF_VAR_auth_token", "")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -30,12 +28,12 @@ func TestAccCreateProjectNoAuth(t *testing.T) {
 }
 
 func TestAccCreateProjectOrgOwner(t *testing.T) {
-	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
+	rnd := acceptance_tests.RandomStringWithPrefix("tf_acc_project_")
 	resourceName := "capella_project." + rnd
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationOwner")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -52,12 +50,12 @@ func TestAccCreateProjectOrgOwner(t *testing.T) {
 }
 
 func TestAccCreateProjectProjCreator(t *testing.T) {
-	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
+	rnd := acceptance_tests.RandomStringWithPrefix("tf_acc_project_")
 	resourceName := "capella_project." + rnd
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("projectCreator")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -74,11 +72,11 @@ func TestAccCreateProjectProjCreator(t *testing.T) {
 }
 
 func TestAccCreateProjectOrgMember(t *testing.T) {
-	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
+	rnd := acceptance_tests.RandomStringWithPrefix("tf_acc_project_")
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationMember")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -91,12 +89,12 @@ func TestAccCreateProjectOrgMember(t *testing.T) {
 }
 
 func TestAccCreateProjectProjOwner(t *testing.T) {
-	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
+	rnd := acceptance_tests.RandomStringWithPrefix("tf_acc_project_")
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectOwner")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -109,12 +107,12 @@ func TestAccCreateProjectProjOwner(t *testing.T) {
 }
 
 func TestAccCreateProjectProjManager(t *testing.T) {
-	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
+	rnd := acceptance_tests.RandomStringWithPrefix("tf_acc_project_")
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectManager")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -127,12 +125,12 @@ func TestAccCreateProjectProjManager(t *testing.T) {
 }
 
 func TestAccCreateProjectProjViewer(t *testing.T) {
-	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
+	rnd := acceptance_tests.RandomStringWithPrefix("tf_acc_project_")
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectViewer")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -145,12 +143,12 @@ func TestAccCreateProjectProjViewer(t *testing.T) {
 }
 
 func TestAccCreateProjectDatabaseDataReaderWriter(t *testing.T) {
-	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
+	rnd := acceptance_tests.RandomStringWithPrefix("tf_acc_project_")
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectDataReaderWriter")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -163,12 +161,12 @@ func TestAccCreateProjectDatabaseDataReaderWriter(t *testing.T) {
 }
 
 func TestAccCreateProjectDatabaseDataReader(t *testing.T) {
-	rnd := "acc_project_" + acctest.GenerateRandomResourceName()
+	rnd := acceptance_tests.RandomStringWithPrefix("tf_acc_project_")
 	tempId := os.Getenv("TF_VAR_auth_token")
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("organizationMember", projId, "projectDataReader")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{

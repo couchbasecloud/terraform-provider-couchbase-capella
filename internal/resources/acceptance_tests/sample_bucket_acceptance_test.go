@@ -2,17 +2,16 @@ package acceptance_tests
 
 import (
 	"fmt"
-	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"regexp"
 	"testing"
 )
 
 func TestAccSampleBucket(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_sample_bucket_")
+	resourceName := RandomStringWithPrefix("tf_acc_sample_bucket_")
 	resourceReference := "couchbase-capella_sample_bucket." + resourceName
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSampleBucketWithTravelSampleConfig(resourceName),

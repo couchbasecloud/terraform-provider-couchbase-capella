@@ -6,15 +6,14 @@ import (
 	"testing"
 	"time"
 
-	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAccAllowListWithRequiredFields(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_allowlist_")
+	resourceName := RandomStringWithPrefix("tf_acc_allowlist_")
 	resourceReference := "couchbase-capella_allowlist." + resourceName
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddIpWithReqFields(resourceName, "10.1.1.1/32"),
@@ -28,10 +27,10 @@ func TestAccAllowListWithRequiredFields(t *testing.T) {
 }
 
 func TestAccAllowListWithOptionalFields(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_allowlist_")
+	resourceName := RandomStringWithPrefix("tf_acc_allowlist_")
 	resourceReference := "couchbase-capella_allowlist." + resourceName
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddIpWithOptionalFields(resourceName, "10.4.5.6/32"),
@@ -47,10 +46,10 @@ func TestAccAllowListWithOptionalFields(t *testing.T) {
 }
 
 func TestAccAllowListAllowAllIP(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_allowlist_")
+	resourceName := RandomStringWithPrefix("tf_acc_allowlist_")
 	resourceReference := "couchbase-capella_allowlist." + resourceName
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddIpWithOptionalFields(resourceName, "0.0.0.0/0"),
@@ -66,9 +65,9 @@ func TestAccAllowListAllowAllIP(t *testing.T) {
 }
 
 func TestAccAllowListWithExpiredIP(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_allowlist_")
+	resourceName := RandomStringWithPrefix("tf_acc_allowlist_")
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAddIpWithExpiredIP(resourceName, "10.2.2.2/32"),

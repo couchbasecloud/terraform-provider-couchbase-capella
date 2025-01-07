@@ -5,18 +5,16 @@ import (
 	"regexp"
 	"testing"
 
-	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
-
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccApiKeyResource(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_apikey_")
+	resourceName := RandomStringWithPrefix("tf_acc_apikey_")
 	resourceReference := "couchbase-capella_apikey." + resourceName
 
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -46,12 +44,11 @@ func TestAccApiKeyResource(t *testing.T) {
 }
 
 func TestAccApiKeyResourceWithOnlyReqField(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_apikey_")
+	resourceName := RandomStringWithPrefix("tf_acc_apikey_")
 	resourceReference := "couchbase-capella_apikey." + resourceName
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -91,11 +88,11 @@ func TestAccApiKeyResourceWithOnlyReqField(t *testing.T) {
 }
 
 func TestAccApiKeyResourceForOrgOwner(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_apikey_")
+	resourceName := RandomStringWithPrefix("tf_acc_apikey_")
 	resourceReference := "couchbase-capella_apikey." + resourceName
 
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -124,9 +121,9 @@ func TestAccApiKeyResourceForOrgOwner(t *testing.T) {
 }
 
 func TestAccApiKeyResourceInvalidScenarioRotateShouldNotPassedWhileCreate(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_apikey_")
+	resourceName := RandomStringWithPrefix("tf_acc_apikey_")
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{

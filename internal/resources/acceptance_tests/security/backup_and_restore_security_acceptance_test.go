@@ -7,8 +7,6 @@ import (
 	"regexp"
 	"testing"
 
-	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
-
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
@@ -17,7 +15,7 @@ func TestAccCreateBackupRestoreNoAuth(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	os.Setenv("TF_VAR_auth_token", "")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -37,7 +35,7 @@ func TestAccCreateBackupRestoreOrgOwner(t *testing.T) {
 	clusterId := os.Getenv("TF_VAR_cluster_id")
 	testAccCreateOrgAPI("organizationOwner")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -58,7 +56,7 @@ func TestAccCreateBackupRestoreOrgMember(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("organizationMember")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -75,7 +73,7 @@ func TestAccCreateBackupRestoreProjCreator(t *testing.T) {
 	tempId := os.Getenv("TF_VAR_auth_token")
 	testAccCreateOrgAPI("projectCreator")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -95,7 +93,7 @@ func TestAccCreateBackupRestoreProjOwner(t *testing.T) {
 	clusterId := os.Getenv("TF_VAR_cluster_id")
 	testAccCreateProjAPI("projectCreator", projectId, "projectOwner")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -116,7 +114,7 @@ func TestAccCreateBackupRestoreProjManager(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("projectCreator", projId, "projectManager")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -134,7 +132,7 @@ func TestAccCreateBackupRestoreProjViewer(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("projectCreator", projId, "projectViewer")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -151,7 +149,7 @@ func TestAccCreateBackupRestoreDatabaseReaderWriter(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("projectCreator", projId, "projectDataReaderWriter")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -168,7 +166,7 @@ func TestAccCreateBackupRestoreDatabaseReader(t *testing.T) {
 	projId := os.Getenv("TF_VAR_project_id")
 	testAccCreateProjAPI("projectCreator", projId, "projectDataReader")
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{

@@ -17,18 +17,17 @@ import (
 	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
-	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 )
 
 // TODO: generate CIDR dynamically
 
 func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_cluster_")
+	resourceName := RandomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	cidr := "10.255.250.0/23"
 
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -111,12 +110,12 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 // - Retrieval and verification of the cluster attributes.
 // - Import state testing for the created cluster.
 func TestAccClusterResourceWithOptionalFieldAWS(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_cluster_")
+	resourceName := RandomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	cidr := "10.251.250.0/23"
 
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -171,12 +170,12 @@ func TestAccClusterResourceWithOptionalFieldAWS(t *testing.T) {
 // - Import state testing for the created cluster.
 // - An update to the cluster, including changes to horizontal scaling.
 func TestAccClusterResourceGCP(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_cluster_")
+	resourceName := RandomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	cidr := "10.252.250.0/23"
 
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -243,11 +242,11 @@ func TestAccClusterResourceGCP(t *testing.T) {
 // The test aims to validate that an error is correctly returned when an invalid disk type ("gp2") is provided in the cluster configuration.
 // This scenario is expected to fail with the error message matching the regular expression "The disk type provided, gp2, is not valid".
 func TestAccClusterResourceWithOptionalFieldAWSInvalidScenario(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_cluster_")
+	resourceName := RandomStringWithPrefix("tf_acc_cluster_")
 	cidr := "10.253.250.0/23"
 
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -262,11 +261,11 @@ func TestAccClusterResourceWithOptionalFieldAWSInvalidScenario(t *testing.T) {
 // testing a failure scenario where the IOPS field is set while creating a GCP (Google Cloud Platform) cluster resource.
 // The aim of this test is to ensure that the creation of the cluster fails as expected.
 func TestAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenario(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_cluster_")
+	resourceName := RandomStringWithPrefix("tf_acc_cluster_")
 	cidr := "10.249.250.0/23"
 
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -283,12 +282,12 @@ func TestAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenario(t *testin
 //
 // This test ensures that a cluster resource can be successfully created with the specified configuration type.
 func TestAccClusterResourceWithConfigurationTypeFieldAdded(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_cluster_")
+	resourceName := RandomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	cidr := "10.247.250.0/23"
 
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -335,12 +334,12 @@ func TestAccClusterResourceWithConfigurationTypeFieldAdded(t *testing.T) {
 // This test ensures that Terraform can handle the scenario where the original cluster no longer exists and can
 // create a new cluster with the specified configuration when updating.
 func TestAccClusterResourceNotFound(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_cluster_")
+	resourceName := RandomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	cidr := "10.248.250.0/23"
 
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -783,11 +782,8 @@ func testAccDeleteClusterResource(resourceReference string) resource.TestCheckFu
 			}
 		}
 
-		data, err := acctest.TestClient()
-		if err != nil {
-			return err
-		}
-		err = deleteClusterFromServer(data, rawState["organization_id"], rawState["project_id"], rawState["id"])
+		data := NewTestClient()
+		err := deleteClusterFromServer(data, rawState["organization_id"], rawState["project_id"], rawState["id"])
 		if err != nil {
 			return err
 		}
@@ -917,11 +913,8 @@ func testAccExistsClusterResource(resourceReference string) resource.TestCheckFu
 				}
 			}
 		}
-		data, err := acctest.TestClient()
-		if err != nil {
-			return err
-		}
-		_, err = retrieveClusterFromServer(data, rawState["organization_id"], rawState["project_id"], rawState["id"])
+		data := NewTestClient()
+		_, err := retrieveClusterFromServer(data, rawState["organization_id"], rawState["project_id"], rawState["id"])
 		if err != nil {
 			return err
 		}

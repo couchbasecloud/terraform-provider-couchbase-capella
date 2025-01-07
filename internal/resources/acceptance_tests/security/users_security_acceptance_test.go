@@ -7,8 +7,6 @@ import (
 	"regexp"
 	"testing"
 
-	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
-
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
@@ -18,7 +16,7 @@ func TestAccCreateUserNoAuth(t *testing.T) {
 	name := "terraform_security"
 	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -36,7 +34,7 @@ func TestAccCreateUserOrgOwner(t *testing.T) {
 	name := "terraform_security"
 	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -58,7 +56,7 @@ func TestAccCreateUserOrgMember(t *testing.T) {
 	name := "terraform_security"
 	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -76,7 +74,7 @@ func TestAccCreateUserProjCreator(t *testing.T) {
 	name := "terraform_security"
 	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -95,7 +93,7 @@ func TestAccCreateUserProjOwner(t *testing.T) {
 	name := "terraform_security"
 	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -114,7 +112,7 @@ func TestAccCreateUserProjManager(t *testing.T) {
 	name := "terraform_security"
 	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -133,7 +131,7 @@ func TestAccCreateUserProjViewer(t *testing.T) {
 	name := "terraform_security"
 	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -152,7 +150,7 @@ func TestAccCreateUserDatabaseReaderWriter(t *testing.T) {
 	name := "terraform_security"
 	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -171,7 +169,7 @@ func TestAccCreateUserDatabaseReader(t *testing.T) {
 	name := "terraform_security"
 	email := "koushal.sharma+10@couchbase.com"
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: acceptance_tests.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
