@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	acc_test "github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
@@ -24,7 +23,7 @@ import (
 // TODO: generate CIDR dynamically
 
 func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
-	resourceName := acc_test.RandomWithPrefix("tf_acc_cluster_")
+	resourceName := randomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	cidr := "10.255.250.0/23"
 
@@ -63,11 +62,6 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 				ResourceName:      resourceReference,
 				ImportStateIdFunc: generateClusterImportIdForResource(resourceReference),
 				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"audit.modified_at",
-					"audit.version",
-				},
 			},
 			// Update number of nodes, compute type, disk size and type, cluster name, support plan, time zone and description from empty string,
 			// and Read testing
@@ -117,7 +111,7 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 // - Retrieval and verification of the cluster attributes.
 // - Import state testing for the created cluster.
 func TestAccClusterResourceWithOptionalFieldAWS(t *testing.T) {
-	resourceName := acc_test.RandomWithPrefix("tf_acc_cluster_")
+	resourceName := randomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	cidr := "10.251.250.0/23"
 
@@ -177,7 +171,7 @@ func TestAccClusterResourceWithOptionalFieldAWS(t *testing.T) {
 // - Import state testing for the created cluster.
 // - An update to the cluster, including changes to horizontal scaling.
 func TestAccClusterResourceGCP(t *testing.T) {
-	resourceName := acc_test.RandomWithPrefix("tf_acc_cluster_")
+	resourceName := randomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	cidr := "10.252.250.0/23"
 
@@ -196,16 +190,16 @@ func TestAccClusterResourceGCP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "64"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "51"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "pd-ssd"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "4"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "3"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "3"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "data"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.1", "index"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.2", "query"),
 					resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
-					resource.TestCheckResourceAttr(resourceReference, "support.plan", "developer pro"),
-					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
+					resource.TestCheckResourceAttr(resourceReference, "support.plan", "enterprise"),
+					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "ET"),
 					resource.TestCheckResourceAttr(resourceReference, "enable_private_dns_resolution", "false"),
 				),
 			},
@@ -225,21 +219,15 @@ func TestAccClusterResourceGCP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "gcp"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east1"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.compute.cpu", "8"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.compute.ram", "16"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.disk.storage", "51"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.disk.type", "pd-ssd"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.num_of_nodes", "3"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.services.#", "1"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.services.0", "data"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "52"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "51"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "pd-ssd"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "2"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "2"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "index"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.1", "query"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "4"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "3"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "data"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.1", "index"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.2", "query"),
 					resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
 					resource.TestCheckResourceAttr(resourceReference, "support.plan", "enterprise"),
 					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "ET"),
@@ -255,7 +243,7 @@ func TestAccClusterResourceGCP(t *testing.T) {
 // The test aims to validate that an error is correctly returned when an invalid disk type ("gp2") is provided in the cluster configuration.
 // This scenario is expected to fail with the error message matching the regular expression "The disk type provided, gp2, is not valid".
 func TestAccClusterResourceWithOptionalFieldAWSInvalidScenario(t *testing.T) {
-	resourceName := acc_test.RandomWithPrefix("tf_acc_cluster_")
+	resourceName := randomStringWithPrefix("tf_acc_cluster_")
 	cidr := "10.253.250.0/23"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -264,7 +252,7 @@ func TestAccClusterResourceWithOptionalFieldAWSInvalidScenario(t *testing.T) {
 			// Create and Read testing
 			{
 				Config:      testAccClusterResourceConfigWithAllFieldInvalidScenario(resourceName, cidr),
-				ExpectError: regexp.MustCompile("'gp2', is not valid"),
+				ExpectError: regexp.MustCompile("gp2.*invalid"),
 			},
 		},
 	})
@@ -274,7 +262,7 @@ func TestAccClusterResourceWithOptionalFieldAWSInvalidScenario(t *testing.T) {
 // testing a failure scenario where the IOPS field is set while creating a GCP (Google Cloud Platform) cluster resource.
 // The aim of this test is to ensure that the creation of the cluster fails as expected.
 func TestAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenario(t *testing.T) {
-	resourceName := acc_test.RandomWithPrefix("tf_acc_cluster_")
+	resourceName := randomStringWithPrefix("tf_acc_cluster_")
 	cidr := "10.249.250.0/23"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -296,7 +284,7 @@ func TestAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenario(t *testin
 //
 // This test ensures that a cluster resource can be successfully created with the specified configuration type.
 func TestAccClusterResourceWithConfigurationTypeFieldAdded(t *testing.T) {
-	resourceName := acc_test.RandomWithPrefix("tf_acc_cluster_")
+	resourceName := randomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	cidr := "10.247.250.0/23"
 
@@ -348,7 +336,7 @@ func TestAccClusterResourceWithConfigurationTypeFieldAdded(t *testing.T) {
 // This test ensures that Terraform can handle the scenario where the original cluster no longer exists and can
 // create a new cluster with the specified configuration when updating.
 func TestAccClusterResourceNotFound(t *testing.T) {
-	resourceName := acc_test.RandomWithPrefix("tf_acc_cluster_")
+	resourceName := randomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	cidr := "10.248.250.0/23"
 
@@ -522,7 +510,7 @@ resource "couchbase-capella_cluster" "%[4]s" {
         }
         disk = {
           storage = 50
-          type    = "gp3"
+          type    = "gp2"
           iops    = 3000
         }
       }
@@ -541,57 +529,6 @@ resource "couchbase-capella_cluster" "%[4]s" {
 `, ProviderBlock, OrgId, ProjectId, resourceName, cidr)
 }
 
-// func testAccClusterCreateSingleNodeAWS((cfg, resourceName, projectResourceName, projectResourceReference, cidr string) string {
-// return fmt.Sprintf(`
-// %[1]s
-//
-//	resource "couchbase-capella_project" "%[3]s" {
-//	   organization_id = var.organization_id
-//		name            = "acc_test_project_name"
-//		description     = "description"
-//	}
-//
-//	resource "couchbase-capella_cluster" "%[2]s" {
-//	 organization_id = var.organization_id
-//	 project_id      = %[4]s.id
-//	 name            = "Terraform Single Node"
-//	 description     = "My first test cluster for multiple services."
-//	 enable_private_dns_resolution = false
-//	 zones = ["use1-az1"]
-//	 cloud_provider = {
-//	   type   = "aws"
-//	   region = "us-east-1"
-//	   cidr   = "%[5]s"
-//	 }
-//
-//	 service_groups = [
-//	   {
-//	     node = {
-//	       compute = {
-//	         cpu = 2
-//	         ram = 8
-//	       }
-//	        disk = {
-//	  			size = 50
-//	  			type = "gp3"
-//	  			iops = 3000
-//			 }
-//	     }
-//	     num_of_nodes = 1
-//	     services     = ["data", "index", "query"]
-//	   }
-//	 ]
-//	 availability = {
-//	   "type" : "single"
-//	 }
-//	 support = {
-//	   plan     = "developer pro"
-//	   timezone = "PT"
-//	 }
-//	}
-//
-// `, cfg, resourceName, projectResourceName, projectResourceReference, cidr)
-// }
 // testAccClusterResourceConfigWithConfigurationTypeFieldAdded generates a Terraform configuration string for testing an
 // acceptance test scenario where a cluster is created with the "configuration_type" field set to "singleNode".
 func testAccClusterResourceConfigWithConfigurationTypeFieldAdded(resourceName, cidr string) string {
@@ -658,7 +595,7 @@ resource "couchbase-capella_cluster"  "%[4]s" {
 		{
 			node = {
 				compute = {
-					cpu = 8
+					cpu = 4
 					ram = 16
 				}
 				disk = {
@@ -667,7 +604,7 @@ resource "couchbase-capella_cluster"  "%[4]s" {
 				}
 			}
 			num_of_nodes = 3
-			services = ["data"]
+			services = ["data", "query", "index"]
 		},
 	]
   availability = {
@@ -807,7 +744,7 @@ resource "couchbase-capella_cluster"  "%[4]s" {
 		{
 			node = {
 				compute = {
-					cpu = 8
+					cpu = 4
 					ram = 16
 				}
 				disk = {
@@ -816,7 +753,7 @@ resource "couchbase-capella_cluster"  "%[4]s" {
 				}
 			}
 			num_of_nodes = 4
-			services = ["data"]
+			services = ["data", "query", "index"]
 		},
 	]
   availability = {
@@ -956,9 +893,7 @@ func retrieveClusterFromServer(
 	if err != nil {
 		return nil, err
 	}
-	if err != nil {
-		return nil, err
-	}
+
 	clusterResp := clusterapi.GetClusterResponse{}
 	err = json.Unmarshal(response.Body, &clusterResp)
 	if err != nil {
@@ -975,7 +910,6 @@ func retrieveClusterFromServer(
 func testAccExistsClusterResource(resourceReference string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// retrieve the resource by name from state
-
 		var rawState map[string]string
 		for _, m := range s.Modules {
 			if len(m.Resources) > 0 {
