@@ -8,34 +8,32 @@ import (
 )
 
 func TestAccReadOrganization(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_org_")
+	resourceReference := "data.couchbase-capella_organization." + resourceName
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationResourceConfig(),
+				Config: testAccOrganizationResourceConfig(resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.couchbase-capella_organization.get_organization", "name"),
-					resource.TestCheckResourceAttr("data.couchbase-capella_organization.get_organization", "organization_id", OrgId),
-					resource.TestCheckResourceAttrSet("data.couchbase-capella_organization.get_organization", "audit.created_at"),
-					resource.TestCheckResourceAttrSet("data.couchbase-capella_organization.get_organization", "audit.modified_at"),
-					resource.TestCheckResourceAttrSet("data.couchbase-capella_organization.get_organization", "audit.version"),
+					resource.TestCheckResourceAttrSet(resourceReference, "name"),
+					resource.TestCheckResourceAttr(resourceReference, "organization_id", OrgId),
+					resource.TestCheckResourceAttrSet(resourceReference, "audit.created_at"),
+					resource.TestCheckResourceAttrSet(resourceReference, "audit.modified_at"),
+					resource.TestCheckResourceAttrSet(resourceReference, "audit.version"),
 				),
 			},
 		},
 	})
 }
 
-func testAccOrganizationResourceConfig() string {
+func testAccOrganizationResourceConfig(resourceName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-output "organizations_get" {
-  value = data.couchbase-capella_organization.get_organization
-}
-
-data "couchbase-capella_organization" "get_organization" {
+data "couchbase-capella_organization" "%[3]s" {
   organization_id = "%[2]s"
 }
 
-`, ProviderBlock, OrgId)
+`, ProviderBlock, OrgId, resourceName)
 }

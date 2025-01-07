@@ -12,7 +12,7 @@ import (
 )
 
 func TestAccApiKeyResource(t *testing.T) {
-	resourceName := "tf_acc_apikey_" + acctest.GenerateRandomResourceName()
+	resourceName := randomStringWithPrefix("tf_acc_apikey_")
 	resourceReference := "couchbase-capella_apikey." + resourceName
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -34,7 +34,7 @@ func TestAccApiKeyResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "resources.0.type", "project"),
 				),
 			},
-			//// ImportState testing
+			// ImportState testing
 			{
 				ResourceName:      resourceReference,
 				ImportStateIdFunc: generateApiKeyImportIdForResource(resourceReference),
@@ -46,7 +46,7 @@ func TestAccApiKeyResource(t *testing.T) {
 }
 
 func TestAccApiKeyResourceWithOnlyReqField(t *testing.T) {
-	resourceName := "acc_apikey_" + acctest.GenerateRandomResourceName()
+	resourceName := randomStringWithPrefix("tf_acc_apikey_")
 	resourceReference := "couchbase-capella_apikey." + resourceName
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -65,7 +65,7 @@ func TestAccApiKeyResourceWithOnlyReqField(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "organization_roles.1", "organizationOwner"),
 				),
 			},
-			//// ImportState testing
+			// ImportState testing
 			{
 				ResourceName:      resourceReference,
 				ImportStateIdFunc: generateApiKeyImportIdForResource(resourceReference),
@@ -91,8 +91,9 @@ func TestAccApiKeyResourceWithOnlyReqField(t *testing.T) {
 }
 
 func TestAccApiKeyResourceForOrgOwner(t *testing.T) {
-	resourceName := "acc_apikey_" + acctest.GenerateRandomResourceName()
+	resourceName := randomStringWithPrefix("tf_acc_apikey_")
 	resourceReference := "couchbase-capella_apikey." + resourceName
+
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -111,7 +112,7 @@ func TestAccApiKeyResourceForOrgOwner(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "resources.0.type", "project"),
 				),
 			},
-			//// ImportState testing
+			// ImportState testing
 			{
 				ResourceName:      resourceReference,
 				ImportStateIdFunc: generateApiKeyImportIdForResource(resourceReference),
@@ -123,7 +124,7 @@ func TestAccApiKeyResourceForOrgOwner(t *testing.T) {
 }
 
 func TestAccApiKeyResourceInvalidScenarioRotateShouldNotPassedWhileCreate(t *testing.T) {
-	resourceName := "acc_apikey_" + acctest.GenerateRandomResourceName()
+	resourceName := randomStringWithPrefix("tf_acc_apikey_")
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

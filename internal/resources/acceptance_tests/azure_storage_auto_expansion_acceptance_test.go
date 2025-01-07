@@ -12,7 +12,7 @@ import (
 )
 
 func TestAccClusterResourceAzureDiskAutoExpansion(t *testing.T) {
-	resourceName := "acc_cluster_" + acctest.GenerateRandomResourceName()
+	resourceName := randomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	cidr, err := getCIDR(context.Background(), api.NewClient(Timeout), "azure")
 	if err != nil {
@@ -54,7 +54,7 @@ func testAccClusterConfigAzureDiskAutoExpansion(resourceName, cidr string) strin
 resource "couchbase-capella_cluster" "%[4]s" {
   organization_id = "%[2]s"
   project_id      = "%[3]s"
-  name            = "Terraform Acceptance Test Azure auto expansion"
+  name            = "%[4]s"
   description     = "Terraform Acceptance Test Azure auto expansion"
   cloud_provider = {
     type   = "azure"
@@ -95,7 +95,7 @@ func testAccClusterConfigAzureDiskAutoExpansionOff(resourceName, cidr string) st
 resource "couchbase-capella_cluster" "%[4]s" {
   organization_id = "%[2]s"
   project_id      = "%[3]s"
-  name            = "Terraform Acceptance Test Azure auto expansion"
+  name            = "%[4]s"
   description     = "Terraform Acceptance Test Azure auto expansion"
   cloud_provider = {
     type   = "azure"

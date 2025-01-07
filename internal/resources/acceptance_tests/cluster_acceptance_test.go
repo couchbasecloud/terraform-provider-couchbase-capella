@@ -69,8 +69,8 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 				Config: testAccClusterResourceConfigUpdateWhenClusterCreatedWithReqFieldOnlyAndIfMatch(resourceName, cidr),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsClusterResource(resourceReference),
-					resource.TestCheckResourceAttr(resourceReference, "name", "Terraform Acceptance Test Cluster Update"),
-					resource.TestCheckResourceAttr(resourceReference, "description", "Cluster Updated."),
+					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
+					resource.TestCheckResourceAttr(resourceReference, "description", "Cluster Updated"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east-1"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
@@ -123,8 +123,8 @@ func TestAccClusterResourceWithOptionalFieldAWS(t *testing.T) {
 				Config: testAccClusterResourceConfigWithAllField(resourceName, cidr),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsClusterResource(resourceReference),
-					resource.TestCheckResourceAttr(resourceReference, "name", "Terraform Acceptance Test Cluster"),
-					resource.TestCheckResourceAttr(resourceReference, "description", "My first test cluster for multiple services."),
+					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
+					resource.TestCheckResourceAttr(resourceReference, "description", "AWS cluster with all fields"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east-1"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
@@ -183,8 +183,8 @@ func TestAccClusterResourceGCP(t *testing.T) {
 				Config: testAccClusterResourceConfigGCP(resourceName, cidr),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsClusterResource(resourceReference),
-					resource.TestCheckResourceAttr(resourceReference, "name", "Terraform Acceptance Test Cluster"),
-					resource.TestCheckResourceAttr(resourceReference, "description", "My first test cluster for multiple services."),
+					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
+					resource.TestCheckResourceAttr(resourceReference, "description", "GCP cluster"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "gcp"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east1"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
@@ -214,8 +214,8 @@ func TestAccClusterResourceGCP(t *testing.T) {
 				Config: testAccClusterResourceConfigGCPUpdateWithHorizontalScaling(resourceName, cidr),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsClusterResource(resourceReference),
-					resource.TestCheckResourceAttr(resourceReference, "name", "Terraform Acceptance Test Cluster"),
-					resource.TestCheckResourceAttr(resourceReference, "description", "My first test cluster for multiple services."),
+					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
+					resource.TestCheckResourceAttr(resourceReference, "description", "GCP update with horizontal scaling"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "gcp"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east1"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
@@ -266,7 +266,6 @@ func TestAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenario(t *testin
 	cidr := "10.249.250.0/23"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -432,8 +431,8 @@ func testAccClusterResourceConfigWithAllField(resourceName, cidr string) string 
 resource "couchbase-capella_cluster" "%[4]s" {
   organization_id = "%[2]s"
   project_id      = "%[3]s"
-  name            = "Terraform Acceptance Test Cluster"
-  description     = "My first test cluster for multiple services."
+  name            = "%[4]s"
+  description     = "AWS cluster with all fields"
   enable_private_dns_resolution = false
 
   cloud_provider = {
@@ -493,8 +492,8 @@ func testAccClusterResourceConfigWithAllFieldInvalidScenario(resourceName, cidr 
 resource "couchbase-capella_cluster" "%[4]s" {
   organization_id = "%[2]s"
   project_id      = "%[3]s"
-  name            = "Terraform Acceptance Test Cluster"
-  description     = "My first test cluster for multiple services."
+  name            = "%[4]s"
+  description     = "AWS cluster with invalid disk type"
 
   cloud_provider = {
     type   = "aws"
@@ -580,11 +579,11 @@ func testAccClusterResourceConfigGCP(resourceName, cidr string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "couchbase-capella_cluster"  "%[4]s" {
+resource "couchbase-capella_cluster" "%[4]s" {
   organization_id = "%[2]s"
   project_id      = "%[3]s"
-  name            = "Terraform Acceptance Test Cluster"
-  description     = "My first test cluster for multiple services."
+  name            = "%[4]s"
+  description     = "GCP cluster"
   cloud_provider = {
 	type = "gcp",
 	region = "us-east1",
@@ -627,8 +626,8 @@ func testAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenarioConfig(res
 resource "couchbase-capella_cluster"  "%[4]s" {
   organization_id = "%[2]s"
   project_id      = "%[3]s"
-  name            = "Terraform Acceptance Test Cluster"
-  description     = "My first test cluster for multiple services."
+  name            = "%[4]s"
+  description     = "GCP with invalid IOPS config"
   cloud_provider = {
 	type = "gcp",
 	region = "us-east1",
@@ -672,8 +671,8 @@ func testAccClusterResourceConfigUpdateWhenClusterCreatedWithReqFieldOnlyAndIfMa
 resource "couchbase-capella_cluster" "%[4]s" {
   organization_id = "%[2]s"
   project_id      = "%[3]s"
-  name            = "Terraform Acceptance Test Cluster Update"
-  description     = "Cluster Updated."
+  name            = "%[4]s"
+  description     = "Cluster Updated"
   cloud_provider = {
     type   = "aws"
     region = "us-east-1"
@@ -732,8 +731,8 @@ func testAccClusterResourceConfigGCPUpdateWithHorizontalScaling(resourceName, ci
 resource "couchbase-capella_cluster"  "%[4]s" {
   organization_id = "%[2]s"
   project_id      = "%[3]s"
-  name            = "Terraform Acceptance Test Cluster"
-  description     = "My first test cluster for multiple services."
+  name            = "%[4]s"
+  description     = "GCP update with horizontal scaling"
   cloud_provider = {
 	type = "gcp",
 	region = "us-east1",

@@ -10,66 +10,86 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAccAllowListTestCases(t *testing.T) {
+func TestAccAllowListWithRequiredFields(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_allowlist_")
+	resourceReference := "couchbase-capella_allowlist." + resourceName
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
-			//IP with required fields
 			{
-				Config: testAccAddIpWithReqFields(),
+				Config: testAccAddIpWithReqFields(resourceName, "10.1.1.1/32"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("couchbase-capella_allowlist.add_allowlist_req", "cidr", "10.1.1.1/32"),
-					resource.TestCheckResourceAttrSet("couchbase-capella_allowlist.add_allowlist_req", "id"),
+					resource.TestCheckResourceAttr(resourceReference, "cidr", "10.1.1.1/32"),
+					resource.TestCheckResourceAttrSet(resourceReference, "id"),
 				),
 			},
-			//IP with optional fields
+		},
+	})
+}
+
+func TestAccAllowListWithOptionalFields(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_allowlist_")
+	resourceReference := "couchbase-capella_allowlist." + resourceName
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
 			{
-				Config: testAccAddIpWithOptionalFields("add_allowlist_opt", "10.4.5.6/32"),
+				Config: testAccAddIpWithOptionalFields(resourceName, "10.4.5.6/32"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("couchbase-capella_allowlist.add_allowlist_opt", "cidr", "10.4.5.6/32"),
-					resource.TestCheckResourceAttrSet("couchbase-capella_allowlist.add_allowlist_opt", "id"),
-					resource.TestCheckResourceAttrSet("couchbase-capella_allowlist.add_allowlist_opt", "expires_at"),
-					resource.TestCheckResourceAttr("couchbase-capella_allowlist.add_allowlist_opt", "comment", "terraform allow list acceptance test"),
+					resource.TestCheckResourceAttr(resourceReference, "cidr", "10.4.5.6/32"),
+					resource.TestCheckResourceAttrSet(resourceReference, "id"),
+					resource.TestCheckResourceAttrSet(resourceReference, "expires_at"),
+					resource.TestCheckResourceAttr(resourceReference, "comment", "terraform allow list acceptance test"),
 				),
 			},
-			//Unspecified IP address
+		},
+	})
+}
+
+func TestAccAllowListAllowAllIP(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_allowlist_")
+	resourceReference := "couchbase-capella_allowlist." + resourceName
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
 			{
-				Config: testAccAddIpWithOptionalFields("add_allowlist_quadzero", "0.0.0.0/0"),
+				Config: testAccAddIpWithOptionalFields(resourceName, "0.0.0.0/0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("couchbase-capella_allowlist.add_allowlist_quadzero", "cidr", "0.0.0.0/0"),
-					resource.TestCheckResourceAttrSet("couchbase-capella_allowlist.add_allowlist_quadzero", "id"),
-					resource.TestCheckResourceAttrSet("couchbase-capella_allowlist.add_allowlist_quadzero", "expires_at"),
-					resource.TestCheckResourceAttr("couchbase-capella_allowlist.add_allowlist_quadzero", "comment", "terraform allow list acceptance test"),
+					resource.TestCheckResourceAttr(resourceReference, "cidr", "0.0.0.0/0"),
+					resource.TestCheckResourceAttrSet(resourceReference, "id"),
+					resource.TestCheckResourceAttrSet(resourceReference, "expires_at"),
+					resource.TestCheckResourceAttr(resourceReference, "comment", "terraform allow list acceptance test"),
 				),
 			},
-			//expired IP
-			//expected error: "Unable to create new
-			//        allowlist for database. The expiration time for the allowlist is not valid.
-			//        Must be a point in time greater than now."
+		},
+	})
+}
+
+func TestAccAllowListWithExpiredIP(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_allowlist_")
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
 			{
-				Config:      testAccAddIpWithExpiredIP("add_allowlist_expiredIP", "10.2.2.2/32"),
+				Config:      testAccAddIpWithExpiredIP(resourceName, "10.2.2.2/32"),
 				ExpectError: regexp.MustCompile("The expiration time for the allowlist is not valid"),
 			},
 		},
 	})
 }
 
-func testAccAddIpWithReqFields() string {
+func testAccAddIpWithReqFields(resourceName, cidr string) string {
 	cfg := fmt.Sprintf(`
 %[1]s
 
-output "add_allowlist_req"{
-  value = couchbase-capella_allowlist.add_allowlist_req
-}
-
-resource "couchbase-capella_allowlist" "add_allowlist_req" {
+resource "couchbase-capella_allowlist" "%[5]s" {
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   cluster_id      = "%[4]s"
-  cidr            = "10.1.1.1/32"
+  cidr            = "%[6]s"
 }
 
-`, ProviderBlock, OrgId, ProjectId, ClusterId)
+`, ProviderBlock, OrgId, ProjectId, ClusterId, resourceName, cidr)
 	return cfg
 }
 
@@ -79,10 +99,6 @@ func testAccAddIpWithOptionalFields(resourceName, cidr string) string {
 	expiryTime := timeNow.Format(time.RFC3339)
 	return fmt.Sprintf(`
 %[1]s
-
-output "%[2]s"{
-  value = couchbase-capella_allowlist.%[2]s
-}
 
 resource "couchbase-capella_allowlist" "%[2]s" {
   organization_id = "%[3]s"
@@ -102,10 +118,6 @@ func testAccAddIpWithExpiredIP(resourceName, cidr string) string {
 	expiryTime := timeNow.Format(time.RFC3339)
 	return fmt.Sprintf(`
 %[1]s
-
-output "%[5]s"{
-  value = couchbase-capella_allowlist.%[5]s
-}
 
 resource "couchbase-capella_allowlist" "%[5]s" {
   organization_id = "%[2]s"

@@ -10,42 +10,41 @@ import (
 )
 
 func TestAccGSI(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_gsi_")
+	resourceReference := "couchbase-capella_query_indexes." + resourceName
+
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCreateGSINonDeferredIndexConfig(),
+				Config: testAccCreateGSINonDeferredIndexConfig(resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("couchbase-capella_query_indexes.non_deferred_index", "index_name", "index1"),
-					resource.TestCheckResourceAttr("couchbase-capella_query_indexes.non_deferred_index", "index_keys.0", "c1"),
-					resource.TestCheckResourceAttr("couchbase-capella_query_indexes.non_deferred_index", "with.num_replica", "1"),
-					resource.TestCheckResourceAttr("couchbase-capella_query_indexes.non_deferred_index", "where", "geo.alt > 1000"),
-					resource.TestCheckResourceAttr("couchbase-capella_query_indexes.non_deferred_index", "bucket_name", "default"),
-					resource.TestCheckResourceAttr("couchbase-capella_query_indexes.non_deferred_index", "scope_name", "_default"),
-					resource.TestCheckResourceAttr("couchbase-capella_query_indexes.non_deferred_index", "collection_name", "_default"),
-					resource.TestCheckResourceAttrSet("couchbase-capella_query_indexes.non_deferred_index", "organization_id"),
-					resource.TestCheckResourceAttrSet("couchbase-capella_query_indexes.non_deferred_index", "project_id"),
-					resource.TestCheckResourceAttrSet("couchbase-capella_query_indexes.non_deferred_index", "cluster_id"),
+					resource.TestCheckResourceAttr(resourceReference, "index_name", "index1"),
+					resource.TestCheckResourceAttr(resourceReference, "index_keys.0", "c1"),
+					resource.TestCheckResourceAttr(resourceReference, "with.num_replica", "1"),
+					resource.TestCheckResourceAttr(resourceReference, "where", "geo.alt > 1000"),
+					resource.TestCheckResourceAttr(resourceReference, "bucket_name", "default"),
+					resource.TestCheckResourceAttr(resourceReference, "scope_name", "_default"),
+					resource.TestCheckResourceAttr(resourceReference, "collection_name", "_default"),
+					resource.TestCheckResourceAttrSet(resourceReference, "organization_id"),
+					resource.TestCheckResourceAttrSet(resourceReference, "project_id"),
+					resource.TestCheckResourceAttrSet(resourceReference, "cluster_id"),
 				),
 			},
 			{
-				Config:            testAccCreateGSINonDeferredIndexConfig(),
-				ResourceName:      "couchbase-capella_query_indexes.non_deferred_index",
-				ImportStateIdFunc: generateGSIImportIdForResource("couchbase-capella_query_indexes.non_deferred_index"),
+				ResourceName:      resourceReference,
+				ImportStateIdFunc: generateGSIImportIdForResource(resourceReference),
 				ImportState:       true,
 			},
 		},
 	})
 }
 
-// project_id      = couchbase-capella_project.terraform_project.id
-// cluster_id      = couchbase-capella_cluster.new_cluster.id
-// organization_id = var.organization_id
-func testAccCreateGSINonDeferredIndexConfig() string {
+func testAccCreateGSINonDeferredIndexConfig(resourceName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "couchbase-capella_query_indexes" "non_deferred_index" {
+resource "couchbase-capella_query_indexes" "%[5]s" {
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   cluster_id      = "%[4]s"
@@ -59,7 +58,7 @@ resource "couchbase-capella_query_indexes" "non_deferred_index" {
         num_replica = 1
   }
 }
-`, ProviderBlock, OrgId, ProjectId, ClusterId)
+`, ProviderBlock, OrgId, ProjectId, ClusterId, resourceName)
 }
 
 func generateGSIImportIdForResource(resourceReference string) resource.ImportStateIdFunc {

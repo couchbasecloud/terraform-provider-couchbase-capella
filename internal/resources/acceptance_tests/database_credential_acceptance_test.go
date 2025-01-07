@@ -9,44 +9,48 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAccDatabaseCredentialTestCases(t *testing.T) {
+func TestAccDatabaseCredentialWithReqFields(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_database_credential_")
+	resourceReference := "couchbase-capella_database_credential." + resourceName
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
-			//database_credential with required fields
 			{
-				Config: testAccAddDatabaseCredWithReqFieldsConfig(),
+				Config: testAccAddDatabaseCredWithReqFieldsConfig(resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("couchbase-capella_database_credential.add_database_credential_req", "name", "acc_test_database_credential_name"),
-					resource.TestCheckResourceAttr("couchbase-capella_database_credential.add_database_credential_req", "access.0.privileges.0", "data_writer"),
-				),
-			},
-			//database_credential with optional fields
-			{
-				Config: testAccAddDatabaseCredWithOptionalFieldsConfig(),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("couchbase-capella_database_credential.add_database_credential_opt", "name", "acc_test_database_credential_name2"),
-					resource.TestCheckResourceAttr("couchbase-capella_database_credential.add_database_credential_opt", "password", "Secret12$#"),
-					resource.TestCheckResourceAttr("couchbase-capella_database_credential.add_database_credential_opt", "access.0.privileges.0", "data_writer"),
+					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
+					resource.TestCheckResourceAttr(resourceReference, "access.0.privileges.0", "data_writer"),
 				),
 			},
 		},
 	})
 }
 
-// Delete the database_credential when the cluster is destroyed through api
-func testAccAddDatabaseCredWithReqFieldsConfig() string {
+func TestAccDatabaseCredentialWithOptionalFields(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_database_credential_")
+	resourceReference := "couchbase-capella_database_credential." + resourceName
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAddDatabaseCredWithOptionalFieldsConfig(resourceName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
+					resource.TestCheckResourceAttr(resourceReference, "password", "Secret12$#"),
+					resource.TestCheckResourceAttr(resourceReference, "access.0.privileges.0", "data_writer"),
+				),
+			},
+		},
+	})
+}
+
+func testAccAddDatabaseCredWithReqFieldsConfig(resourceName string) string {
 	return fmt.Sprintf(
 		`
 		%[1]s
-	
-		output "add_database_credential_req"{
-			value = couchbase-capella_database_credential.add_database_credential_req
-			sensitive = true
-		}
-		
-		resource "couchbase-capella_database_credential" "add_database_credential_req" {
-			name            = "acc_test_database_credential_name"
+
+		resource "couchbase-capella_database_credential" "%[5]s" {
+			name            = "%[5]s"
 			organization_id = "%[2]s"
 			project_id      = "%[3]s"
 			cluster_id      = "%[4]s"
@@ -56,21 +60,15 @@ func testAccAddDatabaseCredWithReqFieldsConfig() string {
 				},
 			]
 		}
-		`, ProviderBlock, OrgId, ProjectId, ClusterId)
+		`, ProviderBlock, OrgId, ProjectId, ClusterId, resourceName)
 }
 
-func testAccAddDatabaseCredWithOptionalFieldsConfig() string {
+func testAccAddDatabaseCredWithOptionalFieldsConfig(resourceName string) string {
 	return fmt.Sprintf(
 		`
 		%[1]s
-	
-		output "add_database_credential_opt"{
-			value = couchbase-capella_database_credential.add_database_credential_opt
-			sensitive = true
-		}
-		
-		resource "couchbase-capella_database_credential" "add_database_credential_opt" {
-			name            = "acc_test_database_credential_name2"
+		resource "couchbase-capella_database_credential" "%[5]s" {
+			name            = "%[5]s"
 			organization_id = "%[2]s"
 			project_id      = "%[3]s"
 			cluster_id      = "%[4]s"
@@ -81,5 +79,5 @@ func testAccAddDatabaseCredWithOptionalFieldsConfig() string {
 				},
 			]
 		}
-		`, ProviderBlock, OrgId, ProjectId, ClusterId)
+		`, ProviderBlock, OrgId, ProjectId, ClusterId, resourceName)
 }

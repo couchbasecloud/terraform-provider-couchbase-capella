@@ -14,7 +14,7 @@ import (
 )
 
 func TestAccUserResource(t *testing.T) {
-	resourceName := "tf_acc_user_" + cfg.GenerateRandomResourceName()
+	resourceName := randomStringWithPrefix("tf_acc_user_")
 	resourceReference := "couchbase-capella_user." + resourceName
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -53,7 +53,7 @@ func TestAccUserResource(t *testing.T) {
 }
 
 func TestAccUserResourceResourceNotFound(t *testing.T) {
-	resourceName := "tf_acc_user_" + cfg.GenerateRandomResourceName()
+	resourceName := randomStringWithPrefix("tf_acc_user_")
 	resourceReference := "couchbase-capella_user." + resourceName
 
 	resource.ParallelTest(t, resource.TestCase{
