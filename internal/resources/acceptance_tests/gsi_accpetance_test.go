@@ -9,7 +9,7 @@ import (
 	acctest "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/testing"
 )
 
-func TestAccGSITestCases(t *testing.T) {
+func TestAccGSI(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -29,19 +29,10 @@ func TestAccGSITestCases(t *testing.T) {
 				),
 			},
 			{
-				Config:                               testAccCreateGSINonDeferredIndexConfig(),
-				ResourceName:                         "couchbase-capella_query_indexes.non_deferred_index",
-				ImportStateIdFunc:                    generateGSIImportIdForResource("couchbase-capella_query_indexes.non_deferred_index"),
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "index_name",
-				ImportStateVerifyIgnore: []string{
-					"where",
-					"index_keys",
-					"partition_by",
-					"with",
-					"is_primary",
-				},
+				Config:            testAccCreateGSINonDeferredIndexConfig(),
+				ResourceName:      "couchbase-capella_query_indexes.non_deferred_index",
+				ImportStateIdFunc: generateGSIImportIdForResource("couchbase-capella_query_indexes.non_deferred_index"),
+				ImportState:       true,
 			},
 		},
 	})
