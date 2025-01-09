@@ -32,6 +32,6 @@ func CreateBucket(ctx context.Context, client *api.Client) error {
 		return err
 	}
 
-	Bucket = bucketResponse.Name
+	BucketId = bucketResponse.Id
 	return nil
 }

@@ -42,11 +42,11 @@ func testAccCreateGSINonDeferredIndexConfig(resourceName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "couchbase-capella_query_indexes" "%[5]s" {
+resource "couchbase-capella_query_indexes" "%[6]s" {
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   cluster_id      = "%[4]s"
-  bucket_name     = "default"
+  bucket_name     = "%[5]s"
   scope_name      = "_default"
   collection_name = "_default"
   index_name      = "index1"
@@ -56,7 +56,7 @@ resource "couchbase-capella_query_indexes" "%[5]s" {
         num_replica = 1
   }
 }
-`, ProviderBlock, OrgId, ProjectId, ClusterId, resourceName)
+`, ProviderBlock, OrgId, ProjectId, ClusterId, BucketName, resourceName)
 }
 
 func generateGSIImportIdForResource(resourceReference string) resource.ImportStateIdFunc {

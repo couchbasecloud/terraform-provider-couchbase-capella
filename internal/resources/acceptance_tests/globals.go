@@ -19,7 +19,8 @@ var (
 	ProjectId string
 	ClusterId string
 
-	Bucket string
+	BucketName = "default"
+	BucketId   string
 
 	// TestAccProtoV6ProviderFactories are used to instantiate a provider during
 	// acceptance testing. The factory function will be invoked for every Terraform
