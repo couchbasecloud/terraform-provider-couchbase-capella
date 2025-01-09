@@ -18,10 +18,12 @@ import (
 //  3. ImportState Testing: Import the state of the created project and verify the imported state matches the expected state.
 //  4. Update and Read Testing: Modify the project's attributes and ensure the changes are applied successfully.
 //  5. Delete Testing: Automatically occurs in the TestCase as part of cleanup.
+
+// TODO:  make project acceptance tests concurrent
 func TestAccProjectResource(t *testing.T) {
 	resourceName := RandomStringWithPrefix("tf_acc_project_")
 	resourceReference := "couchbase-capella_project." + resourceName
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -65,7 +67,7 @@ func TestAccProjectResource(t *testing.T) {
 func TestAccProjectCreateWithReqFields(t *testing.T) {
 	resourceName := RandomStringWithPrefix("tf_acc_project_")
 	resourceReference := "couchbase-capella_project." + resourceName
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
@@ -84,7 +86,7 @@ func TestAccProjectCreateWithReqFields(t *testing.T) {
 func TestAccProjectValidUpdate(t *testing.T) {
 	resourceName := RandomStringWithPrefix("tf_acc_project_")
 	resourceReference := "couchbase-capella_project." + resourceName
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -111,7 +113,7 @@ func TestAccProjectValidUpdate(t *testing.T) {
 func TestAccProjectInvalidResource(t *testing.T) {
 	resourceName := RandomStringWithPrefix("tf_acc_project_")
 	resourceReference := "couchbase-capella_project." + resourceName
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Invalid field in create testing
