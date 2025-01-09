@@ -1,10 +1,12 @@
 package acceptance_tests
 
 import (
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/provider"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
-	"time"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/provider"
 )
 
 var (

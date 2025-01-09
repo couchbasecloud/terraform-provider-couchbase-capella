@@ -2,12 +2,14 @@ package acceptance_tests
 
 import (
 	"fmt"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"net/http"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
 func TestAccUserResource(t *testing.T) {

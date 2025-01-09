@@ -3,9 +3,11 @@ package acceptance_tests
 import (
 	"context"
 	"fmt"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 )
 
 func TestAccClusterResourceAzureDiskAutoExpansion(t *testing.T) {

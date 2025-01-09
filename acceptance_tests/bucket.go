@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	bucketapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/bucket"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	bucketapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/bucket"
 )
 
 func createBucket(ctx context.Context, client *api.Client) error {

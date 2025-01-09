@@ -2,9 +2,10 @@ package acceptance_tests
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"regexp"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAccSampleBucket(t *testing.T) {

@@ -1,9 +1,10 @@
 package acceptance_tests
 
 import (
+	"math/rand"
+
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
-	"math/rand"
 )
 
 const (
