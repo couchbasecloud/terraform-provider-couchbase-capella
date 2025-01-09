@@ -17,11 +17,21 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
-	ProviderBlock = fmt.Sprintf(`
+	ProviderBlock = fmt.Sprint(`
+variable "host" {
+  description = "The Host URL of Couchbase Cloud."
+}
+
+variable "auth_token" {
+  description = "Authentication API Key"
+  sensitive   = true
+}
+
 provider "couchbase-capella" {
-  host                 = "%s"
-  authentication_token = "%s"
-}`, Host, Token)
+  host                 = var.host
+  authentication_token = var.auth_token
+}
+`)
 
 	ctx := context.Background()
 	client := api.NewClient(Timeout)
