@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	bucketapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/bucket"
+	"log"
 	"net/http"
 	"time"
 )
@@ -62,6 +63,7 @@ func bucketWait(ctx context.Context, client *api.Client) error {
 				nil,
 			)
 			if err == nil {
+				log.Print("bucket created")
 				return nil
 			}
 

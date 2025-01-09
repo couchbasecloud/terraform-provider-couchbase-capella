@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -32,6 +33,8 @@ func CreateProject(ctx context.Context, client *api.Client) error {
 		return err
 	}
 
+	log.Print("project created")
+
 	ProjectId = projectResponse.Id.String()
 
 	return nil
@@ -50,6 +53,8 @@ func DestroyProject(ctx context.Context, client *api.Client) error {
 	if err != nil {
 		return err
 	}
+
+	log.Print("project destroyed")
 
 	return nil
 }

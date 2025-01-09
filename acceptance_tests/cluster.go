@@ -101,6 +101,8 @@ func DestroyCluster(ctx context.Context, client *api.Client) error {
 		return err
 	}
 
+	log.Print("cluster destroyed")
+
 	return nil
 }
 
@@ -247,6 +249,7 @@ func clusterWait(ctx context.Context, client *api.Client, destroy bool) error {
 			}
 
 			if clusterResp.CurrentState == clusterapi.Healthy {
+				log.Print("cluster created")
 				return nil
 			}
 		}
