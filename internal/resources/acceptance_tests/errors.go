@@ -12,4 +12,5 @@ const (
 	ErrNoCIDR                   = errors.Sentinel("Could not get suggested CIDR.")
 	ErrUnknownHost              = errors.Sentinel("Unknown host name.")
 	ErrTimeoutWaitingForCluster = errors.Sentinel("Timeout waiting for cluster to be created or destroyed.")
+	ErrTimeoutWaitingForBucket  = errors.Sentinel("Timeout waiting for bucket to be created.")
 )

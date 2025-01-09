@@ -205,7 +205,7 @@ func createBasicAuthToken(username, password string) string {
 	return base64.StdEncoding.EncodeToString([]byte(auth))
 }
 
-func Wait(ctx context.Context, client *api.Client, destroy bool) error {
+func clusterWait(ctx context.Context, client *api.Client, destroy bool) error {
 	const maxWaitTime = 60 * time.Minute
 
 	var cancel context.CancelFunc

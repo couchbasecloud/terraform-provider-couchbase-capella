@@ -58,10 +58,13 @@ func setup(ctx context.Context, client *api.Client) error {
 	if err := CreateCluster(ctx, client); err != nil {
 		return err
 	}
-	if err := Wait(ctx, client, false); err != nil {
+	if err := clusterWait(ctx, client, false); err != nil {
 		return err
 	}
 	if err := CreateBucket(ctx, client); err != nil {
+		return err
+	}
+	if err := bucketWait(ctx, client); err != nil {
 		return err
 	}
 
@@ -72,7 +75,7 @@ func cleanup(ctx context.Context, client *api.Client) error {
 	if err := DestroyCluster(ctx, client); err != nil {
 		return err
 	}
-	if err := Wait(ctx, client, true); err != nil {
+	if err := clusterWait(ctx, client, true); err != nil {
 		return err
 	}
 	if err := DestroyProject(ctx, client); err != nil {
