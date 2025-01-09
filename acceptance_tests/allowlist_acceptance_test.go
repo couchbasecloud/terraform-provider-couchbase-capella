@@ -10,10 +10,10 @@ import (
 )
 
 func TestAccAllowListWithRequiredFields(t *testing.T) {
-	resourceName := RandomStringWithPrefix("tf_acc_allowlist_")
+	resourceName := randomStringWithPrefix("tf_acc_allowlist_")
 	resourceReference := "couchbase-capella_allowlist." + resourceName
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddIpWithReqFields(resourceName, "10.1.1.1/32"),
@@ -27,10 +27,10 @@ func TestAccAllowListWithRequiredFields(t *testing.T) {
 }
 
 func TestAccAllowListWithOptionalFields(t *testing.T) {
-	resourceName := RandomStringWithPrefix("tf_acc_allowlist_")
+	resourceName := randomStringWithPrefix("tf_acc_allowlist_")
 	resourceReference := "couchbase-capella_allowlist." + resourceName
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddIpWithOptionalFields(resourceName, "10.4.5.6/32"),
@@ -46,10 +46,10 @@ func TestAccAllowListWithOptionalFields(t *testing.T) {
 }
 
 func TestAccAllowListAllowAllIP(t *testing.T) {
-	resourceName := RandomStringWithPrefix("tf_acc_allowlist_")
+	resourceName := randomStringWithPrefix("tf_acc_allowlist_")
 	resourceReference := "couchbase-capella_allowlist." + resourceName
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddIpWithOptionalFields(resourceName, "0.0.0.0/0"),
@@ -65,9 +65,9 @@ func TestAccAllowListAllowAllIP(t *testing.T) {
 }
 
 func TestAccAllowListWithExpiredIP(t *testing.T) {
-	resourceName := RandomStringWithPrefix("tf_acc_allowlist_")
+	resourceName := randomStringWithPrefix("tf_acc_allowlist_")
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAddIpWithExpiredIP(resourceName, "10.2.2.2/32"),
@@ -88,7 +88,7 @@ resource "couchbase-capella_allowlist" "%[5]s" {
   cidr            = "%[6]s"
 }
 
-`, ProviderBlock, OrgId, ProjectId, ClusterId, resourceName, cidr)
+`, globalProviderBlock, globalOrgId, globalProjectId, globalClusterId, resourceName, cidr)
 	return cfg
 }
 
@@ -108,7 +108,7 @@ resource "couchbase-capella_allowlist" "%[2]s" {
   expires_at      = "%[7]s"
 }
 
-`, ProviderBlock, resourceName, OrgId, ProjectId, ClusterId, cidr, expiryTime)
+`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, cidr, expiryTime)
 }
 
 func testAccAddIpWithExpiredIP(resourceName, cidr string) string {
@@ -127,5 +127,5 @@ resource "couchbase-capella_allowlist" "%[5]s" {
   expires_at      = "%[7]s"
 }
 
-`, ProviderBlock, OrgId, ProjectId, ClusterId, resourceName, cidr, expiryTime)
+`, globalProviderBlock, globalOrgId, globalProjectId, globalClusterId, resourceName, cidr, expiryTime)
 }

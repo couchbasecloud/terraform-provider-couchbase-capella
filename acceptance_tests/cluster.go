@@ -17,7 +17,8 @@ import (
 	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
 )
 
-func CreateCluster(ctx context.Context, client *api.Client) error {
+// cluster is created with enterprise plan as some features require this.
+func createCluster(ctx context.Context, client *api.Client) error {
 	cidr, err := getCIDR(ctx, client, "aws")
 	if err != nil {
 		return err
@@ -64,13 +65,13 @@ func CreateCluster(ctx context.Context, client *api.Client) error {
 		},
 	}
 
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", Host, OrgId, ProjectId)
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", globalHost, globalOrgId, globalProjectId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
 	response, err := client.ExecuteWithRetry(
-		context.Background(),
+		ctx,
 		cfg,
 		clusterRequest,
-		Token,
+		globalToken,
 		nil,
 	)
 	if err != nil {
@@ -82,19 +83,19 @@ func CreateCluster(ctx context.Context, client *api.Client) error {
 		return err
 	}
 
-	ClusterId = clusterResponse.Id.String()
+	globalClusterId = clusterResponse.Id.String()
 
 	return nil
 }
 
-func DestroyCluster(ctx context.Context, client *api.Client) error {
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", Host, OrgId, ProjectId, ClusterId)
+func destroyCluster(ctx context.Context, client *api.Client) error {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", globalHost, globalOrgId, globalProjectId, globalClusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
 	_, err := client.ExecuteWithRetry(
-		context.Background(),
+		ctx,
 		cfg,
 		nil,
-		Token,
+		globalToken,
 		nil,
 	)
 	if err != nil {
@@ -109,13 +110,13 @@ func DestroyCluster(ctx context.Context, client *api.Client) error {
 func getCIDR(ctx context.Context, client *api.Client, CSP string) (string, error) {
 	hostName := ""
 	switch {
-	case strings.Contains(Host, "localhost"):
+	case strings.Contains(globalHost, "localhost"):
 		hostName = "http://localhost:8080"
-	case strings.Contains(Host, "cloudapi"):
-		hostName = strings.Replace(Host, "cloudapi", "api", 1)
+	case strings.Contains(globalHost, "cloudapi"):
+		hostName = strings.Replace(globalHost, "cloudapi", "api", 1)
 	default:
 		const msg = "unknown host"
-		log.Print(msg, Host)
+		log.Print(msg, globalHost)
 		return "", ErrUnknownHost
 	}
 
@@ -127,7 +128,7 @@ func getCIDR(ctx context.Context, client *api.Client, CSP string) (string, error
 	url := fmt.Sprintf(
 		"%s/v2/organizations/%s/clusters/deployment-options?provider=%s",
 		hostName,
-		OrgId,
+		globalOrgId,
 		CSP,
 	)
 
@@ -222,13 +223,13 @@ func clusterWait(ctx context.Context, client *api.Client, destroy bool) error {
 		case <-ctx.Done():
 			return ErrTimeoutWaitingForCluster
 		case <-ticker.C:
-			url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", Host, OrgId, ProjectId, ClusterId)
+			url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", globalHost, globalOrgId, globalProjectId, globalClusterId)
 			cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 			response, err := client.ExecuteWithRetry(
 				ctx,
 				cfg,
 				nil,
-				Token,
+				globalToken,
 				nil,
 			)
 			if err != nil {

@@ -8,10 +8,10 @@ import (
 )
 
 func TestAccSampleBucket(t *testing.T) {
-	resourceName := RandomStringWithPrefix("tf_acc_sample_bucket_")
+	resourceName := randomStringWithPrefix("tf_acc_sample_bucket_")
 	resourceReference := "couchbase-capella_sample_bucket." + resourceName
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSampleBucketWithTravelSampleConfig(resourceName),
@@ -38,7 +38,7 @@ resource "couchbase-capella_sample_bucket" "%[5]s" {
   cluster_id      = "%[4]s"
   name			  = "travel-sample"
 }
-`, ProviderBlock, OrgId, ProjectId, ClusterId, resourceName)
+`, globalProviderBlock, globalOrgId, globalProjectId, globalClusterId, resourceName)
 }
 
 func testAccWithInvalidSampleInputConfig(resourceName string) string {
@@ -50,5 +50,5 @@ resource "couchbase-capella_sample_bucket" "%[5]s" {
   cluster_id      = "%[4]s"
   name			  = "invalid-sample"
 }
-`, ProviderBlock, OrgId, ProjectId, ClusterId, resourceName)
+`, globalProviderBlock, globalOrgId, globalProjectId, globalClusterId, resourceName)
 }

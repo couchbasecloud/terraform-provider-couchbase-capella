@@ -10,18 +10,18 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 )
 
-func CreateProject(ctx context.Context, client *api.Client) error {
+func createProject(ctx context.Context, client *api.Client) error {
 	projectRequest := api.CreateProjectRequest{
 		Name: "tf_acc_test_project_common",
 	}
 
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects", Host, OrgId)
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects", globalHost, globalOrgId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
 	response, err := client.ExecuteWithRetry(
 		ctx,
 		cfg,
 		projectRequest,
-		Token,
+		globalToken,
 		nil,
 	)
 	if err != nil {
@@ -35,19 +35,19 @@ func CreateProject(ctx context.Context, client *api.Client) error {
 
 	log.Print("project created")
 
-	ProjectId = projectResponse.Id.String()
+	globalProjectId = projectResponse.Id.String()
 
 	return nil
 }
 
-func DestroyProject(ctx context.Context, client *api.Client) error {
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s", Host, OrgId, ProjectId)
+func destroyProject(ctx context.Context, client *api.Client) error {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s", globalHost, globalOrgId, globalProjectId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
 	_, err := client.ExecuteWithRetry(
-		context.Background(),
+		ctx,
 		cfg,
 		nil,
-		Token,
+		globalToken,
 		nil,
 	)
 	if err != nil {

@@ -2,17 +2,17 @@ package acceptance_tests
 
 import "os"
 
-func GetEnvVars() error {
-	Host = os.Getenv("TF_VAR_host")
-	if Host == "" {
+func getEnvVars() error {
+	globalHost = os.Getenv("TF_VAR_host")
+	if globalHost == "" {
 		return ErrHostMissing
 	}
-	Token = os.Getenv("TF_VAR_auth_token")
-	if Token == "" {
+	globalToken = os.Getenv("TF_VAR_auth_token")
+	if globalToken == "" {
 		return ErrTokenMissing
 	}
-	OrgId = os.Getenv("TF_VAR_organization_id")
-	if OrgId == "" {
+	globalOrgId = os.Getenv("TF_VAR_organization_id")
+	if globalOrgId == "" {
 		return ErrOrgIdMissing
 	}
 	Username = os.Getenv("CAPELLA_USERNAME")

@@ -21,10 +21,10 @@ import (
 
 // TODO:  make project acceptance tests concurrent
 func TestAccProjectResource(t *testing.T) {
-	resourceName := RandomStringWithPrefix("tf_acc_project_")
+	resourceName := randomStringWithPrefix("tf_acc_project_")
 	resourceReference := "couchbase-capella_project." + resourceName
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -65,10 +65,10 @@ func TestAccProjectResource(t *testing.T) {
 }
 
 func TestAccProjectCreateWithReqFields(t *testing.T) {
-	resourceName := RandomStringWithPrefix("tf_acc_project_")
+	resourceName := randomStringWithPrefix("tf_acc_project_")
 	resourceReference := "couchbase-capella_project." + resourceName
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -84,10 +84,10 @@ func TestAccProjectCreateWithReqFields(t *testing.T) {
 }
 
 func TestAccProjectValidUpdate(t *testing.T) {
-	resourceName := RandomStringWithPrefix("tf_acc_project_")
+	resourceName := randomStringWithPrefix("tf_acc_project_")
 	resourceReference := "couchbase-capella_project." + resourceName
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectResourceConfig(resourceName),
@@ -111,10 +111,10 @@ func TestAccProjectValidUpdate(t *testing.T) {
 }
 
 func TestAccProjectInvalidResource(t *testing.T) {
-	resourceName := RandomStringWithPrefix("tf_acc_project_")
+	resourceName := randomStringWithPrefix("tf_acc_project_")
 	resourceReference := "couchbase-capella_project." + resourceName
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			// Invalid field in create testing
 			{
@@ -147,7 +147,7 @@ resource "couchbase-capella_project" "%[3]s" {
 	name            = "%[3]s"
 	description     = "terraform acceptance test project"
 }
-`, ProviderBlock, OrgId, resourceName)
+`, globalProviderBlock, globalOrgId, resourceName)
 }
 
 // testAccProjectResourceConfigUpdate generates a Terraform configuration string for updating a Capella project resource.
@@ -160,7 +160,7 @@ resource "couchbase-capella_project" "%[3]s" {
 	name            = "%[3]s"
 	description     = "description_update"
 }
-`, ProviderBlock, OrgId, resourceName)
+`, globalProviderBlock, globalOrgId, resourceName)
 }
 
 // testAccProjectResourceConfigUpdateWithIfMatch generates a Terraform configuration string for updating a Capella project resource
@@ -175,7 +175,7 @@ resource "couchbase-capella_project" "%[3]s" {
 	description     = "description_update_with_match"
 	if_match        =  2
 }
-`, ProviderBlock, OrgId, resourceName)
+`, globalProviderBlock, globalOrgId, resourceName)
 }
 
 // generateProjectImportIdForResource generates a project import ID based on the provided resource name
@@ -205,7 +205,7 @@ resource "couchbase-capella_project" "%[2]s" {
     organization_id = "%[3]s"
 	name            = "%[2]s"
 }
-`, ProviderBlock, resourceName, OrgId)
+`, globalProviderBlock, resourceName, globalOrgId)
 
 }
 
@@ -217,7 +217,7 @@ resource "couchbase-capella_project" "%[2]s" {
     organization_id = "abc-def"
 	name            = "%[2]s"
 }
-`, ProviderBlock, resourceName)
+`, globalProviderBlock, resourceName)
 
 }
 
@@ -230,5 +230,5 @@ resource "couchbase-capella_project" "%[3]s" {
 	name            = "%[3]s"
 	unwantedfiled   = "unwanted value"
 }
-`, ProviderBlock, OrgId, resourceName)
+`, globalProviderBlock, globalOrgId, resourceName)
 }

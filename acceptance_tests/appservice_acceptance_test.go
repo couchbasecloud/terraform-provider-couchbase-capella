@@ -11,10 +11,10 @@ import (
 // This test is not parallel so it's done before all the other tests.
 // The reason is buckets cannot be deleted while app service is being deleted.
 func TestAppServiceResource(t *testing.T) {
-	resourceName := RandomStringWithPrefix("tf_acc_app_svc_")
+	resourceName := randomStringWithPrefix("tf_acc_app_svc_")
 	resourceReference := "couchbase-capella_app_service." + resourceName
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -53,7 +53,7 @@ resource "couchbase-capella_app_service" "%[5]s" {
     ram = 4
   }
 }
-`, ProviderBlock, OrgId, ProjectId, ClusterId, resourceName)
+`, globalProviderBlock, globalOrgId, globalProjectId, globalClusterId, resourceName)
 }
 
 func generateAppServiceImportId(resourceReference string) resource.ImportStateIdFunc {

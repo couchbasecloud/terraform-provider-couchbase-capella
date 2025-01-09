@@ -8,10 +8,10 @@ import (
 )
 
 func TestAccDatabaseCredentialWithReqFields(t *testing.T) {
-	resourceName := RandomStringWithPrefix("tf_acc_database_credential_")
+	resourceName := randomStringWithPrefix("tf_acc_database_credential_")
 	resourceReference := "couchbase-capella_database_credential." + resourceName
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddDatabaseCredWithReqFieldsConfig(resourceName),
@@ -25,10 +25,10 @@ func TestAccDatabaseCredentialWithReqFields(t *testing.T) {
 }
 
 func TestAccDatabaseCredentialWithOptionalFields(t *testing.T) {
-	resourceName := RandomStringWithPrefix("tf_acc_database_credential_")
+	resourceName := randomStringWithPrefix("tf_acc_database_credential_")
 	resourceReference := "couchbase-capella_database_credential." + resourceName
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddDatabaseCredWithOptionalFieldsConfig(resourceName),
@@ -58,7 +58,7 @@ func testAccAddDatabaseCredWithReqFieldsConfig(resourceName string) string {
 				},
 			]
 		}
-		`, ProviderBlock, OrgId, ProjectId, ClusterId, resourceName)
+		`, globalProviderBlock, globalOrgId, globalProjectId, globalClusterId, resourceName)
 }
 
 func testAccAddDatabaseCredWithOptionalFieldsConfig(resourceName string) string {
@@ -77,5 +77,5 @@ func testAccAddDatabaseCredWithOptionalFieldsConfig(resourceName string) string 
 				},
 			]
 		}
-		`, ProviderBlock, OrgId, ProjectId, ClusterId, resourceName)
+		`, globalProviderBlock, globalOrgId, globalProjectId, globalClusterId, resourceName)
 }

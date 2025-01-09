@@ -11,6 +11,6 @@ const (
 	ErrNoJWT                    = errors.Sentinel("Could not get JWT token.")
 	ErrNoCIDR                   = errors.Sentinel("Could not get suggested CIDR.")
 	ErrUnknownHost              = errors.Sentinel("Unknown host name.")
-	ErrTimeoutWaitingForCluster = errors.Sentinel("Timeout waiting for cluster to be created or destroyed.")
-	ErrTimeoutWaitingForBucket  = errors.Sentinel("Timeout waiting for bucket to be created.")
+	ErrTimeoutWaitingForCluster = errors.Sentinel("timeout waiting for cluster to be created or destroyed.")
+	ErrTimeoutWaitingForBucket  = errors.Sentinel("timeout waiting for bucket to be created.")
 )

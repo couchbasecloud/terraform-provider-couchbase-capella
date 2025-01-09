@@ -11,11 +11,11 @@ import (
 )
 
 func TestAccUserResource(t *testing.T) {
-	resourceName := RandomStringWithPrefix("tf_acc_user_")
+	resourceName := randomStringWithPrefix("tf_acc_user_")
 	resourceReference := "couchbase-capella_user." + resourceName
 
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			// Create and Read
 			{
@@ -50,11 +50,11 @@ func TestAccUserResource(t *testing.T) {
 }
 
 func TestAccUserResourceResourceNotFound(t *testing.T) {
-	resourceName := RandomStringWithPrefix("tf_acc_user_")
+	resourceName := randomStringWithPrefix("tf_acc_user_")
 	resourceReference := "couchbase-capella_user." + resourceName
 
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -102,7 +102,7 @@ func testAccDeleteUserResource(resourceReference string) resource.TestCheckFunc 
 			}
 		}
 
-		data := NewTestClient()
+		data := newTestClient()
 		err := deleteUserFromServer(data, rawState["organization_id"], rawState["id"])
 		if err != nil {
 			return err
@@ -162,7 +162,7 @@ func testAccUserResourceConfig(resourceName, username string) string {
 			"organizationOwner"
 		]
 	  }
-	`, ProviderBlock, resourceName, OrgId, username, username+"@couchbase.com")
+	`, globalProviderBlock, resourceName, globalOrgId, username, username+"@couchbase.com")
 }
 
 func testAccUserResourceConfigUpdate(resourceName, username string) string {
@@ -188,7 +188,7 @@ func testAccUserResourceConfigUpdate(resourceName, username string) string {
 		  }
 		]
 	  }
-	`, ProviderBlock, resourceName, OrgId, ProjectId, username, username+"@couchbase.com")
+	`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, username, username+"@couchbase.com")
 }
 
 func generateUserImportIdForResource(resourceReference string) resource.ImportStateIdFunc {
@@ -201,6 +201,6 @@ func generateUserImportIdForResource(resourceReference string) resource.ImportSt
 				}
 			}
 		}
-		return fmt.Sprintf("id=%s,organization_id=%s", rawState["id"], OrgId), nil
+		return fmt.Sprintf("id=%s,organization_id=%s", rawState["id"], globalOrgId), nil
 	}
 }

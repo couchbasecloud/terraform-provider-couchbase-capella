@@ -10,11 +10,11 @@ import (
 )
 
 func TestAccApiKeyResource(t *testing.T) {
-	resourceName := RandomStringWithPrefix("tf_acc_apikey_")
+	resourceName := randomStringWithPrefix("tf_acc_apikey_")
 	resourceReference := "couchbase-capella_apikey." + resourceName
 
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -44,11 +44,11 @@ func TestAccApiKeyResource(t *testing.T) {
 }
 
 func TestAccApiKeyResourceWithOnlyReqField(t *testing.T) {
-	resourceName := RandomStringWithPrefix("tf_acc_apikey_")
+	resourceName := randomStringWithPrefix("tf_acc_apikey_")
 	resourceReference := "couchbase-capella_apikey." + resourceName
 
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -88,11 +88,11 @@ func TestAccApiKeyResourceWithOnlyReqField(t *testing.T) {
 }
 
 func TestAccApiKeyResourceForOrgOwner(t *testing.T) {
-	resourceName := RandomStringWithPrefix("tf_acc_apikey_")
+	resourceName := randomStringWithPrefix("tf_acc_apikey_")
 	resourceReference := "couchbase-capella_apikey." + resourceName
 
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -121,9 +121,9 @@ func TestAccApiKeyResourceForOrgOwner(t *testing.T) {
 }
 
 func TestAccApiKeyResourceInvalidScenarioRotateShouldNotPassedWhileCreate(t *testing.T) {
-	resourceName := RandomStringWithPrefix("tf_acc_apikey_")
+	resourceName := randomStringWithPrefix("tf_acc_apikey_")
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -153,7 +153,7 @@ resource "couchbase-capella_apikey" "%[2]s" {
     }
   ]
 }
-`, ProviderBlock, resourceName, OrgId, ProjectId)
+`, globalProviderBlock, resourceName, globalOrgId, globalProjectId)
 }
 
 func testAccApiKeyResourceConfigWithOnlyReqFieldConfig(resourceName string) string {
@@ -165,7 +165,7 @@ resource "couchbase-capella_apikey" "%[2]s" {
   name               = "%[2]s"
   organization_roles = ["organizationOwner", "organizationMember"]
 }
-`, ProviderBlock, resourceName, OrgId)
+`, globalProviderBlock, resourceName, globalOrgId)
 }
 
 func testAccApiKeyResourceConfigForOrgOwnerConfig(resourceName string) string {
@@ -186,7 +186,7 @@ resource "couchbase-capella_apikey" "%[2]s" {
 	  }
   ]
 }
-`, ProviderBlock, resourceName, OrgId, ProjectId)
+`, globalProviderBlock, resourceName, globalOrgId, globalProjectId)
 }
 
 func testAccApiKeyResourceConfigRotateSetConfig(resourceName string) string {
@@ -208,7 +208,7 @@ resource "couchbase-capella_apikey" "%[2]s" {
   ]
   rotate = 1
 }
-`, ProviderBlock, resourceName, OrgId, ProjectId)
+`, globalProviderBlock, resourceName, globalOrgId, globalProjectId)
 }
 
 func testAccApiKeyResourceConfigWithOnlyReqFieldRotateConfig(resourceName string) string {
@@ -222,7 +222,7 @@ resource "couchbase-capella_apikey" "%[2]s" {
   rotate             = 1
   secret             = "abc"
 }
-`, ProviderBlock, resourceName, OrgId)
+`, globalProviderBlock, resourceName, globalOrgId)
 }
 
 func generateApiKeyImportIdForResource(resourceReference string) resource.ImportStateIdFunc {
@@ -235,6 +235,6 @@ func generateApiKeyImportIdForResource(resourceReference string) resource.Import
 				}
 			}
 		}
-		return fmt.Sprintf("id=%s,organization_id=%s", rawState["id"], OrgId), nil
+		return fmt.Sprintf("id=%s,organization_id=%s", rawState["id"], globalOrgId), nil
 	}
 }

@@ -9,16 +9,16 @@ import (
 )
 
 func TestAccClusterResourceAzureDiskAutoExpansion(t *testing.T) {
-	resourceName := RandomStringWithPrefix("tf_acc_cluster_")
+	resourceName := randomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "couchbase-capella_cluster." + resourceName
-	cidr, err := getCIDR(context.Background(), api.NewClient(Timeout), "azure")
+	cidr, err := getCIDR(context.Background(), api.NewClient(timeout), "azure")
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfigAzureDiskAutoExpansion(resourceName, cidr),
@@ -82,7 +82,7 @@ resource "couchbase-capella_cluster" "%[4]s" {
     timezone = "PT"
   }
 }
-`, ProviderBlock, OrgId, ProjectId, resourceName, cidr)
+`, globalProviderBlock, globalOrgId, globalProjectId, resourceName, cidr)
 }
 
 func testAccClusterConfigAzureDiskAutoExpansionOff(resourceName, cidr string) string {
@@ -123,5 +123,5 @@ resource "couchbase-capella_cluster" "%[4]s" {
     timezone = "PT"
   }
 }
-`, ProviderBlock, OrgId, ProjectId, resourceName, cidr)
+`, globalProviderBlock, globalOrgId, globalProjectId, resourceName, cidr)
 }

@@ -8,16 +8,16 @@ import (
 )
 
 func TestAccReadOrganization(t *testing.T) {
-	resourceName := RandomStringWithPrefix("tf_acc_org_")
+	resourceName := randomStringWithPrefix("tf_acc_org_")
 	resourceReference := "data.couchbase-capella_organization." + resourceName
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationResourceConfig(resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceReference, "name"),
-					resource.TestCheckResourceAttr(resourceReference, "organization_id", OrgId),
+					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttrSet(resourceReference, "audit.created_at"),
 					resource.TestCheckResourceAttrSet(resourceReference, "audit.modified_at"),
 					resource.TestCheckResourceAttrSet(resourceReference, "audit.version"),
@@ -35,5 +35,5 @@ data "couchbase-capella_organization" "%[3]s" {
   organization_id = "%[2]s"
 }
 
-`, ProviderBlock, OrgId, resourceName)
+`, globalProviderBlock, globalOrgId, resourceName)
 }

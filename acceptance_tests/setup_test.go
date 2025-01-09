@@ -11,15 +11,18 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 )
 
+// this is the entry point for acceptance tests.
+// it setups a common project and cluster to test cluster features.
+// once acceptance tests are completed, these resources are destroyed.
 func TestMain(m *testing.M) {
-	if err := GetEnvVars(); err != nil {
+	if err := getEnvVars(); err != nil {
 		log.Print(err)
 		os.Exit(1)
 	}
 
-	ProviderBlock = fmt.Sprint(`
+	globalProviderBlock = fmt.Sprint(`
 variable "host" {
-  description = "The Host URL of Couchbase Cloud."
+  description = "The globalHost URL of Couchbase Cloud."
 }
 
 variable "auth_token" {
@@ -34,7 +37,7 @@ provider "couchbase-capella" {
 `)
 
 	ctx := context.Background()
-	client := api.NewClient(Timeout)
+	client := api.NewClient(timeout)
 
 	if err := setup(ctx, client); err != nil {
 		log.Print(err)
@@ -52,16 +55,16 @@ provider "couchbase-capella" {
 }
 
 func setup(ctx context.Context, client *api.Client) error {
-	if err := CreateProject(ctx, client); err != nil {
+	if err := createProject(ctx, client); err != nil {
 		return err
 	}
-	if err := CreateCluster(ctx, client); err != nil {
+	if err := createCluster(ctx, client); err != nil {
 		return err
 	}
 	if err := clusterWait(ctx, client, false); err != nil {
 		return err
 	}
-	if err := CreateBucket(ctx, client); err != nil {
+	if err := createBucket(ctx, client); err != nil {
 		return err
 	}
 	if err := bucketWait(ctx, client); err != nil {
@@ -72,13 +75,13 @@ func setup(ctx context.Context, client *api.Client) error {
 }
 
 func cleanup(ctx context.Context, client *api.Client) error {
-	if err := DestroyCluster(ctx, client); err != nil {
+	if err := destroyCluster(ctx, client); err != nil {
 		return err
 	}
 	if err := clusterWait(ctx, client, true); err != nil {
 		return err
 	}
-	if err := DestroyProject(ctx, client); err != nil {
+	if err := destroyProject(ctx, client); err != nil {
 		return err
 	}
 

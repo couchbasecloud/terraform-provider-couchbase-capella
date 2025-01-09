@@ -8,11 +8,11 @@ import (
 )
 
 func TestAccGSI(t *testing.T) {
-	resourceName := RandomStringWithPrefix("tf_acc_gsi_")
+	resourceName := randomStringWithPrefix("tf_acc_gsi_")
 	resourceReference := "couchbase-capella_query_indexes." + resourceName
 
 	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCreateGSINonDeferredIndexConfig(resourceName),
@@ -56,7 +56,7 @@ resource "couchbase-capella_query_indexes" "%[6]s" {
         num_replica = 1
   }
 }
-`, ProviderBlock, OrgId, ProjectId, ClusterId, BucketName, resourceName)
+`, globalProviderBlock, globalOrgId, globalProjectId, globalClusterId, globalBucketName, resourceName)
 }
 
 func generateGSIImportIdForResource(resourceReference string) resource.ImportStateIdFunc {

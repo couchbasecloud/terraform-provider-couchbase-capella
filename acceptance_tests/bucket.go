@@ -11,18 +11,18 @@ import (
 	"time"
 )
 
-func CreateBucket(ctx context.Context, client *api.Client) error {
+func createBucket(ctx context.Context, client *api.Client) error {
 	bucketRequest := bucketapi.CreateBucketRequest{
-		Name: BucketName,
+		Name: globalBucketName,
 	}
 
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets", Host, OrgId, ProjectId, ClusterId)
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets", globalHost, globalOrgId, globalProjectId, globalClusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
 	response, err := client.ExecuteWithRetry(
 		ctx,
 		cfg,
 		bucketRequest,
-		Token,
+		globalToken,
 		nil,
 	)
 	if err != nil {
@@ -34,7 +34,7 @@ func CreateBucket(ctx context.Context, client *api.Client) error {
 		return err
 	}
 
-	BucketId = bucketResponse.Id
+	globalBucketId = bucketResponse.Id
 	return nil
 }
 
@@ -53,13 +53,13 @@ func bucketWait(ctx context.Context, client *api.Client) error {
 		case <-ctx.Done():
 			return ErrTimeoutWaitingForBucket
 		case <-ticker.C:
-			url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", Host, OrgId, ProjectId, ClusterId, BucketId)
+			url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", globalHost, globalOrgId, globalProjectId, globalClusterId, globalBucketId)
 			cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 			_, err := client.ExecuteWithRetry(
 				ctx,
 				cfg,
 				nil,
-				Token,
+				globalToken,
 				nil,
 			)
 			if err == nil {
