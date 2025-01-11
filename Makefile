@@ -89,7 +89,7 @@ terraform-fmt:
 	@terraform fmt -write -recursive -diff .
 .PHONY: terraform-check tfcheck
 
-TEST_FILES ?= $$(go list ./... | grep -v internal/resources/acceptance_tests)
+TEST_FILES ?= $$(go list ./... | grep -v acceptance_tests)
 TEST_FLAGS ?= -short -cover -race -coverprofile .testCoverage.txt
 
 .PHONY: test
@@ -102,6 +102,6 @@ test-acceptance:
 	@[ "${TF_VAR_auth_token}" ] || ( echo "export TF_VAR_auth_token before running the acceptance tests"; exit 1 )
 	@[ "${TF_VAR_host}" ] || ( echo "export TF_VAR_host before running the acceptance tests"; exit 1 )
 	@[ "${TF_VAR_organization_id}" ] || ( echo "export TF_VAR_organization_id before running the acceptance tests"; exit 1 )
-	TF_ACC=1 go test -timeout=300m -v ./... -run TestAccOrganizationDataSource -run TestAccProjectResource -run TestAccCreateProjectWithReqFields -run TestAccCreateProjectOptFields -run TestAccValidProjectUpdate -run TestAccInvalidProjectResource -run TestAccDeleteProjectBeforeDestroy -run TestAccClusterResourceAzure -run TestAccClusterResourceGCP -run TestAccClusterResourceWithOnlyReqFieldAWS
+	TF_ACC=1 go test -timeout=60m -v ./...
 
 
