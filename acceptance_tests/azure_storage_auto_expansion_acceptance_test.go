@@ -1,23 +1,18 @@
 package acceptance_tests
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 )
 
 func TestAccClusterResourceAzureDiskAutoExpansion(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "couchbase-capella_cluster." + resourceName
-	cidr, err := getCIDR(context.Background(), api.NewClient(timeout), "azure")
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
+
+	// TODO: dynamically generate CIDR
+	cidr := "10.254.250.0/23"
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
