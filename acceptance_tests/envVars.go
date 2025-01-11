@@ -1,6 +1,8 @@
 package acceptance_tests
 
-import "os"
+import (
+	"os"
+)
 
 func getEnvVars() error {
 	globalHost = os.Getenv("TF_VAR_host")
@@ -14,14 +16,6 @@ func getEnvVars() error {
 	globalOrgId = os.Getenv("TF_VAR_organization_id")
 	if globalOrgId == "" {
 		return ErrOrgIdMissing
-	}
-	Username = os.Getenv("CAPELLA_USERNAME")
-	if Username == "" {
-		return ErrUsernameMissing
-	}
-	Password = os.Getenv("CAPELLA_PASSWORD")
-	if Password == "" {
-		return ErrPasswordMissing
 	}
 
 	return nil
