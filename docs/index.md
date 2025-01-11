@@ -21,36 +21,15 @@ This API key is then used for authenticating the Terraform Provider against Couc
 
 
 **IMPORTANT**  
-Although in examples below, the API key secret is specified as a environmental variable and hardcoded in a config file, it is recommend that the API secret credentials be stored in a remote secrets manager such as Hashicorp Vault or AWS Secrets Manager that the Terraform Provider can then retrieve and use for authentication.
+Although in examples below, the API key secret is specified as an environmental variable and hardcoded in a config file, it is recommended that the API secret credentials be stored in a remote secrets manager such as Hashicorp Vault or AWS Secrets Manager that the Terraform Provider can then retrieve and use for authentication.
 
 
 ### Terraform Environment Variables
 
-Environment variables can be set by terraform by creating and adding terraform.template.tfvars
-```terraform
-auth_token = "<v4-api-key-secret>"
-organization_id = "<replace with organization id>"
-```
+The provider configuration block accepts the following arguments. In most cases it is recommended to set them via the indicated environment variables in order to keep credential information out of the configuration.
 
-A variables.tf should also be added to define the variables for terraform.
-```terraform
-variable "organization_id" {
-  description = "Capella Organization ID"
-}
-
-variable "auth_token" {
-  description = "Authentication API Key"
-}
-```
-
-Set the environment variables by using the following notation:
-```terraform
-resource "couchbase-capella_project" "example" {
-  organization_id = var.organization_id
-  name = var.project_name
-  description = "A Capella Project that will host many Capella clusters."
-}
-```
+* `host` - Allows you to specify the host for the capella API. This can be useful if you are behind a reverse proxy. May be set vai the `CAPELLA_HOST` environment variable. If not provided will default to "https://cloudapi.cloud.couchbase.com"
+* `authentication_token` - A valid [V4 REST API Key](https://docs.couchbase.com/cloud/management-api-guide/management-api-start.html#understand-management-api-keys) for authenticating with the Couchbase Capella API. May be set via the `CAPELLA_AUTH_TOKEN` environment variable.
 
 ## Create and manage resources using terraform
 
@@ -276,35 +255,39 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 
   Network Peering enables you to configure a secure private network connection between the Virtual Private Cloud (VPC) hosting your applications and the VPC of your Couchbase Capella database.
 
-* [Retrieve Specific Event](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/event):
+* [Retrieve a Specific Event](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/event):
 
-  Retrieve Specific Event
+  Fetch the details of any specific event using the eventId and organizationId. The results are always limited by the role and scope of the caller's privileges.
 
 * [Retrieve All Events](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/events):
 
-  Retrieve All Events
+  List the information of all the events within an organization. The list can be customized using filters.
 
 * [Retrieve Private Endpoint Command for AWS](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoint_command/AWS):
 
-  Retrieve Private Endpoint Command for AWS
+  Retrieve the AWS command used to configure a VPC endpoint.
 
 * [Retrieve Private Endpoint Command for Azure](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoint_command/Azure):
 
-  Retrieve Private Endpoint Command for Azure
+  Retrieve the Azure command used to configure a private endpoint.
 
 * [Manage Private Endpoint Service](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoint_service):
 
-  Access your Capella cluster from your cloud provider's private network.
+  Enable or disable the Private Endpoint Service in Capella.
 
 * [Manage Private Endpoints](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoints):
 
-  Manage Private Endpoints
+  Accept or reject a private endpoint in Capella.
 
 * [Manage Azure Network Peer](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/network_peer):
 
-  Manage Azure Network Peer
+  Configure a secure private network connection between the Azure VNet hosting your applications and the VNet of your Couchbase Capella operational cluster.
 
 * [Manage Flush Bucket](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/flush_bucket):
 
-  Manage Flush Bucket
+  Flush a bucket to have the system delete all its data at the earliest opportunity available. 
+
+* [Manage GSI](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/gsi):
+
+  Manage secondary indexes on a Capella operational cluster. It's recommended to use deferred index builds, especially for larger indexes.
 
