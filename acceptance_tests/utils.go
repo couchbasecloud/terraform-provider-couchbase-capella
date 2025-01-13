@@ -18,7 +18,7 @@ const (
 func randomString() string {
 	result := make([]byte, resourceNameLength)
 	for i := 0; i < resourceNameLength; i++ {
-		result[i] = charSetAlpha[rand.Intn(len(charSetAlpha))]
+		result[i] = charSetAlpha[rand.Intn(len(charSetAlpha))] // #nosec G404
 	}
 	return string(result)
 }
