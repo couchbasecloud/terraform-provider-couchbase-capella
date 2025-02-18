@@ -30,10 +30,6 @@ variable "cluster" {
   type = object({
     name               = string
     cidr               = string
-    node_count         = number
-    server_version     = string
-    couchbase_services = list(string)
-    availability_zone  = string
   })
 }
 

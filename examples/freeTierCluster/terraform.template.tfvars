@@ -1,12 +1,12 @@
-project_id      = "0f3952be-5ddf-47ab-862c-0e29afa317b9"
+project_id      = "3b74be24-9787-49f6-bb4e-2ec8ea01e7ba"
 
 cloud_provider = {
   name   = "aws",
-  region = "us-east-1"
+  region = "us-east-2"
 }
 
 cluster = {
-  name               = "New Terraform Cluster"
+  name               = "New Terraform Cluster name"
   cidr               = "192.168.0.0/20"
 }
 
