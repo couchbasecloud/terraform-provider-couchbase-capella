@@ -3,37 +3,27 @@ package schema
 import (
 	"context"
 	"fmt"
+	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/freeTierCluster"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-//type FreeTierCluster struct {
-//	Name          types.String   `tfsdk:"name"`
-//	Description   types.String   `tfsdk:"description"`
-//	CloudProvider *CloudProvider `tfsdk:"cloud_provider"`
-//}
-
-//type CloudProvider struct {
-//	Type   types.String `tfsdk:"type"`
-//	Region types.String `tfsdk:"region"`
-//	Cidr   types.String `tfsdk:"cidr"`
-//}
-
 type FreeTierCluster struct {
 	Id            types.String   `tfsdk:"id"`
-	Availability  *Availability  `tfsdk:"availability"`
+	Availability  types.Object   `tfsdk:"availability"`
 	CloudProvider *CloudProvider `tfsdk:"cloud_provider"`
 	ProjectId     types.String   `tfsdk:"project_id"`
 	Audit         types.Object   `tfsdk:"audit"`
-	Support       *Support       `tfsdk:"support"`
+	Support       types.Object   `tfsdk:"support"`
 
 	OrganizationId types.String `tfsdk:"organization_id"`
-	// ConfigurationType represents whether a cluster is configured as a single-node or multi-node cluster.
-	ConfigurationType types.String `tfsdk:"configuration_type"`
 	// Name of the cluster (up to 256 characters).
 	Name types.String `tfsdk:"name"`
-	// CouchbaseServer is the version of the Couchbase Server to be installed in the cluster.
+	//// CouchbaseServer is the version of the Couchbase Server to be installed in the cluster.
 	CouchbaseServer types.Object `tfsdk:"couchbase_server"`
 
 	// Description of the cluster (up to 1024 characters).
@@ -46,11 +36,11 @@ type FreeTierCluster struct {
 	CurrentState types.String `tfsdk:"current_state"`
 	// ConnectionString specifies the Capella database endpoint for your client connection.
 	ConnectionString types.String `tfsdk:"connection_string"`
-	// ServiceGroups is the couchbase service groups to be run. At least one service group must contain the data service.
-	ServiceGroups []ServiceGroup `tfsdk:"service_groups"`
+	//ServiceGroups is the couchbase service groups to be run. At least one service group must contain the data service.
+	ServiceGroups types.Set `tfsdk:"service_groups"`
 }
 
-func NewFreeTierCluster(ctx context.Context, getfreeClusterResponse *freeTierClusterapi.GetFreeTierClusterResponse, organizationId, projectId string, auditObject basetypes.ObjectValue) (*FreeTierCluster, error) {
+func NewFreeTierCluster(ctx context.Context, getfreeClusterResponse *freeTierClusterapi.GetFreeTierClusterResponse, organizationId, projectId string, auditObject, availabilityObject, supportObject basetypes.ObjectValue, serviceGroupObj types.Set) (*FreeTierCluster, error) {
 	newFreTierCluster := FreeTierCluster{
 		Id:                         types.StringValue(getfreeClusterResponse.ID.String()),
 		OrganizationId:             types.StringValue(organizationId),
@@ -58,21 +48,17 @@ func NewFreeTierCluster(ctx context.Context, getfreeClusterResponse *freeTierClu
 		Name:                       types.StringValue(getfreeClusterResponse.Name),
 		Description:                types.StringValue(getfreeClusterResponse.Description),
 		EnablePrivateDNSResolution: types.BoolValue(getfreeClusterResponse.EnablePrivateDNSResolution),
-		Availability: &Availability{
-			Type: types.StringValue(getfreeClusterResponse.Availability.Type),
-		},
+		Availability:               availabilityObject,
 		CloudProvider: &CloudProvider{
 			Cidr:   types.StringValue(getfreeClusterResponse.CloudProvider.Cidr),
 			Region: types.StringValue(getfreeClusterResponse.CloudProvider.Region),
 			Type:   types.StringValue(string(getfreeClusterResponse.CloudProvider.Type)),
 		},
-		Support: &Support{
-			Plan:     types.StringValue(getfreeClusterResponse.Support.Plan),
-			Timezone: types.StringValue(getfreeClusterResponse.Support.Timezone),
-		},
+		Support:          supportObject,
 		ConnectionString: types.StringValue(getfreeClusterResponse.ConnectionString),
 		CurrentState:     types.StringValue(getfreeClusterResponse.CurrentState),
 		Audit:            auditObject,
+		ServiceGroups:    serviceGroupObj,
 		//Etag:             types.StringValue(getClusterResponse.Etag),
 	}
 	if getfreeClusterResponse.CouchbaseServer.Version != nil {
@@ -89,4 +75,157 @@ func NewFreeTierCluster(ctx context.Context, getfreeClusterResponse *freeTierClu
 	}
 	return &newFreTierCluster, nil
 
+}
+
+func NewTerraformServiceGroups(cluster *freeTierClusterapi.GetFreeTierClusterResponse) ([]ServiceGroup, error) {
+	var newServiceGroups []ServiceGroup
+	for _, serviceGroup := range cluster.ServiceGroups {
+		newServiceGroup := ServiceGroup{
+			Node: &Node{
+				Compute: Compute{
+					Ram: types.Int64Value(int64(serviceGroup.Node.Compute.Ram)),
+					Cpu: types.Int64Value(int64(serviceGroup.Node.Compute.Cpu)),
+				},
+			},
+			NumOfNodes: types.Int64Value(int64(*serviceGroup.NumOfNodes)),
+		}
+
+		switch cluster.CloudProvider.Type {
+		case clusterapi.Aws:
+			awsDisk, err := serviceGroup.Node.AsDiskAWS()
+			if err != nil {
+				return nil, fmt.Errorf("%s: %w", errors.ErrReadingAWSDisk, err)
+			}
+			newServiceGroup.Node.Disk = Node_Disk{
+				Type:    types.StringValue(string(awsDisk.Type)),
+				Storage: types.Int64Value(int64(awsDisk.Storage)),
+				IOPS:    types.Int64Value(int64(awsDisk.Iops)),
+			}
+		case clusterapi.Azure:
+			azureDisk, err := serviceGroup.Node.AsDiskAzure()
+			if err != nil {
+				return nil, fmt.Errorf("%s: %w", errors.ErrReadingAzureDisk, err)
+			}
+
+			newServiceGroup.Node.Disk = Node_Disk{
+				Type:          types.StringValue(string(azureDisk.Type)),
+				Storage:       types.Int64Value(int64(*azureDisk.Storage)),
+				IOPS:          types.Int64Value(int64(*azureDisk.Iops)),
+				Autoexpansion: types.BoolValue(*azureDisk.Autoexpansion),
+			}
+		case clusterapi.Gcp:
+			gcpDisk, err := serviceGroup.Node.AsDiskGCP()
+			if err != nil {
+				return nil, fmt.Errorf("%s: %w", errors.ErrReadingGCPDisk, err)
+			}
+			newServiceGroup.Node.Disk = Node_Disk{
+				Type:    types.StringValue(string(gcpDisk.Type)),
+				Storage: types.Int64Value(int64(gcpDisk.Storage)),
+			}
+		default:
+			return nil, errors.ErrUnsupportedCloudProvider
+		}
+
+		if serviceGroup.NumOfNodes != nil {
+			newServiceGroup.NumOfNodes = types.Int64Value(int64(*serviceGroup.NumOfNodes))
+		}
+
+		if serviceGroup.Services != nil {
+			for _, service := range *serviceGroup.Services {
+				tfService := types.StringValue(string(service))
+				newServiceGroup.Services = append(newServiceGroup.Services, tfService)
+			}
+		}
+		newServiceGroups = append(newServiceGroups, newServiceGroup)
+	}
+	return newServiceGroups, nil
+}
+
+func (f *FreeTierCluster) Validate() (map[Attr]string, error) {
+	state := map[Attr]basetypes.StringValue{
+		OrganizationId: f.OrganizationId,
+		ProjectId:      f.ProjectId,
+		Id:             f.Id,
+	}
+
+	IDs, err := validateSchemaState(state)
+	if err != nil {
+		return nil, fmt.Errorf("failed to validate resource state: %s", err)
+	}
+
+	return IDs, nil
+}
+
+func (a Availability) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"type": types.StringType,
+	}
+}
+
+func NewAvailability(apiAvailability freeTierClusterapi.Availability) Availability {
+	return Availability{
+		Type: types.StringValue(apiAvailability.Type),
+	}
+}
+
+func ServiceGroupAttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"node":         types.ObjectType{AttrTypes: Node{}.AttributeTypes()},
+		"services":     types.SetType{ElemType: types.StringType},
+		"num_of_nodes": types.Int64Type,
+	}
+}
+
+func (n Node) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"disk":    types.ObjectType{AttrTypes: Node_Disk{}.AttributeTypes()},
+		"compute": types.ObjectType{AttrTypes: Compute{}.AttributeTypes()},
+	}
+}
+
+// AttributeTypes returns a mapping of field names to their respective attribute types for the Node_Disk struct.
+func (d Node_Disk) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"type":          types.StringType,
+		"storage":       types.Int64Type,
+		"iops":          types.Int64Type,
+		"autoexpansion": types.BoolType,
+	}
+}
+
+// AttributeTypes returns a mapping of field names to their respective attribute types for the Compute struct.
+func (c Compute) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"cpu": types.Int64Type,
+		"ram": types.Int64Type,
+	}
+}
+
+func (support Support) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"plan":     types.StringType,
+		"timezone": types.StringType,
+	}
+}
+
+func NewSupport(apiSupport freeTierClusterapi.Support) Support {
+	return Support{
+		Plan:     types.StringValue(apiSupport.Plan),
+		Timezone: types.StringValue(apiSupport.Timezone),
+	}
+}
+
+func NewServiceGroups(ctx context.Context, serviceGroups []ServiceGroup) ([]types.Object, error, diag.Diagnostics) {
+	serviceGroupObjList := make([]types.Object, 0)
+	for _, serviceGroup := range serviceGroups {
+		serviceGroupObj, diags := types.ObjectValueFrom(ctx, ServiceGroupAttributeTypes(), serviceGroup)
+		if diags.HasError() {
+			return nil, fmt.Errorf("service group object error"), diags
+		}
+
+		serviceGroupObjList = append(serviceGroupObjList, serviceGroupObj)
+
+	}
+
+	return serviceGroupObjList, nil, nil
 }

@@ -11,7 +11,7 @@ resource "couchbase-capella_cluster_free_tier" "new_cluster_free_tier" {
   organization_id = var.organization_id
   project_id      = var.project_id
   name            = var.cluster.name
-  description     = "My test cluster for multiple services."
+  description     = "new test cluster for multiple services."
   cloud_provider = {
     type   = var.cloud_provider.name
     region = var.cloud_provider.region

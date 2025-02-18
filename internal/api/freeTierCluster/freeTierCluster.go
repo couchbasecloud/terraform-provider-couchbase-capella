@@ -11,21 +11,6 @@ type Type string
 type CouchbaseServer struct {
 	Version *string `json:"version"`
 }
-type ServiceGroup struct {
-	Node struct {
-		Compute struct {
-			CPU int `json:"cpu"`
-			RAM int `json:"ram"`
-		} `json:"compute"`
-		Disk struct {
-			Type    string `json:"type"`
-			Storage int    `json:"storage"`
-			Iops    int    `json:"iops"`
-		} `json:"disk"`
-	} `json:"node"`
-	NumOfNodes int      `json:"numOfNodes"`
-	Services   []string `json:"services"`
-}
 
 type Availability struct {
 	Type string `json:"type"`
@@ -53,7 +38,7 @@ type GetFreeTierClusterResponse struct {
 	ConnectionString           string                 `json:"connectionString"`
 	CloudProvider              cluster.CloudProvider  `json:"cloudProvider"`
 	CouchbaseServer            CouchbaseServer        `json:"couchbaseServer"`
-	ServiceGroups              []ServiceGroup         `json:"serviceGroups"`
+	ServiceGroups              []cluster.ServiceGroup `json:"serviceGroups"`
 	Availability               Availability           `json:"availability"`
 	Support                    Support                `json:"support"`
 	CurrentState               string                 `json:"currentState"`
@@ -73,4 +58,11 @@ type CreateFreeTierClusterRequest struct {
 	// [GCP] https://docs.couchbase.com/cloud/reference/gcp.html
 	// [Azure] https://docs.couchbase.com/cloud/reference/azure.html
 	CloudProvider cluster.CloudProvider `json:"cloudProvider"`
+}
+
+type UpdateFreeTierClusterRequest struct {
+	// Name is the name of the cluster (up to 256 characters).
+	Name string `json:"name"`
+	// Description depicts description of the cluster (up to 1024 characters).
+	Description string `json:"description,omitempty"`
 }

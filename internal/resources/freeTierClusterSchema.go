@@ -21,15 +21,15 @@ func FreeTierClusterSchema() schema.Schema {
 			"project_id":                    stringAttribute([]string{required, requiresReplace}),
 			"name":                          stringAttribute([]string{required}),
 			"description":                   stringAttribute([]string{optional, computed}),
-			"enable_private_dns_resolution": boolDefaultAttribute(false, optional, computed, requiresReplace),
-			"connection_string":             stringAttribute([]string{optional, computed}),
+			"enable_private_dns_resolution": boolAttribute(computed),
+			"connection_string":             stringAttribute([]string{computed}),
 			"current_state":                 stringAttribute([]string{computed}),
 			"audit":                         computedAuditAttribute(),
 			"support": schema.SingleNestedAttribute{
-				Required: true,
+				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"plan":     stringAttribute([]string{required}),
-					"timezone": stringAttribute([]string{computed, optional}),
+					"plan":     stringAttribute([]string{computed}),
+					"timezone": stringAttribute([]string{computed}),
 				},
 			},
 			"cloud_provider": schema.SingleNestedAttribute{
@@ -44,10 +44,9 @@ func FreeTierClusterSchema() schema.Schema {
 				},
 			},
 			"couchbase_server": schema.SingleNestedAttribute{
-				Optional: true,
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"version": stringAttribute([]string{optional, computed}),
+					"version": stringAttribute([]string{computed}),
 				},
 				PlanModifiers: []planmodifier.Object{
 					objectplanmodifier.RequiresReplace(),
@@ -55,45 +54,42 @@ func FreeTierClusterSchema() schema.Schema {
 				},
 			},
 			"service_groups": schema.SetNestedAttribute{
-				Required: true,
+				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"node": schema.SingleNestedAttribute{
-							Required: true,
+							Computed: true,
 							Attributes: map[string]schema.Attribute{
 								"compute": schema.SingleNestedAttribute{
-									Required: true,
+									Computed: true,
 									Attributes: map[string]schema.Attribute{
-										"cpu": int64Attribute(required),
-										"ram": int64Attribute(required),
+										"cpu": int64Attribute(computed),
+										"ram": int64Attribute(computed),
 									},
 								},
 								"disk": schema.SingleNestedAttribute{
 									Description: "The 'storage' and 'IOPS' fields are required for AWS. " +
 										"For Azure, only the 'disktype' field is required, and for Ultra disk type, you can provide all 3 - storage, iops and autoexpansion fields. For Premium type, you can only provide the autoexpansion field, others can't be set." +
 										"In the case of GCP, only 'pd ssd' disk type is available, and you cannot set the 'IOPS' field.",
-									Required: true,
+									Computed: true,
 									Attributes: map[string]schema.Attribute{
-										"type":          stringAttribute([]string{required}),
-										"storage":       int64Attribute(optional, computed),
-										"iops":          int64Attribute(optional, computed),
-										"autoexpansion": boolAttribute(optional, computed),
+										"type":          stringAttribute([]string{computed}),
+										"storage":       int64Attribute(computed),
+										"iops":          int64Attribute(computed),
+										"autoexpansion": boolAttribute(computed),
 									},
 								},
 							},
 						},
-						"num_of_nodes": int64Attribute(required),
-						"services":     stringSetAttribute(required),
+						"num_of_nodes": int64Attribute(computed),
+						"services":     stringSetAttribute(computed),
 					},
 				},
 			},
 			"availability": schema.SingleNestedAttribute{
-				Required: true,
+				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"type": stringAttribute([]string{required}),
-				},
-				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.RequiresReplace(),
+					"type": stringAttribute([]string{computed}),
 				},
 			},
 		},

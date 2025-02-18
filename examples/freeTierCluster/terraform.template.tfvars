@@ -6,7 +6,7 @@ cloud_provider = {
 }
 
 cluster = {
-  name               = "New Terraform Cluster name"
+  name               = "New Terraform Cluster name new"
   cidr               = "192.168.0.0/20"
 }
 
