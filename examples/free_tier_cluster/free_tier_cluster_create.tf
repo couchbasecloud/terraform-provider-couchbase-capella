@@ -10,8 +10,8 @@ output "cluster_free_tierid" {
 resource "couchbase-capella_cluster_free_tier" "new_cluster_free_tier" {
   organization_id = var.organization_id
   project_id      = var.project_id
-  name            = var.cluster.name
-  description     = "new test cluster for multiple services."
+  name            = "New free tier cluster modifed"
+  description     = "new test cluster for multiple services modified"
   cloud_provider = {
     type   = var.cloud_provider.name
     region = var.cloud_provider.region

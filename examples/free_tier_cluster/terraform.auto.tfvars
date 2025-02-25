@@ -1,4 +1,4 @@
-project_id      = "3b74be24-9787-49f6-bb4e-2ec8ea01e7ba"
+project_id      = "62207c06-572e-4b9e-b116-65605f446feb"
 
 cloud_provider = {
   name   = "aws",
@@ -6,7 +6,7 @@ cloud_provider = {
 }
 
 cluster = {
-  name               = "New Terraform Cluster name new"
+  name               = "New Terraform Cluster modified"
   cidr               = "192.168.0.0/20"
 }
 
