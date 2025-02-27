@@ -8,19 +8,24 @@ import (
 )
 
 type Type string
+
+// CouchbaseServer is the version of the Couchbase Server installed in the free-tier cluster as received by the V4 Capella Public API.
 type CouchbaseServer struct {
 	Version *string `json:"version"`
 }
 
+// Availability is the availability type of the free-tier cluster as received by the V4 Capella Public API. It is single zone for free-tier clusters.
 type Availability struct {
 	Type string `json:"type"`
 }
 
+// Support is the support plan for the free-tier cluster as received by the V4 Capella Public API.
 type Support struct {
 	Plan     string `json:"plan"`
 	Timezone string `json:"timezone"`
 }
 
+// Audit is the audit data for the free-tier cluster as received by the V4 Capella Public API.
 type Audit struct {
 	CreatedBy  string    `json:"createdBy"`
 	CreatedAt  time.Time `json:"createdAt"`
@@ -29,7 +34,7 @@ type Audit struct {
 	Version    int       `json:"version"`
 }
 
-// Get Free Tier Cluster Response as received by the V4 Capella Public API.
+// GetFreeTierCluster Response as received by the V4 Capella Public API.
 type GetFreeTierClusterResponse struct {
 	ID                         uuid.UUID              `json:"id"`
 	AppServiceID               string                 `json:"appServiceId"`
@@ -47,6 +52,7 @@ type GetFreeTierClusterResponse struct {
 	EnablePrivateDNSResolution bool                   `json:"enablePrivateDNSResolution"`
 }
 
+// CreateFreeTierClusterRequest is the request body for creating a free-tier cluster as sent to the V4 Capella Public API.
 type CreateFreeTierClusterRequest struct {
 	// Name is the name of the cluster (up to 256 characters).
 	Name string `json:"name"`
@@ -60,6 +66,7 @@ type CreateFreeTierClusterRequest struct {
 	CloudProvider cluster.CloudProvider `json:"cloudProvider"`
 }
 
+// UpdateFreeTierClusterRequest is the request body for updating a free-tier cluster as sent to the V4 Capella Public API.
 type UpdateFreeTierClusterRequest struct {
 	// Name is the name of the cluster (up to 256 characters).
 	Name string `json:"name"`

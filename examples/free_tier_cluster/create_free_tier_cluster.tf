@@ -1,17 +1,17 @@
 
 output "new_free_tier_cluster" {
-  value = couchbase-capella_cluster_free_tier.new_cluster_free_tier
+  value = couchbase-capella_free_tier_cluster.new_free_tier_cluster
 }
 
-output "cluster_free_tierid" {
-  value = couchbase-capella_cluster_free_tier.new_cluster_free_tier.id
+output "free_tier_cluster_id" {
+  value = couchbase-capella_free_tier_cluster.new_free_tier_cluster.id
 }
 
-resource "couchbase-capella_cluster_free_tier" "new_cluster_free_tier" {
+resource "couchbase-capella_free_tier_cluster" "new_free_tier_cluster" {
   organization_id = var.organization_id
   project_id      = var.project_id
-  name            = "New free tier cluster modifed"
-  description     = "new test cluster for multiple services modified"
+  name            = "New free tier cluster"
+  description     = "New free tier test cluster for multiple services"
   cloud_provider = {
     type   = var.cloud_provider.name
     region = var.cloud_provider.region

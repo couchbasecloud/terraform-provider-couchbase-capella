@@ -12,23 +12,30 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
+// FreeTierCluster is the struct for the free-tier cluster as read by the terraform provider schema for state file
 type FreeTierCluster struct {
-	Id            types.String   `tfsdk:"id"`
-	Availability  types.Object   `tfsdk:"availability"`
+	//Id of the free-tier cluster
+	Id types.String `tfsdk:"id"`
+	//Availability of the free-tier cluster. It is single zone for free-tier clusters.
+	Availability types.Object `tfsdk:"availability"`
+	//CloudProvider of the free-tier cluster
 	CloudProvider *CloudProvider `tfsdk:"cloud_provider"`
-	ProjectId     types.String   `tfsdk:"project_id"`
-	Audit         types.Object   `tfsdk:"audit"`
-	Support       types.Object   `tfsdk:"support"`
-
+	//ProjectId of the free-tier cluster
+	ProjectId types.String `tfsdk:"project_id"`
+	//Audit data of the free-tier cluster
+	Audit types.Object `tfsdk:"audit"`
+	//Support plan used by the free-tier cluster
+	Support types.Object `tfsdk:"support"`
+	//OrganizationId of the free-tier cluster
 	OrganizationId types.String `tfsdk:"organization_id"`
 	// Name of the cluster (up to 256 characters).
 	Name types.String `tfsdk:"name"`
-	//// CouchbaseServer is the version of the Couchbase Server to be installed in the cluster.
+	// CouchbaseServer is the version of the Couchbase Server to be installed in the cluster.
 	CouchbaseServer types.Object `tfsdk:"couchbase_server"`
-
 	// Description of the cluster (up to 1024 characters).
 	Description types.String `tfsdk:"description"`
-
+	// Id of the app service assosciated with the free-tier cluster
+	AppServiceId types.String `tfsdk:"app_service_id"`
 	// EnablePrivateDNSResolution signals that the cluster should have hostnames that are hosted in a public DNS zone that resolve to a private DNS address.
 	// This exists to support the use case of customers connecting from their own data centers where it is not possible to make use of a cloud service provider DNS zone.
 	EnablePrivateDNSResolution types.Bool `tfsdk:"enable_private_dns_resolution"`
@@ -38,6 +45,8 @@ type FreeTierCluster struct {
 	ConnectionString types.String `tfsdk:"connection_string"`
 	//ServiceGroups is the couchbase service groups to be run. At least one service group must contain the data service.
 	ServiceGroups types.Set `tfsdk:"service_groups"`
+	//cmekId is the customer managed encryption key id
+	CmekId types.String `tfsdk:"cmek_id"`
 }
 
 func NewFreeTierCluster(ctx context.Context, getfreeClusterResponse *freeTierClusterapi.GetFreeTierClusterResponse, organizationId, projectId string, auditObject, availabilityObject, supportObject basetypes.ObjectValue, serviceGroupObj types.Set) (*FreeTierCluster, error) {
@@ -141,6 +150,7 @@ func NewTerraformServiceGroups(cluster *freeTierClusterapi.GetFreeTierClusterRes
 	return newServiceGroups, nil
 }
 
+// Validate validates the FreeTierCluster object
 func (f *FreeTierCluster) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
 		OrganizationId: f.OrganizationId,
@@ -156,18 +166,21 @@ func (f *FreeTierCluster) Validate() (map[Attr]string, error) {
 	return IDs, nil
 }
 
+// AttributeTypes returns a mapping of field names to their respective attribute types for the Availability struct.
 func (a Availability) AttributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"type": types.StringType,
 	}
 }
 
+// NewAvailability returns a new Availability object from the given API Availability object.
 func NewAvailability(apiAvailability freeTierClusterapi.Availability) Availability {
 	return Availability{
 		Type: types.StringValue(apiAvailability.Type),
 	}
 }
 
+// ServiceGroupAttributeTypes returns a mapping of field names to their respective attribute types for the ServiceGroup struct.
 func ServiceGroupAttributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"node":         types.ObjectType{AttrTypes: Node{}.AttributeTypes()},
@@ -176,6 +189,7 @@ func ServiceGroupAttributeTypes() map[string]attr.Type {
 	}
 }
 
+// AttributeTypes returns a mapping of field names to their respective attribute types for the Node struct.
 func (n Node) AttributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"disk":    types.ObjectType{AttrTypes: Node_Disk{}.AttributeTypes()},
@@ -201,6 +215,7 @@ func (c Compute) AttributeTypes() map[string]attr.Type {
 	}
 }
 
+// AttributeTypes returns a mapping of field names to their respective attribute types for the ServiceGroup struct.
 func (support Support) AttributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"plan":     types.StringType,
@@ -208,6 +223,7 @@ func (support Support) AttributeTypes() map[string]attr.Type {
 	}
 }
 
+// NewSupport returns a new Support object from the given API Support object.
 func NewSupport(apiSupport freeTierClusterapi.Support) Support {
 	return Support{
 		Plan:     types.StringValue(apiSupport.Plan),
@@ -215,6 +231,7 @@ func NewSupport(apiSupport freeTierClusterapi.Support) Support {
 	}
 }
 
+// NewServiceGroup returns a new ServiceGroup object from the given API ServiceGroup object.
 func NewServiceGroups(ctx context.Context, serviceGroups []ServiceGroup) ([]types.Object, error, diag.Diagnostics) {
 	serviceGroupObjList := make([]types.Object, 0)
 	for _, serviceGroup := range serviceGroups {

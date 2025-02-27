@@ -8,7 +8,6 @@ import (
 )
 
 func FreeTierClusterSchema() schema.Schema {
-	//var freeTierClusterSchema schema.Schema
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
@@ -21,9 +20,11 @@ func FreeTierClusterSchema() schema.Schema {
 			"project_id":                    stringAttribute([]string{required, requiresReplace}),
 			"name":                          stringAttribute([]string{required}),
 			"description":                   stringAttribute([]string{optional, computed}),
+			"app_service_id":                stringAttribute([]string{computed}),
 			"enable_private_dns_resolution": boolAttribute(computed),
 			"connection_string":             stringAttribute([]string{computed}),
 			"current_state":                 stringAttribute([]string{computed}),
+			"cmek_id":                       stringAttribute([]string{computed}),
 			"audit":                         computedAuditAttribute(),
 			"support": schema.SingleNestedAttribute{
 				Computed: true,
@@ -68,9 +69,6 @@ func FreeTierClusterSchema() schema.Schema {
 									},
 								},
 								"disk": schema.SingleNestedAttribute{
-									Description: "The 'storage' and 'IOPS' fields are required for AWS. " +
-										"For Azure, only the 'disktype' field is required, and for Ultra disk type, you can provide all 3 - storage, iops and autoexpansion fields. For Premium type, you can only provide the autoexpansion field, others can't be set." +
-										"In the case of GCP, only 'pd ssd' disk type is available, and you cannot set the 'IOPS' field.",
 									Computed: true,
 									Attributes: map[string]schema.Attribute{
 										"type":          stringAttribute([]string{computed}),

@@ -21,15 +21,15 @@ variable "cloud_provider" {
   type = object({
     name   = string
     region = string
+    cidr   = string
   })
 }
 
-variable "cluster" {
+variable "free_tier_cluster" {
   description = "Cluster configuration details useful for creation"
 
   type = object({
     name               = string
-    cidr               = string
   })
 }
 

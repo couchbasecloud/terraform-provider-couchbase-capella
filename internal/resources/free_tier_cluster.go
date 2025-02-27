@@ -42,7 +42,7 @@ func NewFreeTierCluster() resource.Resource {
 }
 
 func (f *FreeTierCluster) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_cluster_free_tier"
+	resp.TypeName = req.ProviderTypeName + "_free_tier_cluster"
 
 }
 
