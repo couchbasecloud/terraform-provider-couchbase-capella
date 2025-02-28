@@ -19,7 +19,7 @@ import (
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-// TODO: generate CIDR dynamically
+// TODO: AV-96938: generate CIDR dynamically
 
 func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_")

@@ -16,7 +16,7 @@ import (
 
 // cluster is created with enterprise plan as some features require this.
 func createCluster(ctx context.Context, client *api.Client) error {
-	// TODO: generate CIDR dynamically
+	// TODO: AV-96938: generate CIDR dynamically
 	cidr := "10.246.250.0/23"
 
 	node := clusterapi.Node{}
