@@ -50,7 +50,7 @@ type FreeTierCluster struct {
 }
 
 func NewFreeTierCluster(ctx context.Context, getfreeClusterResponse *freeTierClusterapi.GetFreeTierClusterResponse, organizationId, projectId string, auditObject, availabilityObject, supportObject basetypes.ObjectValue, serviceGroupObj types.Set) (*FreeTierCluster, error) {
-	newFreTierCluster := FreeTierCluster{
+	newFreeTierCluster := FreeTierCluster{
 		Id:                         types.StringValue(getfreeClusterResponse.ID.String()),
 		OrganizationId:             types.StringValue(organizationId),
 		ProjectId:                  types.StringValue(projectId),
@@ -80,9 +80,9 @@ func NewFreeTierCluster(ctx context.Context, getfreeClusterResponse *freeTierClu
 		if diags.HasError() {
 			return nil, fmt.Errorf("error while converting couchbase server version")
 		}
-		newFreTierCluster.CouchbaseServer = couchbaseServerObject
+		newFreeTierCluster.CouchbaseServer = couchbaseServerObject
 	}
-	return &newFreTierCluster, nil
+	return &newFreeTierCluster, nil
 
 }
 

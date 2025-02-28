@@ -276,7 +276,6 @@ func (f FreeTierCluster) Update(ctx context.Context, request resource.UpdateRequ
 		)
 		return
 	}
-	//currentState.ServiceGroups = plan.ServiceGroups
 
 	// Set state to fully populated data
 	diags = response.State.Set(ctx, currentState)
@@ -417,11 +416,11 @@ func initializePendingFreeTierClusterWithPlanAndId(plan providerschema.FreeTierC
 	if plan.CouchbaseServer.IsNull() || plan.CouchbaseServer.IsUnknown() {
 		plan.CouchbaseServer = types.ObjectNull(providerschema.CouchbaseServer{}.AttributeTypes())
 	}
-	//plan.AppServiceId = types.StringNull()
+	plan.AppServiceId = types.StringNull()
 	plan.ConnectionString = types.StringNull()
 	plan.Audit = types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
 	plan.Availability = types.ObjectNull(providerschema.Availability{}.AttributeTypes())
-	//plan.Etag = types.StringNull()
+	plan.CmekId = types.StringNull()
 
 	if plan.ServiceGroups.IsNull() || plan.ServiceGroups.IsUnknown() {
 		plan.ServiceGroups = types.SetNull(types.ObjectType{}.WithAttributeTypes(providerschema.ServiceGroupAttributeTypes()))
