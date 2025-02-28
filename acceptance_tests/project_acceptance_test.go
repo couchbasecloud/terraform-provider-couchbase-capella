@@ -19,7 +19,7 @@ import (
 //  4. Update and Read Testing: Modify the project's attributes and ensure the changes are applied successfully.
 //  5. Delete Testing: Automatically occurs in the TestCase as part of cleanup.
 
-// TODO:  make project acceptance tests concurrent
+// TODO:  AV-96937: make project acceptance tests concurrent
 func TestAccProjectResource(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_project_")
 	resourceReference := "couchbase-capella_project." + resourceName
