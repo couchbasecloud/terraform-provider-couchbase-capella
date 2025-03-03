@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
+	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 )
 
 // FreeTierCluster is the struct for the free-tier cluster as read by the terraform provider schema for state file
