@@ -164,7 +164,6 @@ func (f *FreeTierCluster) Read(ctx context.Context, request resource.ReadRequest
 		)
 		return
 	}
-	//state.ServiceGroups = refreshedState.ServiceGroups
 	diags = response.State.Set(ctx, &refreshedState)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
