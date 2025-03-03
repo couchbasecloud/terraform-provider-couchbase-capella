@@ -15,6 +15,6 @@ resource "couchbase-capella_free_tier_cluster" "new_free_tier_cluster" {
   cloud_provider = {
     type   = var.cloud_provider.name
     region = var.cloud_provider.region
-    cidr   = var.free_tier_cluster.cidr
+    cidr   = var.cloud_provider.cidr
   }
 }

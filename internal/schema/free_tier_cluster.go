@@ -3,8 +3,8 @@ package schema
 import (
 	"context"
 	"fmt"
+
 	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/freeTierCluster"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -14,7 +14,7 @@ import (
 
 // FreeTierCluster is the struct for the free-tier cluster as read by the terraform provider schema for state file
 type FreeTierCluster struct {
-	//Id of the free-tier cluster
+	//ID of the free-tier cluster
 	Id types.String `tfsdk:"id"`
 	//Availability of the free-tier cluster. It is single zone for free-tier clusters.
 	Availability types.Object `tfsdk:"availability"`
@@ -34,7 +34,7 @@ type FreeTierCluster struct {
 	CouchbaseServer types.Object `tfsdk:"couchbase_server"`
 	// Description of the cluster (up to 1024 characters).
 	Description types.String `tfsdk:"description"`
-	// Id of the app service assosciated with the free-tier cluster
+	// ID of the app service assosciated with the free-tier cluster
 	AppServiceId types.String `tfsdk:"app_service_id"`
 	// EnablePrivateDNSResolution signals that the cluster should have hostnames that are hosted in a public DNS zone that resolve to a private DNS address.
 	// This exists to support the use case of customers connecting from their own data centers where it is not possible to make use of a cloud service provider DNS zone.
@@ -47,31 +47,33 @@ type FreeTierCluster struct {
 	ServiceGroups types.Set `tfsdk:"service_groups"`
 	//cmekId is the customer managed encryption key id
 	CmekId types.String `tfsdk:"cmek_id"`
+	// Etag represents the version of the document
+	Etag types.String `tfsdk:"etag"`
 }
 
-func NewFreeTierCluster(ctx context.Context, getfreeClusterResponse *freeTierClusterapi.GetFreeTierClusterResponse, organizationId, projectId string, auditObject, availabilityObject, supportObject basetypes.ObjectValue, serviceGroupObj types.Set) (*FreeTierCluster, error) {
+func NewFreeTierCluster(ctx context.Context, getfreeTierClusterResponse *clusterapi.GetClusterResponse, organizationId, projectId string, auditObject, availabilityObject, supportObject basetypes.ObjectValue, serviceGroupObj types.Set) (*FreeTierCluster, error) {
 	newFreeTierCluster := FreeTierCluster{
-		Id:                         types.StringValue(getfreeClusterResponse.ID.String()),
+		Id:                         types.StringValue(getfreeTierClusterResponse.Id.String()),
 		OrganizationId:             types.StringValue(organizationId),
 		ProjectId:                  types.StringValue(projectId),
-		Name:                       types.StringValue(getfreeClusterResponse.Name),
-		Description:                types.StringValue(getfreeClusterResponse.Description),
-		EnablePrivateDNSResolution: types.BoolValue(getfreeClusterResponse.EnablePrivateDNSResolution),
+		Name:                       types.StringValue(getfreeTierClusterResponse.Name),
+		Description:                types.StringValue(getfreeTierClusterResponse.Description),
+		EnablePrivateDNSResolution: types.BoolValue(getfreeTierClusterResponse.EnablePrivateDNSResolution),
 		Availability:               availabilityObject,
 		CloudProvider: &CloudProvider{
-			Cidr:   types.StringValue(getfreeClusterResponse.CloudProvider.Cidr),
-			Region: types.StringValue(getfreeClusterResponse.CloudProvider.Region),
-			Type:   types.StringValue(string(getfreeClusterResponse.CloudProvider.Type)),
+			Cidr:   types.StringValue(getfreeTierClusterResponse.CloudProvider.Cidr),
+			Region: types.StringValue(getfreeTierClusterResponse.CloudProvider.Region),
+			Type:   types.StringValue(string(getfreeTierClusterResponse.CloudProvider.Type)),
 		},
 		Support:          supportObject,
-		ConnectionString: types.StringValue(getfreeClusterResponse.ConnectionString),
-		CurrentState:     types.StringValue(getfreeClusterResponse.CurrentState),
+		ConnectionString: types.StringValue(getfreeTierClusterResponse.ConnectionString),
+		CurrentState:     types.StringValue(string(getfreeTierClusterResponse.CurrentState)),
 		Audit:            auditObject,
 		ServiceGroups:    serviceGroupObj,
-		//Etag:             types.StringValue(getClusterResponse.Etag),
+		Etag:             types.StringValue(getfreeTierClusterResponse.Etag),
 	}
-	if getfreeClusterResponse.CouchbaseServer.Version != nil {
-		version := *getfreeClusterResponse.CouchbaseServer.Version
+	if getfreeTierClusterResponse.CouchbaseServer.Version != nil {
+		version := *getfreeTierClusterResponse.CouchbaseServer.Version
 		version = removePatch(version)
 		couchbaseServer := CouchbaseServer{
 			Version: types.StringValue(version),
@@ -86,7 +88,7 @@ func NewFreeTierCluster(ctx context.Context, getfreeClusterResponse *freeTierClu
 
 }
 
-func NewTerraformServiceGroups(cluster *freeTierClusterapi.GetFreeTierClusterResponse) ([]ServiceGroup, error) {
+func NewTerraformServiceGroups(cluster *clusterapi.GetClusterResponse) ([]ServiceGroup, error) {
 	var newServiceGroups []ServiceGroup
 	for _, serviceGroup := range cluster.ServiceGroups {
 		newServiceGroup := ServiceGroup{
@@ -151,7 +153,7 @@ func NewTerraformServiceGroups(cluster *freeTierClusterapi.GetFreeTierClusterRes
 }
 
 // Validate validates the FreeTierCluster object
-func (f *FreeTierCluster) Validate() (map[Attr]string, error) {
+func (f FreeTierCluster) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
 		OrganizationId: f.OrganizationId,
 		ProjectId:      f.ProjectId,
@@ -174,9 +176,9 @@ func (a Availability) AttributeTypes() map[string]attr.Type {
 }
 
 // NewAvailability returns a new Availability object from the given API Availability object.
-func NewAvailability(apiAvailability freeTierClusterapi.Availability) Availability {
+func NewAvailability(apiAvailability clusterapi.Availability) Availability {
 	return Availability{
-		Type: types.StringValue(apiAvailability.Type),
+		Type: types.StringValue(string(apiAvailability.Type)),
 	}
 }
 
@@ -224,14 +226,14 @@ func (support Support) AttributeTypes() map[string]attr.Type {
 }
 
 // NewSupport returns a new Support object from the given API Support object.
-func NewSupport(apiSupport freeTierClusterapi.Support) Support {
+func NewSupport(apiSupport clusterapi.Support) Support {
 	return Support{
-		Plan:     types.StringValue(apiSupport.Plan),
-		Timezone: types.StringValue(apiSupport.Timezone),
+		Plan:     types.StringValue(string(apiSupport.Plan)),
+		Timezone: types.StringValue(string(apiSupport.Timezone)),
 	}
 }
 
-// NewServiceGroup returns a new ServiceGroup object from the given API ServiceGroup object.
+// NewServiceGroups returns a new ServiceGroup object from the given API ServiceGroup object.
 func NewServiceGroups(ctx context.Context, serviceGroups []ServiceGroup) ([]types.Object, error, diag.Diagnostics) {
 	serviceGroupObjList := make([]types.Object, 0)
 	for _, serviceGroup := range serviceGroups {
@@ -245,4 +247,14 @@ func NewServiceGroups(ctx context.Context, serviceGroups []ServiceGroup) ([]type
 	}
 
 	return serviceGroupObjList, nil, nil
+}
+
+func (f FreeTierCluster) ValidateFreeTierCreateCluster() error {
+	if f.OrganizationId.IsNull() {
+		return errors.ErrOrganizationIdMissing
+	}
+	if f.ProjectId.IsNull() {
+		return errors.ErrProjectIdMissing
+	}
+	return nil
 }
