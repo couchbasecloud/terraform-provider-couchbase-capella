@@ -72,7 +72,7 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.1", "index"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.2", "query"),
 					resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
-					resource.TestCheckResourceAttr(resourceReference, "support.plan", "developer pro"),
+					resource.TestCheckResourceAttr(resourceReference, "support.plan", "enterprise"),
 					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
 					resource.TestCheckResourceAttrSet(resourceReference, "etag"),
 				),
@@ -858,7 +858,7 @@ resource "couchbase-capella_cluster" "%[2]s" {
     "type" : "multi"
   }
   support = {
-    plan     = "developer pro"
+    plan     = "enterprise"
     timezone = "PT"
   }
 }
