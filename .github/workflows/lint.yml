@@ -17,8 +17,6 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
@@ -39,9 +37,4 @@ jobs:
         with:
           go-version-file: 'go.mod'
       - run: make tfcheck
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "^1.5.2"
-          terraform_wrapper: false
 
