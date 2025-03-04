@@ -12,7 +12,7 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     env:
       TF_VAR_auth_token: ${{ secrets.CAPELLA_AUTH_TOKEN }}
