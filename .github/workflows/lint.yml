@@ -36,8 +36,5 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-      - name: Run Terraform check
-        run: make tfcheck
+      - run: make tfcheck
 
