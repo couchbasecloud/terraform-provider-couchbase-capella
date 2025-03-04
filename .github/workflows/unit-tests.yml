@@ -3,7 +3,7 @@ on: [pull_request]
 
 jobs:
   test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Check out code repository source code
         uses: actions/checkout@v4
