@@ -12,7 +12,7 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-22.04
+    runs-on: latest
 
     env:
       TF_VAR_auth_token: ${{ secrets.CAPELLA_AUTH_TOKEN }}
@@ -27,6 +27,8 @@ jobs:
         with:
           go-version-file: 'go.mod'
         id: go
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
       - uses: actions/cache@v3
         with:
           path: ~/go/pkg/mod

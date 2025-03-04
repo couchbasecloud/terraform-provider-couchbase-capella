@@ -3,7 +3,7 @@ on: [pull_request]
 
 jobs:
   test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Check out code repository source code
         uses: actions/checkout@v4
@@ -12,6 +12,8 @@ jobs:
         with:
           go-version-file: 'go.mod'
         id: go
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
       - uses: actions/cache@v3
         with:
           path: ~/go/pkg/mod
