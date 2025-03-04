@@ -362,7 +362,7 @@ func TestAccClusterResourceNotFound(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.1", "index"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.2", "query"),
 					resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
-					resource.TestCheckResourceAttr(resourceReference, "support.plan", "developer pro"),
+					resource.TestCheckResourceAttr(resourceReference, "support.plan", "enterprise"),
 					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
 
 					//When the cluster is created for the first time, the ETag of the created cluster is 5
@@ -414,7 +414,7 @@ resource "couchbase-capella_cluster" "%[4]s" {
     "type" : "multi"
   }
   support = {
-    plan     = "developer pro"
+    plan     = "enterprise"
     timezone = "PT"
   }
 }
