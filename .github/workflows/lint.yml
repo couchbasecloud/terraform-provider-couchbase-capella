@@ -25,7 +25,7 @@ jobs:
           only-new-issues: true
 
   tfproviderlint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -37,6 +37,4 @@ jobs:
         with:
           go-version-file: 'go.mod'
       - run: make tfcheck
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
 
