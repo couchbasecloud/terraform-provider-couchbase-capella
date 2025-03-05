@@ -146,6 +146,8 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 				return
 			}
 
+			indexName = plan.IndexName.ValueString()
+
 			ddl = fmt.Sprintf(
 				"CREATE INDEX `%s` ON `%s`.`%s`.`%s`(%s) ",
 				plan.IndexName.ValueString(),
@@ -256,7 +258,7 @@ This will automatically be retried in the background.  Please run "terraform app
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error reading query index",
-				"Could not read query index "+state.IndexName.ValueString()+": "+err.Error(),
+				"Could not read query index "+indexName+": "+err.Error(),
 			)
 			return
 		}
