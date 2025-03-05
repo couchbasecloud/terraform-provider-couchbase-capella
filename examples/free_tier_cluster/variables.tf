@@ -21,21 +21,3 @@ variable "cloud_provider" {
   })
 }
 
-# variable "compute" {
-#   description = "All cluster node compute configuration"
-#
-#   type = object({
-#     cpu = number
-#     ram = number
-#   })
-# }
-#
-# variable "disk" {
-#   description = "All nodes' disk configuration"
-#
-#   type = object({
-#     size = number
-#     type = string
-#     iops = number
-#   })
-# }
