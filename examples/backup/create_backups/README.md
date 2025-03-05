@@ -1,8 +1,8 @@
 # Capella Backup Example
 
-This example shows how to create and manage Backups in Capella.
+This example shows how to create and manage bucket backups in Capella.
 
-This creates a new backup in the selected Capella cluster. It uses the organization ID, project ID, cluster ID and bucket ID to do so.
+This creates a new bucket backup in the selected Capella cluster. It uses the organization ID, project ID, cluster ID and bucket ID to do so.
 
 To run, configure your Couchbase Capella provider as described in README in the root of this project.
 
