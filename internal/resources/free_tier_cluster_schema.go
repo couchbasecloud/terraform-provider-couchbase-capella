@@ -26,6 +26,7 @@ func FreeTierClusterSchema() schema.Schema {
 			"current_state":                 stringAttribute([]string{computed}),
 			"cmek_id":                       stringAttribute([]string{computed}),
 			"audit":                         computedAuditAttribute(),
+			"etag":                          stringAttribute([]string{computed}),
 			"support": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
