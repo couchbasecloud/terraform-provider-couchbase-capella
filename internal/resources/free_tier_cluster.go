@@ -417,7 +417,8 @@ func (f *FreeTierCluster) checkFreeTierClusterStatus(ctx context.Context, organi
 
 // getCluster retrieves cluster information from the specified organization and project
 // using the provided cluster ID by open-api call.
-func (f *FreeTierCluster) getFreeTierCluster(ctx context.Context, organizationId, projectId, clusterId string) (*clusterapi.GetClusterResponse, error) {
+func (f *FreeTierCluster) getFreeTierCluster(ctx context.Context, organizationId, projectId, clusterId string,
+) (*clusterapi.GetClusterResponse, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/freeTier/%s", f.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := f.Client.ExecuteWithRetry(
@@ -440,8 +441,14 @@ func (f *FreeTierCluster) getFreeTierCluster(ctx context.Context, organizationId
 	return &clusterResp, nil
 }
 
-// retrieveCluster retrieves cluster information for a specified organization, project, and cluster ID.
-func (f *FreeTierCluster) retrieveFreeTierCluster(ctx context.Context, organizationId, projectId, clusterId string) (*providerschema.FreeTierCluster, error) {
+// retrieveCluster retrieves cluster information for a specified
+// organization, project, and cluster ID.
+func (f *FreeTierCluster) retrieveFreeTierCluster(
+	ctx context.Context,
+	organizationId,
+	projectId,
+	clusterId string,
+) (*providerschema.FreeTierCluster, error) {
 	freeTierClusterResp, err := f.getFreeTierCluster(ctx, organizationId, projectId, clusterId)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrNotFound, err)
