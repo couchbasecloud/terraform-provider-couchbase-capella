@@ -36,19 +36,21 @@ provider "couchbase-capella" {
 }
 `)
 
+	var code int
 	ctx := context.Background()
 	client := api.NewClient(timeout)
 
-	if err := setup(ctx, client); err != nil {
+	err := setup(ctx, client)
+	if err != nil {
 		log.Print(err)
-		os.Exit(1)
+		code = 1
+	} else {
+		code = m.Run()
 	}
 
-	code := m.Run()
-
-	if err := cleanup(ctx, client); err != nil {
+	if err = cleanup(ctx, client); err != nil {
 		log.Print(err)
-		os.Exit(1)
+		code = 1
 	}
 
 	os.Exit(code)
@@ -75,14 +77,20 @@ func setup(ctx context.Context, client *api.Client) error {
 }
 
 func cleanup(ctx context.Context, client *api.Client) error {
-	if err := destroyCluster(ctx, client); err != nil {
-		return err
+	if globalClusterId != "" {
+		if err := destroyCluster(ctx, client); err != nil {
+			return err
+		}
+
+		if err := clusterWait(ctx, client, true); err != nil {
+			return err
+		}
 	}
-	if err := clusterWait(ctx, client, true); err != nil {
-		return err
-	}
-	if err := destroyProject(ctx, client); err != nil {
-		return err
+
+	if globalProjectId != "" {
+		if err := destroyProject(ctx, client); err != nil {
+			return err
+		}
 	}
 
 	return nil
