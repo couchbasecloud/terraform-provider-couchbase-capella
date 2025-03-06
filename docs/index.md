@@ -29,7 +29,7 @@ Although in examples below, the API key secret is specified as an environmental 
 The provider configuration block accepts the following arguments. In most cases it is recommended to set them via the indicated environment variables in order to keep credential information out of the configuration.
 
 * `host` - Allows you to specify the host for the capella API. This can be useful if you are behind a reverse proxy. May be set vai the `CAPELLA_HOST` environment variable. If not provided will default to "https://cloudapi.cloud.couchbase.com"
-* `authentication_token` - A valid [V4 REST API Key](https://docs.couchbase.com/cloud/management-api-guide/management-api-start.html#understand-management-api-keys) for authenticating with the Couchbase Capella API. May be set via the `CAPELLA_AUTH_TOKEN` environment variable.
+* `authentication_token` - A valid [V4 REST API Key](https://docs.couchbase.com/cloud/management-api-guide/management-api-start.html#understand-management-api-keys) for authenticating with the Couchbase Capella API. May be set via the `CAPELLA_AUTHENTICATION_TOKEN` environment variable.
 
 ## Create and manage resources using terraform
 
