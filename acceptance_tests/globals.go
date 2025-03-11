@@ -14,15 +14,15 @@ var (
 	// these global variables are set by env vars.
 	globalHost  string
 	globalToken string
-	Username    string
-	Password    string
 	globalOrgId string
 
 	// these global variables are set by setup().
-	globalProjectId  string
-	globalClusterId  string
-	globalBucketName = "default"
-	globalBucketId   string
+	globalProjectId      string
+	globalClusterId      string
+	globalBucketName     = "default"
+	globalScopeName      = "_default"
+	globalCollectionName = "_default"
+	globalBucketId       string
 
 	// this global variable is set in TestMain.
 	globalProviderBlock string

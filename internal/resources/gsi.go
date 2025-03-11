@@ -57,8 +57,12 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 	}
 
 	// initialize computed attributes
+	if plan.With != nil {
+		if plan.With.NumReplica.IsNull() {
+			plan.With.NumReplica = types.Int64Null()
+		}
+	}
 	plan.Status = types.StringNull()
-	plan.With.NumReplica = types.Int64Null()
 
 	var ddl string
 	var indexName string
@@ -137,6 +141,7 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 				plan.With.DeferBuild.ValueBool(),
 				plan.With.NumReplica.ValueInt64(),
 			)
+
 		} else {
 			// create secondary index statement.
 			var index_keys []string
