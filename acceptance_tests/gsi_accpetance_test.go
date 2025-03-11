@@ -9,31 +9,47 @@ import (
 )
 
 func TestAccGSI(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_gsi_")
-	resourceReference := "couchbase-capella_query_indexes." + resourceName
+	resourceType := "couchbase-capella_query_indexes"
+	primaryIndexResourceName := randomStringWithPrefix("tf_acc_gsi_")
+	secondaryIndexResourceName := randomStringWithPrefix("tf_acc_gsi_")
+	primaryIndexResourceReference := fmt.Sprintf("%s.%s", resourceType, primaryIndexResourceName)
+	secondaryIndexResourceReference := fmt.Sprintf("%s.%s", resourceType, secondaryIndexResourceName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCreateGSINonDeferredIndexConfig(resourceName),
+				Config: testAccCreateGSINonDeferredIndexConfig(secondaryIndexResourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "index_name", "index1"),
-					resource.TestCheckResourceAttr(resourceReference, "index_keys.0", "c1"),
-					resource.TestCheckResourceAttr(resourceReference, "with.num_replica", "1"),
-					resource.TestCheckResourceAttr(resourceReference, "where", "geo.alt > 1000"),
-					resource.TestCheckResourceAttr(resourceReference, "bucket_name", "default"),
-					resource.TestCheckResourceAttr(resourceReference, "scope_name", "_default"),
-					resource.TestCheckResourceAttr(resourceReference, "collection_name", "_default"),
-					resource.TestCheckResourceAttrSet(resourceReference, "organization_id"),
-					resource.TestCheckResourceAttrSet(resourceReference, "project_id"),
-					resource.TestCheckResourceAttrSet(resourceReference, "cluster_id"),
+					resource.TestCheckResourceAttr(secondaryIndexResourceReference, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(secondaryIndexResourceReference, "project_id", globalProjectId),
+					resource.TestCheckResourceAttr(secondaryIndexResourceReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(secondaryIndexResourceReference, "bucket_name", globalBucketName),
+					resource.TestCheckResourceAttr(secondaryIndexResourceReference, "scope_name", globalScopeName),
+					resource.TestCheckResourceAttr(secondaryIndexResourceReference, "collection_name", globalCollectionName),
+					resource.TestCheckResourceAttr(secondaryIndexResourceReference, "index_name", "index1"),
+					resource.TestCheckResourceAttr(secondaryIndexResourceReference, "index_keys.0", "c1"),
+					resource.TestCheckResourceAttr(secondaryIndexResourceReference, "where", "geo.alt > 1000"),
+					resource.TestCheckResourceAttr(secondaryIndexResourceReference, "with.num_replica", "1"),
 				),
 			},
 			{
-				ResourceName:      resourceReference,
-				ImportStateIdFunc: generateGSIImportIdForResource(resourceReference),
+				ResourceName:      secondaryIndexResourceReference,
+				ImportStateIdFunc: generateGsiImportIdForResource(secondaryIndexResourceReference),
 				ImportState:       true,
+			},
+			{
+				Config: testAccCreatePrimaryIndexConfig(primaryIndexResourceName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(primaryIndexResourceReference, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(primaryIndexResourceReference, "project_id", globalProjectId),
+					resource.TestCheckResourceAttr(primaryIndexResourceReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(primaryIndexResourceReference, "bucket_name", globalBucketName),
+					resource.TestCheckResourceAttr(primaryIndexResourceReference, "scope_name", globalScopeName),
+					resource.TestCheckResourceAttr(primaryIndexResourceReference, "collection_name", globalCollectionName),
+					resource.TestCheckResourceAttr(primaryIndexResourceReference, "index_name", "primary_index"),
+					resource.TestCheckResourceAttr(primaryIndexResourceReference, "with.num_replica", "1"),
+				),
 			},
 		},
 	})
@@ -43,24 +59,58 @@ func testAccCreateGSINonDeferredIndexConfig(resourceName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "couchbase-capella_query_indexes" "%[6]s" {
+resource "couchbase-capella_query_indexes" "%[8]s" {
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   cluster_id      = "%[4]s"
   bucket_name     = "%[5]s"
-  scope_name      = "_default"
-  collection_name = "_default"
+  scope_name      = "%[6]s"
+  collection_name = "%[7]s"
   index_name      = "index1"
   index_keys      = ["c1"]
   where = "geo.alt > 1000"
-  with ={
+  with = {
         num_replica = 1
   }
 }
-`, globalProviderBlock, globalOrgId, globalProjectId, globalClusterId, globalBucketName, resourceName)
+`, globalProviderBlock,
+		globalOrgId,
+		globalProjectId,
+		globalClusterId,
+		globalBucketName,
+		globalScopeName,
+		globalCollectionName,
+		resourceName)
 }
 
-func generateGSIImportIdForResource(resourceReference string) resource.ImportStateIdFunc {
+func testAccCreatePrimaryIndexConfig(resourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_query_indexes" "%[8]s" {
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  cluster_id      = "%[4]s"
+  bucket_name     = "%[5]s"
+  scope_name      = "%[6]s"
+  collection_name = "%[7]s"
+  index_name      = "primary_index"
+  is_primary      = true
+  with = {
+        num_replica = 1
+  }
+}
+`, globalProviderBlock,
+		globalOrgId,
+		globalProjectId,
+		globalClusterId,
+		globalBucketName,
+		globalScopeName,
+		globalCollectionName,
+		resourceName)
+}
+
+func generateGsiImportIdForResource(resourceReference string) resource.ImportStateIdFunc {
 	return func(state *terraform.State) (string, error) {
 		var rawState map[string]string
 		for _, m := range state.Modules {
