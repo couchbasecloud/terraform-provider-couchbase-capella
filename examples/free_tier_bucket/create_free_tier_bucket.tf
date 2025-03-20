@@ -7,10 +7,10 @@ output "free_tier_bucket_id" {
 }
 
 resource "couchbase-capella_free_tier_bucket" "new_free_tier_bucket" {
-  organization_id            = var.organization_id
-  project_id                 = var.project_id
-  cluster_id                 = var.cluster_id
-  name                       = "test_bucket"
-  memory_allocation_in_mb    = 250
+  organization_id         = var.organization_id
+  project_id              = var.project_id
+  cluster_id              = var.cluster_id
+  name                    = "test_bucket"
+  memory_allocation_in_mb = 250
 }
 
