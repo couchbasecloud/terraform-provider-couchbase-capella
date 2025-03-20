@@ -90,8 +90,15 @@ func boolAttribute(fields ...string) *schema.BoolAttribute {
 				boolplanmodifier.RequiresReplace(),
 			}
 			attribute.PlanModifiers = planModifiers
+
+		case useStateForUnknown:
+			var planModifiers = []planmodifier.Bool{
+				boolplanmodifier.UseStateForUnknown(),
+			}
+			attribute.PlanModifiers = planModifiers
 		}
 	}
+
 	return &attribute
 }
 
