@@ -57,10 +57,15 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 	}
 
 	// initialize computed attributes
+	if plan.With != nil {
+		if plan.With.NumReplica.IsNull() {
+			plan.With.NumReplica = types.Int64Null()
+		}
+	}
 	plan.Status = types.StringNull()
-	plan.With.NumReplica = types.Int64Null()
 
 	var ddl string
+	var indexName string
 
 	// create build index statement.
 	if !plan.BuildIndexes.IsNull() {
@@ -122,7 +127,6 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 	} else {
 		// create primary index statement.
 		if plan.IsPrimary.ValueBool() {
-			var indexName string
 			if !plan.IndexName.IsNull() {
 				indexName = plan.IndexName.ValueString()
 			} else {
@@ -137,6 +141,7 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 				plan.With.DeferBuild.ValueBool(),
 				plan.With.NumReplica.ValueInt64(),
 			)
+
 		} else {
 			// create secondary index statement.
 			var index_keys []string
@@ -145,6 +150,8 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 			if resp.Diagnostics.HasError() {
 				return
 			}
+
+			indexName = plan.IndexName.ValueString()
 
 			ddl = fmt.Sprintf(
 				"CREATE INDEX `%s` ON `%s`.`%s`.`%s`(%s) ",
@@ -251,12 +258,12 @@ This will automatically be retried in the background.  Please run "terraform app
 			state.BucketName.ValueString(),
 			state.ScopeName.ValueString(),
 			state.CollectionName.ValueString(),
-			state.IndexName.ValueString(),
+			indexName,
 		)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error reading query index",
-				"Could not read query index "+state.IndexName.ValueString()+": "+err.Error(),
+				"Could not read query index "+indexName+": "+err.Error(),
 			)
 			return
 		}

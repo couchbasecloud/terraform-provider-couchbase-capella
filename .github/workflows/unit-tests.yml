@@ -8,14 +8,15 @@ jobs:
       - name: Check out code repository source code
         uses: actions/checkout@v4
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v4 # this action has caching built in
         with:
           go-version-file: 'go.mod'
+          cache: false
         id: go
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go${{ env.GO_VERSION }}-${{ hashFiles('**/go.sum') }}
+          key: cache-${{ github.run_id }}
       - name: Vet
         run: make vet
       - name: Test
