@@ -4,15 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	bucketapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/bucket"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
-	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	"net/http"
+
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"net/http"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	bucketapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/bucket"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
 var (
