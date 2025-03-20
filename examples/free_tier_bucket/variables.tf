@@ -11,6 +11,6 @@ variable "project_id" {
   description = "Project Name for Project Created via Terraform"
 }
 variable "cluster_id" {
- description = "cluter id"
+ description = "cluster id"
 }
 
