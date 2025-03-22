@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -93,8 +94,8 @@ func (f *FreeTierBucket) Create(ctx context.Context, request resource.CreateRequ
 	)
 	if err != nil {
 		response.Diagnostics.AddError(
-			"Error creating bucket",
-			errorMessageWhileBucketCreation+api.ParseError(err),
+			"Error creating free-tier bucket",
+			errors.ErrorMessageWhileFreeTierBucketCreation.Error()+api.ParseError(err),
 		)
 		return
 	}
@@ -103,8 +104,8 @@ func (f *FreeTierBucket) Create(ctx context.Context, request resource.CreateRequ
 	err = json.Unmarshal(resp.Body, &FreeTierBucketResponse)
 	if err != nil {
 		response.Diagnostics.AddError(
-			"Error creating bucket",
-			errorMessageWhileBucketCreation+"error during unmarshalling: "+err.Error(),
+			"Error creating free-tier bucket",
+			errors.ErrorMessageWhileFreeTierBucketCreation.Error()+"error during unmarshalling: "+err.Error(),
 		)
 		return
 	}
@@ -118,8 +119,8 @@ func (f *FreeTierBucket) Create(ctx context.Context, request resource.CreateRequ
 	refreshedState, err := f.retrieveFreeTierBucket(ctx, organizationId, projectId, clusterId, FreeTierBucketResponse.Id)
 	if err != nil {
 		response.Diagnostics.AddWarning(
-			"Error creating bucket",
-			errorMessageAfterBucketCreation+api.ParseError(err),
+			"Error creating free-tier bucket",
+			errors.ErrorMessageWhileFreeTierBucketCreation.Error()+api.ParseError(err),
 		)
 		return
 	}
@@ -143,7 +144,7 @@ func (f *FreeTierBucket) Read(ctx context.Context, request resource.ReadRequest,
 	IDs, err := currState.Validate()
 	if err != nil {
 		response.Diagnostics.AddError(
-			"Error Reading Bucket in Capella",
+			"Error reading free-tier bucket in Capella",
 			"Could not read free-tier Bucket with ID "+currState.Id.String()+": "+err.Error(),
 		)
 		return
@@ -159,7 +160,7 @@ func (f *FreeTierBucket) Read(ctx context.Context, request resource.ReadRequest,
 	refreshedState, err := f.retrieveFreeTierBucket(ctx, organizationId, projectId, clusterId, bucketId)
 	if err != nil {
 		response.Diagnostics.AddError(
-			"Error reading bucket",
+			"Error reading free-tier bucket",
 			"could not read the free-tier bucket with ID "+currState.Id.String()+": "+err.Error(),
 		)
 		return
@@ -221,6 +222,9 @@ func (f *FreeTierBucket) Update(ctx context.Context, request resource.UpdateRequ
 		)
 		return
 	}
+
+	//Sleep for 5 seconds for the bucket stqts to be updated for GET request
+	time.Sleep(time.Second * 5)
 
 	updatedState, err := f.retrieveFreeTierBucket(ctx, organizationId, projectId, clusterId, bucketId)
 
