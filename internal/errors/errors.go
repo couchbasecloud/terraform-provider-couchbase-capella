@@ -238,4 +238,10 @@ var (
 	ErrMonitorTimeout = errors.New("timed out while watching indexes")
 
 	ErrConcurrentIndexCreation = errors.New("another index create request is in progress")
+
+	ErrFreeTierCreateAppServiceError   = errors.New("There is an error during app service creation. Please check in Capella to see if any hanging resources" + " have been created, unexpected error: ")
+	ErrFreeTierAppServiceAfterCreation = errors.New("App Service creation is initiated, but encountered an error while checking the current" +
+		" state of the app service. Please run `terraform plan` after 4-5 minutes to know the" +
+		" current status of the app service. Additionally, run `terraform apply --refresh-only` to update" +
+		" the state from remote, unexpected error: ")
 )
