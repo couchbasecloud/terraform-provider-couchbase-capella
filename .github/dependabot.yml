@@ -7,3 +7,5 @@ updates:
       day: wednesday
     reviewers:
       - "couchbasecloud/couchbase-capella-terraform-provider-team"
+    secrets:
+      token: ${{ secrets.CAPELLA_AUTH_TOKEN }}
