@@ -18,7 +18,7 @@ func FreeTierBucketSchema() schema.Schema {
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name":                       stringAttribute([]string{required, requiresReplace}),
+			"name":                       stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))),
 			"organization_id":            stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))),
 			"project_id":                 stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))),
 			"cluster_id":                 stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))),
