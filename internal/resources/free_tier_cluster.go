@@ -454,16 +454,19 @@ func (f *FreeTierCluster) retrieveFreeTierCluster(
 	if diags.HasError() {
 		return nil, fmt.Errorf("%s: %w", errors.ErrUnableToConvertAuditData, err)
 	}
+
 	availability := providerschema.NewAvailability(freeTierClusterResp.Availability)
 	availabilityObj, diags := types.ObjectValueFrom(ctx, availability.AttributeTypes(), availability)
 	if diags.HasError() {
 		return nil, fmt.Errorf("unable to convert availablity data %w", err)
 	}
+
 	support := providerschema.NewSupport(freeTierClusterResp.Support)
 	supportObj, diags := types.ObjectValueFrom(ctx, support.AttributeTypes(), support)
 	if diags.HasError() {
 		return nil, fmt.Errorf("unable to convert support data %w", err)
 	}
+
 	serviceGroups, err := providerschema.NewTerraformServiceGroups(freeTierClusterResp)
 	if diags.HasError() {
 		return nil, fmt.Errorf("unable to convert service groups data %w", err)
@@ -474,10 +477,12 @@ func (f *FreeTierCluster) retrieveFreeTierCluster(
 			return nil, err
 		}
 	}
+
 	serviceGroupsObj, diags := types.SetValueFrom(ctx, types.ObjectType{}.WithAttributeTypes(providerschema.ServiceGroupAttributeTypes()), serviceGroupObjList)
 	if diags.HasError() {
 		return nil, fmt.Errorf("error while converting servicegroups to service group object ")
 	}
+
 	refreshedState, err := providerschema.NewFreeTierCluster(ctx, freeTierClusterResp, organizationId, projectId, auditObj, availabilityObj, supportObj, serviceGroupsObj)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrRefreshingState, err)

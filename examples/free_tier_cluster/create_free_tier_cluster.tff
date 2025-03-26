@@ -1,0 +1,60 @@
+
+output "new_free_tier_cluster" {
+  value = couchbase-capella_free_tier_cluster.new_free_tier_cluster
+}
+
+output "free_tier_cluster_id" {
+  value = couchbase-capella_free_tier_cluster.new_free_tier_cluster.id
+}
+
+output "new_free_tier_cluster_2" {
+  value = couchbase-capella_free_tier_cluster.new_free_tier_cluster_2
+}
+
+output "free_tier_cluster_id_2" {
+  value = couchbase-capella_free_tier_cluster.new_free_tier_cluster_2.id
+}
+
+output "new_free_tier_cluster_3" {
+  value = couchbase-capella_free_tier_cluster.new_free_tier_cluster_3
+}
+
+output "free_tier_cluster_id_3" {
+  value = couchbase-capella_free_tier_cluster.new_free_tier_cluster_3.id
+}
+
+resource "couchbase-capella_free_tier_cluster" "new_free_tier_cluster" {
+  organization_id = var.organization_id
+  project_id      = var.project_id
+  name            = "New free tier cluster"
+  description     = "New free tier test cluster for multiple services"
+  cloud_provider = {
+    type   = "aws"
+    region = "us-east-1"
+    cidr   = "10.1.0.0/16"
+  }
+}
+
+resource "couchbase-capella_free_tier_cluster" "new_free_tier_cluster_2" {
+  organization_id = var.organization_id
+  project_id      = var.project_id
+  name            = "New free tier cluster 2"
+  description     = "New free tier test cluster for multiple services"
+  cloud_provider = {
+    type   = "gcp"
+    region = "us-central-1"
+    cidr   = "10.2.0.0/16"
+  }
+}
+
+resource "couchbase-capella_free_tier_cluster" "new_free_tier_cluster_3" {
+  organization_id = var.organization_id
+  project_id      = var.project_id
+  name            = "New free tier cluster 3"
+  description     = "New free tier test cluster for multiple services"
+  cloud_provider = {
+    type   = "azure"
+    region = "eastus"
+    cidr   = "10.3.0.0/16"
+  }
+}
