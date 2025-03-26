@@ -50,12 +50,7 @@ func (f *FreeTierCluster) Create(ctx context.Context, request resource.CreateReq
 	if response.Diagnostics.HasError() {
 		return
 	}
-	if err := plan.ValidateFreeTierCreateCluster(); err != nil {
-		response.Diagnostics.AddError(
-			"error while validating create free tier cluster",
-			"could not create free tier cluster "+err.Error(),
-		)
-	}
+
 	freeTierClusterCreateRequest := freeTierClusterapi.CreateFreeTierClusterRequest{
 		Name: plan.Name.ValueString(),
 		CloudProvider: clusterapi.CloudProvider{
@@ -118,7 +113,7 @@ func (f *FreeTierCluster) Create(ctx context.Context, request resource.CreateReq
 		return
 	}
 
-	// Set state to fully populated data
+	// Set state to fully populated data.
 	diags = response.State.Set(ctx, refreshedState)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
@@ -149,7 +144,7 @@ func (f *FreeTierCluster) Read(ctx context.Context, request resource.ReadRequest
 		clusterId      = resourceIDs[providerschema.Id]
 	)
 
-	//get refreshed cluster values from capella
+	//get refreshed cluster values from capella.
 	refreshedState, err := f.retrieveFreeTierCluster(ctx, organizationId, projectId, clusterId)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
@@ -204,7 +199,7 @@ func (f *FreeTierCluster) Update(ctx context.Context, request resource.UpdateReq
 		Description: plan.Description.ValueString(),
 	}
 
-	// Update existing Cluster
+	// Update existing Cluster.
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/freeTier/%s", f.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
 	_, err = f.Client.ExecuteWithRetry(
@@ -237,7 +232,7 @@ func (f *FreeTierCluster) Update(ctx context.Context, request resource.UpdateReq
 		return
 	}
 
-	// Set state to fully populated data
+	// Set state to fully populated data.
 	diags = response.State.Set(ctx, currentState)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
@@ -246,7 +241,7 @@ func (f *FreeTierCluster) Update(ctx context.Context, request resource.UpdateReq
 }
 
 func (f *FreeTierCluster) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	// Retrieve values from state
+	// Retrieve values from state.
 	var state providerschema.FreeTierCluster
 	diags := request.State.Get(ctx, &state)
 	response.Diagnostics.Append(diags...)
@@ -269,7 +264,7 @@ func (f *FreeTierCluster) Delete(ctx context.Context, request resource.DeleteReq
 		clusterId      = resourceIDs[providerschema.Id]
 	)
 
-	// Delete existing Cluster
+	// Delete existing Cluster.
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/freeTier/%s", f.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
 	_, err = f.Client.ExecuteWithRetry(

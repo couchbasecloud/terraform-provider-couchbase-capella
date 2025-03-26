@@ -1,10 +1,12 @@
 package resources
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
 func FreeTierClusterSchema() schema.Schema {
@@ -16,9 +18,12 @@ func FreeTierClusterSchema() schema.Schema {
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"organization_id":               stringAttribute([]string{required, requiresReplace}),
-			"project_id":                    stringAttribute([]string{required, requiresReplace}),
-			"name":                          stringAttribute([]string{required}),
+			"organization_id": stringAttribute([]string{required, requiresReplace},
+				validator.String(stringvalidator.LengthAtLeast(1))),
+			"project_id": stringAttribute([]string{required, requiresReplace},
+				validator.String(stringvalidator.LengthAtLeast(1))),
+			"name": stringAttribute([]string{required},
+				validator.String(stringvalidator.LengthAtLeast(1))),
 			"description":                   stringAttribute([]string{optional, computed}),
 			"app_service_id":                stringAttribute([]string{computed}),
 			"enable_private_dns_resolution": boolAttribute(computed),

@@ -13,7 +13,7 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 )
 
-// FreeTierCluster is the struct for the free-tier cluster as read by the terraform provider schema for state file
+// FreeTierCluster is the struct for the free-tier cluster as read by the terraform provider schema for state file.
 type FreeTierCluster struct {
 	//ID of the free-tier cluster
 	Id types.String `tfsdk:"id"`
@@ -35,7 +35,7 @@ type FreeTierCluster struct {
 	CouchbaseServer types.Object `tfsdk:"couchbase_server"`
 	// Description of the cluster (up to 1024 characters).
 	Description types.String `tfsdk:"description"`
-	// ID of the app service assosciated with the free-tier cluster
+	// ID of the app service assosciated with the free-tier cluster.
 	AppServiceId types.String `tfsdk:"app_service_id"`
 	// EnablePrivateDNSResolution signals that the cluster should have hostnames that are hosted in a public DNS zone that resolve to a private DNS address.
 	// This exists to support the use case of customers connecting from their own data centers where it is not possible to make use of a cloud service provider DNS zone.
@@ -46,9 +46,9 @@ type FreeTierCluster struct {
 	ConnectionString types.String `tfsdk:"connection_string"`
 	//ServiceGroups is the couchbase service groups to be run. At least one service group must contain the data service.
 	ServiceGroups types.Set `tfsdk:"service_groups"`
-	//cmekId is the customer managed encryption key id
+	//cmekId is the customer managed encryption key id.
 	CmekId types.String `tfsdk:"cmek_id"`
-	// Etag represents the version of the document
+	// Etag represents the version of the document.
 	Etag types.String `tfsdk:"etag"`
 }
 
@@ -153,7 +153,7 @@ func NewTerraformServiceGroups(cluster *clusterapi.GetClusterResponse) ([]Servic
 	return newServiceGroups, nil
 }
 
-// Validate validates the FreeTierCluster object
+// Validate validates the FreeTierCluster object.
 func (f FreeTierCluster) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
 		OrganizationId: f.OrganizationId,
@@ -248,14 +248,4 @@ func NewServiceGroups(ctx context.Context, serviceGroups []ServiceGroup) ([]type
 	}
 
 	return serviceGroupObjList, nil, nil
-}
-
-func (f FreeTierCluster) ValidateFreeTierCreateCluster() error {
-	if f.OrganizationId.IsNull() {
-		return errors.ErrOrganizationIdMissing
-	}
-	if f.ProjectId.IsNull() {
-		return errors.ErrProjectIdMissing
-	}
-	return nil
 }
