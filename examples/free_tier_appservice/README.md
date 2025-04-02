@@ -48,6 +48,7 @@ Terraform will perform the following actions:
       + cluster_id      = "aaaaaaaa-bbbbbbbb-cccccccc-dddddd"
       + compute         = (known after apply)
       + current_state   = (known after apply)
+      + description     = "My first test free tier app service"
       + etag            = (known after apply)
       + id              = (known after apply)
       + name            = "new-terraform-app-service"
@@ -68,7 +69,7 @@ Changes to Outputs:
       + cluster_id      = "aaaaaaaa-bbbbbbbb-cccccccc-dddddd"
       + compute         = (known after apply)
       + current_state   = (known after apply)
-      + description     = ""
+      + description     = "My first test free tier app service"
       + etag            = (known after apply)
       + id              = (known after apply)
       + if_match        = null
@@ -113,9 +114,10 @@ Terraform will perform the following actions:
       + cluster_id      = "aaaaaaaa-bbbbbbbb-cccccccc-dddddd"
       + compute         = (known after apply)
       + current_state   = (known after apply)
+      + description     = "My first test free tier app service"
       + etag            = (known after apply)
       + id              = (known after apply)
-      + name            = "new-terraform-app-service"
+      + name            = "new-terraform-free-tier-app-service"
       + nodes           = (known after apply)
       + organization_id = "aaaaaaaa-bbbbbbbb-cccccccc-dddddd"
       + plan            = (known after apply)
@@ -126,18 +128,17 @@ Terraform will perform the following actions:
 Plan: 1 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
-  + appservice_id   = (known after apply)
-  + new_app_service = {
+  + free_tier_app_service_id  = (known after apply)
+  + new_free_tier_app_service = {
       + audit           = (known after apply)
       + cloud_provider  = (known after apply)
       + cluster_id      = "aaaaaaaa-bbbbbbbb-cccccccc-dddddd"
       + compute         = (known after apply)
       + current_state   = (known after apply)
-      + description     = ""
+      + description     = "My first test free tier app service"
       + etag            = (known after apply)
       + id              = (known after apply)
-      + if_match        = null
-      + name            = "new-terraform-app-service"
+      + name            = "new-terraform-free-tier-app-service"
       + nodes           = (known after apply)
       + organization_id = "aaaaaaaa-bbbbbbbb-cccccccc-dddddd"
       + plan            = (known after apply)
@@ -178,19 +179,24 @@ couchbase-capella_free_tier_app_service.new_free_tier_app_service: Still creatin
 couchbase-capella_free_tier_app_service.new_free_tier_app_service: Still creating... [4m0s elapsed]
 couchbase-capella_free_tier_app_service.new_free_tier_app_service: Still creating... [4m10s elapsed]
 couchbase-capella_free_tier_app_service.new_free_tier_app_service: Still creating... [4m20s elapsed]
-couchbase-capella_free_tier_app_service.new_free_tier_app_service: Creation complete after 4m30s [id=aaaaaaaa-bbbbbbbb-cccccccc-dddddd]
+couchbase-capella_free_tier_app_service.new_free_tier_app_service: Still creating... [4m30s elapsed]
+couchbase-capella_free_tier_app_service.new_free_tier_app_service: Still creating... [4m40s elapsed]
+couchbase-capella_free_tier_app_service.new_free_tier_app_service: Still creating... [4m50s elapsed]
+couchbase-capella_free_tier_app_service.new_free_tier_app_service: Still creating... [5m0s elapsed]
+couchbase-capella_free_tier_app_service.new_free_tier_app_service: Still creating... [5m10s elapsed]
+couchbase-capella_free_tier_app_service.new_free_tier_app_service: Creation complete after 5m16s [id=94860830-ce9d-4549-b4d4-ec2bec7977c6]
 
 Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
 
 Outputs:
 
-appservice_id = "aaaaaaaa-bbbbbbbb-cccccccc-dddddd"
-new_app_service = {
+free_tier_app_service_id = "94860830-ce9d-4549-b4d4-ec2bec7977c6"
+new_free_tier_app_service = {
   "audit" = {
-    "created_at" = "2025-03-25 13:53:49.656829741 +0000 UTC"
-    "created_by" = "aaaaaaaa-bbbbbbbb-cccccccc-dddddd"
-    "modified_at" = "2025-03-25 13:58:08.536718928 +0000 UTC"
-    "modified_by" = "apikey-aaaaaaaa-bbbbbbbb-cccccccc-dddddd"
+    "created_at" = "2025-04-02 14:15:35.829169232 +0000 UTC"
+    "created_by" = "uiQuPitdOw46pKm7R7uIYcDc6mLTiNS0"
+    "modified_at" = "2025-04-02 14:20:48.690883036 +0000 UTC"
+    "modified_by" = "apikey-uiQuPitdOw46pKm7R7uIYcDc6mLTiNS0"
     "version" = 6
   }
   "cloud_provider" = "AWS"
@@ -200,16 +206,17 @@ new_app_service = {
     "ram" = 4
   }
   "current_state" = "healthy"
-  "description" = ""
+  "description" = "My first test free tier app service"
   "etag" = "Version: 6"
-  "id" = "aaaaaaaa-bbbbbbbb-cccccccc-dddddd"
-  "name" = "new-terraform-app-service"
+  "id" = "94860830-ce9d-4549-b4d4-ec2bec7977c6"
+  "name" = "new-terraform-free-tier-app-service"
   "nodes" = 1
   "organization_id" = "aaaaaaaa-bbbbbbbb-cccccccc-dddddd"
   "plan" = "free"
   "project_id" = "aaaaaaaa-bbbbbbbb-cccccccc-dddddd"
   "version" = "3.2.2-1.0.1"
 }
+
 ```
 
 
