@@ -2,7 +2,7 @@
 
 This example shows how to manage Free Tier Buckets in Capella
 
-This creates a new free-tier bucket in the selected Capella cluster and lists existing free-tier buckets in the cluster. It uses the cluster ID to create and list free-tier buckets.
+This creates a new free-tier bucket in the selected Capella free-tier cluster and lists existing free-tier buckets in the cluster. It uses the cluster ID to create and list free-tier buckets.
 
 To run, configure your Couchbase Capella provider as described in README in the root of this project.
 
@@ -11,7 +11,8 @@ To run, configure your Couchbase Capella provider as described in README in the 
 In this example, we are going to do the following.
 
 1. CREATE: Create a new free-tier bucket in Capella as stated in the `create_free_tier_bucket.tf` file.
-2. UPDATE: Update the free-tier bucket configuration using Terraform.
+2. LIST: List the buckets in the Capella free-tier cluster using Terraform.
+3. UPDATE: Update the free-tier bucket configuration using Terraform.
 3. IMPORT: Import a free-tier bucket that exists in Capella but not in the terraform state file.
 4. DELETE: Delete the newly created free-tier bucket from Capella.
 
@@ -186,6 +187,156 @@ new_free_tier_bucket = {
 
 ```
 
+## LIST
+
+### List the free-tier buckets in the Capella free-tier cluster using Terraform
+
+Command: `terraform plan`
+
+Sample Output:
+```
+$terraform plan
+╷
+│ Warning: Provider development overrides are in effect
+│ 
+│ The following provider development overrides are set in the CLI configuration:
+│  - hashicorp.com/couchbasecloud/couchbase-capella in /Users/saicharanrachamadugu/go/bin
+│ 
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
+╵
+data.couchbase-capella_free_tier_buckets.existing_buckets: Reading...
+data.couchbase-capella_free_tier_buckets.existing_buckets: Read complete after 2s
+
+Changes to Outputs:
+  + buckets_list = {
+      + cluster_id      = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+      + data            = [
+          + {
+              + bucket_conflict_resolution = "seqno"
+              + cluster_id                 = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+              + durability_level           = "none"
+              + eviction_policy            = "fullEviction"
+              + flush                      = false
+              + id                         = "dHJhdmVsLXNhbXBsZQ=="
+              + memory_allocation_in_mb    = 200
+              + name                       = "travel-sample"
+              + organization_id            = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+              + project_id                 = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+              + replicas                   = 0
+              + stats                      = {
+                  + disk_used_in_mib   = 66
+                  + item_count         = 63343
+                  + memory_used_in_mib = 80
+                  + ops_per_second     = 0
+                }
+              + storage_backend            = "couchstore"
+              + time_to_live_in_seconds    = 0
+              + type                       = "couchbase"
+            },
+        ]
+      + organization_id = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+      + project_id      = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+    }
+
+You can apply this plan to save these new output values to the Terraform state, without changing any real infrastructure.
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly these actions if you run "terraform apply" now.
+```
+
+## Apply the plan in order to fetch all the free-tier buckets of the cluster
+
+Command: `terraform apply`
+
+Sample Output:
+```
+$terraform apply
+╷
+│ Warning: Provider development overrides are in effect
+│ 
+│ The following provider development overrides are set in the CLI configuration:
+│  - hashicorp.com/couchbasecloud/couchbase-capella in /Users/saicharanrachamadugu/go/bin
+│ 
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
+╵
+data.couchbase-capella_free_tier_buckets.existing_buckets: Reading...
+data.couchbase-capella_free_tier_buckets.existing_buckets: Read complete after 1s
+
+Changes to Outputs:
+  + buckets_list = {
+      + cluster_id      = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+      + data            = [
+          + {
+              + bucket_conflict_resolution = "seqno"
+              + cluster_id                 = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+              + durability_level           = "none"
+              + eviction_policy            = "fullEviction"
+              + flush                      = false
+              + id                         = "dHJhdmVsLXNhbXBsZQ=="
+              + memory_allocation_in_mb    = 200
+              + name                       = "travel-sample"
+              + organization_id            = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+              + project_id                 = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+              + replicas                   = 0
+              + stats                      = {
+                  + disk_used_in_mib   = 66
+                  + item_count         = 63343
+                  + memory_used_in_mib = 80
+                  + ops_per_second     = 0
+                }
+              + storage_backend            = "couchstore"
+              + time_to_live_in_seconds    = 0
+              + type                       = "couchbase"
+            },
+        ]
+      + organization_id = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+      + project_id      = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+    }
+
+You can apply this plan to save these new output values to the Terraform state, without changing any real infrastructure.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+
+Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+buckets_list = {
+  "cluster_id" = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+  "data" = tolist([
+    {
+      "bucket_conflict_resolution" = "seqno"
+      "cluster_id" = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+      "durability_level" = "none"
+      "eviction_policy" = "fullEviction"
+      "flush" = false
+      "id" = "dHJhdmVsLXNhbXBsZQ=="
+      "memory_allocation_in_mb" = 200
+      "name" = "travel-sample"
+      "organization_id" = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+      "project_id" = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+      "replicas" = 0
+      "stats" = {
+        "disk_used_in_mib" = 66
+        "item_count" = 63343
+        "memory_used_in_mib" = 80
+        "ops_per_second" = 0
+      }
+      "storage_backend" = "couchstore"
+      "time_to_live_in_seconds" = 0
+      "type" = "couchbase"
+    },
+  ])
+  "organization_id" = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+  "project_id" = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+}
+```
 
 ## UPDATE
 
@@ -206,38 +357,56 @@ $terraform apply
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
 couchbase-capella_free_tier_bucket.new_free_tier_bucket: Refreshing state... [id=dGVzdF9idWNrZXQ=]
-
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   ~ update in-place
-
 Terraform will perform the following actions:
-
   # couchbase-capella_free_tier_bucket.new_free_tier_bucket will be updated in-place
   ~ resource "couchbase-capella_free_tier_bucket" "new_free_tier_bucket" {
         id                         = "dGVzdF9idWNrZXQ="
-      ~ memory_allocation_in_mb    = 200 -> 250
+      ~ memory_allocation_in_mb    = 360 -> 300
         name                       = "test_bucket"
         # (12 unchanged attributes hidden)
     }
-
 Plan: 0 to add, 1 to change, 0 to destroy.
-
 Changes to Outputs:
   ~ new_free_tier_bucket = {
         id                         = "dGVzdF9idWNrZXQ="
-      ~ memory_allocation_in_mb    = 200 -> 250
+      ~ memory_allocation_in_mb    = 360 -> 300
         name                       = "test_bucket"
         # (12 unchanged attributes hidden)
     }
-
 Do you want to perform these actions?
   Terraform will perform the actions described above.
   Only 'yes' will be accepted to approve.
-
   Enter a value: yes
-
 couchbase-capella_free_tier_bucket.new_free_tier_bucket: Modifying... [id=dGVzdF9idWNrZXQ=]
-couchbase-capella_free_tier_bucket.new_free_tier_bucket: Modifications complete after 2s [id=dGVzdF9idWNrZXQ=]
+couchbase-capella_free_tier_bucket.new_free_tier_bucket: Modifications complete after 6s [id=dGVzdF9idWNrZXQ=]
+Apply complete! Resources: 0 added, 1 changed, 0 destroyed.
+Outputs:
+free_tier_bucket_id = "dGVzdF9idWNrZXQ="
+new_free_tier_bucket = {
+  "bucket_conflict_resolution" = "seqno"
+  "cluster_id" = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+  "durability_level" = "none"
+  "eviction_policy" = "fullEviction"
+  "flush" = false
+  "id" = "dGVzdF9idWNrZXQ="
+  "memory_allocation_in_mb" = 300
+  "name" = "test_bucket"
+  "organization_id" = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+  "project_id" = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+  "replicas" = 0
+  "stats" = {
+    "disk_used_in_mib" = 8
+    "item_count" = 0
+    "memory_used_in_mib" = 28
+    "ops_per_second" = 0
+  }
+  "storage_backend" = "couchstore"
+  "time_to_live_in_seconds" = 0
+  "type" = "couchbase"
+}
+
 ```
 
 
@@ -269,6 +438,11 @@ couchbase-capella_free_tier_bucket.new_free_tier_bucket: Importing from ID "id=d
 couchbase-capella_free_tier_bucket.new_free_tier_bucket: Import prepared!
   Prepared couchbase-capella_free_tier_bucket for import
 couchbase-capella_free_tier_bucket.new_free_tier_bucket: Refreshing state... [id=id=dGVzdF9idWNrZXQ=,organization_id=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee,project_id=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee,cluster_id=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee]
+
+Import successful!
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+
 
 ```
 

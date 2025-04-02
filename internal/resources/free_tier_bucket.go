@@ -223,7 +223,7 @@ func (f *FreeTierBucket) Update(ctx context.Context, request resource.UpdateRequ
 		return
 	}
 
-	//Sleep for 5 seconds for the bucket stqts to be updated for GET request
+	// Sleep for 5 seconds for the bucket stats to be updated for GET request
 	time.Sleep(time.Second * 5)
 
 	updatedState, err := f.retrieveFreeTierBucket(ctx, organizationId, projectId, clusterId, bucketId)
@@ -251,10 +251,10 @@ func (f *FreeTierBucket) Delete(ctx context.Context, request resource.DeleteRequ
 		return
 	}
 	organizationId := currentState.OrganizationId.ValueString()
-	projctId := currentState.ProjectId.ValueString()
+	projectId := currentState.ProjectId.ValueString()
 	clusterId := currentState.ClusterId.ValueString()
 	freeTierBucketId := currentState.Id.ValueString()
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/freeTier/%s", f.HostURL, organizationId, projctId, clusterId, freeTierBucketId)
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/freeTier/%s", f.HostURL, organizationId, projectId, clusterId, freeTierBucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
 	_, err := f.Client.ExecuteWithRetry(
 		ctx,

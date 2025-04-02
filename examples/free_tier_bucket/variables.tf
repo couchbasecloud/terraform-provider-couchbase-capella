@@ -8,9 +8,9 @@ variable "organization_id" {
 }
 
 variable "project_id" {
-  description = "Project Name for Project Created via Terraform"
+  description = "Capella Project ID"
 }
 variable "cluster_id" {
-  description = "cluster id"
+  description = "Capella Free Tier Cluster ID"
 }
 
