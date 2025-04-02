@@ -10,30 +10,30 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-// AppService defines the response as received from V4 Capella Public API when asked to create a new app service.
-// To learn more about App Services, see https://docs.couchbase.com/cloud/app-services/index.html
+// FreeTierAppService defines the response as received from V4 Capella Public API when asked to create a new free-tier app service.
+// To learn more about free-tier app services, see https://docs.couchbase.com/cloud/app-services/index.html
 type FreeTierAppService struct {
-	// Compute is the CPU and RAM configuration of the app service.
+	// Compute is the CPU and RAM configuration of the free-tier app service.
 	Compute types.Object `tfsdk:"compute"`
 
 	// OrganizationId is the organizationId of the capella tenant.
 	OrganizationId types.String `tfsdk:"organization_id"`
 
-	// Description is the description for the app service (up to 256 characters).
+	// Description is the description for the free-tier app service (up to 256 characters).
 	Description types.String `tfsdk:"description"`
 
-	// CloudProvider is the cloud provider where the app service will be hosted.
+	// CloudProvider is the cloud provider where the free-tier app service will be hosted.
 	// To learn more, see:
 	// [AWS] https://docs.couchbase.com/cloud/reference/aws.html
 	// [GCP] https://docs.couchbase.com/cloud/reference/gcp.html
 	// [Azure] https://docs.couchbase.com/cloud/reference/azure.html
 	CloudProvider types.String `tfsdk:"cloud_provider"`
 
-	// Name is the name of the app service, the name of the app service should follow this naming criteria:
-	// An app service name should have at least 2 characters and up to 256 characters.
+	// Name is the name of the free-tier app service, the name of the free-tier app service should follow this naming criteria:
+	// An free-tier app service name should have at least 2 characters and up to 256 characters.
 	Name types.String `tfsdk:"name"`
 
-	// Id is a UUID of the app service.
+	// Id is a UUID of the free-tier app service.
 	Id types.String `tfsdk:"id"`
 
 	// ProjectId is the projectId of the cluster.
@@ -42,10 +42,10 @@ type FreeTierAppService struct {
 	// ClusterId is the clusterId of the cluster.
 	ClusterId types.String `tfsdk:"cluster_id"`
 
-	// CurrentState defines the current state of app service.
+	// CurrentState defines the current state of free-tier app service.
 	CurrentState types.String `tfsdk:"current_state"`
 
-	// Version defines the version of the app service server
+	// Version defines the version of the free-tier app service server
 	Version types.String `tfsdk:"version"`
 
 	// Audit represents all audit-related fields. It is of types.Object type to avoid conversion error for a nested field.
@@ -54,14 +54,14 @@ type FreeTierAppService struct {
 	// Etag represents the version of the document.
 	Etag types.String `tfsdk:"etag"`
 
-	// Nodes is the number of nodes configured for the app service.
+	// Nodes is the number of nodes configured for the free-tier app service.
 	Nodes types.Int64 `tfsdk:"nodes"`
 
 	// Plan is the plan of the free-tier app service.
 	Plan types.String `tfsdk:"plan"`
 }
 
-// NewFreeTierAppService creates a new instance of an App Service.
+// NewFreeTierAppService creates a new instance of an free-tier app service.
 func NewFreeTierAppService(
 	appService *appservice.GetAppServiceResponse,
 	organizationId, projectId string,

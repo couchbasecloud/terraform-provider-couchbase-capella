@@ -2,6 +2,7 @@ package schema
 
 import (
 	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/appservice"
@@ -194,6 +195,7 @@ func NewAppServiceData(
 	return &newAppService
 }
 
+// NewAppServiceCompute creates a new instance of an App Service Compute.
 func NewAppServiceCompute(compute appservice.AppServiceCompute) AppServiceCompute {
 	return AppServiceCompute{
 		Cpu: types.Int64Value(compute.Cpu),

@@ -15,16 +15,11 @@ variable "cluster_id" {
   description = "Capella Cluster ID"
 }
 
-variable "app_service" {
-  description = "App Service configuration details useful for creation"
-
-  type = object({
-    name        = string
-    description = optional(string)
-    nodes       = optional(number)
-    compute = object({
-      cpu = number
-      ram = number
-    })
-  })
+variable "name" {
+  description = "Name of the App Service"
 }
+
+variable "description"{
+  description="Description of the App Service"
+}
+
