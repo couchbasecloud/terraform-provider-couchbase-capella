@@ -98,6 +98,9 @@ type GetAppServiceResponse struct {
 
 	// Id is the ID of the app service created.
 	Id uuid.UUID `json:"id"`
+
+	// Plan is the plan of the app service.
+	Plan string `json:"plan"`
 }
 
 type UpdateAppServiceRequest struct {
