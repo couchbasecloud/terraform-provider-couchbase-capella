@@ -10,14 +10,15 @@ To run this example, configure your Couchbase Capella provider as described in t
 In this example, we are going to do the following.
 
 1. CREATE: Create a new free-ter in Capella as stated in the `create_free_tier_cluster.tf` file.
-2. UPDATE: Update the free-tier cluster  configuration using Terraform.
+2. LIST: List the free-tier cluster in the given project
+3. UPDATE: Update the free-tier cluster configuration using Terraform.
 4. IMPORT: Import a free-tier cluster that exists in Capella but not in the terraform state file.
 5. DELETE: Delete the newly created free-tier cluster from Capella.
 
 If you check the `terraform.template.tfvars` file - Make sure you copy the file to `terraform.tfvars` and update the values of the variables as per the correct organization access.
 
 
-## CREATE & LIST
+## CREATE
 ### View the plan for the resources that Terraform will create
 
 
@@ -241,39 +242,255 @@ new_free_tier_cluster = {
 
 ```
 
-## IMPORT
-### Remove the resource `new_cluster_free_tier` from the Terraform State file
+## LIST
+## List the free-tier cluster in the given project
 
-Command: `terraform state rm couchbase-capella_cluster_free_tier.new_cluster_free_tier`
+Command: `terraform plan`
+
+Sample Output:
+```
+$terraform plan
+╷
+│ Warning: Provider development overrides are in effect
+│ 
+│ The following provider development overrides are set in the CLI configuration:
+│  - hashicorp.com/couchbasecloud/couchbase-capella in /Users/saicharanrachamadugu/go/bin
+│ 
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
+╵
+data.couchbase-capella_free_tier_clusters.existing_free_tier_clusters: Reading...
+data.couchbase-capella_free_tier_clusters.existing_free_tier_clusters: Read complete after 1s
+
+Changes to Outputs:
+  + free_tier_clusters_list = {
+      + data            = [
+          + {
+              + app_service_id                = null
+              + audit                         = {
+                  + created_at  = "2025-04-02 06:18:34.966637849 +0000 UTC"
+                  + created_by  = "ea36341e-c899-4cfe-b3bc-3d8e60f14654"
+                  + modified_at = "2025-04-02 08:54:05.539289368 +0000 UTC"
+                  + modified_by = "aaaaa"
+                  + version     = 11
+                }
+              + availability                  = {
+                  + type = "single"
+                }
+              + cloud_provider                = {
+                  + cidr   = "10.0.0.0/24"
+                  + region = "us-east-2"
+                  + type   = "aws"
+                }
+              + connection_string             = "ffffffff-aaaa-1414-eeee-000000000000"
+              + couchbase_server              = {
+                  + version = "7.6.5"
+                }
+              + current_state                 = "healthy"
+              + description                   = ""
+              + enable_private_dns_resolution = false
+              + id                            = "ffffffff-aaaa-1414-eeee-000000000000"
+              + name                          = "daringschahramdustdar"
+              + organization_id               = "ffffffff-aaaa-1414-eeee-000000000000"
+              + project_id                    = "ffffffff-aaaa-1414-eeee-000000000000"
+              + service_groups                = [
+                  + {
+                      + node         = {
+                          + compute = {
+                              + cpu = 2
+                              + ram = 8
+                            }
+                          + disk    = {
+                              + autoexpansion = null
+                              + iops          = 3000
+                              + storage       = 10
+                              + type          = "gp3"
+                            }
+                        }
+                      + num_of_nodes = 1
+                      + services     = [
+                          + "search",
+                          + "index",
+                          + "data",
+                          + "query",
+                        ]
+                    },
+                ]
+              + support                       = {
+                  + plan     = "free"
+                  + timezone = "PT"
+                }
+            },
+        ]
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+    }
+
+You can apply this plan to save these new output values to the Terraform state, without changing any real infrastructure.
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly these actions if you run "terraform apply" now.
+```
+
+Now apply the plan to list the free-tier cluster in the given project
+
+Command: `terraform apply`
 
 Sample Output
 ```
-$ terraform state rm couchbase-capella_cluster_free_tier.new_cluster_free_tier
-Removed couchbase-capella_cluster_free_tier.new_cluster_free_tier
-Successfully removed 1 resource instance(s).
+$terraform apply
+╷
+│ Warning: Provider development overrides are in effect
+│ 
+│ The following provider development overrides are set in the CLI configuration:
+│  - hashicorp.com/couchbasecloud/couchbase-capella in /Users/saicharanrachamadugu/go/bin
+│ 
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
+╵
+data.couchbase-capella_free_tier_clusters.existing_free_tier_clusters: Reading...
+data.couchbase-capella_free_tier_clusters.existing_free_tier_clusters: Read complete after 1s
+
+Changes to Outputs:
+  + free_tier_clusters_list = {
+      + data            = [
+          + {
+              + app_service_id                = null
+              + audit                         = {
+                  + created_at  = "2025-04-02 06:18:34.966637849 +0000 UTC"
+                  + created_by  = "ea36341e-c899-4cfe-b3bc-3d8e60f14654"
+                  + modified_at = "2025-04-02 08:54:05.539289368 +0000 UTC"
+                  + modified_by = "CP-INTERNAL-API-SYSTEM-USER"
+                  + version     = 11
+                }
+              + availability                  = {
+                  + type = "single"
+                }
+              + cloud_provider                = {
+                  + cidr   = "10.0.0.0/24"
+                  + region = "us-east-2"
+                  + type   = "aws"
+                }
+              + connection_string             = "ffffffff-aaaa-1414-eeee-000000000000"
+              + couchbase_server              = {
+                  + version = "7.6.5"
+                }
+              + current_state                 = "healthy"
+              + description                   = ""
+              + enable_private_dns_resolution = false
+              + id                            = "ffffffff-aaaa-1414-eeee-000000000000"
+              + name                          = "daringschahramdustdar"
+              + organization_id               = "ffffffff-aaaa-1414-eeee-000000000000"
+              + project_id                    = "ffffffff-aaaa-1414-eeee-000000000000"
+              + service_groups                = [
+                  + {
+                      + node         = {
+                          + compute = {
+                              + cpu = 2
+                              + ram = 8
+                            }
+                          + disk    = {
+                              + autoexpansion = null
+                              + iops          = 3000
+                              + storage       = 10
+                              + type          = "gp3"
+                            }
+                        }
+                      + num_of_nodes = 1
+                      + services     = [
+                          + "search",
+                          + "index",
+                          + "data",
+                          + "query",
+                        ]
+                    },
+                ]
+              + support                       = {
+                  + plan     = "free"
+                  + timezone = "PT"
+                }
+            },
+        ]
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+    }
+
+You can apply this plan to save these new output values to the Terraform state, without changing any real infrastructure.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+
+Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+free_tier_clusters_list = {
+  "data" = tolist([
+    {
+      "app_service_id" = tostring(null)
+      "audit" = {
+        "created_at" = "2025-04-02 06:18:34.966637849 +0000 UTC"
+        "created_by" = "ea36341e-c899-4cfe-b3bc-3d8e60f14654"
+        "modified_at" = "2025-04-02 08:54:05.539289368 +0000 UTC"
+        "modified_by" = "CP-INTERNAL-API-SYSTEM-USER"
+        "version" = 11
+      }
+      "availability" = {
+        "type" = "single"
+      }
+      "cloud_provider" = {
+        "cidr" = "10.0.0.0/24"
+        "region" = "us-east-2"
+        "type" = "aws"
+      }
+      "connection_string" = "ffffffff-aaaa-1414-eeee-000000000000"
+      "couchbase_server" = {
+        "version" = "7.6.5"
+      }
+      "current_state" = "healthy"
+      "description" = ""
+      "enable_private_dns_resolution" = false
+      "id" = "ffffffff-aaaa-1414-eeee-000000000000"
+      "name" = "daringschahramdustdar"
+      "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+      "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+      "service_groups" = tolist([
+        {
+          "node" = {
+            "compute" = {
+              "cpu" = 2
+              "ram" = 8
+            }
+            "disk" = {
+              "autoexpansion" = tobool(null)
+              "iops" = 3000
+              "storage" = 10
+              "type" = "gp3"
+            }
+          }
+          "num_of_nodes" = 1
+          "services" = tolist([
+            "search",
+            "index",
+            "data",
+            "query",
+          ])
+        },
+      ])
+      "support" = {
+        "plan" = "free"
+        "timezone" = "PT"
+      }
+    },
+  ])
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+}
 ```
 
-Please note, this command will only remove the resource from the Terraform State file, but in reality, the resource exists in Capella.
-
-### Now, let's import the resource in Terraform
-
-Command:
-`terraform import couchbase-capella_cluster_free_tier.new_cluster_free_tier id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
-
-Example:
-```
-$ terraform import couchbase-capella_cluster_free_tier.new_cluster_free_tier id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000
-couchbase-capella_cluster_free_tier.new_cluster_free_tier: Importing from ID "id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000"...
-couchbase-capella_cluster_free_tier.new_cluster_free_tier: Import prepared!
-  Prepared couchbase-capella_cluster_free_tier for import
-couchbase-capella_cluster_free_tier.new_cluster_free_tier: Refreshing state... [id=id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000]
-
-Import successful!
-
-The resources that were imported are shown above. These resources are now in
-your Terraform state and will henceforth be managed by Terraform.
-
-```
 
 ## UPDATE
 ### Update the resource `new_cluster_free_tier` in the Terraform State file
@@ -471,6 +688,40 @@ new_free_tier_cluster = {
     "timezone" = "PT"
   }
 }
+
+```
+
+## IMPORT
+### Remove the resource `new_cluster_free_tier` from the Terraform State file
+
+Command: `terraform state rm couchbase-capella_cluster_free_tier.new_cluster_free_tier`
+
+Sample Output
+```
+$ terraform state rm couchbase-capella_cluster_free_tier.new_cluster_free_tier
+Removed couchbase-capella_cluster_free_tier.new_cluster_free_tier
+Successfully removed 1 resource instance(s).
+```
+
+Please note, this command will only remove the resource from the Terraform State file, but in reality, the resource exists in Capella.
+
+### Now, let's import the resource in Terraform
+
+Command:
+`terraform import couchbase-capella_cluster_free_tier.new_cluster_free_tier id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
+
+Example:
+```
+$ terraform import couchbase-capella_cluster_free_tier.new_cluster_free_tier id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000
+couchbase-capella_cluster_free_tier.new_cluster_free_tier: Importing from ID "id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000"...
+couchbase-capella_cluster_free_tier.new_cluster_free_tier: Import prepared!
+  Prepared couchbase-capella_cluster_free_tier for import
+couchbase-capella_cluster_free_tier.new_cluster_free_tier: Refreshing state... [id=id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000]
+
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
 
 ```
 
