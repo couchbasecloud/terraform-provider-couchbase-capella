@@ -43,3 +43,4 @@ resource "couchbase-capella_cluster" "new_cluster" {
     timezone = var.support.timezone
   }
 }
+
