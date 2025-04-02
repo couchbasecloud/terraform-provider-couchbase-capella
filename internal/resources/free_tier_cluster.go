@@ -298,7 +298,7 @@ func (f *FreeTierCluster) Delete(ctx context.Context, request resource.DeleteReq
 			)
 			return
 		}
-		// resourceNotFound as expected
+		// resourceNotFound as expected.
 		return
 	}
 
@@ -326,7 +326,7 @@ func (f *FreeTierCluster) Delete(ctx context.Context, request resource.DeleteReq
 }
 
 func (f *FreeTierCluster) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	/// Retrieve import ID and save to id attribute
+	/// Retrieve import ID and save to id attribute.
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
 }
 
@@ -345,7 +345,7 @@ func (f *FreeTierCluster) Configure(_ context.Context, request resource.Configur
 	f.Data = data
 }
 
-// initializePendingClusterWithPlanAndId initializes an instance of providerschema.Cluster
+// initializePendingClusterWithPlanAndId initializes an instance of providerschema.Cluster.
 // with the specified plan and ID. It marks all computed fields as null and state as pending.
 func initializePendingFreeTierClusterWithPlanAndId(plan providerschema.FreeTierCluster, id string) providerschema.FreeTierCluster {
 	plan.Id = types.StringValue(id)
@@ -368,7 +368,7 @@ func initializePendingFreeTierClusterWithPlanAndId(plan providerschema.FreeTierC
 	return plan
 }
 
-// checkFreeTierClusterStatus monitors the status of a cluster creation, update and deletion operation for a specified
+// checkFreeTierClusterStatus monitors the status of a cluster creation, update and deletion operation for a specified,
 // organization, project, and cluster ID. It periodically fetches the cluster status using the `getCluster`
 // function and waits until the cluster reaches a final state or until a specified timeout is reached.
 // The function returns an error if the operation times out or encounters an error during status retrieval.
@@ -378,7 +378,7 @@ func (f *FreeTierCluster) checkFreeTierClusterStatus(ctx context.Context, organi
 		err         error
 	)
 
-	// Assuming 60 minutes is the max time deployment takes, can change after discussion
+	// Assuming 60 minutes is the max time deployment takes, can change after discussion.
 	const timeout = time.Minute * 60
 
 	var cancel context.CancelFunc
@@ -410,7 +410,7 @@ func (f *FreeTierCluster) checkFreeTierClusterStatus(ctx context.Context, organi
 	}
 }
 
-// getCluster retrieves cluster information from the specified organization and project
+// getFreeTierCluster retrieves cluster information from the specified organization and project.
 // using the provided cluster ID by open-api call.
 func (f *FreeTierCluster) getFreeTierCluster(ctx context.Context, organizationId, projectId, clusterId string,
 ) (*clusterapi.GetClusterResponse, error) {
@@ -436,7 +436,7 @@ func (f *FreeTierCluster) getFreeTierCluster(ctx context.Context, organizationId
 	return &clusterResp, nil
 }
 
-// retrieveCluster retrieves cluster information for a specified
+// retrieveFreeTierCluster retrieves cluster information for a specified.
 // organization, project, and cluster ID.
 func (f *FreeTierCluster) retrieveFreeTierCluster(
 	ctx context.Context,

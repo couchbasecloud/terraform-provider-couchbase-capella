@@ -15,19 +15,19 @@ import (
 
 // FreeTierCluster is the struct for the free-tier cluster as read by the terraform provider schema for state file.
 type FreeTierCluster struct {
-	//ID of the free-tier cluster
+	//ID of the free-tier cluster.
 	Id types.String `tfsdk:"id"`
 	//Availability of the free-tier cluster. It is single zone for free-tier clusters.
 	Availability types.Object `tfsdk:"availability"`
-	//CloudProvider of the free-tier cluster
+	//CloudProvider of the free-tier cluster.
 	CloudProvider *CloudProvider `tfsdk:"cloud_provider"`
 	//ProjectId of the free-tier cluster
 	ProjectId types.String `tfsdk:"project_id"`
-	//Audit data of the free-tier cluster
+	//Audit data of the free-tier cluster.
 	Audit types.Object `tfsdk:"audit"`
-	//Support plan used by the free-tier cluster
+	//Support plan used by the free-tier cluster.
 	Support types.Object `tfsdk:"support"`
-	//OrganizationId of the free-tier cluster
+	//OrganizationId of the free-tier cluster.
 	OrganizationId types.String `tfsdk:"organization_id"`
 	// Name of the cluster (up to 256 characters).
 	Name types.String `tfsdk:"name"`

@@ -18,6 +18,7 @@ type FreeTierClusters struct {
 func NewFreeTierClusters() datasource.DataSource {
 	return &FreeTierClusters{
 		Clusters: &Clusters{
+			// Filter free tier clusters. When set to true, only free-tier clusters are stored in the state.
 			FreeTierClusterFilter: true,
 		},
 	}
