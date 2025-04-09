@@ -107,10 +107,17 @@ func (f *FreeTierCluster) Create(ctx context.Context, request resource.CreateReq
 	refreshedState, err := f.retrieveFreeTierCluster(ctx, organizationId, projectId, freeTierClusterResponse.Id.String())
 	if err != nil {
 		response.Diagnostics.AddWarning(
-			"Error creating cluster",
+			"Error fetching the cluster info",
 			errors.ErrorMessageAfterFreeTierClusterCreationInitiation.Error()+api.ParseError(err),
 		)
-		return
+	}
+
+	if clusterapi.State(refreshedState.CurrentState.ValueString()) != clusterapi.Healthy {
+		response.Diagnostics.AddError(
+			"Error creating cluster",
+			fmt.Sprintf("Could not create cluster id %s, as current Cluster state: %s", refreshedState.Id.String(), refreshedState.CurrentState),
+		)
+
 	}
 
 	// Set state to fully populated data.
@@ -159,6 +166,7 @@ func (f *FreeTierCluster) Read(ctx context.Context, request resource.ReadRequest
 		)
 		return
 	}
+
 	diags = response.State.Set(ctx, &refreshedState)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
@@ -194,7 +202,7 @@ func (f *FreeTierCluster) Update(ctx context.Context, request resource.UpdateReq
 		clusterId      = resourceIDs[providerschema.Id]
 	)
 
-	FreeTierClusterUpdateRequest := freeTierClusterapi.UpdateFreeTierClusterRequest{
+	freeTierClusterUpdateRequest := freeTierClusterapi.UpdateFreeTierClusterRequest{
 		Name:        plan.Name.ValueString(),
 		Description: plan.Description.ValueString(),
 	}
@@ -205,7 +213,7 @@ func (f *FreeTierCluster) Update(ctx context.Context, request resource.UpdateReq
 	_, err = f.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
-		FreeTierClusterUpdateRequest,
+		freeTierClusterUpdateRequest,
 		f.Token,
 		nil,
 	)
