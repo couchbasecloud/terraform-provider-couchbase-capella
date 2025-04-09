@@ -71,11 +71,11 @@ func (f *FreeTierBucket) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
-	FreeTierBucketRequest := api.CreateFreeTierBucketRequest{
+	freeTierBucketRequest := api.CreateFreeTierBucketRequest{
 		Name: plan.Name.ValueString(),
 	}
 	if !plan.MemoryAllocationInMB.IsNull() && !plan.MemoryAllocationInMB.IsUnknown() {
-		FreeTierBucketRequest.MemoryAllocationInMb = plan.MemoryAllocationInMB.ValueInt64Pointer()
+		freeTierBucketRequest.MemoryAllocationInMb = plan.MemoryAllocationInMB.ValueInt64Pointer()
 	}
 
 	var organizationId = plan.OrganizationId.ValueString()
@@ -84,11 +84,11 @@ func (f *FreeTierBucket) Create(ctx context.Context, request resource.CreateRequ
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/freeTier", f.HostURL, organizationId, projectId, clusterId)
 
-	cfg := api.EndpointCfg{Url: url, Method: "POST", SuccessStatus: http.StatusCreated}
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
 	resp, err := f.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
-		FreeTierBucketRequest,
+		freeTierBucketRequest,
 		f.Token,
 		nil,
 	)
@@ -119,10 +119,9 @@ func (f *FreeTierBucket) Create(ctx context.Context, request resource.CreateRequ
 	refreshedState, err := f.retrieveFreeTierBucket(ctx, organizationId, projectId, clusterId, FreeTierBucketResponse.Id)
 	if err != nil {
 		response.Diagnostics.AddWarning(
-			"Error creating free-tier bucket",
+			"Error fetching free-tier bucket",
 			errors.ErrorMessageWhileFreeTierBucketCreation.Error()+api.ParseError(err),
 		)
-		return
 	}
 	diags = response.State.Set(ctx, refreshedState)
 	response.Diagnostics.Append(diags...)
