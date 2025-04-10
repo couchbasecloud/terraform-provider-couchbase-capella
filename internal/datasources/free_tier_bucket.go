@@ -17,7 +17,7 @@ type FreeTierBuckets struct {
 	*Buckets
 }
 
-// Metadata is a override method of buckets Metadata
+// Metadata is a override method of buckets Metadata.
 func (f *FreeTierBuckets) Metadata(ctx context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
 	response.TypeName = request.ProviderTypeName + "_free_tier_buckets"
 }
