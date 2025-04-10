@@ -238,4 +238,6 @@ var (
 	ErrMonitorTimeout = errors.New("timed out while watching indexes")
 
 	ErrConcurrentIndexCreation = errors.New("another index create request is in progress")
+
+	ErrorMessageWhileFreeTierBucketCreation = errors.New("There is an error during free tier bucket creation. Please check in Capella to see if any hanging resources")
 )
