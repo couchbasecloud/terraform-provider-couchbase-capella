@@ -162,8 +162,6 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	refreshedState.ProviderType = plan.ProviderType
-
 	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -365,7 +363,9 @@ func (n *NetworkPeer) Configure(_ context.Context, req resource.ConfigureRequest
 	n.Data = data
 }
 
-func (n *NetworkPeer) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (n *NetworkPeer) ImportState(
+	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
+) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
@@ -412,7 +412,9 @@ func initializeNetworkPeerPlanId(plan providerschema.NetworkPeer, id string) pro
 }
 
 // retrieveNetworkPeer retrieves network peer information for a specified organization, project, cluster, and peer ID.
-func (n *NetworkPeer) retrieveNetworkPeer(ctx context.Context, organizationId, projectId, clusterId, peerId, providerType string) (*providerschema.NetworkPeer, error) {
+func (n *NetworkPeer) retrieveNetworkPeer(
+	ctx context.Context, organizationId, projectId, clusterId, peerId, providerType string,
+) (*providerschema.NetworkPeer, error) {
 	networkPeerResp, err := n.getNetworkPeer(ctx, organizationId, projectId, clusterId, peerId)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrNotFound, err)
@@ -434,12 +436,16 @@ func (n *NetworkPeer) retrieveNetworkPeer(ctx context.Context, organizationId, p
 		return nil, fmt.Errorf("%s: %w", errors.ErrRefreshingState, err)
 	}
 
+	refreshedState.ProviderType = types.StringValue(providerType)
+
 	return refreshedState, nil
 }
 
 // getNetworkPeer retrieves cluster information from the specified organization and project
 // using the provided cluster ID by open-api call.
-func (n *NetworkPeer) getNetworkPeer(ctx context.Context, organizationId, projectId, clusterId, peerId string) (*network_peer_api.GetNetworkPeeringRecordResponse, error) {
+func (n *NetworkPeer) getNetworkPeer(
+	ctx context.Context, organizationId, projectId, clusterId, peerId string,
+) (*network_peer_api.GetNetworkPeeringRecordResponse, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/networkPeers/%s", n.HostURL, organizationId, projectId, clusterId, peerId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := n.Client.ExecuteWithRetry(
