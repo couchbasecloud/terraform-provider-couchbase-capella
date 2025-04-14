@@ -466,7 +466,7 @@ func (f *FreeTierCluster) retrieveFreeTierCluster(
 	availability := providerschema.NewAvailability(freeTierClusterResp.Availability)
 	availabilityObj, diags := types.ObjectValueFrom(ctx, availability.AttributeTypes(), availability)
 	if diags.HasError() {
-		return nil, fmt.Errorf("unable to convert availablity data %w", err)
+		return nil, fmt.Errorf("unable to convert availability data %w", err)
 	}
 
 	support := providerschema.NewSupport(freeTierClusterResp.Support)
