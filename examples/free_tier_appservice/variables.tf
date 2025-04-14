@@ -19,7 +19,7 @@ variable "name" {
   description = "Name of the App Service"
 }
 
-variable "description"{
-  description="Description of the App Service"
+variable "description" {
+  description = "Description of the App Service"
 }
 

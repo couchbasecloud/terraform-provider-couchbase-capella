@@ -239,6 +239,8 @@ var (
 
 	ErrConcurrentIndexCreation = errors.New("another index create request is in progress")
 
+	ErrUnableToConvertAppServiceCompute = errors.New("failed to convert app service compute")
+
 	ErrFreeTierCreateAppServiceError   = errors.New("There is an error during app service creation. Please check in Capella to see if any hanging resources" + " have been created, unexpected error: ")
 	ErrFreeTierAppServiceAfterCreation = errors.New("App Service creation is initiated, but encountered an error while checking the current" +
 		" state of the app service. Please run `terraform plan` after 4-5 minutes to know the" +

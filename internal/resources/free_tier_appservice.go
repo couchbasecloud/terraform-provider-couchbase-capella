@@ -18,7 +18,7 @@ import (
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-// Ensure the FreeTierAppService implements the required interfaces
+// Ensure the FreeTierAppService implements the required interfaces.
 var (
 	_ resource.Resource                = &FreeTierAppService{}
 	_ resource.ResourceWithConfigure   = &FreeTierAppService{}
@@ -30,7 +30,7 @@ type FreeTierAppService struct {
 	*providerschema.Data
 }
 
-// NewFreeTierAppService is a helpfer function to simplify the provider implementation
+// NewFreeTierAppService is a helpfer function to simplify the provider implementation.
 func NewFreeTierAppService() resource.Resource {
 	return &FreeTierAppService{}
 }
@@ -334,15 +334,15 @@ func (f *FreeTierAppService) Configure(ctx context.Context, request resource.Con
 // ImportState imports a remote free-tier app service that is not created by Terraform.
 // Since Capella APIs may require multiple IDs, such as organizationId, projectId, clusterId,
 // this function passes the root attribute which is a comma separated string of multiple IDs.
-// example: id=appService123,organization_id=org123,project_id=proj123,cluster_id=cluster123
-// Unfortunately the terraform import CLI doesn't allow us to pass multiple IDs at this point
+// example: id=appService123,organization_id=org123,project_id=proj123,cluster_id=cluster123.
+// Unfortunately the terraform import CLI doesn't allow us to pass multiple IDs at this point.
 // and hence this workaround has been applied.
 func (f *FreeTierAppService) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
 }
 
-// initializePendingFreeTierAppServiceWithPlanAndId initializes an instance of providerschema.AppService
+// initializePendingFreeTierAppServiceWithPlanAndId initializes an instance of providerschema.AppService.
 // with the specified plan and ID. It marks all computed fields as null and state as pending.
 func initializePendingFreeTierAppServiceWithPlanAndId(plan providerschema.FreeTierAppService, id string) providerschema.FreeTierAppService {
 	plan.Id = types.StringValue(id)
@@ -396,6 +396,10 @@ func (f *FreeTierAppService) refreshFreeTierAppService(ctx context.Context, orga
 	}
 	compute := providerschema.NewAppServiceCompute(appServiceResponse.Compute)
 	computeObj, diags := types.ObjectValueFrom(ctx, compute.AttributeTypes(), compute)
+	if diags.HasError() {
+		return nil, fmt.Errorf("%s: %w", errors.ErrUnableToConvertAppServiceCompute, err)
+
+	}
 
 	refreshedState := providerschema.NewFreeTierAppService(
 		appServiceResponse,
