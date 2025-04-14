@@ -20,7 +20,7 @@ type CreateFreeTierAppServiceRequest struct {
 	Name string `json:"name"`
 }
 
-// CreateFreeTierAppServiceResponse is the request payload for the Capella V4 Public API free-tier app service update request
+// CreateFreeTierAppServiceResponse is the request payload for the Capella V4 Public API free-tier app service update request.
 type UpdateFreeTierAppServiceRequest struct {
 	// Description is the description for the free-tier app service (up to 256 characters).
 	Description *string `json:"description,omitempty"`
