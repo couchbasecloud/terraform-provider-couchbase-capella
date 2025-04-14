@@ -405,7 +405,7 @@ func (f *FreeTierCluster) checkFreeTierClusterStatus(ctx context.Context, organi
 			clusterResp, err = f.getFreeTierCluster(ctx, organizationId, projectId, ClusterId)
 			switch err {
 			case nil:
-				if clusterapi.IsFinalState(clusterapi.State(clusterResp.CurrentState)) {
+				if clusterapi.IsFinalState(clusterResp.CurrentState) {
 					return nil
 				}
 				const msg = "waiting for cluster to complete the execution"
