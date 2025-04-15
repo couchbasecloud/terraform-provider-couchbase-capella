@@ -225,7 +225,7 @@ func (f *FreeTierClusterOnOff) manageFreeTierClusterActivation(ctx context.Conte
 		nil,
 	)
 	if err != nil {
-		return fmt.Errorf(errorMessageWhileClusterOnOffCreation + api.ParseError(err))
+		return fmt.Errorf("%w: %s", errorMessageWhileClusterOnOffCreation, api.ParseError(err))
 	}
 	return nil
 }
