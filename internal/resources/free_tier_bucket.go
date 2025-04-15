@@ -4,13 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"time"
-
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"net/http"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	bucketapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/bucket"
@@ -222,17 +220,13 @@ func (f *FreeTierBucket) Update(ctx context.Context, request resource.UpdateRequ
 		return
 	}
 
-	// Sleep for 5 seconds for the bucket stats to be updated for GET request
-	time.Sleep(time.Second * 5)
-
 	updatedState, err := f.retrieveFreeTierBucket(ctx, organizationId, projectId, clusterId, bucketId)
 
 	if err != nil {
-		response.Diagnostics.AddError(
-			"Error updating free-tier bucket",
-			"Could not update free-tier bucket with ID "+bucketId+": "+api.ParseError(err),
+		response.Diagnostics.AddWarning(
+			"Bucket updated but could not retrieve the bucket info",
+			"Could not fetch updated free-tier bucket info, bucket ID - "+bucketId+": "+api.ParseError(err),
 		)
-		return
 	}
 
 	diags = response.State.Set(ctx, updatedState)
