@@ -184,13 +184,13 @@ couchbase-capella_free_tier_app_service.new_free_tier_app_service: Still creatin
 couchbase-capella_free_tier_app_service.new_free_tier_app_service: Still creating... [4m50s elapsed]
 couchbase-capella_free_tier_app_service.new_free_tier_app_service: Still creating... [5m0s elapsed]
 couchbase-capella_free_tier_app_service.new_free_tier_app_service: Still creating... [5m10s elapsed]
-couchbase-capella_free_tier_app_service.new_free_tier_app_service: Creation complete after 5m16s [id=94860830-ce9d-4549-b4d4-ec2bec7977c6]
+couchbase-capella_free_tier_app_service.new_free_tier_app_service: Creation complete after 5m16s [id=aaaaaaaa-bbbbbbbb-cccccccc-dddddd]
 
 Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
 
 Outputs:
 
-free_tier_app_service_id = "94860830-ce9d-4549-b4d4-ec2bec7977c6"
+free_tier_app_service_id = "aaaaaaaa-bbbbbbbb-cccccccc-dddddd"
 new_free_tier_app_service = {
   "audit" = {
     "created_at" = "2025-04-02 14:15:35.829169232 +0000 UTC"
@@ -208,7 +208,7 @@ new_free_tier_app_service = {
   "current_state" = "healthy"
   "description" = "My first test free tier app service"
   "etag" = "Version: 6"
-  "id" = "94860830-ce9d-4549-b4d4-ec2bec7977c6"
+  "id" = "aaaaaaaa-bbbbbbbb-cccccccc-dddddd"
   "name" = "new-terraform-free-tier-app-service"
   "nodes" = 1
   "organization_id" = "aaaaaaaa-bbbbbbbb-cccccccc-dddddd"
