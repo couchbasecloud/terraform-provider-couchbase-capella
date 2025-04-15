@@ -9,7 +9,7 @@ To run, configure your Couchbase capella provider as described in README in the 
 
 In this example, we are going to do the following.
 
-1. CREATE: Swithc the free-tier cluster and assosciated app-service if any to on/off
+1. CREATE: Switch the free-tier cluster and assosciated app-service if any to on/off
 2. UPDATE: Update the current free-tier cluster state to on/off
 3. IMPORT: Import a free-tier cluster state that exists in Capella but not in terraform
 
