@@ -110,6 +110,7 @@ func (f *FreeTierCluster) Create(ctx context.Context, request resource.CreateReq
 			"Error fetching the cluster info",
 			errors.ErrorMessageAfterFreeTierClusterCreationInitiation.Error()+api.ParseError(err),
 		)
+		return
 	}
 
 	if clusterapi.State(refreshedState.CurrentState.ValueString()) != clusterapi.Healthy {
