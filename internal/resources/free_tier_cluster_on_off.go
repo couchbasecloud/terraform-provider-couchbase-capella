@@ -57,7 +57,7 @@ func NewFreeTierClusterOnOff() resource.Resource {
 	return &FreeTierClusterOnOff{}
 }
 
-// Metadata returns the type name for the resource
+// Metadata returns the type name for the resource.
 func (f *FreeTierClusterOnOff) Metadata(ctx context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = request.ProviderTypeName + "_free_tier_cluster_on_off"
 }
@@ -129,7 +129,7 @@ func (f *FreeTierClusterOnOff) Read(ctx context.Context, request resource.ReadRe
 		clusterId      = IDs[providerschema.ClusterId]
 	)
 
-	refreshedState, err := f.retrieveFreeTierClusterOnOff(ctx, organizationId, projectId, clusterId, state.State.String())
+	refreshedState, err := f.retrieveFreeTierClusterOnOff(ctx, organizationId, projectId, clusterId)
 	if err != nil {
 		resourceNotFound, _ := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -230,7 +230,9 @@ func (f *FreeTierClusterOnOff) manageFreeTierClusterActivation(ctx context.Conte
 	return nil
 }
 
-func (f *FreeTierClusterOnOff) retrieveFreeTierClusterOnOff(ctx context.Context, organizationId, projectId, clusterId, state string) (*providerschema.FreeTierClusterOnOff, error) {
+// retrieveFreeTierClusterOnOff retrieves the current state of the free-tier cluster.
+// if the cluster is in "TurnedOff" state, it returns "off", otherwise it returns "on".
+func (f *FreeTierClusterOnOff) retrieveFreeTierClusterOnOff(ctx context.Context, organizationId, projectId, clusterId string) (*providerschema.FreeTierClusterOnOff, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", f.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := f.Client.ExecuteWithRetry(
@@ -243,7 +245,7 @@ func (f *FreeTierClusterOnOff) retrieveFreeTierClusterOnOff(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-
+	var state string
 	clusterResp := cluster_api.GetClusterResponse{}
 	err = json.Unmarshal(response.Body, &clusterResp)
 	if err != nil {
