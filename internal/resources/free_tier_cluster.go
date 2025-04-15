@@ -96,9 +96,9 @@ func (f *FreeTierCluster) Create(ctx context.Context, request resource.CreateReq
 	if response.Diagnostics.HasError() {
 		return
 	}
-	err = f.checkFreeTierClusterStatus(ctx, organizationId, projectId, freeTierClusterResponse.Id.String())
+	err = f.checkForFreeTierClusterDesiredStatus(ctx, organizationId, projectId, freeTierClusterResponse.Id.String())
 	if err != nil {
-		response.Diagnostics.AddWarning(
+		response.Diagnostics.AddError(
 			"Error creating cluster",
 			errors.ErrorMessageAfterFreeTierClusterCreationInitiation.Error()+api.ParseError(err),
 		)
@@ -296,7 +296,7 @@ func (f *FreeTierCluster) Delete(ctx context.Context, request resource.DeleteReq
 		return
 	}
 
-	err = f.checkFreeTierClusterStatus(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
+	err = f.checkForFreeTierClusterDesiredStatus(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if !resourceNotFound {
@@ -380,7 +380,7 @@ func initializePendingFreeTierClusterWithPlanAndId(plan providerschema.FreeTierC
 // organization, project, and cluster ID. It periodically fetches the cluster status using the `getCluster`
 // function and waits until the cluster reaches a final state or until a specified timeout is reached.
 // The function returns an error if the operation times out or encounters an error during status retrieval.
-func (f *FreeTierCluster) checkFreeTierClusterStatus(ctx context.Context, organizationId, projectId, ClusterId string) error {
+func (f *FreeTierCluster) checkForFreeTierClusterDesiredStatus(ctx context.Context, organizationId, projectId, ClusterId string) error {
 	var (
 		clusterResp *clusterapi.GetClusterResponse
 		err         error
@@ -393,15 +393,13 @@ func (f *FreeTierCluster) checkFreeTierClusterStatus(ctx context.Context, organi
 	ctx, cancel = context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	const sleep = time.Second * 3
-
-	timer := time.NewTimer(2 * time.Minute)
+	ticker := time.NewTicker(3 * time.Second)
 
 	for {
 		select {
 		case <-ctx.Done():
 			return fmt.Errorf("cluster creation status transition timed out after initiation, unexpected error: %w", err)
-		case <-timer.C:
+		case <-ticker.C:
 			clusterResp, err = f.getFreeTierCluster(ctx, organizationId, projectId, ClusterId)
 			switch err {
 			case nil:
@@ -413,7 +411,6 @@ func (f *FreeTierCluster) checkFreeTierClusterStatus(ctx context.Context, organi
 			default:
 				return err
 			}
-			timer.Reset(sleep)
 		}
 	}
 }
