@@ -184,7 +184,7 @@ func (f *FreeTierClusterOnOff) Update(ctx context.Context, request resource.Upda
 		return
 	}
 
-	// Set state to fully populated data
+	// Set state to fully populated data.
 	diags = response.State.Set(ctx, refreshedState)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
@@ -244,7 +244,6 @@ func (f *FreeTierClusterOnOff) retrieveFreeTierClusterOnOff(ctx context.Context,
 		return nil, err
 	}
 
-	//There is no GET endpoint so get the cluster response and check current state
 	clusterResp := cluster_api.GetClusterResponse{}
 	err = json.Unmarshal(response.Body, &clusterResp)
 	if err != nil {
