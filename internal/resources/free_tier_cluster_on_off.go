@@ -4,29 +4,31 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	cluster_api "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
-	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	"net/http"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"net/http"
-	"time"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	cluster_api "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
 var (
-	_ resource.Resource                = &FreeTierOnOff{}
-	_ resource.ResourceWithConfigure   = &FreeTierOnOff{}
-	_ resource.ResourceWithImportState = &FreeTierOnOff{}
+	_ resource.Resource                = &FreeTierClusterOnOff{}
+	_ resource.ResourceWithConfigure   = &FreeTierClusterOnOff{}
+	_ resource.ResourceWithImportState = &FreeTierClusterOnOff{}
 )
 
-// FreeTierOnOff is a struct that represents the free tier on/off status of a cluster.
-type FreeTierOnOff struct {
+// FreeTierClusterOnOff is a struct that represents the free tier on/off status of a cluster.
+type FreeTierClusterOnOff struct {
 	*providerschema.Data
 }
 
-func (f *FreeTierOnOff) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
+func (f *FreeTierClusterOnOff) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
 	if request.ProviderData == nil {
 		return
 	}
@@ -45,27 +47,27 @@ func (f *FreeTierOnOff) Configure(ctx context.Context, request resource.Configur
 	f.Data = data
 }
 
-func (f *FreeTierOnOff) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (f *FreeTierClusterOnOff) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	// Retrieve import name and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("cluster_id"), request, response)
 }
 
-// NewFreeTierOnOff creates a new instance of FreeTierOnOff.
-func NewFreeTierOnOff() resource.Resource {
-	return &FreeTierOnOff{}
+// NewFreeTierClusterOnOff creates a new instance of FreeTierClusterOnOff.
+func NewFreeTierClusterOnOff() resource.Resource {
+	return &FreeTierClusterOnOff{}
 }
 
 // Metadata returns the type name for the resource
-func (f *FreeTierOnOff) Metadata(ctx context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = request.ProviderTypeName + "_free_tier_on_off"
+func (f *FreeTierClusterOnOff) Metadata(ctx context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = request.ProviderTypeName + "_free_tier_cluster_on_off"
 }
 
-func (f *FreeTierOnOff) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = FreeTierOnOffSchema()
+func (f *FreeTierClusterOnOff) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = FreeTierClusterOnOffSchema()
 }
 
 // Create allows to swtich the free-tier cluster on and off.
-func (f *FreeTierOnOff) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (f *FreeTierClusterOnOff) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var plan providerschema.FreeTierClusterOnOff
 	diags := request.Plan.Get(ctx, &plan)
 	response.Diagnostics.Append(diags...)
@@ -105,7 +107,7 @@ func (f *FreeTierOnOff) Create(ctx context.Context, request resource.CreateReque
 	}
 }
 
-func (f *FreeTierOnOff) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (f *FreeTierClusterOnOff) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var state providerschema.FreeTierClusterOnOff
 	diags := request.State.Get(ctx, &state)
 	response.Diagnostics.Append(diags...)
@@ -149,7 +151,7 @@ func (f *FreeTierOnOff) Read(ctx context.Context, request resource.ReadRequest, 
 	}
 }
 
-func (f *FreeTierOnOff) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (f *FreeTierClusterOnOff) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	// Retrieve values from plan
 	var plan providerschema.FreeTierClusterOnOff
 	diags := request.Plan.Get(ctx, &plan)
@@ -190,13 +192,15 @@ func (f *FreeTierOnOff) Update(ctx context.Context, request resource.UpdateReque
 	}
 }
 
-func (f *FreeTierOnOff) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (f *FreeTierClusterOnOff) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	// Couchbase Capella's v4 does not support a DELETION/destroying resource for free-tier cluster on/off.
 	// Free Tier Cluster on/off can only access the POST and DELETE endpoint which are used for switching the free-tier cluster to on and off state respectively.
 	// https://docs.couchbase.com/cloud/management-api-reference/index.html#tag/Free-Tier/operation/freeTierClusterOn.
 }
 
-func (f *FreeTierOnOff) manageFreeTierClusterActivation(ctx context.Context, state, organizationId, projectId, clusterId string) error {
+// This function is used to manage the activation state of a free-tier cluster.
+// It switches off/on the free-tier cluster based on the provided input and uses the appropriate HTTP method (POST for "on" and DELETE for "off").
+func (f *FreeTierClusterOnOff) manageFreeTierClusterActivation(ctx context.Context, state, organizationId, projectId, clusterId string) error {
 	var (
 		url    = fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/freeTier/%s/activationState", f.HostURL, organizationId, projectId, clusterId)
 		method string
@@ -226,7 +230,7 @@ func (f *FreeTierOnOff) manageFreeTierClusterActivation(ctx context.Context, sta
 	return nil
 }
 
-func (f *FreeTierOnOff) retrieveFreeTierClusterOnOff(ctx context.Context, organizationId, projectId, clusterId, state string) (*providerschema.FreeTierClusterOnOff, error) {
+func (f *FreeTierClusterOnOff) retrieveFreeTierClusterOnOff(ctx context.Context, organizationId, projectId, clusterId, state string) (*providerschema.FreeTierClusterOnOff, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", f.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := f.Client.ExecuteWithRetry(
@@ -263,7 +267,9 @@ func (f *FreeTierOnOff) retrieveFreeTierClusterOnOff(ctx context.Context, organi
 	return &refreshedState, nil
 }
 
-func (f *FreeTierOnOff) checkClusterForDesiredStatus(ctx context.Context, organizationId, projectId, clusterId, state string) (*providerschema.FreeTierClusterOnOff, error) {
+// This function checks the cluster's current state and waits until it matches the desired state.
+// When Turning on the cluster it checks for "Healthy" state and when turning off it checks for "TurnedOff" state.
+func (f *FreeTierClusterOnOff) checkClusterForDesiredStatus(ctx context.Context, organizationId, projectId, clusterId, state string) (*providerschema.FreeTierClusterOnOff, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/freeTier/%s", f.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
@@ -302,7 +308,6 @@ func (f *FreeTierOnOff) checkClusterForDesiredStatus(ctx context.Context, organi
 			}
 
 			if clusterResp.CurrentState == desiredState {
-				// Success: Cluster is in desired state.
 				refreshedState := providerschema.FreeTierClusterOnOff{
 					ClusterId:      types.StringValue(clusterId),
 					ProjectId:      types.StringValue(projectId),

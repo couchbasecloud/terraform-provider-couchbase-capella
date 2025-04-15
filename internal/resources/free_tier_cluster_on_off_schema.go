@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
-func FreeTierOnOffSchema() schema.Schema {
+func FreeTierClusterOnOffSchema() schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"organization_id": stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))),
