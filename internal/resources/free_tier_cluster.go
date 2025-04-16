@@ -106,7 +106,7 @@ func (f *FreeTierCluster) Create(ctx context.Context, request resource.CreateReq
 	}
 
 	if clusterResp.CurrentState != clusterapi.Healthy {
-		response.Diagnostics.AddError(
+		response.Diagnostics.AddWarning(
 			"Error creating cluster",
 			fmt.Sprintf("Could not create cluster id %s, as current Cluster state: %s", clusterResp.Id, clusterResp.CurrentState),
 		)
