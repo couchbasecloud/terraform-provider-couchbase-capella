@@ -96,15 +96,23 @@ func (f *FreeTierCluster) Create(ctx context.Context, request resource.CreateReq
 	if response.Diagnostics.HasError() {
 		return
 	}
-	err = f.checkForFreeTierClusterDesiredStatus(ctx, organizationId, projectId, freeTierClusterResponse.Id.String())
+	clusterResp, err := f.checkForFreeTierClusterDesiredStatus(ctx, organizationId, projectId, freeTierClusterResponse.Id.String())
 	if err != nil {
-		response.Diagnostics.AddError(
-			"Error creating cluster",
-			errors.ErrorMessageAfterFreeTierClusterCreationInitiation.Error()+api.ParseError(err),
+		response.Diagnostics.AddWarning(
+			"error getting cluster status",
+			"failed to get cluster status, please refresh state later "+api.ParseError(err),
 		)
 		return
 	}
-	refreshedState, err := f.retrieveFreeTierCluster(ctx, organizationId, projectId, freeTierClusterResponse.Id.String())
+
+	if clusterResp.CurrentState != clusterapi.Healthy {
+		response.Diagnostics.AddError(
+			"Error creating cluster",
+			fmt.Sprintf("Could not create cluster id %s, as current Cluster state: %s", clusterResp.Id, clusterResp.CurrentState),
+		)
+
+	}
+	morphedState, err := f.morphFreeTierClusterRespToTerraformObj(ctx, organizationId, projectId, clusterResp)
 	if err != nil {
 		response.Diagnostics.AddWarning(
 			"Error fetching the cluster info",
@@ -113,16 +121,7 @@ func (f *FreeTierCluster) Create(ctx context.Context, request resource.CreateReq
 		return
 	}
 
-	if clusterapi.State(refreshedState.CurrentState.ValueString()) != clusterapi.Healthy {
-		response.Diagnostics.AddError(
-			"Error creating cluster",
-			fmt.Sprintf("Could not create cluster id %s, as current Cluster state: %s", refreshedState.Id.String(), refreshedState.CurrentState),
-		)
-
-	}
-
-	// Set state to fully populated data.
-	diags = response.State.Set(ctx, refreshedState)
+	diags = response.State.Set(ctx, &morphedState)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -297,7 +296,8 @@ func (f *FreeTierCluster) Delete(ctx context.Context, request resource.DeleteReq
 		return
 	}
 
-	err = f.checkForFreeTierClusterDesiredStatus(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
+	freeTierclusterResp, err := f.checkForFreeTierClusterDesiredStatus(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
+
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if !resourceNotFound {
@@ -311,27 +311,12 @@ func (f *FreeTierCluster) Delete(ctx context.Context, request resource.DeleteReq
 		return
 	}
 
-	// This case will only occur when cluster deletion has failed,
-	// and the cluster record still exists in the cp metadata. Therefore,
-	// no error will be returned when performing a GET call.
-	cluster, err := f.retrieveFreeTierCluster(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
-	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			response.State.RemoveResource(ctx)
-			return
-		}
+	if freeTierclusterResp.CurrentState == clusterapi.DestroyFailed {
 		response.Diagnostics.AddError(
-			"Error Deleting Capella Cluster",
-			"Could not delete cluster id "+state.Id.String()+": "+errString,
+			"Error Deleting Free Tier Cluster",
+			"Could not delete cluster id "+state.Id.String()+": cluster in destroy failed state",
 		)
-		return
 	}
-	response.Diagnostics.AddError(
-		"Error deleting cluster",
-		fmt.Sprintf("Could not delete cluster id %s, as current Cluster state: %s", state.Id.String(), cluster.CurrentState),
-	)
 }
 
 func (f *FreeTierCluster) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
@@ -381,7 +366,7 @@ func initializePendingFreeTierClusterWithPlanAndId(plan providerschema.FreeTierC
 // organization, project, and cluster ID. It periodically fetches the cluster status using the `getCluster`
 // function and waits until the cluster reaches a final state or until a specified timeout is reached.
 // The function returns an error if the operation times out or encounters an error during status retrieval.
-func (f *FreeTierCluster) checkForFreeTierClusterDesiredStatus(ctx context.Context, organizationId, projectId, ClusterId string) error {
+func (f *FreeTierCluster) checkForFreeTierClusterDesiredStatus(ctx context.Context, organizationId, projectId, ClusterId string) (*clusterapi.GetClusterResponse, error) {
 	var (
 		clusterResp *clusterapi.GetClusterResponse
 		err         error
@@ -399,18 +384,19 @@ func (f *FreeTierCluster) checkForFreeTierClusterDesiredStatus(ctx context.Conte
 	for {
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("cluster creation status transition timed out after initiation, unexpected error: %w", err)
+			return clusterResp, fmt.Errorf("cluster creation status transition timed out after initiation, unexpected error: %w", err)
 		case <-ticker.C:
 			clusterResp, err = f.getFreeTierCluster(ctx, organizationId, projectId, ClusterId)
 			switch err {
 			case nil:
 				if clusterapi.IsFinalState(clusterResp.CurrentState) {
-					return nil
+					tflog.Info(ctx, "cluster status is in final state")
+					return clusterResp, nil
 				}
 				const msg = "waiting for cluster to complete the execution"
 				tflog.Info(ctx, msg)
 			default:
-				return err
+				return clusterResp, err
 			}
 		}
 	}
@@ -476,6 +462,55 @@ func (f *FreeTierCluster) retrieveFreeTierCluster(
 	serviceGroups, err := providerschema.NewTerraformServiceGroups(freeTierClusterResp)
 	if diags.HasError() {
 		return nil, fmt.Errorf("unable to convert service groups data %w", err)
+	}
+	serviceGroupObjList, err, diag := providerschema.NewServiceGroups(ctx, serviceGroups)
+	if err != nil {
+		if diag.HasError() {
+			return nil, err
+		}
+	}
+
+	serviceGroupsObj, diags := types.SetValueFrom(ctx, types.ObjectType{}.WithAttributeTypes(providerschema.ServiceGroupAttributeTypes()), serviceGroupObjList)
+	if diags.HasError() {
+		return nil, fmt.Errorf("error while converting servicegroups to service group object ")
+	}
+
+	refreshedState, err := providerschema.NewFreeTierCluster(ctx, freeTierClusterResp, organizationId, projectId, auditObj, availabilityObj, supportObj, serviceGroupsObj)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", errors.ErrRefreshingState, err)
+	}
+	return refreshedState, nil
+}
+
+// morphFreeTierClusterRespToTerraformObj transforms the FreeTierCluster response to a terraform object.
+func (f *FreeTierCluster) morphFreeTierClusterRespToTerraformObj(
+	ctx context.Context,
+	organizationId string,
+	projectId string,
+	freeTierClusterResp *clusterapi.GetClusterResponse,
+) (*providerschema.FreeTierCluster, error) {
+
+	audit := providerschema.NewCouchbaseAuditData(freeTierClusterResp.Audit)
+	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
+	if diags.HasError() {
+		return nil, fmt.Errorf(errors.ErrUnableToConvertAuditData.Error())
+	}
+
+	availability := providerschema.NewAvailability(freeTierClusterResp.Availability)
+	availabilityObj, diags := types.ObjectValueFrom(ctx, availability.AttributeTypes(), availability)
+	if diags.HasError() {
+		return nil, fmt.Errorf("unable to convert availability data")
+	}
+
+	support := providerschema.NewSupport(freeTierClusterResp.Support)
+	supportObj, diags := types.ObjectValueFrom(ctx, support.AttributeTypes(), support)
+	if diags.HasError() {
+		return nil, fmt.Errorf("unable to convert support data")
+	}
+
+	serviceGroups, err := providerschema.NewTerraformServiceGroups(freeTierClusterResp)
+	if diags.HasError() {
+		return nil, fmt.Errorf("unable to convert service groups data")
 	}
 	serviceGroupObjList, err, diag := providerschema.NewServiceGroups(ctx, serviceGroups)
 	if err != nil {
