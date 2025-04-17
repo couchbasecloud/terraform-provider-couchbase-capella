@@ -239,7 +239,6 @@ var (
 
 	ErrConcurrentIndexCreation = errors.New("another index create request is in progress")
 
-
 	ErrorMessageWhileFreeTierBucketCreation = errors.New("There is an error during free tier bucket creation. Please check in Capella to see if any hanging resources")
 
 	ErrorMessageAfterFreeTierClusterCreationInitiation = errors.New("Cluster creation is initiated, but encountered an error while checking the current" +
