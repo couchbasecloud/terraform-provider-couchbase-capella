@@ -239,6 +239,8 @@ var (
 
 	ErrConcurrentIndexCreation = errors.New("another index create request is in progress")
 
+	ErrorMessageWhileFreeTierBucketCreation = errors.New("There is an error during free tier bucket creation. Please check in Capella to see if any hanging resources")
+
 	ErrorMessageAfterFreeTierClusterCreationInitiation = errors.New("Cluster creation is initiated, but encountered an error while checking the current" +
 		" state of the cluster. Please run `terraform plan` after 4-5 minutes to know the" +
 		" current status of the cluster. Additionally, run `terraform apply --refresh-only` to update" +
