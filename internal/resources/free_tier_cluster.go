@@ -493,7 +493,7 @@ func (f *FreeTierCluster) morphFreeTierClusterRespToTerraformObj(
 	audit := providerschema.NewCouchbaseAuditData(freeTierClusterResp.Audit)
 	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
 	if diags.HasError() {
-		return nil, fmt.Errorf(errors.ErrUnableToConvertAuditData.Error())
+		return nil, errors.ErrUnableToConvertAuditData
 	}
 
 	availability := providerschema.NewAvailability(freeTierClusterResp.Availability)
@@ -510,7 +510,7 @@ func (f *FreeTierCluster) morphFreeTierClusterRespToTerraformObj(
 
 	serviceGroups, err := providerschema.NewTerraformServiceGroups(freeTierClusterResp)
 	if diags.HasError() {
-		return nil, fmt.Errorf("unable to convert service groups data")
+		return nil, fmt.Errorf("unable to convert service groups data : %w", err)
 	}
 	serviceGroupObjList, err, diag := providerschema.NewServiceGroups(ctx, serviceGroups)
 	if err != nil {
