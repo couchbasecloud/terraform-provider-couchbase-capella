@@ -296,7 +296,7 @@ func (f *FreeTierCluster) Delete(ctx context.Context, request resource.DeleteReq
 		return
 	}
 
-	freeTierclusterResp, err := f.checkForFreeTierClusterDesiredStatus(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
+	freeTierClusterResp, err := f.checkForFreeTierClusterDesiredStatus(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
 
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
@@ -311,7 +311,7 @@ func (f *FreeTierCluster) Delete(ctx context.Context, request resource.DeleteReq
 		return
 	}
 
-	if freeTierclusterResp.CurrentState == clusterapi.DestroyFailed {
+	if freeTierClusterResp.CurrentState == clusterapi.DestroyFailed {
 		response.Diagnostics.AddError(
 			"Error Deleting Free Tier Cluster",
 			"Could not delete cluster id "+state.Id.String()+": cluster in destroy failed state",

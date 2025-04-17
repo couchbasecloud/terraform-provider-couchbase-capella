@@ -3,6 +3,8 @@ package schema
 import (
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/appservice"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 
@@ -191,4 +193,20 @@ func NewAppServiceData(
 		Audit:        auditObject,
 	}
 	return &newAppService
+}
+
+// NewAppServiceCompute creates a new instance of an App Service Compute.
+func NewAppServiceCompute(compute appservice.AppServiceCompute) AppServiceCompute {
+	return AppServiceCompute{
+		Cpu: types.Int64Value(compute.Cpu),
+		Ram: types.Int64Value(compute.Ram),
+	}
+
+}
+
+func (c AppServiceCompute) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"cpu": types.Int64Type,
+		"ram": types.Int64Type,
+	}
 }

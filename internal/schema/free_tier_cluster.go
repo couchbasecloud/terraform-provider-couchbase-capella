@@ -122,7 +122,6 @@ func NewTerraformServiceGroups(cluster *clusterapi.GetClusterResponse) ([]Servic
 			newServiceGroup.Node.Disk = Node_Disk{
 				Type:          types.StringValue(string(azureDisk.Type)),
 				Storage:       types.Int64Value(int64(*azureDisk.Storage)),
-				IOPS:          types.Int64Value(int64(*azureDisk.Iops)),
 				Autoexpansion: types.BoolValue(*azureDisk.Autoexpansion),
 			}
 		case clusterapi.Gcp:
