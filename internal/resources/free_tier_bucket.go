@@ -99,8 +99,8 @@ func (f *FreeTierBucket) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
-	FreeTierBucketResponse := bucketapi.CreateBucketResponse{}
-	err = json.Unmarshal(resp.Body, &FreeTierBucketResponse)
+	freeTierBucketResponse := bucketapi.CreateBucketResponse{}
+	err = json.Unmarshal(resp.Body, &freeTierBucketResponse)
 	if err != nil {
 		response.Diagnostics.AddError(
 			"Error creating free-tier bucket",
@@ -109,13 +109,7 @@ func (f *FreeTierBucket) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
-	plan.Id = types.StringValue(FreeTierBucketResponse.Id)
-	diags = response.State.Set(ctx, plan)
-	response.Diagnostics.Append(diags...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	refreshedState, err := f.retrieveFreeTierBucket(ctx, organizationId, projectId, clusterId, FreeTierBucketResponse.Id)
+	refreshedState, err := f.retrieveFreeTierBucket(ctx, organizationId, projectId, clusterId, freeTierBucketResponse.Id)
 	if err != nil {
 		response.Diagnostics.AddWarning(
 			"Error fetching free-tier bucket",
