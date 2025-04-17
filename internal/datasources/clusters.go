@@ -23,6 +23,7 @@ var (
 // Clusters is the Clusters data source implementation.
 type Clusters struct {
 	*providerschema.Data
+	FreeTierClusterFilter bool
 }
 
 // NewClusters is a helper function to simplify the provider implementation.
@@ -87,6 +88,11 @@ func (d *Clusters) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 
 	for i := range response {
 		cluster := response[i]
+		if d.FreeTierClusterFilter {
+			if cluster.Support.Plan != "free" {
+				continue
+			}
+		}
 		audit := providerschema.NewCouchbaseAuditData(cluster.Audit)
 
 		auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
