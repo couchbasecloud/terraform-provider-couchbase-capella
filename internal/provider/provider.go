@@ -203,6 +203,7 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewProjectEvent,
 		datasources.NewGsiDefinitions,
 		datasources.NewGsiMonitor,
+		datasources.NewFreeTierClusters,
 	}
 }
 
@@ -232,6 +233,7 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewNetworkPeer,
 		resources.NewFlushBucket,
 		resources.NewGSI,
+		resources.NewFreeTierCluster,
 		resources.NewFreeTierAppService,
 	}
 }
