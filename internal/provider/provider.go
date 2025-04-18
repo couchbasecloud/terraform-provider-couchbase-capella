@@ -234,6 +234,7 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewNetworkPeer,
 		resources.NewFlushBucket,
 		resources.NewGSI,
+		resources.NewFreeTierClusterOnOff,
 		resources.NewFreeTierBucket,
 		resources.NewFreeTierCluster,
 		resources.NewFreeTierAppService,
