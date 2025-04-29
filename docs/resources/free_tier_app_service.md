@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_free_tier_app_service Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  
+  Free Tier App services schema.
 ---
 
 # couchbase-capella_free_tier_app_service (Resource)
 
-
+Free Tier App services schema.
 
 ## Example Usage
 

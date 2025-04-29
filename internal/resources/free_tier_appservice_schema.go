@@ -115,5 +115,6 @@ func FreeTierAppServiceSchema() schema.Schema {
 				MarkdownDescription: "ETag of the free-tier app service for concurrency control.",
 			},
 		},
+		MarkdownDescription: "Free Tier App services schema.",
 	}
 }
