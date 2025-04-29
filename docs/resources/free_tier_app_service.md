@@ -3,7 +3,7 @@
 page_title: "couchbase-capella_free_tier_app_service Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  
+  Manages the free-tier app services assosciated with a free-tier cluster.
 ---
 
 # couchbase-capella_free_tier_app_service (Resource)
