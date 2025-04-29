@@ -146,7 +146,7 @@ func (d *Buckets) Schema(_ context.Context, _ datasource.SchemaRequest, resp *da
 				},
 			},
 		},
-		MarkdownDescription: "Data source for Capella buckets. Provides information about the buckets in a Capella cluster.",
+		MarkdownDescription: "Manages Bucket data source for Capella cluster",
 	}
 }
 

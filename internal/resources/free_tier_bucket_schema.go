@@ -41,9 +41,10 @@ func FreeTierBucketSchema() schema.Schema {
 				map[string]string{markdownDescription: "The bucket storage engine type (magma or couchstore)"},
 			),
 			"memory_allocation_in_mb": schema.Int64Attribute{
-				Computed: true,
-				Optional: true,
-				Default:  int64default.StaticInt64(100),
+				Computed:            true,
+				Optional:            true,
+				Default:             int64default.StaticInt64(100),
+				MarkdownDescription: "Bucket size allocation in mb",
 			},
 			"bucket_conflict_resolution": stringAttributeWithValueFields([]string{computed, useStateForUnknown},
 				map[string]string{markdownDescription: "Conflict-resolution mechanism of bucket"},

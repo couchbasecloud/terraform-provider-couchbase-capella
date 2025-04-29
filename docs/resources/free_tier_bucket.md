@@ -34,7 +34,7 @@ resource "couchbase-capella_free_tier_bucket" "new_free_tier_bucket" {
 
 ### Optional
 
-- `memory_allocation_in_mb` (Number)
+- `memory_allocation_in_mb` (Number) Bucket size allocation in mb
 
 ### Read-Only
 
