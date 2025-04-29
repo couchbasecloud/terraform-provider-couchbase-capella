@@ -3,6 +3,9 @@ package resources
 import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -18,30 +21,87 @@ func FreeTierBucketSchema() schema.Schema {
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name":                       stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))),
-			"organization_id":            stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))),
-			"project_id":                 stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))),
-			"cluster_id":                 stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))),
-			"type":                       stringAttribute([]string{computed, useStateForUnknown}),
-			"storage_backend":            stringAttribute([]string{computed, useStateForUnknown}),
-			"memory_allocation_in_mb":    int64DefaultAttribute(100, optional, computed),
-			"bucket_conflict_resolution": stringAttribute([]string{computed, useStateForUnknown}),
-			"durability_level":           stringAttribute([]string{computed, useStateForUnknown}),
-			"replicas":                   int64Attribute(computed, useStateForUnknown),
-			"flush":                      boolAttribute(computed, useStateForUnknown),
-			"time_to_live_in_seconds":    int64Attribute(computed, useStateForUnknown),
-			"eviction_policy":            stringAttribute([]string{computed, useStateForUnknown}),
+			"name": stringAttributeWithValueFields([]string{required, requiresReplace},
+				map[string]string{markdownDescription: "The name of the free-tier bucket"},
+				validator.String(stringvalidator.LengthAtLeast(1)),
+			),
+			"organization_id": stringAttributeWithValueFields([]string{required, requiresReplace},
+				map[string]string{markdownDescription: "Capella tenant id"},
+				validator.String(stringvalidator.LengthAtLeast(1)),
+			),
+			"project_id": stringAttributeWithValueFields([]string{required, requiresReplace},
+				map[string]string{markdownDescription: "ID of the Capella project"},
+				validator.String(stringvalidator.LengthAtLeast(1)),
+			),
+			"cluster_id": stringAttributeWithValueFields([]string{required, requiresReplace},
+				map[string]string{markdownDescription: "ID of the Capella cluster"},
+				validator.String(stringvalidator.LengthAtLeast(1)),
+			),
+			"type": stringAttributeWithValueFields([]string{computed, useStateForUnknown},
+				map[string]string{markdownDescription: "The bucket type (couchbase or ephemeral)"},
+			),
+			"storage_backend": stringAttributeWithValueFields([]string{computed, useStateForUnknown},
+				map[string]string{markdownDescription: "The bucket storage engine type (Magma or Couchstore)"},
+			),
+			"memory_allocation_in_mb": schema.Int64Attribute{
+				Computed: true,
+				Optional: true,
+				Default:  int64default.StaticInt64(100),
+			},
+			"bucket_conflict_resolution": stringAttributeWithValueFields([]string{computed, useStateForUnknown},
+				map[string]string{markdownDescription: "Conflict-resolution mechanism of bucket"},
+			),
+			"durability_level": stringAttributeWithValueFields([]string{computed, useStateForUnknown},
+				map[string]string{markdownDescription: "Durability of the bucket"},
+			),
+			"replicas": schema.Int64Attribute{
+				Computed:            true,
+				MarkdownDescription: "Number of replicas for the data",
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
+			},
+			"flush": schema.BoolAttribute{
+				Computed:            true,
+				MarkdownDescription: "Determines whether the flushing is enabled in the bucket",
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"time_to_live_in_seconds": schema.Int64Attribute{
+				Computed:            true,
+				MarkdownDescription: "Time-to-live (TTL) for items in the bucket, in seconds.",
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
+			},
+			"eviction_policy": stringAttributeWithValueFields([]string{computed, useStateForUnknown},
+				map[string]string{markdownDescription: "Eviction policy for the bucket."},
+			),
 			"stats": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"item_count":         int64Attribute(computed),
-					"ops_per_second":     int64Attribute(computed),
-					"disk_used_in_mib":   int64Attribute(computed),
-					"memory_used_in_mib": int64Attribute(computed),
+					"item_count": schema.Int64Attribute{
+						Computed:            true,
+						MarkdownDescription: "Bucket item count",
+					},
+					"ops_per_second": schema.Int64Attribute{
+						Computed:            true,
+						MarkdownDescription: "Bucket ops per second value",
+					},
+					"disk_used_in_mib": schema.Int64Attribute{
+						Computed:            true,
+						MarkdownDescription: "Disk used in mib",
+					},
+					"memory_used_in_mib": schema.Int64Attribute{
+						Computed:            true,
+						MarkdownDescription: "Memory used in mib",
+					},
 				},
 				PlanModifiers: []planmodifier.Object{
 					objectplanmodifier.UseStateForUnknown(),
 				},
+				MarkdownDescription: "Bucket stats",
 			},
 		},
 	}

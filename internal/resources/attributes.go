@@ -18,14 +18,16 @@ import (
 )
 
 const (
-	optional           = "optional"
-	computed           = "computed"
-	required           = "required"
-	sensitive          = "sensitive"
-	requiresReplace    = "requiresReplace"
-	useStateForUnknown = "useStateForUnknown"
-	deprecated         = "deprecated"
-	deprecationMessage = "Remove this attribute's configuration as it no longer in use and the attribute will be removed in the next major version of the provider."
+	optional            = "optional"
+	computed            = "computed"
+	required            = "required"
+	sensitive           = "sensitive"
+	requiresReplace     = "requiresReplace"
+	useStateForUnknown  = "useStateForUnknown"
+	deprecated          = "deprecated"
+	markdownDescription = "markdownDescription"
+	description         = "description"
+	deprecationMessage  = "Remove this attribute's configuration as it no longer in use and the attribute will be removed in the next major version of the provider."
 )
 
 // stringAttribute is a variadic function which sets the requested fields
@@ -58,6 +60,51 @@ func stringAttribute(fields []string, validators ...validator.String) *schema.St
 			attribute.PlanModifiers = append(attribute.PlanModifiers, planModifiers...)
 		case deprecated:
 			attribute.DeprecationMessage = deprecationMessage
+		}
+	}
+	return &attribute
+}
+
+// stringAttributeWithValueFields is a variadic function which sets the requested fields
+// in a string attribute to true and then returns the string attribute.
+func stringAttributeWithValueFields(fields []string, fieldsWithValues map[string]string, validators ...validator.String) *schema.StringAttribute {
+	attribute := schema.StringAttribute{}
+	attribute.Validators = make([]validator.String, 0)
+
+	attribute.Validators = append(attribute.Validators, validators...)
+
+	for _, field := range fields {
+		switch field {
+		case required:
+			attribute.Required = true
+		case optional:
+			attribute.Optional = true
+		case computed:
+			attribute.Computed = true
+		case sensitive:
+			attribute.Sensitive = true
+		case requiresReplace:
+			var planModifiers = []planmodifier.String{
+				stringplanmodifier.RequiresReplace(),
+			}
+			attribute.PlanModifiers = append(attribute.PlanModifiers, planModifiers...)
+		case useStateForUnknown:
+			var planModifiers = []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			}
+			attribute.PlanModifiers = append(attribute.PlanModifiers, planModifiers...)
+		case deprecated:
+			attribute.DeprecationMessage = deprecationMessage
+		}
+	}
+
+	for key, value := range fieldsWithValues {
+		switch key {
+		case markdownDescription:
+			attribute.MarkdownDescription = value
+		case description:
+			attribute.Description = value
+
 		}
 	}
 	return &attribute
