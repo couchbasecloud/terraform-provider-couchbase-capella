@@ -85,13 +85,30 @@ var (
 	// computedAuditAttribute returns a SingleNestedAttribute to
 	// represent couchbase audit data using terraform schema types.
 	computedAuditAttribute = schema.SingleNestedAttribute{
-		Computed: true,
+		Description: "Couchbase audit data.",
+		Computed:    true,
 		Attributes: map[string]schema.Attribute{
-			"created_at":  computedStringAttribute,
-			"created_by":  computedStringAttribute,
-			"modified_at": computedStringAttribute,
-			"modified_by": computedStringAttribute,
-			"version":     computedInt64Attribute,
+			"created_at": schema.StringAttribute{
+				Computed:    true,
+				Description: "The timestamp when the resource was created.",
+			},
+			"created_by": schema.StringAttribute{
+				Computed:    true,
+				Description: "The user who created the resource.",
+			},
+			"modified_at": schema.StringAttribute{
+				Computed:    true,
+				Description: "The timestamp when the resource was last modified.",
+			},
+			"modified_by": schema.StringAttribute{
+				Computed:    true,
+				Description: "The user who last modified the resource.",
+			},
+			"version": schema.Int64Attribute{
+				Computed: true,
+				Description: "The version of the document. " +
+					"This value is incremented each time the resource is modified.",
+			},
 		},
 	}
 

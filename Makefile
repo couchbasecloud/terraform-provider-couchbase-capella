@@ -76,7 +76,7 @@ docs:
 .PHONT: build-docs
 build-docs:
 	go get github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
-	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
+	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --examples-dir ./examples
 
 .PHONY: terraform-check tfcheck
 tfcheck: terraform-check
