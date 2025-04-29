@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_buckets Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Manages buckets data source
+  Data source for Capella buckets. Provides information about the buckets in a Capella cluster.
 ---
 
 # couchbase-capella_buckets (Data Source)
 
-
+Data source for Capella buckets. Provides information about the buckets in a Capella cluster.
 
 ## Example Usage
 

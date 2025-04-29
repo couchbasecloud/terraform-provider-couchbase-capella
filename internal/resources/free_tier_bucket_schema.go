@@ -105,5 +105,7 @@ func FreeTierBucketSchema() schema.Schema {
 				MarkdownDescription: "Bucket stats",
 			},
 		},
+
+		MarkdownDescription: "Free-tier bucket resource schema",
 	}
 }

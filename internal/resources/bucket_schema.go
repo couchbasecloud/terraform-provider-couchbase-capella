@@ -118,5 +118,6 @@ func BucketSchema() schema.Schema {
 				MarkdownDescription: "Bucket stats",
 			},
 		},
+		MarkdownDescription: "Bucket resource schema",
 	}
 }

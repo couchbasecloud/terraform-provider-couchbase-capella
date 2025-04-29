@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_bucket Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Manages bucket resource.
+  Bucket resource schema
 ---
 
 # couchbase-capella_bucket (Resource)
 
-
+Bucket resource schema
 
 ## Example Usage
 

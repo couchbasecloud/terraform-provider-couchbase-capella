@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_free_tier_buckets Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Manages free-tier buckets data source
+  Data source for Capella buckets. Provides information about the buckets in a Capella cluster.
 ---
 
 # couchbase-capella_free_tier_buckets (Data Source)
 
-
+Data source for Capella buckets. Provides information about the buckets in a Capella cluster.
 
 ## Example Usage
 

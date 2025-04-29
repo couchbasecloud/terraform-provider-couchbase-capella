@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_free_tier_bucket Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Manages free-tier bucket resource
+  Free-tier bucket resource schema
 ---
 
 # couchbase-capella_free_tier_bucket (Resource)
 
-
+Free-tier bucket resource schema
 
 ## Example Usage
 
