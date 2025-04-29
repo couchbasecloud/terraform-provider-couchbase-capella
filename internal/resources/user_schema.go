@@ -22,10 +22,8 @@ func UserSchema() schema.Schema {
 			},
 			"status": schema.StringAttribute{
 				Computed: true,
-				MarkdownDescription: "Status depicts user status whether they are verified or not." +
-					"- verified: It reflects a verified state for an email address where the user has proven that they have access to the email account." +
-					"- not-verified: It reflects an unverified or pending verification state." +
-					"- pending-primary: It reflects an unverified primary email address.",
+				MarkdownDescription: "Status depicts user status whether they are verified or not. " +
+					"It can be one of the following values: verified, not-verified, pending-primary.",
 			},
 			"inactive": schema.BoolAttribute{
 				Computed:            true,

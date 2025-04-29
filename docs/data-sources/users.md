@@ -40,7 +40,7 @@ Read-Only:
 - `organization_roles` (List of String) The organization roles associated to the user. They determines the privileges user possesses in the organization.
 - `region` (String) The region of the user
 - `resources` (Attributes List) (see [below for nested schema](#nestedatt--data--resources))
-- `status` (String) Status depicts user status whether they are verified or not.It can be one of the following values: verified, not-verified, pending-primary.
+- `status` (String) Status depicts user status whether they are verified or not. It can be one of the following values: verified, not-verified, pending-primary.
 - `time_zone` (String) The Time zone of the user.
 
 <a id="nestedatt--data--audit"></a>

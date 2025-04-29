@@ -57,7 +57,7 @@ resource "couchbase-capella_user" "new_user" {
 - `inactive` (Boolean) Inactive depicts whether the user has accepted the invite for the organization.
 - `last_login` (String) The Time(UTC) at which user last logged in.
 - `region` (String) The region of the user
-- `status` (String) Status depicts user status whether they are verified or not.- verified: It reflects a verified state for an email address where the user has proven that they have access to the email account.- not-verified: It reflects an unverified or pending verification state.- pending-primary: It reflects an unverified primary email address.
+- `status` (String) Status depicts user status whether they are verified or not. It can be one of the following values: verified, not-verified, pending-primary.
 - `time_zone` (String) The Time zone of the user.
 
 <a id="nestedatt--resources"></a>

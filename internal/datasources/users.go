@@ -57,7 +57,7 @@ func (d *Users) Schema(_ context.Context, _ datasource.SchemaRequest, resp *data
 						},
 						"status": schema.StringAttribute{
 							Computed: true,
-							MarkdownDescription: "Status depicts user status whether they are verified or not." +
+							MarkdownDescription: "Status depicts user status whether they are verified or not. " +
 								"It can be one of the following values: verified, not-verified, pending-primary.",
 						},
 						"inactive": schema.BoolAttribute{
