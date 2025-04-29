@@ -4,11 +4,11 @@ resource "couchbase-capella_user" "new_user" {
   name               = "John"
   email              = "john.doe@example.com"
   organization_roles = ["organizationMember"]
-  resources          = [
+  resources = [
     {
-    id    = "<project_id>"
-    roles = ["projectViewer"]
-    type  = "project"
+      id    = "<project_id>"
+      roles = ["projectViewer"]
+      type  = "project"
     },
     {
       id    = "<project_id>"
