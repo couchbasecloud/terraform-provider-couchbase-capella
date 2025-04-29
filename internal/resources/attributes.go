@@ -117,6 +117,13 @@ func stringDefaultAttribute(defaultValue string, fields ...string) *schema.Strin
 	return attribute
 }
 
+// stringDefaultAttribute sets the default values for a string field and returns the string attribute.
+func stringDefaultAttributeWithFieldValues(defaultValue string, m map[string]string, fields ...string) *schema.StringAttribute {
+	attribute := stringAttributeWithValueFields(fields, m)
+	attribute.Default = stringdefault.StaticString(defaultValue)
+	return attribute
+}
+
 // boolAttribute is a variadic function which sets the requested fields
 // in a bool attribute to true and then returns the string attribute.
 func boolAttribute(fields ...string) *schema.BoolAttribute {

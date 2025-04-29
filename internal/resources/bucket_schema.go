@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
@@ -36,16 +35,10 @@ func BucketSchema() schema.Schema {
 				map[string]string{markdownDescription: "ID of the Capella cluster"},
 				validator.String(stringvalidator.LengthAtLeast(1)),
 			),
-			"type": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-					stringplanmodifier.UseStateForUnknown(),
-				},
-				Default:             stringdefault.StaticString("couchbase"),
-				MarkdownDescription: "The bucket type (couchbase or ephemeral)",
-			},
+			"type": stringDefaultAttributeWithFieldValues("couchbase",
+				map[string]string{markdownDescription: "The bucket type (couchbase or ephemeral"},
+				optional, computed, requiresReplace, useStateForUnknown,
+			),
 			"storage_backend": stringAttributeWithValueFields([]string{optional, computed, requiresReplace, useStateForUnknown},
 				map[string]string{markdownDescription: "The bucket storage engine type (Magma or Couchstore)"},
 			),
@@ -55,22 +48,16 @@ func BucketSchema() schema.Schema {
 				Default:             int64default.StaticInt64(100),
 				MarkdownDescription: "bucket size allocation in mb",
 			},
-			"bucket_conflict_resolution": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-					stringplanmodifier.UseStateForUnknown(),
-				},
-				Default:             stringdefault.StaticString("seqno"),
-				MarkdownDescription: "Conflict-resolution mechanism of bucket",
-			},
-			"durability_level": schema.StringAttribute{
-				Optional:            true,
-				Computed:            true,
-				Default:             stringdefault.StaticString("none"),
-				MarkdownDescription: "Durability of the bucket",
-			},
+			"bucket_conflict_resolution": stringDefaultAttributeWithFieldValues("seqno",
+				map[string]string{markdownDescription: "Conflict-resolution mechanism of bucket"},
+				optional, computed, requiresReplace, useStateForUnknown,
+			),
+
+			"durability_level": stringDefaultAttributeWithFieldValues("none",
+				map[string]string{markdownDescription: "Durability level of the bucket"},
+				optional, computed,
+			),
+
 			"replicas": schema.Int64Attribute{
 				Optional:            true,
 				Computed:            true,
@@ -118,6 +105,6 @@ func BucketSchema() schema.Schema {
 				MarkdownDescription: "Bucket stats",
 			},
 		},
-		MarkdownDescription: "Bucket resource schema",
+		MarkdownDescription: "Manages Bucket resource for a Capella cluster",
 	}
 }

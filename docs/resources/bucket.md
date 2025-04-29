@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_bucket Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Bucket resource schema
+  Manages Bucket resource for a Capella cluster
 ---
 
 # couchbase-capella_bucket (Resource)
 
-Bucket resource schema
+Manages Bucket resource for a Capella cluster
 
 ## Example Usage
 
@@ -43,14 +43,14 @@ resource "couchbase-capella_bucket" "new_bucket" {
 ### Optional
 
 - `bucket_conflict_resolution` (String) Conflict-resolution mechanism of bucket
-- `durability_level` (String) Durability of the bucket
+- `durability_level` (String) Durability level of the bucket
 - `eviction_policy` (String) Eviction policy for the bucket.
 - `flush` (Boolean) Determines whether the flushing is enabled in the bucket
 - `memory_allocation_in_mb` (Number) bucket size allocation in mb
 - `replicas` (Number) Number of replicas for the data
 - `storage_backend` (String) The bucket storage engine type (Magma or Couchstore)
 - `time_to_live_in_seconds` (Number) Time-to-live (TTL) for items in the bucket, in seconds.
-- `type` (String) The bucket type (couchbase or ephemeral)
+- `type` (String) The bucket type (couchbase or ephemeral
 
 ### Read-Only
 

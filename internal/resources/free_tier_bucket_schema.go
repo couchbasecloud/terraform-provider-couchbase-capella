@@ -8,20 +8,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
 func FreeTierBucketSchema() schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-				MarkdownDescription: "ID of the free-tier bucket",
-			},
+			"id": stringAttributeWithValueFields([]string{computed, useStateForUnknown},
+				map[string]string{markdownDescription: "ID of the free-tier bucket"},
+			),
+
 			"name": stringAttributeWithValueFields([]string{required, requiresReplace},
 				map[string]string{markdownDescription: "The name of the free-tier bucket"},
 				validator.String(stringvalidator.LengthAtLeast(1)),
@@ -106,6 +102,6 @@ func FreeTierBucketSchema() schema.Schema {
 			},
 		},
 
-		MarkdownDescription: "Free-tier bucket resource schema",
+		MarkdownDescription: "Manages free-tier bucket resource for a free-tier cluster",
 	}
 }
