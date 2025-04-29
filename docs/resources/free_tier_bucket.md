@@ -3,7 +3,7 @@
 page_title: "couchbase-capella_free_tier_bucket Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  
+  Manages free-tier bucket resource
 ---
 
 # couchbase-capella_free_tier_bucket (Resource)
@@ -29,7 +29,7 @@ resource "couchbase-capella_free_tier_bucket" "new_free_tier_bucket" {
 
 - `cluster_id` (String) ID of the Capella cluster
 - `name` (String) The name of the free-tier bucket
-- `organization_id` (String) Capella tenant id
+- `organization_id` (String) ID of the capella teanant
 - `project_id` (String) ID of the Capella project
 
 ### Optional
@@ -42,10 +42,10 @@ resource "couchbase-capella_free_tier_bucket" "new_free_tier_bucket" {
 - `durability_level` (String) Durability of the bucket
 - `eviction_policy` (String) Eviction policy for the bucket.
 - `flush` (Boolean) Determines whether the flushing is enabled in the bucket
-- `id` (String) The ID of this resource.
+- `id` (String) ID of the free-tier bucket
 - `replicas` (Number) Number of replicas for the data
 - `stats` (Attributes) Bucket stats (see [below for nested schema](#nestedatt--stats))
-- `storage_backend` (String) The bucket storage engine type (Magma or Couchstore)
+- `storage_backend` (String) The bucket storage engine type (magma or couchstore)
 - `time_to_live_in_seconds` (Number) Time-to-live (TTL) for items in the bucket, in seconds.
 - `type` (String) The bucket type (couchbase or ephemeral)
 
