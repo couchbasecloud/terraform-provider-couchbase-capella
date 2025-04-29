@@ -85,8 +85,20 @@ func FreeTierAppServiceSchema() schema.Schema {
 			"compute": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"cpu": int64Attribute(computed, useStateForUnknown),
-					"ram": int64Attribute(computed, useStateForUnknown),
+					"cpu": schema.Int64Attribute{
+						Computed: true,
+						PlanModifiers: []planmodifier.Int64{
+							int64planmodifier.UseStateForUnknown(),
+						},
+						MarkdownDescription: "Number of CPUs of the free-tier app service node",
+					},
+					"ram": schema.Int64Attribute{
+						Computed: true,
+						PlanModifiers: []planmodifier.Int64{
+							int64planmodifier.UseStateForUnknown(),
+						},
+						MarkdownDescription: "Amount of RAM of the free-tier app service node",
+					},
 				},
 				PlanModifiers: []planmodifier.Object{
 					objectplanmodifier.UseStateForUnknown(),
