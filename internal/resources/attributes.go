@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/numberplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
@@ -18,20 +19,47 @@ import (
 )
 
 const (
-	optional           = "optional"
-	computed           = "computed"
-	required           = "required"
-	sensitive          = "sensitive"
-	requiresReplace    = "requiresReplace"
-	useStateForUnknown = "useStateForUnknown"
-	deprecated         = "deprecated"
-	deprecationMessage = "Remove this attribute's configuration as it no longer in use and the attribute will be removed in the next major version of the provider."
+	optional            = "optional"
+	computed            = "computed"
+	required            = "required"
+	sensitive           = "sensitive"
+	requiresReplace     = "requiresReplace"
+	useStateForUnknown  = "useStateForUnknown"
+	deprecated          = "deprecated"
+	markdownDescription = "markdownDescription"
+	deprecationMessage  = "Remove this attribute's configuration as it no longer in use and the attribute will be removed in the next major version of the provider."
 )
+
+type Test[T any] func(T)
+
+func withMarkdown[T interface {
+	*schema.StringAttribute | *schema.Int64Attribute | *schema.BoolAttribute | *schema.SetAttribute |
+		*schema.Float64Attribute | *schema.NumberAttribute | *schema.ListAttribute
+}](description string) Test[T] {
+	return func(s T) {
+		switch v := any(s).(type) {
+		case *schema.StringAttribute:
+			v.MarkdownDescription = description
+		case *schema.Int64Attribute:
+			v.MarkdownDescription = description
+		case *schema.BoolAttribute:
+			v.MarkdownDescription = description
+		case *schema.SetAttribute:
+			v.MarkdownDescription = description
+		case *schema.Float64Attribute:
+			v.MarkdownDescription = description
+		case *schema.NumberAttribute:
+			v.MarkdownDescription = description
+		case *schema.ListAttribute:
+			v.MarkdownDescription = description
+		}
+	}
+}
 
 // stringAttribute is a variadic function which sets the requested fields
 // in a string attribute to true and then returns the string attribute.
-func stringAttribute(fields []string, validators ...validator.String) *schema.StringAttribute {
-	attribute := schema.StringAttribute{}
+func stringAttribute(fields []string, t Test[*schema.StringAttribute], validators ...validator.String) *schema.StringAttribute {
+	attribute := &schema.StringAttribute{}
 	attribute.Validators = make([]validator.String, 0)
 
 	attribute.Validators = append(attribute.Validators, validators...)
@@ -60,20 +88,23 @@ func stringAttribute(fields []string, validators ...validator.String) *schema.St
 			attribute.DeprecationMessage = deprecationMessage
 		}
 	}
-	return &attribute
+
+	// execute it
+	t(attribute)
+	return attribute
 }
 
 // stringDefaultAttribute sets the default values for a string field and returns the string attribute.
-func stringDefaultAttribute(defaultValue string, fields ...string) *schema.StringAttribute {
-	attribute := stringAttribute(fields)
+func stringDefaultAttribute(defaultValue string, fields []string) *schema.StringAttribute {
+	attribute := stringAttribute(fields, func(s *schema.StringAttribute) {})
 	attribute.Default = stringdefault.StaticString(defaultValue)
 	return attribute
 }
 
 // boolAttribute is a variadic function which sets the requested fields
 // in a bool attribute to true and then returns the string attribute.
-func boolAttribute(fields ...string) *schema.BoolAttribute {
-	attribute := schema.BoolAttribute{}
+func boolAttribute(fields []string, t Test[*schema.BoolAttribute]) *schema.BoolAttribute {
+	attribute := &schema.BoolAttribute{}
 
 	for _, field := range fields {
 		switch field {
@@ -90,7 +121,6 @@ func boolAttribute(fields ...string) *schema.BoolAttribute {
 				boolplanmodifier.RequiresReplace(),
 			}
 			attribute.PlanModifiers = planModifiers
-
 		case useStateForUnknown:
 			var planModifiers = []planmodifier.Bool{
 				boolplanmodifier.UseStateForUnknown(),
@@ -99,20 +129,21 @@ func boolAttribute(fields ...string) *schema.BoolAttribute {
 		}
 	}
 
-	return &attribute
+	t(attribute)
+	return attribute
 }
 
 // boolDefaultAttribute sets the default values for a boolean field and returns the bool attribute.
 func boolDefaultAttribute(defaultValue bool, fields ...string) *schema.BoolAttribute {
-	attribute := boolAttribute(fields...)
+	attribute := boolAttribute(fields, func(b *schema.BoolAttribute) {})
 	attribute.Default = booldefault.StaticBool(defaultValue)
 	return attribute
 }
 
 // int64Attribute is a variadic function which sets the requested fields
 // in an Int64 attribute to true and then returns the string attribute.
-func int64Attribute(fields ...string) *schema.Int64Attribute {
-	attribute := schema.Int64Attribute{}
+func int64Attribute(fields []string, t Test[*schema.Int64Attribute]) *schema.Int64Attribute {
+	attribute := &schema.Int64Attribute{}
 
 	for _, field := range fields {
 		switch field {
@@ -136,20 +167,23 @@ func int64Attribute(fields ...string) *schema.Int64Attribute {
 			attribute.PlanModifiers = append(attribute.PlanModifiers, planModifiers...)
 		}
 	}
-	return &attribute
+
+	// execute it
+	t(attribute)
+	return attribute
 }
 
 // int64DefaultAttribute sets the default values for an int field and returns the int64 attribute.
-func int64DefaultAttribute(defaultValue int64, fields ...string) *schema.Int64Attribute {
-	attribute := int64Attribute(fields...)
+func int64DefaultAttribute(defaultValue int64, fields []string) *schema.Int64Attribute {
+	attribute := int64Attribute(fields, func(i *schema.Int64Attribute) {})
 	attribute.Default = int64default.StaticInt64(defaultValue)
 	return attribute
 }
 
 // numberAttribute is a variadic function which sets the requested fields
 // in an number attribute to true and then returns the string attribute.
-func numberAttribute(fields ...string) *schema.NumberAttribute {
-	attribute := schema.NumberAttribute{}
+func numberAttribute(fields []string, t Test[*schema.NumberAttribute]) *schema.NumberAttribute {
+	attribute := &schema.NumberAttribute{}
 
 	for _, field := range fields {
 		switch field {
@@ -161,15 +195,28 @@ func numberAttribute(fields ...string) *schema.NumberAttribute {
 			attribute.Computed = true
 		case sensitive:
 			attribute.Sensitive = true
+		case requiresReplace:
+			var planModifiers = []planmodifier.Number{
+				numberplanmodifier.RequiresReplace(),
+			}
+			attribute.PlanModifiers = append(attribute.PlanModifiers, planModifiers...)
+		case useStateForUnknown:
+			var planModifiers = []planmodifier.Number{
+				numberplanmodifier.UseStateForUnknown(),
+			}
+			attribute.PlanModifiers = append(attribute.PlanModifiers, planModifiers...)
 		}
 	}
-	return &attribute
+
+	// execute it
+	t(attribute)
+	return attribute
 }
 
 // float64Attribute is a variadic function which sets the requested fields
 // in a float64 attribute to true and then returns the string attribute.
-func float64Attribute(fields ...string) *schema.Float64Attribute {
-	attribute := schema.Float64Attribute{}
+func float64Attribute(fields []string, t Test[*schema.Float64Attribute]) *schema.Float64Attribute {
+	attribute := &schema.Float64Attribute{}
 
 	for _, field := range fields {
 		switch field {
@@ -193,20 +240,23 @@ func float64Attribute(fields ...string) *schema.Float64Attribute {
 			attribute.PlanModifiers = append(attribute.PlanModifiers, planModifiers...)
 		}
 	}
-	return &attribute
+
+	// execute it
+	t(attribute)
+	return attribute
 }
 
 // float64DefaultAttribute sets the default values for an float field and returns the float64 attribute.
-func float64DefaultAttribute(defaultValue float64, fields ...string) *schema.Float64Attribute {
-	attribute := float64Attribute(fields...)
+func float64DefaultAttribute(defaultValue float64, fields []string) *schema.Float64Attribute {
+	attribute := float64Attribute(fields, func(f *schema.Float64Attribute) {})
 	attribute.Default = float64default.StaticFloat64(defaultValue)
 	return attribute
 }
 
 // stringListAttribute returns a Terraform string list schema attribute
 // which is configured to be of type string.
-func stringListAttribute(fields ...string) *schema.ListAttribute {
-	attribute := schema.ListAttribute{
+func stringListAttribute(fields []string, t Test[*schema.ListAttribute]) *schema.ListAttribute {
+	attribute := &schema.ListAttribute{
 		ElementType: types.StringType,
 	}
 
@@ -225,15 +275,23 @@ func stringListAttribute(fields ...string) *schema.ListAttribute {
 				listplanmodifier.RequiresReplace(),
 			}
 			attribute.PlanModifiers = planModifiers
+		case useStateForUnknown:
+			var planModifiers = []planmodifier.List{
+				listplanmodifier.UseStateForUnknown(),
+			}
+			attribute.PlanModifiers = planModifiers
 		}
 	}
-	return &attribute
+
+	// execute it
+	t(attribute)
+	return attribute
 }
 
 // stringSetAttribute returns a Terraform string set schema attribute
 // which is configured to be of type string.
-func stringSetAttribute(fields ...string) *schema.SetAttribute {
-	attribute := schema.SetAttribute{
+func stringSetAttribute(fields []string, t Test[*schema.SetAttribute]) *schema.SetAttribute {
+	attribute := &schema.SetAttribute{
 		ElementType: types.StringType,
 	}
 
@@ -254,7 +312,10 @@ func stringSetAttribute(fields ...string) *schema.SetAttribute {
 			attribute.PlanModifiers = planModifiers
 		}
 	}
-	return &attribute
+
+	// execute it
+	t(attribute)
+	return attribute
 }
 
 // computedAuditAttribute returns a SingleNestedAttribute to
