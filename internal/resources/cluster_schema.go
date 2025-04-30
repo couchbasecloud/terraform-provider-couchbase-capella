@@ -23,9 +23,11 @@ func ClusterSchema() schema.Schema {
 				"The ID of the project that the cluster belongs to."),
 			"name": withMarkdown(stringAttribute([]string{required}),
 				"The name of the cluster. The name must be unique within the project."),
-			"description":                   stringAttribute([]string{optional, computed}),
-			"zones":                         stringSetAttribute(optional, requiresReplace),
-			"enable_private_dns_resolution": boolDefaultAttribute(false, optional, computed, requiresReplace),
+			"description": stringAttribute([]string{optional, computed}),
+			"zones": withMarkdown(stringSetAttribute(optional, requiresReplace),
+				"The list of availability zones for the cluster. The cluster will be created in the specified zones. If not specified, the cluster will be created in all available zones."),
+			"enable_private_dns_resolution": withMarkdown(boolDefaultAttribute(false, optional, computed, requiresReplace),
+				"Enable private DNS resolution for the cluster. If set to true, the cluster will be accessible via private DNS names. If set to false, the cluster will be accessible via public DNS names."),
 			"cloud_provider": schema.SingleNestedAttribute{
 				Required: true,
 				Attributes: map[string]schema.Attribute{
@@ -59,7 +61,8 @@ func ClusterSchema() schema.Schema {
 								"compute": schema.SingleNestedAttribute{
 									Required: true,
 									Attributes: map[string]schema.Attribute{
-										"cpu": int64Attribute(required),
+										"cpu": withMarkdown(int64Attribute(required),
+											"The number of CPU cores for the node. The value must be between 1 and 128."),
 										"ram": int64Attribute(required),
 									},
 								},
