@@ -23,8 +23,12 @@ func ApiKeySchema() schema.Schema {
 			},
 			"organization_id": stringAttribute([]string{required, requiresReplace}),
 			"name":            stringAttribute([]string{required, requiresReplace}),
-			"description":     stringDefaultAttribute("", optional, computed, requiresReplace, useStateForUnknown),
-			"expiry":          float64DefaultAttribute(180, optional, computed, requiresReplace, useStateForUnknown),
+			"description": WithStringDefaultMarkdown(
+				&schema.StringAttribute{},
+				"Description of the api key",
+				stringDefaultAttribute,
+			)("", optional, computed, requiresReplace, useStateForUnknown),
+			"expiry": float64DefaultAttribute(180, optional, computed, requiresReplace, useStateForUnknown),
 			"allowed_cidrs": schema.SetAttribute{
 				Optional:    true,
 				Computed:    true,

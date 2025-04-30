@@ -16,12 +16,20 @@ func ClusterSchema() schema.Schema {
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"organization_id":               stringAttribute([]string{required, requiresReplace}),
-			"project_id":                    stringAttribute([]string{required, requiresReplace}),
-			"name":                          stringAttribute([]string{required}),
-			"description":                   stringAttribute([]string{optional, computed}),
-			"zones":                         stringSetAttribute(optional, requiresReplace),
-			"enable_private_dns_resolution": boolDefaultAttribute(false, optional, computed, requiresReplace),
+			"organization_id": stringAttribute([]string{required, requiresReplace}),
+			"project_id":      stringAttribute([]string{required, requiresReplace}),
+			"name": WithStringMarkdown(
+				&schema.StringAttribute{},
+				"The name of the resource",
+				stringAttribute)([]string{"required"}),
+			"description": stringAttribute([]string{optional, computed}),
+			"zones":       stringSetAttribute(optional, requiresReplace),
+			"enable_private_dns_resolution": WithBoolDefaultMarkdown(
+				&schema.BoolAttribute{},
+				"\t\nboolean\nEnablePrivateDNSResolution signals that the cluster should have hostnames that are hosted "+
+					"in a public DNS zone that resolve to a private DNS address. ",
+				boolDefaultAttribute,
+			)(false, optional, computed, requiresReplace),
 			"cloud_provider": schema.SingleNestedAttribute{
 				Required: true,
 				Attributes: map[string]schema.Attribute{
@@ -55,7 +63,10 @@ func ClusterSchema() schema.Schema {
 								"compute": schema.SingleNestedAttribute{
 									Required: true,
 									Attributes: map[string]schema.Attribute{
-										"cpu": int64Attribute(required),
+										"cpu": WithInt64Markdown(
+											&schema.Int64Attribute{},
+											"The number of CPU cores",
+											int64Attribute)(required),
 										"ram": int64Attribute(required),
 									},
 								},
@@ -65,10 +76,14 @@ func ClusterSchema() schema.Schema {
 										"In the case of GCP, only 'pd ssd' disk type is available, and you cannot set the 'IOPS' field.",
 									Required: true,
 									Attributes: map[string]schema.Attribute{
-										"type":          stringAttribute([]string{required}),
-										"storage":       int64Attribute(optional, computed),
-										"iops":          int64Attribute(optional, computed),
-										"autoexpansion": boolAttribute(optional, computed),
+										"type":    stringAttribute([]string{required}),
+										"storage": int64Attribute(optional, computed),
+										"iops":    int64Attribute(optional, computed),
+										"autoexpansion": WithBoolMarkdown(
+											&schema.BoolAttribute{},
+											"Whether the feature is enabled",
+											boolAttribute,
+										)(optional, computed),
 									},
 								},
 							},

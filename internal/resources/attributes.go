@@ -28,10 +28,10 @@ const (
 	deprecationMessage = "Remove this attribute's configuration as it no longer in use and the attribute will be removed in the next major version of the provider."
 )
 
-// StringAttributeFunc represents a function that configures an attribute
+// StringAttributeFunc represents a function that configures an attribute.
 type StringAttributeFunc func([]string, ...validator.String) *schema.StringAttribute
 
-// Decorator for StringAttribute
+// Decorator for StringAttribute.
 func WithStringMarkdown(sa *schema.StringAttribute, desc string, fn StringAttributeFunc) StringAttributeFunc {
 	return func(fields []string, validators ...validator.String) *schema.StringAttribute {
 		sa.MarkdownDescription = desc
@@ -39,10 +39,10 @@ func WithStringMarkdown(sa *schema.StringAttribute, desc string, fn StringAttrib
 	}
 }
 
-// BoolAttributeFunc represents a function that configures a bool attribute
+// BoolAttributeFunc represents a function that configures a bool attribute.
 type BoolAttributeFunc func(...string) *schema.BoolAttribute
 
-// Decorator for BoolAttribute
+// Decorator for BoolAttribute.
 func WithBoolMarkdown(ba *schema.BoolAttribute, desc string, fn BoolAttributeFunc) BoolAttributeFunc {
 	return func(fields ...string) *schema.BoolAttribute {
 		ba.MarkdownDescription = desc
@@ -50,10 +50,10 @@ func WithBoolMarkdown(ba *schema.BoolAttribute, desc string, fn BoolAttributeFun
 	}
 }
 
-// Int64AttributeFunc represents a function that configures an int64 attribute
+// Int64AttributeFunc represents a function that configures an int64 attribute.
 type Int64AttributeFunc func(...string) *schema.Int64Attribute
 
-// Decorator for Int64Attribute
+// Decorator for Int64Attribute.
 func WithInt64Markdown(ia *schema.Int64Attribute, desc string, fn Int64AttributeFunc) Int64AttributeFunc {
 	return func(fields ...string) *schema.Int64Attribute {
 		ia.MarkdownDescription = desc
@@ -61,10 +61,10 @@ func WithInt64Markdown(ia *schema.Int64Attribute, desc string, fn Int64Attribute
 	}
 }
 
-// Float64AttributeFunc represents a function that configures a float64 attribute
+// Float64AttributeFunc represents a function that configures a float64 attribute.
 type Float64AttributeFunc func(...string) *schema.Float64Attribute
 
-// Decorator for Float64Attribute
+// Decorator for Float64Attribute.
 func WithFloat64Markdown(fa *schema.Float64Attribute, desc string, fn Float64AttributeFunc) Float64AttributeFunc {
 	return func(fields ...string) *schema.Float64Attribute {
 		fa.MarkdownDescription = desc
@@ -72,10 +72,10 @@ func WithFloat64Markdown(fa *schema.Float64Attribute, desc string, fn Float64Att
 	}
 }
 
-// NumberAttributeFunc represents a function that configures a number attribute
+// NumberAttributeFunc represents a function that configures a number attribute.
 type NumberAttributeFunc func(...string) *schema.NumberAttribute
 
-// Decorator for NumberAttribute
+// Decorator for NumberAttribute.
 func WithNumberMarkdown(fa *schema.NumberAttribute, desc string, fn NumberAttributeFunc) NumberAttributeFunc {
 	return func(fields ...string) *schema.NumberAttribute {
 		fa.MarkdownDescription = desc
@@ -83,10 +83,10 @@ func WithNumberMarkdown(fa *schema.NumberAttribute, desc string, fn NumberAttrib
 	}
 }
 
-// ListAttributeFunc represents a function that configures a list attribute
+// ListAttributeFunc represents a function that configures a list attribute.
 type ListAttributeFunc func(...string) *schema.ListAttribute
 
-// Decorator for ListAttribute
+// Decorator for ListAttribute.
 func WithListMarkdown(la *schema.ListAttribute, desc string, fn ListAttributeFunc) ListAttributeFunc {
 	return func(fields ...string) *schema.ListAttribute {
 		la.MarkdownDescription = desc
@@ -94,10 +94,10 @@ func WithListMarkdown(la *schema.ListAttribute, desc string, fn ListAttributeFun
 	}
 }
 
-// SetAttributeFunc represents a function that configures a set attribute
+// SetAttributeFunc represents a function that configures a set attribute.
 type SetAttributeFunc func(...string) *schema.SetAttribute
 
-// Decorator for SetAttribute
+// Decorator for SetAttribute.
 func WithSetMarkdown(sa *schema.SetAttribute, desc string, fn SetAttributeFunc) SetAttributeFunc {
 	return func(fields ...string) *schema.SetAttribute {
 		sa.MarkdownDescription = desc
@@ -105,10 +105,10 @@ func WithSetMarkdown(sa *schema.SetAttribute, desc string, fn SetAttributeFunc) 
 	}
 }
 
-// StringDefaultAttributeFunc represents a function that configures a string attribute with default value
+// StringDefaultAttributeFunc represents a function that configures a string attribute with default value.
 type StringDefaultAttributeFunc func(string, ...string) *schema.StringAttribute
 
-// Decorator for StringDefaultAttribute
+// Decorator for StringDefaultAttribute.
 func WithStringDefaultMarkdown(sa *schema.StringAttribute, desc string, fn StringDefaultAttributeFunc) StringDefaultAttributeFunc {
 	return func(defaultValue string, fields ...string) *schema.StringAttribute {
 		sa.MarkdownDescription = desc
@@ -116,10 +116,10 @@ func WithStringDefaultMarkdown(sa *schema.StringAttribute, desc string, fn Strin
 	}
 }
 
-// BoolDefaultAttributeFunc represents a function that configures a bool attribute with default value
+// BoolDefaultAttributeFunc represents a function that configures a bool attribute with default value.
 type BoolDefaultAttributeFunc func(bool, ...string) *schema.BoolAttribute
 
-// Decorator for BoolDefaultAttribute
+// Decorator for BoolDefaultAttribute.
 func WithBoolDefaultMarkdown(ba *schema.BoolAttribute, desc string, fn BoolDefaultAttributeFunc) BoolDefaultAttributeFunc {
 	return func(defaultValue bool, fields ...string) *schema.BoolAttribute {
 		ba.MarkdownDescription = desc
@@ -127,10 +127,10 @@ func WithBoolDefaultMarkdown(ba *schema.BoolAttribute, desc string, fn BoolDefau
 	}
 }
 
-// Int64DefaultAttributeFunc represents a function that configures an int64 attribute with default value
+// Int64DefaultAttributeFunc represents a function that configures an int64 attribute with default value.
 type Int64DefaultAttributeFunc func(int64, ...string) *schema.Int64Attribute
 
-// Decorator for Int64DefaultAttribute
+// Decorator for Int64DefaultAttribute.
 func WithInt64DefaultMarkdown(ia *schema.Int64Attribute, desc string, fn Int64DefaultAttributeFunc) Int64DefaultAttributeFunc {
 	return func(defaultValue int64, fields ...string) *schema.Int64Attribute {
 		ia.MarkdownDescription = desc
