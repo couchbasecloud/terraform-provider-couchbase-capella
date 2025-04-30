@@ -28,6 +28,39 @@ const (
 	deprecationMessage = "Remove this attribute's configuration as it no longer in use and the attribute will be removed in the next major version of the provider."
 )
 
+// StringAttributeFunc represents a function that configures an attribute
+type StringAttributeFunc func([]string, ...validator.String) *schema.StringAttribute
+
+// Decorator for StringAttribute
+func WithStringMarkdown(sa *schema.StringAttribute, desc string, fn StringAttributeFunc) StringAttributeFunc {
+	return func(fields []string, validators ...validator.String) *schema.StringAttribute {
+		sa.MarkdownDescription = desc
+		return fn(fields, validators...)
+	}
+}
+
+// BoolAttributeFunc represents a function that configures a bool attribute
+type BoolAttributeFunc func([]string, ...validator.Bool) *schema.BoolAttribute
+
+// Decorator for BoolAttribute
+func WithBoolMarkdown(ba *schema.BoolAttribute, desc string, fn BoolAttributeFunc) BoolAttributeFunc {
+	return func(fields []string, validators ...validator.Bool) *schema.BoolAttribute {
+		ba.MarkdownDescription = desc
+		return fn(fields, validators...)
+	}
+}
+
+// Int64AttributeFunc represents a function that configures an int64 attribute
+type Int64AttributeFunc func([]string, ...validator.Int64) *schema.Int64Attribute
+
+// Decorator for Int64Attribute
+func WithInt64Markdown(ia *schema.Int64Attribute, desc string, fn Int64AttributeFunc) Int64AttributeFunc {
+	return func(fields []string, validators ...validator.Int64) *schema.Int64Attribute {
+		ia.MarkdownDescription = desc
+		return fn(fields, validators...)
+	}
+}
+
 // stringAttribute is a variadic function which sets the requested fields
 // in a string attribute to true and then returns the string attribute.
 func stringAttribute(fields []string, validators ...validator.String) *schema.StringAttribute {
