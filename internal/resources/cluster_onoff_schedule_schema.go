@@ -17,7 +17,9 @@ func OnOffScheduleSchema() schema.Schema {
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"state": stringAttribute([]string{required}),
-						"day":   stringAttribute([]string{required}, stringvalidator.OneOf("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")),
+						"day": stringAttributeWithValidators([]string{required},
+							withMarkdown[*schema.StringAttribute]("day of the week"),
+							stringvalidator.OneOf("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")),
 						"from": schema.SingleNestedAttribute{
 							Optional: true,
 							Attributes: map[string]schema.Attribute{

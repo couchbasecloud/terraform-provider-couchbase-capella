@@ -5,6 +5,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -12,8 +13,13 @@ func ClusterSchema() schema.Schema {
 	return schema.Schema{
 		MarkdownDescription: "Manages the Couchbase Capella cluster resource.",
 		Attributes: map[string]schema.Attribute{
-			"id": stringAttribute([]string{computed, useStateForUnknown},
-				withMarkdown[*schema.StringAttribute]("The unique identifier of the cluster.")),
+			"id": schema.StringAttribute{
+				MarkdownDescription: "The unique identifier of the cluster.",
+				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"organization_id": stringAttribute([]string{required, requiresReplace},
 				withMarkdown[*schema.StringAttribute]("The unique identifier of the Capella organization that owns this cluster.")),
 			"project_id": stringAttribute([]string{required, requiresReplace},
