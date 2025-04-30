@@ -61,6 +61,39 @@ func WithInt64Markdown(ia *schema.Int64Attribute, desc string, fn Int64Attribute
 	}
 }
 
+// Float64AttributeFunc represents a function that configures a float64 attribute
+type Float64AttributeFunc func([]string, ...validator.Float64) *schema.Float64Attribute
+
+// Decorator for Float64Attribute
+func WithFloat64Markdown(fa *schema.Float64Attribute, desc string, fn Float64AttributeFunc) Float64AttributeFunc {
+	return func(fields []string, validators ...validator.Float64) *schema.Float64Attribute {
+		fa.MarkdownDescription = desc
+		return fn(fields, validators...)
+	}
+}
+
+// ListAttributeFunc represents a function that configures a list attribute
+type ListAttributeFunc func([]string, ...validator.List) *schema.ListAttribute
+
+// Decorator for ListAttribute
+func WithListMarkdown(la *schema.ListAttribute, desc string, fn ListAttributeFunc) ListAttributeFunc {
+	return func(fields []string, validators ...validator.List) *schema.ListAttribute {
+		la.MarkdownDescription = desc
+		return fn(fields, validators...)
+	}
+}
+
+// SetAttributeFunc represents a function that configures a set attribute
+type SetAttributeFunc func([]string, ...validator.Set) *schema.SetAttribute
+
+// Decorator for SetAttribute
+func WithSetMarkdown(sa *schema.SetAttribute, desc string, fn SetAttributeFunc) SetAttributeFunc {
+	return func(fields []string, validators ...validator.Set) *schema.SetAttribute {
+		sa.MarkdownDescription = desc
+		return fn(fields, validators...)
+	}
+}
+
 // stringAttribute is a variadic function which sets the requested fields
 // in a string attribute to true and then returns the string attribute.
 func stringAttribute(fields []string, validators ...validator.String) *schema.StringAttribute {
