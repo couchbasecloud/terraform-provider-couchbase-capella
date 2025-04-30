@@ -11,14 +11,18 @@ func ClusterSchema() schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: "The ID of the Capella cluster.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"organization_id":               stringAttribute([]string{required, requiresReplace}),
-			"project_id":                    stringAttribute([]string{required, requiresReplace}),
-			"name":                          stringAttribute([]string{required}),
+			"organization_id": withMarkdown(stringAttribute([]string{required, requiresReplace}),
+				"The ID of the organization that the cluster belongs to."),
+			"project_id": withMarkdown(stringAttribute([]string{required, requiresReplace}),
+				"The ID of the project that the cluster belongs to."),
+			"name": withMarkdown(stringAttribute([]string{required}),
+				"The name of the cluster. The name must be unique within the project."),
 			"description":                   stringAttribute([]string{optional, computed}),
 			"zones":                         stringSetAttribute(optional, requiresReplace),
 			"enable_private_dns_resolution": boolDefaultAttribute(false, optional, computed, requiresReplace),

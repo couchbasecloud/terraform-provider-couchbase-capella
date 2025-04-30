@@ -28,6 +28,34 @@ const (
 	deprecationMessage = "Remove this attribute's configuration as it no longer in use and the attribute will be removed in the next major version of the provider."
 )
 
+// withMarkdown sets the MarkdownDescription for the provided attribute.
+// It accepts an attribute of type schema.StringAttribute, schema.Int64Attribute,
+// schema.BoolAttribute, schema.SetAttribute, schema.Float64Attribute,
+// schema.NumberAttribute, or schema.ListAttribute, and a description string.
+// The function returns the modified attribute.
+func withMarkdown[T interface {
+	*schema.StringAttribute | *schema.Int64Attribute | *schema.BoolAttribute | *schema.SetAttribute |
+		*schema.Float64Attribute | *schema.NumberAttribute | *schema.ListAttribute
+}](attr T, description string) T {
+	switch v := any(attr).(type) {
+	case *schema.StringAttribute:
+		v.MarkdownDescription = description
+	case *schema.Int64Attribute:
+		v.MarkdownDescription = description
+	case *schema.BoolAttribute:
+		v.MarkdownDescription = description
+	case *schema.SetAttribute:
+		v.MarkdownDescription = description
+	case *schema.Float64Attribute:
+		v.MarkdownDescription = description
+	case *schema.NumberAttribute:
+		v.MarkdownDescription = description
+	case *schema.ListAttribute:
+		v.MarkdownDescription = description
+	}
+	return attr
+}
+
 // stringAttribute is a variadic function which sets the requested fields
 // in a string attribute to true and then returns the string attribute.
 func stringAttribute(fields []string, validators ...validator.String) *schema.StringAttribute {
