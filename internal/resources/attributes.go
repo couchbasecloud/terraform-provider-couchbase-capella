@@ -29,12 +29,17 @@ const (
 	deprecationMessage = "Remove this attribute's configuration as it no longer in use and the attribute will be removed in the next major version of the provider."
 )
 
-type Test[T any] func(T)
+type AttributeFunc[T any] func(T)
 
+// withMarkdown sets the MarkdownDescription for the provided attribute.
+// It accepts an attribute of type schema.StringAttribute, schema.Int64Attribute,
+// schema.BoolAttribute, schema.SetAttribute, schema.Float64Attribute,
+// schema.NumberAttribute, or schema.ListAttribute, and a description string.
+// The function returns an AttributeFunc that modifies the attribute.
 func withMarkdown[T interface {
 	*schema.StringAttribute | *schema.Int64Attribute | *schema.BoolAttribute | *schema.SetAttribute |
 	*schema.Float64Attribute | *schema.NumberAttribute | *schema.ListAttribute
-}](description string) Test[T] {
+}](description string) AttributeFunc[T] {
 	return func(s T) {
 		switch v := any(s).(type) {
 		case *schema.StringAttribute:
@@ -55,7 +60,7 @@ func withMarkdown[T interface {
 	}
 }
 
-func stringAttributeWithValidators(fields []string, t Test[*schema.StringAttribute], validators ...validator.String) *schema.StringAttribute {
+func stringAttributeWithValidators(fields []string, t AttributeFunc[*schema.StringAttribute], validators ...validator.String) *schema.StringAttribute {
 	attribute := &schema.StringAttribute{}
 	attribute.Validators = validators
 
@@ -91,7 +96,7 @@ func stringAttributeWithValidators(fields []string, t Test[*schema.StringAttribu
 
 // stringAttribute is a variadic function which sets the requested fields
 // in a string attribute to true and then returns the string attribute.
-func stringAttribute(fields []string, t ...Test[*schema.StringAttribute]) *schema.StringAttribute {
+func stringAttribute(fields []string, t ...AttributeFunc[*schema.StringAttribute]) *schema.StringAttribute {
 	attribute := &schema.StringAttribute{}
 
 	for _, field := range fields {
@@ -127,7 +132,7 @@ func stringAttribute(fields []string, t ...Test[*schema.StringAttribute]) *schem
 }
 
 // stringDefaultAttribute sets the default values for a string field and returns the string attribute.
-func stringDefaultAttribute(defaultValue string, fields []string, t ...Test[*schema.StringAttribute]) *schema.StringAttribute {
+func stringDefaultAttribute(defaultValue string, fields []string, t ...AttributeFunc[*schema.StringAttribute]) *schema.StringAttribute {
 	//attribute := stringAttribute(fields, func(s *schema.StringAttribute) {})
 	attribute := stringAttribute(fields, t...)
 	attribute.Default = stringdefault.StaticString(defaultValue)
@@ -136,7 +141,7 @@ func stringDefaultAttribute(defaultValue string, fields []string, t ...Test[*sch
 
 // boolAttribute is a variadic function which sets the requested fields
 // in a bool attribute to true and then returns the string attribute.
-func boolAttribute(fields []string, t ...Test[*schema.BoolAttribute]) *schema.BoolAttribute {
+func boolAttribute(fields []string, t ...AttributeFunc[*schema.BoolAttribute]) *schema.BoolAttribute {
 	attribute := &schema.BoolAttribute{}
 
 	for _, field := range fields {
@@ -170,7 +175,7 @@ func boolAttribute(fields []string, t ...Test[*schema.BoolAttribute]) *schema.Bo
 }
 
 // boolDefaultAttribute sets the default values for a boolean field and returns the bool attribute.
-func boolDefaultAttribute(defaultValue bool, fields []string, t ...Test[*schema.BoolAttribute]) *schema.BoolAttribute {
+func boolDefaultAttribute(defaultValue bool, fields []string, t ...AttributeFunc[*schema.BoolAttribute]) *schema.BoolAttribute {
 	attribute := boolAttribute(fields, t...)
 	//attribute := boolAttribute(fields, func(s *schema.BoolAttribute) {})
 	attribute.Default = booldefault.StaticBool(defaultValue)
@@ -179,7 +184,7 @@ func boolDefaultAttribute(defaultValue bool, fields []string, t ...Test[*schema.
 
 // int64Attribute is a variadic function which sets the requested fields
 // in an Int64 attribute to true and then returns the string attribute.
-// func int64Attribute(fields []string, t ...Test[*schema.Int64Attribute]) *schema.Int64Attribute {
+// TODO: func int64Attribute(fields []string, t ...Test[*schema.Int64Attribute]) *schema.Int64Attribute {
 func int64Attribute(fields ...string) *schema.Int64Attribute {
 	attribute := &schema.Int64Attribute{}
 
@@ -214,7 +219,7 @@ func int64Attribute(fields ...string) *schema.Int64Attribute {
 }
 
 // int64DefaultAttribute sets the default values for an int field and returns the int64 attribute.
-// func int64DefaultAttribute(defaultValue int64, fields []string, t ...Test[*schema.Int64Attribute]) *schema.Int64Attribute {
+// TODO: func int64DefaultAttribute(defaultValue int64, fields []string, t ...Test[*schema.Int64Attribute]) *schema.Int64Attribute {
 func int64DefaultAttribute(defaultValue int64, fields ...string) *schema.Int64Attribute {
 	// attribute := int64Attribute(fields, t...)
 	attribute := int64Attribute(fields...)
@@ -224,7 +229,7 @@ func int64DefaultAttribute(defaultValue int64, fields ...string) *schema.Int64At
 
 // numberAttribute is a variadic function which sets the requested fields
 // in an number attribute to true and then returns the string attribute.
-// func numberAttribute(fields []string, t ...Test[*schema.NumberAttribute]) *schema.NumberAttribute {
+// TODO: func numberAttribute(fields []string, t ...Test[*schema.NumberAttribute]) *schema.NumberAttribute {
 func numberAttribute(fields ...string) *schema.NumberAttribute {
 	attribute := &schema.NumberAttribute{}
 
@@ -260,7 +265,7 @@ func numberAttribute(fields ...string) *schema.NumberAttribute {
 
 // float64Attribute is a variadic function which sets the requested fields
 // in a float64 attribute to true and then returns the string attribute.
-// func float64Attribute(fields []string, t ...Test[*schema.Float64Attribute]) *schema.Float64Attribute {
+// TODO: func float64Attribute(fields []string, t ...Test[*schema.Float64Attribute]) *schema.Float64Attribute {
 func float64Attribute(fields ...string) *schema.Float64Attribute {
 	attribute := &schema.Float64Attribute{}
 
@@ -295,7 +300,7 @@ func float64Attribute(fields ...string) *schema.Float64Attribute {
 }
 
 // float64DefaultAttribute sets the default values for an float field and returns the float64 attribute.
-// func float64DefaultAttribute(defaultValue float64, fields []string, t ...Test[*schema.Float64Attribute]) *schema.Float64Attribute {
+// TODO: func float64DefaultAttribute(defaultValue float64, fields []string, t ...Test[*schema.Float64Attribute]) *schema.Float64Attribute {
 func float64DefaultAttribute(defaultValue float64, fields ...string) *schema.Float64Attribute {
 	// attribute := float64Attribute(fields, t...)
 	attribute := float64Attribute(fields...)
@@ -305,7 +310,7 @@ func float64DefaultAttribute(defaultValue float64, fields ...string) *schema.Flo
 
 // stringListAttribute returns a Terraform string list schema attribute
 // which is configured to be of type string.
-// func stringListAttribute(fields []string, t ...Test[*schema.ListAttribute]) *schema.ListAttribute {
+// TODO: func stringListAttribute(fields []string, t ...Test[*schema.ListAttribute]) *schema.ListAttribute {
 func stringListAttribute(fields ...string) *schema.ListAttribute {
 	attribute := &schema.ListAttribute{
 		ElementType: types.StringType,
@@ -343,7 +348,7 @@ func stringListAttribute(fields ...string) *schema.ListAttribute {
 
 // stringSetAttribute returns a Terraform string set schema attribute
 // which is configured to be of type string.
-// func stringSetAttribute(fields []string, t ...Test[*schema.SetAttribute]) *schema.SetAttribute {
+// TODO: func stringSetAttribute(fields []string, t ...Test[*schema.SetAttribute]) *schema.SetAttribute {
 func stringSetAttribute(fields ...string) *schema.SetAttribute {
 	attribute := &schema.SetAttribute{
 		ElementType: types.StringType,
