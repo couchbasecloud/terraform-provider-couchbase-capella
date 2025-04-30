@@ -28,7 +28,7 @@ func FreeTierAppServiceSchema() schema.Schema {
 				withMarkdown[*schema.StringAttribute]("cluster_id is the ID of the Capella cluster"),
 				validator.String(stringvalidator.LengthAtLeast(1))),
 			"name":           stringAttribute([]string{required}),
-			"description":    stringDefaultAttribute("", optional, computed),
+			"description":    stringDefaultAttribute("", []string{optional, computed}),
 			"nodes":          int64Attribute(computed, useStateForUnknown),
 			"cloud_provider": stringAttribute([]string{computed, useStateForUnknown}),
 			"current_state":  stringAttribute([]string{computed}),

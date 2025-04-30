@@ -19,7 +19,7 @@ func AppServiceSchema() schema.Schema {
 			"project_id":      stringAttribute([]string{required, requiresReplace}),
 			"cluster_id":      stringAttribute([]string{required, requiresReplace}),
 			"name":            stringAttribute([]string{required, requiresReplace}),
-			"description":     stringDefaultAttribute("", optional, computed, requiresReplace),
+			"description":     stringDefaultAttribute("", []string{optional, computed, requiresReplace}),
 			"nodes":           int64Attribute(optional, computed),
 			"cloud_provider":  stringAttribute([]string{optional, computed}),
 			"current_state":   stringAttribute([]string{computed}),

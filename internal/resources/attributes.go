@@ -128,8 +128,9 @@ func stringAttribute(fields []string, t ...Test[*schema.StringAttribute]) *schem
 
 // stringDefaultAttribute sets the default values for a string field and returns the string attribute.
 // func stringDefaultAttribute(defaultValue string, fields []string, t ...Test[*schema.StringAttribute]) *schema.StringAttribute {
-func stringDefaultAttribute(defaultValue string, fields ...string) *schema.StringAttribute {
-	attribute := stringAttribute(fields, func(s *schema.StringAttribute) {})
+func stringDefaultAttribute(defaultValue string, fields []string, t ...Test[*schema.StringAttribute]) *schema.StringAttribute {
+	//attribute := stringAttribute(fields, func(s *schema.StringAttribute) {})
+	attribute := stringAttribute(fields, t...)
 	attribute.Default = stringdefault.StaticString(defaultValue)
 	return attribute
 }

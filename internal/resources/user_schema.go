@@ -23,7 +23,7 @@ func UserSchema() schema.Schema {
 				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"type":  stringDefaultAttribute("project", optional, computed),
+						"type":  stringDefaultAttribute("project", []string{optional, computed}),
 						"id":    stringAttribute([]string{required}),
 						"roles": stringSetAttribute(required),
 					},

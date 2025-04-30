@@ -33,10 +33,10 @@ func GsiSchema() schema.Schema {
 			"cluster_id":      stringAttribute([]string{required, requiresReplace}),
 			"bucket_name":     stringAttribute([]string{required, requiresReplace}),
 			"scope_name": stringDefaultAttribute(
-				"_default", optional, computed, useStateForUnknown, requiresReplace,
+				"_default", []string{optional, computed, useStateForUnknown, requiresReplace},
 			),
 			"collection_name": stringDefaultAttribute(
-				"_default", optional, computed, useStateForUnknown, requiresReplace,
+				"_default", []string{optional, computed, useStateForUnknown, requiresReplace},
 			),
 			"index_name":   stringAttribute([]string{optional, requiresReplace}),
 			"is_primary":   boolAttribute(optional),

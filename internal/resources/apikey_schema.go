@@ -23,7 +23,7 @@ func ApiKeySchema() schema.Schema {
 			},
 			"organization_id": stringAttribute([]string{required, requiresReplace}),
 			"name":            stringAttribute([]string{required, requiresReplace}),
-			"description":     stringDefaultAttribute("", optional, computed, requiresReplace, useStateForUnknown),
+			"description":     stringDefaultAttribute("", []string{optional, computed, requiresReplace, useStateForUnknown}),
 			"expiry":          float64DefaultAttribute(180, optional, computed, requiresReplace, useStateForUnknown),
 			"allowed_cidrs": schema.SetAttribute{
 				Optional:    true,
@@ -45,7 +45,7 @@ func ApiKeySchema() schema.Schema {
 					Attributes: map[string]schema.Attribute{
 						"id":    stringAttribute([]string{required}),
 						"roles": stringSetAttribute(required),
-						"type":  stringDefaultAttribute("project", optional, computed),
+						"type":  stringDefaultAttribute("project", []string{optional, computed}),
 					},
 				},
 				PlanModifiers: []planmodifier.Set{
