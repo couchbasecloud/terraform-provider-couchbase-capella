@@ -11,7 +11,7 @@ func ClusterOnOffOnDemandSchema() schema.Schema {
 			"project_id":                 stringAttribute([]string{required, requiresReplace}),
 			"cluster_id":                 stringAttribute([]string{required, requiresReplace}),
 			"state":                      stringAttribute([]string{required}),
-			"turn_on_linked_app_service": boolAttribute(optional, computed),
+			"turn_on_linked_app_service": boolAttribute([]string{optional, computed}),
 		},
 	}
 }

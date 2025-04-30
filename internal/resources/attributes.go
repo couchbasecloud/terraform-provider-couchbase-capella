@@ -33,7 +33,7 @@ type Test[T any] func(T)
 
 func withMarkdown[T interface {
 	*schema.StringAttribute | *schema.Int64Attribute | *schema.BoolAttribute | *schema.SetAttribute |
-		*schema.Float64Attribute | *schema.NumberAttribute | *schema.ListAttribute
+	*schema.Float64Attribute | *schema.NumberAttribute | *schema.ListAttribute
 }](description string) Test[T] {
 	return func(s T) {
 		switch v := any(s).(type) {
@@ -127,7 +127,6 @@ func stringAttribute(fields []string, t ...Test[*schema.StringAttribute]) *schem
 }
 
 // stringDefaultAttribute sets the default values for a string field and returns the string attribute.
-// func stringDefaultAttribute(defaultValue string, fields []string, t ...Test[*schema.StringAttribute]) *schema.StringAttribute {
 func stringDefaultAttribute(defaultValue string, fields []string, t ...Test[*schema.StringAttribute]) *schema.StringAttribute {
 	//attribute := stringAttribute(fields, func(s *schema.StringAttribute) {})
 	attribute := stringAttribute(fields, t...)
@@ -137,8 +136,7 @@ func stringDefaultAttribute(defaultValue string, fields []string, t ...Test[*sch
 
 // boolAttribute is a variadic function which sets the requested fields
 // in a bool attribute to true and then returns the string attribute.
-// func boolAttribute(fields []string, t ...Test[*schema.BoolAttribute]) *schema.BoolAttribute {
-func boolAttribute(fields ...string) *schema.BoolAttribute {
+func boolAttribute(fields []string, t ...Test[*schema.BoolAttribute]) *schema.BoolAttribute {
 	attribute := &schema.BoolAttribute{}
 
 	for _, field := range fields {
@@ -164,18 +162,17 @@ func boolAttribute(fields ...string) *schema.BoolAttribute {
 		}
 	}
 
-	// execute markdown function if provided
-	// if len(t) > 0 {
-	// 	t[0](attribute)
-	// }
+	//execute markdown function if provided
+	if len(t) > 0 {
+		t[0](attribute)
+	}
 	return attribute
 }
 
 // boolDefaultAttribute sets the default values for a boolean field and returns the bool attribute.
-// func boolDefaultAttribute(defaultValue bool, fields []string, t ...Test[*schema.BoolAttribute]) *schema.BoolAttribute {
-func boolDefaultAttribute(defaultValue bool, fields ...string) *schema.BoolAttribute {
-	// attribute := boolAttribute(fields, t...)
-	attribute := boolAttribute(fields...)
+func boolDefaultAttribute(defaultValue bool, fields []string, t ...Test[*schema.BoolAttribute]) *schema.BoolAttribute {
+	attribute := boolAttribute(fields, t...)
+	//attribute := boolAttribute(fields, func(s *schema.BoolAttribute) {})
 	attribute.Default = booldefault.StaticBool(defaultValue)
 	return attribute
 }

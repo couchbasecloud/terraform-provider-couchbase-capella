@@ -11,7 +11,7 @@ func AuditLogSettingsSchema() schema.Schema {
 			"organization_id": stringAttribute([]string{required}),
 			"project_id":      stringAttribute([]string{required}),
 			"cluster_id":      stringAttribute([]string{required}),
-			"audit_enabled":   boolAttribute(computed, optional),
+			"audit_enabled":   boolAttribute([]string{computed, optional}),
 			"enabled_event_ids": schema.SetAttribute{
 				Computed:    true,
 				Optional:    true,

@@ -25,7 +25,7 @@ func SampleBucketSchema() schema.Schema {
 			"bucket_conflict_resolution": stringAttribute([]string{computed}),
 			"durability_level":           stringAttribute([]string{computed}),
 			"replicas":                   int64Attribute(computed),
-			"flush":                      boolAttribute(computed),
+			"flush":                      boolAttribute([]string{computed}),
 			"time_to_live_in_seconds":    int64Attribute(computed),
 			"eviction_policy":            stringAttribute([]string{computed}),
 			"stats": schema.SingleNestedAttribute{

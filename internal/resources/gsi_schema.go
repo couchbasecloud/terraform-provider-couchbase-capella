@@ -39,7 +39,7 @@ func GsiSchema() schema.Schema {
 				"_default", []string{optional, computed, useStateForUnknown, requiresReplace},
 			),
 			"index_name":   stringAttribute([]string{optional, requiresReplace}),
-			"is_primary":   boolAttribute(optional),
+			"is_primary":   boolAttribute([]string{optional}),
 			"index_keys":   stringListAttribute(optional, requiresReplace),
 			"where":        stringAttribute([]string{optional, requiresReplace}),
 			"status":       stringAttribute([]string{computed, useStateForUnknown}),

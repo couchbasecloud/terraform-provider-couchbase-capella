@@ -32,7 +32,7 @@ func FreeTierBucketSchema() schema.Schema {
 			"bucket_conflict_resolution": stringAttribute([]string{computed, useStateForUnknown}),
 			"durability_level":           stringAttribute([]string{computed, useStateForUnknown}),
 			"replicas":                   int64Attribute(computed, useStateForUnknown),
-			"flush":                      boolAttribute(computed, useStateForUnknown),
+			"flush":                      boolAttribute([]string{computed, useStateForUnknown}),
 			"time_to_live_in_seconds":    int64Attribute(computed, useStateForUnknown),
 			"eviction_policy":            stringAttribute([]string{computed, useStateForUnknown}),
 			"stats": schema.SingleNestedAttribute{

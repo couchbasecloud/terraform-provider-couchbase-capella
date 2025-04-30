@@ -25,7 +25,7 @@ func BucketSchema() schema.Schema {
 			"bucket_conflict_resolution": stringDefaultAttribute("seqno", []string{optional, computed, requiresReplace, useStateForUnknown}),
 			"durability_level":           stringDefaultAttribute("none", []string{optional, computed}),
 			"replicas":                   int64DefaultAttribute(1, optional, computed),
-			"flush":                      boolDefaultAttribute(false, optional, computed),
+			"flush":                      boolDefaultAttribute(false, []string{optional, computed}),
 			"time_to_live_in_seconds":    int64DefaultAttribute(0, optional, computed),
 			"eviction_policy":            stringAttribute([]string{optional, computed, requiresReplace, useStateForUnknown}),
 			"stats": schema.SingleNestedAttribute{

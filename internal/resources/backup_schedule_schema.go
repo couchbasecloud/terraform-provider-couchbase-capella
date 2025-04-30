@@ -19,7 +19,7 @@ func BackupScheduleSchema() schema.Schema {
 					"start_at":                 int64Attribute(required),
 					"incremental_every":        int64Attribute(required),
 					"retention_time":           stringAttribute([]string{required}),
-					"cost_optimized_retention": boolAttribute(required),
+					"cost_optimized_retention": boolAttribute([]string{required}),
 				},
 			},
 		},

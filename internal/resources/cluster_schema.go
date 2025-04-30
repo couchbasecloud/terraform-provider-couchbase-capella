@@ -36,7 +36,7 @@ func ClusterSchema() schema.Schema {
 					setplanmodifier.RequiresReplace(),
 				},
 			},
-			"enable_private_dns_resolution": boolDefaultAttribute(false, optional, computed, requiresReplace),
+			"enable_private_dns_resolution": boolDefaultAttribute(false, []string{optional, computed, requiresReplace}),
 			"cloud_provider": schema.SingleNestedAttribute{
 				Required:            true,
 				MarkdownDescription: "The cloud provider configuration for the cluster.",
@@ -89,7 +89,7 @@ func ClusterSchema() schema.Schema {
 											withMarkdown[*schema.StringAttribute]("The type of disk to use (e.g., 'pd-ssd', 'premium', 'ultra').")),
 										"storage":       int64Attribute(optional, computed),
 										"iops":          int64Attribute(optional, computed),
-										"autoexpansion": boolAttribute(optional, computed),
+										"autoexpansion": boolAttribute([]string{optional, computed}),
 									},
 								},
 							},
