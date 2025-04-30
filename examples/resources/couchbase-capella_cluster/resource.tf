@@ -22,8 +22,8 @@ resource "couchbase-capella_cluster" "new_cluster" {
           iops    = 3000
         }
       }
-      num_of_nodes =  3
-      services     = [ "search","index","data", "query"]
+      num_of_nodes = 3
+      services     = ["search", "index", "data", "query"]
     }
   ]
   availability = {
