@@ -2,43 +2,70 @@ package resources
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 func ClusterSchema() schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Manages the Couchbase Capella cluster resource.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: "The unique identifier of the cluster.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"organization_id":               stringAttribute([]string{required, requiresReplace}),
-			"project_id":                    stringAttribute([]string{required, requiresReplace}),
-			"name":                          stringAttribute([]string{required}),
-			"description":                   stringAttribute([]string{optional, computed}),
-			"zones":                         stringSetAttribute(optional, requiresReplace),
-			"enable_private_dns_resolution": boolDefaultAttribute(false, optional, computed, requiresReplace),
+			"organization_id": stringAttribute([]string{required, requiresReplace},
+				withMarkdown[*schema.StringAttribute]("The unique identifier of the Capella organization that owns this cluster.")),
+			"project_id": stringAttribute([]string{required, requiresReplace},
+				withMarkdown[*schema.StringAttribute]("The unique identifier of the Capella project where this cluster will be created.")),
+			"name": stringAttribute([]string{required},
+				withMarkdown[*schema.StringAttribute]("The name of the cluster. This must be unique within the project.")),
+			"description": stringAttribute([]string{optional, computed},
+				withMarkdown[*schema.StringAttribute]("A description of the cluster's purpose or characteristics.")),
+			"zones": schema.SetAttribute{
+				ElementType:         types.StringType,
+				Optional:            true,
+				MarkdownDescription: "The cloud provider availability zones where the cluster will be deployed. Currently only supports single AZ clusters.",
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.RequiresReplace(),
+				},
+			},
+			"enable_private_dns_resolution": schema.BoolAttribute{
+				Optional:            true,
+				Computed:            true,
+				MarkdownDescription: "Enables private DNS resolution for the cluster.",
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+				Default: booldefault.StaticBool(false),
+			},
 			"cloud_provider": schema.SingleNestedAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "The cloud provider configuration for the cluster.",
 				Attributes: map[string]schema.Attribute{
-					"type":   stringAttribute([]string{required}),
-					"region": stringAttribute([]string{required}),
-					"cidr":   stringAttribute([]string{required}),
+					"type":   stringAttribute([]string{required}, withMarkdown[*schema.StringAttribute]("The type of cloud provider (e.g., 'aws', 'azure', 'gcp').")),
+					"region": stringAttribute([]string{required}, withMarkdown[*schema.StringAttribute]("The region where the cluster will be deployed.")),
+					"cidr":   stringAttribute([]string{required}, withMarkdown[*schema.StringAttribute]("The CIDR block for the cluster's network.")),
 				},
 				PlanModifiers: []planmodifier.Object{
 					objectplanmodifier.RequiresReplace(),
 				},
 			},
-			"configuration_type": stringAttribute([]string{optional, computed, requiresReplace, useStateForUnknown, deprecated}),
+			"configuration_type": stringAttribute([]string{optional, computed, requiresReplace, useStateForUnknown, deprecated}, withMarkdown[*schema.StringAttribute]("The type of cluster configuration.")),
 			"couchbase_server": schema.SingleNestedAttribute{
-				Optional: true,
-				Computed: true,
+				Optional:            true,
+				Computed:            true,
+				MarkdownDescription: "Couchbase Server configuration settings.",
 				Attributes: map[string]schema.Attribute{
-					"version": stringAttribute([]string{optional, computed}),
+					"version": stringAttribute([]string{optional, computed}, withMarkdown[*schema.StringAttribute]("The version of Couchbase Server to deploy.")),
 				},
 				PlanModifiers: []planmodifier.Object{
 					objectplanmodifier.RequiresReplace(),
@@ -46,61 +73,63 @@ func ClusterSchema() schema.Schema {
 				},
 			},
 			"service_groups": schema.SetNestedAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "Configuration for service groups in the cluster.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"node": schema.SingleNestedAttribute{
-							Required: true,
+							Required:            true,
+							MarkdownDescription: "Node configuration for the service group.",
 							Attributes: map[string]schema.Attribute{
 								"compute": schema.SingleNestedAttribute{
-									Required: true,
+									Required:            true,
+									MarkdownDescription: "Compute resources configuration for the node.",
 									Attributes: map[string]schema.Attribute{
-										"cpu": int64Attribute(required),
-										"ram": int64Attribute(required),
+										"cpu": int64Attribute([]string{required}, withMarkdown[*schema.Int64Attribute]("Number of CPU cores allocated to the node.")),
+										"ram": int64Attribute([]string{required}, withMarkdown[*schema.Int64Attribute]("Amount of RAM in MB allocated to the node.")),
 									},
 								},
 								"disk": schema.SingleNestedAttribute{
-									Description: "The 'storage' and 'IOPS' fields are required for AWS. " +
-										"For Azure, only the 'disktype' field is required, and for Ultra disk type, you can provide all 3 - storage, iops and autoexpansion fields. For Premium type, you can only provide the autoexpansion field, others can't be set." +
-										"In the case of GCP, only 'pd ssd' disk type is available, and you cannot set the 'IOPS' field.",
-									Required: true,
+									Required:            true,
+									MarkdownDescription: "Disk configuration for the node. Storage and IOPS are required for AWS. For Azure, only disktype is required, with additional options for Ultra disk type. GCP only supports pd-ssd disk type.",
 									Attributes: map[string]schema.Attribute{
-										"type":          stringAttribute([]string{required}),
-										"storage":       int64Attribute(optional, computed),
-										"iops":          int64Attribute(optional, computed),
-										"autoexpansion": boolAttribute(optional, computed),
+										"type":          stringAttribute([]string{required}, withMarkdown[*schema.StringAttribute]("The type of disk to use (e.g., 'pd-ssd', 'premium', 'ultra').")),
+										"storage":       int64Attribute([]string{optional, computed}, withMarkdown[*schema.Int64Attribute]("The size of the disk in GB.")),
+										"iops":          int64Attribute([]string{optional, computed}, withMarkdown[*schema.Int64Attribute]("The number of IOPS for the disk.")),
+										"autoexpansion": boolAttribute([]string{optional, computed}, withMarkdown[*schema.BoolAttribute]("Whether to enable automatic disk expansion.")),
 									},
 								},
 							},
 						},
-						"num_of_nodes": int64Attribute(required),
-						"services":     stringSetAttribute(required),
+						"num_of_nodes": int64Attribute([]string{required}, withMarkdown[*schema.Int64Attribute]("The number of nodes in this service group.")),
+						"services":     stringSetAttribute([]string{required}, withMarkdown[*schema.SetAttribute]("The services to run on this service group (e.g., 'data', 'index', 'query', 'search').")),
 					},
 				},
 			},
 			"availability": schema.SingleNestedAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "Availability configuration for the cluster.",
 				Attributes: map[string]schema.Attribute{
-					"type": stringAttribute([]string{required}),
+					"type": stringAttribute([]string{required}, withMarkdown[*schema.StringAttribute]("The type of availability configuration (e.g., 'single', 'multi').")),
 				},
 				PlanModifiers: []planmodifier.Object{
 					objectplanmodifier.RequiresReplace(),
 				},
 			},
 			"support": schema.SingleNestedAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "Support configuration for the cluster.",
 				Attributes: map[string]schema.Attribute{
-					"plan":     stringAttribute([]string{required}),
-					"timezone": stringAttribute([]string{computed, optional}),
+					"plan":     stringAttribute([]string{required}, withMarkdown[*schema.StringAttribute]("The support plan for the cluster.")),
+					"timezone": stringAttribute([]string{computed, optional}, withMarkdown[*schema.StringAttribute]("The timezone for support operations.")),
 				},
 			},
-			"current_state":     stringAttribute([]string{computed}),
-			"connection_string": stringAttribute([]string{computed}),
-			"app_service_id":    stringAttribute([]string{computed}),
+			"current_state":     stringAttribute([]string{computed}, withMarkdown[*schema.StringAttribute]("The current state of the cluster.")),
+			"connection_string": stringAttribute([]string{computed}, withMarkdown[*schema.StringAttribute]("The connection string for accessing the cluster.")),
+			"app_service_id":    stringAttribute([]string{computed}, withMarkdown[*schema.StringAttribute]("The ID of the associated application service.")),
 			"audit":             computedAuditAttribute(),
-			// if_match is only required during update call
-			"if_match": stringAttribute([]string{optional}),
-			"etag":     stringAttribute([]string{computed}),
+			"if_match":          stringAttribute([]string{optional}, withMarkdown[*schema.StringAttribute]("The ETag value for optimistic concurrency control during updates.")),
+			"etag":              stringAttribute([]string{computed}, withMarkdown[*schema.StringAttribute]("The current ETag value of the cluster resource.")),
 		},
 	}
 }
