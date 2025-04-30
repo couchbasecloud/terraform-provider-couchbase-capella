@@ -9,10 +9,16 @@ import (
 func FreeTierClusterOnOffSchema() schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"organization_id": stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))),
-			"project_id":      stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))),
-			"cluster_id":      stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))),
-			"state":           stringAttribute([]string{required}),
+			"organization_id": stringAttributeWithValidators([]string{required, requiresReplace},
+				withMarkdown[*schema.StringAttribute]("organization id"),
+				validator.String(stringvalidator.LengthAtLeast(1))),
+			"project_id": stringAttributeWithValidators([]string{required, requiresReplace},
+				withMarkdown[*schema.StringAttribute]("project id"),
+				validator.String(stringvalidator.LengthAtLeast(1))),
+			"cluster_id": stringAttributeWithValidators([]string{required, requiresReplace},
+				withMarkdown[*schema.StringAttribute]("cluster id"),
+				validator.String(stringvalidator.LengthAtLeast(1))),
+			"state": stringAttribute([]string{required}),
 		},
 	}
 }
