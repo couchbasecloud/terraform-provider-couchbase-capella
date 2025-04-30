@@ -6,6 +6,7 @@ import (
 
 func ClusterSchema() schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Retrieves the clusters in Couchbase Capella.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": requiredStringAttribute,
 			"project_id":      requiredStringAttribute,
