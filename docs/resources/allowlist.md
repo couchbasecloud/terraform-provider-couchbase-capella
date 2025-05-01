@@ -59,6 +59,5 @@ Read-Only:
 Import is supported using the following syntax:
 
 ```shell
-# Just for documentation, not a script.
 terraform import couchbase-capella_allowlist.new_allowlist id=test_id, cluster_id=test_id, project_id=test_id, organization_id=test_id
 ```
