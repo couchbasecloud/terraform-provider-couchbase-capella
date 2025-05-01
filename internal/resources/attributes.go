@@ -34,7 +34,7 @@ const (
 // Float64Attribute, NumberAttribute, and ListAttribute.
 type SchemaAttribute interface {
 	*schema.StringAttribute | *schema.Int64Attribute | *schema.BoolAttribute | *schema.SetAttribute |
-	*schema.Float64Attribute | *schema.NumberAttribute | *schema.ListAttribute
+		*schema.Float64Attribute | *schema.NumberAttribute | *schema.ListAttribute
 }
 
 // WithDescription sets the MarkdownDescription for the provided attribute.
