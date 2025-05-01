@@ -29,15 +29,16 @@ const (
 )
 
 // SchemaAttribute is a type alias that encapsulates the allowed attribute types.
+// It is used to define a set of types that can be used as attributes in the schema.
+// This alias includes various attribute types such as StringAttribute, Int64Attribute, BoolAttribute, SetAttribute,
+// Float64Attribute, NumberAttribute, and ListAttribute.
 type SchemaAttribute interface {
 	*schema.StringAttribute | *schema.Int64Attribute | *schema.BoolAttribute | *schema.SetAttribute |
 	*schema.Float64Attribute | *schema.NumberAttribute | *schema.ListAttribute
 }
 
 // WithDescription sets the MarkdownDescription for the provided attribute.
-// It accepts an attribute of type schema.StringAttribute, schema.Int64Attribute,
-// schema.BoolAttribute, schema.SetAttribute, schema.Float64Attribute,
-// schema.NumberAttribute, or schema.ListAttribute, and a description string.
+// It accepts an attribute of type SchemaAttribute, and a description string.
 // The function returns the modified attribute.
 func WithDescription[T SchemaAttribute](attr T, description string) T {
 	switch v := any(attr).(type) {
