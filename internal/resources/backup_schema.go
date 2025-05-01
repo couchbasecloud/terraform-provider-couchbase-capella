@@ -31,7 +31,7 @@ func BackupSchema() schema.Schema {
 			"backup_stats": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"size_in_mb": withMarkdown(float64Attribute(computed),
+					"size_in_mb": Docs(float64Attribute(computed),
 						"Size in MB is the total size of the backup in megabytes. It represents the amount of data that was backed up during the backup operation."),
 					"items":      int64Attribute(computed),
 					"mutations":  int64Attribute(computed),
@@ -63,7 +63,7 @@ func BackupSchema() schema.Schema {
 				Attributes: map[string]schema.Attribute{
 					"target_cluster_id": stringAttribute([]string{required}),
 					"source_cluster_id": stringAttribute([]string{required}),
-					"services": withMarkdown(stringListAttribute(required),
+					"services": Docs(stringListAttribute(required),
 						"Services is a list of services to be restored. It is used to specify the services that should be included in the restore operation."),
 					"force_updates":           boolAttribute(optional),
 					"auto_remove_collections": boolAttribute(optional),

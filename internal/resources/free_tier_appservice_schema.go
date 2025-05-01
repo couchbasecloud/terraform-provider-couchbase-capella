@@ -18,7 +18,7 @@ func FreeTierAppServiceSchema() schema.Schema {
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"organization_id": withMarkdown(stringAttribute([]string{required, requiresReplace}, validator.String(
+			"organization_id": Docs(stringAttribute([]string{required, requiresReplace}, validator.String(
 				stringvalidator.LengthAtLeast(1),
 			)),
 				"Organization ID is the unique identifier for the organization. It is used to group resources and manage access within the organization."),
