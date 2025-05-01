@@ -28,15 +28,18 @@ const (
 	deprecationMessage = "Remove this attribute's configuration as it no longer in use and the attribute will be removed in the next major version of the provider."
 )
 
+// CustomType is a type alias that encapsulates the allowed attribute types.
+type CustomType interface {
+	*schema.StringAttribute | *schema.Int64Attribute | *schema.BoolAttribute | *schema.SetAttribute |
+	*schema.Float64Attribute | *schema.NumberAttribute | *schema.ListAttribute
+}
+
 // WithDescription sets the MarkdownDescription for the provided attribute.
 // It accepts an attribute of type schema.StringAttribute, schema.Int64Attribute,
 // schema.BoolAttribute, schema.SetAttribute, schema.Float64Attribute,
 // schema.NumberAttribute, or schema.ListAttribute, and a description string.
 // The function returns the modified attribute.
-func WithDescription[T interface {
-	*schema.StringAttribute | *schema.Int64Attribute | *schema.BoolAttribute | *schema.SetAttribute |
-		*schema.Float64Attribute | *schema.NumberAttribute | *schema.ListAttribute
-}](attr T, description string) T {
+func WithDescription[T CustomType](attr T, description string) T {
 	switch v := any(attr).(type) {
 	case *schema.StringAttribute:
 		v.MarkdownDescription = description
