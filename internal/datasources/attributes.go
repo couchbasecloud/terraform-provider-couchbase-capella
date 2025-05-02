@@ -90,7 +90,7 @@ var (
 		Attributes: map[string]schema.Attribute{
 			"created_at": schema.StringAttribute{
 				Computed:    true,
-				Description: "The timestamp when the resource was created.",
+				Description: "The RFC3339 timestamp when the resource was created.",
 			},
 			"created_by": schema.StringAttribute{
 				Computed:    true,
@@ -98,7 +98,7 @@ var (
 			},
 			"modified_at": schema.StringAttribute{
 				Computed:    true,
-				Description: "The timestamp when the resource was last modified.",
+				Description: "The RFC3339 timestamp when the resource was last modified.",
 			},
 			"modified_by": schema.StringAttribute{
 				Computed:    true,
