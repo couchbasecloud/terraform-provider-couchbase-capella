@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
-
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -42,12 +41,34 @@ func (p *PrivateEndpoint) Metadata(_ context.Context, req resource.MetadataReque
 // Schema defines the schema for the private endpoint resource.
 func (p *PrivateEndpoint) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Resource to manage private endpoints for a Capella cluster. Private endpoints allow you to securely connect your cloud provider's private network (VPC/VNET) to your Capella cluster without exposing traffic to the public internet.",
 		Attributes: map[string]schema.Attribute{
-			"organization_id": stringAttribute([]string{required, requiresReplace}),
-			"project_id":      stringAttribute([]string{required, requiresReplace}),
-			"cluster_id":      stringAttribute([]string{required, requiresReplace}),
-			"endpoint_id":     stringAttribute([]string{required, requiresReplace}),
-			"status":          stringAttribute([]string{computed}),
+			"organization_id": WithDescription(
+				stringAttribute([]string{required, requiresReplace}),
+				"The ID of the Capella organization where the private endpoint will be created.",
+			),
+			"project_id": WithDescription(
+				stringAttribute([]string{required, requiresReplace}),
+				"The ID of the Capella project containing the cluster where the private endpoint will be created.",
+			),
+			"cluster_id": WithDescription(
+				stringAttribute([]string{required, requiresReplace}),
+				"The ID of the Capella cluster to create the private endpoint for. This enables secure access to the cluster through your cloud provider's private network.",
+			),
+			"endpoint_id": WithDescription(
+				stringAttribute([]string{required, requiresReplace}),
+				"The ID of the private endpoint in your cloud provider.",
+			),
+			"status": schema.StringAttribute{
+				Computed: true,
+				MarkdownDescription: "The current status of the private endpoint. Possible values are:\n" +
+					"* `pending` - The endpoint creation is in progress\n" +
+					"* `pendingAcceptance` - The endpoint is waiting for acceptance from Capella\n" +
+					"* `linked` - The endpoint is successfully connected and active\n" +
+					"* `rejected` - The endpoint connection request was rejected\n" +
+					"* `unrecognized` - The endpoint state cannot be determined\n" +
+					"* `failed` - The endpoint creation or connection attempt failed",
+			},
 		},
 	}
 }
