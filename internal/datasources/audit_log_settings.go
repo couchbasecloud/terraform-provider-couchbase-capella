@@ -38,18 +38,42 @@ func (a *AuditLogSettings) Metadata(_ context.Context, req datasource.MetadataRe
 
 func (a *AuditLogSettings) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Data source to retrieve audit log configuration settings for a Capella cluster. These settings control which audit events are logged and which users are excluded from audit logging.",
 		Attributes: map[string]schema.Attribute{
-			"organization_id":   requiredStringAttribute,
-			"project_id":        requiredStringAttribute,
-			"cluster_id":        requiredStringAttribute,
-			"audit_enabled":     computedBoolAttribute,
-			"enabled_event_ids": computedIntSetAttribute,
+			"organization_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The ID of the organization that the cluster belongs to.",
+			},
+			"project_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The ID of the project that the cluster belongs to.",
+			},
+			"cluster_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The ID of the cluster to retrieve audit log settings from.",
+			},
+			"audit_enabled": schema.BoolAttribute{
+				Computed:            true,
+				MarkdownDescription: "Whether audit logging is enabled for this cluster.",
+			},
+			"enabled_event_ids": schema.SetAttribute{
+				Computed:            true,
+				ElementType:         types.Int64Type,
+				MarkdownDescription: "List of audit event IDs that are currently enabled for logging. These IDs correspond to specific types of events that will be recorded in the audit log.",
+			},
 			"disabled_users": schema.SetNestedAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: "List of users whose actions are excluded from audit logging.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"domain": schema.StringAttribute{Computed: true},
-						"name":   schema.StringAttribute{Computed: true},
+						"domain": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "The authentication domain of the excluded user.",
+						},
+						"name": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "The username of the excluded user.",
+						},
 					},
 				},
 			},

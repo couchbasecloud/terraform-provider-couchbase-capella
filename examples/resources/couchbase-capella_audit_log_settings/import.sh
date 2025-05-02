@@ -1,0 +1,1 @@
+terraform import couchbase-capella_audit_log_settings.new_auditlogsettings id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000
