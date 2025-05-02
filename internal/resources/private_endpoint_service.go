@@ -50,13 +50,21 @@ func (p *PrivateEndpointService) Metadata(_ context.Context, req resource.Metada
 // Schema defines the schema for a private endpoint service resource.
 func (p *PrivateEndpointService) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Resource to manage the private endpoint service for a Capella cluster. The private endpoint service must be enabled before you can create private endpoints to connect your cloud provider's private network (VPC/VNET) to your Capella cluster. This enables secure access to your cluster without exposing traffic to the public internet.",
 		Attributes: map[string]schema.Attribute{
-			"organization_id": stringAttribute([]string{required, requiresReplace}),
-			"project_id":      stringAttribute([]string{required, requiresReplace}),
-			"cluster_id":      stringAttribute([]string{required, requiresReplace}),
+			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}),
+				"The ID of the organization where the private endpoint service will be enabled. This field cannot be changed after the private endpoint service is created.",
+			),
+			"project_id": WithDescription(stringAttribute([]string{required, requiresReplace}),
+				"The ID of the project containing the cluster where the private endpoint service will be enabled. This field cannot be changed after the private endpoint service is created.",
+			),
+			"cluster_id": WithDescription(stringAttribute([]string{required, requiresReplace}),
+				"The ID of the cluster where the private endpoint service will be enabled. This enables secure access to the cluster through your cloud provider's private network. This field cannot be changed after the private endpoint service is created.",
+			),
 			"enabled": schema.BoolAttribute{
-				Required:      true,
-				PlanModifiers: []planmodifier.Bool{custommodifier.BlockCreateWhenEnabledSetToFalse()},
+				Required:            true,
+				MarkdownDescription: "Whether to enable or disable the private endpoint service for the cluster. When enabled, you can create private endpoints to connect your cloud provider's private network to the cluster. Note: Setting this to false during creation will result in an error as the service must be enabled to be managed.",
+				PlanModifiers:       []planmodifier.Bool{custommodifier.BlockCreateWhenEnabledSetToFalse()},
 			},
 		},
 	}

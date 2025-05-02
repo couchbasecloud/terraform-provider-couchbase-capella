@@ -39,11 +39,24 @@ func (p *PrivateEndpointService) Metadata(_ context.Context, req datasource.Meta
 // Schema defines schema for private endpoint service resource.
 func (p *PrivateEndpointService) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Data source to retrieve the status of the private endpoint service for a Capella cluster. Private endpoint service enables secure connectivity between your cloud provider's private network (VPC/VNET) and your Capella cluster.",
 		Attributes: map[string]schema.Attribute{
-			"organization_id": requiredStringAttribute,
-			"project_id":      requiredStringAttribute,
-			"cluster_id":      requiredStringAttribute,
-			"enabled":         computedBoolAttribute,
+			"organization_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The ID of the organization where the private endpoint service exists. Used to scope the private endpoint service status query.",
+			},
+			"project_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The ID of the project containing the cluster with the private endpoint service. Used to scope the private endpoint service status query.",
+			},
+			"cluster_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The ID of the cluster to retrieve private endpoint service status from. Private endpoint service enables secure access to this cluster through your cloud provider's private network.",
+			},
+			"enabled": schema.BoolAttribute{
+				Computed:            true,
+				MarkdownDescription: "Whether the private endpoint service is enabled for the cluster. When enabled, you can create private endpoints to connect your cloud provider's private network to the cluster.",
+			},
 		},
 	}
 }
