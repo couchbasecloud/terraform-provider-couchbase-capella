@@ -53,3 +53,11 @@ Read-Only:
 - `modified_at` (String) The timestamp when the resource was last modified.
 - `modified_by` (String) The user who last modified the resource.
 - `version` (Number) The version of the document. This value is incremented each time the resource is modified.
+
+## Import
+
+Import is supported using the following syntax:
+
+```shell
+terraform import couchbase-capella_allowlist.new_allowlist id=test_id, cluster_id=test_id, project_id=test_id, organization_id=test_id
+```
