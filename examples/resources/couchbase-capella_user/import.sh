@@ -1,0 +1,1 @@
+terraform import couchbase-capella_user.new_user id=test_id,organization_id=test_id
