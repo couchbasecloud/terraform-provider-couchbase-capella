@@ -7,11 +7,8 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
-
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -46,34 +43,22 @@ func (p *PrivateEndpoint) Schema(_ context.Context, _ resource.SchemaRequest, re
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Resource to manage private endpoints for a Capella cluster. Private endpoints allow you to securely connect your cloud provider's private network (VPC/VNET) to your Capella cluster without exposing traffic to the public internet.",
 		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The ID of the organization where the private endpoint will be created. This field cannot be changed after the private endpoint is created.",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"project_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The ID of the project containing the cluster where the private endpoint will be created. This field cannot be changed after the private endpoint is created.",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"cluster_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The ID of the cluster to create the private endpoint for. This enables secure access to the cluster through your cloud provider's private network. This field cannot be changed after the private endpoint is created.",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"endpoint_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The ID of the private endpoint in your cloud provider. For AWS this is the VPC Endpoint ID, for Azure this is the Private Endpoint ID, and for GCP this is the Private Service Connect Endpoint ID. This field cannot be changed after the private endpoint is created.",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
+			"organization_id": WithDescription(
+				stringAttribute([]string{required, requiresReplace}),
+				"The ID of the Capella organization where the private endpoint will be created.",
+			),
+			"project_id": WithDescription(
+				stringAttribute([]string{required, requiresReplace}),
+				"The ID of the Capella project containing the cluster where the private endpoint will be created.",
+			),
+			"cluster_id": WithDescription(
+				stringAttribute([]string{required, requiresReplace}),
+				"The ID of the Capella cluster to create the private endpoint for. This enables secure access to the cluster through your cloud provider's private network.",
+			),
+			"endpoint_id": WithDescription(
+				stringAttribute([]string{required, requiresReplace}),
+				"The ID of the private endpoint in your cloud provider.",
+			),
 			"status": schema.StringAttribute{
 				Computed: true,
 				MarkdownDescription: "The current status of the private endpoint. Possible values are:\n" +

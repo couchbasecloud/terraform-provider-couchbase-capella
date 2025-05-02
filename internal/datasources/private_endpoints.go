@@ -43,11 +43,11 @@ func (p *PrivateEndpoints) Schema(_ context.Context, _ datasource.SchemaRequest,
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The ID of the organization where the private endpoint exists. Used to scope the search for private endpoints.",
+				MarkdownDescription: "The ID of the Capella organization where the private endpoint exists. ",
 			},
 			"project_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The ID of the project containing the cluster with private endpoints. Used to scope the search for private endpoints.",
+				MarkdownDescription: "The ID of the Capella project containing the cluster with private endpoints.",
 			},
 			"cluster_id": schema.StringAttribute{
 				Required:            true,
@@ -60,7 +60,7 @@ func (p *PrivateEndpoints) Schema(_ context.Context, _ datasource.SchemaRequest,
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The unique identifier of the private endpoint. For AWS this is the VPC Endpoint ID, for Azure this is the Private Endpoint ID, and for GCP this is the Private Service Connect Endpoint ID.",
+							MarkdownDescription: "The unique identifier of the private endpoint.",
 						},
 						"status": schema.StringAttribute{
 							Computed: true,
