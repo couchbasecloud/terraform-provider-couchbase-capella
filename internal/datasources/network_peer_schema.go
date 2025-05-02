@@ -39,7 +39,7 @@ func NetworkPeerSchema() schema.Schema {
 							Attributes: map[string]schema.Attribute{
 								"aws_config": schema.SingleNestedAttribute{
 									Computed:            true,
-									MarkdownDescription: "AAWS config data required to establish a VPC peering relationship.",
+									MarkdownDescription: "AWS config data required to establish a VPC peering relationship.",
 									Attributes: map[string]schema.Attribute{
 										"account_id": schema.StringAttribute{
 											Computed:            true,
