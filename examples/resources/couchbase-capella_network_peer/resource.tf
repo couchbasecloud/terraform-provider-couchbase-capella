@@ -25,10 +25,10 @@ resource "couchbase-capella_network_peer" "new_network_peer" {
   provider_type   = "gcp"
   provider_config = {
     aws_config = {
-       cidr            = "10.0.4.0/23"
-       network_name    = "cc-ffffffff-aaaa-1414-eeee-000000000000"
-       project_id      = "test-project-id"
-       service_account = "service-account-name@project-id.iam.gserviceaccount.com"
+      cidr            = "10.0.4.0/23"
+      network_name    = "cc-ffffffff-aaaa-1414-eeee-000000000000"
+      project_id      = "test-project-id"
+      service_account = "service-account-name@project-id.iam.gserviceaccount.com"
     }
   }
 }
