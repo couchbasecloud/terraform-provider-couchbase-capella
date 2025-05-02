@@ -2,11 +2,12 @@ package datasources
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 func ClusterSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "Data source for Couchbase Capella clusters.",
+		MarkdownDescription: "Retrieves the details of Couchbase Capella clusters.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
@@ -124,6 +125,7 @@ func ClusterSchema() schema.Schema {
 									},
 									"services": schema.ListAttribute{
 										Computed:            true,
+										ElementType:         types.StringType,
 										MarkdownDescription: "The couchbase services running on the nodes. The allowed services for singleNode cluster are one or all of - data, index, query and search.",
 									},
 								},
