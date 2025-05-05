@@ -38,43 +38,63 @@ func (d *DatabaseCredentials) Metadata(_ context.Context, req datasource.Metadat
 func (d *DatabaseCredentials) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"organization_id": requiredStringAttribute,
-			"project_id":      requiredStringAttribute,
-			"cluster_id":      requiredStringAttribute,
+			"organization_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the Capella organization.",
+			},
+			"project_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the project.",
+			},
+			"cluster_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the cluster.",
+			},
 			"data": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"id":              computedStringAttribute,
-						"name":            computedStringAttribute,
-						"organization_id": computedStringAttribute,
-						"project_id":      computedStringAttribute,
-						"cluster_id":      computedStringAttribute,
+						"id":              schema.StringAttribute{Computed: true, MarkdownDescription: "The ID of the database credential created."},
+						"name":            schema.StringAttribute{Computed: true, MarkdownDescription: "Name of the database credential created (up to 256 characters)."},
+						"organization_id": schema.StringAttribute{Computed: true, MarkdownDescription: "The GUID4 ID of the Capella organization."},
+						"project_id":      schema.StringAttribute{Computed: true, MarkdownDescription: "The GUID4 ID of the project."},
+						"cluster_id":      schema.StringAttribute{Computed: true, MarkdownDescription: "The GUID4 ID of the cluster."},
 						"audit":           computedAuditAttribute,
 						"access": schema.ListNestedAttribute{
-							Optional: true,
+							Optional:            true,
+							MarkdownDescription: "Describes the access information of the database credential.",
 							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
 									"privileges": schema.ListAttribute{
-										Required:    true,
-										ElementType: types.StringType,
+										Required:            true,
+										ElementType:         types.StringType,
+										MarkdownDescription: "The privileges field in this API represents the privilege level for users.",
 									},
 									"resources": schema.SingleNestedAttribute{
-										Optional: true,
+										Optional:            true,
+										MarkdownDescription: "The resources for which access will be granted on. Leaving this empty will grant access to all buckets.",
 										Attributes: map[string]schema.Attribute{
 											"buckets": schema.ListNestedAttribute{
 												Optional: true,
 												NestedObject: schema.NestedAttributeObject{
 													Attributes: map[string]schema.Attribute{
-														"name": requiredStringAttribute,
+														"name": schema.StringAttribute{
+															Required:            true,
+															MarkdownDescription: "The name of the bucket.",
+														},
 														"scopes": schema.ListNestedAttribute{
-															Optional: true,
+															Optional:            true,
+															MarkdownDescription: "The scopes under a bucket.",
 															NestedObject: schema.NestedAttributeObject{
 																Attributes: map[string]schema.Attribute{
-																	"name": requiredStringAttribute,
+																	"name": schema.StringAttribute{
+																		Required:            true,
+																		MarkdownDescription: "The name of the scope.",
+																	},
 																	"collections": schema.ListAttribute{
-																		Optional:    true,
-																		ElementType: types.StringType,
+																		Optional:            true,
+																		ElementType:         types.StringType,
+																		MarkdownDescription: "The collections under a scope.",
 																	},
 																},
 															},
