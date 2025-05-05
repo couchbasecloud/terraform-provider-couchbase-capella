@@ -4,9 +4,9 @@ resource "couchbase-capella_database_credential" "new_database_credential" {
   project_id      = "<project_id>"
   cluster_id      = "<cluster_id>"
   password        = "<password>"
-  access          = [
+  access = [
     {
-      "privileges": [
+      "privileges" : [
         "data_reader",
         "data_writer"
       ]
