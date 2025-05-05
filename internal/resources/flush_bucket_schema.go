@@ -8,10 +8,10 @@ import (
 func FlushBucketSchema() schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"organization_id": stringAttribute([]string{required, requiresReplace}, stringvalidator.LengthAtLeast(1)),
-			"project_id":      stringAttribute([]string{required, requiresReplace}, stringvalidator.LengthAtLeast(1)),
-			"cluster_id":      stringAttribute([]string{required, requiresReplace}, stringvalidator.LengthAtLeast(1)),
-			"bucket_id":       stringAttribute([]string{required, requiresReplace}, stringvalidator.LengthAtLeast(1)),
+			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}, stringvalidator.LengthAtLeast(1)), "The GUID4 ID of the Capella organization."),
+			"project_id":      WithDescription(stringAttribute([]string{required, requiresReplace}, stringvalidator.LengthAtLeast(1)), "The GUID4 ID of the project."),
+			"cluster_id":      WithDescription(stringAttribute([]string{required, requiresReplace}, stringvalidator.LengthAtLeast(1)), "The GUID4 ID of the cluster."),
+			"bucket_id":       WithDescription(stringAttribute([]string{required, requiresReplace}, stringvalidator.LengthAtLeast(1)), "The ID of the bucket. It is the URL-compatible base64 encoding of the bucket name."),
 		},
 	}
 }
