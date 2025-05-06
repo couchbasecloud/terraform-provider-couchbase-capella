@@ -8,6 +8,7 @@ import (
 
 func ClusterOnOffOnDemandSchema() schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Manages the on/off state of a capella cluster. This resource is used to turn on or off cluster.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required: true,
