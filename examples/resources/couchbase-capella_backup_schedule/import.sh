@@ -1,1 +1,0 @@
-terraform import couchbase-capella_backup.new_backup id=<bucket_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>
