@@ -1,0 +1,1 @@
+terraform import couchbase-capella_cluster_onoff_ondemand.new_cluster_onoff_ondemand cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>
