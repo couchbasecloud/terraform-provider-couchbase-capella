@@ -8,6 +8,7 @@ import (
 
 func AppServiceOnOffOnDemandSchema() schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Manages the on-demand state of an app service. This resource is used to turn on/off the app service on-demand.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required: true,
