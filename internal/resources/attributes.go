@@ -65,61 +65,9 @@ func stringAttribute(fields []string, validators ...validator.String) *schema.St
 	return &attribute
 }
 
-// stringAttributeWithValueFields is a variadic function which sets the requested fields
-// in a string attribute to true and then returns the string attribute.
-func stringAttributeWithValueFields(fields []string, fieldsWithValues map[string]string, validators ...validator.String) *schema.StringAttribute {
-	attribute := schema.StringAttribute{}
-	attribute.Validators = make([]validator.String, 0)
-
-	attribute.Validators = append(attribute.Validators, validators...)
-
-	for _, field := range fields {
-		switch field {
-		case required:
-			attribute.Required = true
-		case optional:
-			attribute.Optional = true
-		case computed:
-			attribute.Computed = true
-		case sensitive:
-			attribute.Sensitive = true
-		case requiresReplace:
-			var planModifiers = []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
-			}
-			attribute.PlanModifiers = append(attribute.PlanModifiers, planModifiers...)
-		case useStateForUnknown:
-			var planModifiers = []planmodifier.String{
-				stringplanmodifier.UseStateForUnknown(),
-			}
-			attribute.PlanModifiers = append(attribute.PlanModifiers, planModifiers...)
-		case deprecated:
-			attribute.DeprecationMessage = deprecationMessage
-		}
-	}
-
-	for key, value := range fieldsWithValues {
-		switch key {
-		case markdownDescription:
-			attribute.MarkdownDescription = value
-		case description:
-			attribute.Description = value
-
-		}
-	}
-	return &attribute
-}
-
 // stringDefaultAttribute sets the default values for a string field and returns the string attribute.
 func stringDefaultAttribute(defaultValue string, fields ...string) *schema.StringAttribute {
 	attribute := stringAttribute(fields)
-	attribute.Default = stringdefault.StaticString(defaultValue)
-	return attribute
-}
-
-// stringDefaultAttribute sets the default values for a string field and returns the string attribute.
-func stringDefaultAttributeWithFieldValues(defaultValue string, m map[string]string, fields ...string) *schema.StringAttribute {
-	attribute := stringAttributeWithValueFields(fields, m)
 	attribute.Default = stringdefault.StaticString(defaultValue)
 	return attribute
 }

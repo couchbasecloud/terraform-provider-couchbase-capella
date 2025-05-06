@@ -39,6 +39,7 @@ func (d *Buckets) Metadata(_ context.Context, req datasource.MetadataRequest, re
 // Schema defines the schema for the bucket data source.
 func (d *Buckets) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Manages Bucket data source for Capella cluster",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
@@ -146,7 +147,6 @@ func (d *Buckets) Schema(_ context.Context, _ datasource.SchemaRequest, resp *da
 				},
 			},
 		},
-		MarkdownDescription: "Manages Bucket data source for Capella cluster",
 	}
 }
 
