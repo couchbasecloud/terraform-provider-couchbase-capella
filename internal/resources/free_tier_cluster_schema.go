@@ -5,20 +5,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 )
 
 func FreeTierClusterSchema() schema.Schema {
 	return schema.Schema{
 		MarkdownDescription: "Manages a Couchbase Capella Free Tier Cluster resource",
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-				MarkdownDescription: "The ID of the free-tier cluster",
-			},
+			"id":                            WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The GUID4 ID of the free-tier cluster."),
 			"organization_id":               WithDescription(stringAttribute([]string{required, requiresReplace}, stringvalidator.LengthAtLeast(1)), "The GUID4 ID of the organization."),
 			"project_id":                    WithDescription(stringAttribute([]string{required, requiresReplace}, stringvalidator.LengthAtLeast(1)), "The GUID4 ID of the project."),
 			"name":                          WithDescription(stringAttribute([]string{required}, stringvalidator.LengthAtLeast(1)), "Name of the free-tier cluster."),
