@@ -75,10 +75,7 @@ func FreeTierClusterSchema() schema.Schema {
 									Computed:            true,
 									MarkdownDescription: "Disk details for the node",
 									Attributes: map[string]schema.Attribute{
-										"type": schema.StringAttribute{
-											Computed:            true,
-											MarkdownDescription: "The type of disk for the node.",
-										},
+										"type":          WithDescription(stringAttribute([]string{computed}), "The type of disk for the node. Should be one of 'ssd', 'hdd', or 'nvme'."),
 										"storage":       WithDescription(int64Attribute(computed), "Storage size of the disk."),
 										"iops":          WithDescription(int64Attribute(computed), "Input/Output Operations Per Second (IOPS) for the disk."),
 										"autoexpansion": WithDescription(boolAttribute(computed), "Indicates if auto-expansion is enabled for the disk."),
