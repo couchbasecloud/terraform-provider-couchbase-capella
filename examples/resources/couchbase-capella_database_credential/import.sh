@@ -1,0 +1,1 @@
+terraform import couchbase-capella_database_credential.new_database_credential id=<database_credential_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>
