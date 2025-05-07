@@ -8,6 +8,7 @@ import (
 // EventsSchema returns the schema for the Events data source.
 func EventsSchema() schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Data source to retrieve all events for a Capella organization.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
