@@ -5,6 +5,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
 func FreeTierClusterSchema() schema.Schema {
@@ -12,9 +13,9 @@ func FreeTierClusterSchema() schema.Schema {
 		MarkdownDescription: "Manages a Couchbase Capella Free Tier Cluster resource",
 		Attributes: map[string]schema.Attribute{
 			"id":                            WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The GUID4 ID of the free-tier cluster."),
-			"organization_id":               WithDescription(stringAttribute([]string{required, requiresReplace}, stringvalidator.LengthAtLeast(1)), "The GUID4 ID of the organization."),
-			"project_id":                    WithDescription(stringAttribute([]string{required, requiresReplace}, stringvalidator.LengthAtLeast(1)), "The GUID4 ID of the project."),
-			"name":                          WithDescription(stringAttribute([]string{required}, stringvalidator.LengthAtLeast(1)), "Name of the free-tier cluster."),
+			"organization_id":               WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The GUID4 ID of the organization."),
+			"project_id":                    WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The GUID4 ID of the project."),
+			"name":                          WithDescription(stringAttribute([]string{required}, validator.String(stringvalidator.LengthAtLeast(1))), "Name of the free-tier cluster."),
 			"description":                   WithDescription(stringAttribute([]string{optional, computed}), "Description of the free-tier cluster."),
 			"app_service_id":                WithDescription(stringAttribute([]string{computed}), "The GUID4 ID of the App Service."),
 			"connection_string":             WithDescription(stringAttribute([]string{computed}), "The connection string of the free-tier cluster."),
