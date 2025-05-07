@@ -14,41 +14,12 @@ func BucketSchema() schema.Schema {
 	return schema.Schema{
 		MarkdownDescription: "Manages Bucket resource for a Capella cluster",
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-				MarkdownDescription: "ID of the Capella bucket",
-			},
-			"name": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "Name of the Capella bucket",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"organization_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "ID of the Capella organization",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"project_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "ID of the Capella project",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"cluster_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "ID of the Capella cluster",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
+			"id": WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "ID of the Capella bucket"),
+
+			"name":            WithDescription(stringAttribute([]string{required, requiresReplace}), "Name of the Capella bucket"),
+			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}), "ID of the Capella organization"),
+			"project_id":      WithDescription(stringAttribute([]string{required, requiresReplace}), "ID of the Capella project"),
+			"cluster_id":      WithDescription(stringAttribute([]string{required, requiresReplace}), "ID of the Capella cluster"),
 			"type": schema.StringAttribute{
 				Computed:            true,
 				Optional:            true,
