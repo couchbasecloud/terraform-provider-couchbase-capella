@@ -1,0 +1,1 @@
+terraform import couchbase-capella_apikey.new_apikey id=<apikey_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>
