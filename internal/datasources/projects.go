@@ -37,6 +37,7 @@ func (d *Projects) Metadata(_ context.Context, req datasource.MetadataRequest, r
 // Schema defines the schema for the project data source.
 func (d *Projects) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Data source to retrieve projects' information in a Capella organization.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
