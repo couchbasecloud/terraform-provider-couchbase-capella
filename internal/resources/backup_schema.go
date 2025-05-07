@@ -48,7 +48,7 @@ func BackupSchema() schema.Schema {
 					"backup_type": WithDescription(stringAttribute([]string{computed}), "Represents whether the backup is a Weekly or Daily backup."),
 					"backup_time": WithDescription(stringAttribute([]string{computed}), "Represents the time at which the backup is scheduled to be taken."),
 					"increment":   WithDescription(int64Attribute(computed), "Represents interval in hours for incremental backup."),
-					"retention":   WithDescription(int64Attribute(computed), "Represents retention time in days."),
+					"retention":   WithDescription(stringAttribute([]string{computed}), "Represents retention time in days."),
 				},
 				PlanModifiers: []planmodifier.Object{
 					objectplanmodifier.UseStateForUnknown(),
