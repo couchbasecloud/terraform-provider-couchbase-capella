@@ -37,6 +37,7 @@ func (d *ApiKeys) Metadata(_ context.Context, req datasource.MetadataRequest, re
 // Schema defines the schema for the api key data source.
 func (d *ApiKeys) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Data source to retrieve api keys in a Capella organization. API keys are used to authenticate and authorize access to Capella resources and services.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,

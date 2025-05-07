@@ -14,6 +14,7 @@ import (
 
 func ApiKeySchema() schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Resource to create and manage API keys in Capella. API keys are used to authenticate and authorize access to Capella resources and services.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
