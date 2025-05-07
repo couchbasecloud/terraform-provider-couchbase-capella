@@ -120,21 +120,51 @@ var (
 			"hrefs": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"first":    computedStringAttribute,
-					"last":     computedStringAttribute,
-					"next":     computedStringAttribute,
-					"previous": computedStringAttribute,
+					"first": schema.StringAttribute{
+						Computed:            true,
+						MarkdownDescription: "The base URL, endpoint, and path parameters required to fetch the first page of results.",
+					},
+					"last": schema.StringAttribute{
+						Computed:            true,
+						MarkdownDescription: "The base URL, endpoint, and path parameters required to fetch the last page of results.",
+					},
+					"next": schema.StringAttribute{
+						Computed:            true,
+						MarkdownDescription: "The base URL, endpoint, and path parameters required to fetch the next page of results. Empty if there is no next page.",
+					},
+					"previous": schema.StringAttribute{
+						Computed:            true,
+						MarkdownDescription: "The base URL, endpoint, and path parameters required to fetch the previous page of results. Empty if there is no previous page.",
+					},
 				},
 			},
 			"pages": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"last":        computedInt64Attribute,
-					"next":        computedInt64Attribute,
-					"page":        computedInt64Attribute,
-					"per_page":    computedInt64Attribute,
-					"previous":    computedInt64Attribute,
-					"total_items": computedInt64Attribute,
+					"last": schema.Int64Attribute{
+						Computed:            true,
+						MarkdownDescription: "Number of the last page of results.",
+					},
+					"next": schema.Int64Attribute{
+						Computed:            true,
+						MarkdownDescription: "Number of the next page of results. Not set on the last page.",
+					},
+					"page": schema.Int64Attribute{
+						Computed:            true,
+						MarkdownDescription: "Current page of results, starting from page 1.",
+					},
+					"per_page": schema.Int64Attribute{
+						Computed:            true,
+						MarkdownDescription: "Number of items displayed in each page.",
+					},
+					"previous": schema.Int64Attribute{
+						Computed:            true,
+						MarkdownDescription: "Number of the previous page of results. Not set on the first page.",
+					},
+					"total_items": schema.Int64Attribute{
+						Computed:    true,
+						Description: "Total number of items across all pages.",
+					},
 				},
 			},
 		},
@@ -146,28 +176,95 @@ var (
 		Computed: true,
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: map[string]schema.Attribute{
-				"alert_key":        computedStringAttribute,
-				"app_service_id":   computedStringAttribute,
-				"app_service_name": computedStringAttribute,
-				"cluster_id":       computedStringAttribute,
-				"cluster_name":     computedStringAttribute,
-				"id":               computedStringAttribute,
-				"image_url":        computedStringAttribute,
-				"incident_ids":     computedStringSetAttribute,
-				"key":              computedStringAttribute,
-				"kv":               computedStringAttribute,
-				"occurrence_count": computedInt64Attribute,
-				"project_id":       computedStringAttribute,
-				"project_name":     computedStringAttribute,
-				"request_id":       computedStringAttribute,
-				"session_id":       computedStringAttribute,
-				"severity":         computedStringAttribute,
-				"source":           computedStringAttribute,
-				"summary":          computedStringAttribute,
-				"timestamp":        computedStringAttribute,
-				"user_email":       computedStringAttribute,
-				"user_id":          computedStringAttribute,
-				"user_name":        computedStringAttribute,
+				"alert_key": schema.StringAttribute{
+					Computed:            true,
+					MarkdownDescription: "Populated on demand based on the Event.Key and select labels in KV.",
+				},
+				"app_service_id": schema.StringAttribute{
+					Computed:            true,
+					MarkdownDescription: "SyncGatewayID this Event refers to.",
+				},
+				"app_service_name": schema.StringAttribute{
+					Computed:            true,
+					MarkdownDescription: "Name of the sync gateway at the time of event emission.",
+				},
+				"cluster_id": schema.StringAttribute{
+					Computed:            true,
+					MarkdownDescription: "ClusterID this Event refers to.",
+				},
+				"cluster_name": schema.StringAttribute{
+					Computed:            true,
+					MarkdownDescription: "Name of the cluster at the time of event emission.",
+				},
+				"id": schema.StringAttribute{
+					Computed:            true,
+					MarkdownDescription: "UUID for this instance of an Event.",
+				},
+				"image_url": schema.StringAttribute{
+					Computed:            true,
+					MarkdownDescription: "Rendered chart image to display for an Alert Event.",
+				},
+				"incident_ids": schema.SetAttribute{
+					ElementType:         types.StringType,
+					Computed:            true,
+					MarkdownDescription: "Group events related to an alert incident.",
+				},
+				"key": schema.StringAttribute{
+					Computed:            true,
+					MarkdownDescription: "Defines the specific kind of Event.",
+				},
+				"kv": schema.StringAttribute{
+					Computed:            true,
+					MarkdownDescription: "Key-value pairs for additional event data.",
+				},
+				"occurrence_count": schema.Int64Attribute{
+					Computed:            true,
+					MarkdownDescription: "Number of times the alert has fired within this \"incident\".",
+				},
+				"project_id": schema.StringAttribute{
+					Computed:            true,
+					MarkdownDescription: "ProjectID this Event refers to.",
+				},
+				"project_name": schema.StringAttribute{
+					Computed:            true,
+					MarkdownDescription: "Name of the project at the time of event emission.",
+				},
+				"request_id": schema.StringAttribute{
+					Computed:            true,
+					MarkdownDescription: "RequestID for an Event.",
+				},
+				"session_id": schema.StringAttribute{
+					Computed:            true,
+					MarkdownDescription: "User that initiated the request for this Event.",
+				},
+				"severity": schema.StringAttribute{
+					Computed:            true,
+					MarkdownDescription: "Severity of the event.",
+				},
+				"source": schema.StringAttribute{
+					Computed:            true,
+					MarkdownDescription: "Identifies the originator of the event.",
+				},
+				"summary": schema.StringAttribute{
+					Computed:            true,
+					MarkdownDescription: "Metadata.SummaryTemplate rendered for this event.",
+				},
+				"timestamp": schema.StringAttribute{
+					Computed:            true,
+					MarkdownDescription: "Time when the event was emitted.",
+				},
+				"user_email": schema.StringAttribute{
+					Computed:            true,
+					MarkdownDescription: "Email of the associated user at the time of event emission.",
+				},
+				"user_id": schema.StringAttribute{
+					Computed:            true,
+					MarkdownDescription: "User id that initiated the request for this Event.",
+				},
+				"user_name": schema.StringAttribute{
+					Computed:            true,
+					MarkdownDescription: "Name of the associated user at the time of event emission.",
+				},
 			},
 		},
 	}
