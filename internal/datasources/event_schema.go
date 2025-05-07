@@ -8,6 +8,7 @@ import (
 // EventSchema returns the schema for the Event data source.
 func EventSchema() schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Data source for an event in a Capella organization. Events represent a trail of actions that users performs within Capella at an organization level.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Required:            true,
