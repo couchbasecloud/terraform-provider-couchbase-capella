@@ -1,0 +1,1 @@
+terraform import couchbase-capella_allowlist.new_allowlist id=test_id, cluster_id=test_id, project_id=test_id, organization_id=test_id

@@ -38,13 +38,32 @@ func (a *AzurePrivateEndpointCommand) Metadata(_ context.Context, req datasource
 // Schema defines the schema for the private endpoint command data source.
 func (a *AzurePrivateEndpointCommand) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Data source to generate Azure CLI command for setting up a private endpoint connection to a Capella cluster. Retrieve the command or script to be executed in order to create the private endpoint which will provides a private connection between the specified VPC and the specified Capella private endpoint service.",
 		Attributes: map[string]schema.Attribute{
-			"organization_id":     requiredStringAttribute,
-			"project_id":          requiredStringAttribute,
-			"cluster_id":          requiredStringAttribute,
-			"resource_group_name": requiredStringAttribute,
-			"virtual_network":     requiredStringAttribute,
-			"command":             computedStringAttribute,
+			"organization_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the organization that owns the Capella cluster.",
+			},
+			"project_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the project containing the Capella cluster.",
+			},
+			"cluster_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the Capella cluster to connect to via private endpoint.",
+			},
+			"resource_group_name": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The name of your Azure resource group.",
+			},
+			"virtual_network": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The virtual network and subnet name",
+			},
+			"command": schema.StringAttribute{
+				Computed:            true,
+				MarkdownDescription: "The generated Azure CLI command that can be used to create the private endpoint connection within Azure.",
+			},
 		},
 	}
 }

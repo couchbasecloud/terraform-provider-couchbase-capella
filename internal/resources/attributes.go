@@ -28,6 +28,38 @@ const (
 	deprecationMessage = "Remove this attribute's configuration as it no longer in use and the attribute will be removed in the next major version of the provider."
 )
 
+// SchemaAttribute is a type alias that encapsulates the allowed attribute types.
+// It is used to define a set of types that can be used as attributes in the schema.
+// This alias includes various attribute types such as StringAttribute, Int64Attribute, BoolAttribute, SetAttribute,
+// Float64Attribute, NumberAttribute, and ListAttribute.
+type SchemaAttribute interface {
+	*schema.StringAttribute | *schema.Int64Attribute | *schema.BoolAttribute | *schema.SetAttribute |
+		*schema.Float64Attribute | *schema.NumberAttribute | *schema.ListAttribute
+}
+
+// WithDescription sets the MarkdownDescription for the provided attribute.
+// It accepts an attribute of type SchemaAttribute, and a description string.
+// The function returns the modified attribute.
+func WithDescription[T SchemaAttribute](attr T, description string) T {
+	switch v := any(attr).(type) {
+	case *schema.StringAttribute:
+		v.MarkdownDescription = description
+	case *schema.Int64Attribute:
+		v.MarkdownDescription = description
+	case *schema.BoolAttribute:
+		v.MarkdownDescription = description
+	case *schema.SetAttribute:
+		v.MarkdownDescription = description
+	case *schema.Float64Attribute:
+		v.MarkdownDescription = description
+	case *schema.NumberAttribute:
+		v.MarkdownDescription = description
+	case *schema.ListAttribute:
+		v.MarkdownDescription = description
+	}
+	return attr
+}
+
 // stringAttribute is a variadic function which sets the requested fields
 // in a string attribute to true and then returns the string attribute.
 func stringAttribute(fields []string, validators ...validator.String) *schema.StringAttribute {
@@ -266,7 +298,7 @@ func computedAuditAttribute() *schema.SingleNestedAttribute {
 		Attributes: map[string]schema.Attribute{
 			"created_at": schema.StringAttribute{
 				Computed:    true,
-				Description: "The timestamp when the resource was created.",
+				Description: "The RFC3339 timestamp when the resource was created.",
 			},
 			"created_by": schema.StringAttribute{
 				Computed:    true,
@@ -274,7 +306,7 @@ func computedAuditAttribute() *schema.SingleNestedAttribute {
 			},
 			"modified_at": schema.StringAttribute{
 				Computed:    true,
-				Description: "The timestamp when the resource was last modified.",
+				Description: "The RFC3339 timestamp when the resource was last modified.",
 			},
 			"modified_by": schema.StringAttribute{
 				Computed:    true,
