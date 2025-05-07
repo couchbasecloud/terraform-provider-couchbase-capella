@@ -6,7 +6,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
 func FreeTierClusterSchema() schema.Schema {
@@ -20,93 +19,32 @@ func FreeTierClusterSchema() schema.Schema {
 				},
 				MarkdownDescription: "The ID of the free-tier cluster",
 			},
-			"organization_id": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				MarkdownDescription: "The GUID4 ID of the organization.",
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
-			},
-			"project_id": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				MarkdownDescription: "The GUID4 ID of the project.",
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
-			},
-			"name": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "Name of the free-tier cluster.",
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
-			},
-			"description": schema.StringAttribute{
-				Optional:            true,
-				MarkdownDescription: "Description of the free-tier cluster.",
-				Computed:            true,
-			},
-			"app_service_id": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "The GUID4 ID of the App Service.",
-			},
-			"enable_private_dns_resolution": schema.BoolAttribute{
-				Computed:            true,
-				MarkdownDescription: "Indicates if the private DNS resolution is enabled for the cluster.",
-			},
-			"connection_string": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "The connection string of the free-tier cluster.",
-			},
-			"current_state": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "The current state of the free-tier cluster.",
-			},
-			"cmek_id": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "The customer-managed encryption key (CMEK) ID.",
-			},
-			"audit": computedAuditAttribute(),
-			"etag": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "The etag of the free-tier cluster, part of the response header",
-			},
+			"organization_id":               WithDescription(stringAttribute([]string{required, requiresReplace}, stringvalidator.LengthAtLeast(1)), "The GUID4 ID of the organization."),
+			"project_id":                    WithDescription(stringAttribute([]string{required, requiresReplace}, stringvalidator.LengthAtLeast(1)), "The GUID4 ID of the project."),
+			"name":                          WithDescription(stringAttribute([]string{required}, stringvalidator.LengthAtLeast(1)), "Name of the free-tier cluster."),
+			"description":                   WithDescription(stringAttribute([]string{optional, computed}), "Description of the free-tier cluster."),
+			"app_service_id":                WithDescription(stringAttribute([]string{computed}), "The GUID4 ID of the App Service."),
+			"connection_string":             WithDescription(stringAttribute([]string{computed}), "The connection string of the free-tier cluster."),
+			"current_state":                 WithDescription(stringAttribute([]string{computed}), "The current state of the free-tier cluster."),
+			"cmek_id":                       WithDescription(stringAttribute([]string{computed}), "The customer-managed encryption key (CMEK) ID."),
+			"etag":                          WithDescription(stringAttribute([]string{computed}), "The etag of the free-tier cluster, part of the response header"),
+			"enable_private_dns_resolution": WithDescription(boolAttribute(computed), "Indicates if the private DNS resolution is enabled for the cluster."),
+			"audit":                         computedAuditAttribute(),
 			"support": schema.SingleNestedAttribute{
 				Computed:            true,
 				MarkdownDescription: "Support information for the free-tier cluster.",
 				Attributes: map[string]schema.Attribute{
-					"plan": schema.StringAttribute{
-						Computed:            true,
-						MarkdownDescription: "Support plan for the free-tier cluster. Free tier plan is automatically assigned to free tier clusters.",
-					},
-					"timezone": schema.StringAttribute{
-						Computed:            true,
-						MarkdownDescription: "The standard timezone for the cluster. Should be the TZ identifier. For example, 'ET'",
-					},
+					"plan":     WithDescription(stringAttribute([]string{computed}), "Support plan for the free-tier cluster. Free tier plan is automatically assigned to free tier clusters."),
+					"timezone": WithDescription(stringAttribute([]string{computed}), "The standard timezone for the cluster. Should be the TZ identifier. For example, 'ET'"),
 				},
 			},
 			"cloud_provider": schema.SingleNestedAttribute{
 				Required:            true,
 				MarkdownDescription: "The cloud provider details for the free-tier cluster.",
 				Attributes: map[string]schema.Attribute{
-					"type": schema.StringAttribute{
-						Required:            true,
-						MarkdownDescription: "The cloud provider type. Should be one of 'aws', 'gcp', or 'azure'.",
-					},
-					"region": schema.StringAttribute{
-						Required:            true,
-						MarkdownDescription: "The region for the cloud provider. Should be a valid region for the specified cloud provider. For example 'us-west-2'",
-					},
-					"cidr": schema.StringAttribute{
-						Required:            true,
-						MarkdownDescription: "CIDR block for Cloud Provider.",
-					},
+					"type":   WithDescription(stringAttribute([]string{required}), "The cloud provider type. Should be one of 'aws', 'gcp', or 'azure'."),
+					"region": WithDescription(stringAttribute([]string{required}), "The region for the cloud provider. Should be a valid region for the specified cloud provider. For example 'us-west-2'"),
+					"cidr":   WithDescription(stringAttribute([]string{required}), "CIDR block for Cloud Provider."),
 				},
 				PlanModifiers: []planmodifier.Object{
 					objectplanmodifier.RequiresReplace(),
@@ -116,10 +54,7 @@ func FreeTierClusterSchema() schema.Schema {
 				Computed:            true,
 				MarkdownDescription: "Couchbase Server details for the free-tier cluster.",
 				Attributes: map[string]schema.Attribute{
-					"version": schema.StringAttribute{
-						Computed:            true,
-						MarkdownDescription: "The version of Couchbase Server for the free-tier cluster.",
-					},
+					"version": WithDescription(stringAttribute([]string{computed}), "The version of Couchbase Server for the free-tier cluster."),
 				},
 				PlanModifiers: []planmodifier.Object{
 					objectplanmodifier.RequiresReplace(),
@@ -139,14 +74,8 @@ func FreeTierClusterSchema() schema.Schema {
 									Computed:            true,
 									MarkdownDescription: "Compute details for the node",
 									Attributes: map[string]schema.Attribute{
-										"cpu": schema.Int64Attribute{
-											Computed:            true,
-											MarkdownDescription: "The number of CPU cores for the node.",
-										},
-										"ram": schema.Int64Attribute{
-											Computed:            true,
-											MarkdownDescription: "The amount of RAM for the node.",
-										},
+										"cpu": WithDescription(int64Attribute(computed), "The number of CPU cores for the node."),
+										"ram": WithDescription(int64Attribute(computed), "The amount of RAM for the node."),
 									},
 								},
 								"disk": schema.SingleNestedAttribute{
@@ -157,30 +86,15 @@ func FreeTierClusterSchema() schema.Schema {
 											Computed:            true,
 											MarkdownDescription: "The type of disk for the node.",
 										},
-										"storage": schema.Int64Attribute{
-											Computed:            true,
-											MarkdownDescription: "Storage size of the disk.",
-										},
-										"iops": schema.Int64Attribute{
-											Computed:            true,
-											MarkdownDescription: "Input/Output Operations Per Second (IOPS) for the disk.",
-										},
-										"autoexpansion": schema.BoolAttribute{
-											Computed:            true,
-											MarkdownDescription: "Indicates if auto-expansion is enabled for the disk.",
-										},
+										"storage":       WithDescription(int64Attribute(computed), "Storage size of the disk."),
+										"iops":          WithDescription(int64Attribute(computed), "Input/Output Operations Per Second (IOPS) for the disk."),
+										"autoexpansion": WithDescription(boolAttribute(computed), "Indicates if auto-expansion is enabled for the disk."),
 									},
 								},
 							},
 						},
-						"num_of_nodes": schema.Int64Attribute{
-							Computed:            true,
-							MarkdownDescription: "The number of nodes in the service group. This is 1 for the free-tier cluster.",
-						},
-						"services": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The services enabled for free-tier cluster.",
-						},
+						"num_of_nodes": WithDescription(int64Attribute(computed), "The number of nodes in the service group."),
+						"services":     WithDescription(stringAttribute([]string{computed}), "The services enabled for the service group. Should be a comma-separated list of services. For example, 'data,index,query'"),
 					},
 				},
 			},
@@ -188,10 +102,7 @@ func FreeTierClusterSchema() schema.Schema {
 				Computed:            true,
 				MarkdownDescription: "Availability zone details for the free-tier cluster. This is single az for the free-tier cluster.",
 				Attributes: map[string]schema.Attribute{
-					"type": schema.StringAttribute{
-						Computed:            true,
-						MarkdownDescription: "The availability zone type. Should be 'single' for the free-tier cluster.",
-					},
+					"type": WithDescription(stringAttribute([]string{computed}), "The availability zone type. Should be 'single' for the free-tier cluster."),
 				},
 			},
 		},
