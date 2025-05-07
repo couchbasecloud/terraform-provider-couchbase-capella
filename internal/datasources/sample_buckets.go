@@ -38,6 +38,7 @@ func (d *SampleBuckets) Metadata(_ context.Context, req datasource.MetadataReque
 // Schema defines the schema for the sample bucket data source.
 func (s *SampleBuckets) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Datasource to retrieve sample buckets in a Capella cluster.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required: true,

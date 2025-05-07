@@ -8,6 +8,7 @@ import (
 
 func SampleBucketSchema() schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Resource to manage a sample bucket in Couchbase Capella. Sample buckets are pre-loaded with sample data - \"travel-sample\", \"gamesim-sample\", \"beer-sample\".",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
