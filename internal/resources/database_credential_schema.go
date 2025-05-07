@@ -11,6 +11,7 @@ import (
 // DatabaseCredential resource supports Create, Destroy, Read, Import and List operations.
 func DatabaseCredentialSchema() schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Resource to create and manage a database credential for a cluster. Database credentials provide programmatic and application-level access to data on a database.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,

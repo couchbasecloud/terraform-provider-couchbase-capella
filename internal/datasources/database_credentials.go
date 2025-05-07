@@ -37,6 +37,7 @@ func (d *DatabaseCredentials) Metadata(_ context.Context, req datasource.Metadat
 // Schema defines the schema for the database credential data source.
 func (d *DatabaseCredentials) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Data source to retrieve database credentials for a cluster.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
