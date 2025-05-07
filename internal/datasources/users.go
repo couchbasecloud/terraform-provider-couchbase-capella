@@ -38,7 +38,7 @@ func (d *Users) Metadata(_ context.Context, req datasource.MetadataRequest, resp
 // Schema defines the schema for the User data source.
 func (d *Users) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Datasource to retrieve users in a Capella organization.",
+		MarkdownDescription: "Data source to retrieve users in a Capella organization.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
