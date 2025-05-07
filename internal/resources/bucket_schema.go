@@ -30,15 +30,7 @@ func BucketSchema() schema.Schema {
 				},
 				Default: stringdefault.StaticString("couchbase"),
 			},
-			"storage_backend": schema.StringAttribute{
-				Computed: true,
-				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-					stringplanmodifier.UseStateForUnknown(),
-				},
-				MarkdownDescription: "The bucket storage engine type (Magma or Couchstore)",
-			},
+			"storage_backend": WithDescription(stringAttribute([]string{computed, optional, requiresReplace, useStateForUnknown}), "The bucket storage engine type (Magma or Couchstore)"),
 			"memory_allocation_in_mb": schema.Int64Attribute{
 				Optional:            true,
 				Computed:            true,
@@ -81,39 +73,19 @@ func BucketSchema() schema.Schema {
 				Default:             int64default.StaticInt64(0),
 				MarkdownDescription: "Time-to-live (TTL) for items in the bucket, in seconds.",
 			},
-			"eviction_policy": schema.StringAttribute{
-				Optional:            true,
-				Computed:            true,
-				MarkdownDescription: "Eviction policy for the bucket.",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			"eviction_policy": WithDescription(stringAttribute([]string{computed, optional, requiresReplace, useStateForUnknown}), "Eviction policy for the bucket."),
 			"stats": schema.SingleNestedAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: "Bucket stats",
 				Attributes: map[string]schema.Attribute{
-					"item_count": schema.Int64Attribute{
-						Computed:            true,
-						MarkdownDescription: "Bucket item count",
-					},
-					"ops_per_second": schema.Int64Attribute{
-						Computed:            true,
-						MarkdownDescription: "Bucket ops per second value",
-					},
-					"disk_used_in_mib": schema.Int64Attribute{
-						Computed:            true,
-						MarkdownDescription: "Disk used in mib",
-					},
-					"memory_used_in_mib": schema.Int64Attribute{
-						Computed:            true,
-						MarkdownDescription: "Memory used in mib",
-					},
+					"item_count":         WithDescription(int64Attribute(computed), "Bucket item count"),
+					"ops_per_second":     WithDescription(int64Attribute(computed), "Bucket ops per second value"),
+					"disk_used_in_mib":   WithDescription(int64Attribute(computed), "Disk used in mib"),
+					"memory_used_in_mib": WithDescription(int64Attribute(computed), "Memory used in mib"),
 				},
 				PlanModifiers: []planmodifier.Object{
 					objectplanmodifier.UseStateForUnknown(),
 				},
-				MarkdownDescription: "Bucket stats",
 			},
 		},
 	}
