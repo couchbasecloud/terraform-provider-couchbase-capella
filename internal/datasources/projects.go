@@ -68,7 +68,10 @@ func (d *Projects) Schema(_ context.Context, _ datasource.SchemaRequest, resp *d
 							Computed:            true,
 							MarkdownDescription: "A precondition header that specifies the entity tag of a resource.",
 						},
-						"etag": computedStringAttribute,
+						"etag": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "The ETag header value returned by the server, used for optimistic concurrency control.",
+						},
 					},
 				},
 			},

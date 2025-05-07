@@ -21,7 +21,7 @@ func ProjectSchema() schema.Schema {
 			"name":            WithDescription(stringAttribute([]string{required}), "The name of the project (up to 128 characters)."),
 			"description":     WithDescription(stringAttribute([]string{optional, computed}), "A short description of the project (up to 256 characters)."),
 			"if_match":        WithDescription(stringAttribute([]string{optional}), "A precondition header that specifies the entity tag of a resource."),
-			"etag":            stringAttribute([]string{computed}),
+			"etag":            WithDescription(stringAttribute([]string{computed}), "The ETag header value returned by the server, used for optimistic concurrency control."),
 			"audit":           computedAuditAttribute(),
 		},
 	}
