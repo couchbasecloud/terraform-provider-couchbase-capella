@@ -6,6 +6,7 @@ import (
 
 func UserSchema() schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "The User resource allows you to manage users in your Capella organization. You can create, update, and delete users, as well as manage their roles and permissions within the organization.",
 		Attributes: map[string]schema.Attribute{
 			"id":                   WithDescription(stringAttribute([]string{computed}), "The UUID of the user created."),
 			"name":                 WithDescription(stringAttribute([]string{optional, computed}), "The name of the user."),
