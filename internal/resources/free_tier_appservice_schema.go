@@ -11,6 +11,7 @@ import (
 
 func FreeTierAppServiceSchema() schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Manages free-tier app services resources assosciated with a free-tier cluster",
 		Attributes: map[string]schema.Attribute{
 			"id": WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "ID of the free-tier app service."),
 			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(
@@ -55,6 +56,5 @@ func FreeTierAppServiceSchema() schema.Schema {
 			"plan":  WithDescription(stringAttribute([]string{computed}), "Plan associated with the free-tier app service."),
 			"etag":  WithDescription(stringAttribute([]string{computed}), "ETag of the free-tier app service."),
 		},
-		MarkdownDescription: "Free Tier App services schema.",
 	}
 }
