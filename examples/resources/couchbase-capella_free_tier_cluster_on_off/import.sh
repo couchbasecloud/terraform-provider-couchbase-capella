@@ -1,0 +1,2 @@
+terraform import couchbase-capella_free_tier_cluster_on_off.new_free_tier_cluster_on_off cluster_id=ffffffff-aaaaaaaa-bbbbbbbbb-cccccc,organization_id=ffffffff-aaaaaaaa-bbbbbbbbb-cccccc,project_id=ffffffff-aaaaaaaa-bbbbbbbbb-cccccc
+
