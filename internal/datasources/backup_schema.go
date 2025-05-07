@@ -23,7 +23,8 @@ func BackupSchema() schema.Schema {
 				MarkdownDescription: "The ID of the bucket. It is the URL-compatible base64 encoding of the bucket name.",
 			},
 			"data": schema.ListNestedAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: "Represents the list of backups associated with a bucket.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
@@ -79,7 +80,8 @@ func BackupSchema() schema.Schema {
 							MarkdownDescription: "The cloud provider where the cluster is hosted.",
 						},
 						"backup_stats": schema.SingleNestedAttribute{
-							Computed: true,
+							Computed:            true,
+							MarkdownDescription: "Represents various backup level data that couchbase provides.",
 							Attributes: map[string]schema.Attribute{
 								"size_in_mb": schema.Float64Attribute{
 									Computed:            true,
@@ -115,9 +117,13 @@ func BackupSchema() schema.Schema {
 								},
 							},
 						},
-						"elapsed_time_in_seconds": computedInt64Attribute,
+						"elapsed_time_in_seconds": schema.Int64Attribute{
+							Computed:            true,
+							MarkdownDescription: "The amount of seconds that have elapsed between the creation and completion of the backup.",
+						},
 						"schedule_info": schema.SingleNestedAttribute{
-							Computed: true,
+							Computed:            true,
+							MarkdownDescription: "Represents the schedule information of the backup.",
 							Attributes: map[string]schema.Attribute{
 								"backup_type": schema.StringAttribute{
 									Computed:            true,
