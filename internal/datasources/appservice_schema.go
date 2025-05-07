@@ -4,6 +4,7 @@ import "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 
 func AppServiceSchema() schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Data source retrieves information for a App Service in Capella. App Service is a fully managed application backend designed to provide data synchronization between mobile or IoT applications running Couchbase Lite and your Couchbase Capella database.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,

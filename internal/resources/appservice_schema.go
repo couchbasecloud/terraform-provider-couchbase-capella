@@ -8,6 +8,7 @@ import (
 
 func AppServiceSchema() schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Resource to create and manage an App Service in Capella. App Service is a fully managed application backend designed to provide data synchronization between mobile or IoT applications running Couchbase Lite and your Couchbase Capella database.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
