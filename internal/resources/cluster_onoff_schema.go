@@ -2,44 +2,17 @@ package resources
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 )
 
 func ClusterOnOffOnDemandSchema() schema.Schema {
 	return schema.Schema{
 		MarkdownDescription: "Manages the on/off state of a capella cluster. This resource is used to turn on or off cluster.",
 		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				MarkdownDescription: "The GUID4 ID of the organization.",
-			},
-			"project_id": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				MarkdownDescription: "The GUID4 ID of the project.",
-			},
-			"cluster_id": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				MarkdownDescription: "The GUID4 ID of the cluster.",
-			},
-			"state": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "State of the cluster. Possible values are `on` and `off`.",
-			},
-			"turn_on_linked_app_service": schema.BoolAttribute{
-				Optional:            true,
-				Computed:            true,
-				MarkdownDescription: "Whether to turn on the linked app service when the cluster is turned on..",
-			},
+			"organization_id":            WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the organization."),
+			"project_id":                 WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the project."),
+			"cluster_id":                 WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the cluster."),
+			"state":                      WithDescription(stringAttribute([]string{required}), "State of the cluster. Possible values are `on` and `off`."),
+			"turn_on_linked_app_service": WithDescription(boolAttribute(optional, computed), "Whether to turn on the linked app service when the cluster is turned on."),
 		},
 	}
 }
