@@ -5,48 +5,56 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
 func FreeTierAppServiceSchema() schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Manages free-tier app services resources assosciated with a free-tier cluster",
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			"id": WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "ID of the free-tier app service."),
 			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(
 				stringvalidator.LengthAtLeast(1),
 			)),
 				"Organization ID is the unique identifier for the organization. It is used to group resources and manage access within the organization."),
-			"project_id": stringAttribute([]string{required, requiresReplace}, validator.String(
+			"project_id": WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(
 				stringvalidator.LengthAtLeast(1),
-			)),
-			"cluster_id": stringAttribute([]string{required, requiresReplace}, validator.String(
+			)), "The ID of the Capella project"),
+			"cluster_id": WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(
 				stringvalidator.LengthAtLeast(1),
-			)),
-			"name":           stringAttribute([]string{required}),
-			"description":    stringDefaultAttribute("", optional, computed),
-			"nodes":          int64Attribute(computed, useStateForUnknown),
-			"cloud_provider": stringAttribute([]string{computed, useStateForUnknown}),
-			"current_state":  stringAttribute([]string{computed}),
-			"version":        stringAttribute([]string{computed}),
+			)), "The ID of the Capella cluster"),
+
+			"name": WithDescription(stringAttribute([]string{required}), "Name of the free-tier app service."),
+			"description": schema.StringAttribute{
+				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString(""),
+				MarkdownDescription: "Description of the free-tier app service.",
+			},
+			"nodes": WithDescription(int64Attribute(computed, useStateForUnknown), "Number of nodes in the free-tier app service."),
+
+			"cloud_provider": WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "Cloud provider of the free-tier app service. current supported providers are aws, gcp and azure"),
+
+			"current_state": WithDescription(stringAttribute([]string{computed}), "Current state of the free-tier app service."),
+
+			"version": WithDescription(stringAttribute([]string{computed}), "Version of the free-tier app service."),
+
 			"compute": schema.SingleNestedAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: "Compute configuration of the free-tier app service.",
 				Attributes: map[string]schema.Attribute{
-					"cpu": int64Attribute(computed, useStateForUnknown),
-					"ram": int64Attribute(computed, useStateForUnknown),
+					"cpu": WithDescription(int64Attribute(computed, useStateForUnknown), "Number of CPUs of the free-tier app service node."),
+
+					"ram": WithDescription(int64Attribute(computed, useStateForUnknown), "Amount of RAM of the free-tier app service node."),
 				},
 				PlanModifiers: []planmodifier.Object{
 					objectplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"audit": computedAuditAttribute(),
-			"plan":  stringAttribute([]string{computed}),
-			"etag":  stringAttribute([]string{computed}),
+			"plan":  WithDescription(stringAttribute([]string{computed}), "Plan associated with the free-tier app service."),
+			"etag":  WithDescription(stringAttribute([]string{computed}), "ETag of the free-tier app service."),
 		},
 	}
 }
