@@ -8,6 +8,7 @@ import (
 // ProjectEventSchema returns the schema for the ProjectEvent data source.
 func ProjectEventSchema() schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Data source to retrieve an event for a project.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Required:            true,
