@@ -39,16 +39,45 @@ func (a *AzureNetworkPeerCommand) Metadata(_ context.Context, req datasource.Met
 // Schema defines the schema for the azure network peer command data source.
 func (a *AzureNetworkPeerCommand) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Data source to generate Azure CLI command for setting up VNet peering between your Azure VNet and a Capella cluster.Retrieves the role assignment command or script to be executed in the Azure CLI to assign a new network contributor role. It scopes only to the specified subscription and the virtual network within that subscription." +
+			"\n\n Please check the github [repository](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/network_peer_command_azure) examples for the steps and more details.",
 		Attributes: map[string]schema.Attribute{
-			"organization_id":                requiredStringAttribute,
-			"project_id":                     requiredStringAttribute,
-			"cluster_id":                     requiredStringAttribute,
-			"tenant_id":                      requiredStringAttribute,
-			"subscription_id":                requiredStringAttribute,
-			"resource_group":                 requiredStringAttribute,
-			"vnet_id":                        requiredStringAttribute,
-			"vnet_peering_service_principal": requiredStringAttribute,
-			"command":                        computedStringAttribute,
+			"organization_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the organization that owns the Capella cluster.",
+			},
+			"project_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the project containing the Capella cluster.",
+			},
+			"cluster_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the Capella cluster to set up VNet peering with.",
+			},
+			"tenant_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The Azure tenant ID where your VNet resides.",
+			},
+			"subscription_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "Subscription ID is a GUID that uniquely identifies your subscription to use Azure services.",
+			},
+			"resource_group": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The resource group name holding the resource you’re connecting with Capella.",
+			},
+			"vnet_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The VNet ID is the name of the virtual network in Azure.",
+			},
+			"vnet_peering_service_principal": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The enterprise application object ID for the Capella service principal. You can find the enterprise application object ID in Azure by selecting Azure Active Directory -> Enterprise applications. Next, select the application name, the object ID is in the Object ID box.",
+			},
+			"command": schema.StringAttribute{
+				Computed:            true,
+				MarkdownDescription: "The command to be run by the customer in is their external azure account in order to grant the service principal a network contributor role that is required for VNET peering.",
+			},
 		},
 	}
 }

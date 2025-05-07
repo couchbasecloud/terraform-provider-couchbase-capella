@@ -7,23 +7,32 @@ import (
 
 func AuditLogSettingsSchema() schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Resource to manage audit log configuration settings for a Capella cluster. These settings control which audit events are logged and which users are excluded from audit logging.",
 		Attributes: map[string]schema.Attribute{
-			"organization_id": stringAttribute([]string{required}),
-			"project_id":      stringAttribute([]string{required}),
-			"cluster_id":      stringAttribute([]string{required}),
-			"audit_enabled":   boolAttribute(computed, optional),
+			"organization_id": WithDescription(stringAttribute([]string{required}),
+				"The ID of the Capella organization."),
+			"project_id": WithDescription(stringAttribute([]string{required}),
+				"The ID of the Capella project that the cluster belongs to."),
+			"cluster_id": WithDescription(stringAttribute([]string{required}),
+				"The ID of the Capella cluster to configure audit log settings for."),
+			"audit_enabled": WithDescription(boolAttribute(computed, optional),
+				"Determines whether audit logging is enabled or not on the cluster. Set to true to enable audit logging."),
 			"enabled_event_ids": schema.SetAttribute{
-				Computed:    true,
-				Optional:    true,
-				ElementType: types.Int64Type,
+				Computed:            true,
+				Optional:            true,
+				ElementType:         types.Int64Type,
+				MarkdownDescription: "List of audit event IDs to enable for logging. These IDs correspond to specific types of events that will be recorded in the audit log. Use the audit_log_event_ids data source to get the list of available event IDs.",
 			},
 			"disabled_users": schema.SetNestedAttribute{
-				Computed: true,
-				Optional: true,
+				Computed:            true,
+				Optional:            true,
+				MarkdownDescription: "List of users whose actions will be excluded from audit logging.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"domain": stringAttribute([]string{required}),
-						"name":   stringAttribute([]string{required}),
+						"domain": WithDescription(stringAttribute([]string{required}),
+							"The authentication domain of the user to exclude. Specifies whether the user is local or external."),
+						"name": WithDescription(stringAttribute([]string{required}),
+							"The username of the user to exclude from audit logging."),
 					},
 				},
 			},
