@@ -8,7 +8,7 @@ import (
 // ProjectEventsSchema returns the schema for the ProjectEvents data source.
 func ProjectEventsSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "Data source to retrieve all events information for a Capella project.",
+		MarkdownDescription: "Data source to retrieve all events information for a Capella project. Events represent a trail of actions that users performs within Capella at project level.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
