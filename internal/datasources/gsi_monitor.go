@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
@@ -41,34 +42,49 @@ func (g *GsiMonitor) Schema(
 	_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse,
 ) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Data source for monitoring Query Indexes in Couchbase Capella",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "The ID of the Capella organization.",
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
 				},
 			},
 			"project_id": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "The ID of the Capella project.",
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
 				},
 			},
 			"cluster_id": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "The ID of the Capella cluster where the indexes exist.",
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
 				},
 			},
 			"bucket_name": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "The name of the bucket where the indexes exist. Specifies the bucket part of the key space.",
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
 				},
 			},
-			"scope_name":      optionalStringAttribute,
-			"collection_name": optionalStringAttribute,
-			"indexes":         requiredStringSetAttribute,
+			"scope_name": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "The name of the scope where the indexes exist. Specifies the scope part of the key space. If unspecified, this will be the default scope.",
+			},
+			"collection_name": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "Specifies the collection part of the key space. If unspecified, this will be the default collection.",
+			},
+			"indexes": schema.SetAttribute{
+				Required:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: "Set of index names to monitor. These indexes must exist in the specified keyspace.",
+			},
 		},
 	}
 }
