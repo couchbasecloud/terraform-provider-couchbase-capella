@@ -38,16 +38,28 @@ func (c *Certificate) Metadata(_ context.Context, req datasource.MetadataRequest
 // Schema defines the schema for the allowlist data source.
 func (c *Certificate) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "The Capella certificate data source allows you to retrieve the certificate for a cluster.",
 		Attributes: map[string]schema.Attribute{
-			"organization_id": requiredStringAttribute,
-			"project_id":      requiredStringAttribute,
-			"cluster_id":      requiredStringAttribute,
+			"organization_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the organization.",
+			},
+			"project_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the project.",
+			},
+			"cluster_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the cluster.",
+			},
 			"data": schema.ListNestedAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: "The list of certificates.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"certificate": schema.StringAttribute{
-							Computed: true,
+							Computed:            true,
+							MarkdownDescription: "The certificate in PEM format.",
 						},
 					},
 				},

@@ -37,19 +37,41 @@ func (d *Projects) Metadata(_ context.Context, req datasource.MetadataRequest, r
 // Schema defines the schema for the project data source.
 func (d *Projects) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Data source to retrieve projects' information in a Capella organization.",
 		Attributes: map[string]schema.Attribute{
-			"organization_id": requiredStringAttribute,
+			"organization_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the Capella organization.",
+			},
 			"data": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"id":              computedStringAttribute,
-						"organization_id": computedStringAttribute,
-						"name":            computedStringAttribute,
-						"description":     computedStringAttribute,
-						"audit":           computedAuditAttribute,
-						"if_match":        computedStringAttribute,
-						"etag":            computedStringAttribute,
+						"id": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "A GUID4 identifier of the project.",
+						},
+						"organization_id": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "The GUID4 ID of the organization.",
+						},
+						"name": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "The name of the project.",
+						},
+						"description": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "The description of a particular project.",
+						},
+						"audit": computedAuditAttribute,
+						"if_match": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "A precondition header that specifies the entity tag of a resource.",
+						},
+						"etag": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "The ETag header value returned by the server, used for optimistic concurrency control.",
+						},
 					},
 				},
 			},

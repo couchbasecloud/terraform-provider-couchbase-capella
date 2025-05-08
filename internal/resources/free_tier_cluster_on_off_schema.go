@@ -8,11 +8,12 @@ import (
 
 func FreeTierClusterOnOffSchema() schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Manages the on/off state resource of a Free Tier Cluster.",
 		Attributes: map[string]schema.Attribute{
-			"organization_id": stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))),
-			"project_id":      stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))),
-			"cluster_id":      stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))),
-			"state":           stringAttribute([]string{required}),
+			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The GUID4 ID of the organization."),
+			"project_id":      WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The GUID4 ID of the project."),
+			"cluster_id":      WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The GUID4 ID of the cluster."),
+			"state":           WithDescription(stringAttribute([]string{required}), "The on/off state of the Free Tier Cluster."),
 		},
 	}
 }

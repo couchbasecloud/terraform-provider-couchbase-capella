@@ -6,57 +6,134 @@ import (
 
 func NetworkPeerSchema() schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Data source to retrieve network peering records for a Capella cluster.",
 		Attributes: map[string]schema.Attribute{
-			"organization_id": requiredStringAttribute,
-			"project_id":      requiredStringAttribute,
-			"cluster_id":      requiredStringAttribute,
+			"organization_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the organization that owns the Capella cluster.",
+			},
+			"project_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the project containing the Capella cluster.",
+			},
+			"cluster_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the cluster to list network peering records for.",
+			},
 			"data": schema.ListNestedAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: "List of network peering records.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"id":   computedStringAttribute,
-						"name": computedStringAttribute,
+						"id": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "The unique identifier for the VPC peering record.",
+						},
+						"name": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "The name of the network peering relationship.",
+						},
 						"provider_config": schema.SingleNestedAttribute{
-							Computed: true,
+							Computed:            true,
+							MarkdownDescription: "Cloud provider-specific configuration for the network peering. This provides details about the configuration and the ID of the VPC peer on AWS, GCP, or Azure.",
 							Attributes: map[string]schema.Attribute{
 								"aws_config": schema.SingleNestedAttribute{
-									Computed: true,
+									Computed:            true,
+									MarkdownDescription: "AWS config data required to establish a VPC peering relationship.",
 									Attributes: map[string]schema.Attribute{
-										"account_id":  computedStringAttribute,
-										"vpc_id":      computedStringAttribute,
-										"region":      computedStringAttribute,
-										"cidr":        computedStringAttribute,
-										"provider_id": computedStringAttribute,
+										"account_id": schema.StringAttribute{
+											Computed:            true,
+											MarkdownDescription: "The numeric AWS Account ID or Owner ID.",
+										},
+										"vpc_id": schema.StringAttribute{
+											Computed:            true,
+											MarkdownDescription: "The alphanumeric VPC ID which starts with 'vpc-'. This is also known as the networkId.",
+										},
+										"region": schema.StringAttribute{
+											Computed:            true,
+											MarkdownDescription: "The AWS region where your VPC is deployed",
+										},
+										"cidr": schema.StringAttribute{
+											Computed:            true,
+											MarkdownDescription: "The AWS VPC CIDR block of network in which your application runs. This cannot overlap with your Capella CIDR Block.",
+										},
+										"provider_id": schema.StringAttribute{
+											Computed:            true,
+											MarkdownDescription: "The ID of the VPC peer on AWS.",
+										},
 									},
 								},
 								"gcp_config": schema.SingleNestedAttribute{
-									Computed: true,
+									Computed:            true,
+									MarkdownDescription: "GCP config data required to establish a VPC peering relationship.",
 									Attributes: map[string]schema.Attribute{
-										"cidr":            computedStringAttribute,
-										"network_name":    computedStringAttribute,
-										"project_id":      computedStringAttribute,
-										"service_account": computedStringAttribute,
-										"provider_id":     computedStringAttribute,
+										"cidr": schema.StringAttribute{
+											Computed:            true,
+											MarkdownDescription: "The GCP VPC CIDR block of network in which your application runs. This cannot overlap with your Capella CIDR Block.",
+										},
+										"network_name": schema.StringAttribute{
+											Computed:            true,
+											MarkdownDescription: "The name of the network that you want to peer with.",
+										},
+										"project_id": schema.StringAttribute{
+											Computed:            true,
+											MarkdownDescription: "The unique identifier for your GCP project.",
+										},
+										"service_account": schema.StringAttribute{
+											Computed: true,
+											MarkdownDescription: "ServiceAccount created or assigned on the external VPC project. GCP Service Account with below permissions" +
+												"DNS Admin Compute.NetworkAdmin It should be in the form of an email that is shown under gcloud iam service-accounts list command. [Reference](https://cloud.google.com/iam/docs/service-accounts-create#creating)",
+										},
+										"provider_id": schema.StringAttribute{
+											Computed:            true,
+											MarkdownDescription: "The ID of the VPC peer on GCP.",
+										},
 									},
 								},
 								"azure_config": schema.SingleNestedAttribute{
-									Computed: true,
+									Computed:            true,
+									MarkdownDescription: "Azure config data required to establish a VNet peering relationship.",
 									Attributes: map[string]schema.Attribute{
-										"tenant_id":       computedStringAttribute,
-										"cidr":            computedStringAttribute,
-										"resource_group":  computedStringAttribute,
-										"subscription_id": computedStringAttribute,
-										"vnet_id":         computedStringAttribute,
-										"provider_id":     computedStringAttribute,
+										"tenant_id": schema.StringAttribute{
+											Computed:            true,
+											MarkdownDescription: "The Azure tenant ID where the VNet exists. More [info](https://learn.microsoft.com/en-us/entra/fundamentals/how-to-find-tenant)",
+										},
+										"cidr": schema.StringAttribute{
+											Computed:            true,
+											MarkdownDescription: "The CIDR block from the virtual network that you created in Azure.",
+										},
+										"resource_group": schema.StringAttribute{
+											Computed:            true,
+											MarkdownDescription: "The resource group name holding the resource you’re connecting with Capella.",
+										},
+										"subscription_id": schema.StringAttribute{
+											Computed:            true,
+											MarkdownDescription: "The Azure subscription ID where the VNet exists. More [info](https://learn.microsoft.com/en-us/azure/azure-portal/get-subscription-tenant-id#find-your-azure-subscription)",
+										},
+										"vnet_id": schema.StringAttribute{
+											Computed:            true,
+											MarkdownDescription: "The VNet ID is the name of the virtual network peering in Azure.",
+										},
+										"provider_id": schema.StringAttribute{
+											Computed:            true,
+											MarkdownDescription: "The ID of the VNet peer on Azure.",
+										},
 									},
 								},
 							},
 						},
 						"status": schema.SingleNestedAttribute{
-							Computed: true,
+							Computed:            true,
+							MarkdownDescription: "Current status of the network peering connection.",
 							Attributes: map[string]schema.Attribute{
-								"reasoning": computedStringAttribute,
-								"state":     computedStringAttribute,
+								"reasoning": schema.StringAttribute{
+									Computed:            true,
+									MarkdownDescription: "Detailed reason for the current status of the peering connection.",
+								},
+								"state": schema.StringAttribute{
+									Computed:            true,
+									MarkdownDescription: "Current state of the peering connection.",
+								},
 							},
 						},
 						"audit": computedAuditAttribute,

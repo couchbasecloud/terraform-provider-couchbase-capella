@@ -1,0 +1,1 @@
+terraform import couchbase-capella_project.new_project id=<project_id>,organization_id=<organization_id>

@@ -1,0 +1,1 @@
+terraform import couchbase-capella_app_service.new_app_service id=<appservice_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>
