@@ -41,34 +41,90 @@ func (g *GsiDefinitions) Schema(
 	_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse,
 ) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Data source for retrieving Query Indexes in Couchbase Capella",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "The ID of the Capella organization.",
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
 				},
 			},
 			"project_id": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "The ID of the Capella project.",
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
 				},
 			},
 			"cluster_id": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "The ID of the Capella cluster where the indexes exist.",
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
 				},
 			},
 			"bucket_name": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "The name of the bucket where the indexes exist. Specifies the bucket part of the key space.",
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
 				},
 			},
-			"scope_name":      optionalStringAttribute,
-			"collection_name": optionalStringAttribute,
-			"data":            computedGsiAttributes,
+			"scope_name": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "The name of the scope where the indexes exist. Specifies the scope part of the key space. If unspecified, this will be the default scope.",
+			},
+			"collection_name": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "Specifies the collection part of the key space. If unspecified, this will be the default collection.",
+			},
+			"data": schema.ListNestedAttribute{
+				Computed:            true,
+				MarkdownDescription: "List of indexes in the specified keyspace.",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "The name of the index.",
+						},
+						"is_primary": schema.BoolAttribute{
+							Computed:            true,
+							MarkdownDescription: "Whether this is a primary index.",
+						},
+						"state": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "The current state of the index. For example 'Created', 'Ready', etc.",
+						},
+						"keyspace_id": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "The full keyspace identifier for the index (bucket.scope.collection).",
+						},
+						"index_key": schema.ListAttribute{
+							Computed:            true,
+							ElementType:         types.StringType,
+							MarkdownDescription: "List of document fields being indexed.",
+						},
+						"condition": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "The WHERE clause condition for the index.",
+						},
+						"partition": schema.ListAttribute{
+							Computed:            true,
+							ElementType:         types.StringType,
+							MarkdownDescription: "List of fields the index is partitioned by.",
+						},
+						"replica_count": schema.Int64Attribute{
+							Computed:            true,
+							MarkdownDescription: "Number of index replicas.",
+						},
+						"partition_count": schema.Int64Attribute{
+							Computed:            true,
+							MarkdownDescription: "Number of partitions for the index.",
+						},
+					},
+				},
+			},
 		},
 	}
 }
