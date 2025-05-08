@@ -1,0 +1,1 @@
+import couchbase-capella_query_indexes.idx1 index_name=idx1,collection_name=memory,scope_name=metrics,bucket_name=api,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000
