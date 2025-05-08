@@ -4,7 +4,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -82,9 +81,6 @@ func BucketSchema() schema.Schema {
 					"ops_per_second":     WithDescription(int64Attribute(computed), "Bucket ops per second value"),
 					"disk_used_in_mib":   WithDescription(int64Attribute(computed), "Disk used in mib"),
 					"memory_used_in_mib": WithDescription(int64Attribute(computed), "Memory used in mib"),
-				},
-				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.UseStateForUnknown(),
 				},
 			},
 		},

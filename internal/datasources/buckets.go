@@ -54,7 +54,8 @@ func (d *Buckets) Schema(_ context.Context, _ datasource.SchemaRequest, resp *da
 				MarkdownDescription: "ID of the Capella cluster",
 			},
 			"data": schema.ListNestedAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: "Data of buckets in the cluster",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
