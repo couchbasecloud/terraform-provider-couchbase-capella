@@ -6,7 +6,15 @@ resource "couchbase-capella_cluster_onoff_schedule" "new_cluster_onoff_schedule"
   days = [
     for day in var.days : {
       state = "state"
-      day   = "day(ex:Monday)"
+      day   = "Monday"
+      from =  {
+                  hour   = 12
+                  minute = 30
+                }
+       to = {
+                  hour   = 14
+                  minute = 30
+                }
       from  = "from time"
       to    = "to time"
     }
