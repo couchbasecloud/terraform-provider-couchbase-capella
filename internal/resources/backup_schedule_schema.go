@@ -18,10 +18,10 @@ func BackupScheduleSchema() schema.Schema {
 				MarkdownDescription: "Schedule a full backup once a week with regular incrementals.",
 				Attributes: map[string]schema.Attribute{
 					"day_of_week":              WithDescription(stringAttribute([]string{required}), "Day of the week for the backup. Values can be \"sunday\" \"monday\" \"tuesday\" \"wednesday\" \"thursday\" \"friday\" \"saturday\""),
-					"start_at":                 WithDescription(stringAttribute([]string{required}), "Start at hour (in 24-Hour format). Integer value between 0 and 23."),
-					"incremental_every":        WithDescription(stringAttribute([]string{required}), "Interval in hours for incremental backup. Integer value between 1 and 24."),
+					"start_at":                 WithDescription(int64Attribute(required), "Start at hour (in 24-Hour format). Integer value between 0 and 23."),
+					"incremental_every":        WithDescription(int64Attribute(required), "Interval in hours for incremental backup. Integer value between 1 and 24."),
 					"retention_time":           WithDescription(stringAttribute([]string{required}), "Retention time in days, ex: 30days, 1year, 5years"),
-					"cost_optimized_retention": WithDescription(stringAttribute([]string{required}), "Optimize backup retention to reduce total cost of ownership (TCO). This gives the option to keep all but the last backup cycle of the month for thirty days; the last cycle will be kept for the defined retention period."),
+					"cost_optimized_retention": WithDescription(boolAttribute(required), "Optimize backup retention to reduce total cost of ownership (TCO). This gives the option to keep all but the last backup cycle of the month for thirty days; the last cycle will be kept for the defined retention period."),
 				},
 			},
 		},
