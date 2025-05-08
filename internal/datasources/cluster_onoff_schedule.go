@@ -41,29 +41,63 @@ func (c *ClusterOnOffSchedule) Metadata(_ context.Context, req datasource.Metada
 // Schema defines the schema for the cluster on/off schedule data source.
 func (c *ClusterOnOffSchedule) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "The On/Off schedule data source allows you to retrieve the on/off schedule for a Capella cluster.",
 		Attributes: map[string]schema.Attribute{
-			"organization_id": requiredStringAttribute,
-			"project_id":      requiredStringAttribute,
-			"cluster_id":      requiredStringAttribute,
-			"timezone":        computedStringAttribute,
+			"organization_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the organization.",
+			},
+			"project_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the project.",
+			},
+			"cluster_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the cluster.",
+			},
+			"timezone": schema.StringAttribute{
+				Computed:            true,
+				MarkdownDescription: "The standard timezone for the cluster. Should be the TZ identifier. For example, 'ET'",
+			},
 			"days": schema.ListNestedAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: "The list of days for the cluster on/off schedule. Each day should have a state, day, from, and to time.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"state": computedStringAttribute,
-						"day":   computedStringAttribute,
+						"state": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "The state of the cluster on/off schedule. Should be one of 'on' or 'off'.",
+						},
+						"day": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "The day of the week for the cluster on/off schedule. Should be one of 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', or 'saturday'.",
+						},
 						"from": schema.SingleNestedAttribute{
-							Optional: true,
+							Optional:            true,
+							MarkdownDescription: "The time from which the cluster on/off schedule starts.",
 							Attributes: map[string]schema.Attribute{
-								"hour":   computedInt64Attribute,
-								"minute": computedInt64Attribute,
+								"hour": schema.Int64Attribute{
+									Computed:            true,
+									MarkdownDescription: "The hour of the day for the cluster on/off schedule. Should be between 0 and 23.",
+								},
+								"minute": schema.Int64Attribute{
+									Computed:            true,
+									MarkdownDescription: "The minute of the hour for the cluster on/off schedule. Should be between 0 and 59.",
+								},
 							},
 						},
 						"to": schema.SingleNestedAttribute{
-							Optional: true,
+							Optional:            true,
+							MarkdownDescription: "The time to which the cluster on/off schedule ends.",
 							Attributes: map[string]schema.Attribute{
-								"hour":   computedInt64Attribute,
-								"minute": computedInt64Attribute,
+								"hour": schema.Int64Attribute{
+									Computed:            true,
+									MarkdownDescription: "The hour of the day for the cluster on/off schedule. Should be between 0 and 23.",
+								},
+								"minute": schema.Int64Attribute{
+									Computed:            true,
+									MarkdownDescription: "The minute of the hour for the cluster on/off schedule. Should be between 0 and 59.",
+								},
 							},
 						},
 					},

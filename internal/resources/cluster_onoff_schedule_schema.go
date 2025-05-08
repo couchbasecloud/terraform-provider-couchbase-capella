@@ -3,33 +3,61 @@ package resources
 import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
 func OnOffScheduleSchema() schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "The On/Off schedule resource allows you to manage the on/off schedule for a Capella cluster.",
 		Attributes: map[string]schema.Attribute{
-			"organization_id": stringAttribute([]string{required, requiresReplace}),
-			"project_id":      stringAttribute([]string{required, requiresReplace}),
-			"cluster_id":      stringAttribute([]string{required, requiresReplace}),
-			"timezone":        stringAttribute([]string{required, requiresReplace}),
+			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the organization."),
+			"project_id":      WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the project."),
+			"cluster_id":      WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the cluster."),
+			"timezone":        WithDescription(stringAttribute([]string{required, requiresReplace}), "Timezone for the schedule. Should be the TZ identifier. For example, 'US/Hawaii', 'Indian/Mauritius'"),
 			"days": schema.ListNestedAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "List of days the on/off schedule is active.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"state": stringAttribute([]string{required}),
-						"day":   stringAttribute([]string{required}, stringvalidator.OneOf("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")),
+						"state": WithDescription(stringAttribute([]string{required}), "Cluster state (on, off, or custom)."),
+						"day": WithDescription(stringAttribute([]string{required},
+							validator.String(stringvalidator.OneOf("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"))),
+							"Day of the week for scheduling on/off."),
 						"from": schema.SingleNestedAttribute{
-							Optional: true,
+							Optional:            true,
+							MarkdownDescription: "OnTimeBoundary corresponds to \"from\" and \"to\" time boundaries for when the cluster needs to be in the turned on (healthy) state on a day with \"custom\" scheduling timings.",
 							Attributes: map[string]schema.Attribute{
-								"hour":   int64DefaultAttribute(0, optional, computed),
-								"minute": int64DefaultAttribute(0, optional, computed),
+								"hour": schema.Int64Attribute{
+									Optional:            true,
+									Computed:            true,
+									Default:             int64default.StaticInt64(0),
+									MarkdownDescription: "Hour of the time boundary. The valid hour values are from 0 to 23 inclusive.",
+								},
+								"minute": schema.Int64Attribute{
+									Optional:            true,
+									Computed:            true,
+									Default:             int64default.StaticInt64(0),
+									MarkdownDescription: "Minute of the time boundary. Valid minute values are 0 and 30",
+								},
 							},
 						},
 						"to": schema.SingleNestedAttribute{
-							Optional: true,
+							MarkdownDescription: "OnTimeBoundary corresponds to \"from\" and \"to\" time boundaries for when the cluster needs to be in the turned on (healthy) state on a day with \"custom\" scheduling timings.",
+							Optional:            true,
 							Attributes: map[string]schema.Attribute{
-								"hour":   int64DefaultAttribute(0, optional, computed),
-								"minute": int64DefaultAttribute(0, optional, computed),
+								"hour": schema.Int64Attribute{
+									Optional:            true,
+									Computed:            true,
+									Default:             int64default.StaticInt64(0),
+									MarkdownDescription: "Hour of the time boundary. The valid hour values are from 0 to 23 inclusive.",
+								},
+								"minute": schema.Int64Attribute{
+									Optional:            true,
+									Computed:            true,
+									Default:             int64default.StaticInt64(0),
+									MarkdownDescription: "Minute of the time boundary. Valid minute values are 0 and 30",
+								},
 							},
 						},
 					},

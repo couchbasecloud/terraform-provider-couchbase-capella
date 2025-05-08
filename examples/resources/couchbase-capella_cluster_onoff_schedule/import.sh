@@ -1,0 +1,1 @@
+terraform import couchbase-capella_cluster_onoff_schedule.new_cluster_onoff_schedule cluster_id=<cluster_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>
