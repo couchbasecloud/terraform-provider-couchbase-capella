@@ -1,14 +1,14 @@
 resource "couchbase-capella_backup_schedule" "new_backup_schedule" {
-  organization_id = "organization_id"
-  project_id      = "project_id"
-  cluster_id      = "cluster_id"
-  bucket_id       = "bucket_id"
-  type            = "backup_schedule_type"
+  organization_id = "aaaaa-bbbbb-ccccc-dddddd"
+  project_id      = "aaaaa-bbbbb-ccccc-dddddd"
+  cluster_id      = "aaaaa-bbbbb-ccccc-dddddd"
+  bucket_id       = "aaaaa-bbbbbbb"
+  type            = "weekly"
   weekly_schedule = {
-    day_of_week              = "day_of_week"
-    start_at                 = "start_time"
-    incremental_every        = "incremental_hours"
-    retention_time           = "retention_time"
-    cost_optimized_retention = "cost_optimized_retention(bool)"
+    day_of_week              = "sunday"
+    start_at                 = 10
+    incremental_every        = 4
+    retention_time           = "90days"
+    cost_optimized_retention = false
   }
 }
