@@ -1,1 +1,1 @@
-terraform import couchbase-capella_free_tier_bucket.new_free_tier_bucket id=dGVzdF9idWNrZXQ=,organization_id=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee,project_id=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee,cluster_id=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
+terraform import couchbase-capella_free_tier_bucket.new_free_tier_bucket id=aaaaa-bbbbbb-ccc,organization_id=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee,project_id=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee,cluster_id=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
