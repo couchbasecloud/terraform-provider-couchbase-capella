@@ -3,7 +3,7 @@
 page_title: "couchbase-capella_buckets Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-
+ 
 ---
 
 # couchbase-capella_buckets (Data Source)
