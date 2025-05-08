@@ -39,85 +39,108 @@ func (d *Buckets) Metadata(_ context.Context, req datasource.MetadataRequest, re
 // Schema defines the schema for the bucket data source.
 func (d *Buckets) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Manages Bucket data source for Capella cluster",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "ID of the Capella tenant",
 			},
 			"project_id": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "ID of the Caplla project",
 			},
 			"cluster_id": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "ID of the Capella cluster",
 			},
 			"data": schema.ListNestedAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: "Data of buckets in the cluster",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
-							Computed: true,
+							Computed:            true,
+							MarkdownDescription: "ID of the bucket",
 						},
 						"name": schema.StringAttribute{
-							Computed: true,
+							Computed:            true,
+							MarkdownDescription: "The name of the bucket",
 						},
 						"organization_id": schema.StringAttribute{
-							Computed: true,
+							Computed:            true,
+							MarkdownDescription: "ID of the Capella tenant",
 						},
 						"project_id": schema.StringAttribute{
-							Computed: true,
+							Computed:            true,
+							MarkdownDescription: "ID of the Capella project",
 						},
 						"cluster_id": schema.StringAttribute{
-							Computed: true,
+							Computed:            true,
+							MarkdownDescription: "ID of the Capella cluster",
 						},
 						"type": schema.StringAttribute{
-							Optional: true,
-							Computed: true,
+							Optional:            true,
+							Computed:            true,
+							MarkdownDescription: "The bucket type (couchbase or ephemeral)",
 						},
 						"storage_backend": schema.StringAttribute{
-							Optional: true,
-							Computed: true,
+							Optional:            true,
+							Computed:            true,
+							MarkdownDescription: "The bucket storage engine type (Magma or Couchstore)",
 						},
 						"memory_allocation_in_mb": schema.Int64Attribute{
-							Optional: true,
-							Computed: true,
+							Optional:            true,
+							Computed:            true,
+							MarkdownDescription: "bucket size allocation in mb",
 						},
 						"bucket_conflict_resolution": schema.StringAttribute{
-							Optional: true,
-							Computed: true,
+							Optional:            true,
+							Computed:            true,
+							MarkdownDescription: "Conflict-resolution mechanism of bucket",
 						},
 						"durability_level": schema.StringAttribute{
-							Optional: true,
-							Computed: true,
+							Optional:            true,
+							Computed:            true,
+							MarkdownDescription: "Durability of the bucket",
 						},
 						"replicas": schema.Int64Attribute{
-							Optional: true,
-							Computed: true,
+							Optional:            true,
+							Computed:            true,
+							MarkdownDescription: "Number of replicas for the data",
 						},
 						"flush": schema.BoolAttribute{
-							Optional: true,
-							Computed: true,
+							Optional:            true,
+							Computed:            true,
+							MarkdownDescription: "Determines whether the flushing is enabled in the bucket",
 						},
 						"time_to_live_in_seconds": schema.Int64Attribute{
-							Optional: true,
-							Computed: true,
+							Optional:            true,
+							Computed:            true,
+							MarkdownDescription: "Time-to-live (TTL) for items in the bucket, in seconds",
 						},
 						"eviction_policy": schema.StringAttribute{
-							Optional: true,
-							Computed: true,
+							Optional:            true,
+							Computed:            true,
+							MarkdownDescription: "Eviction policy for the bucket",
 						},
 						"stats": schema.SingleNestedAttribute{
 							Computed: true,
 							Attributes: map[string]schema.Attribute{
 								"item_count": schema.Int64Attribute{
-									Computed: true,
+									Computed:            true,
+									MarkdownDescription: "Bucket item count",
 								},
 								"ops_per_second": schema.Int64Attribute{
-									Computed: true,
+									Computed:            true,
+									MarkdownDescription: "Bucket ops per second value",
 								},
 								"disk_used_in_mib": schema.Int64Attribute{
-									Computed: true,
+									Computed:            true,
+									MarkdownDescription: "Disk used in mib",
 								},
 								"memory_used_in_mib": schema.Int64Attribute{
-									Computed: true,
+									Computed:            true,
+									MarkdownDescription: "Memory used in mib",
 								},
 							},
 						},
