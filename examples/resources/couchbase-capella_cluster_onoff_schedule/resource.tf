@@ -1,8 +1,8 @@
 resource "couchbase-capella_cluster_onoff_schedule" "new_cluster_onoff_schedule" {
-  organization_id = "organization_id"
-  project_id      = "project_id"
-  cluster_id      = "cluster_id"
-  timezone        = "ex:US/Hawaii"
+  organization_id = "aaaaaa-bbbbb-cccc-dddd-eeeeeeeeeeee"
+  project_id      = "aaaaaa-bbbbb-cccc-dddd-eeeeeeeeeeee"
+  cluster_id      = "aaaaaa-bbbbb-cccc-dddd-eeeeeeeeeeee"
+  timezone        = "US/Hawaii"
   days = [
     {
       day   = "monday"
