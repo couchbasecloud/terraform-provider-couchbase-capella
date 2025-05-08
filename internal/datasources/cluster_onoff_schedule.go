@@ -60,7 +60,8 @@ func (c *ClusterOnOffSchedule) Schema(_ context.Context, _ datasource.SchemaRequ
 				MarkdownDescription: "The standard timezone for the cluster. Should be the TZ identifier. For example, 'ET'",
 			},
 			"days": schema.ListNestedAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: "The list of days for the cluster on/off schedule. Each day should have a state, day, from, and to time.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"state": schema.StringAttribute{
@@ -72,7 +73,8 @@ func (c *ClusterOnOffSchedule) Schema(_ context.Context, _ datasource.SchemaRequ
 							MarkdownDescription: "The day of the week for the cluster on/off schedule. Should be one of 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', or 'saturday'.",
 						},
 						"from": schema.SingleNestedAttribute{
-							Optional: true,
+							Optional:            true,
+							MarkdownDescription: "The time from which the cluster on/off schedule starts.",
 							Attributes: map[string]schema.Attribute{
 								"hour": schema.Int64Attribute{
 									Computed:            true,
@@ -85,7 +87,8 @@ func (c *ClusterOnOffSchedule) Schema(_ context.Context, _ datasource.SchemaRequ
 							},
 						},
 						"to": schema.SingleNestedAttribute{
-							Optional: true,
+							Optional:            true,
+							MarkdownDescription: "The time to which the cluster on/off schedule ends.",
 							Attributes: map[string]schema.Attribute{
 								"hour": schema.Int64Attribute{
 									Computed:            true,
