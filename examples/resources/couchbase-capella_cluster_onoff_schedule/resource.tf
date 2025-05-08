@@ -5,7 +5,7 @@ resource "couchbase-capella_cluster_onoff_schedule" "new_cluster_onoff_schedule"
   timezone        = "timezone(ex:US/Hawaii)"
   days = [
     for day in var.days : {
-      state = "state"
+      state = "off"
       day   = "Monday"
       from =  {
                   hour   = 12
