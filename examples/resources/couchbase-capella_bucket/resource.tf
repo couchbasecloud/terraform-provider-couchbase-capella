@@ -1,8 +1,8 @@
 resource "couchbase-capella_bucket" "new_bucket" {
   name                       = "terraform bucket"
-  organization_id            = "<organization_id>"
-  project_id                 = "<project_id>"
-  cluster_id                 = "<cluster_id"
+  organization_id            = "aaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+  project_id                 = "aaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+  cluster_id                 = "aaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
   type                       = "couchbase"
   storage_backend            = "couchstore"
   memory_allocation_in_mb    = 100
