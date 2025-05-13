@@ -48,9 +48,9 @@ resource "couchbase-capella_allowlist" "new_allowlist" {
 
 Read-Only:
 
-- `created_at` (String) The RFC3339 timestamp when the resource was created.
+- `created_at` (String) The timestamp when the resource was created.
 - `created_by` (String) The user who created the resource.
-- `modified_at` (String) The RFC3339 timestamp when the resource was last modified.
+- `modified_at` (String) The timestamp when the resource was last modified.
 - `modified_by` (String) The user who last modified the resource.
 - `version` (Number) The version of the document. This value is incremented each time the resource is modified.
 
