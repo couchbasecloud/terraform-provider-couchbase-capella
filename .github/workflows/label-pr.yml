@@ -26,39 +26,54 @@ jobs:
           echo "PR_BODY<<EOF" >> $GITHUB_ENV
           echo "${{ github.event.pull_request.body }}" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
+          
+          # Debug: Show PR body
+          echo "PR Body content:"
+          echo "${{ github.event.pull_request.body }}"
 
       - name: Determine which labels to apply
         id: determine-labels
         run: |
           declare -a LABELS=()
           
+          echo "Checking PR body content for matches..."
+          
           # Core changes
-          if echo "${{ env.PR_BODY }}" | grep -q '\[X\].*Bug fix (non-breaking change which fixes an issue)'; then
+          if echo "${{ env.PR_BODY }}" | grep -iq "\[[xX]\] Bug fix"; then
+            echo "Found Bug fix checkbox"
             LABELS+=("bug")
           fi
-          if echo "${{ env.PR_BODY }}" | grep -q '\[X\].*New feature (non-breaking change which adds functionality)'; then
+          if echo "${{ env.PR_BODY }}" | grep -iq "\[[xX]\] New feature"; then
+            echo "Found New feature checkbox"
             LABELS+=("enhancement")
           fi
-          if echo "${{ env.PR_BODY }}" | grep -q '\[X\].*Breaking change'; then
+          if echo "${{ env.PR_BODY }}" | grep -iq "\[[xX]\] Breaking change"; then
+            echo "Found Breaking change checkbox"
             LABELS+=("breaking change")
           fi
           
           # Documentation
-          if echo "${{ env.PR_BODY }}" | grep -q '\[X\].*Documentation fix/enhancement'; then
+          if echo "${{ env.PR_BODY }}" | grep -iq "\[[xX]\] Documentation"; then
+            echo "Found Documentation checkbox"
             LABELS+=("documentation")
           fi
           
+          # Debug: Show what was found
+          echo "Content of LABELS array:"
+          printf '%s\n' "${LABELS[@]}"
+          
           # Output the labels
           if [ ${#LABELS[@]} -eq 0 ]; then
+            echo "No labels found, setting needs-triage"
             echo "labels=needs-triage" >> $GITHUB_OUTPUT
           else
-            # Join array elements with comma
+            echo "Found labels, joining them"
             IFS=,
             echo "labels=${LABELS[*]}" >> $GITHUB_OUTPUT
           fi
           
           # Debug output
-          echo "Detected labels: ${LABELS[*]}"
+          echo "Final labels output: $(cat $GITHUB_OUTPUT)"
 
       - name: Add labels
         uses: actions/github-script@v6
@@ -66,6 +81,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const labels = '${{ steps.determine-labels.outputs.labels }}'.split(',');
+            console.log('PR Body:', context.payload.pull_request.body);
             console.log('Adding labels:', labels);
             
             try {
