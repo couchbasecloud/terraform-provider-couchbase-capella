@@ -50,21 +50,35 @@ jobs:
           
           # Output the labels
           if [ ${#LABELS[@]} -eq 0 ]; then
-            echo "labels<<EOF" >> $GITHUB_OUTPUT
-            echo "needs-triage" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
+            echo "labels=needs-triage" >> $GITHUB_OUTPUT
           else
-            echo "labels<<EOF" >> $GITHUB_OUTPUT
-            printf '%s\n' "${LABELS[@]}" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
+            # Join array elements with comma
+            IFS=,
+            echo "labels=${LABELS[*]}" >> $GITHUB_OUTPUT
           fi
+          
+          # Debug output
+          echo "Detected labels: ${LABELS[*]}"
 
       - name: Add labels
-        uses: actions-ecosystem/action-add-labels@v1
+        uses: actions/github-script@v6
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          labels: |
-            ${{ steps.determine-labels.outputs.labels }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const labels = '${{ steps.determine-labels.outputs.labels }}'.split(',');
+            console.log('Adding labels:', labels);
+            
+            try {
+              await github.rest.issues.addLabels({
+                ...context.repo,
+                issue_number: context.payload.pull_request.number,
+                labels: labels
+              });
+              console.log('Successfully added labels');
+            } catch (error) {
+              console.log('Error adding labels:', error);
+              throw error;
+            }
 
       - name: Add comment if no template matches found
         if: steps.determine-labels.outputs.labels == 'needs-triage'
