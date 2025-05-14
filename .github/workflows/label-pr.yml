@@ -84,15 +84,27 @@ jobs:
             console.log('PR Body:', context.payload.pull_request.body);
             console.log('Adding labels:', labels);
 
+            try {
+              await github.rest.issues.addLabels({
+                ...context.repo,
+                issue_number: context.payload.pull_request.number,
+                labels: labels
+              });
+              console.log('Successfully added labels');
+            } catch (error) {
+              console.log('Error adding labels:', error);
+              throw error;
+            }
+
       - name: Add comment if no template matches found
         if: steps.determine-labels.outputs.labels == 'needs-triage'
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.name,
+            const prNumber = context.payload.pull_request.number;
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: prNumber,
               body: 'No PR template selections were detected. Please make sure to fill out the PR template properly by selecting the appropriate checkboxes.'
-            })
+            });
