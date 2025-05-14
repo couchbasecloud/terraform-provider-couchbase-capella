@@ -1,0 +1,49 @@
+name: "Label PR Based on Template"
+
+on:
+  pull_request:
+    types: [opened, edited, closed]
+
+jobs:
+  label-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract and set labels based on PR body
+        id: get-labels
+        run: |
+          echo "PR_BODY<<EOF" >> $GITHUB_ENV
+          echo "${{ github.event.pull_request.body }}" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Determine which labels to apply
+        id: determine-labels
+        run: |
+          LABELS=""
+          if echo "${{ env.PR_BODY }}" | grep -q '\[x\].*Bug fix'; then
+            LABELS="$LABELS,bug"
+          fi
+          if echo "${{ env.PR_BODY }}" | grep -q '\[x\].*New feature'; then
+            LABELS="$LABELS,enhancement"
+          fi
+          if echo "${{ env.PR_BODY }}" | grep -q '\[x\].*Breaking change'; then
+            LABELS="$LABELS,breaking-change"
+          fi
+          if echo "${{ env.PR_BODY }}" | grep -q '\[x\].*Documentation'; then
+            LABELS="$LABELS,documentation"
+          fi
+          if echo "${{ env.PR_BODY }}" | grep -q '\[x\].*requires a documentation update'; then
+            LABELS="$LABELS,needs-docs"
+          fi
+          LABELS="${LABELS#,}"  # Remove leading comma
+          echo "labels=$LABELS" >> $GITHUB_OUTPUT
+
+      - name: Add labels
+        if: steps.determine-labels.outputs.labels != ''
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          labels: ${{ steps.determine-labels.outputs.labels }}
+
+      - name: Skip if not merged
+        if: github.event.pull_request.merged != true
+        run: echo "PR was closed but not merged, skipping labeling."
