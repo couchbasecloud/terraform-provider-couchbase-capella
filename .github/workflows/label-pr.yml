@@ -30,30 +30,27 @@ jobs:
       - name: Determine which labels to apply
         id: determine-labels
         run: |
-          LABELS=""
+          LABELS="[]"
           
           # Core changes
           if echo "${{ env.PR_BODY }}" | grep -q '\[X\].*Bug fix (non-breaking change which fixes an issue)'; then
-            LABELS="$LABELS,bug"
+            LABELS=$(echo $LABELS | jq '. += ["bug"]')
           fi
           if echo "${{ env.PR_BODY }}" | grep -q '\[X\].*New feature (non-breaking change which adds functionality)'; then
-            LABELS="$LABELS,enhancement"
+            LABELS=$(echo $LABELS | jq '. += ["enhancement"]')
           fi
           if echo "${{ env.PR_BODY }}" | grep -q '\[X\].*Breaking change'; then
-            LABELS="$LABELS,breaking change"
+            LABELS=$(echo $LABELS | jq '. += ["breaking change"]')
           fi
           
           # Documentation
           if echo "${{ env.PR_BODY }}" | grep -q '\[X\].*Documentation fix/enhancement'; then
-            LABELS="$LABELS,documentation"
+            LABELS=$(echo $LABELS | jq '. += ["documentation"]')
           fi
           
-          # Remove leading comma if present
-          LABELS="${LABELS#,}"
-          
-          # Only set needs-triage if absolutely no checkboxes are marked
+          # Set needs-triage if no checkboxes are marked
           if ! echo "${{ env.PR_BODY }}" | grep -q '\[X\]'; then
-            LABELS="needs-triage"
+            LABELS='["needs-triage"]'
           fi
           
           echo "labels=$LABELS" >> $GITHUB_OUTPUT
@@ -62,10 +59,10 @@ jobs:
         uses: actions-ecosystem/action-add-labels@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          labels: ${{ steps.determine-labels.outputs.labels }}
+          labels: ${{ fromJSON(steps.determine-labels.outputs.labels) }}
 
       - name: Add comment if no template matches found
-        if: steps.determine-labels.outputs.labels == 'needs-triage'
+        if: steps.determine-labels.outputs.labels == '["needs-triage"]'
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
