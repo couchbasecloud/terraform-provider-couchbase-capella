@@ -30,30 +30,31 @@ jobs:
       - name: Determine which labels to apply
         id: determine-labels
         run: |
-          LABELS="[]"
+          declare -a LABELS=()
           
           # Core changes
           if echo "${{ env.PR_BODY }}" | grep -q '\[X\].*Bug fix (non-breaking change which fixes an issue)'; then
-            LABELS=$(echo $LABELS | jq '. += ["bug"]')
+            LABELS+=("bug")
           fi
           if echo "${{ env.PR_BODY }}" | grep -q '\[X\].*New feature (non-breaking change which adds functionality)'; then
-            LABELS=$(echo $LABELS | jq '. += ["enhancement"]')
+            LABELS+=("enhancement")
           fi
           if echo "${{ env.PR_BODY }}" | grep -q '\[X\].*Breaking change'; then
-            LABELS=$(echo $LABELS | jq '. += ["breaking change"]')
+            LABELS+=("breaking change")
           fi
           
           # Documentation
           if echo "${{ env.PR_BODY }}" | grep -q '\[X\].*Documentation fix/enhancement'; then
-            LABELS=$(echo $LABELS | jq '. += ["documentation"]')
+            LABELS+=("documentation")
           fi
           
-          # Set needs-triage if no checkboxes are marked
-          if ! echo "${{ env.PR_BODY }}" | grep -q '\[X\]'; then
-            LABELS='["needs-triage"]'
+          # Convert array to JSON array string
+          if [ ${#LABELS[@]} -eq 0 ]; then
+            echo "labels=[\"needs-triage\"]" >> $GITHUB_OUTPUT
+          else
+            printf -v joined '"%s",' "${LABELS[@]}"
+            echo "labels=[${joined%,}]" >> $GITHUB_OUTPUT
           fi
-          
-          echo "labels=$LABELS" >> $GITHUB_OUTPUT
 
       - name: Add labels
         uses: actions-ecosystem/action-add-labels@v1
