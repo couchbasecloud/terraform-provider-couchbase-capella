@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_apikeys Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  
+  Data source to retrieve api keys in a Capella organization. API keys are used to authenticate and authorize access to Capella resources and services.
 ---
 
 # couchbase-capella_apikeys (Data Source)
 
-
+Data source to retrieve api keys in a Capella organization. API keys are used to authenticate and authorize access to Capella resources and services.
 
 
 
@@ -17,7 +17,7 @@ description: |-
 
 ### Required
 
-- `organization_id` (String)
+- `organization_id` (String) The ID of then Capella organization.
 
 ### Read-Only
 
@@ -28,26 +28,26 @@ description: |-
 
 Read-Only:
 
-- `allowed_cidrs` (List of String)
-- `audit` (Attributes) (see [below for nested schema](#nestedatt--data--audit))
-- `description` (String)
-- `expiry` (Number)
-- `id` (String)
-- `name` (String)
-- `organization_id` (String)
-- `organization_roles` (List of String)
-- `resources` (Attributes List) (see [below for nested schema](#nestedatt--data--resources))
+- `allowed_cidrs` (List of String) List of inbound CIDRs for the API key. The system making a request must come from one of the allowed CIDRs.
+- `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--data--audit))
+- `description` (String) Description for the API key.
+- `expiry` (Number) Expiry of the API key in number of days. If set to -1, the token will not expire.
+- `id` (String) The id is a unique identifier for an apiKey.
+- `name` (String) Name of the API key.
+- `organization_id` (String) The GUID4 ID of the Capella organization.
+- `organization_roles` (List of String) List of organization roles associated with the API key.
+- `resources` (Attributes List) Resources are the resource level permissions associated with the API key. (see [below for nested schema](#nestedatt--data--resources))
 
 <a id="nestedatt--data--audit"></a>
 ### Nested Schema for `data.audit`
 
 Read-Only:
 
-- `created_at` (String)
-- `created_by` (String)
-- `modified_at` (String)
-- `modified_by` (String)
-- `version` (Number)
+- `created_at` (String) The RFC3339 timestamp when the resource was created.
+- `created_by` (String) The user who created the resource.
+- `modified_at` (String) The RFC3339 timestamp when the resource was last modified.
+- `modified_by` (String) The user who last modified the resource.
+- `version` (Number) The version of the document. This value is incremented each time the resource is modified.
 
 
 <a id="nestedatt--data--resources"></a>
@@ -55,6 +55,6 @@ Read-Only:
 
 Read-Only:
 
-- `id` (String)
-- `roles` (List of String)
-- `type` (String)
+- `id` (String) ID of the project.
+- `roles` (List of String) Project Roles associated with the API key.
+- `type` (String) Type of the resource.
