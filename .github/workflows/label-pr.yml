@@ -2,12 +2,24 @@ name: "Label PR Based on Template"
 
 on:
   pull_request:
-    types: [opened, edited, closed]
 
 jobs:
   label-pr:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
+      contents: read
+
     steps:
+      - name: Check PR body
+        id: check-pr
+        run: |
+          if [ -z "${{ github.event.pull_request.body }}" ]; then
+            echo "PR body is empty. Please fill out the PR template."
+            exit 1
+          fi
+
       - name: Extract and set labels based on PR body
         id: get-labels
         run: |
@@ -18,32 +30,51 @@ jobs:
       - name: Determine which labels to apply
         id: determine-labels
         run: |
-          LABELS=""
-          if echo "${{ env.PR_BODY }}" | grep -q '\[x\].*Bug fix'; then
-            LABELS="$LABELS,bug"
+          declare -a LABELS=()
+          
+          # Core changes
+          if echo "${{ env.PR_BODY }}" | grep -q '\[X\].*Bug fix (non-breaking change which fixes an issue)'; then
+            LABELS+=("bug")
           fi
-          if echo "${{ env.PR_BODY }}" | grep -q '\[x\].*New feature'; then
-            LABELS="$LABELS,enhancement"
+          if echo "${{ env.PR_BODY }}" | grep -q '\[X\].*New feature (non-breaking change which adds functionality)'; then
+            LABELS+=("enhancement")
           fi
-          if echo "${{ env.PR_BODY }}" | grep -q '\[x\].*Breaking change'; then
-            LABELS="$LABELS,breaking-change"
+          if echo "${{ env.PR_BODY }}" | grep -q '\[X\].*Breaking change'; then
+            LABELS+=("breaking change")
           fi
-          if echo "${{ env.PR_BODY }}" | grep -q '\[x\].*Documentation'; then
-            LABELS="$LABELS,documentation"
+          
+          # Documentation
+          if echo "${{ env.PR_BODY }}" | grep -q '\[X\].*Documentation fix/enhancement'; then
+            LABELS+=("documentation")
           fi
-          if echo "${{ env.PR_BODY }}" | grep -q '\[x\].*requires a documentation update'; then
-            LABELS="$LABELS,needs-docs"
+          
+          # Output the labels
+          if [ ${#LABELS[@]} -eq 0 ]; then
+            echo "labels<<EOF" >> $GITHUB_OUTPUT
+            echo "needs-triage" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "labels<<EOF" >> $GITHUB_OUTPUT
+            printf '%s\n' "${LABELS[@]}" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
           fi
-          LABELS="${LABELS#,}"  # Remove leading comma
-          echo "labels=$LABELS" >> $GITHUB_OUTPUT
 
       - name: Add labels
-        if: steps.determine-labels.outputs.labels != ''
         uses: actions-ecosystem/action-add-labels@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          labels: ${{ steps.determine-labels.outputs.labels }}
+          labels: |
+            ${{ steps.determine-labels.outputs.labels }}
 
-      - name: Skip if not merged
-        if: github.event.pull_request.merged != true
-        run: echo "PR was closed but not merged, skipping labeling."
+      - name: Add comment if no template matches found
+        if: steps.determine-labels.outputs.labels == 'needs-triage'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.name,
+              body: 'No PR template selections were detected. Please make sure to fill out the PR template properly by selecting the appropriate checkboxes.'
+            })
