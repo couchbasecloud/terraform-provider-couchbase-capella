@@ -40,15 +40,12 @@ jobs:
             LABELS="$LABELS,enhancement"
           fi
           if echo "${{ env.PR_BODY }}" | grep -q '\[X\].*Breaking change'; then
-            LABELS="$LABELS,breaking-change"
+            LABELS="$LABELS,breaking change"
           fi
           
           # Documentation
           if echo "${{ env.PR_BODY }}" | grep -q '\[X\].*Documentation fix/enhancement'; then
             LABELS="$LABELS,documentation"
-          fi
-          if echo "${{ env.PR_BODY }}" | grep -q '\[X\].*requires a documentation update'; then
-            LABELS="$LABELS,needs-docs"
           fi
           
           # Remove leading comma if present
