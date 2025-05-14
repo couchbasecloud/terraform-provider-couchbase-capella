@@ -33,43 +33,29 @@ jobs:
           LABELS=""
           
           # Core changes
-          if echo "${{ env.PR_BODY }}" | grep -q '\[x\].*Bug fix'; then
+          if echo "${{ env.PR_BODY }}" | grep -q '\[X\].*Bug fix (non-breaking change which fixes an issue)'; then
             LABELS="$LABELS,bug"
           fi
-          if echo "${{ env.PR_BODY }}" | grep -q '\[x\].*New feature'; then
+          if echo "${{ env.PR_BODY }}" | grep -q '\[X\].*New feature (non-breaking change which adds functionality)'; then
             LABELS="$LABELS,enhancement"
           fi
-          if echo "${{ env.PR_BODY }}" | grep -q '\[x\].*Breaking change'; then
+          if echo "${{ env.PR_BODY }}" | grep -q '\[X\].*Breaking change'; then
             LABELS="$LABELS,breaking-change"
           fi
           
           # Documentation
-          if echo "${{ env.PR_BODY }}" | grep -q '\[x\].*Documentation'; then
+          if echo "${{ env.PR_BODY }}" | grep -q '\[X\].*Documentation fix/enhancement'; then
             LABELS="$LABELS,documentation"
           fi
-          if echo "${{ env.PR_BODY }}" | grep -q '\[x\].*requires a documentation update'; then
+          if echo "${{ env.PR_BODY }}" | grep -q '\[X\].*requires a documentation update'; then
             LABELS="$LABELS,needs-docs"
-          fi
-          
-          # Additional categories
-          if echo "${{ env.PR_BODY }}" | grep -q '\[x\].*Dependencies'; then
-            LABELS="$LABELS,dependencies"
-          fi
-          if echo "${{ env.PR_BODY }}" | grep -q '\[x\].*Security'; then
-            LABELS="$LABELS,security"
-          fi
-          if echo "${{ env.PR_BODY }}" | grep -q '\[x\].*Performance'; then
-            LABELS="$LABELS,performance"
-          fi
-          if echo "${{ env.PR_BODY }}" | grep -q '\[x\].*Tests'; then
-            LABELS="$LABELS,tests"
           fi
           
           # Remove leading comma if present
           LABELS="${LABELS#,}"
           
-          # Set default label if none matched
-          if [ -z "$LABELS" ]; then
+          # Only set needs-triage if absolutely no checkboxes are marked
+          if ! echo "${{ env.PR_BODY }}" | grep -q '\[X\]'; then
             LABELS="needs-triage"
           fi
           
