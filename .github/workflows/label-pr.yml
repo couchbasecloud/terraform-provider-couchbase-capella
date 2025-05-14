@@ -66,35 +66,51 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const labelsToRemove = ['bug', 'enhancement', 'breaking change', 'documentation', 'needs-triage'];
-            const { data: currentLabels } = await github.rest.issues.listLabelsOnIssue({
-              owner: context.repo.owner,
-              repo: context.repo.name,
-              issue_number: context.issue.number
-            });
-            
-            for (const label of currentLabels) {
-              if (labelsToRemove.includes(label.name)) {
-                await github.rest.issues.removeLabel({
-                  owner: context.repo.owner,
-                  repo: context.repo.name,
-                  issue_number: context.issue.number,
-                  name: label.name
-                }).catch(e => {
-                  // Ignore if label doesn't exist
-                  if (e.status !== 404) {
-                    throw e;
+            try {
+              const { data: currentLabels } = await github.rest.issues.listLabelsOnIssue({
+                owner: context.repo.owner,
+                repo: context.repo.name,
+                issue_number: context.issue.number
+              });
+              
+              for (const label of currentLabels) {
+                if (labelsToRemove.includes(label.name)) {
+                  try {
+                    await github.rest.issues.removeLabel({
+                      owner: context.repo.owner,
+                      repo: context.repo.name,
+                      issue_number: context.issue.number,
+                      name: label.name
+                    });
+                    console.log(`Removed label: ${label.name}`);
+                  } catch (removeError) {
+                    console.log(`Error removing label ${label.name}:`, removeError);
                   }
-                });
+                }
               }
+            } catch (error) {
+              console.log('Error getting current labels:', error);
+              // Continue with adding new labels even if removal fails
             }
 
       # Then add new labels
-      - name: Add labels
-        uses: actions-ecosystem/action-add-labels@v1
+      - name: Add new labels
+        uses: actions/github-script@v6
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          labels: |
-            ${{ steps.determine-labels.outputs.labels }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const labelsToAdd = '${{ steps.determine-labels.outputs.labels }}'.split('\n').filter(Boolean);
+            try {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.name,
+                issue_number: context.issue.number,
+                labels: labelsToAdd
+              });
+              console.log('Added labels:', labelsToAdd);
+            } catch (error) {
+              console.log('Error adding labels:', error);
+            }
 
       - name: Add comment if no template matches found
         if: steps.determine-labels.outputs.labels == 'needs-triage'
