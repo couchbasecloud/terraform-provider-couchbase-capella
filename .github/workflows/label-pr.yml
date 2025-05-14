@@ -59,6 +59,36 @@ jobs:
             echo "EOF" >> $GITHUB_OUTPUT
           fi
 
+      # First remove existing PR type labels
+      - name: Remove existing labels
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const labelsToRemove = ['bug', 'enhancement', 'breaking change', 'documentation', 'needs-triage'];
+            const { data: currentLabels } = await github.rest.issues.listLabelsOnIssue({
+              owner: context.repo.owner,
+              repo: context.repo.name,
+              issue_number: context.issue.number
+            });
+            
+            for (const label of currentLabels) {
+              if (labelsToRemove.includes(label.name)) {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.name,
+                  issue_number: context.issue.number,
+                  name: label.name
+                }).catch(e => {
+                  // Ignore if label doesn't exist
+                  if (e.status !== 404) {
+                    throw e;
+                  }
+                });
+              }
+            }
+
+      # Then add new labels
       - name: Add labels
         uses: actions-ecosystem/action-add-labels@v1
         with:
