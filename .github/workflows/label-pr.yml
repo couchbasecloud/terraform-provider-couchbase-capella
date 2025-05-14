@@ -50,20 +50,20 @@ jobs:
           
           # Convert array to JSON array string
           if [ ${#LABELS[@]} -eq 0 ]; then
-            echo "labels=[\"needs-triage\"]" >> $GITHUB_OUTPUT
+            echo "labels=needs-triage" >> $GITHUB_OUTPUT
           else
-            printf -v joined '"%s",' "${LABELS[@]}"
-            echo "labels=[${joined%,}]" >> $GITHUB_OUTPUT
+            printf -v joined '%s,' "${LABELS[@]}"
+            echo "labels=${joined%,}" >> $GITHUB_OUTPUT
           fi
 
       - name: Add labels
         uses: actions-ecosystem/action-add-labels@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          labels: ${{ fromJSON(steps.determine-labels.outputs.labels) }}
+          labels: ${{ steps.determine-labels.outputs.labels }}
 
       - name: Add comment if no template matches found
-        if: steps.determine-labels.outputs.labels == '["needs-triage"]'
+        if: steps.determine-labels.outputs.labels == 'needs-triage'
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
