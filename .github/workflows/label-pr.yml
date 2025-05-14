@@ -48,19 +48,23 @@ jobs:
             LABELS+=("documentation")
           fi
           
-          # Convert array to JSON array string
+          # Output the labels
           if [ ${#LABELS[@]} -eq 0 ]; then
-            echo "labels=needs-triage" >> $GITHUB_OUTPUT
+            echo "labels<<EOF" >> $GITHUB_OUTPUT
+            echo "needs-triage" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
           else
-            printf -v joined '%s,' "${LABELS[@]}"
-            echo "labels=${joined%,}" >> $GITHUB_OUTPUT
+            echo "labels<<EOF" >> $GITHUB_OUTPUT
+            printf '%s\n' "${LABELS[@]}" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
           fi
 
       - name: Add labels
         uses: actions-ecosystem/action-add-labels@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          labels: ${{ steps.determine-labels.outputs.labels }}
+          labels: |
+            ${{ steps.determine-labels.outputs.labels }}
 
       - name: Add comment if no template matches found
         if: steps.determine-labels.outputs.labels == 'needs-triage'
