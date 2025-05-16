@@ -58,7 +58,7 @@ func ClusterSchema() schema.Schema {
 								},
 								"cidr": schema.StringAttribute{
 									Computed:            true,
-									MarkdownDescription: "CIDR block for Cloud Provider.",
+									MarkdownDescription: "CIDR block for the Cloud Service Provider.",
 								},
 							},
 						},
@@ -147,7 +147,7 @@ func ClusterSchema() schema.Schema {
 							Attributes: map[string]schema.Attribute{
 								"plan": schema.StringAttribute{
 									Computed:            true,
-									MarkdownDescription: "Plan type, either 'Basic', 'Developer Pro', or 'Enterprise'. Plan type allowed for singleNode cluster is either 'Basic', or 'Developer Pro'. In case of 'Basic' plan timezone field value is ignored.",
+									MarkdownDescription: "Plan type, either 'Basic', 'Developer Pro', or 'Enterprise'. Plan type allowed for Single Node cluster is either 'Basic', or 'Developer Pro'. In case of 'Basic' plan timezone field value is ignored.",
 								},
 								"timezone": schema.StringAttribute{
 									Computed:            true,

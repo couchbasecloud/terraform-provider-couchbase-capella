@@ -55,7 +55,7 @@ func (d *Buckets) Schema(_ context.Context, _ datasource.SchemaRequest, resp *da
 			},
 			"data": schema.ListNestedAttribute{
 				Computed:            true,
-				MarkdownDescription: "Data of buckets in the cluster",
+				MarkdownDescription: "Lists the bucket data in the cluster.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
@@ -81,7 +81,7 @@ func (d *Buckets) Schema(_ context.Context, _ datasource.SchemaRequest, resp *da
 						"type": schema.StringAttribute{
 							Optional:            true,
 							Computed:            true,
-							MarkdownDescription: "The bucket type (couchbase or ephemeral).",
+							MarkdownDescription: "The bucket type (Couchbase or Ephemeral).",
 						},
 						"storage_backend": schema.StringAttribute{
 							Optional:            true,
@@ -124,7 +124,8 @@ func (d *Buckets) Schema(_ context.Context, _ datasource.SchemaRequest, resp *da
 							MarkdownDescription: "Eviction policy for the bucket.",
 						},
 						"stats": schema.SingleNestedAttribute{
-							Computed: true,
+							Computed:            true,
+							MarkdownDescription: "Bucket statistics.",
 							Attributes: map[string]schema.Attribute{
 								"item_count": schema.Int64Attribute{
 									Computed:            true,
