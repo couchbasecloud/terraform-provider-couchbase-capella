@@ -8,22 +8,22 @@ import (
 // EventSchema returns the schema for the Event data source.
 func EventSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "Data source for an event in a Capella organization. Events represent a trail of actions that users performs within Capella at an organization level.",
+		MarkdownDescription: "The data source to retrieve an event in an organization. Events represent a trail of actions that users performs within Capella at an organization level.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "UUID for this instance of an Event.",
+				MarkdownDescription: "A UUID that uniquely identifies this specific instance of the event.",
 			},
 			"organization_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The ID of then Capella organization.",
+				MarkdownDescription: "The GUID4 ID of the organization.",
 			},
-			"alert_key":        schema.StringAttribute{Computed: true, MarkdownDescription: "Populated on demand based on the Event.Key and select labels in KV."},
-			"app_service_id":   schema.StringAttribute{Computed: true, MarkdownDescription: "SyncGatewayID this Event refers to."},
+			"alert_key":        schema.StringAttribute{Computed: true, MarkdownDescription: "Generated on demand based on the Event.Key and select labels in KV."},
+			"app_service_id":   schema.StringAttribute{Computed: true, MarkdownDescription: "SyncGatewayID this event refers to."},
 			"app_service_name": schema.StringAttribute{Computed: true, MarkdownDescription: "Name of the sync gateway at the time of event emission."},
-			"cluster_id":       schema.StringAttribute{Computed: true, MarkdownDescription: "ClusterID this Event refers to."},
+			"cluster_id":       schema.StringAttribute{Computed: true, MarkdownDescription: "The GUID4 ID of the cluster."},
 			"cluster_name":     schema.StringAttribute{Computed: true, MarkdownDescription: "Name of the cluster at the time of event emission."},
-			"image_url":        schema.StringAttribute{Computed: true, MarkdownDescription: "Rendered chart image to display for an Alert Event."},
+			"image_url":        schema.StringAttribute{Computed: true, MarkdownDescription: "URL to a rendered chart image representing the alert event."},
 			"incident_ids": schema.SetAttribute{
 				ElementType:         types.StringType,
 				Computed:            true,
@@ -32,16 +32,16 @@ func EventSchema() schema.Schema {
 			"key":              schema.StringAttribute{Computed: true, MarkdownDescription: "Defines the specific kind of Event."},
 			"kv":               schema.StringAttribute{Computed: true, MarkdownDescription: "Key-value pairs for additional event data."},
 			"occurrence_count": schema.Int64Attribute{Computed: true, MarkdownDescription: "Number of times the alert has fired within this \"incident\"."},
-			"project_id":       schema.StringAttribute{Computed: true, MarkdownDescription: "ProjectID this Event refers to."},
+			"project_id":       schema.StringAttribute{Computed: true, MarkdownDescription: "The GUID4 ID of the project."},
 			"project_name":     schema.StringAttribute{Computed: true, MarkdownDescription: "Name of the project at the time of event emission."},
-			"request_id":       schema.StringAttribute{Computed: true, MarkdownDescription: "RequestID for an Event."},
-			"session_id":       schema.StringAttribute{Computed: true, MarkdownDescription: "User that initiated the request for this Event."},
+			"request_id":       schema.StringAttribute{Computed: true, MarkdownDescription: "The request ID for an event."},
+			"session_id":       schema.StringAttribute{Computed: true, MarkdownDescription: "ID of the session associated with the user that initiated the request for this event."},
 			"severity":         schema.StringAttribute{Computed: true, MarkdownDescription: "Severity of the event."},
 			"source":           schema.StringAttribute{Computed: true, MarkdownDescription: "Identifies the originator of the event."},
 			"summary":          schema.StringAttribute{Computed: true, MarkdownDescription: "Metadata.SummaryTemplate rendered for this event."},
-			"timestamp":        schema.StringAttribute{Computed: true, MarkdownDescription: "Time when the event was emitted."},
+			"timestamp":        schema.StringAttribute{Computed: true, MarkdownDescription: "The RFC3339 timestamp when the event was emitted."},
 			"user_email":       schema.StringAttribute{Computed: true, MarkdownDescription: "Email of the associated user at the time of event emission."},
-			"user_id":          schema.StringAttribute{Computed: true, MarkdownDescription: "User id that initiated the request for this Event."},
+			"user_id":          schema.StringAttribute{Computed: true, MarkdownDescription: "ID of the user that initiated the request for this event."},
 			"user_name":        schema.StringAttribute{Computed: true, MarkdownDescription: "Name of the associated user at the time of event emission."},
 		},
 	}

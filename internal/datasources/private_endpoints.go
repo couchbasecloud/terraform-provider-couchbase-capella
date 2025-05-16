@@ -39,23 +39,23 @@ func (p *PrivateEndpoints) Metadata(_ context.Context, req datasource.MetadataRe
 // Schema defines the schema for the private endpoint data source.
 func (p *PrivateEndpoints) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Data source to retrieve private endpoints for a Capella cluster. Access your Capella cluster from your cloud provider's private network. Returns a list of private endpoints associated with the endpoint service for your Capella cluster, along with the endpoint state. Each private endpoint connects a private network to the Capella cluster.",
+		MarkdownDescription: "Data source to retrieve private endpoints for an operational cluster. Access your operational cluster from your Cloud Service Provider's private network. Returns a list of private endpoints associated with the endpoint service for your operational cluster, along with the endpoint state. Each private endpoint connects a private network to the operational cluster.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The ID of the Capella organization where the private endpoint exists. ",
+				MarkdownDescription: "The GUID4 ID of the organization.",
 			},
 			"project_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The ID of the Capella project containing the cluster with private endpoints.",
+				MarkdownDescription: "The GUID4 ID of the project.",
 			},
 			"cluster_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The ID of the cluster to retrieve private endpoints from. Private endpoints enable secure access to this cluster through your cloud provider's private network.",
+				MarkdownDescription: "The GUID4 ID of the cluster. Private endpoints enable secure access to this cluster through your Cloud Service Provider's private network.",
 			},
 			"data": schema.ListNestedAttribute{
 				Computed:            true,
-				MarkdownDescription: "List of private endpoints associated with the cluster. Each entry represents a connection point between your private network and the Capella cluster.",
+				MarkdownDescription: "Lists the private endpoints associated with the cluster. Each entry represents a connection point between your private network and the Capella cluster.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{

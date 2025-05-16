@@ -37,11 +37,11 @@ func (d *Projects) Metadata(_ context.Context, req datasource.MetadataRequest, r
 // Schema defines the schema for the project data source.
 func (d *Projects) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Data source to retrieve projects' information in a Capella organization.",
+		MarkdownDescription: "Data source to retrieve project details in an organization.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the Capella organization.",
+				MarkdownDescription: "The GUID4 ID of the organization.",
 			},
 			"data": schema.ListNestedAttribute{
 				Computed: true,
@@ -49,7 +49,7 @@ func (d *Projects) Schema(_ context.Context, _ datasource.SchemaRequest, resp *d
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "A GUID4 identifier of the project.",
+							MarkdownDescription: "The GUID4 ID of the project.",
 						},
 						"organization_id": schema.StringAttribute{
 							Computed:            true,

@@ -38,19 +38,19 @@ func (a *AWSPrivateEndpointCommand) Metadata(_ context.Context, req datasource.M
 // Schema defines the schema for the private endpoint command data source.
 func (a *AWSPrivateEndpointCommand) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Data source to generate AWS CLI command for setting up a private endpoint connection to a Capella cluster. Retrieve the command or script to be executed in order to create the private endpoint which will provides a private connection between the specified VPC and the specified Capella private endpoint service.",
+		MarkdownDescription: "The data source to generate an AWS CLI command for setting up a private endpoint connection to an operational cluster. Retrieves the command or script to create the private endpoint, which establishes a private connection between the specified VPC and the Capella private endpoint service.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the organization that owns the Capella cluster.",
+				MarkdownDescription: "The GUID4 ID of the organization.",
 			},
 			"project_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the project containing the Capella cluster.",
+				MarkdownDescription: "The GUID4 ID of the project.",
 			},
 			"cluster_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the Capella cluster to connect to via private endpoint.",
+				MarkdownDescription: "The GUID4 ID of the cluster.",
 			},
 			"vpc_id": schema.StringAttribute{
 				Required:            true,
@@ -63,7 +63,7 @@ func (a *AWSPrivateEndpointCommand) Schema(_ context.Context, _ datasource.Schem
 			},
 			"command": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "The generated AWS CLI command that can be used to create the private endpoint connection within AWS.",
+				MarkdownDescription: "The generated AWS CLI command. Use this command to create the private endpoint connection within AWS.",
 			},
 		},
 	}

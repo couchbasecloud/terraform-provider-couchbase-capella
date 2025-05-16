@@ -6,23 +6,23 @@ import (
 
 func NetworkPeerSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "Data source to retrieve network peering records for a Capella cluster.",
+		MarkdownDescription: "The data source to retrieve network peering records for a Capella cluster.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the organization that owns the Capella cluster.",
+				MarkdownDescription: "The GUID4 ID of the organization.",
 			},
 			"project_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the project containing the Capella cluster.",
+				MarkdownDescription: "The GUID4 ID of the project.",
 			},
 			"cluster_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the cluster to list network peering records for.",
+				MarkdownDescription: "The GUID4 ID of the cluster.",
 			},
 			"data": schema.ListNestedAttribute{
 				Computed:            true,
-				MarkdownDescription: "List of network peering records.",
+				MarkdownDescription: "Lists the network peering records.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
@@ -35,11 +35,11 @@ func NetworkPeerSchema() schema.Schema {
 						},
 						"provider_config": schema.SingleNestedAttribute{
 							Computed:            true,
-							MarkdownDescription: "Cloud provider-specific configuration for the network peering. This provides details about the configuration and the ID of the VPC peer on AWS, GCP, or Azure.",
+							MarkdownDescription: "The Cloud Service Provider-specific configuration for the network peering. This provides details about the configuration and the ID of the VPC peer on AWS, GCP, or Azure.",
 							Attributes: map[string]schema.Attribute{
 								"aws_config": schema.SingleNestedAttribute{
 									Computed:            true,
-									MarkdownDescription: "AWS config data required to establish a VPC peering relationship.",
+									MarkdownDescription: "AWS configuration data required to establish a VPC peering relationship.",
 									Attributes: map[string]schema.Attribute{
 										"account_id": schema.StringAttribute{
 											Computed:            true,
@@ -65,7 +65,7 @@ func NetworkPeerSchema() schema.Schema {
 								},
 								"gcp_config": schema.SingleNestedAttribute{
 									Computed:            true,
-									MarkdownDescription: "GCP config data required to establish a VPC peering relationship.",
+									MarkdownDescription: "GCP configuration data required to establish a VPC peering relationship.",
 									Attributes: map[string]schema.Attribute{
 										"cidr": schema.StringAttribute{
 											Computed:            true,
@@ -81,8 +81,8 @@ func NetworkPeerSchema() schema.Schema {
 										},
 										"service_account": schema.StringAttribute{
 											Computed: true,
-											MarkdownDescription: "ServiceAccount created or assigned on the external VPC project. GCP Service Account with below permissions" +
-												"DNS Admin Compute.NetworkAdmin It should be in the form of an email that is shown under gcloud iam service-accounts list command. [Reference](https://cloud.google.com/iam/docs/service-accounts-create#creating)",
+											MarkdownDescription: "The Service Account created or assigned on the external VPC project. The GCP Service Account should have the following permission:" +
+												"DNS Admin and Network Admin. It must be in the form of an email address, as shown by the output of the gcloud iam service-accounts list command. [Reference](https://cloud.google.com/iam/docs/service-accounts-create#creating)",
 										},
 										"provider_id": schema.StringAttribute{
 											Computed:            true,
@@ -92,11 +92,11 @@ func NetworkPeerSchema() schema.Schema {
 								},
 								"azure_config": schema.SingleNestedAttribute{
 									Computed:            true,
-									MarkdownDescription: "Azure config data required to establish a VNet peering relationship.",
+									MarkdownDescription: "Azure configuration data required to establish a VNet peering relationship.",
 									Attributes: map[string]schema.Attribute{
 										"tenant_id": schema.StringAttribute{
 											Computed:            true,
-											MarkdownDescription: "The Azure tenant ID where the VNet exists. More [info](https://learn.microsoft.com/en-us/entra/fundamentals/how-to-find-tenant)",
+											MarkdownDescription: "The Azure tenant ID where the VNet exists. For more information, see [How to Find Tenant](https://learn.microsoft.com/en-us/entra/fundamentals/how-to-find-tenant)",
 										},
 										"cidr": schema.StringAttribute{
 											Computed:            true,
@@ -108,7 +108,7 @@ func NetworkPeerSchema() schema.Schema {
 										},
 										"subscription_id": schema.StringAttribute{
 											Computed:            true,
-											MarkdownDescription: "The Azure subscription ID where the VNet exists. More [info](https://learn.microsoft.com/en-us/azure/azure-portal/get-subscription-tenant-id#find-your-azure-subscription)",
+											MarkdownDescription: "The Azure subscription ID where the VNet exists. For more information, see [Find Your Azure Subscription](https://learn.microsoft.com/en-us/azure/azure-portal/get-subscription-tenant-id#find-your-azure-subscription)",
 										},
 										"vnet_id": schema.StringAttribute{
 											Computed:            true,

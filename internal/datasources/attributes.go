@@ -190,7 +190,7 @@ var (
 				},
 				"cluster_id": schema.StringAttribute{
 					Computed:            true,
-					MarkdownDescription: "ClusterID this Event refers to.",
+					MarkdownDescription: "The GUID4 ID of the cluster.",
 				},
 				"cluster_name": schema.StringAttribute{
 					Computed:            true,
@@ -198,11 +198,11 @@ var (
 				},
 				"id": schema.StringAttribute{
 					Computed:            true,
-					MarkdownDescription: "UUID for this instance of an Event.",
+					MarkdownDescription: "UUID for this instance of an event.",
 				},
 				"image_url": schema.StringAttribute{
 					Computed:            true,
-					MarkdownDescription: "Rendered chart image to display for an Alert Event.",
+					MarkdownDescription: "URL to a rendered chart image representing the alert event.",
 				},
 				"incident_ids": schema.SetAttribute{
 					ElementType:         types.StringType,
@@ -211,7 +211,7 @@ var (
 				},
 				"key": schema.StringAttribute{
 					Computed:            true,
-					MarkdownDescription: "Defines the specific kind of Event.",
+					MarkdownDescription: "Defines the specific kind of event.",
 				},
 				"kv": schema.StringAttribute{
 					Computed:            true,
@@ -223,7 +223,7 @@ var (
 				},
 				"project_id": schema.StringAttribute{
 					Computed:            true,
-					MarkdownDescription: "ProjectID this Event refers to.",
+					MarkdownDescription: "The GUID4 ID of the project.",
 				},
 				"project_name": schema.StringAttribute{
 					Computed:            true,
@@ -231,11 +231,11 @@ var (
 				},
 				"request_id": schema.StringAttribute{
 					Computed:            true,
-					MarkdownDescription: "RequestID for an Event.",
+					MarkdownDescription: "The request ID for an event.",
 				},
 				"session_id": schema.StringAttribute{
 					Computed:            true,
-					MarkdownDescription: "User that initiated the request for this Event.",
+					MarkdownDescription: "ID of the session associated with the user that initiated the request for this event.",
 				},
 				"severity": schema.StringAttribute{
 					Computed:            true,
@@ -251,7 +251,7 @@ var (
 				},
 				"timestamp": schema.StringAttribute{
 					Computed:            true,
-					MarkdownDescription: "Time when the event was emitted.",
+					MarkdownDescription: "The RFC3339 timestamp when the event was emitted.",
 				},
 				"user_email": schema.StringAttribute{
 					Computed:            true,
@@ -259,7 +259,7 @@ var (
 				},
 				"user_id": schema.StringAttribute{
 					Computed:            true,
-					MarkdownDescription: "User id that initiated the request for this Event.",
+					MarkdownDescription: "User ID that initiated the request for this event.",
 				},
 				"user_name": schema.StringAttribute{
 					Computed:            true,

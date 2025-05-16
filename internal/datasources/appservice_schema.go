@@ -4,23 +4,23 @@ import "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 
 func AppServiceSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "Data source retrieves information for a App Service in Capella. App Service is a fully managed application backend designed to provide data synchronization between mobile or IoT applications running Couchbase Lite and your Couchbase Capella database.",
+		MarkdownDescription: "The data source retrieves information for an App Service in Capella. App Service is a fully managed application backend designed to provide data synchronization between mobile or IoT applications running Couchbase Lite and your Couchbase Capella database.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The ID of then Capella organization.",
+				MarkdownDescription: "The GUID4 ID of the organization.",
 			},
 			"data": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id":              schema.StringAttribute{Computed: true, MarkdownDescription: "The ID of the App Service created."},
-						"organization_id": schema.StringAttribute{Computed: true, MarkdownDescription: "The GUID4 ID of the Capella organization."},
+						"organization_id": schema.StringAttribute{Computed: true, MarkdownDescription: "The GUID4 ID of the organization."},
 						"cluster_id":      schema.StringAttribute{Computed: true, MarkdownDescription: "The GUID4 ID of the cluster."},
 						"name":            schema.StringAttribute{Computed: true, MarkdownDescription: "Name of the App Service (up to 256 characters)."},
-						"description":     schema.StringAttribute{Computed: true, MarkdownDescription: "Description of the App Service (up to 1024 characters)."},
+						"description":     schema.StringAttribute{Computed: true, MarkdownDescription: "A description of the App Service (up to 1024 characters)."},
 						"nodes":           schema.Int64Attribute{Computed: true, MarkdownDescription: "Number of nodes configured for the App Service."},
-						"cloud_provider":  schema.StringAttribute{Computed: true, MarkdownDescription: "Provider is the cloud service provider for the App Service."},
+						"cloud_provider":  schema.StringAttribute{Computed: true, MarkdownDescription: "The Cloud Service Provider for the App Service."},
 						"current_state":   schema.StringAttribute{Computed: true, MarkdownDescription: "The current state of the App Service."},
 						"compute": schema.SingleNestedAttribute{
 							Computed:            true,

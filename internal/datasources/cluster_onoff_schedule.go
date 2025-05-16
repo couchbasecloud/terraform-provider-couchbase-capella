@@ -41,7 +41,7 @@ func (c *ClusterOnOffSchedule) Metadata(_ context.Context, req datasource.Metada
 // Schema defines the schema for the cluster on/off schedule data source.
 func (c *ClusterOnOffSchedule) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "The On/Off schedule data source allows you to retrieve the on/off schedule for a Capella cluster.",
+		MarkdownDescription: "The On/Off schedule data source allows you to retrieve the on/off schedule for an operational cluster.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
@@ -57,46 +57,46 @@ func (c *ClusterOnOffSchedule) Schema(_ context.Context, _ datasource.SchemaRequ
 			},
 			"timezone": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "The standard timezone for the cluster. Should be the TZ identifier. For example, 'ET'",
+				MarkdownDescription: "The standard timezone for the cluster. Should be the TZ identifier. For example, 'ET'.",
 			},
 			"days": schema.ListNestedAttribute{
 				Computed:            true,
-				MarkdownDescription: "The list of days for the cluster on/off schedule. Each day should have a state, day, from, and to time.",
+				MarkdownDescription: "The list of days for the cluster on/off schedule. Each day should have a 'state', 'day', and 'from' and 'to' time.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"state": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The state of the cluster on/off schedule. Should be one of 'on' or 'off'.",
+							MarkdownDescription: "The state of the cluster on/off schedule. The states are 'on' or 'off'.",
 						},
 						"day": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The day of the week for the cluster on/off schedule. Should be one of 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', or 'saturday'.",
+							MarkdownDescription: " The day of the week for the cluster on/off schedule. One of the following: 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', or 'saturday'.",
 						},
 						"from": schema.SingleNestedAttribute{
 							Optional:            true,
-							MarkdownDescription: "The time from which the cluster on/off schedule starts.",
+							MarkdownDescription: "The start time of the cluster on/off schedule.",
 							Attributes: map[string]schema.Attribute{
 								"hour": schema.Int64Attribute{
 									Computed:            true,
-									MarkdownDescription: "The hour of the day for the cluster on/off schedule. Should be between 0 and 23.",
+									MarkdownDescription: "Specifies the hour of the day for the cluster on/off schedule, ranging from 0 to 23.",
 								},
 								"minute": schema.Int64Attribute{
 									Computed:            true,
-									MarkdownDescription: "The minute of the hour for the cluster on/off schedule. Should be between 0 and 59.",
+									MarkdownDescription: "Specifies the minute of the hour for the cluster on/off schedule, ranging from 0 to 59.",
 								},
 							},
 						},
 						"to": schema.SingleNestedAttribute{
 							Optional:            true,
-							MarkdownDescription: "The time to which the cluster on/off schedule ends.",
+							MarkdownDescription: "The end time of the cluster on/off schedule.",
 							Attributes: map[string]schema.Attribute{
 								"hour": schema.Int64Attribute{
 									Computed:            true,
-									MarkdownDescription: "The hour of the day for the cluster on/off schedule. Should be between 0 and 23.",
+									MarkdownDescription: "Specifies the hour of the day for the cluster on/off schedule, ranging from 0 to 23.",
 								},
 								"minute": schema.Int64Attribute{
 									Computed:            true,
-									MarkdownDescription: "The minute of the hour for the cluster on/off schedule. Should be between 0 and 59.",
+									MarkdownDescription: "Specifies the minute of the hour for the cluster on/off schedule, ranging from 0 to 59.",
 								},
 							},
 						},

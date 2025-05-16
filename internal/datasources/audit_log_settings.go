@@ -38,23 +38,23 @@ func (a *AuditLogSettings) Metadata(_ context.Context, req datasource.MetadataRe
 
 func (a *AuditLogSettings) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Data source to retrieve audit log configuration settings for a Capella cluster. These settings control which audit events are logged and which users are excluded from audit logging.",
+		MarkdownDescription: "The data source to retrieve audit log configuration settings for an operational cluster. These settings control which events are logged and which users are excluded.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The ID of the organization that the cluster belongs to.",
+				MarkdownDescription: "The GUID4 ID of the organization.",
 			},
 			"project_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The ID of the project that the cluster belongs to.",
+				MarkdownDescription: "The GUID4 ID of the project.",
 			},
 			"cluster_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The ID of the cluster to retrieve audit log settings from.",
+				MarkdownDescription: "The GUID4 ID of the cluster.",
 			},
 			"audit_enabled": schema.BoolAttribute{
 				Computed:            true,
-				MarkdownDescription: "Whether audit logging is enabled for this cluster.",
+				MarkdownDescription: "Specifies whether audit logging is enabled for this cluster.",
 			},
 			"enabled_event_ids": schema.SetAttribute{
 				Computed:            true,

@@ -7,19 +7,19 @@ import (
 
 func ClusterSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "Retrieves the details of Couchbase Capella clusters.",
+		MarkdownDescription: "The data source retrieves the details of Couchbase Capella clusters.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The ID of the organization that the cluster and project belongs to.",
+				MarkdownDescription: "The GUID4 ID of the organization.",
 			},
 			"project_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The ID of the project that the cluster belongs to.",
+				MarkdownDescription: "The GUID4 ID of the project.",
 			},
 			"data": schema.ListNestedAttribute{
 				Computed:            true,
-				MarkdownDescription: "List of clusters in the project.",
+				MarkdownDescription: "Lists the clusters in the project.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
@@ -34,7 +34,7 @@ func ClusterSchema() schema.Schema {
 						},
 						"description": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "Description of the cluster (up to 1024 characters).",
+							MarkdownDescription: "A description of the cluster (up to 1024 characters).",
 						},
 						"enable_private_dns_resolution": schema.BoolAttribute{
 							Computed:            true,
@@ -42,15 +42,15 @@ func ClusterSchema() schema.Schema {
 						},
 						"connection_string": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The connection string to use to connect to the cluster.",
+							MarkdownDescription: "The connection string used to connect to the cluster.",
 						},
 						"cloud_provider": schema.SingleNestedAttribute{
 							Computed:            true,
-							MarkdownDescription: "The cloud provider where the cluster is hosted.",
+							MarkdownDescription: "The Cloud Service Provider where the cluster is hosted.",
 							Attributes: map[string]schema.Attribute{
 								"type": schema.StringAttribute{
 									Computed:            true,
-									MarkdownDescription: "Cloud provider type. Currently supported values are AWS, GCP and Azure. Note: For singleNode cluster, only AWS type cloud provider is allowed.",
+									MarkdownDescription: "The cluster's Cloud Service Provider (CSP). The supported CSPs include AWS, GCP, and Azure. Only AWS is supported as the cloud provider for Single Node clusters.",
 								},
 								"region": schema.StringAttribute{
 									Computed:            true,
@@ -58,32 +58,32 @@ func ClusterSchema() schema.Schema {
 								},
 								"cidr": schema.StringAttribute{
 									Computed:            true,
-									MarkdownDescription: "CIDR block for Cloud Provider.",
+									MarkdownDescription: "CIDR block for the Cloud Service Provider.",
 								},
 							},
 						},
 						"couchbase_server": schema.SingleNestedAttribute{
 							Computed:            true,
-							MarkdownDescription: "Configuration for the Couchbase Server running on the cluster.",
+							MarkdownDescription: "Specifies the Couchbase Server configuration running on the cluster.",
 							Attributes: map[string]schema.Attribute{
 								"version": schema.StringAttribute{
 									Computed:            true,
-									MarkdownDescription: "Version of the Couchbase Server installed in the cluster.",
+									MarkdownDescription: "The Couchbase Server version installed in the cluster.",
 								},
 							},
 						},
 						"service_groups": schema.ListNestedAttribute{
 							Computed:            true,
-							MarkdownDescription: "The couchbase service groups running in the cluster.",
+							MarkdownDescription: "The Couchbase service groups running in the cluster.",
 							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
 									"node": schema.SingleNestedAttribute{
 										Computed:            true,
-										MarkdownDescription: "Node configuration for this service group.",
+										MarkdownDescription: "The node configuration for this service group.",
 										Attributes: map[string]schema.Attribute{
 											"compute": schema.SingleNestedAttribute{
 												Computed:            true,
-												MarkdownDescription: "Compute resources configuration for the nodes.",
+												MarkdownDescription: "The compute resource configuration for the nodes.",
 												Attributes: map[string]schema.Attribute{
 													"cpu": schema.Int64Attribute{
 														Computed:            true,
@@ -105,7 +105,7 @@ func ClusterSchema() schema.Schema {
 													},
 													"storage": schema.Int64Attribute{
 														Computed:            true,
-														MarkdownDescription: "The size of the disk in GB. For AWS: >= 50, for Azure (Only required for Ultra Disk types.): >= 64, for GCP: >= 50.",
+														MarkdownDescription: "The size of the disk in GB. For AWS: >= 50, for Azure (only required for Ultra Disk types.): >= 64, for GCP: >= 50.",
 													},
 													"iops": schema.Int64Attribute{
 														Computed:            true,
@@ -121,12 +121,12 @@ func ClusterSchema() schema.Schema {
 									},
 									"num_of_nodes": schema.Int64Attribute{
 										Computed:            true,
-										MarkdownDescription: "The number of nodes in this service group. The minimum number of nodes for the cluster can be 3 and maximum can be 27 nodes.",
+										MarkdownDescription: "The number of nodes in this Service Group. A cluster can have a minimum of 3 nodes and a maximum of 27 nodes.",
 									},
 									"services": schema.ListAttribute{
 										Computed:            true,
 										ElementType:         types.StringType,
-										MarkdownDescription: "The couchbase services running on the nodes. The allowed services for singleNode cluster are one or all of - data, index, query and search.",
+										MarkdownDescription: "The Services running on the nodes. The available Services include 'Data', 'Index', 'Query', and 'Search'.",
 									},
 								},
 							},
@@ -137,7 +137,7 @@ func ClusterSchema() schema.Schema {
 							Attributes: map[string]schema.Attribute{
 								"type": schema.StringAttribute{
 									Computed:            true,
-									MarkdownDescription: "The availability type of the cluster. Can be 'single' for Single Node or 'multi' for Multi Node.",
+									MarkdownDescription: "Specifies the availability type of the cluster, either 'single' for Single Node or 'multi' for Multi Node.",
 								},
 							},
 						},
@@ -147,7 +147,7 @@ func ClusterSchema() schema.Schema {
 							Attributes: map[string]schema.Attribute{
 								"plan": schema.StringAttribute{
 									Computed:            true,
-									MarkdownDescription: "Plan type, either 'Basic', 'Developer Pro', or 'Enterprise'. Plan type allowed for singleNode cluster is either 'Basic', or 'Developer Pro'. In case of 'Basic' plan timezone field value is ignored.",
+									MarkdownDescription: "Plan type, either 'Basic', 'Developer Pro', or 'Enterprise'. Plan type allowed for Single Node cluster is either 'Basic', or 'Developer Pro'. In case of 'Basic' plan timezone field value is ignored.",
 								},
 								"timezone": schema.StringAttribute{
 									Computed:            true,
@@ -157,7 +157,7 @@ func ClusterSchema() schema.Schema {
 						},
 						"current_state": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The current state of the cluster. Example- deploying, scaling, destroying, peering,etc.",
+							MarkdownDescription: "The current cluster status. The cluster statuses are 'deploying', 'scaling', 'destroying', 'peering', 'healthy', and more.",
 						},
 						"app_service_id": schema.StringAttribute{
 							Computed:            true,

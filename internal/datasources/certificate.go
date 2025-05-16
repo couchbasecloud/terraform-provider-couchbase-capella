@@ -54,7 +54,7 @@ func (c *Certificate) Schema(_ context.Context, _ datasource.SchemaRequest, resp
 			},
 			"data": schema.ListNestedAttribute{
 				Computed:            true,
-				MarkdownDescription: "The list of certificates.",
+				MarkdownDescription: "Lists the certificates.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"certificate": schema.StringAttribute{

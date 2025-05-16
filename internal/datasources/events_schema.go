@@ -8,11 +8,11 @@ import (
 // EventsSchema returns the schema for the Events data source.
 func EventsSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "Data source to retrieve all events for a Capella organization. Events represent a trail of actions that users performs within Capella at an organization level.",
+		MarkdownDescription: " Data source to retrieve all events in an organization. Events represent a trail of actions that users performs within Capella at an organization level.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the Capella organization.",
+				MarkdownDescription: "The GUID4 ID of the organization.",
 			},
 			"project_ids": schema.SetAttribute{
 				ElementType:         types.StringType,
@@ -22,7 +22,7 @@ func EventsSchema() schema.Schema {
 			"cluster_ids": schema.SetAttribute{
 				ElementType:         types.StringType,
 				Optional:            true,
-				MarkdownDescription: "List of clusterIds to filter on. By default events corresponding to all clusters are returned.",
+				MarkdownDescription: "List of clusterIds to filter on. By default, events corresponding to all clusters are returned.",
 			},
 			"user_ids": schema.SetAttribute{
 				ElementType:         types.StringType,
@@ -37,7 +37,7 @@ func EventsSchema() schema.Schema {
 			"tags": schema.SetAttribute{
 				ElementType:         types.StringType,
 				Optional:            true,
-				MarkdownDescription: "Filter by tags. Default is to return events corresponding to all supported tag. Tags are availability, billing, maintenance, performance, security, alert.",
+				MarkdownDescription: "Filter by tags. Default is to return events corresponding to all supported tag. The tags are: availability, billing, maintenance, performance, security, alert.",
 			},
 			"from": schema.StringAttribute{
 				Optional:            true,
@@ -57,11 +57,11 @@ func EventsSchema() schema.Schema {
 			},
 			"sort_by": schema.StringAttribute{
 				Optional:            true,
-				MarkdownDescription: "Sets the order of how you would like to sort the results and the key you would like to order by. Valid fields to sort the results are: severity, timestamp.",
+				MarkdownDescription: "Sets the order of how you would like to sort the results and the key you would like to order by. The valid fields to sort the results are: severity, timestamp.",
 			},
 			"sort_direction": schema.StringAttribute{
 				Optional:            true,
-				MarkdownDescription: "The order in which the items will be sorted. Valid values are: asc, desc.",
+				MarkdownDescription: "The order in which the items will be sorted. The valid values are: asc, desc.",
 			},
 			"data":   computedEventAttributes,
 			"cursor": computedCursorAttribute,

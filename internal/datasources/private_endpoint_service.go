@@ -39,19 +39,19 @@ func (p *PrivateEndpointService) Metadata(_ context.Context, req datasource.Meta
 // Schema defines schema for private endpoint service resource.
 func (p *PrivateEndpointService) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Data source to retrieve the status of the private endpoint service for a Capella cluster. Private endpoint service enables secure connectivity between your cloud provider's private network (VPC/VNET) and your Capella cluster.",
+		MarkdownDescription: "Data source to retrieve the status of the private endpoint service for an operational cluster. Private endpoint service enables secure connectivity between your Cloud Service Provider's private network (VPC/VNET) and your operational cluster.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The ID of the organization where the private endpoint service exists. Used to scope the private endpoint service status query.",
+				MarkdownDescription: "The GUID4 ID of the organization.",
 			},
 			"project_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The ID of the project containing the cluster with the private endpoint service. Used to scope the private endpoint service status query.",
+				MarkdownDescription: "The GUID4 ID of the project.",
 			},
 			"cluster_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The ID of the cluster to retrieve private endpoint service status from. Private endpoint service enables secure access to this cluster through your cloud provider's private network.",
+				MarkdownDescription: "The GUID4 ID of the cluster to retrieve private endpoint service status from. Private endpoint service enables secure access to this cluster through your cloud provider's private network.",
 			},
 			"enabled": schema.BoolAttribute{
 				Computed:            true,
