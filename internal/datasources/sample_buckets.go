@@ -38,16 +38,19 @@ func (d *SampleBuckets) Metadata(_ context.Context, req datasource.MetadataReque
 // Schema defines the schema for the sample bucket data source.
 func (s *SampleBuckets) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Data source to retrieve sample buckets in a Capella cluster.",
+		MarkdownDescription: "The data source to retrieve sample buckets in an operational cluster.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
-				Required: true,
+				MarkdownDescription: "The GUID4 ID of the organization.",
+				Required:            true,
 			},
 			"project_id": schema.StringAttribute{
-				Required: true,
+				MarkdownDescription: "The GUID4 ID of the project.",
+				Required:            true,
 			},
 			"cluster_id": schema.StringAttribute{
-				Required: true,
+				MarkdownDescription: "The GUID4 ID of the cluster.",
+				Required:            true,
 			},
 			"data": schema.ListNestedAttribute{
 				Computed: true,
@@ -59,11 +62,11 @@ func (s *SampleBuckets) Schema(_ context.Context, _ datasource.SchemaRequest, re
 						},
 						"name": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The name of the sample dataset to be loaded. The name has to be one of the following sample datasets: : \"travel-sample\", \"gamesim-sample\" or \"beer-sample\".",
+							MarkdownDescription: "The name of the sample dataset to be loaded. The name has to be one of the following sample datasets: \"travel-sample\", \"gamesim-sample\" or \"beer-sample\".",
 						},
 						"organization_id": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The GUID4 ID of the Capella organization.",
+							MarkdownDescription: "The GUID4 ID of the organization.",
 						},
 						"project_id": schema.StringAttribute{
 							Computed:            true,
@@ -75,11 +78,11 @@ func (s *SampleBuckets) Schema(_ context.Context, _ datasource.SchemaRequest, re
 						},
 						"type": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "Type of the bucket. If selected Ephemeral, it is not eligible for imports or App Endpoints creation. The options may also be referred to as Memory and Disk (Couchbase), Memory Only (Ephemeral) in the Couchbase documentation.",
+							MarkdownDescription: "Type of the bucket. If it’s an  Ephemeral bucket, it is not eligible for imports or App Endpoints creation. The options may also be referred to as Memory and Disk (Couchbase), Memory Only (Ephemeral) in the Couchbase documentation.",
 						},
 						"storage_backend": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "Type of the bucket. If selected Ephemeral, it is not eligible for imports or App Endpoints creation. The options may also be referred to as Memory and Disk (Couchbase), Memory Only (Ephemeral) in the Couchbase documentation.",
+							MarkdownDescription: "Type of the bucket. If it’s an Ephemeral bucket type, it is not eligible for imports or App Endpoints creation. The options may also be referred to as Memory and Disk (Couchbase), Memory Only (Ephemeral) in the Couchbase documentation.",
 						},
 						"memory_allocation_in_mb": schema.Int64Attribute{
 							Computed:            true,
@@ -91,7 +94,7 @@ func (s *SampleBuckets) Schema(_ context.Context, _ datasource.SchemaRequest, re
 						},
 						"durability_level": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "This is the minimum level at which all writes to the Couchbase bucket must occur. The options for Durability level are as follows, according to the bucket type. For a Couchbase bucket: None, Replicate to Majority, Majority and Persist to Active, Persist to Majority. For an Ephemeral bucket: None, Replicate to Majority",
+							MarkdownDescription: "This is the minimum level at which all writes to the Couchbase bucket must occur. The options for durability level are according to the bucket type. For a Couchbase bucket: None, Replicate to Majority, Majority and Persist to Active, Persist to Majority. For an Ephemeral bucket: None, Replicate to Majority.",
 						},
 						"replicas": schema.Int64Attribute{
 							Computed:            true,
@@ -99,7 +102,7 @@ func (s *SampleBuckets) Schema(_ context.Context, _ datasource.SchemaRequest, re
 						},
 						"flush": schema.BoolAttribute{
 							Computed:            true,
-							MarkdownDescription: "Replaced by flushEnabled. Determines whether bucket flush is enabled. Set property to true to be able to delete all items in this bucket using the /flush endpoint. Disable property to avoid inadvertent data loss by calling the the /flush endpoint.",
+							MarkdownDescription: "Replaced by flushEnabled. Determines whether bucket flush is enabled. Set property to ‘true’ to be able to delete all items in this bucket using the /flush endpoint. Disable property to avoid inadvertent data loss by calling the /flush endpoint.",
 						},
 						"time_to_live_in_seconds": schema.Int64Attribute{
 							Computed:            true,
@@ -107,7 +110,7 @@ func (s *SampleBuckets) Schema(_ context.Context, _ datasource.SchemaRequest, re
 						},
 						"eviction_policy": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The policy which Capella adopts to prevent data loss due to memory exhaustion. This may be also known as Ejection Policy in the Couchbase documentation. For Couchbase bucket, Eviction Policy is fullEviction by default. For Ephemeral buckets, Eviction Policy is a required field, and should be one of the following: noEviction, nruEviction",
+							MarkdownDescription: "The policy which Capella adopts to prevent data loss due to memory exhaustion. This may be also known as Ejection Policy in the Couchbase documentation. For Couchbase bucket, Eviction Policy is fullEviction by default. For Ephemeral buckets, the Eviction Policy is a required field and should be one of the following: noEviction, nruEviction.",
 						},
 						"stats": schema.SingleNestedAttribute{
 							Computed: true,

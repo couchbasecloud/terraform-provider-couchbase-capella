@@ -4,7 +4,7 @@ import "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 
 func BackupSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "Manages backup datasource, retrieves backups associated with a bucket for a Couchbase Capella cluster.",
+		MarkdownDescription: "The backups data source retrieves backups associated with a bucket for an operational cluster.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
@@ -24,7 +24,7 @@ func BackupSchema() schema.Schema {
 			},
 			"data": schema.ListNestedAttribute{
 				Computed:            true,
-				MarkdownDescription: "Represents the list of backups associated with a bucket.",
+				MarkdownDescription: "Lists the backups associated with a bucket.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
@@ -57,11 +57,11 @@ func BackupSchema() schema.Schema {
 						},
 						"restore_before": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The RFC3339 timestamp representing the time at which backup will expire",
+							MarkdownDescription: "The RFC3339 timestamp representing the time at which the backup will expire.",
 						},
 						"status": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The status of the backup. values being pending, ready and failed",
+							MarkdownDescription: "The status of the backup. Backup statuses are 'pending', 'ready', 'failed'.",
 						},
 						"method": schema.StringAttribute{
 							Computed:            true,
@@ -73,15 +73,15 @@ func BackupSchema() schema.Schema {
 						},
 						"source": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The way a backup job was initiated. It can be either manual or scheduled.",
+							MarkdownDescription: "Specifies whether the backup job was initiated manually or by a schedule.",
 						},
 						"cloud_provider": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The cloud provider where the cluster is hosted.",
+							MarkdownDescription: "The Cloud Service Provider where the cluster is hosted.",
 						},
 						"backup_stats": schema.SingleNestedAttribute{
 							Computed:            true,
-							MarkdownDescription: "Represents various backup level data that couchbase provides.",
+							MarkdownDescription: "Lists the backup level data that Couchbase provides.",
 							Attributes: map[string]schema.Attribute{
 								"size_in_mb": schema.Float64Attribute{
 									Computed:            true,
@@ -123,23 +123,23 @@ func BackupSchema() schema.Schema {
 						},
 						"schedule_info": schema.SingleNestedAttribute{
 							Computed:            true,
-							MarkdownDescription: "Represents the schedule information of the backup.",
+							MarkdownDescription: "The schedule information of the backup.",
 							Attributes: map[string]schema.Attribute{
 								"backup_type": schema.StringAttribute{
 									Computed:            true,
-									MarkdownDescription: "Represents whether the backup is a Weekly or Daily backup.",
+									MarkdownDescription: "Specifies if the backup frequency is daily or weekly.",
 								},
 								"backup_time": schema.StringAttribute{
 									Computed:            true,
-									MarkdownDescription: "The timestamp indicating the backup created time.",
+									MarkdownDescription: "The timestamp indicating when the backup was created.",
 								},
 								"increment": schema.Int64Attribute{
 									Computed:            true,
-									MarkdownDescription: "Represents interval in hours for incremental backup.",
+									MarkdownDescription: "The interval in hours for incremental backups.",
 								},
 								"retention": schema.StringAttribute{
 									Computed:            true,
-									MarkdownDescription: "Represents retention time in days.",
+									MarkdownDescription: "The retention time in days.",
 								},
 							},
 						},
