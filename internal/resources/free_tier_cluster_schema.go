@@ -10,35 +10,35 @@ import (
 
 func FreeTierClusterSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "Manages a Couchbase Capella Free Tier Cluster resource",
+		MarkdownDescription: "This resource allows you to manage a free tier operational cluster.",
 		Attributes: map[string]schema.Attribute{
-			"id":                            WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The GUID4 ID of the free-tier cluster."),
+			"id":                            WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The GUID4 ID of the free tier cluster."),
 			"organization_id":               WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The GUID4 ID of the organization."),
 			"project_id":                    WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The GUID4 ID of the project."),
-			"name":                          WithDescription(stringAttribute([]string{required}, validator.String(stringvalidator.LengthAtLeast(1))), "Name of the free-tier cluster."),
-			"description":                   WithDescription(stringAttribute([]string{optional, computed}), "Description of the free-tier cluster."),
+			"name":                          WithDescription(stringAttribute([]string{required}, validator.String(stringvalidator.LengthAtLeast(1))), "Name of the free tier cluster."),
+			"description":                   WithDescription(stringAttribute([]string{optional, computed}), "Description of the free tier cluster."),
 			"app_service_id":                WithDescription(stringAttribute([]string{computed}), "The GUID4 ID of the App Service."),
-			"connection_string":             WithDescription(stringAttribute([]string{computed}), "The connection string of the free-tier cluster."),
-			"current_state":                 WithDescription(stringAttribute([]string{computed}), "The current state of the free-tier cluster."),
+			"connection_string":             WithDescription(stringAttribute([]string{computed}), "The connection string of the free tier cluster."),
+			"current_state":                 WithDescription(stringAttribute([]string{computed}), "The current state of the free tier cluster."),
 			"cmek_id":                       WithDescription(stringAttribute([]string{computed}), "The customer-managed encryption key (CMEK) ID."),
-			"etag":                          WithDescription(stringAttribute([]string{computed}), "The etag of the free-tier cluster, part of the response header"),
+			"etag":                          WithDescription(stringAttribute([]string{computed}), "The etag of the free tier cluster, part of the response header"),
 			"enable_private_dns_resolution": WithDescription(boolAttribute(computed), "Indicates if the private DNS resolution is enabled for the cluster."),
 			"audit":                         computedAuditAttribute(),
 			"support": schema.SingleNestedAttribute{
 				Computed:            true,
-				MarkdownDescription: "Support information for the free-tier cluster.",
+				MarkdownDescription: "The Support information for the free tier cluster.",
 				Attributes: map[string]schema.Attribute{
-					"plan":     WithDescription(stringAttribute([]string{computed}), "Support plan for the free-tier cluster. Free tier plan is automatically assigned to free tier clusters."),
-					"timezone": WithDescription(stringAttribute([]string{computed}), "The standard timezone for the cluster. Should be the TZ identifier. For example, 'ET'"),
+					"plan":     WithDescription(stringAttribute([]string{computed}), "The Support plan for the free tier cluster. The free tier plan is automatically assigned to free tier clusters."),
+					"timezone": WithDescription(stringAttribute([]string{computed}), "The standard timezone for the cluster. Should be the TZ identifier. For example, 'ET'."),
 				},
 			},
 			"cloud_provider": schema.SingleNestedAttribute{
 				Required:            true,
-				MarkdownDescription: "The cloud provider details for the free-tier cluster.",
+				MarkdownDescription: "The Cloud Service Provider details for the free tier cluster.",
 				Attributes: map[string]schema.Attribute{
-					"type":   WithDescription(stringAttribute([]string{required}), "The cloud provider type. Should be one of 'aws', 'gcp', or 'azure'."),
-					"region": WithDescription(stringAttribute([]string{required}), "The region for the cloud provider. Should be a valid region for the specified cloud provider. For example 'us-west-2'"),
-					"cidr":   WithDescription(stringAttribute([]string{required}), "CIDR block for Cloud Provider."),
+					"type":   WithDescription(stringAttribute([]string{required}), "The Cloud Service Provider type. Currently supporting AWS, GCP and Azure."),
+					"region": WithDescription(stringAttribute([]string{required}), "The region for the Cloud Service Provider. This should be a valid region for the specified Cloud Service Provider. For example 'us-west-2'."),
+					"cidr":   WithDescription(stringAttribute([]string{required}), "CIDR block for the Cloud Service Provider."),
 				},
 				PlanModifiers: []planmodifier.Object{
 					objectplanmodifier.RequiresReplace(),
@@ -46,9 +46,9 @@ func FreeTierClusterSchema() schema.Schema {
 			},
 			"couchbase_server": schema.SingleNestedAttribute{
 				Computed:            true,
-				MarkdownDescription: "Couchbase Server details for the free-tier cluster.",
+				MarkdownDescription: "Couchbase Server details for the free tier cluster.",
 				Attributes: map[string]schema.Attribute{
-					"version": WithDescription(stringAttribute([]string{computed}), "The version of Couchbase Server for the free-tier cluster."),
+					"version": WithDescription(stringAttribute([]string{computed}), "The version of Couchbase Server for the free tier cluster."),
 				},
 				PlanModifiers: []planmodifier.Object{
 					objectplanmodifier.RequiresReplace(),
@@ -57,12 +57,12 @@ func FreeTierClusterSchema() schema.Schema {
 			},
 			"service_groups": schema.SetNestedAttribute{
 				Computed:            true,
-				MarkdownDescription: "Service groups for the free-tier cluster.",
+				MarkdownDescription: "The Service Groups for the free tier cluster.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"node": schema.SingleNestedAttribute{
 							Computed:            true,
-							MarkdownDescription: "Node details for the service group.",
+							MarkdownDescription: "Node details for the Service Group.",
 							Attributes: map[string]schema.Attribute{
 								"compute": schema.SingleNestedAttribute{
 									Computed:            true,
@@ -84,16 +84,16 @@ func FreeTierClusterSchema() schema.Schema {
 								},
 							},
 						},
-						"num_of_nodes": WithDescription(int64Attribute(computed), "The number of nodes in the service group."),
-						"services":     WithDescription(stringAttribute([]string{computed}), "The services enabled for the service group. Should be a comma-separated list of services. For example, 'data,index,query'"),
+						"num_of_nodes": WithDescription(int64Attribute(computed), "The number of nodes in the Service Group."),
+						"services":     WithDescription(stringAttribute([]string{computed}), "The services enabled for the Service Group. Should be a comma-separated list of services. For example, 'data,index,query'."),
 					},
 				},
 			},
 			"availability": schema.SingleNestedAttribute{
 				Computed:            true,
-				MarkdownDescription: "Availability zone details for the free-tier cluster. This is single az for the free-tier cluster.",
+				MarkdownDescription: "Availability zone details for the free tier cluster. Free tier clusters have single availability zones (AZ).",
 				Attributes: map[string]schema.Attribute{
-					"type": WithDescription(stringAttribute([]string{computed}), "The availability zone type. Should be 'single' for the free-tier cluster."),
+					"type": WithDescription(stringAttribute([]string{computed}), "The availability zone type. This should be 'single' for the free tier cluster."),
 				},
 			},
 		},

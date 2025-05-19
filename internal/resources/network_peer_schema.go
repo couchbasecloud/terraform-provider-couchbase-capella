@@ -10,7 +10,7 @@ import (
 
 func NetworkPeerSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "Resource to manage network peering for a Capella cluster.",
+		MarkdownDescription: "This resource allows you to manage network peering for an operational cluster.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
@@ -28,7 +28,7 @@ func NetworkPeerSchema() schema.Schema {
 			"name": WithDescription(stringAttribute([]string{required, requiresReplace}),
 				"The name of the network peering relationship."),
 			"provider_type": WithDescription(stringAttribute([]string{required, requiresReplace}),
-				"The cloud provider type for the network peering (aws, gcp, or azure)."),
+				"The Cloud Service Provider type for the network peering. Currently supporting AWS, GCP, or Azure."),
 			"commands": schema.SetAttribute{
 				Computed:            true,
 				ElementType:         types.StringType,
@@ -102,7 +102,7 @@ func NetworkPeerSchema() schema.Schema {
 					"reasoning": WithDescription(stringAttribute([]string{computed}),
 						"Detailed reason for the current status of the peering connection."),
 					"state": WithDescription(stringAttribute([]string{computed}),
-						"Current state of the peering connection (e.g., pending, active, failed)."),
+						"Current state of the peering connection. The status options are 'pending', 'active', or 'failed'."),
 				},
 			},
 			"audit": computedAuditAttribute(),

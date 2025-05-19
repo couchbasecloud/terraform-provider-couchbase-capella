@@ -11,7 +11,7 @@ import (
 
 func BucketSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: " Manages the bucket resource for an operational cluster.",
+		MarkdownDescription: "This resource allows you to manage the buckets for an operational cluster.",
 		Attributes: map[string]schema.Attribute{
 			"id": WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The ID of the bucket."),
 
