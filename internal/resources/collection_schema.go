@@ -6,15 +6,22 @@ import (
 
 func CollectionSchema() schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Resource to manage a collection within a scope in a bucket.",
 		Attributes: map[string]schema.Attribute{
-			"organization_id": stringAttribute([]string{required, requiresReplace}),
-			"project_id":      stringAttribute([]string{required, requiresReplace}),
-			"cluster_id":      stringAttribute([]string{required, requiresReplace}),
-			"bucket_id":       stringAttribute([]string{required, requiresReplace}),
-			"scope_name":      stringAttribute([]string{required, requiresReplace}),
-			"collection_name": stringAttribute([]string{required, requiresReplace}),
-			"max_ttl":         int64Attribute(optional, computed),
+			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}),
+				"The GUID4 ID of the organization."),
+			"project_id": WithDescription(stringAttribute([]string{required, requiresReplace}),
+				"The GUID4 ID of the project."),
+			"cluster_id": WithDescription(stringAttribute([]string{required, requiresReplace}),
+				"The GUID4 ID of the cluster."),
+			"bucket_id": WithDescription(stringAttribute([]string{required, requiresReplace}),
+				"The ID of the bucket. It is the URL-compatible base64 encoding of the bucket name."),
+			"scope_name": WithDescription(stringAttribute([]string{required, requiresReplace}),
+				"The name of the scope."),
+			"collection_name": WithDescription(stringAttribute([]string{required, requiresReplace}),
+				"The name of the collection."),
+			"max_ttl": WithDescription(int64Attribute(optional, computed),
+				"The maximum Time To Live (TTL) for documents in the collection."),
 		},
 	}
-
 }
