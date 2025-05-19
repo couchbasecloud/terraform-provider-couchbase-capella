@@ -13,7 +13,7 @@ func UserSchema() schema.Schema {
 			"status":               WithDescription(stringAttribute([]string{computed}), "Status depicts user status whether they are verified or not."+"It can be one of the following values: verified, not-verified, pending-primary."),
 			"inactive":             WithDescription(boolAttribute(computed), "Inactive depicts whether the user has accepted the invite for the organization."),
 			"email":                WithDescription(stringAttribute([]string{required, requiresReplace}), "Email of the user."),
-			"organization_id":      WithDescription(stringAttribute([]string{required, requiresReplace}), "The ID of the Capella organization."),
+			"organization_id":      WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the organization."),
 			"organization_roles":   WithDescription(stringListAttribute(required), "The organization roles associated to the user. They determines the privileges user possesses in the organization."),
 			"last_login":           WithDescription(stringAttribute([]string{computed}), "The Time(UTC) at which user last logged in."),
 			"region":               WithDescription(stringAttribute([]string{computed}), "The region of the user"),
@@ -25,7 +25,7 @@ func UserSchema() schema.Schema {
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"type":  WithDescription(stringDefaultAttribute("project", optional, computed), "Type of the resource."),
-						"id":    WithDescription(stringAttribute([]string{required}), "The ID of the project."),
+						"id":    WithDescription(stringAttribute([]string{required}), "The GUID4 ID of the project."),
 						"roles": WithDescription(stringSetAttribute(required), "Project Roles associated with the User."),
 					},
 				},

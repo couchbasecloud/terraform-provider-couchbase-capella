@@ -11,50 +11,50 @@ import (
 
 func FreeTierAppServiceSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "Manages free-tier app services resources assosciated with a free-tier cluster",
+		MarkdownDescription: "This resource allows you to manage free tier App Services associated with a free tier operational cluster.",
 		Attributes: map[string]schema.Attribute{
-			"id": WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "ID of the free-tier app service."),
+			"id": WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "ID of the free tier App Service."),
 			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(
 				stringvalidator.LengthAtLeast(1),
 			)),
-				"Organization ID is the unique identifier for the organization. It is used to group resources and manage access within the organization."),
+				"The GUID4 ID of the organization."),
 			"project_id": WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(
 				stringvalidator.LengthAtLeast(1),
-			)), "The ID of the Capella project"),
+			)), "The GUID4 ID of the project."),
 			"cluster_id": WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(
 				stringvalidator.LengthAtLeast(1),
-			)), "The ID of the Capella cluster"),
+			)), " The GUID4 ID of the cluster."),
 
-			"name": WithDescription(stringAttribute([]string{required}), "Name of the free-tier app service."),
+			"name": WithDescription(stringAttribute([]string{required}), "Name of the free tier App Service."),
 			"description": schema.StringAttribute{
 				Optional:            true,
 				Computed:            true,
 				Default:             stringdefault.StaticString(""),
-				MarkdownDescription: "Description of the free-tier app service.",
+				MarkdownDescription: "Description of the free tier App Service.",
 			},
-			"nodes": WithDescription(int64Attribute(computed, useStateForUnknown), "Number of nodes in the free-tier app service."),
+			"nodes": WithDescription(int64Attribute(computed, useStateForUnknown), "Number of nodes in the free tier App Service."),
 
-			"cloud_provider": WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "Cloud provider of the free-tier app service. current supported providers are aws, gcp and azure"),
+			"cloud_provider": WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The Cloud Service Provider of the free tier App Service. The supported Cloud Service Providers are AWS, GCP, and Azure."),
 
-			"current_state": WithDescription(stringAttribute([]string{computed}), "Current state of the free-tier app service."),
+			"current_state": WithDescription(stringAttribute([]string{computed}), "Current state of the free tier App Service."),
 
-			"version": WithDescription(stringAttribute([]string{computed}), "Version of the free-tier app service."),
+			"version": WithDescription(stringAttribute([]string{computed}), "The Server version of the free tier App Service."),
 
 			"compute": schema.SingleNestedAttribute{
 				Computed:            true,
-				MarkdownDescription: "Compute configuration of the free-tier app service.",
+				MarkdownDescription: "Compute configuration of the free tier App Service.",
 				Attributes: map[string]schema.Attribute{
-					"cpu": WithDescription(int64Attribute(computed, useStateForUnknown), "Number of CPUs of the free-tier app service node."),
+					"cpu": WithDescription(int64Attribute(computed, useStateForUnknown), "The number of CPUs of the free tier App Service node."),
 
-					"ram": WithDescription(int64Attribute(computed, useStateForUnknown), "Amount of RAM of the free-tier app service node."),
+					"ram": WithDescription(int64Attribute(computed, useStateForUnknown), "The amount of RAM of the free tier App Service node."),
 				},
 				PlanModifiers: []planmodifier.Object{
 					objectplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"audit": computedAuditAttribute(),
-			"plan":  WithDescription(stringAttribute([]string{computed}), "Plan associated with the free-tier app service."),
-			"etag":  WithDescription(stringAttribute([]string{computed}), "ETag of the free-tier app service."),
+			"plan":  WithDescription(stringAttribute([]string{computed}), "The Support plan associated with the free tier App Service. The Support plan options are 'Basic', 'Developer Pro', or 'Enterprise'."),
+			"etag":  WithDescription(stringAttribute([]string{computed}), "ETag of the free tier App Service."),
 		},
 	}
 }

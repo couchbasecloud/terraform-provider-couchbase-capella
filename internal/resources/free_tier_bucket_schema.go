@@ -24,11 +24,11 @@ func FreeTierBucketSchema() schema.Schema {
 
 			"name": WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "Name of the free-tier bucket"),
 
-			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "ID of the Capella organization"),
+			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The GUID4 ID of the organization."),
 
-			"project_id": WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "ID of the Capella project"),
+			"project_id": WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The GUID4 ID of the project."),
 
-			"cluster_id": WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "ID of the Capella cluster"),
+			"cluster_id": WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), " The GUID4 ID of the cluster."),
 
 			"type":            WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The bucket type (couchbase or ephemeral)"),
 			"storage_backend": WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The bucket storage engine type (magma or couchstore)"),
