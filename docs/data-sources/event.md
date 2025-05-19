@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_event Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Data source for an event in a Capella organization. Events represent a trail of actions that users performs within Capella at an organization level.
+  The data source to retrieve an event in an organization. Events represent a trail of actions that users performs within Capella at an organization level.
 ---
 
 # couchbase-capella_event (Data Source)
 
-Data source for an event in a Capella organization. Events represent a trail of actions that users performs within Capella at an organization level.
+The data source to retrieve an event in an organization. Events represent a trail of actions that users performs within Capella at an organization level.
 
 ## Example Usage
 
@@ -24,29 +24,29 @@ data "couchbase-capella_event" "existing_event" {
 
 ### Required
 
-- `id` (String) UUID for this instance of an Event.
-- `organization_id` (String) The ID of then Capella organization.
+- `id` (String) A UUID that uniquely identifies this specific instance of the event.
+- `organization_id` (String) The GUID4 ID of the organization.
 
 ### Read-Only
 
-- `alert_key` (String) Populated on demand based on the Event.Key and select labels in KV.
-- `app_service_id` (String) SyncGatewayID this Event refers to.
+- `alert_key` (String) Generated on demand based on the Event.Key and select labels in KV.
+- `app_service_id` (String) SyncGatewayID this event refers to.
 - `app_service_name` (String) Name of the sync gateway at the time of event emission.
-- `cluster_id` (String) ClusterID this Event refers to.
+- `cluster_id` (String) The GUID4 ID of the cluster.
 - `cluster_name` (String) Name of the cluster at the time of event emission.
-- `image_url` (String) Rendered chart image to display for an Alert Event.
+- `image_url` (String) URL to a rendered chart image representing the alert event.
 - `incident_ids` (Set of String) Group events related to an alert incident.
 - `key` (String) Defines the specific kind of Event.
 - `kv` (String) Key-value pairs for additional event data.
 - `occurrence_count` (Number) Number of times the alert has fired within this "incident".
-- `project_id` (String) ProjectID this Event refers to.
+- `project_id` (String) The GUID4 ID of the project.
 - `project_name` (String) Name of the project at the time of event emission.
-- `request_id` (String) RequestID for an Event.
-- `session_id` (String) User that initiated the request for this Event.
+- `request_id` (String) The request ID for an event.
+- `session_id` (String) ID of the session associated with the user that initiated the request for this event.
 - `severity` (String) Severity of the event.
 - `source` (String) Identifies the originator of the event.
 - `summary` (String) Metadata.SummaryTemplate rendered for this event.
-- `timestamp` (String) Time when the event was emitted.
+- `timestamp` (String) The RFC3339 timestamp when the event was emitted.
 - `user_email` (String) Email of the associated user at the time of event emission.
-- `user_id` (String) User id that initiated the request for this Event.
+- `user_id` (String) ID of the user that initiated the request for this event.
 - `user_name` (String) Name of the associated user at the time of event emission.

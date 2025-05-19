@@ -23,7 +23,7 @@ data "couchbase-capella_organization" "existing_organization" {
 
 ### Required
 
-- `organization_id` (String) The GUID4 ID of the Capella organization to fetch information for.
+- `organization_id` (String) The GUID4 ID of the organization.
 
 ### Read-Only
 
@@ -49,4 +49,4 @@ Read-Only:
 
 Read-Only:
 
-- `session_duration` (Number) Maximum allowed time in seconds inside the organization for a user.
+- `session_duration` (Number) The maximum allowed time (in seconds) a users can spend in the organization.

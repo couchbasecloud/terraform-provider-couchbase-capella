@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_audit_log_event_ids Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Data source to retrieve audit log event IDs for a Capella cluster. These event IDs can be used to filter audit logs and configure audit logging.
+  The data source to retrieve audit log event IDs for an operational cluster. These event IDs can be used to filter audit logs and configure audit logging.
 ---
 
 # couchbase-capella_audit_log_event_ids (Data Source)
 
-Data source to retrieve audit log event IDs for a Capella cluster. These event IDs can be used to filter audit logs and configure audit logging.
+The data source to retrieve audit log event IDs for an operational cluster. These event IDs can be used to filter audit logs and configure audit logging.
 
 ## Example Usage
 
@@ -25,20 +25,20 @@ data "couchbase-capella_audit_log_event_ids" "existing_auditlogeventids" {
 
 ### Required
 
-- `cluster_id` (String) The ID of the Capella cluster to retrieve audit log event IDs from.
-- `organization_id` (String) The ID of the Capella organization.
-- `project_id` (String) The ID of the Capella project that the cluster belongs to.
+- `cluster_id` (String) The GUID4 ID of the cluster.
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
 
 ### Read-Only
 
-- `data` (Attributes Set) List of available audit log events and their details. (see [below for nested schema](#nestedatt--data))
+- `data` (Attributes Set) Lists the available audit log events and their details. (see [below for nested schema](#nestedatt--data))
 
 <a id="nestedatt--data"></a>
 ### Nested Schema for `data`
 
 Read-Only:
 
-- `description` (String) Description of what this audit event represents.
-- `id` (Number) The unique identifier for this audit event.
-- `module` (String) The Couchbase Server module that generates this type of audit event.
-- `name` (String) The name of the audit event type.
+- `description` (String) A description of the audit log event.
+- `id` (Number) The unique identifier for the audit log event.
+- `module` (String) The Couchbase Server module that generates this type of audit log event.
+- `name` (String) The name of the audit log event type.

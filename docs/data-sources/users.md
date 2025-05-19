@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_users Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Data source to retrieve users in a Capella organization.
+  The data source to retrieve users in a Capella organization.
 ---
 
 # couchbase-capella_users (Data Source)
 
-Data source to retrieve users in a Capella organization.
+The data source to retrieve users in a Capella organization.
 
 
 
@@ -17,7 +17,7 @@ Data source to retrieve users in a Capella organization.
 
 ### Required
 
-- `organization_id` (String) The ID of then Capella organization.
+- `organization_id` (String) The GUID4 ID of the organization.
 
 ### Read-Only
 
@@ -34,14 +34,14 @@ Read-Only:
 - `expires_at` (String) Time at which the user expires.
 - `id` (String) The ID of the user.
 - `inactive` (Boolean) Inactive depicts whether the user has accepted the invite for the organization.
-- `last_login` (String) The Time(UTC) at which user last logged in.
+- `last_login` (String) Time(UTC) when the user last logged in.
 - `name` (String) The name of the user.
-- `organization_id` (String) The ID of the Capella organization.
-- `organization_roles` (List of String) The organization roles associated to the user. They determines the privileges user possesses in the organization.
-- `region` (String) The region of the user
+- `organization_id` (String) The GUID4 ID of the organization.
+- `organization_roles` (List of String) The organization roles associated with the user. They determine the privileges a user possesses in the organization.
+- `region` (String) The region of the user.
 - `resources` (Attributes List) (see [below for nested schema](#nestedatt--data--resources))
 - `status` (String) Status depicts user status whether they are verified or not. It can be one of the following values: verified, not-verified, pending-primary.
-- `time_zone` (String) The Time zone of the user.
+- `time_zone` (String) Time zone of the user.
 
 <a id="nestedatt--data--audit"></a>
 ### Nested Schema for `data.audit`
@@ -64,5 +64,5 @@ Optional:
 
 Read-Only:
 
-- `id` (String) The ID of the project.
-- `roles` (List of String) Project Roles associated with the User.
+- `id` (String) The GUID4 ID of the project.
+- `roles` (List of String) Project Roles associated with the user.

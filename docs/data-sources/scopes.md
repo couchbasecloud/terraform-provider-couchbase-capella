@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_scopes Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  
+  The scopes data source retrieves the scopes in a bucket.
 ---
 
 # couchbase-capella_scopes (Data Source)
 
-
+The scopes data source retrieves the scopes in a bucket.
 
 
 
@@ -17,27 +17,27 @@ description: |-
 
 ### Required
 
-- `bucket_id` (String)
-- `cluster_id` (String)
-- `organization_id` (String)
-- `project_id` (String)
+- `bucket_id` (String) The ID of the bucket. It is the URL-compatible base64 encoding of the bucket name.
+- `cluster_id` (String) The GUID4 ID of the cluster.
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
 
 ### Read-Only
 
-- `scopes` (Attributes List) (see [below for nested schema](#nestedatt--scopes))
+- `scopes` (Attributes List) The list of scopes in the bucket. (see [below for nested schema](#nestedatt--scopes))
 
 <a id="nestedatt--scopes"></a>
 ### Nested Schema for `scopes`
 
 Read-Only:
 
-- `collections` (Attributes Set) (see [below for nested schema](#nestedatt--scopes--collections))
-- `scope_name` (String)
+- `collections` (Attributes Set) The list of collections in the scope. (see [below for nested schema](#nestedatt--scopes--collections))
+- `scope_name` (String) The name of the scope.
 
 <a id="nestedatt--scopes--collections"></a>
 ### Nested Schema for `scopes.collections`
 
 Read-Only:
 
-- `max_ttl` (Number)
-- `name` (String)
+- `max_ttl` (Number) The maximum time-to-live (TTL) for documents in the collection, in seconds.
+- `name` (String) The name of the collection.

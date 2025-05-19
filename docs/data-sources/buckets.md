@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_buckets Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Manages Bucket data source for Capella cluster
+  The bucket data source retrieves the bucket information for an operational cluster.
 ---
 
 # couchbase-capella_buckets (Data Source)
 
-Manages Bucket data source for Capella cluster
+The bucket data source retrieves the bucket information for an operational cluster.
 
 ## Example Usage
 
@@ -25,44 +25,44 @@ data "couchbase-capella_buckets" "existing_buckets" {
 
 ### Required
 
-- `cluster_id` (String) ID of the Capella cluster
-- `organization_id` (String) ID of the Capella tenant
-- `project_id` (String) ID of the Caplla project
+- `cluster_id` (String) The GUID4 ID of the cluster.
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
 
 ### Read-Only
 
-- `data` (Attributes List) Data of buckets in the cluster (see [below for nested schema](#nestedatt--data))
+- `data` (Attributes List) Lists the bucket data in the cluster. (see [below for nested schema](#nestedatt--data))
 
 <a id="nestedatt--data"></a>
 ### Nested Schema for `data`
 
 Optional:
 
-- `bucket_conflict_resolution` (String) Conflict-resolution mechanism of bucket
-- `durability_level` (String) Durability of the bucket
-- `eviction_policy` (String) Eviction policy for the bucket
-- `flush` (Boolean) Determines whether the flushing is enabled in the bucket
-- `memory_allocation_in_mb` (Number) bucket size allocation in mb
-- `replicas` (Number) Number of replicas for the data
-- `storage_backend` (String) The bucket storage engine type (Magma or Couchstore)
-- `time_to_live_in_seconds` (Number) Time-to-live (TTL) for items in the bucket, in seconds
-- `type` (String) The bucket type (couchbase or ephemeral)
+- `bucket_conflict_resolution` (String) Conflict-resolution mechanism of the bucket.
+- `durability_level` (String) Durability of the bucket.
+- `eviction_policy` (String) Eviction policy for the bucket.
+- `flush` (Boolean) Determines whether flushing is enabled in the bucket.
+- `memory_allocation_in_mb` (Number) Bucket size in MB.
+- `replicas` (Number) Number of replicas for the data.
+- `storage_backend` (String) The bucket storage engine type (Magma or Couchstore).
+- `time_to_live_in_seconds` (Number) Time-to-live (TTL) for items in the bucket, in seconds.
+- `type` (String) The bucket type (Couchbase or Ephemeral).
 
 Read-Only:
 
-- `cluster_id` (String) ID of the Capella cluster
-- `id` (String) ID of the bucket
-- `name` (String) The name of the bucket
-- `organization_id` (String) ID of the Capella tenant
-- `project_id` (String) ID of the Capella project
-- `stats` (Attributes) (see [below for nested schema](#nestedatt--data--stats))
+- `cluster_id` (String) The GUID4 ID of the cluster.
+- `id` (String) The ID of the bucket.
+- `name` (String) The name of the bucket.
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
+- `stats` (Attributes) Bucket statistics. (see [below for nested schema](#nestedatt--data--stats))
 
 <a id="nestedatt--data--stats"></a>
 ### Nested Schema for `data.stats`
 
 Read-Only:
 
-- `disk_used_in_mib` (Number) Disk used in mib
-- `item_count` (Number) Bucket item count
-- `memory_used_in_mib` (Number) Memory used in mib
-- `ops_per_second` (Number) Bucket ops per second value
+- `disk_used_in_mib` (Number) Disk used in MiB.
+- `item_count` (Number) Bucket item count.
+- `memory_used_in_mib` (Number) Memory used in MiB.
+- `ops_per_second` (Number) Bucket operations per second.

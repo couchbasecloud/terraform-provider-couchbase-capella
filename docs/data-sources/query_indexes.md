@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_query_indexes Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Data source for retrieving Query Indexes in Couchbase Capella
+  The data source for retrieving Query Indexes in Couchbase Capella.
 ---
 
 # couchbase-capella_query_indexes (Data Source)
 
-Data source for retrieving Query Indexes in Couchbase Capella
+The data source for retrieving Query Indexes in Couchbase Capella.
 
 ## Example Usage
 
@@ -28,15 +28,15 @@ data "couchbase-capella_query_indexes" "list" {
 
 ### Required
 
-- `bucket_name` (String) The name of the bucket where the indexes exist. Specifies the bucket part of the key space.
-- `cluster_id` (String) The ID of the Capella cluster where the indexes exist.
-- `organization_id` (String) The ID of the Capella organization.
-- `project_id` (String) The ID of the Capella project.
+- `bucket_name` (String) The name of the bucket where the indexes exist. Specifies the bucket portion of the keyspace.
+- `cluster_id` (String) The GUID4 ID of the cluster.
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
 
 ### Optional
 
-- `collection_name` (String) Specifies the collection part of the key space. If unspecified, this will be the default collection.
-- `scope_name` (String) The name of the scope where the indexes exist. Specifies the scope part of the key space. If unspecified, this will be the default scope.
+- `collection_name` (String) Specifies the collection portion of the keyspace. If unspecified, this will be the default collection.
+- `scope_name` (String) The name of the scope where the indexes exist. Specifies the scope portion of the keyspace. If unspecified, this will be the default scope.
 
 ### Read-Only
 
@@ -49,7 +49,7 @@ Read-Only:
 
 - `condition` (String) The WHERE clause condition for the index.
 - `index_key` (List of String) List of document fields being indexed.
-- `is_primary` (Boolean) Whether this is a primary index.
+- `is_primary` (Boolean) Specifies whether this is a primary index.
 - `keyspace_id` (String) The full keyspace identifier for the index (bucket.scope.collection).
 - `name` (String) The name of the index.
 - `partition` (List of String) List of fields the index is partitioned by.

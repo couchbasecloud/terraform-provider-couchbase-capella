@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_project_events Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Data source to retrieve all events information for a Capella project. Events represent a trail of actions that users performs within Capella at project level.
+  Data source to retrieve all event information for a project. Events represent a trail of actions that users performs within Capella at project level.
 ---
 
 # couchbase-capella_project_events (Data Source)
 
-Data source to retrieve all events information for a Capella project. Events represent a trail of actions that users performs within Capella at project level.
+Data source to retrieve all event information for a project. Events represent a trail of actions that users performs within Capella at project level.
 
 ## Example Usage
 
@@ -24,11 +24,11 @@ data "couchbase-capella_project_events" "existing_project_events" {
 
 ### Required
 
-- `organization_id` (String) The GUID4 ID of the Capella organization.
+- `organization_id` (String) The GUID4 ID of the organization.
 
 ### Optional
 
-- `cluster_ids` (Set of String) List of clusterIds to filter on. By default events corresponding to all clusters are returned.
+- `cluster_ids` (Set of String) List of clusterIds to filter on. By default, events corresponding to all clusters are returned.
 - `from` (String) Start date in RFC3339 format. If not provided, events starting from last 24 hours are returned.
 - `page` (Number) Sets the page you would like to view.
 - `per_page` (Number) Sets the number of results you would like to have on each page.
@@ -36,7 +36,7 @@ data "couchbase-capella_project_events" "existing_project_events" {
 - `severity_levels` (Set of String) Filter by severity levels. Default is to return events corresponding to all supported severity levels.
 - `sort_by` (String) Sets the order of how you would like to sort the results and the key you would like to order by. Valid fields to sort the results are: severity, timestamp.
 - `sort_direction` (String) The order in which the items will be sorted.
-- `tags` (Set of String) Filter by tags. Default is to return events corresponding to all supported tag. Tags are availability, billing, maintenance, performance, security, alert.
+- `tags` (Set of String) Filter by tags. Default is to return events corresponding to all supported tag. The tags are: availability, billing, maintenance, performance, security, alert.
 - `to` (String) End datetime in the last 24 hours, RFC3339 format. Defaults to Now.
 - `user_ids` (Set of String) Filter by user UUID. Default is to return events corresponding to all users.
 
@@ -86,22 +86,22 @@ Read-Only:
 - `alert_key` (String) Populated on demand based on the Event.Key and select labels in KV.
 - `app_service_id` (String) SyncGatewayID this Event refers to.
 - `app_service_name` (String) Name of the sync gateway at the time of event emission.
-- `cluster_id` (String) ClusterID this Event refers to.
+- `cluster_id` (String) The GUID4 ID of the cluster.
 - `cluster_name` (String) Name of the cluster at the time of event emission.
-- `id` (String) UUID for this instance of an Event.
-- `image_url` (String) Rendered chart image to display for an Alert Event.
+- `id` (String) UUID for this instance of an event.
+- `image_url` (String) URL to a rendered chart image representing the alert event.
 - `incident_ids` (Set of String) Group events related to an alert incident.
-- `key` (String) Defines the specific kind of Event.
+- `key` (String) Defines the specific kind of event.
 - `kv` (String) Key-value pairs for additional event data.
 - `occurrence_count` (Number) Number of times the alert has fired within this "incident".
-- `project_id` (String) ProjectID this Event refers to.
+- `project_id` (String) The GUID4 ID of the project.
 - `project_name` (String) Name of the project at the time of event emission.
-- `request_id` (String) RequestID for an Event.
-- `session_id` (String) User that initiated the request for this Event.
+- `request_id` (String) The request ID for an event.
+- `session_id` (String) ID of the session associated with the user that initiated the request for this event.
 - `severity` (String) Severity of the event.
 - `source` (String) Identifies the originator of the event.
 - `summary` (String) Metadata.SummaryTemplate rendered for this event.
-- `timestamp` (String) Time when the event was emitted.
+- `timestamp` (String) The RFC3339 timestamp when the event was emitted.
 - `user_email` (String) Email of the associated user at the time of event emission.
-- `user_id` (String) User id that initiated the request for this Event.
+- `user_id` (String) User ID that initiated the request for this event.
 - `user_name` (String) Name of the associated user at the time of event emission.

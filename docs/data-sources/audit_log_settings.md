@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_audit_log_settings Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Data source to retrieve audit log configuration settings for a Capella cluster. These settings control which audit events are logged and which users are excluded from audit logging.
+  The data source to retrieve audit log configuration settings for an operational cluster. These settings control which events are logged and which users are excluded.
 ---
 
 # couchbase-capella_audit_log_settings (Data Source)
 
-Data source to retrieve audit log configuration settings for a Capella cluster. These settings control which audit events are logged and which users are excluded from audit logging.
+The data source to retrieve audit log configuration settings for an operational cluster. These settings control which events are logged and which users are excluded.
 
 ## Example Usage
 
@@ -25,13 +25,13 @@ data "couchbase-capella_audit_log_settings" "existing_auditlogsettings" {
 
 ### Required
 
-- `cluster_id` (String) The ID of the cluster to retrieve audit log settings from.
-- `organization_id` (String) The ID of the organization that the cluster belongs to.
-- `project_id` (String) The ID of the project that the cluster belongs to.
+- `cluster_id` (String) The GUID4 ID of the cluster.
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
 
 ### Read-Only
 
-- `audit_enabled` (Boolean) Whether audit logging is enabled for this cluster.
+- `audit_enabled` (Boolean) Specifies whether audit logging is enabled for this cluster.
 - `disabled_users` (Attributes Set) List of users whose actions are excluded from audit logging. (see [below for nested schema](#nestedatt--disabled_users))
 - `enabled_event_ids` (Set of Number) List of audit event IDs that are currently enabled for logging. These IDs correspond to specific types of events that will be recorded in the audit log.
 

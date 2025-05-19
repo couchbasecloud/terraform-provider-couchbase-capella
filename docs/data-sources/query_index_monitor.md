@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_query_index_monitor Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Data source for monitoring Query Indexes in Couchbase Capella
+  The data source for monitoring Query Indexes in Couchbase Capella.
 ---
 
 # couchbase-capella_query_index_monitor (Data Source)
 
-Data source for monitoring Query Indexes in Couchbase Capella
+The data source for monitoring Query Indexes in Couchbase Capella.
 
 
 
@@ -18,12 +18,12 @@ Data source for monitoring Query Indexes in Couchbase Capella
 ### Required
 
 - `bucket_name` (String) The name of the bucket where the indexes exist. Specifies the bucket part of the key space.
-- `cluster_id` (String) The ID of the Capella cluster where the indexes exist.
+- `cluster_id` (String) The GUID4 ID of the cluster.
 - `indexes` (Set of String) Set of index names to monitor. These indexes must exist in the specified keyspace.
-- `organization_id` (String) The ID of the Capella organization.
-- `project_id` (String) The ID of the Capella project.
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
 
 ### Optional
 
-- `collection_name` (String) Specifies the collection part of the key space. If unspecified, this will be the default collection.
-- `scope_name` (String) The name of the scope where the indexes exist. Specifies the scope part of the key space. If unspecified, this will be the default scope.
+- `collection_name` (String) The name of the collection where the indexes exist. Specifies the collection portion of the keyspace. If unspecified, this will be the default collection.
+- `scope_name` (String) The name of the scope where the indexes exist. Specifies the scope portion of the keyspace. If unspecified, this will be the default scope.

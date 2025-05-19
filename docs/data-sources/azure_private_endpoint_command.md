@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_azure_private_endpoint_command Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Data source to generate Azure CLI command for setting up a private endpoint connection to a Capella cluster. Retrieve the command or script to be executed in order to create the private endpoint which will provides a private connection between the specified VPC and the specified Capella private endpoint service.
+  The data source to generate an Azure CLI command for setting up a private endpoint connection to a Capella cluster. Retrieves the command or script to create the private endpoint, which establishes a private connection between the specified VPC and the designated Capella private endpoint service.
 ---
 
 # couchbase-capella_azure_private_endpoint_command (Data Source)
 
-Data source to generate Azure CLI command for setting up a private endpoint connection to a Capella cluster. Retrieve the command or script to be executed in order to create the private endpoint which will provides a private connection between the specified VPC and the specified Capella private endpoint service.
+The data source to generate an Azure CLI command for setting up a private endpoint connection to a Capella cluster. Retrieves the command or script to create the private endpoint, which establishes a private connection between the specified VPC and the designated Capella private endpoint service.
 
 ## Example Usage
 
@@ -27,9 +27,9 @@ data "couchbase-capella_azure_private_endpoint_command" "azure_command" {
 
 ### Required
 
-- `cluster_id` (String) The GUID4 ID of the Capella cluster to connect to via private endpoint.
-- `organization_id` (String) The GUID4 ID of the organization that owns the Capella cluster.
-- `project_id` (String) The GUID4 ID of the project containing the Capella cluster.
+- `cluster_id` (String) The GUID4 ID of the cluster.
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
 - `resource_group_name` (String) The name of your Azure resource group.
 - `virtual_network` (String) The virtual network and subnet name
 
