@@ -6,7 +6,7 @@ import (
 
 func CollectionSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "Resource to manage a collection within a scope in a bucket.",
+		MarkdownDescription: "This resource allows you to manage a collection within a scope in a bucket.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}),
 				"The GUID4 ID of the organization."),
