@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_cluster Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Manages the Couchbase Capella cluster resource.
+  Manages the operational cluster resource.
 ---
 
 # couchbase-capella_cluster (Resource)
 
-Manages the Couchbase Capella cluster resource.
+Manages the operational cluster resource.
 
 ## Example Usage
 
@@ -59,11 +59,11 @@ resource "couchbase-capella_cluster" "new_cluster" {
 ### Required
 
 - `availability` (Attributes) Availability configuration for the cluster. (see [below for nested schema](#nestedatt--availability))
-- `cloud_provider` (Attributes) The cloud provider where the cluster will be hosted. (see [below for nested schema](#nestedatt--cloud_provider))
+- `cloud_provider` (Attributes) The Cloud Service Provider where the cluster will be hosted. (see [below for nested schema](#nestedatt--cloud_provider))
 - `name` (String) The name of the cluster (up to 256 characters).
-- `organization_id` (String) The ID of the organization that the cluster and project belongs to.
-- `project_id` (String) The ID of the project that the cluster belongs to.
-- `service_groups` (Attributes Set) Configuration for the service groups in the cluster. Each service group represents a set of nodes with the same configuration. (see [below for nested schema](#nestedatt--service_groups))
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
+- `service_groups` (Attributes Set) Configuration for the Service Groups in the cluster. Each Service Group represents a set of nodes with the same configuration. (see [below for nested schema](#nestedatt--service_groups))
 - `support` (Attributes) Support configuration for the cluster. (see [below for nested schema](#nestedatt--support))
 
 ### Optional
@@ -71,9 +71,9 @@ resource "couchbase-capella_cluster" "new_cluster" {
 - `configuration_type` (String, Deprecated) The configuration type of the cluster. This field is deprecated.
 - `couchbase_server` (Attributes) Configuration for the Couchbase Server running on the cluster. (see [below for nested schema](#nestedatt--couchbase_server))
 - `description` (String) Description of the cluster (up to 1024 characters).
-- `enable_private_dns_resolution` (Boolean) EnablePrivateDNSResolution signals that the cluster should have hostnames that are hosted in a public DNS zone that resolve to a private DNS address. This exists to support the use case of customers connecting from their own data centers where it is not possible to make use of a cloud service provider DNS zone.
+- `enable_private_dns_resolution` (Boolean) EnablePrivateDNSResolution signals that the cluster should have hostnames that are hosted in a public DNS zone that resolve to a private DNS address. This exists to support the use case of customers connecting from their own data centers where it is not possible to make use of a Cloud Service Provider DNS zone.
 - `if_match` (String) The If-Match header value used for optimistic concurrency control.
-- `zones` (Set of String) Zones is the cloud services provider availability zones for the cluster. Currently Supported only for single AZ clusters so only 1 zone is allowed in list.
+- `zones` (Set of String) The Cloud Services Provider's availability zones for the cluster.For single availability zone clusters, only 1 zone is allowed in list.
 
 ### Read-Only
 
@@ -82,7 +82,7 @@ resource "couchbase-capella_cluster" "new_cluster" {
 - `connection_string` (String) The connection string to use to connect to the cluster.
 - `current_state` (String) The current state of the cluster.
 - `etag` (String) The ETag header value returned by the server, used for optimistic concurrency control.
-- `id` (String) The ID of the Capella cluster.
+- `id` (String) The ID of the operational cluster.
 
 <a id="nestedatt--availability"></a>
 ### Nested Schema for `availability`
@@ -99,7 +99,7 @@ Required:
 
 - `cidr` (String) The CIDR block for the cluster's network.
 - `region` (String) The region where the cluster will be hosted.
-- `type` (String) Cloud provider type. Currently supported values are AWS, GCP and Azure. Note: For singleNode cluster, only AWS type cloud provider is allowed.
+- `type` (String) The Cloud Service Provider type. Currently supporting AWS, GCP and Azure. For Single Node cluster, only the AWS type Cloud Service Provider is allowed.
 
 
 <a id="nestedatt--service_groups"></a>
@@ -107,9 +107,9 @@ Required:
 
 Required:
 
-- `node` (Attributes) Node configuration for this service group. (see [below for nested schema](#nestedatt--service_groups--node))
-- `num_of_nodes` (Number) The number of nodes in this service group.
-- `services` (Set of String) The list of Couchbase services to run on the nodes in this service group.
+- `node` (Attributes) Node configuration for this Service Group. (see [below for nested schema](#nestedatt--service_groups--node))
+- `num_of_nodes` (Number) The number of nodes in this Service Group.
+- `services` (Set of String) The list of Couchbase Services to run on the nodes in this Service Group.
 
 <a id="nestedatt--service_groups--node"></a>
 ### Nested Schema for `service_groups.node`
@@ -117,7 +117,7 @@ Required:
 Required:
 
 - `compute` (Attributes) Compute resources configuration for the nodes. (see [below for nested schema](#nestedatt--service_groups--node--compute))
-- `disk` (Attributes) The 'storage' and 'IOPS' fields are required for AWS. For Azure, only the 'disktype' field is required, and for Ultra disk type, you can provide all 3 - storage, iops and autoexpansion fields. For Premium type, you can only provide the autoexpansion field, others can't be set.In the case of GCP, only 'pd ssd' disk type is available, and you cannot set the 'IOPS' field. (see [below for nested schema](#nestedatt--service_groups--node--disk))
+- `disk` (Attributes) The 'storage' and 'IOPS' fields are required for AWS. For Azure, only the 'disktype' field is required. For the Ultra disk type, you can provide storage, IOPS, and auto-expansion fields. For Premium type, you can only provide the auto-expansion field, others cannot be set. In the case of GCP, only 'pd ssd' disk type is available, and you cannot set the 'IOPS' field. (see [below for nested schema](#nestedatt--service_groups--node--disk))
 
 <a id="nestedatt--service_groups--node--compute"></a>
 ### Nested Schema for `service_groups.node.compute`
@@ -137,7 +137,7 @@ Required:
 
 Optional:
 
-- `autoexpansion` (Boolean) Whether to enable automatic disk expansion.
+- `autoexpansion` (Boolean) Enable or disable automatic disk expansion.
 - `iops` (Number) The number of IOPS for the disk. Only applicable for certain disk types.
 - `storage` (Number) The size of the disk in GB.
 
@@ -149,7 +149,7 @@ Optional:
 
 Required:
 
-- `plan` (String) The support plan for the cluster. Can be 'Basic', 'Developer Pro', or 'Enterprise'.
+- `plan` (String) The support plan options include 'Basic', 'Developer Pro', or 'Enterprise'.
 
 Optional:
 

@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_project Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Resource to create and manage a project in a Capella organization. Projects are used to organize and manage groups of Couchbase databases within organizations.
+  This resource allows you to create and manage a project in an organization. Projects are used to organize and manage groups of operational clusters within organizations.
 ---
 
 # couchbase-capella_project (Resource)
 
-Resource to create and manage a project in a Capella organization. Projects are used to organize and manage groups of Couchbase databases within organizations.
+This resource allows you to create and manage a project in an organization. Projects are used to organize and manage groups of operational clusters within organizations.
 
 ## Example Usage
 

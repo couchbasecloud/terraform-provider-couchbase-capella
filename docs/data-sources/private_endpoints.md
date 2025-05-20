@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_private_endpoints Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Data source to retrieve private endpoints for a Capella cluster. Access your Capella cluster from your cloud provider's private network. Returns a list of private endpoints associated with the endpoint service for your Capella cluster, along with the endpoint state. Each private endpoint connects a private network to the Capella cluster.
+  The data source to retrieve private endpoints for an operational cluster. Access your operational cluster from your Cloud Service Provider's private network. Returns a list of private endpoints associated with the endpoint service for your operational cluster, along with the endpoint state. Each private endpoint connects a private network to the operational cluster.
 ---
 
 # couchbase-capella_private_endpoints (Data Source)
 
-Data source to retrieve private endpoints for a Capella cluster. Access your Capella cluster from your cloud provider's private network. Returns a list of private endpoints associated with the endpoint service for your Capella cluster, along with the endpoint state. Each private endpoint connects a private network to the Capella cluster.
+The data source to retrieve private endpoints for an operational cluster. Access your operational cluster from your Cloud Service Provider's private network. Returns a list of private endpoints associated with the endpoint service for your operational cluster, along with the endpoint state. Each private endpoint connects a private network to the operational cluster.
 
 ## Example Usage
 
@@ -25,13 +25,13 @@ data "couchbase-capella_private_endpoints" "list_endpoints" {
 
 ### Required
 
-- `cluster_id` (String) The ID of the cluster to retrieve private endpoints from. Private endpoints enable secure access to this cluster through your cloud provider's private network.
-- `organization_id` (String) The ID of the Capella organization where the private endpoint exists.
-- `project_id` (String) The ID of the Capella project containing the cluster with private endpoints.
+- `cluster_id` (String) The GUID4 ID of the cluster. Private endpoints enable secure access to this cluster through your Cloud Service Provider's private network.
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
 
 ### Read-Only
 
-- `data` (Attributes List) List of private endpoints associated with the cluster. Each entry represents a connection point between your private network and the Capella cluster. (see [below for nested schema](#nestedatt--data))
+- `data` (Attributes List) Lists the private endpoints associated with the cluster. Each entry represents a connection point between your private network and the Capella cluster. (see [below for nested schema](#nestedatt--data))
 
 <a id="nestedatt--data"></a>
 ### Nested Schema for `data`

@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_clusters Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Retrieves the details of Couchbase Capella clusters.
+  The data source retrieves the details of Couchbase Capella clusters.
 ---
 
 # couchbase-capella_clusters (Data Source)
 
-Retrieves the details of Couchbase Capella clusters.
+The data source retrieves the details of Couchbase Capella clusters.
 
 ## Example Usage
 
@@ -24,12 +24,12 @@ data "couchbase-capella_clusters" "existing_clusters" {
 
 ### Required
 
-- `organization_id` (String) The ID of the organization that the cluster and project belongs to.
-- `project_id` (String) The ID of the project that the cluster belongs to.
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
 
 ### Read-Only
 
-- `data` (Attributes List) List of clusters in the project. (see [below for nested schema](#nestedatt--data))
+- `data` (Attributes List) Lists the clusters in the project. (see [below for nested schema](#nestedatt--data))
 
 <a id="nestedatt--data"></a>
 ### Nested Schema for `data`
@@ -39,17 +39,17 @@ Read-Only:
 - `app_service_id` (String) The ID of the App Service associated with this cluster.
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--data--audit))
 - `availability` (Attributes) Availability configuration for the cluster. (see [below for nested schema](#nestedatt--data--availability))
-- `cloud_provider` (Attributes) The cloud provider where the cluster is hosted. (see [below for nested schema](#nestedatt--data--cloud_provider))
-- `connection_string` (String) The connection string to use to connect to the cluster.
-- `couchbase_server` (Attributes) Configuration for the Couchbase Server running on the cluster. (see [below for nested schema](#nestedatt--data--couchbase_server))
-- `current_state` (String) The current state of the cluster. Example- deploying, scaling, destroying, peering,etc.
-- `description` (String) Description of the cluster (up to 1024 characters).
+- `cloud_provider` (Attributes) The Cloud Service Provider where the cluster is hosted. (see [below for nested schema](#nestedatt--data--cloud_provider))
+- `connection_string` (String) The connection string used to connect to the cluster.
+- `couchbase_server` (Attributes) Specifies the Couchbase Server configuration running on the cluster. (see [below for nested schema](#nestedatt--data--couchbase_server))
+- `current_state` (String) The current cluster status. The cluster statuses are 'deploying', 'scaling', 'destroying', 'peering', 'healthy', and more.
+- `description` (String) A description of the cluster (up to 1024 characters).
 - `enable_private_dns_resolution` (Boolean) EnablePrivateDNSResolution signals that the cluster should have hostnames that are hosted in a public DNS zone that resolve to a private DNS address.
-- `id` (String) The ID of the Capella cluster.
+- `id` (String) The ID of the cluster.
 - `name` (String) The name of the cluster (up to 256 characters).
-- `organization_id` (String)
-- `project_id` (String)
-- `service_groups` (Attributes List) The couchbase service groups running in the cluster. (see [below for nested schema](#nestedatt--data--service_groups))
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
+- `service_groups` (Attributes List) The Couchbase service groups running in the cluster. (see [below for nested schema](#nestedatt--data--service_groups))
 - `support` (Attributes) Support configuration for the cluster. (see [below for nested schema](#nestedatt--data--support))
 
 <a id="nestedatt--data--audit"></a>
@@ -69,7 +69,7 @@ Read-Only:
 
 Read-Only:
 
-- `type` (String) The availability type of the cluster. Can be 'single' for Single Node or 'multi' for Multi Node.
+- `type` (String) Specifies the availability type of the cluster, either 'single' for Single Node or 'multi' for Multi Node.
 
 
 <a id="nestedatt--data--cloud_provider"></a>
@@ -77,9 +77,9 @@ Read-Only:
 
 Read-Only:
 
-- `cidr` (String) CIDR block for Cloud Provider.
+- `cidr` (String) CIDR block for the Cloud Service Provider.
 - `region` (String) The region where the cluster is hosted.
-- `type` (String) Cloud provider type. Currently supported values are AWS, GCP and Azure. Note: For singleNode cluster, only AWS type cloud provider is allowed.
+- `type` (String) The cluster's Cloud Service Provider (CSP). The supported CSPs include AWS, GCP, and Azure. Only AWS is supported as the cloud provider for Single Node clusters.
 
 
 <a id="nestedatt--data--couchbase_server"></a>
@@ -87,7 +87,7 @@ Read-Only:
 
 Read-Only:
 
-- `version` (String) Version of the Couchbase Server installed in the cluster.
+- `version` (String) The Couchbase Server version installed in the cluster.
 
 
 <a id="nestedatt--data--service_groups"></a>
@@ -95,16 +95,16 @@ Read-Only:
 
 Read-Only:
 
-- `node` (Attributes) Node configuration for this service group. (see [below for nested schema](#nestedatt--data--service_groups--node))
-- `num_of_nodes` (Number) The number of nodes in this service group. The minimum number of nodes for the cluster can be 3 and maximum can be 27 nodes.
-- `services` (List of String) The couchbase services running on the nodes. The allowed services for singleNode cluster are one or all of - data, index, query and search.
+- `node` (Attributes) The node configuration for this service group. (see [below for nested schema](#nestedatt--data--service_groups--node))
+- `num_of_nodes` (Number) The number of nodes in this Service Group. A cluster can have a minimum of 3 nodes and a maximum of 27 nodes.
+- `services` (List of String) The Services running on the nodes. The available Services include 'Data', 'Index', 'Query', and 'Search'.
 
 <a id="nestedatt--data--service_groups--node"></a>
 ### Nested Schema for `data.service_groups.node`
 
 Read-Only:
 
-- `compute` (Attributes) Compute resources configuration for the nodes. (see [below for nested schema](#nestedatt--data--service_groups--node--compute))
+- `compute` (Attributes) The compute resource configuration for the nodes. (see [below for nested schema](#nestedatt--data--service_groups--node--compute))
 - `disk` (Attributes) The disk configuration for the nodes. (see [below for nested schema](#nestedatt--data--service_groups--node--disk))
 
 <a id="nestedatt--data--service_groups--node--compute"></a>
@@ -123,7 +123,7 @@ Read-Only:
 
 - `autoexpansion` (Boolean) Whether to enable automatic disk expansion. Only applicable for Azure.
 - `iops` (Number) The number of IOPS for the disk. Only applicable for certain disk types for AWS and Azure.
-- `storage` (Number) The size of the disk in GB. For AWS: >= 50, for Azure (Only required for Ultra Disk types.): >= 64, for GCP: >= 50.
+- `storage` (Number) The size of the disk in GB. For AWS: >= 50, for Azure (only required for Ultra Disk types.): >= 64, for GCP: >= 50.
 - `type` (String) The type of disk to use. For AWS: gp3 or io2, for Azure: Premium (P6, P10, P15, P20, P30, P40, P50, P60) or Ultra, for GCP: pd-ssd.
 
 
@@ -134,5 +134,5 @@ Read-Only:
 
 Read-Only:
 
-- `plan` (String) Plan type, either 'Basic', 'Developer Pro', or 'Enterprise'. Plan type allowed for singleNode cluster is either 'Basic', or 'Developer Pro'. In case of 'Basic' plan timezone field value is ignored.
+- `plan` (String) Plan type, either 'Basic', 'Developer Pro', or 'Enterprise'. Plan type allowed for Single Node cluster is either 'Basic', or 'Developer Pro'. In case of 'Basic' plan timezone field value is ignored.
 - `timezone` (String) The standard timezone for the cluster. Should be the TZ identifier - ET, GMT, IST, PT.

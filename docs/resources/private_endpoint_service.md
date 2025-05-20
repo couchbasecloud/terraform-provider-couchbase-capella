@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_private_endpoint_service Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Resource to manage the private endpoint service for a Capella cluster. The private endpoint service must be enabled before you can create private endpoints to connect your cloud provider's private network (VPC/VNET) to your Capella cluster. This enables secure access to your cluster without exposing traffic to the public internet.
+  This resource allows you to manage the private endpoint service for an operational cluster. The private endpoint service must be enabled before you can create private endpoints to connect your Cloud Service Provider's private network (VPC/VNET) to your operational cluster. This enables secure access to your cluster without exposing traffic to the public internet.
 ---
 
 # couchbase-capella_private_endpoint_service (Resource)
 
-Resource to manage the private endpoint service for a Capella cluster. The private endpoint service must be enabled before you can create private endpoints to connect your cloud provider's private network (VPC/VNET) to your Capella cluster. This enables secure access to your cluster without exposing traffic to the public internet.
+This resource allows you to manage the private endpoint service for an operational cluster. The private endpoint service must be enabled before you can create private endpoints to connect your Cloud Service Provider's private network (VPC/VNET) to your operational cluster. This enables secure access to your cluster without exposing traffic to the public internet.
 
 ## Example Usage
 
@@ -26,10 +26,10 @@ resource "couchbase-capella_private_endpoint_service" "new_service" {
 
 ### Required
 
-- `cluster_id` (String) The ID of the cluster where the private endpoint service will be enabled. This enables secure access to the cluster through your cloud provider's private network. This field cannot be changed after the private endpoint service is created.
-- `enabled` (Boolean) Whether to enable or disable the private endpoint service for the cluster. When enabled, you can create private endpoints to connect your cloud provider's private network to the cluster. Note: Setting this to false during creation will result in an error as the service must be enabled to be managed.
-- `organization_id` (String) The ID of the organization where the private endpoint service will be enabled. This field cannot be changed after the private endpoint service is created.
-- `project_id` (String) The ID of the project containing the cluster where the private endpoint service will be enabled. This field cannot be changed after the private endpoint service is created.
+- `cluster_id` (String) The GUID4 ID of the cluster where the private endpoint service will be enabled. This enables secure access to the cluster through your Cloud Service Provider's private network. This field cannot be changed after the private endpoint service is created.
+- `enabled` (Boolean) Whether to enable or disable the private endpoint service for the cluster. When enabled, you can create private endpoints to connect your Cloud Service Provider's private network to the cluster. Note: Setting this to false during creation will result in an error as the service must be enabled to be managed.
+- `organization_id` (String) The GUID4 ID of the organization where the private endpoint service will be enabled. This field cannot be changed after the private endpoint service is created.
+- `project_id` (String) The GUID4 ID of the project containing the cluster where the private endpoint service will be enabled. This field cannot be changed after the private endpoint service is created.
 
 ## Import
 

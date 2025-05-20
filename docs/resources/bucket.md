@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_bucket Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Manages Bucket resource for a Capella cluster
+  This resource allows you to manage the buckets for an operational cluster.
 ---
 
 # couchbase-capella_bucket (Resource)
 
-Manages Bucket resource for a Capella cluster
+This resource allows you to manage the buckets for an operational cluster.
 
 ## Example Usage
 
@@ -35,26 +35,26 @@ resource "couchbase-capella_bucket" "new_bucket" {
 
 ### Required
 
-- `cluster_id` (String) ID of the Capella cluster
+- `cluster_id` (String) The GUID4 ID of the cluster.
 - `name` (String) Name of the Capella bucket
-- `organization_id` (String) ID of the Capella organization
-- `project_id` (String) ID of the Capella project
+- `organization_id` (String) The GUID4 ID of the organization
+- `project_id` (String) The GUID4 ID of the project.
 
 ### Optional
 
-- `bucket_conflict_resolution` (String) Conflict-resolution mechanism of bucket
+- `bucket_conflict_resolution` (String) Conflict-resolution mechanism of the bucket.
 - `durability_level` (String) Durability level of the bucket.
 - `eviction_policy` (String) Eviction policy for the bucket.
-- `flush` (Boolean) Determines whether the flushing is enabled in the bucket
-- `memory_allocation_in_mb` (Number) bucket size allocation in mb
-- `replicas` (Number) Number of replicas for the data
-- `storage_backend` (String) The bucket storage engine type (Magma or Couchstore)
+- `flush` (Boolean) Determines whether the flushing is enabled in the bucket.
+- `memory_allocation_in_mb` (Number) Bucket size allocation in MB.
+- `replicas` (Number) Number of replicas for the data.
+- `storage_backend` (String) The bucket storage engine type (Magma or Couchstore).
 - `time_to_live_in_seconds` (Number) Time-to-live (TTL) for items in the bucket, in seconds.
-- `type` (String) The bucket type (couchbase or ephemeral)
+- `type` (String) The bucket type (couchbase or ephemeral).
 
 ### Read-Only
 
-- `id` (String) ID of the Capella bucket
+- `id` (String) The ID of the bucket.
 - `stats` (Attributes) Bucket stats (see [below for nested schema](#nestedatt--stats))
 
 <a id="nestedatt--stats"></a>
@@ -62,10 +62,10 @@ resource "couchbase-capella_bucket" "new_bucket" {
 
 Read-Only:
 
-- `disk_used_in_mib` (Number) Disk used in mib
-- `item_count` (Number) Bucket item count
-- `memory_used_in_mib` (Number) Memory used in mib
-- `ops_per_second` (Number) Bucket ops per second value
+- `disk_used_in_mib` (Number) Disk used in MiB.
+- `item_count` (Number) Bucket item count.
+- `memory_used_in_mib` (Number) Memory used in MiB.
+- `ops_per_second` (Number) The value for bucket operations per second.
 
 ## Import
 

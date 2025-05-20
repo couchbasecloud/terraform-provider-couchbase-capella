@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_private_endpoint_service Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Data source to retrieve the status of the private endpoint service for a Capella cluster. Private endpoint service enables secure connectivity between your cloud provider's private network (VPC/VNET) and your Capella cluster.
+  The data source to retrieve the status of the private endpoint service for an operational cluster. Private endpoint service enables secure connectivity between your Cloud Service Provider's private network (VPC/VNET) and your operational cluster.
 ---
 
 # couchbase-capella_private_endpoint_service (Data Source)
 
-Data source to retrieve the status of the private endpoint service for a Capella cluster. Private endpoint service enables secure connectivity between your cloud provider's private network (VPC/VNET) and your Capella cluster.
+The data source to retrieve the status of the private endpoint service for an operational cluster. Private endpoint service enables secure connectivity between your Cloud Service Provider's private network (VPC/VNET) and your operational cluster.
 
 ## Example Usage
 
@@ -25,9 +25,9 @@ data "couchbase-capella_private_endpoint_service" "service_status" {
 
 ### Required
 
-- `cluster_id` (String) The ID of the cluster to retrieve private endpoint service status from. Private endpoint service enables secure access to this cluster through your cloud provider's private network.
-- `organization_id` (String) The ID of the organization where the private endpoint service exists. Used to scope the private endpoint service status query.
-- `project_id` (String) The ID of the project containing the cluster with the private endpoint service. Used to scope the private endpoint service status query.
+- `cluster_id` (String) The GUID4 ID of the cluster to retrieve private endpoint service status from. Private endpoint service enables secure access to this cluster through your cloud provider's private network.
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
 
 ### Read-Only
 

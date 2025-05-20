@@ -37,31 +37,31 @@ func (d *ApiKeys) Metadata(_ context.Context, req datasource.MetadataRequest, re
 // Schema defines the schema for the api key data source.
 func (d *ApiKeys) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Data source to retrieve api keys in a Capella organization. API keys are used to authenticate and authorize access to Capella resources and services.",
+		MarkdownDescription: "The data source to retrieve API keys in an organization. API keys are used to authenticate and authorize access to Capella resources and services.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The ID of then Capella organization.",
+				MarkdownDescription: "The GUID4 ID of the organization.",
 			},
 			"data": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"id":                 schema.StringAttribute{Computed: true, MarkdownDescription: "The id is a unique identifier for an apiKey."},
-						"organization_id":    schema.StringAttribute{Computed: true, MarkdownDescription: "The GUID4 ID of the Capella organization."},
+						"id":                 schema.StringAttribute{Computed: true, MarkdownDescription: "The unique identifier for the API key."},
+						"organization_id":    schema.StringAttribute{Computed: true, MarkdownDescription: "The GUID4 ID of the organization."},
 						"name":               schema.StringAttribute{Computed: true, MarkdownDescription: "Name of the API key."},
-						"description":        schema.StringAttribute{Computed: true, MarkdownDescription: "Description for the API key."},
+						"description":        schema.StringAttribute{Computed: true, MarkdownDescription: "A description for the API key."},
 						"expiry":             schema.Float64Attribute{Computed: true, MarkdownDescription: "Expiry of the API key in number of days. If set to -1, the token will not expire."},
-						"allowed_cidrs":      schema.ListAttribute{ElementType: types.StringType, Computed: true, MarkdownDescription: "List of inbound CIDRs for the API key. The system making a request must come from one of the allowed CIDRs."},
-						"organization_roles": schema.ListAttribute{ElementType: types.StringType, Computed: true, MarkdownDescription: "List of organization roles associated with the API key."},
+						"allowed_cidrs":      schema.ListAttribute{ElementType: types.StringType, Computed: true, MarkdownDescription: "The list of inbound CIDRs for the API key. The system making a request must come from one of the allowed CIDRs."},
+						"organization_roles": schema.ListAttribute{ElementType: types.StringType, Computed: true, MarkdownDescription: "List of the organization roles associated with the API key."},
 						"resources": schema.ListNestedAttribute{
 							Computed:            true,
-							MarkdownDescription: "Resources are the resource level permissions associated with the API key.",
+							MarkdownDescription: "Resource level permissions associated with the API key.",
 							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
-									"id":    schema.StringAttribute{Computed: true, MarkdownDescription: "ID of the project."},
+									"id":    schema.StringAttribute{Computed: true, MarkdownDescription: "The GUID4 ID of the project."},
 									"roles": schema.ListAttribute{ElementType: types.StringType, Computed: true, MarkdownDescription: "Project Roles associated with the API key."},
-									"type":  schema.StringAttribute{Computed: true, MarkdownDescription: "Type of the resource."},
+									"type":  schema.StringAttribute{Computed: true, MarkdownDescription: "Resource type."},
 								},
 							},
 						},

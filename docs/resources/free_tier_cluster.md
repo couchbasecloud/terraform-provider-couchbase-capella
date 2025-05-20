@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_free_tier_cluster Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Manages a Couchbase Capella Free Tier Cluster resource
+  This resource allows you to manage a free tier operational cluster.
 ---
 
 # couchbase-capella_free_tier_cluster (Resource)
 
-Manages a Couchbase Capella Free Tier Cluster resource
+This resource allows you to manage a free tier operational cluster.
 
 ## Example Usage
 
@@ -31,38 +31,38 @@ resource "couchbase-capella_free_tier_cluster" "new_free_tier_cluster" {
 
 ### Required
 
-- `cloud_provider` (Attributes) The cloud provider details for the free-tier cluster. (see [below for nested schema](#nestedatt--cloud_provider))
-- `name` (String) Name of the free-tier cluster.
+- `cloud_provider` (Attributes) The Cloud Service Provider details for the free tier cluster. (see [below for nested schema](#nestedatt--cloud_provider))
+- `name` (String) Name of the free tier cluster.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
 ### Optional
 
-- `description` (String) Description of the free-tier cluster.
+- `description` (String) Description of the free tier cluster.
 
 ### Read-Only
 
 - `app_service_id` (String) The GUID4 ID of the App Service.
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
-- `availability` (Attributes) Availability zone details for the free-tier cluster. This is single az for the free-tier cluster. (see [below for nested schema](#nestedatt--availability))
+- `availability` (Attributes) Availability zone details for the free tier cluster. Free tier clusters have single availability zones (AZ). (see [below for nested schema](#nestedatt--availability))
 - `cmek_id` (String) The customer-managed encryption key (CMEK) ID.
-- `connection_string` (String) The connection string of the free-tier cluster.
-- `couchbase_server` (Attributes) Couchbase Server details for the free-tier cluster. (see [below for nested schema](#nestedatt--couchbase_server))
-- `current_state` (String) The current state of the free-tier cluster.
+- `connection_string` (String) The connection string of the free tier cluster.
+- `couchbase_server` (Attributes) Couchbase Server details for the free tier cluster. (see [below for nested schema](#nestedatt--couchbase_server))
+- `current_state` (String) The current state of the free tier cluster.
 - `enable_private_dns_resolution` (Boolean) Indicates if the private DNS resolution is enabled for the cluster.
-- `etag` (String) The etag of the free-tier cluster, part of the response header
-- `id` (String) The GUID4 ID of the free-tier cluster.
-- `service_groups` (Attributes Set) Service groups for the free-tier cluster. (see [below for nested schema](#nestedatt--service_groups))
-- `support` (Attributes) Support information for the free-tier cluster. (see [below for nested schema](#nestedatt--support))
+- `etag` (String) The etag of the free tier cluster, part of the response header
+- `id` (String) The GUID4 ID of the free tier cluster.
+- `service_groups` (Attributes Set) The Service Groups for the free tier cluster. (see [below for nested schema](#nestedatt--service_groups))
+- `support` (Attributes) The Support information for the free tier cluster. (see [below for nested schema](#nestedatt--support))
 
 <a id="nestedatt--cloud_provider"></a>
 ### Nested Schema for `cloud_provider`
 
 Required:
 
-- `cidr` (String) CIDR block for Cloud Provider.
-- `region` (String) The region for the cloud provider. Should be a valid region for the specified cloud provider. For example 'us-west-2'
-- `type` (String) The cloud provider type. Should be one of 'aws', 'gcp', or 'azure'.
+- `cidr` (String) CIDR block for the Cloud Service Provider.
+- `region` (String) The region for the Cloud Service Provider. This should be a valid region for the specified Cloud Service Provider. For example 'us-west-2'.
+- `type` (String) The Cloud Service Provider type. Currently supporting AWS, GCP and Azure.
 
 
 <a id="nestedatt--audit"></a>
@@ -82,7 +82,7 @@ Read-Only:
 
 Read-Only:
 
-- `type` (String) The availability zone type. Should be 'single' for the free-tier cluster.
+- `type` (String) The availability zone type. This should be 'single' for the free tier cluster.
 
 
 <a id="nestedatt--couchbase_server"></a>
@@ -90,7 +90,7 @@ Read-Only:
 
 Read-Only:
 
-- `version` (String) The version of Couchbase Server for the free-tier cluster.
+- `version` (String) The version of Couchbase Server for the free tier cluster.
 
 
 <a id="nestedatt--service_groups"></a>
@@ -98,9 +98,9 @@ Read-Only:
 
 Read-Only:
 
-- `node` (Attributes) Node details for the service group. (see [below for nested schema](#nestedatt--service_groups--node))
-- `num_of_nodes` (Number) The number of nodes in the service group.
-- `services` (String) The services enabled for the service group. Should be a comma-separated list of services. For example, 'data,index,query'
+- `node` (Attributes) Node details for the Service Group. (see [below for nested schema](#nestedatt--service_groups--node))
+- `num_of_nodes` (Number) The number of nodes in the Service Group.
+- `services` (String) The services enabled for the Service Group. Should be a comma-separated list of services. For example, 'data,index,query'.
 
 <a id="nestedatt--service_groups--node"></a>
 ### Nested Schema for `service_groups.node`
@@ -137,8 +137,8 @@ Read-Only:
 
 Read-Only:
 
-- `plan` (String) Support plan for the free-tier cluster. Free tier plan is automatically assigned to free tier clusters.
-- `timezone` (String) The standard timezone for the cluster. Should be the TZ identifier. For example, 'ET'
+- `plan` (String) The Support plan for the free tier cluster. The free tier plan is automatically assigned to free tier clusters.
+- `timezone` (String) The standard timezone for the cluster. Should be the TZ identifier. For example, 'ET'.
 
 ## Import
 

@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_user Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  The User resource allows you to manage users in your Capella organization. You can create, update, and delete users, as well as manage their roles and permissions within the organization.
+  This User resource allows you to manage users in your Capella organization. You can create, update, and delete users, as well as manage their roles and permissions within the organization.
 ---
 
 # couchbase-capella_user (Resource)
 
-The User resource allows you to manage users in your Capella organization. You can create, update, and delete users, as well as manage their roles and permissions within the organization.
+This User resource allows you to manage users in your Capella organization. You can create, update, and delete users, as well as manage their roles and permissions within the organization.
 
 ## Example Usage
 
@@ -40,7 +40,7 @@ resource "couchbase-capella_user" "new_user" {
 ### Required
 
 - `email` (String) Email of the user.
-- `organization_id` (String) The ID of the Capella organization.
+- `organization_id` (String) The GUID4 ID of the organization.
 - `organization_roles` (List of String) The organization roles associated to the user. They determines the privileges user possesses in the organization.
 
 ### Optional
@@ -55,22 +55,22 @@ resource "couchbase-capella_user" "new_user" {
 - `expires_at` (String) Time at which the user expires.
 - `id` (String) The UUID of the user created.
 - `inactive` (Boolean) Inactive depicts whether the user has accepted the invite for the organization.
-- `last_login` (String) The Time(UTC) at which user last logged in.
-- `region` (String) The region of the user
-- `status` (String) Status depicts user status whether they are verified or not.It can be one of the following values: verified, not-verified, pending-primary.
-- `time_zone` (String) The Time zone of the user.
+- `last_login` (String) Time(UTC) at which user last logged in.
+- `region` (String) The region of the user.
+- `status` (String) Depicts the user's status by determining whether they are verified or not. It can be one of the following values: verified, not-verified, pending-primary.
+- `time_zone` (String) The time zone of the user.
 
 <a id="nestedatt--resources"></a>
 ### Nested Schema for `resources`
 
 Required:
 
-- `id` (String) The ID of the project.
-- `roles` (Set of String) Project Roles associated with the User.
+- `id` (String) The GUID4 ID of the project.
+- `roles` (Set of String) The project roles associated with the user.
 
 Optional:
 
-- `type` (String) Type of the resource.
+- `type` (String) Resource type.
 
 
 <a id="nestedatt--audit"></a>

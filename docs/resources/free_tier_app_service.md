@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_free_tier_app_service Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Manages free-tier app services resources assosciated with a free-tier cluster
+  This resource allows you to manage free tier App Services associated with a free tier operational cluster.
 ---
 
 # couchbase-capella_free_tier_app_service (Resource)
 
-Manages free-tier app services resources assosciated with a free-tier cluster
+This resource allows you to manage free tier App Services associated with a free tier operational cluster.
 
 ## Example Usage
 
@@ -27,26 +27,26 @@ resource "couchbase-capella_free_tier_app_service" "new_free_tier_app_service" {
 
 ### Required
 
-- `cluster_id` (String) The ID of the Capella cluster
-- `name` (String) Name of the free-tier app service.
-- `organization_id` (String) Organization ID is the unique identifier for the organization. It is used to group resources and manage access within the organization.
-- `project_id` (String) The ID of the Capella project
+- `cluster_id` (String) The GUID4 ID of the cluster.
+- `name` (String) Name of the free tier App Service.
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
 
 ### Optional
 
-- `description` (String) Description of the free-tier app service.
+- `description` (String) Description of the free tier App Service.
 
 ### Read-Only
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
-- `cloud_provider` (String) Cloud provider of the free-tier app service. current supported providers are aws, gcp and azure
-- `compute` (Attributes) Compute configuration of the free-tier app service. (see [below for nested schema](#nestedatt--compute))
-- `current_state` (String) Current state of the free-tier app service.
-- `etag` (String) ETag of the free-tier app service.
-- `id` (String) ID of the free-tier app service.
-- `nodes` (Number) Number of nodes in the free-tier app service.
-- `plan` (String) Plan associated with the free-tier app service.
-- `version` (String) Version of the free-tier app service.
+- `cloud_provider` (String) The Cloud Service Provider of the free tier App Service. The supported Cloud Service Providers are AWS, GCP, and Azure.
+- `compute` (Attributes) Compute configuration of the free tier App Service. (see [below for nested schema](#nestedatt--compute))
+- `current_state` (String) Current state of the free tier App Service.
+- `etag` (String) ETag of the free tier App Service.
+- `id` (String) ID of the free tier App Service.
+- `nodes` (Number) Number of nodes in the free tier App Service.
+- `plan` (String) The Support plan associated with the free tier App Service. The Support plan options are 'Basic', 'Developer Pro', or 'Enterprise'.
+- `version` (String) The Server version of the free tier App Service.
 
 <a id="nestedatt--audit"></a>
 ### Nested Schema for `audit`
@@ -65,8 +65,8 @@ Read-Only:
 
 Read-Only:
 
-- `cpu` (Number) Number of CPUs of the free-tier app service node.
-- `ram` (Number) Amount of RAM of the free-tier app service node.
+- `cpu` (Number) The number of CPUs of the free tier App Service node.
+- `ram` (Number) The amount of RAM of the free tier App Service node.
 
 ## Import
 

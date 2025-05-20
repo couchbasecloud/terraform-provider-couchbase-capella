@@ -41,43 +41,43 @@ func (g *GsiDefinitions) Schema(
 	_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse,
 ) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Data source for retrieving Query Indexes in Couchbase Capella",
+		MarkdownDescription: "The data source for retrieving Query Indexes in Couchbase Capella.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The ID of the Capella organization.",
+				MarkdownDescription: "The GUID4 ID of the organization.",
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
 				},
 			},
 			"project_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The ID of the Capella project.",
+				MarkdownDescription: "The GUID4 ID of the project.",
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
 				},
 			},
 			"cluster_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The ID of the Capella cluster where the indexes exist.",
+				MarkdownDescription: "The GUID4 ID of the cluster.",
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
 				},
 			},
 			"bucket_name": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The name of the bucket where the indexes exist. Specifies the bucket part of the key space.",
+				MarkdownDescription: "The name of the bucket where the indexes exist. Specifies the bucket portion of the keyspace.",
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
 				},
 			},
 			"scope_name": schema.StringAttribute{
 				Optional:            true,
-				MarkdownDescription: "The name of the scope where the indexes exist. Specifies the scope part of the key space. If unspecified, this will be the default scope.",
+				MarkdownDescription: "The name of the scope where the indexes exist. Specifies the scope portion of the keyspace. If unspecified, this will be the default scope.",
 			},
 			"collection_name": schema.StringAttribute{
 				Optional:            true,
-				MarkdownDescription: "Specifies the collection part of the key space. If unspecified, this will be the default collection.",
+				MarkdownDescription: "Specifies the collection portion of the keyspace. If unspecified, this will be the default collection.\n",
 			},
 			"data": schema.ListNestedAttribute{
 				Computed:            true,
@@ -90,7 +90,7 @@ func (g *GsiDefinitions) Schema(
 						},
 						"is_primary": schema.BoolAttribute{
 							Computed:            true,
-							MarkdownDescription: "Whether this is a primary index.",
+							MarkdownDescription: "Specifies whether this is a primary index.",
 						},
 						"state": schema.StringAttribute{
 							Computed:            true,

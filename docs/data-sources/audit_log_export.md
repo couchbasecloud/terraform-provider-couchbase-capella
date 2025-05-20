@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_audit_log_export Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Data source to retrieve audit log exports for a Capella cluster. It will show the pre-signed URL if the export was successful, a failure error if it was unsuccessful or a message saying no audit logs available if there were no audit logs found.
+  The data source to retrieve audit log exports for an operational cluster. It will show the pre-signed URL if the export was successful, a failure error if it was unsuccessful, or a message saying no audit logs available if there were no audit logs found.
 ---
 
 # couchbase-capella_audit_log_export (Data Source)
 
-Data source to retrieve audit log exports for a Capella cluster. It will show the pre-signed URL if the export was successful, a failure error if it was unsuccessful or a message saying no audit logs available if there were no audit logs found.
+The data source to retrieve audit log exports for an operational cluster. It will show the pre-signed URL if the export was successful, a failure error if it was unsuccessful, or a message saying no audit logs available if there were no audit logs found.
 
 ## Example Usage
 
@@ -25,9 +25,9 @@ data "couchbase-capella_audit_log_export" "existing_auditlogexport" {
 
 ### Required
 
-- `cluster_id` (String)
-- `organization_id` (String)
-- `project_id` (String)
+- `cluster_id` (String) The GUID4 ID of the cluster.
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
 
 ### Read-Only
 
@@ -36,15 +36,18 @@ data "couchbase-capella_audit_log_export" "existing_auditlogexport" {
 <a id="nestedatt--data"></a>
 ### Nested Schema for `data`
 
+Required:
+
+- `cluster_id` (String) The GUID4 ID of the cluster.
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
+
 Read-Only:
 
 - `audit_log_download_url` (String) Pre-signed URL to download cluster audit logs. This URL is only available when the export job status is 'completed'.
-- `cluster_id` (String)
 - `created_at` (String) The timestamp when this audit log export job was created.
 - `end` (String) The end timestamp for the audit log export in RFC3339 format (e.g., '2024-01-02T00:00:00Z'). This defines the end of the time period to export logs from.
-- `expiration` (String) The timestamp when the download link expires. The timestamp when the audit log export will expire and no longer be available for download.
-- `id` (String)
-- `organization_id` (String)
-- `project_id` (String)
+- `expiration` (String) The timestamp for when the audit log export expires and will no longer be available for download.
+- `id` (String) The ID of the audit log export job.
 - `start` (String) The start timestamp for the audit log export in RFC3339 format (e.g., '2024-01-01T00:00:00Z'). This defines the beginning of the time period to export logs from.
-- `status` (String) The current status of the audit log export job. Possible values are 'queued', 'in progress', 'completed', or 'failed'.
+- `status` (String) The current status of the audit log export job. Audit log export job statuses are 'queued', 'in progress', 'completed', or 'failed'.

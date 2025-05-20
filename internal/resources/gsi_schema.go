@@ -27,14 +27,14 @@ func GsiSchema() schema.Schema {
 		})
 
 	return schema.Schema{
-		MarkdownDescription: "Manages Query Indexes in Couchbase Capella",
+		MarkdownDescription: "This resource allows you to manage Query Indexes in Couchbase Capella.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}),
-				"The ID of the Capella organization."),
+				"The GUID4 ID of the organization."),
 			"project_id": WithDescription(stringAttribute([]string{required, requiresReplace}),
-				"The ID of the Capella project."),
+				"The GUID4 ID of the project."),
 			"cluster_id": WithDescription(stringAttribute([]string{required, requiresReplace}),
-				"The ID of the Capella cluster where the index will be created."),
+				"The GUID4 ID of the cluster where the index will be created."),
 			"bucket_name": WithDescription(stringAttribute([]string{required, requiresReplace}),
 				"The name of the bucket where the index will be created. Specifies the bucket part of the key space."),
 			"scope_name": WithDescription(stringDefaultAttribute(
@@ -46,7 +46,7 @@ func GsiSchema() schema.Schema {
 			"index_name": WithDescription(stringAttribute([]string{optional, requiresReplace}),
 				"The name of the index."),
 			"is_primary": WithDescription(boolAttribute(optional),
-				"Whether this is a primary index."),
+				"Specifies whether this is a primary index."),
 			"index_keys": WithDescription(stringListAttribute(optional, requiresReplace),
 				"List of document fields to index."),
 			"where": WithDescription(stringAttribute([]string{optional, requiresReplace}),

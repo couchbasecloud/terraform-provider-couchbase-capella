@@ -16,9 +16,9 @@ Please include a summary of the fix/feature/change, including any relevant motiv
 
 ## Type of Change
 
-- [ ] Bug fix (non-breaking change which fixes an issue). Please, add the "bug" label to the PR.
-- [ ] New feature (non-breaking change which adds functionality). Please, add the "enhancement" label to the PR.
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected). Please, add the "breaking change" label to the PR.
+- [ ] Bug fix (non-breaking change which fixes an issue).
+- [ ] New feature (non-breaking change which adds functionality).
+- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected).
 - [ ] This change requires a documentation update
 - [ ] Documentation fix/enhancement
 

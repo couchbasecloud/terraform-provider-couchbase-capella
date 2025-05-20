@@ -8,11 +8,11 @@ import (
 // ProjectEventsSchema returns the schema for the ProjectEvents data source.
 func ProjectEventsSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "Data source to retrieve all events information for a Capella project. Events represent a trail of actions that users performs within Capella at project level.",
+		MarkdownDescription: "The data source to retrieve all event information for a project. Events represent a trail of actions that users performs within Capella at project level.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the Capella organization.",
+				MarkdownDescription: "The GUID4 ID of the organization.",
 			},
 			"project_id": schema.StringAttribute{
 				Optional:            true,
@@ -21,7 +21,7 @@ func ProjectEventsSchema() schema.Schema {
 			"cluster_ids": schema.SetAttribute{
 				ElementType:         types.StringType,
 				Optional:            true,
-				MarkdownDescription: "List of clusterIds to filter on. By default events corresponding to all clusters are returned.",
+				MarkdownDescription: "List of clusterIds to filter on. By default, events corresponding to all clusters are returned.",
 			},
 			"user_ids": schema.SetAttribute{
 				ElementType:         types.StringType,
@@ -36,7 +36,7 @@ func ProjectEventsSchema() schema.Schema {
 			"tags": schema.SetAttribute{
 				ElementType:         types.StringType,
 				Optional:            true,
-				MarkdownDescription: "Filter by tags. Default is to return events corresponding to all supported tag. Tags are availability, billing, maintenance, performance, security, alert.",
+				MarkdownDescription: "Filter by tags. Default is to return events corresponding to all supported tag. The tags are: availability, billing, maintenance, performance, security, alert.",
 			},
 			"from": schema.StringAttribute{
 				Optional:            true,

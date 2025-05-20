@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_query_indexes Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Manages Query Indexes in Couchbase Capella
+  This resource allows you to manage Query Indexes in Couchbase Capella.
 ---
 
 # couchbase-capella_query_indexes (Resource)
 
-Manages Query Indexes in Couchbase Capella
+This resource allows you to manage Query Indexes in Couchbase Capella.
 
 ## Example Usage
 
@@ -124,9 +124,9 @@ resource "couchbase-capella_query_indexes" "idx" {
 ### Required
 
 - `bucket_name` (String) The name of the bucket where the index will be created. Specifies the bucket part of the key space.
-- `cluster_id` (String) The ID of the Capella cluster where the index will be created.
-- `organization_id` (String) The ID of the Capella organization.
-- `project_id` (String) The ID of the Capella project.
+- `cluster_id` (String) The GUID4 ID of the cluster where the index will be created.
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
 
 ### Optional
 
@@ -134,7 +134,7 @@ resource "couchbase-capella_query_indexes" "idx" {
 - `collection_name` (String) Specifies the collection part of the key space. If unspecified, this will be the default collection.
 - `index_keys` (List of String) List of document fields to index.
 - `index_name` (String) The name of the index.
-- `is_primary` (Boolean) Whether this is a primary index.
+- `is_primary` (Boolean) Specifies whether this is a primary index.
 - `partition_by` (List of String) List of fields to partition the index by.
 - `scope_name` (String) The name of the scope where the index will be created. Specifies the scope part of the key space. If unspecified, this will be the default scope.
 - `where` (String) WHERE clause for the index.

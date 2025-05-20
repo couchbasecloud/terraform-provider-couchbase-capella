@@ -3,15 +3,12 @@
 page_title: "couchbase-capella_azure_network_peer_command Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Data source to generate Azure CLI command for setting up VNet peering between your Azure VNet and a Capella cluster.Retrieves the role assignment command or script to be executed in the Azure CLI to assign a new network contributor role. It scopes only to the specified subscription and the virtual network within that subscription.
-  Please check the github repository https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/network_peer_command_azure examples for the steps and more details.
+  The data source to generate an Azure CLI command for setting up VNet peering between your Azure VNet and a Capella cluster. Retrieves the role assignment command or script to be executed in the Azure CLI to assign a new network contributor role. It scopes only to the specified subscription and the virtual network within that subscription.
 ---
 
 # couchbase-capella_azure_network_peer_command (Data Source)
 
-Data source to generate Azure CLI command for setting up VNet peering between your Azure VNet and a Capella cluster.Retrieves the role assignment command or script to be executed in the Azure CLI to assign a new network contributor role. It scopes only to the specified subscription and the virtual network within that subscription.
-
- Please check the github [repository](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/network_peer_command_azure) examples for the steps and more details.
+The data source to generate an Azure CLI command for setting up VNet peering between your Azure VNet and a Capella cluster. Retrieves the role assignment command or script to be executed in the Azure CLI to assign a new network contributor role. It scopes only to the specified subscription and the virtual network within that subscription.
 
 ## Example Usage
 
@@ -33,15 +30,15 @@ data "couchbase-capella_azure_network_peer_command" "azure_network_peer_command"
 
 ### Required
 
-- `cluster_id` (String) The GUID4 ID of the Capella cluster to set up VNet peering with.
-- `organization_id` (String) The GUID4 ID of the organization that owns the Capella cluster.
-- `project_id` (String) The GUID4 ID of the project containing the Capella cluster.
+- `cluster_id` (String) The GUID4 ID of the cluster.
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
 - `resource_group` (String) The resource group name holding the resource you’re connecting with Capella.
-- `subscription_id` (String) Subscription ID is a GUID that uniquely identifies your subscription to use Azure services.
-- `tenant_id` (String) The Azure tenant ID where your VNet resides.
+- `subscription_id` (String) The GUID ID of your Azure service subscription.
+- `tenant_id` (String) The ID of the Azure tenant where your VNet resides.
 - `vnet_id` (String) The VNet ID is the name of the virtual network in Azure.
-- `vnet_peering_service_principal` (String) The enterprise application object ID for the Capella service principal. You can find the enterprise application object ID in Azure by selecting Azure Active Directory -> Enterprise applications. Next, select the application name, the object ID is in the Object ID box.
+- `vnet_peering_service_principal` (String) The enterprise application object ID for the Capella service principal. You can find this ID in Azure by selecting Azure Active Directory -> Enterprise applications. Next, select the application name, the object ID is in the Object ID box.
 
 ### Read-Only
 
-- `command` (String) The command to be run by the customer in is their external azure account in order to grant the service principal a network contributor role that is required for VNET peering.
+- `command` (String) The command you need to run in your external Azure account to assign the Network Contributor role to the service principal, which is required for VNet peering.

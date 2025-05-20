@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_private_endpoints Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Resource to manage private endpoints for a Capella cluster. Private endpoints allow you to securely connect your cloud provider's private network (VPC/VNET) to your Capella cluster without exposing traffic to the public internet.
+  This resource allows you to manage private endpoints for an operational cluster. Private endpoints allow you to securely connect your Cloud Service Provider's private network (VPC/VNET) to your operational cluster without exposing traffic to the public internet.
 ---
 
 # couchbase-capella_private_endpoints (Resource)
 
-Resource to manage private endpoints for a Capella cluster. Private endpoints allow you to securely connect your cloud provider's private network (VPC/VNET) to your Capella cluster without exposing traffic to the public internet.
+This resource allows you to manage private endpoints for an operational cluster. Private endpoints allow you to securely connect your Cloud Service Provider's private network (VPC/VNET) to your operational cluster without exposing traffic to the public internet.
 
 ## Example Usage
 
@@ -26,10 +26,10 @@ resource "couchbase-capella_private_endpoints" "accept_endpoint" {
 
 ### Required
 
-- `cluster_id` (String) The ID of the Capella cluster to create the private endpoint for. This enables secure access to the cluster through your cloud provider's private network.
+- `cluster_id` (String) The GUID4 ID of the operational cluster to create the private endpoint for. This enables secure access to the cluster through your Cloud Service Provider's private network.
 - `endpoint_id` (String) The ID of the private endpoint in your cloud provider.
-- `organization_id` (String) The ID of the Capella organization where the private endpoint will be created.
-- `project_id` (String) The ID of the Capella project containing the cluster where the private endpoint will be created.
+- `organization_id` (String) The GUID4 ID of the organization where the private endpoint will be created.
+- `project_id` (String) The GUID4 ID of the project containing the cluster where the private endpoint will be created.
 
 ### Read-Only
 

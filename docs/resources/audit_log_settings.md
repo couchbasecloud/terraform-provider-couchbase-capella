@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_audit_log_settings Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Resource to manage audit log configuration settings for a Capella cluster. These settings control which audit events are logged and which users are excluded from audit logging.
+  This resource allows you to manage audit log configuration settings for an operational cluster. These settings control which audit events are logged and which users are excluded from audit logging.
 ---
 
 # couchbase-capella_audit_log_settings (Resource)
 
-Resource to manage audit log configuration settings for a Capella cluster. These settings control which audit events are logged and which users are excluded from audit logging.
+This resource allows you to manage audit log configuration settings for an operational cluster. These settings control which audit events are logged and which users are excluded from audit logging.
 
 ## Example Usage
 
@@ -28,13 +28,13 @@ resource "couchbase-capella_audit_log_settings" "new_auditlogsettings" {
 
 ### Required
 
-- `cluster_id` (String) The ID of the Capella cluster to configure audit log settings for.
-- `organization_id` (String) The ID of the Capella organization.
-- `project_id` (String) The ID of the Capella project that the cluster belongs to.
+- `cluster_id` (String) The GUID4 ID of the cluster to configure audit log settings.
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
 
 ### Optional
 
-- `audit_enabled` (Boolean) Determines whether audit logging is enabled or not on the cluster. Set to true to enable audit logging.
+- `audit_enabled` (Boolean) Determines whether audit logging is enabled or not on the cluster. Set to 'true' to enable audit logging.
 - `disabled_users` (Attributes Set) List of users whose actions will be excluded from audit logging. (see [below for nested schema](#nestedatt--disabled_users))
 - `enabled_event_ids` (Set of Number) List of audit event IDs to enable for logging. These IDs correspond to specific types of events that will be recorded in the audit log. Use the audit_log_event_ids data source to get the list of available event IDs.
 

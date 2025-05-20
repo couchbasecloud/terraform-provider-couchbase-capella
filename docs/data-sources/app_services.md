@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_app_services Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Data source retrieves information for a App Service in Capella. App Service is a fully managed application backend designed to provide data synchronization between mobile or IoT applications running Couchbase Lite and your Couchbase Capella database.
+  The data source retrieves information for an App Service in Capella. App Service is a fully managed application backend designed to provide data synchronization between mobile or IoT applications running Couchbase Lite and your Couchbase Capella database.
 ---
 
 # couchbase-capella_app_services (Data Source)
 
-Data source retrieves information for a App Service in Capella. App Service is a fully managed application backend designed to provide data synchronization between mobile or IoT applications running Couchbase Lite and your Couchbase Capella database.
+The data source retrieves information for an App Service in Capella. App Service is a fully managed application backend designed to provide data synchronization between mobile or IoT applications running Couchbase Lite and your Couchbase Capella database.
 
 
 
@@ -17,7 +17,7 @@ Data source retrieves information for a App Service in Capella. App Service is a
 
 ### Required
 
-- `organization_id` (String) The ID of then Capella organization.
+- `organization_id` (String) The GUID4 ID of the organization.
 
 ### Read-Only
 
@@ -29,15 +29,15 @@ Data source retrieves information for a App Service in Capella. App Service is a
 Read-Only:
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--data--audit))
-- `cloud_provider` (String) Provider is the cloud service provider for the App Service.
+- `cloud_provider` (String) The Cloud Service Provider for the App Service.
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `compute` (Attributes) The CPU and RAM configuration of the App Service. (see [below for nested schema](#nestedatt--data--compute))
 - `current_state` (String) The current state of the App Service.
-- `description` (String) Description of the App Service (up to 1024 characters).
+- `description` (String) A description of the App Service (up to 1024 characters).
 - `id` (String) The ID of the App Service created.
 - `name` (String) Name of the App Service (up to 256 characters).
 - `nodes` (Number) Number of nodes configured for the App Service.
-- `organization_id` (String) The GUID4 ID of the Capella organization.
+- `organization_id` (String) The GUID4 ID of the organization.
 - `version` (String) The version of the App Service server. If left empty, it will be defaulted to the latest available version.
 
 <a id="nestedatt--data--audit"></a>

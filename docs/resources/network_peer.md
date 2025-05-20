@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_network_peer Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Resource to manage network peering for a Capella cluster.
+  This resource allows you to manage network peering for an operational cluster.
 ---
 
 # couchbase-capella_network_peer (Resource)
 
-Resource to manage network peering for a Capella cluster.
+This resource allows you to manage network peering for an operational cluster.
 
 ## Example Usage
 
@@ -73,12 +73,12 @@ resource "couchbase-capella_network_peer" "new_network_peer" {
 
 ### Required
 
-- `cluster_id` (String) The GUID4 ID of the cluster to set up network peering for.
+- `cluster_id` (String) The GUID4 ID of the cluster to set up network peering.
 - `name` (String) The name of the network peering relationship.
-- `organization_id` (String) The GUID4 ID of the organization that owns the Capella cluster.
-- `project_id` (String) The GUID4 ID of the project containing the Capella cluster.
-- `provider_config` (Attributes) Cloud provider-specific configuration for the network peering.The 'accountId', 'vpcId', 'region', and 'cidr' fields are required for AWS VPC peering. For GCP, the 'networkName', 'projectId', 'serviceAccount', and 'cidr' fields are required for VPC peering. (see [below for nested schema](#nestedatt--provider_config))
-- `provider_type` (String) The cloud provider type for the network peering (aws, gcp, or azure).
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
+- `provider_config` (Attributes) The Cloud Service Provider's specific configuration for the network peering. The 'accountId', 'vpcId', 'region', and 'cidr' fields are required for AWS VPC peering. For GCP, the 'networkName', 'projectId', 'serviceAccount', and 'cidr' fields are required for VPC peering. (see [below for nested schema](#nestedatt--provider_config))
+- `provider_type` (String) The Cloud Service Provider type for the network peering. Currently supporting AWS, GCP, or Azure.
 
 ### Read-Only
 
@@ -170,7 +170,7 @@ Read-Only:
 Read-Only:
 
 - `reasoning` (String) Detailed reason for the current status of the peering connection.
-- `state` (String) Current state of the peering connection (e.g., pending, active, failed).
+- `state` (String) Current state of the peering connection. The status options are 'pending', 'active', or 'failed'.
 
 ## Import
 

@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_cluster_onoff_schedule Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  The On/Off schedule resource allows you to manage the on/off schedule for a Capella cluster.
+  This resource allows you to manage the On/Off schedule for an operational cluster.
 ---
 
 # couchbase-capella_cluster_onoff_schedule (Resource)
 
-The On/Off schedule resource allows you to manage the on/off schedule for a Capella cluster.
+This resource allows you to manage the On/Off schedule for an operational cluster.
 
 ## Example Usage
 
@@ -90,7 +90,7 @@ resource "couchbase-capella_cluster_onoff_schedule" "new_cluster_onoff_schedule"
 ### Required
 
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `days` (Attributes List) List of days the on/off schedule is active. (see [below for nested schema](#nestedatt--days))
+- `days` (Attributes List) List of days the On/Off schedule is active. (see [below for nested schema](#nestedatt--days))
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 - `timezone` (String) Timezone for the schedule. Should be the TZ identifier. For example, 'US/Hawaii', 'Indian/Mauritius'
@@ -101,7 +101,7 @@ resource "couchbase-capella_cluster_onoff_schedule" "new_cluster_onoff_schedule"
 Required:
 
 - `day` (String) Day of the week for scheduling on/off.
-- `state` (String) Cluster state (on, off, or custom).
+- `state` (String) The cluster state. It can be 'on', 'off', or 'custom'.
 
 Optional:
 
@@ -114,7 +114,7 @@ Optional:
 Optional:
 
 - `hour` (Number) Hour of the time boundary. The valid hour values are from 0 to 23 inclusive.
-- `minute` (Number) Minute of the time boundary. Valid minute values are 0 and 30
+- `minute` (Number) Minute of the time boundary. The valid minute values are 0 and 30.
 
 
 <a id="nestedatt--days--to"></a>
@@ -123,7 +123,7 @@ Optional:
 Optional:
 
 - `hour` (Number) Hour of the time boundary. The valid hour values are from 0 to 23 inclusive.
-- `minute` (Number) Minute of the time boundary. Valid minute values are 0 and 30
+- `minute` (Number) Minute of the time boundary. The valid minute values are 0 and 30.
 
 ## Import
 

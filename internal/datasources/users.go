@@ -38,11 +38,11 @@ func (d *Users) Metadata(_ context.Context, req datasource.MetadataRequest, resp
 // Schema defines the schema for the User data source.
 func (d *Users) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Data source to retrieve users in a Capella organization.",
+		MarkdownDescription: "The data source to retrieve users in a Capella organization.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The ID of then Capella organization.",
+				MarkdownDescription: "The GUID4 ID of the organization.",
 			},
 			"data": schema.ListNestedAttribute{
 				Computed: true,
@@ -71,24 +71,24 @@ func (d *Users) Schema(_ context.Context, _ datasource.SchemaRequest, resp *data
 						},
 						"organization_id": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The ID of the Capella organization.",
+							MarkdownDescription: "The GUID4 ID of the organization.",
 						},
 						"organization_roles": schema.ListAttribute{
 							ElementType:         types.StringType,
 							Computed:            true,
-							MarkdownDescription: "The organization roles associated to the user. They determines the privileges user possesses in the organization.",
+							MarkdownDescription: "The organization roles associated with the user. They determine the privileges a user possesses in the organization.",
 						},
 						"last_login": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The Time(UTC) at which user last logged in.",
+							MarkdownDescription: "Time(UTC) when the user last logged in.",
 						},
 						"region": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The region of the user",
+							MarkdownDescription: "The region of the user.",
 						},
 						"time_zone": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The Time zone of the user.",
+							MarkdownDescription: "Time zone of the user.",
 						},
 						"enable_notifications": schema.BoolAttribute{
 							Computed:            true,
@@ -107,11 +107,11 @@ func (d *Users) Schema(_ context.Context, _ datasource.SchemaRequest, resp *data
 										Computed:            true,
 										MarkdownDescription: "Type of the resource.",
 									},
-									"id": schema.StringAttribute{Computed: true, MarkdownDescription: "The ID of the project."},
+									"id": schema.StringAttribute{Computed: true, MarkdownDescription: "The GUID4 ID of the project."},
 									"roles": schema.ListAttribute{
 										ElementType:         types.StringType,
 										Computed:            true,
-										MarkdownDescription: "Project Roles associated with the User.",
+										MarkdownDescription: "Project Roles associated with the user.",
 									},
 								},
 							},

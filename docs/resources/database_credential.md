@@ -38,7 +38,7 @@ resource "couchbase-capella_database_credential" "new_database_credential" {
 - `access` (Attributes Set) Describes the access information of the database credential. (see [below for nested schema](#nestedatt--access))
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `name` (String) Username for the database credential.
-- `organization_id` (String) The GUID4 ID of the Capella organization.
+- `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
 ### Optional

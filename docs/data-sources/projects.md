@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_projects Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Data source to retrieve projects' information in a Capella organization.
+  Data source to retrieve project details in an organization.
 ---
 
 # couchbase-capella_projects (Data Source)
 
-Data source to retrieve projects' information in a Capella organization.
+Data source to retrieve project details in an organization.
 
 
 
@@ -17,7 +17,7 @@ Data source to retrieve projects' information in a Capella organization.
 
 ### Required
 
-- `organization_id` (String) The GUID4 ID of the Capella organization.
+- `organization_id` (String) The GUID4 ID of the organization.
 
 ### Read-Only
 
@@ -31,7 +31,7 @@ Read-Only:
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--data--audit))
 - `description` (String) The description of a particular project.
 - `etag` (String) The ETag header value returned by the server, used for optimistic concurrency control.
-- `id` (String) A GUID4 identifier of the project.
+- `id` (String) The GUID4 ID of the project.
 - `if_match` (String) A precondition header that specifies the entity tag of a resource.
 - `name` (String) The name of the project.
 - `organization_id` (String) The GUID4 ID of the organization.

@@ -36,11 +36,11 @@ func (o *Organization) Metadata(_ context.Context, req datasource.MetadataReques
 
 func (o *Organization) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Data source to retrieve information about a Capella organization.",
+		MarkdownDescription: "The data source to retrieve information about a Capella organization.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the Capella organization to fetch information for.",
+				MarkdownDescription: "The GUID4 ID of the organization.",
 			},
 			"name": schema.StringAttribute{
 				Computed:            true,
@@ -56,7 +56,7 @@ func (o *Organization) Schema(_ context.Context, _ datasource.SchemaRequest, res
 				Attributes: map[string]schema.Attribute{
 					"session_duration": schema.Int64Attribute{
 						Computed:            true,
-						MarkdownDescription: "Maximum allowed time in seconds inside the organization for a user.",
+						MarkdownDescription: "The maximum allowed time (in seconds) a users can spend in the organization.",
 					},
 				},
 			},

@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_database_credentials Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Data source to retrieve database credentials for a cluster. Database credentials provide programmatic and application-level access to data on a database.
+  The data source to retrieve database credentials for a cluster. Database credentials provide programmatic and application-level access to data on a database.
 ---
 
 # couchbase-capella_database_credentials (Data Source)
 
-Data source to retrieve database credentials for a cluster. Database credentials provide programmatic and application-level access to data on a database.
+The data source to retrieve database credentials for a cluster. Database credentials provide programmatic and application-level access to data on a database.
 
 
 
@@ -18,7 +18,7 @@ Data source to retrieve database credentials for a cluster. Database credentials
 ### Required
 
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `organization_id` (String) The GUID4 ID of the Capella organization.
+- `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
 ### Read-Only
@@ -38,7 +38,7 @@ Read-Only:
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `id` (String) The ID of the database credential created.
 - `name` (String) Name of the database credential created (up to 256 characters).
-- `organization_id` (String) The GUID4 ID of the Capella organization.
+- `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
 <a id="nestedatt--data--access"></a>

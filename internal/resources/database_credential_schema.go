@@ -22,7 +22,7 @@ func DatabaseCredentialSchema() schema.Schema {
 			},
 			"name":            WithDescription(stringAttribute([]string{required, requiresReplace}), "Username for the database credential."),
 			"password":        WithDescription(stringAttribute([]string{optional, computed, sensitive, useStateForUnknown}), "A password associated with the database credential."),
-			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the Capella organization."),
+			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the organization."),
 			"project_id":      WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the project."),
 			"cluster_id":      WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the cluster."),
 			"audit":           computedAuditAttribute(),

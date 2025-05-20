@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_audit_log_export Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Resource to manage audit log exports for a Capella cluster. This allows you to export audit logs for a specific time period and download them for analysis. Audit Logs for the last 30 days can be requested, otherwise they are purged. A pre-signed URL to a s3 bucket location is returned, which is used to download these audit logs.
+  This resource allows you to manage audit log exports for an operational cluster. This allows you to export audit logs for a specific time period and download them for analysis. Audit Logs for the last 30 days can be requested, otherwise they are purged. A pre-signed URL to a s3 bucket location is returned, which is used to download these audit logs.
 ---
 
 # couchbase-capella_audit_log_export (Resource)
 
-Resource to manage audit log exports for a Capella cluster. This allows you to export audit logs for a specific time period and download them for analysis. Audit Logs for the last 30 days can be requested, otherwise they are purged. A pre-signed URL to a s3 bucket location is returned, which is used to download these audit logs.
+This resource allows you to manage audit log exports for an operational cluster. This allows you to export audit logs for a specific time period and download them for analysis. Audit Logs for the last 30 days can be requested, otherwise they are purged. A pre-signed URL to a s3 bucket location is returned, which is used to download these audit logs.
 
 ## Example Usage
 
@@ -27,10 +27,10 @@ resource "couchbase-capella_audit_log_export" "new_auditlogexport" {
 
 ### Required
 
-- `cluster_id` (String) The ID of the Capella cluster to export audit logs from.
+- `cluster_id` (String) The GUID4 ID of the cluster to export audit logs from.
 - `end` (String) The end timestamp for the audit log export in RFC3339 format (e.g., '2024-01-02T00:00:00Z'). This defines the end of the time period to export logs from.
-- `organization_id` (String) The ID of the Capella organization.
-- `project_id` (String) The ID of the Capella project that the cluster belongs to.
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
 - `start` (String) The start timestamp for the audit log export in RFC3339 format (e.g., '2024-01-01T00:00:00Z'). This defines the beginning of the time period to export logs from.
 
 ### Read-Only
@@ -39,7 +39,7 @@ resource "couchbase-capella_audit_log_export" "new_auditlogexport" {
 - `created_at` (String) The timestamp when this audit log export job was created.
 - `expiration` (String) The timestamp when the download link expires. The timestamp when the audit log export will expire and no longer be available for download.
 - `id` (String) The unique identifier of the audit log export job.
-- `status` (String) The current status of the audit log export job. Possible values are 'queued', 'in progress', 'completed', or 'failed'.
+- `status` (String) The current status of the audit log export job. Audit log export job statuses are 'queued', 'in progress', 'completed', or 'failed'.
 
 ## Import
 

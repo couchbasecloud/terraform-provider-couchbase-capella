@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_network_peers Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Data source to retrieve network peering records for a Capella cluster.
+  The data source to retrieve network peering records for a Capella cluster.
 ---
 
 # couchbase-capella_network_peers (Data Source)
 
-Data source to retrieve network peering records for a Capella cluster.
+The data source to retrieve network peering records for a Capella cluster.
 
 ## Example Usage
 
@@ -25,13 +25,13 @@ data "couchbase-capella_network_peers" "existing_network_peers" {
 
 ### Required
 
-- `cluster_id` (String) The GUID4 ID of the cluster to list network peering records for.
-- `organization_id` (String) The GUID4 ID of the organization that owns the Capella cluster.
-- `project_id` (String) The GUID4 ID of the project containing the Capella cluster.
+- `cluster_id` (String) The GUID4 ID of the cluster.
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
 
 ### Read-Only
 
-- `data` (Attributes List) List of network peering records. (see [below for nested schema](#nestedatt--data))
+- `data` (Attributes List) Lists the network peering records. (see [below for nested schema](#nestedatt--data))
 
 <a id="nestedatt--data"></a>
 ### Nested Schema for `data`
@@ -41,7 +41,7 @@ Read-Only:
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--data--audit))
 - `id` (String) The unique identifier for the VPC peering record.
 - `name` (String) The name of the network peering relationship.
-- `provider_config` (Attributes) Cloud provider-specific configuration for the network peering. This provides details about the configuration and the ID of the VPC peer on AWS, GCP, or Azure. (see [below for nested schema](#nestedatt--data--provider_config))
+- `provider_config` (Attributes) The Cloud Service Provider-specific configuration for the network peering. This provides details about the configuration and the ID of the VPC peer on AWS, GCP, or Azure. (see [below for nested schema](#nestedatt--data--provider_config))
 - `status` (Attributes) Current status of the network peering connection. (see [below for nested schema](#nestedatt--data--status))
 
 <a id="nestedatt--data--audit"></a>
@@ -61,9 +61,9 @@ Read-Only:
 
 Read-Only:
 
-- `aws_config` (Attributes) AWS config data required to establish a VPC peering relationship. (see [below for nested schema](#nestedatt--data--provider_config--aws_config))
-- `azure_config` (Attributes) Azure config data required to establish a VNet peering relationship. (see [below for nested schema](#nestedatt--data--provider_config--azure_config))
-- `gcp_config` (Attributes) GCP config data required to establish a VPC peering relationship. (see [below for nested schema](#nestedatt--data--provider_config--gcp_config))
+- `aws_config` (Attributes) AWS configuration data required to establish a VPC peering relationship. (see [below for nested schema](#nestedatt--data--provider_config--aws_config))
+- `azure_config` (Attributes) Azure configuration data required to establish a VNet peering relationship. (see [below for nested schema](#nestedatt--data--provider_config--azure_config))
+- `gcp_config` (Attributes) GCP configuration data required to establish a VPC peering relationship. (see [below for nested schema](#nestedatt--data--provider_config--gcp_config))
 
 <a id="nestedatt--data--provider_config--aws_config"></a>
 ### Nested Schema for `data.provider_config.aws_config`
@@ -85,8 +85,8 @@ Read-Only:
 - `cidr` (String) The CIDR block from the virtual network that you created in Azure.
 - `provider_id` (String) The ID of the VNet peer on Azure.
 - `resource_group` (String) The resource group name holding the resource you’re connecting with Capella.
-- `subscription_id` (String) The Azure subscription ID where the VNet exists. More [info](https://learn.microsoft.com/en-us/azure/azure-portal/get-subscription-tenant-id#find-your-azure-subscription)
-- `tenant_id` (String) The Azure tenant ID where the VNet exists. More [info](https://learn.microsoft.com/en-us/entra/fundamentals/how-to-find-tenant)
+- `subscription_id` (String) The Azure subscription ID where the VNet exists. For more information, see [Find Your Azure Subscription](https://learn.microsoft.com/en-us/azure/azure-portal/get-subscription-tenant-id#find-your-azure-subscription)
+- `tenant_id` (String) The Azure tenant ID where the VNet exists. For more information, see [How to Find Tenant](https://learn.microsoft.com/en-us/entra/fundamentals/how-to-find-tenant)
 - `vnet_id` (String) The VNet ID is the name of the virtual network peering in Azure.
 
 
@@ -99,7 +99,7 @@ Read-Only:
 - `network_name` (String) The name of the network that you want to peer with.
 - `project_id` (String) The unique identifier for your GCP project.
 - `provider_id` (String) The ID of the VPC peer on GCP.
-- `service_account` (String) ServiceAccount created or assigned on the external VPC project. GCP Service Account with below permissionsDNS Admin Compute.NetworkAdmin It should be in the form of an email that is shown under gcloud iam service-accounts list command. [Reference](https://cloud.google.com/iam/docs/service-accounts-create#creating)
+- `service_account` (String) The Service Account created or assigned on the external VPC project. The GCP Service Account should have the following permission:DNS Admin and Network Admin. It must be in the form of an email address, as shown by the output of the gcloud iam service-accounts list command. [Reference](https://cloud.google.com/iam/docs/service-accounts-create#creating)
 
 
 

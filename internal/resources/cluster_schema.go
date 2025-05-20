@@ -9,35 +9,35 @@ import (
 
 func ClusterSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "Manages the Couchbase Capella cluster resource.",
+		MarkdownDescription: "Manages the operational cluster resource.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "The ID of the Capella cluster.",
+				MarkdownDescription: "The ID of the operational cluster.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}),
-				"The ID of the organization that the cluster and project belongs to."),
+				"The GUID4 ID of the organization."),
 			"project_id": WithDescription(stringAttribute([]string{required, requiresReplace}),
-				"The ID of the project that the cluster belongs to."),
+				"The GUID4 ID of the project."),
 			"name": WithDescription(stringAttribute([]string{required}),
 				"The name of the cluster (up to 256 characters)."),
 			"description": WithDescription(stringAttribute([]string{optional, computed}),
 				"Description of the cluster (up to 1024 characters)."),
 			"zones": WithDescription(stringSetAttribute(optional, requiresReplace),
-				"Zones is the cloud services provider availability zones for the cluster. "+
-					"Currently Supported only for single AZ clusters so only 1 zone is allowed in list."),
+				"The Cloud Services Provider's availability zones for the cluster."+
+					"For single availability zone clusters, only 1 zone is allowed in list."),
 			"enable_private_dns_resolution": WithDescription(boolDefaultAttribute(false, optional, computed, requiresReplace),
 				"EnablePrivateDNSResolution signals that the cluster should have hostnames that are hosted in a public DNS zone that resolve to a private DNS address. "+
-					"This exists to support the use case of customers connecting from their own data centers where it is not possible to make use of a cloud service provider DNS zone."),
+					"This exists to support the use case of customers connecting from their own data centers where it is not possible to make use of a Cloud Service Provider DNS zone."),
 			"cloud_provider": schema.SingleNestedAttribute{
 				Required:            true,
-				MarkdownDescription: "The cloud provider where the cluster will be hosted. ",
+				MarkdownDescription: "The Cloud Service Provider where the cluster will be hosted. ",
 				Attributes: map[string]schema.Attribute{
 					"type": WithDescription(stringAttribute([]string{required}),
-						"Cloud provider type. Currently supported values are AWS, GCP and Azure. Note: For singleNode cluster, only AWS type cloud provider is allowed.",
+						"The Cloud Service Provider type. Currently supporting AWS, GCP and Azure. For Single Node cluster, only the AWS type Cloud Service Provider is allowed.",
 					),
 					"region": WithDescription(stringAttribute([]string{required}),
 						"The region where the cluster will be hosted."),
@@ -65,12 +65,12 @@ func ClusterSchema() schema.Schema {
 			},
 			"service_groups": schema.SetNestedAttribute{
 				Required:            true,
-				MarkdownDescription: "Configuration for the service groups in the cluster. Each service group represents a set of nodes with the same configuration.",
+				MarkdownDescription: "Configuration for the Service Groups in the cluster. Each Service Group represents a set of nodes with the same configuration.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"node": schema.SingleNestedAttribute{
 							Required:            true,
-							MarkdownDescription: "Node configuration for this service group.",
+							MarkdownDescription: "Node configuration for this Service Group.",
 							Attributes: map[string]schema.Attribute{
 								"compute": schema.SingleNestedAttribute{
 									Required:            true,
@@ -84,8 +84,8 @@ func ClusterSchema() schema.Schema {
 								},
 								"disk": schema.SingleNestedAttribute{
 									Description: "The 'storage' and 'IOPS' fields are required for AWS. " +
-										"For Azure, only the 'disktype' field is required, and for Ultra disk type, you can provide all 3 - storage, iops and autoexpansion fields. For Premium type, you can only provide the autoexpansion field, others can't be set." +
-										"In the case of GCP, only 'pd ssd' disk type is available, and you cannot set the 'IOPS' field.",
+										"For Azure, only the 'disktype' field is required. For the Ultra disk type, you can provide storage, IOPS, and auto-expansion fields. For Premium type, you can only provide the auto-expansion field, others cannot be set." +
+										" In the case of GCP, only 'pd ssd' disk type is available, and you cannot set the 'IOPS' field.",
 									Required: true,
 									Attributes: map[string]schema.Attribute{
 										"type": WithDescription(stringAttribute([]string{required}),
@@ -95,15 +95,15 @@ func ClusterSchema() schema.Schema {
 										"iops": WithDescription(int64Attribute(optional, computed),
 											"The number of IOPS for the disk. Only applicable for certain disk types."),
 										"autoexpansion": WithDescription(boolAttribute(optional, computed),
-											"Whether to enable automatic disk expansion."),
+											"Enable or disable automatic disk expansion."),
 									},
 								},
 							},
 						},
 						"num_of_nodes": WithDescription(int64Attribute(required),
-							"The number of nodes in this service group."),
+							"The number of nodes in this Service Group."),
 						"services": WithDescription(stringSetAttribute(required),
-							"The list of Couchbase services to run on the nodes in this service group."),
+							"The list of Couchbase Services to run on the nodes in this Service Group."),
 					},
 				},
 			},
@@ -123,7 +123,7 @@ func ClusterSchema() schema.Schema {
 				MarkdownDescription: "Support configuration for the cluster.",
 				Attributes: map[string]schema.Attribute{
 					"plan": WithDescription(stringAttribute([]string{required}),
-						"The support plan for the cluster. Can be 'Basic', 'Developer Pro', or 'Enterprise'."),
+						"The support plan options include 'Basic', 'Developer Pro', or 'Enterprise'."),
 					"timezone": WithDescription(stringAttribute([]string{computed, optional}),
 						"The timezone for support coverage."),
 				},

@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_backups Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Manages backup datasource, retrieves backups associated with a bucket for a Couchbase Capella cluster.
+  The backups data source retrieves backups associated with a bucket for an operational cluster.
 ---
 
 # couchbase-capella_backups (Data Source)
 
-Manages backup datasource, retrieves backups associated with a bucket for a Couchbase Capella cluster.
+The backups data source retrieves backups associated with a bucket for an operational cluster.
 
 ## Example Usage
 
@@ -33,17 +33,17 @@ data "couchbase-capella_backups" "existing_backups" {
 
 ### Read-Only
 
-- `data` (Attributes List) Represents the list of backups associated with a bucket. (see [below for nested schema](#nestedatt--data))
+- `data` (Attributes List) Lists the backups associated with a bucket. (see [below for nested schema](#nestedatt--data))
 
 <a id="nestedatt--data"></a>
 ### Nested Schema for `data`
 
 Read-Only:
 
-- `backup_stats` (Attributes) Represents various backup level data that couchbase provides. (see [below for nested schema](#nestedatt--data--backup_stats))
+- `backup_stats` (Attributes) Lists the backup level data that Couchbase provides. (see [below for nested schema](#nestedatt--data--backup_stats))
 - `bucket_id` (String) The ID of the bucket. It is the URL-compatible base64 encoding of the bucket name.
 - `bucket_name` (String) The name of the bucket for which the backup belongs to.
-- `cloud_provider` (String) The cloud provider where the cluster is hosted.
+- `cloud_provider` (String) The Cloud Service Provider where the cluster is hosted.
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `cycle_id` (String) The GUID4 ID of the cycle this backup belongs to.
 - `date` (String) The RFC3339 timestamp representing the time at which backup was created.
@@ -52,10 +52,10 @@ Read-Only:
 - `method` (String) The mechanism of the backup. It can be either incremental or full.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
-- `restore_before` (String) The RFC3339 timestamp representing the time at which backup will expire
-- `schedule_info` (Attributes) Represents the schedule information of the backup. (see [below for nested schema](#nestedatt--data--schedule_info))
-- `source` (String) The way a backup job was initiated. It can be either manual or scheduled.
-- `status` (String) The status of the backup. values being pending, ready and failed
+- `restore_before` (String) The RFC3339 timestamp representing the time at which the backup will expire.
+- `schedule_info` (Attributes) The schedule information of the backup. (see [below for nested schema](#nestedatt--data--schedule_info))
+- `source` (String) Specifies whether the backup job was initiated manually or by a schedule.
+- `status` (String) The status of the backup. Backup statuses are 'pending', 'ready', 'failed'.
 
 <a id="nestedatt--data--backup_stats"></a>
 ### Nested Schema for `data.backup_stats`
@@ -77,7 +77,7 @@ Read-Only:
 
 Read-Only:
 
-- `backup_time` (String) The timestamp indicating the backup created time.
-- `backup_type` (String) Represents whether the backup is a Weekly or Daily backup.
-- `increment` (Number) Represents interval in hours for incremental backup.
-- `retention` (String) Represents retention time in days.
+- `backup_time` (String) The timestamp indicating when the backup was created.
+- `backup_type` (String) Specifies if the backup frequency is daily or weekly.
+- `increment` (Number) The interval in hours for incremental backups.
+- `retention` (String) The retention time in days.

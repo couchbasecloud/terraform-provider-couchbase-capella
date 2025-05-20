@@ -39,108 +39,109 @@ func (d *Buckets) Metadata(_ context.Context, req datasource.MetadataRequest, re
 // Schema defines the schema for the bucket data source.
 func (d *Buckets) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Manages Bucket data source for Capella cluster",
+		MarkdownDescription: "The bucket data source retrieves the bucket information for an operational cluster.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "ID of the Capella tenant",
+				MarkdownDescription: "The GUID4 ID of the organization.",
 			},
 			"project_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "ID of the Caplla project",
+				MarkdownDescription: "The GUID4 ID of the project.",
 			},
 			"cluster_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "ID of the Capella cluster",
+				MarkdownDescription: "The GUID4 ID of the cluster.",
 			},
 			"data": schema.ListNestedAttribute{
 				Computed:            true,
-				MarkdownDescription: "Data of buckets in the cluster",
+				MarkdownDescription: "Lists the bucket data in the cluster.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "ID of the bucket",
+							MarkdownDescription: "The ID of the bucket.",
 						},
 						"name": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The name of the bucket",
+							MarkdownDescription: "The name of the bucket.",
 						},
 						"organization_id": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "ID of the Capella tenant",
+							MarkdownDescription: "The GUID4 ID of the organization.",
 						},
 						"project_id": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "ID of the Capella project",
+							MarkdownDescription: "The GUID4 ID of the project.",
 						},
 						"cluster_id": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "ID of the Capella cluster",
+							MarkdownDescription: "The GUID4 ID of the cluster.",
 						},
 						"type": schema.StringAttribute{
 							Optional:            true,
 							Computed:            true,
-							MarkdownDescription: "The bucket type (couchbase or ephemeral)",
+							MarkdownDescription: "The bucket type (Couchbase or Ephemeral).",
 						},
 						"storage_backend": schema.StringAttribute{
 							Optional:            true,
 							Computed:            true,
-							MarkdownDescription: "The bucket storage engine type (Magma or Couchstore)",
+							MarkdownDescription: "The bucket storage engine type (Magma or Couchstore).",
 						},
 						"memory_allocation_in_mb": schema.Int64Attribute{
 							Optional:            true,
 							Computed:            true,
-							MarkdownDescription: "bucket size allocation in mb",
+							MarkdownDescription: "Bucket size in MB.",
 						},
 						"bucket_conflict_resolution": schema.StringAttribute{
 							Optional:            true,
 							Computed:            true,
-							MarkdownDescription: "Conflict-resolution mechanism of bucket",
+							MarkdownDescription: "Conflict-resolution mechanism of the bucket.",
 						},
 						"durability_level": schema.StringAttribute{
 							Optional:            true,
 							Computed:            true,
-							MarkdownDescription: "Durability of the bucket",
+							MarkdownDescription: "Durability of the bucket.",
 						},
 						"replicas": schema.Int64Attribute{
 							Optional:            true,
 							Computed:            true,
-							MarkdownDescription: "Number of replicas for the data",
+							MarkdownDescription: "Number of replicas for the data.",
 						},
 						"flush": schema.BoolAttribute{
 							Optional:            true,
 							Computed:            true,
-							MarkdownDescription: "Determines whether the flushing is enabled in the bucket",
+							MarkdownDescription: "Determines whether flushing is enabled in the bucket.",
 						},
 						"time_to_live_in_seconds": schema.Int64Attribute{
 							Optional:            true,
 							Computed:            true,
-							MarkdownDescription: "Time-to-live (TTL) for items in the bucket, in seconds",
+							MarkdownDescription: "Time-to-live (TTL) for items in the bucket, in seconds.",
 						},
 						"eviction_policy": schema.StringAttribute{
 							Optional:            true,
 							Computed:            true,
-							MarkdownDescription: "Eviction policy for the bucket",
+							MarkdownDescription: "Eviction policy for the bucket.",
 						},
 						"stats": schema.SingleNestedAttribute{
-							Computed: true,
+							Computed:            true,
+							MarkdownDescription: "Bucket statistics.",
 							Attributes: map[string]schema.Attribute{
 								"item_count": schema.Int64Attribute{
 									Computed:            true,
-									MarkdownDescription: "Bucket item count",
+									MarkdownDescription: "Bucket item count.",
 								},
 								"ops_per_second": schema.Int64Attribute{
 									Computed:            true,
-									MarkdownDescription: "Bucket ops per second value",
+									MarkdownDescription: "Bucket operations per second.",
 								},
 								"disk_used_in_mib": schema.Int64Attribute{
 									Computed:            true,
-									MarkdownDescription: "Disk used in mib",
+									MarkdownDescription: "Disk used in MiB.",
 								},
 								"memory_used_in_mib": schema.Int64Attribute{
 									Computed:            true,
-									MarkdownDescription: "Memory used in mib",
+									MarkdownDescription: "Memory used in MiB.",
 								},
 							},
 						},

@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_cluster_onoff_schedule Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  The On/Off schedule data source allows you to retrieve the on/off schedule for a Capella cluster.
+  The On/Off schedule data source allows you to retrieve the on/off schedule for an operational cluster.
 ---
 
 # couchbase-capella_cluster_onoff_schedule (Data Source)
 
-The On/Off schedule data source allows you to retrieve the on/off schedule for a Capella cluster.
+The On/Off schedule data source allows you to retrieve the on/off schedule for an operational cluster.
 
 ## Example Usage
 
@@ -31,29 +31,29 @@ data "couchbase-capella_cluster_onoff_schedule" "existing_cluster_onoff_schedule
 
 ### Read-Only
 
-- `days` (Attributes List) The list of days for the cluster on/off schedule. Each day should have a state, day, from, and to time. (see [below for nested schema](#nestedatt--days))
-- `timezone` (String) The standard timezone for the cluster. Should be the TZ identifier. For example, 'ET'
+- `days` (Attributes List) The list of days for the cluster on/off schedule. Each day should have a 'state', 'day', and 'from' and 'to' time. (see [below for nested schema](#nestedatt--days))
+- `timezone` (String) The standard timezone for the cluster. Should be the TZ identifier. For example, 'ET'.
 
 <a id="nestedatt--days"></a>
 ### Nested Schema for `days`
 
 Optional:
 
-- `from` (Attributes) The time from which the cluster on/off schedule starts. (see [below for nested schema](#nestedatt--days--from))
-- `to` (Attributes) The time to which the cluster on/off schedule ends. (see [below for nested schema](#nestedatt--days--to))
+- `from` (Attributes) The start time of the cluster on/off schedule. (see [below for nested schema](#nestedatt--days--from))
+- `to` (Attributes) The end time of the cluster on/off schedule. (see [below for nested schema](#nestedatt--days--to))
 
 Read-Only:
 
-- `day` (String) The day of the week for the cluster on/off schedule. Should be one of 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', or 'saturday'.
-- `state` (String) The state of the cluster on/off schedule. Should be one of 'on' or 'off'.
+- `day` (String) The day of the week for the cluster on/off schedule. One of the following: 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', or 'saturday'.
+- `state` (String) The state of the cluster on/off schedule. The states are 'on' or 'off'.
 
 <a id="nestedatt--days--from"></a>
 ### Nested Schema for `days.from`
 
 Read-Only:
 
-- `hour` (Number) The hour of the day for the cluster on/off schedule. Should be between 0 and 23.
-- `minute` (Number) The minute of the hour for the cluster on/off schedule. Should be between 0 and 59.
+- `hour` (Number) Specifies the hour of the day for the cluster on/off schedule, ranging from 0 to 23.
+- `minute` (Number) Specifies the minute of the hour for the cluster on/off schedule, ranging from 0 to 59.
 
 
 <a id="nestedatt--days--to"></a>
@@ -61,5 +61,5 @@ Read-Only:
 
 Read-Only:
 
-- `hour` (Number) The hour of the day for the cluster on/off schedule. Should be between 0 and 23.
-- `minute` (Number) The minute of the hour for the cluster on/off schedule. Should be between 0 and 59.
+- `hour` (Number) Specifies the hour of the day for the cluster on/off schedule, ranging from 0 to 23.
+- `minute` (Number) Specifies the minute of the hour for the cluster on/off schedule, ranging from 0 to 59.

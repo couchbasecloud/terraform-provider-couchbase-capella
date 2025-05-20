@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_free_tier_cluster_on_off Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Manages the on/off state resource of a Free Tier Cluster.
+  This resource allows you to manage the On/Off state of a free tier operational cluster.
 ---
 
 # couchbase-capella_free_tier_cluster_on_off (Resource)
 
-Manages the on/off state resource of a Free Tier Cluster.
+This resource allows you to manage the On/Off state of a free tier operational cluster.
 
 ## Example Usage
 
@@ -29,7 +29,7 @@ resource "couchbase-capella_free_tier_cluster_on_off" "new_free_tier_cluster_on_
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
-- `state` (String) The on/off state of the Free Tier Cluster.
+- `state` (String) The On/Off state of the free tier cluster.
 
 ## Import
 

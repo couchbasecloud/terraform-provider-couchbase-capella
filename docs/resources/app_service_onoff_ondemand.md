@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_app_service_onoff_ondemand Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Manages the on-demand state of an app service. This resource is used to turn on/off the app service on-demand.
+  Manages the on-demand state of an App Service. This resource is used to turn the App Service on or off on-demand.
 ---
 
 # couchbase-capella_app_service_onoff_ondemand (Resource)
 
-Manages the on-demand state of an app service. This resource is used to turn on/off the app service on-demand.
+Manages the on-demand state of an App Service. This resource is used to turn the App Service on or off on-demand.
 
 ## Example Usage
 
@@ -31,7 +31,7 @@ resource "couchbase-capella_app_service_onoff_ondemand" "new_app_service_onoff_o
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
-- `state` (String) The state of the app service on-demand. It can be on/off.
+- `state` (String) The state of the app service on-demand. It can be 'on' or 'off'.
 
 ## Import
 
