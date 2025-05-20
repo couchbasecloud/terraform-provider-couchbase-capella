@@ -8,7 +8,7 @@ import (
 
 func ProjectSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "Resource to create and manage a project in a Capella organization. Projects are used to organize and manage groups of Couchbase databases within organizations.",
+		MarkdownDescription: "This resource allows you to create and manage a project in an organization. Projects are used to organize and manage groups of operational clusters within organizations.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
