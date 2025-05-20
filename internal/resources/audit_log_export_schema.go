@@ -6,7 +6,7 @@ import (
 
 func AuditLogExportSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "Resource to manage audit log exports for a Capella cluster. This allows you to export audit logs for a specific time period and download them for analysis. Audit Logs for the last 30 days can be requested, otherwise they are purged. A pre-signed URL to a s3 bucket location is returned, which is used to download these audit logs.",
+		MarkdownDescription: "This resource allows you to manage audit log exports for an operational cluster. This allows you to export audit logs for a specific time period and download them for analysis. Audit Logs for the last 30 days can be requested, otherwise they are purged. A pre-signed URL to a s3 bucket location is returned, which is used to download these audit logs.",
 		Attributes: map[string]schema.Attribute{
 			"id": WithDescription(stringAttribute([]string{computed, useStateForUnknown}),
 				"The unique identifier of the audit log export job."),

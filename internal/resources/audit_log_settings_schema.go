@@ -7,7 +7,7 @@ import (
 
 func AuditLogSettingsSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "Resource to manage audit log configuration settings for an operational cluster. These settings control which audit events are logged and which users are excluded from audit logging.",
+		MarkdownDescription: "This resource allows you to manage audit log configuration settings for an operational cluster. These settings control which audit events are logged and which users are excluded from audit logging.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": WithDescription(stringAttribute([]string{required}),
 				"The GUID4 ID of the organization."),

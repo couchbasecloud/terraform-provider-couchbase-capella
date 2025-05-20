@@ -6,7 +6,7 @@ import (
 
 func ClusterOnOffOnDemandSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "Manages the On/Off state of an operational cluster. TThis resource is used to turn your cluster on or off.",
+		MarkdownDescription: "Manages the On/Off state of an operational cluster. This resource allows you to turn your cluster on or off.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id":            WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the organization."),
 			"project_id":                 WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the project."),

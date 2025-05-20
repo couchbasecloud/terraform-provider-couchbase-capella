@@ -35,8 +35,8 @@ func NetworkPeerSchema() schema.Schema {
 				MarkdownDescription: "The list of commands required to set up network peering.",
 			},
 			"provider_config": schema.SingleNestedAttribute{
-				Description: "Cloud provider-specific configuration for the network peering." +
-					"The 'accountId', 'vpcId', 'region', and 'cidr' fields are required for AWS VPC peering. " +
+				Description: "The Cloud Service Provider's specific configuration for the network peering." +
+					" The 'accountId', 'vpcId', 'region', and 'cidr' fields are required for AWS VPC peering. " +
 					"For GCP, the 'networkName', 'projectId', 'serviceAccount', and 'cidr' fields are required for VPC peering. ",
 				Required: true,
 				PlanModifiers: []planmodifier.Object{
