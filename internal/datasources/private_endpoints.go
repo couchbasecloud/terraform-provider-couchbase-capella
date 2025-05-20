@@ -39,7 +39,7 @@ func (p *PrivateEndpoints) Metadata(_ context.Context, req datasource.MetadataRe
 // Schema defines the schema for the private endpoint data source.
 func (p *PrivateEndpoints) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Data source to retrieve private endpoints for an operational cluster. Access your operational cluster from your Cloud Service Provider's private network. Returns a list of private endpoints associated with the endpoint service for your operational cluster, along with the endpoint state. Each private endpoint connects a private network to the operational cluster.",
+		MarkdownDescription: "The data source to retrieve private endpoints for an operational cluster. Access your operational cluster from your Cloud Service Provider's private network. Returns a list of private endpoints associated with the endpoint service for your operational cluster, along with the endpoint state. Each private endpoint connects a private network to the operational cluster.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
