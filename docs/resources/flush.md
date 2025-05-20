@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_flush Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Resources allows you to flush a Capella bucket. Flushing a bucket causes all documents in the bucket to be deleted by the system at the earliest. This operation can only be performed if the bucket has been configured with flushEnabled to true.
+  This resource allows you to flush a Capella bucket. Flushing a bucket causes all documents in the bucket to be deleted by the system at the earliest. This operation can only be performed if the bucket has been configured with flushEnabled to 'true'.
 ---
 
 # couchbase-capella_flush (Resource)
 
-Resources allows you to flush a Capella bucket. Flushing a bucket causes all documents in the bucket to be deleted by the system at the earliest. This operation can only be performed if the bucket has been configured with flushEnabled to true.
+This resource allows you to flush a Capella bucket. Flushing a bucket causes all documents in the bucket to be deleted by the system at the earliest. This operation can only be performed if the bucket has been configured with flushEnabled to 'true'.
 
 ## Example Usage
 
@@ -28,5 +28,5 @@ resource "couchbase-capella_flush" "new_flush" {
 
 - `bucket_id` (String) The ID of the bucket. It is the URL-compatible base64 encoding of the bucket name.
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `organization_id` (String) The GUID4 ID of the Capella organization.
+- `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.

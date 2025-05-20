@@ -35,7 +35,7 @@ resource "couchbase-capella_app_service" "new_app_service" {
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `compute` (Attributes) The CPU and RAM configuration of the App Service. (see [below for nested schema](#nestedatt--compute))
 - `name` (String) Name of the cluster (up to 256 characters).
-- `organization_id` (String) The GUID4 ID of the Capella organization.
+- `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
 ### Optional

@@ -30,7 +30,7 @@ resource "couchbase-capella_apikey" "new_apikey" {
 ### Required
 
 - `name` (String) Name of the API key.
-- `organization_id` (String) The GUID4 ID of the capella organization.
+- `organization_id` (String) The GUID4 ID of the organization.
 - `organization_roles` (Set of String)
 
 ### Optional
@@ -53,12 +53,12 @@ resource "couchbase-capella_apikey" "new_apikey" {
 
 Required:
 
-- `id` (String) ID of the project.
+- `id` (String) The GUID4 ID of the project.
 - `roles` (Set of String) Project Roles associated with the API key.
 
 Optional:
 
-- `type` (String) Type of the resource.
+- `type` (String) Resource type.
 
 
 <a id="nestedatt--audit"></a>

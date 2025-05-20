@@ -41,7 +41,7 @@ resource "couchbase-capella_backup" "new_backup" {
 
 - `backup_stats` (Attributes) Represents various backup level data that couchbase provides. (see [below for nested schema](#nestedatt--backup_stats))
 - `bucket_name` (String) The name of the bucket for which the backup belongs to.
-- `cloud_provider` (String) The cloud provider where the cluster is hosted.
+- `cloud_provider` (String) The Cloud Service Provider where the cluster is hosted.
 - `cycle_id` (String) The GUID4 ID of the cycle this backup belongs to.
 - `date` (String) The RFC3339 timestamp representing the time at which backup was created.
 - `elapsed_time_in_seconds` (Number) The amount of seconds that have elapsed between the creation and completion of the backup.
@@ -49,7 +49,7 @@ resource "couchbase-capella_backup" "new_backup" {
 - `method` (String) The mechanism of the backup. It can be either incremental or full.
 - `schedule_info` (Attributes) Represents the schedule information of the backup. (see [below for nested schema](#nestedatt--schedule_info))
 - `source` (String) The source of the backup. It can be either cluster or bucket.
-- `status` (String) The status of the backup. values being pending, ready and failed
+- `status` (String) The status of the backup. Backup statuses are 'pending', 'ready', and 'failed'.
 
 <a id="nestedatt--restore"></a>
 ### Nested Schema for `restore`
@@ -66,10 +66,10 @@ Optional:
 - `exclude_data` (String) Skips restoring the data specified here.
 - `filter_keys` (String) Only restore data where the key matches a particular regular expression.
 - `filter_values` (String) Only restore data where the value matches a particular regular expression.
-- `force_updates` (Boolean) Forces data in the Couchbase cluster to be overwritten even if the data in the cluster is newer.
+- `force_updates` (Boolean) Forces data in the operational cluster to be overwritten even if the data in the cluster is newer.
 - `include_data` (String) Restores only the data specified here.
-- `map_data` (String) Specified when you want to restore source data into a different location
-- `replace_ttl` (String) Sets a new expiration (time-to-live) value for the specified keys. Values being 'none' 'all' 'expired'
+- `map_data` (String) Specified when you want to restore source data into a different location.
+- `replace_ttl` (String) Sets a new expiration (time-to-live) value for the specified keys. These values are 'none', 'all', and 'expired'.
 - `replace_ttl_with` (String) Updates the expiration for the keys.
 
 Read-Only:
@@ -98,7 +98,7 @@ Read-Only:
 Read-Only:
 
 - `backup_time` (String) Represents the time at which the backup is scheduled to be taken.
-- `backup_type` (String) Represents whether the backup is a Weekly or Daily backup.
+- `backup_type` (String) Represents whether the backup is a weekly or daily backup.
 - `increment` (Number) Represents interval in hours for incremental backup.
 - `retention` (String) Represents retention time in days.
 

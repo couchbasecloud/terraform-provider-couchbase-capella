@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_sample_bucket Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Resource to manage a sample bucket in Couchbase Capella. Sample buckets are pre-loaded with sample data - "travel-sample", "gamesim-sample", "beer-sample".
+  This resource allows you to manage a sample bucket in Couchbase Capella. Sample buckets are pre-loaded with sample data. Different sample data options include,"travel-sample", "gamesim-sample", "beer-sample".
 ---
 
 # couchbase-capella_sample_bucket (Resource)
 
-Resource to manage a sample bucket in Couchbase Capella. Sample buckets are pre-loaded with sample data - "travel-sample", "gamesim-sample", "beer-sample".
+This resource allows you to manage a sample bucket in Couchbase Capella. Sample buckets are pre-loaded with sample data. Different sample data options include,"travel-sample", "gamesim-sample", "beer-sample".
 
 ## Example Usage
 
@@ -34,9 +34,9 @@ resource "couchbase-capella_sample_bucket" "new_sample_bucket" {
 ### Read-Only
 
 - `bucket_conflict_resolution` (String) The means in which conflicts are resolved during replication. This field may be referred to as conflictResolution in the Couchbase documentation, and seqno and lww may be referred to as sequence Number and Timestamp respectively.
-- `durability_level` (String) This is the minimum level at which all writes to the Couchbase bucket must occur. The options for Durability level are as follows, according to the bucket type. For a Couchbase bucket: None, Replicate to Majority, Majority and Persist to Active, Persist to Majority. For an Ephemeral bucket: None, Replicate to Majority
+- `durability_level` (String) The durability level of the bucket. This setting defines the minimum durability level required for all writes to a Couchbase bucket. The available durability levels depend on the bucket type. For a Couchbase bucket, the options are: None, Replicate to Majority, Majority and Persist to Active, and Persist to Majority. For an Ephemeral bucket, the options are limited to: None and Replicate to Majority.
 - `eviction_policy` (String) The policy which Capella adopts to prevent data loss due to memory exhaustion. This may be also known as Ejection Policy in the Couchbase documentation. For Couchbase bucket, Eviction Policy is fullEviction by default. For Ephemeral buckets, Eviction Policy is a required field, and should be one of the following: noEviction, nruEviction
-- `flush` (Boolean) Replaced by flushEnabled. Determines whether bucket flush is enabled. Set property to true to be able to delete all items in this bucket using the /flush endpoint. Disable property to avoid inadvertent data loss by calling the the /flush endpoint.
+- `flush` (Boolean) Replaced by flushEnabled. Determines whether bucket flush is enabled. Set property to 'true' to be able to delete all items in this bucket using the /flush endpoint. Disable property to avoid inadvertent data loss by calling the the /flush endpoint.
 - `id` (String) The ID of the bucket. This is the base64 encoding of the bucket name.
 - `memory_allocation_in_mb` (Number) The amount of memory to allocate for the bucket memory in MiB. The maximum limit is dependent on the allocation of the KV service. For example, 80% of the allocation.
 - `replicas` (Number) The number of replicas for the bucket

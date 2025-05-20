@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_backup_schedule Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Manages backup schedule resource associated with a bucket for a Couchbase Capella cluster.
+  Manages the backup schedule resource associated with a bucket for an operational cluster.
 ---
 
 # couchbase-capella_backup_schedule (Resource)
 
-Manages backup schedule resource associated with a bucket for a Couchbase Capella cluster.
+Manages the backup schedule resource associated with a bucket for an operational cluster.
 
 ## Example Usage
 
@@ -47,10 +47,10 @@ resource "couchbase-capella_backup_schedule" "new_backup_schedule" {
 Required:
 
 - `cost_optimized_retention` (Boolean) Optimize backup retention to reduce total cost of ownership (TCO). This gives the option to keep all but the last backup cycle of the month for thirty days; the last cycle will be kept for the defined retention period.
-- `day_of_week` (String) Day of the week for the backup. Values can be "sunday" "monday" "tuesday" "wednesday" "thursday" "friday" "saturday"
+- `day_of_week` (String) Day of the week for the backup. Values can be "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", or "saturday"
 - `incremental_every` (Number) Interval in hours for incremental backup. Integer value between 1 and 24.
-- `retention_time` (String) Retention time in days, ex: 30days, 1year, 5years
-- `start_at` (Number) Start at hour (in 24-Hour format). Integer value between 0 and 23.
+- `retention_time` (String) Retention time in days. For example: 30days, 1year, 5years.
+- `start_at` (Number) The starting hour (in 24-Hour format). Integer value between 0 and 23.
 
 ## Import
 
