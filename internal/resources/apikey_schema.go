@@ -23,7 +23,7 @@ func ApiKeySchema() schema.Schema {
 				},
 				MarkdownDescription: "The ID (Access key) of the API key.",
 			},
-			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the capella organization."),
+			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the organization."),
 			"name":            WithDescription(stringAttribute([]string{required, requiresReplace}), "Name of the API key."),
 			"description":     WithDescription(stringDefaultAttribute("", optional, computed, requiresReplace, useStateForUnknown), "Description for the API key."),
 			"expiry":          WithDescription(float64DefaultAttribute(180, optional, computed, requiresReplace, useStateForUnknown), "Expiry of the API key in number of days. If set to -1, the token will not expire."),
@@ -46,9 +46,9 @@ func ApiKeySchema() schema.Schema {
 				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"id":    WithDescription(stringAttribute([]string{required}), "ID of the project."),
+						"id":    WithDescription(stringAttribute([]string{required}), "The GUID4 ID of the project."),
 						"roles": WithDescription(stringSetAttribute(required), "Project Roles associated with the API key."),
-						"type":  WithDescription(stringDefaultAttribute("project", optional, computed), "Type of the resource."),
+						"type":  WithDescription(stringDefaultAttribute("project", optional, computed), "Resource type."),
 					},
 				},
 				PlanModifiers: []planmodifier.Set{

@@ -17,7 +17,7 @@ func AppServiceSchema() schema.Schema {
 				},
 				MarkdownDescription: "The ID of the App Service created.",
 			},
-			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the Capella organization."),
+			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the organization."),
 			"project_id":      WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the project."),
 			"cluster_id":      WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the cluster."),
 			"name":            WithDescription(stringAttribute([]string{required, requiresReplace}), "Name of the cluster (up to 256 characters)."),
