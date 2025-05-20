@@ -52,7 +52,7 @@ func (d *ApiKeys) Schema(_ context.Context, _ datasource.SchemaRequest, resp *da
 						"name":               schema.StringAttribute{Computed: true, MarkdownDescription: "Name of the API key."},
 						"description":        schema.StringAttribute{Computed: true, MarkdownDescription: "A description for the API key."},
 						"expiry":             schema.Float64Attribute{Computed: true, MarkdownDescription: "Expiry of the API key in number of days. If set to -1, the token will not expire."},
-						"allowed_cidrs":      schema.ListAttribute{ElementType: types.StringType, Computed: true, MarkdownDescription: "The list of inbound CIDRs for the API key. The system making a request must come from one of the allowed CIDRs.."},
+						"allowed_cidrs":      schema.ListAttribute{ElementType: types.StringType, Computed: true, MarkdownDescription: "The list of inbound CIDRs for the API key. The system making a request must come from one of the allowed CIDRs."},
 						"organization_roles": schema.ListAttribute{ElementType: types.StringType, Computed: true, MarkdownDescription: "List of the organization roles associated with the API key."},
 						"resources": schema.ListNestedAttribute{
 							Computed:            true,

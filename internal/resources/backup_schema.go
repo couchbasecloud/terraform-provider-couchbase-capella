@@ -8,7 +8,7 @@ import (
 
 func BackupSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "Manages backup resource associated with a bucket for a Couchbase Capella cluster.",
+		MarkdownDescription: "Manages backup resource associated with a bucket for an operational Capella cluster.",
 		Attributes: map[string]schema.Attribute{
 			"id":              WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The GUID4 ID of the backup resource."),
 			"organization_id": WithDescription(stringAttribute([]string{required}), "The GUID4 ID of the organization."),

@@ -39,7 +39,7 @@ func (p *PrivateEndpointService) Metadata(_ context.Context, req datasource.Meta
 // Schema defines schema for private endpoint service resource.
 func (p *PrivateEndpointService) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Data source to retrieve the status of the private endpoint service for an operational cluster. Private endpoint service enables secure connectivity between your Cloud Service Provider's private network (VPC/VNET) and your operational cluster.",
+		MarkdownDescription: "The data source to retrieve the status of the private endpoint service for an operational cluster. Private endpoint service enables secure connectivity between your Cloud Service Provider's private network (VPC/VNET) and your operational cluster.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
