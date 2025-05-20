@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_app_services Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  
+  The data source retrieves information for an App Service in Capella. App Service is a fully managed application backend designed to provide data synchronization between mobile or IoT applications running Couchbase Lite and your Couchbase Capella database.
 ---
 
 # couchbase-capella_app_services (Data Source)
 
-
+The data source retrieves information for an App Service in Capella. App Service is a fully managed application backend designed to provide data synchronization between mobile or IoT applications running Couchbase Lite and your Couchbase Capella database.
 
 
 
@@ -17,7 +17,7 @@ description: |-
 
 ### Required
 
-- `organization_id` (String)
+- `organization_id` (String) The GUID4 ID of the organization.
 
 ### Read-Only
 
@@ -28,28 +28,28 @@ description: |-
 
 Read-Only:
 
-- `audit` (Attributes) (see [below for nested schema](#nestedatt--data--audit))
-- `cloud_provider` (String)
-- `cluster_id` (String)
-- `compute` (Attributes) (see [below for nested schema](#nestedatt--data--compute))
-- `current_state` (String)
-- `description` (String)
-- `id` (String)
-- `name` (String)
-- `nodes` (Number)
-- `organization_id` (String)
-- `version` (String)
+- `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--data--audit))
+- `cloud_provider` (String) The Cloud Service Provider for the App Service.
+- `cluster_id` (String) The GUID4 ID of the cluster.
+- `compute` (Attributes) The CPU and RAM configuration of the App Service. (see [below for nested schema](#nestedatt--data--compute))
+- `current_state` (String) The current state of the App Service.
+- `description` (String) A description of the App Service (up to 1024 characters).
+- `id` (String) The ID of the App Service created.
+- `name` (String) Name of the App Service (up to 256 characters).
+- `nodes` (Number) Number of nodes configured for the App Service.
+- `organization_id` (String) The GUID4 ID of the organization.
+- `version` (String) The version of the App Service server. If left empty, it will be defaulted to the latest available version.
 
 <a id="nestedatt--data--audit"></a>
 ### Nested Schema for `data.audit`
 
 Read-Only:
 
-- `created_at` (String)
-- `created_by` (String)
-- `modified_at` (String)
-- `modified_by` (String)
-- `version` (Number)
+- `created_at` (String) The RFC3339 timestamp when the resource was created.
+- `created_by` (String) The user who created the resource.
+- `modified_at` (String) The RFC3339 timestamp when the resource was last modified.
+- `modified_by` (String) The user who last modified the resource.
+- `version` (Number) The version of the document. This value is incremented each time the resource is modified.
 
 
 <a id="nestedatt--data--compute"></a>
@@ -57,5 +57,5 @@ Read-Only:
 
 Read-Only:
 
-- `cpu` (Number)
-- `ram` (Number)
+- `cpu` (Number) CPU units (cores).
+- `ram` (Number) RAM units (GB).
