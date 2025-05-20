@@ -7,16 +7,16 @@ import (
 
 func AuditLogSettingsSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "Resource to manage audit log configuration settings for a Capella cluster. These settings control which audit events are logged and which users are excluded from audit logging.",
+		MarkdownDescription: "This resource allows you to manage audit log configuration settings for an operational cluster. These settings control which audit events are logged and which users are excluded from audit logging.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": WithDescription(stringAttribute([]string{required}),
-				"The ID of the Capella organization."),
+				"The GUID4 ID of the organization."),
 			"project_id": WithDescription(stringAttribute([]string{required}),
-				"The ID of the Capella project that the cluster belongs to."),
+				"The GUID4 ID of the project."),
 			"cluster_id": WithDescription(stringAttribute([]string{required}),
-				"The ID of the Capella cluster to configure audit log settings for."),
+				"The GUID4 ID of the cluster to configure audit log settings."),
 			"audit_enabled": WithDescription(boolAttribute(computed, optional),
-				"Determines whether audit logging is enabled or not on the cluster. Set to true to enable audit logging."),
+				"Determines whether audit logging is enabled or not on the cluster. Set to 'true' to enable audit logging."),
 			"enabled_event_ids": schema.SetAttribute{
 				Computed:            true,
 				Optional:            true,

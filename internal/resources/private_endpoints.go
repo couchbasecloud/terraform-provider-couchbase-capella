@@ -41,19 +41,19 @@ func (p *PrivateEndpoint) Metadata(_ context.Context, req resource.MetadataReque
 // Schema defines the schema for the private endpoint resource.
 func (p *PrivateEndpoint) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Resource to manage private endpoints for a Capella cluster. Private endpoints allow you to securely connect your cloud provider's private network (VPC/VNET) to your Capella cluster without exposing traffic to the public internet.",
+		MarkdownDescription: "This resource allows you to manage private endpoints for an operational cluster. Private endpoints allow you to securely connect your Cloud Service Provider's private network (VPC/VNET) to your operational cluster without exposing traffic to the public internet.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": WithDescription(
 				stringAttribute([]string{required, requiresReplace}),
-				"The ID of the Capella organization where the private endpoint will be created.",
+				"The GUID4 ID of the organization where the private endpoint will be created.",
 			),
 			"project_id": WithDescription(
 				stringAttribute([]string{required, requiresReplace}),
-				"The ID of the Capella project containing the cluster where the private endpoint will be created.",
+				"The GUID4 ID of the project containing the cluster where the private endpoint will be created.",
 			),
 			"cluster_id": WithDescription(
 				stringAttribute([]string{required, requiresReplace}),
-				"The ID of the Capella cluster to create the private endpoint for. This enables secure access to the cluster through your cloud provider's private network.",
+				"The GUID4 ID of the operational cluster to create the private endpoint for. This enables secure access to the cluster through your Cloud Service Provider's private network.",
 			),
 			"endpoint_id": WithDescription(
 				stringAttribute([]string{required, requiresReplace}),

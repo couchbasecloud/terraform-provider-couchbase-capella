@@ -39,22 +39,46 @@ func (s *Scopes) Metadata(_ context.Context, req datasource.MetadataRequest, res
 // Schema defines the schema for the scope data source.
 func (s *Scopes) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "The scopes data source retrieves the scopes in a bucket.",
 		Attributes: map[string]schema.Attribute{
-			"organization_id": requiredStringAttribute,
-			"project_id":      requiredStringAttribute,
-			"cluster_id":      requiredStringAttribute,
-			"bucket_id":       requiredStringAttribute,
+			"organization_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the organization.",
+			},
+			"project_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the project.",
+			},
+			"cluster_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the cluster.",
+			},
+			"bucket_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The ID of the bucket. It is the URL-compatible base64 encoding of the bucket name.",
+			},
 			"scopes": schema.ListNestedAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: "The list of scopes in the bucket.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"scope_name": computedStringAttribute,
+						"scope_name": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "The name of the scope.",
+						},
 						"collections": schema.SetNestedAttribute{
-							Computed: true,
+							Computed:            true,
+							MarkdownDescription: "The list of collections in the scope.",
 							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
-									"max_ttl": computedInt64Attribute,
-									"name":    computedStringAttribute,
+									"max_ttl": schema.Int64Attribute{
+										Computed:            true,
+										MarkdownDescription: "The maximum time-to-live (TTL) for documents in the collection, in seconds.",
+									},
+									"name": schema.StringAttribute{
+										Computed:            true,
+										MarkdownDescription: "The name of the collection.",
+									},
 								},
 							},
 						},

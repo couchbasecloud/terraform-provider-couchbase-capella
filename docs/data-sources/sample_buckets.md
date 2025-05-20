@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_sample_buckets Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  
+  The data source to retrieve sample buckets in an operational cluster.
 ---
 
 # couchbase-capella_sample_buckets (Data Source)
 
-
+The data source to retrieve sample buckets in an operational cluster.
 
 
 
@@ -17,9 +17,9 @@ description: |-
 
 ### Required
 
-- `cluster_id` (String)
-- `organization_id` (String)
-- `project_id` (String)
+- `cluster_id` (String) The GUID4 ID of the cluster.
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
 
 ### Read-Only
 
@@ -30,28 +30,28 @@ description: |-
 
 Read-Only:
 
-- `bucket_conflict_resolution` (String)
-- `cluster_id` (String)
-- `durability_level` (String)
-- `eviction_policy` (String)
-- `flush` (Boolean)
-- `id` (String)
-- `memory_allocation_in_mb` (Number)
-- `name` (String)
-- `organization_id` (String)
-- `project_id` (String)
-- `replicas` (Number)
+- `bucket_conflict_resolution` (String) The means in which conflicts are resolved during replication. This field may be referred to as conflictResolution in the Couchbase documentation, and seqno and lww may be referred to as sequence Number and Timestamp respectively.
+- `cluster_id` (String) The GUID4 ID of the cluster.
+- `durability_level` (String) This is the minimum level at which all writes to the Couchbase bucket must occur. The options for durability level are according to the bucket type. For a Couchbase bucket: None, Replicate to Majority, Majority and Persist to Active, Persist to Majority. For an Ephemeral bucket: None, Replicate to Majority.
+- `eviction_policy` (String) The policy which Capella adopts to prevent data loss due to memory exhaustion. This may be also known as Ejection Policy in the Couchbase documentation. For Couchbase bucket, Eviction Policy is fullEviction by default. For Ephemeral buckets, the Eviction Policy is a required field and should be one of the following: noEviction, nruEviction.
+- `flush` (Boolean) Replaced by flushEnabled. Determines whether bucket flush is enabled. Set property to ‘true’ to be able to delete all items in this bucket using the /flush endpoint. Disable property to avoid inadvertent data loss by calling the /flush endpoint.
+- `id` (String) The ID of the bucket. This is the base64 encoding of the bucket name.
+- `memory_allocation_in_mb` (Number) The amount of memory to allocate for the bucket memory in MiB. The maximum limit is dependent on the allocation of the KV service. For example, 80% of the allocation.
+- `name` (String) The name of the sample dataset to be loaded. The name has to be one of the following sample datasets: "travel-sample", "gamesim-sample" or "beer-sample".
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
+- `replicas` (Number) The number of replicas for the bucket.
 - `stats` (Attributes) (see [below for nested schema](#nestedatt--data--stats))
-- `storage_backend` (String)
-- `time_to_live_in_seconds` (Number)
-- `type` (String)
+- `storage_backend` (String) Type of the bucket. If it’s an Ephemeral bucket type, it is not eligible for imports or App Endpoints creation. The options may also be referred to as Memory and Disk (Couchbase), Memory Only (Ephemeral) in the Couchbase documentation.
+- `time_to_live_in_seconds` (Number) Specifies the time to live (TTL) value in seconds. This is the maximum time to live for items in the bucket. If specified as 0, TTL is disabled. This is a non-negative value.
+- `type` (String) Type of the bucket. If it’s an  Ephemeral bucket, it is not eligible for imports or App Endpoints creation. The options may also be referred to as Memory and Disk (Couchbase), Memory Only (Ephemeral) in the Couchbase documentation.
 
 <a id="nestedatt--data--stats"></a>
 ### Nested Schema for `data.stats`
 
 Read-Only:
 
-- `disk_used_in_mib` (Number)
-- `item_count` (Number)
-- `memory_used_in_mib` (Number)
-- `ops_per_second` (Number)
+- `disk_used_in_mib` (Number) The amount of disk used (in MiB).
+- `item_count` (Number) Number of documents in the bucket.
+- `memory_used_in_mib` (Number) The amount of memory used (in MiB).
+- `ops_per_second` (Number) Number of operations per second.

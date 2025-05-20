@@ -8,7 +8,7 @@ import (
 // ProjectEventSchema returns the schema for the ProjectEvent data source.
 func ProjectEventSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "Data source to retrieve an event for a project. Events represent a trail of actions that users performs within Capella at project level.",
+		MarkdownDescription: "The data source to retrieve an event for a project. Events represent a trail of actions that users performs within Capella at the project level.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Required:            true,
@@ -36,7 +36,7 @@ func ProjectEventSchema() schema.Schema {
 			},
 			"cluster_id": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "ClusterID this Event refers to.",
+				MarkdownDescription: "The GUID4 ID of the cluster this event refers to.",
 			},
 			"cluster_name": schema.StringAttribute{
 				Computed:            true,
@@ -44,7 +44,7 @@ func ProjectEventSchema() schema.Schema {
 			},
 			"image_url": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "Rendered chart image to display for an Alert Event.",
+				MarkdownDescription: "URL to a rendered chart image representing the alert event.",
 			},
 			"incident_ids": schema.SetAttribute{
 				ElementType:         types.StringType,
@@ -53,7 +53,7 @@ func ProjectEventSchema() schema.Schema {
 			},
 			"key": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "Defines the specific kind of Event.",
+				MarkdownDescription: "Defines the specific kind of event.",
 			},
 			"kv": schema.StringAttribute{
 				Computed:            true,
@@ -69,11 +69,11 @@ func ProjectEventSchema() schema.Schema {
 			},
 			"request_id": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "RequestID for an Event.",
+				MarkdownDescription: "RequestID for an event.",
 			},
 			"session_id": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "User that initiated the request for this Event.",
+				MarkdownDescription: "ID of the session associated with the user that initiated the request for this event.",
 			},
 			"severity": schema.StringAttribute{
 				Computed:            true,
@@ -89,7 +89,7 @@ func ProjectEventSchema() schema.Schema {
 			},
 			"timestamp": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "Time when the event was emitted.",
+				MarkdownDescription: "The RFC3339 timestamp when the event was emitted.",
 			},
 			"user_email": schema.StringAttribute{
 				Computed:            true,
@@ -97,7 +97,7 @@ func ProjectEventSchema() schema.Schema {
 			},
 			"user_id": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "User id that initiated the request for this Event.",
+				MarkdownDescription: "User id that initiated the request for this event.",
 			},
 			"user_name": schema.StringAttribute{
 				Computed:            true,
