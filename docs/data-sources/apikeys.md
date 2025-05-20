@@ -28,7 +28,7 @@ The data source to retrieve API keys in an organization. API keys are used to au
 
 Read-Only:
 
-- `allowed_cidrs` (List of String) The list of inbound CIDRs for the API key. The system making a request must come from one of the allowed CIDRs..
+- `allowed_cidrs` (List of String) The list of inbound CIDRs for the API key. The system making a request must come from one of the allowed CIDRs.
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--data--audit))
 - `description` (String) A description for the API key.
 - `expiry` (Number) Expiry of the API key in number of days. If set to -1, the token will not expire.

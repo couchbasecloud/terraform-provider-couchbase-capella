@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_project_event Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Data source to retrieve an event for a project. Events represent a trail of actions that users performs within Capella at the project level.
+  The data source to retrieve an event for a project. Events represent a trail of actions that users performs within Capella at the project level.
 ---
 
 # couchbase-capella_project_event (Data Source)
 
-Data source to retrieve an event for a project. Events represent a trail of actions that users performs within Capella at the project level.
+The data source to retrieve an event for a project. Events represent a trail of actions that users performs within Capella at the project level.
 
 ## Example Usage
 

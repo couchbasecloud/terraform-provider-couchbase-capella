@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_private_endpoint_service Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Data source to retrieve the status of the private endpoint service for an operational cluster. Private endpoint service enables secure connectivity between your Cloud Service Provider's private network (VPC/VNET) and your operational cluster.
+  The data source to retrieve the status of the private endpoint service for an operational cluster. Private endpoint service enables secure connectivity between your Cloud Service Provider's private network (VPC/VNET) and your operational cluster.
 ---
 
 # couchbase-capella_private_endpoint_service (Data Source)
 
-Data source to retrieve the status of the private endpoint service for an operational cluster. Private endpoint service enables secure connectivity between your Cloud Service Provider's private network (VPC/VNET) and your operational cluster.
+The data source to retrieve the status of the private endpoint service for an operational cluster. Private endpoint service enables secure connectivity between your Cloud Service Provider's private network (VPC/VNET) and your operational cluster.
 
 ## Example Usage
 

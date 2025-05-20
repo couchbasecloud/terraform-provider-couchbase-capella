@@ -45,10 +45,10 @@ Read-Only:
 - `current_state` (String) The current cluster status. The cluster statuses are 'deploying', 'scaling', 'destroying', 'peering', 'healthy', and more.
 - `description` (String) A description of the cluster (up to 1024 characters).
 - `enable_private_dns_resolution` (Boolean) EnablePrivateDNSResolution signals that the cluster should have hostnames that are hosted in a public DNS zone that resolve to a private DNS address.
-- `id` (String) The ID of the Capella cluster.
+- `id` (String) The ID of the cluster.
 - `name` (String) The name of the cluster (up to 256 characters).
-- `organization_id` (String)
-- `project_id` (String)
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
 - `service_groups` (Attributes List) The Couchbase service groups running in the cluster. (see [below for nested schema](#nestedatt--data--service_groups))
 - `support` (Attributes) Support configuration for the cluster. (see [below for nested schema](#nestedatt--data--support))
 

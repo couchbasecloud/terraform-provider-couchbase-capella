@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_private_endpoints Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Data source to retrieve private endpoints for an operational cluster. Access your operational cluster from your Cloud Service Provider's private network. Returns a list of private endpoints associated with the endpoint service for your operational cluster, along with the endpoint state. Each private endpoint connects a private network to the operational cluster.
+  The data source to retrieve private endpoints for an operational cluster. Access your operational cluster from your Cloud Service Provider's private network. Returns a list of private endpoints associated with the endpoint service for your operational cluster, along with the endpoint state. Each private endpoint connects a private network to the operational cluster.
 ---
 
 # couchbase-capella_private_endpoints (Data Source)
 
-Data source to retrieve private endpoints for an operational cluster. Access your operational cluster from your Cloud Service Provider's private network. Returns a list of private endpoints associated with the endpoint service for your operational cluster, along with the endpoint state. Each private endpoint connects a private network to the operational cluster.
+The data source to retrieve private endpoints for an operational cluster. Access your operational cluster from your Cloud Service Provider's private network. Returns a list of private endpoints associated with the endpoint service for your operational cluster, along with the endpoint state. Each private endpoint connects a private network to the operational cluster.
 
 ## Example Usage
 

@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_organization Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Data source to retrieve information about a Capella organization.
+  The data source to retrieve information about a Capella organization.
 ---
 
 # couchbase-capella_organization (Data Source)
 
-Data source to retrieve information about a Capella organization.
+The data source to retrieve information about a Capella organization.
 
 ## Example Usage
 
