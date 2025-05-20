@@ -162,7 +162,7 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 
   Couchbase Capella uses an ordered hierarchy to help you keep all of your data organized and securely accessible.
   The entity at the top of the hierarchy is called an organization.
-  Everything you do in Capella  --  whether it’s creating a cluster or managing billing  --  happens within the scope of an [organization](https://docs.couchbase.com/cloud/organizations/organizations.html).
+  Everything you do in Capella, from creating a cluster to managing your billing, happens inside an [organization](https://docs.couchbase.com/cloud/organizations/organizations.html).
 
 * [Create and Manage Users](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/user):
 
@@ -191,7 +191,7 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 
   Database credentials are separate from organization roles and project roles.
   A [database credential](https://docs.couchbase.com/cloud/clusters/manage-database-users.html#about-database-credentials) is specific to a database and consists of a database access name, secret, and a set of bucket and scope access levels.
-  It’s required for applications to remotely authenticate on a database and access bucket data.
+  It's required for applications to remotely authenticate on a database and access bucket data.
 
 * [Create & Manage Allowlists](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/allowlist):
 
@@ -285,9 +285,24 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 
 * [Manage Flush Bucket](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/flush_bucket):
 
-  Flush a bucket to have the system delete all its data at the earliest opportunity available. 
+  Flush a bucket to have the system delete all its data at the earliest opportunity available.
 
 * [Manage GSI](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/gsi):
 
   Manage secondary indexes on a Capella operational cluster. It's recommended to use deferred index builds, especially for larger indexes.
 
+* [Create & Manage Free Tier Clusters](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/free_tier_cluster):
+
+  Create and manage a free tier operational cluster in Capella. Free tier operational clusters provide a cost-effective way to get started with Couchbase Capella. This is a Single Node cluster that runs only the Data, Query, Index, and Search services. Only 1 free tier operational cluster is available per organization.
+
+* [Create & Manage Free Tier Buckets](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/free_tier_bucket):
+
+  Create and manage buckets within a free tier operational cluster. Free tier buckets have specific memory allocation limits. This is a Couchbase bucket where only the name and memory quota is configurable. Other bucket properties use default values.
+
+* [Create & Manage Free Tier App Services](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/free_tier_appservice):
+
+  Set up and manage App Services for your free tier operational cluster. This is a Single Node App Service that can only be linked to a free tier operational cluster. The App Service can only be turned off and on when the linked free tier operational cluster is turned off and on.
+
+* [Manage Free Tier Cluster On/Off](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/free_tier_cluster_on_off):
+
+  Turn your free tier operational cluster on or off on demand to optimize resource usage. Turning the free tier cluster on or off will also turn on or off any linked App Services. 
