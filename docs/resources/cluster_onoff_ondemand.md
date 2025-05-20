@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_cluster_onoff_ondemand Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Manages the On/Off state of an operational cluster. TThis resource is used to turn your cluster on or off.
+  Manages the On/Off state of an operational cluster. This resource allows you to turn your cluster on or off.
 ---
 
 # couchbase-capella_cluster_onoff_ondemand (Resource)
 
-Manages the On/Off state of an operational cluster. TThis resource is used to turn your cluster on or off.
+Manages the On/Off state of an operational cluster. This resource allows you to turn your cluster on or off.
 
 ## Example Usage
 

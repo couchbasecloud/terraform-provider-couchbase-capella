@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_audit_log_settings Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Resource to manage audit log configuration settings for an operational cluster. These settings control which audit events are logged and which users are excluded from audit logging.
+  This resource allows you to manage audit log configuration settings for an operational cluster. These settings control which audit events are logged and which users are excluded from audit logging.
 ---
 
 # couchbase-capella_audit_log_settings (Resource)
 
-Resource to manage audit log configuration settings for an operational cluster. These settings control which audit events are logged and which users are excluded from audit logging.
+This resource allows you to manage audit log configuration settings for an operational cluster. These settings control which audit events are logged and which users are excluded from audit logging.
 
 ## Example Usage
 

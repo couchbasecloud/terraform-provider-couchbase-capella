@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_backup Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Manages backup resource associated with a bucket for a Couchbase Capella cluster.
+  Manages backup resource associated with a bucket for an operational Capella cluster.
 ---
 
 # couchbase-capella_backup (Resource)
 
-Manages backup resource associated with a bucket for a Couchbase Capella cluster.
+Manages backup resource associated with a bucket for an operational Capella cluster.
 
 ## Example Usage
 

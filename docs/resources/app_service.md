@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_app_service Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Resource to create and manage an App Service in Capella. App Service is a fully managed application backend designed to provide data synchronization between mobile or IoT applications running Couchbase Lite and your Couchbase Capella database.
+  This resource allows you to create and manage an App Service in Capella. App Service is a fully managed application backend designed to provide data synchronization between mobile or IoT applications running Couchbase Lite and your Couchbase Capella database.
 ---
 
 # couchbase-capella_app_service (Resource)
 
-Resource to create and manage an App Service in Capella. App Service is a fully managed application backend designed to provide data synchronization between mobile or IoT applications running Couchbase Lite and your Couchbase Capella database.
+This resource allows you to create and manage an App Service in Capella. App Service is a fully managed application backend designed to provide data synchronization between mobile or IoT applications running Couchbase Lite and your Couchbase Capella database.
 
 ## Example Usage
 
@@ -40,7 +40,7 @@ resource "couchbase-capella_app_service" "new_app_service" {
 
 ### Optional
 
-- `cloud_provider` (String) Provider is the cloud service provider for the App Service.
+- `cloud_provider` (String) The Cloud Service Provider for the App Service.
 - `description` (String) A short description of the App Service.
 - `if_match` (String) A precondition header that specifies the entity tag of a resource.
 - `nodes` (Number) Number of nodes configured for the App Service. Number of nodes configured for the App Service. The number of nodes can range from 2 to 12.

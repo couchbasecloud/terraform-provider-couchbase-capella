@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_cluster Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Manages the Couchbase operational cluster resource.
+  Manages the operational cluster resource.
 ---
 
 # couchbase-capella_cluster (Resource)
 
-Manages the Couchbase operational cluster resource.
+Manages the operational cluster resource.
 
 ## Example Usage
 
@@ -82,7 +82,7 @@ resource "couchbase-capella_cluster" "new_cluster" {
 - `connection_string` (String) The connection string to use to connect to the cluster.
 - `current_state` (String) The current state of the cluster.
 - `etag` (String) The ETag header value returned by the server, used for optimistic concurrency control.
-- `id` (String) The ID of the Capella cluster.
+- `id` (String) The ID of the operational cluster.
 
 <a id="nestedatt--availability"></a>
 ### Nested Schema for `availability`

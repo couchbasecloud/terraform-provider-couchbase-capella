@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_apikey Resource - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Resource to create and manage API keys in Capella. API keys are used to authenticate and authorize access to Capella resources and services.
+  This resource allows you to create and manage API keys in Capella. API keys are used to authenticate and authorize access to Capella resources and services.
 ---
 
 # couchbase-capella_apikey (Resource)
 
-Resource to create and manage API keys in Capella. API keys are used to authenticate and authorize access to Capella resources and services.
+This resource allows you to create and manage API keys in Capella. API keys are used to authenticate and authorize access to Capella resources and services.
 
 ## Example Usage
 
