@@ -9,11 +9,11 @@ import (
 
 func ClusterSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "Manages the Couchbase operational cluster resource.",
+		MarkdownDescription: "Manages the operational cluster resource.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "The ID of the Capella cluster.",
+				MarkdownDescription: "The ID of the operational cluster.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},

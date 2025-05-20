@@ -24,10 +24,16 @@ func ClusterSchema() schema.Schema {
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The ID of the Capella cluster.",
+							MarkdownDescription: "The ID of the cluster.",
 						},
-						"organization_id": computedStringAttribute,
-						"project_id":      computedStringAttribute,
+						"organization_id": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "The GUID4 ID of the organization.",
+						},
+						"project_id": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "The GUID4 ID of the project.",
+						},
 						"name": schema.StringAttribute{
 							Computed:            true,
 							MarkdownDescription: "The name of the cluster (up to 256 characters).",
