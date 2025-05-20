@@ -38,26 +38,47 @@ func (a *AuditLogExport) Metadata(_ context.Context, req datasource.MetadataRequ
 // Schema defines the schema for the audit log export data source.
 func (a *AuditLogExport) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Data source to retrieve audit log exports for a Capella cluster. It will show the pre-signed URL if the export was successful, a failure error if it was unsuccessful or a message saying no audit logs available if there were no audit logs found.",
+		MarkdownDescription: "The data source to retrieve audit log exports for an operational cluster. It will show the pre-signed URL if the export was successful, a failure error if it was unsuccessful, or a message saying no audit logs available if there were no audit logs found.",
 		Attributes: map[string]schema.Attribute{
-			"organization_id": requiredStringAttribute,
-			"project_id":      requiredStringAttribute,
-			"cluster_id":      requiredStringAttribute,
+			"organization_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the organization.",
+			},
+			"project_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the project.",
+			},
+			"cluster_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the cluster.",
+			},
 			"data": schema.SetNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"id":              computedStringAttribute,
-						"organization_id": computedStringAttribute,
-						"project_id":      computedStringAttribute,
-						"cluster_id":      computedStringAttribute,
+						"id": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "The ID of the audit log export job.",
+						},
+						"organization_id": schema.StringAttribute{
+							Required:            true,
+							MarkdownDescription: "The GUID4 ID of the organization.",
+						},
+						"project_id": schema.StringAttribute{
+							Required:            true,
+							MarkdownDescription: "The GUID4 ID of the project.",
+						},
+						"cluster_id": schema.StringAttribute{
+							Required:            true,
+							MarkdownDescription: "The GUID4 ID of the cluster.",
+						},
 						"audit_log_download_url": schema.StringAttribute{
 							Computed:            true,
 							MarkdownDescription: "Pre-signed URL to download cluster audit logs. This URL is only available when the export job status is 'completed'.",
 						},
 						"expiration": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The timestamp when the download link expires. The timestamp when the audit log export will expire and no longer be available for download.",
+							MarkdownDescription: "The timestamp for when the audit log export expires and will no longer be available for download.",
 						},
 						"start": schema.StringAttribute{
 							Computed:            true,
@@ -73,7 +94,7 @@ func (a *AuditLogExport) Schema(_ context.Context, _ datasource.SchemaRequest, r
 						},
 						"status": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The current status of the audit log export job. Possible values are 'queued', 'in progress', 'completed', or 'failed'.",
+							MarkdownDescription: "The current status of the audit log export job. Audit log export job statuses are 'queued', 'in progress', 'completed', or 'failed'.",
 						},
 					},
 				},

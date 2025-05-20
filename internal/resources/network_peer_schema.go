@@ -10,7 +10,7 @@ import (
 
 func NetworkPeerSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "Resource to manage network peering for a Capella cluster.",
+		MarkdownDescription: "This resource allows you to manage network peering for an operational cluster.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
@@ -20,15 +20,15 @@ func NetworkPeerSchema() schema.Schema {
 				MarkdownDescription: "The unique identifier for the network peering record.",
 			},
 			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}),
-				"The GUID4 ID of the organization that owns the Capella cluster."),
+				"The GUID4 ID of the organization."),
 			"project_id": WithDescription(stringAttribute([]string{required, requiresReplace}),
-				"The GUID4 ID of the project containing the Capella cluster."),
+				"The GUID4 ID of the project."),
 			"cluster_id": WithDescription(stringAttribute([]string{required, requiresReplace}),
-				"The GUID4 ID of the cluster to set up network peering for."),
+				"The GUID4 ID of the cluster to set up network peering."),
 			"name": WithDescription(stringAttribute([]string{required, requiresReplace}),
 				"The name of the network peering relationship."),
 			"provider_type": WithDescription(stringAttribute([]string{required, requiresReplace}),
-				"The cloud provider type for the network peering (aws, gcp, or azure)."),
+				"The Cloud Service Provider type for the network peering. Currently supporting AWS, GCP, or Azure."),
 			"commands": schema.SetAttribute{
 				Computed:            true,
 				ElementType:         types.StringType,
@@ -102,7 +102,7 @@ func NetworkPeerSchema() schema.Schema {
 					"reasoning": WithDescription(stringAttribute([]string{computed}),
 						"Detailed reason for the current status of the peering connection."),
 					"state": WithDescription(stringAttribute([]string{computed}),
-						"Current state of the peering connection (e.g., pending, active, failed)."),
+						"Current state of the peering connection. The status options are 'pending', 'active', or 'failed'."),
 				},
 			},
 			"audit": computedAuditAttribute(),

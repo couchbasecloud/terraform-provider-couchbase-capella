@@ -37,18 +37,41 @@ func (c *Collections) Metadata(_ context.Context, req datasource.MetadataRequest
 // Schema defines the schema for the collection data source.
 func (c *Collections) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "The data source for retrieving collections within a scope in a bucket.",
 		Attributes: map[string]schema.Attribute{
-			"organization_id": requiredStringAttribute,
-			"project_id":      requiredStringAttribute,
-			"cluster_id":      requiredStringAttribute,
-			"bucket_id":       requiredStringAttribute,
-			"scope_name":      requiredStringAttribute,
+			"organization_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the organization.",
+			},
+			"project_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the project.",
+			},
+			"cluster_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the cluster.",
+			},
+			"bucket_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The ID of the bucket. It is the URL-compatible base64 encoding of the bucket name",
+			},
+			"scope_name": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The name of the scope.",
+			},
 			"data": schema.ListNestedAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: "List of collections in the scope.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"collection_name": computedStringAttribute,
-						"max_ttl":         computedInt64Attribute,
+						"collection_name": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "The name of the collection.",
+						},
+						"max_ttl": schema.Int64Attribute{
+							Computed:            true,
+							MarkdownDescription: "The maximum Time To Live (TTL) for documents in the collection.",
+						},
 					},
 				},
 			},

@@ -38,40 +38,40 @@ func (a *AuditLogEventIDs) Metadata(_ context.Context, req datasource.MetadataRe
 // Schema defines the schema for the audit log event ids data source.
 func (a *AuditLogEventIDs) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Data source to retrieve audit log event IDs for a Capella cluster. These event IDs can be used to filter audit logs and configure audit logging.",
+		MarkdownDescription: "The data source to retrieve audit log event IDs for an operational cluster. These event IDs can be used to filter audit logs and configure audit logging.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The ID of the Capella organization.",
+				MarkdownDescription: "The GUID4 ID of the organization.",
 			},
 			"project_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The ID of the Capella project that the cluster belongs to.",
+				MarkdownDescription: "The GUID4 ID of the project.",
 			},
 			"cluster_id": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The ID of the Capella cluster to retrieve audit log event IDs from.",
+				MarkdownDescription: "The GUID4 ID of the cluster.",
 			},
 			"data": schema.SetNestedAttribute{
 				Computed:            true,
-				MarkdownDescription: "List of available audit log events and their details.",
+				MarkdownDescription: "Lists the available audit log events and their details.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"description": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "Description of what this audit event represents.",
+							MarkdownDescription: " A description of the audit log event.",
 						},
 						"id": schema.Int64Attribute{
 							Computed:            true,
-							MarkdownDescription: "The unique identifier for this audit event.",
+							MarkdownDescription: "The unique identifier for the audit log event.",
 						},
 						"module": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The Couchbase Server module that generates this type of audit event.",
+							MarkdownDescription: "The Couchbase Server module that generates this type of audit log event.",
 						},
 						"name": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The name of the audit event type.",
+							MarkdownDescription: "The name of the audit log event type.",
 						},
 					},
 				},

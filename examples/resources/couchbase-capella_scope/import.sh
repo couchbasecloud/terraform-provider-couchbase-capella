@@ -1,0 +1,1 @@
+terraform import couchbase-capella_scope.new_scope scope_name=new_terraform_scope,bucket_id=YjE=,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000

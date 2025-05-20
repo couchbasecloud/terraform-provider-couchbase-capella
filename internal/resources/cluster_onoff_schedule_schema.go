@@ -9,7 +9,7 @@ import (
 
 func OnOffScheduleSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "The On/Off schedule resource allows you to manage the on/off schedule for a Capella cluster.",
+		MarkdownDescription: "This resource allows you to manage the On/Off schedule for an operational cluster.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the organization."),
 			"project_id":      WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the project."),
@@ -17,10 +17,10 @@ func OnOffScheduleSchema() schema.Schema {
 			"timezone":        WithDescription(stringAttribute([]string{required, requiresReplace}), "Timezone for the schedule. Should be the TZ identifier. For example, 'US/Hawaii', 'Indian/Mauritius'"),
 			"days": schema.ListNestedAttribute{
 				Required:            true,
-				MarkdownDescription: "List of days the on/off schedule is active.",
+				MarkdownDescription: "List of days the On/Off schedule is active.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"state": WithDescription(stringAttribute([]string{required}), "Cluster state (on, off, or custom)."),
+						"state": WithDescription(stringAttribute([]string{required}), "The cluster state. It can be 'on', 'off', or 'custom'."),
 						"day": WithDescription(stringAttribute([]string{required},
 							validator.String(stringvalidator.OneOf("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"))),
 							"Day of the week for scheduling on/off."),
@@ -38,7 +38,7 @@ func OnOffScheduleSchema() schema.Schema {
 									Optional:            true,
 									Computed:            true,
 									Default:             int64default.StaticInt64(0),
-									MarkdownDescription: "Minute of the time boundary. Valid minute values are 0 and 30",
+									MarkdownDescription: "Minute of the time boundary. The valid minute values are 0 and 30.",
 								},
 							},
 						},
@@ -56,7 +56,7 @@ func OnOffScheduleSchema() schema.Schema {
 									Optional:            true,
 									Computed:            true,
 									Default:             int64default.StaticInt64(0),
-									MarkdownDescription: "Minute of the time boundary. Valid minute values are 0 and 30",
+									MarkdownDescription: "Minute of the time boundary. The valid minute values are 0 and 30.",
 								},
 							},
 						},
