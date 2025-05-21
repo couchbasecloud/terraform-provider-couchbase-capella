@@ -1,5 +1,100 @@
 # Changelog
 
+## [v1.5.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.5.0) (2025-05-21)
+
+[Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.4.1...v1.5.0)
+
+**Implemented enhancements:**
+
+- Does provider support Alert Integration [\#257](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues/257)
+- \[AV-98659\] Implement Free Tier On Off  [\#286](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/286) ([SaicharanCB](https://github.com/SaicharanCB))
+- \[AV-98401\] Add Free Tier App Service Resource [\#283](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/283) ([SaicharanCB](https://github.com/SaicharanCB))
+- \[AV-98308\] Add Free Tier Bucket Resource [\#282](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/282) ([SaicharanCB](https://github.com/SaicharanCB))
+- \[AV-84484\] Implement Free Tier Cluster [\#264](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/264) ([SaicharanCB](https://github.com/SaicharanCB))
+
+**Fixed bugs:**
+
+- VPC peering resource is recreated on each apply [\#284](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues/284)
+- Problem creating primary index with one replica [\#277](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues/277)
+- How to create a primary index using the couchbase-capella\_query\_indexes [\#259](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues/259)
+- \[AV-99812\] Set Provider Type [\#287](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/287) ([l0n3star](https://github.com/l0n3star))
+- \[AV-97596\] Set Computed Value for Replica Correctly [\#278](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/278) ([l0n3star](https://github.com/l0n3star))
+- \[AV-97308\] Clean Up Resources on Setup Fail [\#276](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/276) ([l0n3star](https://github.com/l0n3star))
+- \[AV-97306\] Set indexName for Secondary Index [\#275](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/275) ([l0n3star](https://github.com/l0n3star))
+- \[AV-97171\] Fix Github Files to Use ubuntu-latest and upgrade sdk [\#273](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/273) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-97053\] Get Default Primary Index Name Correctly [\#269](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/269) ([l0n3star](https://github.com/l0n3star))
+
+**Closed issues:**
+
+- Improve Documentation [\#289](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues/289)
+- Provider resource for cluster backups [\#268](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues/268)
+- Docs: Provider docs wrong variable name [\#261](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues/261)
+- Database Injection Attack vulnerability [\#256](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues/256)
+
+**Merged pull requests:**
+
+- Bump github.com/hashicorp/terraform-plugin-framework from 1.14.1 to 1.15.0 [\#342](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/342) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump github.com/hashicorp/terraform-plugin-testing from 1.12.0 to 1.13.0 [\#341](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/341) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump github.com/hashicorp/terraform-plugin-go from 0.26.0 to 0.27.0 [\#340](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/340) ([dependabot[bot]](https://github.com/apps/dependabot))
+- \[AV-102211\] Address Final Docs Review Comments [\#339](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/339) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-101713\] Address Resources Docs Review Comments [\#338](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/338) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-102119\] Add Documentation for Scopes and Collections Resources and Datasources [\#337](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/337) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-101712\] Address Datasources Docs Review Comments [\#336](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/336) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- Bump github.com/hashicorp/terraform-plugin-framework-validators from 0.17.0 to 0.18.0 [\#335](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/335) ([dependabot[bot]](https://github.com/apps/dependabot))
+- \[AV-101826\] Automate Addition of PR labels [\#334](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/334) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-101710\] Update Documentation for All Resources [\#331](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/331) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-101592\] Update index.md and 1.5.0-upgrade-guide.md Files [\#330](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/330) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-101448\] Update Documentation for All Datasources [\#328](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/328) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-100853\] Update Readme File in Examples [\#327](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/327) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-100854\] Add documentation for GSI Resources and Datasources [\#326](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/326) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-100850\] Add Documentation for Free-Tier Cluster [\#325](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/325) ([SaicharanCB](https://github.com/SaicharanCB))
+- \[AV-100851\] Add Documentation for Free Tier On/Off [\#324](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/324) ([SaicharanCB](https://github.com/SaicharanCB))
+- \[AV-100882\] Add Documentation for Cluster On/Off Schedule [\#323](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/323) ([SaicharanCB](https://github.com/SaicharanCB))
+- \[AV-100881\] Add Documentation for  Cluster On/Off On Demand [\#322](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/322) ([SaicharanCB](https://github.com/SaicharanCB))
+- \[AV-100880\] Add Documentation for App Service On/Off [\#321](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/321) ([SaicharanCB](https://github.com/SaicharanCB))
+- \[AV-100879\] Add documentation for Certificate Datasource [\#320](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/320) ([SaicharanCB](https://github.com/SaicharanCB))
+- \[AV-100878\] Add documentation for Backup Schedule Resource and Datasource [\#319](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/319) ([SaicharanCB](https://github.com/SaicharanCB))
+- \[AV-100877\] Add documentation for Backup Resource and Datasource [\#318](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/318) ([SaicharanCB](https://github.com/SaicharanCB))
+- \[AV-100866\] Add documentation for Sample Bucket Resource [\#317](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/317) ([karanjain-ops](https://github.com/karanjain-ops))
+- \[AV-100867\] Add documentation for Project Resource and Datasource \(Part 2\) [\#316](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/316) ([karanjain-ops](https://github.com/karanjain-ops))
+- \[AV-100868\] Add documentation for Project Event Datasource \(Part 1\) [\#315](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/315) ([karanjain-ops](https://github.com/karanjain-ops))
+- \[AV-100869\] Add documentation for Project Resource and Datasource [\#314](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/314) ([karanjain-ops](https://github.com/karanjain-ops))
+- \[AV-100870\] Add documentation for Bucket Flush Datasource [\#313](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/313) ([karanjain-ops](https://github.com/karanjain-ops))
+- \[AV-100871\] Add documentation for Event Datasource \(Part 2\) [\#312](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/312) ([karanjain-ops](https://github.com/karanjain-ops))
+- \[AV-100872\] Add documentation for Event Datasource \(Part 1\)  [\#311](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/311) ([karanjain-ops](https://github.com/karanjain-ops))
+- \[AV-100873\] Add documentation for Database Credentials Resource and Datasource [\#310](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/310) ([karanjain-ops](https://github.com/karanjain-ops))
+- \[AV-100874\] Add documentation for App Services Resource and Datasource [\#309](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/309) ([karanjain-ops](https://github.com/karanjain-ops))
+- \[AV-100875\] Add documentation for API Keys Resource and Datasource [\#308](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/308) ([karanjain-ops](https://github.com/karanjain-ops))
+- \[AV-100855\] Add documentation for Network Peering Resource and Datasource [\#307](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/307) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-100856\] Add documentation for Azure VNet Peering Datasource [\#306](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/306) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-100857\] Add documentation for Organization Datasource [\#305](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/305) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-100858\] Add documentation for Private Endpoints Resource and Datasource \(Part 3\) [\#304](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/304) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-100859\] Add documentation for Private Endpoints Resource and Datasource \(Part 2\) [\#303](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/303) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-100860\] Add documentation for Private Endpoints Resource and Datasource \(Part 1\) [\#302](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/302) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-100861\] Add documentation for Audit log Export Resource and Datasource [\#301](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/301) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-100862\] Add documentation for Audit log Settings [\#300](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/300) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-100863\] Add documentation for Audit log Event IDs Datasource [\#299](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/299) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-100864\] Add documentation for Cluster Resource and Datasource [\#298](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/298) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-101023\] Add import code snippet to documentation [\#297](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/297) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-100893\] Add markdown description to fields using Generics [\#295](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/295) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-100865\] Add documentation for User Resource and Datasource [\#293](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/293) ([karanjain-ops](https://github.com/karanjain-ops))
+- \[AV-100849\] Add documentation for Free Tier Buckets [\#292](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/292) ([SaicharanCB](https://github.com/SaicharanCB))
+- \[AV-100830\] Add documentation for free-tier resources [\#291](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/291) ([SaicharanCB](https://github.com/SaicharanCB))
+- \[AV-100782\] Add documentation for the Allowlist Resource [\#290](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/290) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- Bump golang.org/x/net from 0.37.0 to 0.38.0 [\#288](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/288) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump github.com/hashicorp/terraform-plugin-testing from 1.11.0 to 1.12.0 [\#281](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/281) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump golang.org/x/time from 0.10.0 to 0.11.0 [\#279](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/279) ([dependabot[bot]](https://github.com/apps/dependabot))
+- \[AV-97194\] Update Backup Documentation to add the term Bucket [\#274](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/274) ([l0n3star](https://github.com/l0n3star))
+- \[AV-97063\] Tie down the versions for golangci-lint and ubuntu in Github workflows [\#270](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/270) ([Talina06](https://github.com/Talina06))
+- Bump github.com/hashicorp/terraform-plugin-framework from 1.13.0 to 1.14.1 [\#267](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/267) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump github.com/hashicorp/terraform-plugin-framework-validators from 0.16.0 to 0.17.0 [\#265](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/265) ([dependabot[bot]](https://github.com/apps/dependabot))
+- \[Docs\] Update documentation to use the correct environment variable [\#263](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/263) ([cdsre](https://github.com/cdsre))
+- Bump golang.org/x/time from 0.8.0 to 0.10.0 [\#260](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/260) ([dependabot[bot]](https://github.com/apps/dependabot))
+- \[AV-92992\] Refactor and Optimize Acceptance Tests [\#255](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/255) ([l0n3star](https://github.com/l0n3star))
+- Bump github.com/hashicorp/terraform-plugin-testing from 1.7.0 to 1.11.0 [\#253](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/253) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+
+
 ## [v1.4.1](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.4.1) (2024-12-20)
 
 [Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.4.0...v1.4.1)
