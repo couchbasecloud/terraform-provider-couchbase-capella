@@ -6,7 +6,6 @@
 
 **Implemented enhancements:**
 
-- Does provider support Alert Integration [\#257](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues/257)
 - \[AV-98659\] Implement Free Tier On Off  [\#286](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/286) ([SaicharanCB](https://github.com/SaicharanCB))
 - \[AV-98401\] Add Free Tier App Service Resource [\#283](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/283) ([SaicharanCB](https://github.com/SaicharanCB))
 - \[AV-98308\] Add Free Tier Bucket Resource [\#282](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/282) ([SaicharanCB](https://github.com/SaicharanCB))
@@ -14,9 +13,6 @@
 
 **Fixed bugs:**
 
-- VPC peering resource is recreated on each apply [\#284](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues/284)
-- Problem creating primary index with one replica [\#277](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues/277)
-- How to create a primary index using the couchbase-capella\_query\_indexes [\#259](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues/259)
 - \[AV-99812\] Set Provider Type [\#287](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/287) ([l0n3star](https://github.com/l0n3star))
 - \[AV-97596\] Set Computed Value for Replica Correctly [\#278](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/278) ([l0n3star](https://github.com/l0n3star))
 - \[AV-97308\] Clean Up Resources on Setup Fail [\#276](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/276) ([l0n3star](https://github.com/l0n3star))
@@ -27,8 +23,12 @@
 **Closed issues:**
 
 - Improve Documentation [\#289](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues/289)
+- VPC peering resource is recreated on each apply [\#284](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues/284)
+- Problem creating primary index with one replica [\#277](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues/277)
 - Provider resource for cluster backups [\#268](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues/268)
 - Docs: Provider docs wrong variable name [\#261](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues/261)
+- How to create a primary index using the couchbase-capella\_query\_indexes [\#259](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues/259)
+- Does provider support Alert Integration [\#257](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues/257)
 - Database Injection Attack vulnerability [\#256](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues/256)
 
 **Merged pull requests:**
