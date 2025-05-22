@@ -16,7 +16,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const title = context.payload.pull_request.title;
-            const pattern = /^\[AV-\d{5}\]\s+[A-Z][a-z].+/;
+            const pattern = /^\[AV-\d{9}\]\s+[A-Z][a-z].+/;
             
             if (!pattern.test(title)) {
               core.setFailed(`PR title "${title}" does not match the required format.
