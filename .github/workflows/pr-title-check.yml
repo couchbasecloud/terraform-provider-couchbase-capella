@@ -1,0 +1,28 @@
+name: PR Title Check
+
+on: [pull_request]
+
+jobs:
+  check-pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR Title
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const title = context.payload.pull_request.title;
+            const pattern = /^\[AV-\d{5}\]\s+[A-Z][a-z].+/;
+            
+            if (!pattern.test(title)) {
+              core.setFailed(`PR title "${title}" does not match the required format.
+                
+                Requirements:
+                - Must start with [AV-XXXXX] where X is a digit
+                - After the bracket, must start with a Verb (Add, Update, Fix, etc.)
+                - The Verb must start with an uppercase letter
+                
+                Expected format: [AV-XXXXX] Verb ...
+                Example: [AV-98659] Implement Cluster On/Off feature
+                Valid verbs: Add, Update, Fix, Implement, Remove, Refactor, etc.`);
+            } 
