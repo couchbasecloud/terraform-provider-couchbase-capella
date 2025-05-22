@@ -47,7 +47,7 @@ jobs:
                 body: errorMessage
               });
               
-              core.setFailed('🚨 PR description validation failed. Please check the comment for details.');
+              core.setFailed('PR description validation failed. Please check the comment for details.');
             }
 
             // Log the description for debugging
