@@ -25,8 +25,12 @@ jobs:
             const description = pr.data.body || '';
             const defaultText = "Please include a summary of the fix/feature/change, including any relevant motivation and context.";
             
-            // Check if description is default or empty
-            if (!description || description.trim() === '' || description.includes(defaultText)) {
+            // Check if description is empty, only whitespace, or contains default text
+            if (!description || 
+                description.trim().length === 0 || 
+                description.includes(defaultText) || 
+                description === 'null' || 
+                description === 'undefined') {
               const errorMessage = `📝 PR Description Error:
                 Your PR description needs attention.
                 
@@ -50,3 +54,8 @@ jobs:
               
               core.setFailed('PR description validation failed. Please check the comment for details.');
             }
+
+            // Log the description for debugging
+            console.log('PR Description:', description);
+            console.log('Description length:', description.length);
+            console.log('Trimmed length:', description.trim().length);
