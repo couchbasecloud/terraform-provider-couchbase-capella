@@ -4,6 +4,7 @@ on: [pull_request]
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   check-pr-title:
@@ -18,7 +19,7 @@ jobs:
             const pattern = /^\[AV-\d+\]\s+[A-Z][A-Za-z\s].+/;
             
             if (!pattern.test(title)) {
-              core.setFailed(`PR title "${title}" does not match the required format.
+              const errorMessage = `🚨 PR title "${title}" does not match the required format.
                 
                 Requirements:
                 - Must start with [AV-XXXXX] where X is any number of digits
@@ -27,5 +28,15 @@ jobs:
                 
                 Expected format: [AV-XXXXX] Verb ...
                 Example: [AV-98659] Implement Cluster On/Off feature
-                Valid verbs: Add, Update, Fix, Implement, Remove, Refactor, etc.`);
+                Valid verbs: Add, Update, Fix, Implement, Remove, Refactor, etc.`;
+              
+              // Add comment to the PR
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: errorMessage
+              });
+              
+              core.setFailed(errorMessage);
             } 
