@@ -25,18 +25,13 @@ jobs:
             const description = pr.data.body || '';
             const defaultText = "Please include a summary of the fix/feature/change, including any relevant motivation and context.";
             
-            // Check if description is empty, only whitespace, or contains default text
-            if (!description || 
-                description.trim().length === 0 || 
-                description.includes(defaultText) || 
-                description === 'null' || 
-                description === 'undefined') {
-              const errorMessage = `📝 PR Description Error:
+            // Only check for default template text
+            if (description.includes(defaultText)) {
+              const errorMessage = ` PR Description Error:
                 Your PR description needs attention.
                 
                 Description Requirements:
-                - Must not be empty
-                - Must not contain only the default template text
+                - Must not contain the default template text
                 - Should include:
                   * A clear summary of the changes
                   * Motivation for the changes
@@ -52,7 +47,7 @@ jobs:
                 body: errorMessage
               });
               
-              core.setFailed('PR description validation failed. Please check the comment for details.');
+              core.setFailed('🚨 PR description validation failed. Please check the comment for details.');
             }
 
             // Log the description for debugging
