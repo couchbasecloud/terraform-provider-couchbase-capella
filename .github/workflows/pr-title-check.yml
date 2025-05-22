@@ -15,7 +15,14 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const title = context.payload.pull_request.title;
+            // Fetch the current PR data
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            
+            const title = pr.data.title;
             const pattern = /^\[AV-\d+\]\s+[A-Z][A-Za-z\s].+/;
             
             if (!pattern.test(title)) {
