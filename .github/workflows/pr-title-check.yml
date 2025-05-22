@@ -3,6 +3,7 @@ name: PR Title Check
 on: [pull_request]
 
 permissions:
+  contents: read
   pull-requests: read
 
 jobs:
