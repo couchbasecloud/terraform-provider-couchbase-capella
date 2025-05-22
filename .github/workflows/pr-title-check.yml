@@ -4,7 +4,6 @@ on: [pull_request]
 
 permissions:
   contents: read
-  pull-requests: read
 
 jobs:
   check-pr-title:
@@ -16,13 +15,13 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const title = context.payload.pull_request.title;
-            const pattern = /^\[AV-\d{9}\]\s+[A-Z][a-z].+/;
+            const pattern = /^\[AV-\d+\]\s+[A-Z][A-Za-z\s].+/;
             
             if (!pattern.test(title)) {
               core.setFailed(`PR title "${title}" does not match the required format.
                 
                 Requirements:
-                - Must start with [AV-XXXXX] where X is a digit
+                - Must start with [AV-XXXXX] where X is any number of digits
                 - After the bracket, must start with a Verb (Add, Update, Fix, etc.)
                 - The Verb must start with an uppercase letter
                 
