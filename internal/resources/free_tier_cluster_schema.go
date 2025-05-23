@@ -85,7 +85,7 @@ func FreeTierClusterSchema() schema.Schema {
 							},
 						},
 						"num_of_nodes": WithDescription(int64Attribute(computed), "The number of nodes in the Service Group."),
-						"services":     WithDescription(stringSetAttribute(computed), "The services enabled for the service group. Should be a comma-separated list of services. For example, 'data,index,query'"),
+						"services":     WithDescription(stringSetAttribute(computed), "The services enabled for the Service Group. Should be a comma-separated list of services. For example, 'data,index,query'."),
 					},
 				},
 			},
