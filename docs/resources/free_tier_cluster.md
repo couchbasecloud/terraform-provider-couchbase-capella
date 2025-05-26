@@ -100,7 +100,7 @@ Read-Only:
 
 - `node` (Attributes) Node details for the Service Group. (see [below for nested schema](#nestedatt--service_groups--node))
 - `num_of_nodes` (Number) The number of nodes in the Service Group.
-- `services` (String) The services enabled for the Service Group. Should be a comma-separated list of services. For example, 'data,index,query'.
+- `services` (Set of String) The services enabled for the Service Group. Should be a comma-separated list of services. For example, 'data,index,query'.
 
 <a id="nestedatt--service_groups--node"></a>
 ### Nested Schema for `service_groups.node`
