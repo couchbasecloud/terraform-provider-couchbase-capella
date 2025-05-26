@@ -1,5 +1,13 @@
 # Changelog
 
+## [v1.5.1](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.5.1) (2025-05-26)
+
+[Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.5.0...v1.5.1)
+
+**Fixed bugs:**
+
+- AV-102419: Fix PFT cluster schema [\#345](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/345) ([SaicharanCB](https://github.com/SaicharanCB))
+
 ## [v1.5.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.5.0) (2025-05-21)
 
 [Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.4.1...v1.5.0)
