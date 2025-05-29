@@ -104,3 +104,7 @@ func (a *AppServiceCidr) Create(ctx context.Context, req resource.CreateRequest,
 	// TODO save state
 
 }
+
+func (a *AppServiceCidr) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	// TODO
+}
