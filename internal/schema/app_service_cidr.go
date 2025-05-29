@@ -19,3 +19,7 @@ type AppServiceCIDR struct {
 
 	Audit types.Object `tfsdk:"audit"`
 }
+
+// TODO
+type AppServiceCIDRs struct {
+}
