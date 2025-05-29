@@ -32,3 +32,9 @@ func (a *AppServiceCidrs) Schema(_ context.Context, _ datasource.SchemaRequest, 
 func (a *AppServiceCidrs) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	// TODO
 }
+
+func (a *AppServiceCidrs) Configure(
+	_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse,
+) {
+	// TODO
+}
