@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	_ datasource.DataSource = (*AppServiceCidrs)(nil)
+	_ datasource.DataSource              = (*AppServiceCidrs)(nil)
 	_ datasource.DataSourceWithConfigure = (*AppServiceCidrs)(nil)
 )
 
@@ -23,4 +23,8 @@ func (a *AppServiceCidrs) Metadata(
 	_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse,
 ) {
 	resp.TypeName = req.ProviderTypeName + "_app_service_cidrs"
+}
+
+func (a *AppServiceCidrs) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	// TODO
 }
