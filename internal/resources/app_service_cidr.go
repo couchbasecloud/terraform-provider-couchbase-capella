@@ -108,3 +108,12 @@ func (a *AppServiceCidr) Create(ctx context.Context, req resource.CreateRequest,
 func (a *AppServiceCidr) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	// TODO
 }
+
+func (a *AppServiceCidr) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// Couchbase Capella's v4 does not support a PUT endpoint for app services cidr.
+	// This resource can only be created, read and deleted.
+	//
+	// Note: In this situation, terraform apply will default to deleting and executing a new create.
+	// The update implementation should simply be left empty.
+	// https://developer.hashicorp.com/terraform/plugin/framework/resources/update
+}
