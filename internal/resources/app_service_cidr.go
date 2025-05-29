@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"context"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 )
@@ -17,4 +18,8 @@ type AppServiceCidr struct {
 
 func NewAppServiceCidr() resource.Resource {
 	return &AppServiceCidr{}
+}
+
+func (a *AppServiceCidr) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_project"
 }
