@@ -121,3 +121,9 @@ func (a *AppServiceCidr) Update(ctx context.Context, req resource.UpdateRequest,
 func (a *AppServiceCidr) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// TODO
 }
+
+func (a *AppServiceCidr) ImportState(
+	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
+) {
+	// TODO
+}
