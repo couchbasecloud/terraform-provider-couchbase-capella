@@ -2,9 +2,12 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"net/http"
 )
 
 var (
@@ -46,4 +49,58 @@ func (a *AppServiceCidr) Configure(_ context.Context, req resource.ConfigureRequ
 	}
 
 	a.Data = data
+}
+
+func (a *AppServiceCidr) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan providerschema.AppServiceCIDR
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	cidrReq := api.CreateAllowedCIDRRequest{
+		Cidr:      plan.Cidr.ValueString(),
+		Comment:   plan.Comment.ValueString(),
+		ExpiresAt: plan.ExpiresAt.ValueString(),
+	}
+
+	url := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/allowedcidrs",
+		a.HostURL,
+		plan.OrganizationId.ValueString(),
+		plan.ProjectId.ValueString(),
+		plan.ClusterId.ValueString(),
+		plan.AppServiceId.ValueString(),
+	)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
+	response, err := a.Client.ExecuteWithRetry(
+		ctx,
+		cfg,
+		cidrReq,
+		a.Token,
+		nil,
+	)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Creating App Service CIDR",
+			"", // TODO: Add error message detail
+		)
+		return
+	}
+
+	cidrResp := &api.AppServiceAllowedCIDRResponse{}
+	err = json.Unmarshal(response.Body, &cidrResp)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Unmarshalling App Service CIDR Response",
+			"", // TODO : Add error message detail
+		)
+		return
+	}
+
+	// TODO get latest status of the CIDR
+
+	// TODO save state
+
 }
