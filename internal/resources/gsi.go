@@ -56,9 +56,9 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 		return
 	}
 
-	// initialize computed attributes
+	// initialize computed attributes to null.
 	if plan.With != nil {
-		if plan.With.NumReplica.IsNull() {
+		if plan.With.NumReplica.IsNull() || plan.With.NumReplica.IsUnknown() {
 			plan.With.NumReplica = types.Int64Null()
 		}
 	}
