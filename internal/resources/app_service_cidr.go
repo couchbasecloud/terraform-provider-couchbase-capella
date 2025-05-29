@@ -117,3 +117,7 @@ func (a *AppServiceCidr) Update(ctx context.Context, req resource.UpdateRequest,
 	// The update implementation should simply be left empty.
 	// https://developer.hashicorp.com/terraform/plugin/framework/resources/update
 }
+
+func (a *AppServiceCidr) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	// TODO
+}
