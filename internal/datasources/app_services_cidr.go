@@ -28,3 +28,7 @@ func (a *AppServiceCidrs) Metadata(
 func (a *AppServiceCidrs) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	// TODO
 }
+
+func (a *AppServiceCidrs) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	// TODO
+}
