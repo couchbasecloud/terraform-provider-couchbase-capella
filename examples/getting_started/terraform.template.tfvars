@@ -192,11 +192,9 @@ aws_config = {
   cidr       = "10.0.0.0/16"
 }
 
-index_name = "idx1"
 index_keys = ["id", "age", "name"]
 where      = "dept = 'sales'"
 
 with = {
   defer_build = false
-  num_replica = 1
 }
