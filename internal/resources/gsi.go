@@ -56,13 +56,19 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 		return
 	}
 
-	// initialize computed attributes
+	// initialize computed attributes to null.
 	if plan.With != nil {
-		if plan.With.NumReplica.IsNull() {
+		if plan.With.NumReplica.IsNull() || plan.With.NumReplica.IsUnknown() {
 			plan.With.NumReplica = types.Int64Null()
 		}
 	}
 	plan.Status = types.StringNull()
+
+	diags := resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	var ddl string
 	var indexName string
@@ -227,10 +233,6 @@ This will automatically be retried in the background.  Please run "terraform app
 				plan.CollectionName.ValueString(),
 			),
 		)
-
-		// save to state file so that refresh can work.
-		// this is preferrable to import as there can be many indexes in this state.
-		resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 
 		return
 
