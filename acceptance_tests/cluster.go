@@ -3,6 +3,7 @@ package acceptance_tests
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -17,7 +18,7 @@ import (
 // cluster is created with enterprise plan as some features require this.
 func createCluster(ctx context.Context, client *api.Client) error {
 	// TODO: AV-96938: generate CIDR dynamically
-	cidr := "10.246.250.0/23"
+	cidr := "10.200.250.0/23"
 
 	node := clusterapi.Node{}
 	diskAws := clusterapi.DiskAWS{
@@ -97,46 +98,52 @@ func destroyCluster(ctx context.Context, client *api.Client) error {
 		return err
 	}
 
-	log.Print("cluster destroyed")
-
 	return nil
 }
 
 func clusterWait(ctx context.Context, client *api.Client, destroy bool) error {
-	const maxWaitTime = 60 * time.Minute
+	const maxWaitTime = 30 * time.Minute
+	const checkInterval = 1 * time.Minute
 
-	var cancel context.CancelFunc
-	ctx, cancel = context.WithTimeout(ctx, maxWaitTime)
-	defer cancel()
+	deadline := time.Now().Add(maxWaitTime)
 
-	ticker := time.NewTicker(1 * time.Minute)
-	defer ticker.Stop()
+	for time.Now().Before(deadline) {
+		url := fmt.Sprintf(
+			"%s/v4/organizations/%s/projects/%s/clusters/%s",
+			globalHost,
+			globalOrgId,
+			globalProjectId,
+			globalClusterId,
+		)
 
-	for {
-		select {
-		case <-ctx.Done():
-			return ErrTimeoutWaitingForCluster
-		case <-ticker.C:
-			url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", globalHost, globalOrgId, globalProjectId, globalClusterId)
-			cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-			response, err := client.ExecuteWithRetry(
-				ctx,
-				cfg,
-				nil,
-				globalToken,
-				nil,
-			)
-			if err != nil {
-				if destroy {
-					if apiError, ok := err.(*api.Error); ok {
-						if apiError.HttpStatusCode == http.StatusNotFound {
-							return nil
-						}
-					}
-				}
-				return err
+		cfg := api.EndpointCfg{
+			Url:           url,
+			Method:        http.MethodGet,
+			SuccessStatus: http.StatusOK,
+		}
+
+		response, err := client.ExecuteWithRetry(
+			ctx,
+			cfg,
+			nil,
+			globalToken,
+			nil,
+		)
+		if err != nil {
+			resourceNotFound, errMsg := api.CheckResourceNotFoundError(err)
+			if destroy && resourceNotFound {
+				log.Print("cluster destroyed")
+				return nil
 			}
+			if destroy && !resourceNotFound {
+				return errors.New(errMsg)
+			}
+			
+			return err
+		}
 
+
+		if !destroy {
 			clusterResp := clusterapi.GetClusterResponse{}
 			err = json.Unmarshal(response.Body, &clusterResp)
 			if err != nil {
@@ -148,5 +155,9 @@ func clusterWait(ctx context.Context, client *api.Client, destroy bool) error {
 				return nil
 			}
 		}
+
+		time.Sleep(checkInterval)
 	}
+
+	return fmt.Errorf("timeout waiting for cluster to be created or destroyed")
 }
