@@ -25,16 +25,16 @@ func createAppService(ctx context.Context, client *api.Client) error {
 	}
 
 	url := fmt.Sprintf(
-		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices", 
-		globalHost, 
-		globalOrgId, 
-		globalProjectId, 
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices",
+		globalHost,
+		globalOrgId,
+		globalProjectId,
 		globalClusterId,
 	)
 
 	cfg := api.EndpointCfg{
-		Url: url, 
-		Method: http.MethodPost, 
+		Url:           url,
+		Method:        http.MethodPost,
 		SuccessStatus: http.StatusCreated,
 	}
 
@@ -96,10 +96,9 @@ func appServiceWait(ctx context.Context, client *api.Client, destroy bool) error
 			if destroy && !resourceNotFound {
 				return errors.New(errMsg)
 			}
-			
+
 			return err
 		}
-
 
 		if !destroy {
 			var appServiceResponse appservice.GetAppServiceResponse

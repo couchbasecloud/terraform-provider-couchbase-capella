@@ -138,10 +138,9 @@ func clusterWait(ctx context.Context, client *api.Client, destroy bool) error {
 			if destroy && !resourceNotFound {
 				return errors.New(errMsg)
 			}
-			
+
 			return err
 		}
-
 
 		if !destroy {
 			clusterResp := clusterapi.GetClusterResponse{}
