@@ -7,6 +7,7 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -117,7 +118,7 @@ func (a *AppServiceCidr) Create(ctx context.Context, req resource.CreateRequest,
 	refreshedState, err := a.refreshAllowedCIDR(ctx, plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), plan.ClusterId.ValueString(), cidrResp.Id, plan.AppServiceId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddWarning(
-			"Error reading Capella AllowList",
+			"Error reading App Service Allowed CIDR after creation",
 			errorMessageAfterAllowListCreation+api.ParseError(err),
 		)
 		return
@@ -281,11 +282,61 @@ func (a *AppServiceCidr) Update(ctx context.Context, req resource.UpdateRequest,
 }
 
 func (a *AppServiceCidr) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// TODO
+	// Retrieve existing state
+	var state providerschema.AppServiceCIDR
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Validate parameters were successfully imported
+	organizationId, projectId, clusterId, appServiceId, allowedCIDRId, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading App Service Allowed CIDR",
+			"Could not read App Service Allowed CIDR: "+err.Error(),
+		)
+		return
+	}
+
+	// Execute request to delete existing allowlist
+	url := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/allowedcidrs/%s",
+		a.HostURL,
+		organizationId,
+		projectId,
+		clusterId,
+		appServiceId,
+		allowedCIDRId,
+	)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
+	_, err = a.Client.ExecuteWithRetry(
+		ctx,
+		cfg,
+		nil,
+		a.Token,
+		nil,
+	)
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError(
+			"Error Reading Capella AllowList",
+			"Could not read Capella allowListID "+allowedCIDRId+": "+errString,
+		)
+		return
+	}
 }
 
 func (a *AppServiceCidr) ImportState(
 	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
 ) {
-	// TODO
+	// Retrieve import ID and save to id attribute
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
