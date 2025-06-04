@@ -8,6 +8,7 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"net/http"
 )
@@ -107,46 +108,122 @@ func (a *AppServiceCidr) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	// TODO set computed attributes to null
+	diags = resp.State.Set(ctx, initializeAllowedCIDRWithPlanAndId(plan, cidrResp.Id))
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	// TODO get latest status of the CIDR
+	refreshedState, err := a.refreshAllowedCIDR(ctx, plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), plan.ClusterId.ValueString(), cidrResp.Id, plan.AppServiceId.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddWarning(
+			"Error reading Capella AllowList",
+			errorMessageAfterAllowListCreation+api.ParseError(err),
+		)
+		return
+	}
 
-	// TODO save state
+	// This is added to workaround any timezone conversions that the API does automatically and
+	// may cause an issue in the state file.
+	if plan.ExpiresAt != refreshedState.ExpiresAt {
+		refreshedState.ExpiresAt = plan.ExpiresAt
+	}
+
+	// Set state to fully populated data
+	diags = resp.State.Set(ctx, refreshedState)
+
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 }
 
+// initializeAllowListWithPlanAndId initializes an instance of providerschema.AllowList
+// with the specified plan and ID. It marks all computed fields as null.
+func initializeAllowedCIDRWithPlanAndId(plan providerschema.AppServiceCIDR, id string) providerschema.AppServiceCIDR {
+	plan.Id = types.StringValue(id)
+	plan.Audit = providerschema.CouchbaseAuditData{}
+	if plan.Comment.IsNull() || plan.Comment.IsUnknown() {
+		plan.Comment = types.StringNull()
+	}
+	return plan
+}
+
 // getAllowList is used to retrieve an existing allow list.
-func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId, clusterId, appServiceId, allowListId string) (*api.GetAllowListResponse, error) {
+func (a *AppServiceCidr) getAllowList(ctx context.Context, organizationId, projectId, clusterId, appServiceId, allowListId string) (*api.AppServiceAllowedCIDRResponse, error) {
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/allowedcidrs",
-		r.HostURL,
+		a.HostURL,
 		organizationId,
 		projectId,
 		clusterId,
 		appServiceId,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := r.Client.ExecuteWithRetry(
+	response, err := a.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
-		r.Token,
+		a.Token,
 		nil,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 	}
 
-	allowListResp := api.GetAllowListResponse{}
+	allowListResp := api.ListAppServiceAllowedCIDRResponse{}
 	err = json.Unmarshal(response.Body, &allowListResp)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
-	return &allowListResp, nil
+
+	for _, allowlist := range allowListResp.Data {
+		if allowlist.Id == allowListId {
+			// Found the allow list with the matching ID
+			return &allowlist, nil
+		}
+	}
+	return nil, errors.ErrNotFound
+}
+
+// refreshAllowList is used to pass an existing AllowList to the refreshed state.
+func (r *AppServiceCidr) refreshAllowedCIDR(ctx context.Context, organizationId, projectId, clusterId, appServiceId, allowedCIDRId string) (*providerschema.AppServiceCIDR, error) {
+	allowListResp, err := r.getAllowList(ctx, organizationId, projectId, clusterId, appServiceId, allowedCIDRId)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", errors.ErrNotFound, err)
+	}
+
+	refreshedState := providerschema.AppServiceCIDR{
+		Id:             types.StringValue(allowListResp.Id),
+		OrganizationId: types.StringValue(organizationId),
+		ProjectId:      types.StringValue(projectId),
+		ClusterId:      types.StringValue(clusterId),
+		AppServiceId:   types.StringValue(appServiceId),
+		Cidr:           types.StringValue(allowListResp.Cidr),
+		Audit: providerschema.CouchbaseAuditData{
+			CreatedAt:  types.StringValue(allowListResp.Audit.CreatedAt.String()),
+			CreatedBy:  types.StringValue(allowListResp.Audit.CreatedBy),
+			ModifiedAt: types.StringValue(allowListResp.Audit.ModifiedAt.String()),
+			ModifiedBy: types.StringValue(allowListResp.Audit.ModifiedBy),
+			Version:    types.Int64Value(int64(allowListResp.Audit.Version)),
+		},
+	}
+
+	// Set optional fields
+	if allowListResp.Comment != "" {
+		refreshedState.Comment = types.StringValue(allowListResp.Comment)
+	}
+
+	if allowListResp.ExpiresAt != "" {
+		refreshedState.ExpiresAt = types.StringValue(allowListResp.ExpiresAt)
+	}
+
+	return &refreshedState, nil
 }
 
 func (a *AppServiceCidr) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state providerschema.AllowList
+	var state providerschema.AppServiceCIDR
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 
@@ -155,7 +232,7 @@ func (a *AppServiceCidr) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 
 	// Validate parameters were successfully imported
-	IDs, err := state.Validate()
+	organizationId, projectId, clusterId, appServiceId, allowedCIDRId, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella AllowList",
@@ -164,15 +241,8 @@ func (a *AppServiceCidr) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	var (
-		organizationId = IDs[providerschema.OrganizationId]
-		projectId      = IDs[providerschema.ProjectId]
-		clusterId      = IDs[providerschema.ClusterId]
-		allowListId    = IDs[providerschema.Id]
-	)
-
 	// refresh the existing allow list
-	refreshedState, err := a.refreshAllowList(ctx, organizationId, projectId, clusterId, allowListId)
+	refreshedState, err := a.getAllowList(ctx, organizationId, projectId, clusterId, appServiceId, allowedCIDRId)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -182,13 +252,13 @@ func (a *AppServiceCidr) Read(ctx context.Context, req resource.ReadRequest, res
 		}
 		resp.Diagnostics.AddError(
 			"Error Reading Capella AllowList",
-			"Could not read Capella allowListID "+allowListId+": "+errString,
+			"Could not read Capella allowListID "+allowedCIDRId+": "+errString,
 		)
 		return
 	}
 
-	if state.ExpiresAt != refreshedState.ExpiresAt {
-		refreshedState.ExpiresAt = state.ExpiresAt
+	if state.ExpiresAt.ValueString() != refreshedState.ExpiresAt {
+		refreshedState.ExpiresAt = state.ExpiresAt.ValueString()
 	}
 
 	// Set refreshed state
@@ -199,8 +269,15 @@ func (a *AppServiceCidr) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 }
 
+// Update is not supported for App services allowed cidrs
 func (a *AppServiceCidr) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// TODO return error
+	// Couchbase Capella's v4 does not support a PUT endpoint for Network Peers.
+	// Network Peers can only be created, read and deleted.
+	// https://docs.couchbase.com/cloud/management-api-reference/index.html#tag/Network-Peers
+	//
+	// Note: In this situation, terraform apply will default to deleting and executing a new create.
+	// The update implementation should simply be left empty.
+	// https://developer.hashicorp.com/terraform/plugin/framework/resources/update
 }
 
 func (a *AppServiceCidr) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

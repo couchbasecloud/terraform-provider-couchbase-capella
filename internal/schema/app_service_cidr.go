@@ -21,7 +21,7 @@ type AppServiceCIDR struct {
 	// ExpiresAt is an RFC3339 timestamp determining when the allowed CIDR should expire.
 	ExpiresAt types.String `tfsdk:"expires_at"`
 	// Audit contains the audit information for the App service CIDR.
-	Audit types.Object `tfsdk:"audit"`
+	Audit CouchbaseAuditData `tfsdk:"audit"`
 	// Id is the ID is the unique UUID generated when an allowed cidr is created.
 	Id types.String `tfsdk:"id"`
 }
@@ -72,4 +72,25 @@ func (a *AppServiceCIDRs) Validate() (clusterId, projectId, organizationId, apps
 		return "", "", "", "", errors.ErrClusterIdMissing
 	}
 	return a.ClusterId.ValueString(), a.ProjectId.ValueString(), a.OrganizationId.ValueString(), a.AppServiceId.ValueString(), nil
+}
+
+// Validate is used to verify that all the fields in the datasource
+// have been populated.
+func (a *AppServiceCIDR) Validate() (clusterId, projectId, organizationId, appserviceId, allowedCIDRId string, err error) {
+	if a.OrganizationId.IsNull() {
+		return "", "", "", "", "", errors.ErrOrganizationIdMissing
+	}
+	if a.ProjectId.IsNull() {
+		return "", "", "", "", "", errors.ErrProjectIdMissing
+	}
+	if a.ClusterId.IsNull() {
+		return "", "", "", "", "", errors.ErrClusterIdMissing
+	}
+	if a.AppServiceId.IsNull() {
+		return "", "", "", "", "", errors.ErrAppServiceIdMissing
+	}
+	if a.Id.IsNull() {
+		return "", "", "", "", "", errors.ErrAllowListIdMissing
+	}
+	return a.ClusterId.ValueString(), a.ProjectId.ValueString(), a.OrganizationId.ValueString(), a.AppServiceId.ValueString(), a.Id.ValueString(), nil
 }
