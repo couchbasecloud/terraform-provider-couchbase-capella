@@ -1,7 +1,11 @@
 package schema
 
-import "github.com/hashicorp/terraform-plugin-framework/types"
+import (
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+)
 
+// AppServiceCIDRs defines the attributes for an individual App service allowed CIDR.
 type AppServiceCIDR struct {
 	OrganizationId types.String `tfsdk:"organization_id"`
 
@@ -12,14 +16,60 @@ type AppServiceCIDR struct {
 	AppServiceId types.String `tfsdk:"app_service_id"`
 
 	Cidr types.String `tfsdk:"cidr"`
-
+	// Id is a GUID4 identifier of the App service CIDR.
 	Comment types.String `tfsdk:"comment"`
-
+	// ExpiresAt is an RFC3339 timestamp determining when the allowed CIDR should expire.
 	ExpiresAt types.String `tfsdk:"expires_at"`
-
+	// Audit contains the audit information for the App service CIDR.
 	Audit types.Object `tfsdk:"audit"`
+	// Id is the ID is the unique UUID generated when an allowed cidr is created.
+	Id types.String `tfsdk:"id"`
 }
 
-// TODO
+// AppServiceCIDRs defines the attributes for an individual App service allowed CIDR.
+type AppServiceCIDRData struct {
+	// Id is the ID is the unique UUID generated when an allowed cidr is created.
+	Id types.String `tfsdk:"id"`
+
+	Cidr types.String `tfsdk:"cidr"`
+	// Id is a GUID4 identifier of the App service CIDR.
+	Comment types.String `tfsdk:"comment"`
+	// ExpiresAt is an RFC3339 timestamp determining when the allowed CIDR should expire.
+	ExpiresAt types.String `tfsdk:"expires_at"`
+	// Audit contains the audit information for the App service CIDR.
+	Audit CouchbaseAuditData `tfsdk:"audit"`
+}
+
+// AppServiceCIDRs defines the attributes as received from the
+// V4 Capella Public API when asked to list App service allowed CIDRs.
 type AppServiceCIDRs struct {
+	// OrganizationId is the organizationId of the capella.
+	OrganizationId types.String `tfsdk:"organization_id"`
+
+	// ProjectId is the GUID4 identifier for the project.
+	ProjectId types.String `tfsdk:"project_id"`
+
+	// ClusterId is the GUID4 identifier for the Cluster.
+	ClusterId types.String `tfsdk:"cluster_id"`
+
+	// AppServiceId is the GUID4 identifier for the App Service.
+	AppServiceId types.String `tfsdk:"app_service_id"`
+
+	// Data contains the list of resources.
+	Data []AppServiceCIDRData `tfsdk:"data"`
+}
+
+// Validate is used to verify that all the fields in the datasource
+// have been populated.
+func (a *AppServiceCIDRs) Validate() (clusterId, projectId, organizationId, appserviceId string, err error) {
+	if a.OrganizationId.IsNull() {
+		return "", "", "", "", errors.ErrOrganizationIdMissing
+	}
+	if a.ProjectId.IsNull() {
+		return "", "", "", "", errors.ErrProjectIdMissing
+	}
+	if a.ClusterId.IsNull() {
+		return "", "", "", "", errors.ErrClusterIdMissing
+	}
+	return a.ClusterId.ValueString(), a.ProjectId.ValueString(), a.OrganizationId.ValueString(), a.AppServiceId.ValueString(), nil
 }

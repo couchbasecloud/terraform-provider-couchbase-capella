@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"net/http"
 )
 
@@ -64,14 +66,20 @@ func (a *AppServiceCidr) Create(ctx context.Context, req resource.CreateRequest,
 		Comment:   plan.Comment.ValueString(),
 		ExpiresAt: plan.ExpiresAt.ValueString(),
 	}
+	var (
+		organizationId = plan.OrganizationId.ValueString()
+		projectId      = plan.ProjectId.ValueString()
+		clusterId      = plan.ClusterId.ValueString()
+		appServiceId   = plan.AppServiceId.ValueString()
+	)
 
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/allowedcidrs",
 		a.HostURL,
-		plan.OrganizationId.ValueString(),
-		plan.ProjectId.ValueString(),
-		plan.ClusterId.ValueString(),
-		plan.AppServiceId.ValueString(),
+		organizationId,
+		projectId,
+		clusterId,
+		appServiceId,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
 	response, err := a.Client.ExecuteWithRetry(
@@ -107,8 +115,88 @@ func (a *AppServiceCidr) Create(ctx context.Context, req resource.CreateRequest,
 
 }
 
+// getAllowList is used to retrieve an existing allow list.
+func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId, clusterId, appServiceId, allowListId string) (*api.GetAllowListResponse, error) {
+	url := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/allowedcidrs",
+		r.HostURL,
+		organizationId,
+		projectId,
+		clusterId,
+		appServiceId,
+	)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	response, err := r.Client.ExecuteWithRetry(
+		ctx,
+		cfg,
+		nil,
+		r.Token,
+		nil,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
+	}
+
+	allowListResp := api.GetAllowListResponse{}
+	err = json.Unmarshal(response.Body, &allowListResp)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
+	}
+	return &allowListResp, nil
+}
+
 func (a *AppServiceCidr) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// TODO
+	var state providerschema.AllowList
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Validate parameters were successfully imported
+	IDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Capella AllowList",
+			"Could not read Capella allow list: "+err.Error(),
+		)
+		return
+	}
+
+	var (
+		organizationId = IDs[providerschema.OrganizationId]
+		projectId      = IDs[providerschema.ProjectId]
+		clusterId      = IDs[providerschema.ClusterId]
+		allowListId    = IDs[providerschema.Id]
+	)
+
+	// refresh the existing allow list
+	refreshedState, err := a.refreshAllowList(ctx, organizationId, projectId, clusterId, allowListId)
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError(
+			"Error Reading Capella AllowList",
+			"Could not read Capella allowListID "+allowListId+": "+errString,
+		)
+		return
+	}
+
+	if state.ExpiresAt != refreshedState.ExpiresAt {
+		refreshedState.ExpiresAt = state.ExpiresAt
+	}
+
+	// Set refreshed state
+	diags = resp.State.Set(ctx, &refreshedState)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 func (a *AppServiceCidr) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

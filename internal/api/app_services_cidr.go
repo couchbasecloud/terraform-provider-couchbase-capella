@@ -23,3 +23,6 @@ type AppServiceAllowedCIDRResponse struct {
 
 	Audit CouchbaseAuditData `json:"audit"`
 }
+type ListAppServiceAllowedCIDRResponse struct {
+	Data []AppServiceAllowedCIDRResponse `json:"data"`
+}
