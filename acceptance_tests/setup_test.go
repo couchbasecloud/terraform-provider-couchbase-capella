@@ -45,7 +45,7 @@ provider "couchbase-capella" {
 		log.Print(err)
 		code = 1
 	} else {
-		// code = m.Run()
+		code = m.Run()
 	}
 
 	if err = cleanup(ctx, client); err != nil {
