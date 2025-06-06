@@ -27,12 +27,12 @@ func NewAppServiceCidrs() datasource.DataSource {
 func (a *AppServiceCidrs) Metadata(
 	_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse,
 ) {
-	resp.TypeName = req.ProviderTypeName + "_app_service_cidrs"
+	resp.TypeName = req.ProviderTypeName + "_app_services_cidr"
 }
 
 func (a *AppServiceCidrs) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Retrieves the allowlists details for a Capella App Service.",
+		MarkdownDescription: "Retrieves the allowed CIDRs for a Capella App Service.",
 		Attributes: map[string]schema.Attribute{
 			"data": schema.ListNestedAttribute{
 				MarkdownDescription: "The list of allowed CIDRs on an App Service. ",
@@ -164,5 +164,18 @@ func (a *AppServiceCidrs) mapResponseBody(
 func (a *AppServiceCidrs) Configure(
 	_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse,
 ) {
-	// TODO
+	if req.ProviderData == nil {
+		return
+	}
+
+	data, ok := req.ProviderData.(*providerschema.Data)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *ProviderSourceData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+	a.Data = data
 }

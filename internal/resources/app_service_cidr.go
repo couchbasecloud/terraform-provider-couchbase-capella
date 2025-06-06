@@ -33,8 +33,7 @@ func (a *AppServiceCidr) Metadata(_ context.Context, req resource.MetadataReques
 }
 
 func (a *AppServiceCidr) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-
-	// TODO
+	resp.Schema = AllowedCIDRsSchema()
 }
 
 func (a *AppServiceCidr) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -236,8 +235,8 @@ func (a *AppServiceCidr) Read(ctx context.Context, req resource.ReadRequest, res
 	organizationId, projectId, clusterId, appServiceId, allowedCIDRId, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Capella AllowList",
-			"Could not read Capella allow list: "+err.Error(),
+			"Error Reading App Service Allowed CIDR",
+			"Could not read App Service Allowed CIDR: "+err.Error(),
 		)
 		return
 	}
@@ -252,8 +251,8 @@ func (a *AppServiceCidr) Read(ctx context.Context, req resource.ReadRequest, res
 			return
 		}
 		resp.Diagnostics.AddError(
-			"Error Reading Capella AllowList",
-			"Could not read Capella allowListID "+allowedCIDRId+": "+errString,
+			"Error Reading App Service Allowed CIDR",
+			"Could not read App Service Allowed CIDR "+allowedCIDRId+": "+errString,
 		)
 		return
 	}
@@ -327,8 +326,8 @@ func (a *AppServiceCidr) Delete(ctx context.Context, req resource.DeleteRequest,
 			return
 		}
 		resp.Diagnostics.AddError(
-			"Error Reading Capella AllowList",
-			"Could not read Capella allowListID "+allowedCIDRId+": "+errString,
+			"Error Reading App Service Allowed CIDR",
+			"Could not read App Service Allowed CIDR "+allowedCIDRId+": "+errString,
 		)
 		return
 	}
