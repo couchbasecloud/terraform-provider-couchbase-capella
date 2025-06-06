@@ -9,33 +9,53 @@ import (
 )
 
 func TestAccGSI(t *testing.T) {
-	resourceType := "couchbase-capella_query_indexes"
+	const resourceType = "couchbase-capella_query_indexes"
 	primaryIndexResourceName := randomStringWithPrefix("tf_acc_gsi_")
-	secondaryIndexResourceName := randomStringWithPrefix("tf_acc_gsi_")
 	primaryIndexResourceReference := fmt.Sprintf("%s.%s", resourceType, primaryIndexResourceName)
-	secondaryIndexResourceReference := fmt.Sprintf("%s.%s", resourceType, secondaryIndexResourceName)
+	gsiResourceIdx1 := fmt.Sprintf("%s.%s", resourceType, "idx1")
+	gsiResourceIdx2 := fmt.Sprintf("%s.%s", resourceType, "idx2")
+	gsiResourceIdx3 := fmt.Sprintf("%s.%s", resourceType, "idx3")
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCreateGSINonDeferredIndexConfig(secondaryIndexResourceName),
+				Config: testAccCreateGSINonDeferredIndexConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(secondaryIndexResourceReference, "organization_id", globalOrgId),
-					resource.TestCheckResourceAttr(secondaryIndexResourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(secondaryIndexResourceReference, "cluster_id", globalClusterId),
-					resource.TestCheckResourceAttr(secondaryIndexResourceReference, "bucket_name", globalBucketName),
-					resource.TestCheckResourceAttr(secondaryIndexResourceReference, "scope_name", globalScopeName),
-					resource.TestCheckResourceAttr(secondaryIndexResourceReference, "collection_name", globalCollectionName),
-					resource.TestCheckResourceAttr(secondaryIndexResourceReference, "index_name", "index1"),
-					resource.TestCheckResourceAttr(secondaryIndexResourceReference, "index_keys.0", "c1"),
-					resource.TestCheckResourceAttr(secondaryIndexResourceReference, "where", "geo.alt > 1000"),
-					resource.TestCheckResourceAttr(secondaryIndexResourceReference, "with.num_replica", "1"),
+					resource.TestCheckResourceAttr(gsiResourceIdx1, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(gsiResourceIdx1, "project_id", globalProjectId),
+					resource.TestCheckResourceAttr(gsiResourceIdx1, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(gsiResourceIdx1, "bucket_name", globalBucketName),
+					resource.TestCheckResourceAttr(gsiResourceIdx1, "scope_name", globalScopeName),
+					resource.TestCheckResourceAttr(gsiResourceIdx1, "collection_name", globalCollectionName),
+					resource.TestCheckResourceAttr(gsiResourceIdx1, "index_name", "idx1"),
+					resource.TestCheckResourceAttr(gsiResourceIdx1, "index_keys.0", "c1"),
+					resource.TestCheckResourceAttr(gsiResourceIdx1, "where", "geo.alt > 1000"),
+
+					resource.TestCheckResourceAttr(gsiResourceIdx2, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(gsiResourceIdx2, "project_id", globalProjectId),
+					resource.TestCheckResourceAttr(gsiResourceIdx2, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(gsiResourceIdx2, "bucket_name", globalBucketName),
+					resource.TestCheckResourceAttr(gsiResourceIdx2, "scope_name", globalScopeName),
+					resource.TestCheckResourceAttr(gsiResourceIdx2, "collection_name", globalCollectionName),
+					resource.TestCheckResourceAttr(gsiResourceIdx2, "index_name", "idx2"),
+					resource.TestCheckResourceAttr(gsiResourceIdx2, "index_keys.0", "c2"),
+					resource.TestCheckResourceAttr(gsiResourceIdx2, "where", "geo.alt > 2000"),
+
+					resource.TestCheckResourceAttr(gsiResourceIdx3, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(gsiResourceIdx3, "project_id", globalProjectId),
+					resource.TestCheckResourceAttr(gsiResourceIdx3, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(gsiResourceIdx3, "bucket_name", globalBucketName),
+					resource.TestCheckResourceAttr(gsiResourceIdx3, "scope_name", globalScopeName),
+					resource.TestCheckResourceAttr(gsiResourceIdx3, "collection_name", globalCollectionName),
+					resource.TestCheckResourceAttr(gsiResourceIdx3, "index_name", "idx3"),
+					resource.TestCheckResourceAttr(gsiResourceIdx3, "index_keys.0", "c3"),
+					resource.TestCheckResourceAttr(gsiResourceIdx3, "where", "geo.alt > 3000"),
 				),
 			},
 			{
-				ResourceName:      secondaryIndexResourceReference,
-				ImportStateIdFunc: generateGsiImportIdForResource(secondaryIndexResourceReference),
+				ResourceName:      gsiResourceIdx1,
+				ImportStateIdFunc: generateGsiImportIdForResource(gsiResourceIdx1),
 				ImportState:       true,
 			},
 			{
@@ -55,22 +75,52 @@ func TestAccGSI(t *testing.T) {
 	})
 }
 
-func testAccCreateGSINonDeferredIndexConfig(resourceName string) string {
+func testAccCreateGSINonDeferredIndexConfig() string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "couchbase-capella_query_indexes" "%[8]s" {
+resource "couchbase-capella_query_indexes" "idx1" {
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   cluster_id      = "%[4]s"
   bucket_name     = "%[5]s"
   scope_name      = "%[6]s"
   collection_name = "%[7]s"
-  index_name      = "index1"
+  index_name      = "idx1"
   index_keys      = ["c1"]
   where = "geo.alt > 1000"
   with = {
-        num_replica = 1
+        defer_build = false
+  }
+}
+
+resource "couchbase-capella_query_indexes" "idx2" {
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  cluster_id      = "%[4]s"
+  bucket_name     = "%[5]s"
+  scope_name      = "%[6]s"
+  collection_name = "%[7]s"
+  index_name      = "idx2"
+  index_keys      = ["c2"]
+  where = "geo.alt > 2000"
+  with = {
+        defer_build = false
+  }
+}
+
+resource "couchbase-capella_query_indexes" "idx3" {
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  cluster_id      = "%[4]s"
+  bucket_name     = "%[5]s"
+  scope_name      = "%[6]s"
+  collection_name = "%[7]s"
+  index_name      = "idx3"
+  index_keys      = ["c3"]
+  where = "geo.alt > 3000"
+  with = {
+        defer_build = false
   }
 }
 `, globalProviderBlock,
@@ -80,7 +130,7 @@ resource "couchbase-capella_query_indexes" "%[8]s" {
 		globalBucketName,
 		globalScopeName,
 		globalCollectionName,
-		resourceName)
+	)
 }
 
 func testAccCreatePrimaryIndexConfig(resourceName string) string {
