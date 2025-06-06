@@ -1,0 +1,56 @@
+name: PR Description Check
+
+on: [pull_request]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  check-pr-description:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR Description
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // Fetch the current PR data
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            
+            const description = pr.data.body || '';
+            const defaultText = "Please include a summary of the fix/feature/change, including any relevant motivation and context.";
+            
+            // Only check for default template text
+            if (description.includes(defaultText)) {
+              const errorMessage = ` PR Description Error:
+                Your PR description needs attention.
+                
+                Description Requirements:
+                - Must not contain the default template text
+                - Should include:
+                  * A clear summary of the changes
+                  * Motivation for the changes
+                  * Any relevant context
+                
+                Please replace the default text with a meaningful description of your changes.`;
+              
+              // Add comment to the PR
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: errorMessage
+              });
+              
+              core.setFailed('PR description validation failed. Please check the comment for details.');
+            }
+
+            // Log the description for debugging
+            console.log('PR Description:', description);
+            console.log('Description length:', description.length);
+            console.log('Trimmed length:', description.trim().length);
