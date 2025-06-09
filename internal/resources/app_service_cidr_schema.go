@@ -54,7 +54,6 @@ func AllowedCIDRsSchema() schema.Schema {
 			},
 			"comment": schema.StringAttribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "A short description of the allowed CIDR.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
