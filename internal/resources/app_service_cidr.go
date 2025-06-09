@@ -145,7 +145,7 @@ func (a *AppServiceCidr) Create(ctx context.Context, req resource.CreateRequest,
 // with the specified plan and ID. It marks all computed fields as null.
 func initializeAllowedCIDRWithPlanAndId(plan providerschema.AppServiceCIDR, id string) providerschema.AppServiceCIDR {
 	plan.Id = types.StringValue(id)
-	plan.Audit = types.Object{}
+	plan.Audit = types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
 	if plan.Comment.IsNull() || plan.Comment.IsUnknown() {
 		plan.Comment = types.StringNull()
 	}
