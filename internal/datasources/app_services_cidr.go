@@ -3,12 +3,14 @@ package datasources
 import (
 	"context"
 	"fmt"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	"net/http"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"net/http"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
 var (
@@ -109,7 +111,7 @@ func (a *AppServiceCidrs) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	state = a.mapResponseBody(response, &state)
+	state = a.mapResponseBody(ctx, response, &state)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading allowlist",
@@ -130,6 +132,7 @@ func (a *AppServiceCidrs) Read(ctx context.Context, req datasource.ReadRequest, 
 // mapResponseBody is used to map the response body from a call to
 // listAllowlists to the allowlists schema that will be used by terraform.
 func (a *AppServiceCidrs) mapResponseBody(
+	ctx context.Context,
 	allowLists []api.AppServiceAllowedCIDRResponse,
 	state *providerschema.AppServiceCIDRs,
 ) providerschema.AppServiceCIDRs {
@@ -139,16 +142,18 @@ func (a *AppServiceCidrs) mapResponseBody(
 		ClusterId:      types.StringValue(state.ClusterId.ValueString()),
 	}
 	for _, allowList := range allowLists {
+		// Create audit data object
+		audit := providerschema.NewCouchbaseAuditData(allowList.Audit)
+		auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
+		if diags.HasError() {
+			// Handle error - for now we'll set audit to null
+			auditObj = types.ObjectNull(audit.AttributeTypes())
+		}
+
 		allowListState := providerschema.AppServiceCIDRData{
-			Id:   types.StringValue(allowList.Id),
-			Cidr: types.StringValue(allowList.Cidr),
-			Audit: providerschema.CouchbaseAuditData{
-				CreatedAt:  types.StringValue(allowList.Audit.CreatedAt.String()),
-				CreatedBy:  types.StringValue(allowList.Audit.CreatedBy),
-				ModifiedAt: types.StringValue(allowList.Audit.ModifiedAt.String()),
-				ModifiedBy: types.StringValue(allowList.Audit.ModifiedBy),
-				Version:    types.Int64Value(int64(allowList.Audit.Version)),
-			},
+			Id:    types.StringValue(allowList.Id),
+			Cidr:  types.StringValue(allowList.Cidr),
+			Audit: auditObj,
 		}
 		if allowList.Comment != "" {
 			allowListState.Comment = types.StringValue(allowList.Comment)

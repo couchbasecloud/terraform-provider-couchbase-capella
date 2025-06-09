@@ -4,14 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
-	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	"net/http"
+
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"net/http"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
 var (
@@ -93,7 +95,7 @@ func (a *AppServiceCidr) Create(ctx context.Context, req resource.CreateRequest,
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Creating App Service CIDR",
-			"", // TODO: Add error message detail
+			"Could not create App Service CIDR, unexpected error: "+api.ParseError(err),
 		)
 		return
 	}
@@ -103,7 +105,7 @@ func (a *AppServiceCidr) Create(ctx context.Context, req resource.CreateRequest,
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Unmarshalling App Service CIDR Response",
-			"", // TODO : Add error message detail
+			"Could not unmarshal App Service CIDR response, unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -114,7 +116,7 @@ func (a *AppServiceCidr) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	refreshedState, err := a.refreshAllowedCIDR(ctx, plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), plan.ClusterId.ValueString(), cidrResp.Id, plan.AppServiceId.ValueString())
+	refreshedState, err := a.refreshAllowedCIDR(ctx, plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), plan.ClusterId.ValueString(), plan.AppServiceId.ValueString(), cidrResp.Id)
 	if err != nil {
 		resp.Diagnostics.AddWarning(
 			"Error reading App Service Allowed CIDR after creation",
@@ -143,7 +145,7 @@ func (a *AppServiceCidr) Create(ctx context.Context, req resource.CreateRequest,
 // with the specified plan and ID. It marks all computed fields as null.
 func initializeAllowedCIDRWithPlanAndId(plan providerschema.AppServiceCIDR, id string) providerschema.AppServiceCIDR {
 	plan.Id = types.StringValue(id)
-	plan.Audit = providerschema.CouchbaseAuditData{}
+	plan.Audit = types.Object{}
 	if plan.Comment.IsNull() || plan.Comment.IsUnknown() {
 		plan.Comment = types.StringNull()
 	}
@@ -194,6 +196,13 @@ func (r *AppServiceCidr) refreshAllowedCIDR(ctx context.Context, organizationId,
 		return nil, fmt.Errorf("%s: %w", errors.ErrNotFound, err)
 	}
 
+	// Create audit data object
+	audit := providerschema.NewCouchbaseAuditData(allowListResp.Audit)
+	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
+	if diags.HasError() {
+		return nil, fmt.Errorf("error converting audit data to object")
+	}
+
 	refreshedState := providerschema.AppServiceCIDR{
 		Id:             types.StringValue(allowListResp.Id),
 		OrganizationId: types.StringValue(organizationId),
@@ -201,13 +210,7 @@ func (r *AppServiceCidr) refreshAllowedCIDR(ctx context.Context, organizationId,
 		ClusterId:      types.StringValue(clusterId),
 		AppServiceId:   types.StringValue(appServiceId),
 		Cidr:           types.StringValue(allowListResp.Cidr),
-		Audit: providerschema.CouchbaseAuditData{
-			CreatedAt:  types.StringValue(allowListResp.Audit.CreatedAt.String()),
-			CreatedBy:  types.StringValue(allowListResp.Audit.CreatedBy),
-			ModifiedAt: types.StringValue(allowListResp.Audit.ModifiedAt.String()),
-			ModifiedBy: types.StringValue(allowListResp.Audit.ModifiedBy),
-			Version:    types.Int64Value(int64(allowListResp.Audit.Version)),
-		},
+		Audit:          auditObj,
 	}
 
 	// Set optional fields
@@ -235,14 +238,14 @@ func (a *AppServiceCidr) Read(ctx context.Context, req resource.ReadRequest, res
 	organizationId, projectId, clusterId, appServiceId, allowedCIDRId, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading App Service Allowed CIDR",
-			"Could not read App Service Allowed CIDR: "+err.Error(),
+			"Error Validating App Service Allowed CIDR state",
+			"Could not validate App Service Allowed CIDR: "+err.Error(),
 		)
 		return
 	}
 
 	// refresh the existing allow list
-	refreshedState, err := a.getAllowList(ctx, organizationId, projectId, clusterId, appServiceId, allowedCIDRId)
+	refreshedState, err := a.refreshAllowedCIDR(ctx, organizationId, projectId, clusterId, appServiceId, allowedCIDRId)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -257,12 +260,12 @@ func (a *AppServiceCidr) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	if state.ExpiresAt.ValueString() != refreshedState.ExpiresAt {
-		refreshedState.ExpiresAt = state.ExpiresAt.ValueString()
+	if state.ExpiresAt.ValueString() != refreshedState.ExpiresAt.ValueString() {
+		refreshedState.ExpiresAt = state.ExpiresAt
 	}
 
 	// Set refreshed state
-	diags = resp.State.Set(ctx, &refreshedState)
+	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -326,7 +329,7 @@ func (a *AppServiceCidr) Delete(ctx context.Context, req resource.DeleteRequest,
 			return
 		}
 		resp.Diagnostics.AddError(
-			"Error Reading App Service Allowed CIDR",
+			"Error Listing App Service Allowed CIDRs",
 			"Could not read App Service Allowed CIDR "+allowedCIDRId+": "+errString,
 		)
 		return

@@ -1,8 +1,9 @@
 package schema
 
 import (
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 )
 
 // AppServiceCIDRs defines the attributes for an individual App service allowed CIDR.
@@ -20,8 +21,8 @@ type AppServiceCIDR struct {
 	Comment types.String `tfsdk:"comment"`
 	// ExpiresAt is an RFC3339 timestamp determining when the allowed CIDR should expire.
 	ExpiresAt types.String `tfsdk:"expires_at"`
-	// Audit contains the audit information for the App service CIDR.
-	Audit CouchbaseAuditData `tfsdk:"audit"`
+	// Audit contains the audit information for the App service CIDR. It is of types.Object type to avoid conversion error for a nested field.
+	Audit types.Object `tfsdk:"audit"`
 	// Id is the ID is the unique UUID generated when an allowed cidr is created.
 	Id types.String `tfsdk:"id"`
 }
@@ -36,8 +37,8 @@ type AppServiceCIDRData struct {
 	Comment types.String `tfsdk:"comment"`
 	// ExpiresAt is an RFC3339 timestamp determining when the allowed CIDR should expire.
 	ExpiresAt types.String `tfsdk:"expires_at"`
-	// Audit contains the audit information for the App service CIDR.
-	Audit CouchbaseAuditData `tfsdk:"audit"`
+	// Audit contains the audit information for the App service CIDR. It is of types.Object type to avoid conversion error for a nested field.
+	Audit types.Object `tfsdk:"audit"`
 }
 
 // AppServiceCIDRs defines the attributes as received from the
@@ -76,7 +77,7 @@ func (a *AppServiceCIDRs) Validate() (clusterId, projectId, organizationId, apps
 
 // Validate is used to verify that all the fields in the datasource
 // have been populated.
-func (a *AppServiceCIDR) Validate() (clusterId, projectId, organizationId, appserviceId, allowedCIDRId string, err error) {
+func (a *AppServiceCIDR) Validate() (organizationId, projectId, clusterId, appserviceId, allowedCIDRId string, err error) {
 	if a.OrganizationId.IsNull() {
 		return "", "", "", "", "", errors.ErrOrganizationIdMissing
 	}
@@ -92,5 +93,5 @@ func (a *AppServiceCIDR) Validate() (clusterId, projectId, organizationId, appse
 	if a.Id.IsNull() {
 		return "", "", "", "", "", errors.ErrAllowListIdMissing
 	}
-	return a.ClusterId.ValueString(), a.ProjectId.ValueString(), a.OrganizationId.ValueString(), a.AppServiceId.ValueString(), a.Id.ValueString(), nil
+	return a.OrganizationId.ValueString(), a.ProjectId.ValueString(), a.ClusterId.ValueString(), a.AppServiceId.ValueString(), a.Id.ValueString(), nil
 }

@@ -1,8 +1,8 @@
-# Capella allowedcidrs Example
+# Capella allowedcidr Example
 
-This example shows how to create and manage App Service Allowed CIDRs in Capella.
+This example shows how to create and manage App Service Allowed CIDR in Capella.
 
-This creates a new Allowed CIDR in the selected Capella App Service and lists existing Allowed CIDRs in the App Service. It uses the App Service ID to create and list Allowed CIDRs.
+This creates a new Allowed CIDR in the selected Capella App Service and lists existing Allowed CIDR in the App Service. It uses the App Service ID to create and list Allowed CIDR.
 
 To run, configure your Couchbase Capella provider as described in README in the root of this project.
 
@@ -11,7 +11,7 @@ To run, configure your Couchbase Capella provider as described in README in the 
 In this example, we are going to do the following.
 
 1. CREATE: Create a new allowedcidr in Capella as stated in the `create_allowedcidr.tf` file.
-2. LIST: List existing allowedcidrs in Capella as stated in the `list_allowedcidrs.tf` file.
+2. LIST: List existing allowedcidr in Capella as stated in the `list_allowedcidr.tf` file.
 3. IMPORT: Import an allowedcidr that exists in Capella but not in the terraform state file.
 4. DELETE: Delete the newly created allowedcidr from Capella.
 
@@ -34,8 +34,8 @@ $ terraform plan
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
 │ published releases.
 ╵
-data.capella_app_services_cidrs.existing_allowedcidrs: Reading...
-data.capella_app_services_cidrs.existing_allowedcidrs: Read complete after 0s
+data.capella_app_services_cidr.existing_allowedcidr: Reading...
+data.capella_app_services_cidr.existing_allowedcidr: Read complete after 0s
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   + create
@@ -63,7 +63,7 @@ Terraform will perform the following actions:
 Plan: 1 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
-  + allowedcidrs_list = {
+  + allowedcidr_list = {
       + cluster_id      = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
       + data            = [
           + {
@@ -120,8 +120,8 @@ $ terraform apply
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
 │ published releases.
 ╵
-data.capella_app_services_cidrs.existing_allowedcidrs: Reading...
-data.capella_app_services_cidrs.existing_allowedcidrs: Read complete after 0s
+data.capella_app_services_cidr.existing_allowedcidr: Reading...
+data.capella_app_services_cidr.existing_allowedcidr: Read complete after 0s
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   + create
@@ -149,7 +149,7 @@ Terraform will perform the following actions:
 Plan: 1 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
-  + allowedcidrs_list = {
+  + allowedcidr_list = {
       + cluster_id      = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
       + app_service_id      = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
       + data            = [
@@ -199,7 +199,7 @@ Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
 
 Outputs:
 
-allowedcidrs_list = {
+allowedcidr_list = {
   "cluster_id" = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
   "data" = tolist([
     {
@@ -276,7 +276,7 @@ Command: `terraform state list`
 Sample Output:
 ```
 $ terraform state list
-data.couchbase-capella_app_services_cidrs.existing_allowedcidrs
+data.couchbase-capella_app_services_cidr.existing_allowedcidr
 couchbase-capella_app_services_cidr.new_allowedcidr
 ```
 
@@ -305,11 +305,11 @@ Sample Output:
 ```
 $ terraform import couchbase-capella_app_services_cidr.new_allowedcidr id=854cbdf0-8ae3-4a42-9227-59c52a5ab4f2,cluster_id=f499a9e6-e5a1-4f3e-95a7-941a41d046e6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d
 capella_app_services_cidr.new_allowedcidr: Importing from ID "id=854cbdf0-8ae3-4a42-9227-59c52a5ab4f2,cluster_id=f499a9e6-e5a1-4f3e-95a7-941a41d046e6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d"...
-data.capella_app_services_cidrs.existing_allowedcidrs: Reading...
+data.capella_app_services_cidr.existing_allowedcidr: Reading...
 capella_app_services_cidr.new_allowedcidr: Import prepared!
   Prepared capella_app_services_cidr for import
 capella_app_services_cidr.new_allowedcidr: Refreshing state... [id=id=854cbdf0-8ae3-4a42-9227-59c52a5ab4f2,cluster_id=f499a9e6-e5a1-4f3e-95a7-941a41d046e6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d]
-data.capella_app_services_cidrs.existing_allowedcidrs: Read complete after 1s
+data.capella_app_services_cidr.existing_allowedcidr: Read complete after 1s
 
 Import successful!
 
@@ -339,9 +339,9 @@ $ terraform plan
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
 │ published releases.
 ╵
-data.capella_app_services_cidrs.existing_allowedcidrs: Reading...
+data.capella_app_services_cidr.existing_allowedcidr: Reading...
 capella_app_services_cidr.new_allowedcidr: Refreshing state... [id=854cbdf0-8ae3-4a42-9227-59c52a5ab4f2]
-data.capella_app_services_cidrs.existing_allowedcidrs: Read complete after 1s
+data.capella_app_services_cidr.existing_allowedcidr: Read complete after 1s
 
 No changes. Your infrastructure matches the configuration.
 
@@ -365,9 +365,9 @@ $ terraform apply -var comment="updated allowedcidr comment"
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
 │ published releases.
 ╵
-data.capella_app_services_cidrs.existing_allowedcidrs: Reading...
+data.capella_app_services_cidr.existing_allowedcidr: Reading...
 capella_app_services_cidr.new_allowedcidr: Refreshing state... [id=854cbdf0-8ae3-4a42-9227-59c52a5ab4f2]
-data.capella_app_services_cidrs.existing_allowedcidrs: Read complete after 1s
+data.capella_app_services_cidr.existing_allowedcidr: Read complete after 1s
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
 -/+ destroy and then create replacement
@@ -419,7 +419,7 @@ Apply complete! Resources: 1 added, 0 changed, 1 destroyed.
 
 Outputs:
 
-allowedcidrs_list = {
+allowedcidr_list = {
   "cluster_id" = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
   "data" = tolist([
     {
@@ -496,9 +496,9 @@ $ terraform destroy
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
 │ published releases.
 ╵
-data.capella_app_services_cidrs.existing_allowedcidrs: Reading...
+data.capella_app_services_cidr.existing_allowedcidr: Reading...
 capella_app_services_cidr.new_allowedcidr: Refreshing state... [id=358387f9-9780-4419-9ca6-b5e8a3b457dc]
-data.capella_app_services_cidrs.existing_allowedcidrs: Read complete after 0s
+data.capella_app_services_cidr.existing_allowedcidr: Read complete after 0s
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   - destroy
@@ -526,7 +526,7 @@ Terraform will perform the following actions:
 Plan: 0 to add, 0 to change, 1 to destroy.
 
 Changes to Outputs:
-  - allowedcidrs_list = {
+  - allowedcidr_list = {
       - cluster_id      = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
       - data            = [
           - {
