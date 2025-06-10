@@ -197,6 +197,14 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 
   More than one [allowlist](https://docs.couchbase.com/cloud/security/security.html#access-management) gives extra security across testing, development, and deployment infrastructure, and different projects.
 
+* [Create & Manage App Services Allowed CIDRs](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/app_services_cidr):
+
+  App Services only allow trusted IP addresses to connect and use its REST APIs.
+  Each App Service has a configurable Allowed IP list that can include up to 75 entries. 
+  Each entry can be a single IP address or an IP address space.
+  Any IP address you add to this list can have a user-specified expiration time for temporary access, or be permanent. 
+  Capella automatically denies any connection attempts to and from an IP not in the allowed IP list.
+
 * [Create & Manage Buckets](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/bucket):
 
   The [buckets](https://docs.couchbase.com/cloud/clusters/data-service/about-buckets-scopes-collections.html#buckets) is the top-level storage container for data in a Capella database.

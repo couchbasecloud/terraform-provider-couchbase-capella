@@ -68,8 +68,8 @@ func (a *AppServiceCidrs) Schema(_ context.Context, _ datasource.SchemaRequest, 
 	}
 }
 
-// listAllowLists executes calls to the list allowlist endpoint. It handles pagination and
-// returns a slice of individual allowlists responses retrieved from multiple pages.
+// listAllowedCIDRs executes calls to the list app service allowed cidrs endpoint. It handles pagination and
+// returns a slice of individual allowed cidr responses retrieved from multiple pages.
 func (a *AppServiceCidrs) listAllowedCIDRs(ctx context.Context, organizationId, projectId, clusterId, appServiceId string) ([]api.AppServiceAllowedCIDRResponse, error) {
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/allowedcidrs",
@@ -85,7 +85,7 @@ func (a *AppServiceCidrs) listAllowedCIDRs(ctx context.Context, organizationId, 
 }
 
 func (a *AppServiceCidrs) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state providerschema.AppServiceCIDRs
+	var state *providerschema.AppServiceCIDRs
 	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -96,8 +96,8 @@ func (a *AppServiceCidrs) Read(ctx context.Context, req datasource.ReadRequest, 
 	organizationId, projectId, clusterId, appServiceId, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Capella AllowLists",
-			"Could not read allow lists in cluster "+state.ClusterId.String()+": "+err.Error(),
+			"Error Reading App Service Allowed CIDRs",
+			"Could not validate App Service allowed CIDRS in state file "+state.AppServiceId.String()+": "+err.Error(),
 		)
 		return
 	}
@@ -105,17 +105,17 @@ func (a *AppServiceCidrs) Read(ctx context.Context, req datasource.ReadRequest, 
 	response, err := a.listAllowedCIDRs(ctx, organizationId, projectId, clusterId, appServiceId)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Capella App Services",
-			fmt.Sprintf("Could not read app services in organization %s, unexpected error: %s", organizationId, api.ParseError(err)),
+			"Error Listing App Service allowed CIDRs",
+			fmt.Sprintf("Could not list App Service allowed CIDRs in organization %s, unexpected error: %s", organizationId, api.ParseError(err)),
 		)
 		return
 	}
 
-	state = a.mapResponseBody(ctx, response, &state)
+	state = a.mapResponseBody(ctx, response, state)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading allowlist",
-			"Could not read allowlist, unexpected error: "+err.Error(),
+			"Error morphing allowed CIDRs",
+			"Could not morph list allowed CIDRs response, unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -135,7 +135,7 @@ func (a *AppServiceCidrs) mapResponseBody(
 	ctx context.Context,
 	allowLists []api.AppServiceAllowedCIDRResponse,
 	state *providerschema.AppServiceCIDRs,
-) providerschema.AppServiceCIDRs {
+) *providerschema.AppServiceCIDRs {
 	state = &providerschema.AppServiceCIDRs{
 		OrganizationId: types.StringValue(state.OrganizationId.ValueString()),
 		ProjectId:      types.StringValue(state.ProjectId.ValueString()),
@@ -146,8 +146,8 @@ func (a *AppServiceCidrs) mapResponseBody(
 		audit := providerschema.NewCouchbaseAuditData(allowList.Audit)
 		auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
 		if diags.HasError() {
-			// Handle error - for now we'll set audit to null
-			auditObj = types.ObjectNull(audit.AttributeTypes())
+			// If we have an error, we should not continue processing the rest of the allowlists.
+			return nil
 		}
 
 		allowListState := providerschema.AppServiceCIDRData{
@@ -163,7 +163,7 @@ func (a *AppServiceCidrs) mapResponseBody(
 		}
 		state.Data = append(state.Data, allowListState)
 	}
-	return *state
+	return state
 }
 
 func (a *AppServiceCidrs) Configure(

@@ -246,16 +246,14 @@ func (a *AppServiceCidr) Read(ctx context.Context, req resource.ReadRequest, res
 
 	// refresh the existing allow list
 	refreshedState, err := a.refreshAllowedCIDR(ctx, organizationId, projectId, clusterId, appServiceId, allowedCIDRId)
-	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			resp.State.RemoveResource(ctx)
-			return
-		}
+	if err != errors.ErrNotFound {
+		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+		resp.State.RemoveResource(ctx)
+		return
+	} else if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading App Service Allowed CIDR",
-			"Could not read App Service Allowed CIDR "+allowedCIDRId+": "+errString,
+			"Could not read App Service Allowed CIDR "+allowedCIDRId+": "+err.Error(),
 		)
 		return
 	}
@@ -274,9 +272,9 @@ func (a *AppServiceCidr) Read(ctx context.Context, req resource.ReadRequest, res
 
 // Update is not supported for App services allowed cidrs
 func (a *AppServiceCidr) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// Couchbase Capella's v4 does not support a PUT endpoint for Network Peers.
-	// Network Peers can only be created, read and deleted.
-	// https://docs.couchbase.com/cloud/management-api-reference/index.html#tag/Network-Peers
+	// Couchbase Capella's v4 does not support a PUT endpoint for App Services Allowed CIDRs.
+	// App Services Allowed CIDRs can only be created, read and deleted.
+	// https://docs.couchbase.com/cloud/management-api-reference/index.html#tag/Allowed-CIDRs-(App-Services)
 	//
 	// Note: In this situation, terraform apply will default to deleting and executing a new create.
 	// The update implementation should simply be left empty.
