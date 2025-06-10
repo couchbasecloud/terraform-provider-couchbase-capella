@@ -270,7 +270,7 @@ func (a *AppServiceCidr) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 }
 
-// Update is not supported for App services allowed cidrs
+// Update is not supported for App services allowed cidrs.
 func (a *AppServiceCidr) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// Couchbase Capella's v4 does not support a PUT endpoint for App Services Allowed CIDRs.
 	// App Services Allowed CIDRs can only be created, read and deleted.
