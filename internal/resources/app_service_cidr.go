@@ -141,7 +141,7 @@ func (a *AppServiceCidr) Create(ctx context.Context, req resource.CreateRequest,
 
 }
 
-// initializeAllowListWithPlanAndId initializes an instance of providerschema.AllowList
+// initializeAllowedCIDRWithPlanAndId initializes an instance of providerschema.AppServiceCIDR
 // with the specified plan and ID. It marks all computed fields as null.
 func initializeAllowedCIDRWithPlanAndId(plan providerschema.AppServiceCIDR, id string) providerschema.AppServiceCIDR {
 	plan.Id = types.StringValue(id)
@@ -152,8 +152,8 @@ func initializeAllowedCIDRWithPlanAndId(plan providerschema.AppServiceCIDR, id s
 	return plan
 }
 
-// getAllowList is used to retrieve an existing allow list.
-func (a *AppServiceCidr) getAllowList(ctx context.Context, organizationId, projectId, clusterId, appServiceId, allowListId string) (*api.AppServiceAllowedCIDRResponse, error) {
+// getAllowedCIDR is used to retrieve an existing allow list.
+func (a *AppServiceCidr) getAllowedCIDR(ctx context.Context, organizationId, projectId, clusterId, appServiceId, allowListId string) (*api.AppServiceAllowedCIDRResponse, error) {
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/allowedcidrs",
 		a.HostURL,
@@ -189,9 +189,9 @@ func (a *AppServiceCidr) getAllowList(ctx context.Context, organizationId, proje
 	return nil, errors.ErrNotFound
 }
 
-// refreshAllowList is used to pass an existing AllowList to the refreshed state.
+// refreshAllowedCIDR is used to pass an existing Allowed CIDR to the refreshed state.
 func (r *AppServiceCidr) refreshAllowedCIDR(ctx context.Context, organizationId, projectId, clusterId, appServiceId, allowedCIDRId string) (*providerschema.AppServiceCIDR, error) {
-	allowListResp, err := r.getAllowList(ctx, organizationId, projectId, clusterId, appServiceId, allowedCIDRId)
+	allowListResp, err := r.getAllowedCIDR(ctx, organizationId, projectId, clusterId, appServiceId, allowedCIDRId)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrNotFound, err)
 	}
@@ -301,7 +301,7 @@ func (a *AppServiceCidr) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	// Execute request to delete existing allowlist
+	// Execute request to delete existing allowed CIDR
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/allowedcidrs/%s",
 		a.HostURL,

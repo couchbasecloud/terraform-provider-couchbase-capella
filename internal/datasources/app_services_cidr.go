@@ -130,7 +130,7 @@ func (a *AppServiceCidrs) Read(ctx context.Context, req datasource.ReadRequest, 
 }
 
 // mapResponseBody is used to map the response body from a call to
-// listAllowlists to the allowlists schema that will be used by terraform.
+// listAllowedCidrs to the allowed cidrs schema that will be used by terraform.
 func (a *AppServiceCidrs) mapResponseBody(
 	ctx context.Context,
 	allowLists []api.AppServiceAllowedCIDRResponse,

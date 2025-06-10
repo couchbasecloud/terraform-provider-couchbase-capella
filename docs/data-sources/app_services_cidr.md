@@ -6,7 +6,7 @@ description: |-
   Retrieves the allowed CIDR details for a Capella App Service.
 ---
 
-# couchbase-capella_allowlists (Data Source)
+# couchbase-capella_app_services_cidr (Data Source)
 
 Retrieves the allowed CIDR details for a Capella App Service.
 
