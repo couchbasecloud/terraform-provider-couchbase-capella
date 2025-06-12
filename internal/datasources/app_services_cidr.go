@@ -48,6 +48,7 @@ func (a *AppServiceCidrs) Schema(_ context.Context, _ datasource.SchemaRequest, 
 						"organization_id": computedStringAttribute,
 						"project_id":      computedStringAttribute,
 						"cluster_id":      computedStringAttribute,
+						"app_service_id":  computedStringAttribute,
 						"cidr": schema.StringAttribute{
 							Computed:            true,
 							MarkdownDescription: "The trusted CIDR to allow the database connections from.",
@@ -140,6 +141,7 @@ func (a *AppServiceCidrs) mapResponseBody(
 		OrganizationId: types.StringValue(state.OrganizationId.ValueString()),
 		ProjectId:      types.StringValue(state.ProjectId.ValueString()),
 		ClusterId:      types.StringValue(state.ClusterId.ValueString()),
+		AppServiceId:   types.StringValue(state.AppServiceId.ValueString()),
 	}
 	for _, allowList := range allowLists {
 		// Create audit data object

@@ -72,6 +72,9 @@ func (a *AppServiceCIDRs) Validate() (clusterId, projectId, organizationId, apps
 	if a.ClusterId.IsNull() {
 		return "", "", "", "", errors.ErrClusterIdMissing
 	}
+	if a.AppServiceId.IsNull() {
+		return "", "", "", "", errors.ErrAppServiceIdMissing
+	}
 	return a.ClusterId.ValueString(), a.ProjectId.ValueString(), a.OrganizationId.ValueString(), a.AppServiceId.ValueString(), nil
 }
 
