@@ -121,9 +121,7 @@ func (a *AppServiceCidrs) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	// Set state
 	diags = resp.State.Set(ctx, &state)
-
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

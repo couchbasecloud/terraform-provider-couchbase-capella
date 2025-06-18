@@ -282,7 +282,6 @@ func (a *AppServiceCidr) Update(ctx context.Context, req resource.UpdateRequest,
 }
 
 func (a *AppServiceCidr) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// Retrieve existing state
 	var state providerschema.AppServiceCIDR
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)

@@ -8,14 +8,19 @@ import (
 
 // AppServiceCIDRs defines the attributes for an individual App service allowed CIDR.
 type AppServiceCIDR struct {
+	// OrganizationId is the Capella tenant id associated with the App Service.
 	OrganizationId types.String `tfsdk:"organization_id"`
 
+	// ProjectId is the id of the Capella project associated with the App Service.
 	ProjectId types.String `tfsdk:"project_id"`
 
+	// ClusterId is the id of the Capella cluster associated with the App Service.
 	ClusterId types.String `tfsdk:"cluster_id"`
 
+	// AppServiceId is the id of the Capella App Service associated with the App Service CIDR.
 	AppServiceId types.String `tfsdk:"app_service_id"`
 
+	// Cidr is the CIDR to allow connections from.
 	Cidr types.String `tfsdk:"cidr"`
 	// Id is a GUID4 identifier of the App service CIDR.
 	Comment types.String `tfsdk:"comment"`
@@ -31,7 +36,7 @@ type AppServiceCIDR struct {
 type AppServiceCIDRData struct {
 	// Id is the ID is the unique UUID generated when an allowed cidr is created.
 	Id types.String `tfsdk:"id"`
-
+	// Cidr is the CIDR or ip address range to allow connections from.
 	Cidr types.String `tfsdk:"cidr"`
 	// Id is a GUID4 identifier of the App service CIDR.
 	Comment types.String `tfsdk:"comment"`
