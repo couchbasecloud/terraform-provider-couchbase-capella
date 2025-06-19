@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 )
 
+// AllowedCIDRsSchema returns the schema for the App Service allowed CIDRs resource.
 func AllowedCIDRsSchema() schema.Schema {
 	return schema.Schema{
 		MarkdownDescription: "Manages the IP addresses allowed to connect to App Services on Couchbase Capella.",

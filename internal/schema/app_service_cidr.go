@@ -6,7 +6,7 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 )
 
-// AppServiceCIDRs defines the attributes for an individual App service allowed CIDR.
+// AppServiceCIDR defines the attributes for an individual App service allowed CIDR.
 type AppServiceCIDR struct {
 	// OrganizationId is the Capella tenant id associated with the App Service.
 	OrganizationId types.String `tfsdk:"organization_id"`
@@ -32,7 +32,7 @@ type AppServiceCIDR struct {
 	Id types.String `tfsdk:"id"`
 }
 
-// AppServiceCIDRs defines the attributes for an individual App service allowed CIDR.
+// AppServiceCIDRData defines the schema for individual App service allowed CIDRs returned by the list endpoint.
 type AppServiceCIDRData struct {
 	// Id is the ID is the unique UUID generated when an allowed cidr is created.
 	Id types.String `tfsdk:"id"`

@@ -26,18 +26,22 @@ type AppServiceCidr struct {
 	*providerschema.Data
 }
 
+// NewAppServiceCidr is used in (p *capellaProvider) Resources for building the provider.
 func NewAppServiceCidr() resource.Resource {
 	return &AppServiceCidr{}
 }
 
+// Metadata returns the App Service CIDR resource type name.
 func (a *AppServiceCidr) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_app_services_cidr"
 }
 
+// Schema defines the schema for the App Service CIDR resource.
 func (a *AppServiceCidr) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = AllowedCIDRsSchema()
 }
 
+// Configure is used to configure the App Service CIDR resource with the provider data.
 func (a *AppServiceCidr) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -56,6 +60,7 @@ func (a *AppServiceCidr) Configure(_ context.Context, req resource.ConfigureRequ
 	a.Data = data
 }
 
+// Create is used to create a new App Service Allowed CIDR.
 func (a *AppServiceCidr) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan providerschema.AppServiceCIDR
 	diags := req.Plan.Get(ctx, &plan)
@@ -131,7 +136,7 @@ func (a *AppServiceCidr) Create(ctx context.Context, req resource.CreateRequest,
 		refreshedState.ExpiresAt = plan.ExpiresAt
 	}
 
-	// Set state to fully populated data
+	// Set state to fully populated data.
 	diags = resp.State.Set(ctx, refreshedState)
 
 	resp.Diagnostics.Append(diags...)
@@ -225,6 +230,7 @@ func (r *AppServiceCidr) refreshAllowedCIDR(ctx context.Context, organizationId,
 	return &refreshedState, nil
 }
 
+// Read is used to read an existing App Service CIDR and set the state.
 func (a *AppServiceCidr) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state providerschema.AppServiceCIDR
 	diags := req.State.Get(ctx, &state)
@@ -281,6 +287,7 @@ func (a *AppServiceCidr) Update(ctx context.Context, req resource.UpdateRequest,
 	// https://developer.hashicorp.com/terraform/plugin/framework/resources/update
 }
 
+// Delete is used to delete an existing App Service Allowed CIDR.
 func (a *AppServiceCidr) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state providerschema.AppServiceCIDR
 	diags := req.State.Get(ctx, &state)
@@ -290,7 +297,7 @@ func (a *AppServiceCidr) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	// Validate parameters were successfully imported
+	// Validate parameters were successfully imported.
 	organizationId, projectId, clusterId, appServiceId, allowedCIDRId, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -300,7 +307,7 @@ func (a *AppServiceCidr) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	// Execute request to delete existing allowed CIDR
+	// Execute request to delete existing allowed CIDR.
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/allowedcidrs/%s",
 		a.HostURL,

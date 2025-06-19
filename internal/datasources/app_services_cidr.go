@@ -23,7 +23,7 @@ type AppServiceCidrs struct {
 	*providerschema.Data
 }
 
-// NewAppServiceCidrs is used in (p *capellaProvider) DataSources for
+// NewAppServiceCidrs is used in (p *capellaProvider) DataSources for building the provider.
 func NewAppServiceCidrs() datasource.DataSource {
 	return &AppServiceCidrs{}
 }
@@ -171,6 +171,7 @@ func (a *AppServiceCidrs) mapResponseBody(
 	return state
 }
 
+// Configure is used to configure the AppServiceCidrs data source with the provider data.
 func (a *AppServiceCidrs) Configure(
 	_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse,
 ) {
