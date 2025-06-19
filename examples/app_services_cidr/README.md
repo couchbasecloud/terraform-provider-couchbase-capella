@@ -52,51 +52,51 @@ Terraform will perform the following actions:
           + version     = (known after apply)
         }
       + cidr            = "10.0.0.0/16"
-      + cluster_id      = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + comment         = "Allow access from another VPC"
       + expires_at      = "2023-11-14T21:49:58.465Z"
       + id              = (known after apply)
-      + organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      + project_id      = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
     }
 
 Plan: 1 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
   + allowedcidr_list = {
-      + cluster_id      = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + data            = [
           + {
               + audit           = {
                   + created_at  = "2023-10-04 02:44:17.216362615 +0000 UTC"
-                  + created_by  = "7dfc7b93-a71b-4a2e-b5a7-4255ab29cab9"
+                  + created_by  = "ffffffff-aaaa-1414-eeee-000000000000"
                   + modified_at = "2023-10-04 02:44:17.216362615 +0000 UTC"
-                  + modified_by = "7dfc7b93-a71b-4a2e-b5a7-4255ab29cab9"
+                  + modified_by = "ffffffff-aaaa-1414-eeee-000000000000"
                   + version     = 1
                 }
               + cidr            = "23.121.17.137/32"
-              + cluster_id      = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+              + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
               + comment         = ""
               + expires_at      = null
               + id              = "bbaf68d3-6e8a-433e-aa78-d12a79da4911"
               + if_match        = null
-              + organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-              + project_id      = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+              + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+              + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
             },
         ]
-      + organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      + project_id      = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
     }
   + new_allowedcidr   = {
       + audit           = (known after apply)
       + cidr            = "10.0.0.0/16"
-      + cluster_id      = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + comment         = "Allow access from another VPC"
       + expires_at      = "2023-11-14T21:49:58.465Z"
       + id              = (known after apply)
       + if_match        = null
-      + organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      + project_id      = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
     }
 
 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -138,52 +138,52 @@ Terraform will perform the following actions:
           + version     = (known after apply)
         }
       + cidr            = "10.0.0.0/16"
-      + cluster_id      = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + comment         = "Allow access from another VPC"
       + expires_at      = "2023-11-14T21:49:58.465Z"
       + id              = (known after apply)
-      + organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      + project_id      = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
     }
 
 Plan: 1 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
   + allowedcidr_list = {
-      + cluster_id      = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
-      + app_service_id      = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      + app_service_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + data            = [
           + {
               + audit           = {
                   + created_at  = "2023-10-04 02:44:17.216362615 +0000 UTC"
-                  + created_by  = "7dfc7b93-a71b-4a2e-b5a7-4255ab29cab9"
+                  + created_by  = "ffffffff-aaaa-1414-eeee-000000000000"
                   + modified_at = "2023-10-04 02:44:17.216362615 +0000 UTC"
-                  + modified_by = "7dfc7b93-a71b-4a2e-b5a7-4255ab29cab9"
+                  + modified_by = "ffffffff-aaaa-1414-eeee-000000000000"
                   + version     = 1
                 }
               + cidr            = "23.121.17.137/32"
-              + cluster_id      = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+              + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
               + comment         = ""
               + expires_at      = null
               + id              = "bbaf68d3-6e8a-433e-aa78-d12a79da4911"
               + if_match        = null
-              + organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-              + project_id      = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+              + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+              + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
             },
         ]
-      + organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      + project_id      = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
     }
   + new_allowedcidr   = {
       + audit           = (known after apply)
       + cidr            = "10.0.0.0/16"
-      + cluster_id      = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + comment         = "Allow access from another VPC"
       + expires_at      = "2023-11-14T21:49:58.465Z"
       + id              = (known after apply)
       + if_match        = null
-      + organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      + project_id      = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
     }
 
 Do you want to perform these actions?
@@ -200,28 +200,28 @@ Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
 Outputs:
 
 allowedcidr_list = {
-  "cluster_id" = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "data" = tolist([
     {
       "audit" = {
         "created_at" = "2023-10-04 02:44:17.216362615 +0000 UTC"
-        "created_by" = "7dfc7b93-a71b-4a2e-b5a7-4255ab29cab9"
+        "created_by" = "ffffffff-aaaa-1414-eeee-000000000000"
         "modified_at" = "2023-10-04 02:44:17.216362615 +0000 UTC"
-        "modified_by" = "7dfc7b93-a71b-4a2e-b5a7-4255ab29cab9"
+        "modified_by" = "ffffffff-aaaa-1414-eeee-000000000000"
         "version" = 1
       }
       "cidr" = "23.121.17.137/32"
-      "cluster_id" = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+      "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
       "comment" = ""
       "expires_at" = tostring(null)
       "id" = "bbaf68d3-6e8a-433e-aa78-d12a79da4911"
       "if_match" = tostring(null)
-      "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+      "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+      "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
     },
   ])
-  "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-  "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
 }
 new_allowedcidr = {
   "audit" = {
@@ -232,13 +232,13 @@ new_allowedcidr = {
     "version" = 1
   }
   "cidr" = "10.0.0.0/16"
-  "cluster_id" = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "comment" = "Allow access from another VPC"
   "expires_at" = "2023-11-14T21:49:58.465Z"
   "id" = "854cbdf0-8ae3-4a42-9227-59c52a5ab4f2"
   "if_match" = tostring(null)
-  "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-  "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
 }
 ```
 
@@ -257,13 +257,13 @@ $ terraform output new_allowedcidr
     "version" = 1
   }
   "cidr" = "10.0.0.0/16"
-  "cluster_id" = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "comment" = "Allow access from another VPC"
   "expires_at" = "2023-11-14T21:49:58.465Z"
   "id" = "854cbdf0-8ae3-4a42-9227-59c52a5ab4f2"
   "if_match" = tostring(null)
-  "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-  "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
 }
 ```
 
@@ -299,16 +299,16 @@ Please note, this command will only remove the resource from the Terraform State
 Command: `terraform import couchbase-capella_app_services_cidr.new_allowedcidr id=<allowedcidr_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
 In this case, the complete command is:
-`terraform import couchbase-capella_app_services_cidr.new_allowedcidr id=854cbdf0-8ae3-4a42-9227-59c52a5ab4f2,cluster_id=f499a9e6-e5a1-4f3e-95a7-941a41d046e6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d`
+`terraform import couchbase-capella_app_services_cidr.new_allowedcidr id=854cbdf0-8ae3-4a42-9227-59c52a5ab4f2,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000`
 
 Sample Output:
 ```
-$ terraform import couchbase-capella_app_services_cidr.new_allowedcidr id=854cbdf0-8ae3-4a42-9227-59c52a5ab4f2,cluster_id=f499a9e6-e5a1-4f3e-95a7-941a41d046e6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d
-capella_app_services_cidr.new_allowedcidr: Importing from ID "id=854cbdf0-8ae3-4a42-9227-59c52a5ab4f2,cluster_id=f499a9e6-e5a1-4f3e-95a7-941a41d046e6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d"...
+$ terraform import couchbase-capella_app_services_cidr.new_allowedcidr id=854cbdf0-8ae3-4a42-9227-59c52a5ab4f2,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000
+capella_app_services_cidr.new_allowedcidr: Importing from ID "id=854cbdf0-8ae3-4a42-9227-59c52a5ab4f2,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000"...
 data.capella_app_services_cidr.existing_allowedcidr: Reading...
 capella_app_services_cidr.new_allowedcidr: Import prepared!
   Prepared capella_app_services_cidr for import
-capella_app_services_cidr.new_allowedcidr: Refreshing state... [id=id=854cbdf0-8ae3-4a42-9227-59c52a5ab4f2,cluster_id=f499a9e6-e5a1-4f3e-95a7-941a41d046e6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d]
+capella_app_services_cidr.new_allowedcidr: Refreshing state... [id=id=854cbdf0-8ae3-4a42-9227-59c52a5ab4f2,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000]
 data.capella_app_services_cidr.existing_allowedcidr: Read complete after 1s
 
 Import successful!
@@ -420,7 +420,7 @@ Apply complete! Resources: 1 added, 0 changed, 1 destroyed.
 Outputs:
 
 allowedcidr_list = {
-  "cluster_id" = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "data" = tolist([
     {
       "audit" = {
@@ -431,34 +431,34 @@ allowedcidr_list = {
         "version" = 1
       }
       "cidr" = "10.0.0.0/16"
-      "cluster_id" = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+      "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
       "comment" = "Allow access from another VPC"
       "expires_at" = "2023-11-14T21:49:58.465Z"
       "id" = "854cbdf0-8ae3-4a42-9227-59c52a5ab4f2"
       "if_match" = tostring(null)
-      "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+      "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+      "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
     },
     {
       "audit" = {
         "created_at" = "2023-10-04 02:44:17.216362615 +0000 UTC"
-        "created_by" = "7dfc7b93-a71b-4a2e-b5a7-4255ab29cab9"
+        "created_by" = "ffffffff-aaaa-1414-eeee-000000000000"
         "modified_at" = "2023-10-04 02:44:17.216362615 +0000 UTC"
-        "modified_by" = "7dfc7b93-a71b-4a2e-b5a7-4255ab29cab9"
+        "modified_by" = "ffffffff-aaaa-1414-eeee-000000000000"
         "version" = 1
       }
       "cidr" = "23.121.17.137/32"
-      "cluster_id" = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+      "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
       "comment" = ""
       "expires_at" = tostring(null)
       "id" = "bbaf68d3-6e8a-433e-aa78-d12a79da4911"
       "if_match" = tostring(null)
-      "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+      "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+      "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
     },
   ])
-  "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-  "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
 }
 new_allowedcidr = {
   "audit" = {
@@ -469,13 +469,13 @@ new_allowedcidr = {
     "version" = 1
   }
   "cidr" = "10.0.0.0/16"
-  "cluster_id" = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "comment" = "updated allowedcidr comment"
   "expires_at" = "2023-11-14T21:49:58.465Z"
   "id" = "358387f9-9780-4419-9ca6-b5e8a3b457dc"
   "if_match" = tostring(null)
-  "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-  "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
 }
 ```
 
@@ -515,19 +515,19 @@ Terraform will perform the following actions:
           - version     = 1 -> null
         }
       - cidr            = "10.0.0.0/16" -> null
-      - cluster_id      = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6" -> null
+      - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - comment         = "updated allowedcidr comment" -> null
       - expires_at      = "2023-11-14T21:49:58.465Z" -> null
-      - id              = "358387f9-9780-4419-9ca6-b5e8a3b457dc" -> null
-      - organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d" -> null
-      - project_id      = "958ad6b5-272d-49f0-babd-cc98c6b54a81" -> null
+      - id              = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - organization_id = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - project_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
     }
 
 Plan: 0 to add, 0 to change, 1 to destroy.
 
 Changes to Outputs:
   - allowedcidr_list = {
-      - cluster_id      = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+      - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       - data            = [
           - {
               - audit           = {
@@ -538,34 +538,34 @@ Changes to Outputs:
                   - version     = 1
                 }
               - cidr            = "10.0.0.0/16"
-              - cluster_id      = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+              - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
               - comment         = "updated allowedcidr comment"
               - expires_at      = "2023-11-14T21:49:58.465Z"
               - id              = "358387f9-9780-4419-9ca6-b5e8a3b457dc"
               - if_match        = null
-              - organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-              - project_id      = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+              - organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+              - project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
             },
           - {
               - audit           = {
                   - created_at  = "2023-10-04 02:44:17.216362615 +0000 UTC"
-                  - created_by  = "7dfc7b93-a71b-4a2e-b5a7-4255ab29cab9"
+                  - created_by  = "ffffffff-aaaa-1414-eeee-000000000000"
                   - modified_at = "2023-10-04 02:44:17.216362615 +0000 UTC"
-                  - modified_by = "7dfc7b93-a71b-4a2e-b5a7-4255ab29cab9"
+                  - modified_by = "ffffffff-aaaa-1414-eeee-000000000000"
                   - version     = 1
                 }
               - cidr            = "23.121.17.137/32"
-              - cluster_id      = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+              - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
               - comment         = ""
               - expires_at      = null
               - id              = "bbaf68d3-6e8a-433e-aa78-d12a79da4911"
               - if_match        = null
-              - organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-              - project_id      = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+              - organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+              - project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
             },
         ]
-      - organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      - project_id      = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+      - organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      - project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
     } -> null
   - new_allowedcidr   = {
       - audit           = {
@@ -576,13 +576,13 @@ Changes to Outputs:
           - version     = 1
         }
       - cidr            = "10.0.0.0/16"
-      - cluster_id      = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+      - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       - comment         = "updated allowedcidr comment"
       - expires_at      = "2023-11-14T21:49:58.465Z"
       - id              = "358387f9-9780-4419-9ca6-b5e8a3b457dc"
       - if_match        = null
-      - organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      - project_id      = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+      - organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      - project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
     } -> null
 
 Do you really want to destroy all resources?

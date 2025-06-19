@@ -1,6 +1,6 @@
 package api
 
-// CreateAllowedCIDRRequest is the request structure for creating an allowed CIDR on an App Service.
+// CreateAllowedCIDRRequest is the request body for creating an allowed CIDR on an App Service.
 type CreateAllowedCIDRRequest struct {
 	// Cidr is the ip address range in CIDR notation that is allowed to access the App Service.
 	Cidr string `json:"cidr"`
@@ -12,6 +12,7 @@ type CreateAllowedCIDRRequest struct {
 	ExpiresAt string `json:"expiresAt"`
 }
 
+// AppServiceAllowedCIDRResponse is the response structure for an individual allowed CIDR entry on an App Service.
 type AppServiceAllowedCIDRResponse struct {
 	// Id is the UUID generated when an allowed cidr is created.
 	Id string `json:"id"`

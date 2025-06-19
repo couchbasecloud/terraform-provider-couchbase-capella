@@ -18,20 +18,24 @@ var (
 	_ datasource.DataSourceWithConfigure = (*AppServiceCidrs)(nil)
 )
 
+// AppServiceCidrs is the data source implementation for retrieving allowed CIDRs for an App Service.
 type AppServiceCidrs struct {
 	*providerschema.Data
 }
 
+// NewAppServiceCidrs is used in (p *capellaProvider) DataSources for
 func NewAppServiceCidrs() datasource.DataSource {
 	return &AppServiceCidrs{}
 }
 
+// Metadata returns the App Service CIDRs data source type name.
 func (a *AppServiceCidrs) Metadata(
 	_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse,
 ) {
 	resp.TypeName = req.ProviderTypeName + "_app_services_cidr"
 }
 
+// Schema defines the schema for the App Service CIDRs data source.
 func (a *AppServiceCidrs) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Retrieves the allowed CIDRs for a Capella App Service.",
@@ -85,6 +89,7 @@ func (a *AppServiceCidrs) listAllowedCIDRs(ctx context.Context, organizationId, 
 	return api.GetPaginated[[]api.AppServiceAllowedCIDRResponse](ctx, a.Client, a.Token, cfg, api.SortById)
 }
 
+// Read refreshes the Terraform state with the allowed CIDRs in the Terraform state file.
 func (a *AppServiceCidrs) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state *providerschema.AppServiceCIDRs
 	diags := req.Config.Get(ctx, &state)
