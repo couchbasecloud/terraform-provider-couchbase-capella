@@ -235,6 +235,20 @@ This will automatically be retried in the background.  Please run "terraform app
 		)
 
 		return
+	case internalerrors.ErrGatewayTimeoutForIndexDDL:
+		resp.Diagnostics.AddWarning(
+			"Long index build time",
+			fmt.Sprintf(
+				`Build of index %s in %s.%s.%s did not complete in time.  This maybe due to non-deferred builds of a large index,
+in which case it is recommended to use deferred builds.  Please monitor the index and once its ready, then refresh state.`,
+				plan.IndexName.ValueString(),
+				plan.BucketName.ValueString(),
+				plan.ScopeName.ValueString(),
+				plan.CollectionName.ValueString(),
+			),
+		)
+
+		return
 
 	default:
 		resp.Diagnostics.AddError(
@@ -582,12 +596,17 @@ func (g *GSI) executeGsiDdl(ctx context.Context, plan *providerschema.GsiDefinit
 		nil,
 	)
 	if err != nil {
+		if errors.Is(err, internalerrors.ErrGatewayTimeoutForIndexDDL) {
+			return internalerrors.ErrGatewayTimeoutForIndexDDL
+		}
+
 		// Indexer doesn't allow concurrent index builds.
 		// Index build is resource intensive operation from indexer and KV perspective
-		// as indexer will request data the keyspace from the beginning.
+		// as indexer will request data for the keyspace from the beginning.
 		//
 		// Indexer will automatically retry in the background.
 		if apiError, ok := err.(*api.Error); ok {
+
 			if strings.Contains(strings.ToLower(apiError.Message), "build already in progress") ||
 				strings.Contains(strings.ToLower(apiError.Message), "concurrent create index request") {
 
