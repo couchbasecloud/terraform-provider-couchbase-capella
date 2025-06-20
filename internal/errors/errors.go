@@ -24,6 +24,9 @@ var (
 	// ErrClusterIdMissing is returned when an expected Cluster Id was not found after an import.
 	ErrClusterIdMissing = errors.New("cluster ID is missing or was passed incorrectly, please check provider documentation for syntax")
 
+	// ErrAppServiceIdMissing is returned when an expected App Service Id was not found after an import.
+	ErrAppServiceIdMissing = errors.New("app service ID is missing or was passed incorrectly, please check provider documentation for syntax")
+
 	// ErrPeerIdMissing is returned when an expected Peer Id was not found after an import.
 	ErrPeerIdMissing = errors.New("peer ID is missing or was passed incorrectly, please check provider documentation for syntax")
 
