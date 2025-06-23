@@ -1,4 +1,4 @@
-resource "couchbase-capella_allowlist" "new_allowlist" {
+resource "couchbase-capella_app_services_cidr" "new_allowed_cidr" {
   organization_id = var.organization_id
   project_id      = couchbase-capella_project.new_project.id
   cluster_id      = couchbase-capella_cluster.new_cluster.id
