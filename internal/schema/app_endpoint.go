@@ -6,51 +6,63 @@ import (
 
 // AppEndpoint represents the Terraform schema for an app endpoint configuration
 type AppEndpoint struct {
-	Bucket           types.String    `tfsdk:"bucket"`
-	Name             types.String    `tfsdk:"name"`
-	UserXattrKey     types.String    `tfsdk:"user_xattr_key"`
-	DeltaSyncEnabled types.Bool      `tfsdk:"delta_sync_enabled"`
-	Scopes           types.Object    `tfsdk:"scopes"`
-	Cors             AppEndpointCors `tfsdk:"cors"`
-	Oidc             AppEndpointOidc `tfsdk:"oidc"`
+	Bucket           types.String                             `tfsdk:"bucket"`
+	Name             types.String                             `tfsdk:"name"`
+	UserXattrKey     types.String                             `tfsdk:"userXattrKey"`
+	DeltaSyncEnabled types.Bool                               `tfsdk:"deltaSyncEnabled"`
+	Scopes           AppEndpointScopes                        `tfsdk:"scopes"`
+	Cors             AppEndpointCors                          `tfsdk:"cors"`
+	Oidc             []AppEndpointOidc                        `tfsdk:"oidc"`
+	RequireResync    map[string]AppEndpointRequireResyncScope `tfsdk:"requireResync"`
+	AdminURL         types.String                             `tfsdk:"adminURL"`
+	MetricsURL       types.String                             `tfsdk:"metricsURL"`
+	PublicURL        types.String                             `tfsdk:"publicURL"`
 }
 
 // AppEndpointScopes represents the scopes configuration within an app endpoint
 type AppEndpointScopes struct {
-	Default types.Object `tfsdk:"_default"`
+	Default AppEndpointScope `tfsdk:"_default"`
 }
 
-// AppEndpointDefaultScope represents the default scope configuration
-type AppEndpointDefaultScope struct {
-	Collections types.Object `tfsdk:"collections"`
+// AppEndpointScope represents a scope configuration
+type AppEndpointScope struct {
+	Collections AppEndpointCollections `tfsdk:"collections"`
 }
 
 // AppEndpointCollections represents the collections configuration within a scope
 type AppEndpointCollections struct {
-	Default types.Object `tfsdk:"_default"`
+	Default AppEndpointCollection `tfsdk:"_default"`
 }
 
-// AppEndpointDefaultCollection represents the default collection configuration
-type AppEndpointDefaultCollection struct {
-	AccessControlFunction types.String `tfsdk:"access_control_function"`
-	ImportFilter          types.String `tfsdk:"import_filter"`
+// AppEndpointCollection represents a collection configuration
+type AppEndpointCollection struct {
+	AccessControlFunction types.String `tfsdk:"accessControlFunction"`
+	ImportFilter          types.String `tfsdk:"importFilter"`
 }
 
 // AppEndpointCors represents the CORS configuration for an app endpoint
 type AppEndpointCors struct {
-	Origin      types.List `tfsdk:"origin"`
-	LoginOrigin types.List `tfsdk:"login_origin"`
-	Headers     types.List `tfsdk:"headers"`
-	Disabled    types.Bool `tfsdk:"disabled"`
+	Origin      []types.String `tfsdk:"origin"`
+	LoginOrigin []types.String `tfsdk:"loginOrigin"`
+	Headers     []types.String `tfsdk:"headers"`
+	MaxAge      types.Int64    `tfsdk:"maxAge"`
+	Disabled    types.Bool     `tfsdk:"disabled"`
 }
 
 // AppEndpointOidc represents an OIDC configuration within an app endpoint
 type AppEndpointOidc struct {
 	Issuer        types.String `tfsdk:"issuer"`
 	Register      types.Bool   `tfsdk:"register"`
-	ClientId      types.String `tfsdk:"client_id"`
-	UserPrefix    types.String `tfsdk:"user_prefix"`
-	DiscoveryUrl  types.String `tfsdk:"discovery_url"`
-	UsernameClaim types.String `tfsdk:"username_claim"`
-	RolesClaim    types.String `tfsdk:"roles_claim"`
+	ClientId      types.String `tfsdk:"clientId"`
+	UserPrefix    types.String `tfsdk:"userPrefix"`
+	DiscoveryUrl  types.String `tfsdk:"discoveryUrl"`
+	UsernameClaim types.String `tfsdk:"usernameClaim"`
+	RolesClaim    types.String `tfsdk:"rolesClaim"`
+	ProviderId    types.String `tfsdk:"providerId"`
+	IsDefault     types.Bool   `tfsdk:"isDefault"`
+}
+
+// AppEndpointRequireResyncDefault represents the default require resync configuration
+type AppEndpointRequireResyncScope struct {
+	Items []types.String `tfsdk:"items"`
 }
