@@ -5,7 +5,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// AppEndpointsSchema defines the schema for the AppEndpoints datasource
+// AppEndpointsSchema defines the schema for the AppEndpoints datasource.
 func AppEndpointsSchema() schema.Schema {
 	return schema.Schema{
 		MarkdownDescription: "The data source retrieves App Endpoint configurations for a Couchbase Capella App Service.",
@@ -41,31 +41,31 @@ func AppEndpointsSchema() schema.Schema {
 						},
 						"deltaSyncEnabled": schema.BoolAttribute{
 							Computed:            true,
-							MarkdownDescription: "Whether delta sync is enabled for this App Endpoint.",
+							MarkdownDescription: "Enable or disable delta sync on this App Endpoint.",
 						},
 						"scopes": schema.SingleNestedAttribute{
-							Computed:            true,
-							MarkdownDescription: "Configuration for scopes within the App Endpoint.",
+							Optional:            true,
+							MarkdownDescription: "The list of scopes in this App Endpoint. Currently, only one scope can be linked per App Endpoint.",
 							Attributes: map[string]schema.Attribute{
-								"_default": schema.SingleNestedAttribute{
+								"scope_name": schema.SingleNestedAttribute{
 									Computed:            true,
-									MarkdownDescription: "Configuration for the default scope.",
+									MarkdownDescription: "The scope config, defining Access control and validation functions, and import filters for each collection. The key to the scope config object is the name of the scope.",
 									Attributes: map[string]schema.Attribute{
 										"collections": schema.SingleNestedAttribute{
 											Computed:            true,
-											MarkdownDescription: "Configuration for collections within the default scope.",
+											MarkdownDescription: "The list of linked collections in this scope.",
 											Attributes: map[string]schema.Attribute{
-												"_default": schema.SingleNestedAttribute{
+												"collection_name": schema.SingleNestedAttribute{
 													Computed:            true,
-													MarkdownDescription: "Configuration for the default collection.",
+													MarkdownDescription: "The collection config, defining Access control and validation functions and import filters for this collection. The key to the collection config object is the name of the collection.",
 													Attributes: map[string]schema.Attribute{
 														"accessControlFunction": schema.StringAttribute{
 															Computed:            true,
-															MarkdownDescription: "The access control function for the default collection.",
+															MarkdownDescription: "The Javascript function that is used to specify the access control policies to be applied to documents in this collection. Every document update is processed by this function.",
 														},
 														"importFilter": schema.StringAttribute{
 															Computed:            true,
-															MarkdownDescription: "The import filter for the default collection.",
+															MarkdownDescription: "The Javascript function used to specify the documents in this collection that are to be imported by the App Endpoint.",
 														},
 													},
 												},
@@ -150,16 +150,16 @@ func AppEndpointsSchema() schema.Schema {
 						},
 						"requireResync": schema.SingleNestedAttribute{
 							Computed:            true,
-							MarkdownDescription: "Configuration for require resync settings.",
+							MarkdownDescription: "List of collections that require resync, keyed by scope.",
 							Attributes: map[string]schema.Attribute{
-								"_default": schema.SingleNestedAttribute{
+								"scope_name": schema.SingleNestedAttribute{
 									Computed:            true,
-									MarkdownDescription: "Default require resync configuration.",
+									MarkdownDescription: "Scope name.",
 									Attributes: map[string]schema.Attribute{
 										"items": schema.ListAttribute{
 											Computed:            true,
 											ElementType:         types.StringType,
-											MarkdownDescription: "List of items that require resync.",
+											MarkdownDescription: "List of collections that require resync under this scope.",
 										},
 									},
 								},

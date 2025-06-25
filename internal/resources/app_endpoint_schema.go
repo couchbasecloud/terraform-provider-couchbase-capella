@@ -5,14 +5,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// AppEndpointSchema defines the schema for the AppEndpoint resource
+// AppEndpointSchema defines the schema for the AppEndpoint resource.
 func AppEndpointSchema() schema.Schema {
 	return schema.Schema{
 		MarkdownDescription: "This resource allows you to manage an App Endpoint configuration for a Couchbase Capella App Service.",
 		Attributes: map[string]schema.Attribute{
-			"organization_id":  WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the organization."),
-			"project_id":       WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the project."),
-			"cluster_id":       WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the cluster."),
+			"organization_id":  WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the Couchbase Capellaorganization."),
+			"project_id":       WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the Couchbase Capella project."),
+			"cluster_id":       WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the Couchbase Capella cluster."),
 			"bucket":           WithDescription(stringAttribute([]string{required, requiresReplace}), "The name of the bucket associated with this App Endpoint."),
 			"name":             WithDescription(stringAttribute([]string{required, requiresReplace}), "The name of the App Endpoint."),
 			"userXattrKey":     WithDescription(stringAttribute([]string{optional}), "The user extended attribute key for the App Endpoint."),
@@ -21,17 +21,20 @@ func AppEndpointSchema() schema.Schema {
 				Optional:            true,
 				MarkdownDescription: "Configuration for scopes within the App Endpoint.",
 				Attributes: map[string]schema.Attribute{
-					"scope": schema.SingleNestedAttribute{
+					"scope_name": schema.SingleNestedAttribute{
 						Optional:            true,
-						MarkdownDescription: "Configuration for the default scope.",
+						MarkdownDescription: "The list of collections within this scope.",
 						Attributes: map[string]schema.Attribute{
-							"collections": schema.SetNestedAttribute{
-								Computed:            true,
-								MarkdownDescription: "The list of collections within this scope.",
-								NestedObject: schema.NestedAttributeObject{
-									Attributes: map[string]schema.Attribute{
-										"accessControlFunction": WithDescription(stringAttribute([]string{optional}), "The access control function for this collection."),
-										"importFilter":          WithDescription(stringAttribute([]string{optional}), "The import filter for this collection."),
+							"collections": schema.SingleNestedAttribute{
+								Optional:            true,
+								MarkdownDescription: "Configuration for collections within the default scope.",
+								Attributes: map[string]schema.Attribute{
+									"collection_name": schema.SingleNestedAttribute{
+										MarkdownDescription: "Configuration for the default collection.",
+										Attributes: map[string]schema.Attribute{
+											"accessControlFunction": WithDescription(stringAttribute([]string{optional}), "The Javascript function that is used to specify the access control policies to be applied to documents in this collection. Every document update is processed by this function."),
+											"importFilter":          WithDescription(stringAttribute([]string{optional}), "The Javascript function used to specify the documents in this collection that are to be imported by the App Endpoint."),
+										},
 									},
 								},
 							},
@@ -77,23 +80,23 @@ func AppEndpointSchema() schema.Schema {
 						"discoveryUrl":  WithDescription(stringAttribute([]string{optional}), "The OIDC discovery URL."),
 						"usernameClaim": WithDescription(stringAttribute([]string{optional}), "The username claim for OIDC."),
 						"rolesClaim":    WithDescription(stringAttribute([]string{optional}), "The roles claim for OIDC."),
-						"providerId":    WithDescription(stringAttribute([]string{optional}), "The OIDC provider ID."),
-						"isDefault":     WithDescription(boolAttribute(optional), "Whether this is the default OIDC provider."),
+						"providerId":    WithDescription(stringAttribute([]string{computed}), "The OIDC provider ID."),
+						"isDefault":     WithDescription(boolAttribute(computed), "Whether this is the default OIDC provider."),
 					},
 				},
 			},
 			"requireResync": schema.SingleNestedAttribute{
-				Optional:            true,
-				MarkdownDescription: "Configuration for require resync settings.",
+				Computed:            true,
+				MarkdownDescription: "List of collections that require resync, keyed by scope.",
 				Attributes: map[string]schema.Attribute{
-					"_default": schema.SingleNestedAttribute{
-						Optional:            true,
-						MarkdownDescription: "Default require resync configuration.",
+					"scope_name": schema.SingleNestedAttribute{
+						Computed:            true,
+						MarkdownDescription: "Scope name.",
 						Attributes: map[string]schema.Attribute{
 							"items": schema.ListAttribute{
-								Optional:            true,
+								Computed:            true,
 								ElementType:         types.StringType,
-								MarkdownDescription: "List of items that require resync.",
+								MarkdownDescription: "List of collections that require resync under this scope.",
 							},
 						},
 					},
