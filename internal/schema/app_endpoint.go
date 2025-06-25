@@ -4,7 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// AppEndpoint represents the Terraform schema for an app endpoint configuration
+// AppEndpoint represents the Terraform schema for an app endpoint configuration.
 type AppEndpoint struct {
 	Bucket           types.String                             `tfsdk:"bucket"`
 	Name             types.String                             `tfsdk:"name"`
@@ -19,28 +19,28 @@ type AppEndpoint struct {
 	PublicURL        types.String                             `tfsdk:"publicURL"`
 }
 
-// AppEndpointScopes represents the scopes configuration within an app endpoint
+// AppEndpointScopes represents the scopes configuration within an app endpoint.
 type AppEndpointScopes struct {
 	Default AppEndpointScope `tfsdk:"_default"`
 }
 
-// AppEndpointScope represents a scope configuration
+// AppEndpointScope represents a scope configuration.
 type AppEndpointScope struct {
 	Collections AppEndpointCollections `tfsdk:"collections"`
 }
 
-// AppEndpointCollections represents the collections configuration within a scope
+// AppEndpointCollections represents the collections configuration within a scope.
 type AppEndpointCollections struct {
 	Default AppEndpointCollection `tfsdk:"_default"`
 }
 
-// AppEndpointCollection represents a collection configuration
+// AppEndpointCollection represents a collection configuration.
 type AppEndpointCollection struct {
 	AccessControlFunction types.String `tfsdk:"accessControlFunction"`
 	ImportFilter          types.String `tfsdk:"importFilter"`
 }
 
-// AppEndpointCors represents the CORS configuration for an app endpoint
+// AppEndpointCors represents the CORS configuration for an app endpoint.
 type AppEndpointCors struct {
 	Origin      []types.String `tfsdk:"origin"`
 	LoginOrigin []types.String `tfsdk:"loginOrigin"`
@@ -49,7 +49,7 @@ type AppEndpointCors struct {
 	Disabled    types.Bool     `tfsdk:"disabled"`
 }
 
-// AppEndpointOidc represents an OIDC configuration within an app endpoint
+// AppEndpointOidc represents an OIDC configuration within an app endpoint.
 type AppEndpointOidc struct {
 	Issuer        types.String `tfsdk:"issuer"`
 	Register      types.Bool   `tfsdk:"register"`
@@ -62,7 +62,7 @@ type AppEndpointOidc struct {
 	IsDefault     types.Bool   `tfsdk:"isDefault"`
 }
 
-// AppEndpointRequireResyncDefault represents the default require resync configuration
+// AppEndpointRequireResyncDefault represents the default require resync configuration.
 type AppEndpointRequireResyncScope struct {
 	Items []types.String `tfsdk:"items"`
 }
