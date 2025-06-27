@@ -27,58 +27,73 @@ Sample Output:
 
 ```
 terraform apply
+2025-06-27T15:02:22.804-0700 [INFO]  Terraform version: 1.7.3
+2025-06-27T15:02:22.804-0700 [INFO]  Go runtime version: go1.21.5
+2025-06-27T15:02:22.804-0700 [INFO]  CLI args: []string{"terraform", "apply"}
+2025-06-27T15:02:22.804-0700 [INFO]  Loading CLI configuration from /Users/paulomee.de/.terraformrc
+2025-06-27T15:02:22.805-0700 [INFO]  CLI command args: []string{"apply"}
 ╷
 │ Warning: Provider development overrides are in effect
-│
+│ 
 │ The following provider development overrides are set in the CLI configuration:
-│   - couchbasecloud/couchbase-capella in /Users/$USER/GolandProjects/terraform-provider-couchbase-capella/bin
-│
+│  - couchbasecloud/couchbase-capella in /Users/paulomee.de/terraform-provider-couchbase-capella/bin
+│ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
+2025-06-27T15:02:22.808-0700 [INFO]  backend/local: starting Apply operation
+2025-06-27T15:02:22.810-0700 [INFO]  provider: configuring client automatic mTLS
+2025-06-27T15:02:22.860-0700 [INFO]  provider.terraform-provider-couchbase-capella: configuring server automatic mTLS: timestamp=2025-06-27T15:02:22.860-0700
+2025-06-27T15:02:22.894-0700 [INFO]  provider: configuring client automatic mTLS
+2025-06-27T15:02:22.907-0700 [INFO]  provider.terraform-provider-couchbase-capella: configuring server automatic mTLS: timestamp=2025-06-27T15:02:22.907-0700
+2025-06-27T15:02:22.925-0700 [INFO]  backend/local: apply calling Plan
+2025-06-27T15:02:22.926-0700 [INFO]  provider: configuring client automatic mTLS
+2025-06-27T15:02:22.940-0700 [INFO]  provider.terraform-provider-couchbase-capella: configuring server automatic mTLS: timestamp=2025-06-27T15:02:22.940-0700
+2025-06-27T15:02:22.953-0700 [INFO]  provider.terraform-provider-couchbase-capella: Configuring the Capella Client: tf_rpc=ConfigureProvider @caller=/Users/paulomee.de/terraform-provider-couchbase-capella/internal/provider/provider.go:73 @module=couchbase_capella tf_provider_addr=hashicorp.com/couchbasecloud/couchbase-capella tf_req_id=925ef7f3-eeb1-9aad-6c55-2f2bf7169f3d timestamp=2025-06-27T15:02:22.952-0700
+2025-06-27T15:02:22.953-0700 [INFO]  provider.terraform-provider-couchbase-capella: Configured Capella client: @caller=/Users/paulomee.de/terraform-provider-couchbase-capella/internal/provider/provider.go:169 authentication_token="***" success=true tf_rpc=ConfigureProvider @module=couchbase_capella host=https://cloudapi.dev.nonprod-project-avengers.com tf_provider_addr=hashicorp.com/couchbasecloud/couchbase-capella tf_req_id=925ef7f3-eeb1-9aad-6c55-2f2bf7169f3d timestamp=2025-06-27T15:02:22.953-0700
 data.couchbase-capella_gcp_private_endpoint_command.gcp_command: Reading...
-data.couchbase-capella_gcp_private_endpoint_command.gcp_command: Read complete after 1s
+data.couchbase-capella_gcp_private_endpoint_command.gcp_command: Read complete after 4s
 
 Changes to Outputs:
   + gcp_command = {
-      + cluster_id      = "b6576f48-2cf1-4589-812e-9655664362f4"
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + command         = <<-EOT
-          #!/bin/bash
-          REGION='us-east1'
-          NETWORK='psc-test'
-          SUBNET='psc-test-1'
-          CLUSTER='b6576f48-2cf1-4589-812e-9655664362f4'
-          BASE_DNS_NAME='n-b2yhxoydjdec9j.aws-guardians.nonprod-project-avengers.com'
-          SERVICE_ATTACHMENT='projects/cbc-dev-bbf356999fa41d60/regions/us-east1/serviceAttachments/psc-b6576f48-2cf1-4589-812e-9655664362f4'
-          BOOTSTRAP_SERVICE='projects/cbc-dev-bbf356999fa41d60/regions/us-east1/serviceAttachments/psc-bootstrap-b6576f48-2cf1-4589-812e-9655664362f4'
-
-          NETWORK_SHORT=${NETWORK:0:15}
-          CLUSTER_SHORT=${CLUSTER:0:15}
-
-          # Create private DNS zone
-          gcloud dns managed-zones create $NETWORK_SHORT-$CLUSTER_SHORT --description="Private Endpoint for Capella cluster" --dns-name=$BASE_DNS_NAME --networks=$NETWORK --visibility=private
-          gcloud dns record-sets transaction start --zone=$NETWORK_SHORT-$CLUSTER_SHORT
-
-          # Create forwarding rule for main service
-          gcloud compute addresses create pe-address-$NETWORK_SHORT-$CLUSTER_SHORT --region=$REGION --subnet=$SUBNET
-          IP_ADDRESS=$(gcloud compute addresses list --filter="name=pe-address-$NETWORK_SHORT-$CLUSTER_SHORT AND region:$REGION AND subnetwork:$SUBNET" --format="value(address)")
-          gcloud compute forwarding-rules create endpoint-$NETWORK_SHORT-$CLUSTER_SHORT --region=$REGION --network=$NETWORK --address=pe-address-$NETWORK_SHORT-$CLUSTER_SHORT --target-service-attachment=$SERVICE_ATTACHMENT
-          gcloud dns record-sets transaction add $IP_ADDRESS --name=pe.$BASE_DNS_NAME --type=A --ttl=300 --zone=$NETWORK_SHORT-$CLUSTER_SHORT
-
-          # Create forwarding rule for bootstrap service
-          gcloud compute addresses create pe-address-bootstrap-$NETWORK_SHORT-$CLUSTER_SHORT --region=$REGION --subnet=$SUBNET
-          IP_ADDRESS=$(gcloud compute addresses list --filter="name=pe-address-bootstrap-$NETWORK_SHORT-$CLUSTER_SHORT AND region:$REGION AND subnetwork:$SUBNET" --format="value(address)")
-          gcloud compute forwarding-rules create endpoint-bootstrap-$NETWORK_SHORT-$CLUSTER_SHORT --region=$REGION --network=$NETWORK --address=pe-address-bootstrap-$NETWORK_SHORT-$CLUSTER_SHORT --target-service-attachment=$BOOTSTRAP_SERVICE
-          gcloud dns record-sets transaction add $IP_ADDRESS --name=private-endpoint.$BASE_DNS_NAME --type=A --ttl=300 --zone=$NETWORK_SHORT-$CLUSTER_SHORT
-
-          # Execute DNS transaction
-          gcloud dns record-sets transaction execute --zone=$NETWORK_SHORT-$CLUSTER_SHORT
+            #!/bin/bash
+            REGION='us-east4'
+            NETWORK='psc-test'
+            SUBNET='psc-test'
+            CLUSTER='ffffffff-aaaa-1414-eeee-000000000000'
+            # Do not change
+            BASE_DNS_NAME='ekmrhmd1hd67vf0m.customsubdomain.nonprod-project-avengers.com'
+            SERVICE_ATTACHMENT=''projects/cbc-dev-123abc456def789yz/regions/us-east4/serviceAttachments/psc-ffffffff-aaaa-1414-eeee-000000000000''
+            BOOTSTRAP_SERVICE=''projects/cbc-dev-123abc456def789yz/regions/us-east4/serviceAttachments/psc-bootstrap-ffffffff-aaaa-1414-eeee-000000000000''
+            
+            NETWORK_SHORT=${NETWORK:0:15}
+            CLUSTER_SHORT=${CLUSTER:0:15}
+            
+            # Create private DNS zone
+            gcloud dns managed-zones create $NETWORK_SHORT-$CLUSTER_SHORT --description="Private Endpoint for Capella cluster" --dns-name=$BASE_DNS_NAME --networks=$NETWORK --visibility=private
+            gcloud dns record-sets transaction start --zone=$NETWORK_SHORT-$CLUSTER_SHORT
+            
+            # Create attachments and DNS records
+            gcloud compute addresses create pe-address-$NETWORK_SHORT-$CLUSTER_SHORT --region=$REGION --subnet=$SUBNET
+            IP_ADDRESS=$(gcloud compute addresses list --filter="name=pe-address-$NETWORK_SHORT-$CLUSTER_SHORT AND region:$REGION AND subnetwork:$SUBNET" --format="value(address)")
+            gcloud compute forwarding-rules create endpoint-$NETWORK_SHORT-$CLUSTER_SHORT --region=$REGION --network=$NETWORK --address=pe-address-$NETWORK_SHORT-$CLUSTER_SHORT --target-service-attachment=$SERVICE_ATTACHMENT
+            gcloud dns record-sets transaction add $IP_ADDRESS --name=pe.$BASE_DNS_NAME --type=A --ttl=300 --zone=$NETWORK_SHORT-$CLUSTER_SHORT
+            
+            gcloud compute addresses create pe-address-bootstrap-$NETWORK_SHORT-$CLUSTER_SHORT --region=$REGION --subnet=$SUBNET
+            IP_ADDRESS=$(gcloud compute addresses list --filter="name=pe-address-bootstrap-$NETWORK_SHORT-$CLUSTER_SHORT AND region:$REGION AND subnetwork:$SUBNET" --format="value(address)")
+            gcloud compute forwarding-rules create endpoint-bootstrap-$NETWORK_SHORT-$CLUSTER_SHORT --region=$REGION --network=$NETWORK --address=pe-address-bootstrap-$NETWORK_SHORT-$CLUSTER_SHORT --target-service-attachment=$BOOTSTRAP_SERVICE
+            gcloud dns record-sets transaction add $IP_ADDRESS --name=private-endpoint.$BASE_DNS_NAME --type=A --ttl=300 --zone=$NETWORK_SHORT-$CLUSTER_SHORT
+            
+            # Execute transactions
+            gcloud dns record-sets transaction execute --zone=$NETWORK_SHORT-$CLUSTER_SHORT
         EOT
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + subnet_ids      = [
-          + "psc-test-1",
+          + "psc-test",
         ]
-      + vpc_network_id = "psc-test"
+      + vpc_network_id  = "psc-test"
     }
 
 You can apply this plan to save these new output values to the Terraform state, without changing any real infrastructure.
@@ -88,6 +103,57 @@ Do you want to perform these actions?
   Only 'yes' will be accepted to approve.
 
   Enter a value: yes
+
+2025-06-27T15:02:29.188-0700 [INFO]  backend/local: apply calling Apply
+
+Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+gcp_command = {
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "command" = <<-EOT
+  
+  #!/bin/bash
+  REGION='us-east4'
+  NETWORK='psc-test'
+  SUBNET='psc-test'
+  CLUSTER='ffffffff-aaaa-1414-eeee-000000000000'
+  # Do not change
+  BASE_DNS_NAME='ekmrhmd1hd67vf0m.customsubdomain.nonprod-project-avengers.com'
+  SERVICE_ATTACHMENT=''projects/cbc-dev-123abc456def789yz/regions/us-east4/serviceAttachments/psc-ffffffff-aaaa-1414-eeee-000000000000''
+  BOOTSTRAP_SERVICE=''projects/cbc-dev-123abc456def789yz/regions/us-east4/serviceAttachments/psc-bootstrap-ffffffff-aaaa-1414-eeee-000000000000''
+  
+  NETWORK_SHORT=${NETWORK:0:15}
+  CLUSTER_SHORT=${CLUSTER:0:15}
+  
+  # Create private DNS zone
+  gcloud dns managed-zones create $NETWORK_SHORT-$CLUSTER_SHORT --description="Private Endpoint for Capella cluster" --dns-name=$BASE_DNS_NAME --networks=$NETWORK --visibility=private
+  gcloud dns record-sets transaction start --zone=$NETWORK_SHORT-$CLUSTER_SHORT
+  
+  # Create attachments and DNS records
+  gcloud compute addresses create pe-address-$NETWORK_SHORT-$CLUSTER_SHORT --region=$REGION --subnet=$SUBNET
+  IP_ADDRESS=$(gcloud compute addresses list --filter="name=pe-address-$NETWORK_SHORT-$CLUSTER_SHORT AND region:$REGION AND subnetwork:$SUBNET" --format="value(address)")
+  gcloud compute forwarding-rules create endpoint-$NETWORK_SHORT-$CLUSTER_SHORT --region=$REGION --network=$NETWORK --address=pe-address-$NETWORK_SHORT-$CLUSTER_SHORT --target-service-attachment=$SERVICE_ATTACHMENT
+  gcloud dns record-sets transaction add $IP_ADDRESS --name=pe.$BASE_DNS_NAME --type=A --ttl=300 --zone=$NETWORK_SHORT-$CLUSTER_SHORT
+  
+  gcloud compute addresses create pe-address-bootstrap-$NETWORK_SHORT-$CLUSTER_SHORT --region=$REGION --subnet=$SUBNET
+  IP_ADDRESS=$(gcloud compute addresses list --filter="name=pe-address-bootstrap-$NETWORK_SHORT-$CLUSTER_SHORT AND region:$REGION AND subnetwork:$SUBNET" --format="value(address)")
+  gcloud compute forwarding-rules create endpoint-bootstrap-$NETWORK_SHORT-$CLUSTER_SHORT --region=$REGION --network=$NETWORK --address=pe-address-bootstrap-$NETWORK_SHORT-$CLUSTER_SHORT --target-service-attachment=$BOOTSTRAP_SERVICE
+  gcloud dns record-sets transaction add $IP_ADDRESS --name=private-endpoint.$BASE_DNS_NAME --type=A --ttl=300 --zone=$NETWORK_SHORT-$CLUSTER_SHORT
+  
+  # Execute transactions
+  gcloud dns record-sets transaction execute --zone=$NETWORK_SHORT-$CLUSTER_SHORT
+  
+  EOT
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "subnet_ids" = toset([
+    "psc-test",
+  ])
+  "vpc_network_id" = "psc-test"
+}
+
 ```
 
 ---
