@@ -9,7 +9,7 @@ import (
 // AllowedCIDRsSchema returns the schema for the App Service allowed CIDRs resource.
 func AllowedCIDRsSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "Manages the IP addresses allowed to connect to App Services on Couchbase Capella.",
+		MarkdownDescription: "Manages the IP addresses allowed to connect to App Services in Couchbase Capella.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				MarkdownDescription: "The ID of the allowed CIDR block.",

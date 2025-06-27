@@ -317,9 +317,9 @@ The resources that were imported are shown above. These resources are now in
 your Terraform state and will henceforth be managed by Terraform.
 ```
 
-Here, we pass the IDs as a single comma-separated string.
-The first ID in the string is the allowedcidr ID i.e. the ID of the resource that we want to import.
-The second ID is the cluster ID i.e. the ID of the cluster to which the allowedcidr belongs.
+In this section, we pass the IDs as a single comma-separated string.
+The first ID in the string is the a CIDR block ID, which identifies the resource that we want to import.
+The second ID is the cluster ID which identifies the cluster the App Service is associated with..
 The third ID is the project ID i.e. the ID of the project to which the cluster belongs.
 The fourth ID is the organization ID i.e. the ID of the organization to which the project belongs.
 
@@ -430,6 +430,7 @@ allowedcidr_list = {
         "modified_by" = "osxKeibDiShFFyyqAVNvqWRaWryXBxBD"
         "version" = 1
       }
+      "app_service_id" = "ffffffff-aaaa-1414-eeee-000000000000"
       "cidr" = "10.0.0.0/16"
       "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
       "comment" = "Allow access from another VPC"
@@ -447,6 +448,7 @@ allowedcidr_list = {
         "modified_by" = "ffffffff-aaaa-1414-eeee-000000000000"
         "version" = 1
       }
+      "app_service_id" = "ffffffff-aaaa-1414-eeee-000000000000"
       "cidr" = "23.121.17.137/32"
       "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
       "comment" = ""
@@ -468,6 +470,7 @@ new_allowedcidr = {
     "modified_by" = "osxKeibDiShFFyyqAVNvqWRaWryXBxBD"
     "version" = 1
   }
+  "app_service_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "cidr" = "10.0.0.0/16"
   "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "comment" = "updated allowedcidr comment"
