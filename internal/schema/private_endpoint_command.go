@@ -43,3 +43,24 @@ type AzureCommandRequest struct {
 	// Command is the Azure script.
 	Command types.String `tfsdk:"command"`
 }
+
+// GCPCommandRequest represents the GCP script to create a private endpoint.
+type GCPCommandRequest struct {
+	// ClusterId is the ID of the cluster associated with the private endpoint.
+	ClusterId types.String `tfsdk:"cluster_id"`
+
+	// ProjectId is the ID of the project to which the Capella cluster belongs.
+	ProjectId types.String `tfsdk:"project_id"`
+
+	// OrganizationId is the ID of the organization to which the Capella cluster belongs.
+	OrganizationId types.String `tfsdk:"organization_id"`
+
+	// VpcNetworkID The ID of your virtual network.
+	VpcNetworkID types.String `tfsdk:"vpc_network_id"`
+
+	// SubnetIDs is a list of subnet ids.
+	SubnetIDs []types.String `tfsdk:"subnet_ids"`
+
+	// Command is the GCP command.
+	Command types.String `tfsdk:"command"`
+}
