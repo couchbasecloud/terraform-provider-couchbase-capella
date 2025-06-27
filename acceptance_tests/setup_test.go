@@ -12,7 +12,7 @@ import (
 )
 
 // this is the entry point for acceptance tests.
-// it setups a common project and cluster to test cluster features.
+// it setups a common project, cluster and app service.
 // once acceptance tests are completed, these resources are destroyed.
 func TestMain(m *testing.M) {
 	if err := getEnvVars(); err != nil {
@@ -72,11 +72,27 @@ func setup(ctx context.Context, client *api.Client) error {
 	if err := bucketWait(ctx, client); err != nil {
 		return err
 	}
+	if err := createAppService(ctx, client); err != nil {
+		return err
+	}
+	if err := appServiceWait(ctx, client, false); err != nil {
+		return err
+	}
 
 	return nil
 }
 
 func cleanup(ctx context.Context, client *api.Client) error {
+	if globalAppServiceId != "" {
+		if err := destroyAppService(ctx, client); err != nil {
+			return err
+		}
+
+		if err := appServiceWait(ctx, client, true); err != nil {
+			return err
+		}
+	}
+
 	if globalClusterId != "" {
 		if err := destroyCluster(ctx, client); err != nil {
 			return err
