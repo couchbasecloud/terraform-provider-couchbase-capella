@@ -67,6 +67,23 @@ variable "support" {
   })
 }
 
+variable "free_tier_cluster"{
+        description = "Free Tier cluster configuration"
+        type = object({
+                name = string
+                description = string
+                cidr = string
+            })
+    }
+
+variable "free_tier_cloud_provider"{
+        description= "Provider configruation for free tier cluster"
+        type = object({
+                name   = string
+                region = string
+            })
+    }
+
 variable "apikey" {
   description = "ApiKey creation details useful for apikey creation"
 
@@ -129,6 +146,29 @@ variable "bucket" {
     flush                      = optional(bool)
     time_to_live_in_seconds    = optional(number)
     eviction_policy            = optional(string)
+  })
+}
+
+variable "free_tier_cluster_state" {
+  description = "Free tier cluster state configuration"
+  type = object({
+    state = string
+  })
+}
+
+variable "free_tier_bucket" {
+  description = "Free tier bucket configuration"
+  type = object({
+    name                    = string
+    memory_allocation_in_mb = number
+  })
+}
+
+variable "free_tier_app_service" {
+  description = "Free tier app service configuration"
+  type = object({
+    name        = string
+    description = string
   })
 }
 
