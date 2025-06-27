@@ -201,7 +201,7 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 
   App Services only allow trusted IP addresses to connect and use its REST APIs.
   Each App Service has a configurable Allowed IP list that can include up to 75 entries. 
-  Each entry can be a single IP address or an IP address space.
+  Each entry can be a single IP address or an IP address space. The addresses are written in CIDR notation.
   Any IP address you add to this list can have a user-specified expiration time for temporary access, or be permanent. 
   Capella automatically denies any connection attempts to and from an IP not in the allowed IP list.
 

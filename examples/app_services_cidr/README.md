@@ -1,8 +1,8 @@
-# Capella allowedcidr Example
+# Capella App Services Allowed CIDR Example
 
-This example shows how to create and manage App Service Allowed CIDR in Capella.
+This example shows how to create and manage App Service Allowed CIDR blocks in Capella.
 
-This creates a new Allowed CIDR in the selected Capella App Service and lists existing Allowed CIDR in the App Service. It uses the App Service ID to create and list Allowed CIDR.
+This creates a new Allowed CIDR block in the selected Capella App Service and lists existing Allowed CIDR blocks in the App Service. It uses the App Service ID to create and list Allowed CIDR blocks.
 
 To run, configure your Couchbase Capella provider as described in README in the root of this project.
 
@@ -10,10 +10,10 @@ To run, configure your Couchbase Capella provider as described in README in the 
 
 In this example, we are going to do the following.
 
-1. CREATE: Create a new allowedcidr in Capella as stated in the `create_allowedcidr.tf` file.
-2. LIST: List existing allowedcidr in Capella as stated in the `list_allowedcidr.tf` file.
-3. IMPORT: Import an allowedcidr that exists in Capella but not in the terraform state file.
-4. DELETE: Delete the newly created allowedcidr from Capella.
+1. CREATE: Add a new CIDR block to the App Service's list of allowed IP addresses, as stated in the `create_allowedcidr.tf` file.
+2. LIST: List existing allowed CIDR blocks in Capella as stated in the `list_allowedcidr.tf` file.
+3. IMPORT: Import an allowed CIDR block that exists in Capella but not in the terraform state file.
+4. DELETE: Delete the newly created allowed CIDR block from Capella.
 
 If you check the `terraform.template.tfvars` file - Make sure you copy the file to `terraform.tfvars` and update the values of the variables as per the correct organization access.
 
@@ -508,19 +508,19 @@ Terraform will perform the following actions:
   # capella_app_services_cidr.new_allowedcidr will be destroyed
   - resource "capella_app_services_cidr" "new_allowedcidr" {
       - audit           = {
-          - created_at  = "2023-10-04 02:49:31.491935751 +0000 UTC" -> null
-          - created_by  = "osxKeibDiShFFyyqAVNvqWRaWryXBxBD" -> null
-          - modified_at = "2023-10-04 02:49:31.491935751 +0000 UTC" -> null
-          - modified_by = "osxKeibDiShFFyyqAVNvqWRaWryXBxBD" -> null
-          - version     = 1 -> null
+          - created_at  = "2023-10-04 02:49:31.491935751 +0000 UTC"
+          - created_by  = "osxKeibDiShFFyyqAVNvqWRaWryXBxBD"
+          - modified_at = "2023-10-04 02:49:31.491935751 +0000 UTC"
+          - modified_by = "osxKeibDiShFFyyqAVNvqWRaWryXBxBD"
+          - version     = 1
         }
-      - cidr            = "10.0.0.0/16" -> null
-      - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
-      - comment         = "updated allowedcidr comment" -> null
-      - expires_at      = "2023-11-14T21:49:58.465Z" -> null
-      - id              = "ffffffff-aaaa-1414-eeee-000000000000" -> null
-      - organization_id = "ffffffff-aaaa-1414-eeee-000000000000" -> null
-      - project_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - cidr            = "10.0.0.0/16"
+      - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      - comment         = "updated allowedcidr comment"
+      - expires_at      = "2023-11-14T21:49:58.465Z"
+      - id              = "358387f9-9780-4419-9ca6-b5e8a3b457dc"
+      - organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      - project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
     }
 
 Plan: 0 to add, 0 to change, 1 to destroy.

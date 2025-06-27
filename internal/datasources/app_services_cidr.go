@@ -38,16 +38,16 @@ func (a *AppServiceCidrs) Metadata(
 // Schema defines the schema for the App Service CIDRs data source.
 func (a *AppServiceCidrs) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Retrieves the allowed CIDRs for a Capella App Service.",
+		MarkdownDescription: "Retrieves the allowed CIDR blocks for a Capella App Service.",
 		Attributes: map[string]schema.Attribute{
 			"data": schema.ListNestedAttribute{
-				MarkdownDescription: "The list of allowed CIDRs on an App Service. ",
+				MarkdownDescription: "The list of allowed CIDR blocks on an App Service. ",
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The ID of the allowed CIDR.",
+							MarkdownDescription: "The ID of the allowed CIDR block.",
 						},
 						"organization_id": computedStringAttribute,
 						"project_id":      computedStringAttribute,
@@ -55,15 +55,15 @@ func (a *AppServiceCidrs) Schema(_ context.Context, _ datasource.SchemaRequest, 
 						"app_service_id":  computedStringAttribute,
 						"cidr": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The trusted CIDR to allow the database connections from.",
+							MarkdownDescription: "The trusted CIDR block to allow the database connections from.",
 						},
 						"comment": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The trusted CIDR to allow the database connections from.",
+							MarkdownDescription: "A short description of the allowed CIDR block.",
 						},
 						"expires_at": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "An RFC3339 timestamp determining when the allowed CIDR will expire. If this field is empty/omitted then the allowed CIDR is permanent and will never automatically expire.",
+							MarkdownDescription: "An RFC3339 timestamp determining when the allowed CIDR block will expire. If this field is empty/omitted then the allowed CIDR block is permanent. It will never automatically expire.",
 						},
 						"audit": computedAuditAttribute,
 					},

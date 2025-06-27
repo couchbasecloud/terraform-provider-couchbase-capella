@@ -12,7 +12,7 @@ func AllowedCIDRsSchema() schema.Schema {
 		MarkdownDescription: "Manages the IP addresses allowed to connect to App Services on Couchbase Capella.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				MarkdownDescription: "The ID of the allowed CIDR.",
+				MarkdownDescription: "The ID of the allowed CIDR block.",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -48,22 +48,22 @@ func AllowedCIDRsSchema() schema.Schema {
 			},
 			"cidr": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The trusted CIDR to allow the database connections from.",
+				MarkdownDescription: "The trusted CIDR block to allow the database connections from.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"comment": schema.StringAttribute{
 				Optional:            true,
-				MarkdownDescription: "A short description of the allowed CIDR.",
+				MarkdownDescription: "A short description of the allowed CIDR block.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"expires_at": schema.StringAttribute{
 				Optional: true,
-				MarkdownDescription: "An RFC3339 timestamp determining when the allowed CIDR will expire. " +
-					"If this field is omitted then the allowed CIDR is permanent and will never automatically expire.",
+				MarkdownDescription: "An RFC3339 timestamp determining when the allowed CIDR block will expire. " +
+					"If this field is omitted then the allowed CIDR block is permanent. It will never automatically expire.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
