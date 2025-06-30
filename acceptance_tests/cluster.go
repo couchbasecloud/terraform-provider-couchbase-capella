@@ -17,9 +17,6 @@ import (
 
 // cluster is created with enterprise plan as some features require this.
 func createCluster(ctx context.Context, client *api.Client) error {
-	// TODO: AV-96938: generate CIDR dynamically
-	cidr := "10.200.250.0/23"
-
 	node := clusterapi.Node{}
 	diskAws := clusterapi.DiskAWS{
 		Type:    clusterapi.DiskAWSType("gp3"),
@@ -35,7 +32,6 @@ func createCluster(ctx context.Context, client *api.Client) error {
 			Type: "multi",
 		},
 		CloudProvider: clusterapi.CloudProvider{
-			Cidr:   cidr,
 			Region: "us-east-1",
 			Type:   "aws",
 		},
