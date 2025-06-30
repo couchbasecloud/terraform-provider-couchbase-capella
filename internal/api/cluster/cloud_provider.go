@@ -11,7 +11,7 @@ const (
 // To learn more, see [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html).
 type CloudProvider struct {
 	// Cidr block for Cloud Provider.
-	Cidr string `json:"cidr, omitempty"`
+	Cidr string `json:"cidr,omitempty"`
 
 	// Region is cloud provider region, e.g. 'us-west-2'. For information about supported regions, see
 	// [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html).
