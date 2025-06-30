@@ -1,8 +1,8 @@
 # Capella App Services Allowed CIDR Example
 
-This example shows how to create and manage App Service Allowed CIDR blocks in Capella.
+This example shows how to create and manage allowed CIDR blocks for an App Service in Capella.
 
-This creates a new Allowed CIDR block in the selected Capella App Service and lists existing Allowed CIDR blocks in the App Service. It uses the App Service ID to create and list Allowed CIDR blocks.
+This creates a new allowed CIDR block in the selected Capella App Service and lists its currently allowed CIDR blocks. It uses the App Service ID to create and list allowed CIDR blocks.
 
 To run, configure your Couchbase Capella provider as described in README in the root of this project.
 
@@ -314,10 +314,10 @@ your Terraform state and will henceforth be managed by Terraform.
 
 In this section, we pass the IDs as a single comma-separated string.
 The first ID in the string is the a CIDR block ID, which identifies the resource that we want to import.
-The second ID is the organization ID i.e. the ID of the organization to which the project belongs.
+The second ID is the organization ID, which identifies the organization with the project.
 The third ID is the project ID i.e. the ID of the project to which the cluster belongs.
-The fourth ID is the cluster ID which identifies the cluster the App Service is associated with..
-The fifth ID is the App Service ID which identifies the App Service of the .
+The fourth ID is the cluster ID, which identifies the cluster associated with the App Service.
+The fifth ID is the App Service ID, which identifies the specific App Service we are working with.
 
 ### Let's run a terraform plan to confirm that the import was successful and no resource states were impacted
 

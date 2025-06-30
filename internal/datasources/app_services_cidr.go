@@ -41,7 +41,7 @@ func (a *AppServiceCidrs) Schema(_ context.Context, _ datasource.SchemaRequest, 
 		MarkdownDescription: "Retrieves the allowed CIDR blocks for a Capella App Service.",
 		Attributes: map[string]schema.Attribute{
 			"data": schema.ListNestedAttribute{
-				MarkdownDescription: "The list of allowed CIDR blocks on an App Service. ",
+				MarkdownDescription: "The list of allowed CIDR blocks for an App Service. ",
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
