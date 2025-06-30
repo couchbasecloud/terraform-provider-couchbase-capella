@@ -65,6 +65,7 @@ Plan: 1 to add, 0 to change, 0 to destroy.
 Changes to Outputs:
   + allowedcidr_list = {
       + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      + app_service_id  = "ffffffff-aaaa-1414-eeee-000000000000"
       + data            = [
           + {
               + audit           = {
@@ -79,9 +80,6 @@ Changes to Outputs:
               + comment         = ""
               + expires_at      = null
               + id              = "bbaf68d3-6e8a-433e-aa78-d12a79da4911"
-              + if_match        = null
-              + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
-              + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
             },
         ]
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
@@ -97,6 +95,7 @@ Changes to Outputs:
       + if_match        = null
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      + app_service_id  = "ffffffff-aaaa-1414-eeee-000000000000"
     }
 
 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -151,7 +150,7 @@ Plan: 1 to add, 0 to change, 0 to destroy.
 Changes to Outputs:
   + allowedcidr_list = {
       + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
-      + app_service_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      + app_service_id  = "ffffffff-aaaa-1414-eeee-000000000000"
       + data            = [
           + {
               + audit           = {
@@ -162,13 +161,9 @@ Changes to Outputs:
                   + version     = 1
                 }
               + cidr            = "23.121.17.137/32"
-              + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
               + comment         = ""
               + expires_at      = null
               + id              = "bbaf68d3-6e8a-433e-aa78-d12a79da4911"
-              + if_match        = null
-              + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
-              + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
             },
         ]
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
@@ -184,6 +179,7 @@ Changes to Outputs:
       + if_match        = null
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      + app_service_id  = "ffffffff-aaaa-1414-eeee-000000000000"
     }
 
 Do you want to perform these actions?
@@ -200,6 +196,7 @@ Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
 Outputs:
 
 allowedcidr_list = {
+  "app_service_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "data" = tolist([
     {
@@ -211,13 +208,9 @@ allowedcidr_list = {
         "version" = 1
       }
       "cidr" = "23.121.17.137/32"
-      "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
       "comment" = ""
       "expires_at" = tostring(null)
       "id" = "bbaf68d3-6e8a-433e-aa78-d12a79da4911"
-      "if_match" = tostring(null)
-      "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
-      "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
     },
   ])
   "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
@@ -239,6 +232,7 @@ new_allowedcidr = {
   "if_match" = tostring(null)
   "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "app_service_id" = "ffffffff-aaaa-1414-eeee-000000000000"
 }
 ```
 
@@ -264,6 +258,7 @@ $ terraform output new_allowedcidr
   "if_match" = tostring(null)
   "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "app_service_id" = "ffffffff-aaaa-1414-eeee-000000000000"
 }
 ```
 
@@ -422,6 +417,7 @@ Outputs:
 
 allowedcidr_list = {
   "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "app_service_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "data" = tolist([
     {
       "audit" = {
@@ -431,15 +427,10 @@ allowedcidr_list = {
         "modified_by" = "osxKeibDiShFFyyqAVNvqWRaWryXBxBD"
         "version" = 1
       }
-      "app_service_id" = "ffffffff-aaaa-1414-eeee-000000000000"
       "cidr" = "10.0.0.0/16"
-      "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
       "comment" = "Allow access from another VPC"
       "expires_at" = "2023-11-14T21:49:58.465Z"
       "id" = "854cbdf0-8ae3-4a42-9227-59c52a5ab4f2"
-      "if_match" = tostring(null)
-      "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
-      "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
     },
     {
       "audit" = {
@@ -449,15 +440,10 @@ allowedcidr_list = {
         "modified_by" = "ffffffff-aaaa-1414-eeee-000000000000"
         "version" = 1
       }
-      "app_service_id" = "ffffffff-aaaa-1414-eeee-000000000000"
       "cidr" = "23.121.17.137/32"
-      "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
       "comment" = ""
       "expires_at" = tostring(null)
       "id" = "bbaf68d3-6e8a-433e-aa78-d12a79da4911"
-      "if_match" = tostring(null)
-      "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
-      "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
     },
   ])
   "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
@@ -531,6 +517,7 @@ Plan: 0 to add, 0 to change, 1 to destroy.
 
 Changes to Outputs:
   - allowedcidr_list = {
+      - app_service_id  = "ffffffff-aaaa-1414-eeee-000000000000"
       - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       - data            = [
           - {
@@ -542,13 +529,9 @@ Changes to Outputs:
                   - version     = 1
                 }
               - cidr            = "10.0.0.0/16"
-              - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
               - comment         = "updated allowedcidr comment"
               - expires_at      = "2023-11-14T21:49:58.465Z"
               - id              = "358387f9-9780-4419-9ca6-b5e8a3b457dc"
-              - if_match        = null
-              - organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
-              - project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
             },
           - {
               - audit           = {
@@ -559,13 +542,10 @@ Changes to Outputs:
                   - version     = 1
                 }
               - cidr            = "23.121.17.137/32"
-              - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
               - comment         = ""
               - expires_at      = null
               - id              = "bbaf68d3-6e8a-433e-aa78-d12a79da4911"
               - if_match        = null
-              - organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
-              - project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
             },
         ]
       - organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
