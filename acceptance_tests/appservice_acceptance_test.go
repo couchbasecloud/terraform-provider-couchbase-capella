@@ -81,7 +81,7 @@ resource "couchbase-capella_cluster" "%[5]s" {
 resource "couchbase-capella_app_service" "%[4]s" {
   organization_id = "%[2]s"
   project_id      = "%[3]s"
-  cluster_id      = "couchbase-capella_cluster.%[5]s.id"
+  cluster_id      = couchbase-capella_cluster.%[5]s.id
   name            = "tf_acc_test_app_service"
   compute = {
     cpu = 2
