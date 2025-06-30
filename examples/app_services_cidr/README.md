@@ -8,7 +8,7 @@ To run, configure your Couchbase Capella provider as described in README in the 
 
 # Example Walkthrough
 
-In this example, we are going to do the following.
+In the following example, we will:
 
 1. CREATE: Add a new CIDR block to the App Service's list of allowed IP addresses, as stated in the `create_allowedcidr.tf` file.
 2. LIST: List existing allowed CIDR blocks in Capella as stated in the `list_allowedcidr.tf` file.
@@ -292,23 +292,23 @@ Removed couchbase-capella_app_services_cidr.new_allowedcidr
 Successfully removed 1 resource instance(s).
 ```
 
-Please note, this command will only remove the resource from the Terraform State file, but in reality, the resource exists in Capella.
+Please note, this command will only remove the resource from the Terraform State file. The resource will still exist in Capella.
 
 ### Now, let's import the resource in Terraform
 
 Command: `terraform import couchbase-capella_app_services_cidr.new_allowedcidr id=<allowedcidr_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
 In this case, the complete command is:
-`terraform import couchbase-capella_app_services_cidr.new_allowedcidr id=854cbdf0-8ae3-4a42-9227-59c52a5ab4f2,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000`
+`terraform import couchbase-capella_app_services_cidr.new_allowedcidr id=854cbdf0-8ae3-4a42-9227-59c52a5ab4f2,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000,app_service_id=ffffffff-aaaa-1414-eeee-000000000000`
 
 Sample Output:
 ```
-$ terraform import couchbase-capella_app_services_cidr.new_allowedcidr id=854cbdf0-8ae3-4a42-9227-59c52a5ab4f2,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000
-capella_app_services_cidr.new_allowedcidr: Importing from ID "id=854cbdf0-8ae3-4a42-9227-59c52a5ab4f2,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000"...
+$ terraform import couchbase-capella_app_services_cidr.new_allowedcidr id=854cbdf0-8ae3-4a42-9227-59c52a5ab4f2,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000,app_service_id=ffffffff-aaaa-1414-eeee-000000000000
+capella_app_services_cidr.new_allowedcidr: Importing from ID "id=854cbdf0-8ae3-4a42-9227-59c52a5ab4f2,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000",,app_service_id=ffffffff-aaaa-1414-eeee-000000000000...
 data.capella_app_services_cidr.existing_allowedcidr: Reading...
 capella_app_services_cidr.new_allowedcidr: Import prepared!
   Prepared capella_app_services_cidr for import
-capella_app_services_cidr.new_allowedcidr: Refreshing state... [id=id=854cbdf0-8ae3-4a42-9227-59c52a5ab4f2,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000]
+capella_app_services_cidr.new_allowedcidr: Refreshing state... [id=id=854cbdf0-8ae3-4a42-9227-59c52a5ab4f2,organization_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,app_service_id=ffffffff-aaaa-1414-eeee-000000000000]
 data.capella_app_services_cidr.existing_allowedcidr: Read complete after 1s
 
 Import successful!
@@ -319,9 +319,10 @@ your Terraform state and will henceforth be managed by Terraform.
 
 In this section, we pass the IDs as a single comma-separated string.
 The first ID in the string is the a CIDR block ID, which identifies the resource that we want to import.
-The second ID is the cluster ID which identifies the cluster the App Service is associated with..
+The second ID is the organization ID i.e. the ID of the organization to which the project belongs.
 The third ID is the project ID i.e. the ID of the project to which the cluster belongs.
-The fourth ID is the organization ID i.e. the ID of the organization to which the project belongs.
+The fourth ID is the cluster ID which identifies the cluster the App Service is associated with..
+The fifth ID is the App Service ID which identifies the App Service of the .
 
 ### Let's run a terraform plan to confirm that the import was successful and no resource states were impacted
 
