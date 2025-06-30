@@ -262,7 +262,7 @@ $ terraform output new_allowedcidr
 }
 ```
 
-In this case, the allowedcidr ID for my new allowedcidr is `854cbdf0-8ae3-4a42-9227-59c52a5ab4f2`
+In this case, the allowedcidr ID for the new CIDR block is `854cbdf0-8ae3-4a42-9227-59c52a5ab4f2`
 
 ### List the resources that are present in the Terraform State file.
 
@@ -315,7 +315,7 @@ your Terraform state and will henceforth be managed by Terraform.
 In this section, we pass the IDs as a single comma-separated string.
 The first ID in the string is the a CIDR block ID, which identifies the resource that we want to import.
 The second ID is the organization ID, which identifies the organization with the project.
-The third ID is the project ID i.e. the ID of the project to which the cluster belongs.
+The third ID is the project ID, which identifies the project that has the cluster.
 The fourth ID is the cluster ID, which identifies the cluster associated with the App Service.
 The fifth ID is the App Service ID, which identifies the specific App Service we are working with.
 
