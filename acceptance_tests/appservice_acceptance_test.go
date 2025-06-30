@@ -66,7 +66,7 @@ resource "couchbase-capella_cluster" "%[5]s" {
         }
       }
       num_of_nodes = 1
-      services     = ["data"]
+      services     = ["data", "index", "query"]
     }
   ]
   availability = {
