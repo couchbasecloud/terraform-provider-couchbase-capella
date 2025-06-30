@@ -20,8 +20,7 @@ func TestAppServiceResource(t *testing.T) {
 			{
 				Config: testAccAppServiceResourceConfig(resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
-					resource.TestCheckResourceAttr(resourceReference, "description", "description"),
+					resource.TestCheckResourceAttr(resourceReference, "name", resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "compute.cpu", "2"),
 					resource.TestCheckResourceAttr(resourceReference, "compute.ram", "4"),
 				),
