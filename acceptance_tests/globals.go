@@ -23,6 +23,7 @@ var (
 	globalScopeName      = "_default"
 	globalCollectionName = "_default"
 	globalBucketId       string
+	globalAppServiceId   string
 
 	// this global variable is set in TestMain.
 	globalProviderBlock string
