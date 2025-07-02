@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/app_endpoints"
-
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 
@@ -82,16 +81,18 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		)
 		return
 	}
-	var scopes app_endpoints.AppEndpointScopes
+	var scopes app_endpoints.ScopesConfig
+	var collection map[string]app_endpoints.AppEndpointCollection
 	for scopeName, scopeConfig := range plan.Scopes {
 		for collName, collConfig := range scopeConfig.Collections {
-			collections[collName] = oapi.CollectionConfig{
-				ImportFilter:          collConfig.ImportFilter,
+			collection[collName.String()] = app_endpoints.AppEndpointCollection{
+				ImportFilter:          collConfig,
 				AccessControlFunction: collConfig.SyncFn,
 			}
 		}
-		scopes[scopeName] = oapi.ScopeConfig{Collections: collections}
+		scopes[scopeName.String()] = collection
 	}
+
 	// Create the app endpoint using the API
 	createAppEndpointRequest := app_endpoints.CreateAppEndpointRequest{
 		Bucket:           plan.Bucket.ValueString(),
@@ -193,11 +194,6 @@ func (a *AppEndpoint) validateCreateAppEndpointRequest(plan providerschema.AppEn
 		}
 	}
 
-	// Validate scopes configuration if provided
-	if err := a.validateScopesConfiguration(plan.Scopes); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -279,25 +275,6 @@ func isValidEndpointName(name string) bool {
 	}
 
 	return true
-}
-
-// validateScopesConfiguration validates the scopes configuration.
-func (a *AppEndpoint) validateScopesConfiguration(scopes providerschema.AppEndpointScopes) error {
-	// Validate access control function if provided
-	if !scopes.Default.Collections.Default.AccessControlFunction.IsNull() && !scopes.Default.Collections.Default.AccessControlFunction.IsUnknown() {
-		if !providerschema.IsTrimmed(scopes.Default.Collections.Default.AccessControlFunction.ValueString()) {
-			return fmt.Errorf("accessControlFunction %s", errors.ErrNotTrimmed)
-		}
-	}
-
-	// Validate import filter if provided
-	if !scopes.Default.Collections.Default.ImportFilter.IsNull() && !scopes.Default.Collections.Default.ImportFilter.IsUnknown() {
-		if !providerschema.IsTrimmed(scopes.Default.Collections.Default.ImportFilter.ValueString()) {
-			return fmt.Errorf("importFilter %s", errors.ErrNotTrimmed)
-		}
-	}
-
-	return nil
 }
 
 func (a *AppEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
