@@ -3,9 +3,12 @@ package resources
 import (
 	"context"
 	"fmt"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/app_endpoints"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/appservice"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"net/http"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
@@ -82,15 +85,17 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 	var scopes app_endpoints.ScopesConfig
-	var collection map[string]app_endpoints.AppEndpointCollection
+	var collections map[string]app_endpoints.AppEndpointCollection
 	for scopeName, scopeConfig := range plan.Scopes {
+		collections = make(map[string]app_endpoints.AppEndpointCollection)
 		for collName, collConfig := range scopeConfig.Collections {
-			collection[collName.String()] = app_endpoints.AppEndpointCollection{
-				ImportFilter:          collConfig,
-				AccessControlFunction: collConfig.SyncFn,
+			collections[collName.String()] = app_endpoints.AppEndpointCollection{
+				ImportFilter:          collConfig.ImportFilter.ValueStringPointer(),
+				AccessControlFunction: collConfig.AccessControlFunction.ValueStringPointer(),
 			}
+
 		}
-		scopes[scopeName.String()] = collection
+		scopes[scopeName.String()] = app_endpoints.ScopeConfig{Collections: collections}
 	}
 
 	// Create the app endpoint using the API
@@ -98,9 +103,60 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		Bucket:           plan.Bucket.ValueString(),
 		Name:             plan.Name.ValueString(),
 		DeltaSyncEnabled: plan.DeltaSyncEnabled.ValueBool(),
-		Scopes:           plan.Scopes,
-		Cors:             nil,
-		Oidc:             nil,
+		Scopes:           scopes,
+		Cors:             &app_endpoints.AppEndpointCors{Origin: plan.Cors.Origin, LoginOrigin: plan.Cors.LoginOrigin, Headers: plan.Cors.Headers, MaxAge: plan.Cors.MaxAge.ValueInt64Pointer(), Disabled: plan.Cors.Disabled.ValueBoolPointer()},
+	}
+	if len(plan.Oidc) > 0 {
+		createAppEndpointRequest.Oidc = make([]app_endpoints.AppEndpointOidc, len(plan.Oidc))
+		for i, oidc := range plan.Oidc {
+			createAppEndpointRequest.Oidc[i] = app_endpoints.AppEndpointOidc{
+				Issuer:        oidc.Issuer.ValueString(),
+				ClientId:      oidc.ClientId.ValueString(),
+				UserPrefix:    oidc.UserPrefix.ValueStringPointer(),
+				DiscoveryUrl:  oidc.DiscoveryUrl.ValueStringPointer(),
+				UsernameClaim: oidc.UsernameClaim.ValueStringPointer(),
+				RolesClaim:    oidc.RolesClaim.ValueStringPointer(),
+				Register:      oidc.Register.ValueBoolPointer(),
+			}
+		}
+	}
+
+	var organizationId = plan.OrganizationId.ValueString()
+	var projectId = plan.ProjectId.ValueString()
+	var clusterId = plan.ClusterId.ValueString()
+
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices", a.HostURL, organizationId, projectId, clusterId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
+
+	response, err := a.Client.ExecuteWithRetry(
+		ctx,
+		cfg,
+		appServiceRequest,
+		a.Token,
+		nil,
+	)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error executing request",
+			errorMessageWhileAppServiceCreation+err.Error(),
+		)
+		return
+	}
+
+	createAppServiceResponse := appservice.CreateAppServiceResponse{}
+	err = json.Unmarshal(response.Body, &createAppServiceResponse)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating app service",
+			errorMessageWhileAppServiceCreation+"error during unmarshalling:"+err.Error(),
+		)
+		return
+	}
+
+	diags = resp.State.Set(ctx, initializePendingAppServiceWithPlanAndId(plan, createAppServiceResponse.Id.String()))
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	diags = resp.State.Set(ctx, plan)
