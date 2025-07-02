@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/app_endpoints"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -31,7 +32,7 @@ func NewAppEndpoint() resource.Resource {
 // ImportState imports a remote AppEndpoint app service that is not created by Terraform.
 func (a *AppEndpoint) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import name and save to id attribute
-	resource.ImportStatePassthroughID(ctx, path.Root("app_service_id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
 }
 
 // Metadata returns the AppEndpoint cluster resource type name.
@@ -81,9 +82,26 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		)
 		return
 	}
+	var scopes app_endpoints.AppEndpointScopes
+	for scopeName, scopeConfig := range plan.Scopes {
+		for collName, collConfig := range scopeConfig.Collections {
+			collections[collName] = oapi.CollectionConfig{
+				ImportFilter:          collConfig.ImportFilter,
+				AccessControlFunction: collConfig.SyncFn,
+			}
+		}
+		scopes[scopeName] = oapi.ScopeConfig{Collections: collections}
+	}
+	// Create the app endpoint using the API
+	createAppEndpointRequest := app_endpoints.CreateAppEndpointRequest{
+		Bucket:           plan.Bucket.ValueString(),
+		Name:             plan.Name.ValueString(),
+		DeltaSyncEnabled: plan.DeltaSyncEnabled.ValueBool(),
+		Scopes:           plan.Scopes,
+		Cors:             nil,
+		Oidc:             nil,
+	}
 
-	// TODO: Implement actual app endpoint creation logic
-	// For now, just set the state to the plan
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -93,7 +111,7 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 
 // validateCreateAppEndpointRequest validates the required fields for creating an app endpoint.
 func (a *AppEndpoint) validateCreateAppEndpointRequest(plan providerschema.AppEndpoint) error {
-	// Validate required organization, project, cluster, and app service IDs
+	// Validate required IDs
 	if plan.OrganizationId.IsNull() || plan.OrganizationId.IsUnknown() {
 		return errors.ErrOrganizationIdCannotBeEmpty
 	}
@@ -113,10 +131,6 @@ func (a *AppEndpoint) validateCreateAppEndpointRequest(plan providerschema.AppEn
 	}
 	if !providerschema.IsTrimmed(plan.Bucket.ValueString()) {
 		return fmt.Errorf("bucket name %s", errors.ErrNotTrimmed)
-	}
-	// Validate bucket name format
-	if !isValidBucketName(plan.Bucket.ValueString()) {
-		return fmt.Errorf("bucket name must be between 1-100 characters and contain only lowercase letters, numbers, hyphens, and underscores")
 	}
 
 	// Validate required endpoint name
@@ -249,22 +263,6 @@ func isValidURL(urlString string) bool {
 
 	// Basic URL validation - check if it starts with http:// or https://
 	return len(urlString) > 7 && (urlString[:7] == "http://" || urlString[:8] == "https://")
-}
-
-// isValidBucketName checks if a bucket name follows the proper naming convention.
-func isValidBucketName(name string) bool {
-	if len(name) < 1 || len(name) > 100 {
-		return false
-	}
-
-	// Check if name contains only lowercase letters, numbers, hyphens, and underscores
-	for _, char := range name {
-		if !((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9') || char == '-' || char == '_') {
-			return false
-		}
-	}
-
-	return true
 }
 
 // isValidEndpointName checks if an endpoint name follows the proper naming convention.
