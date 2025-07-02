@@ -113,8 +113,7 @@ func MorphApiKeyResources(resources api.Resources) []ApiKeyResourcesItems {
 		if resource.Type != nil {
 			newResourceItem.Type = types.StringValue(*resource.Type)
 		}
-		newRoles := StringsToBaseStrings(resource.Roles)
-		newResourceItem.Roles = newRoles
+		newResourceItem.Roles = StringsToBaseStrings(resource.Roles)
 		newApiKeyResourcesItems = append(newApiKeyResourcesItems, newResourceItem)
 	}
 	return newApiKeyResourcesItems
