@@ -27,14 +27,9 @@ type AppEndpoint struct {
 type (
 	AppEndpointScopes      map[types.String]AppEndpointScopeConfig
 	AppEndpointScopeConfig struct {
-		Collections map[types.String]AppEndpointCollections `json:"collections,omitempty"` // Collection-specific config options.
+		Collections map[types.String]AppEndpointCollection `json:"collections,omitempty"` // Collection-specific config options.
 	}
 )
-
-// AppEndpointCollections represents the collections configuration within a scope.
-type AppEndpointCollections struct {
-	Default AppEndpointCollection `tfsdk:"_default"`
-}
 
 // AppEndpointCollection represents a collection configuration.
 type AppEndpointCollection struct {
