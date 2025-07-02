@@ -6,28 +6,30 @@ import (
 
 // AppEndpoint represents the Terraform schema for an app endpoint configuration.
 type AppEndpoint struct {
-	Bucket           types.String                             `tfsdk:"bucket"`
-	Name             types.String                             `tfsdk:"name"`
-	UserXattrKey     types.String                             `tfsdk:"userXattrKey"`
-	DeltaSyncEnabled types.Bool                               `tfsdk:"deltaSyncEnabled"`
-	Scopes           AppEndpointScopes                        `tfsdk:"scopes"`
-	Cors             AppEndpointCors                          `tfsdk:"cors"`
-	Oidc             []AppEndpointOidc                        `tfsdk:"oidc"`
-	RequireResync    map[string]AppEndpointRequireResyncScope `tfsdk:"requireResync"`
-	AdminURL         types.String                             `tfsdk:"adminURL"`
-	MetricsURL       types.String                             `tfsdk:"metricsURL"`
-	PublicURL        types.String                             `tfsdk:"publicURL"`
+	OrganizationId   types.String                    `tfsdk:"organization_id"`
+	ProjectId        types.String                    `tfsdk:"project_id"`
+	ClusterId        types.String                    `tfsdk:"cluster_id"`
+	AppServiceId     types.String                    `tfsdk:"app_service_id"`
+	Bucket           types.String                    `tfsdk:"bucket"`
+	Name             types.String                    `tfsdk:"name"`
+	UserXattrKey     types.String                    `tfsdk:"userXattrKey"`
+	DeltaSyncEnabled types.Bool                      `tfsdk:"deltaSyncEnabled"`
+	Scopes           AppEndpointScopes               `tfsdk:"scopes"`
+	Cors             AppEndpointCors                 `tfsdk:"cors"`
+	Oidc             []AppEndpointOidc               `tfsdk:"oidc"`
+	RequireResync    map[types.String][]types.String `tfsdk:"requireResync"`
+	AdminURL         types.String                    `tfsdk:"adminURL"`
+	MetricsURL       types.String                    `tfsdk:"metricsURL"`
+	PublicURL        types.String                    `tfsdk:"publicURL"`
 }
 
-// AppEndpointScopes represents the scopes configuration within an app endpoint.
-type AppEndpointScopes struct {
-	Default AppEndpointScope `tfsdk:"_default"`
-}
-
-// AppEndpointScope represents a scope configuration.
-type AppEndpointScope struct {
-	Collections AppEndpointCollections `tfsdk:"collections"`
-}
+// ScopesConfig maps scope name to a list of collection names
+type (
+	AppEndpointScopes      map[types.String]AppEndpointScopeConfig
+	AppEndpointScopeConfig struct {
+		Collections map[types.String]AppEndpointCollections `json:"collections,omitempty"` // Collection-specific config options.
+	}
+)
 
 // AppEndpointCollections represents the collections configuration within a scope.
 type AppEndpointCollections struct {
@@ -60,9 +62,4 @@ type AppEndpointOidc struct {
 	RolesClaim    types.String `tfsdk:"rolesClaim"`
 	ProviderId    types.String `tfsdk:"providerId"`
 	IsDefault     types.Bool   `tfsdk:"isDefault"`
-}
-
-// AppEndpointRequireResyncDefault represents the default require resync configuration.
-type AppEndpointRequireResyncScope struct {
-	Items []types.String `tfsdk:"items"`
 }
