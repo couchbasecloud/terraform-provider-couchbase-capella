@@ -11,15 +11,15 @@ func AppEndpointsSchema() schema.Schema {
 		MarkdownDescription: "The data source retrieves App Endpoint configurations for a Couchbase Capella App Service.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
-				Required:            true,
+				Computed:            true,
 				MarkdownDescription: "The GUID4 ID of the organization.",
 			},
 			"project_id": schema.StringAttribute{
-				Required:            true,
+				Computed:            true,
 				MarkdownDescription: "The GUID4 ID of the project.",
 			},
 			"cluster_id": schema.StringAttribute{
-				Required:            true,
+				Computed:            true,
 				MarkdownDescription: "The GUID4 ID of the cluster.",
 			},
 			"data": schema.ListNestedAttribute{
@@ -44,7 +44,6 @@ func AppEndpointsSchema() schema.Schema {
 							MarkdownDescription: "Enable or disable delta sync on this App Endpoint.",
 						},
 						"scopes": schema.SingleNestedAttribute{
-							Optional:            true,
 							MarkdownDescription: "The list of scopes in this App Endpoint. Currently, only one scope can be linked per App Endpoint.",
 							Attributes: map[string]schema.Attribute{
 								"scope_name": schema.SingleNestedAttribute{

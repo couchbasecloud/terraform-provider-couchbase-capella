@@ -26,7 +26,6 @@ func AppEndpointSchema() schema.Schema {
 						MarkdownDescription: "The list of collections within this scope.",
 						Attributes: map[string]schema.Attribute{
 							"collections": schema.SingleNestedAttribute{
-								Optional:            true,
 								MarkdownDescription: "Configuration for collections within the default scope.",
 								Attributes: map[string]schema.Attribute{
 									"collection_name": schema.SingleNestedAttribute{
