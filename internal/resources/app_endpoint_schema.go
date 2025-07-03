@@ -10,31 +10,26 @@ func AppEndpointSchema() schema.Schema {
 	return schema.Schema{
 		MarkdownDescription: "This resource allows you to manage an App Endpoint configuration for a Couchbase Capella App Service.",
 		Attributes: map[string]schema.Attribute{
-			"organization_id":  WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the Couchbase Capellaorganization."),
-			"project_id":       WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the Couchbase Capella project."),
-			"cluster_id":       WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the Couchbase Capella cluster."),
+			"organization_id":  WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the organization."),
+			"project_id":       WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the project."),
+			"cluster_id":       WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the cluster."),
+			"app_service_id":   WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the App Service."),
 			"bucket":           WithDescription(stringAttribute([]string{required, requiresReplace}), "The name of the bucket associated with this App Endpoint."),
 			"name":             WithDescription(stringAttribute([]string{required, requiresReplace}), "The name of the App Endpoint."),
 			"userXattrKey":     WithDescription(stringAttribute([]string{optional}), "The user extended attribute key for the App Endpoint."),
-			"deltaSyncEnabled": WithDescription(boolAttribute(optional), "Whether delta sync is enabled for this App Endpoint."),
-			"scopes": schema.SingleNestedAttribute{
+			"deltaSyncEnabled": WithDescription(boolAttribute(optional), "States whether delta sync is enabled for this App Endpoint."),
+			"scopes": schema.MapNestedAttribute{
 				Optional:            true,
 				MarkdownDescription: "Configuration for scopes within the App Endpoint.",
-				Attributes: map[string]schema.Attribute{
-					"scope_name": schema.SingleNestedAttribute{
-						Optional:            true,
-						MarkdownDescription: "The list of collections within this scope.",
-						Attributes: map[string]schema.Attribute{
-							"collections": schema.SingleNestedAttribute{
-								MarkdownDescription: "Configuration for collections within the default scope.",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"collections": schema.MapNestedAttribute{
+							Optional:            true,
+							MarkdownDescription: "Configuration for collections within this scope.",
+							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
-									"collection_name": schema.SingleNestedAttribute{
-										MarkdownDescription: "Configuration for the default collection.",
-										Attributes: map[string]schema.Attribute{
-											"accessControlFunction": WithDescription(stringAttribute([]string{optional}), "The Javascript function that is used to specify the access control policies to be applied to documents in this collection. Every document update is processed by this function."),
-											"importFilter":          WithDescription(stringAttribute([]string{optional}), "The Javascript function used to specify the documents in this collection that are to be imported by the App Endpoint."),
-										},
-									},
+									"accessControlFunction": WithDescription(stringAttribute([]string{optional}), "The Javascript function that is used to specify the access control policies to be applied to documents in this collection. Every document update is processed by this function."),
+									"importFilter":          WithDescription(stringAttribute([]string{optional}), "The JavaScript function used to filter which documents in the collection that are to be imported by the App Endpoint."),
 								},
 							},
 						},
@@ -62,9 +57,9 @@ func AppEndpointSchema() schema.Schema {
 					},
 					"maxAge": schema.Int64Attribute{
 						Optional:            true,
-						MarkdownDescription: "Maximum age for CORS preflight requests in seconds.",
+						MarkdownDescription: "Maximum age, in seconds, for CORS preflight requests in seconds.",
 					},
-					"disabled": WithDescription(boolAttribute(optional), "Whether CORS is disabled for this App Endpoint."),
+					"disabled": WithDescription(boolDefaultAttribute(false, optional), "Disables/Enables CORS for this App Endpoint."),
 				},
 			},
 			"oidc": schema.ListNestedAttribute{
@@ -73,14 +68,14 @@ func AppEndpointSchema() schema.Schema {
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"issuer":        WithDescription(stringAttribute([]string{required}), "The OIDC issuer URL."),
-						"register":      WithDescription(boolAttribute(optional), "Whether to register the OIDC client."),
+						"register":      WithDescription(boolAttribute(optional), "States whether to register the OIDC client."),
 						"clientId":      WithDescription(stringAttribute([]string{required}), "The OIDC client ID."),
 						"userPrefix":    WithDescription(stringAttribute([]string{optional}), "The user prefix for OIDC users."),
 						"discoveryUrl":  WithDescription(stringAttribute([]string{optional}), "The OIDC discovery URL."),
 						"usernameClaim": WithDescription(stringAttribute([]string{optional}), "The username claim for OIDC."),
 						"rolesClaim":    WithDescription(stringAttribute([]string{optional}), "The roles claim for OIDC."),
 						"providerId":    WithDescription(stringAttribute([]string{computed}), "The OIDC provider ID."),
-						"isDefault":     WithDescription(boolAttribute(computed), "Whether this is the default OIDC provider."),
+						"isDefault":     WithDescription(boolAttribute(computed), "States whether this is the default OIDC provider."),
 					},
 				},
 			},
@@ -90,7 +85,7 @@ func AppEndpointSchema() schema.Schema {
 				Attributes: map[string]schema.Attribute{
 					"scope_name": schema.SingleNestedAttribute{
 						Computed:            true,
-						MarkdownDescription: "Scope name.",
+						MarkdownDescription: "The scope's name.",
 						Attributes: map[string]schema.Attribute{
 							"items": schema.ListAttribute{
 								Computed:            true,
