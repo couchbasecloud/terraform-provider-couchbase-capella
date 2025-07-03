@@ -9,6 +9,7 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/appservice"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"net/http"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
@@ -154,7 +155,7 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	diags = resp.State.Set(ctx, initializePendingAppServiceWithPlanAndId(plan, createAppServiceResponse.Id.String()))
+	diags = resp.State.Set(ctx, initializeAppEndpointWithPlan(plan))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -332,6 +333,35 @@ func isValidEndpointName(name string) bool {
 	}
 
 	return true
+}
+
+func initializeAppEndpointWithPlan(plan providerschema.AppEndpoint) providerschema.AppEndpoint {
+	if plan.UserXattrKey.IsNull() || plan.UserXattrKey.IsUnknown() {
+		plan.UserXattrKey = types.StringNull()
+	}
+	if plan.DeltaSyncEnabled.IsNull() || plan.DeltaSyncEnabled.IsUnknown() {
+		plan.DeltaSyncEnabled = types.BoolNull()
+	}
+	if plan.Cors.Origin == nil {
+		plan.Cors.Origin = []types.String{}
+	}
+	if plan.Cors.LoginOrigin == nil {
+		plan.Cors.LoginOrigin = []types.String{}
+	}
+	if plan.Cors.Headers == nil {
+		plan.Cors.Headers = []types.String{}
+	}
+	if plan.Cors.MaxAge.IsNull() || plan.Cors.MaxAge.IsUnknown() {
+		plan.Cors.MaxAge = types.Int64Null()
+	}
+	if plan.Cors.Disabled.IsNull() || plan.Cors.Disabled.IsUnknown() {
+		plan.Cors.Disabled = types.BoolNull()
+	}
+	if len(plan.Oidc) == 0 {
+		plan.Oidc = []providerschema.AppEndpointOidc{}
+	}
+
+	return plan
 }
 
 func (a *AppEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
