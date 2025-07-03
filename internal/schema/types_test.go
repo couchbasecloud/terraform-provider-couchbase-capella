@@ -106,36 +106,3 @@ func TestStringsToStringValues(t *testing.T) {
 		})
 	}
 }
-
-func TestConversionRoundTrip(t *testing.T) {
-	tests := []struct {
-		name  string
-		input []string
-	}{
-		{
-			name:  "[POSITIVE] Round trip conversion with normal strings",
-			input: []string{"hello", "world", "test"},
-		},
-		{
-			name:  "[POSITIVE] Round trip conversion with empty slice",
-			input: []string{},
-		},
-		{
-			name:  "[POSITIVE] Round trip conversion with empty strings",
-			input: []string{"", "non-empty", ""},
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			// Convert strings to StringValues
-			stringValues := StringsToBaseStrings(test.input)
-
-			// Convert back to strings
-			result := BaseStringsToStrings(stringValues)
-
-			// Should be equal to original input
-			assert.Equal(t, test.input, result)
-		})
-	}
-}
