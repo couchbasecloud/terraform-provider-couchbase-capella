@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/app_endpoints"
@@ -104,7 +105,7 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		Name:             plan.Name.ValueString(),
 		DeltaSyncEnabled: plan.DeltaSyncEnabled.ValueBool(),
 		Scopes:           scopes,
-		Cors:             &app_endpoints.AppEndpointCors{Origin: plan.Cors.Origin, LoginOrigin: plan.Cors.LoginOrigin, Headers: plan.Cors.Headers, MaxAge: plan.Cors.MaxAge.ValueInt64Pointer(), Disabled: plan.Cors.Disabled.ValueBoolPointer()},
+		Cors:             &app_endpoints.AppEndpointCors{Origin: providerschema.BaseStringsToStrings(plan.Cors.Origin), LoginOrigin: providerschema.BaseStringsToStrings(plan.Cors.LoginOrigin), Headers: providerschema.BaseStringsToStrings(plan.Cors.Headers), MaxAge: plan.Cors.MaxAge.ValueInt64Pointer(), Disabled: plan.Cors.Disabled.ValueBoolPointer()},
 	}
 	if len(plan.Oidc) > 0 {
 		createAppEndpointRequest.Oidc = make([]app_endpoints.AppEndpointOidc, len(plan.Oidc))
@@ -131,7 +132,7 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 	response, err := a.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
-		appServiceRequest,
+		createAppEndpointRequest,
 		a.Token,
 		nil,
 	)
