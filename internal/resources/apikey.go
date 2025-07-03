@@ -489,11 +489,7 @@ func (a *ApiKey) convertResources(resources []providerschema.ApiKeyResourcesItem
 			Id: id,
 		}
 
-		var convertedRoles []string
-		for _, role := range resource.Roles {
-			convertedRoles = append(convertedRoles, role.ValueString())
-		}
-		convertedResource.Roles = convertedRoles
+		convertedResource.Roles = providerschema.BaseStringsToStrings(resource.Roles)
 
 		if !resource.Type.IsNull() && !resource.Type.IsUnknown() {
 			convertedResource.Type = resource.Type.ValueStringPointer()
@@ -511,11 +507,7 @@ func (a *ApiKey) convertAllowedCidrs(ctx context.Context, allowedCidrs types.Set
 		return nil, fmt.Errorf("error while extracting allowedCidrs elements")
 	}
 
-	var convertedAllowedCidrs []string
-	for _, allowedCidr := range elements {
-		convertedAllowedCidrs = append(convertedAllowedCidrs, allowedCidr.ValueString())
-	}
-	return convertedAllowedCidrs, nil
+	return providerschema.BaseStringsToStrings(elements), nil
 }
 
 func (a *ApiKey) retainResourcesIfOrgOwner(apiKeyReq, apiKeyRes *providerschema.ApiKey) *providerschema.ApiKey {
