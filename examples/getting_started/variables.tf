@@ -242,10 +242,6 @@ variable "aws_config" {
   })
 }
 
-variable "index_name" {
-  description = "index Name"
-}
-
 variable "index_keys" {
   description = "index keys"
 }
