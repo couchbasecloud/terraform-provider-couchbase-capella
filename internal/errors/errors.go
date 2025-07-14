@@ -196,6 +196,9 @@ var (
 	// ErrGatewayTimeout is returned when a gateway operation times out.
 	ErrGatewayTimeout = errors.New("gateway timeout")
 
+	// ErrGatewayTimeoutForIndexDDL is returned when API server times out while waiting for response for index DDL.
+	ErrGatewayTimeoutForIndexDDL = errors.New("timeout waiting for response for index DDL")
+
 	// ErrNotTrimmed is returned when any attribute has leading or trailing spaces.
 	ErrNotTrimmed = errors.New("attribute has leading or trailing spaces")
 
@@ -241,6 +244,8 @@ var (
 	ErrMonitorTimeout = errors.New("timed out while watching indexes")
 
 	ErrConcurrentIndexCreation = errors.New("another index create request is in progress")
+
+	ErrTimeoutWaitingForClientResponse = errors.New("timeout waiting for index build")
 
 	ErrorMessageWhileFreeTierBucketCreation = errors.New("There is an error during free tier bucket creation. Please check in Capella to see if any hanging resources")
 
