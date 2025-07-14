@@ -596,25 +596,24 @@ func (g *GSI) executeGsiDdl(ctx context.Context, plan *providerschema.GsiDefinit
 		g.Token,
 		nil,
 	)
-	if err != nil {
-		if errors.Is(err, internalerrors.ErrGatewayTimeoutForIndexDDL) {
-			return internalerrors.ErrGatewayTimeoutForIndexDDL
-		}
-
+	switch {
+	case err == nil:
+	// for large non-deferred indexes API server will timeout.
+	case errors.Is(err, internalerrors.ErrGatewayTimeoutForIndexDDL):
+		return internalerrors.ErrGatewayTimeoutForIndexDDL
+	case errors.Is(err, &api.Error{}):
 		// Indexer doesn't allow concurrent index builds.
 		// Index build is resource intensive operation from indexer and KV perspective
 		// as indexer will request data for the keyspace from the beginning.
 		//
 		// Indexer will automatically retry in the background.
-		if apiError, ok := err.(*api.Error); ok {
+		apiError, _ := err.(*api.Error)
+		if strings.Contains(strings.ToLower(apiError.Message), "build already in progress") ||
+			strings.Contains(strings.ToLower(apiError.Message), "concurrent create index request") {
 
-			if strings.Contains(strings.ToLower(apiError.Message), "build already in progress") ||
-				strings.Contains(strings.ToLower(apiError.Message), "concurrent create index request") {
-
-				return internalerrors.ErrConcurrentIndexCreation
-			}
+			return internalerrors.ErrConcurrentIndexCreation
 		}
-
+	default:
 		return err
 	}
 

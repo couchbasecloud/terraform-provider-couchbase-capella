@@ -21,6 +21,14 @@ func (e *Error) Error() string {
 	)
 }
 
+func (e *Error) Is(target error) bool {
+	var t *Error
+	if errors.As(target, &t) {
+		return true
+	}
+	return false
+}
+
 func (e Error) CompleteError() string {
 	jsonData, err := json.Marshal(e)
 	if err != nil {
