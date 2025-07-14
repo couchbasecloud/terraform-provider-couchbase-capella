@@ -23,10 +23,7 @@ func (e *Error) Error() string {
 
 func (e *Error) Is(target error) bool {
 	var t *Error
-	if errors.As(target, &t) {
-		return true
-	}
-	return false
+	return errors.As(target, &t)
 }
 
 func (e Error) CompleteError() string {
