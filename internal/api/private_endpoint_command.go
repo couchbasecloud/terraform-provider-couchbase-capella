@@ -17,6 +17,14 @@ type CreateAzurePrivateEndpointCommandRequest struct {
 	VirtualNetwork string `json:"virtualNetwork"`
 }
 
+// CreateGCPEndpointCommandRequest is a request to get the CLI to create an GCP private endpoint.
+type CreateGCPEndpointCommandRequest struct {
+	SubnetIDs *[]string `json:"subnetIDs,omitempty"`
+
+	// VpcNetworkID The ID of your virtual network
+	VpcNetworkID string `json:"vpcNetworkID"`
+}
+
 type CreatePrivateEndpointCommandResponse struct {
 	// Command The CLI command or script used to create private endpoint within your CSP.
 	Command string `json:"command"`

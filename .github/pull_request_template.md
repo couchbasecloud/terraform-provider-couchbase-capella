@@ -19,8 +19,8 @@ Please include a summary of the fix/feature/change, including any relevant motiv
 - [ ] Bug fix (non-breaking change which fixes an issue).
 - [ ] New feature (non-breaking change which adds functionality).
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected).
-- [ ] This change requires a documentation update
-- [ ] Documentation fix/enhancement
+- [ ] This change updates the ci/cd workflow.
+- [ ] Documentation fix/enhancement.
 
 ## Manual Testing Approach
 

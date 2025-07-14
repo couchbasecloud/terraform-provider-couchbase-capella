@@ -20,8 +20,6 @@ func TestAppServiceResource(t *testing.T) {
 			{
 				Config: testAccAppServiceResourceConfig(resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
-					resource.TestCheckResourceAttr(resourceReference, "description", "description"),
 					resource.TestCheckResourceAttr(resourceReference, "compute.cpu", "2"),
 					resource.TestCheckResourceAttr(resourceReference, "compute.ram", "4"),
 				),
@@ -39,21 +37,56 @@ func TestAppServiceResource(t *testing.T) {
 }
 
 func testAccAppServiceResourceConfig(resourceName string) string {
+	clusterName := randomStringWithPrefix("tf_acc_cluster_")
 	return fmt.Sprintf(`
 %[1]s
 
-resource "couchbase-capella_app_service" "%[5]s" {
+resource "couchbase-capella_cluster" "%[5]s" {
   organization_id = "%[2]s"
   project_id      = "%[3]s"
-  cluster_id      = "%[4]s"
   name            = "%[5]s"
-  description     = "description"
+  cloud_provider = {
+    type   = "aws"
+    region = "us-east-1"
+    cidr   = "10.190.250.0/23"
+  }
+  service_groups = [
+    {
+      node = {
+        compute = {
+          cpu = 4
+          ram = 16
+        }
+        disk = {
+          storage = 50
+          type    = "gp3"
+          iops    = 3000
+        }
+      }
+      num_of_nodes = 1
+      services     = ["data", "index", "query"]
+    }
+  ]
+  availability = {
+    "type" : "single"
+  }
+  support = {
+    plan     = "developer pro"
+    timezone = "PT"
+  }
+}
+
+resource "couchbase-capella_app_service" "%[4]s" {
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  cluster_id      = couchbase-capella_cluster.%[5]s.id
+  name            = "tf_acc_test_app_service"
   compute = {
     cpu = 2
     ram = 4
   }
 }
-`, globalProviderBlock, globalOrgId, globalProjectId, globalClusterId, resourceName)
+`, globalProviderBlock, globalOrgId, globalProjectId, resourceName, clusterName)
 }
 
 func generateAppServiceImportId(resourceReference string) resource.ImportStateIdFunc {

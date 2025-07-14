@@ -58,6 +58,12 @@ jobs:
             LABELS+=("documentation")
           fi
           
+          # ci/cd
+          if echo "${{ env.PR_BODY }}" | grep -iq "\[[xX]\] This change updates the ci/cd workflow"; then
+            echo "Found ci/cd workflow checkbox"
+            LABELS+=("ci/cd")
+          fi
+          
           # Debug: Show what was found
           echo "Content of LABELS array:"
           printf '%s\n' "${LABELS[@]}"
