@@ -240,7 +240,8 @@ This will automatically be retried in the background.  Please run "terraform app
 			"Long index build time",
 			fmt.Sprintf(
 				`Build of index %s in %s.%s.%s did not complete in time.  This maybe due to non-deferred builds of a large index,
-in which case it is recommended to use deferred builds.  Please monitor the index and once its ready, then refresh state.`,
+in which case it is recommended to use deferred builds.  Please monitor the index using query_index datasource. Once the index is ready
+refresh state.`,
 				plan.IndexName.ValueString(),
 				plan.BucketName.ValueString(),
 				plan.ScopeName.ValueString(),
