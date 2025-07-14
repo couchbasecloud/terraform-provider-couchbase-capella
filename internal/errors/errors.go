@@ -193,6 +193,7 @@ var (
 	// ErrGatewayTimeout is returned when a gateway operation times out.
 	ErrGatewayTimeout = errors.New("gateway timeout")
 
+	// ErrGatewayTimeoutForIndexDDL is returned when API server times out while waiting for response for index DDL.
 	ErrGatewayTimeoutForIndexDDL = errors.New("timeout waiting for response for index DDL")
 
 	// ErrNotTrimmed is returned when any attribute has leading or trailing spaces.
