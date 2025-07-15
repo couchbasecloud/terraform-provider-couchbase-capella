@@ -25,10 +25,10 @@ type AppEndpoint struct {
 	Name types.String `tfsdk:"name"`
 
 	// UserXattrKey is the key used for user extended attributes in the App Endpoint.
-	UserXattrKey types.String `tfsdk:"userXattrKey"`
+	UserXattrKey types.String `tfsdk:"user_xattr_key"`
 
 	// DeltaSyncEnabled Indicates whether Delta Sync is enabled for the App Endpoint.
-	DeltaSyncEnabled types.Bool `tfsdk:"deltaSyncEnabled"`
+	DeltaSyncEnabled types.Bool `tfsdk:"delta_sync_enabled"`
 
 	// Scopes defines the scopes and collections for the App Endpoint.
 	Scopes AppEndpointScopes `tfsdk:"scopes"`
@@ -37,22 +37,22 @@ type AppEndpoint struct {
 	Cors AppEndpointCors `tfsdk:"cors"`
 
 	// IsRequireResync Indicates whether the App Endpoint requires resyncing.
-	IsRequireResync types.Bool `tfsdk:"isRequireResync"`
+	IsRequireResync types.Bool `tfsdk:"is_require_resync"`
 
 	// Oidc is a list of OIDC provider configurations for the App Endpoint.
 	Oidc []AppEndpointOidc `tfsdk:"oidc"`
 
 	// IsRequireResync Indicates whether the App Endpoint requires resyncing.
-	RequireResync map[types.String][]types.String `tfsdk:"requireResync"`
+	RequireResync map[types.String][]types.String `tfsdk:"require_resync"`
 
 	// AdminURL A URL for the admin API used for the administration of App Endpoints. For more information, read the [Capella App Services Admin API Reference](https://docs.couchbase.com/cloud/app-services/references/rest-api-introduction.html#:~:text=Capella%20App%20Services%20Admin%20API%20Reference)
-	AdminURL types.String `tfsdk:"adminURL"`
+	AdminURL types.String `tfsdk:"admin_url"`
 
 	// MetricsURL A URL for the metrics API used for monitoring App Services performance metrics. For more information, read the [Capella App Services Metrics API Reference](https://docs.couchbase.com/cloud/app-services/references/rest_api_metric.html)
-	MetricsURL types.String `tfsdk:"metricsURL"`
+	MetricsURL types.String `tfsdk:"metrics_url"`
 
 	// PublicURL A URL for the public API used for access to functions for data access and manipulation. For more information, read the [Capella App Services Public API Reference](https://docs.couchbase.com/cloud/app-services/references/rest_api_public.html)
-	PublicURL types.String `tfsdk:"publicURL"`
+	PublicURL types.String `tfsdk:"public_url"`
 }
 
 // ScopesConfig maps scope name to a list of collection names.
@@ -70,9 +70,9 @@ type AppEndpointCollection struct {
 	// AccessControlFunction The Javascript function that is used to specify the access control policies to be applied to documents in this collection.
 	// Every document update is processed by this function. The default access control function is 'function(doc){channel(doc.channels);}'
 	// for the default collection and 'function(doc){channel(collectionName);}' for named collections.
-	AccessControlFunction types.String `tfsdk:"accessControlFunction"`
+	AccessControlFunction types.String `tfsdk:"access_control_function"`
 	// ImportFilter The Javascript function used to specify the documents in this collection that are to be imported by the App Endpoint. By default, all documents in corresponding collection are imported.
-	ImportFilter types.String `tfsdk:"importFilter"`
+	ImportFilter types.String `tfsdk:"import_filter"`
 }
 
 // AppEndpointCors represents the CORS configuration for an app endpoint.
@@ -80,11 +80,11 @@ type AppEndpointCors struct {
 	// Origin List of allowed origins, use ['*'] to allow access from everywhere
 	Origin []types.String `tfsdk:"origin"`
 	// LoginOrigin List of allowed login origins
-	LoginOrigin []types.String `tfsdk:"loginOrigin"`
+	LoginOrigin []types.String `tfsdk:"login_origin"`
 	// Headers List of allowed headers
 	Headers []types.String `tfsdk:"headers"`
 	// MaxAge Specifies the duration (in seconds) for which the results of a preflight request can be cached.
-	MaxAge types.Int64 `tfsdk:"maxAge"`
+	MaxAge types.Int64 `tfsdk:"max_age"`
 	// Disabled indicated whether CORS is disabled.
 	Disabled types.Bool `tfsdk:"disabled"`
 }
@@ -96,18 +96,18 @@ type AppEndpointOidc struct {
 	// Register Indicates whether to register a new App Service user account when a user logs in using OpenID Connect.
 	Register types.Bool `tfsdk:"register"`
 	// ClientId The OpenID Connect provider client ID.
-	ClientId types.String `tfsdk:"clientId"`
+	ClientId types.String `tfsdk:"client_id"`
 	// UserPrefix Username prefix for all users created for this provider
-	UserPrefix types.String `tfsdk:"userPrefix"`
+	UserPrefix types.String `tfsdk:"user_prefix"`
 	// DiscoveryUrl The URL for the non-standard discovery endpoint.
-	DiscoveryUrl types.String `tfsdk:"discoveryUrl"`
+	DiscoveryUrl types.String `tfsdk:"discovery_url"`
 	// UsernameClaim Allows a different OpenID Connect field to be specified instead of the Subject (sub).
-	UsernameClaim types.String `tfsdk:"usernameClaim"`
+	UsernameClaim types.String `tfsdk:"username_claim"`
 	// RolesClaim If set, the value(s) of the given OpenID Connect authentication token claim will be added to the user's roles.
 	// The value of this claim in the OIDC token must be either a string or an array of strings, any other type will result in an error.
-	RolesClaim types.String `tfsdk:"rolesClaim"`
+	RolesClaim types.String `tfsdk:"roles_claim"`
 	// ProviderId UUID of the provider.
-	ProviderId types.String `tfsdk:"providerId"`
+	ProviderId types.String `tfsdk:"provider_id"`
 	// IsDefault Indicates whether this is the default OpenID Connect provider.
-	IsDefault types.Bool `tfsdk:"isDefault"`
+	IsDefault types.Bool `tfsdk:"is_default"`
 }

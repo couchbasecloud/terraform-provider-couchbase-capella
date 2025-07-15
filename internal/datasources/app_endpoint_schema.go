@@ -39,11 +39,11 @@ func AppEndpointsSchema() schema.Schema {
 							Computed:            true,
 							MarkdownDescription: "The name of the App Endpoint.",
 						},
-						"userXattrKey": schema.StringAttribute{
+						"user_xattr_key": schema.StringAttribute{
 							Computed:            true,
 							MarkdownDescription: "The user extended attribute key for the App Endpoint.",
 						},
-						"deltaSyncEnabled": schema.BoolAttribute{
+						"delta_sync_enabled": schema.BoolAttribute{
 							Computed:            true,
 							MarkdownDescription: "Enable or disable delta sync on this App Endpoint.",
 						},
@@ -57,11 +57,11 @@ func AppEndpointsSchema() schema.Schema {
 										MarkdownDescription: "The collection configuration defines access control, validation functions, and import filters for a specific collection. The key of the collection configuration object is the name of the collection.",
 										NestedObject: schema.NestedAttributeObject{
 											Attributes: map[string]schema.Attribute{
-												"accessControlFunction": schema.StringAttribute{
+												"access_control_function": schema.StringAttribute{
 													Computed:            true,
 													MarkdownDescription: "The Javascript function that is used to specify the access control policies to be applied to documents in this collection. Every document update is processed by this function.",
 												},
-												"importFilter": schema.StringAttribute{
+												"import_filter": schema.StringAttribute{
 													Computed:            true,
 													MarkdownDescription: "The JavaScript function used to filter which documents in the collection that are to be imported by the App Endpoint.",
 												},
@@ -80,7 +80,7 @@ func AppEndpointsSchema() schema.Schema {
 									ElementType:         types.StringType,
 									MarkdownDescription: "List of allowed origins for CORS.",
 								},
-								"loginOrigin": schema.ListAttribute{
+								"login_origin": schema.ListAttribute{
 									Computed:            true,
 									ElementType:         types.StringType,
 									MarkdownDescription: "List of allowed login origins for CORS.",
@@ -90,7 +90,7 @@ func AppEndpointsSchema() schema.Schema {
 									ElementType:         types.StringType,
 									MarkdownDescription: "List of allowed headers for CORS.",
 								},
-								"maxAge": schema.Int64Attribute{
+								"max_age": schema.Int64Attribute{
 									Computed:            true,
 									MarkdownDescription: "Maximum age for CORS preflight requests in seconds.",
 								},
@@ -113,38 +113,38 @@ func AppEndpointsSchema() schema.Schema {
 										Computed:            true,
 										MarkdownDescription: "Whether to register the OIDC client.",
 									},
-									"clientId": schema.StringAttribute{
+									"client_id": schema.StringAttribute{
 										Computed:            true,
 										MarkdownDescription: "The OIDC client ID.",
 									},
-									"userPrefix": schema.StringAttribute{
+									"user_prefix": schema.StringAttribute{
 										Computed:            true,
 										MarkdownDescription: "The user prefix for OIDC users.",
 									},
-									"discoveryUrl": schema.StringAttribute{
+									"discovery_url": schema.StringAttribute{
 										Computed:            true,
 										MarkdownDescription: "The OIDC discovery URL.",
 									},
-									"usernameClaim": schema.StringAttribute{
+									"username_claim": schema.StringAttribute{
 										Computed:            true,
 										MarkdownDescription: "The username claim for OIDC.",
 									},
-									"rolesClaim": schema.StringAttribute{
+									"roles_claim": schema.StringAttribute{
 										Computed:            true,
 										MarkdownDescription: "The roles claim for OIDC.",
 									},
-									"providerId": schema.StringAttribute{
+									"provider_id": schema.StringAttribute{
 										Computed:            true,
 										MarkdownDescription: "The OIDC provider ID.",
 									},
-									"isDefault": schema.BoolAttribute{
+									"is_default": schema.BoolAttribute{
 										Computed:            true,
 										MarkdownDescription: "Whether this is the default OIDC provider.",
 									},
 								},
 							},
 						},
-						"requireResync": schema.MapNestedAttribute{
+						"require_resync": schema.MapNestedAttribute{
 							Computed:            true,
 							MarkdownDescription: "List of collections that require resync, keyed by scope.",
 							NestedObject: schema.NestedAttributeObject{
@@ -157,15 +157,15 @@ func AppEndpointsSchema() schema.Schema {
 								},
 							},
 						},
-						"adminURL": schema.StringAttribute{
+						"admin_url": schema.StringAttribute{
 							Computed:            true,
 							MarkdownDescription: "The admin URL for the App Endpoint.",
 						},
-						"metricsURL": schema.StringAttribute{
+						"metrics_url": schema.StringAttribute{
 							Computed:            true,
 							MarkdownDescription: "The metrics URL for the App Endpoint.",
 						},
-						"publicURL": schema.StringAttribute{
+						"public_url": schema.StringAttribute{
 							Computed:            true,
 							MarkdownDescription: "The public URL for the App Endpoint.",
 						},
