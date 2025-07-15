@@ -16,7 +16,7 @@ func createAppEndpoint(ctx context.Context, client *api.Client) error {
 		Name:             globalAppEndpoint,
 		UserXattrKey:     nil,
 		DeltaSyncEnabled: false,
-		Scopes:           nil,
+		Scopes:           app_endpoints.ScopesConfig{globalScopeName: app_endpoints.ScopeConfig{Collections: map[string]app_endpoints.AppEndpointCollection{globalCollectionName: {}}}},
 	}
 
 	url := fmt.Sprintf(
