@@ -59,7 +59,7 @@ func AppEndpointSchema() schema.Schema {
 						Optional:            true,
 						MarkdownDescription: "Maximum age, in seconds, for CORS preflight requests in seconds.",
 					},
-					"disabled": WithDescription(boolDefaultAttribute(false, optional), "Disables/Enables CORS for this App Endpoint."),
+					"disabled": schema.BoolAttribute{Optional: true, Description: "Disables/Enables CORS for this App Endpoint."},
 				},
 			},
 			"oidc": schema.ListNestedAttribute{
