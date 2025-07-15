@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
@@ -19,96 +21,48 @@ func TestAppEndpointResource(t *testing.T) {
 			{
 				Config: testAccAppEndpointResourceConfig(resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "bucket", "test_bucket"),
+					resource.TestCheckResourceAttr(resourceReference, "bucket", globalBucketName),
 					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
-					//resource.TestCheckResourceAttr(resourceReference, "app_service_id", "${couchbase-capella_app_service." + resourceName + ".id}"),
+					resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
+					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
 				),
 			},
 			// ImportState testing
-			//{
-			//	ResourceName:      resourceReference,
-			//	ImportStateIdFunc: generateAppServiceImportId(resourceReference),
-			//	ImportState:       true,
-			//	ImportStateVerify: true,
-			//},
+			{
+				ResourceName:      resourceReference,
+				ImportStateIdFunc: generateAppEndpointImportId(resourceReference),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 			// Delete testing automatically occurs in TestCase
 		},
 	})
 }
 
 func testAccAppEndpointResourceConfig(resourceName string) string {
-	clusterName := randomStringWithPrefix("tf_acc_cluster_")
 	return fmt.Sprintf(`
-%[1]s
-
-resource "couchbase-capella_cluster" "%[5]s" {
-  organization_id = "%[2]s"
-  project_id      = "%[3]s"
-  name            = "%[5]s"
-  cloud_provider = {
-    type   = "aws"
-    region = "us-east-1"
-    cidr   = "10.190.250.0/23"
-  }
-  service_groups = [
-    {
-      node = {
-        compute = {
-          cpu = 4
-          ram = 16
-        }
-        disk = {
-          storage = 50
-          type    = "gp3"
-          iops    = 3000
-        }
-      }
-      num_of_nodes = 1
-      services     = ["data", "index", "query"]
-    }
-  ]
-  availability = {
-    "type" : "single"
-  }
-  support = {
-    plan     = "developer pro"
-    timezone = "PT"
-  }
-}
-
-resource "couchbase-capella_app_service" "%[4]s" {
-  organization_id = "%[2]s"
-  project_id      = "%[3]s"
-  cluster_id      = couchbase-capella_cluster.%[5]s.id
-  name            = "tf_acc_test_app_service"
-  compute = {
-    cpu = 2
-    ram = 4
-  }
-}
-
 resource "couchbase-capella_app_endpoint" "%[6]s" {
-  organization_id = "%[2]s"
-  project_id      = "%[3]s"
-  cluster_id      = couchbase-capella_cluster.%[5]s.id
-  app_service_id  = couchbase-capella_app_service.%[4]s.id
-  bucket          = "test_bucket"
+  organization_id = "%[1]s"
+  project_id      = "%[2]s"
+  cluster_id      = "%[4]s"
+  app_service_id  = "%[3]s"
+  bucket          = "%[5]s"
   name            = "%[6]s"
   
 }
-`, globalProviderBlock, globalOrgId, globalProjectId, globalAppServiceId, clusterName, globalAppEndpoint)
+`, globalOrgId, globalProjectId, globalAppServiceId, globalClusterId, globalBucketName, resourceName)
 }
 
-//func generateAppImportId(resourceReference string) resource.ImportStateIdFunc {
-//	return func(state *terraform.State) (string, error) {
-//		var rawState map[string]string
-//		for _, m := range state.Modules {
-//			if len(m.Resources) > 0 {
-//				if v, ok := m.Resources[resourceReference]; ok {
-//					rawState = v.Primary.Attributes
-//				}
-//			}
-//		}
-//		return fmt.Sprintf("id=%s,cluster_id=%s,project_id=%s,organization_id=%s", rawState["id"], rawState["cluster_id"], rawState["project_id"], rawState["organization_id"]), nil
-//	}
-//}
+func generateAppEndpointImportId(resourceReference string) resource.ImportStateIdFunc {
+	return func(state *terraform.State) (string, error) {
+		var rawState map[string]string
+		for _, m := range state.Modules {
+			if len(m.Resources) > 0 {
+				if v, ok := m.Resources[resourceReference]; ok {
+					rawState = v.Primary.Attributes
+				}
+			}
+		}
+		return fmt.Sprintf("id=%s,app_service_id=%s,cluster_id=%s,project_id=%s,organization_id=%s", rawState["id"], rawState["app_service_id"], rawState["cluster_id"], rawState["project_id"], rawState["organization_id"]), nil
+	}
+}
