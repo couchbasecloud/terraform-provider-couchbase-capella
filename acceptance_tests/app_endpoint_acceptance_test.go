@@ -41,6 +41,8 @@ func TestAppEndpointResource(t *testing.T) {
 
 func testAccAppEndpointResourceConfig(resourceName string) string {
 	return fmt.Sprintf(`
+%[7]s
+	
 resource "couchbase-capella_app_endpoint" "%[6]s" {
   organization_id = "%[1]s"
   project_id      = "%[2]s"
@@ -50,7 +52,7 @@ resource "couchbase-capella_app_endpoint" "%[6]s" {
   name            = "%[6]s"
   
 }
-`, globalOrgId, globalProjectId, globalAppServiceId, globalClusterId, globalBucketName, resourceName)
+`, globalOrgId, globalProjectId, globalAppServiceId, globalClusterId, globalBucketName, resourceName, globalProviderBlock)
 }
 
 func generateAppEndpointImportId(resourceReference string) resource.ImportStateIdFunc {
