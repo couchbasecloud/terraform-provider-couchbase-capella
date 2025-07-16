@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -40,7 +41,7 @@ type AppEndpoint struct {
 	Oidc []AppEndpointOidc `tfsdk:"oidc"`
 
 	// RequireResync is a map of scopes to a list of collection names that require resync.
-	RequireResync map[types.String][]types.String `tfsdk:"require_resync"`
+	RequireResync RequireResync `tfsdk:"require_resync"`
 
 	// AdminURL A URL for the admin API used for the administration of App Endpoints. For more information, read the [Capella App Services Admin API Reference](https://docs.couchbase.com/cloud/app-services/references/rest-api-introduction.html#:~:text=Capella%20App%20Services%20Admin%20API%20Reference)
 	AdminURL types.String `tfsdk:"admin_url"`
@@ -52,10 +53,32 @@ type AppEndpoint struct {
 	PublicURL types.String `tfsdk:"public_url"`
 }
 
+func (a AppEndpoint) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"organization_id":    types.StringType,
+		"project_id":         types.StringType,
+		"cluster_id":         types.StringType,
+		"app_service_id":     types.StringType,
+		"bucket":             types.StringType,
+		"name":               types.StringType,
+		"user_xattr_key":     types.StringType,
+		"delta_sync_enabled": types.BoolType,
+		"scopes":             types.MapType{ElemType: types.ObjectType{}},
+		"cors":               types.ObjectType{},
+		"oidc":               types.ListType{ElemType: types.ObjectType{}},
+		"require_resync":     types.MapType{ElemType: types.ListType{ElemType: types.StringType}},
+		"admin_url":          types.StringType,
+		"metrics_url":        types.StringType,
+		"public_url":         types.StringType,
+	}
+}
+
 // ScopesConfig maps scope name to a list of collection names.
 type (
 	// AppEndpointScopes represents a map of scope names to collections.
-	AppEndpointScopes      map[types.String]AppEndpointScopeConfig
+	AppEndpointScopes map[types.String]AppEndpointScopeConfig
+	// RequireResync
+	RequireResync          types.MapType
 	AppEndpointScopeConfig struct {
 		// Collections is a map of collections names to their configurations.
 		Collections map[types.String]AppEndpointCollection `tfsdk:"collections"` // Collection-specific config options.
