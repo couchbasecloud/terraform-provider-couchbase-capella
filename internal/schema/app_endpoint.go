@@ -36,9 +36,6 @@ type AppEndpoint struct {
 	// Cors configures cross origin resource sharing (CORS) for the App Endpoint.
 	Cors AppEndpointCors `tfsdk:"cors"`
 
-	// IsRequireResync Indicates whether the App Endpoint requires resyncing.
-	IsRequireResync types.Bool `tfsdk:"is_require_resync"`
-
 	// Oidc is a list of OIDC provider configurations for the App Endpoint.
 	Oidc []AppEndpointOidc `tfsdk:"oidc"`
 
