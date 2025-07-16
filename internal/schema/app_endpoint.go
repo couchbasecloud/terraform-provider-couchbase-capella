@@ -39,7 +39,7 @@ type AppEndpoint struct {
 	// Oidc is a list of OIDC provider configurations for the App Endpoint.
 	Oidc []AppEndpointOidc `tfsdk:"oidc"`
 
-	// IsRequireResync Indicates whether the App Endpoint requires resyncing.
+	// RequireResync is a map of scopes to a list of collection names that require resync.
 	RequireResync map[types.String][]types.String `tfsdk:"require_resync"`
 
 	// AdminURL A URL for the admin API used for the administration of App Endpoints. For more information, read the [Capella App Services Admin API Reference](https://docs.couchbase.com/cloud/app-services/references/rest-api-introduction.html#:~:text=Capella%20App%20Services%20Admin%20API%20Reference)
