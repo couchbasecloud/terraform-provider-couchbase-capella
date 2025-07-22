@@ -1,13 +1,50 @@
 package datasources
 
 import (
+	"context"
+
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
+var (
+	_ datasource.DataSource              = (*AppEndpoint)(nil)
+	_ datasource.DataSourceWithConfigure = (*AppEndpoint)(nil)
+)
+
+// AppServiceCidrs is the data source implementation for retrieving allowed CIDRs for an App Service.
+type AppEndpoint struct {
+	*providerschema.Data
+}
+
+func (a *AppEndpoint) Configure(ctx context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
+	//TODO implement me
+	return
+}
+
+func (a *AppEndpoint) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	//TODO implement me
+	return
+}
+
+// NewAppServiceCidrs is used in (p *capellaProvider) DataSources for building the provider.
+func NewAppEndpoint() datasource.DataSource {
+	return &AppEndpoint{}
+}
+
+// Metadata returns the App Service CIDRs data source type name.
+func (a *AppEndpoint) Metadata(
+	_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse,
+) {
+	resp.TypeName = req.ProviderTypeName + "_app_services_cidr"
+}
+
 // AppEndpointsSchema defines the schema for the AppEndpoints datasource.
-func AppEndpointsSchema() schema.Schema {
-	return schema.Schema{
+func (a *AppEndpoint) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		MarkdownDescription: "The data source retrieves App Endpoint configurations for an App Service.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
