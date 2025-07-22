@@ -161,6 +161,17 @@ func (c *Client) ExecuteWithRetry(
 			dur = time.Second * time.Duration(retryAfter)
 			return nil, dur, errors.ErrRatelimit
 		case http.StatusGatewayTimeout:
+			var apiError Error
+			if err := json.Unmarshal(responseBody, &apiError); err != nil {
+				return nil, dur, fmt.Errorf(
+					"unexpected code: %d, expected: %d, body: %s",
+					apiRes.StatusCode, endpointCfg.SuccessStatus, responseBody)
+			}
+
+			if apiError.Code == 7001 {
+				return nil, 0, errors.ErrGatewayTimeoutForIndexDDL
+			}
+
 			return nil, dur, errors.ErrGatewayTimeout
 		default:
 			var apiError Error
@@ -187,7 +198,9 @@ func (c *Client) ExecuteWithRetry(
 	return exec(ctx, fn, defaultWaitAttempt)
 }
 
-func exec(ctx context.Context, fn func() (response *Response, dur time.Duration, err error), waitOnReattempt time.Duration) (*Response, error) {
+func exec(
+	ctx context.Context, fn func() (response *Response, dur time.Duration, err error), waitOnReattempt time.Duration,
+) (*Response, error) {
 	timer := time.NewTimer(time.Millisecond)
 
 	var (
