@@ -32,16 +32,16 @@ type AppEndpoint struct {
 	DeltaSyncEnabled types.Bool `tfsdk:"delta_sync_enabled"`
 
 	// Scopes defines the scopes and collections for the App Endpoint.
-	Scopes AppEndpointScopes `tfsdk:"scopes"`
+	Scopes types.Map `tfsdk:"scopes"`
 
 	// Cors configures cross origin resource sharing (CORS) for the App Endpoint.
-	Cors AppEndpointCors `tfsdk:"cors"`
+	Cors types.Object `tfsdk:"cors"`
 
 	// Oidc is a list of OIDC provider configurations for the App Endpoint.
-	Oidc []AppEndpointOidc `tfsdk:"oidc"`
+	Oidc types.List `tfsdk:"oidc"`
 
 	// RequireResync is a map of scopes to a list of collection names that require resync.
-	RequireResync RequireResync `tfsdk:"require_resync"`
+	RequireResync types.Map `tfsdk:"require_resync"`
 
 	// AdminURL A URL for the admin API used for the administration of App Endpoints. For more information, read the [Capella App Services Admin API Reference](https://docs.couchbase.com/cloud/app-services/references/rest-api-introduction.html#:~:text=Capella%20App%20Services%20Admin%20API%20Reference)
 	AdminURL types.String `tfsdk:"admin_url"`
@@ -51,26 +51,6 @@ type AppEndpoint struct {
 
 	// PublicURL A URL for the public API used for access to functions for data access and manipulation. For more information, read the [Capella App Services Public API Reference](https://docs.couchbase.com/cloud/app-services/references/rest_api_public.html)
 	PublicURL types.String `tfsdk:"public_url"`
-}
-
-func (a AppEndpoint) AttributeTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"organization_id":    types.StringType,
-		"project_id":         types.StringType,
-		"cluster_id":         types.StringType,
-		"app_service_id":     types.StringType,
-		"bucket":             types.StringType,
-		"name":               types.StringType,
-		"user_xattr_key":     types.StringType,
-		"delta_sync_enabled": types.BoolType,
-		"scopes":             types.MapType{ElemType: types.ObjectType{}},
-		"cors":               types.ObjectType{},
-		"oidc":               types.ListType{ElemType: types.ObjectType{}},
-		"require_resync":     types.MapType{ElemType: types.ListType{ElemType: types.StringType}},
-		"admin_url":          types.StringType,
-		"metrics_url":        types.StringType,
-		"public_url":         types.StringType,
-	}
 }
 
 // ScopesConfig maps scope name to a list of collection names.
@@ -130,4 +110,61 @@ type AppEndpointOidc struct {
 	ProviderId types.String `tfsdk:"provider_id"`
 	// IsDefault Indicates whether this is the default OpenID Connect provider.
 	IsDefault types.Bool `tfsdk:"is_default"`
+}
+
+func (a AppEndpoint) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"organization_id":    types.StringType,
+		"project_id":         types.StringType,
+		"cluster_id":         types.StringType,
+		"app_service_id":     types.StringType,
+		"bucket":             types.StringType,
+		"name":               types.StringType,
+		"user_xattr_key":     types.StringType,
+		"delta_sync_enabled": types.BoolType,
+		"scopes":             types.MapType{ElemType: types.ObjectType{AttrTypes: AppEndpointScopeConfig{}.AttributeTypes()}},
+		"cors":               types.ObjectType{AttrTypes: AppEndpointCors{}.AttributeTypes()},
+		"oidc":               types.ListType{ElemType: types.ObjectType{AttrTypes: AppEndpointOidc{}.AttributeTypes()}},
+		"require_resync":     types.MapType{ElemType: types.ListType{ElemType: types.StringType}},
+		"admin_url":          types.StringType,
+		"metrics_url":        types.StringType,
+		"public_url":         types.StringType,
+	}
+}
+
+func (s AppEndpointScopeConfig) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"collections": types.MapType{ElemType: types.ObjectType{AttrTypes: AppEndpointCollection{}.AttributeTypes()}},
+	}
+}
+
+func (o AppEndpointOidc) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"issuer":         types.StringType,
+		"register":       types.BoolType,
+		"client_id":      types.StringType,
+		"user_prefix":    types.StringType,
+		"discovery_url":  types.StringType,
+		"username_claim": types.StringType,
+		"roles_claim":    types.StringType,
+		"provider_id":    types.StringType,
+		"is_default":     types.BoolType,
+	}
+}
+
+func (c AppEndpointCors) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"origin":       types.ListType{ElemType: types.StringType},
+		"login_origin": types.ListType{ElemType: types.StringType},
+		"headers":      types.ListType{ElemType: types.StringType},
+		"max_age":      types.Int64Type,
+		"disabled":     types.BoolType,
+	}
+}
+
+func (c AppEndpointCollection) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"access_control_function": types.StringType,
+		"import_filter":           types.StringType,
+	}
 }
