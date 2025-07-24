@@ -1,8 +1,9 @@
 package app_endpoints
 
 import (
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/google/uuid"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 )
 
 // CreateAppEndpointRequest is the request payload sent to the Capella V4 Public API in order to create a new app endpoint.
@@ -30,7 +31,7 @@ type CreateAppEndpointRequest struct {
 	DeltaSyncEnabled bool `json:"deltaSyncEnabled,omitempty"`
 
 	// Scopes is the configuration for scopes and collections within the App Endpoint.
-	Scopes ScopesConfig `json:"scopes,omitempty"`
+	Scopes map[string]map[string]map[string]AppEndpointCollection `json:"scopes,omitempty"`
 
 	// Cors is the CORS configuration for the App Endpoint.
 	Cors *AppEndpointCors `json:"cors,omitempty"`
