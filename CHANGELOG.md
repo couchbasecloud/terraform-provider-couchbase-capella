@@ -1,5 +1,28 @@
 # Changelog
 
+## [v1.5.2](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.5.2) (2025-07-22)
+
+[Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.5.1...v1.5.2)
+
+**Implemented enhancements:**
+
+- \[AV-104869\] Implement GCP Get Private Endpoint Command support [\#359](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/359) ([akhilravuri-cb](https://github.com/akhilravuri-cb))
+- \[AV-104294\] Consume 504 gateway error [\#357](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/357) ([l0n3star](https://github.com/l0n3star))
+- \[AV-102981\] Implement App services Allowed CIDR [\#353](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/353) ([mohammed-madi](https://github.com/mohammed-madi))
+- \[AV-103003\] Create common app service for acc tests [\#351](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/351) ([l0n3star](https://github.com/l0n3star))
+
+**Fixed bugs:**
+
+- \[AV-102723\] Initialize num\_replica to null [\#350](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/350) ([l0n3star](https://github.com/l0n3star))
+
+**Closed issues:**
+
+- Provider resource for App Endpoints [\#346](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues/346)
+
+**Merged pull requests:**
+
+- \[AV-102370\] Add PR title and description checker script [\#344](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/344) ([PaulomeeCb](https://github.com/PaulomeeCb))
+
 ## [v1.5.1](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.5.1) (2025-05-26)
 
 [Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.5.0...v1.5.1)
