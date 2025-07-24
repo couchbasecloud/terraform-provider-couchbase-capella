@@ -31,14 +31,15 @@ type AppEndpoint struct {
 	// DeltaSyncEnabled Indicates whether Delta Sync is enabled for the App Endpoint.
 	DeltaSyncEnabled types.Bool `tfsdk:"delta_sync_enabled"`
 
-	// Scopes defines the scopes and collections for the App Endpoint.
-	Scopes types.Map `tfsdk:"scopes"`
+	Scope types.String `tfsdk:"scope"`
+
+	Collections types.Map `tfsdk:"collections"`
 
 	// Cors configures cross origin resource sharing (CORS) for the App Endpoint.
-	Cors types.Object `tfsdk:"cors"`
+	Cors AppEndpointCors `tfsdk:"cors"`
 
 	// Oidc is a list of OIDC provider configurations for the App Endpoint.
-	Oidc types.List `tfsdk:"oidc"`
+	Oidc []AppEndpointOidc `tfsdk:"oidc"`
 
 	// RequireResync is a map of scopes to a list of collection names that require resync.
 	RequireResync types.Map `tfsdk:"require_resync"`
@@ -56,12 +57,12 @@ type AppEndpoint struct {
 // ScopesConfig maps scope name to a list of collection names.
 type (
 	// AppEndpointScopes represents a map of scope names to collections.
-	AppEndpointScopes map[types.String]AppEndpointScopeConfig
+	AppEndpointScopes map[string]AppEndpointScopeConfig
 	// RequireResync
 	RequireResync          types.MapType
 	AppEndpointScopeConfig struct {
 		// Collections is a map of collections names to their configurations.
-		Collections map[types.String]AppEndpointCollection `tfsdk:"collections"` // Collection-specific config options.
+		Collections map[string]AppEndpointCollection `tfsdk:"collections"` // Collection-specific config options.
 	}
 )
 
