@@ -18,24 +18,20 @@ func AppEndpointSchema() schema.Schema {
 			"name":               WithDescription(stringAttribute([]string{required, requiresReplace}), "The name of the App Endpoint."),
 			"user_xattr_key":     WithDescription(stringAttribute([]string{optional}), "The user extended attribute key for the App Endpoint."),
 			"delta_sync_enabled": WithDescription(boolAttribute(optional), "States whether delta sync is enabled for this App Endpoint."),
-			"scopes": schema.MapNestedAttribute{
+
+			"scope": stringAttribute([]string{optional}),
+
+			"collections": schema.MapNestedAttribute{
 				Optional:            true,
-				MarkdownDescription: "Configuration for scopes within the App Endpoint.",
+				MarkdownDescription: "Configuration for collections within the App Endpoint. The map key is the collection name.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"collections": schema.MapNestedAttribute{
-							Optional:            true,
-							MarkdownDescription: "Configuration for collections within this scope.",
-							NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"access_control_function": WithDescription(stringAttribute([]string{optional}), "The Javascript function that is used to specify the access control policies to be applied to documents in this collection. Every document update is processed by this function."),
-									"import_filter":           WithDescription(stringAttribute([]string{optional}), "The JavaScript function used to filter which documents in the collection that are to be imported by the App Endpoint."),
-								},
-							},
-						},
+						"access_control_function": WithDescription(stringAttribute([]string{optional}), "The Javascript function that is used to specify the access control policies to be applied to documents in this collection. Every document update is processed by this function."),
+						"import_filter":           WithDescription(stringAttribute([]string{optional}), "The JavaScript function used to filter which documents in the collection that are to be imported by the App Endpoint."),
 					},
 				},
 			},
+
 			"cors": schema.SingleNestedAttribute{
 				Optional:            true,
 				MarkdownDescription: "CORS configuration for the App Endpoint.",
@@ -62,7 +58,8 @@ func AppEndpointSchema() schema.Schema {
 					"disabled": schema.BoolAttribute{Optional: true, Description: "Disables/Enables CORS for this App Endpoint."},
 				},
 			},
-			"oidc": schema.ListNestedAttribute{
+
+			"oidc": schema.SetNestedAttribute{
 				Optional:            true,
 				MarkdownDescription: "List of OIDC configurations for the App Endpoint.",
 				NestedObject: schema.NestedAttributeObject{
@@ -79,23 +76,20 @@ func AppEndpointSchema() schema.Schema {
 					},
 				},
 			},
-			"require_resync": schema.SingleNestedAttribute{
+
+			"require_resync": schema.MapNestedAttribute{
 				Computed:            true,
 				MarkdownDescription: "List of collections that require resync, keyed by scope.",
-				Attributes: map[string]schema.Attribute{
-					"scope_name": schema.SingleNestedAttribute{
-						Computed:            true,
-						MarkdownDescription: "The scope's name.",
-						Attributes: map[string]schema.Attribute{
-							"items": schema.ListAttribute{
-								Computed:            true,
-								ElementType:         types.StringType,
-								MarkdownDescription: "List of collections that require resync under this scope.",
-							},
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"items": schema.SetAttribute{
+							Computed:    true,
+							ElementType: types.StringType,
 						},
 					},
 				},
 			},
+
 			"admin_url": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "The admin URL for the App Endpoint.",
