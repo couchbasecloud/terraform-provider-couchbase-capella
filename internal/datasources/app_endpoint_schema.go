@@ -22,12 +22,10 @@ type AppEndpoint struct {
 
 func (a *AppEndpoint) Configure(ctx context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
 	//TODO implement me
-	return
 }
 
 func (a *AppEndpoint) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	//TODO implement me
-	return
 }
 
 // NewAppServiceCidrs is used in (p *capellaProvider) DataSources for building the provider.

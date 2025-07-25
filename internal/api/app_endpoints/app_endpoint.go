@@ -124,7 +124,7 @@ type UpdateAppEndpointRequest struct {
 	Oidc []AppEndpointOidc `json:"oidc,omitempty"`
 }
 
-// ScopesConfig maps scope name to a list of collection names
+// ScopesConfig maps scope name to a list of collection names.
 type (
 	ScopesConfig map[string]ScopeConfig
 	ScopeConfig  struct {

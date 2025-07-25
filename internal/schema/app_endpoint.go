@@ -57,8 +57,7 @@ type AppEndpoint struct {
 // ScopesConfig maps scope name to a list of collection names.
 type (
 	// AppEndpointScopes represents a map of scope names to collections.
-	AppEndpointScopes map[string]AppEndpointScopeConfig
-	// RequireResync
+	AppEndpointScopes      map[string]AppEndpointScopeConfig
 	RequireResync          types.MapType
 	AppEndpointScopeConfig struct {
 		// Collections is a map of collections names to their configurations.
