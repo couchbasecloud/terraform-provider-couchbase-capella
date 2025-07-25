@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/appservice"
-
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
@@ -16,6 +14,7 @@ import (
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/app_endpoints"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/appservice"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
@@ -279,70 +278,6 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 //
 //	return nil
 //}
-
-// validateOidcConfiguration validates an individual OIDC configuration.
-//func (a *AppEndpoint) validateOidcConfiguration(oidc providerschema.AppEndpointOidc, index int) error {
-//	// Validate required issuer
-//	if oidc.Issuer.IsNull() || oidc.Issuer.IsUnknown() {
-//		return fmt.Errorf("oidc configuration at index %d: issuer cannot be empty", index)
-//	}
-//	if !providerschema.IsTrimmed(oidc.Issuer.ValueString()) {
-//		return fmt.Errorf("oidc configuration at index %d: issuer %s", index, errors.ErrNotTrimmed)
-//	}
-//	// Validate issuer URL format
-//	if !isValidURL(oidc.Issuer.ValueString()) {
-//		return fmt.Errorf("oidc configuration at index %d: issuer must be a valid URL", index)
-//	}
-//
-//	// Validate required clientId
-//	if oidc.ClientId.IsNull() || oidc.ClientId.IsUnknown() {
-//		return fmt.Errorf("oidc configuration at index %d: clientId cannot be empty", index)
-//	}
-//	if !providerschema.IsTrimmed(oidc.ClientId.ValueString()) {
-//		return fmt.Errorf("oidc configuration at index %d: clientId %s", index, errors.ErrNotTrimmed)
-//	}
-//
-//	// Validate optional fields if provided
-//	if !oidc.UserPrefix.IsNull() && !oidc.UserPrefix.IsUnknown() {
-//		if !providerschema.IsTrimmed(oidc.UserPrefix.ValueString()) {
-//			return fmt.Errorf("oidc configuration at index %d: userPrefix %s", index, errors.ErrNotTrimmed)
-//		}
-//	}
-//
-//	if !oidc.DiscoveryUrl.IsNull() && !oidc.DiscoveryUrl.IsUnknown() {
-//		if !providerschema.IsTrimmed(oidc.DiscoveryUrl.ValueString()) {
-//			return fmt.Errorf("oidc configuration at index %d: discoveryUrl %s", index, errors.ErrNotTrimmed)
-//		}
-//		// Validate discovery URL format
-//		if !isValidURL(oidc.DiscoveryUrl.ValueString()) {
-//			return fmt.Errorf("oidc configuration at index %d: discoveryUrl must be a valid URL", index)
-//		}
-//	}
-//
-//	if !oidc.UsernameClaim.IsNull() && !oidc.UsernameClaim.IsUnknown() {
-//		if !providerschema.IsTrimmed(oidc.UsernameClaim.ValueString()) {
-//			return fmt.Errorf("oidc configuration at index %d: usernameClaim %s", index, errors.ErrNotTrimmed)
-//		}
-//	}
-//
-//	if !oidc.RolesClaim.IsNull() && !oidc.RolesClaim.IsUnknown() {
-//		if !providerschema.IsTrimmed(oidc.RolesClaim.ValueString()) {
-//			return fmt.Errorf("oidc configuration at index %d: rolesClaim %s", index, errors.ErrNotTrimmed)
-//		}
-//	}
-//
-//	return nil
-//}
-
-// isValidURL checks if a string is a valid URL.
-func isValidURL(urlString string) bool {
-	if urlString == "" {
-		return false
-	}
-
-	// Basic URL validation - check if it starts with http:// or https://
-	return len(urlString) > 7 && (urlString[:7] == "http://" || urlString[:8] == "https://")
-}
 
 // isValidEndpointName checks if an endpoint name follows the proper naming convention.
 func isValidEndpointName(name string) bool {
