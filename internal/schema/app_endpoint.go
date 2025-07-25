@@ -36,7 +36,7 @@ type AppEndpoint struct {
 	Collections types.Map `tfsdk:"collections"`
 
 	// Cors configures cross origin resource sharing (CORS) for the App Endpoint.
-	Cors AppEndpointCors `tfsdk:"cors"`
+	Cors *AppEndpointCors `tfsdk:"cors"`
 
 	// Oidc is a list of OIDC provider configurations for the App Endpoint.
 	Oidc []AppEndpointOidc `tfsdk:"oidc"`
