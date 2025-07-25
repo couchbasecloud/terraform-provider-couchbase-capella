@@ -118,13 +118,15 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		Name:             plan.Name.ValueString(),
 		DeltaSyncEnabled: plan.DeltaSyncEnabled.ValueBool(),
 		Scopes:           nestedMap,
-		Cors: &app_endpoints.AppEndpointCors{
+	}
+	if plan.Cors != nil {
+		createAppEndpointRequest.Cors = &app_endpoints.AppEndpointCors{
 			Origin:      providerschema.BaseStringsToStrings(plan.Cors.Origin),
 			LoginOrigin: providerschema.BaseStringsToStrings(plan.Cors.LoginOrigin),
 			Headers:     providerschema.BaseStringsToStrings(plan.Cors.Headers),
 			MaxAge:      plan.Cors.MaxAge.ValueInt64Pointer(),
 			Disabled:    plan.Cors.Disabled.ValueBoolPointer(),
-		},
+		}
 	}
 	if len(plan.Oidc) > 0 {
 		createAppEndpointRequest.Oidc = make([]app_endpoints.AppEndpointOidc, len(plan.Oidc))
