@@ -14,7 +14,6 @@ import (
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/app_endpoints"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/appservice"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
@@ -107,7 +106,9 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		endpointCollection := nestedMap[scope]["collections"][col]
 
 		for name, value := range attr {
-			fieldSetters[name](&endpointCollection, value.String())
+			if !(value.IsNull() || value.IsUnknown()) {
+				fieldSetters[name](&endpointCollection, value.String())
+			}
 		}
 
 		nestedMap[scope]["collections"][col] = endpointCollection
@@ -149,9 +150,9 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	//if jsonData, err := json.MarshalIndent(createAppEndpointRequest, "", "  "); err == nil {
-	//	fmt.Printf("###DEBUG### createAppEndpointRequest: %s\n", string(jsonData))
-	//}
+	if jsonData, err := json.MarshalIndent(createAppEndpointRequest, "", "  "); err == nil {
+		fmt.Printf("###DEBUG### createAppEndpointRequest: %s\n", string(jsonData))
+	}
 
 	var organizationId = plan.OrganizationId.ValueString()
 	var projectId = plan.ProjectId.ValueString()
@@ -161,7 +162,7 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints", a.HostURL, organizationId, projectId, clusterId, appServiceId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
 
-	response, err := a.Client.ExecuteWithRetry(
+	_, err := a.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
 		createAppEndpointRequest,
@@ -176,22 +177,11 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	createAppServiceResponse := appservice.CreateAppServiceResponse{}
-	err = json.Unmarshal(response.Body, &createAppServiceResponse)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating app service",
-			errorMessageWhileAppServiceCreation+"error during unmarshalling:"+err.Error(),
-		)
+	diags = resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	// TODO refresh state
-	//diags = resp.State.Set(ctx, plan)
-	//resp.Diagnostics.Append(diags...)
-	//if resp.Diagnostics.HasError() {
-	//	return
-	//}
 }
 
 // validateCreateAppEndpointRequest validates the required fields for creating an app endpoint.
@@ -331,7 +321,163 @@ func initComputedAttributesToNull(plan providerschema.AppEndpoint) providerschem
 }
 
 func (a *AppEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// TODO: AV-104555: Implement read for App Endpoint
+	var state providerschema.AppEndpoint
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var organizationId = state.OrganizationId.ValueString()
+	var projectId = state.ProjectId.ValueString()
+	var clusterId = state.ClusterId.ValueString()
+	var appServiceId = state.AppServiceId.ValueString()
+	var endpointName = state.Name.ValueString()
+
+	// Get the app endpoint
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
+		a.HostURL, organizationId, projectId, clusterId, appServiceId, endpointName)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+
+	response, err := a.Client.ExecuteWithRetry(
+		ctx,
+		cfg,
+		nil,
+		a.Token,
+		nil,
+	)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error reading app endpoint",
+			fmt.Sprintf("Could not read app endpoint %s: %s", endpointName, err.Error()),
+		)
+		return
+	}
+
+	newstate, err := a.refreshAppEndpoint(ctx, response.Body)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error refreshing app endpoint",
+			fmt.Sprintf("Could not refresh app endpoint %s: %s", endpointName, err.Error()),
+		)
+		return
+	}
+	diags = resp.State.Set(ctx, newstate)
+	resp.Diagnostics.Append(diags...)
+}
+
+// refreshAppEndpoint parses the API response and returns a refreshed AppEndpoint state
+func (a *AppEndpoint) refreshAppEndpoint(ctx context.Context, responseBody []byte) (*providerschema.AppEndpoint, error) {
+	var appEndpoint app_endpoints.GetAppEndpointResponse
+	err := json.Unmarshal(responseBody, &appEndpoint)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse app endpoint response: %w", err)
+	}
+
+	refreshedState := &providerschema.AppEndpoint{}
+
+	// Set basic attributes
+	refreshedState.Bucket = types.StringValue(appEndpoint.Bucket)
+	refreshedState.Name = types.StringValue(appEndpoint.Name)
+	refreshedState.DeltaSyncEnabled = types.BoolValue(appEndpoint.DeltaSyncEnabled)
+
+	if appEndpoint.UserXattrKey != nil {
+		refreshedState.UserXattrKey = types.StringValue(*appEndpoint.UserXattrKey)
+	} else {
+		refreshedState.UserXattrKey = types.StringNull()
+	}
+
+	// Set computed attributes
+	if appEndpoint.AdminURL != "" {
+		refreshedState.AdminURL = types.StringValue(appEndpoint.AdminURL)
+	}
+	if appEndpoint.PublicURL != "" {
+		refreshedState.PublicURL = types.StringValue(appEndpoint.PublicURL)
+	}
+	if appEndpoint.MetricsURL != "" {
+		refreshedState.MetricsURL = types.StringValue(appEndpoint.MetricsURL)
+	}
+
+	// Handle scopes and collections
+	if len(appEndpoint.Scopes) > 0 {
+		for scopeName, scopeData := range appEndpoint.Scopes {
+			refreshedState.Scope = types.StringValue(scopeName)
+
+			collectionAttrs := make(map[string]attr.Value)
+			for collectionName := range scopeData.Collections {
+				collectionAttrs[collectionName] = types.ObjectValueMust(
+					map[string]attr.Type{
+						"access_control_function": types.StringType,
+						"import_filter":           types.StringType,
+					},
+					map[string]attr.Value{
+						"access_control_function": types.StringNull(),
+						"import_filter":           types.StringNull(),
+					},
+				)
+			}
+			refreshedState.Collections = types.MapValueMust(
+				types.ObjectType{
+					AttrTypes: map[string]attr.Type{
+						"access_control_function": types.StringType,
+						"import_filter":           types.StringType,
+					},
+				},
+				collectionAttrs,
+			)
+		}
+	}
+
+	// Handle CORS if present
+	if appEndpoint.Cors != nil {
+		refreshedState.Cors = &providerschema.AppEndpointCors{
+			Disabled: types.BoolPointerValue(appEndpoint.Cors.Disabled),
+		}
+		if appEndpoint.Cors.MaxAge != nil {
+			refreshedState.Cors.MaxAge = types.Int64PointerValue(appEndpoint.Cors.MaxAge)
+		}
+		if len(appEndpoint.Cors.Origin) > 0 {
+			origins := make([]types.String, len(appEndpoint.Cors.Origin))
+			for i, origin := range appEndpoint.Cors.Origin {
+				origins[i] = types.StringValue(origin)
+			}
+			refreshedState.Cors.Origin = origins
+		}
+		if len(appEndpoint.Cors.LoginOrigin) > 0 {
+			loginOrigins := make([]types.String, len(appEndpoint.Cors.LoginOrigin))
+			for i, loginOrigin := range appEndpoint.Cors.LoginOrigin {
+				loginOrigins[i] = types.StringValue(loginOrigin)
+			}
+			refreshedState.Cors.LoginOrigin = loginOrigins
+		}
+		if len(appEndpoint.Cors.Headers) > 0 {
+			headers := make([]types.String, len(appEndpoint.Cors.Headers))
+			for i, header := range appEndpoint.Cors.Headers {
+				headers[i] = types.StringValue(header)
+			}
+			refreshedState.Cors.Headers = headers
+		}
+	}
+
+	// Handle OIDC if present
+	if len(appEndpoint.Oidc) > 0 {
+		refreshedState.Oidc = make([]providerschema.AppEndpointOidc, len(appEndpoint.Oidc))
+		for i, oidc := range appEndpoint.Oidc {
+			refreshedState.Oidc[i] = providerschema.AppEndpointOidc{
+				Issuer:        types.StringValue(oidc.Issuer),
+				ClientId:      types.StringValue(oidc.ClientId),
+				UserPrefix:    types.StringPointerValue(oidc.UserPrefix),
+				DiscoveryUrl:  types.StringPointerValue(oidc.DiscoveryUrl),
+				UsernameClaim: types.StringPointerValue(oidc.UsernameClaim),
+				RolesClaim:    types.StringPointerValue(oidc.RolesClaim),
+				Register:      types.BoolPointerValue(oidc.Register),
+				ProviderId:    types.StringPointerValue(oidc.ProviderId),
+				IsDefault:     types.BoolPointerValue(oidc.IsDefault),
+			}
+		}
+	}
+
+	return refreshedState, nil
 }
 
 func (a *AppEndpoint) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
