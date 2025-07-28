@@ -484,6 +484,36 @@ func (a *AppEndpoint) Update(ctx context.Context, req resource.UpdateRequest, re
 	// TODO: AV-104552: Implement delete and update for App Endpoint
 }
 
-func (a *AppEndpoint) Delete(_ context.Context, _ resource.DeleteRequest, _ *resource.DeleteResponse) {
-	// TODO: AV-104552: Implement delete and update for App Endpoint
+func (a *AppEndpoint) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state providerschema.AppEndpoint
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var organizationId = state.OrganizationId.ValueString()
+	var projectId = state.ProjectId.ValueString()
+	var clusterId = state.ClusterId.ValueString()
+	var appServiceId = state.AppServiceId.ValueString()
+	var endpointName = state.Name.ValueString()
+
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
+		a.HostURL, organizationId, projectId, clusterId, appServiceId, endpointName)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
+
+	_, err := a.Client.ExecuteWithRetry(
+		ctx,
+		cfg,
+		nil,
+		a.Token,
+		nil,
+	)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error deleting app endpoint",
+			fmt.Sprintf("Could not delete app endpoint %s: %s", endpointName, err.Error()),
+		)
+		return
+	}
 }
