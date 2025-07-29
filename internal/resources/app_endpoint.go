@@ -161,7 +161,7 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints", a.HostURL, organizationId, projectId, clusterId, appServiceId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-
+	fmt.Printf("###DEBUG### url: %s\n", url)
 	_, err := a.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
@@ -176,8 +176,13 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		)
 		return
 	}
+	getUrl := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
+		a.HostURL, organizationId, projectId, clusterId, appServiceId, plan.Name)
+	cfg = api.EndpointCfg{Url: getUrl, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
-	diags = resp.State.Set(ctx, plan)
+	refreshedPlan, err := a.refreshAppEndpoint(ctx, cfg)
+
+	diags = resp.State.Set(ctx, refreshedPlan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -339,22 +344,7 @@ func (a *AppEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *
 		a.HostURL, organizationId, projectId, clusterId, appServiceId, endpointName)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
-	response, err := a.Client.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		a.Token,
-		nil,
-	)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error reading app endpoint",
-			fmt.Sprintf("Could not read app endpoint %s: %s", endpointName, err.Error()),
-		)
-		return
-	}
-
-	newstate, err := a.refreshAppEndpoint(ctx, response.Body)
+	newstate, err := a.refreshAppEndpoint(ctx, cfg)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error refreshing app endpoint",
@@ -367,9 +357,20 @@ func (a *AppEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *
 }
 
 // refreshAppEndpoint parses the API response and returns a refreshed AppEndpoint state
-func (a *AppEndpoint) refreshAppEndpoint(ctx context.Context, responseBody []byte) (*providerschema.AppEndpoint, error) {
+func (a *AppEndpoint) refreshAppEndpoint(ctx context.Context, cfg api.EndpointCfg) (*providerschema.AppEndpoint, error) {
 	var appEndpoint app_endpoints.GetAppEndpointResponse
-	err := json.Unmarshal(responseBody, &appEndpoint)
+	response, err := a.Client.ExecuteWithRetry(
+		ctx,
+		cfg,
+		nil,
+		a.Token,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(response.Body, &appEndpoint)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse app endpoint response: %w", err)
 	}
