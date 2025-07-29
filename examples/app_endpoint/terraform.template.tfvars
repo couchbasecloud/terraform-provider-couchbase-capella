@@ -12,13 +12,13 @@ delta_sync_enabled = false
 scope = "scope1"
 
 collections = {
-  red_collection = {
-    access_control_function = "exampleAccessControlFunction_red"
-    import_filter           = "exampleImportFilter_red"
+  collection1 = {
+    access_control_function = "function(doc){channel(doc.channels);}"
+    import_filter           = "function(doc) { if (doc.type != 'mobile') { return false; } return true; }"
   },
-  blue_collection = {
-    access_control_function = "exampleAccessControlFunction_blue"
-    import_filter           = "exampleImportFilter_blue"
+  collection2 = {
+    access_control_function = "function(doc){channel(doc.channels);}"
+    import_filter           = "function(doc) { if (doc.type != 'mobile') { return false; } return true; }"
   },
 }
 

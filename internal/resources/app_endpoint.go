@@ -34,7 +34,7 @@ func NewAppEndpoint() resource.Resource {
 	return &AppEndpoint{}
 }
 
-// ImportState imports a remote AppEndpoint app service that is not created by Terraform.
+// ImportState imports a remote AppEndpoint that is not created by Terraform.
 func (a *AppEndpoint) ImportState(
 	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
 ) {

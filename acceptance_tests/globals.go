@@ -22,7 +22,6 @@ var (
 	globalBucketName     = "default"
 	globalScopeName      = "_default"
 	globalCollectionName = "_default"
-	globalAppEndpoint    string
 	globalBucketId       string
 	globalAppServiceId   string
 
