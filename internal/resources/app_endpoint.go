@@ -177,11 +177,17 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 	getUrl := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
-		a.HostURL, organizationId, projectId, clusterId, appServiceId, plan.Name)
+		a.HostURL, organizationId, projectId, clusterId, appServiceId, plan.Name.ValueString())
 	cfg = api.EndpointCfg{Url: getUrl, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
 	refreshedPlan, err := a.refreshAppEndpoint(ctx, cfg)
-
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error refreshing app endpoint",
+			fmt.Sprintf("Could not refresh app endpoint %s: %s", plan.Name.ValueString(), err.Error()),
+		)
+		return
+	}
 	diags = resp.State.Set(ctx, refreshedPlan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
