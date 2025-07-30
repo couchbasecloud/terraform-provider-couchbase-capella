@@ -276,6 +276,21 @@ func TestAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenario(t *testin
 	})
 }
 
+func TestAccClusterResourceForAwsWithAutoexpansion(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_")
+	cidr := "10.249.250.0/23"
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterResourceConfigAwsWithAutoexpansion(resourceName, cidr),
+				ExpectError: regexp.MustCompile(`(?i)Autoexpansion cannot be set`),
+			},
+		},
+	})
+}
+
 // TestAccClusterResourceWithConfigurationTypeFieldAdded is a Terraform acceptance test that validates
 // the creation of a cluster resource with the addition of the "configuration_type" field set to "singleNode"
 // for an AWS (Amazon Web Services) cloud provider.
@@ -555,6 +570,49 @@ resource "couchbase-capella_cluster" "%[4]s" {
           storage = 50
           type    = "gp3"
           iops    = 3000
+        }
+      }
+      num_of_nodes = 1
+      services     = ["data", "index", "query"]
+    }
+  ]
+  availability = {
+    "type" : "single"
+  }
+  support = {
+    plan     = "developer pro"
+    timezone = "PT"
+  }
+}
+`, globalProviderBlock, globalOrgId, globalProjectId, resourceName, cidr)
+}
+
+func testAccClusterResourceConfigAwsWithAutoexpansion(resourceName, cidr string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_cluster" "%[4]s" {
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  name            = "%[4]s"
+  cloud_provider = {
+    type   = "aws"
+    region = "us-east-1"
+    cidr   = "%[5]s"
+  }
+
+  service_groups = [
+    {
+      node = {
+        compute = {
+          cpu = 2
+          ram = 8
+        }
+        disk = {
+          storage = 50
+          type    = "gp3"
+          iops    = 3000
+		  auto_expansion = true
         }
       }
       num_of_nodes = 1
