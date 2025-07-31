@@ -141,18 +141,11 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 			}
 		}
 	}
-	if !plan.UserXattrKey.IsNull() && !plan.UserXattrKey.IsUnknown() {
-
-	}
 
 	diags = resp.State.Set(ctx, initComputedAttributesToNull(plan))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
-	}
-
-	if jsonData, err := json.MarshalIndent(createAppEndpointRequest, "", "  "); err == nil {
-		fmt.Printf("###DEBUG### createAppEndpointRequest: %s\n", string(jsonData))
 	}
 
 	var organizationId = plan.OrganizationId.ValueString()
@@ -162,7 +155,7 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints", a.HostURL, organizationId, projectId, clusterId, appServiceId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-	fmt.Printf("###DEBUG### url: %s\n", url)
+
 	_, err := a.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
@@ -435,7 +428,6 @@ func (a *AppEndpoint) refreshAppEndpoint(ctx context.Context, cfg api.EndpointCf
 	if err != nil {
 		return nil, fmt.Errorf("could not parse app endpoint response: %w", err)
 	}
-	fmt.Printf("###DEBUG### appEndpoint: %+v\n", appEndpoint)
 
 	// Set basic attributes
 	plan.Bucket = types.StringValue(appEndpoint.Bucket)
@@ -443,9 +435,9 @@ func (a *AppEndpoint) refreshAppEndpoint(ctx context.Context, cfg api.EndpointCf
 	plan.DeltaSyncEnabled = types.BoolValue(appEndpoint.DeltaSyncEnabled)
 
 	if appEndpoint.UserXattrKey != nil {
-		plan.UserXattrKey = types.StringValue(*appEndpoint.UserXattrKey)
-	} else {
-		plan.UserXattrKey = types.StringNull()
+		if *appEndpoint.UserXattrKey != "" {
+			plan.UserXattrKey = types.StringValue(*appEndpoint.UserXattrKey)
+		}
 	}
 
 	// Set computed attributes
@@ -540,8 +532,7 @@ func (a *AppEndpoint) refreshAppEndpoint(ctx context.Context, cfg api.EndpointCf
 			for i, name := range collections {
 				items[i] = types.StringValue(name)
 			}
-			fmt.Println()
-			collections, diags := types.ListValueFrom(
+			requireResyncMap[scope], diags = types.ListValueFrom(
 				ctx,
 				types.StringType,
 				items,
@@ -549,7 +540,6 @@ func (a *AppEndpoint) refreshAppEndpoint(ctx context.Context, cfg api.EndpointCf
 			if diags.HasError() {
 				return nil, fmt.Errorf("error converting require_resync for scope %s: %w", scope, diags.Errors())
 			}
-			requireResyncMap[scope] = collections
 		}
 		plan.RequireResync, diags = types.MapValueFrom(ctx, types.ListType{ElemType: types.StringType}, requireResyncMap)
 		if diags.HasError() {
