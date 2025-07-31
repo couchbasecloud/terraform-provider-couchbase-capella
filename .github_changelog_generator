@@ -1,5 +1,5 @@
-future-release=v1.5.2
-since-tag=v1.5.1
+future-release=v1.5.3
+since-tag=v1.5.2
 exclude-labels=no-changelog-needed
 date-format=%Y-%m-%d
 base=CHANGELOG.md
