@@ -845,8 +845,9 @@ func (c *Cluster) validateCreateCluster(plan providerschema.Cluster) error {
 
 	if csp != string(clusterapi.Azure) {
 		for _, sg := range plan.ServiceGroups {
+			// check if autoexpansion is set for AWS or GCP.
 			if !sg.Node.Disk.Autoexpansion.IsNull() && !sg.Node.Disk.Autoexpansion.IsUnknown() {
-				return fmt.Errorf("invalid configuration: Autoexpansion cannot be set for %s cloud provider", plan.CloudProvider.Type.ValueString())
+				return fmt.Errorf("invalid configuration: Autoexpansion cannot be set for %s cloud provider", csp)
 			}
 		}
 	}
