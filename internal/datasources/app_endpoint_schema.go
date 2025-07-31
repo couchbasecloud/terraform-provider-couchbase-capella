@@ -179,18 +179,10 @@ func (a *AppEndpoint) Schema(ctx context.Context, req datasource.SchemaRequest, 
 								},
 							},
 						},
-						"require_resync": schema.MapNestedAttribute{
+						"require_resync": schema.MapAttribute{
 							Computed:            true,
 							MarkdownDescription: "List of collections that require resync, keyed by scope.",
-							NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"items": schema.ListAttribute{
-										Computed:            true,
-										ElementType:         types.StringType,
-										MarkdownDescription: "List of collections that require resync under this scope.",
-									},
-								},
-							},
+							ElementType:         types.ListType{ElemType: types.StringType},
 						},
 						"admin_url": schema.StringAttribute{
 							Computed:            true,

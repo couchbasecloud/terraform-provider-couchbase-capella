@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/app_endpoints"
@@ -89,12 +91,8 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 	nestedMap[scope] = make(map[string]map[string]app_endpoints.AppEndpointCollection)
 
 	fieldSetters := map[string]func(*app_endpoints.AppEndpointCollection, string){
-		"access_control_function": func(
-			c *app_endpoints.AppEndpointCollection, val string,
-		) {
-			c.AccessControlFunction = &val
-		},
-		"import_filter": func(c *app_endpoints.AppEndpointCollection, val string) { c.ImportFilter = &val },
+		"access_control_function": func(c *app_endpoints.AppEndpointCollection, val string) { c.AccessControlFunction = &val },
+		"import_filter":           func(c *app_endpoints.AppEndpointCollection, val string) { c.ImportFilter = &val },
 	}
 
 	for col, obj := range sc {
@@ -143,6 +141,9 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 			}
 		}
 	}
+	if !plan.UserXattrKey.IsNull() && !plan.UserXattrKey.IsUnknown() {
+
+	}
 
 	diags = resp.State.Set(ctx, initComputedAttributesToNull(plan))
 	resp.Diagnostics.Append(diags...)
@@ -180,7 +181,7 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		a.HostURL, organizationId, projectId, clusterId, appServiceId, plan.Name.ValueString())
 	cfg = api.EndpointCfg{Url: getUrl, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
-	refreshedPlan, err := a.refreshAppEndpoint(ctx, cfg)
+	refreshedPlan, err := a.refreshAppEndpoint(ctx, cfg, &plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error refreshing app endpoint",
@@ -196,101 +197,158 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 }
 
 // validateCreateAppEndpointRequest validates the required fields for creating an app endpoint.
-//func (a *AppEndpoint) validateCreateAppEndpointRequest(plan providerschema.AppEndpoint) error {
-//	// Validate required IDs
-//	if plan.OrganizationId.IsNull() || plan.OrganizationId.IsUnknown() {
-//		return errors.ErrOrganizationIdCannotBeEmpty
-//	}
-//	if plan.ProjectId.IsNull() || plan.ProjectId.IsUnknown() {
-//		return errors.ErrProjectIdCannotBeEmpty
-//	}
-//	if plan.ClusterId.IsNull() || plan.ClusterId.IsUnknown() {
-//		return errors.ErrClusterIdCannotBeEmpty
-//	}
-//	if plan.AppServiceId.IsNull() || plan.AppServiceId.IsUnknown() {
-//		return errors.ErrAppServiceIdCannotBeEmpty
-//	}
-//
-//	// Validate required bucket name
-//	if plan.Bucket.IsNull() || plan.Bucket.IsUnknown() {
-//		return fmt.Errorf("bucket name cannot be empty")
-//	}
-//	if !providerschema.IsTrimmed(plan.Bucket.ValueString()) {
-//		return fmt.Errorf("bucket name %s", errors.ErrNotTrimmed)
-//	}
-//
-//	// Validate required endpoint name
-//	if plan.Name.IsNull() || plan.Name.IsUnknown() {
-//		return fmt.Errorf("app endpoint name cannot be empty")
-//	}
-//	if !providerschema.IsTrimmed(plan.Name.ValueString()) {
-//		return fmt.Errorf("app endpoint name %s", errors.ErrNotTrimmed)
-//	}
-//	// Validate endpoint name format
-//	if !isValidEndpointName(plan.Name.ValueString()) {
-//		return fmt.Errorf("app endpoint name must be between 1-100 characters and contain only lowercase letters, numbers, hyphens, and underscores")
-//	}
-//
-//	// Validate userXattrKey if provided
-//	if !plan.UserXattrKey.IsNull() && !plan.UserXattrKey.IsUnknown() {
-//		if !providerschema.IsTrimmed(plan.UserXattrKey.ValueString()) {
-//			return fmt.Errorf("userXattrKey %s", errors.ErrNotTrimmed)
-//		}
-//	}
-//
-//	// Validate OIDC configurations if provided
-//	if len(plan.Oidc) > 0 {
-//		for i, oidc := range plan.Oidc {
-//			if err := a.validateOidcConfiguration(oidc, i); err != nil {
-//				return err
-//			}
-//		}
-//	}
-//
-//	// Validate CORS configuration if provided
-//	if len(plan.Cors.Origin) > 0 {
-//		for i, origin := range plan.Cors.Origin {
-//			if !providerschema.IsTrimmed(origin.ValueString()) {
-//				return fmt.Errorf("cors origin at index %d %s", i, errors.ErrNotTrimmed)
-//			}
-//		}
-//	}
-//
-//	if len(plan.Cors.LoginOrigin) > 0 {
-//		for i, loginOrigin := range plan.Cors.LoginOrigin {
-//			if !providerschema.IsTrimmed(loginOrigin.ValueString()) {
-//				return fmt.Errorf("cors loginOrigin at index %d %s", i, errors.ErrNotTrimmed)
-//			}
-//		}
-//	}
-//
-//	if len(plan.Cors.Headers) > 0 {
-//		for i, header := range plan.Cors.Headers {
-//			if !providerschema.IsTrimmed(header.ValueString()) {
-//				return fmt.Errorf("cors header at index %d %s", i, errors.ErrNotTrimmed)
-//			}
-//		}
-//	}
-//
-//	// Validate CORS maxAge if provided
-//	if !plan.Cors.MaxAge.IsNull() && !plan.Cors.MaxAge.IsUnknown() {
-//		if plan.Cors.MaxAge.ValueInt64() < 0 {
-//			return fmt.Errorf("cors maxAge cannot be negative")
-//		}
-//	}
-//
-//	return nil
-//}
+func (a *AppEndpoint) validateCreateAppEndpointRequest(plan providerschema.AppEndpoint) error {
+	// Validate required IDs
+	if plan.OrganizationId.IsNull() || plan.OrganizationId.IsUnknown() {
+		return errors.ErrOrganizationIdCannotBeEmpty
+	}
+	if plan.ProjectId.IsNull() || plan.ProjectId.IsUnknown() {
+		return errors.ErrProjectIdCannotBeEmpty
+	}
+	if plan.ClusterId.IsNull() || plan.ClusterId.IsUnknown() {
+		return errors.ErrClusterIdCannotBeEmpty
+	}
+	if plan.AppServiceId.IsNull() || plan.AppServiceId.IsUnknown() {
+		return errors.ErrAppServiceIdCannotBeEmpty
+	}
+
+	// Validate required bucket name
+	if plan.Bucket.IsNull() || plan.Bucket.IsUnknown() {
+		return fmt.Errorf("bucket name cannot be empty")
+	}
+	if !providerschema.IsTrimmed(plan.Bucket.ValueString()) {
+		return fmt.Errorf("bucket name %s", errors.ErrNotTrimmed)
+	}
+
+	// Validate required endpoint name
+	if plan.Name.IsNull() || plan.Name.IsUnknown() {
+		return fmt.Errorf("app endpoint name cannot be empty")
+	}
+	if !providerschema.IsTrimmed(plan.Name.ValueString()) {
+		return fmt.Errorf("app endpoint name %s", errors.ErrNotTrimmed)
+	}
+
+	if !isValidEndpointName(plan.Name.ValueString()) {
+		return fmt.Errorf("app endpoint name must be between 1-228 characters and contain only lowercase letters, numbers, hyphens, underscores, dollar signs, plus signs, and parentheses")
+	}
+
+	// Validate userXattrKey if provided
+	if !plan.UserXattrKey.IsNull() && !plan.UserXattrKey.IsUnknown() {
+		if !providerschema.IsTrimmed(plan.UserXattrKey.ValueString()) || len(plan.UserXattrKey.ValueString()) > 15 {
+			return fmt.Errorf("userXattrKey %s", errors.ErrNotTrimmed)
+		}
+	}
+
+	// Validate OIDC configurations if provided
+	if len(plan.Oidc) > 0 {
+		for i, oidc := range plan.Oidc {
+			if err := a.validateOidcConfiguration(oidc, i); err != nil {
+				return err
+			}
+		}
+	}
+
+	// Validate CORS configuration if provided
+	if len(plan.Cors.Origin) > 0 {
+		for i, origin := range plan.Cors.Origin {
+			if !providerschema.IsTrimmed(origin.ValueString()) {
+				return fmt.Errorf("cors origin at index %d %s", i, errors.ErrNotTrimmed)
+			}
+		}
+	}
+
+	if len(plan.Cors.LoginOrigin) > 0 {
+		for i, loginOrigin := range plan.Cors.LoginOrigin {
+			if !providerschema.IsTrimmed(loginOrigin.ValueString()) {
+				return fmt.Errorf("cors loginOrigin at index %d %s", i, errors.ErrNotTrimmed)
+			}
+		}
+	}
+
+	if len(plan.Cors.Headers) > 0 {
+		for i, header := range plan.Cors.Headers {
+			if !providerschema.IsTrimmed(header.ValueString()) {
+				return fmt.Errorf("cors header at index %d %s", i, errors.ErrNotTrimmed)
+			}
+		}
+	}
+
+	// Validate CORS maxAge if provided
+	if !plan.Cors.MaxAge.IsNull() && !plan.Cors.MaxAge.IsUnknown() {
+		if plan.Cors.MaxAge.ValueInt64() < 0 {
+			return fmt.Errorf("cors maxAge cannot be negative")
+		}
+	}
+
+	return nil
+}
+
+// validateOidcConfiguration validates an individual OIDC configuration.
+func (a *AppEndpoint) validateOidcConfiguration(oidc providerschema.AppEndpointOidc, index int) error {
+	// Validate required issuer
+	if oidc.Issuer.IsNull() || oidc.Issuer.IsUnknown() {
+		return fmt.Errorf("oidc configuration at index %d: issuer cannot be empty", index)
+	}
+	if !providerschema.IsTrimmed(oidc.Issuer.ValueString()) {
+		return fmt.Errorf("oidc configuration at index %d: issuer %s", index, errors.ErrNotTrimmed)
+	}
+	// Validate issuer URL format
+	if !isValidURL(oidc.Issuer.ValueString()) {
+		return fmt.Errorf("oidc configuration at index %d: issuer must be a valid URL", index)
+	}
+	// Validate required clientId
+	if oidc.ClientId.IsNull() || oidc.ClientId.IsUnknown() {
+		return fmt.Errorf("oidc configuration at index %d: clientId cannot be empty", index)
+	}
+	if !providerschema.IsTrimmed(oidc.ClientId.ValueString()) {
+		return fmt.Errorf("oidc configuration at index %d: clientId %s", index, errors.ErrNotTrimmed)
+	}
+	// Validate optional fields if provided
+	if !oidc.UserPrefix.IsNull() && !oidc.UserPrefix.IsUnknown() {
+		if !providerschema.IsTrimmed(oidc.UserPrefix.ValueString()) {
+			return fmt.Errorf("oidc configuration at index %d: userPrefix %s", index, errors.ErrNotTrimmed)
+		}
+	}
+	if !oidc.DiscoveryUrl.IsNull() && !oidc.DiscoveryUrl.IsUnknown() {
+		if !providerschema.IsTrimmed(oidc.DiscoveryUrl.ValueString()) {
+			return fmt.Errorf("oidc configuration at index %d: discoveryUrl %s", index, errors.ErrNotTrimmed)
+		}
+		// Validate discovery URL format
+		if !isValidURL(oidc.DiscoveryUrl.ValueString()) {
+			return fmt.Errorf("oidc configuration at index %d: discoveryUrl must be a valid URL", index)
+		}
+	}
+	if !oidc.UsernameClaim.IsNull() && !oidc.UsernameClaim.IsUnknown() {
+		if !providerschema.IsTrimmed(oidc.UsernameClaim.ValueString()) {
+			return fmt.Errorf("oidc configuration at index %d: usernameClaim %s", index, errors.ErrNotTrimmed)
+		}
+	}
+	if !oidc.RolesClaim.IsNull() && !oidc.RolesClaim.IsUnknown() {
+		if !providerschema.IsTrimmed(oidc.RolesClaim.ValueString()) {
+			return fmt.Errorf("oidc configuration at index %d: rolesClaim %s", index, errors.ErrNotTrimmed)
+		}
+	}
+	return nil
+}
+
+// isValidURL checks if a string is a valid URL.
+func isValidURL(urlString string) bool {
+	if urlString == "" {
+		return false
+	}
+	// Basic URL validation - check if it starts with http:// or https://
+	return len(urlString) > 7 && (urlString[:7] == "http://" || urlString[:8] == "https://")
+}
 
 // isValidEndpointName checks if an endpoint name follows the proper naming convention.
 func isValidEndpointName(name string) bool {
-	if len(name) < 1 || len(name) > 100 {
+	if len(name) < 1 || len(name) >= 228 {
 		return false
 	}
 
-	// Check if name contains only lowercase letters, numbers, hyphens, and underscores
+	// Check if name contains only lowercase letters, numbers, hyphens, underscores, dollar signs, plus signs, and parentheses
 	for _, char := range name {
-		if !((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9') || char == '-' || char == '_') {
+		if !((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9') || char == '-' || char == '_' || char == '$' || char == '+' || char == '(' || char == ')') {
 			return false
 		}
 	}
@@ -322,11 +380,7 @@ func initComputedAttributesToNull(plan providerschema.AppEndpoint) providerschem
 		}
 	}
 
-	plan.RequireResync = types.MapNull(types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"items": types.SetType{ElemType: types.StringType},
-		},
-	})
+	plan.RequireResync = types.MapNull(types.ListType{ElemType: types.StringType})
 
 	return plan
 }
@@ -350,7 +404,7 @@ func (a *AppEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *
 		a.HostURL, organizationId, projectId, clusterId, appServiceId, endpointName)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
-	newstate, err := a.refreshAppEndpoint(ctx, cfg)
+	newstate, err := a.refreshAppEndpoint(ctx, cfg, &state)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error refreshing app endpoint",
@@ -363,8 +417,9 @@ func (a *AppEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *
 }
 
 // refreshAppEndpoint parses the API response and returns a refreshed AppEndpoint state
-func (a *AppEndpoint) refreshAppEndpoint(ctx context.Context, cfg api.EndpointCfg) (*providerschema.AppEndpoint, error) {
+func (a *AppEndpoint) refreshAppEndpoint(ctx context.Context, cfg api.EndpointCfg, plan *providerschema.AppEndpoint) (*providerschema.AppEndpoint, error) {
 	var appEndpoint app_endpoints.GetAppEndpointResponse
+	var diags diag.Diagnostics
 	response, err := a.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
@@ -380,35 +435,28 @@ func (a *AppEndpoint) refreshAppEndpoint(ctx context.Context, cfg api.EndpointCf
 	if err != nil {
 		return nil, fmt.Errorf("could not parse app endpoint response: %w", err)
 	}
-
-	refreshedState := &providerschema.AppEndpoint{}
+	fmt.Printf("###DEBUG### appEndpoint: %+v\n", appEndpoint)
 
 	// Set basic attributes
-	refreshedState.Bucket = types.StringValue(appEndpoint.Bucket)
-	refreshedState.Name = types.StringValue(appEndpoint.Name)
-	refreshedState.DeltaSyncEnabled = types.BoolValue(appEndpoint.DeltaSyncEnabled)
+	plan.Bucket = types.StringValue(appEndpoint.Bucket)
+	plan.Name = types.StringValue(appEndpoint.Name)
+	plan.DeltaSyncEnabled = types.BoolValue(appEndpoint.DeltaSyncEnabled)
 
 	if appEndpoint.UserXattrKey != nil {
-		refreshedState.UserXattrKey = types.StringValue(*appEndpoint.UserXattrKey)
+		plan.UserXattrKey = types.StringValue(*appEndpoint.UserXattrKey)
 	} else {
-		refreshedState.UserXattrKey = types.StringNull()
+		plan.UserXattrKey = types.StringNull()
 	}
 
 	// Set computed attributes
-	if appEndpoint.AdminURL != "" {
-		refreshedState.AdminURL = types.StringValue(appEndpoint.AdminURL)
-	}
-	if appEndpoint.PublicURL != "" {
-		refreshedState.PublicURL = types.StringValue(appEndpoint.PublicURL)
-	}
-	if appEndpoint.MetricsURL != "" {
-		refreshedState.MetricsURL = types.StringValue(appEndpoint.MetricsURL)
-	}
+	plan.AdminURL = types.StringValue(appEndpoint.AdminURL)
+	plan.PublicURL = types.StringValue(appEndpoint.PublicURL)
+	plan.MetricsURL = types.StringValue(appEndpoint.MetricsURL)
 
 	// Handle scopes and collections
 	if len(appEndpoint.Scopes) > 0 {
 		for scopeName, scopeData := range appEndpoint.Scopes {
-			refreshedState.Scope = types.StringValue(scopeName)
+			plan.Scope = types.StringValue(scopeName)
 
 			collectionAttrs := make(map[string]attr.Value)
 			for collectionName := range scopeData.Collections {
@@ -423,7 +471,7 @@ func (a *AppEndpoint) refreshAppEndpoint(ctx context.Context, cfg api.EndpointCf
 					},
 				)
 			}
-			refreshedState.Collections = types.MapValueMust(
+			plan.Collections = types.MapValueMust(
 				types.ObjectType{
 					AttrTypes: map[string]attr.Type{
 						"access_control_function": types.StringType,
@@ -437,40 +485,40 @@ func (a *AppEndpoint) refreshAppEndpoint(ctx context.Context, cfg api.EndpointCf
 
 	// Handle CORS if present
 	if appEndpoint.Cors != nil {
-		refreshedState.Cors = &providerschema.AppEndpointCors{
+		plan.Cors = &providerschema.AppEndpointCors{
 			Disabled: types.BoolPointerValue(appEndpoint.Cors.Disabled),
 		}
 		if appEndpoint.Cors.MaxAge != nil {
-			refreshedState.Cors.MaxAge = types.Int64PointerValue(appEndpoint.Cors.MaxAge)
+			plan.Cors.MaxAge = types.Int64PointerValue(appEndpoint.Cors.MaxAge)
 		}
 		if len(appEndpoint.Cors.Origin) > 0 {
 			origins := make([]types.String, len(appEndpoint.Cors.Origin))
 			for i, origin := range appEndpoint.Cors.Origin {
 				origins[i] = types.StringValue(origin)
 			}
-			refreshedState.Cors.Origin = origins
+			plan.Cors.Origin = origins
 		}
 		if len(appEndpoint.Cors.LoginOrigin) > 0 {
 			loginOrigins := make([]types.String, len(appEndpoint.Cors.LoginOrigin))
 			for i, loginOrigin := range appEndpoint.Cors.LoginOrigin {
 				loginOrigins[i] = types.StringValue(loginOrigin)
 			}
-			refreshedState.Cors.LoginOrigin = loginOrigins
+			plan.Cors.LoginOrigin = loginOrigins
 		}
 		if len(appEndpoint.Cors.Headers) > 0 {
 			headers := make([]types.String, len(appEndpoint.Cors.Headers))
 			for i, header := range appEndpoint.Cors.Headers {
 				headers[i] = types.StringValue(header)
 			}
-			refreshedState.Cors.Headers = headers
+			plan.Cors.Headers = headers
 		}
 	}
 
 	// Handle OIDC if present
 	if len(appEndpoint.Oidc) > 0 {
-		refreshedState.Oidc = make([]providerschema.AppEndpointOidc, len(appEndpoint.Oidc))
+		plan.Oidc = make([]providerschema.AppEndpointOidc, len(appEndpoint.Oidc))
 		for i, oidc := range appEndpoint.Oidc {
-			refreshedState.Oidc[i] = providerschema.AppEndpointOidc{
+			plan.Oidc[i] = providerschema.AppEndpointOidc{
 				Issuer:        types.StringValue(oidc.Issuer),
 				ClientId:      types.StringValue(oidc.ClientId),
 				UserPrefix:    types.StringPointerValue(oidc.UserPrefix),
@@ -484,7 +532,35 @@ func (a *AppEndpoint) refreshAppEndpoint(ctx context.Context, cfg api.EndpointCf
 		}
 	}
 
-	return refreshedState, nil
+	// Handle require_resync
+	if len(appEndpoint.RequireResync) > 0 {
+		requireResyncMap := make(map[string]attr.Value)
+		for scope, collections := range appEndpoint.RequireResync {
+			items := make([]attr.Value, len(collections))
+			for i, name := range collections {
+				items[i] = types.StringValue(name)
+			}
+			fmt.Println()
+			collections, diags := types.ListValueFrom(
+				ctx,
+				types.StringType,
+				items,
+			)
+			if diags.HasError() {
+				return nil, fmt.Errorf("error converting require_resync for scope %s: %w", scope, diags.Errors())
+			}
+			requireResyncMap[scope] = collections
+		}
+		plan.RequireResync, diags = types.MapValueFrom(ctx, types.ListType{ElemType: types.StringType}, requireResyncMap)
+		if diags.HasError() {
+
+			return nil, fmt.Errorf("error converting require_resync: %w", diags.Errors())
+		}
+	} else {
+		plan.RequireResync = types.MapNull(types.ListType{ElemType: types.StringType})
+	}
+
+	return plan, nil
 }
 
 func (a *AppEndpoint) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

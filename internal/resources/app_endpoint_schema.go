@@ -77,17 +77,10 @@ func AppEndpointSchema() schema.Schema {
 				},
 			},
 
-			"require_resync": schema.MapNestedAttribute{
+			"require_resync": schema.MapAttribute{
 				Computed:            true,
 				MarkdownDescription: "List of collections that require resync, keyed by scope.",
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"items": schema.SetAttribute{
-							Computed:    true,
-							ElementType: types.StringType,
-						},
-					},
-				},
+				ElementType:         types.ListType{ElemType: types.StringType},
 			},
 
 			"admin_url": schema.StringAttribute{
