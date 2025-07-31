@@ -613,6 +613,9 @@ func (g *GSI) executeGsiDdl(ctx context.Context, plan *providerschema.GsiDefinit
 
 			return internalerrors.ErrConcurrentIndexCreation
 		}
+
+		// Some other error from the API server.
+		return err
 	default:
 		return err
 	}
