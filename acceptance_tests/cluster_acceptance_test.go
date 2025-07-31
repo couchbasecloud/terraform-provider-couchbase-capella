@@ -277,8 +277,8 @@ func TestAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenario(t *testin
 }
 
 // TestAccClusterResourceForAwsWithAutoexpansion tests a failure scenario where the autoexpansion field is set
-// for an AWS cluster.  
-func TestAccClusterResourceForAwsWithAutoexpansion(t *testing.T) {
+// for an AWS cluster.
+func TestAccClusterResourceForAwsWithAutoexpansionInvalid(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_")
 	cidr := "10.249.250.0/23"
 
@@ -286,7 +286,7 @@ func TestAccClusterResourceForAwsWithAutoexpansion(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccClusterResourceConfigAwsWithAutoexpansion(resourceName, cidr),
+				Config:      testAccClusterResourceConfigAwsWithAutoexpansionInvalidConfig(resourceName, cidr),
 				ExpectError: regexp.MustCompile(`(?i)Autoexpansion cannot be set`),
 			},
 		},
@@ -591,7 +591,7 @@ resource "couchbase-capella_cluster" "%[4]s" {
 
 // testAccClusterResourceConfigAwsWithAutoexpansion generates a Terraform script for testing an acceptance test scenario
 // where a cluster resource is created with the AWS cloud provider and auto-expansion enabled for the disk.
-func testAccClusterResourceConfigAwsWithAutoexpansion(resourceName, cidr string) string {
+func testAccClusterResourceConfigAwsWithAutoexpansionInvalidConfig(resourceName, cidr string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -616,7 +616,7 @@ resource "couchbase-capella_cluster" "%[4]s" {
           storage = 50
           type    = "gp3"
           iops    = 3000
-		  auto_expansion = true
+		  autoexpansion = true
         }
       }
       num_of_nodes = 1
