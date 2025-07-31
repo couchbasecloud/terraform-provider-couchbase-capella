@@ -843,9 +843,9 @@ func (c *Cluster) validateCreateCluster(plan providerschema.Cluster) error {
 		return fmt.Errorf("invalid cloud provider type %s, must be either aws, gcp or azure", csp)
 	}
 
-	if plan.CloudProvider.Type.ValueString() != string(clusterapi.Azure) {
+	if csp != string(clusterapi.Azure) {
 		for _, sg := range plan.ServiceGroups {
-			if !sg.Node.Disk.Autoexpansion.IsNull() || !sg.Node.Disk.Autoexpansion.IsUnknown() {
+			if !sg.Node.Disk.Autoexpansion.IsNull() && !sg.Node.Disk.Autoexpansion.IsUnknown() {
 				return fmt.Errorf("invalid configuration: Autoexpansion cannot be set for %s cloud provider", plan.CloudProvider.Type.ValueString())
 			}
 		}
