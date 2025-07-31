@@ -569,14 +569,18 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 }
 
 // ImportState imports a remote cluster that is not created by Terraform.
-func (c *Cluster) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (c *Cluster) ImportState(
+	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
+) {
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 // getCluster retrieves cluster information from the specified organization and project
 // using the provided cluster ID by open-api call.
-func (c *Cluster) getCluster(ctx context.Context, organizationId, projectId, clusterId string) (*clusterapi.GetClusterResponse, error) {
+func (c *Cluster) getCluster(
+	ctx context.Context, organizationId, projectId, clusterId string,
+) (*clusterapi.GetClusterResponse, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", c.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := c.Client.ExecuteWithRetry(
@@ -600,7 +604,9 @@ func (c *Cluster) getCluster(ctx context.Context, organizationId, projectId, clu
 }
 
 // retrieveCluster retrieves cluster information for a specified organization, project, and cluster ID.
-func (c *Cluster) retrieveCluster(ctx context.Context, organizationId, projectId, clusterId string) (*providerschema.Cluster, error) {
+func (c *Cluster) retrieveCluster(
+	ctx context.Context, organizationId, projectId, clusterId string,
+) (*providerschema.Cluster, error) {
 	clusterResp, err := c.getCluster(ctx, organizationId, projectId, clusterId)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrNotFound, err)
@@ -829,6 +835,23 @@ func (c *Cluster) validateCreateCluster(plan providerschema.Cluster) error {
 		return errors.ErrIfMatchCannotBeSetWhileCreate
 	}
 
+	csp := plan.CloudProvider.Type.ValueString()
+	switch csp {
+	case string(clusterapi.Aws), string(clusterapi.Gcp), string(clusterapi.Azure):
+		// continue
+	default:
+		return fmt.Errorf("invalid cloud provider type %s, must be either aws, gcp or azure", csp)
+	}
+
+	if csp != string(clusterapi.Azure) {
+		for _, sg := range plan.ServiceGroups {
+			// check if autoexpansion is set for AWS or GCP.
+			if !sg.Node.Disk.Autoexpansion.IsNull() && !sg.Node.Disk.Autoexpansion.IsUnknown() {
+				return fmt.Errorf("invalid configuration: Autoexpansion cannot be set for %s cloud provider", csp)
+			}
+		}
+	}
+
 	return c.validateClusterAttributesTrimmed(plan)
 }
 
@@ -843,7 +866,9 @@ func (c *Cluster) validateClusterAttributesTrimmed(plan providerschema.Cluster) 
 }
 
 // this function converts types.Object field to couchbaseServer field.
-func getCouchbaseServer(ctx context.Context, config tfsdk.Config, diags *diag.Diagnostics) *providerschema.CouchbaseServer {
+func getCouchbaseServer(
+	ctx context.Context, config tfsdk.Config, diags *diag.Diagnostics,
+) *providerschema.CouchbaseServer {
 	var couchbaseServer *providerschema.CouchbaseServer
 	diags.Append(config.GetAttribute(ctx, path.Root("couchbase_server"), &couchbaseServer)...)
 	tflog.Info(ctx, fmt.Sprintf("couchbase_server: %+v", couchbaseServer))
