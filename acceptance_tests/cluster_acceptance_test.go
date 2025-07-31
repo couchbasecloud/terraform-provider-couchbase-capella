@@ -276,6 +276,8 @@ func TestAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenario(t *testin
 	})
 }
 
+// TestAccClusterResourceForAwsWithAutoexpansion tests a failure scenario where the autoexpansion field is set
+// for an AWS cluster.  
 func TestAccClusterResourceForAwsWithAutoexpansion(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_")
 	cidr := "10.249.250.0/23"
@@ -587,6 +589,8 @@ resource "couchbase-capella_cluster" "%[4]s" {
 `, globalProviderBlock, globalOrgId, globalProjectId, resourceName, cidr)
 }
 
+// testAccClusterResourceConfigAwsWithAutoexpansion generates a Terraform script for testing an acceptance test scenario
+// where a cluster resource is created with the AWS cloud provider and auto-expansion enabled for the disk.
 func testAccClusterResourceConfigAwsWithAutoexpansion(resourceName, cidr string) string {
 	return fmt.Sprintf(`
 %[1]s
