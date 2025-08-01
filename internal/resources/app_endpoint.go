@@ -83,6 +83,14 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
+	if err := a.validateCreateAppEndpointRequest(plan); err != nil {
+		resp.Diagnostics.AddError(
+			"Invalid App Endpoint Create Request",
+			fmt.Sprintf("Could not create app endpoint: %s", err.Error()),
+		)
+		return
+	}
+
 	scope := plan.Scope.ValueString()
 	sc := make(map[string]types.Object)
 	plan.Collections.ElementsAs(ctx, &sc, false)
@@ -190,6 +198,7 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 }
 
 // validateCreateAppEndpointRequest validates the required fields for creating an app endpoint.
+// Almost the same validation as v4 API, the API will do extra checks based on information stored on the control plane.
 func (a *AppEndpoint) validateCreateAppEndpointRequest(plan providerschema.AppEndpoint) error {
 	// Validate required IDs
 	if plan.OrganizationId.IsNull() || plan.OrganizationId.IsUnknown() {
@@ -409,7 +418,7 @@ func (a *AppEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *
 	resp.Diagnostics.Append(diags...)
 }
 
-// refreshAppEndpoint parses the API response and returns a refreshed AppEndpoint state
+// refreshAppEndpoint parses the API response and returns a refreshed AppEndpoint state.
 func (a *AppEndpoint) refreshAppEndpoint(ctx context.Context, cfg api.EndpointCfg, plan *providerschema.AppEndpoint) (*providerschema.AppEndpoint, error) {
 	var appEndpoint app_endpoints.GetAppEndpointResponse
 	var diags diag.Diagnostics
@@ -538,13 +547,12 @@ func (a *AppEndpoint) refreshAppEndpoint(ctx context.Context, cfg api.EndpointCf
 				items,
 			)
 			if diags.HasError() {
-				return nil, fmt.Errorf("error converting require_resync for scope %s: %w", scope, diags.Errors())
+				return nil, fmt.Errorf("error converting require_resync for scope %s: %v", scope, diags.Errors())
 			}
 		}
 		plan.RequireResync, diags = types.MapValueFrom(ctx, types.ListType{ElemType: types.StringType}, requireResyncMap)
 		if diags.HasError() {
-
-			return nil, fmt.Errorf("error converting require_resync: %w", diags.Errors())
+			return nil, fmt.Errorf("error converting require_resync: %s", diags.Errors())
 		}
 	} else {
 		plan.RequireResync = types.MapNull(types.ListType{ElemType: types.StringType})
