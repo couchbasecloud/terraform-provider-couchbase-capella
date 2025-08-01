@@ -36,7 +36,7 @@ func NewAppEndpoint() resource.Resource {
 	return &AppEndpoint{}
 }
 
-// ImportState imports a remote AppEndpoint that is not created by Terraform.
+// ImportState imports a remote App Endpoint that was not created by Terraform.
 func (a *AppEndpoint) ImportState(
 	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
 ) {
@@ -44,12 +44,12 @@ func (a *AppEndpoint) ImportState(
 	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
 }
 
-// Metadata returns the AppEndpoint cluster resource type name.
+// Metadata returns the App Endpoint resource type name.
 func (a *AppEndpoint) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_app_endpoint"
 }
 
-// Configure It adds the provider configured api to ClusterOnOff.
+// Configure adds the provider configured api to App Endpoints.
 func (a *AppEndpoint) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -387,6 +387,7 @@ func initComputedAttributesToNull(plan providerschema.AppEndpoint) providerschem
 	return plan
 }
 
+// Read reads and updates the current state of an App Endpoint.
 func (a *AppEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state providerschema.AppEndpoint
 	diags := req.State.Get(ctx, &state)
@@ -561,10 +562,12 @@ func (a *AppEndpoint) refreshAppEndpoint(ctx context.Context, cfg api.EndpointCf
 	return plan, nil
 }
 
+// Update updates an existing App Endpoint.
 func (a *AppEndpoint) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// TODO: AV-104552: Implement delete and update for App Endpoint
 }
 
+// Delete deletes an existing App Endpoint.
 func (a *AppEndpoint) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state providerschema.AppEndpoint
 	diags := req.State.Get(ctx, &state)

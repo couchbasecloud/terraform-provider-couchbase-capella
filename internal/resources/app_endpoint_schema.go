@@ -5,7 +5,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// AppEndpointSchema defines the schema for the AppEndpoint resource.
+// AppEndpointSchema defines the schema for the _app_endpoint resource.
 func AppEndpointSchema() schema.Schema {
 	return schema.Schema{
 		MarkdownDescription: "This resource allows you to manage an App Endpoint configuration for a Couchbase Capella App Service.",
