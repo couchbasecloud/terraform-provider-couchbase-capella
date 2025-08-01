@@ -852,6 +852,15 @@ func (c *Cluster) validateCreateCluster(plan providerschema.Cluster) error {
 		}
 	}
 
+	if csp == string(clusterapi.Gcp) {
+		for _, sg := range plan.ServiceGroups {
+			// check if iops is set for GCP.
+			if !sg.Node.Disk.IOPS.IsNull() && !sg.Node.Disk.IOPS.IsUnknown() {
+				return errors.ErrCannotSetIopsForGcp
+			}
+		}
+	}
+
 	return c.validateClusterAttributesTrimmed(plan)
 }
 
