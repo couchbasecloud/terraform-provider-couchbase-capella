@@ -18,9 +18,7 @@ func AppEndpointSchema() schema.Schema {
 			"name":               WithDescription(stringAttribute([]string{required, requiresReplace}), "The name of the App Endpoint."),
 			"user_xattr_key":     WithDescription(stringAttribute([]string{optional}), "The user extended attribute key for the App Endpoint."),
 			"delta_sync_enabled": WithDescription(boolAttribute(optional), "States whether delta sync is enabled for this App Endpoint."),
-
-			"scope": stringAttribute([]string{optional}),
-
+			"scope":              WithDescription(stringAttribute([]string{optional}), "The scope name for the App Endpoint. Currently, only one scope can be linked per App Endpoint."),
 			"collections": schema.MapNestedAttribute{
 				Optional:            true,
 				MarkdownDescription: "Configuration for collections within the App Endpoint. The map key is the collection name.",

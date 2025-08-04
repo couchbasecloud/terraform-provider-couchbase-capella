@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
-
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -16,6 +14,7 @@ import (
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/app_endpoints"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
@@ -150,7 +149,7 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		}
 	}
 
-	diags = resp.State.Set(ctx, initComputedAttributesToNull(plan))
+	diags = resp.State.Set(ctx, initComputedAppEndpointAttributesToNull(plan))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -358,7 +357,8 @@ func isValidEndpointName(name string) bool {
 	return true
 }
 
-func initComputedAttributesToNull(plan providerschema.AppEndpoint) providerschema.AppEndpoint {
+// initComputedAppEndpointAttributesToNull initializes computed attributes to null before refreshing the app endpoint state.
+func initComputedAppEndpointAttributesToNull(plan providerschema.AppEndpoint) providerschema.AppEndpoint {
 	if plan.AdminURL.IsUnknown() || plan.AdminURL.IsNull() {
 		plan.AdminURL = types.StringNull()
 	}

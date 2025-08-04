@@ -52,13 +52,13 @@ type AppEndpoint struct {
 
 	// PublicURL A URL for the public API used for access to functions for data access and manipulation. For more information, read the [Capella App Services Public API Reference](https://docs.couchbase.com/cloud/app-services/references/rest_api_public.html)
 	PublicURL types.String `tfsdk:"public_url"`
+
+	// State is the current state of the App Endpoint including online, offline, resyncing, etc.
+	State types.String `tfsdk:"state"`
 }
 
 // ScopesConfig maps scope name to a list of collection names.
 type (
-	// AppEndpointScopes represents a map of scope names to collections.
-	AppEndpointScopes      map[string]AppEndpointScopeConfig
-	RequireResync          types.MapType
 	AppEndpointScopeConfig struct {
 		// Collections is a map of collections names to their configurations.
 		Collections map[string]AppEndpointCollection `tfsdk:"collections"` // Collection-specific config options.
@@ -121,14 +121,16 @@ func (a AppEndpoint) AttributeTypes() map[string]attr.Type {
 		"bucket":             types.StringType,
 		"name":               types.StringType,
 		"user_xattr_key":     types.StringType,
-		"delta_sync_enabled": types.BoolType,
-		"scopes":             types.MapType{ElemType: types.ObjectType{AttrTypes: AppEndpointScopeConfig{}.AttributeTypes()}},
-		"cors":               types.ObjectType{AttrTypes: AppEndpointCors{}.AttributeTypes()},
-		"oidc":               types.ListType{ElemType: types.ObjectType{AttrTypes: AppEndpointOidc{}.AttributeTypes()}},
-		"require_resync":     types.MapType{ElemType: types.ListType{ElemType: types.StringType}},
+		"scope":              types.StringType,
+		"state":              types.StringType,
 		"admin_url":          types.StringType,
 		"metrics_url":        types.StringType,
 		"public_url":         types.StringType,
+		"collections":        types.MapType{ElemType: types.ObjectType{AttrTypes: AppEndpointCollection{}.AttributeTypes()}},
+		"cors":               types.ObjectType{AttrTypes: AppEndpointCors{}.AttributeTypes()},
+		"oidc":               types.ListType{ElemType: types.ObjectType{AttrTypes: AppEndpointOidc{}.AttributeTypes()}},
+		"require_resync":     types.MapType{ElemType: types.ListType{ElemType: types.StringType}},
+		"delta_sync_enabled": types.BoolType,
 	}
 }
 
