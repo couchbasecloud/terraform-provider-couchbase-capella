@@ -90,65 +90,6 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	scope := plan.Scope.ValueString()
-	sc := make(map[string]types.Object)
-	plan.Collections.ElementsAs(ctx, &sc, false)
-
-	nestedMap := make(map[string]map[string]map[string]app_endpoints.AppEndpointCollection)
-	nestedMap[scope] = make(map[string]map[string]app_endpoints.AppEndpointCollection)
-
-	fieldSetters := map[string]func(*app_endpoints.AppEndpointCollection, string){
-		"access_control_function": func(c *app_endpoints.AppEndpointCollection, val string) { c.AccessControlFunction = &val },
-		"import_filter":           func(c *app_endpoints.AppEndpointCollection, val string) { c.ImportFilter = &val },
-	}
-
-	for col, obj := range sc {
-		if _, ok := nestedMap[scope]["collections"]; !ok {
-			nestedMap[scope]["collections"] = make(map[string]app_endpoints.AppEndpointCollection)
-		}
-
-		attr := obj.Attributes()
-		endpointCollection := nestedMap[scope]["collections"][col]
-
-		for name, value := range attr {
-			if !(value.IsNull() || value.IsUnknown()) {
-				fieldSetters[name](&endpointCollection, value.String())
-			}
-		}
-
-		nestedMap[scope]["collections"][col] = endpointCollection
-	}
-
-	createAppEndpointRequest := app_endpoints.CreateAppEndpointRequest{
-		Bucket:           plan.Bucket.ValueString(),
-		Name:             plan.Name.ValueString(),
-		DeltaSyncEnabled: plan.DeltaSyncEnabled.ValueBool(),
-		Scopes:           nestedMap,
-	}
-	if plan.Cors != nil {
-		createAppEndpointRequest.Cors = &app_endpoints.AppEndpointCors{
-			Origin:      providerschema.BaseStringsToStrings(plan.Cors.Origin),
-			LoginOrigin: providerschema.BaseStringsToStrings(plan.Cors.LoginOrigin),
-			Headers:     providerschema.BaseStringsToStrings(plan.Cors.Headers),
-			MaxAge:      plan.Cors.MaxAge.ValueInt64Pointer(),
-			Disabled:    plan.Cors.Disabled.ValueBoolPointer(),
-		}
-	}
-	if len(plan.Oidc) > 0 {
-		createAppEndpointRequest.Oidc = make([]app_endpoints.AppEndpointOidc, len(plan.Oidc))
-		for i, oidc := range plan.Oidc {
-			createAppEndpointRequest.Oidc[i] = app_endpoints.AppEndpointOidc{
-				Issuer:        oidc.Issuer.ValueString(),
-				ClientId:      oidc.ClientId.ValueString(),
-				UserPrefix:    oidc.UserPrefix.ValueStringPointer(),
-				DiscoveryUrl:  oidc.DiscoveryUrl.ValueStringPointer(),
-				UsernameClaim: oidc.UsernameClaim.ValueStringPointer(),
-				RolesClaim:    oidc.RolesClaim.ValueStringPointer(),
-				Register:      oidc.Register.ValueBoolPointer(),
-			}
-		}
-	}
-
 	diags = resp.State.Set(ctx, initComputedAppEndpointAttributesToNull(plan))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -162,6 +103,8 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints", a.HostURL, organizationId, projectId, clusterId, appServiceId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
+
+	createAppEndpointRequest := schemaToAppEndpointRequest(ctx, plan)
 
 	_, err := a.Client.ExecuteWithRetry(
 		ctx,
@@ -194,6 +137,72 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
+}
+
+// schemaToAppEndpointRequest converts the Terraform plan to the request format expected by the Capella API for creating/updating an App Endpoint.
+func schemaToAppEndpointRequest(ctx context.Context, plan providerschema.AppEndpoint) *app_endpoints.CreateAppEndpointRequest {
+	scope := plan.Scope.ValueString()
+	sc := make(map[string]providerschema.AppEndpointCollection)
+	plan.Collections.ElementsAs(ctx, &sc, false)
+
+	nestedMap := make(map[string]map[string]map[string]app_endpoints.AppEndpointCollection)
+	nestedMap[scope] = make(map[string]map[string]app_endpoints.AppEndpointCollection)
+
+	//fieldSetters := map[string]func(*app_endpoints.AppEndpointCollection, string){
+	//	"access_control_function": func(c *app_endpoints.AppEndpointCollection, val string) { c.AccessControlFunction = &val },
+	//	"import_filter":           func(c *app_endpoints.AppEndpointCollection, val string) { c.ImportFilter = &val },
+	//}
+
+	for col, obj := range sc {
+		if _, ok := nestedMap[scope]["collections"]; !ok {
+			nestedMap[scope]["collections"] = make(map[string]app_endpoints.AppEndpointCollection)
+		}
+
+		nestedMap[scope]["collections"][col] = app_endpoints.AppEndpointCollection{
+			AccessControlFunction: obj.AccessControlFunction.ValueStringPointer(),
+			ImportFilter:          obj.ImportFilter.ValueStringPointer(),
+		}
+
+		//for name, value := range attr {
+		//	if !(value.IsNull() || value.IsUnknown()) {
+		//		fieldSetters[name](&endpointCollection, value.String())
+		//	}
+		//}
+	}
+
+	createAppEndpointRequest := app_endpoints.CreateAppEndpointRequest{
+		Bucket:           plan.Bucket.ValueString(),
+		Name:             plan.Name.ValueString(),
+		DeltaSyncEnabled: plan.DeltaSyncEnabled.ValueBool(),
+		Scopes:           nestedMap,
+		UserXattrKey:     plan.UserXattrKey.ValueStringPointer(),
+	}
+	if plan.Cors != nil {
+		createAppEndpointRequest.Cors = &app_endpoints.AppEndpointCors{
+			Origin:      providerschema.BaseStringsToStrings(plan.Cors.Origin),
+			LoginOrigin: providerschema.BaseStringsToStrings(plan.Cors.LoginOrigin),
+			Headers:     providerschema.BaseStringsToStrings(plan.Cors.Headers),
+			MaxAge:      plan.Cors.MaxAge.ValueInt64Pointer(),
+			Disabled:    plan.Cors.Disabled.ValueBoolPointer(),
+		}
+	}
+	createAppEndpointRequest.Oidc = make([]app_endpoints.AppEndpointOidc, len(plan.Oidc))
+	if len(plan.Oidc) > 0 {
+		for i, oidc := range plan.Oidc {
+			createAppEndpointRequest.Oidc[i] = app_endpoints.AppEndpointOidc{
+				Issuer:        oidc.Issuer.ValueString(),
+				ClientId:      oidc.ClientId.ValueString(),
+				UserPrefix:    oidc.UserPrefix.ValueStringPointer(),
+				DiscoveryUrl:  oidc.DiscoveryUrl.ValueStringPointer(),
+				UsernameClaim: oidc.UsernameClaim.ValueStringPointer(),
+				RolesClaim:    oidc.RolesClaim.ValueStringPointer(),
+				Register:      oidc.Register.ValueBoolPointer(),
+			}
+		}
+	}
+	pr, _ := json.MarshalIndent(createAppEndpointRequest, "", "    ")
+	fmt.Printf("###DEBUG### url: %v\n", string(pr))
+	return &createAppEndpointRequest
 }
 
 // validateCreateAppEndpointRequest validates the required fields for creating an app endpoint.
@@ -250,34 +259,36 @@ func (a *AppEndpoint) validateCreateAppEndpointRequest(plan providerschema.AppEn
 	}
 
 	// Validate CORS configuration if provided
-	if len(plan.Cors.Origin) > 0 {
-		for i, origin := range plan.Cors.Origin {
-			if !providerschema.IsTrimmed(origin.ValueString()) {
-				return fmt.Errorf("cors origin at index %d %s", i, errors.ErrNotTrimmed)
+	if plan.Cors != nil {
+		if len(plan.Cors.Origin) > 0 {
+			for i, origin := range plan.Cors.Origin {
+				if !providerschema.IsTrimmed(origin.ValueString()) {
+					return fmt.Errorf("cors origin at index %d %s", i, errors.ErrNotTrimmed)
+				}
 			}
 		}
-	}
 
-	if len(plan.Cors.LoginOrigin) > 0 {
-		for i, loginOrigin := range plan.Cors.LoginOrigin {
-			if !providerschema.IsTrimmed(loginOrigin.ValueString()) {
-				return fmt.Errorf("cors loginOrigin at index %d %s", i, errors.ErrNotTrimmed)
+		if len(plan.Cors.LoginOrigin) > 0 {
+			for i, loginOrigin := range plan.Cors.LoginOrigin {
+				if !providerschema.IsTrimmed(loginOrigin.ValueString()) {
+					return fmt.Errorf("cors loginOrigin at index %d %s", i, errors.ErrNotTrimmed)
+				}
 			}
 		}
-	}
 
-	if len(plan.Cors.Headers) > 0 {
-		for i, header := range plan.Cors.Headers {
-			if !providerschema.IsTrimmed(header.ValueString()) {
-				return fmt.Errorf("cors header at index %d %s", i, errors.ErrNotTrimmed)
+		if len(plan.Cors.Headers) > 0 {
+			for i, header := range plan.Cors.Headers {
+				if !providerschema.IsTrimmed(header.ValueString()) {
+					return fmt.Errorf("cors header at index %d %s", i, errors.ErrNotTrimmed)
+				}
 			}
 		}
-	}
 
-	// Validate CORS maxAge if provided
-	if !plan.Cors.MaxAge.IsNull() && !plan.Cors.MaxAge.IsUnknown() {
-		if plan.Cors.MaxAge.ValueInt64() < 0 {
-			return fmt.Errorf("cors maxAge cannot be negative")
+		// Validate CORS maxAge if provided
+		if !plan.Cors.MaxAge.IsNull() && !plan.Cors.MaxAge.IsUnknown() {
+			if plan.Cors.MaxAge.ValueInt64() < 0 {
+				return fmt.Errorf("cors maxAge cannot be negative")
+			}
 		}
 	}
 
@@ -568,7 +579,7 @@ func (a *AppEndpoint) refreshAppEndpoint(ctx context.Context, cfg api.EndpointCf
 // Update updates an existing App Endpoint.
 func (a *AppEndpoint) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var state providerschema.AppEndpoint
-	diags := req.State.Get(ctx, &state)
+	diags := req.Plan.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -580,14 +591,16 @@ func (a *AppEndpoint) Update(ctx context.Context, req resource.UpdateRequest, re
 	var appServiceId = state.AppServiceId.ValueString()
 	var endpointName = state.Name.ValueString()
 
+	body := schemaToAppEndpointRequest(ctx, state)
+
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
 		a.HostURL, organizationId, projectId, clusterId, appServiceId, endpointName)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusOK}
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
 
 	_, err := a.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
-		state,
+		body,
 		a.Token,
 		nil,
 	)

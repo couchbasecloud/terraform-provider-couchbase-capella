@@ -29,7 +29,6 @@ func AppEndpointSchema() schema.Schema {
 					},
 				},
 			},
-
 			"cors": schema.SingleNestedAttribute{
 				Optional:            true,
 				MarkdownDescription: "CORS configuration for the App Endpoint.",
@@ -56,7 +55,6 @@ func AppEndpointSchema() schema.Schema {
 					"disabled": schema.BoolAttribute{Optional: true, Description: "Disables/Enables CORS for this App Endpoint."},
 				},
 			},
-
 			"oidc": schema.SetNestedAttribute{
 				Optional:            true,
 				MarkdownDescription: "List of OIDC configurations for the App Endpoint.",
@@ -74,13 +72,15 @@ func AppEndpointSchema() schema.Schema {
 					},
 				},
 			},
-
 			"require_resync": schema.MapAttribute{
 				Computed:            true,
 				MarkdownDescription: "List of collections that require resync, keyed by scope.",
 				ElementType:         types.ListType{ElemType: types.StringType},
 			},
-
+			"state": schema.StringAttribute{
+				Computed:            true,
+				MarkdownDescription: "The current state of the App Endpoint, such as online, offline, resyncing, etc.",
+			},
 			"admin_url": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "The admin URL for the App Endpoint.",
