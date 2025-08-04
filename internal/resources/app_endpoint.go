@@ -372,6 +372,8 @@ func initComputedAppEndpointAttributesToNull(plan providerschema.AppEndpoint) pr
 		plan.MetricsURL = types.StringNull()
 	}
 
+	plan.State = types.StringNull()
+
 	for i := range plan.Oidc {
 		if plan.Oidc[i].ProviderId.IsUnknown() || plan.Oidc[i].ProviderId.IsNull() {
 			plan.Oidc[i].ProviderId = types.StringNull()
@@ -443,6 +445,7 @@ func (a *AppEndpoint) refreshAppEndpoint(ctx context.Context, cfg api.EndpointCf
 	plan.Bucket = types.StringValue(appEndpoint.Bucket)
 	plan.Name = types.StringValue(appEndpoint.Name)
 	plan.DeltaSyncEnabled = types.BoolValue(appEndpoint.DeltaSyncEnabled)
+	plan.State = types.StringValue(appEndpoint.State)
 
 	if appEndpoint.UserXattrKey != nil {
 		if *appEndpoint.UserXattrKey != "" {

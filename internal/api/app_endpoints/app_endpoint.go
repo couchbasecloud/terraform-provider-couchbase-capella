@@ -93,6 +93,9 @@ type GetAppEndpointResponse struct {
 	// PublicURL is the public URL for the App Endpoint.
 	PublicURL string `json:"publicURL"`
 
+	// State is the current state of the App Endpoint, such as online, offline, resyncing, etc.
+	State string `json:"state"`
+
 	// Etag represents the version of the document
 	Etag string
 
