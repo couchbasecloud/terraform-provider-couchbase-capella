@@ -567,7 +567,49 @@ func (a *AppEndpoint) refreshAppEndpoint(ctx context.Context, cfg api.EndpointCf
 
 // Update updates an existing App Endpoint.
 func (a *AppEndpoint) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// TODO: AV-104552: Implement delete and update for App Endpoint
+	var state providerschema.AppEndpoint
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var organizationId = state.OrganizationId.ValueString()
+	var projectId = state.ProjectId.ValueString()
+	var clusterId = state.ClusterId.ValueString()
+	var appServiceId = state.AppServiceId.ValueString()
+	var endpointName = state.Name.ValueString()
+
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
+		a.HostURL, organizationId, projectId, clusterId, appServiceId, endpointName)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusOK}
+
+	_, err := a.Client.ExecuteWithRetry(
+		ctx,
+		cfg,
+		state,
+		a.Token,
+		nil,
+	)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating app endpoint",
+			fmt.Sprintf("Could not update app endpoint %s: %s", endpointName, err.Error()),
+		)
+		return
+	}
+
+	// Refresh the state after update
+	refreshedState, err := a.refreshAppEndpoint(ctx, cfg, &state)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error refreshing app endpoint",
+			fmt.Sprintf("Could not refresh app endpoint %s: %s", endpointName, err.Error()),
+		)
+		return
+	}
+	diags = resp.State.Set(ctx, refreshedState)
+	resp.Diagnostics.Append(diags...)
 }
 
 // Delete deletes an existing App Endpoint.
