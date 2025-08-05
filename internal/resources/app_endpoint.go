@@ -162,13 +162,7 @@ func schemaToAppEndpointRequest(ctx context.Context, plan providerschema.AppEndp
 			AccessControlFunction: obj.AccessControlFunction.ValueStringPointer(),
 			ImportFilter:          obj.ImportFilter.ValueStringPointer(),
 		}
-
-		//for name, value := range attr {
-		//	if !(value.IsNull() || value.IsUnknown()) {
-		//		fieldSetters[name](&endpointCollection, value.String())
-		//	}
-		//}
-	}
+		
 
 	createAppEndpointRequest := app_endpoints.CreateAppEndpointRequest{
 		Bucket:           plan.Bucket.ValueString(),
@@ -376,7 +370,6 @@ func initComputedAppEndpointAttributesToNull(plan providerschema.AppEndpoint) pr
 
 	if plan.PublicURL.IsUnknown() || plan.PublicURL.IsNull() {
 		plan.PublicURL = types.StringNull()
-
 	}
 
 	if plan.MetricsURL.IsUnknown() || plan.MetricsURL.IsNull() {
@@ -393,14 +386,29 @@ func initComputedAppEndpointAttributesToNull(plan providerschema.AppEndpoint) pr
 		if plan.Oidc[i].IsDefault.IsUnknown() || plan.Oidc[i].IsDefault.IsNull() {
 			plan.Oidc[i].IsDefault = types.BoolNull()
 		}
+		if plan.Oidc[i].UserPrefix.IsUnknown() || plan.Oidc[i].UserPrefix.IsNull() {
+			plan.Oidc[i].UserPrefix = types.StringNull()
+		}
+		if plan.Oidc[i].DiscoveryUrl.IsUnknown() || plan.Oidc[i].DiscoveryUrl.IsNull() {
+			plan.Oidc[i].DiscoveryUrl = types.StringNull()
+		}
+		if plan.Oidc[i].UsernameClaim.IsUnknown() || plan.Oidc[i].UsernameClaim.IsNull() {
+			plan.Oidc[i].UsernameClaim = types.StringNull()
+		}
+		if plan.Oidc[i].RolesClaim.IsUnknown() || plan.Oidc[i].RolesClaim.IsNull() {
+			plan.Oidc[i].RolesClaim = types.StringNull()
+		}
+		if plan.Oidc[i].Register.IsUnknown() || plan.Oidc[i].Register.IsNull() {
+			plan.Oidc[i].Register = types.BoolNull()
+		}
 	}
 
 	if plan.Cors != nil {
 		if plan.Cors.Disabled.IsUnknown() || plan.Cors.Disabled.IsNull() {
-			plan.Cors.Disabled = types.BoolValue(false)
+			plan.Cors.Disabled = types.BoolNull()
 		}
 		if plan.Cors.MaxAge.IsUnknown() || plan.Cors.MaxAge.IsNull() {
-			plan.Cors.MaxAge = types.Int64Value(0)
+			plan.Cors.MaxAge = types.Int64Null()
 		}
 	}
 
@@ -484,15 +492,15 @@ func (a *AppEndpoint) refreshAppEndpoint(ctx context.Context, cfg api.EndpointCf
 			plan.Scope = types.StringValue(scopeName)
 
 			collectionAttrs := make(map[string]attr.Value)
-			for collectionName := range scopeData.Collections {
+			for collectionName, collectionConfig := range scopeData.Collections {
 				collectionAttrs[collectionName] = types.ObjectValueMust(
 					map[string]attr.Type{
 						"access_control_function": types.StringType,
 						"import_filter":           types.StringType,
 					},
 					map[string]attr.Value{
-						"access_control_function": types.StringNull(),
-						"import_filter":           types.StringNull(),
+						"access_control_function": types.StringPointerValue(collectionConfig.AccessControlFunction),
+						"import_filter":           types.StringPointerValue(collectionConfig.ImportFilter),
 					},
 				)
 			}
