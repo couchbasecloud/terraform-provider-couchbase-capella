@@ -148,11 +148,6 @@ func schemaToAppEndpointRequest(ctx context.Context, plan providerschema.AppEndp
 	nestedMap := make(map[string]map[string]map[string]app_endpoints.AppEndpointCollection)
 	nestedMap[scope] = make(map[string]map[string]app_endpoints.AppEndpointCollection)
 
-	//fieldSetters := map[string]func(*app_endpoints.AppEndpointCollection, string){
-	//	"access_control_function": func(c *app_endpoints.AppEndpointCollection, val string) { c.AccessControlFunction = &val },
-	//	"import_filter":           func(c *app_endpoints.AppEndpointCollection, val string) { c.ImportFilter = &val },
-	//}
-
 	for col, obj := range sc {
 		if _, ok := nestedMap[scope]["collections"]; !ok {
 			nestedMap[scope]["collections"] = make(map[string]app_endpoints.AppEndpointCollection)
@@ -162,7 +157,7 @@ func schemaToAppEndpointRequest(ctx context.Context, plan providerschema.AppEndp
 			AccessControlFunction: obj.AccessControlFunction.ValueStringPointer(),
 			ImportFilter:          obj.ImportFilter.ValueStringPointer(),
 		}
-		
+	}
 
 	createAppEndpointRequest := app_endpoints.CreateAppEndpointRequest{
 		Bucket:           plan.Bucket.ValueString(),
