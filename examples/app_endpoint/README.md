@@ -279,7 +279,7 @@ $ terraform output new_app_endpoint
 Command: `terraform state list`
 
 Sample Output:
-```
+```bash
  $ terraform state list
 2025-07-31T17:20:20.841+0100 [INFO]  Terraform version: 1.12.1
 2025-07-31T17:20:20.841+0100 [INFO]  Go runtime version: go1.24.2
@@ -294,7 +294,7 @@ couchbase-capella_app_endpoint.example_app_endpoint
 Command: `terraform state rm couchbase-capella_app_endpoint.new_app_endpoint`
 
 Sample Output:
-```
+```bash
 $ terraform state rm couchbase-capella_app_endpoint.example_app_endpoint                                                                                                                                                                                                                                                                                  1 ↵
 2025-07-31T17:46:52.487+0100 [INFO]  Terraform version: 1.12.1
 2025-07-31T17:46:52.487+0100 [INFO]  Go runtime version: go1.24.2
@@ -307,7 +307,91 @@ Successfully removed 1 resource instance(s).
 Please note, this command will only remove the resource from the Terraform State file. The resource will still exist in Capella.
 
 ## IMPORT // TODO 
-## Update // TODO 
+
+## Update
+
+Command: `terraform apply -var delta_sync_enabled=true'`
+
+Sample output:
+```bash
+ $ terraform apply -var delta_sync_enabled=true                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   1 ↵
+╷
+│ Warning: Provider development overrides are in effect
+│ 
+│ The following provider development overrides are set in the CLI configuration:
+│  - couchbasecloud/couchbase-capella in /Applications/gh_2.14.6_macOS_amd64/bin/terraform-provider-couchbase-capella/bin
+│ 
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
+╵
+couchbase-capella_app_endpoint.example_app_endpoint: Refreshing state... [name=example-app-endpoint]
+
+No changes. Your infrastructure matches the configuration.
+
+Terraform has compared your real infrastructure against your configuration and found no differences, so no changes are needed.
+
+Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+example_app_endpoint = {
+  "admin_url" = "https://aaaabbbbccccdddd.apps.nonprod-project-avengers.com:4985/example-app-endpoint"
+  "app_service_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "bucket" = "example-bucket"
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "collections" = tomap({
+    "collection1" = {
+      "access_control_function" = "function (doc, oldDoc, meta) {channel('collection1');}"
+      "import_filter" = tostring(null)
+    }
+  })
+  "cors" = {
+    "disabled" = false
+    "headers" = tolist(null) /* of string */
+    "login_origin" = tolist([
+      "https://login.example.com",
+    ])
+    "max_age" = 0
+    "origin" = tolist([
+      "https://example.com",
+    ])
+  }
+  "delta_sync_enabled" = true
+  "metrics_url" = "https://aaaabbbbccccdddd.apps.nonprod-project-avengers.com:4988/metrics"
+  "name" = "example-app-endpoint"
+  "oidc" = tolist([
+    {
+      "client_id" = "example-client"
+      "discovery_url" = "https://accounts.google.com/.well-known/openid-configuration"
+      "is_default" = true
+      "issuer" = "https://accounts.google.com"
+      "provider_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+      "register" = false
+      "roles_claim" = ""
+      "user_prefix" = "example-prefix2"
+      "username_claim" = ""
+    },
+    {
+      "client_id" = "example-client"
+      "discovery_url" = "https://accounts.google.com/.well-known/openid-configuration"
+      "is_default" = false
+      "issuer" = "https://accounts.google.com"
+      "provider_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+      "register" = false
+      "roles_claim" = ""
+      "user_prefix" = "example-prefix22"
+      "username_claim" = ""
+    },
+  ])
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "public_url" = "wss://aaaabbbbccccdddd.apps.nonprod-project-avengers.com:4984/example-app-endpoint"
+  "require_resync" = tomap(null) /* of list of string */
+  "scope" = "scope1"
+  "state" = "Offline"
+  "user_xattr_key" = "user_xattr"
+}
+
+```
 
 ## DELETE
 ### Delete the App Endpoint from Capella
