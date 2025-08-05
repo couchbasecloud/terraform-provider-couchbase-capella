@@ -395,6 +395,15 @@ func initComputedAppEndpointAttributesToNull(plan providerschema.AppEndpoint) pr
 		}
 	}
 
+	if plan.Cors != nil {
+		if plan.Cors.Disabled.IsUnknown() || plan.Cors.Disabled.IsNull() {
+			plan.Cors.Disabled = types.BoolValue(false)
+		}
+		if plan.Cors.MaxAge.IsUnknown() || plan.Cors.MaxAge.IsNull() {
+			plan.Cors.MaxAge = types.Int64Value(0)
+		}
+	}
+
 	plan.RequireResync = types.MapNull(types.ListType{ElemType: types.StringType})
 
 	return plan
@@ -613,6 +622,7 @@ func (a *AppEndpoint) Update(ctx context.Context, req resource.UpdateRequest, re
 	}
 
 	// Refresh the state after update
+	cfg = api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	refreshedState, err := a.refreshAppEndpoint(ctx, cfg, &state)
 	if err != nil {
 		resp.Diagnostics.AddError(
