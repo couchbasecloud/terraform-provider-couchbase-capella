@@ -189,8 +189,6 @@ func schemaToAppEndpointRequest(ctx context.Context, plan providerschema.AppEndp
 			}
 		}
 	}
-	pr, _ := json.MarshalIndent(createAppEndpointRequest, "", "    ")
-	fmt.Printf("###DEBUG### url: %v\n", string(pr))
 	return &createAppEndpointRequest
 }
 
