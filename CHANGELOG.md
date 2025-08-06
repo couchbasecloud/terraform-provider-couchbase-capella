@@ -8,7 +8,11 @@
 
 - \[AV-107267\] Restrict setting IOPS for GCP clusters [\#369](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/369) ([l0n3star](https://github.com/l0n3star))
 - \[AV-107190\] Return API errors [\#367](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/367) ([l0n3star](https://github.com/l0n3star))
-- \[AV-107162\] Do not allow setting autoexpansion for AWS/GCP [\#366](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/366) ([l0n3star](https://github.com/l0n3star))
+- \[AV-107162\] Restrict setting autoexpansion for AWS/GCP [\#366](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/366) ([l0n3star](https://github.com/l0n3star))
+
+**Merged pull requests:**
+
+- \[AV-107698\] Add docs for terraform provider 1.5.3 [\#371](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/371) ([l0n3star](https://github.com/l0n3star))
 
 ## [v1.5.2](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.5.2) (2025-07-22)
 
