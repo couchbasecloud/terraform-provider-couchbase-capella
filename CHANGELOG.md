@@ -10,15 +10,6 @@
 - \[AV-107190\] Return API errors [\#367](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/367) ([l0n3star](https://github.com/l0n3star))
 - \[AV-107162\] Do not allow setting autoexpansion for AWS/GCP [\#366](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/366) ([l0n3star](https://github.com/l0n3star))
 
-## [v1.5.3](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.5.3) (2025-07-31)
-
-[Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.5.2...v1.5.3)
-
-**Fixed bugs:**
-
-- \[AV-107190\] Return API errors [\#367](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/367) ([l0n3star](https://github.com/l0n3star))
-- \[AV-107162\] Do not allow setting autoexpansion for AWS/GCP [\#366](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/366) ([l0n3star](https://github.com/l0n3star))
-
 ## [v1.5.2](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.5.2) (2025-07-22)
 
 [Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.5.1...v1.5.2)
