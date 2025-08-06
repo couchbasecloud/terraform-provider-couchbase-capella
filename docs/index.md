@@ -318,7 +318,3 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 * [Manage Free Tier Cluster On/Off](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/free_tier_cluster_on_off):
 
   Turn your free tier operational cluster on or off on demand to optimize resource usage. Turning the free tier cluster on or off will also turn on or off any linked App Services. 
-
-* [Manage App Services CIDR](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/app_services_cidr):
-
-  Manage CIDR for App Services. 
