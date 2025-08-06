@@ -20,26 +20,6 @@ type AppEndpoint struct {
 	*providerschema.Data
 }
 
-func (a *AppEndpoint) Configure(ctx context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
-	//TODO implement me
-}
-
-func (a *AppEndpoint) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	//TODO implement me
-}
-
-// NewAppEndpoint is used in (p *capellaProvider) DataSources for building the provider.
-func NewAppEndpoint() datasource.DataSource {
-	return &AppEndpoint{}
-}
-
-// Metadata returns the App Service CIDRs data source type name.
-func (a *AppEndpoint) Metadata(
-	_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse,
-) {
-	resp.TypeName = req.ProviderTypeName + "_app_services_cidr"
-}
-
 // AppEndpointsSchema defines the schema for the AppEndpoints datasource.
 func (a *AppEndpoint) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
