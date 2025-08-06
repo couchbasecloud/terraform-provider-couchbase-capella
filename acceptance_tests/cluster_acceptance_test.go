@@ -737,7 +737,7 @@ locals {
     cluster.id if cluster.name == "%[4]s"
   ][0]
   
-  cluster_etag = regex("[0-9]+", data.http.cluster_info[0].response_headers["Etag"])
+  cluster_etag = regex("[0-9]+", data.http.cluster_info.response_headers["Etag"])
 }
 
 data "http" "cluster_info" {
