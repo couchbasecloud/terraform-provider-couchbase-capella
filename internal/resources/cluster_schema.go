@@ -93,7 +93,7 @@ func ClusterSchema() schema.Schema {
 										"storage": WithDescription(int64Attribute(optional, computed),
 											"The size of the disk in GB."),
 										"iops": WithDescription(int64Attribute(optional, computed),
-											"The number of IOPS for the disk. Only applicable for certain disk types."),
+											"The number of IOPS for the disk. Only applicable for AWS and Azure."),
 										"autoexpansion": WithDescription(boolAttribute(optional, computed),
 											"Enable or disable automatic disk expansion.  This can only be set for Azure."),
 									},

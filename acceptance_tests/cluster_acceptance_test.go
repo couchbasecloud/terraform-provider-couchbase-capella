@@ -267,10 +267,9 @@ func TestAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenario(t *testin
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
-			// Create and Read testing
 			{
 				Config:      testAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenarioConfig(resourceName, cidr),
-				ExpectError: regexp.MustCompile("Could not create cluster, unexpected error: iops for gcp cluster cannot be"),
+				ExpectError: regexp.MustCompile("iops cannot be set for GCP"),
 			},
 		},
 	})
