@@ -275,6 +275,10 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 
   Retrieve the AWS command used to configure a VPC endpoint.
 
+* [Retrieve Private Endpoint Command for GCP](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoint_command/GCP):
+
+  Retrieve the GCP command used to configure a VPC endpoint.
+
 * [Retrieve Private Endpoint Command for Azure](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoint_command/Azure):
 
   Retrieve the Azure command used to configure a private endpoint.
@@ -314,3 +318,7 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 * [Manage Free Tier Cluster On/Off](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/free_tier_cluster_on_off):
 
   Turn your free tier operational cluster on or off on demand to optimize resource usage. Turning the free tier cluster on or off will also turn on or off any linked App Services. 
+
+* [Manage App Services CIDR](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/app_services_cidr):
+
+  Manage CIDR for App Services. 
