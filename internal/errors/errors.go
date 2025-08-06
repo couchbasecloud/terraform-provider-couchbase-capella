@@ -263,4 +263,6 @@ var (
 		" state of the app service. Please run `terraform plan` after 4-5 minutes to know the" +
 		" current status of the app service. Additionally, run `terraform apply --refresh-only` to update" +
 		" the state from remote, unexpected error: ")
+
+	ErrCannotSetIopsForGcp = errors.New("iops cannot be set for GCP clusters.")
 )
