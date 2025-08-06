@@ -3,8 +3,15 @@ package datasources
 import (
 	"context"
 	"fmt"
-	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	"net/http"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
 // NewAppEndpoint is used in (p *capellaProvider) DataSources for building the provider.
@@ -37,6 +44,68 @@ func (a *AppEndpoint) Configure(ctx context.Context, req datasource.ConfigureReq
 	a.Data = data
 }
 
-func (a *AppEndpoint) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	//TODO implement me
+func (a *AppEndpoint) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var state providerschema.AppEndpoints
+	diags := req.Config.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if state.OrganizationId.IsNull() {
+		resp.Diagnostics.AddError(
+			"Error reading cluster",
+			"Could not read cluster, unexpected error: organization ID cannot be empty.",
+		)
+		return
+	}
+
+	if state.ProjectId.IsNull() {
+		resp.Diagnostics.AddError(
+			"Error reading cluster",
+			"Could not read cluster, unexpected error: project ID cannot be empty.",
+		)
+		return
+	}
+
+	var (
+		organizationId = state.OrganizationId.ValueString()
+		projectId      = state.ProjectId.ValueString()
+	)
+
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", a.HostURL, organizationId, projectId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+
+	response, err := api.GetPaginated[[]clusterapi.GetClusterResponse](ctx, a.Client, a.Token, cfg, api.SortById)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Capella Clusters",
+			fmt.Sprintf(
+				"Could not read clusters in organization %s and project %s, unexpected error: %s",
+				organizationId, projectId, api.ParseError(err),
+			),
+		)
+		return
+	}
+
+	for i := range response {
+		cluster := response[i]
+
+		newClusterData, err := providerschema.NewClusterData(&cluster, organizationId, projectId, auditObj)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error Reading Capella Clusters",
+				fmt.Sprintf("Could not read clusters in organization %s and project %s, unexpected error: %s", organizationId, projectId, err.Error()),
+			)
+		}
+		state.Data = append(state.Data, *newClusterData)
+	}
+
+	// Set state
+	diags = resp.State.Set(ctx, &state)
+
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }

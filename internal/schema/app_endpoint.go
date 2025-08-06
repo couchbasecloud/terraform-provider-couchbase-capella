@@ -1,9 +1,115 @@
 package schema
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/app_endpoints"
 )
+
+type AppEndpoints struct {
+	// OrganizationId is the ID of the organization to which the App Endpoints belong.
+	OrganizationId types.String `tfsdk:"organization_id"`
+	// ProjectId is the ID of the project to which the App Endpoints belong.
+	ProjectId types.String `tfsdk:"project_id"`
+	// ClusterId is the ID of the cluster to which the App Endpoints belong.
+	ClusterId types.String `tfsdk:"cluster_id"`
+	// AppServiceId is the ID of the App Service to which the App Endpoints belong.
+	AppServiceId types.String `tfsdk:"app_service_id"`
+	// Data is a list of App Endpoint configurations.
+	Data []AppEndpoint `tfsdk:"data"`
+}
+
+func NewAppEndpoint(ctx context.Context, apiEndpoint *app_endpoints.GetAppEndpointResponse) (*AppEndpoint, error) {
+	newEndpoint := AppEndpoint{
+		DeltaSyncEnabled: types.BoolValue(apiEndpoint.DeltaSyncEnabled),
+		AdminURL:         types.StringValue(apiEndpoint.AdminURL),
+		MetricsURL:       types.StringValue(apiEndpoint.MetricsURL),
+		PublicURL:        types.StringValue(apiEndpoint.PublicURL),
+		State:            types.StringValue(apiEndpoint.State),
+	}
+	var diags diag.Diagnostics
+
+	// Convert collections
+	collections := make(map[string]attr.Value)
+	for scopeName, config := range apiEndpoint.Scopes {
+		newEndpoint.Scope = types.StringValue(scopeName)
+		for collectionName, collectionConfig := range config.Collections {
+			collection := AppEndpointCollection{
+				AccessControlFunction: types.StringPointerValue(collectionConfig.AccessControlFunction),
+				ImportFilter:          types.StringPointerValue(collectionConfig.ImportFilter),
+			}
+
+			collectionObject, diags := types.ObjectValueFrom(ctx, collection.AttributeTypes(), collection)
+			if diags.HasError() {
+				return nil, fmt.Errorf("error while converting collection %s: %s", collectionName, diags)
+			}
+			collections[collectionName] = collectionObject
+		}
+	}
+
+	newEndpoint.Collections, diags = types.MapValue(types.ObjectType{AttrTypes: AppEndpointCollection{}.AttributeTypes()}, collections)
+	if diags.HasError() {
+		return nil, fmt.Errorf("error while converting collections: %s", diags)
+	}
+
+	// Convert CORS
+	if apiEndpoint.Cors != nil {
+		newEndpoint.Cors = &AppEndpointCors{
+			Origin:      StringsToBaseStrings(apiEndpoint.Cors.Origin),
+			LoginOrigin: StringsToBaseStrings(apiEndpoint.Cors.LoginOrigin),
+			Headers:     StringsToBaseStrings(apiEndpoint.Cors.Headers),
+			MaxAge:      types.Int64PointerValue(apiEndpoint.Cors.MaxAge),
+			Disabled:    types.BoolPointerValue(apiEndpoint.Cors.Disabled),
+		}
+	}
+
+	// Convert OIDC
+	var oidcConfigs []AppEndpointOidc
+	for _, oidc := range apiEndpoint.Oidc {
+		oidcConfig := AppEndpointOidc{
+			Issuer:        types.StringValue(oidc.Issuer),
+			Register:      types.BoolPointerValue(oidc.Register),
+			ClientId:      types.StringValue(oidc.ClientId),
+			UserPrefix:    types.StringPointerValue(oidc.UserPrefix),
+			DiscoveryUrl:  types.StringPointerValue(oidc.DiscoveryUrl),
+			UsernameClaim: types.StringPointerValue(oidc.UsernameClaim),
+			RolesClaim:    types.StringPointerValue(oidc.RolesClaim),
+			ProviderId:    types.StringPointerValue(oidc.ProviderId),
+			IsDefault:     types.BoolPointerValue(oidc.IsDefault),
+		}
+		oidcConfigs = append(oidcConfigs, oidcConfig)
+	}
+	newEndpoint.Oidc = oidcConfigs
+
+	// Convert RequireResync
+	requireResync := make(map[string]attr.Value)
+	for scope, collections := range apiEndpoint.RequireResync {
+		collectionList, diags := convertStringSliceToAttr(collections)
+		if diags.HasError() {
+			return nil, fmt.Errorf("error while converting require_resync for scope %s: %s", scope, diags)
+		}
+		requireResync[scope] = collectionList
+	}
+	newEndpoint.RequireResync, diags = types.MapValue(types.ListType{ElemType: types.StringType}, requireResync)
+	if diags.HasError() {
+		return nil, fmt.Errorf("error while converting require_resync: %s", diags)
+	}
+
+	return &newEndpoint, nil
+}
+
+func convertStringSliceToAttr(slice []string) (attr.Value, diag.Diagnostics) {
+	var attrValues []attr.Value
+	for _, item := range slice {
+		attrValues = append(attrValues, types.StringValue(item))
+	}
+	return types.ListValue(types.StringType, attrValues)
+}
 
 // AppEndpoint represents the Terraform schema for an app endpoint configuration.
 type AppEndpoint struct {
