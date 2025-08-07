@@ -6,11 +6,9 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/app_endpoints"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
@@ -71,12 +69,13 @@ func (a *AppEndpoint) Read(ctx context.Context, req datasource.ReadRequest, resp
 	var (
 		organizationId = state.OrganizationId.ValueString()
 		projectId      = state.ProjectId.ValueString()
+		appServiceId   = state.AppServiceId.ValueString()
 	)
 
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", a.HostURL, organizationId, projectId)
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/appservices/%s/appEndpoints", a.HostURL, organizationId, projectId, appServiceId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
-	response, err := api.GetPaginated[[]clusterapi.GetClusterResponse](ctx, a.Client, a.Token, cfg, api.SortById)
+	response, err := api.GetPaginated[[]app_endpoints.GetAppEndpointResponse](ctx, a.Client, a.Token, cfg, api.SortById)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Clusters",
@@ -89,16 +88,14 @@ func (a *AppEndpoint) Read(ctx context.Context, req datasource.ReadRequest, resp
 	}
 
 	for i := range response {
-		cluster := response[i]
-
-		newClusterData, err := providerschema.NewClusterData(&cluster, organizationId, projectId, auditObj)
+		newAppEndpoint, err := providerschema.NewAppEndpoint(ctx, &response[i])
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error Reading Capella Clusters",
 				fmt.Sprintf("Could not read clusters in organization %s and project %s, unexpected error: %s", organizationId, projectId, err.Error()),
 			)
 		}
-		state.Data = append(state.Data, *newClusterData)
+		state.Data = append(state.Data, *newAppEndpoint)
 	}
 
 	// Set state
