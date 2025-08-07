@@ -26,19 +26,19 @@ func (a *AppEndpoint) Schema(ctx context.Context, req datasource.SchemaRequest, 
 		MarkdownDescription: "The data source retrieves App Endpoint configurations for an App Service.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
-				Computed:            true,
+				Required:            true,
 				MarkdownDescription: "The GUID4 ID of the organization.",
 			},
 			"project_id": schema.StringAttribute{
-				Computed:            true,
+				Required:            true,
 				MarkdownDescription: "The GUID4 ID of the project.",
 			},
 			"cluster_id": schema.StringAttribute{
-				Computed:            true,
+				Required:            true,
 				MarkdownDescription: "The GUID4 ID of the cluster.",
 			},
 			"app_service_id": schema.StringAttribute{
-				Computed:            true,
+				Required:            true,
 				MarkdownDescription: "The GUID4 ID of the App Service.",
 			},
 			"data": schema.ListNestedAttribute{

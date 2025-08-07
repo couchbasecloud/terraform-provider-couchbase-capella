@@ -17,13 +17,14 @@ func NewAppEndpoint() datasource.DataSource {
 	return &AppEndpoint{}
 }
 
-// Metadata returns the App Service CIDRs data source type name.
+// Metadata returns the App Endpoints data source type name.
 func (a *AppEndpoint) Metadata(
 	_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse,
 ) {
-	resp.TypeName = req.ProviderTypeName + "_app_services_cidr"
+	resp.TypeName = req.ProviderTypeName + "_app_endpoints"
 }
 
+// Configure defines the schema for the App Endpoints data source.
 func (a *AppEndpoint) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -42,6 +43,7 @@ func (a *AppEndpoint) Configure(ctx context.Context, req datasource.ConfigureReq
 	a.Data = data
 }
 
+// Read refreshes the Terraform state with the latest App Endpoints configs.
 func (a *AppEndpoint) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state providerschema.AppEndpoints
 	diags := req.Config.Get(ctx, &state)
@@ -52,7 +54,7 @@ func (a *AppEndpoint) Read(ctx context.Context, req datasource.ReadRequest, resp
 
 	if state.OrganizationId.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error reading cluster",
+			"Error reading App Endpoints",
 			"Could not read cluster, unexpected error: organization ID cannot be empty.",
 		)
 		return
@@ -60,8 +62,24 @@ func (a *AppEndpoint) Read(ctx context.Context, req datasource.ReadRequest, resp
 
 	if state.ProjectId.IsNull() {
 		resp.Diagnostics.AddError(
-			"Error reading cluster",
+			"Error reading App Endpoints",
 			"Could not read cluster, unexpected error: project ID cannot be empty.",
+		)
+		return
+	}
+
+	if state.ClusterId.IsNull() {
+		resp.Diagnostics.AddError(
+			"Error reading App Endpoints",
+			"Could not read cluster, unexpected error: cluster ID cannot be empty.",
+		)
+		return
+	}
+
+	if state.AppServiceId.IsNull() {
+		resp.Diagnostics.AddError(
+			"Error reading App Endpoints",
+			"Could not read cluster, unexpected error: App Service ID cannot be empty.",
 		)
 		return
 	}
@@ -69,18 +87,19 @@ func (a *AppEndpoint) Read(ctx context.Context, req datasource.ReadRequest, resp
 	var (
 		organizationId = state.OrganizationId.ValueString()
 		projectId      = state.ProjectId.ValueString()
+		clusterId      = state.ClusterId.ValueString()
 		appServiceId   = state.AppServiceId.ValueString()
 	)
 
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/appservices/%s/appEndpoints", a.HostURL, organizationId, projectId, appServiceId)
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints", a.HostURL, organizationId, projectId, clusterId, appServiceId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
-	response, err := api.GetPaginated[[]app_endpoints.GetAppEndpointResponse](ctx, a.Client, a.Token, cfg, api.SortById)
+	response, err := api.GetPaginated[[]app_endpoints.GetAppEndpointResponse](ctx, a.Client, a.Token, cfg, api.SortByName)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Capella Clusters",
+			"Error Reading App Endpoints",
 			fmt.Sprintf(
-				"Could not read clusters in organization %s and project %s, unexpected error: %s",
+				"Could not read App Endpoints in organization %s and project %s, unexpected error: %s",
 				organizationId, projectId, api.ParseError(err),
 			),
 		)
