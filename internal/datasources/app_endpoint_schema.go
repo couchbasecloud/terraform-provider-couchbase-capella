@@ -15,7 +15,7 @@ var (
 	_ datasource.DataSourceWithConfigure = (*AppEndpoint)(nil)
 )
 
-// AppServiceCidrs is the data source implementation for retrieving allowed CIDRs for an App Service.
+// AppEndpoint is the data source implementation for retrieving App Endpoints for an App Service.
 type AppEndpoint struct {
 	*providerschema.Data
 }
