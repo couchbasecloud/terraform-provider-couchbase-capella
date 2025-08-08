@@ -31,14 +31,17 @@ type AppEndpoint struct {
 	// DeltaSyncEnabled Indicates whether Delta Sync is enabled for the App Endpoint.
 	DeltaSyncEnabled types.Bool `tfsdk:"delta_sync_enabled"`
 
-	// Scopes defines the scopes and collections for the App Endpoint.
-	Scopes types.Map `tfsdk:"scopes"`
+	// Scope is the name of the scope associated with the App Endpoint.
+	Scope types.String `tfsdk:"scope"`
+
+	// Collections is a map of collection names to their configurations.
+	Collections types.Map `tfsdk:"collections"`
 
 	// Cors configures cross origin resource sharing (CORS) for the App Endpoint.
-	Cors types.Object `tfsdk:"cors"`
+	Cors *AppEndpointCors `tfsdk:"cors"`
 
 	// Oidc is a list of OIDC provider configurations for the App Endpoint.
-	Oidc types.List `tfsdk:"oidc"`
+	Oidc []AppEndpointOidc `tfsdk:"oidc"`
 
 	// RequireResync is a map of scopes to a list of collection names that require resync.
 	RequireResync types.Map `tfsdk:"require_resync"`
@@ -51,19 +54,10 @@ type AppEndpoint struct {
 
 	// PublicURL A URL for the public API used for access to functions for data access and manipulation. For more information, read the [Capella App Services Public API Reference](https://docs.couchbase.com/cloud/app-services/references/rest_api_public.html)
 	PublicURL types.String `tfsdk:"public_url"`
-}
 
-// ScopesConfig maps scope name to a list of collection names.
-type (
-	// AppEndpointScopes represents a map of scope names to collections.
-	AppEndpointScopes map[types.String]AppEndpointScopeConfig
-	// RequireResync
-	RequireResync          types.MapType
-	AppEndpointScopeConfig struct {
-		// Collections is a map of collections names to their configurations.
-		Collections map[types.String]AppEndpointCollection `tfsdk:"collections"` // Collection-specific config options.
-	}
-)
+	// State is the current state of the App Endpoint including online, offline, resyncing, etc.
+	State types.String `tfsdk:"state"`
+}
 
 // AppEndpointCollection represents a collection configuration.
 type AppEndpointCollection struct {
@@ -112,6 +106,7 @@ type AppEndpointOidc struct {
 	IsDefault types.Bool `tfsdk:"is_default"`
 }
 
+// AttributeTypes returns the attribute types for the AppEndpoint schema.
 func (a AppEndpoint) AttributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"organization_id":    types.StringType,
@@ -121,20 +116,16 @@ func (a AppEndpoint) AttributeTypes() map[string]attr.Type {
 		"bucket":             types.StringType,
 		"name":               types.StringType,
 		"user_xattr_key":     types.StringType,
-		"delta_sync_enabled": types.BoolType,
-		"scopes":             types.MapType{ElemType: types.ObjectType{AttrTypes: AppEndpointScopeConfig{}.AttributeTypes()}},
-		"cors":               types.ObjectType{AttrTypes: AppEndpointCors{}.AttributeTypes()},
-		"oidc":               types.ListType{ElemType: types.ObjectType{AttrTypes: AppEndpointOidc{}.AttributeTypes()}},
-		"require_resync":     types.MapType{ElemType: types.ListType{ElemType: types.StringType}},
+		"scope":              types.StringType,
+		"state":              types.StringType,
 		"admin_url":          types.StringType,
 		"metrics_url":        types.StringType,
 		"public_url":         types.StringType,
-	}
-}
-
-func (s AppEndpointScopeConfig) AttributeTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"collections": types.MapType{ElemType: types.ObjectType{AttrTypes: AppEndpointCollection{}.AttributeTypes()}},
+		"collections":        types.MapType{ElemType: types.ObjectType{AttrTypes: AppEndpointCollection{}.AttributeTypes()}},
+		"cors":               types.ObjectType{AttrTypes: AppEndpointCors{}.AttributeTypes()},
+		"oidc":               types.ListType{ElemType: types.ObjectType{AttrTypes: AppEndpointOidc{}.AttributeTypes()}},
+		"require_resync":     types.MapType{ElemType: types.ListType{ElemType: types.StringType}},
+		"delta_sync_enabled": types.BoolType,
 	}
 }
 

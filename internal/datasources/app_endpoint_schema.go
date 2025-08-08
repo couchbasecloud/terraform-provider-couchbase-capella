@@ -22,15 +22,13 @@ type AppEndpoint struct {
 
 func (a *AppEndpoint) Configure(ctx context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
 	//TODO implement me
-	return
 }
 
 func (a *AppEndpoint) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	//TODO implement me
-	return
 }
 
-// NewAppServiceCidrs is used in (p *capellaProvider) DataSources for building the provider.
+// NewAppEndpoint is used in (p *capellaProvider) DataSources for building the provider.
 func NewAppEndpoint() datasource.DataSource {
 	return &AppEndpoint{}
 }
@@ -84,26 +82,22 @@ func (a *AppEndpoint) Schema(ctx context.Context, req datasource.SchemaRequest, 
 							Computed:            true,
 							MarkdownDescription: "Enable or disable delta sync on this App Endpoint.",
 						},
-						"scopes": schema.MapNestedAttribute{
+						"scope": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The list of scopes in this App Endpoint. Currently, only one scope can be linked per App Endpoint.",
+							MarkdownDescription: "The scope name for the App Endpoint. Currently, only one scope can be linked per App Endpoint.",
+						},
+						"collections": schema.MapNestedAttribute{
+							Computed:            true,
+							MarkdownDescription: "The collection configuration defines access control, validation functions, and import filters for a specific collection. The key of the collection configuration object is the name of the collection.",
 							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
-									"collections": schema.MapNestedAttribute{
+									"access_control_function": schema.StringAttribute{
 										Computed:            true,
-										MarkdownDescription: "The collection configuration defines access control, validation functions, and import filters for a specific collection. The key of the collection configuration object is the name of the collection.",
-										NestedObject: schema.NestedAttributeObject{
-											Attributes: map[string]schema.Attribute{
-												"access_control_function": schema.StringAttribute{
-													Computed:            true,
-													MarkdownDescription: "The Javascript function that is used to specify the access control policies to be applied to documents in this collection. Every document update is processed by this function.",
-												},
-												"import_filter": schema.StringAttribute{
-													Computed:            true,
-													MarkdownDescription: "The JavaScript function used to filter which documents in the collection that are to be imported by the App Endpoint.",
-												},
-											},
-										},
+										MarkdownDescription: "The Javascript function that is used to specify the access control policies to be applied to documents in this collection. Every document update is processed by this function.",
+									},
+									"import_filter": schema.StringAttribute{
+										Computed:            true,
+										MarkdownDescription: "The JavaScript function used to filter which documents in the collection that are to be imported by the App Endpoint.",
 									},
 								},
 							},
@@ -181,18 +175,14 @@ func (a *AppEndpoint) Schema(ctx context.Context, req datasource.SchemaRequest, 
 								},
 							},
 						},
-						"require_resync": schema.MapNestedAttribute{
+						"state": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "The state of the App Endpoint. Possible values include `online`, `offline` and `resyncing`.",
+						},
+						"require_resync": schema.MapAttribute{
 							Computed:            true,
 							MarkdownDescription: "List of collections that require resync, keyed by scope.",
-							NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"items": schema.ListAttribute{
-										Computed:            true,
-										ElementType:         types.StringType,
-										MarkdownDescription: "List of collections that require resync under this scope.",
-									},
-								},
-							},
+							ElementType:         types.ListType{ElemType: types.StringType},
 						},
 						"admin_url": schema.StringAttribute{
 							Computed:            true,
