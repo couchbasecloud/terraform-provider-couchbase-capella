@@ -1,49 +1,49 @@
 
 variable "auth_token" {
-  description = "Authentication API Key"
-  sensitive   = true
+    description = "Authentication API Key"
+    sensitive   = true
 }
 
 variable "organization_id" {
-  description = "Capella Organization ID"
+    description = "Capella Organization ID"
 }
 
 variable "project_id" {
-  description = "Capella Project ID"
+    description = "Capella Project ID"
 }
 
 variable "cluster_id" {
-  description = "Capella Cluster ID"
+    description = "Capella Cluster ID"
 }
 
 variable "app_service_id" {
-  description = "Capella App Service ID"
+    description = "Capella App Service ID"
 }
 
 variable "bucket" {
-  description = "bucket"
+    description = "bucket"
 }
 
 variable "name" {
-  description = "name"
+    description = "name"
 }
 
 variable "delta_sync_enabled" {
-  description = "delta_sync_enabled"
+    description = "delta_sync_enabled"
 }
 
 variable "scope" {
-  description = "scope"
+    description = "scope"
 }
 
 variable "collections" {
-  description = "collections"
+    description = "collections"
 }
 
 variable "cors" {
-  description = "cors"
+    description = "cors"
 }
 
 variable "oidc" {
-  description = "oidc"
+    description = "oidc"
 }

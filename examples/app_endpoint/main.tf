@@ -1,11 +1,11 @@
 terraform {
-  required_providers {
-    couchbase-capella = {
-      source = "couchbasecloud/couchbase-capella"
+    required_providers {
+        couchbase-capella = {
+            source = "couchbasecloud/couchbase-capella"
+        }
     }
-  }
 }
 
 provider "couchbase-capella" {
-  authentication_token = var.auth_token
+    authentication_token = var.auth_token
 }
