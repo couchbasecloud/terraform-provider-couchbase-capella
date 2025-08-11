@@ -650,7 +650,7 @@ Please note, this command will only remove the resource from the Terraform State
 
 ### Now, let's import the resource in Terraform
 
-Command: `terraform import couchbase-capella_cluster.new_cluster id=<cluster_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
+Command: `terraform import couchbase-capella_cluster.new_cluster id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
 In this case, the complete command is:
 `terraform import couchbase-capella_cluster.new_cluster id=ffffffff-aaaa-1414-eeee-00000000000,project_id=ffffffff-aaaa-1414-eeee-00000000000,organization_id=ffffffff-aaaa-1414-eeee-00000000000`
