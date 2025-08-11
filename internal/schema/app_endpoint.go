@@ -7,8 +7,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/app_endpoints"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 )
 
 type AppEndpoints struct {
@@ -163,6 +165,24 @@ type AppEndpoint struct {
 
 	// State is the current state of the App Endpoint including online, offline, resyncing, etc.
 	State types.String `tfsdk:"state"`
+}
+
+// Validate verifies required identifiers for the App Endpoint are present and returns them.
+func (a *AppEndpoint) Validate() (map[Attr]string, error) {
+	state := map[Attr]basetypes.StringValue{
+		OrganizationId: a.OrganizationId,
+		ProjectId:      a.ProjectId,
+		ClusterId:      a.ClusterId,
+		AppServiceId:   a.AppServiceId,
+		// Reuse EndpointId to represent the endpoint identifier (name) for URL construction
+		EndpointId: a.Name,
+	}
+
+	IDs, err := validateSchemaState(state, EndpointId)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
+	}
+	return IDs, nil
 }
 
 // GetAppEndpointResponse represents the Terraform schema for an app endpoint configuration.

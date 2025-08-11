@@ -466,11 +466,20 @@ func (a *AppEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return
 	}
 
-	var organizationId = state.OrganizationId.ValueString()
-	var projectId = state.ProjectId.ValueString()
-	var clusterId = state.ClusterId.ValueString()
-	var appServiceId = state.AppServiceId.ValueString()
-	var endpointName = state.Name.ValueString()
+	IDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error refreshing app endpoint",
+			fmt.Sprintf("Could not validate app endpoint %s: %s", state.Name.String(), err.Error()),
+		)
+		return
+	}
+
+	organizationId := IDs[providerschema.OrganizationId]
+	projectId := IDs[providerschema.ProjectId]
+	clusterId := IDs[providerschema.ClusterId]
+	appServiceId := IDs[providerschema.AppServiceId]
+	endpointName := IDs[providerschema.EndpointId]
 
 	// Get the app endpoint
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
