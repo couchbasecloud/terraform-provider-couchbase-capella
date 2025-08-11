@@ -175,10 +175,10 @@ func (a *AppEndpoint) Validate() (map[Attr]string, error) {
 		ClusterId:      a.ClusterId,
 		AppServiceId:   a.AppServiceId,
 		// Reuse EndpointId to represent the endpoint identifier (name) for URL construction
-		EndpointId: a.Name,
+		EndpointName: a.Name,
 	}
 
-	IDs, err := validateSchemaState(state, EndpointId)
+	IDs, err := validateSchemaState(state, EndpointName)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
 	}
