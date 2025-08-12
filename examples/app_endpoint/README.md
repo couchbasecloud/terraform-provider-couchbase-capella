@@ -306,8 +306,25 @@ Successfully removed 1 resource instance(s).
 ```
 Please note, this command will only remove the resource from the Terraform State file. The resource will still exist in Capella.
 
-## IMPORT // TODO 
+## IMPORT
 
+Command:  `terraform import couchbase-capella_app_endpoint.example_app_endpoint name=example-app-endpoint,organization_id=<organization_id>,project_id=<project_id>,app_service_id=<app_service_id>,cluster_id=<cluster_id>`
+
+
+```aiignore
+ $ terraform import  couchbase-capella_app_endpoint.example_app_endpoint name=example-app-endpoint,organization_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,app_service_id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000                                                                                                                                                                                                                                       1 ↵
+couchbase-capella_app_endpoint.example_app_endpoint: Importing from ID "name=example-app-endpoint,organization_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,app_service_id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000"...
+couchbase-capella_app_endpoint.example_app_endpoint: Import prepared!
+  Prepared couchbase-capella_app_endpoint for import
+couchbase-capella_app_endpoint.example_app_endpoint: Refreshing state... [name=name=example-app-endpoint,organization_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,app_service_id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000]
+
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+
+
+```
 ## Update
 
 Command: `terraform apply -var delta_sync_enabled=true'`
