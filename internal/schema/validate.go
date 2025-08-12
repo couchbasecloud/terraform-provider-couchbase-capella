@@ -22,6 +22,7 @@ var (
 		"index_name":      IndexName,
 		"app_service_id":  AppServiceId,
 		"endpoint_id":     EndpointId,
+		"name":            EndpointName,
 	}
 )
 
