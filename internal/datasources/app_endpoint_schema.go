@@ -41,7 +41,7 @@ func (a *AppEndpoint) Schema(ctx context.Context, req datasource.SchemaRequest, 
 				Required:            true,
 				MarkdownDescription: "The GUID4 ID of the App Service.",
 			},
-			"data": schema.ListNestedAttribute{
+			"data": schema.SetNestedAttribute{
 				Computed:            true,
 				MarkdownDescription: "List of App Endpoint configurations.",
 				NestedObject: schema.NestedAttributeObject{
@@ -86,17 +86,17 @@ func (a *AppEndpoint) Schema(ctx context.Context, req datasource.SchemaRequest, 
 							Computed:            true,
 							MarkdownDescription: "CORS configuration for the App Endpoint.",
 							Attributes: map[string]schema.Attribute{
-								"origin": schema.ListAttribute{
+								"origin": schema.SetAttribute{
 									Computed:            true,
 									ElementType:         types.StringType,
 									MarkdownDescription: "List of allowed origins for CORS.",
 								},
-								"login_origin": schema.ListAttribute{
+								"login_origin": schema.SetAttribute{
 									Computed:            true,
 									ElementType:         types.StringType,
 									MarkdownDescription: "List of allowed login origins for CORS.",
 								},
-								"headers": schema.ListAttribute{
+								"headers": schema.SetAttribute{
 									Computed:            true,
 									ElementType:         types.StringType,
 									MarkdownDescription: "List of allowed headers for CORS.",
@@ -111,7 +111,7 @@ func (a *AppEndpoint) Schema(ctx context.Context, req datasource.SchemaRequest, 
 								},
 							},
 						},
-						"oidc": schema.ListNestedAttribute{
+						"oidc": schema.SetNestedAttribute{
 							Computed:            true,
 							MarkdownDescription: "List of OIDC configurations for the App Endpoint.",
 							NestedObject: schema.NestedAttributeObject{
@@ -162,7 +162,7 @@ func (a *AppEndpoint) Schema(ctx context.Context, req datasource.SchemaRequest, 
 						"require_resync": schema.MapAttribute{
 							Computed:            true,
 							MarkdownDescription: "List of collections that require resync, keyed by scope.",
-							ElementType:         types.ListType{ElemType: types.StringType},
+							ElementType:         types.SetType{ElemType: types.StringType},
 						},
 						"admin_url": schema.StringAttribute{
 							Computed:            true,
