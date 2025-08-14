@@ -405,7 +405,7 @@ func initComputedAppEndpointAttributesToNull(plan providerschema.AppEndpoint) pr
 		}
 	}
 
-	plan.RequireResync = types.MapNull(types.ListType{ElemType: types.StringType})
+	plan.RequireResync = types.MapNull(types.SetType{ElemType: types.StringType})
 
 	return plan
 }
@@ -566,7 +566,7 @@ func (a *AppEndpoint) refreshAppEndpoint(ctx context.Context, cfg api.EndpointCf
 			for i, name := range collections {
 				items[i] = types.StringValue(name)
 			}
-			requireResyncMap[scope], diags = types.ListValueFrom(
+			requireResyncMap[scope], diags = types.SetValueFrom(
 				ctx,
 				types.StringType,
 				items,
@@ -575,12 +575,12 @@ func (a *AppEndpoint) refreshAppEndpoint(ctx context.Context, cfg api.EndpointCf
 				return nil, fmt.Errorf("error converting require_resync for scope %s: %v", scope, diags.Errors())
 			}
 		}
-		plan.RequireResync, diags = types.MapValueFrom(ctx, types.ListType{ElemType: types.StringType}, requireResyncMap)
+		plan.RequireResync, diags = types.MapValueFrom(ctx, types.SetType{ElemType: types.StringType}, requireResyncMap)
 		if diags.HasError() {
 			return nil, fmt.Errorf("error converting require_resync: %s", diags.Errors())
 		}
 	} else {
-		plan.RequireResync = types.MapNull(types.ListType{ElemType: types.StringType})
+		plan.RequireResync = types.MapNull(types.SetType{ElemType: types.StringType})
 	}
 
 	return plan, nil

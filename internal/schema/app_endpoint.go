@@ -123,8 +123,8 @@ func (a AppEndpoint) AttributeTypes() map[string]attr.Type {
 		"public_url":         types.StringType,
 		"collections":        types.MapType{ElemType: types.ObjectType{AttrTypes: AppEndpointCollection{}.AttributeTypes()}},
 		"cors":               types.ObjectType{AttrTypes: AppEndpointCors{}.AttributeTypes()},
-		"oidc":               types.ListType{ElemType: types.ObjectType{AttrTypes: AppEndpointOidc{}.AttributeTypes()}},
-		"require_resync":     types.MapType{ElemType: types.ListType{ElemType: types.StringType}},
+		"oidc":               types.SetType{ElemType: types.ObjectType{AttrTypes: AppEndpointOidc{}.AttributeTypes()}},
+		"require_resync":     types.MapType{ElemType: types.SetType{ElemType: types.StringType}},
 		"delta_sync_enabled": types.BoolType,
 	}
 }
@@ -145,9 +145,9 @@ func (o AppEndpointOidc) AttributeTypes() map[string]attr.Type {
 
 func (c AppEndpointCors) AttributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
-		"origin":       types.ListType{ElemType: types.StringType},
-		"login_origin": types.ListType{ElemType: types.StringType},
-		"headers":      types.ListType{ElemType: types.StringType},
+		"origin":       types.SetType{ElemType: types.StringType},
+		"login_origin": types.SetType{ElemType: types.StringType},
+		"headers":      types.SetType{ElemType: types.StringType},
 		"max_age":      types.Int64Type,
 		"disabled":     types.BoolType,
 	}
