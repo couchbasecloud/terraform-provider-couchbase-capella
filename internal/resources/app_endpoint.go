@@ -469,8 +469,8 @@ func (a *AppEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *
 	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error refreshing app endpoint",
-			fmt.Sprintf("Could not validate app endpoint %s: %s", state.Name.String(), err.Error()),
+			"Error validating app endpoint state",
+			fmt.Sprintf("Could not validate app endpoint state %s: %s", state.Name.String(), err.Error()),
 		)
 		return
 	}
