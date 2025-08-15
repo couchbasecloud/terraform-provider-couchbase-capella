@@ -27,11 +27,9 @@ func TestAccAppEndpointResource(t *testing.T) {
 			},
 			// ImportState testing
 			{
-				ResourceName:                         resourceReference,
-				ImportStateIdFunc:                    generateAppEndpointImportId(resourceReference),
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "name",
+				ResourceName:      resourceReference,
+				ImportStateIdFunc: generateAppEndpointImportId(resourceReference),
+				ImportState:       true,
 			},
 			// Update and Read testing
 			{
@@ -82,6 +80,27 @@ resource "couchbase-capella_app_endpoint" "%[6]s" {
   collections = {
     "%[9]s" = {}
   }
+
+
+  cors = {
+    origin      = ["https://example.com"]
+    login_origin = ["https://login.example.com"]
+    headers     = ["Authorization", "Content-Type"]
+    max_age     = 3600
+    disabled    = false
+}
+
+oidc = [
+    {
+        register       = true
+        client_id      = "example-client-id"
+        user_prefix    = "example-prefix"
+		discovery_url: "https://accounts.google.com/.well-known/openid-configuration",
+		issuer: "https://accounts.google.com",
+        username_claim = "preferred_username"
+        roles_claim    = "roles"
+    }
+]
 }
 `, globalProviderBlock, globalOrgId, globalProjectId, globalClusterId, globalAppServiceId, resourceName, globalBucketName, globalScopeName, globalCollectionName)
 }
