@@ -14,4 +14,5 @@ const (
 	AppServiceId   Attr = "appServiceId"
 	EndpointId     Attr = "endpointId"
 	IndexName      Attr = "indexName"
+	Keyspace       Attr = "keyspace"
 )
