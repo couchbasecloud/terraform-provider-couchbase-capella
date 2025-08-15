@@ -2,7 +2,6 @@ package resources
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -86,18 +85,19 @@ func (r *AccessFunction) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
+	// add validate func, use ap pservice id for passthru
 	// Extract IDs from plan
 	organizationId := plan.OrganizationId.ValueString()
 	projectId := plan.ProjectId.ValueString()
 	clusterId := plan.ClusterId.ValueString()
 	appServiceId := plan.AppServiceId.ValueString()
-	appEndpointId := plan.AppEndpointId.ValueString()
+	appEndpointName := plan.AppEndpointName.ValueString()
 	scope := plan.Scope.ValueString()
 	collection := plan.Collection.ValueString()
 
 	// Create access function using PUT (upsert)
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appendpoints/%s/collections/%s/%s/accesscontrolfunction",
-		r.HostURL, organizationId, projectId, clusterId, appServiceId, appEndpointId, scope, collection)
+		r.HostURL, organizationId, projectId, clusterId, appServiceId, appEndpointName, scope, collection)
 
 	createRequest := AccessFunctionRequest{
 		Function: plan.AccessControlFunction.ValueString(),
@@ -120,14 +120,14 @@ func (r *AccessFunction) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	// Set initial state
-	diags = resp.State.Set(ctx, initializeAccessFunctionWithPlan(plan))
+	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Refresh state to get current values
-	refreshedState, err := r.refreshAccessFunction(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointId, scope, collection)
+	refreshedState, err := r.refreshAccessFunction(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, scope, collection)
 	if err != nil {
 		resp.Diagnostics.AddWarning(
 			"Error reading access function after creation",
@@ -163,7 +163,7 @@ func (r *AccessFunction) Read(ctx context.Context, req resource.ReadRequest, res
 
 	// Refresh state
 	refreshedState, err := r.refreshAccessFunction(ctx, IDs["organizationId"], IDs["projectId"], IDs["clusterId"],
-		IDs["appServiceId"], IDs["appEndpointId"], IDs["scope"], IDs["collection"])
+		IDs["appServiceId"], IDs["appEndpointName"], IDs["scope"], IDs["collection"])
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -198,13 +198,13 @@ func (r *AccessFunction) Update(ctx context.Context, req resource.UpdateRequest,
 	projectId := plan.ProjectId.ValueString()
 	clusterId := plan.ClusterId.ValueString()
 	appServiceId := plan.AppServiceId.ValueString()
-	appEndpointId := plan.AppEndpointId.ValueString()
+	appEndpointName := plan.AppEndpointName.ValueString()
 	scope := plan.Scope.ValueString()
 	collection := plan.Collection.ValueString()
 
 	// Update access function using PUT (upsert)
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appendpoints/%s/collections/%s/%s/accesscontrolfunction",
-		r.HostURL, organizationId, projectId, clusterId, appServiceId, appEndpointId, scope, collection)
+		r.HostURL, organizationId, projectId, clusterId, appServiceId, appEndpointName, scope, collection)
 
 	updateRequest := AccessFunctionRequest{
 		Function: plan.AccessControlFunction.ValueString(),
@@ -227,7 +227,7 @@ func (r *AccessFunction) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	// Refresh state
-	refreshedState, err := r.refreshAccessFunction(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointId, scope, collection)
+	refreshedState, err := r.refreshAccessFunction(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, scope, collection)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading access function after update",
@@ -264,7 +264,7 @@ func (r *AccessFunction) Delete(ctx context.Context, req resource.DeleteRequest,
 	// Delete access function
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appendpoints/%s/collections/%s/%s/accesscontrolfunction",
 		r.HostURL, IDs["organizationId"], IDs["projectId"], IDs["clusterId"],
-		IDs["appServiceId"], IDs["appEndpointId"], IDs["scope"], IDs["collection"])
+		IDs["appServiceId"], IDs["appEndpointName"], IDs["scope"], IDs["collection"])
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
 	_, err = r.Client.ExecuteWithRetry(
@@ -290,7 +290,7 @@ func (r *AccessFunction) Delete(ctx context.Context, req resource.DeleteRequest,
 
 // ImportState imports a resource into Terraform state.
 func (r *AccessFunction) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	// The import ID should be in the format: organizationId,projectId,clusterId,appServiceId,appEndpointId,scope,collection
+	// The import ID should be in the format: organizationId,projectId,clusterId,appServiceId,appEndpointName,scope,collection
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
@@ -309,7 +309,7 @@ func (r *AccessFunction) validateCreateAccessFunctionRequest(plan providerschema
 	if plan.AppServiceId.IsNull() {
 		return fmt.Errorf("app service ID cannot be empty")
 	}
-	if plan.AppEndpointId.IsNull() {
+	if plan.AppEndpointName.IsNull() {
 		return fmt.Errorf("app endpoint ID cannot be empty")
 	}
 	if plan.Scope.IsNull() {
@@ -337,7 +337,7 @@ func (r *AccessFunction) validateAccessFunctionState(state providerschema.Access
 	if state.AppServiceId.IsNull() {
 		return nil, fmt.Errorf("app service ID cannot be empty")
 	}
-	if state.AppEndpointId.IsNull() {
+	if state.AppEndpointName.IsNull() {
 		return nil, fmt.Errorf("app endpoint ID cannot be empty")
 	}
 	if state.Scope.IsNull() {
@@ -348,19 +348,19 @@ func (r *AccessFunction) validateAccessFunctionState(state providerschema.Access
 	}
 
 	return map[string]string{
-		"organizationId": state.OrganizationId.ValueString(),
-		"projectId":      state.ProjectId.ValueString(),
-		"clusterId":      state.ClusterId.ValueString(),
-		"appServiceId":   state.AppServiceId.ValueString(),
-		"appEndpointId":  state.AppEndpointId.ValueString(),
-		"scope":          state.Scope.ValueString(),
-		"collection":     state.Collection.ValueString(),
+		"organizationId":  state.OrganizationId.ValueString(),
+		"projectId":       state.ProjectId.ValueString(),
+		"clusterId":       state.ClusterId.ValueString(),
+		"appServiceId":    state.AppServiceId.ValueString(),
+		"appEndpointName": state.AppEndpointName.ValueString(),
+		"scope":           state.Scope.ValueString(),
+		"collection":      state.Collection.ValueString(),
 	}, nil
 }
 
-func (r *AccessFunction) getAccessFunction(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointId, scope, collection string) (*AccessFunctionResponse, error) {
+func (r *AccessFunction) getAccessFunction(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName, scope, collection string) (string, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appendpoints/%s/collections/%s/%s/accesscontrolfunction",
-		r.HostURL, organizationId, projectId, clusterId, appServiceId, appEndpointId, scope, collection)
+		r.HostURL, organizationId, projectId, clusterId, appServiceId, appEndpointName, scope, collection)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := r.Client.ExecuteWithRetry(
@@ -371,27 +371,16 @@ func (r *AccessFunction) getAccessFunction(ctx context.Context, organizationId, 
 		nil,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
+		return "", fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 	}
 
-	accessFunctionResp := AccessFunctionResponse{}
-	err = json.Unmarshal(response.Body, &accessFunctionResp)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
-	}
-	return &accessFunctionResp, nil
+	return string(response.Body), nil
 }
 
-func (r *AccessFunction) refreshAccessFunction(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointId, scope, collection string) (*providerschema.AccessFunction, error) {
-	accessFunctionResp, err := r.getAccessFunction(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointId, scope, collection)
+func (r *AccessFunction) refreshAccessFunction(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName, scope, collection string) (*providerschema.AccessFunction, error) {
+	accessFunction, err := r.getAccessFunction(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, scope, collection)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrNotFound, err)
-	}
-
-	audit := providerschema.NewCouchbaseAuditData(accessFunctionResp.Audit)
-	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
-	if diags.HasError() {
-		return nil, fmt.Errorf("%s: %w", errors.ErrUnableToConvertAuditData, err)
 	}
 
 	refreshedState := &providerschema.AccessFunction{
@@ -399,18 +388,12 @@ func (r *AccessFunction) refreshAccessFunction(ctx context.Context, organization
 		ProjectId:             types.StringValue(projectId),
 		ClusterId:             types.StringValue(clusterId),
 		AppServiceId:          types.StringValue(appServiceId),
-		AppEndpointId:         types.StringValue(appEndpointId),
+		AppEndpointName:       types.StringValue(appEndpointName),
 		Scope:                 types.StringValue(scope),
 		Collection:            types.StringValue(collection),
-		AccessControlFunction: types.StringValue(accessFunctionResp.Function),
-		Audit:                 auditObj,
+		AccessControlFunction: types.StringValue(accessFunction),
 	}
 	return refreshedState, nil
-}
-
-func initializeAccessFunctionWithPlan(plan providerschema.AccessFunction) providerschema.AccessFunction {
-	plan.Audit = types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
-	return plan
 }
 
 // API structures for access function operations
