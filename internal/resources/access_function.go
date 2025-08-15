@@ -21,6 +21,7 @@ type AccessFunction struct {
 	*providerschema.Data
 }
 
+// NewAccessFunction creates a new access function resource for provider initialization.
 func NewAccessFunction() resource.Resource {
 	return &AccessFunction{}
 }
