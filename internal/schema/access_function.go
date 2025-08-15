@@ -22,7 +22,7 @@ type AccessFunction struct {
 	AppServiceId types.String `tfsdk:"app_service_id"`
 
 	// AppEndpointId is the ID of the App Endpoint.
-	AppEndpointId types.String `tfsdk:"app_endpoint_id"`
+	AppEndpointName types.String `tfsdk:"app_endpoint_name"`
 
 	// Scope is the name of the scope containing the collection.
 	Scope types.String `tfsdk:"scope"`
@@ -45,7 +45,7 @@ func (a AccessFunction) AttributeTypes() map[string]attr.Type {
 		"project_id":              types.StringType,
 		"cluster_id":              types.StringType,
 		"app_service_id":          types.StringType,
-		"app_endpoint_id":         types.StringType,
+		"app_endpoint_name":       types.StringType,
 		"scope":                   types.StringType,
 		"collection":              types.StringType,
 		"access_control_function": types.StringType,
