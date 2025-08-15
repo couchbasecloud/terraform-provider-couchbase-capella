@@ -27,7 +27,7 @@ func NewAccessFunction() resource.Resource {
 
 // Metadata returns the access function resource type name.
 func (r *AccessFunction) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_access_function"
+	resp.TypeName = req.ProviderTypeName + "_access_control_function"
 }
 
 // Schema defines the schema for the access function resource.
