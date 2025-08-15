@@ -35,9 +35,6 @@ type AccessFunction struct {
 	// The default access control function is 'function(doc){channel(doc.channels);}'
 	// for the default collection and 'function(doc){channel(collectionName);}' for named collections.
 	AccessControlFunction types.String `tfsdk:"access_control_function"`
-
-	// Audit contains audit-related information including creation and modification details.
-	Audit types.Object `tfsdk:"audit"`
 }
 
 // AttributeTypes returns a map of attribute types for the AccessFunction schema.
@@ -52,6 +49,5 @@ func (a AccessFunction) AttributeTypes() map[string]attr.Type {
 		"scope":                   types.StringType,
 		"collection":              types.StringType,
 		"access_control_function": types.StringType,
-		"audit":                   types.ObjectType{AttrTypes: CouchbaseAuditData{}.AttributeTypes()},
 	}
 }
