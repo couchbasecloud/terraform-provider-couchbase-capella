@@ -1,6 +1,8 @@
 package schema
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -50,4 +52,50 @@ func (a AccessFunction) AttributeTypes() map[string]attr.Type {
 		"collection":              types.StringType,
 		"access_control_function": types.StringType,
 	}
+}
+
+func (a *AccessFunction) Validate() (map[string]string, error) {
+	ids := make(map[string]string)
+
+	if a.OrganizationId.IsNull() || a.OrganizationId.IsUnknown() {
+		return nil, fmt.Errorf("organization_id cannot be empty")
+	}
+	ids["organization_id"] = a.OrganizationId.ValueString()
+
+	if a.ProjectId.IsNull() || a.ProjectId.IsUnknown() {
+		return nil, fmt.Errorf("project_id cannot be empty")
+	}
+	ids["project_id"] = a.ProjectId.ValueString()
+
+	if a.ClusterId.IsNull() || a.ClusterId.IsUnknown() {
+		return nil, fmt.Errorf("cluster_id cannot be empty")
+	}
+	ids["cluster_id"] = a.ClusterId.ValueString()
+
+	if a.AppServiceId.IsNull() || a.AppServiceId.IsUnknown() {
+		return nil, fmt.Errorf("app_service_id cannot be empty")
+	}
+	ids["app_service_id"] = a.AppServiceId.ValueString()
+
+	if a.AppEndpointName.IsNull() || a.AppEndpointName.IsUnknown() {
+		return nil, fmt.Errorf("app_endpoint_name cannot be empty")
+	}
+	ids["app_endpoint_name"] = a.AppEndpointName.ValueString()
+
+	if a.Scope.IsNull() || a.Scope.IsUnknown() {
+		return nil, fmt.Errorf("scope cannot be empty")
+	}
+	ids["scope"] = a.Scope.ValueString()
+
+	if a.Collection.IsNull() || a.Collection.IsUnknown() {
+		return nil, fmt.Errorf("collection cannot be empty")
+	}
+	ids["collection"] = a.Collection.ValueString()
+
+	if a.AccessControlFunction.IsNull() || a.AccessControlFunction.IsUnknown() {
+		return nil, fmt.Errorf("access_control_function cannot be empty")
+	}
+	ids["access_control_function"] = a.AccessControlFunction.ValueString()
+
+	return ids, nil
 }

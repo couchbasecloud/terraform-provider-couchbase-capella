@@ -85,15 +85,21 @@ func (r *AccessFunction) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	// add validate func, use ap pservice id for passthru
-	// Extract IDs from plan
-	organizationId := plan.OrganizationId.ValueString()
-	projectId := plan.ProjectId.ValueString()
-	clusterId := plan.ClusterId.ValueString()
-	appServiceId := plan.AppServiceId.ValueString()
-	appEndpointName := plan.AppEndpointName.ValueString()
-	scope := plan.Scope.ValueString()
-	collection := plan.Collection.ValueString()
+	IDs, err := plan.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error parsing create access function request",
+			"Could not create access function, "+err.Error(),
+		)
+		return
+	}
+	organizationId := IDs["organization_id"]
+	projectId := IDs["project_id"]
+	clusterId := IDs["cluster_id"]
+	appServiceId := IDs["app_service_id"]
+	appEndpointName := IDs["app_endpoint_name"]
+	scope := IDs["scope"]
+	collection := IDs["collection"]
 
 	// Create access function using PUT (upsert)
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appendpoints/%s/collections/%s/%s/accesscontrolfunction",
