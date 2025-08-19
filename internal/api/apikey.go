@@ -110,4 +110,7 @@ type RotateApiKeyResponse struct {
 	// SecretKey is a confidential token that is paired with the Access key.
 	// The API key is made of an Access key and a Secret key.
 	SecretKey string `json:"secretKey"`
+
+	// Token is a confidential piece of information that is used to authorize requests made to v4 endpoints.
+	Token string `json:"token"`
 }
