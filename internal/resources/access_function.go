@@ -102,20 +102,16 @@ func (r *AccessFunction) Create(ctx context.Context, req resource.CreateRequest,
 	collection := IDs["collection"]
 
 	// Create access function using PUT (upsert)
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appendpoints/%s/collections/%s/%s/accesscontrolfunction",
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s.%s.%s/accessControlFunction",
 		r.HostURL, organizationId, projectId, clusterId, appServiceId, appEndpointName, scope, collection)
-
-	createRequest := AccessFunctionRequest{
-		Function: plan.AccessControlFunction.ValueString(),
-	}
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusOK}
 	_, err = r.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
-		createRequest,
+		plan.AccessControlFunction.ValueString(),
 		r.Token,
-		nil,
+		map[string]string{"Content-Type": "application/javascript"},
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -209,7 +205,7 @@ func (r *AccessFunction) Update(ctx context.Context, req resource.UpdateRequest,
 	collection := plan.Collection.ValueString()
 
 	// Update access function using PUT (upsert)
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appendpoints/%s/collections/%s/%s/accesscontrolfunction",
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s.%s.%s/accessControlFunction",
 		r.HostURL, organizationId, projectId, clusterId, appServiceId, appEndpointName, scope, collection)
 
 	updateRequest := AccessFunctionRequest{
@@ -268,7 +264,7 @@ func (r *AccessFunction) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 
 	// Delete access function
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appendpoints/%s/collections/%s/%s/accesscontrolfunction",
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s.%s.%s/accessControlFunction",
 		r.HostURL, IDs["organizationId"], IDs["projectId"], IDs["clusterId"],
 		IDs["appServiceId"], IDs["appEndpointName"], IDs["scope"], IDs["collection"])
 
@@ -365,7 +361,7 @@ func (r *AccessFunction) validateAccessFunctionState(state providerschema.Access
 }
 
 func (r *AccessFunction) getAccessFunction(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName, scope, collection string) (string, error) {
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appendpoints/%s/collections/%s/%s/accesscontrolfunction",
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s.%s.%s/accessControlFunction",
 		r.HostURL, organizationId, projectId, clusterId, appServiceId, appEndpointName, scope, collection)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
