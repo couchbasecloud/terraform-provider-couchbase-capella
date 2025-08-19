@@ -61,10 +61,25 @@ func NewAppEndpoint(ctx context.Context, apiEndpoint *app_endpoints.GetAppEndpoi
 
 	// Convert CORS
 	if apiEndpoint.Cors != nil {
+		corsOrigin, diags := types.SetValueFrom(ctx, types.StringType, apiEndpoint.Cors.Origin)
+		if diags.HasError() {
+			return nil, fmt.Errorf("error converting CORS origins: %v", diags.Errors())
+		}
+
+		corsLoginOrigin, diags := types.SetValueFrom(ctx, types.StringType, apiEndpoint.Cors.LoginOrigin)
+		if diags.HasError() {
+			return nil, fmt.Errorf("error converting CORS login origins: %v", diags.Errors())
+		}
+
+		corsHeaders, diags := types.SetValueFrom(ctx, types.StringType, apiEndpoint.Cors.Headers)
+		if diags.HasError() {
+			return nil, fmt.Errorf("error converting CORS headers: %v", diags.Errors())
+		}
+
 		newEndpoint.Cors = &AppEndpointCors{
-			Origin:      StringsToBaseStrings(apiEndpoint.Cors.Origin),
-			LoginOrigin: StringsToBaseStrings(apiEndpoint.Cors.LoginOrigin),
-			Headers:     StringsToBaseStrings(apiEndpoint.Cors.Headers),
+			Origin:      corsOrigin,
+			LoginOrigin: corsLoginOrigin,
+			Headers:     corsHeaders,
 			MaxAge:      types.Int64PointerValue(apiEndpoint.Cors.MaxAge),
 			Disabled:    types.BoolPointerValue(apiEndpoint.Cors.Disabled),
 		}
