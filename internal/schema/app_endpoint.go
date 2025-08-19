@@ -41,7 +41,7 @@ type AppEndpoint struct {
 	Cors *AppEndpointCors `tfsdk:"cors"`
 
 	// Oidc is a list of OIDC provider configurations for the App Endpoint.
-	Oidc []AppEndpointOidc `tfsdk:"oidc"`
+	Oidc types.Set `tfsdk:"oidc"`
 
 	// RequireResync is a map of scopes to a list of collection names that require resync.
 	RequireResync types.Map `tfsdk:"require_resync"`
@@ -72,11 +72,11 @@ type AppEndpointCollection struct {
 // AppEndpointCors represents the CORS configuration for an app endpoint.
 type AppEndpointCors struct {
 	// Origin List of allowed origins, use ['*'] to allow access from everywhere
-	Origin []types.String `tfsdk:"origin"`
+	Origin types.Set `tfsdk:"origin"`
 	// LoginOrigin List of allowed login origins
-	LoginOrigin []types.String `tfsdk:"login_origin"`
+	LoginOrigin types.Set `tfsdk:"login_origin"`
 	// Headers List of allowed headers
-	Headers []types.String `tfsdk:"headers"`
+	Headers types.Set `tfsdk:"headers"`
 	// MaxAge Specifies the duration (in seconds) for which the results of a preflight request can be cached.
 	MaxAge types.Int64 `tfsdk:"max_age"`
 	// Disabled indicated whether CORS is disabled.

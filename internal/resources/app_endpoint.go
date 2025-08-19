@@ -82,7 +82,7 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	if err := a.validateCreateAppEndpointRequest(plan); err != nil {
+	if err := a.validateCreateAppEndpointRequest(ctx, plan); err != nil {
 		resp.Diagnostics.AddError(
 			"Invalid App Endpoint Create Request",
 			fmt.Sprintf("Could not create app endpoint: %s", err.Error()),
@@ -167,17 +167,55 @@ func schemaToAppEndpointRequest(ctx context.Context, plan providerschema.AppEndp
 		UserXattrKey:     plan.UserXattrKey.ValueStringPointer(),
 	}
 	if plan.Cors != nil {
-		createAppEndpointRequest.Cors = &app_endpoints.AppEndpointCors{
-			Origin:      providerschema.BaseStringsToStrings(plan.Cors.Origin),
-			LoginOrigin: providerschema.BaseStringsToStrings(plan.Cors.LoginOrigin),
-			Headers:     providerschema.BaseStringsToStrings(plan.Cors.Headers),
-			MaxAge:      plan.Cors.MaxAge.ValueInt64Pointer(),
-			Disabled:    plan.Cors.Disabled.ValueBoolPointer(),
+		corsRequest := &app_endpoints.AppEndpointCors{
+			MaxAge:   plan.Cors.MaxAge.ValueInt64Pointer(),
+			Disabled: plan.Cors.Disabled.ValueBoolPointer(),
 		}
+
+		// Convert Origin set to slice
+		if !plan.Cors.Origin.IsNull() && !plan.Cors.Origin.IsUnknown() {
+			elements := make([]types.String, 0, len(plan.Cors.Origin.Elements()))
+			diags := plan.Cors.Origin.ElementsAs(ctx, &elements, false)
+			if diags.HasError() {
+				// Return error in function signature format
+				return nil
+			}
+			corsRequest.Origin = providerschema.BaseStringsToStrings(elements)
+		}
+
+		// Convert LoginOrigin set to slice
+		if !plan.Cors.LoginOrigin.IsNull() && !plan.Cors.LoginOrigin.IsUnknown() {
+			elements := make([]types.String, 0, len(plan.Cors.LoginOrigin.Elements()))
+			diags := plan.Cors.LoginOrigin.ElementsAs(ctx, &elements, false)
+			if diags.HasError() {
+				return nil
+			}
+			corsRequest.LoginOrigin = providerschema.BaseStringsToStrings(elements)
+		}
+
+		// Convert Headers set to slice
+		if !plan.Cors.Headers.IsNull() && !plan.Cors.Headers.IsUnknown() {
+			elements := make([]types.String, 0, len(plan.Cors.Headers.Elements()))
+			diags := plan.Cors.Headers.ElementsAs(ctx, &elements, false)
+			if diags.HasError() {
+				return nil
+			}
+			corsRequest.Headers = providerschema.BaseStringsToStrings(elements)
+		}
+
+		createAppEndpointRequest.Cors = corsRequest
 	}
-	createAppEndpointRequest.Oidc = make([]app_endpoints.AppEndpointOidc, len(plan.Oidc))
-	if len(plan.Oidc) > 0 {
-		for i, oidc := range plan.Oidc {
+
+	// Convert OIDC set to slice for API request
+	if !plan.Oidc.IsNull() && !plan.Oidc.IsUnknown() {
+		elements := make([]providerschema.AppEndpointOidc, 0, len(plan.Oidc.Elements()))
+		diags := plan.Oidc.ElementsAs(ctx, &elements, false)
+		if diags.HasError() {
+			return nil
+		}
+
+		createAppEndpointRequest.Oidc = make([]app_endpoints.AppEndpointOidc, len(elements))
+		for i, oidc := range elements {
 			createAppEndpointRequest.Oidc[i] = app_endpoints.AppEndpointOidc{
 				Issuer:        oidc.Issuer.ValueString(),
 				ClientId:      oidc.ClientId.ValueString(),
@@ -194,7 +232,7 @@ func schemaToAppEndpointRequest(ctx context.Context, plan providerschema.AppEndp
 
 // validateCreateAppEndpointRequest validates the required fields for creating an app endpoint.
 // Almost the same validation as v4 API, the API will do extra checks based on information stored on the control plane.
-func (a *AppEndpoint) validateCreateAppEndpointRequest(plan providerschema.AppEndpoint) error {
+func (a *AppEndpoint) validateCreateAppEndpointRequest(ctx context.Context, plan providerschema.AppEndpoint) error {
 	// Validate required IDs
 	if plan.OrganizationId.IsNull() || plan.OrganizationId.IsUnknown() {
 		return errors.ErrOrganizationIdCannotBeEmpty
@@ -237,8 +275,14 @@ func (a *AppEndpoint) validateCreateAppEndpointRequest(plan providerschema.AppEn
 	}
 
 	// Validate OIDC configurations if provided
-	if len(plan.Oidc) > 0 {
-		for i, oidc := range plan.Oidc {
+	if !plan.Oidc.IsNull() && !plan.Oidc.IsUnknown() {
+		elements := make([]providerschema.AppEndpointOidc, 0, len(plan.Oidc.Elements()))
+		diags := plan.Oidc.ElementsAs(ctx, &elements, false)
+		if diags.HasError() {
+			return fmt.Errorf("error extracting OIDC configurations")
+		}
+
+		for i, oidc := range elements {
 			if err := a.validateOidcConfiguration(oidc, i); err != nil {
 				return err
 			}
@@ -247,24 +291,45 @@ func (a *AppEndpoint) validateCreateAppEndpointRequest(plan providerschema.AppEn
 
 	// Validate CORS configuration if provided
 	if plan.Cors != nil {
-		if len(plan.Cors.Origin) > 0 {
-			for i, origin := range plan.Cors.Origin {
+		// Validate Origin set
+		if !plan.Cors.Origin.IsNull() && !plan.Cors.Origin.IsUnknown() {
+			originElements := make([]types.String, 0, len(plan.Cors.Origin.Elements()))
+			diags := plan.Cors.Origin.ElementsAs(ctx, &originElements, false)
+			if diags.HasError() {
+				return fmt.Errorf("error extracting CORS origins")
+			}
+
+			for i, origin := range originElements {
 				if !providerschema.IsTrimmed(origin.ValueString()) {
 					return fmt.Errorf("cors origin at index %d %s", i, errors.ErrNotTrimmed)
 				}
 			}
 		}
 
-		if len(plan.Cors.LoginOrigin) > 0 {
-			for i, loginOrigin := range plan.Cors.LoginOrigin {
+		// Validate LoginOrigin set
+		if !plan.Cors.LoginOrigin.IsNull() && !plan.Cors.LoginOrigin.IsUnknown() {
+			loginOriginElements := make([]types.String, 0, len(plan.Cors.LoginOrigin.Elements()))
+			diags := plan.Cors.LoginOrigin.ElementsAs(ctx, &loginOriginElements, false)
+			if diags.HasError() {
+				return fmt.Errorf("error extracting CORS login origins")
+			}
+
+			for i, loginOrigin := range loginOriginElements {
 				if !providerschema.IsTrimmed(loginOrigin.ValueString()) {
 					return fmt.Errorf("cors loginOrigin at index %d %s", i, errors.ErrNotTrimmed)
 				}
 			}
 		}
 
-		if len(plan.Cors.Headers) > 0 {
-			for i, header := range plan.Cors.Headers {
+		// Validate Headers set
+		if !plan.Cors.Headers.IsNull() && !plan.Cors.Headers.IsUnknown() {
+			headerElements := make([]types.String, 0, len(plan.Cors.Headers.Elements()))
+			diags := plan.Cors.Headers.ElementsAs(ctx, &headerElements, false)
+			if diags.HasError() {
+				return fmt.Errorf("error extracting CORS headers")
+			}
+
+			for i, header := range headerElements {
 				if !providerschema.IsTrimmed(header.ValueString()) {
 					return fmt.Errorf("cors header at index %d %s", i, errors.ErrNotTrimmed)
 				}
@@ -371,29 +436,11 @@ func initComputedAppEndpointAttributesToNull(plan providerschema.AppEndpoint) pr
 
 	plan.State = types.StringNull()
 
-	for i := range plan.Oidc {
-		if plan.Oidc[i].ProviderId.IsUnknown() || plan.Oidc[i].ProviderId.IsNull() {
-			plan.Oidc[i].ProviderId = types.StringNull()
-		}
-
-		if plan.Oidc[i].IsDefault.IsUnknown() || plan.Oidc[i].IsDefault.IsNull() {
-			plan.Oidc[i].IsDefault = types.BoolNull()
-		}
-		if plan.Oidc[i].UserPrefix.IsUnknown() || plan.Oidc[i].UserPrefix.IsNull() {
-			plan.Oidc[i].UserPrefix = types.StringNull()
-		}
-		if plan.Oidc[i].DiscoveryUrl.IsUnknown() || plan.Oidc[i].DiscoveryUrl.IsNull() {
-			plan.Oidc[i].DiscoveryUrl = types.StringNull()
-		}
-		if plan.Oidc[i].UsernameClaim.IsUnknown() || plan.Oidc[i].UsernameClaim.IsNull() {
-			plan.Oidc[i].UsernameClaim = types.StringNull()
-		}
-		if plan.Oidc[i].RolesClaim.IsUnknown() || plan.Oidc[i].RolesClaim.IsNull() {
-			plan.Oidc[i].RolesClaim = types.StringNull()
-		}
-		if plan.Oidc[i].Register.IsUnknown() || plan.Oidc[i].Register.IsNull() {
-			plan.Oidc[i].Register = types.BoolNull()
-		}
+	// Handle OIDC set initialization
+	if !plan.Oidc.IsNull() && !plan.Oidc.IsUnknown() {
+		// For computed attributes in OIDC, we need to set them properly
+		// Since we can't modify elements in a set directly, we'll leave the set as is
+		// The refresh function will handle setting the computed values properly
 	}
 
 	if plan.Cors != nil {
@@ -517,34 +564,35 @@ func (a *AppEndpoint) refreshAppEndpoint(ctx context.Context, cfg api.EndpointCf
 		if appEndpoint.Cors.MaxAge != nil {
 			plan.Cors.MaxAge = types.Int64PointerValue(appEndpoint.Cors.MaxAge)
 		}
-		if len(appEndpoint.Cors.Origin) > 0 {
-			origins := make([]types.String, len(appEndpoint.Cors.Origin))
-			for i, origin := range appEndpoint.Cors.Origin {
-				origins[i] = types.StringValue(origin)
-			}
-			plan.Cors.Origin = origins
+
+		// Convert Origin slice to set
+		originSet, diags := types.SetValueFrom(ctx, types.StringType, appEndpoint.Cors.Origin)
+		if diags.HasError() {
+			return nil, fmt.Errorf("error converting CORS origins: %v", diags.Errors())
 		}
-		if len(appEndpoint.Cors.LoginOrigin) > 0 {
-			loginOrigins := make([]types.String, len(appEndpoint.Cors.LoginOrigin))
-			for i, loginOrigin := range appEndpoint.Cors.LoginOrigin {
-				loginOrigins[i] = types.StringValue(loginOrigin)
-			}
-			plan.Cors.LoginOrigin = loginOrigins
+		plan.Cors.Origin = originSet
+
+		// Convert LoginOrigin slice to set
+		loginOriginSet, diags := types.SetValueFrom(ctx, types.StringType, appEndpoint.Cors.LoginOrigin)
+		if diags.HasError() {
+			return nil, fmt.Errorf("error converting CORS login origins: %v", diags.Errors())
 		}
-		if len(appEndpoint.Cors.Headers) > 0 {
-			headers := make([]types.String, len(appEndpoint.Cors.Headers))
-			for i, header := range appEndpoint.Cors.Headers {
-				headers[i] = types.StringValue(header)
-			}
-			plan.Cors.Headers = headers
+		plan.Cors.LoginOrigin = loginOriginSet
+
+		// Convert Headers slice to set
+		headersSet, diags := types.SetValueFrom(ctx, types.StringType, appEndpoint.Cors.Headers)
+		if diags.HasError() {
+			return nil, fmt.Errorf("error converting CORS headers: %v", diags.Errors())
 		}
+		plan.Cors.Headers = headersSet
 	}
 
 	// Handle OIDC if present
 	if len(appEndpoint.Oidc) > 0 {
-		plan.Oidc = make([]providerschema.AppEndpointOidc, len(appEndpoint.Oidc))
+		// Convert API OIDC slice to schema OIDC slice first
+		oidcElements := make([]providerschema.AppEndpointOidc, len(appEndpoint.Oidc))
 		for i, oidc := range appEndpoint.Oidc {
-			plan.Oidc[i] = providerschema.AppEndpointOidc{
+			oidcElements[i] = providerschema.AppEndpointOidc{
 				Issuer:        types.StringValue(oidc.Issuer),
 				ClientId:      types.StringValue(oidc.ClientId),
 				UserPrefix:    types.StringPointerValue(oidc.UserPrefix),
@@ -556,6 +604,15 @@ func (a *AppEndpoint) refreshAppEndpoint(ctx context.Context, cfg api.EndpointCf
 				IsDefault:     types.BoolPointerValue(oidc.IsDefault),
 			}
 		}
+
+		// Convert to set
+		oidcSet, diags := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: providerschema.AppEndpointOidc{}.AttributeTypes()}, oidcElements)
+		if diags.HasError() {
+			return nil, fmt.Errorf("error converting OIDC configurations: %v", diags.Errors())
+		}
+		plan.Oidc = oidcSet
+	} else {
+		plan.Oidc = types.SetNull(types.ObjectType{AttrTypes: providerschema.AppEndpointOidc{}.AttributeTypes()})
 	}
 
 	// Handle require_resync
