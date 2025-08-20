@@ -2,7 +2,6 @@ package resources
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -291,7 +290,7 @@ func (a *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/apikeys/%s/rotate", a.HostURL, organizationId, apiKeyId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusOK}
 	response, err := a.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
@@ -333,9 +332,8 @@ func (a *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 	}
 
 	currentState.Secret = types.StringValue(rotateApiKeyResponse.SecretKey)
-	if !currentState.Id.IsNull() && !currentState.Id.IsUnknown() && !currentState.Secret.IsNull() && !currentState.Secret.IsUnknown() {
-		currentState.Token = types.StringValue(base64.StdEncoding.EncodeToString([]byte(currentState.Id.ValueString() + ":" + currentState.Secret.ValueString())))
-	}
+	currentState.Token = types.StringValue(rotateApiKeyResponse.Token)
+
 	currentState.Rotate = plan.Rotate
 	currentState = a.retainResourcesIfOrgOwner(&plan, currentState)
 
