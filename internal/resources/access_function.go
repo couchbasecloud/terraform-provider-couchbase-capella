@@ -218,7 +218,7 @@ func (r *AccessFunction) Update(ctx context.Context, req resource.UpdateRequest,
 		cfg,
 		updateRequest,
 		r.Token,
-		nil,
+		map[string]string{"Content-Type": "application/javascript"},
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
