@@ -28,6 +28,7 @@ type AppEndpointActivationStatus struct {
 	Online types.Bool `tfsdk:"online"`
 }
 
+// Validate validates the AppEndpointActivationStatus resource for import.
 func (a *AppEndpointActivationStatus) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
 		OrganizationId:  a.OrganizationId,
