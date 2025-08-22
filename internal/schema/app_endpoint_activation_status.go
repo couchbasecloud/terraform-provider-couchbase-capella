@@ -21,23 +21,23 @@ type AppEndpointActivationStatus struct {
 	// AppServiceId is the appServiceId of the capella tenant.
 	AppServiceId types.String `tfsdk:"app_service_id"`
 
-	// AppEndpointId is the appEndpointId of the capella tenant.
-	AppEndpointId types.String `tfsdk:"app_endpoint_id"`
+	// AppEndpointName is the name of the app endpoint.
+	AppEndpointName types.String `tfsdk:"app_endpoint_name"`
 
-	// State is the activation state to which the app endpoint needs to be set i.e. active or inactive.
-	State types.String `tfsdk:"state"`
+	// Online indicates whether the app endpoint should be online (true) or offline (false).
+	Online types.Bool `tfsdk:"online"`
 }
 
 func (a *AppEndpointActivationStatus) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
-		OrganizationId: a.OrganizationId,
-		ProjectId:      a.ProjectId,
-		ClusterId:      a.ClusterId,
-		AppServiceId:   a.AppServiceId,
-		AppEndpointId:  a.AppEndpointId,
+		OrganizationId:  a.OrganizationId,
+		ProjectId:       a.ProjectId,
+		ClusterId:       a.ClusterId,
+		AppServiceId:    a.AppServiceId,
+		AppEndpointName: a.AppEndpointName,
 	}
 
-	IDs, err := validateSchemaState(state, AppEndpointId)
+	IDs, err := validateSchemaState(state, AppServiceId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to validate resource state: %s", err)
 	}
