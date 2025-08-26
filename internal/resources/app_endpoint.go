@@ -378,7 +378,7 @@ func (a *AppEndpoint) validateOidcConfiguration(oidc providerschema.AppEndpointO
 			return fmt.Errorf("oidc configuration at index %d: discoveryUrl %s", index, errors.ErrNotTrimmed)
 		}
 		// Validate discovery URL format
-		if !isValidURL(oidc.DiscoveryUrl.ValueString()) {
+		if oidc.DiscoveryUrl.ValueString() != "" && !isValidURL(oidc.DiscoveryUrl.ValueString()) {
 			return fmt.Errorf("oidc configuration at index %d: discoveryUrl must be a valid URL", index)
 		}
 	}
@@ -606,7 +606,7 @@ func (a *AppEndpoint) refreshAppEndpoint(ctx context.Context, cfg api.EndpointCf
 		}
 
 		// Convert to set
-		oidcSet, diags := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: providerschema.AppEndpointOidc{}.AttributeTypes()}, oidcElements)
+		oidcSet, diags := types.SetValueFrom(ctx, types.ObjectType{}.WithAttributeTypes(providerschema.AppEndpointOidc{}.AttributeTypes()), oidcElements)
 		if diags.HasError() {
 			return nil, fmt.Errorf("error converting OIDC configurations: %v", diags.Errors())
 		}
