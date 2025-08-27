@@ -208,8 +208,8 @@ func (r *AccessFunction) Update(ctx context.Context, req resource.UpdateRequest,
 	// Update access function using PUT (upsert)
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s.%s.%s/accessControlFunction",
 		r.HostURL, organizationId, projectId, clusterId, appServiceId, appEndpointName, scope, collection)
-	
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusOK}
+
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
 	_, err := r.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
@@ -265,7 +265,7 @@ func (r *AccessFunction) Delete(ctx context.Context, req resource.DeleteRequest,
 		r.HostURL, IDs["organizationId"], IDs["projectId"], IDs["clusterId"],
 		IDs["appServiceId"], IDs["appEndpointName"], IDs["scope"], IDs["collection"])
 
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
 	_, err = r.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
