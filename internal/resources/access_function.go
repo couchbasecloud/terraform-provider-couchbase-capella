@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -105,7 +106,7 @@ func (r *AccessFunction) Create(ctx context.Context, req resource.CreateRequest,
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s.%s.%s/accessControlFunction",
 		r.HostURL, organizationId, projectId, clusterId, appServiceId, appEndpointName, scope, collection)
 
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusOK}
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
 	_, err = r.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
@@ -207,16 +208,12 @@ func (r *AccessFunction) Update(ctx context.Context, req resource.UpdateRequest,
 	// Update access function using PUT (upsert)
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s.%s.%s/accessControlFunction",
 		r.HostURL, organizationId, projectId, clusterId, appServiceId, appEndpointName, scope, collection)
-
-	updateRequest := AccessFunctionRequest{
-		Function: plan.AccessControlFunction.ValueString(),
-	}
-
+	
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusOK}
 	_, err := r.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
-		updateRequest,
+		plan.AccessControlFunction.ValueString(),
 		r.Token,
 		map[string]string{"Content-Type": "application/javascript"},
 	)
@@ -399,9 +396,7 @@ func (r *AccessFunction) refreshAccessFunction(ctx context.Context, organization
 }
 
 // API structures for access function operations
-type AccessFunctionRequest struct {
-	Function string `json:"function"`
-}
+type AccessFunctionRequest json.RawMessage
 
 type AccessFunctionResponse struct {
 	Function string                 `json:"function"`
