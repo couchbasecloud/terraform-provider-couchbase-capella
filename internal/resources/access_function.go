@@ -98,13 +98,11 @@ func (r *AccessFunction) Create(ctx context.Context, req resource.CreateRequest,
 	projectId := IDs["project_id"]
 	clusterId := IDs["cluster_id"]
 	appServiceId := IDs["app_service_id"]
-	appEndpointName := IDs["app_endpoint_name"]
-	scope := IDs["scope"]
-	collection := IDs["collection"]
+	keyspace := IDs["keyspace"]
 
 	// Create access function using PUT (upsert)
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s.%s.%s/accessControlFunction",
-		r.HostURL, organizationId, projectId, clusterId, appServiceId, appEndpointName, scope, collection)
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/accessControlFunction",
+		r.HostURL, organizationId, projectId, clusterId, appServiceId, keyspace)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
 	_, err = r.Client.ExecuteWithRetry(
@@ -130,7 +128,7 @@ func (r *AccessFunction) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	// Refresh state to get current values
-	refreshedState, err := r.refreshAccessFunction(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, scope, collection)
+	refreshedState, err := r.refreshAccessFunction(ctx, organizationId, projectId, clusterId, appServiceId, keyspace)
 	if err != nil {
 		resp.Diagnostics.AddWarning(
 			"Error reading access function after creation",
@@ -155,7 +153,7 @@ func (r *AccessFunction) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 
 	// Validate parameters
-	IDs, err := r.validateAccessFunctionState(state)
+	IDs, err := state.ValidateState()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Access Function",
@@ -166,7 +164,7 @@ func (r *AccessFunction) Read(ctx context.Context, req resource.ReadRequest, res
 
 	// Refresh state
 	refreshedState, err := r.refreshAccessFunction(ctx, IDs["organizationId"], IDs["projectId"], IDs["clusterId"],
-		IDs["appServiceId"], IDs["appEndpointName"], IDs["scope"], IDs["collection"])
+		IDs["appServiceId"], IDs["keyspace"])
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -201,13 +199,11 @@ func (r *AccessFunction) Update(ctx context.Context, req resource.UpdateRequest,
 	projectId := plan.ProjectId.ValueString()
 	clusterId := plan.ClusterId.ValueString()
 	appServiceId := plan.AppServiceId.ValueString()
-	appEndpointName := plan.AppEndpointName.ValueString()
-	scope := plan.Scope.ValueString()
-	collection := plan.Collection.ValueString()
+	keyspace := plan.Keyspace.ValueString()
 
 	// Update access function using PUT (upsert)
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s.%s.%s/accessControlFunction",
-		r.HostURL, organizationId, projectId, clusterId, appServiceId, appEndpointName, scope, collection)
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/accessControlFunction",
+		r.HostURL, organizationId, projectId, clusterId, appServiceId, keyspace)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
 	_, err := r.Client.ExecuteWithRetry(
@@ -226,7 +222,7 @@ func (r *AccessFunction) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	// Refresh state
-	refreshedState, err := r.refreshAccessFunction(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, scope, collection)
+	refreshedState, err := r.refreshAccessFunction(ctx, organizationId, projectId, clusterId, appServiceId, keyspace)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading access function after update",
@@ -261,9 +257,9 @@ func (r *AccessFunction) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 
 	// Delete access function
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s.%s.%s/accessControlFunction",
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/accessControlFunction",
 		r.HostURL, IDs["organizationId"], IDs["projectId"], IDs["clusterId"],
-		IDs["appServiceId"], IDs["appEndpointName"], IDs["scope"], IDs["collection"])
+		IDs["appServiceId"], IDs["keyspace"])
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
 	_, err = r.Client.ExecuteWithRetry(
@@ -289,8 +285,8 @@ func (r *AccessFunction) Delete(ctx context.Context, req resource.DeleteRequest,
 
 // ImportState imports a resource into Terraform state.
 func (r *AccessFunction) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	// The import ID should be in the format: organizationId,projectId,clusterId,appServiceId,appEndpointName,scope,collection
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	// The import ID should be in the format: organizationId,projectId,clusterId,appServiceId,keyspace
+	resource.ImportStatePassthroughID(ctx, path.Root("keyspace"), req, resp)
 }
 
 // Helper functions
@@ -308,14 +304,8 @@ func (r *AccessFunction) validateCreateAccessFunctionRequest(plan providerschema
 	if plan.AppServiceId.IsNull() {
 		return fmt.Errorf("app service ID cannot be empty")
 	}
-	if plan.AppEndpointName.IsNull() {
-		return fmt.Errorf("app endpoint ID cannot be empty")
-	}
-	if plan.Scope.IsNull() {
-		return fmt.Errorf("scope cannot be empty")
-	}
-	if plan.Collection.IsNull() {
-		return fmt.Errorf("collection cannot be empty")
+	if plan.Keyspace.IsNull() {
+		return fmt.Errorf("keyspace cannot be empty")
 	}
 	if plan.AccessControlFunction.IsNull() {
 		return fmt.Errorf("access control function cannot be empty")
@@ -336,30 +326,23 @@ func (r *AccessFunction) validateAccessFunctionState(state providerschema.Access
 	if state.AppServiceId.IsNull() {
 		return nil, fmt.Errorf("app service ID cannot be empty")
 	}
-	if state.AppEndpointName.IsNull() {
-		return nil, fmt.Errorf("app endpoint ID cannot be empty")
-	}
-	if state.Scope.IsNull() {
-		return nil, fmt.Errorf("scope cannot be empty")
-	}
-	if state.Collection.IsNull() {
-		return nil, fmt.Errorf("collection cannot be empty")
+
+	if state.Keyspace.IsNull() {
+		return nil, fmt.Errorf("keyspace cannot be empty")
 	}
 
 	return map[string]string{
-		"organizationId":  state.OrganizationId.ValueString(),
-		"projectId":       state.ProjectId.ValueString(),
-		"clusterId":       state.ClusterId.ValueString(),
-		"appServiceId":    state.AppServiceId.ValueString(),
-		"appEndpointName": state.AppEndpointName.ValueString(),
-		"scope":           state.Scope.ValueString(),
-		"collection":      state.Collection.ValueString(),
+		"organizationId": state.OrganizationId.ValueString(),
+		"projectId":      state.ProjectId.ValueString(),
+		"clusterId":      state.ClusterId.ValueString(),
+		"appServiceId":   state.AppServiceId.ValueString(),
+		"keyspace":       state.Keyspace.ValueString(),
 	}, nil
 }
 
-func (r *AccessFunction) getAccessFunction(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName, scope, collection string) (string, error) {
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s.%s.%s/accessControlFunction",
-		r.HostURL, organizationId, projectId, clusterId, appServiceId, appEndpointName, scope, collection)
+func (r *AccessFunction) getAccessFunction(ctx context.Context, organizationId, projectId, clusterId, appServiceId, keyspace string) (string, error) {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/accessControlFunction",
+		r.HostURL, organizationId, projectId, clusterId, appServiceId, keyspace)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := r.Client.ExecuteWithRetry(
@@ -376,8 +359,8 @@ func (r *AccessFunction) getAccessFunction(ctx context.Context, organizationId, 
 	return string(response.Body), nil
 }
 
-func (r *AccessFunction) refreshAccessFunction(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName, scope, collection string) (*providerschema.AccessFunction, error) {
-	accessFunction, err := r.getAccessFunction(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, scope, collection)
+func (r *AccessFunction) refreshAccessFunction(ctx context.Context, organizationId, projectId, clusterId, appServiceId, keyspace string) (*providerschema.AccessFunction, error) {
+	accessFunction, err := r.getAccessFunction(ctx, organizationId, projectId, clusterId, appServiceId, keyspace)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrNotFound, err)
 	}
@@ -387,10 +370,8 @@ func (r *AccessFunction) refreshAccessFunction(ctx context.Context, organization
 		ProjectId:             types.StringValue(projectId),
 		ClusterId:             types.StringValue(clusterId),
 		AppServiceId:          types.StringValue(appServiceId),
-		AppEndpointName:       types.StringValue(appEndpointName),
-		Scope:                 types.StringValue(scope),
-		Collection:            types.StringValue(collection),
 		AccessControlFunction: types.StringValue(accessFunction),
+		Keyspace:              types.StringValue(keyspace),
 	}
 	return refreshedState, nil
 }

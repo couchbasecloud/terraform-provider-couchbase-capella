@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 // AccessFunction represents the Terraform schema for an Access Control and Validation function
@@ -23,14 +24,8 @@ type AccessFunction struct {
 	// AppServiceId is the ID of the App Service to which the App Endpoint belongs.
 	AppServiceId types.String `tfsdk:"app_service_id"`
 
-	// AppEndpointId is the ID of the App Endpoint.
-	AppEndpointName types.String `tfsdk:"app_endpoint_name"`
-
-	// Scope is the name of the scope containing the collection.
-	Scope types.String `tfsdk:"scope"`
-
-	// Collection is the name of the collection for which the access function is defined.
-	Collection types.String `tfsdk:"collection"`
+	// Keyspace is the keyspace of the access function.
+	Keyspace types.String `tfsdk:"keyspace"`
 
 	// Function is the JavaScript function that is used to specify the access control policies
 	// to be applied to documents in this collection. Every document update is processed by this function.
@@ -47,9 +42,6 @@ func (a AccessFunction) AttributeTypes() map[string]attr.Type {
 		"project_id":              types.StringType,
 		"cluster_id":              types.StringType,
 		"app_service_id":          types.StringType,
-		"app_endpoint_name":       types.StringType,
-		"scope":                   types.StringType,
-		"collection":              types.StringType,
 		"access_control_function": types.StringType,
 	}
 }
@@ -77,20 +69,10 @@ func (a *AccessFunction) Validate() (map[string]string, error) {
 	}
 	ids["app_service_id"] = a.AppServiceId.ValueString()
 
-	if a.AppEndpointName.IsNull() || a.AppEndpointName.IsUnknown() {
-		return nil, fmt.Errorf("app_endpoint_name cannot be empty")
+	if a.Keyspace.IsNull() || a.Keyspace.IsUnknown() {
+		return nil, fmt.Errorf("keyspace cannot be empty")
 	}
-	ids["app_endpoint_name"] = a.AppEndpointName.ValueString()
-
-	if a.Scope.IsNull() || a.Scope.IsUnknown() {
-		return nil, fmt.Errorf("scope cannot be empty")
-	}
-	ids["scope"] = a.Scope.ValueString()
-
-	if a.Collection.IsNull() || a.Collection.IsUnknown() {
-		return nil, fmt.Errorf("collection cannot be empty")
-	}
-	ids["collection"] = a.Collection.ValueString()
+	ids["keyspace"] = a.Keyspace.ValueString()
 
 	if a.AccessControlFunction.IsNull() || a.AccessControlFunction.IsUnknown() {
 		return nil, fmt.Errorf("access_control_function cannot be empty")
@@ -98,4 +80,23 @@ func (a *AccessFunction) Validate() (map[string]string, error) {
 	ids["access_control_function"] = a.AccessControlFunction.ValueString()
 
 	return ids, nil
+}
+
+// ValidateState validates base identifiers using the shared validateSchemaState helper,
+// enabling consistent terraform import parsing similar to other resources.
+func (a *AccessFunction) ValidateState() (map[Attr]string, error) {
+	state := map[Attr]basetypes.StringValue{
+		OrganizationId: a.OrganizationId,
+		ProjectId:      a.ProjectId,
+		ClusterId:      a.ClusterId,
+		AppServiceId:   a.AppServiceId,
+		Keyspace:       a.Keyspace,
+	}
+
+	IDs, err := validateSchemaState(state, Keyspace)
+	if err != nil {
+		return nil, fmt.Errorf("failed to validate resource state: %s", err)
+	}
+
+	return IDs, nil
 }
