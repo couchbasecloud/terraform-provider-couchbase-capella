@@ -39,7 +39,7 @@ func NewAppEndpointActivationStatus() resource.Resource {
 // ImportState imports a remote App Endpoint activation status that is not created by Terraform.
 func (r *AppEndpointActivationStatus) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Save import name to app_endpoint_name attribute
-	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("app_endpoint_name"), req, resp)
 }
 
 // Metadata returns the resource type name.

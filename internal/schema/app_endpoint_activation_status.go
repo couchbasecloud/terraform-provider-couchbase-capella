@@ -38,7 +38,7 @@ func (a *AppEndpointActivationStatus) Validate() (map[Attr]string, error) {
 		AppEndpointName: a.AppEndpointName,
 	}
 
-	IDs, err := validateSchemaState(state, AppServiceId)
+	IDs, err := validateSchemaState(state, AppEndpointName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to validate resource state: %s", err)
 	}
