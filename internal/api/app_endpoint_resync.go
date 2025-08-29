@@ -55,3 +55,5 @@ const (
 	ResyncStatusStateStopped   ResyncStatusState = "stopped"
 	ResyncStatusStateStopping  ResyncStatusState = "stopping"
 )
+
+type GetResyncResponse = CreateResyncResponse
