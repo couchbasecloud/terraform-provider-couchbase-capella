@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -19,13 +18,17 @@ import (
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-const errorMessageWhileSnapshotBackupCreation = "There is an error during snapshot backup creation. Please check in Capella to see if any hanging resources" +
-	" have been created, unexpected error: "
+const (
+	errorMessageWhileSnapshotBackupCreation = "There is an error during snapshot backup creation. Please check in Capella to see if any hanging resources" +
+		" have been created, unexpected error: "
+	errorMessageWhileSnapshotBackupUpdate = "There is an error during snapshot backup update. Please check in Capella to see if any hanging resources" +
+		" have been created, unexpected error: "
+	errorMessageConfigure = "Expected *ProviderSourceData, got:"
+)
 
 var (
-	_ resource.Resource                = &SnapshotBackup{}
-	_ resource.ResourceWithConfigure   = &SnapshotBackup{}
-	_ resource.ResourceWithImportState = &SnapshotBackup{}
+	_ resource.Resource              = &SnapshotBackup{}
+	_ resource.ResourceWithConfigure = &SnapshotBackup{}
 )
 
 type ID struct {
@@ -111,14 +114,12 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	//checks the snapshot backup creation is complete
+	// Checks the snapshot backup creation is complete.
 	backupResp, err := s.checkLatestSnapshotBackupStatus(ctx, tenantId, projectId, clusterId, backupFound, latestBackup)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while checking latest snapshot backup status",
-			fmt.Sprintf("Could not check latest snapshot backup status."+
-				"Please check in Capella to see if any hanging resources have "+
-				"been created, unexpected error: "+api.ParseError(err)),
+			errorMessageWhileSnapshotBackupCreation+api.ParseError(err),
 		)
 		return
 	}
@@ -132,7 +133,7 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	// Set state to fully populated data
+	// Sets state to fully populated data.
 	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -189,7 +190,7 @@ func (s *SnapshotBackup) Read(ctx context.Context, req resource.ReadRequest, res
 
 }
 
-// Update updates the retention of a snapshot backup
+// Update updates the retention of a snapshot backup.
 func (s *SnapshotBackup) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var state, plan providerschema.SnapshotBackup
 
@@ -295,12 +296,6 @@ func (s *SnapshotBackup) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 }
 
-// ImportState imports a remote snapshot backup that is not created by Terraform.
-func (s *SnapshotBackup) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	// Retrieve import ID and save to id attribute
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
 // Configure adds the provider configured api to the snapshot backup resource.
 func (s *SnapshotBackup) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
@@ -311,7 +306,7 @@ func (s *SnapshotBackup) Configure(ctx context.Context, req resource.ConfigureRe
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *ProviderSourceData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			errorMessageConfigure+fmt.Sprintf("%T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 		return
 	}
@@ -331,17 +326,16 @@ func (s *SnapshotBackup) validateCreateSnapshotBackupRequest(plan providerschema
 	return nil
 }
 
-// checkLatestSnapshotBackupStatus monitors the status of a snapshot backup creation operation for a specified
-// organization, project, and cluster ID. It periodically fetches the snapshot backup job status using the `getLatestSnapshotBackup`
+// checkLatestSnapshotBackupStatus monitors the status of a snapshot backup creation operation for a specified organization, project, and cluster ID.
+// It periodically fetches the snapshot backup job status using the `getLatestSnapshotBackup` function and waits until the snapshot backup reaches a final state or until a specified timeout is reached.
 // function and waits until the snapshot backup reaches a final state or until a specified timeout is reached.
-// The function returns an error if the operation times out or encounters an error during status retrieval.
 func (s *SnapshotBackup) checkLatestSnapshotBackupStatus(ctx context.Context, organizationId, projectId, clusterId string, backupFound bool, latestBackup *snapshot_backup.SnapshotBackup) (*snapshot_backup.SnapshotBackup, error) {
 	var (
 		backupResp *snapshot_backup.SnapshotBackup
 		err        error
 	)
 
-	// Assuming 60 minutes is the max time backup completion takes
+	// Assuming 60 minutes is the max time backup completion takes.
 	const timeout = time.Minute * 60
 
 	var cancel context.CancelFunc
@@ -359,7 +353,6 @@ func (s *SnapshotBackup) checkLatestSnapshotBackupStatus(ctx context.Context, or
 
 		case <-timer.C:
 			backupResp, err = s.getLatestSnapshotBackup(ctx, organizationId, projectId, clusterId)
-			tflog.Info(ctx, fmt.Sprintf("backupResp.BackupID: %+v", backupResp.BackupID))
 			switch err {
 			case nil:
 				// If there is no existing snapshot backup, check for a new snapshot backup record to be created.
@@ -379,7 +372,7 @@ func (s *SnapshotBackup) checkLatestSnapshotBackupStatus(ctx context.Context, or
 	}
 }
 
-// getLatestSnapshotBackup retrieves the latest snapshot backup information for a specified cluster
+// getLatestSnapshotBackup retrieves the latest snapshot backup information for a specified cluster.
 func (s *SnapshotBackup) getLatestSnapshotBackup(ctx context.Context, tenantId, projectId, clusterId string) (*snapshot_backup.SnapshotBackup, error) {
 	resp, err := s.getSnapshotBackups(ctx, tenantId, projectId, clusterId)
 	if err != nil {
@@ -414,7 +407,7 @@ func (s *SnapshotBackup) getSnapshotBackups(ctx context.Context, tenantId, proje
 	return resp, nil
 }
 
-// getSnapshotBackup retrieves a snapshot backup by its BackupID
+// getSnapshotBackup retrieves a snapshot backup by its BackupID.
 func (s *SnapshotBackup) getSnapshotBackup(ctx context.Context, tenantId, projectId, clusterId, backupId string) (*snapshot_backup.SnapshotBackup, error) {
 	resp, err := s.getSnapshotBackups(ctx, tenantId, projectId, clusterId)
 	if err != nil {
@@ -431,8 +424,7 @@ func (s *SnapshotBackup) getSnapshotBackup(ctx context.Context, tenantId, projec
 	return nil, errors.ErrNotFound
 }
 
-// UnmarshalJSON unmarshals the JSON response into a ListSnapshotBackupsResponse
-// so 'id' is assigned to the BackupID field
+// UnmarshalJSON unmarshals the JSON response into a ListSnapshotBackupsResponse so 'id' is assigned to the BackupID field.
 func UnmarshalJSON(s *snapshot_backup.ListSnapshotBackupsResponse, data []byte) (*snapshot_backup.ListSnapshotBackupsResponse, error) {
 	err := json.Unmarshal(data, &s)
 	if err != nil {
@@ -449,7 +441,7 @@ func UnmarshalJSON(s *snapshot_backup.ListSnapshotBackupsResponse, data []byte) 
 	return s, nil
 }
 
-// createSnapshotBackup creates a snapshot backup from a snapshot backup response
+// createSnapshotBackup creates a snapshot backup from a snapshot backup response.
 func createSnapshotBackup(ctx context.Context, backupResp *snapshot_backup.SnapshotBackup, clusterId, projectId, tenantId string) (*providerschema.SnapshotBackup, error) {
 	progress := providerschema.NewProgress(backupResp.Progress)
 	progressObj, diags := types.ObjectValueFrom(ctx, progress.AttributeTypes(), progress)
