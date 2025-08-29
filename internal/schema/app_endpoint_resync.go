@@ -1,7 +1,12 @@
 package schema
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 )
 
 // AppEndpointResync defines the Terraform schema for an App Endpoint Resync resource.
@@ -49,4 +54,21 @@ type AppEndpointResync struct {
 	// State indicates the current state of the resync operation
 	// (e.g., "running", "completed", "error", etc.).
 	State types.String `tfsdk:"state"`
+}
+
+func (a AppEndpointResync) Validate() (map[Attr]string, error) {
+	state := map[Attr]basetypes.StringValue{
+		OrganizationId:  a.OrganizationId,
+		ProjectId:       a.ProjectId,
+		ClusterId:       a.ClusterId,
+		AppServiceId:    a.AppServiceId,
+		AppEndpointName: a.AppEndpoint,
+	}
+
+	IDs, err := validateSchemaState(state, AppEndpointName)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
+	}
+
+	return IDs, nil
 }
