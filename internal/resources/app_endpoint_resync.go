@@ -2,17 +2,14 @@ package resources
 
 import (
 	"context"
-	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -50,96 +47,23 @@ func (a *AppEndpointResync) Metadata(_ context.Context, req resource.MetadataReq
 	resp.TypeName = req.ProviderTypeName + "_app_endpoint_resync"
 }
 
-// ImportState imports a remote app endpoint resync resource.
-func (a *AppEndpointResync) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	reader := csv.NewReader(strings.NewReader(req.ID))
-	reader.LazyQuotes = true
-	reader.TrimLeadingSpace = true
-
-	parts, err := reader.Read()
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Parsing Import ID",
-			fmt.Sprintf("Could not parse import ID as CSV: %s", err.Error()),
-		)
-		return
-	}
-
-	values := make(map[string]string)
-	for _, part := range parts {
-		part = strings.TrimSpace(part)
-		if part == "" {
-			continue
-		}
-
-		kvReader := csv.NewReader(strings.NewReader(part))
-		kvReader.Comma = '='
-		kvReader.FieldsPerRecord = 2
-		kvReader.TrimLeadingSpace = true
-
-		kv, err := kvReader.Read()
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Invalid Import Format",
-				fmt.Sprintf("Each part must be in key=value format, got: %s. Error: %s", part, err.Error()),
-			)
-			return
-		}
-
-		key := strings.TrimSpace(kv[0])
-		value := strings.TrimSpace(kv[1])
-
-		if key == "" {
-			resp.Diagnostics.AddError(
-				"Invalid Import Format",
-				fmt.Sprintf("Empty key in import string: %s", part),
-			)
-			return
-		}
-
-		values[key] = value
-	}
-
-	state := providerschema.AppEndpointResync{
-		OrganizationId: types.StringValue(values["organization_id"]),
-		ProjectId:      types.StringValue(values["project_id"]),
-		ClusterId:      types.StringValue(values["cluster_id"]),
-		AppServiceId:   types.StringValue(values["app_service_id"]),
-		AppEndpoint:    types.StringValue(values["app_endpoint"]),
-	}
-
-	diags := resp.State.Set(ctx, state)
-	resp.Diagnostics.Append(diags...)
-}
-
 // Schema returns the schema for the App Endpoint Resync resource.
 func (a *AppEndpointResync) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages App Endpoint Resync operations. This resource allows you to create and manage resync operations for App Endpoints in Couchbase Capella.",
 		Attributes: map[string]schema.Attribute{
-			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}), "The UUID of the organization."),
-			"project_id":      WithDescription(stringAttribute([]string{required, requiresReplace}), "The UUID of the project."),
-			"cluster_id":      WithDescription(stringAttribute([]string{required, requiresReplace}), "The UUID of the cluster."),
-			"app_service_id":  WithDescription(stringAttribute([]string{required, requiresReplace}), "The UUID of the app service."),
-			"app_endpoint":    WithDescription(stringAttribute([]string{required, requiresReplace}), "The name of the app endpoint."),
-			"scopes": schema.MapAttribute{
-				ElementType:         types.SetType{ElemType: types.StringType},
-				Required:            true,
-				MarkdownDescription: "A map of scope names to their collections that need to be resynced. Each scope maps to a set of collection names.",
-				PlanModifiers: []planmodifier.Map{
-					mapplanmodifier.RequiresReplace(),
-				},
-			},
-			"collections_processing": schema.MapAttribute{
-				ElementType:         types.SetType{ElemType: types.StringType},
-				Computed:            true,
-				MarkdownDescription: "A map of collections currently being processed, organized by scope.",
-			},
-			"docs_changed":   WithDescription(int64Attribute(computed), "The number of documents that have been changed during the resync operation."),
-			"docs_processed": WithDescription(int64Attribute(computed), "The total number of documents that have been processed during the resync operation."),
-			"last_error":     WithDescription(stringAttribute([]string{computed}), "The last error message encountered during the resync operation, if any."),
-			"start_time":     WithDescription(stringAttribute([]string{computed}), "The timestamp when the resync operation was initiated."),
-			"state":          WithDescription(stringAttribute([]string{computed}), "The current state of the resync operation (e.g., 'running', 'completed', 'error', etc.)."),
+			"organization_id":        WithDescription(stringAttribute([]string{required, requiresReplace}), "The UUID of the organization."),
+			"project_id":             WithDescription(stringAttribute([]string{required, requiresReplace}), "The UUID of the project."),
+			"cluster_id":             WithDescription(stringAttribute([]string{required, requiresReplace}), "The UUID of the cluster."),
+			"app_service_id":         WithDescription(stringAttribute([]string{required, requiresReplace}), "The UUID of the app service."),
+			"app_endpoint":           WithDescription(stringAttribute([]string{required, requiresReplace}), "The name of the app endpoint."),
+			"scopes":                 WithDescription(mapAttribute(types.SetType{ElemType: types.StringType}, []string{required}...), "A map of scope names to their collections that need to be resynced. Each scope maps to a set of collection names."),
+			"collections_processing": WithDescription(mapAttribute(types.SetType{ElemType: types.StringType}, []string{computed}...), "A map of collections currently being processed, organized by scope."),
+			"docs_changed":           WithDescription(int64Attribute(computed), "The number of documents that have been changed during the resync operation."),
+			"docs_processed":         WithDescription(int64Attribute(computed), "The total number of documents that have been processed during the resync operation."),
+			"last_error":             WithDescription(stringAttribute([]string{computed}), "The last error message encountered during the resync operation, if any."),
+			"start_time":             WithDescription(stringAttribute([]string{computed}), "The timestamp when the resync operation was initiated."),
+			"state":                  WithDescription(stringAttribute([]string{computed}), "The current state of the resync operation (e.g., 'running', 'completed', 'error', etc.)."),
 		},
 	}
 }
@@ -159,31 +83,27 @@ func (a *AppEndpointResync) Create(ctx context.Context, req resource.CreateReque
 	appServiceId := plan.AppServiceId.ValueString()
 	appEndpointName := plan.AppEndpoint.ValueString()
 
-	var scopesMap map[string][]string
-	scopesElements := make(map[string]types.Set)
-	diags = plan.Scopes.ElementsAs(ctx, &scopesElements, false)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
+	var scopes map[string][]string
+
+	diags = plan.Scopes.ElementsAs(ctx, &scopes, false)
+	if diags.HasError() {
+		resp.Diagnostics.Append(diags...)
 		return
 	}
 
-	scopesMap = make(map[string][]string)
-	for scopeName, collectionsSet := range scopesElements {
-		var collections []string
-		diags = collectionsSet.ElementsAs(ctx, &collections, false)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		scopesMap[scopeName] = collections
-	}
-
 	resyncRequest := api.CreateResyncRequest{
-		Scopes: scopesMap,
+		Scopes: scopes,
 	}
 
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/resync",
-		a.HostURL, organizationId, projectId, clusterId, appServiceId, appEndpointName)
+	url := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/resync",
+		a.HostURL,
+		organizationId,
+		projectId,
+		clusterId,
+		appServiceId,
+		appEndpointName,
+	)
 
 	cfg := api.EndpointCfg{
 		Url:           url,
@@ -215,8 +135,15 @@ func (a *AppEndpointResync) Create(ctx context.Context, req resource.CreateReque
 	plan.State = types.StringNull()
 
 	// Refresh the state by getting the latest data
-	url = fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/resync",
-		a.HostURL, organizationId, projectId, clusterId, appServiceId, appEndpointName)
+	url = fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/resync",
+		a.HostURL,
+		organizationId,
+		projectId,
+		clusterId,
+		appServiceId,
+		appEndpointName,
+	)
 
 	cfg = api.EndpointCfg{
 		Url:           url,
@@ -270,14 +197,32 @@ func (a *AppEndpointResync) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	organizationId := state.OrganizationId.ValueString()
-	projectId := state.ProjectId.ValueString()
-	clusterId := state.ClusterId.ValueString()
-	appServiceId := state.AppServiceId.ValueString()
-	appEndpointName := state.AppEndpoint.ValueString()
+	IDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading App Endpoint in Capella",
+			"Could not read App Endpoint  "+state.AppEndpoint.String()+": "+err.Error(),
+		)
+		return
+	}
 
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/resync",
-		a.HostURL, organizationId, projectId, clusterId, appServiceId, appEndpointName)
+	var (
+		organizationId  = IDs[providerschema.OrganizationId]
+		projectId       = IDs[providerschema.ProjectId]
+		clusterId       = IDs[providerschema.ClusterId]
+		appServiceId    = IDs[providerschema.AppServiceId]
+		appEndpointName = IDs[providerschema.AppEndpointName]
+	)
+
+	url := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/resync",
+		a.HostURL,
+		organizationId,
+		projectId,
+		clusterId,
+		appServiceId,
+		appEndpointName,
+	)
 
 	cfg := api.EndpointCfg{
 		Url:           url,
@@ -349,13 +294,20 @@ func (a *AppEndpointResync) Delete(ctx context.Context, req resource.DeleteReque
 	appServiceId := state.AppServiceId.ValueString()
 	appEndpointName := state.AppEndpoint.ValueString()
 
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/resync",
-		a.HostURL, organizationId, projectId, clusterId, appServiceId, appEndpointName)
+	url := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/resync",
+		a.HostURL,
+		organizationId,
+		projectId,
+		clusterId,
+		appServiceId,
+		appEndpointName,
+	)
 
 	cfg := api.EndpointCfg{
 		Url:           url,
 		Method:        http.MethodDelete,
-		SuccessStatus: http.StatusNoContent,
+		SuccessStatus: http.StatusAccepted,
 	}
 
 	_, err := a.Client.ExecuteWithRetry(
@@ -380,8 +332,17 @@ func (a *AppEndpointResync) Delete(ctx context.Context, req resource.DeleteReque
 	}
 }
 
+// ImportState imports a remote app endpoint resync resource.
+func (a *AppEndpointResync) ImportState(
+	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
+) {
+	resource.ImportStatePassthroughID(ctx, path.Root("app_endpoint"), req, resp)
+}
+
 // Configure adds the provider configured api to AppEndpointResync.
-func (a *AppEndpointResync) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (a *AppEndpointResync) Configure(
+	_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse,
+) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -399,7 +360,9 @@ func (a *AppEndpointResync) Configure(_ context.Context, req resource.ConfigureR
 }
 
 // mapResponseToState maps the API response to the Terraform state.
-func (a *AppEndpointResync) mapResponseToState(ctx context.Context, response *api.CreateResyncResponse, plan *providerschema.AppEndpointResync) (*providerschema.AppEndpointResync, diag.Diagnostics) {
+func (a *AppEndpointResync) mapResponseToState(
+	ctx context.Context, response *api.CreateResyncResponse, plan *providerschema.AppEndpointResync,
+) (*providerschema.AppEndpointResync, diag.Diagnostics) {
 	state := &providerschema.AppEndpointResync{
 		OrganizationId: plan.OrganizationId,
 		ProjectId:      plan.ProjectId,
