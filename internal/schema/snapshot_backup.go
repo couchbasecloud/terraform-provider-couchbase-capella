@@ -1,0 +1,135 @@
+package schema
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/snapshot_backup"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+)
+
+type Progress struct {
+	Status types.String `tfsdk:"status"`
+	Time   types.String `tfsdk:"time"`
+}
+
+type CMEK struct {
+	ID         types.String `tfsdk:"id"`
+	ProviderID types.String `tfsdk:"provider_id"`
+}
+
+type Server struct {
+	Version types.String `tfsdk:"version"`
+}
+
+type SnapshotBackup struct {
+	AppService types.String `tfsdk:"app_service"`
+	ClusterID  types.String `tfsdk:"cluster_id"`
+	CreatedAt  types.String `tfsdk:"created_at"`
+	Expiration types.String `tfsdk:"expiration"`
+	BackupID   types.String `tfsdk:"backup_id"`
+	Retention  types.Int64  `tfsdk:"retention"`
+	Progress   types.Object `tfsdk:"progress"`
+	CMEK       types.Set    `tfsdk:"cmek"`
+	ProjectID  types.String `tfsdk:"project_id"`
+	Server     types.Object `tfsdk:"server"`
+	Size       types.Int64  `tfsdk:"size"`
+	TenantID   types.String `tfsdk:"tenant_id"`
+	Type       types.String `tfsdk:"type"`
+}
+
+func (p Progress) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"status": types.StringType,
+		"time":   types.StringType,
+	}
+}
+
+func NewProgress(progress snapshot_backup.Progress) Progress {
+	return Progress{
+		Status: types.StringValue(string(progress.Status)),
+		Time:   types.StringValue(progress.Time),
+	}
+}
+
+func (c CMEK) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"id":          types.StringType,
+		"provider_id": types.StringType,
+	}
+}
+
+func NewCMEK(cmek snapshot_backup.CMEK) CMEK {
+	return CMEK{
+		ID:         types.StringValue(cmek.ID),
+		ProviderID: types.StringValue(cmek.ProviderID),
+	}
+}
+
+func (s Server) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"version": types.StringType,
+	}
+}
+
+func NewServer(server snapshot_backup.Server) Server {
+	return Server{
+		Version: types.StringValue(server.Version),
+	}
+}
+
+func (s SnapshotBackup) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"app_service": types.StringType,
+		"cluster_id":  types.StringType,
+		"created_at":  types.StringType,
+		"expiration":  types.StringType,
+		"backup_id":   types.StringType,
+		"progress":    types.ObjectType{AttrTypes: Progress{}.AttributeTypes()},
+		"project_id":  types.StringType,
+		"retention":   types.Int64Type,
+		"cmek":        types.SetType{ElemType: types.ObjectType{AttrTypes: CMEK{}.AttributeTypes()}},
+		"server":      types.ObjectType{AttrTypes: Server{}.AttributeTypes()},
+		"size":        types.Int64Type,
+		"tenant_id":   types.StringType,
+		"type":        types.StringType,
+	}
+}
+
+func NewSnapshotBackup(ctx context.Context, snapshotBackup snapshot_backup.SnapshotBackup, BackupID, clusterID, projectID, tenantID string, progressObj, serverObj basetypes.ObjectValue, cmekObj basetypes.SetValue) SnapshotBackup {
+	return SnapshotBackup{
+		AppService: types.StringValue(snapshotBackup.AppService),
+		BackupID:   types.StringValue(BackupID),
+		ClusterID:  types.StringValue(clusterID),
+		Expiration: types.StringValue(snapshotBackup.Expiration),
+		ProjectID:  types.StringValue(projectID),
+		TenantID:   types.StringValue(tenantID),
+		CreatedAt:  types.StringValue(snapshotBackup.CreatedAt),
+		Retention:  types.Int64Value(int64(snapshotBackup.Retention)),
+		Progress:   progressObj,
+		CMEK:       cmekObj,
+		Server:     serverObj,
+		Size:       types.Int64Value(int64(snapshotBackup.Size)),
+		Type:       types.StringValue(snapshotBackup.Type),
+	}
+}
+
+// Validate is used to verify that IDs have been properly imported.
+func (s SnapshotBackup) Validate() (map[Attr]string, error) {
+	state := map[Attr]basetypes.StringValue{
+		OrganizationId: s.TenantID,
+		ProjectId:      s.ProjectID,
+		ClusterId:      s.ClusterID,
+		Id:             s.BackupID,
+	}
+
+	IDs, err := validateSchemaState(state)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
+	}
+	return IDs, nil
+}
