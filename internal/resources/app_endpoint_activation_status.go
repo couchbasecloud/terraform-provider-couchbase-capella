@@ -168,7 +168,7 @@ func (r *AppEndpointActivationStatus) manageAppEndpointActivation(ctx context.Co
 		nil,
 	)
 	if err != nil {
-		return fmt.Errorf(errorMessageWhileAppEndpointActivation + api.ParseError(err))
+		return fmt.Errorf("%s%s", errorMessageWhileAppEndpointActivation, api.ParseError(err))
 	}
 	return nil
 }
