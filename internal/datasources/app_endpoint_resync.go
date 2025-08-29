@@ -47,12 +47,9 @@ func (a *AppEndpointResync) Schema(_ context.Context, _ datasource.SchemaRequest
 			"cluster_id":      requiredStringAttribute,
 			"app_service_id":  requiredStringAttribute,
 			"app_endpoint":    requiredStringAttribute,
-			"collections_processing": schema.MapAttribute{
-				ElementType: types.SetType{
-					ElemType: types.StringType,
-				},
-				Computed: true,
-			},
+			"collections_processing": computedMaptAttribute(types.SetType{
+				ElemType: types.StringType,
+			}),
 			"docs_changed":   computedInt64Attribute,
 			"docs_processed": computedInt64Attribute,
 			"last_error":     computedStringAttribute,
