@@ -24,10 +24,10 @@ var (
 	_ resource.ResourceWithImportState = &AppEndpointResync{}
 )
 
-const errorMessageWhileAppEndpointResyncCreation = "There is an error during app endpoint resync creation. Please check in Capella to see if any hanging resources" +
+const errorInitiatingAppEndpointResync = "There is an error initiating app endpoint resync. Please check in Capella to see if any hanging resources" +
 	" have been created, unexpected error: "
 
-const errorMessageAfterAppEndpointResyncCreation = "App endpoint resync creation is successful, but encountered an error while checking the current" +
+const errorAfterAppEndpointResyncInitiation = "Encountered an error while checking the current" +
 	" state of the resync. Please run `terraform plan` after 1-2 minutes to know the" +
 	" current state. Additionally, run `terraform apply --refresh-only` to update" +
 	" the state from remote, unexpected error: "
@@ -52,10 +52,10 @@ func (a *AppEndpointResync) Schema(_ context.Context, _ resource.SchemaRequest, 
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages App Endpoint Resync operations. This resource allows you to create and manage resync operations for App Endpoints in Couchbase Capella.",
 		Attributes: map[string]schema.Attribute{
-			"organization_id":        WithDescription(stringAttribute([]string{required, requiresReplace}), "The UUID of the organization."),
-			"project_id":             WithDescription(stringAttribute([]string{required, requiresReplace}), "The UUID of the project."),
-			"cluster_id":             WithDescription(stringAttribute([]string{required, requiresReplace}), "The UUID of the cluster."),
-			"app_service_id":         WithDescription(stringAttribute([]string{required, requiresReplace}), "The UUID of the app service."),
+			"organization_id":        WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the organization."),
+			"project_id":             WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the project."),
+			"cluster_id":             WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the cluster."),
+			"app_service_id":         WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the app service."),
 			"app_endpoint":           WithDescription(stringAttribute([]string{required, requiresReplace}), "The name of the app endpoint."),
 			"scopes":                 WithDescription(mapAttribute(types.SetType{ElemType: types.StringType}, []string{optional}...), "A map of scope names to their collections that need to be resynced. Each scope maps to a set of collection names."),
 			"collections_processing": WithDescription(mapAttribute(types.SetType{ElemType: types.StringType}, []string{computed}...), "A map of collections currently being processed, organized by scope."),
@@ -84,15 +84,17 @@ func (a *AppEndpointResync) Create(ctx context.Context, req resource.CreateReque
 	appEndpointName := plan.AppEndpoint.ValueString()
 
 	var scopes map[string][]string
-
 	diags = plan.Scopes.ElementsAs(ctx, &scopes, false)
 	if diags.HasError() {
 		resp.Diagnostics.Append(diags...)
 		return
 	}
 
-	resyncRequest := api.CreateResyncRequest{
-		Scopes: scopes,
+	var resyncRequest *api.CreateResyncRequest
+	if scopes != nil {
+		resyncRequest = &api.CreateResyncRequest{
+			Scopes: scopes,
+		}
 	}
 
 	url := fmt.Sprintf(
@@ -111,7 +113,7 @@ func (a *AppEndpointResync) Create(ctx context.Context, req resource.CreateReque
 		SuccessStatus: http.StatusAccepted,
 	}
 
-	response, err := a.Client.ExecuteWithRetry(
+	_, err := a.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
 		resyncRequest,
@@ -120,8 +122,8 @@ func (a *AppEndpointResync) Create(ctx context.Context, req resource.CreateReque
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error parsing app endpoint resync response",
-			errorMessageWhileAppEndpointResyncCreation+api.ParseError(err),
+			"Error initiating app endpoint resync",
+			errorInitiatingAppEndpointResync+api.ParseError(err),
 		)
 		return
 	}
@@ -133,6 +135,11 @@ func (a *AppEndpointResync) Create(ctx context.Context, req resource.CreateReque
 	plan.LastError = types.StringNull()
 	plan.StartTime = types.StringNull()
 	plan.State = types.StringNull()
+	diags = resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Refresh the state by getting the latest data
 	url = fmt.Sprintf(
@@ -151,7 +158,7 @@ func (a *AppEndpointResync) Create(ctx context.Context, req resource.CreateReque
 		SuccessStatus: http.StatusOK,
 	}
 
-	response, err = a.Client.ExecuteWithRetry(
+	response, err := a.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -160,8 +167,8 @@ func (a *AppEndpointResync) Create(ctx context.Context, req resource.CreateReque
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading app endpoint resync after creation",
-			errorMessageAfterAppEndpointResyncCreation+api.ParseError(err),
+			"Error reading app endpoint resync after initiation",
+			errorAfterAppEndpointResyncInitiation+api.ParseError(err),
 		)
 		return
 	}
@@ -170,7 +177,7 @@ func (a *AppEndpointResync) Create(ctx context.Context, req resource.CreateReque
 	if err = json.Unmarshal(response.Body, &resyncResponse); err != nil {
 		resp.Diagnostics.AddError(
 			"Error parsing app endpoint resync response",
-			errorMessageAfterAppEndpointResyncCreation+"error during unmarshalling: "+err.Error(),
+			errorAfterAppEndpointResyncInitiation+"error during unmarshalling: "+err.Error(),
 		)
 		return
 	}
@@ -315,7 +322,7 @@ func (a *AppEndpointResync) Update(ctx context.Context, req resource.UpdateReque
 		SuccessStatus: http.StatusAccepted,
 	}
 
-	response, err := a.Client.ExecuteWithRetry(
+	_, err := a.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
 		resyncRequest,
@@ -325,7 +332,7 @@ func (a *AppEndpointResync) Update(ctx context.Context, req resource.UpdateReque
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error parsing app endpoint resync response",
-			errorMessageWhileAppEndpointResyncCreation+api.ParseError(err),
+			errorInitiatingAppEndpointResync+api.ParseError(err),
 		)
 		return
 	}
@@ -355,7 +362,7 @@ func (a *AppEndpointResync) Update(ctx context.Context, req resource.UpdateReque
 		SuccessStatus: http.StatusOK,
 	}
 
-	response, err = a.Client.ExecuteWithRetry(
+	response, err := a.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -365,7 +372,7 @@ func (a *AppEndpointResync) Update(ctx context.Context, req resource.UpdateReque
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading app endpoint resync after creation",
-			errorMessageAfterAppEndpointResyncCreation+api.ParseError(err),
+			errorAfterAppEndpointResyncInitiation+api.ParseError(err),
 		)
 		return
 	}
@@ -374,7 +381,7 @@ func (a *AppEndpointResync) Update(ctx context.Context, req resource.UpdateReque
 	if err = json.Unmarshal(response.Body, &resyncResponse); err != nil {
 		resp.Diagnostics.AddError(
 			"Error parsing app endpoint resync response",
-			errorMessageAfterAppEndpointResyncCreation+"error during unmarshalling: "+err.Error(),
+			errorAfterAppEndpointResyncInitiation+"error during unmarshalling: "+err.Error(),
 		)
 		return
 	}
@@ -483,8 +490,8 @@ func (a *AppEndpointResync) mapResponseToState(
 		AppServiceId:   plan.AppServiceId,
 		AppEndpoint:    plan.AppEndpoint,
 		Scopes:         plan.Scopes,
-		DocsChanged:    types.Int64Value(int64(response.DocsChanged)),
-		DocsProcessed:  types.Int64Value(int64(response.DocsProcessed)),
+		DocsChanged:    types.Int64Value(response.DocsChanged),
+		DocsProcessed:  types.Int64Value(response.DocsProcessed),
 		LastError:      types.StringValue(response.LastError),
 		StartTime:      types.StringValue(response.StartTime.Format("2006-01-02T15:04:05Z")),
 		State:          types.StringValue(string(response.State)),
