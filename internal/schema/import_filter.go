@@ -23,13 +23,7 @@ type ImportFilter struct {
 	AppServiceId types.String `tfsdk:"app_service_id"`
 
 	// AppEndpointName is the name of the App Endpoint.
-	AppEndpointName types.String `tfsdk:"app_endpoint_name"`
-
-	// Scope is the name of the scope containing the collection.
-	Scope types.String `tfsdk:"scope"`
-
-	// Collection is the name of the collection for which the import filter is defined.
-	Collection types.String `tfsdk:"collection"`
+	Keyspace types.String `tfsdk:"keyspace"`
 
 	// ImportFilter is the JavaScript function used to specify the documents in this
 	// collection that are to be imported by the App Endpoint. By default, all
@@ -40,13 +34,11 @@ type ImportFilter struct {
 // AttributeTypes returns a map of attribute types for the ImportFilter schema.
 func (i ImportFilter) AttributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
-		"organization_id":   types.StringType,
-		"project_id":        types.StringType,
-		"cluster_id":        types.StringType,
-		"app_service_id":    types.StringType,
-		"app_endpoint_name": types.StringType,
-		"scope":             types.StringType,
-		"collection":        types.StringType,
-		"import_filter":     types.StringType,
+		"organization_id": types.StringType,
+		"project_id":      types.StringType,
+		"cluster_id":      types.StringType,
+		"app_service_id":  types.StringType,
+		"keyspace":        types.StringType,
+		"import_filter":   types.StringType,
 	}
 }
