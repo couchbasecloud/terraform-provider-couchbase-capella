@@ -78,27 +78,13 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 		clusterId = plan.ClusterID.ValueString()
 	)
 
-	latestBackup, err := s.getLatestSnapshotBackup(ctx, tenantId, projectId, clusterId)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error getting latest snapshot backup",
-			"Could not get the latest snapshot backup : unexpected error "+api.ParseError(err),
-		)
-		return
-	}
-
-	var backupFound bool
-	if latestBackup != nil {
-		backupFound = true
-	}
-
 	createSnapshotBackupRequest := snapshot_backup.CreateSnapshotBackupRequest{
 		Retention: int(plan.Retention.ValueInt64()),
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups", s.HostURL, tenantId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
-	_, err = s.Client.ExecuteWithRetry(
+	createResp, err := s.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
 		createSnapshotBackupRequest,
@@ -114,8 +100,17 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
+	var createSnapshotBackupResponse snapshot_backup.CreateSnapshotBackupResponse
+	err = json.Unmarshal(createResp.Body, &createSnapshotBackupResponse)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error unmarshalling create snapshot backup response",
+			"Could not unmarshal create snapshot backup response: "+err.Error(),
+		)
+	}
+
 	// Checks the snapshot backup creation is complete.
-	backupResp, err := s.checkLatestSnapshotBackupStatus(ctx, tenantId, projectId, clusterId, backupFound, latestBackup)
+	backupResp, err := s.checkSnapshotBackupStatus(ctx, tenantId, projectId, clusterId, createSnapshotBackupResponse.BackupID)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while checking latest snapshot backup status",
@@ -240,7 +235,18 @@ func (s *SnapshotBackup) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	state.Retention = types.Int64Value(plan.Retention.ValueInt64())
+	backupResp, err := s.getSnapshotBackup(ctx, tenantId, projectId, clusterId, backupId)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error getting snapshot backup",
+			"Could not get snapshot backup id "+backupId+": "+err.Error(),
+		)
+		return
+	}
+
+	state.Retention = types.Int64Value(int64(backupResp.Retention))
+	state.Expiration = types.StringValue(backupResp.Expiration)
+
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -329,7 +335,7 @@ func (s *SnapshotBackup) validateCreateSnapshotBackupRequest(plan providerschema
 // checkLatestSnapshotBackupStatus monitors the status of a snapshot backup creation operation for a specified organization, project, and cluster ID.
 // It periodically fetches the snapshot backup job status using the `getLatestSnapshotBackup` function and waits until the snapshot backup reaches a final state or until a specified timeout is reached.
 // function and waits until the snapshot backup reaches a final state or until a specified timeout is reached.
-func (s *SnapshotBackup) checkLatestSnapshotBackupStatus(ctx context.Context, organizationId, projectId, clusterId string, backupFound bool, latestBackup *snapshot_backup.SnapshotBackup) (*snapshot_backup.SnapshotBackup, error) {
+func (s *SnapshotBackup) checkSnapshotBackupStatus(ctx context.Context, organizationId, projectId, clusterId, backupId string) (*snapshot_backup.SnapshotBackup, error) {
 	var (
 		backupResp *snapshot_backup.SnapshotBackup
 		err        error
@@ -352,14 +358,10 @@ func (s *SnapshotBackup) checkLatestSnapshotBackupStatus(ctx context.Context, or
 			return nil, errors.ErrSnapshotBackupCreationStatusTimeout
 
 		case <-timer.C:
-			backupResp, err = s.getLatestSnapshotBackup(ctx, organizationId, projectId, clusterId)
+			backupResp, err = s.getSnapshotBackup(ctx, organizationId, projectId, clusterId, backupId)
 			switch err {
 			case nil:
-				// If there is no existing snapshot backup, check for a new snapshot backup record to be created.
-				// If a snapshot backup record exists already, wait for a snapshot backup record with a new ID to be created.
-				if !backupFound && backupResp != nil && snapshot_backup.IsFinalState(backupResp.Progress.Status) {
-					return backupResp, nil
-				} else if backupFound && backupResp != nil && latestBackup.BackupID != backupResp.BackupID && snapshot_backup.IsFinalState(backupResp.Progress.Status) {
+				if snapshot_backup.IsFinalState(backupResp.Progress.Status) {
 					return backupResp, nil
 				}
 				const msg = "waiting for snapshot backup to complete the execution"
@@ -370,19 +372,6 @@ func (s *SnapshotBackup) checkLatestSnapshotBackupStatus(ctx context.Context, or
 			timer.Reset(sleep)
 		}
 	}
-}
-
-// getLatestSnapshotBackup retrieves the latest snapshot backup information for a specified cluster.
-func (s *SnapshotBackup) getLatestSnapshotBackup(ctx context.Context, tenantId, projectId, clusterId string) (*snapshot_backup.SnapshotBackup, error) {
-	resp, err := s.getSnapshotBackups(ctx, tenantId, projectId, clusterId)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(resp.Data) > 0 {
-		return &resp.Data[len(resp.Data)-1], nil
-	}
-	return nil, nil
 }
 
 func (s *SnapshotBackup) getSnapshotBackups(ctx context.Context, tenantId, projectId, clusterId string) (*snapshot_backup.ListSnapshotBackupsResponse, error) {

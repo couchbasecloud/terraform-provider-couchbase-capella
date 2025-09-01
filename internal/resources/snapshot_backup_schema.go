@@ -14,13 +14,13 @@ func SnapshotBackupSchema() schema.Schema {
 			"project_id":  WithDescription(stringAttribute([]string{required}), "The GUID4 ID of the project."),
 			"tenant_id":   WithDescription(stringAttribute([]string{required}), "The GUID4 ID of the tenant."),
 			"created_at":  WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The RFC3339 timestamp representing the time at which snapshot backup was created."),
-			"expiration":  WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The RFC3339 timestamp representing the time at which snapshot backup will expire."),
-			"retention":   WithDescription(int64Attribute(required), "The retention of the snapshot backup in hours."),
+			"expiration":  WithDescription(stringAttribute([]string{computed}), "The RFC3339 timestamp representing the time at which snapshot backup will expire."),
+			"retention":   WithDescription(int64Attribute(optional, computed), "The retention of the snapshot backup in hours."),
 			"progress": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"status": WithDescription(stringAttribute([]string{computed}), "The status of the snapshot backup. Snapshot backup statuses are 'pending', 'complete', and 'failed'."),
-					"time":   WithDescription(stringAttribute([]string{computed}), "The RFC3339 timestamp representing the time at which the status was last updated."),
+					"status": WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The status of the snapshot backup. Snapshot backup statuses are 'pending', 'complete', and 'failed'."),
+					"time":   WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The RFC3339 timestamp representing the time at which the status was last updated."),
 				},
 			},
 			"cmek": schema.SetNestedAttribute{
