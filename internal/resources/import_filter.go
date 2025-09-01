@@ -171,7 +171,7 @@ func (r *ImportFilter) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	resourceIDs, err := state.ValidateState()
 	if err != nil {
-		resp.Diagnostics.AddError("Error Reading Import Filter", errors.ErrValidatingResource.Error())
+		resp.Diagnostics.AddError("Error Reading Import Filter", err.Error())
 		return
 	}
 
