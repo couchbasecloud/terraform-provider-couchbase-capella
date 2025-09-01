@@ -65,9 +65,13 @@ func (c *Client) Execute(
 ) (response *Response, err error) {
 	var requestBody []byte
 	if payload != nil {
-		requestBody, err = json.Marshal(payload)
-		if err != nil {
-			return nil, fmt.Errorf("%s: %w", errors.ErrMarshallingPayload, err)
+		if content, ok := headers["Content-Type"]; ok && content == "application/javascript" {
+			requestBody = []byte(payload.(string))
+		} else {
+			requestBody, err = json.Marshal(payload)
+			if err != nil {
+				return nil, fmt.Errorf("%s: %w", errors.ErrMarshallingPayload, err)
+			}
 		}
 	}
 
@@ -121,9 +125,13 @@ func (c *Client) ExecuteWithRetry(
 	var requestBody []byte
 	var dur time.Duration
 	if payload != nil {
-		requestBody, err = json.Marshal(payload)
-		if err != nil {
-			return nil, fmt.Errorf("%s: %w", errors.ErrMarshallingPayload, err)
+		if content, ok := headers["Content-Type"]; ok && content == "application/javascript" {
+			requestBody = []byte(payload.(string))
+		} else {
+			requestBody, err = json.Marshal(payload)
+			if err != nil {
+				return nil, fmt.Errorf("%s: %w", errors.ErrMarshallingPayload, err)
+			}
 		}
 	}
 
