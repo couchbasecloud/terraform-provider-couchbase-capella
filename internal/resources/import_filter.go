@@ -7,6 +7,7 @@ import (
 
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -168,18 +169,27 @@ func (r *ImportFilter) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	if state.OrganizationId.IsNull() || state.ProjectId.IsNull() || state.ClusterId.IsNull() || state.AppServiceId.IsNull() || state.Keyspace.IsNull() {
+	resourceIDs, err := state.ValidateState()
+	if err != nil {
 		resp.Diagnostics.AddError("Error Reading Import Filter", errors.ErrValidatingResource.Error())
 		return
 	}
 
+	var (
+		organizationId = resourceIDs[providerschema.OrganizationId]
+		projectId      = resourceIDs[providerschema.ProjectId]
+		clusterId      = resourceIDs[providerschema.ClusterId]
+		appServiceId   = resourceIDs[providerschema.AppServiceId]
+		keyspace       = resourceIDs[providerschema.Keyspace]
+	)
+
 	url := buildImportFilterURL(
 		r.HostURL,
-		state.OrganizationId.ValueString(),
-		state.ProjectId.ValueString(),
-		state.ClusterId.ValueString(),
-		state.AppServiceId.ValueString(),
-		state.Keyspace.ValueString(),
+		organizationId,
+		projectId,
+		clusterId,
+		appServiceId,
+		keyspace,
 	)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
@@ -309,5 +319,5 @@ func (r *ImportFilter) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 // ImportState imports a resource into Terraform state.
 func (r *ImportFilter) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-
+	resource.ImportStatePassthroughID(ctx, path.Root("keyspace"), req, resp)
 }

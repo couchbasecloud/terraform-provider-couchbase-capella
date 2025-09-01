@@ -1,8 +1,11 @@
 package schema
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 // AccessFunction represents the Terraform schema for an Access Control and Validation function
@@ -50,4 +53,23 @@ func (a AccessFunction) AttributeTypes() map[string]attr.Type {
 		"collection":              types.StringType,
 		"access_control_function": types.StringType,
 	}
+}
+
+// ValidateState validates base identifiers using the shared validateSchemaState helper,
+// enabling consistent terraform import parsing similar to other resources.
+func (a *ImportFilter) ValidateState() (map[Attr]string, error) {
+	state := map[Attr]basetypes.StringValue{
+		OrganizationId: a.OrganizationId,
+		ProjectId:      a.ProjectId,
+		ClusterId:      a.ClusterId,
+		AppServiceId:   a.AppServiceId,
+		Keyspace:       a.Keyspace,
+	}
+
+	IDs, err := validateSchemaState(state, Keyspace)
+	if err != nil {
+		return nil, fmt.Errorf("failed to validate resource state: %s", err)
+	}
+
+	return IDs, nil
 }
