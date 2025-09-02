@@ -123,7 +123,11 @@ func (c *Client) ExecuteWithRetry(
 	if payload != nil {
 		if content, ok := headers["Content-Type"]; ok && content == "application/javascript" {
 			// json.Marshal will add escape characters to the string payload which makes it invalid javascript, this is a workaround
-			requestBody = []byte(payload.(string))
+			js, ok := payload.(string)
+			if !ok {
+				return nil, fmt.Errorf("%s: %w", errors.ErrNotAString, fmt.Errorf("expected string payload for javascript content type"))
+			}
+			requestBody = []byte(js)
 		} else {
 			requestBody, err = json.Marshal(payload)
 			if err != nil {

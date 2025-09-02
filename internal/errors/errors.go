@@ -84,6 +84,9 @@ var (
 	// ErrUnableToUpdateCloudProvider is returned when it is not possible to update the cloud provider.
 	ErrUnableToUpdateCloudProvider = errors.New("unable to update cloud provider")
 
+	// ErrNotAString is returned when a payload is not a string.
+	ErrNotAString = errors.New("payload is not a string")
+
 	// ErrMarshallingPayload is returned when a payload has failed to marshal into a request body.
 	ErrMarshallingPayload = errors.New("failed to marshal payload")
 
