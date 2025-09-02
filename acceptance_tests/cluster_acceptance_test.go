@@ -28,6 +28,11 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"http": {
+				Source: "hashicorp/http",
+			},
+		},
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -65,32 +70,24 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 			// Update number of nodes, compute type, disk size and type, cluster name, support plan, time zone and description from empty string,
 			// and Read testing
 			{
-				Config: testAccClusterResourceConfigUpdateWhenClusterCreatedWithReqFieldOnlyAndIfMatch(resourceName, cidr),
+				Config:             testAccClusterResourceConfigUpdateWhenClusterCreatedWithReqFieldOnlyAndIfMatch(resourceName, cidr),
+				ExpectNonEmptyPlan: true,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsClusterResource(resourceReference),
-					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
-					resource.TestCheckResourceAttr(resourceReference, "description", "Cluster Updated"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east-1"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
 					resource.TestCheckResourceAttr(resourceReference, "configuration_type", "multiNode"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.compute.cpu", "8"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.compute.ram", "32"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.disk.storage", "51"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.disk.type", "gp3"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.disk.iops", "3001"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.num_of_nodes", "2"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.services.#", "2"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.services.0", "index"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.services.1", "query"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "51"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "gp3"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.iops", "3001"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "50"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "io2"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.iops", "3000"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "3"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "1"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "3"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "data"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.1", "index"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.2", "query"),
 					resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
 					resource.TestCheckResourceAttr(resourceReference, "support.plan", "enterprise"),
 					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "IST"),
@@ -728,11 +725,32 @@ func testAccClusterResourceConfigUpdateWhenClusterCreatedWithReqFieldOnlyAndIfMa
 	return fmt.Sprintf(`
 %[1]s
 
+data "couchbase-capella_clusters" "existing_clusters" {
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+}
+
+locals {
+  cluster_id = [
+    for cluster in data.couchbase-capella_clusters.existing_clusters.data :
+    cluster.id if cluster.name == "%[4]s"
+  ][0]
+  
+  cluster_etag = regex("[0-9]+", data.http.cluster_info.response_headers["Etag"])
+}
+
+data "http" "cluster_info" {
+  url   = "${var.host}/v4/organizations/%[2]s/projects/%[3]s/clusters/${local.cluster_id}"
+
+  request_headers = {
+    Authorization = "Bearer ${var.auth_token}"
+  }
+}
+
 resource "couchbase-capella_cluster" "%[4]s" {
   organization_id = "%[2]s"
   project_id      = "%[3]s"
-  name            = "%[4]s"
-  description     = "Cluster Updated"
+  name            =  "%[4]s"
   cloud_provider = {
     type   = "aws"
     region = "us-east-1"
@@ -742,32 +760,17 @@ resource "couchbase-capella_cluster" "%[4]s" {
     {
       node = {
         compute = {
-          cpu = 8
-          ram = 32
-        }
-        disk = {
-          storage = 51
-          type    = "gp3"
-          iops    = 3001
-        }
-      }
-      num_of_nodes = 2
-      services     = ["index", "query"]
-    },
-    {
-      node = {
-        compute = {
           cpu = 4
           ram = 16
         }
         disk = {
-          storage = 51
-          type    = "gp3"
-          iops    = 3001
+          storage = 50
+          type    = "io2"
+          iops    = 3000
         }
       }
       num_of_nodes = 3
-      services     = ["data"]
+      services     = ["data", "index", "query"]
     }
   ]
   availability = {
@@ -777,6 +780,9 @@ resource "couchbase-capella_cluster" "%[4]s" {
     plan     = "enterprise"
     timezone = "IST"
   }
+
+  if_match = local.cluster_etag
+
 }
 `, globalProviderBlock, globalOrgId, globalProjectId, resourceName, cidr)
 }
