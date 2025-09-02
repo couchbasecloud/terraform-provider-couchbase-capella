@@ -782,7 +782,6 @@ resource "couchbase-capella_cluster" "%[4]s" {
   }
 
   if_match = local.cluster_etag
-
 }
 `, globalProviderBlock, globalOrgId, globalProjectId, resourceName, cidr)
 }
