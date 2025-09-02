@@ -22,7 +22,7 @@ var (
 		"index_name":      IndexName,
 		"app_service_id":  AppServiceId,
 		"endpoint_id":     EndpointId,
-		"keyspace":        Keyspace,
+		"app_endpoint":    AppEndpointName,
 	}
 )
 
