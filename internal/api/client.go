@@ -132,9 +132,6 @@ func (c *Client) ExecuteWithRetry(
 		}
 	}
 
-	fmt.Println(string(requestBody))
-	//fmt.Println(payload.(string))
-
 	var fn = func() (response *Response, backoff time.Duration, err error) {
 		req, err := http.NewRequest(endpointCfg.Method, endpointCfg.Url, bytes.NewReader(requestBody))
 		if err != nil {
