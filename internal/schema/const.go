@@ -12,7 +12,7 @@ const (
 	ScopeName       Attr = "scopeName"
 	CollectionName  Attr = "collectionName"
 	AppServiceId    Attr = "appServiceId"
+	AppEndpointName Attr = "appEndpointName"
 	EndpointId      Attr = "endpointId"
 	IndexName       Attr = "indexName"
-	AppEndpointName Attr = "appEndpointName"
 )
