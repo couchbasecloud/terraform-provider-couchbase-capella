@@ -243,6 +243,6 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewFreeTierCluster,
 		resources.NewFreeTierAppService,
 		resources.NewAppServiceCidr,
-		resources.NewAccessFunction,
+		resources.NewAccessControlFunction,
 	}
 }
