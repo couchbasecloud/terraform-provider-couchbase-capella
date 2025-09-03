@@ -115,7 +115,7 @@ func (r *AppEndpointActivationStatus) Create(ctx context.Context, req resource.C
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella App Endpoint Activation Status",
-			fmt.Sprintf("Could not read activation status for the app endpoint: %s associated to app service: %s: %s", appEndpointName, appServiceId, api.ParseError(err)),
+			fmt.Sprintf("Could not read activation status for the App Endpoint: %s on App Service: %s: %s", appEndpointName, appServiceId, api.ParseError(err)),
 		)
 		return
 	}
@@ -283,6 +283,7 @@ func (r *AppEndpointActivationStatus) Update(ctx context.Context, req resource.U
 }
 
 // Delete is a no-op as the activation resource models an action.
+// so deleting will only remove it from the state file.
 func (r *AppEndpointActivationStatus) Delete(_ context.Context, _ resource.DeleteRequest, _ *resource.DeleteResponse) {
 	// Couchbase Capella's v4 does not support destroying an activation resource.
 	// The POST and DELETE endpoints are used to switch the app endpoint online and offline respectively.
@@ -305,12 +306,12 @@ func (r *AppEndpointActivationStatus) retrieveAppEndpointActivation(ctx context.
 		return nil, err
 	}
 
-	var getResp *app_service_api.GetAppEndpointStateResp
-	if err := json.Unmarshal(response.Body, getResp); err != nil {
+	var getResp app_service_api.GetAppEndpointStateResp
+	if err := json.Unmarshal(response.Body, &getResp); err != nil {
 		return nil, err
 	}
 
-	return getResp, nil
+	return &getResp, nil
 }
 
 // waitForAppEndpointStatus monitors the status of an App Endpoint online/offline request.
@@ -331,19 +332,19 @@ func (r *AppEndpointActivationStatus) waitForAppEndpointStatus(ctx context.Conte
 	defer cancel()
 
 	const sleep = time.Second * 3
-	timer := time.NewTimer(30 * time.Second)
+	timer := time.NewTimer(10 * time.Second)
 
 	var desiredState string
 	if online {
-		desiredState = "online"
+		desiredState = "Online"
 	} else {
-		desiredState = "offline"
+		desiredState = "Offline"
 	}
 
 	for {
 		select {
 		case <-ctx.Done():
-			return nil, fmt.Errorf("cluster creation status transition timed out after initiation, unexpected error: %w", err)
+			return nil, fmt.Errorf("app endpoint activation status transition timed out after initiation, unexpected error: %w", err)
 		case <-timer.C:
 			appEndpointResp, err = r.retrieveAppEndpointActivation(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName)
 			switch err {
