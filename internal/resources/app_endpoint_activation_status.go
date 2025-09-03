@@ -5,14 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
+	"time"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	api "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	app_service_api "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/appservice"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
@@ -109,7 +111,7 @@ func (r *AppEndpointActivationStatus) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	refreshedState, err := r.retrieveAppEndpointActivation(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, online)
+	refreshedState, err := r.waitForAppEndpointStatus(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, online)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella App Endpoint Activation Status",
@@ -173,52 +175,6 @@ func (r *AppEndpointActivationStatus) manageAppEndpointActivation(ctx context.Co
 	return nil
 }
 
-// retrieveAppEndpointActivation reads the app endpoint and maps its state to the Online flag.
-func (r *AppEndpointActivationStatus) retrieveAppEndpointActivation(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string, desiredOnline bool) (*providerschema.AppEndpointActivationStatus, error) {
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s", r.HostURL, organizationId, projectId, clusterId, appServiceId, appEndpointName)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := r.Client.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		r.Token,
-		nil,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	// Minimal struct to pick state or online
-	var getResp struct {
-		State  string `json:"state"`
-		Online *bool  `json:"online"`
-		Status string `json:"status"`
-	}
-	if err := json.Unmarshal(response.Body, &getResp); err != nil {
-		return nil, err
-	}
-
-	online := desiredOnline
-	switch {
-	case getResp.Online != nil:
-		online = *getResp.Online
-	case getResp.State != "":
-		online = strings.EqualFold(getResp.State, "online")
-	case getResp.Status != "":
-		online = strings.EqualFold(getResp.Status, "online")
-	}
-
-	refreshed := providerschema.AppEndpointActivationStatus{
-		OrganizationId:  types.StringValue(organizationId),
-		ProjectId:       types.StringValue(projectId),
-		ClusterId:       types.StringValue(clusterId),
-		AppServiceId:    types.StringValue(appServiceId),
-		AppEndpointName: types.StringValue(appEndpointName),
-		Online:          types.BoolValue(online),
-	}
-	return &refreshed, nil
-}
-
 // Read verifies the status via GET App Endpoint API and updates state.
 // Couchbase Capella's v4 does not support a GET endpoint for activation state directly.
 // This read is calling the retrieveAppEndpointActivation func to verify the state with the app endpoint response.
@@ -254,7 +210,7 @@ func (r *AppEndpointActivationStatus) Read(ctx context.Context, req resource.Rea
 		appEndpointName = IDs[providerschema.AppEndpointName]
 	)
 
-	refreshedState, err := r.retrieveAppEndpointActivation(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, state.Online.ValueBool())
+	refreshedState, err := r.waitForAppEndpointStatus(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, state.Online.ValueBool())
 	if err != nil {
 		resourceNotFound, _ := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -310,7 +266,7 @@ func (r *AppEndpointActivationStatus) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	refreshedState, err := r.retrieveAppEndpointActivation(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, online)
+	refreshedState, err := r.waitForAppEndpointStatus(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, online)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella App Endpoint Activation Status",
@@ -332,4 +288,80 @@ func (r *AppEndpointActivationStatus) Delete(_ context.Context, _ resource.Delet
 	// The POST and DELETE endpoints are used to switch the app endpoint online and offline respectively.
 	// https://docs.couchbase.com/cloud/management-api-reference/index.html#tag/App-Endpoints/operation/postAppEndpointActivationStatus
 	// https://docs.couchbase.com/cloud/management-api-reference/index.html#tag/App-Endpoints/operation/deleteAppEndpointActivationStatus
+}
+
+// retrieveAppEndpointActivation reads the app endpoint and maps its state to the Online flag.
+func (r *AppEndpointActivationStatus) retrieveAppEndpointActivation(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string) (*app_service_api.GetAppEndpointStateResp, error) {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s", r.HostURL, organizationId, projectId, clusterId, appServiceId, appEndpointName)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	response, err := r.Client.ExecuteWithRetry(
+		ctx,
+		cfg,
+		nil,
+		r.Token,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	var getResp *app_service_api.GetAppEndpointStateResp
+	if err := json.Unmarshal(response.Body, getResp); err != nil {
+		return nil, err
+	}
+
+	return getResp, nil
+}
+
+// waitForAppEndpointStatus monitors the status of an App Endpoint online/offline request.
+// It periodically fetches the App Endpoint status using the `retrieveAppEndpointActivation`
+// function and waits until the App Endpoint reaches the desired state or until a specified timeout is reached.
+// The function returns an error if the operation times out or encounters an error during status retrieval.
+func (r *AppEndpointActivationStatus) waitForAppEndpointStatus(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string, online bool) (*providerschema.AppEndpointActivationStatus, error) {
+	var (
+		appEndpointResp *app_service_api.GetAppEndpointStateResp
+		err             error
+	)
+
+	// Assuming 60 minutes is the max time online/offline takes, can change after discussion
+	const timeout = time.Minute * 30
+
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	const sleep = time.Second * 3
+	timer := time.NewTimer(30 * time.Second)
+
+	var desiredState string
+	if online {
+		desiredState = "online"
+	} else {
+		desiredState = "offline"
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, fmt.Errorf("cluster creation status transition timed out after initiation, unexpected error: %w", err)
+		case <-timer.C:
+			appEndpointResp, err = r.retrieveAppEndpointActivation(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName)
+			switch err {
+			case nil:
+				if appEndpointResp.State == desiredState {
+					return &providerschema.AppEndpointActivationStatus{
+						OrganizationId:  types.StringValue(organizationId),
+						ProjectId:       types.StringValue(projectId),
+						ClusterId:       types.StringValue(clusterId),
+						AppServiceId:    types.StringValue(appServiceId),
+						AppEndpointName: types.StringValue(appEndpointName),
+						Online:          types.BoolValue(online),
+					}, nil
+				}
+			default:
+				return nil, err
+			}
+			timer.Reset(sleep)
+		}
+	}
 }

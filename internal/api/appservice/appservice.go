@@ -111,3 +111,9 @@ type UpdateAppServiceRequest struct {
 	// Compute is the CPU and RAM configuration of the app service.
 	Compute AppServiceCompute `json:"compute"`
 }
+
+// GetAppEndpointStateResp is a Minimal struct to pick state from the Get App Endpoint API response
+type GetAppEndpointStateResp struct {
+	// State defines the current state of app endpoint.
+	State string `json:"state"`
+}
