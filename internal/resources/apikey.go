@@ -291,7 +291,7 @@ func (a *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/apikeys/%s/rotate", a.HostURL, organizationId, apiKeyId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusOK}
 	response, err := a.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
