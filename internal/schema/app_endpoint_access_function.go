@@ -23,8 +23,8 @@ type AccessControlFunction struct {
 	// AppServiceId is the ID of the App Service to which the App Endpoint belongs.
 	AppServiceId types.String `tfsdk:"app_service_id"`
 
-	// AppEndpoint is the name of the App Endpoint the access function is associated with.
-	AppEndpoint types.String `tfsdk:"app_endpoint"`
+	// AppEndpointName is the name of the App Endpoint the access function is associated with.
+	AppEndpointName types.String `tfsdk:"app_endpoint_name"`
 
 	// Scope is scope where the collection resides.
 	Scope types.String `tfsdk:"scope"`
@@ -47,7 +47,7 @@ func (a *AccessControlFunction) Validate() (map[Attr]string, error) {
 		ProjectId:       a.ProjectId,
 		ClusterId:       a.ClusterId,
 		AppServiceId:    a.AppServiceId,
-		AppEndpointName: a.AppEndpoint,
+		AppEndpointName: a.AppEndpointName,
 		ScopeName:       a.Scope,
 		CollectionName:  a.Collection,
 	}

@@ -42,7 +42,7 @@ Terraform will perform the following actions:
   # couchbase-capella_app_endpoint_access_control_function.acf will be created
   + resource "couchbase-capella_app_endpoint_access_control_function" "acf" {
       + access_control_function = "function (doc, oldDoc, meta) {channel(doc.channels); }"
-      + app_endpoint            = "test-endpoint"
+      + app_endpoint_name       = "test-endpoint"
       + app_service_id          = "{appServiceId}"
       + cluster_id              = "{clusterId}"
       + collection              = "test"
@@ -133,7 +133,7 @@ Terraform will perform the following actions:
   # couchbase-capella_app_endpoint_access_control_function.acf will be destroyed
   - resource "couchbase-capella_app_endpoint_access_control_function" "acf" {
       - access_control_function = "function (currentDoc, oldDoc, meta) {channel(doc.channels); }" -> null
-      - app_endpoint            = "test-endpoint" -> null
+      - app_endpoint_name       = "test-endpoint" -> null
       - app_service_id          = "{appServiceId}" -> null
       - cluster_id              = "{clusterId}" -> null
       - collection              = "test" -> null
@@ -170,7 +170,7 @@ couchbase-capella_app_endpoint_access_control_function.acf: Import prepared!
 couchbase-capella_app_endpoint_access_control_function.acf: Refreshing state...
 2025-09-02T13:55:15.576-0700 [WARN]  Provider "registry.terraform.io/couchbasecloud/couchbase-capella" produced an unexpected new value for couchbase-capella_app_endpoint_access_control_function.acf during refresh.
       - .access_control_function: was null, but now cty.StringVal("function (currentDoc, oldDoc, meta) {channel(doc.channels); }")
-      - .app_endpoint: was cty.StringVal("organization_id={orgId},project_id={projectId},cluster_id={clusterId},app_service_id={appServiceId},app_endpoint=test-endpoint,scope_name=test,collection_name=test"), but now cty.StringVal("test-endpoint")
+      - .app_endpoint_name: was cty.StringVal("organization_id={orgId},project_id={projectId},cluster_id={clusterId},app_service_id={appServiceId},app_endpoint=test-endpoint,scope_name=test,collection_name=test"), but now cty.StringVal("test-endpoint")
       - .app_service_id: was null, but now cty.StringVal("{appServiceId}")
       - .cluster_id: was null, but now cty.StringVal("{clusterId}")
       - .collection: was null, but now cty.StringVal("test")

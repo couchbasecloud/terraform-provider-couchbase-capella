@@ -62,7 +62,7 @@ func (a *AccessControlFunction) Create(ctx context.Context, req resource.CreateR
 		appServiceId   = plan.AppServiceId.ValueString()
 		keyspace       = fmt.Sprintf(
 			"%s.%s.%s",
-			plan.AppEndpoint.ValueString(),
+			plan.AppEndpointName.ValueString(),
 			plan.Scope.ValueString(),
 			plan.Collection.ValueString(),
 		)
@@ -145,7 +145,7 @@ func (a *AccessControlFunction) Read(ctx context.Context, req resource.ReadReque
 		ProjectId:             types.StringValue(IDs["projectId"]),
 		ClusterId:             types.StringValue(IDs["clusterId"]),
 		AppServiceId:          types.StringValue(IDs["appServiceId"]),
-		AppEndpoint:           types.StringValue(IDs["appEndpointName"]),
+		AppEndpointName:       types.StringValue(IDs["appEndpointName"]),
 		Scope:                 types.StringValue(IDs["scopeName"]),
 		Collection:            types.StringValue(IDs["collectionName"]),
 		AccessControlFunction: types.StringValue(accessControlFunction),
@@ -169,7 +169,7 @@ func (a *AccessControlFunction) Update(ctx context.Context, req resource.UpdateR
 		appServiceId   = plan.AppServiceId.ValueString()
 		keyspace       = fmt.Sprintf(
 			"%s.%s.%s",
-			plan.AppEndpoint.ValueString(),
+			plan.AppEndpointName.ValueString(),
 			plan.Scope.ValueString(),
 			plan.Collection.ValueString(),
 		)
@@ -221,7 +221,7 @@ func (a *AccessControlFunction) Delete(ctx context.Context, req resource.DeleteR
 		appServiceId   = state.AppServiceId.ValueString()
 		keyspace       = fmt.Sprintf(
 			"%s.%s.%s",
-			state.AppEndpoint.ValueString(),
+			state.AppEndpointName.ValueString(),
 			state.Scope.ValueString(),
 			state.Collection.ValueString(),
 		)
@@ -264,7 +264,7 @@ func (a *AccessControlFunction) ImportState(
 	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
 ) {
 	// The import ID should be in the format: organizationId,projectId,clusterId,appServiceId,keyspace
-	resource.ImportStatePassthroughID(ctx, path.Root("app_endpoint"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("app_endpoint_name"), req, resp)
 }
 
 // Configure sets provider-defined data, clients, etc. that is passed to data sources or resources in the provider.

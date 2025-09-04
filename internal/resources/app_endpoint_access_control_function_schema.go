@@ -12,7 +12,7 @@ func AccessControlFunctionSchema() schema.Schema {
 			"project_id":              WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the project."),
 			"cluster_id":              WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the cluster."),
 			"app_service_id":          WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the app service."),
-			"app_endpoint":            WithDescription(stringAttribute([]string{required, requiresReplace}), "The app endpoint name."),
+			"app_endpoint_name":       WithDescription(stringAttribute([]string{required, requiresReplace}), "The app endpoint name."),
 			"scope":                   WithDescription(stringDefaultAttribute("_default", optional, computed, requiresReplace), "The scope name of the access function."),
 			"collection":              WithDescription(stringDefaultAttribute("_default", optional, computed, requiresReplace), "The collection name of the access function."),
 			"access_control_function": WithDescription(stringAttribute([]string{required}), "The JavaScript function that is used to specify the access control policies to be applied to documents in this collection. Every document update is processed by this function."),
