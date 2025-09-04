@@ -59,23 +59,18 @@ func (f *ImportFilter) Configure(ctx context.Context, req resource.ConfigureRequ
 	f.Data = data
 }
 
-// buildImportFilterURL builds the URL for the import filter API endpoint.
-func buildImportFilterURL(hostURL, organizationId, projectId, clusterId, appServiceId, keyspace string) string {
-	return fmt.Sprintf(
-		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s.%s.%s/importFilter",
-		hostURL,
+// fetchImportFilter fetches the import filter from the API endpoint.
+// returns the import filter function as a string.
+func (f *ImportFilter) fetchImportFilter(ctx context.Context, organizationId, projectId, clusterId, appServiceId, keyspace string) (string, error) {
+	url := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/importFilter",
+		f.HostURL,
 		organizationId,
 		projectId,
 		clusterId,
 		appServiceId,
 		keyspace,
 	)
-}
-
-// fetchImportFilter fetches the import filter from the API endpoint.
-// returns the import filter function as a string.
-func (f *ImportFilter) fetchImportFilter(ctx context.Context, organizationId, projectId, clusterId, appServiceId, keyspace string) (string, error) {
-	url := buildImportFilterURL(f.HostURL, organizationId, projectId, clusterId, appServiceId, keyspace)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := f.Client.ExecuteWithRetry(ctx, cfg, nil, f.Token, nil)
 	if err != nil {
