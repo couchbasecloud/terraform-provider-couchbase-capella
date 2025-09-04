@@ -1,0 +1,1 @@
+terraform import  couchbase-capella_import_filter.example_import_filter app_endpoint_name=api,scope_name=scope1,collection_name=coll1,organization_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,app_service_id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000
