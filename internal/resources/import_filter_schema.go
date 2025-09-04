@@ -13,7 +13,7 @@ func ImportFilterSchema() schema.Schema {
 			"project_id":        WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the project."),
 			"cluster_id":        WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the cluster."),
 			"app_service_id":    WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the app service."),
-			"app_endpoint_name": WithDescription(stringAttribute([]string{required, requiresReplace}), "The app endpoint name."),
+			"app_endpoint_name": WithDescription(stringAttribute([]string{required, requiresReplace}), "The App Endpoint name."),
 			"scope":             WithDescription(stringDefaultAttribute("_default", optional, computed, requiresReplace), "Scope is the scope within the keyspace where the collection resides."),
 			"collection":        WithDescription(stringDefaultAttribute("_default", optional, computed, requiresReplace), "Collection is the collection within the scope where the documents to be imported reside."),
 			"import_filter":     WithDescription(stringAttribute([]string{required}), "The JavaScript function that specifies which documents to import from this collection. By default, all documents are imported."),

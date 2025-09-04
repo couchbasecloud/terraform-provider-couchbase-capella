@@ -1,8 +1,11 @@
 package schema
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 // ImportFilter represents the Terraform schema for an Import Filter function
@@ -50,4 +53,25 @@ func (i ImportFilter) AttributeTypes() map[string]attr.Type {
 		"collection":        types.StringType,
 		"import_filter":     types.StringType,
 	}
+}
+
+// ValidateState validates base identifiers using the shared validateSchemaState helper,
+// enabling consistent terraform import parsing similar to other resources.
+func (a *ImportFilter) ValidateState() (map[Attr]string, error) {
+	state := map[Attr]basetypes.StringValue{
+		OrganizationId:  a.OrganizationId,
+		ProjectId:       a.ProjectId,
+		ClusterId:       a.ClusterId,
+		AppServiceId:    a.AppServiceId,
+		AppEndpointName: a.AppEndpointName,
+		ScopeName:       a.Scope,
+		CollectionName:  a.Collection,
+	}
+
+	IDs, err := validateSchemaState(state, AppEndpointName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to validate resource state: %s", err)
+	}
+
+	return IDs, nil
 }
