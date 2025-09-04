@@ -4,9 +4,9 @@ resource "couchbase-capella_import_filter" "example" {
   cluster_id      = var.cluster_id
   app_service_id  = var.app_service_id
 
-  # keyspace format: <app_endpoint_name>[.<scope_name>[.<collection_name>]]
-  keyspace = var.keyspace
-
+  app_endpoint_name = var.app_endpoint_name
+  scope            = var.scope
+  collection       = var.collection
   # JavaScript function body
   import_filter = <<-EOT
   function (doc, meta) {
