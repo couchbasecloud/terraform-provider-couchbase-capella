@@ -13,7 +13,9 @@ func ImportFilterSchema() schema.Schema {
 			"project_id":      WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the project."),
 			"cluster_id":      WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the cluster."),
 			"app_service_id":  WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the app service."),
-			"keyspace":        WithDescription(stringAttribute([]string{required, requiresReplace}), "The keyspace of the collection, in the format <app_endpoint_name>.<scope_name>.<collection_name>. If only an App Endpoint name is provided this will be interpreted as \"endpoint1._default._default\". If only an App Endpoint name and collection name are provided these will interpreted as a named collection within the default scope, for example \"endpoint1.collection1\" will be interpreted as \"endpoint1._default.collection1\"."),
+			"app_endpoint":    WithDescription(stringAttribute([]string{required, requiresReplace}), "The app endpoint name."),
+			"scope":           WithDescription(stringDefaultAttribute("_default", optional, computed, requiresReplace), "Scope is the scope within the keyspace where the collection resides."),
+			"collection":      WithDescription(stringDefaultAttribute("_default", optional, computed, requiresReplace), "Collection is the collection within the scope where the documents to be imported reside."),
 			"import_filter":   WithDescription(stringAttribute([]string{required}), "The JavaScript function that specifies which documents to import from this collection. By default, all documents are imported."),
 		},
 	}
