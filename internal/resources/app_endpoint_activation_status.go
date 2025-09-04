@@ -324,8 +324,8 @@ func (r *AppEndpointActivationStatus) waitForAppEndpointStatus(ctx context.Conte
 		err             error
 	)
 
-	// Assuming 60 minutes is the max time online/offline takes, can change after discussion
-	const timeout = time.Minute * 30
+	// Assuming 20 minutes is the max time online/offline takes, can change after discussion
+	const timeout = time.Minute * 20
 
 	var cancel context.CancelFunc
 	ctx, cancel = context.WithTimeout(ctx, timeout)
