@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -34,17 +33,17 @@ func NewImportFilter() resource.Resource {
 }
 
 // Metadata returns the resource type name.
-func (r *ImportFilter) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (f *ImportFilter) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_import_filter"
 }
 
 // Schema defines the Terraform schema for this resource.
-func (r *ImportFilter) Schema(ctx context.Context, rsc resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (f *ImportFilter) Schema(ctx context.Context, rsc resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = ImportFilterSchema()
 }
 
 // Configure sets provider-defined data, clients, etc.
-func (r *ImportFilter) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (f *ImportFilter) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -57,13 +56,13 @@ func (r *ImportFilter) Configure(ctx context.Context, req resource.ConfigureRequ
 		)
 		return
 	}
-	r.Data = data
+	f.Data = data
 }
 
 // buildImportFilterURL builds the URL for the import filter API endpoint.
 func buildImportFilterURL(hostURL, organizationId, projectId, clusterId, appServiceId, keyspace string) string {
 	return fmt.Sprintf(
-		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/importFilter",
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s.%s.%s/importFilter",
 		hostURL,
 		organizationId,
 		projectId,
@@ -75,10 +74,10 @@ func buildImportFilterURL(hostURL, organizationId, projectId, clusterId, appServ
 
 // fetchImportFilter fetches the import filter from the API endpoint.
 // returns the import filter function as a string.
-func (r *ImportFilter) fetchImportFilter(ctx context.Context, organizationId, projectId, clusterId, appServiceId, keyspace string) (string, error) {
-	url := buildImportFilterURL(r.HostURL, organizationId, projectId, clusterId, appServiceId, keyspace)
+func (f *ImportFilter) fetchImportFilter(ctx context.Context, organizationId, projectId, clusterId, appServiceId, keyspace string) (string, error) {
+	url := buildImportFilterURL(f.HostURL, organizationId, projectId, clusterId, appServiceId, keyspace)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := r.Client.ExecuteWithRetry(ctx, cfg, nil, r.Token, nil)
+	response, err := f.Client.ExecuteWithRetry(ctx, cfg, nil, f.Token, nil)
 	if err != nil {
 		return "", err
 	}
@@ -86,7 +85,7 @@ func (r *ImportFilter) fetchImportFilter(ctx context.Context, organizationId, pr
 }
 
 // Create upserts the import filter.
-func (r *ImportFilter) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (f *ImportFilter) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan providerschema.ImportFilter
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -94,44 +93,36 @@ func (r *ImportFilter) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	// Validate required fields
-	if plan.OrganizationId.IsNull() {
-		resp.Diagnostics.AddError("Error Creating Import Filter", errors.ErrOrganizationIdCannotBeEmpty.Error())
-		return
-	}
-	if plan.ProjectId.IsNull() {
-		resp.Diagnostics.AddError("Error Creating Import Filter", errors.ErrProjectIdMissing.Error())
-		return
-	}
-	if plan.ClusterId.IsNull() {
-		resp.Diagnostics.AddError("Error Creating Import Filter", errors.ErrClusterIdMissing.Error())
-		return
-	}
-	if plan.AppServiceId.IsNull() {
-		resp.Diagnostics.AddError("Error Creating Import Filter", errors.ErrAppServiceIdMissing.Error())
-		return
-	}
-	if plan.Keyspace.IsNull() {
-		resp.Diagnostics.AddError("Error Creating Import Filter", "keyspace cannot be empty")
-		return
-	}
+	var (
+		organizationId = plan.OrganizationId.ValueString()
+		projectId      = plan.ProjectId.ValueString()
+		clusterId      = plan.ClusterId.ValueString()
+		appServiceId   = plan.AppServiceId.ValueString()
+		keyspace       = fmt.Sprintf(
+			"%s.%s.%s",
+			plan.AppEndpointName.ValueString(),
+			plan.Scope.ValueString(),
+			plan.Collection.ValueString(),
+		)
+	)
 
-	url := buildImportFilterURL(
-		r.HostURL,
-		plan.OrganizationId.ValueString(),
-		plan.ProjectId.ValueString(),
-		plan.ClusterId.ValueString(),
-		plan.AppServiceId.ValueString(),
-		plan.Keyspace.ValueString(),
+	url := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/importFilter",
+		f.HostURL,
+		organizationId,
+		projectId,
+		clusterId,
+		appServiceId,
+		keyspace,
 	)
 
 	headers := map[string]string{"Content-Type": "application/javascript"}
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err := r.Client.ExecuteWithRetry(
+	_, err := f.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
 		plan.ImportFilter.ValueString(),
-		r.Token,
+		f.Token,
 		headers,
 	)
 	if err != nil {
@@ -142,8 +133,8 @@ func (r *ImportFilter) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	// Refresh from server to ensure state matches remote
-	body, err := r.fetchImportFilter(ctx, plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), plan.ClusterId.ValueString(), plan.AppServiceId.ValueString(), plan.Keyspace.ValueString())
+	// Refresh from app service to ensure state matches remote
+	body, err := f.fetchImportFilter(ctx, organizationId, projectId, clusterId, appServiceId, keyspace)
 	if err != nil {
 		resp.Diagnostics.AddWarning(
 			"Error reading Import Filter after creation",
@@ -161,7 +152,7 @@ func (r *ImportFilter) Create(ctx context.Context, req resource.CreateRequest, r
 }
 
 // Read fetches the current import filter and refreshes state.
-func (r *ImportFilter) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (f *ImportFilter) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state providerschema.ImportFilter
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -169,37 +160,15 @@ func (r *ImportFilter) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	resourceIDs, err := state.ValidateState()
+	IDs, err := state.ValidateState()
 	if err != nil {
 		resp.Diagnostics.AddError("Error Reading Import Filter", err.Error())
 		return
 	}
 
-	var (
-		organizationId = resourceIDs[providerschema.OrganizationId]
-		projectId      = resourceIDs[providerschema.ProjectId]
-		clusterId      = resourceIDs[providerschema.ClusterId]
-		appServiceId   = resourceIDs[providerschema.AppServiceId]
-		keyspace       = resourceIDs[providerschema.Keyspace]
-	)
+	keyspace := fmt.Sprintf("%s.%s.%s", IDs["appEndpointName"], IDs["scopeName"], IDs["collectionName"])
 
-	url := buildImportFilterURL(
-		r.HostURL,
-		organizationId,
-		projectId,
-		clusterId,
-		appServiceId,
-		keyspace,
-	)
-
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := r.Client.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		r.Token,
-		nil,
-	)
+	response, err := f.fetchImportFilter(ctx, IDs["organizationId"], IDs["projectId"], IDs["clusterId"], IDs["appServiceId"], keyspace)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -214,7 +183,7 @@ func (r *ImportFilter) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	state.ImportFilter = types.StringValue(string(response.Body))
+	state.ImportFilter = types.StringValue(response)
 
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
@@ -224,30 +193,43 @@ func (r *ImportFilter) Read(ctx context.Context, req resource.ReadRequest, resp 
 }
 
 // Update updates the import filter.
-func (r *ImportFilter) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (f *ImportFilter) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan providerschema.ImportFilter
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	var (
+		organizationId = plan.OrganizationId.ValueString()
+		projectId      = plan.ProjectId.ValueString()
+		clusterId      = plan.ClusterId.ValueString()
+		appServiceId   = plan.AppServiceId.ValueString()
+		keyspace       = fmt.Sprintf(
+			"%s.%s.%s",
+			plan.AppEndpointName.ValueString(),
+			plan.Scope.ValueString(),
+			plan.Collection.ValueString(),
+		)
+	)
 
-	url := buildImportFilterURL(
-		r.HostURL,
-		plan.OrganizationId.ValueString(),
-		plan.ProjectId.ValueString(),
-		plan.ClusterId.ValueString(),
-		plan.AppServiceId.ValueString(),
-		plan.Keyspace.ValueString(),
+	url := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/importFilter",
+		f.HostURL,
+		organizationId,
+		projectId,
+		clusterId,
+		appServiceId,
+		keyspace,
 	)
 
 	headers := map[string]string{"Content-Type": "application/javascript"}
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err := r.Client.ExecuteWithRetry(
+	_, err := f.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
 		plan.ImportFilter.ValueString(),
-		r.Token,
+		f.Token,
 		headers,
 	)
 	if err != nil {
@@ -259,7 +241,7 @@ func (r *ImportFilter) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	// Refresh from server
-	body, err := r.fetchImportFilter(ctx, plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), plan.ClusterId.ValueString(), plan.AppServiceId.ValueString(), plan.Keyspace.ValueString())
+	body, err := f.fetchImportFilter(ctx, organizationId, projectId, clusterId, appServiceId, keyspace)
 	if err != nil {
 		resp.Diagnostics.AddWarning(
 			"Error reading Import Filter after update",
@@ -277,7 +259,7 @@ func (r *ImportFilter) Update(ctx context.Context, req resource.UpdateRequest, r
 }
 
 // Delete deletes the import filter (resets/removes).
-func (r *ImportFilter) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (f *ImportFilter) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state providerschema.ImportFilter
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -285,21 +267,35 @@ func (r *ImportFilter) Delete(ctx context.Context, req resource.DeleteRequest, r
 		return
 	}
 
-	url := buildImportFilterURL(
-		r.HostURL,
-		state.OrganizationId.ValueString(),
-		state.ProjectId.ValueString(),
-		state.ClusterId.ValueString(),
-		state.AppServiceId.ValueString(),
-		state.Keyspace.ValueString(),
+	var (
+		organizationId = state.OrganizationId.ValueString()
+		projectId      = state.ProjectId.ValueString()
+		clusterId      = state.ClusterId.ValueString()
+		appServiceId   = state.AppServiceId.ValueString()
+		keyspace       = fmt.Sprintf(
+			"%s.%s.%s",
+			state.AppEndpointName.ValueString(),
+			state.Scope.ValueString(),
+			state.Collection.ValueString(),
+		)
+	)
+
+	url := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/importFilter",
+		f.HostURL,
+		organizationId,
+		projectId,
+		clusterId,
+		appServiceId,
+		keyspace,
 	)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
-	_, err := r.Client.ExecuteWithRetry(
+	_, err := f.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
-		r.Token,
+		f.Token,
 		nil,
 	)
 	if err != nil {
@@ -318,6 +314,6 @@ func (r *ImportFilter) Delete(ctx context.Context, req resource.DeleteRequest, r
 }
 
 // ImportState imports a resource into Terraform state.
-func (r *ImportFilter) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("keyspace"), req, resp)
+func (f *ImportFilter) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("app_endpoint_name"), req, resp)
 }

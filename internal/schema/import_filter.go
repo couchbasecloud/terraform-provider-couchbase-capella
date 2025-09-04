@@ -59,14 +59,16 @@ func (i ImportFilter) AttributeTypes() map[string]attr.Type {
 // enabling consistent terraform import parsing similar to other resources.
 func (a *ImportFilter) ValidateState() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
-		OrganizationId: a.OrganizationId,
-		ProjectId:      a.ProjectId,
-		ClusterId:      a.ClusterId,
-		AppServiceId:   a.AppServiceId,
-		Keyspace:       a.Keyspace,
+		OrganizationId:  a.OrganizationId,
+		ProjectId:       a.ProjectId,
+		ClusterId:       a.ClusterId,
+		AppServiceId:    a.AppServiceId,
+		AppEndpointName: a.AppEndpointName,
+		ScopeName:       a.Scope,
+		CollectionName:  a.Collection,
 	}
 
-	IDs, err := validateSchemaState(state, Keyspace)
+	IDs, err := validateSchemaState(state, AppEndpointName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to validate resource state: %s", err)
 	}
