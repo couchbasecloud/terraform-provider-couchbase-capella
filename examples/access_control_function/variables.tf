@@ -32,16 +32,7 @@ variable "auth_token" {
 }
 
 variable "access_control_function" {
-  description = "Access Control Function configuration"
-
-  type = object({
-    organization_id         = string
-    project_id              = string
-    cluster_id              = string
-    app_service_id          = string
-    app_endpoint_name       = string
-    scope                   = string
-    collection              = string
-    access_control_function = string
-  })
+  description = "JavaScript access control function"
+  type        = string
+  default     = "function (doc, oldDoc, meta) {channel(doc.channels); }"
 } 
