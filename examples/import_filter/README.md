@@ -35,7 +35,9 @@ Terraform will perform the following actions:
       + app_service_id  = "ffffffff-aaaa-1414-eeee-000000000000"
       + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + import_filter   = "function(doc) { if (doc.type != 'mobile') { return false; } return true; }"
-      + keyspace        = "api._default._default"
+      + app_endpoint_name        = "api"
+      + scope           = "_default"
+      + collection      = "_default"
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
     }
@@ -56,12 +58,14 @@ Terraform will perform the following actions:
 
   # couchbase-capella_import_filter.example_import_filter will be created
   + resource "couchbase-capella_import_filter" "example_import_filter" {
-      + app_service_id  = "ffffffff-aaaa-1414-eeee-000000000000"
-      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
-      + import_filter   = "function(doc) { if (doc.type != 'mobile') { return false; } return true; }"
-      + keyspace        = "api._default._default"
-      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
-      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      + app_service_id     = "ffffffff-aaaa-1414-eeee-000000000000"
+      + cluster_id         = "ffffffff-aaaa-1414-eeee-000000000000"
+      + import_filter      = "function(doc) { if (doc.type != 'mobile') { return false; } return true; }"
+      + app_endpoint_name  = "api"
+      + scope              = "_default"
+      + collection         = "_default"
+      + organization_id    = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id         = "ffffffff-aaaa-1414-eeee-000000000000"
     }
 
 Plan: 1 to add, 0 to change, 0 to destroy.
@@ -88,12 +92,14 @@ Sample Output:
 $ terraform show
 # couchbase-capella_import_filter.example_import_filter:
 resource "couchbase-capella_import_filter" "example_import_filter" {
-    app_service_id  = "ffffffff-aaaa-1414-eeee-000000000000"
-    cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
-    import_filter   = "function(doc) { if (doc.type != 'mobile') { return false; } return true; }"
-    keyspace        = "api._default._default"
-    organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
-    project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+    app_service_id    = "ffffffff-aaaa-1414-eeee-000000000000"
+    cluster_id        = "ffffffff-aaaa-1414-eeee-000000000000"
+    import_filter     = "function(doc) { if (doc.type != 'mobile') { return false; } return true; }"
+    app_endpoint_name = "api"
+    scope             = "_default"
+    collection        = "_default"
+    organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+    project_id        = "ffffffff-aaaa-1414-eeee-000000000000"
 }
 ```
 
@@ -163,16 +169,16 @@ Please note, this command will only remove the resource from the Terraform State
 
 ### Now, let's import the resource in Terraform
 
-Command: `terraform import couchbase-capella_access_control_function.example_access_function keyspace=app_service_id=<appservice_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
+Command: `terraform import  couchbase-capella_import_filter.coll2_import_filter app_endpoint_name=api,scope_name=_default,collection_name=_default,app_service_id=<appservice_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
 In this case, the complete command is:
-`terraform import couchbase-capella_access_control_function.example_access_function keyspace=endpoint1.scope1.collection1,id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000`
+`terraform import  couchbase-capella_import_filter.coll2_import_filter app_endpoint_name=api,scope_name=_default,collection_name=_default,id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000`
 
 Sample Output:
 ``` 
 
-$ terraform import  couchbase-capella_import_filter.example_import_filter keyspace=api._default._default,organization_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,app_service_id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000
-couchbase-capella_import_filter.example_import_filter: Importing from ID "keyspace=api._default._default,organization_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,app_service_id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000"...
+$ terraform import  couchbase-capella_import_filter.example_import_filterterraform import  couchbase-capella_import_filter.coll2_import_filter app_endpoint_name=api,scope_name=_default,collection_name=_default,organization_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,app_service_id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000
+couchbase-capella_import_filter.example_import_filter: Importing from ID "app_endpoint_name=api,scope_name=_default,collection_name=_default,organization_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,app_service_id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000"...
 couchbase-capella_import_filter.example_import_filter: Import prepared!
   Prepared couchbase-capella_import_filter for import
 couchbase-capella_import_filter.example_import_filter: Refreshing state...
@@ -201,12 +207,14 @@ Terraform will perform the following actions:
 
   # couchbase-capella_import_filter.example_import_filter will be destroyed
   - resource "couchbase-capella_import_filter" "example_import_filter" {
-      - app_service_id  = "ffffffff-aaaa-1414-eeee-000000000000" -> null
-      - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
-      - import_filter   = "function(doc) { if (doc.type != 'edge') { return false; } return true; }" -> null
-      - keyspace        = "api._default._default" -> null
-      - organization_id = "ffffffff-aaaa-1414-eeee-000000000000" -> null
-      - project_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - app_service_id    = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - cluster_id        = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - import_filter     = "function(doc) { if (doc.type != 'edge') { return false; } return true; }" -> null
+      - app_endpoint_name = "api" -> null
+      - scope             = "_default" -> null
+      - collection        = "_default" -> null
+      - organization_id   = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - project_id        = "ffffffff-aaaa-1414-eeee-000000000000" -> null
     }
 
 Plan: 0 to add, 0 to change, 1 to destroy.
