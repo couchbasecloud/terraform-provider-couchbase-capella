@@ -1,8 +1,8 @@
 output "new_import_filter" {
-  value = couchbase-capella_import_filter.new_import_filter
+  value = couchbase-capella_app_endpoint_import_filter.new_import_filter
 }
 
-resource "couchbase-capella_import_filter" "new_import_filter" {
+resource "couchbase-capella_app_endpoint_import_filter" "new_import_filter" {
   organization_id      = var.import_filter.organization_id
   project_id           = var.import_filter.project_id
   cluster_id           = var.import_filter.cluster_id

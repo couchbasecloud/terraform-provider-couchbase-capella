@@ -34,7 +34,7 @@ func NewImportFilter() resource.Resource {
 
 // Metadata returns the resource type name.
 func (f *ImportFilter) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_import_filter"
+	resp.TypeName = req.ProviderTypeName + "_app_endpoint_import_filter"
 }
 
 // Schema defines the Terraform schema for this resource.
