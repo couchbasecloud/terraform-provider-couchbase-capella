@@ -1,6 +1,3 @@
-variable "host" {
-  description = "host URL"
-}
 
 variable "organization_id" {
   description = "Capella Organization ID"
