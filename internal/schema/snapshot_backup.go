@@ -27,19 +27,19 @@ type Server struct {
 }
 
 type SnapshotBackup struct {
-	AppService types.String `tfsdk:"app_service"`
-	ClusterID  types.String `tfsdk:"cluster_id"`
-	CreatedAt  types.String `tfsdk:"created_at"`
-	Expiration types.String `tfsdk:"expiration"`
-	BackupID   types.String `tfsdk:"backup_id"`
-	Retention  types.Int64  `tfsdk:"retention"`
-	Progress   types.Object `tfsdk:"progress"`
-	CMEK       types.Set    `tfsdk:"cmek"`
-	ProjectID  types.String `tfsdk:"project_id"`
-	Server     types.Object `tfsdk:"server"`
-	Size       types.Int64  `tfsdk:"size"`
-	TenantID   types.String `tfsdk:"tenant_id"`
-	Type       types.String `tfsdk:"type"`
+	AppService     types.String `tfsdk:"app_service"`
+	ClusterID      types.String `tfsdk:"cluster_id"`
+	CreatedAt      types.String `tfsdk:"created_at"`
+	Expiration     types.String `tfsdk:"expiration"`
+	ID             types.String `tfsdk:"id"`
+	Retention      types.Int64  `tfsdk:"retention"`
+	Progress       types.Object `tfsdk:"progress"`
+	CMEK           types.Set    `tfsdk:"cmek"`
+	ProjectID      types.String `tfsdk:"project_id"`
+	Server         types.Object `tfsdk:"server"`
+	Size           types.Int64  `tfsdk:"size"`
+	OrganizationId types.String `tfsdk:"organization_id"`
+	Type           types.String `tfsdk:"type"`
 }
 
 func (p Progress) AttributeTypes() map[string]attr.Type {
@@ -84,47 +84,47 @@ func NewServer(server snapshot_backup.Server) Server {
 
 func (s SnapshotBackup) AttributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
-		"app_service": types.StringType,
-		"cluster_id":  types.StringType,
-		"created_at":  types.StringType,
-		"expiration":  types.StringType,
-		"backup_id":   types.StringType,
-		"progress":    types.ObjectType{AttrTypes: Progress{}.AttributeTypes()},
-		"project_id":  types.StringType,
-		"retention":   types.Int64Type,
-		"cmek":        types.SetType{ElemType: types.ObjectType{AttrTypes: CMEK{}.AttributeTypes()}},
-		"server":      types.ObjectType{AttrTypes: Server{}.AttributeTypes()},
-		"size":        types.Int64Type,
-		"tenant_id":   types.StringType,
-		"type":        types.StringType,
+		"app_service":     types.StringType,
+		"cluster_id":      types.StringType,
+		"created_at":      types.StringType,
+		"expiration":      types.StringType,
+		"id":              types.StringType,
+		"progress":        types.ObjectType{AttrTypes: Progress{}.AttributeTypes()},
+		"project_id":      types.StringType,
+		"retention":       types.Int64Type,
+		"cmek":            types.SetType{ElemType: types.ObjectType{AttrTypes: CMEK{}.AttributeTypes()}},
+		"server":          types.ObjectType{AttrTypes: Server{}.AttributeTypes()},
+		"size":            types.Int64Type,
+		"organization_id": types.StringType,
+		"type":            types.StringType,
 	}
 }
 
-func NewSnapshotBackup(ctx context.Context, snapshotBackup snapshot_backup.SnapshotBackup, BackupID, clusterID, projectID, tenantID string, progressObj, serverObj basetypes.ObjectValue, cmekObj basetypes.SetValue) SnapshotBackup {
+func NewSnapshotBackup(ctx context.Context, snapshotBackup snapshot_backup.SnapshotBackup, ID, clusterID, projectID, organizationID string, progressObj, serverObj basetypes.ObjectValue, cmekObj basetypes.SetValue) SnapshotBackup {
 	return SnapshotBackup{
-		AppService: types.StringValue(snapshotBackup.AppService),
-		BackupID:   types.StringValue(BackupID),
-		ClusterID:  types.StringValue(clusterID),
-		Expiration: types.StringValue(snapshotBackup.Expiration),
-		ProjectID:  types.StringValue(projectID),
-		TenantID:   types.StringValue(tenantID),
-		CreatedAt:  types.StringValue(snapshotBackup.CreatedAt),
-		Retention:  types.Int64Value(int64(snapshotBackup.Retention)),
-		Progress:   progressObj,
-		CMEK:       cmekObj,
-		Server:     serverObj,
-		Size:       types.Int64Value(int64(snapshotBackup.Size)),
-		Type:       types.StringValue(snapshotBackup.Type),
+		AppService:     types.StringValue(snapshotBackup.AppService),
+		ID:             types.StringValue(ID),
+		ClusterID:      types.StringValue(clusterID),
+		Expiration:     types.StringValue(snapshotBackup.Expiration),
+		ProjectID:      types.StringValue(projectID),
+		OrganizationId: types.StringValue(organizationID),
+		CreatedAt:      types.StringValue(snapshotBackup.CreatedAt),
+		Retention:      types.Int64Value(int64(snapshotBackup.Retention)),
+		Progress:       progressObj,
+		CMEK:           cmekObj,
+		Server:         serverObj,
+		Size:           types.Int64Value(int64(snapshotBackup.Size)),
+		Type:           types.StringValue(snapshotBackup.Type),
 	}
 }
 
 // Validate is used to verify that IDs have been properly imported.
 func (s SnapshotBackup) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
-		OrganizationId: s.TenantID,
+		OrganizationId: s.OrganizationId,
 		ProjectId:      s.ProjectID,
 		ClusterId:      s.ClusterID,
-		Id:             s.BackupID,
+		Id:             s.ID,
 	}
 
 	IDs, err := validateSchemaState(state)

@@ -8,14 +8,14 @@ func SnapshotBackupSchema() schema.Schema {
 	return schema.Schema{
 		MarkdownDescription: "Manages snapshot backup resource",
 		Attributes: map[string]schema.Attribute{
-			"app_service": WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The GUID4 ID of the app service."),
-			"backup_id":   WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The GUID4 ID of the snapshot backup."),
-			"cluster_id":  WithDescription(stringAttribute([]string{required}), "The GUID4 ID of the cluster."),
-			"project_id":  WithDescription(stringAttribute([]string{required}), "The GUID4 ID of the project."),
-			"tenant_id":   WithDescription(stringAttribute([]string{required}), "The GUID4 ID of the tenant."),
-			"created_at":  WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The RFC3339 timestamp representing the time at which snapshot backup was created."),
-			"expiration":  WithDescription(stringAttribute([]string{computed}), "The RFC3339 timestamp representing the time at which snapshot backup will expire."),
-			"retention":   WithDescription(int64Attribute(optional, computed), "The retention of the snapshot backup in hours."),
+			"app_service":     WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The GUID4 ID of the app service."),
+			"id":              WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The GUID4 ID of the snapshot backup."),
+			"cluster_id":      WithDescription(stringAttribute([]string{required}), "The GUID4 ID of the cluster."),
+			"project_id":      WithDescription(stringAttribute([]string{required}), "The GUID4 ID of the project."),
+			"organization_id": WithDescription(stringAttribute([]string{required}), "The GUID4 ID of the organization."),
+			"created_at":      WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The RFC3339 timestamp representing the time at which snapshot backup was created."),
+			"expiration":      WithDescription(stringAttribute([]string{computed}), "The RFC3339 timestamp representing the time at which snapshot backup will expire."),
+			"retention":       WithDescription(int64Attribute(optional, computed), "The retention of the snapshot backup in hours."),
 			"progress": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{

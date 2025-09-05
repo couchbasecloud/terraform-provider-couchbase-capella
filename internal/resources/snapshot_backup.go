@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -27,8 +28,9 @@ const (
 )
 
 var (
-	_ resource.Resource              = &SnapshotBackup{}
-	_ resource.ResourceWithConfigure = &SnapshotBackup{}
+	_ resource.Resource                = &SnapshotBackup{}
+	_ resource.ResourceWithConfigure   = &SnapshotBackup{}
+	_ resource.ResourceWithImportState = &SnapshotBackup{}
 )
 
 type ID struct {
@@ -55,6 +57,12 @@ func (s *SnapshotBackup) Schema(_ context.Context, _ resource.SchemaRequest, res
 	resp.Schema = SnapshotBackupSchema()
 }
 
+// ImportState imports a remote backup that is not created by Terraform.
+func (s *SnapshotBackup) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	// Retrieve import ID and save to id attribute
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
 func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan providerschema.SnapshotBackup
 	diags := req.Plan.Get(ctx, &plan)
@@ -69,20 +77,24 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 			"Error parsing create snapshot backup request",
 			"Could not create snapshot backup "+err.Error(),
 		)
+		tflog.Debug(ctx, "error validating snapshot backup request", map[string]interface{}{
+			"plan": plan,
+			"err":  err,
+		})
 		return
 	}
 
 	var (
-		tenantId  = plan.TenantID.ValueString()
-		projectId = plan.ProjectID.ValueString()
-		clusterId = plan.ClusterID.ValueString()
+		organizationId = plan.OrganizationId.ValueString()
+		projectId      = plan.ProjectID.ValueString()
+		clusterId      = plan.ClusterID.ValueString()
 	)
 
 	createSnapshotBackupRequest := snapshot_backup.CreateSnapshotBackupRequest{
 		Retention: int(plan.Retention.ValueInt64()),
 	}
 
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups", s.HostURL, tenantId, projectId, clusterId)
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups", s.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
 	createResp, err := s.Client.ExecuteWithRetry(
 		ctx,
@@ -94,9 +106,17 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error executing create snapshot backup request",
+			"Error executing create snapshot backup",
 			errorMessageWhileSnapshotBackupCreation+api.ParseError(err),
 		)
+		tflog.Debug(ctx, "error executing create snapshot backup", map[string]interface{}{
+			"organizationId":              organizationId,
+			"projectId":                   projectId,
+			"clusterId":                   clusterId,
+			"createSnapshotBackupRequest": createSnapshotBackupRequest,
+			"createResp":                  createResp,
+			"err":                         api.ParseError(err),
+		})
 		return
 	}
 
@@ -107,24 +127,47 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 			"Error unmarshalling create snapshot backup response",
 			"Could not unmarshal create snapshot backup response: "+err.Error(),
 		)
+		tflog.Debug(ctx, "error unmarshalling create snapshot backup response", map[string]interface{}{
+			"organizationId":              organizationId,
+			"projectId":                   projectId,
+			"clusterId":                   clusterId,
+			"createSnapshotBackupRequest": createSnapshotBackupRequest,
+			"createResp":                  createResp,
+			"err":                         api.ParseError(err),
+		})
+		return
 	}
 
 	// Checks the snapshot backup creation is complete.
-	backupResp, err := s.checkSnapshotBackupStatus(ctx, tenantId, projectId, clusterId, createSnapshotBackupResponse.BackupID)
+	backupResp, err := s.checkSnapshotBackupStatus(ctx, organizationId, projectId, clusterId, createSnapshotBackupResponse.ID)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while checking latest snapshot backup status",
 			errorMessageWhileSnapshotBackupCreation+api.ParseError(err),
 		)
+		tflog.Debug(ctx, "error checking latest snapshot backup status", map[string]interface{}{
+			"organizationId": organizationId,
+			"projectId":      projectId,
+			"clusterId":      clusterId,
+			"Id":             createSnapshotBackupResponse.ID,
+			"err":            err,
+		})
 		return
 	}
 
-	refreshedState, err := createSnapshotBackup(ctx, backupResp, clusterId, projectId, tenantId)
+	refreshedState, err := createSnapshotBackup(ctx, backupResp, clusterId, projectId, organizationId)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating snapshot backup",
 			"Could not create snapshot backup: "+err.Error(),
 		)
+		tflog.Debug(ctx, "error creating snapshot backup", map[string]interface{}{
+			"organizationId": organizationId,
+			"projectId":      projectId,
+			"clusterId":      clusterId,
+			"refreshedState": refreshedState,
+			"err":            err,
+		})
 		return
 	}
 
@@ -144,36 +187,56 @@ func (s *SnapshotBackup) Read(ctx context.Context, req resource.ReadRequest, res
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Backup in Capella",
-			"Could not read Capella Backup with ID "+state.BackupID.String()+": "+err.Error(),
+			"Could not read Capella Backup with ID "+state.ID.String()+": "+err.Error(),
 		)
+		tflog.Debug(ctx, "error validating snapshot backup IDs", map[string]interface{}{
+			"state": state,
+			"err":   err,
+		})
 		return
 	}
 	var (
-		tenantId  = IDs[providerschema.OrganizationId]
-		projectId = IDs[providerschema.ProjectId]
-		clusterId = IDs[providerschema.ClusterId]
-		backupId  = state.BackupID.ValueString()
+		organizationId = IDs[providerschema.OrganizationId]
+		projectId      = IDs[providerschema.ProjectId]
+		clusterId      = IDs[providerschema.ClusterId]
+		Id             = IDs[providerschema.Id]
 	)
 
-	snapshotBackup, err := s.getSnapshotBackup(ctx, tenantId, projectId, clusterId, backupId)
+	snapshotBackup, err := s.getSnapshotBackup(ctx, organizationId, projectId, clusterId, Id)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading snapshot backup",
-			"Could not read snapshot backup id "+backupId+": "+err.Error(),
+			"Could not read snapshot backup id "+Id+": "+err.Error(),
 		)
+		tflog.Debug(ctx, "error reading snapshot backup", map[string]interface{}{
+			"OrganizationId": organizationId,
+			"ProjectID":      projectId,
+			"ClusterID":      clusterId,
+			"ID":             Id,
+			"err":            err,
+		})
 		return
 	}
 
-	refreshedState, err := createSnapshotBackup(ctx, snapshotBackup, clusterId, projectId, tenantId)
+	refreshedState, err := createSnapshotBackup(ctx, snapshotBackup, clusterId, projectId, organizationId)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating snapshot backup",
-			"Could not update snapshot backup id "+backupId+": "+err.Error(),
+			"Could not update snapshot backup id "+Id+": "+err.Error(),
 		)
+		tflog.Debug(ctx, "error updating snapshot backup", map[string]interface{}{
+			"OrganizationId": organizationId,
+			"ProjectID":      projectId,
+			"ClusterID":      clusterId,
+			"ID":             Id,
+			"refreshedState": refreshedState,
+			"err":            err,
+		})
 		return
 	}
 
@@ -202,23 +265,27 @@ func (s *SnapshotBackup) Update(ctx context.Context, req resource.UpdateRequest,
 	IDs, err := plan.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Snapshot Backup in Capella",
-			"Could not read Capella Snapshot Backup with ID "+state.BackupID.String()+": "+err.Error(),
+			"Error Validating Snapshot Backup IDs",
+			"Could not validate ids for snapshot backup id "+state.ID.String()+" unexpected error: "+err.Error(),
 		)
+		tflog.Debug(ctx, "error validating snapshot backup IDs", map[string]interface{}{
+			"plan": plan,
+			"err":  err,
+		})
 		return
 	}
 	var (
-		tenantId  = IDs[providerschema.OrganizationId]
-		projectId = IDs[providerschema.ProjectId]
-		clusterId = IDs[providerschema.ClusterId]
-		backupId  = state.BackupID.ValueString()
+		organizationId = IDs[providerschema.OrganizationId]
+		projectId      = IDs[providerschema.ProjectId]
+		clusterId      = IDs[providerschema.ClusterId]
+		Id             = IDs[providerschema.Id]
 	)
 
 	updateSnapshotBackupRequest := snapshot_backup.EditBackupRetentionRequest{
 		Retention: int(plan.Retention.ValueInt64()),
 	}
 
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups/%s", s.HostURL, tenantId, projectId, clusterId, backupId)
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups/%s", s.HostURL, organizationId, projectId, clusterId, Id)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
 	_, err = s.Client.ExecuteWithRetry(
 		ctx,
@@ -229,27 +296,47 @@ func (s *SnapshotBackup) Update(ctx context.Context, req resource.UpdateRequest,
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error executing update snapshot backup request retention",
-			"Could not update snapshot backup id "+backupId+": "+api.ParseError(err),
+			"Error executing update snapshot backup retention",
+			"Could not update snapshot backup id "+Id+": "+api.ParseError(err),
 		)
+		tflog.Debug(ctx, "error executing update snapshot backup retention", map[string]interface{}{
+			"OrganizationId": organizationId,
+			"ProjectID":      projectId,
+			"ClusterID":      clusterId,
+			"ID":             Id,
+			"retention":      plan.Retention.ValueInt64(),
+			"err":            err,
+		})
 		return
 	}
 
-	backupResp, err := s.getSnapshotBackup(ctx, tenantId, projectId, clusterId, backupId)
+	refreshedState, err := s.getSnapshotBackup(ctx, organizationId, projectId, clusterId, Id)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error getting snapshot backup",
-			"Could not get snapshot backup id "+backupId+": "+err.Error(),
+			"Error reading snapshot backup",
+			"Could not read snapshot backup id "+Id+": "+err.Error(),
 		)
+		tflog.Debug(ctx, "error reading snapshot backup", map[string]interface{}{
+			"OrganizationId": organizationId,
+			"ProjectID":      projectId,
+			"ClusterID":      clusterId,
+			"ID":             Id,
+			"refreshedState": refreshedState,
+			"err":            err,
+		})
 		return
 	}
 
-	state.Retention = types.Int64Value(int64(backupResp.Retention))
-	state.Expiration = types.StringValue(backupResp.Expiration)
+	state.Retention = types.Int64Value(int64(refreshedState.Retention))
+	state.Expiration = types.StringValue(refreshedState.Expiration)
 
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
+		tflog.Debug(ctx, "error setting snapshot backup state", map[string]interface{}{
+			"state": state,
+			"err":   err,
+		})
 		return
 	}
 }
@@ -264,21 +351,28 @@ func (s *SnapshotBackup) Delete(ctx context.Context, req resource.DeleteRequest,
 
 	IDs, err := state.Validate()
 	if err != nil {
+		tflog.Debug(ctx, "error validating snapshot backup IDs", map[string]interface{}{
+			"state.OrganizationId": state.OrganizationId.String(),
+			"state.ProjectID":      state.ProjectID.String(),
+			"state.ClusterID":      state.ClusterID.String(),
+			"state.ID":             state.ID.String(),
+			"err":                  err,
+		})
 		resp.Diagnostics.AddError(
-			"Error deleting backup",
-			"Could not delete backup id "+state.BackupID.String()+" unexpected error: "+err.Error(),
+			"Error validating snapshot backup IDs",
+			"Could not validate ids for snapshot backup id "+state.ID.String()+" unexpected error: "+err.Error(),
 		)
 		return
 	}
 
 	var (
-		tenantId  = IDs[providerschema.OrganizationId]
-		projectId = IDs[providerschema.ProjectId]
-		clusterId = IDs[providerschema.ClusterId]
-		backupId  = state.BackupID.ValueString()
+		organizationId = IDs[providerschema.OrganizationId]
+		projectId      = IDs[providerschema.ProjectId]
+		clusterId      = IDs[providerschema.ClusterId]
+		Id             = IDs[providerschema.Id]
 	)
 
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups/%s", s.HostURL, tenantId, projectId, clusterId, backupId)
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups/%s", s.HostURL, organizationId, projectId, clusterId, Id)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
 	_, err = s.Client.ExecuteWithRetry(
 		ctx,
@@ -290,14 +384,27 @@ func (s *SnapshotBackup) Delete(ctx context.Context, req resource.DeleteRequest,
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			tflog.Debug(ctx, "snapshot backup doesn't exist in remote server removing resource from state file", map[string]interface{}{
+				"OrganizationId": organizationId,
+				"ProjectID":      projectId,
+				"ClusterID":      clusterId,
+				"ID":             Id,
+				"err":            err,
+			})
 			resp.State.RemoveResource(ctx)
 			return
 		}
 		resp.Diagnostics.AddError(
 			"Error deleting backup",
-			"Could not delete backup id "+state.BackupID.String()+": "+errString,
+			"Could not delete backup id "+state.ID.String()+": "+errString,
 		)
+		tflog.Debug(ctx, "error deleting snapshot backup", map[string]interface{}{
+			"OrganizationId": organizationId,
+			"ProjectID":      projectId,
+			"ClusterID":      clusterId,
+			"ID":             Id,
+			"err":            err,
+		})
 		return
 	}
 }
@@ -320,7 +427,7 @@ func (s *SnapshotBackup) Configure(ctx context.Context, req resource.ConfigureRe
 }
 
 func (s *SnapshotBackup) validateCreateSnapshotBackupRequest(plan providerschema.SnapshotBackup) error {
-	if plan.TenantID.IsNull() {
+	if plan.OrganizationId.IsNull() {
 		return errors.ErrOrganizationIdCannotBeEmpty
 	}
 	if plan.ProjectID.IsNull() {
@@ -335,13 +442,13 @@ func (s *SnapshotBackup) validateCreateSnapshotBackupRequest(plan providerschema
 // checkLatestSnapshotBackupStatus monitors the status of a snapshot backup creation operation for a specified organization, project, and cluster ID.
 // It periodically fetches the snapshot backup job status using the `getLatestSnapshotBackup` function and waits until the snapshot backup reaches a final state or until a specified timeout is reached.
 // function and waits until the snapshot backup reaches a final state or until a specified timeout is reached.
-func (s *SnapshotBackup) checkSnapshotBackupStatus(ctx context.Context, organizationId, projectId, clusterId, backupId string) (*snapshot_backup.SnapshotBackup, error) {
+func (s *SnapshotBackup) checkSnapshotBackupStatus(ctx context.Context, organizationId, projectId, clusterId, Id string) (*snapshot_backup.SnapshotBackup, error) {
 	var (
 		backupResp *snapshot_backup.SnapshotBackup
 		err        error
 	)
 
-	// Assuming 60 minutes is the max time backup completion takes.
+	// Assuming 60 minutes is the max time snapshot backup creation takes.
 	const timeout = time.Minute * 60
 
 	var cancel context.CancelFunc
@@ -355,18 +462,29 @@ func (s *SnapshotBackup) checkSnapshotBackupStatus(ctx context.Context, organiza
 	for {
 		select {
 		case <-ctx.Done():
+			tflog.Debug(ctx, "snapshot backup creation status timeout", map[string]interface{}{
+				"organizationId": organizationId,
+				"projectId":      projectId,
+				"clusterId":      clusterId,
+			})
 			return nil, errors.ErrSnapshotBackupCreationStatusTimeout
 
 		case <-timer.C:
-			backupResp, err = s.getSnapshotBackup(ctx, organizationId, projectId, clusterId, backupId)
+			backupResp, err = s.getSnapshotBackup(ctx, organizationId, projectId, clusterId, Id)
 			switch err {
 			case nil:
 				if snapshot_backup.IsFinalState(backupResp.Progress.Status) {
 					return backupResp, nil
 				}
-				const msg = "waiting for snapshot backup to complete the execution"
-				tflog.Info(ctx, msg)
+				tflog.Debug(ctx, "waiting for snapshot backup to complete the execution")
 			default:
+				tflog.Debug(ctx, "error getting snapshot backup", map[string]interface{}{
+					"organizationId": organizationId,
+					"projectId":      projectId,
+					"clusterId":      clusterId,
+					"Id":             Id,
+					"err":            err,
+				})
 				return nil, err
 			}
 			timer.Reset(sleep)
@@ -374,10 +492,10 @@ func (s *SnapshotBackup) checkSnapshotBackupStatus(ctx context.Context, organiza
 	}
 }
 
-func (s *SnapshotBackup) getSnapshotBackups(ctx context.Context, tenantId, projectId, clusterId string) (*snapshot_backup.ListSnapshotBackupsResponse, error) {
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups", s.HostURL, tenantId, projectId, clusterId)
+func (s *SnapshotBackup) getSnapshotBackups(ctx context.Context, organizationId, projectId, clusterId string) (*snapshot_backup.ListSnapshotBackupsResponse, error) {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups", s.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := s.Client.ExecuteWithRetry(
+	resp, err := s.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -385,62 +503,79 @@ func (s *SnapshotBackup) getSnapshotBackups(ctx context.Context, tenantId, proje
 		nil,
 	)
 	if err != nil {
+		tflog.Debug(ctx, "error reading snapshot backups", map[string]interface{}{
+			"organizationId": organizationId,
+			"projectId":      projectId,
+			"clusterId":      clusterId,
+			"err":            err,
+		})
 		return nil, err
 	}
 
-	resp, err := UnmarshalJSON(&snapshot_backup.ListSnapshotBackupsResponse{}, response.Body)
+	var snapshotBackups snapshot_backup.ListSnapshotBackupsResponse
+	err = json.Unmarshal(resp.Body, &snapshotBackups)
 	if err != nil {
+		tflog.Debug(ctx, "error unmarshalling the list of snapshot backups", map[string]interface{}{
+			"organizationId": organizationId,
+			"projectId":      projectId,
+			"clusterId":      clusterId,
+			"resp":           resp,
+			"err":            err,
+		})
 		return nil, err
 	}
 
-	return resp, nil
+	return &snapshotBackups, nil
 }
 
-// getSnapshotBackup retrieves a snapshot backup by its BackupID.
-func (s *SnapshotBackup) getSnapshotBackup(ctx context.Context, tenantId, projectId, clusterId, backupId string) (*snapshot_backup.SnapshotBackup, error) {
-	resp, err := s.getSnapshotBackups(ctx, tenantId, projectId, clusterId)
+// getSnapshotBackup retrieves a snapshot backup by its ID.
+func (s *SnapshotBackup) getSnapshotBackup(ctx context.Context, organizationId, projectId, clusterId, Id string) (*snapshot_backup.SnapshotBackup, error) {
+	resp, err := s.getSnapshotBackups(ctx, organizationId, projectId, clusterId)
 	if err != nil {
+		tflog.Debug(ctx, "error reading snapshot backups", map[string]interface{}{
+			"organizationId": organizationId,
+			"projectId":      projectId,
+			"clusterId":      clusterId,
+			"err":            err,
+		})
 		return nil, err
 	}
 
 	if len(resp.Data) > 0 {
 		for _, backup := range resp.Data {
-			if backup.BackupID == backupId {
+			if backup.ID == Id {
 				return &backup, nil
 			}
 		}
 	}
+	tflog.Debug(ctx, "snapshot backup not found", map[string]interface{}{
+		"organizationId": organizationId,
+		"projectId":      projectId,
+		"clusterId":      clusterId,
+		"Id":             Id,
+	})
 	return nil, errors.ErrNotFound
 }
 
-// UnmarshalJSON unmarshals the JSON response into a ListSnapshotBackupsResponse so 'id' is assigned to the BackupID field.
-func UnmarshalJSON(s *snapshot_backup.ListSnapshotBackupsResponse, data []byte) (*snapshot_backup.ListSnapshotBackupsResponse, error) {
-	err := json.Unmarshal(data, &s)
-	if err != nil {
-		return nil, err
-	}
-	idList := IDList{}
-	err = json.Unmarshal(data, &idList)
-	if err != nil {
-		return nil, err
-	}
-	for i, id := range idList.Data {
-		s.Data[i].BackupID = id.ID
-	}
-	return s, nil
-}
-
 // createSnapshotBackup creates a snapshot backup from a snapshot backup response.
-func createSnapshotBackup(ctx context.Context, backupResp *snapshot_backup.SnapshotBackup, clusterId, projectId, tenantId string) (*providerschema.SnapshotBackup, error) {
+func createSnapshotBackup(ctx context.Context, backupResp *snapshot_backup.SnapshotBackup, clusterId, projectId, organizationId string) (*providerschema.SnapshotBackup, error) {
 	progress := providerschema.NewProgress(backupResp.Progress)
 	progressObj, diags := types.ObjectValueFrom(ctx, progress.AttributeTypes(), progress)
 	if diags.HasError() {
+		tflog.Debug(ctx, "error during progress conversion", map[string]interface{}{
+			"backupResp": backupResp,
+			"progress":   progress,
+		})
 		return nil, fmt.Errorf("error during progress conversion")
 	}
 
 	server := providerschema.NewServer(backupResp.Server)
 	serverObj, diags := types.ObjectValueFrom(ctx, server.AttributeTypes(), server)
 	if diags.HasError() {
+		tflog.Debug(ctx, "error during server conversion", map[string]interface{}{
+			"backupResp": backupResp,
+			"server":     server,
+		})
 		return nil, fmt.Errorf("error during server conversion")
 	}
 
@@ -449,6 +584,10 @@ func createSnapshotBackup(ctx context.Context, backupResp *snapshot_backup.Snaps
 		cmek := providerschema.NewCMEK(cmek)
 		cmekObj, diags := types.ObjectValueFrom(ctx, cmek.AttributeTypes(), cmek)
 		if diags.HasError() {
+			tflog.Debug(ctx, "error during CMEK conversion", map[string]interface{}{
+				"backupResp": backupResp,
+				"cmek":       cmek,
+			})
 			return nil, fmt.Errorf("error during CMEK conversion")
 		}
 		cmekObjs = append(cmekObjs, cmekObj)
@@ -456,9 +595,13 @@ func createSnapshotBackup(ctx context.Context, backupResp *snapshot_backup.Snaps
 
 	cmekSet, diags := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: providerschema.CMEK{}.AttributeTypes()}, cmekObjs)
 	if diags.HasError() {
+		tflog.Debug(ctx, "error during CMEK conversion", map[string]interface{}{
+			"backupResp": backupResp,
+			"cmekObjs":   cmekObjs,
+		})
 		return nil, fmt.Errorf("error during CMEK conversion")
 	}
 
-	snapshotBackup := providerschema.NewSnapshotBackup(ctx, *backupResp, backupResp.BackupID, clusterId, projectId, tenantId, progressObj, serverObj, cmekSet)
+	snapshotBackup := providerschema.NewSnapshotBackup(ctx, *backupResp, backupResp.ID, clusterId, projectId, organizationId, progressObj, serverObj, cmekSet)
 	return &snapshotBackup, nil
 }

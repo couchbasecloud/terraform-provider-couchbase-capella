@@ -3,7 +3,7 @@ output "new_snapshot_backup" {
 }
 
 resource "couchbase-capella_snapshot_backup" "new_snapshot_backup" {
-  tenant_id  = var.tenant_id
+  organization_id  = var.organization_id
   project_id = var.project_id
   cluster_id = var.cluster_id
 

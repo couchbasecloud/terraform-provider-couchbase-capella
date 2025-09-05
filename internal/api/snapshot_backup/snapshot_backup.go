@@ -17,19 +17,19 @@ type Server struct {
 }
 
 type SnapshotBackup struct {
-	AppService string   `json:"appService"`
-	ClusterID  string   `json:"clusterId"`
-	CreatedAt  string   `json:"createdAt"`
-	Expiration string   `json:"expiration"`
-	BackupID   string   `json:"backupId"`
-	Progress   Progress `json:"progress"`
-	ProjectID  string   `json:"projectId"`
-	Retention  int      `json:"retention"`
-	CMEK       CMEKs    `json:"cmek"`
-	Server     Server   `json:"server"`
-	Size       int      `json:"size"`
-	TenantID   string   `json:"tenantId"`
-	Type       string   `json:"type"`
+	AppService     string   `json:"appService"`
+	ClusterID      string   `json:"clusterId"`
+	CreatedAt      string   `json:"createdAt"`
+	Expiration     string   `json:"expiration"`
+	ID             string   `json:"id"`
+	Progress       Progress `json:"progress"`
+	ProjectID      string   `json:"projectId"`
+	Retention      int      `json:"retention"`
+	CMEK           CMEKs    `json:"cmek"`
+	Server         Server   `json:"server"`
+	Size           int      `json:"size"`
+	OrganizationID string   `json:"tenantId"`
+	Type           string   `json:"type"`
 }
 
 type CreateSnapshotBackupRequest struct {
@@ -37,7 +37,7 @@ type CreateSnapshotBackupRequest struct {
 }
 
 type CreateSnapshotBackupResponse struct {
-	BackupID string `json:"backupId"`
+	ID string `json:"backupId"`
 }
 
 type ListSnapshotBackupsResponse struct {
