@@ -245,5 +245,6 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewAppServiceCidr,
 		resources.NewAccessFunction,
 		resources.NewImportFilter,
+		resources.NewCors,
 	}
 }
