@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -131,17 +131,21 @@ func (c *Cors) Create(ctx context.Context, req resource.CreateRequest, resp *res
 		plan.Disabled = types.BoolNull()
 	}
 
-	// Read the created CORS configuration
-	refreshedState, refreshDiags := c.refreshCors(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName)
-	if refreshDiags.HasError() {
-		resp.Diagnostics.Append(refreshDiags...)
-		// Set state with plan data since creation was successful
-		diags = resp.State.Set(ctx, plan)
-		resp.Diagnostics.Append(diags...)
+	diags = resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Set state to fully populated data
+	// Read the created CORS configuration
+	refreshedState, err := c.refreshCors(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName)
+	if err != nil {
+		resp.Diagnostics.AddWarning(
+			"Error reading CORS configuration after creation",
+			"CORS was created successfully but could not be read back: "+api.ParseError(err),
+		)
+	}
+
 	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -150,7 +154,9 @@ func (c *Cors) Create(ctx context.Context, req resource.CreateRequest, resp *res
 }
 
 // getCors is used to retrieve an existing CORS configuration.
-func (c *Cors) getCors(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string) (*api.CorsResponse, error) {
+func (c *Cors) getCors(
+	ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string,
+) (*api.CorsResponse, error) {
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/cors",
 		c.HostURL,
@@ -182,35 +188,39 @@ func (c *Cors) getCors(ctx context.Context, organizationId, projectId, clusterId
 }
 
 // refreshCors is used to pass an existing CORS configuration to the refreshed state.
-func (c *Cors) refreshCors(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string) (*providerschema.Cors, diag.Diagnostics) {
-	var diagnostics diag.Diagnostics
-
+func (c *Cors) refreshCors(
+	ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string,
+) (*providerschema.Cors, error) {
 	corsResp, err := c.getCors(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName)
 	if err != nil {
-		diagnostics.AddError(
-			"Error Reading CORS Configuration",
-			fmt.Sprintf("Could not read CORS configuration: %s", api.ParseError(err)),
-		)
-		return nil, diagnostics
+		return nil, err
 	}
 
-	// Convert string slices to set types
 	originSet, diags := types.SetValueFrom(ctx, types.StringType, corsResp.Origin)
 	if diags.HasError() {
-		diagnostics.Append(diags...)
-		return nil, diagnostics
+		var allErrs []string
+		for _, d := range diags.Errors() {
+			allErrs = append(allErrs, d.Detail())
+		}
+		return nil, fmt.Errorf("failed to convert origin to set: %s", strings.Join(allErrs, "; "))
 	}
 
 	loginOriginSet, diags := types.SetValueFrom(ctx, types.StringType, corsResp.LoginOrigin)
 	if diags.HasError() {
-		diagnostics.Append(diags...)
-		return nil, diagnostics
+		var allErrs []string
+		for _, d := range diags.Errors() {
+			allErrs = append(allErrs, d.Detail())
+		}
+		return nil, fmt.Errorf("failed to convert login origin to set: %s", strings.Join(allErrs, "; "))
 	}
 
 	headersSet, diags := types.SetValueFrom(ctx, types.StringType, corsResp.Headers)
 	if diags.HasError() {
-		diagnostics.Append(diags...)
-		return nil, diagnostics
+		var allErrs []string
+		for _, d := range diags.Errors() {
+			allErrs = append(allErrs, d.Detail())
+		}
+		return nil, fmt.Errorf("failed to convert headers to set: %s", strings.Join(allErrs, "; "))
 	}
 
 	refreshedState := &providerschema.Cors{
@@ -226,7 +236,7 @@ func (c *Cors) refreshCors(ctx context.Context, organizationId, projectId, clust
 		Disabled:        types.BoolValue(corsResp.Disabled),
 	}
 
-	return refreshedState, diagnostics
+	return refreshedState, nil
 }
 
 // Read is used to read an existing CORS configuration and set the state.
@@ -248,17 +258,18 @@ func (c *Cors) Read(ctx context.Context, req resource.ReadRequest, resp *resourc
 	}
 
 	// Refresh the existing CORS configuration
-	refreshedState, refreshDiags := c.refreshCors(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName)
-	if refreshDiags.HasError() {
-		// Check if it's a not found error
-		for _, diag := range refreshDiags.Errors() {
-			if resourceNotFound, _ := api.CheckResourceNotFoundError(fmt.Errorf(diag.Detail())); resourceNotFound {
-				tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-				resp.State.RemoveResource(ctx)
-				return
-			}
+	refreshedState, err := c.refreshCors(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName)
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
 		}
-		resp.Diagnostics.Append(refreshDiags...)
+		resp.Diagnostics.AddError(
+			"Error Reading CORS Configuration",
+			"Could not read CORS configuration: "+errString,
+		)
 		return
 	}
 
@@ -349,9 +360,18 @@ func (c *Cors) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 	}
 
 	// Read the updated CORS configuration
-	refreshedState, refreshDiags := c.refreshCors(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName)
-	if refreshDiags.HasError() {
-		resp.Diagnostics.Append(refreshDiags...)
+	refreshedState, err := c.refreshCors(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName)
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddWarning(
+			"Error reading CORS configuration after update",
+			"CORS was updated successfully but could not be read back: "+errString,
+		)
 		// Set state with plan data since update was successful
 		diags = resp.State.Set(ctx, plan)
 		resp.Diagnostics.Append(diags...)
