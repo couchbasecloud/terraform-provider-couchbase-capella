@@ -39,7 +39,7 @@ Terraform will perform the following actions:
       + app_endpoint_name = "api"
       + app_service_id    = "ffffffff-aaaa-1414-eeee-000000000000"
       + cluster_id        = "ffffffff-aaaa-1414-eeee-000000000000"
-      + online            = true
+      + state             = "Online"
       + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id        = "ffffffff-aaaa-1414-eeee-000000000000"
     }
@@ -74,7 +74,7 @@ Terraform will perform the following actions:
       + app_endpoint_name = "api"
       + app_service_id    = "ffffffff-aaaa-1414-eeee-000000000000"
       + cluster_id        = "ffffffff-aaaa-1414-eeee-000000000000"
-      + online            = true
+      + state             = "Online"
       + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id        = "ffffffff-aaaa-1414-eeee-000000000000"
     }
@@ -143,7 +143,7 @@ your Terraform state and will henceforth be managed by Terraform.
 ### Let us edit terraform.tfvars file to change the App Endpoint status
 
 Command: `terraform apply`
-Change the `online` value to `false` to turn off the App Endpoint
+Change the `state` value to `Offline` to turn off the App Endpoint
 
 Example output:
 
@@ -159,7 +159,7 @@ Terraform will perform the following actions:
 
   # couchbase-capella_app_endpoint_activation_status.example_activation_status will be updated in-place
   ~ resource "couchbase-capella_app_endpoint_activation_status" "example_activation_status" {
-      ~ online            = true -> false
+      ~ state            = "Online" -> "Offline"
         # (5 unchanged attributes hidden)
     }
 

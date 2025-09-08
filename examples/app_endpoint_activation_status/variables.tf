@@ -23,9 +23,9 @@ variable "app_endpoint_name" {
   description = "App Endpoint name"
 }
 
-variable "online" {
-  description = "Whether the App Endpoint should be online (true) or offline (false)"
-  type        = bool
+variable "state" {
+  description = "The current state of the app endpoint. Valid values are `Online` and `Offline`. The provider may set other values on refresh based on remote state."
+  type        = state
 }
 
 

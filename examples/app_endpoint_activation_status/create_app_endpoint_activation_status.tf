@@ -4,7 +4,7 @@ resource "couchbase-capella_app_endpoint_activation_status" "app_endpoint_activa
   cluster_id        = var.cluster_id
   app_service_id    = var.app_service_id
   app_endpoint_name = var.app_endpoint_name
-  online            = var.online
+  state            = var.state
 }
 
 

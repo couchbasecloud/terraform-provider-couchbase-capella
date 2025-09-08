@@ -5,6 +5,5 @@ cluster_id        = "<cluster_id>"
 app_service_id    = "<app_service_id>"
 app_endpoint_name = "<app_endpoint_name>"
 
-online = true
-
+state = "Online"
 
