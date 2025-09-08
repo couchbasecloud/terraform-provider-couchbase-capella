@@ -121,7 +121,7 @@ func (r *AppEndpointActivationStatus) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	refreshedState, err := r.waitForAppEndpointStatus(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, state)
+	err = r.waitForAppEndpointStatus(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, state)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella App Endpoint Activation Status",
@@ -130,7 +130,7 @@ func (r *AppEndpointActivationStatus) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	diags = resp.State.Set(ctx, refreshedState)
+	diags = resp.State.Set(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -197,10 +197,9 @@ func (r *AppEndpointActivationStatus) Read(ctx context.Context, req resource.Rea
 		clusterId       = IDs[providerschema.ClusterId]
 		appServiceId    = IDs[providerschema.AppServiceId]
 		appEndpointName = IDs[providerschema.AppEndpointName]
-		planState       = state.State.ValueString()
 	)
 
-	refreshedState, err := r.waitForAppEndpointStatus(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, planState)
+	appEndpointResp, err := r.retrieveAppEndpointActivation(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName)
 	if err != nil {
 		resourceNotFound, _ := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -214,8 +213,9 @@ func (r *AppEndpointActivationStatus) Read(ctx context.Context, req resource.Rea
 		)
 		return
 	}
+	state.State = types.StringValue(appEndpointResp.State)
 
-	diags = resp.State.Set(ctx, &refreshedState)
+	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -266,7 +266,7 @@ func (r *AppEndpointActivationStatus) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	refreshedState, err := r.waitForAppEndpointStatus(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, state)
+	err = r.waitForAppEndpointStatus(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, state)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella App Endpoint Activation Status",
@@ -275,7 +275,7 @@ func (r *AppEndpointActivationStatus) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	diags = resp.State.Set(ctx, refreshedState)
+	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -318,7 +318,7 @@ func (r *AppEndpointActivationStatus) retrieveAppEndpointActivation(ctx context.
 // It periodically fetches the App Endpoint status using the `retrieveAppEndpointActivation`
 // function and waits until the App Endpoint reaches the desired state or until a specified timeout is reached.
 // The function returns an error if the operation times out or encounters an error during status retrieval.
-func (r *AppEndpointActivationStatus) waitForAppEndpointStatus(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string, state string) (string, error) {
+func (r *AppEndpointActivationStatus) waitForAppEndpointStatus(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string, state string) error {
 	var (
 		appEndpointResp *app_service_api.GetAppEndpointStateResp
 		err             error
@@ -337,16 +337,16 @@ func (r *AppEndpointActivationStatus) waitForAppEndpointStatus(ctx context.Conte
 		select {
 		case <-ctx.Done():
 			//  on timeout, return the last known state with timeout error
-			return appEndpointResp.State, fmt.Errorf("app endpoint activation status transition timed out after initiation, unexpected error: %w", err)
+			return fmt.Errorf("app endpoint activation status transition timed out after initiation, unexpected error: %w", err)
 		case <-timer.C:
 			appEndpointResp, err = r.retrieveAppEndpointActivation(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName)
 			switch err {
 			case nil:
 				if appEndpointResp.State == state {
-					return state, nil
+					return nil
 				}
 			default:
-				return "", err
+				return err
 			}
 			timer.Reset(sleep)
 		}
@@ -355,9 +355,9 @@ func (r *AppEndpointActivationStatus) waitForAppEndpointStatus(ctx context.Conte
 
 // validateAppEndpointState checks if the provided state is either "online" or "offline" and returns an appropriate bool.
 func validateAppEndpointState(state types.String) (bool, error) {
-	if state.ValueString() == "online" {
+	if state.ValueString() == "Online" {
 		return true, nil
-	} else if state.ValueString() == "offline" {
+	} else if state.ValueString() == "Offline" {
 		return false, nil
 	}
 

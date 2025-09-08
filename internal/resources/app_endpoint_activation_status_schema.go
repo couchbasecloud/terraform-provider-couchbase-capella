@@ -14,7 +14,7 @@ func AppEndpointActivationStatusSchema() schema.Schema {
 			"cluster_id":        WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the cluster."),
 			"app_service_id":    WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the app service."),
 			"app_endpoint_name": WithDescription(stringAttribute([]string{required, requiresReplace}), "The name of the app endpoint."),
-			"state":             WithDescription(stringAttribute([]string{required, computed}), "The current state of the app endpoint. Valid values are `online` and `offline`. The provider may set other values on refresh based on remote state."),
+			"state":             WithDescription(stringAttribute([]string{required}), "The current state of the app endpoint. Valid values are `Online` and `Offline`. The provider may set other values on refresh based on remote state."),
 		},
 	}
 }
