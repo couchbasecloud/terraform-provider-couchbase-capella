@@ -27,6 +27,9 @@ var (
 	// ErrAppServiceIdMissing is returned when an expected App Service Id was not found after an import.
 	ErrAppServiceIdMissing = errors.New("app service ID is missing or was passed incorrectly, please check provider documentation for syntax")
 
+	// ErrAppEndpointInvalidState is returned when an invalid state is provided for an App Endpoint.
+	ErrAppEndpointInvalidState = errors.New("app endpoint state is invalid, valid values are 'online' and 'offline'")
+
 	// ErrPeerIdMissing is returned when an expected Peer Id was not found after an import.
 	ErrPeerIdMissing = errors.New("peer ID is missing or was passed incorrectly, please check provider documentation for syntax")
 

@@ -80,7 +80,8 @@ func (r *AppEndpointActivationStatus) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	if err := r.validate(plan); err != nil {
+	var err error
+	if _, err := plan.Validate(); err != nil {
 		resp.Diagnostics.AddError(
 			"Error parsing create app endpoint activation status request",
 			"Could not switch app endpoint online/offline, unexpected error: "+err.Error(),
@@ -94,8 +95,17 @@ func (r *AppEndpointActivationStatus) Create(ctx context.Context, req resource.C
 		clusterId       = plan.ClusterId.ValueString()
 		appServiceId    = plan.AppServiceId.ValueString()
 		appEndpointName = plan.AppEndpointName.ValueString()
-		online          = plan.Online.ValueBool()
+		state           = plan.State.ValueString()
 	)
+
+	var online bool
+	if online, err = validateAppEndpointState(plan.State); err != nil {
+		resp.Diagnostics.AddError(
+			"Error parsing update App Endpoint activation status request",
+			"Failed to validate activation status state : "+err.Error(),
+		)
+		return
+	}
 
 	if err := r.manageAppEndpointActivation(ctx, online, organizationId, projectId, clusterId, appServiceId, appEndpointName); err != nil {
 		resp.Diagnostics.AddError(
@@ -111,7 +121,7 @@ func (r *AppEndpointActivationStatus) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	refreshedState, err := r.waitForAppEndpointStatus(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, online)
+	refreshedState, err := r.waitForAppEndpointStatus(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, state)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella App Endpoint Activation Status",
@@ -127,28 +137,7 @@ func (r *AppEndpointActivationStatus) Create(ctx context.Context, req resource.C
 	}
 }
 
-func (r *AppEndpointActivationStatus) validate(plan providerschema.AppEndpointActivationStatus) error {
-	if plan.OrganizationId.IsNull() {
-		return errors.ErrOrganizationIdCannotBeEmpty
-	}
-	if plan.ProjectId.IsNull() {
-		return errors.ErrProjectIdCannotBeEmpty
-	}
-	if plan.ClusterId.IsNull() {
-		return errors.ErrClusterIdCannotBeEmpty
-	}
-	if plan.AppServiceId.IsNull() {
-		return errors.ErrAppServiceIdCannotBeEmpty
-	}
-	if plan.AppEndpointName.IsNull() {
-		return errors.ErrEndpointIdMissing
-	}
-	if plan.Online.IsNull() {
-		return errors.ErrOnoffStateCannotBeEmpty
-	}
-	return nil
-}
-
+// manageAppEndpointActivation sends a request to either activate (online) or deactivate (offline) an App Endpoint.
 func (r *AppEndpointActivationStatus) manageAppEndpointActivation(ctx context.Context, online bool, organizationId, projectId, clusterId, appServiceId, appEndpointName string) error {
 	var (
 		url    = fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/activationStatus", r.HostURL, organizationId, projectId, clusterId, appServiceId, appEndpointName)
@@ -208,9 +197,10 @@ func (r *AppEndpointActivationStatus) Read(ctx context.Context, req resource.Rea
 		clusterId       = IDs[providerschema.ClusterId]
 		appServiceId    = IDs[providerschema.AppServiceId]
 		appEndpointName = IDs[providerschema.AppEndpointName]
+		planState       = state.State.ValueString()
 	)
 
-	refreshedState, err := r.waitForAppEndpointStatus(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, state.Online.ValueBool())
+	refreshedState, err := r.waitForAppEndpointStatus(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, planState)
 	if err != nil {
 		resourceNotFound, _ := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -241,7 +231,8 @@ func (r *AppEndpointActivationStatus) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	if err := r.validate(plan); err != nil {
+	var err error
+	if _, err := plan.Validate(); err != nil {
 		resp.Diagnostics.AddError(
 			"Error parsing update app endpoint activation status request",
 			"Could not switch app endpoint online/offline, unexpected error: "+err.Error(),
@@ -255,8 +246,17 @@ func (r *AppEndpointActivationStatus) Update(ctx context.Context, req resource.U
 		clusterId       = plan.ClusterId.ValueString()
 		appServiceId    = plan.AppServiceId.ValueString()
 		appEndpointName = plan.AppEndpointName.ValueString()
-		online          = plan.Online.ValueBool()
+		state           = plan.State.ValueString()
 	)
+
+	var online bool
+	if online, err = validateAppEndpointState(plan.State); err != nil {
+		resp.Diagnostics.AddError(
+			"Error parsing update App Endpoint activation status request",
+			"Failed to validate activation status state : "+err.Error(),
+		)
+		return
+	}
 
 	if err := r.manageAppEndpointActivation(ctx, online, organizationId, projectId, clusterId, appServiceId, appEndpointName); err != nil {
 		resp.Diagnostics.AddError(
@@ -266,7 +266,7 @@ func (r *AppEndpointActivationStatus) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	refreshedState, err := r.waitForAppEndpointStatus(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, online)
+	refreshedState, err := r.waitForAppEndpointStatus(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, state)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella App Endpoint Activation Status",
@@ -318,7 +318,7 @@ func (r *AppEndpointActivationStatus) retrieveAppEndpointActivation(ctx context.
 // It periodically fetches the App Endpoint status using the `retrieveAppEndpointActivation`
 // function and waits until the App Endpoint reaches the desired state or until a specified timeout is reached.
 // The function returns an error if the operation times out or encounters an error during status retrieval.
-func (r *AppEndpointActivationStatus) waitForAppEndpointStatus(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string, online bool) (*providerschema.AppEndpointActivationStatus, error) {
+func (r *AppEndpointActivationStatus) waitForAppEndpointStatus(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string, state string) (string, error) {
 	var (
 		appEndpointResp *app_service_api.GetAppEndpointStateResp
 		err             error
@@ -327,42 +327,39 @@ func (r *AppEndpointActivationStatus) waitForAppEndpointStatus(ctx context.Conte
 	// Assuming 20 minutes is the max time online/offline takes, can change after discussion
 	const timeout = time.Minute * 20
 
-	var cancel context.CancelFunc
-	ctx, cancel = context.WithTimeout(ctx, timeout)
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	const sleep = time.Second * 3
 	timer := time.NewTimer(10 * time.Second)
 
-	var desiredState string
-	if online {
-		desiredState = "Online"
-	} else {
-		desiredState = "Offline"
-	}
-
 	for {
 		select {
 		case <-ctx.Done():
-			return nil, fmt.Errorf("app endpoint activation status transition timed out after initiation, unexpected error: %w", err)
+			//  on timeout, return the last known state with timeout error
+			return appEndpointResp.State, fmt.Errorf("app endpoint activation status transition timed out after initiation, unexpected error: %w", err)
 		case <-timer.C:
 			appEndpointResp, err = r.retrieveAppEndpointActivation(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName)
 			switch err {
 			case nil:
-				if appEndpointResp.State == desiredState {
-					return &providerschema.AppEndpointActivationStatus{
-						OrganizationId:  types.StringValue(organizationId),
-						ProjectId:       types.StringValue(projectId),
-						ClusterId:       types.StringValue(clusterId),
-						AppServiceId:    types.StringValue(appServiceId),
-						AppEndpointName: types.StringValue(appEndpointName),
-						Online:          types.BoolValue(online),
-					}, nil
+				if appEndpointResp.State == state {
+					return state, nil
 				}
 			default:
-				return nil, err
+				return "", err
 			}
 			timer.Reset(sleep)
 		}
 	}
+}
+
+// validateAppEndpointState checks if the provided state is either "online" or "offline" and returns an appropriate bool.
+func validateAppEndpointState(state types.String) (bool, error) {
+	if state.ValueString() == "online" {
+		return true, nil
+	} else if state.ValueString() == "offline" {
+		return false, nil
+	}
+
+	return false, errors.ErrAppEndpointInvalidState
 }
