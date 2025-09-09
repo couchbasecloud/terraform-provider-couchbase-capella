@@ -87,7 +87,7 @@ func (s *SnapshotBackupSchedule) Create(ctx context.Context, req resource.Create
 		})
 		resp.Diagnostics.AddError(
 			"Error Upserting Snapshot Backup Schedule in Capella",
-			"Could not upsert Capella Snapshot Backup Schedule for cluster with ID "+clusterId+": "+err.Error(),
+			errorMessageWhileSnapshotBackupScheduleCreation+err.Error(),
 		)
 		return
 	}
