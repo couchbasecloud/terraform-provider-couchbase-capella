@@ -26,7 +26,7 @@ var (
 	_ resource.ResourceWithImportState = &AppEndpointActivationStatus{}
 )
 
-const errorMessageWhileAppEndpointActivation = "There is an error during switching online/offline the app endpoint. Please check in Capella to see if any hanging resources have been created, unexpected error: "
+const errorMessageWhileAppEndpointActivation = "There is an error during switching online/offline the app endpoint. Unexpected error: "
 
 // AppEndpointActivationStatus manages activation status (online/offline) of an App Endpoint.
 type AppEndpointActivationStatus struct {
@@ -112,12 +112,6 @@ func (r *AppEndpointActivationStatus) Create(ctx context.Context, req resource.C
 			"App Endpoint activation failed",
 			err.Error(),
 		)
-		return
-	}
-
-	diags = resp.State.Set(ctx, plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
 		return
 	}
 
