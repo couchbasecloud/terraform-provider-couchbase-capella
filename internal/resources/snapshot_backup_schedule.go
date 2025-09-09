@@ -288,7 +288,7 @@ func (s *SnapshotBackupSchedule) upsertSnapshotBackupSchedule(ctx context.Contex
 			"createSnapshotBackupScheduleRequest": createSnapshotBackupScheduleRequest,
 			"err":                                 err,
 		})
-		return nil, fmt.Errorf(errorMessageWhileSnapshotBackupScheduleCreation + api.ParseError(err))
+		return nil, err
 	}
 
 	snapshotBackupSchedule, err := s.getSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId, plan.StartTime.ValueString())
@@ -299,7 +299,7 @@ func (s *SnapshotBackupSchedule) upsertSnapshotBackupSchedule(ctx context.Contex
 			"clusterId":      clusterId,
 			"err":            err,
 		})
-		return nil, fmt.Errorf("Could not get Capella Snapshot Backup Schedule for cluster with ID " + clusterId + ": " + err.Error())
+		return nil, err
 	}
 
 	refreshedState := providerschema.NewSnapshotBackupSchedule(*snapshotBackupSchedule, organizationId, projectId, clusterId)
