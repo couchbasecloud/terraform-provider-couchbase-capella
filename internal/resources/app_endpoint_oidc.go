@@ -1,12 +1,8 @@
 package resources
 
 import (
-	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-)
-
-import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -41,6 +37,11 @@ func (r *AppEndpointOidcProvider) Metadata(ctx context.Context, req resource.Met
 	resp.TypeName = req.ProviderTypeName + "_app_endpoint_oidc_provider"
 }
 
+// Schema defines the Terraform schema for this resource.
+func (r *AppEndpointOidcProvider) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = AppEndpointOidcProviderSchema()
+}
+
 // ImportState imports a resource into Terraform state.
 func (r *AppEndpointOidcProvider) ImportState(
 	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
@@ -55,76 +56,241 @@ func (r *AppEndpointOidcProvider) Configure(ctx context.Context, req resource.Co
 		return
 	}
 
-	client, ok := req.ProviderData.(*sdk.Couchbase)
-
+	data, ok := req.ProviderData.(*providerschema.Data)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *sdk.Couchbase, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			fmt.Sprintf("Expected *ProviderSourceData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 
 		return
 	}
 
-	r.client = client
+	r.Data = data
 }
 
+// Create creates a new OIDC provider and stores provider_id.
 func (r *AppEndpointOidcProvider) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data *AppEndpointOidcProvider
-	var plan types.Object
-
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	var plan providerschema.AppEndpointOidcProvider
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(plan.As(ctx, &data, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})...)
+	organizationId := plan.OrganizationId.ValueString()
+	projectId := plan.ProjectId.ValueString()
+	clusterId := plan.ClusterId.ValueString()
+	appServiceId := plan.AppServiceId.ValueString()
+	appEndpointName := plan.AppEndpointName.ValueString()
 
-	if resp.Diagnostics.HasError() {
-		return
+	url := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/oidcProviders",
+		r.HostURL,
+		organizationId,
+		projectId,
+		clusterId,
+		appServiceId,
+		appEndpointName,
+	)
+
+	payload := api.AppEndpointOIDCProviderRequest{
+		Issuer:   plan.Issuer.ValueString(),
+		ClientID: plan.ClientId.ValueString(),
+	}
+	if !plan.DiscoveryUrl.IsNull() && !plan.DiscoveryUrl.IsUnknown() {
+		v := plan.DiscoveryUrl.ValueString()
+		payload.DiscoveryURL = &v
+	}
+	if !plan.Register.IsNull() && !plan.Register.IsUnknown() {
+		v := plan.Register.ValueBool()
+		payload.Register = &v
+	}
+	if !plan.RolesClaim.IsNull() && !plan.RolesClaim.IsUnknown() {
+		v := plan.RolesClaim.ValueString()
+		payload.RolesClaim = &v
+	}
+	if !plan.UserPrefix.IsNull() && !plan.UserPrefix.IsUnknown() {
+		v := plan.UserPrefix.ValueString()
+		payload.UserPrefix = &v
+	}
+	if !plan.UsernameClaim.IsNull() && !plan.UsernameClaim.IsUnknown() {
+		v := plan.UsernameClaim.ValueString()
+		payload.UsernameClaim = &v
 	}
 
-	request, requestDiags := data.ToOperationsCreateAppEndpointOIDCProviderRequest(ctx)
-	resp.Diagnostics.Append(requestDiags...)
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	res, err := r.client.AppEndpointOidcProvider.CreateOidcProvider(ctx, *request)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
+	res, err := r.Client.ExecuteWithRetry(ctx, cfg, payload, r.Token, map[string]string{"Content-Type": "application/json"})
 	if err != nil {
-		resp.Diagnostics.AddError("failure to invoke API", err.Error())
-		if res != nil && res.RawResponse != nil {
-			resp.Diagnostics.AddError("unexpected http request/response", debugResponse(res.RawResponse))
+		resp.Diagnostics.AddError("Error Creating OIDC Provider", api.ParseError(err))
+		return
+	}
+
+	// Capture providerId from response
+	var created api.AppEndpointOIDCProviderResponse
+	if err := json.Unmarshal(res.Body, &created); err == nil {
+		if created.ProviderID != "" {
+			plan.ProviderId = types.StringValue(created.ProviderID)
 		}
-		return
 	}
-	if res == nil {
-		resp.Diagnostics.AddError("unexpected response from API", fmt.Sprintf("%v", res))
-		return
-	}
-	if res.StatusCode != 201 {
-		resp.Diagnostics.AddError(fmt.Sprintf("unexpected response from API. Got an unexpected response code %v", res.StatusCode), debugResponse(res.RawResponse))
-		return
-	}
-	if !(res.OIDCProviderID != nil) {
-		resp.Diagnostics.AddError("unexpected response from API. Got an unexpected response body", debugResponse(res.RawResponse))
-		return
-	}
-	resp.Diagnostics.Append(data.RefreshFromSharedOIDCProviderID(ctx, res.OIDCProviderID)...)
 
+	// Refresh using GET
+	if !plan.ProviderId.IsNull() && !plan.ProviderId.IsUnknown() {
+		details, err := r.getOidcProvider(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, plan.ProviderId.ValueString())
+		if err == nil {
+			r.mapResponseToState(&plan, details)
+		} else {
+			tflog.Warn(ctx, "Failed to read OIDC provider after creation", map[string]any{"error": api.ParseError(err)})
+		}
+	}
+
+	diags = resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
+}
+
+// Read fetches the OIDC provider and refreshes state.
+func (r *AppEndpointOidcProvider) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state providerschema.AppEndpointOidcProvider
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(refreshPlan(ctx, plan, &data)...)
+	IDs, err := state.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError("Error Reading OIDC Provider", "Could not validate state: "+err.Error())
+		return
+	}
 
+	providerId := state.ProviderId.ValueString()
+	if providerId == "" {
+		tflog.Info(ctx, "providerId missing; removing from state")
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	details, err := r.getOidcProvider(ctx, IDs[providerschema.OrganizationId], IDs[providerschema.ProjectId], IDs[providerschema.ClusterId], IDs[providerschema.AppServiceId], IDs[providerschema.AppEndpointName], providerId)
+	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "OIDC provider not found; removing from state")
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError("Error Reading OIDC Provider", "Could not read OIDC provider: "+errString)
+		return
+	}
+
+	r.mapResponseToState(&state, details)
+
+	diags = resp.State.Set(ctx, state)
+	resp.Diagnostics.Append(diags...)
+}
+
+// Update is effectively a no-op because fields require replacement.
+func (r *AppEndpointOidcProvider) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan providerschema.AppEndpointOidcProvider
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	diags = resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
+}
+
+// Delete deletes the OIDC provider.
+func (r *AppEndpointOidcProvider) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state providerschema.AppEndpointOidcProvider
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	organizationId := state.OrganizationId.ValueString()
+	projectId := state.ProjectId.ValueString()
+	clusterId := state.ClusterId.ValueString()
+	appServiceId := state.AppServiceId.ValueString()
+	appEndpointName := state.AppEndpointName.ValueString()
+	providerId := state.ProviderId.ValueString()
+
+	if providerId == "" {
+		return
+	}
+
+	url := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/oidcProviders/%s",
+		r.HostURL,
+		organizationId,
+		projectId,
+		clusterId,
+		appServiceId,
+		appEndpointName,
+		providerId,
+	)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
+	_, err := r.Client.ExecuteWithRetry(ctx, cfg, nil, r.Token, nil)
+	if err != nil {
+		resourceNotFound, _ := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			return
+		}
+		resp.Diagnostics.AddError("Error Deleting OIDC Provider", api.ParseError(err))
+		return
+	}
+}
+
+// getOidcProvider gets OIDC provider details.
+func (r *AppEndpointOidcProvider) getOidcProvider(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName, providerId string) (api.AppEndpointOIDCProviderResponse, error) {
+	url := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/oidcProviders/%s",
+		r.HostURL,
+		organizationId,
+		projectId,
+		clusterId,
+		appServiceId,
+		appEndpointName,
+		providerId,
+	)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	res, err := r.Client.ExecuteWithRetry(ctx, cfg, nil, r.Token, nil)
+	if err != nil {
+		return api.AppEndpointOIDCProviderResponse{}, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
+	}
+	var out api.AppEndpointOIDCProviderResponse
+	if err := json.Unmarshal(res.Body, &out); err != nil {
+		return api.AppEndpointOIDCProviderResponse{}, fmt.Errorf("failed to parse response: %w", err)
+	}
+	return out, nil
+}
+
+// mapResponseToState maps response fields to state.
+func (r *AppEndpointOidcProvider) mapResponseToState(state *providerschema.AppEndpointOidcProvider, resp api.AppEndpointOIDCProviderResponse) {
+	if resp.Issuer != "" {
+		state.Issuer = types.StringValue(resp.Issuer)
+	}
+	if resp.ClientID != "" {
+		state.ClientId = types.StringValue(resp.ClientID)
+	}
+	if resp.DiscoveryURL != "" {
+		state.DiscoveryUrl = types.StringValue(resp.DiscoveryURL)
+	}
+	if resp.UserPrefix != "" {
+		state.UserPrefix = types.StringValue(resp.UserPrefix)
+	}
+	if resp.UsernameClaim != "" {
+		state.UsernameClaim = types.StringValue(resp.UsernameClaim)
+	}
+	if resp.RolesClaim != "" {
+		state.RolesClaim = types.StringValue(resp.RolesClaim)
+	}
+	if resp.Register != nil {
+		state.Register = types.BoolValue(*resp.Register)
+	}
+	if resp.ProviderID != "" {
+		state.ProviderId = types.StringValue(resp.ProviderID)
+	}
 }
