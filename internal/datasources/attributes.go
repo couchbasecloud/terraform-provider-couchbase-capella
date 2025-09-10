@@ -1,7 +1,6 @@
 package datasources
 
 import (
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -280,10 +279,3 @@ var (
 		},
 	}
 )
-
-func computedMaptAttribute(T attr.Type) schema.MapAttribute {
-	return schema.MapAttribute{
-		ElementType: T,
-		Computed:    true,
-	}
-}
