@@ -134,7 +134,7 @@ type OneAppEndpoint struct {
 	State types.String `tfsdk:"state"`
 }
 
-// AppEndpointScope represents a scope configuration for app endpoints with tfsdk tags
+// AppEndpointScope represents a scope configuration for app endpoints with tfsdk tags.
 type AppEndpointScope struct {
 	Collections types.Map `tfsdk:"collections"`
 }
