@@ -1,7 +1,6 @@
 package schema
 
 import (
-	//"context"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -24,8 +23,8 @@ type AppEndpoints struct {
 	// AppServiceId is the ID of the App Service to which the App Endpoints belong.
 	AppServiceId types.String `tfsdk:"app_service_id"`
 
-	// Data is a list of App Endpoint configurations.
-	Data []GetAppEndpointResponse `tfsdk:"data"`
+	// Data is a list of App Endpoints.
+	Data []OneAppEndpoint `tfsdk:"data"`
 }
 
 // AppEndpoint represents the Terraform schema for an App Endpoint configuration.
@@ -96,8 +95,8 @@ func (a *AppEndpoint) Validate() (map[Attr]string, error) {
 	return IDs, nil
 }
 
-// GetAppEndpointResponse represents the Terraform schema for an App Endpoint configuration.
-type GetAppEndpointResponse struct {
+// OneAppEndpoint represents the Terraform schema for an App Endpoint configuration.
+type OneAppEndpoint struct {
 	// Bucket The Capella Cluster backing bucket for the App Endpoint.
 	Bucket types.String `tfsdk:"bucket"`
 
@@ -110,25 +109,25 @@ type GetAppEndpointResponse struct {
 	// DeltaSyncEnabled Indicates whether Delta Sync is enabled for the App Endpoint.
 	DeltaSyncEnabled types.Bool `tfsdk:"delta_sync_enabled"`
 
-	// Scope is a map of scope names to scope configurations.
-	Scope types.Map `tfsdk:"scope"`
+	// Scopes is a map of scope names to scope configurations.
+	Scopes types.Map `tfsdk:"scopes"`
 
 	// Cors configures cross origin resource sharing (CORS) for the App Endpoint.
 	Cors *AppEndpointCors `tfsdk:"cors"`
 
 	// Oidc is a list of OIDC provider configurations for the App Endpoint.
-	Oidc []AppEndpointOidc `tfsdk:"oidc"`
+	Oidc types.Set `tfsdk:"oidc"`
 
 	// RequireResync is a map of scopes to a list of collection names that require resync.
 	RequireResync types.Map `tfsdk:"require_resync"`
 
-	// AdminURL A URL for the admin API used for the administration of App Endpoints. For more information, read the [Capella App Services Admin API Reference](https://docs.couchbase.com/cloud/app-services/references/rest-api-introduction.html#:~:text=Capella%20App%20Services%20Admin%20API%20Reference)
+	// AdminURL A URL for the admin API used for the administration of App Endpoints.
 	AdminURL types.String `tfsdk:"admin_url"`
 
-	// MetricsURL A URL for the metrics API used for monitoring App Services performance metrics. For more information, read the [Capella App Services Metrics API Reference](https://docs.couchbase.com/cloud/app-services/references/rest_api_metric.html)
+	// MetricsURL A URL for the metrics API used for monitoring App Services performance metrics.
 	MetricsURL types.String `tfsdk:"metrics_url"`
 
-	// PublicURL A URL for the public API used for access to functions for data access and manipulation. For more information, read the [Capella App Services Public API Reference](https://docs.couchbase.com/cloud/app-services/references/rest_api_public.html)
+	// PublicURL A URL for the public API used for access to functions for data access and manipulation.
 	PublicURL types.String `tfsdk:"public_url"`
 
 	// State is the current state of the App Endpoint including online, offline, resyncing, etc.
