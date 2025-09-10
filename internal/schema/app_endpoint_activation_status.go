@@ -3,6 +3,8 @@ package schema
 import (
 	"fmt"
 
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -25,7 +27,7 @@ type AppEndpointActivationStatus struct {
 	AppEndpointName types.String `tfsdk:"app_endpoint_name"`
 
 	// Online indicates whether the app endpoint should be online (true) or offline (false).
-	Online types.Bool `tfsdk:"online"`
+	State types.String `tfsdk:"state"`
 }
 
 // Validate validates the AppEndpointActivationStatus resource for import.
@@ -38,7 +40,26 @@ func (a *AppEndpointActivationStatus) Validate() (map[Attr]string, error) {
 		AppEndpointName: a.AppEndpointName,
 	}
 
-	IDs, err := validateSchemaState(state, AppServiceId)
+	if a.OrganizationId.IsNull() {
+		return nil, errors.ErrOrganizationIdCannotBeEmpty
+	}
+	if a.ProjectId.IsNull() {
+		return nil, errors.ErrProjectIdCannotBeEmpty
+	}
+	if a.ClusterId.IsNull() {
+		return nil, errors.ErrClusterIdCannotBeEmpty
+	}
+	if a.AppServiceId.IsNull() {
+		return nil, errors.ErrAppServiceIdCannotBeEmpty
+	}
+	if a.AppEndpointName.IsNull() {
+		return nil, errors.ErrEndpointIdMissing
+	}
+	if a.State.IsNull() {
+		return nil, errors.ErrAppEndpointInvalidState
+	}
+
+	IDs, err := validateSchemaState(state, AppEndpointName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to validate resource state: %s", err)
 	}
