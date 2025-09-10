@@ -232,6 +232,7 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewClusterOnOffSchedule,
 		resources.NewClusterOnOffOnDemand,
 		resources.NewAppServiceOnOffOnDemand,
+		resources.NewAppEndpointActivationStatus,
 		resources.NewAuditLogSettings,
 		resources.NewAuditLogExport,
 		resources.NewPrivateEndpointService,
@@ -244,6 +245,8 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewFreeTierCluster,
 		resources.NewFreeTierAppService,
 		resources.NewAppServiceCidr,
+		resources.NewAccessControlFunction,
+		resources.NewImportFilter,
 		resources.NewAppEndpoint,
 	}
 }
