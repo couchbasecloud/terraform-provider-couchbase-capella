@@ -40,21 +40,25 @@ func (a *AppEndpointResync) Metadata(
 // Schema defines the schema for the collection data source.
 func (a *AppEndpointResync) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "The data source for retrieving collections within a scope in a bucket.",
+		MarkdownDescription: "Resync status of the given App Endpoint.",
 		Attributes: map[string]schema.Attribute{
-			"organization_id": requiredStringAttribute,
-			"project_id":      requiredStringAttribute,
-			"cluster_id":      requiredStringAttribute,
-			"app_service_id":  requiredStringAttribute,
-			"app_endpoint":    requiredStringAttribute,
-			"collections_processing": computedMaptAttribute(types.SetType{
-				ElemType: types.StringType,
-			}),
-			"docs_changed":   computedInt64Attribute,
-			"docs_processed": computedInt64Attribute,
-			"last_error":     computedStringAttribute,
-			"start_time":     computedStringAttribute,
-			"state":          computedStringAttribute,
+			"organization_id":   schema.StringAttribute{Required: true, MarkdownDescription: "The GUID4 ID of the organization."},
+			"project_id":        schema.StringAttribute{Required: true, MarkdownDescription: "The GUID4 ID of the project."},
+			"cluster_id":        schema.StringAttribute{Required: true, MarkdownDescription: "The GUID4 ID of the cluster."},
+			"app_service_id":    schema.StringAttribute{Required: true, MarkdownDescription: "The GUID4 ID of the app service."},
+			"app_endpoint_name": schema.StringAttribute{Required: true, MarkdownDescription: "The name of the app endpoint."},
+			"collections_processing": schema.MapAttribute{
+				ElementType: types.SetType{
+					ElemType: types.StringType,
+				},
+				Computed:            true,
+				MarkdownDescription: "A map of collections currently being processed during the resync operation.",
+			},
+			"docs_changed":   schema.Int64Attribute{Computed: true, MarkdownDescription: "The number of documents that have been changed during the resync operation."},
+			"docs_processed": schema.Int64Attribute{Computed: true, MarkdownDescription: "The number of documents that have been processed during the resync operation."},
+			"last_error":     schema.Int64Attribute{Computed: true, MarkdownDescription: "The last error that occurred during the resync operation."},
+			"start_time":     schema.StringAttribute{Computed: true, MarkdownDescription: "The timestamp when the resync operation was initiated."},
+			"state":          schema.StringAttribute{Computed: true, MarkdownDescription: "The current state of the resync operation."},
 		},
 	}
 }
