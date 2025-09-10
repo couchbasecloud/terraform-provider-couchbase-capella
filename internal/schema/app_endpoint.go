@@ -81,14 +81,14 @@ type AppEndpoint struct {
 // Validate verifies required identifiers for the App Endpoint are present and returns them.
 func (a *AppEndpoint) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
-		OrganizationId: a.OrganizationId,
-		ProjectId:      a.ProjectId,
-		ClusterId:      a.ClusterId,
-		AppServiceId:   a.AppServiceId,
-		EndpointName:   a.Name,
+		OrganizationId:  a.OrganizationId,
+		ProjectId:       a.ProjectId,
+		ClusterId:       a.ClusterId,
+		AppServiceId:    a.AppServiceId,
+		AppEndpointName: a.Name,
 	}
 
-	IDs, err := validateSchemaState(state, EndpointName)
+	IDs, err := validateSchemaState(state, AppEndpointName)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
 	}

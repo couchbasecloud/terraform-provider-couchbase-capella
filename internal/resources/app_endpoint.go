@@ -291,7 +291,7 @@ func (a *AppEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *
 		projectId      = IDs[providerschema.ProjectId]
 		clusterId      = IDs[providerschema.ClusterId]
 		appServiceId   = IDs[providerschema.AppServiceId]
-		endpointName   = IDs[providerschema.EndpointName]
+		endpointName   = IDs[providerschema.AppEndpointName]
 	)
 
 	newstate, err := a.refreshAppEndpoint(
