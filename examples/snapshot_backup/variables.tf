@@ -30,4 +30,9 @@ variable "snapshot_backup" {
     condition = var.snapshot_backup.retention == null || (var.snapshot_backup.retention >= 24 && var.snapshot_backup.retention <= 720)
     error_message = "Retention must be between 24 and 720 hours."
   }
+
+  validation {
+    condition = var.snapshot_backup.retention == floor(var.snapshot_backup.retention)
+    error_message = "Retention must be an integer."
+  }
 }
