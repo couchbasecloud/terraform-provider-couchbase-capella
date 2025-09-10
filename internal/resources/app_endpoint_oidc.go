@@ -46,7 +46,7 @@ func (r *AppEndpointOidcProvider) Schema(_ context.Context, _ resource.SchemaReq
 func (r *AppEndpointOidcProvider) ImportState(
 	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
 ) {
-	// The import ID should be in the format: organizationId,projectId,clusterId,appServiceId,keyspace
+	// The import ID should be in the format: organizationId,projectId,clusterId,appServiceId,app_endpoint_name,provider_id
 	resource.ImportStatePassthroughID(ctx, path.Root("app_endpoint_name"), req, resp)
 }
 
@@ -94,30 +94,7 @@ func (r *AppEndpointOidcProvider) Create(ctx context.Context, req resource.Creat
 		appEndpointName,
 	)
 
-	payload := api.AppEndpointOIDCProviderRequest{
-		Issuer:   plan.Issuer.ValueString(),
-		ClientID: plan.ClientId.ValueString(),
-	}
-	if !plan.DiscoveryUrl.IsNull() && !plan.DiscoveryUrl.IsUnknown() {
-		v := plan.DiscoveryUrl.ValueString()
-		payload.DiscoveryURL = &v
-	}
-	if !plan.Register.IsNull() && !plan.Register.IsUnknown() {
-		v := plan.Register.ValueBool()
-		payload.Register = &v
-	}
-	if !plan.RolesClaim.IsNull() && !plan.RolesClaim.IsUnknown() {
-		v := plan.RolesClaim.ValueString()
-		payload.RolesClaim = &v
-	}
-	if !plan.UserPrefix.IsNull() && !plan.UserPrefix.IsUnknown() {
-		v := plan.UserPrefix.ValueString()
-		payload.UserPrefix = &v
-	}
-	if !plan.UsernameClaim.IsNull() && !plan.UsernameClaim.IsUnknown() {
-		v := plan.UsernameClaim.ValueString()
-		payload.UsernameClaim = &v
-	}
+	payload := buildAppEndpointOIDCProviderPayload(plan)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
 	res, err := r.Client.ExecuteWithRetry(ctx, cfg, payload, r.Token, map[string]string{"Content-Type": "application/json"})
@@ -134,11 +111,11 @@ func (r *AppEndpointOidcProvider) Create(ctx context.Context, req resource.Creat
 		}
 	}
 
-	// Refresh using GET
+	// Refresh using GET; preserve nulls for optional attributes during create
 	if !plan.ProviderId.IsNull() && !plan.ProviderId.IsUnknown() {
 		details, err := r.getOidcProvider(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, plan.ProviderId.ValueString())
 		if err == nil {
-			r.mapResponseToState(&plan, details)
+			r.mapResponseToState(&plan, details, true)
 		} else {
 			tflog.Warn(ctx, "Failed to read OIDC provider after creation", map[string]any{"error": api.ParseError(err)})
 		}
@@ -182,7 +159,8 @@ func (r *AppEndpointOidcProvider) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	r.mapResponseToState(&state, details)
+	// On Read, populate all fields from remote
+	r.mapResponseToState(&state, details, false)
 
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
@@ -268,29 +246,73 @@ func (r *AppEndpointOidcProvider) getOidcProvider(ctx context.Context, organizat
 }
 
 // mapResponseToState maps response fields to state.
-func (r *AppEndpointOidcProvider) mapResponseToState(state *providerschema.AppEndpointOidcProvider, resp api.AppEndpointOIDCProviderResponse) {
+// If preserveNulls is true, optional attributes that are null in state will not be populated.
+func (r *AppEndpointOidcProvider) mapResponseToState(state *providerschema.AppEndpointOidcProvider, resp api.AppEndpointOIDCProviderResponse, preserveNulls bool) {
+	// Required fields
 	if resp.Issuer != "" {
 		state.Issuer = types.StringValue(resp.Issuer)
 	}
 	if resp.ClientID != "" {
 		state.ClientId = types.StringValue(resp.ClientID)
 	}
+
+	// Optional fields with null-preservation on create
 	if resp.DiscoveryURL != "" {
-		state.DiscoveryUrl = types.StringValue(resp.DiscoveryURL)
+		if !(preserveNulls && state.DiscoveryUrl.IsNull()) {
+			state.DiscoveryUrl = types.StringValue(resp.DiscoveryURL)
+		}
 	}
 	if resp.UserPrefix != "" {
-		state.UserPrefix = types.StringValue(resp.UserPrefix)
+		if !(preserveNulls && state.UserPrefix.IsNull()) {
+			state.UserPrefix = types.StringValue(resp.UserPrefix)
+		}
 	}
 	if resp.UsernameClaim != "" {
-		state.UsernameClaim = types.StringValue(resp.UsernameClaim)
+		if !(preserveNulls && state.UsernameClaim.IsNull()) {
+			state.UsernameClaim = types.StringValue(resp.UsernameClaim)
+		}
 	}
 	if resp.RolesClaim != "" {
-		state.RolesClaim = types.StringValue(resp.RolesClaim)
+		if !(preserveNulls && state.RolesClaim.IsNull()) {
+			state.RolesClaim = types.StringValue(resp.RolesClaim)
+		}
 	}
 	if resp.Register != nil {
-		state.Register = types.BoolValue(*resp.Register)
+		if !(preserveNulls && state.Register.IsNull()) {
+			state.Register = types.BoolValue(*resp.Register)
+		}
 	}
+
+	// Computed ID
 	if resp.ProviderID != "" {
 		state.ProviderId = types.StringValue(resp.ProviderID)
 	}
+}
+
+func buildAppEndpointOIDCProviderPayload(plan providerschema.AppEndpointOidcProvider) api.AppEndpointOIDCProviderRequest {
+	payload := api.AppEndpointOIDCProviderRequest{
+		Issuer:   plan.Issuer.ValueString(),
+		ClientID: plan.ClientId.ValueString(),
+	}
+	if !plan.DiscoveryUrl.IsNull() && !plan.DiscoveryUrl.IsUnknown() {
+		v := plan.DiscoveryUrl.ValueString()
+		payload.DiscoveryURL = &v
+	}
+	if !plan.Register.IsNull() && !plan.Register.IsUnknown() {
+		v := plan.Register.ValueBool()
+		payload.Register = &v
+	}
+	if !plan.RolesClaim.IsNull() && !plan.RolesClaim.IsUnknown() {
+		v := plan.RolesClaim.ValueString()
+		payload.RolesClaim = &v
+	}
+	if !plan.UserPrefix.IsNull() && !plan.UserPrefix.IsUnknown() {
+		v := plan.UserPrefix.ValueString()
+		payload.UserPrefix = &v
+	}
+	if !plan.UsernameClaim.IsNull() && !plan.UsernameClaim.IsUnknown() {
+		v := plan.UsernameClaim.ValueString()
+		payload.UsernameClaim = &v
+	}
+	return payload
 }
