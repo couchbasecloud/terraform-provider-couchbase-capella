@@ -301,7 +301,7 @@ func (c *Cors) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 	}
 
 	var loginOrigin []string
-	if !plan.LoginOrigin.IsNull() && !plan.LoginOrigin.IsUnknown() {
+	if !plan.LoginOrigin.IsNull() {
 		diags = plan.LoginOrigin.ElementsAs(ctx, &loginOrigin, false)
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
@@ -310,7 +310,7 @@ func (c *Cors) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 	}
 
 	var headers []string
-	if !plan.Headers.IsNull() && !plan.Headers.IsUnknown() {
+	if !plan.Headers.IsNull() {
 		diags = plan.Headers.ElementsAs(ctx, &headers, false)
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
