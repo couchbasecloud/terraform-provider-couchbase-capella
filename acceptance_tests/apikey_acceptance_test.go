@@ -81,6 +81,7 @@ func TestAccApiKeyResourceWithOnlyReqField(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "organization_roles.1", "organizationOwner"),
 					resource.TestCheckResourceAttr(resourceReference, "rotate", "1"),
 					resource.TestCheckResourceAttr(resourceReference, "secret", "abc"),
+					resource.TestCheckResourceAttrSet(resourceReference, "token"),
 				),
 			},
 		},
