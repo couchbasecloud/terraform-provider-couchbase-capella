@@ -1,4 +1,4 @@
-# Capella Backup Example
+# Capella Snapshot Backup Example
 
 This example shows how to create and manage cloud snapshot backups in Capella.
 
@@ -12,8 +12,8 @@ In this example, we are going to do the following.
 
 1. CREATE: Create a new snapshot backup entry of an existing Capella cluster as stated in the `create_snapshot_backup.tf` file.
 2. UPDATE: Edits the `retention` of the snapshot backup.
-3. IMPORT: Import a backup that exists in Capella but not in the terraform state file.
-4. DELETE: Delete the newly created backup from Capella.
+3. IMPORT: Import a snapshot backup that exists in Capella but not in the terraform state file.
+4. DELETE: Delete the newly created snapshot backup from Capella.
 
 If you check the `terraform.template.tfvars` file - Make sure you copy the file to `terraform.tfvars` and update the values of the variables as per the correct organization access.
 
@@ -75,7 +75,7 @@ Changes to Outputs:
     }
 ```
 
-### Apply the Plan, in order to create a new Backup entry
+### Apply the Plan, in order to create a new Snapshot Backup entry
 
 Command: `terraform apply`
 
@@ -198,7 +198,7 @@ Sample Output:
 }
 
 ```
-In this case, the backup ID for my new backup is `58dd0f30-323b-461c-83a8-1d2719f4bcee`
+In this case, the snapshot backup ID for my new snapshot backup is `772896aa-9259-49af-a129-de33473a8690`
 
 ### List the resources that are present in the Terraform State file.
 
@@ -248,7 +248,7 @@ The third ID is the project ID i.e. the ID of the project to which the cluster b
 The fourth ID is the organization ID i.e. the ID of the organization to which the project belongs.
 
 ## UPDATE
-### Let us edit the backup retention in the terraform.tfvars file.
+### Let us edit the snapshot backup retention in the terraform.tfvars file.
 ```
 snapshot_backup = {
     retention = 72
