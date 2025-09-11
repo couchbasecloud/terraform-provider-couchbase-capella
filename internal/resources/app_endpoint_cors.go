@@ -290,14 +290,11 @@ func (c *Cors) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 		return
 	}
 
-	// Convert list attributes to string slices
 	var origin []string
-	if !plan.Origin.IsNull() && !plan.Origin.IsUnknown() {
-		diags = plan.Origin.ElementsAs(ctx, &origin, false)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	diags = plan.Origin.ElementsAs(ctx, &origin, false)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	var loginOrigin []string
