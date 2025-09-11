@@ -34,7 +34,7 @@ func NewImportFilter() resource.Resource {
 
 // Metadata returns the resource type name.
 func (f *ImportFilter) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_import_filter"
+	resp.TypeName = req.ProviderTypeName + "_app_endpoint_import_filter"
 }
 
 // Schema defines the Terraform schema for this resource.
@@ -111,14 +111,13 @@ func (f *ImportFilter) Create(ctx context.Context, req resource.CreateRequest, r
 		keyspace,
 	)
 
-	headers := map[string]string{"Content-Type": "application/javascript"}
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
 	_, err := f.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
 		plan.ImportFilter.ValueString(),
 		f.Token,
-		headers,
+		map[string]string{"Content-Type": "application/javascript"},
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -218,14 +217,13 @@ func (f *ImportFilter) Update(ctx context.Context, req resource.UpdateRequest, r
 		keyspace,
 	)
 
-	headers := map[string]string{"Content-Type": "application/javascript"}
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
 	_, err := f.Client.ExecuteWithRetry(
 		ctx,
 		cfg,
 		plan.ImportFilter.ValueString(),
 		f.Token,
-		headers,
+		map[string]string{"Content-Type": "application/javascript"},
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(

@@ -30,8 +30,8 @@ Terraform used the selected providers to generate the following execution plan. 
 
 Terraform will perform the following actions:
 
-  # couchbase-capella_import_filter.example_import_filter will be created
-  + resource "couchbase-capella_import_filter" "example_import_filter" {
+  # couchbase-capella_app_endpoint_import_filter.example_import_filter will be created
+  + resource "couchbase-capella_app_endpoint_import_filter" "example_import_filter" {
       + app_service_id  = "ffffffff-aaaa-1414-eeee-000000000000"
       + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + import_filter   = "function(doc) { if (doc.type != 'mobile') { return false; } return true; }"
@@ -56,8 +56,8 @@ Terraform used the selected providers to generate the following execution plan. 
 
 Terraform will perform the following actions:
 
-  # couchbase-capella_import_filter.example_import_filter will be created
-  + resource "couchbase-capella_import_filter" "example_import_filter" {
+  # couchbase-capella_app_endpoint_import_filter.example_import_filter will be created
+  + resource "couchbase-capella_app_endpoint_import_filter" "example_import_filter" {
       + app_service_id     = "ffffffff-aaaa-1414-eeee-000000000000"
       + cluster_id         = "ffffffff-aaaa-1414-eeee-000000000000"
       + import_filter      = "function(doc) { if (doc.type != 'mobile') { return false; } return true; }"
@@ -76,9 +76,9 @@ Do you want to perform these actions?
 
   Enter a value: yes
 
-couchbase-capella_import_filter.example_import_filter: Creating...
-couchbase-capella_import_filter.example_import_filter: Still creating... [00m10s elapsed]
-couchbase-capella_import_filter.example_import_filter: Creation complete after 14s
+couchbase-capella_app_endpoint_import_filter.example_import_filter: Creating...
+couchbase-capella_app_endpoint_import_filter.example_import_filter: Still creating... [00m10s elapsed]
+couchbase-capella_app_endpoint_import_filter.example_import_filter: Creation complete after 14s
 
 Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
 ```
@@ -90,8 +90,8 @@ Command: `terraform show`
 Sample Output:
 ```
 $ terraform show
-# couchbase-capella_import_filter.example_import_filter:
-resource "couchbase-capella_import_filter" "example_import_filter" {
+# couchbase-capella_app_endpoint_import_filter.example_import_filter:
+resource "couchbase-capella_app_endpoint_import_filter" "example_import_filter" {
     app_service_id    = "ffffffff-aaaa-1414-eeee-000000000000"
     cluster_id        = "ffffffff-aaaa-1414-eeee-000000000000"
     import_filter     = "function(doc) { if (doc.type != 'mobile') { return false; } return true; }"
@@ -111,7 +111,7 @@ Command: `terraform state list`
 Sample Output:
 ```
 $ terraform state list
-couchbase-capella_import_filter.example_import_filter
+couchbase-capella_app_endpoint_import_filter.example_import_filter
 ```
 
 
@@ -126,15 +126,15 @@ Sample Output:
 $ terraform apply  
 
 
-couchbase-capella_import_filter.example_import_filter: Refreshing state...
+couchbase-capella_app_endpoint_import_filter.example_import_filter: Refreshing state...
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   ~ update in-place
 
 Terraform will perform the following actions:
 
-  # couchbase-capella_import_filter.example_import_filter will be updated in-place
-  ~ resource "couchbase-capella_import_filter" "example_import_filter" {
+  # couchbase-capella_app_endpoint_import_filter.example_import_filter will be updated in-place
+  ~ resource "couchbase-capella_app_endpoint_import_filter" "example_import_filter" {
       ~ import_filter   = "function(doc) { if (doc.type != 'mobile') { return false; } return true; }" -> "function(doc) { if (doc.type != 'edge') { return false; } return true; }"
         # (5 unchanged attributes hidden)
     }
@@ -147,8 +147,8 @@ Do you want to perform these actions?
 
   Enter a value: yes
 
-couchbase-capella_import_filter.example_import_filter: Modifying...
-couchbase-capella_import_filter.example_import_filter: Modifications complete after 7s
+couchbase-capella_app_endpoint_import_filter.example_import_filter: Modifying...
+couchbase-capella_app_endpoint_import_filter.example_import_filter: Modifications complete after 7s
 
 Apply complete! Resources: 0 added, 1 changed, 0 destroyed.
 ```
@@ -157,31 +157,31 @@ Apply complete! Resources: 0 added, 1 changed, 0 destroyed.
 ## IMPORT
 ### Remove the resource `example_access_function` from the Terraform State file
 
-Command: `terraform state rm couchbase-capella_import_filter.example_import_filter`
+Command: `terraform state rm couchbase-capella_app_endpoint_import_filter.example_import_filter`
 
 Sample Output:
 ``` 
-$ terraform state rm couchbase-capella_import_filter.example_import_filter
-Removed couchbase-capella_import_filter.example_import_filter
+$ terraform state rm couchbase-capella_app_endpoint_import_filter.example_import_filter
+Removed couchbase-capella_app_endpoint_import_filter.example_import_filter
 Successfully removed 1 resource instance(s).
 ```
 Please note, this command will only remove the resource from the Terraform State file, but in reality, the resource exists in Capella.
 
 ### Now, let's import the resource in Terraform
 
-Command: `terraform import  couchbase-capella_import_filter.coll2_import_filter app_endpoint_name=api,scope_name=_default,collection_name=_default,app_service_id=<appservice_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
+Command: `terraform import  couchbase-capella_app_endpoint_import_filter.coll2_import_filter app_endpoint_name=api,scope_name=_default,collection_name=_default,app_service_id=<appservice_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
 In this case, the complete command is:
-`terraform import  couchbase-capella_import_filter.coll2_import_filter app_endpoint_name=api,scope_name=_default,collection_name=_default,id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000`
+`terraform import  couchbase-capella_app_endpoint_import_filter.coll2_import_filter app_endpoint_name=api,scope_name=_default,collection_name=_default,id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000`
 
 Sample Output:
 ``` 
 
-$ terraform import  couchbase-capella_import_filter.example_import_filterterraform import  couchbase-capella_import_filter.coll2_import_filter app_endpoint_name=api,scope_name=_default,collection_name=_default,organization_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,app_service_id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000
-couchbase-capella_import_filter.example_import_filter: Importing from ID "app_endpoint_name=api,scope_name=_default,collection_name=_default,organization_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,app_service_id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000"...
-couchbase-capella_import_filter.example_import_filter: Import prepared!
-  Prepared couchbase-capella_import_filter for import
-couchbase-capella_import_filter.example_import_filter: Refreshing state...
+$ terraform import  couchbase-capella_app_endpoint_import_filter.example_import_filterterraform import  couchbase-capella_app_endpoint_import_filter.coll2_import_filter app_endpoint_name=api,scope_name=_default,collection_name=_default,organization_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,app_service_id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000
+couchbase-capella_app_endpoint_import_filter.example_import_filter: Importing from ID "app_endpoint_name=api,scope_name=_default,collection_name=_default,organization_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,app_service_id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000"...
+couchbase-capella_app_endpoint_import_filter.example_import_filter: Import prepared!
+  Prepared couchbase-capella_app_endpoint_import_filter for import
+couchbase-capella_app_endpoint_import_filter.example_import_filter: Refreshing state...
 
 Import successful!
 
@@ -198,15 +198,15 @@ Sample Output:
 ```
  $ terraform destroy
 
-couchbase-capella_import_filter.example_import_filter: Refreshing state...
+couchbase-capella_app_endpoint_import_filter.example_import_filter: Refreshing state...
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   - destroy
 
 Terraform will perform the following actions:
 
-  # couchbase-capella_import_filter.example_import_filter will be destroyed
-  - resource "couchbase-capella_import_filter" "example_import_filter" {
+  # couchbase-capella_app_endpoint_import_filter.example_import_filter will be destroyed
+  - resource "couchbase-capella_app_endpoint_import_filter" "example_import_filter" {
       - app_service_id    = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - cluster_id        = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - import_filter     = "function(doc) { if (doc.type != 'edge') { return false; } return true; }" -> null
@@ -225,8 +225,8 @@ Do you really want to destroy all resources?
 
   Enter a value: yes
 
-couchbase-capella_import_filter.example_import_filter: Destroying...
-couchbase-capella_import_filter.example_import_filter: Destruction complete after 1s
+couchbase-capella_app_endpoint_import_filter.example_import_filter: Destroying...
+couchbase-capella_app_endpoint_import_filter.example_import_filter: Destruction complete after 1s
 
 Destroy complete! Resources: 1 destroyed.
 ```
