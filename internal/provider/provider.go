@@ -209,6 +209,7 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewFreeTierBuckets,
 		datasources.NewFreeTierClusters,
 		datasources.NewAppServiceCidrs,
+		datasources.NewAppEndpointResync,
 	}
 }
 
@@ -246,5 +247,6 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewAppServiceCidr,
 		resources.NewAccessControlFunction,
 		resources.NewImportFilter,
+		resources.NewAppEndpointResync,
 	}
 }
