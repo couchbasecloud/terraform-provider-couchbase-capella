@@ -28,7 +28,7 @@ Sample Output:
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/sophie.wegmann/terraform-provider-couchbase-capella/bin
+│  - couchbasecloud/couchbase-capella in /Users/$USER/terraform-provider-couchbase-capella/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -59,49 +59,9 @@ Changes to Outputs:
       + retention       = 24
       + start_time      = "2025-09-15T12:00:00+00:00"
     }
-
-
-Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
-  + create
-
-Terraform will perform the following actions:
-
-  # capella_backup_schedule.new_backup_schedule will be created
-  + resource "capella_backup_schedule" "new_backup_schedule" {
-      + bucket_id       = "dGVzdC1idWNrZXQ="
-      + cluster_id      = "4f728ab7-dbbc-45a2-9789-ee172f09851e"
-      + organization_id = "7a99d00c-f55b-4b39-bc72-1b4cc68ba894"
-      + project_id      = "53b0e002-eb11-4317-9a53-6a781b29960e"
-      + type            = "weekly"
-      + weekly_schedule = {
-          + cost_optimized_retention = false
-          + day_of_week              = "Monday"
-          + incremental_every        = 6
-          + retention_time           = "30days"
-          + start_at                 = 10
-        }
-    }
-
-Plan: 1 to add, 0 to change, 0 to destroy.
-
-Changes to Outputs:
-  + new_backup_schedule = {
-      + bucket_id       = "dGVzdC1idWNrZXQ="
-      + cluster_id      = "4f728ab7-dbbc-45a2-9789-ee172f09851e"
-      + organization_id = "7a99d00c-f55b-4b39-bc72-1b4cc68ba894"
-      + project_id      = "53b0e002-eb11-4317-9a53-6a781b29960e"
-      + type            = "weekly"
-      + weekly_schedule = {
-          + cost_optimized_retention = false
-          + day_of_week              = "Monday"
-          + incremental_every        = 6
-          + retention_time           = "30days"
-          + start_at                 = 10
-        }
-    }
 ```
 
-### Apply the Plan, in order to create a new Backup Schedule entry
+### Apply the Plan, in order to create a new Snapshot Backup Schedule entry
 
 Command: `terraform apply`
 
@@ -111,7 +71,7 @@ Sample Output:
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/sophie.wegmann/terraform-provider-couchbase-capella/bin
+│  - couchbasecloud/couchbase-capella in /Users/$USER/terraform-provider-couchbase-capella/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -156,7 +116,7 @@ new_snapshot_backup_schedule = {
 }
 ```
 
-### Note the Bucket ID of the new Backup Schedule required for import.
+### Note the Cluster ID of the new Snapshot Backup Schedule required for import.
 Command: `terraform output new_snapshot_backup_schedule`
 
 Sample Output:
@@ -170,7 +130,7 @@ Sample Output:
   "start_time" = "2025-09-15T12:00:00+00:00"
 }
 ```
-In this case, the bucket ID is `dGVzdC1idWNrZXQ=`
+In this case, the cluster ID is `10eb079a-977a-4b05-bf7f-f1300c65c206`
 
 ### List the resources that are present in the Terraform State file.
 
@@ -182,7 +142,7 @@ couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule
 ```
 
 ## IMPORT
-### Remove the resource `new_backup_schedule` from the Terraform State file
+### Remove the resource `new_snapshot_backup_schedule` from the Terraform State file
 
 Command: `terraform state rm couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule`
 
@@ -220,7 +180,7 @@ The second ID is the project ID i.e. the ID of the project to which the cluster 
 The third ID is the organization ID i.e. the ID of the organization to which the project belongs.
 
 ## UPDATE
-### Let us edit terraform.tfvars file to change the backup schedule configuration settings.
+### Let us edit terraform.tfvars file to change the snapshot backup schedule configuration settings.
 
 Command: `terraform plan`
 
@@ -231,7 +191,7 @@ Sample Output:
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/sophie.wegmann/terraform-provider-couchbase-capella/bin
+│  - couchbasecloud/couchbase-capella in /Users/$USER/terraform-provider-couchbase-capella/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -273,7 +233,7 @@ Sample Output:
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/sophie.wegmann/terraform-provider-couchbase-capella/bin
+│  - couchbasecloud/couchbase-capella in /Users/$USER/terraform-provider-couchbase-capella/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -338,7 +298,7 @@ Sample Output:
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/sophie.wegmann/terraform-provider-couchbase-capella/bin
+│  - couchbasecloud/couchbase-capella in /Users/$USER/terraform-provider-couchbase-capella/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
