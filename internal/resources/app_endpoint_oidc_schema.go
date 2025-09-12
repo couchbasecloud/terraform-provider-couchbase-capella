@@ -22,7 +22,7 @@ func AppEndpointOidcProviderSchema() schema.Schema {
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
-				Description: `The GUID4 ID of the appService. Requires replacement if changed.`,
+				Description: `The GUID4 ID of the App Service. Requires replacement if changed.`,
 			},
 			"client_id": schema.StringAttribute{
 				Required:    true,
@@ -33,7 +33,7 @@ func AppEndpointOidcProviderSchema() schema.Schema {
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
-				Description: `The GUID4 ID of the cluster. Requires replacement if changed.`,
+				Description: `The GUID4 ID of the Capella Cluster. Requires replacement if changed.`,
 			},
 			"discovery_url": schema.StringAttribute{
 				Optional:    true,
@@ -48,14 +48,14 @@ func AppEndpointOidcProviderSchema() schema.Schema {
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
-				Description: `The GUID4 ID of the organization. Requires replacement if changed.`,
+				Description: `The GUID4 ID of the Capella Organization. Requires replacement if changed.`,
 			},
 			"project_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
-				Description: `The GUID4 ID of the project. Requires replacement if changed.`,
+				Description: `The GUID4 ID of the Capella Project. Requires replacement if changed.`,
 			},
 			"provider_id": schema.StringAttribute{
 				Computed: true,
