@@ -53,7 +53,7 @@ type AppEndpoint struct {
 	// DeltaSyncEnabled Indicates whether Delta Sync is enabled for the App Endpoint.
 	DeltaSyncEnabled types.Bool `tfsdk:"delta_sync_enabled"`
 
-	// Scope is a map of scope names to scope configurations.
+	// Scopes is a map of scope names to scope configurations.
 	Scopes types.Map `tfsdk:"scopes"`
 
 	// Cors configures cross origin resource sharing (CORS) for the App Endpoint.
@@ -136,6 +136,7 @@ type OneAppEndpoint struct {
 
 // AppEndpointScope represents a scope configuration for app endpoints with tfsdk tags.
 type AppEndpointScope struct {
+	// Collections is a map of collection names to collection configurations.
 	Collections types.Map `tfsdk:"collections"`
 }
 
