@@ -40,11 +40,11 @@ func (d *AppEndpointActivationStatusDS) Schema(_ context.Context, _ datasource.S
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Reads the activation status of an App Endpoint by calling get App Endpoint and returning its state.",
 		Attributes: map[string]schema.Attribute{
-			"organization_id":   schema.StringAttribute{Required: true, MarkdownDescription: "The GUID4 ID of the organization."},
-			"project_id":        schema.StringAttribute{Required: true, MarkdownDescription: "The GUID4 ID of the project."},
-			"cluster_id":        schema.StringAttribute{Required: true, MarkdownDescription: "The GUID4 ID of the cluster."},
-			"app_service_id":    schema.StringAttribute{Required: true, MarkdownDescription: "The GUID4 ID of the app service."},
-			"app_endpoint_name": schema.StringAttribute{Required: true, MarkdownDescription: "The name of the app endpoint."},
+			"organization_id":   schema.StringAttribute{Required: true, MarkdownDescription: "The GUID4 ID of the Capella organization."},
+			"project_id":        schema.StringAttribute{Required: true, MarkdownDescription: "The GUID4 ID of the Capella project."},
+			"cluster_id":        schema.StringAttribute{Required: true, MarkdownDescription: "The GUID4 ID of the Capella Cluster."},
+			"app_service_id":    schema.StringAttribute{Required: true, MarkdownDescription: "The GUID4 ID of the App Service."},
+			"app_endpoint_name": schema.StringAttribute{Required: true, MarkdownDescription: "The name of the App Endpoint."},
 			"state":             schema.StringAttribute{Computed: true, MarkdownDescription: "The current activation state of the App Endpoint as reported by Capella."},
 		},
 	}
