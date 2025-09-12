@@ -1,5 +1,10 @@
 package api
 
+// AppEndpointOIDCDefaultProviderRequest represents the payload to set the default OIDC provider.
+type AppEndpointOIDCDefaultProviderRequest struct {
+	ProviderID string `json:"providerId"`
+}
+
 // AppEndpointOIDCProviderRequest represents the payload to create/update an OIDC provider for an App Endpoint.
 type AppEndpointOIDCProviderRequest struct {
 	Issuer        string  `json:"issuer"`
