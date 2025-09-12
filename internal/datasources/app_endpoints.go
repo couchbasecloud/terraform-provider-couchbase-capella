@@ -157,7 +157,7 @@ func (a *AppEndpoint) Read(ctx context.Context, req datasource.ReadRequest, resp
 				ctx,
 				types.ObjectType{
 					AttrTypes: providerschema.
-						AppEndpointOidc{}.
+					AppEndpointOidc{}.
 						AttributeTypes(),
 				},
 				appEndpoint.Oidc,
@@ -170,7 +170,7 @@ func (a *AppEndpoint) Read(ctx context.Context, req datasource.ReadRequest, resp
 			oidcSet = types.SetNull(
 				types.ObjectType{
 					AttrTypes: providerschema.
-						AppEndpointOidc{}.
+					AppEndpointOidc{}.
 						AttributeTypes(),
 				},
 			)
@@ -204,7 +204,7 @@ func (a *AppEndpoint) Read(ctx context.Context, req datasource.ReadRequest, resp
 					ctx,
 					types.ObjectType{
 						AttrTypes: providerschema.
-							AppEndpointCollection{}.
+						AppEndpointCollection{}.
 							AttributeTypes(),
 					},
 					collectionsMapElements,
@@ -232,7 +232,7 @@ func (a *AppEndpoint) Read(ctx context.Context, req datasource.ReadRequest, resp
 				ctx,
 				types.ObjectType{
 					AttrTypes: providerschema.
-						AppEndpointScope{}.
+					AppEndpointScope{}.
 						AttributeTypes(),
 				},
 				scopesMapElements,
@@ -277,7 +277,7 @@ func (a *AppEndpoint) Configure(
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *ProviderSourceData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			fmt.Sprintf("Expected *providerschema.Data, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 
 		return

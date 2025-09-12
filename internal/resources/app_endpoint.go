@@ -189,7 +189,7 @@ func initComputedAttributesToNullBeforeRefresh(ctx context.Context, plan *provid
 
 				collectionsMapValue, d := types.MapValueFrom(ctx, types.ObjectType{
 					AttrTypes: schema.
-						AppEndpointCollection{}.
+					AppEndpointCollection{}.
 						AttributeTypes(),
 				}, collectionsMap)
 				diags.Append(d...)
@@ -206,7 +206,7 @@ func initComputedAttributesToNullBeforeRefresh(ctx context.Context, plan *provid
 				"collections": types.MapType{
 					ElemType: types.ObjectType{
 						AttrTypes: schema.
-							AppEndpointCollection{}.
+						AppEndpointCollection{}.
 							AttributeTypes(),
 					},
 				},
@@ -255,7 +255,7 @@ func initComputedAttributesToNullBeforeRefresh(ctx context.Context, plan *provid
 
 		oidcSet, d := types.SetValueFrom(ctx, types.ObjectType{
 			AttrTypes: schema.
-				AppEndpointOidc{}.
+			AppEndpointOidc{}.
 				AttributeTypes(),
 		}, oidcList)
 		diags.Append(d...)
@@ -455,7 +455,7 @@ func (a *AppEndpoint) Configure(_ context.Context, req resource.ConfigureRequest
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *ProviderSourceData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			fmt.Sprintf("Expected *providerschema.Data, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 
 		return
@@ -571,7 +571,7 @@ func (a *AppEndpoint) refreshAppEndpoint(
 				ctx,
 				types.ObjectType{
 					AttrTypes: providerschema.
-						AppEndpointCollection{}.
+					AppEndpointCollection{}.
 						AttributeTypes(),
 				},
 				collectionsMapElements,
@@ -605,7 +605,7 @@ func (a *AppEndpoint) refreshAppEndpoint(
 			ctx,
 			types.ObjectType{
 				AttrTypes: providerschema.
-					AppEndpointScope{}.
+				AppEndpointScope{}.
 					AttributeTypes(),
 			},
 			scopesMapElements,
@@ -657,7 +657,7 @@ func (a *AppEndpoint) refreshAppEndpoint(
 			ctx,
 			types.ObjectType{
 				AttrTypes: providerschema.
-					AppEndpointOidc{}.
+				AppEndpointOidc{}.
 					AttributeTypes(),
 			},
 			appEndpoint.Oidc,
@@ -670,7 +670,7 @@ func (a *AppEndpoint) refreshAppEndpoint(
 	} else {
 		state.Oidc = types.SetNull(types.ObjectType{
 			AttrTypes: providerschema.
-				AppEndpointOidc{}.
+			AppEndpointOidc{}.
 				AttributeTypes(),
 		})
 	}
