@@ -277,11 +277,7 @@ func (r *AppEndpointOidcProvider) mapResponseToState(state *providerschema.AppEn
 			state.RolesClaim = types.StringValue(resp.RolesClaim)
 		}
 	}
-	if resp.Register != nil {
-		if !(preserveNulls && state.Register.IsNull()) {
-			state.Register = types.BoolValue(*resp.Register)
-		}
-	}
+	state.Register = types.BoolValue(resp.Register)
 
 	// Computed ID
 	if resp.ProviderID != "" {

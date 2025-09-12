@@ -17,11 +17,11 @@ type AppEndpointOIDCProviderResponse struct {
 	Issuer        string `json:"issuer,omitempty"`
 	ClientID      string `json:"clientId,omitempty"`
 	DiscoveryURL  string `json:"discoveryUrl,omitempty"`
-	Register      *bool  `json:"register,omitempty"`
+	Register      bool   `json:"register,omitempty"`
 	RolesClaim    string `json:"rolesClaim,omitempty"`
 	UserPrefix    string `json:"userPrefix,omitempty"`
 	UsernameClaim string `json:"usernameClaim,omitempty"`
-	IsDefault     *bool  `json:"isDefault,omitempty"`
+	IsDefault     bool   `json:"isDefault,omitempty"`
 }
 
 // AppEndpointOIDCProviderListResponse models a list of OIDC providers.
