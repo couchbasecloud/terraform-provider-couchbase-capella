@@ -1,69 +1,46 @@
 package datasources
 
 import (
-	"context"
-
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-
-	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
-
-var (
-	_ datasource.DataSource              = (*AppEndpoint)(nil)
-	_ datasource.DataSourceWithConfigure = (*AppEndpoint)(nil)
-)
-
-// AppServiceCidrs is the data source implementation for retrieving allowed CIDRs for an App Service.
-type AppEndpoint struct {
-	*providerschema.Data
-}
-
-func (a *AppEndpoint) Configure(ctx context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
-	//TODO implement me
-	return
-}
-
-func (a *AppEndpoint) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	//TODO implement me
-	return
-}
-
-// NewAppServiceCidrs is used in (p *capellaProvider) DataSources for building the provider.
-func NewAppEndpoint() datasource.DataSource {
-	return &AppEndpoint{}
-}
-
-// Metadata returns the App Service CIDRs data source type name.
-func (a *AppEndpoint) Metadata(
-	_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse,
-) {
-	resp.TypeName = req.ProviderTypeName + "_app_services_cidr"
-}
 
 // AppEndpointsSchema defines the schema for the AppEndpoints datasource.
-func (a *AppEndpoint) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func AppEndpointSchema() schema.Schema {
+	return schema.Schema{
 		MarkdownDescription: "The data source retrieves App Endpoint configurations for an App Service.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
-				Computed:            true,
+				Required:            true,
 				MarkdownDescription: "The GUID4 ID of the organization.",
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"project_id": schema.StringAttribute{
-				Computed:            true,
+				Required:            true,
 				MarkdownDescription: "The GUID4 ID of the project.",
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"cluster_id": schema.StringAttribute{
-				Computed:            true,
+				Required:            true,
 				MarkdownDescription: "The GUID4 ID of the cluster.",
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"app_service_id": schema.StringAttribute{
-				Computed:            true,
+				Required:            true,
 				MarkdownDescription: "The GUID4 ID of the App Service.",
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
-			"data": schema.ListNestedAttribute{
+			"data": schema.SetNestedAttribute{
 				Computed:            true,
 				MarkdownDescription: "List of App Endpoint configurations.",
 				NestedObject: schema.NestedAttributeObject{
@@ -86,17 +63,17 @@ func (a *AppEndpoint) Schema(ctx context.Context, req datasource.SchemaRequest, 
 						},
 						"scopes": schema.MapNestedAttribute{
 							Computed:            true,
-							MarkdownDescription: "The list of scopes in this App Endpoint. Currently, only one scope can be linked per App Endpoint.",
+							MarkdownDescription: "Configuration for scopes within the App Endpoint.",
 							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
 									"collections": schema.MapNestedAttribute{
 										Computed:            true,
-										MarkdownDescription: "The collection configuration defines access control, validation functions, and import filters for a specific collection. The key of the collection configuration object is the name of the collection.",
+										MarkdownDescription: "Configuration for collections within the App Endpoint.",
 										NestedObject: schema.NestedAttributeObject{
 											Attributes: map[string]schema.Attribute{
 												"access_control_function": schema.StringAttribute{
 													Computed:            true,
-													MarkdownDescription: "The Javascript function that is used to specify the access control policies to be applied to documents in this collection. Every document update is processed by this function.",
+													MarkdownDescription: "The Javascript function that is used to specify the access control policies to be applied to documents in this collection.",
 												},
 												"import_filter": schema.StringAttribute{
 													Computed:            true,
@@ -112,17 +89,17 @@ func (a *AppEndpoint) Schema(ctx context.Context, req datasource.SchemaRequest, 
 							Computed:            true,
 							MarkdownDescription: "CORS configuration for the App Endpoint.",
 							Attributes: map[string]schema.Attribute{
-								"origin": schema.ListAttribute{
+								"origin": schema.SetAttribute{
 									Computed:            true,
 									ElementType:         types.StringType,
 									MarkdownDescription: "List of allowed origins for CORS.",
 								},
-								"login_origin": schema.ListAttribute{
+								"login_origin": schema.SetAttribute{
 									Computed:            true,
 									ElementType:         types.StringType,
 									MarkdownDescription: "List of allowed login origins for CORS.",
 								},
-								"headers": schema.ListAttribute{
+								"headers": schema.SetAttribute{
 									Computed:            true,
 									ElementType:         types.StringType,
 									MarkdownDescription: "List of allowed headers for CORS.",
@@ -137,7 +114,7 @@ func (a *AppEndpoint) Schema(ctx context.Context, req datasource.SchemaRequest, 
 								},
 							},
 						},
-						"oidc": schema.ListNestedAttribute{
+						"oidc": schema.SetNestedAttribute{
 							Computed:            true,
 							MarkdownDescription: "List of OIDC configurations for the App Endpoint.",
 							NestedObject: schema.NestedAttributeObject{
@@ -181,15 +158,19 @@ func (a *AppEndpoint) Schema(ctx context.Context, req datasource.SchemaRequest, 
 								},
 							},
 						},
+						"state": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "The state of the App Endpoint. Possible values include `online`, `offline` and `resyncing`.",
+						},
 						"require_resync": schema.MapNestedAttribute{
 							Computed:            true,
 							MarkdownDescription: "List of collections that require resync, keyed by scope.",
 							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
-									"items": schema.ListAttribute{
+									"items": schema.SetAttribute{
 										Computed:            true,
 										ElementType:         types.StringType,
-										MarkdownDescription: "List of collections that require resync under this scope.",
+										MarkdownDescription: "List of collections that require resync.",
 									},
 								},
 							},
