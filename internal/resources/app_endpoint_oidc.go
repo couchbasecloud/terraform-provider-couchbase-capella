@@ -166,7 +166,7 @@ func (r *AppEndpointOidcProvider) Read(ctx context.Context, req resource.ReadReq
 	resp.Diagnostics.Append(diags...)
 }
 
-// Update is effectively a no-op because fields require replacement.
+// Update updates an existing OIDC provider for the App Endpoint using the Capella API.
 func (r *AppEndpointOidcProvider) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan providerschema.AppEndpointOidcProvider
 	diags := req.Plan.Get(ctx, &plan)
@@ -174,6 +174,63 @@ func (r *AppEndpointOidcProvider) Update(ctx context.Context, req resource.Updat
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Read current state to obtain provider ID
+	var state providerschema.AppEndpointOidcProvider
+	diags = req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	organizationId := plan.OrganizationId.ValueString()
+	projectId := plan.ProjectId.ValueString()
+	clusterId := plan.ClusterId.ValueString()
+	appServiceId := plan.AppServiceId.ValueString()
+	appEndpointName := plan.AppEndpointName.ValueString()
+
+	providerId := state.ProviderId.ValueString()
+	if providerId == "" && !plan.ProviderId.IsNull() && !plan.ProviderId.IsUnknown() {
+		providerId = plan.ProviderId.ValueString()
+	}
+	if providerId == "" {
+		resp.Diagnostics.AddError("Error Updating OIDC Provider", "provider_id is missing; cannot update")
+		return
+	}
+
+	url := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/oidcProviders/%s",
+		r.HostURL,
+		organizationId,
+		projectId,
+		clusterId,
+		appServiceId,
+		appEndpointName,
+		providerId,
+	)
+
+	payload := buildAppEndpointOIDCProviderPayload(plan)
+
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
+	_, err := r.Client.ExecuteWithRetry(ctx, cfg, payload, r.Token, map[string]string{"Content-Type": "application/json"})
+	if err != nil {
+		resp.Diagnostics.AddError("Error Updating OIDC Provider", api.ParseError(err))
+		return
+	}
+
+	// Refresh from server to ensure state matches remote
+	details, err := r.getOidcProvider(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, providerId)
+	if err != nil {
+		resp.Diagnostics.AddWarning("Error reading OIDC Provider after update", api.ParseError(err))
+		// Preserve providerId even if read failed
+		plan.ProviderId = types.StringValue(providerId)
+		diags = resp.State.Set(ctx, plan)
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	r.mapResponseToState(&plan, details, false)
+
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 }
