@@ -80,7 +80,7 @@ func (r *AppEndpointDefaultOidcProvider) Create(ctx context.Context, req resourc
 	providerId := plan.ProviderId.ValueString()
 
 	url := fmt.Sprintf(
-		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/oidcProviders/default",
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/oidcProviders/defaultProvider",
 		r.HostURL,
 		organizationId,
 		projectId,
@@ -172,7 +172,7 @@ func (r *AppEndpointDefaultOidcProvider) Update(ctx context.Context, req resourc
 	}
 
 	url := fmt.Sprintf(
-		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/oidcProviders/default",
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/oidcProviders/defaultProvider",
 		r.HostURL,
 		organizationId,
 		projectId,
