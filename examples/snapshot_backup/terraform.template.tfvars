@@ -8,4 +8,5 @@ cluster_id      = "<cluster_id>"
 // Retention must be an integer.
 snapshot_backup = {
     retention = "<retention>"
+    regions_to_copy = ["<region_1>", "<region_2>"]
 }

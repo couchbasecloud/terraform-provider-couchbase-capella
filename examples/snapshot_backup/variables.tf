@@ -1,4 +1,3 @@
-
 variable "organization_id" {
   description = "Capella Organization ID"
   type = string
@@ -24,6 +23,7 @@ variable "snapshot_backup" {
 
   type = object({
     retention = optional(number)
+    regions_to_copy = optional(list(string))
   })
 
   validation {
@@ -32,7 +32,7 @@ variable "snapshot_backup" {
   }
 
   validation {
-    condition = var.snapshot_backup.retention == floor(var.snapshot_backup.retention)
+    condition = var.snapshot_backup.retention == null || var.snapshot_backup.retention == floor(var.snapshot_backup.retention)
     error_message = "Retention must be an integer."
   }
 }
