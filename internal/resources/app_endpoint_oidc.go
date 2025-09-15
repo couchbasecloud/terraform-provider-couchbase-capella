@@ -234,7 +234,7 @@ func (r *AppEndpointOidcProvider) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	r.mapResponseToState(&plan, details, false)
+	r.mapResponseToState(&plan, details, true)
 
 	diags = resp.State.Set(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -340,9 +340,7 @@ func (r *AppEndpointOidcProvider) mapResponseToState(state *providerschema.AppEn
 		}
 	}
 	// Preserve null for optional bool on create if not set in config
-	if preserveNulls && state.Register.IsNull() {
-		// leave as null
-	} else {
+	if !state.Register.IsNull() || !preserveNulls {
 		state.Register = types.BoolValue(resp.Register)
 	}
 
