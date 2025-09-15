@@ -340,6 +340,7 @@ func (r *AppEndpointOidcProvider) mapResponseToState(state *providerschema.AppEn
 		}
 	}
 	// Preserve null for optional bool on create if not set in config
+	// if preserveNulls is false, then we should set the register to the value from the response
 	if !state.Register.IsNull() || !preserveNulls {
 		state.Register = types.BoolValue(resp.Register)
 	}
