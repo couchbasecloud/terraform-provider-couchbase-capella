@@ -26,20 +26,28 @@ type Server struct {
 	Version types.String `tfsdk:"version"`
 }
 
+type CrossRegionCopy struct {
+	RegionCode types.String `tfsdk:"region_code"`
+	Status     types.String `tfsdk:"status"`
+	Time       types.String `tfsdk:"time"`
+}
+
 type SnapshotBackup struct {
-	AppService     types.String `tfsdk:"app_service"`
-	ClusterID      types.String `tfsdk:"cluster_id"`
-	CreatedAt      types.String `tfsdk:"created_at"`
-	Expiration     types.String `tfsdk:"expiration"`
-	ID             types.String `tfsdk:"id"`
-	Retention      types.Int64  `tfsdk:"retention"`
-	Progress       types.Object `tfsdk:"progress"`
-	CMEK           types.Set    `tfsdk:"cmek"`
-	ProjectID      types.String `tfsdk:"project_id"`
-	Server         types.Object `tfsdk:"server"`
-	Size           types.Int64  `tfsdk:"size"`
-	OrganizationId types.String `tfsdk:"organization_id"`
-	Type           types.String `tfsdk:"type"`
+	AppService        types.String   `tfsdk:"app_service"`
+	ClusterID         types.String   `tfsdk:"cluster_id"`
+	CreatedAt         types.String   `tfsdk:"created_at"`
+	Expiration        types.String   `tfsdk:"expiration"`
+	ID                types.String   `tfsdk:"id"`
+	Retention         types.Int64    `tfsdk:"retention"`
+	RegionsToCopy     []types.String `tfsdk:"regions_to_copy"`
+	CrossRegionCopies types.Set      `tfsdk:"cross_region_copies"`
+	Progress          types.Object   `tfsdk:"progress"`
+	CMEK              types.Set      `tfsdk:"cmek"`
+	ProjectID         types.String   `tfsdk:"project_id"`
+	Server            types.Object   `tfsdk:"server"`
+	Size              types.Int64    `tfsdk:"size"`
+	OrganizationId    types.String   `tfsdk:"organization_id"`
+	Type              types.String   `tfsdk:"type"`
 }
 
 func (p Progress) AttributeTypes() map[string]attr.Type {
@@ -82,39 +90,58 @@ func NewServer(server snapshot_backup.Server) Server {
 	}
 }
 
-func (s SnapshotBackup) AttributeTypes() map[string]attr.Type {
+func (c CrossRegionCopy) AttributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
-		"app_service":     types.StringType,
-		"cluster_id":      types.StringType,
-		"created_at":      types.StringType,
-		"expiration":      types.StringType,
-		"id":              types.StringType,
-		"progress":        types.ObjectType{AttrTypes: Progress{}.AttributeTypes()},
-		"project_id":      types.StringType,
-		"retention":       types.Int64Type,
-		"cmek":            types.SetType{ElemType: types.ObjectType{AttrTypes: CMEK{}.AttributeTypes()}},
-		"server":          types.ObjectType{AttrTypes: Server{}.AttributeTypes()},
-		"size":            types.Int64Type,
-		"organization_id": types.StringType,
-		"type":            types.StringType,
+		"region_code": types.StringType,
+		"status":      types.StringType,
+		"time":        types.StringType,
 	}
 }
 
-func NewSnapshotBackup(ctx context.Context, snapshotBackup snapshot_backup.SnapshotBackup, ID, clusterID, projectID, organizationID string, progressObj, serverObj basetypes.ObjectValue, cmekObj basetypes.SetValue) SnapshotBackup {
+func NewCrossRegionCopy(crossRegionCopy snapshot_backup.CrossRegionCopy) CrossRegionCopy {
+	return CrossRegionCopy{
+		RegionCode: types.StringValue(crossRegionCopy.RegionCode),
+		Status:     types.StringValue(string(crossRegionCopy.Status)),
+		Time:       types.StringValue(crossRegionCopy.Time),
+	}
+}
+
+func (s SnapshotBackup) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"app_service":         types.StringType,
+		"cluster_id":          types.StringType,
+		"created_at":          types.StringType,
+		"expiration":          types.StringType,
+		"id":                  types.StringType,
+		"progress":            types.ObjectType{AttrTypes: Progress{}.AttributeTypes()},
+		"project_id":          types.StringType,
+		"retention":           types.Int64Type,
+		"regions_to_copy":     types.ListType{ElemType: types.StringType},
+		"cross_region_copies": types.SetType{ElemType: types.ObjectType{AttrTypes: CrossRegionCopy{}.AttributeTypes()}},
+		"cmek":                types.SetType{ElemType: types.ObjectType{AttrTypes: CMEK{}.AttributeTypes()}},
+		"server":              types.ObjectType{AttrTypes: Server{}.AttributeTypes()},
+		"size":                types.Int64Type,
+		"organization_id":     types.StringType,
+		"type":                types.StringType,
+	}
+}
+
+func NewSnapshotBackup(ctx context.Context, snapshotBackup snapshot_backup.SnapshotBackup, ID, clusterID, projectID, organizationID string, progressObj, serverObj basetypes.ObjectValue, cmekSet, crossRegionCopySet basetypes.SetValue) SnapshotBackup {
 	return SnapshotBackup{
-		AppService:     types.StringValue(snapshotBackup.AppService),
-		ID:             types.StringValue(ID),
-		ClusterID:      types.StringValue(clusterID),
-		Expiration:     types.StringValue(snapshotBackup.Expiration),
-		ProjectID:      types.StringValue(projectID),
-		OrganizationId: types.StringValue(organizationID),
-		CreatedAt:      types.StringValue(snapshotBackup.CreatedAt),
-		Retention:      types.Int64Value(int64(snapshotBackup.Retention)),
-		Progress:       progressObj,
-		CMEK:           cmekObj,
-		Server:         serverObj,
-		Size:           types.Int64Value(int64(snapshotBackup.Size)),
-		Type:           types.StringValue(snapshotBackup.Type),
+		AppService:        types.StringValue(snapshotBackup.AppService),
+		ID:                types.StringValue(ID),
+		ClusterID:         types.StringValue(clusterID),
+		Expiration:        types.StringValue(snapshotBackup.Expiration),
+		ProjectID:         types.StringValue(projectID),
+		OrganizationId:    types.StringValue(organizationID),
+		CreatedAt:         types.StringValue(snapshotBackup.CreatedAt),
+		Retention:         types.Int64Value(int64(snapshotBackup.Retention)),
+		CrossRegionCopies: crossRegionCopySet,
+		Progress:          progressObj,
+		CMEK:              cmekSet,
+		Server:            serverObj,
+		Size:              types.Int64Value(int64(snapshotBackup.Size)),
+		Type:              types.StringValue(snapshotBackup.Type),
 	}
 }
 
@@ -132,4 +159,14 @@ func (s SnapshotBackup) Validate() (map[Attr]string, error) {
 		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
 	}
 	return IDs, nil
+}
+
+// ConvertRegionsToCopy is used to convert all regionsToCopy
+// in an array of basetypes.StringValue to strings.
+func ConvertRegionsToCopy(regionsToCopy []basetypes.StringValue) []string {
+	var convertedRegionsToCopy []string
+	for _, region := range regionsToCopy {
+		convertedRegionsToCopy = append(convertedRegionsToCopy, region.ValueString())
+	}
+	return convertedRegionsToCopy
 }

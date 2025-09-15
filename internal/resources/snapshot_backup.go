@@ -71,18 +71,6 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	err := s.validateCreateSnapshotBackupRequest(plan)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error parsing create snapshot backup request",
-			"Could not create snapshot backup "+err.Error(),
-		)
-		tflog.Debug(ctx, "error validating snapshot backup request", map[string]interface{}{
-			"plan": plan,
-			"err":  err,
-		})
-		return
-	}
 
 	var (
 		organizationId = plan.OrganizationId.ValueString()
@@ -91,7 +79,8 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 	)
 
 	createSnapshotBackupRequest := snapshot_backup.CreateSnapshotBackupRequest{
-		Retention: int(plan.Retention.ValueInt64()),
+		Retention:     int(plan.Retention.ValueInt64()),
+		RegionsToCopy: providerschema.ConvertRegionsToCopy(plan.RegionsToCopy),
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups", s.HostURL, organizationId, projectId, clusterId)
@@ -171,6 +160,8 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
+	refreshedState.RegionsToCopy = plan.RegionsToCopy
+
 	// Sets state to fully populated data.
 	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
@@ -239,6 +230,8 @@ func (s *SnapshotBackup) Read(ctx context.Context, req resource.ReadRequest, res
 		})
 		return
 	}
+
+	refreshedState.RegionsToCopy = state.RegionsToCopy
 
 	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
@@ -426,19 +419,6 @@ func (s *SnapshotBackup) Configure(ctx context.Context, req resource.ConfigureRe
 	s.Data = data
 }
 
-func (s *SnapshotBackup) validateCreateSnapshotBackupRequest(plan providerschema.SnapshotBackup) error {
-	if plan.OrganizationId.IsNull() {
-		return errors.ErrOrganizationIdCannotBeEmpty
-	}
-	if plan.ProjectID.IsNull() {
-		return errors.ErrProjectIdCannotBeEmpty
-	}
-	if plan.ClusterID.IsNull() {
-		return errors.ErrClusterIdCannotBeEmpty
-	}
-	return nil
-}
-
 // checkLatestSnapshotBackupStatus monitors the status of a snapshot backup creation operation for a specified organization, project, and cluster ID.
 // It periodically fetches the snapshot backup job status using the `getLatestSnapshotBackup` function and waits until the snapshot backup reaches a final state or until a specified timeout is reached.
 // function and waits until the snapshot backup reaches a final state or until a specified timeout is reached.
@@ -473,9 +453,10 @@ func (s *SnapshotBackup) checkSnapshotBackupStatus(ctx context.Context, organiza
 			backupResp, err = s.getSnapshotBackup(ctx, organizationId, projectId, clusterId, Id)
 			switch err {
 			case nil:
-				if snapshot_backup.IsFinalState(backupResp.Progress.Status) {
+				if snapshot_backup.IsFinalState(backupResp.Progress.Status) && s.checkCrossRegionCopyStatus(backupResp) == nil {
 					return backupResp, nil
 				}
+
 				tflog.Debug(ctx, "waiting for snapshot backup to complete the execution")
 			default:
 				tflog.Debug(ctx, "error getting snapshot backup", map[string]interface{}{
@@ -490,6 +471,15 @@ func (s *SnapshotBackup) checkSnapshotBackupStatus(ctx context.Context, organiza
 			timer.Reset(sleep)
 		}
 	}
+}
+
+func (s *SnapshotBackup) checkCrossRegionCopyStatus(backupResp *snapshot_backup.SnapshotBackup) error {
+	for _, crossRegionCopy := range backupResp.CrossRegionCopies {
+		if !snapshot_backup.IsFinalState(crossRegionCopy.Status) {
+			return fmt.Errorf("cross region copy status is not final")
+		}
+	}
+	return nil
 }
 
 func (s *SnapshotBackup) getSnapshotBackups(ctx context.Context, organizationId, projectId, clusterId string) (*snapshot_backup.ListSnapshotBackupsResponse, error) {
@@ -602,6 +592,29 @@ func createSnapshotBackup(ctx context.Context, backupResp *snapshot_backup.Snaps
 		return nil, fmt.Errorf("error during CMEK conversion")
 	}
 
-	snapshotBackup := providerschema.NewSnapshotBackup(ctx, *backupResp, backupResp.ID, clusterId, projectId, organizationId, progressObj, serverObj, cmekSet)
+	crossRegionCopyObjs := make([]basetypes.ObjectValue, 0)
+	for _, region := range backupResp.CrossRegionCopies {
+		crossRegionCopy := providerschema.NewCrossRegionCopy(region)
+		crossRegionCopyObj, diags := types.ObjectValueFrom(ctx, crossRegionCopy.AttributeTypes(), crossRegionCopy)
+		if diags.HasError() {
+			tflog.Debug(ctx, "error during cross region copy conversion", map[string]interface{}{
+				"backupResp": backupResp,
+				"region":     region,
+			})
+			return nil, fmt.Errorf("error during cross region copy conversion")
+		}
+		crossRegionCopyObjs = append(crossRegionCopyObjs, crossRegionCopyObj)
+	}
+
+	crossRegionCopySet, diags := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: providerschema.CrossRegionCopy{}.AttributeTypes()}, crossRegionCopyObjs)
+	if diags.HasError() {
+		tflog.Debug(ctx, "error during cross region copy conversion", map[string]interface{}{
+			"backupResp":          backupResp,
+			"crossRegionCopyObjs": crossRegionCopyObjs,
+		})
+		return nil, fmt.Errorf("error during cross region copy conversion")
+	}
+
+	snapshotBackup := providerschema.NewSnapshotBackup(ctx, *backupResp, backupResp.ID, clusterId, projectId, organizationId, progressObj, serverObj, cmekSet, crossRegionCopySet)
 	return &snapshotBackup, nil
 }

@@ -16,24 +16,32 @@ type Server struct {
 	Version string `json:"version"`
 }
 
+type CrossRegionCopy struct {
+	RegionCode string `json:"regionCode"`
+	Status     State  `json:"status"`
+	Time       string `json:"time"`
+}
+
 type SnapshotBackup struct {
-	AppService     string   `json:"appService"`
-	ClusterID      string   `json:"clusterId"`
-	CreatedAt      string   `json:"createdAt"`
-	Expiration     string   `json:"expiration"`
-	ID             string   `json:"id"`
-	Progress       Progress `json:"progress"`
-	ProjectID      string   `json:"projectId"`
-	Retention      int      `json:"retention"`
-	CMEK           CMEKs    `json:"cmek"`
-	Server         Server   `json:"server"`
-	Size           int      `json:"size"`
-	OrganizationID string   `json:"tenantId"`
-	Type           string   `json:"type"`
+	AppService        string            `json:"appService"`
+	ClusterID         string            `json:"clusterId"`
+	CreatedAt         string            `json:"createdAt"`
+	Expiration        string            `json:"expiration"`
+	ID                string            `json:"id"`
+	Progress          Progress          `json:"progress"`
+	ProjectID         string            `json:"projectId"`
+	Retention         int               `json:"retention"`
+	CrossRegionCopies []CrossRegionCopy `json:"crossRegionCopies"`
+	CMEK              CMEKs             `json:"cmek"`
+	Server            Server            `json:"server"`
+	Size              int               `json:"size"`
+	OrganizationID    string            `json:"tenantId"`
+	Type              string            `json:"type"`
 }
 
 type CreateSnapshotBackupRequest struct {
-	Retention int `json:"retention"`
+	Retention     int      `json:"retention"`
+	RegionsToCopy []string `json:"regionsToCopy"`
 }
 
 type CreateSnapshotBackupResponse struct {
