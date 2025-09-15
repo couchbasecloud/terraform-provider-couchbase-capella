@@ -25,3 +25,13 @@ See [Contributing.md](https://github.com/couchbasecloud/terraform-provider-couch
 
 Most of the new features of the provider are using [capella-public-apis](https://docs.couchbase.com/cloud/management-api-guide/management-api-intro.html)
 Public APIs are updated automatically, tracking all new Capella features.
+
+## Generated API client (experimental)
+
+For exploration without touching existing `internal/api`, a generated client is available in `internal/apigen`.
+
+- Regenerate:
+  - Ensure the generator is installed: `go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest`
+  - Run: `make gen-apigen`
+
+This uses `openapi.generated.yaml` at the repo root and writes to `internal/apigen/openapi.gen.go`.

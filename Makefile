@@ -73,6 +73,12 @@ docs-lint:
 docs:
 	@echo "Use this site to preview markdown rendering: https://registry.terraform.io/tools/doc-preview"
 
+.PHONY: gen-apigen
+gen-apigen: ## Generate OpenAPI client into internal/apigen
+	@echo "==> Generating OpenAPI client (internal/apigen)"
+	PATH="$(shell go env GOPATH)/bin:$(PATH)" go generate ./internal/apigen
+	@echo "==> Done"
+
 .PHONT: build-docs
 build-docs:
 	go get github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
