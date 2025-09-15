@@ -349,6 +349,8 @@ func (r *AppEndpointOidcProvider) mapResponseToState(state *providerschema.AppEn
 	if resp.ProviderID != "" {
 		state.ProviderId = types.StringValue(resp.ProviderID)
 	}
+	state.IsDefault = types.BoolValue(resp.IsDefault)
+
 }
 
 // initOidcProviderNullsBeforeRefresh initializes optional and computed attributes to null

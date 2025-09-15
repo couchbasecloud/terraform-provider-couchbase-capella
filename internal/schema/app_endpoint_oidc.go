@@ -22,6 +22,7 @@ type AppEndpointOidcProvider struct {
 	RolesClaim      types.String `tfsdk:"roles_claim"`
 	UserPrefix      types.String `tfsdk:"user_prefix"`
 	UsernameClaim   types.String `tfsdk:"username_claim"`
+	IsDefault       types.Bool   `tfsdk:"is_default"`
 }
 
 // Validate validates the AppEndpointActivationStatus resource for import.

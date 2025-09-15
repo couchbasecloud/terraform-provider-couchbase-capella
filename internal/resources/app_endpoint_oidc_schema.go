@@ -43,6 +43,10 @@ func AppEndpointOidcProviderSchema() schema.Schema {
 				Required:    true,
 				Description: `The URL for the OpenID Connect issuer.`,
 			},
+			"is_default": schema.BoolAttribute{
+				Computed:    true,
+				Description: `Indicates whether this is the default OpenID Connect provider for this App Endpoint.`,
+			},
 			"organization_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
