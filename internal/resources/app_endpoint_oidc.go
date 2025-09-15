@@ -111,6 +111,11 @@ func (r *AppEndpointOidcProvider) Create(ctx context.Context, req resource.Creat
 		}
 	}
 
+	// Initialize optional/computed attributes to null before refresh to preserve user intent
+	initOidcProviderNullsBeforeRefresh(&plan)
+	diags = resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
+
 	// Refresh using GET; preserve nulls for optional attributes during create
 	if !plan.ProviderId.IsNull() && !plan.ProviderId.IsUnknown() {
 		details, err := r.getOidcProvider(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, plan.ProviderId.ValueString())
@@ -231,7 +236,7 @@ func (r *AppEndpointOidcProvider) Update(ctx context.Context, req resource.Updat
 
 	r.mapResponseToState(&plan, details, false)
 
-	diags = resp.State.Set(ctx, plan)
+	diags = resp.State.Set(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 }
 
@@ -334,11 +339,37 @@ func (r *AppEndpointOidcProvider) mapResponseToState(state *providerschema.AppEn
 			state.RolesClaim = types.StringValue(resp.RolesClaim)
 		}
 	}
-	state.Register = types.BoolValue(resp.Register)
+	// Preserve null for optional bool on create if not set in config
+	if preserveNulls && state.Register.IsNull() {
+		// leave as null
+	} else {
+		state.Register = types.BoolValue(resp.Register)
+	}
 
 	// Computed ID
 	if resp.ProviderID != "" {
 		state.ProviderId = types.StringValue(resp.ProviderID)
+	}
+}
+
+// initOidcProviderNullsBeforeRefresh initializes optional and computed attributes to null
+// prior to the first refresh after create, matching patterns in other resources.
+// Note: Do not null out provider_id, as it is needed to perform the refresh GET.
+func initOidcProviderNullsBeforeRefresh(plan *providerschema.AppEndpointOidcProvider) {
+	if plan.DiscoveryUrl.IsNull() || plan.DiscoveryUrl.IsUnknown() {
+		plan.DiscoveryUrl = types.StringNull()
+	}
+	if plan.Register.IsNull() || plan.Register.IsUnknown() {
+		plan.Register = types.BoolNull()
+	}
+	if plan.RolesClaim.IsNull() || plan.RolesClaim.IsUnknown() {
+		plan.RolesClaim = types.StringNull()
+	}
+	if plan.UserPrefix.IsNull() || plan.UserPrefix.IsUnknown() {
+		plan.UserPrefix = types.StringNull()
+	}
+	if plan.UsernameClaim.IsNull() || plan.UsernameClaim.IsUnknown() {
+		plan.UsernameClaim = types.StringNull()
 	}
 }
 
