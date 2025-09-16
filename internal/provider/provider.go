@@ -2,10 +2,12 @@ package provider
 
 import (
 	"context"
+	"net/http"
 	"os"
 	"time"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/apigen"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/datasources"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
@@ -149,11 +151,18 @@ func (p *capellaProvider) Configure(
 
 	tflog.Debug(ctx, "Creating Capella client")
 
-	// Create a new capella client using the configuration values
+	// Create clients using the configuration values
+	httpClient := api.NewClient(apiRequestTimeout)
+	genClient, _ := apigen.NewClientWithResponses(host, apigen.WithHTTPClient(httpClient), apigen.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
+		req.Header.Set("Authorization", "Bearer "+authenticationToken)
+		req.Header.Set("User-Agent", providerName+"/"+version.ProviderVersion)
+		return nil
+	}))
 	providerData := &providerschema.Data{
 		HostURL: host,
 		Token:   authenticationToken,
-		Client:  api.NewClient(apiRequestTimeout),
+		Client:  httpClient,
+		Apigen:  genClient,
 	}
 
 	// Make the Capella client available during DataSource and Resource
