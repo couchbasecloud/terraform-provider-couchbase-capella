@@ -116,7 +116,7 @@ func (a *AuditLogSettings) Create(ctx context.Context, req resource.CreateReques
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/auditLog", a.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err = a.Client.ExecuteWithRetry(
+	_, err = a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		auditLogUpdateRequest,
@@ -234,7 +234,7 @@ func (a *AuditLogSettings) Update(ctx context.Context, req resource.UpdateReques
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/auditLog", a.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err := a.Client.ExecuteWithRetry(
+	_, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		auditLogUpdateRequest,
@@ -295,7 +295,7 @@ func (a *AuditLogSettings) refreshAuditLogSettingsState(ctx context.Context, org
 	)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := a.Client.ExecuteWithRetry(
+	response, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

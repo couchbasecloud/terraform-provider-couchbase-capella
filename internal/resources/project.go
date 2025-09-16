@@ -105,7 +105,7 @@ func (r *Project) Create(ctx context.Context, req resource.CreateRequest, resp *
 		return
 	}
 
-	res, err := r.Apigen.PostProjectWithResponse(ctx, apigen.OrganizationId(orgUUID), createReq)
+	res, err := r.ClientV2.PostProjectWithResponse(ctx, apigen.OrganizationId(orgUUID), createReq)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating project",
@@ -254,7 +254,7 @@ func (r *Project) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		params = &apigen.PutProjectParams{IfMatch: &ifMatch}
 	}
 
-	_, err = r.Apigen.PutProjectWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID), params, putReq)
+	_, err = r.ClientV2.PutProjectWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID), params, putReq)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -331,7 +331,7 @@ func (r *Project) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 		return
 	}
 
-	_, err = r.Apigen.DeleteProjectByIDWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID))
+	_, err = r.ClientV2.DeleteProjectByIDWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID))
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -368,7 +368,7 @@ func (r *Project) retrieveProject(ctx context.Context, organizationId, projectId
 		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 	}
 
-	res, err := r.Apigen.GetProjectByIDWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID))
+	res, err := r.ClientV2.GetProjectByIDWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID))
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 	}

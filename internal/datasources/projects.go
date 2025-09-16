@@ -104,7 +104,7 @@ func (d *Projects) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 		return
 	}
 
-	listResp, err := d.Apigen.ListProjectsWithResponse(ctx, apigen.OrganizationId(orgUUID), nil)
+	listResp, err := d.ClientV2.ListProjectsWithResponse(ctx, apigen.OrganizationId(orgUUID), nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Projects",

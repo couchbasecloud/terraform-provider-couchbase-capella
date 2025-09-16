@@ -113,7 +113,7 @@ func (c *Collection) Create(ctx context.Context, req resource.CreateRequest, res
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/scopes/%s/collections", c.HostURL, organizationId, projectId, clusterId, bucketId, scopeName)
 	cfg := collection_api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-	_, err := c.Client.ExecuteWithRetry(
+	_, err := c.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		collectionRequest,
@@ -192,7 +192,7 @@ func (c *Collection) validateCollectionAttributesTrimmed(plan providerschema.Col
 func (c *Collection) retrieveCollection(ctx context.Context, organizationId, projectId, clusterId, bucketId, scopeName, collectionName string) (*providerschema.Collection, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/scopes/%s/collections/%s", c.HostURL, organizationId, projectId, clusterId, bucketId, scopeName, collectionName)
 	cfg := collection_api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := c.Client.ExecuteWithRetry(
+	response, err := c.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -321,7 +321,7 @@ func (c *Collection) Update(ctx context.Context, req resource.UpdateRequest, res
 	// Update existing collection
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/scopes/%s/collections/%s", c.HostURL, organizationId, projectId, clusterId, bucketId, scopeName, collectionName)
 	cfg := collection_api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err = c.Client.ExecuteWithRetry(
+	_, err = c.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		updateCollectionRequest,
@@ -389,7 +389,7 @@ func (c *Collection) Delete(ctx context.Context, req resource.DeleteRequest, res
 	// Delete existing collection
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/scopes/%s/collections/%s", c.HostURL, organizationId, projectId, clusterId, bucketId, scopeName, collectionName)
 	cfg := collection_api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err = c.Client.ExecuteWithRetry(
+	_, err = c.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

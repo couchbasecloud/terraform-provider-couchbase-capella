@@ -117,7 +117,7 @@ func (c *Bucket) Create(ctx context.Context, req resource.CreateRequest, resp *r
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets", c.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-	response, err := c.Client.ExecuteWithRetry(
+	response, err := c.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		BucketRequest,
@@ -279,7 +279,7 @@ func (r *Bucket) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", r.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err := r.Client.ExecuteWithRetry(
+	_, err := r.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -311,7 +311,7 @@ func (c *Bucket) ImportState(ctx context.Context, req resource.ImportStateReques
 func (c *Bucket) retrieveBucket(ctx context.Context, organizationId, projectId, clusterId, bucketId string) (*providerschema.OneBucket, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", c.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := c.Client.ExecuteWithRetry(
+	response, err := c.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -389,7 +389,7 @@ func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", c.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err = c.Client.ExecuteWithRetry(
+	_, err = c.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		bucketUpdateRequest,

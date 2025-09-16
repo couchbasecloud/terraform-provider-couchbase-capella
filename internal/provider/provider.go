@@ -152,17 +152,17 @@ func (p *capellaProvider) Configure(
 	tflog.Debug(ctx, "Creating Capella client")
 
 	// Create clients using the configuration values
-	httpClient := api.NewClient(apiRequestTimeout)
-	genClient, _ := apigen.NewClientWithResponses(host, apigen.WithHTTPClient(httpClient), apigen.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
+	clientV1 := api.NewClient(apiRequestTimeout)
+	clientV2, _ := apigen.NewClientWithResponses(host, apigen.WithHTTPClient(clientV1), apigen.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
 		req.Header.Set("Authorization", "Bearer "+authenticationToken)
 		req.Header.Set("User-Agent", providerName+"/"+version.ProviderVersion)
 		return nil
 	}))
 	providerData := &providerschema.Data{
-		HostURL: host,
-		Token:   authenticationToken,
-		Client:  httpClient,
-		Apigen:  genClient,
+		HostURL:  host,
+		Token:    authenticationToken,
+		ClientV1: clientV1,
+		ClientV2: clientV2,
 	}
 
 	// Make the Capella client available during DataSource and Resource
