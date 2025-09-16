@@ -69,16 +69,16 @@ func setup(ctx context.Context, client *api.Client, clientV2 *apigen.ClientWithR
 	if err := createProject(ctx, clientV2); err != nil {
 		return err
 	}
-	if err := createCluster(ctx, client); err != nil {
+	if err := createCluster(ctx, clientV2); err != nil { // v2
 		return err
 	}
-	if err := clusterWait(ctx, client, false); err != nil {
+	if err := clusterWait(ctx, clientV2, false); err != nil { // v2
 		return err
 	}
-	if err := createBucket(ctx, client); err != nil {
+	if err := createBucket(ctx, clientV2); err != nil { // v2
 		return err
 	}
-	if err := bucketWait(ctx, client); err != nil {
+	if err := bucketWait(ctx, clientV2); err != nil { // v2
 		return err
 	}
 	if err := createAppService(ctx, client); err != nil {
@@ -103,11 +103,11 @@ func cleanup(ctx context.Context, client *api.Client, clientV2 *apigen.ClientWit
 	}
 
 	if globalClusterId != "" {
-		if err := destroyCluster(ctx, client); err != nil {
+		if err := destroyCluster(ctx, clientV2); err != nil { // v2
 			return err
 		}
 
-		if err := clusterWait(ctx, client, true); err != nil {
+		if err := clusterWait(ctx, clientV2, true); err != nil { // v2
 			return err
 		}
 	}

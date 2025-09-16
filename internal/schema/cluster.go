@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
+	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/apigen"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -189,19 +189,19 @@ func removePatch(version string) string {
 }
 
 // NewCluster create new cluster object.
-func NewCluster(ctx context.Context, cluster *clusterapi.GetClusterResponse, organizationId, projectId string, auditObject basetypes.ObjectValue) (*Cluster, error) {
+func NewCluster(ctx context.Context, cluster *apigen.GetClusterResponse, organizationId, projectId string, auditObject basetypes.ObjectValue) (*Cluster, error) {
 	newCluster := Cluster{
 		Id:                         types.StringValue(cluster.Id.String()),
 		OrganizationId:             types.StringValue(organizationId),
 		ProjectId:                  types.StringValue(projectId),
 		Name:                       types.StringValue(cluster.Name),
 		Description:                types.StringValue(cluster.Description),
-		EnablePrivateDNSResolution: types.BoolValue(cluster.EnablePrivateDNSResolution),
+		EnablePrivateDNSResolution: types.BoolValue(getBoolOrFalse(cluster.EnablePrivateDNSResolution)),
 		Availability: &Availability{
 			Type: types.StringValue(string(cluster.Availability.Type)),
 		},
 		CloudProvider: &CloudProvider{
-			Cidr:   types.StringValue(cluster.CloudProvider.Cidr),
+			Cidr:   types.StringValue(valueOrEmpty(cluster.CloudProvider.Cidr)),
 			Region: types.StringValue(cluster.CloudProvider.Region),
 			Type:   types.StringValue(string(cluster.CloudProvider.Type)),
 		},
@@ -213,7 +213,7 @@ func NewCluster(ctx context.Context, cluster *clusterapi.GetClusterResponse, org
 		ConnectionString: types.StringValue(cluster.ConnectionString),
 		CurrentState:     types.StringValue(string(cluster.CurrentState)),
 		Audit:            auditObject,
-		Etag:             types.StringValue(cluster.Etag),
+		Etag:             types.StringNull(),
 	}
 
 	if cluster.CouchbaseServer.Version != nil {
@@ -238,7 +238,7 @@ func NewCluster(ctx context.Context, cluster *clusterapi.GetClusterResponse, org
 	return &newCluster, nil
 }
 
-func morphToTerraformServiceGroups(cluster *clusterapi.GetClusterResponse) ([]ServiceGroup, error) {
+func morphToTerraformServiceGroups(cluster *apigen.GetClusterResponse) ([]ServiceGroup, error) {
 	var newServiceGroups []ServiceGroup
 	for _, serviceGroup := range cluster.ServiceGroups {
 		newServiceGroup := ServiceGroup{
@@ -248,40 +248,50 @@ func morphToTerraformServiceGroups(cluster *clusterapi.GetClusterResponse) ([]Se
 					Cpu: types.Int64Value(int64(serviceGroup.Node.Compute.Cpu)),
 				},
 			},
-			NumOfNodes: types.Int64Value(int64(*serviceGroup.NumOfNodes)),
 		}
 
 		switch cluster.CloudProvider.Type {
-		case clusterapi.Aws:
-			awsDisk, err := serviceGroup.Node.AsDiskAWS()
+		case apigen.CloudProviderType("aws"):
+			awsDisk, err := serviceGroup.Node.Disk.AsDiskAWS()
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", errors.ErrReadingAWSDisk, err)
 			}
 			newServiceGroup.Node.Disk = Node_Disk{
 				Type:    types.StringValue(string(awsDisk.Type)),
-				Storage: types.Int64Value(int64(awsDisk.Storage)),
-				IOPS:    types.Int64Value(int64(awsDisk.Iops)),
+				Storage: types.Int64Null(),
+				IOPS:    types.Int64Null(),
 			}
-		case clusterapi.Azure:
-			azureDisk, err := serviceGroup.Node.AsDiskAzure()
+		case apigen.CloudProviderType("azure"):
+			azureDisk, err := serviceGroup.Node.Disk.AsDiskAzure()
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", errors.ErrReadingAzureDisk, err)
 			}
-
-			newServiceGroup.Node.Disk = Node_Disk{
-				Type:          types.StringValue(string(azureDisk.Type)),
-				Storage:       types.Int64Value(int64(*azureDisk.Storage)),
-				IOPS:          types.Int64Value(int64(*azureDisk.Iops)),
-				Autoexpansion: types.BoolValue(*azureDisk.Autoexpansion),
+			nd := Node_Disk{Type: types.StringValue(string(azureDisk.Type))}
+			if azureDisk.Storage != nil {
+				nd.Storage = types.Int64Value(int64(*azureDisk.Storage))
+			} else {
+				nd.Storage = types.Int64Null()
 			}
-		case clusterapi.Gcp:
-			gcpDisk, err := serviceGroup.Node.AsDiskGCP()
+			if azureDisk.Iops != nil {
+				nd.IOPS = types.Int64Value(int64(*azureDisk.Iops))
+			} else {
+				nd.IOPS = types.Int64Null()
+			}
+			if azureDisk.AutoExpansion != nil {
+				nd.Autoexpansion = types.BoolValue(*azureDisk.AutoExpansion)
+			} else {
+				nd.Autoexpansion = types.BoolNull()
+			}
+			newServiceGroup.Node.Disk = nd
+		case apigen.CloudProviderType("gcp"):
+			gcpDisk, err := serviceGroup.Node.Disk.AsDiskGCP()
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", errors.ErrReadingGCPDisk, err)
 			}
 			newServiceGroup.Node.Disk = Node_Disk{
 				Type:    types.StringValue(string(gcpDisk.Type)),
 				Storage: types.Int64Value(int64(gcpDisk.Storage)),
+				IOPS:    types.Int64Null(),
 			}
 		default:
 			return nil, errors.ErrUnsupportedCloudProvider
@@ -349,19 +359,19 @@ type ClusterData struct {
 }
 
 // NewClusterData creates a new cluster data object.
-func NewClusterData(cluster *clusterapi.GetClusterResponse, organizationId, projectId string, auditObject basetypes.ObjectValue) (*ClusterData, error) {
+func NewClusterData(cluster *apigen.GetClusterResponse, organizationId, projectId string, auditObject basetypes.ObjectValue) (*ClusterData, error) {
 	newClusterData := ClusterData{
 		Id:                         types.StringValue(cluster.Id.String()),
 		OrganizationId:             types.StringValue(organizationId),
 		ProjectId:                  types.StringValue(projectId),
 		Name:                       types.StringValue(cluster.Name),
 		Description:                types.StringValue(cluster.Description),
-		EnablePrivateDNSResolution: types.BoolValue(cluster.EnablePrivateDNSResolution),
+		EnablePrivateDNSResolution: types.BoolValue(getBoolOrFalse(cluster.EnablePrivateDNSResolution)),
 		Availability: &Availability{
 			Type: types.StringValue(string(cluster.Availability.Type)),
 		},
 		CloudProvider: &CloudProvider{
-			Cidr:   types.StringValue(cluster.CloudProvider.Cidr),
+			Cidr:   types.StringValue(valueOrEmpty(cluster.CloudProvider.Cidr)),
 			Region: types.StringValue(cluster.CloudProvider.Region),
 			Type:   types.StringValue(string(cluster.CloudProvider.Type)),
 		},
@@ -388,4 +398,18 @@ func NewClusterData(cluster *clusterapi.GetClusterResponse, organizationId, proj
 	newClusterData.ServiceGroups = newServiceGroups
 
 	return &newClusterData, nil
+}
+
+func valueOrEmpty(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}
+
+func getBoolOrFalse(b *bool) bool {
+	if b == nil {
+		return false
+	}
+	return *b
 }

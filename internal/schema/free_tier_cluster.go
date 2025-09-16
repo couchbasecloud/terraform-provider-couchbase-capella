@@ -9,8 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 
-	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
+	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/apigen"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 // FreeTierCluster is the struct for the free-tier cluster as read by the terraform provider schema for state file.
@@ -52,17 +53,36 @@ type FreeTierCluster struct {
 	Etag types.String `tfsdk:"etag"`
 }
 
-func NewFreeTierCluster(ctx context.Context, getfreeTierClusterResponse *clusterapi.GetClusterResponse, organizationId, projectId string, auditObject, availabilityObject, supportObject basetypes.ObjectValue, serviceGroupObj types.Set) (*FreeTierCluster, error) {
+func NewFreeTierCluster(ctx context.Context, getfreeTierClusterResponse *struct {
+	AppServiceId               *openapi_types.UUID       `json:"appServiceId,omitempty"`
+	Audit                      apigen.CouchbaseAuditData `json:"audit"`
+	Availability               apigen.Availability       `json:"availability"`
+	CloudProvider              apigen.CloudProvider      `json:"cloudProvider"`
+	CmekId                     *string                   `json:"cmekId,omitempty"`
+	ConfigurationType          apigen.ConfigurationType  `json:"configurationType"`
+	ConnectionString           string                    `json:"connectionString"`
+	CouchbaseServer            apigen.CouchbaseServer    `json:"couchbaseServer"`
+	CurrentState               apigen.CurrentState       `json:"currentState"`
+	Description                string                    `json:"description"`
+	EnablePrivateDNSResolution *bool                     `json:"enablePrivateDNSResolution,omitempty"`
+	Id                         openapi_types.UUID        `json:"id"`
+	Name                       string                    `json:"name"`
+	ServiceGroups              []apigen.ServiceGroup     `json:"serviceGroups"`
+	Support                    struct {
+		Plan     apigen.GetFreeTierCluster200SupportPlan `json:"plan"`
+		Timezone apigen.SupportTimezone                  `json:"timezone"`
+	} `json:"support"`
+}, organizationId, projectId string, auditObject, availabilityObject, supportObject basetypes.ObjectValue, serviceGroupObj types.Set) (*FreeTierCluster, error) {
 	newFreeTierCluster := FreeTierCluster{
 		Id:                         types.StringValue(getfreeTierClusterResponse.Id.String()),
 		OrganizationId:             types.StringValue(organizationId),
 		ProjectId:                  types.StringValue(projectId),
 		Name:                       types.StringValue(getfreeTierClusterResponse.Name),
 		Description:                types.StringValue(getfreeTierClusterResponse.Description),
-		EnablePrivateDNSResolution: types.BoolValue(getfreeTierClusterResponse.EnablePrivateDNSResolution),
+		EnablePrivateDNSResolution: types.BoolValue(getBoolOrFalse(getfreeTierClusterResponse.EnablePrivateDNSResolution)),
 		Availability:               availabilityObject,
 		CloudProvider: &CloudProvider{
-			Cidr:   types.StringValue(getfreeTierClusterResponse.CloudProvider.Cidr),
+			Cidr:   types.StringValue(valueOrEmpty(getfreeTierClusterResponse.CloudProvider.Cidr)),
 			Region: types.StringValue(getfreeTierClusterResponse.CloudProvider.Region),
 			Type:   types.StringValue(string(getfreeTierClusterResponse.CloudProvider.Type)),
 		},
@@ -71,10 +91,10 @@ func NewFreeTierCluster(ctx context.Context, getfreeTierClusterResponse *cluster
 		CurrentState:     types.StringValue(string(getfreeTierClusterResponse.CurrentState)),
 		Audit:            auditObject,
 		ServiceGroups:    serviceGroupObj,
-		Etag:             types.StringValue(getfreeTierClusterResponse.Etag),
+		Etag:             types.StringNull(),
 	}
-	if getfreeTierClusterResponse.CouchbaseServer.Version != nil {
-		version := *getfreeTierClusterResponse.CouchbaseServer.Version
+	if clusterVersion := getfreeTierClusterResponse.CouchbaseServer.Version; clusterVersion != nil {
+		version := *clusterVersion
 		version = removePatch(version)
 		couchbaseServer := CouchbaseServer{
 			Version: types.StringValue(version),
@@ -89,7 +109,7 @@ func NewFreeTierCluster(ctx context.Context, getfreeTierClusterResponse *cluster
 
 }
 
-func NewTerraformServiceGroups(cluster *clusterapi.GetClusterResponse) ([]ServiceGroup, error) {
+func NewTerraformServiceGroups(cluster *apigen.GetClusterResponse) ([]ServiceGroup, error) {
 	var newServiceGroups []ServiceGroup
 	for _, serviceGroup := range cluster.ServiceGroups {
 		newServiceGroup := ServiceGroup{
@@ -99,39 +119,45 @@ func NewTerraformServiceGroups(cluster *clusterapi.GetClusterResponse) ([]Servic
 					Cpu: types.Int64Value(int64(serviceGroup.Node.Compute.Cpu)),
 				},
 			},
-			NumOfNodes: types.Int64Value(int64(*serviceGroup.NumOfNodes)),
 		}
 
 		switch cluster.CloudProvider.Type {
-		case clusterapi.Aws:
-			awsDisk, err := serviceGroup.Node.AsDiskAWS()
+		case apigen.CloudProviderType("aws"):
+			awsDisk, err := serviceGroup.Node.Disk.AsDiskAWS()
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", errors.ErrReadingAWSDisk, err)
 			}
 			newServiceGroup.Node.Disk = Node_Disk{
 				Type:    types.StringValue(string(awsDisk.Type)),
-				Storage: types.Int64Value(int64(awsDisk.Storage)),
-				IOPS:    types.Int64Value(int64(awsDisk.Iops)),
+				Storage: types.Int64Null(),
+				IOPS:    types.Int64Null(),
 			}
-		case clusterapi.Azure:
-			azureDisk, err := serviceGroup.Node.AsDiskAzure()
+		case apigen.CloudProviderType("azure"):
+			azureDisk, err := serviceGroup.Node.Disk.AsDiskAzure()
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", errors.ErrReadingAzureDisk, err)
 			}
-
-			newServiceGroup.Node.Disk = Node_Disk{
-				Type:          types.StringValue(string(azureDisk.Type)),
-				Storage:       types.Int64Value(int64(*azureDisk.Storage)),
-				Autoexpansion: types.BoolValue(*azureDisk.Autoexpansion),
+			nd := Node_Disk{Type: types.StringValue(string(azureDisk.Type))}
+			if azureDisk.Storage != nil {
+				nd.Storage = types.Int64Value(int64(*azureDisk.Storage))
+			} else {
+				nd.Storage = types.Int64Null()
 			}
-		case clusterapi.Gcp:
-			gcpDisk, err := serviceGroup.Node.AsDiskGCP()
+			if azureDisk.AutoExpansion != nil {
+				nd.Autoexpansion = types.BoolValue(*azureDisk.AutoExpansion)
+			} else {
+				nd.Autoexpansion = types.BoolNull()
+			}
+			newServiceGroup.Node.Disk = nd
+		case apigen.CloudProviderType("gcp"):
+			gcpDisk, err := serviceGroup.Node.Disk.AsDiskGCP()
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", errors.ErrReadingGCPDisk, err)
 			}
 			newServiceGroup.Node.Disk = Node_Disk{
 				Type:    types.StringValue(string(gcpDisk.Type)),
 				Storage: types.Int64Value(int64(gcpDisk.Storage)),
+				IOPS:    types.Int64Null(),
 			}
 		default:
 			return nil, errors.ErrUnsupportedCloudProvider
@@ -176,7 +202,7 @@ func (a Availability) AttributeTypes() map[string]attr.Type {
 }
 
 // NewAvailability returns a new Availability object from the given API Availability object.
-func NewAvailability(apiAvailability clusterapi.Availability) Availability {
+func NewAvailability(apiAvailability apigen.Availability) Availability {
 	return Availability{
 		Type: types.StringValue(string(apiAvailability.Type)),
 	}
@@ -226,7 +252,10 @@ func (support Support) AttributeTypes() map[string]attr.Type {
 }
 
 // NewSupport returns a new Support object from the given API Support object.
-func NewSupport(apiSupport clusterapi.Support) Support {
+func NewSupport(apiSupport struct {
+	Plan     apigen.GetFreeTierCluster200SupportPlan
+	Timezone apigen.SupportTimezone
+}) Support {
 	return Support{
 		Plan:     types.StringValue(string(apiSupport.Plan)),
 		Timezone: types.StringValue(string(apiSupport.Timezone)),

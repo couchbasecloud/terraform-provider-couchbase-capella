@@ -2,9 +2,7 @@ package resources
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -12,9 +10,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	bucketapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/bucket"
+	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/apigen"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+
+	"github.com/google/uuid"
 )
 
 var (
@@ -70,27 +70,19 @@ func (f *FreeTierBucket) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
-	freeTierBucketRequest := api.CreateFreeTierBucketRequest{
+	freeTierBucketRequest := apigen.CreateFreeTierBucketRequest{
 		Name: plan.Name.ValueString(),
 	}
 	if !plan.MemoryAllocationInMB.IsNull() && !plan.MemoryAllocationInMB.IsUnknown() {
-		freeTierBucketRequest.MemoryAllocationInMb = plan.MemoryAllocationInMB.ValueInt64Pointer()
+		v := int(plan.MemoryAllocationInMB.ValueInt64())
+		freeTierBucketRequest.MemoryAllocationInMb = &v
 	}
 
-	var organizationId = plan.OrganizationId.ValueString()
-	var projectId = plan.ProjectId.ValueString()
-	var clusterId = plan.ClusterId.ValueString()
+	orgUUID, _ := uuid.Parse(plan.OrganizationId.ValueString())
+	projUUID, _ := uuid.Parse(plan.ProjectId.ValueString())
+	cluUUID, _ := uuid.Parse(plan.ClusterId.ValueString())
 
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/freeTier", f.HostURL, organizationId, projectId, clusterId)
-
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-	resp, err := f.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		freeTierBucketRequest,
-		f.Token,
-		nil,
-	)
+	res, err := f.ClientV2.CreateFreeTierBucketWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID), apigen.ClusterId(cluUUID), freeTierBucketRequest)
 	if err != nil {
 		response.Diagnostics.AddError(
 			"Error creating free-tier bucket",
@@ -98,18 +90,12 @@ func (f *FreeTierBucket) Create(ctx context.Context, request resource.CreateRequ
 		)
 		return
 	}
-
-	freeTierBucketResponse := bucketapi.CreateBucketResponse{}
-	err = json.Unmarshal(resp.Body, &freeTierBucketResponse)
-	if err != nil {
-		response.Diagnostics.AddError(
-			"Error creating free-tier bucket",
-			errors.ErrorMessageWhileFreeTierBucketCreation.Error()+"error during unmarshalling: "+err.Error(),
-		)
+	if res.JSON201 == nil {
+		response.Diagnostics.AddError("Error creating free-tier bucket", "unexpected status: "+res.Status())
 		return
 	}
 
-	refreshedState, err := f.retrieveFreeTierBucket(ctx, organizationId, projectId, clusterId, freeTierBucketResponse.Id)
+	refreshedState, err := f.retrieveFreeTierBucket(ctx, plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), plan.ClusterId.ValueString(), res.JSON201.Id)
 	if err != nil {
 		response.Diagnostics.AddWarning(
 			"Error fetching free-tier bucket",
@@ -187,20 +173,15 @@ func (f *FreeTierBucket) Update(ctx context.Context, request resource.UpdateRequ
 	clusterId := currState.ClusterId.ValueString()
 	bucketId := currState.Id.ValueString()
 
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/freeTier/%s", f.HostURL, organizationId, projectId, clusterId, bucketId)
+	orgUUID, _ := uuid.Parse(organizationId)
+	projUUID, _ := uuid.Parse(projectId)
+	cluUUID, _ := uuid.Parse(clusterId)
 
-	updateBucketRequest := api.UpdateFreeTierBucketRequest{
-		MemoryAllocationInMb: plannedState.MemoryAllocationInMB.ValueInt64(),
+	updateBucketRequest := apigen.UpdateFreeTierBucketRequest{
+		MemoryAllocationInMb: int(plannedState.MemoryAllocationInMB.ValueInt64()),
 	}
 
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err := f.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		updateBucketRequest,
-		f.Token,
-		nil,
-	)
+	_, err := f.ClientV2.UpdateFreeTierBucketWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID), apigen.ClusterId(cluUUID), apigen.BucketId(bucketId), updateBucketRequest)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -242,15 +223,12 @@ func (f *FreeTierBucket) Delete(ctx context.Context, request resource.DeleteRequ
 	projectId := currentState.ProjectId.ValueString()
 	clusterId := currentState.ClusterId.ValueString()
 	freeTierBucketId := currentState.Id.ValueString()
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/freeTier/%s", f.HostURL, organizationId, projectId, clusterId, freeTierBucketId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err := f.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		f.Token,
-		nil,
-	)
+
+	orgUUID, _ := uuid.Parse(organizationId)
+	projUUID, _ := uuid.Parse(projectId)
+	cluUUID, _ := uuid.Parse(clusterId)
+
+	_, err := f.ClientV2.DeleteFreeTierBucketByIDWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID), apigen.ClusterId(cluUUID), apigen.BucketId(freeTierBucketId))
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -267,24 +245,19 @@ func (f *FreeTierBucket) Delete(ctx context.Context, request resource.DeleteRequ
 }
 
 func (f *FreeTierBucket) retrieveFreeTierBucket(ctx context.Context, organizationId, projectId, clusterId, bucketId string) (*providerschema.OneBucket, error) {
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/freeTier/%s", f.HostURL, organizationId, projectId, clusterId, bucketId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := f.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		f.Token,
-		nil,
-	)
+	orgUUID, _ := uuid.Parse(organizationId)
+	projUUID, _ := uuid.Parse(projectId)
+	cluUUID, _ := uuid.Parse(clusterId)
+
+	res, err := f.ClientV2.GetFreeTierBucketByIDWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID), apigen.ClusterId(cluUUID), apigen.BucketId(bucketId))
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 	}
-
-	bucketResp := bucketapi.GetBucketResponse{}
-	err = json.Unmarshal(response.Body, &bucketResp)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
+	if res.JSON200 == nil {
+		return nil, fmt.Errorf("%s: unexpected status %s", errors.ErrExecutingRequest, res.Status())
 	}
+
+	bucketResp := *res.JSON200
 
 	refreshedState := providerschema.OneBucket{
 		Id:                       types.StringValue(bucketResp.Id),
@@ -294,19 +267,18 @@ func (f *FreeTierBucket) retrieveFreeTierBucket(ctx context.Context, organizatio
 		ClusterId:                types.StringValue(clusterId),
 		Type:                     types.StringValue(bucketResp.Type),
 		StorageBackend:           types.StringValue(bucketResp.StorageBackend),
-		MemoryAllocationInMB:     types.Int64Value(bucketResp.MemoryAllocationInMb),
+		MemoryAllocationInMB:     types.Int64Value(int64(bucketResp.MemoryAllocationInMb)),
 		BucketConflictResolution: types.StringValue(bucketResp.BucketConflictResolution),
 		DurabilityLevel:          types.StringValue(bucketResp.DurabilityLevel),
-		Replicas:                 types.Int64Value(bucketResp.Replicas),
-		Flush:                    types.BoolValue(bucketResp.Flush),
-		TimeToLiveInSeconds:      types.Int64Value(bucketResp.TimeToLiveInSeconds),
-		EvictionPolicy:           types.StringValue(bucketResp.EvictionPolicy),
-		Stats: &providerschema.Stats{
-			ItemCount:       types.Int64Value(bucketResp.Stats.ItemCount),
-			OpsPerSecond:    types.Int64Value(bucketResp.Stats.OpsPerSecond),
-			DiskUsedInMiB:   types.Int64Value(bucketResp.Stats.DiskUsedInMib),
-			MemoryUsedInMiB: types.Int64Value(bucketResp.Stats.MemoryUsedInMib),
-		},
+		Replicas:                 types.Int64Value(int64(bucketResp.Replicas)),
+		TimeToLiveInSeconds:      types.Int64Value(int64(bucketResp.TimeToLiveInSeconds)),
+		EvictionPolicy:           types.StringValue(string(bucketResp.EvictionPolicy)),
+	}
+	refreshedState.Stats = &providerschema.Stats{
+		ItemCount:       types.Int64Value(int64(bucketResp.Stats.ItemCount)),
+		OpsPerSecond:    types.Int64Value(int64(bucketResp.Stats.OpsPerSecond)),
+		DiskUsedInMiB:   types.Int64Value(int64(bucketResp.Stats.DiskUsedInMib)),
+		MemoryUsedInMiB: types.Int64Value(int64(bucketResp.Stats.MemoryUsedInMib)),
 	}
 
 	return &refreshedState, nil

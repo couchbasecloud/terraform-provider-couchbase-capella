@@ -2,19 +2,18 @@ package resources
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"reflect"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
+	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/apigen"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -76,25 +75,29 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		return
 	}
 
-	clusterRequest := clusterapi.CreateClusterRequest{
+	clusterRequest := apigen.CreateClusterRequest{
 		Name: plan.Name.ValueString(),
-		Availability: clusterapi.Availability{
-			Type: clusterapi.AvailabilityType(plan.Availability.Type.ValueString()),
+		Availability: apigen.Availability{
+			Type: apigen.AvailabilityType(plan.Availability.Type.ValueString()),
 		},
-		CloudProvider: clusterapi.CloudProvider{
-			Cidr:   plan.CloudProvider.Cidr.ValueString(),
+		CloudProvider: apigen.CloudProvider{
 			Region: plan.CloudProvider.Region.ValueString(),
-			Type:   clusterapi.CloudProviderType(plan.CloudProvider.Type.ValueString()),
+			Type:   apigen.CloudProviderType(plan.CloudProvider.Type.ValueString()),
 		},
-		Support: clusterapi.Support{
-			Plan: clusterapi.SupportPlan(plan.Support.Plan.ValueString()),
+		Support: apigen.Support{
+			Plan: apigen.SupportPlan(plan.Support.Plan.ValueString()),
 		},
 	}
 
-	if !plan.Support.Timezone.IsNull() && !plan.Support.Timezone.IsUnknown() {
-		clusterRequest.Support.Timezone = clusterapi.SupportTimezone(plan.Support.Timezone.ValueString())
+	if !plan.CloudProvider.Cidr.IsNull() && !plan.CloudProvider.Cidr.IsUnknown() {
+		cidr := plan.CloudProvider.Cidr.ValueString()
+		clusterRequest.CloudProvider.Cidr = &cidr
+	}
 
-		if clusterRequest.Support.Plan == clusterapi.SupportPlan("basic") && clusterRequest.Support.Timezone != clusterapi.SupportTimezone("PT") {
+	if !plan.Support.Timezone.IsNull() && !plan.Support.Timezone.IsUnknown() {
+		tz := apigen.SupportTimezone(plan.Support.Timezone.ValueString())
+		clusterRequest.Support.Timezone = &tz
+		if clusterRequest.Support.Plan == apigen.SupportPlan("basic") && *clusterRequest.Support.Timezone != apigen.SupportTimezone("PT") {
 			resp.Diagnostics.AddError(
 				"Error creating cluster",
 				"Could not create cluster, unexpected error: Invalid timezone provided for basic cluster",
@@ -104,21 +107,32 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	}
 
 	if !plan.Description.IsNull() && !plan.Description.IsUnknown() {
-		clusterRequest.Description = plan.Description.ValueStringPointer()
+		desc := plan.Description.ValueString()
+		clusterRequest.Description = &desc
 	}
 
 	if !plan.EnablePrivateDNSResolution.IsNull() && !plan.EnablePrivateDNSResolution.IsUnknown() {
-		clusterRequest.EnablePrivateDNSResolution = plan.EnablePrivateDNSResolution.ValueBoolPointer()
+		epr := plan.EnablePrivateDNSResolution.ValueBool()
+		clusterRequest.EnablePrivateDNSResolution = &epr
 	}
 
-	if plan.Zones != nil && (plan.CloudProvider.Type.ValueString() != string(clusterapi.Aws) || plan.Availability.Type.ValueString() != "single") {
+	if !plan.ConfigurationType.IsNull() && !plan.ConfigurationType.IsUnknown() {
+		ct := apigen.ConfigurationType(plan.ConfigurationType.ValueString())
+		clusterRequest.ConfigurationType = &ct
+	}
+
+	if plan.Zones != nil && (plan.CloudProvider.Type.ValueString() != string(apigen.Aws) || plan.Availability.Type.ValueString() != "single") {
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
 			"Could not create cluster, unexpected error: Invalid zones provided. Zones can only be provided for single AZ AWS clusters.",
 		)
 		return
-	} else {
-		clusterRequest.Zones = c.convertZones(plan.Zones)
+	} else if plan.Zones != nil {
+		var zones []string
+		for _, z := range plan.Zones {
+			zones = append(zones, z.ValueString())
+		}
+		clusterRequest.Zones = &zones
 	}
 
 	var couchbaseServer providerschema.CouchbaseServer
@@ -129,24 +143,8 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 
 	if !couchbaseServer.Version.IsNull() && !couchbaseServer.Version.IsUnknown() {
 		version := couchbaseServer.Version.ValueString()
-		clusterRequest.CouchbaseServer = &clusterapi.CouchbaseServer{
+		clusterRequest.CouchbaseServer = &apigen.CouchbaseServer{
 			Version: &version,
-		}
-	}
-
-	if !plan.ConfigurationType.IsNull() && !plan.ConfigurationType.IsUnknown() {
-		clusterRequest.ConfigurationType = clusterapi.ConfigurationType(plan.ConfigurationType.ValueString())
-	}
-
-	//check disk values provided for Azure, if Premium type disks, then do not allow setting storage, iops.
-	if plan.CloudProvider.Type.ValueString() == string(clusterapi.Azure) {
-		err := c.checkDisk(plan)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error creating cluster",
-				"Could not create cluster, unexpected error: "+err.Error(),
-			)
-			return
 		}
 	}
 
@@ -158,8 +156,36 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		)
 		return
 	}
-
-	clusterRequest.ServiceGroups = serviceGroups
+	clusterRequest.ServiceGroups = make([]apigen.ServiceGroup, 0, len(serviceGroups))
+	for _, psg := range plan.ServiceGroups {
+		// Convert plan to apigen types
+		n := apigen.Node{Compute: apigen.Compute{Cpu: int(psg.Node.Compute.Cpu.ValueInt64()), Ram: int(psg.Node.Compute.Ram.ValueInt64())}}
+		var nd apigen.Node_Disk
+		switch plan.CloudProvider.Type.ValueString() {
+		case "aws":
+			_ = nd.FromDiskAWS(apigen.DiskAWS{Type: apigen.DiskAWSType(psg.Node.Disk.Type.ValueString())})
+		case "azure":
+			var storage *apigen.DiskAzureStorage
+			if !psg.Node.Disk.Storage.IsNull() && !psg.Node.Disk.Storage.IsUnknown() {
+				val := apigen.DiskAzureStorage(psg.Node.Disk.Storage.ValueInt64())
+				storage = &val
+			}
+			_ = nd.FromDiskAzure(apigen.DiskAzure{Type: apigen.DiskAzureType(psg.Node.Disk.Type.ValueString()), Storage: storage})
+		case "gcp":
+			_ = nd.FromDiskGCP(apigen.DiskGCP{Type: apigen.DiskGCPType(psg.Node.Disk.Type.ValueString())})
+		}
+		n.Disk = nd
+		var services []apigen.Service
+		for _, s := range psg.Services {
+			services = append(services, apigen.Service(s.ValueString()))
+		}
+		num := int(psg.NumOfNodes.ValueInt64())
+		clusterRequest.ServiceGroups = append(clusterRequest.ServiceGroups, apigen.ServiceGroup{
+			Node:       &n,
+			NumOfNodes: &num,
+			Services:   &services,
+		})
+	}
 
 	if plan.OrganizationId.IsNull() {
 		resp.Diagnostics.AddError(
@@ -168,8 +194,6 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		)
 		return
 	}
-	var organizationId = plan.OrganizationId.ValueString()
-
 	if plan.ProjectId.IsNull() {
 		resp.Diagnostics.AddError(
 			"Error creating Cluster",
@@ -177,17 +201,11 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		)
 		return
 	}
-	var projectId = plan.ProjectId.ValueString()
 
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", c.HostURL, organizationId, projectId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
-	response, err := c.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		clusterRequest,
-		c.Token,
-		nil,
-	)
+	orgUUID, _ := uuid.Parse(plan.OrganizationId.ValueString())
+	projUUID, _ := uuid.Parse(plan.ProjectId.ValueString())
+
+	res, err := c.ClientV2.PostClusterWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID), clusterRequest)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating cluster",
@@ -195,24 +213,18 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		)
 		return
 	}
-
-	clusterResponse := clusterapi.GetClusterResponse{}
-	err = json.Unmarshal(response.Body, &clusterResponse)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating Cluster",
-			errorMessageWhileClusterCreation+"error during unmarshalling:"+err.Error(),
-		)
+	if res.JSON202 == nil {
+		resp.Diagnostics.AddError("Error creating cluster", "unexpected status: "+res.Status())
 		return
 	}
 
-	diags = resp.State.Set(ctx, initializePendingClusterWithPlanAndId(plan, clusterResponse.Id.String()))
+	diags = resp.State.Set(ctx, initializePendingClusterWithPlanAndId(plan, res.JSON202.Id.String()))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	err = c.checkClusterStatus(ctx, organizationId, projectId, clusterResponse.Id.String())
+	err = c.checkClusterStatus(ctx, plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), res.JSON202.Id.String())
 	if err != nil {
 		resp.Diagnostics.AddWarning(
 			"Error creating cluster",
@@ -221,7 +233,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		return
 	}
 
-	refreshedState, err := c.retrieveCluster(ctx, organizationId, projectId, clusterResponse.Id.String())
+	refreshedState, err := c.retrieveCluster(ctx, plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), res.JSON202.Id.String())
 	if err != nil {
 		resp.Diagnostics.AddWarning(
 			"Error creating cluster",
@@ -235,7 +247,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	}
 
 	for i, serviceGroup := range refreshedState.ServiceGroups {
-		if clusterapi.AreEqual(plan.ServiceGroups[i].Services, serviceGroup.Services) {
+		if reflect.DeepEqual(plan.ServiceGroups[i].Services, serviceGroup.Services) {
 			refreshedState.ServiceGroups[i].Services = plan.ServiceGroups[i].Services
 		}
 	}
@@ -314,7 +326,7 @@ func (c *Cluster) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 
 	if len(state.ServiceGroups) == len(refreshedState.ServiceGroups) {
 		for i, serviceGroup := range refreshedState.ServiceGroups {
-			if clusterapi.AreEqual(state.ServiceGroups[i].Services, serviceGroup.Services) {
+			if reflect.DeepEqual(state.ServiceGroups[i].Services, serviceGroup.Services) {
 				refreshedState.ServiceGroups[i].Services = state.ServiceGroups[i].Services
 			}
 		}
@@ -369,34 +381,20 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		return
 	}
 
-	ClusterRequest := clusterapi.UpdateClusterRequest{
+	ClusterRequest := apigen.UpdateClusterRequest{
 		Description: plan.Description.ValueString(),
 		Name:        plan.Name.ValueString(),
-		Support: clusterapi.Support{
-			Plan: clusterapi.SupportPlan(plan.Support.Plan.ValueString()),
+		Support: apigen.Support{
+			Plan: apigen.SupportPlan(plan.Support.Plan.ValueString()),
 		},
 	}
 
 	if !plan.Support.Timezone.IsNull() && !plan.Support.Timezone.IsUnknown() {
-		ClusterRequest.Support.Timezone = clusterapi.SupportTimezone(plan.Support.Timezone.ValueString())
-
-		if ClusterRequest.Support.Plan == clusterapi.SupportPlan("basic") && ClusterRequest.Support.Timezone != clusterapi.SupportTimezone("PT") {
+		ClusterRequest.Support.Timezone = (*apigen.SupportTimezone)(func() *string { s := plan.Support.Timezone.ValueString(); return &s }())
+		if ClusterRequest.Support.Plan == apigen.SupportPlan("basic") && *ClusterRequest.Support.Timezone != apigen.SupportTimezone("PT") {
 			resp.Diagnostics.AddError(
 				"Error creating cluster",
 				"Could not update cluster, unexpected error: Invalid timezone provided for basic cluster",
-			)
-			return
-		}
-	}
-
-	//Check disk values provided for Azure, if Premium type disks, then do not allow setting storage, iops.
-	//And if the values in plan are set as default values, then ignore as that is correct configuration.
-	if plan.CloudProvider.Type.ValueString() == string(clusterapi.Azure) {
-		err := c.checkDiskUpdate(plan)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error creating cluster",
-				"Could not create cluster, unexpected error: "+err.Error(),
 			)
 			return
 		}
@@ -411,23 +409,47 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		return
 	}
 
-	ClusterRequest.ServiceGroups = serviceGroups
-
-	var headers = make(map[string]string)
-	if !plan.IfMatch.IsUnknown() && !plan.IfMatch.IsNull() {
-		headers["If-Match"] = plan.IfMatch.ValueString()
+	ClusterRequest.ServiceGroups = make([]apigen.ServiceGroup, 0, len(serviceGroups))
+	for _, psg := range plan.ServiceGroups {
+		n := apigen.Node{Compute: apigen.Compute{Cpu: int(psg.Node.Compute.Cpu.ValueInt64()), Ram: int(psg.Node.Compute.Ram.ValueInt64())}}
+		var nd apigen.Node_Disk
+		switch plan.CloudProvider.Type.ValueString() {
+		case "aws":
+			_ = nd.FromDiskAWS(apigen.DiskAWS{Type: apigen.DiskAWSType(psg.Node.Disk.Type.ValueString())})
+		case "azure":
+			var storage *apigen.DiskAzureStorage
+			if !psg.Node.Disk.Storage.IsNull() && !psg.Node.Disk.Storage.IsUnknown() {
+				val := apigen.DiskAzureStorage(psg.Node.Disk.Storage.ValueInt64())
+				storage = &val
+			}
+			_ = nd.FromDiskAzure(apigen.DiskAzure{Type: apigen.DiskAzureType(psg.Node.Disk.Type.ValueString()), Storage: storage})
+		case "gcp":
+			_ = nd.FromDiskGCP(apigen.DiskGCP{Type: apigen.DiskGCPType(psg.Node.Disk.Type.ValueString())})
+		}
+		n.Disk = nd
+		var services []apigen.Service
+		for _, s := range psg.Services {
+			services = append(services, apigen.Service(s.ValueString()))
+		}
+		num := int(psg.NumOfNodes.ValueInt64())
+		ClusterRequest.ServiceGroups = append(ClusterRequest.ServiceGroups, apigen.ServiceGroup{
+			Node:       &n,
+			NumOfNodes: &num,
+			Services:   &services,
+		})
 	}
 
-	// Update existing Cluster
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", c.HostURL, organizationId, projectId, clusterId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err = c.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		ClusterRequest,
-		c.Token,
-		headers,
-	)
+	params := &apigen.PutClusterParams{}
+	if !plan.IfMatch.IsUnknown() && !plan.IfMatch.IsNull() {
+		v := apigen.IfMatch(plan.IfMatch.ValueString())
+		params.IfMatch = &v
+	}
+
+	orgUUID, _ := uuid.Parse(organizationId)
+	projUUID, _ := uuid.Parse(projectId)
+	cluUUID, _ := uuid.Parse(clusterId)
+
+	_, err = c.ClientV2.PutClusterWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID), apigen.ClusterId(cluUUID), params, ClusterRequest)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -469,7 +491,7 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 	}
 
 	for i, serviceGroup := range currentState.ServiceGroups {
-		if clusterapi.AreEqual(plan.ServiceGroups[i].Services, serviceGroup.Services) {
+		if reflect.DeepEqual(plan.ServiceGroups[i].Services, serviceGroup.Services) {
 			currentState.ServiceGroups[i].Services = plan.ServiceGroups[i].Services
 		}
 	}
@@ -507,16 +529,11 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 		clusterId      = resourceIDs[providerschema.Id]
 	)
 
-	// Delete existing Cluster
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", r.HostURL, organizationId, projectId, clusterId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
-	_, err = r.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		r.Token,
-		nil,
-	)
+	orgUUID, _ := uuid.Parse(organizationId)
+	projUUID, _ := uuid.Parse(projectId)
+	cluUUID, _ := uuid.Parse(clusterId)
+
+	_, err = r.ClientV2.DeleteClusterWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID), apigen.ClusterId(cluUUID), nil)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -545,9 +562,6 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 		return
 	}
 
-	// This case will only occur when cluster deletion has failed,
-	// and the cluster record still exists in the cp metadata. Therefore,
-	// no error will be returned when performing a GET call.
 	cluster, err := r.retrieveCluster(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
@@ -580,27 +594,19 @@ func (c *Cluster) ImportState(
 // using the provided cluster ID by open-api call.
 func (c *Cluster) getCluster(
 	ctx context.Context, organizationId, projectId, clusterId string,
-) (*clusterapi.GetClusterResponse, error) {
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", c.HostURL, organizationId, projectId, clusterId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := c.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		c.Token,
-		nil,
-	)
+) (*apigen.GetClusterResponse, error) {
+	orgUUID, _ := uuid.Parse(organizationId)
+	projUUID, _ := uuid.Parse(projectId)
+	cluUUID, _ := uuid.Parse(clusterId)
+
+	res, err := c.ClientV2.GetClusterWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID), apigen.ClusterId(cluUUID))
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 	}
-
-	clusterResp := clusterapi.GetClusterResponse{}
-	err = json.Unmarshal(response.Body, &clusterResp)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
+	if res.JSON200 == nil {
+		return nil, fmt.Errorf("%s: unexpected status %s", errors.ErrExecutingRequest, res.Status())
 	}
-	clusterResp.Etag = response.Response.Header.Get("ETag")
-	return &clusterResp, nil
+	return res.JSON200, nil
 }
 
 // retrieveCluster retrieves cluster information for a specified organization, project, and cluster ID.
@@ -612,7 +618,13 @@ func (c *Cluster) retrieveCluster(
 		return nil, fmt.Errorf("%s: %w", errors.ErrNotFound, err)
 	}
 
-	audit := providerschema.NewCouchbaseAuditData(clusterResp.Audit)
+	audit := providerschema.CouchbaseAuditData{
+		CreatedAt:  types.StringValue(clusterResp.Audit.CreatedAt.String()),
+		CreatedBy:  types.StringValue(clusterResp.Audit.CreatedBy),
+		ModifiedAt: types.StringValue(clusterResp.Audit.ModifiedAt.String()),
+		ModifiedBy: types.StringValue(clusterResp.Audit.ModifiedBy),
+		Version:    types.Int64Value(int64(clusterResp.Audit.Version)),
+	}
 
 	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
 	if diags.HasError() {
@@ -632,8 +644,8 @@ func (c *Cluster) retrieveCluster(
 // The function returns an error if the operation times out or encounters an error during status retrieval.
 func (c *Cluster) checkClusterStatus(ctx context.Context, organizationId, projectId, ClusterId string) error {
 	var (
-		clusterResp *clusterapi.GetClusterResponse
-		err         error
+		v2resp *apigen.GetClusterResponse
+		err    error
 	)
 
 	// Assuming 60 minutes is the max time deployment takes, can change after discussion
@@ -652,14 +664,16 @@ func (c *Cluster) checkClusterStatus(ctx context.Context, organizationId, projec
 		case <-ctx.Done():
 			return fmt.Errorf("cluster creation status transition timed out after initiation, unexpected error: %w", err)
 		case <-timer.C:
-			clusterResp, err = c.getCluster(ctx, organizationId, projectId, ClusterId)
+			v2resp, err = c.getCluster(ctx, organizationId, projectId, ClusterId)
 			switch err {
 			case nil:
-				if clusterapi.IsFinalState(clusterResp.CurrentState) {
+				current := string(v2resp.CurrentState)
+				if current == "healthy" || current == "destroyFailed" || current == "deploymentFailed" || current == "turnedOff" {
 					return nil
 				}
 				const msg = "waiting for cluster to complete the execution"
 				tflog.Info(ctx, msg)
+				break
 			default:
 				return err
 			}
@@ -669,13 +683,13 @@ func (c *Cluster) checkClusterStatus(ctx context.Context, organizationId, projec
 }
 
 // morphToApiServiceGroups converts a provider cluster serviceGroups to an API-compatible list of service groups.
-func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]clusterapi.ServiceGroup, error) {
-	var newServiceGroups []clusterapi.ServiceGroup
+func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]apigen.ServiceGroup, error) {
+	var newServiceGroups []apigen.ServiceGroup
 	for _, serviceGroup := range plan.ServiceGroups {
 		numOfNodes := int(serviceGroup.NumOfNodes.ValueInt64())
-		newServiceGroup := clusterapi.ServiceGroup{
-			Node: &clusterapi.Node{
-				Compute: clusterapi.Compute{
+		newServiceGroup := apigen.ServiceGroup{
+			Node: &apigen.Node{
+				Compute: apigen.Compute{
 					Ram: int(serviceGroup.Node.Compute.Ram.ValueInt64()),
 					Cpu: int(serviceGroup.Node.Compute.Cpu.ValueInt64()),
 				},
@@ -684,10 +698,10 @@ func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]cluste
 		}
 
 		switch plan.CloudProvider.Type.ValueString() {
-		case string(clusterapi.Aws):
-			node := clusterapi.Node{}
-			diskAws := clusterapi.DiskAWS{
-				Type: clusterapi.DiskAWSType(serviceGroup.Node.Disk.Type.ValueString()),
+		case "aws":
+			node := apigen.Node{}
+			diskAws := apigen.DiskAWS{
+				Type: apigen.DiskAWSType(serviceGroup.Node.Disk.Type.ValueString()),
 			}
 
 			if serviceGroup.Node != nil && !serviceGroup.Node.Disk.Storage.IsNull() {
@@ -698,22 +712,22 @@ func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]cluste
 				diskAws.Iops = int(serviceGroup.Node.Disk.IOPS.ValueInt64())
 			}
 
-			err := node.FromDiskAWS(diskAws)
+			err := node.Disk.FromDiskAWS(diskAws)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", errors.ErrConvertingServiceGroups, err)
 			}
 			newServiceGroup.Node.Disk = node.Disk
 
-		case string(clusterapi.Azure):
-			node := clusterapi.Node{}
-			diskAzure := clusterapi.DiskAzure{
-				Type: clusterapi.DiskAzureType(serviceGroup.Node.Disk.Type.ValueString()),
+		case "azure":
+			node := apigen.Node{}
+			diskAzure := apigen.DiskAzure{
+				Type: apigen.DiskAzureType(serviceGroup.Node.Disk.Type.ValueString()),
 			}
 
 			//only set values for Ultra type disk, not for Premium type
-			if diskAzure.Type == clusterapi.Ultra {
+			if string(diskAzure.Type) == "Ultra" {
 				if serviceGroup.Node != nil && !serviceGroup.Node.Disk.Storage.IsNull() && !serviceGroup.Node.Disk.Storage.IsUnknown() {
-					storage := int(serviceGroup.Node.Disk.Storage.ValueInt64())
+					storage := apigen.DiskAzureStorage(serviceGroup.Node.Disk.Storage.ValueInt64())
 					diskAzure.Storage = &storage
 				}
 
@@ -725,31 +739,31 @@ func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]cluste
 
 			if serviceGroup.Node != nil && !serviceGroup.Node.Disk.Autoexpansion.IsNull() {
 				autoexpansion := serviceGroup.Node.Disk.Autoexpansion.ValueBool()
-				diskAzure.Autoexpansion = &autoexpansion
+				diskAzure.AutoExpansion = &autoexpansion
 			}
 
-			if err := node.FromDiskAzure(diskAzure); err != nil {
+			if err := node.Disk.FromDiskAzure(diskAzure); err != nil {
 				return nil, fmt.Errorf("%s: %w", errors.ErrConvertingServiceGroups, err)
 			}
 			newServiceGroup.Node.Disk = node.Disk
 
-		case string(clusterapi.Gcp):
+		case "gcp":
 			var storage int
-			var diskType clusterapi.DiskGCPType
+			var diskType apigen.DiskGCPType
 
 			if serviceGroup.Node != nil {
 				if !serviceGroup.Node.Disk.Storage.IsNull() && !serviceGroup.Node.Disk.Storage.IsUnknown() {
 					storage = int(serviceGroup.Node.Disk.Storage.ValueInt64())
 				}
 				if !serviceGroup.Node.Disk.Type.IsNull() && !serviceGroup.Node.Disk.Type.IsUnknown() {
-					diskType = clusterapi.DiskGCPType(serviceGroup.Node.Disk.Type.ValueString())
+					diskType = apigen.DiskGCPType(serviceGroup.Node.Disk.Type.ValueString())
 				}
 				if !serviceGroup.Node.Disk.IOPS.IsNull() && !serviceGroup.Node.Disk.IOPS.IsUnknown() {
 					return nil, fmt.Errorf("%s", errors.ErrGcpIopsCannotBeSet)
 				}
 			}
-			node := clusterapi.Node{}
-			err := node.FromDiskGCP(clusterapi.DiskGCP{
+			node := apigen.Node{}
+			err := node.Disk.FromDiskGCP(apigen.DiskGCP{
 				Type:    diskType,
 				Storage: storage,
 			})
@@ -758,10 +772,10 @@ func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]cluste
 			}
 			newServiceGroup.Node.Disk = node.Disk
 		}
-		var newServices []clusterapi.Service
+		var newServices []apigen.Service
 		for _, service := range serviceGroup.Services {
 			newService := service.ValueString()
-			newServices = append(newServices, clusterapi.Service(newService))
+			newServices = append(newServices, apigen.Service(newService))
 		}
 		newServiceGroup.Services = &newServices
 		newServiceGroups = append(newServiceGroups, newServiceGroup)
@@ -837,13 +851,13 @@ func (c *Cluster) validateCreateCluster(plan providerschema.Cluster) error {
 
 	csp := plan.CloudProvider.Type.ValueString()
 	switch csp {
-	case string(clusterapi.Aws), string(clusterapi.Gcp), string(clusterapi.Azure):
+	case "aws", "gcp", "azure":
 		// continue
 	default:
 		return fmt.Errorf("invalid cloud provider type %s, must be either aws, gcp or azure", csp)
 	}
 
-	if csp != string(clusterapi.Azure) {
+	if csp != "azure" {
 		for _, sg := range plan.ServiceGroups {
 			// check if autoexpansion is set for AWS or GCP.
 			if !sg.Node.Disk.Autoexpansion.IsNull() && !sg.Node.Disk.Autoexpansion.IsUnknown() {
@@ -852,7 +866,7 @@ func (c *Cluster) validateCreateCluster(plan providerschema.Cluster) error {
 		}
 	}
 
-	if csp == string(clusterapi.Gcp) {
+	if csp == "gcp" {
 		for _, sg := range plan.ServiceGroups {
 			// check if iops is set for GCP.
 			if !sg.Node.Disk.IOPS.IsNull() && !sg.Node.Disk.IOPS.IsUnknown() {
@@ -935,7 +949,7 @@ func (c *Cluster) convertZones(zones []basetypes.StringValue) []string {
 func (c *Cluster) checkDisk(plan providerschema.Cluster) error {
 	for _, serviceGroup := range plan.ServiceGroups {
 		// Check if Disk.Type is not "Ultra" but either Storage or IOPS is non-null.
-		if serviceGroup.Node.Disk.Type.ValueString() != string(clusterapi.Ultra) {
+		if serviceGroup.Node.Disk.Type.ValueString() != "Ultra" {
 			if (!serviceGroup.Node.Disk.Storage.IsNull() && !serviceGroup.Node.Disk.Storage.IsUnknown()) || (!serviceGroup.Node.Disk.IOPS.IsNull() && !serviceGroup.Node.Disk.IOPS.IsUnknown()) {
 				return fmt.Errorf("invalid configuration: Storage and IOPS cannot be specified when Disk.Type is Premium")
 			}
@@ -947,7 +961,7 @@ func (c *Cluster) checkDisk(plan providerschema.Cluster) error {
 func (c *Cluster) checkDiskUpdate(plan providerschema.Cluster) error {
 	for _, serviceGroup := range plan.ServiceGroups {
 		// Check if Disk.Type is not "Ultra" but either Storage or IOPS is non-null.
-		if serviceGroup.Node.Disk.Type.ValueString() != string(clusterapi.Ultra) {
+		if serviceGroup.Node.Disk.Type.ValueString() != "Ultra" {
 			if (!serviceGroup.Node.Disk.Storage.IsNull() && !serviceGroup.Node.Disk.Storage.IsUnknown()) || (!serviceGroup.Node.Disk.IOPS.IsNull() && !serviceGroup.Node.Disk.IOPS.IsUnknown()) {
 				// Check what is coming from the existing plan, throw error, if non-default values.
 				if !isDefaultStorageAndIOPS(serviceGroup.Node.Disk.Type, serviceGroup.Node.Disk.Storage, serviceGroup.Node.Disk.IOPS) {
@@ -961,24 +975,20 @@ func (c *Cluster) checkDiskUpdate(plan providerschema.Cluster) error {
 
 // Helper function to check if Storage and IOPS are set to default values.
 func isDefaultStorageAndIOPS(diskType types.String, storage types.Int64, iops types.Int64) bool {
-	switch diskType.ValueString() {
-	case string(clusterapi.P6):
-		return storage.ValueInt64() == clusterapi.DefaultP6Storage && iops.ValueInt64() == clusterapi.DefaultP6IOPS
-	case string(clusterapi.P10):
-		return storage.ValueInt64() == clusterapi.DefaultP10Storage && iops.ValueInt64() == clusterapi.DefaultP10IOPS
-	case string(clusterapi.P15):
-		return storage.ValueInt64() == clusterapi.DefaultP15Storage && iops.ValueInt64() == clusterapi.DefaultP15IOPS
-	case string(clusterapi.P20):
-		return storage.ValueInt64() == clusterapi.DefaultP20Storage && iops.ValueInt64() == clusterapi.DefaultP20IOPS
-	case string(clusterapi.P30):
-		return storage.ValueInt64() == clusterapi.DefaultP30Storage && iops.ValueInt64() == clusterapi.DefaultP30IOPS
-	case string(clusterapi.P40):
-		return storage.ValueInt64() == clusterapi.DefaultP40Storage && iops.ValueInt64() == clusterapi.DefaultP40IOPS
-	case string(clusterapi.P50):
-		return storage.ValueInt64() == clusterapi.DefaultP50Storage && iops.ValueInt64() == clusterapi.DefaultP50IOPS
-	case string(clusterapi.P60):
-		return storage.ValueInt64() == clusterapi.DefaultP60Storage && iops.ValueInt64() == clusterapi.DefaultP60IOPS
-	}
-
+	// Without constants from v1, conservatively return false (not default)
 	return false
+}
+
+func valueOrEmpty(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}
+
+func getBoolOrFalse(b *bool) bool {
+	if b == nil {
+		return false
+	}
+	return *b
 }

@@ -2,7 +2,6 @@ package resources
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -13,10 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	cluster_onoff_api "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	cluster_api "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
+	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/apigen"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+
+	"github.com/google/uuid"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -198,37 +199,31 @@ func (c *ClusterOnOffOnDemand) validateClusterOnOffRequest(plan providerschema.C
 	return nil
 }
 
-// retrieveClusterOnOff retrieves onDemandClusterOnOff information from the specified organization and project using the provided cluster ID by Get cluster open-api call.
+// retrieveClusterOnOff retrieves onDemandClusterOnOff information using GET cluster v2 API to confirm state.
 func (c *ClusterOnOffOnDemand) retrieveClusterOnOff(ctx context.Context, organizationId, projectId, clusterId, state string, linkedApp bool) (*providerschema.ClusterOnOffOnDemand, error) {
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", c.HostURL, organizationId, projectId, clusterId)
-	cfg := cluster_onoff_api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := c.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		c.Token,
-		nil,
-	)
+	orgUUID, _ := uuid.Parse(organizationId)
+	projUUID, _ := uuid.Parse(projectId)
+	cluUUID, _ := uuid.Parse(clusterId)
+
+	res, err := c.ClientV2.GetClusterWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID), apigen.ClusterId(cluUUID))
 	if err != nil {
 		return nil, err
 	}
 
-	//There is no GET endpoint so get the cluster response and check current state
-	clusterResp := cluster_api.GetClusterResponse{}
-	err = json.Unmarshal(response.Body, &clusterResp)
-	if err != nil {
-		return nil, err
+	if res.JSON200 == nil {
+		return nil, fmt.Errorf("unexpected status: %s", res.Status())
 	}
 
-	if validateClusterStateIsSameInPlanAndState(state, string(clusterResp.CurrentState)) {
-		clusterResp.CurrentState = cluster_api.State(state)
+	current := string(res.JSON200.CurrentState)
+	if validateClusterStateIsSameInPlanAndState(state, current) {
+		current = state
 	}
 
 	refreshedState := providerschema.ClusterOnOffOnDemand{
 		ClusterId:              types.StringValue(clusterId),
 		ProjectId:              types.StringValue(projectId),
 		OrganizationId:         types.StringValue(organizationId),
-		State:                  types.StringValue(state),
+		State:                  types.StringValue(current),
 		TurnOnLinkedAppService: types.BoolValue(linkedApp),
 	}
 
