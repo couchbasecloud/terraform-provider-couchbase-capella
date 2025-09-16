@@ -3,12 +3,14 @@ package acceptance_tests
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"log"
 	"os"
 	"testing"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/apigen"
 )
 
 // this is the entry point for acceptance tests.
@@ -39,8 +41,15 @@ provider "couchbase-capella" {
 	var code int
 	ctx := context.Background()
 	client := api.NewClient(timeout)
+	clientV2, _ := apigen.NewClientWithResponses(globalHost,
+		apigen.WithHTTPClient(client),
+		apigen.WithRequestEditorFn(func(_ context.Context, req *http.Request) error {
+			req.Header.Set("Authorization", "Bearer "+globalToken)
+			return nil
+		}),
+	)
 
-	err := setup(ctx, client)
+	err := setup(ctx, client, clientV2)
 	if err != nil {
 		log.Print(err)
 		code = 1
@@ -48,7 +57,7 @@ provider "couchbase-capella" {
 		code = m.Run()
 	}
 
-	if err = cleanup(ctx, client); err != nil {
+	if err = cleanup(ctx, client, clientV2); err != nil {
 		log.Print(err)
 		code = 1
 	}
@@ -56,8 +65,8 @@ provider "couchbase-capella" {
 	os.Exit(code)
 }
 
-func setup(ctx context.Context, client *api.Client) error {
-	if err := createProject(ctx, client); err != nil {
+func setup(ctx context.Context, client *api.Client, clientV2 *apigen.ClientWithResponses) error {
+	if err := createProject(ctx, clientV2); err != nil {
 		return err
 	}
 	if err := createCluster(ctx, client); err != nil {
@@ -82,7 +91,7 @@ func setup(ctx context.Context, client *api.Client) error {
 	return nil
 }
 
-func cleanup(ctx context.Context, client *api.Client) error {
+func cleanup(ctx context.Context, client *api.Client, clientV2 *apigen.ClientWithResponses) error {
 	if globalAppServiceId != "" {
 		if err := destroyAppService(ctx, client); err != nil {
 			return err
@@ -104,7 +113,7 @@ func cleanup(ctx context.Context, client *api.Client) error {
 	}
 
 	if globalProjectId != "" {
-		if err := destroyProject(ctx, client); err != nil {
+		if err := destroyProject(ctx, clientV2); err != nil {
 			return err
 		}
 	}
