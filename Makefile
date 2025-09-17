@@ -73,10 +73,11 @@ docs-lint:
 docs:
 	@echo "Use this site to preview markdown rendering: https://registry.terraform.io/tools/doc-preview"
 
-.PHONY: gen-apigen
-gen-apigen: ## Generate OpenAPI client into internal/apigen
-	@echo "==> Generating OpenAPI client (internal/apigen)"
-	PATH="$(shell go env GOPATH)/bin:$(PATH)" go generate ./internal/apigen
+
+.PHONY: gen-api
+gen-api: ## Generate OpenAPI client into internal/generated/api
+	@echo "==> Generating OpenAPI client (internal/generated/api)"
+	PATH="$(shell go env GOPATH)/bin:$(PATH)" go generate ./internal/generated/api
 	@echo "==> Done"
 
 .PHONT: build-docs

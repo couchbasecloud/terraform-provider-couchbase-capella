@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/apigen"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/google/uuid"
