@@ -28,7 +28,7 @@ Public APIs are updated automatically, tracking all new Capella features.
 
 ## Generated API client
 
-This repository includes an OpenAPI-generated client in `internal/apigen` (keeping the existing hand-written client in `internal/api` for backward compatibility).
+This repository includes an OpenAPI-generated client in `internal/generated/api` (keeping the existing hand-written client in `internal/api` for backward compatibility).
 
 Generate/update the client before working on a new resource or data source:
 
@@ -38,12 +38,12 @@ Generate/update the client before working on a new resource or data source:
 
 2) Regenerate from the root `openapi.generated.yaml`:
 
-   `make gen-apigen`
+   `make gen-api`
 
-The command writes the client/types to `internal/apigen/openapi.gen.go`.
+The command writes the client/types to `internal/generated/api/openapi.gen.go`.
 
 Notes:
 - Provider wiring makes both clients available:
   - `providerschema.Data.ClientV1`: legacy HTTP client (`internal/api`)
-  - `providerschema.Data.ClientV2`: generated client with typed methods (`internal/apigen`)
+  - `providerschema.Data.ClientV2`: generated client with typed methods (`internal/generated/api`)
 - When adding a new resource/data source, prefer calling `ClientV2` for new endpoints and migrate incrementally.
