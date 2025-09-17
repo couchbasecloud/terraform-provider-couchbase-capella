@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/apigen"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/datasources"
+	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/version"

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/apigen"
+	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 	"github.com/google/uuid"
 )
 

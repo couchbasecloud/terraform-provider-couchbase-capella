@@ -1,0 +1,344 @@
+{
+	"datasources": [
+		{
+			"name": "projects",
+			"schema": {
+				"attributes": [
+					{
+						"name": "organization_id",
+						"string": {
+							"computed_optional_required": "required",
+							"description": "The GUID4 ID of the organization.\n"
+						}
+					},
+					{
+						"name": "page",
+						"int64": {
+							"computed_optional_required": "computed_optional",
+							"description": "Sets the page you would like to view."
+						}
+					},
+					{
+						"name": "per_page",
+						"int64": {
+							"computed_optional_required": "computed_optional",
+							"description": "Sets the number of results you would like to have on each page."
+						}
+					},
+					{
+						"name": "sort_by",
+						"list": {
+							"computed_optional_required": "computed_optional",
+							"element_type": {
+								"string": {}
+							},
+							"description": "Sets the order of how you would like to sort the results and the key you would like to order by. Valid fields to sort the results are: **id**, **name**."
+						}
+					},
+					{
+						"name": "sort_direction",
+						"string": {
+							"computed_optional_required": "computed_optional",
+							"description": "The order in which the items will be sorted.",
+							"validators": [
+								{
+									"custom": {
+										"imports": [
+											{
+												"path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+											}
+										],
+										"schema_definition": "stringvalidator.OneOf(\n\"asc\",\n\"desc\",\n)"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "cursor",
+						"single_nested": {
+							"computed_optional_required": "computed",
+							"attributes": [
+								{
+									"name": "hrefs",
+									"single_nested": {
+										"computed_optional_required": "computed",
+										"attributes": [
+											{
+												"name": "first",
+												"string": {
+													"computed_optional_required": "computed",
+													"description": "The base URL, endpoint, and path parameters required to fetch the first page of results."
+												}
+											},
+											{
+												"name": "last",
+												"string": {
+													"computed_optional_required": "computed",
+													"description": "The base URL, endpoint, and path parameters required to fetch the last page of results."
+												}
+											},
+											{
+												"name": "next",
+												"string": {
+													"computed_optional_required": "computed",
+													"description": "The base URL, endpoint, and path parameters required to fetch the next page of results.\nEmpty if there is no next page.\n"
+												}
+											},
+											{
+												"name": "previous",
+												"string": {
+													"computed_optional_required": "computed",
+													"description": "The base URL, endpoint, and path parameters required to fetch the previous page of results.\nEmpty if there is no previous page.\n"
+												}
+											}
+										]
+									}
+								},
+								{
+									"name": "pages",
+									"single_nested": {
+										"computed_optional_required": "computed",
+										"attributes": [
+											{
+												"name": "last",
+												"int64": {
+													"computed_optional_required": "computed",
+													"description": "Number of the last page of results."
+												}
+											},
+											{
+												"name": "next",
+												"int64": {
+													"computed_optional_required": "computed",
+													"description": "Number of the next page of results. Not set on the last page.\n"
+												}
+											},
+											{
+												"name": "page",
+												"int64": {
+													"computed_optional_required": "computed",
+													"description": "Current page of results, starting from page 1."
+												}
+											},
+											{
+												"name": "per_page",
+												"int64": {
+													"computed_optional_required": "computed",
+													"description": "Number of items displayed in each page."
+												}
+											},
+											{
+												"name": "previous",
+												"int64": {
+													"computed_optional_required": "computed",
+													"description": "Number of the previous page of results. Not set on the first page.\n"
+												}
+											},
+											{
+												"name": "total_items",
+												"int64": {
+													"computed_optional_required": "computed",
+													"description": "Total items found by the given query."
+												}
+											}
+										]
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "data",
+						"list_nested": {
+							"computed_optional_required": "computed",
+							"nested_object": {
+								"attributes": [
+									{
+										"name": "audit",
+										"single_nested": {
+											"computed_optional_required": "computed",
+											"attributes": [
+												{
+													"name": "created_at",
+													"string": {
+														"computed_optional_required": "computed",
+														"description": "The RFC3339 timestamp associated with when the resource was initially\ncreated.\n"
+													}
+												},
+												{
+													"name": "created_by",
+													"string": {
+														"computed_optional_required": "computed",
+														"description": "The user who created the resource; this will be a UUID4 ID for standard\nusers and will be a string such as \"internal-support\" for internal\nCouchbase support users.\n"
+													}
+												},
+												{
+													"name": "modified_at",
+													"string": {
+														"computed_optional_required": "computed",
+														"description": "The RFC3339 timestamp associated with when the resource was last modified.\n"
+													}
+												},
+												{
+													"name": "modified_by",
+													"string": {
+														"computed_optional_required": "computed",
+														"description": "The user who last modified the resource; this will be a UUID4 ID for\nstandard users and wilmal be a string such as \"internal-support\" for\ninternal Couchbase support users.\n"
+													}
+												},
+												{
+													"name": "version",
+													"int64": {
+														"computed_optional_required": "computed",
+														"description": "The version of the document. This value is incremented each time the\nresource is modified.\n"
+													}
+												}
+											]
+										}
+									},
+									{
+										"name": "description",
+										"string": {
+											"computed_optional_required": "computed",
+											"description": "The description of a particular project."
+										}
+									},
+									{
+										"name": "id",
+										"string": {
+											"computed_optional_required": "computed",
+											"description": "A GUID4 identifier of the project."
+										}
+									},
+									{
+										"name": "name",
+										"string": {
+											"computed_optional_required": "computed",
+											"description": "The name of the project."
+										}
+									}
+								]
+							}
+						}
+					}
+				]
+			}
+		}
+	],
+	"provider": {
+		"name": "couchbase_capella"
+	},
+	"resources": [
+		{
+			"name": "project",
+			"schema": {
+				"attributes": [
+					{
+						"name": "description",
+						"string": {
+							"computed_optional_required": "computed_optional",
+							"description": "A short description of the project (up to 256 characters).",
+							"validators": [
+								{
+									"custom": {
+										"imports": [
+											{
+												"path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+											}
+										],
+										"schema_definition": "stringvalidator.LengthAtMost(256)"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "name",
+						"string": {
+							"computed_optional_required": "required",
+							"description": "The name of the project (up to 128 characters).",
+							"validators": [
+								{
+									"custom": {
+										"imports": [
+											{
+												"path": "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+											}
+										],
+										"schema_definition": "stringvalidator.LengthAtMost(128)"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "id",
+						"string": {
+							"computed_optional_required": "computed",
+							"description": "The ID of the project created."
+						}
+					},
+					{
+						"name": "audit",
+						"single_nested": {
+							"computed_optional_required": "computed",
+							"attributes": [
+								{
+									"name": "created_at",
+									"string": {
+										"computed_optional_required": "computed",
+										"description": "The RFC3339 timestamp associated with when the resource was initially\ncreated.\n"
+									}
+								},
+								{
+									"name": "created_by",
+									"string": {
+										"computed_optional_required": "computed",
+										"description": "The user who created the resource; this will be a UUID4 ID for standard\nusers and will be a string such as \"internal-support\" for internal\nCouchbase support users.\n"
+									}
+								},
+								{
+									"name": "modified_at",
+									"string": {
+										"computed_optional_required": "computed",
+										"description": "The RFC3339 timestamp associated with when the resource was last modified.\n"
+									}
+								},
+								{
+									"name": "modified_by",
+									"string": {
+										"computed_optional_required": "computed",
+										"description": "The user who last modified the resource; this will be a UUID4 ID for\nstandard users and wilmal be a string such as \"internal-support\" for\ninternal Couchbase support users.\n"
+									}
+								},
+								{
+									"name": "version",
+									"int64": {
+										"computed_optional_required": "computed",
+										"description": "The version of the document. This value is incremented each time the\nresource is modified.\n"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "organization_id",
+						"string": {
+							"computed_optional_required": "computed_optional",
+							"description": "The GUID4 ID of the organization.\n"
+						}
+					},
+					{
+						"name": "project_id",
+						"string": {
+							"computed_optional_required": "computed_optional",
+							"description": "The GUID4 ID of the project."
+						}
+					}
+				]
+			}
+		}
+	],
+	"version": "0.1"
+}

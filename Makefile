@@ -60,6 +60,8 @@ setup:  ## Install dev tools
 	go install golang.org/x/tools/go/analysis/passes/fieldalignment/cmd/fieldalignment@latest
 	go install golang.org/x/tools/cmd/goimports@latest
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin $(GOLANGCI_VERSION)
+	go install github.com/hashicorp/terraform-plugin-codegen-framework/cmd/tfplugingen-framework@latest
+	go install github.com/hashicorp/terraform-plugin-codegen-openapi/cmd/tfplugingen-openapi@latest
 
 .PHONY: check
 check: setup tffmt tfcheck fmt docs-lint lint-fix test
@@ -75,9 +77,15 @@ docs:
 
 
 .PHONY: gen-api
-gen-api: ## Generate OpenAPI client into internal/generated/api
+gen-api: setup ## Generate OpenAPI client into internal/generated/api
 	@echo "==> Generating OpenAPI client (internal/generated/api)"
 	PATH="$(shell go env GOPATH)/bin:$(PATH)" go generate ./internal/generated/api
+	@echo "==> Done"
+
+.PHONY: gen-tf
+gen-tf: setup ## Scaffold TF Plugin Framework resource/datasource stubs
+	@echo "==> Generating TF Plugin Framework scaffolding (internal/generated/tf)"
+	PATH="$(shell go env GOPATH)/bin:$(PATH)" go generate ./internal/generated/tf/...
 	@echo "==> Done"
 
 .PHONT: build-docs

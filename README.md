@@ -47,3 +47,21 @@ Notes:
   - `providerschema.Data.ClientV1`: legacy HTTP client (`internal/api`)
   - `providerschema.Data.ClientV2`: generated client with typed methods (`internal/generated/api`)
 - When adding a new resource/data source, prefer calling `ClientV2` for new endpoints and migrate incrementally.
+
+## Generated Terraform schemas (Plugin Framework)
+
+You can generate provider/resource/data source schemas from the OpenAPI spec using HashiCorp's codegen tools.
+
+1) Install generators (included in `make setup`):
+
+   - `go install github.com/hashicorp/terraform-plugin-codegen-framework/cmd/tfplugingen-framework@latest`
+   - `go install github.com/hashicorp/terraform-plugin-codegen-openapi/cmd/tfplugingen-openapi@latest`
+
+2) Generate provider and project schemas:
+
+   - Provider-level codegen (from `openapi.generated.yaml`):
+     `make gen-tf`
+
+   - Project-specific resource/data source codegen lives under `internal/generated/tf/project/` and is invoked by `go generate` in that folder. The top-level `make gen-tf` runs all generation under `internal/generated/tf/...`.
+
+Outputs are written under `internal/generated/tf/`.

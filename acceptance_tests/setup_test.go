@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/apigen"
+	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 )
 
 // this is the entry point for acceptance tests.
