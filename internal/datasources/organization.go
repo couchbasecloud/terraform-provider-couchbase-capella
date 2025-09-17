@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/apigen"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 	"github.com/google/uuid"
 )
@@ -86,7 +85,7 @@ func (o *Organization) Read(ctx context.Context, req datasource.ReadRequest, res
 		return
 	}
 
-	res, err := o.ClientV2.GetOrganizationByIDWithResponse(ctx, apigen.OrganizationId(orgUUID))
+	res, err := o.ClientV2.GetOrganizationByIDWithResponse(ctx, orgUUID)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Organization",

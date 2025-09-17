@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/apigen"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/apigen"
 	"github.com/google/uuid"
 )
 
@@ -14,7 +14,7 @@ func createProject(ctx context.Context, client *apigen.ClientWithResponses) erro
 	}
 
 	orgUUID, _ := uuid.Parse(globalOrgId)
-	resp, err := client.PostProjectWithResponse(ctx, apigen.OrganizationId(orgUUID), req)
+	resp, err := client.PostProjectWithResponse(ctx, orgUUID, req)
 	if err != nil {
 		return err
 	}
@@ -28,6 +28,6 @@ func createProject(ctx context.Context, client *apigen.ClientWithResponses) erro
 func destroyProject(ctx context.Context, client *apigen.ClientWithResponses) error {
 	orgUUID, _ := uuid.Parse(globalOrgId)
 	projUUID, _ := uuid.Parse(globalProjectId)
-	_, err := client.DeleteProjectByIDWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID))
+	_, err := client.DeleteProjectByIDWithResponse(ctx, orgUUID, projUUID)
 	return err
 }

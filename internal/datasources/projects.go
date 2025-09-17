@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/apigen"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/google/uuid"
@@ -104,7 +103,7 @@ func (d *Projects) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 		return
 	}
 
-	listResp, err := d.ClientV2.ListProjectsWithResponse(ctx, apigen.OrganizationId(orgUUID), nil)
+	listResp, err := d.ClientV2.ListProjectsWithResponse(ctx, orgUUID, nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Projects",
