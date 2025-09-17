@@ -24,34 +24,34 @@ variable "app_endpoint_name" {
 }
 
 variable "issuer" {
-  description = "OIDC issuer URL"
+  description = "The URL for the OpenID Connect issuer."
 }
 
 variable "client_id" {
-  description = "OIDC client ID"
+  description = "The OpenID Connect provider client ID."
 }
 
 variable "discovery_url" {
-  description = "Non-standard discovery endpoint URL"
+  description = "The URL for the non-standard discovery endpoint."
   default     = null
 }
 
 variable "register" {
-  description = "Register new App Service user on first login"
+  description = "Indicates whether to register a new App Service user account when a user logs in using OpenID Connect."
   default     = null
 }
 
 variable "roles_claim" {
-  description = "Token claim providing roles"
+  description = "If set, the value(s) of the given OpenID Connect authentication token claim will be added to the user's roles. The value of this claim in the OIDC token must be either a string or an array of strings, any other type will result in an error."
   default     = null
 }
 
 variable "user_prefix" {
-  description = "Username prefix for users created by this provider"
+  description = "Username prefix for all users created for this provider"
   default     = null
 }
 
 variable "username_claim" {
-  description = "Token claim to use for username"
+  description = "Allows a different OpenID Connect field to be specified instead of the Subject (sub)."
   default     = null
 }
