@@ -2,7 +2,7 @@ package schema
 
 import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/apigen"
+	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
