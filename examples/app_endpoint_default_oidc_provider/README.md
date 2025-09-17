@@ -107,13 +107,6 @@ Terraform will perform the following actions:
     }
 
 Plan: 0 to add, 1 to change, 0 to destroy.
-╷
-│ Warning: Value for undeclared variable
-│ 
-│ The root module does not declare a variable named "access_control_function" but a value was found in file "terraform.tfvars". If you meant to use this value, add a "variable" block to the configuration.
-│ 
-│ To silence these warnings, use TF_VAR_... environment variables to provide certain "global" settings to all configurations in your organization. To reduce the verbosity of these warnings, use the -compact-warnings option.
-╵
 
 Do you want to perform these actions?
   Terraform will perform the actions described above.
