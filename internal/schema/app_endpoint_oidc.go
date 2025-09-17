@@ -33,6 +33,7 @@ func (a *AppEndpointOidcProvider) Validate() (map[Attr]string, error) {
 		ClusterId:       a.ClusterId,
 		AppServiceId:    a.AppServiceId,
 		AppEndpointName: a.AppEndpointName,
+		ProviderId:      a.ProviderId,
 	}
 
 	IDs, err := validateSchemaState(state, AppEndpointName)

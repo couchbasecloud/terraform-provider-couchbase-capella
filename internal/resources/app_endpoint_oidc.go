@@ -145,7 +145,7 @@ func (r *AppEndpointOidcProvider) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	providerId := state.ProviderId.ValueString()
+	providerId := IDs[providerschema.ProviderId]
 	if providerId == "" {
 		tflog.Info(ctx, "providerId missing; removing from state")
 		resp.State.RemoveResource(ctx)
