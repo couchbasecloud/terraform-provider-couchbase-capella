@@ -33,10 +33,6 @@ resources:
           description: A short description of the project (up to 256 characters).
           type: string
           optional: true
-        etag:
-          description: ETag header value returned by the server.
-          type: string
-          computed: true
 
 data_sources:
   projects:

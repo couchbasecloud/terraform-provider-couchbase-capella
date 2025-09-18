@@ -7,9 +7,6 @@ package tf
 
 //go:generate sh -c "tfplugingen-openapi generate -config config.yaml -output spec.json ../../../openapi.generated.yaml"
 
-// generate provider code.
-//go:generate sh -c "tfplugingen-framework generate provider --input spec.json --output ."
-
-// generate project resource and datasource code.
+// generate project data sources and resources from OpenAPI-derived spec
 //go:generate sh -c "tfplugingen-framework generate data-sources --input spec.json --output ."
 //go:generate sh -c "tfplugingen-framework generate resources --input spec.json --output ."

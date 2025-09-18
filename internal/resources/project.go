@@ -9,11 +9,14 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
+	resource_project "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/tf/resource_project"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/google/uuid"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -47,8 +50,11 @@ func (r *Project) Metadata(_ context.Context, req resource.MetadataRequest, resp
 }
 
 // Schema defines the schema for the project resource.
-func (r *Project) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = ProjectSchema()
+func (r *Project) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+	// Start from generated schema, then add headers-based fields used by our logic
+	s := resource_project.ProjectResourceSchema(ctx)
+	s.Attributes["if_match"] = schema.StringAttribute{Optional: true, Description: "A precondition header that specifies the entity tag of a resource."}
+	resp.Schema = s
 }
 
 // Configure adds the provider configured client to the project resource.
@@ -72,7 +78,7 @@ func (r *Project) Configure(_ context.Context, req resource.ConfigureRequest, re
 
 // Create creates a new project.
 func (r *Project) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan providerschema.Project
+	var plan resource_project.ProjectModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -145,26 +151,18 @@ func (r *Project) Create(ctx context.Context, req resource.CreateRequest, resp *
 // Read reads project information.
 func (r *Project) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	// Get current state
-	var state providerschema.Project
+	var state resource_project.ProjectModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	IDs, err := state.Validate()
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Reading Capella Projects",
-			"Could not read Capella project ID "+state.Id.String()+": "+err.Error(),
-		)
+	organizationId, projectId, idErr := extractIDsFromState(state)
+	if idErr != nil {
+		resp.Diagnostics.AddError("Missing required IDs", idErr.Error())
 		return
 	}
-
-	var (
-		organizationId = IDs[providerschema.OrganizationId]
-		projectId      = IDs[providerschema.Id]
-	)
 
 	// Get refreshed project value from Capella
 	refreshedState, err := r.retrieveProject(ctx, organizationId, projectId)
@@ -182,10 +180,6 @@ func (r *Project) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 		return
 	}
 
-	if !state.IfMatch.IsUnknown() && !state.IfMatch.IsNull() {
-		refreshedState.IfMatch = state.IfMatch
-	}
-
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &refreshedState)
 	resp.Diagnostics.Append(diags...)
@@ -196,20 +190,11 @@ func (r *Project) Read(ctx context.Context, req resource.ReadRequest, resp *reso
 
 // Update updates the project.
 func (r *Project) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var state providerschema.Project
+	var state resource_project.ProjectModel
 	diags := req.Plan.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 
 	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	IDs, err := state.Validate()
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Updating Capella Project",
-			"Could not update Capella project ID "+state.Id.String()+": "+err.Error(),
-		)
 		return
 	}
 
@@ -221,10 +206,11 @@ func (r *Project) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		return
 	}
 
-	var (
-		organizationId = IDs[providerschema.OrganizationId]
-		projectId      = IDs[providerschema.Id]
-	)
+	organizationId, projectId, idErr := extractIDsFromState(state)
+	if idErr != nil {
+		resp.Diagnostics.AddError("Missing required IDs", idErr.Error())
+		return
+	}
 
 	putReq := apigen.PutProjectJSONRequestBody{
 		Description: func() *string {
@@ -248,10 +234,13 @@ func (r *Project) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		return
 	}
 
+	// Include If-Match header from plan attribute if provided
+	var ifMatch types.String
+	_ = req.Plan.GetAttribute(ctx, path.Root("if_match"), &ifMatch)
 	var params *apigen.PutProjectParams
-	if !state.IfMatch.IsUnknown() && !state.IfMatch.IsNull() {
-		ifMatch := state.IfMatch.ValueString()
-		params = &apigen.PutProjectParams{IfMatch: &ifMatch}
+	if !ifMatch.IsNull() && !ifMatch.IsUnknown() {
+		v := ifMatch.ValueString()
+		params = &apigen.PutProjectParams{IfMatch: &v}
 	}
 
 	_, err = r.ClientV2.PutProjectWithResponse(ctx, orgUUID, projUUID, params, putReq)
@@ -284,8 +273,9 @@ func (r *Project) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		return
 	}
 
-	if !state.IfMatch.IsUnknown() && !state.IfMatch.IsNull() {
-		currentState.IfMatch = state.IfMatch
+	// Preserve If-Match value in state if provided
+	if !ifMatch.IsNull() && !ifMatch.IsUnknown() {
+		_ = resp.State.SetAttribute(ctx, path.Root("if_match"), ifMatch)
 	}
 
 	// Set state to fully populated data
@@ -299,26 +289,18 @@ func (r *Project) Update(ctx context.Context, req resource.UpdateRequest, resp *
 // Delete deletes the project.
 func (r *Project) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// Retrieve values from state
-	var state providerschema.Project
+	var state resource_project.ProjectModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	IDs, err := state.Validate()
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Deleting Capella Project",
-			"Could not delete Capella project ID "+state.Id.String()+": "+err.Error(),
-		)
+	organizationId, projectId, idErr := extractIDsFromState(state)
+	if idErr != nil {
+		resp.Diagnostics.AddError("Missing required IDs", idErr.Error())
 		return
 	}
-
-	var (
-		organizationId = IDs[providerschema.OrganizationId]
-		projectId      = IDs[providerschema.Id]
-	)
 
 	orgUUID, err := uuid.Parse(organizationId)
 	if err != nil {
@@ -358,7 +340,7 @@ func (r *Project) ImportState(ctx context.Context, req resource.ImportStateReque
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func (r *Project) retrieveProject(ctx context.Context, organizationId, projectId string) (*providerschema.OneProject, error) {
+func (r *Project) retrieveProject(ctx context.Context, organizationId, projectId string) (*resource_project.ProjectModel, error) {
 	orgUUID, err := uuid.Parse(organizationId)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
@@ -378,41 +360,38 @@ func (r *Project) retrieveProject(ctx context.Context, organizationId, projectId
 
 	projectResp := *res.JSON200
 
-	etag := ""
-	if res.HTTPResponse != nil {
-		etag = res.HTTPResponse.Header.Get("ETag")
-	}
+	// Build audit value
+	auditObj := resource_project.NewAuditValueMust(
+		resource_project.AuditValue{}.AttributeTypes(ctx),
+		map[string]attr.Value{
+			"created_at":  types.StringValue(projectResp.Audit.CreatedAt.String()),
+			"created_by":  types.StringValue(projectResp.Audit.CreatedBy),
+			"modified_at": types.StringValue(projectResp.Audit.ModifiedAt.String()),
+			"modified_by": types.StringValue(projectResp.Audit.ModifiedBy),
+			"version":     types.Int64Value(int64(projectResp.Audit.Version)),
+		},
+	)
 
-	refreshedState := providerschema.OneProject{
+	refreshedState := resource_project.ProjectModel{
 		Id:             types.StringValue(projectResp.Id.String()),
 		OrganizationId: types.StringValue(organizationId),
 		Name:           types.StringValue(projectResp.Name),
 		Description:    types.StringValue(projectResp.Description),
-		Audit: providerschema.CouchbaseAuditData{
-			CreatedAt:  types.StringValue(projectResp.Audit.CreatedAt.String()),
-			CreatedBy:  types.StringValue(projectResp.Audit.CreatedBy),
-			ModifiedAt: types.StringValue(projectResp.Audit.ModifiedAt.String()),
-			ModifiedBy: types.StringValue(projectResp.Audit.ModifiedBy),
-			Version:    types.Int64Value(int64(projectResp.Audit.Version)),
-		},
-		Etag: types.StringValue(etag),
+		Audit:          auditObj,
 	}
 
 	return &refreshedState, nil
 }
 
-func (r *Project) validateCreateProject(plan providerschema.Project) error {
+func (r *Project) validateCreateProject(plan resource_project.ProjectModel) error {
 	if plan.OrganizationId.IsNull() {
 		return errors.ErrOrganizationIdMissing
-	}
-	if !plan.IfMatch.IsNull() && !plan.IfMatch.IsUnknown() {
-		return errors.ErrIfMatchCannotBeSetWhileCreate
 	}
 
 	return r.validateProjectAttributesTrimmed(plan)
 }
 
-func (r *Project) validateProjectAttributesTrimmed(plan providerschema.Project) error {
+func (r *Project) validateProjectAttributesTrimmed(plan resource_project.ProjectModel) error {
 	if (!plan.Name.IsNull() && !plan.Name.IsUnknown()) && !providerschema.IsTrimmed(plan.Name.ValueString()) {
 		return fmt.Errorf("name %s", errors.ErrNotTrimmed)
 	}
@@ -424,13 +403,21 @@ func (r *Project) validateProjectAttributesTrimmed(plan providerschema.Project) 
 
 // initializeProjectWithPlanAndId initializes an instance of providerschema.Project
 // with the specified plan and ID. It marks all computed fields as null.
-func initializeProjectWithPlanAndId(plan providerschema.Project, id string) providerschema.Project {
+func initializeProjectWithPlanAndId(plan resource_project.ProjectModel, id string) resource_project.ProjectModel {
 	plan.Id = types.StringValue(id)
-	plan.Audit = types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
-	plan.Etag = types.StringNull()
 	if plan.Description.IsNull() || plan.Description.IsUnknown() {
 		plan.Description = types.StringNull()
 	}
-
 	return plan
+}
+
+// extractIDsFromState validates and returns required IDs from the generated model.
+func extractIDsFromState(state resource_project.ProjectModel) (string, string, error) {
+	if state.OrganizationId.IsNull() || state.OrganizationId.IsUnknown() {
+		return "", "", fmt.Errorf("organization_id must be set")
+	}
+	if state.Id.IsNull() || state.Id.IsUnknown() {
+		return "", "", fmt.Errorf("id must be set")
+	}
+	return state.OrganizationId.ValueString(), state.Id.ValueString(), nil
 }
