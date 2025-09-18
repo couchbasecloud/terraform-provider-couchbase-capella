@@ -107,16 +107,20 @@ func (r *AppEndpointOidcProvider) Create(ctx context.Context, req resource.Creat
 	// Capture providerId from response
 	var created api.AppEndpointOIDCProviderResponse
 	var providerId string
-	if err := json.Unmarshal(res.Body, &created); err == nil {
-		if created.ProviderID != "" {
-			providerId = created.ProviderID
-			plan.ProviderId = types.StringValue(created.ProviderID)
-		}
-	} else {
+	if err := json.Unmarshal(res.Body, &created); err != nil {
 		resp.Diagnostics.AddError("Error unmarshalling create OIDC Provider response", api.ParseError(err))
 		return
 	}
-
+	if created.ProviderID != "" {
+		providerId = created.ProviderID
+		plan.ProviderId = types.StringValue(created.ProviderID)
+	} else {
+		resp.Diagnostics.AddError(
+			"Error Creating App Endpoint OIDC Provider",
+			"Empty provider Id returned.",
+		)
+		return
+	}
 	// Initialize optional/computed attributes to null before refresh to preserve user intent
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -125,8 +129,8 @@ func (r *AppEndpointOidcProvider) Create(ctx context.Context, req resource.Creat
 	details, err := r.getOidcProvider(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, providerId)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Capella Collection",
-			fmt.Sprintf("Could not read OIDC provider %s on App Endpoint %s ", providerId, appEndpointName)+"."+api.ParseError(err),
+			"Error refreshing App Endpoint OIDC Provider after creation",
+			fmt.Sprintf("Could not read OIDC provider %s on App Endpoint %s ", providerId, appEndpointName)+". "+api.ParseError(err),
 		)
 		return
 	}
@@ -200,9 +204,7 @@ func (r *AppEndpointOidcProvider) Update(ctx context.Context, req resource.Updat
 	appEndpointName := plan.AppEndpointName.ValueString()
 
 	providerId := state.ProviderId.ValueString()
-	if providerId == "" && !plan.ProviderId.IsNull() && !plan.ProviderId.IsUnknown() {
-		providerId = plan.ProviderId.ValueString()
-	}
+
 	if providerId == "" {
 		resp.Diagnostics.AddError("Error Updating OIDC Provider", "provider_id is missing; cannot update")
 		return
