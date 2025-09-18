@@ -102,6 +102,7 @@ func (r *AppEndpointOidcProvider) Create(ctx context.Context, req resource.Creat
 		resp.Diagnostics.AddError("Error Creating OIDC Provider", api.ParseError(err))
 		return
 	}
+	initOidcProviderNullsBeforeRefresh(&plan)
 
 	// Capture providerId from response
 	var created api.AppEndpointOIDCProviderResponse
@@ -112,7 +113,6 @@ func (r *AppEndpointOidcProvider) Create(ctx context.Context, req resource.Creat
 	}
 
 	// Initialize optional/computed attributes to null before refresh to preserve user intent
-	initOidcProviderNullsBeforeRefresh(&plan)
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 
@@ -353,25 +353,11 @@ func (r *AppEndpointOidcProvider) mapResponseToState(state *providerschema.AppEn
 
 }
 
-// initOidcProviderNullsBeforeRefresh initializes optional and computed attributes to null
-// prior to the first refresh after create, matching patterns in other resources.
-// Note: Do not null out provider_id, as it is needed to perform the refresh GET.
+// initOidcProviderNullsBeforeRefresh initializes computed attributes to null
+// prior to the first refresh after create.
 func initOidcProviderNullsBeforeRefresh(plan *providerschema.AppEndpointOidcProvider) {
-	if plan.DiscoveryUrl.IsNull() || plan.DiscoveryUrl.IsUnknown() {
-		plan.DiscoveryUrl = types.StringNull()
-	}
-	if plan.Register.IsNull() || plan.Register.IsUnknown() {
-		plan.Register = types.BoolNull()
-	}
-	if plan.RolesClaim.IsNull() || plan.RolesClaim.IsUnknown() {
-		plan.RolesClaim = types.StringNull()
-	}
-	if plan.UserPrefix.IsNull() || plan.UserPrefix.IsUnknown() {
-		plan.UserPrefix = types.StringNull()
-	}
-	if plan.UsernameClaim.IsNull() || plan.UsernameClaim.IsUnknown() {
-		plan.UsernameClaim = types.StringNull()
-	}
+	plan.IsDefault = types.BoolNull()
+	plan.ProviderId = types.StringNull()
 }
 
 func buildAppEndpointOIDCProviderPayload(plan providerschema.AppEndpointOidcProvider) api.AppEndpointOIDCProviderRequest {
