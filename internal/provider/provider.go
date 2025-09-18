@@ -153,7 +153,9 @@ func (p *capellaProvider) Configure(
 
 	// Create clients using the configuration values
 	clientV1 := api.NewClient(apiRequestTimeout)
-	clientV2, _ := apigen.NewClientWithResponses(host, apigen.WithHTTPClient(clientV1), apigen.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
+	// Use retrying HTTP client for v2 as well
+	retryingHTTP := api.NewRetryHTTPClient(apiRequestTimeout)
+	clientV2, _ := apigen.NewClientWithResponses(host, apigen.WithHTTPClient(retryingHTTP), apigen.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
 		req.Header.Set("Authorization", "Bearer "+authenticationToken)
 		req.Header.Set("User-Agent", providerName+"/"+version.ProviderVersion)
 		return nil
