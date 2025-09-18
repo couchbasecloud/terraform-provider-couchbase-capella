@@ -10,8 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 	"github.com/google/uuid"
+
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
 var (

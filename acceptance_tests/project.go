@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 	"github.com/google/uuid"
+
+	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 )
 
 func createProject(ctx context.Context, client *apigen.ClientWithResponses) error {
