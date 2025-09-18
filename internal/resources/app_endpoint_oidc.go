@@ -97,7 +97,7 @@ func (r *AppEndpointOidcProvider) Create(ctx context.Context, req resource.Creat
 	payload := buildAppEndpointOIDCProviderPayload(plan)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-	res, err := r.Client.ExecuteWithRetry(ctx, cfg, payload, r.Token, map[string]string{"Content-Type": "application/json"})
+	res, err := r.Client.ExecuteWithRetry(ctx, cfg, payload, r.Token, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Error Creating OIDC Provider", api.ParseError(err))
 		return
@@ -110,6 +110,9 @@ func (r *AppEndpointOidcProvider) Create(ctx context.Context, req resource.Creat
 		if created.ProviderID != "" {
 			plan.ProviderId = types.StringValue(created.ProviderID)
 		}
+	} else {
+		resp.Diagnostics.AddError("Error unmarshalling create OIDC Provider response", api.ParseError(err))
+		return
 	}
 
 	// Initialize optional/computed attributes to null before refresh to preserve user intent
@@ -117,13 +120,11 @@ func (r *AppEndpointOidcProvider) Create(ctx context.Context, req resource.Creat
 	resp.Diagnostics.Append(diags...)
 
 	// Refresh using GET; preserve nulls for optional attributes during create
-	if !plan.ProviderId.IsNull() && !plan.ProviderId.IsUnknown() {
-		details, err := r.getOidcProvider(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, plan.ProviderId.ValueString())
-		if err == nil {
-			r.mapResponseToState(&plan, details, true)
-		} else {
-			tflog.Warn(ctx, "Failed to read OIDC provider after creation", map[string]any{"error": api.ParseError(err)})
-		}
+	details, err := r.getOidcProvider(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, plan.ProviderId.ValueString())
+	if err == nil {
+		r.mapResponseToState(&plan, details, true)
+	} else {
+		tflog.Warn(ctx, "Failed to read OIDC provider after creation", map[string]any{"error": api.ParseError(err)})
 	}
 
 	diags = resp.State.Set(ctx, plan)
@@ -217,7 +218,7 @@ func (r *AppEndpointOidcProvider) Update(ctx context.Context, req resource.Updat
 	payload := buildAppEndpointOIDCProviderPayload(plan)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err := r.Client.ExecuteWithRetry(ctx, cfg, payload, r.Token, map[string]string{"Content-Type": "application/json"})
+	_, err := r.Client.ExecuteWithRetry(ctx, cfg, payload, r.Token, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Error Updating OIDC Provider", api.ParseError(err))
 		return
