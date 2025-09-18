@@ -27,7 +27,6 @@ func BucketSchema() schema.Schema {
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
-				Default: stringdefault.StaticString("couchbase"),
 			},
 			"storage_backend": WithDescription(stringAttribute([]string{computed, optional, requiresReplace, useStateForUnknown}), "The bucket storage engine type (Magma or Couchstore)."),
 			"memory_allocation_in_mb": schema.Int64Attribute{
