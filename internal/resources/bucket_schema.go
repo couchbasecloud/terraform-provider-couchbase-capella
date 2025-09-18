@@ -3,7 +3,6 @@ package resources
 import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -32,7 +31,6 @@ func BucketSchema() schema.Schema {
 			"memory_allocation_in_mb": schema.Int64Attribute{
 				Optional:            true,
 				Computed:            true,
-				Default:             int64default.StaticInt64(100),
 				MarkdownDescription: "Bucket size allocation in MB.",
 			},
 			"bucket_conflict_resolution": schema.StringAttribute{
@@ -49,14 +47,12 @@ func BucketSchema() schema.Schema {
 			"durability_level": schema.StringAttribute{
 				Computed:            true,
 				Optional:            true,
-				Default:             stringdefault.StaticString("none"),
 				MarkdownDescription: "Durability level of the bucket.",
 			},
 
 			"replicas": schema.Int64Attribute{
 				Optional:            true,
 				Computed:            true,
-				Default:             int64default.StaticInt64(1),
 				MarkdownDescription: "Number of replicas for the data.",
 			},
 			"flush": schema.BoolAttribute{
@@ -68,7 +64,6 @@ func BucketSchema() schema.Schema {
 			"time_to_live_in_seconds": schema.Int64Attribute{
 				Optional:            true,
 				Computed:            true,
-				Default:             int64default.StaticInt64(0),
 				MarkdownDescription: "Time-to-live (TTL) for items in the bucket, in seconds.",
 			},
 			"eviction_policy": WithDescription(stringAttribute([]string{computed, optional, requiresReplace, useStateForUnknown}), "Eviction policy for the bucket."),
