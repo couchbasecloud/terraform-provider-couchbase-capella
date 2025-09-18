@@ -106,8 +106,10 @@ func (r *AppEndpointOidcProvider) Create(ctx context.Context, req resource.Creat
 
 	// Capture providerId from response
 	var created api.AppEndpointOIDCProviderResponse
+	var providerId string
 	if err := json.Unmarshal(res.Body, &created); err == nil {
 		if created.ProviderID != "" {
+			providerId = created.ProviderID
 			plan.ProviderId = types.StringValue(created.ProviderID)
 		}
 	} else {
@@ -120,13 +122,15 @@ func (r *AppEndpointOidcProvider) Create(ctx context.Context, req resource.Creat
 	resp.Diagnostics.Append(diags...)
 
 	// Refresh using GET; preserve nulls for optional attributes during create
-	details, err := r.getOidcProvider(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, plan.ProviderId.ValueString())
-	if err == nil {
-		r.mapResponseToState(&plan, details, true)
-	} else {
-		tflog.Warn(ctx, "Failed to read OIDC provider after creation", map[string]any{"error": api.ParseError(err)})
+	details, err := r.getOidcProvider(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, providerId)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Capella Collection",
+			fmt.Sprintf("Could not read OIDC provider %s on App Endpoint %s ", providerId, appEndpointName)+"."+api.ParseError(err),
+		)
+		return
 	}
-
+	r.mapResponseToState(&plan, details, true)
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 }
