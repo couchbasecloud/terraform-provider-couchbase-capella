@@ -12,7 +12,7 @@ import (
 
 // RetryTransport implements simple retry logic for HTTP 429 and 504 responses.
 // - 429: respects Retry-After header (seconds) if present
-// - 504: retries with default backoff unless body contains code 7001
+// - 504: retries with default backoff unless body contains code 7001.
 type RetryTransport struct {
 	Base http.RoundTripper
 }
@@ -33,18 +33,18 @@ func (t *RetryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 		bodyBytes = b
 	}
 
-	makeReq := func(ctx context.Context) (*http.Request, error) {
+	makeReq := func(ctx context.Context) *http.Request {
 		r := req.Clone(ctx)
 		if bodyBytes != nil {
 			r.Body = io.NopCloser(bytes.NewReader(bodyBytes))
 		}
-		return r, nil
+		return r
 	}
 
 	backoff := defaultWaitAttempt
 
 	for {
-		r, _ := makeReq(req.Context())
+		r := makeReq(req.Context())
 		res, err := t.base().RoundTrip(r)
 		if err != nil {
 			return nil, err
@@ -62,7 +62,7 @@ func (t *RetryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 			_, _ = io.Copy(io.Discard, res.Body)
 			_ = res.Body.Close()
 			if err := sleepOrDone(req.Context(), backoff); err != nil {
-				return res, nil
+				return res, err
 			}
 			continue
 		case http.StatusGatewayTimeout:
@@ -80,7 +80,7 @@ func (t *RetryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 				return res, nil
 			}
 			if err := sleepOrDone(req.Context(), backoff); err != nil {
-				return res, nil
+				return res, err
 			}
 			continue
 		default:
