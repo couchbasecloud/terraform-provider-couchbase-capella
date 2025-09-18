@@ -2,150 +2,82 @@ package acceptance_tests
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
-	"net/http"
 	"time"
 
-	"github.com/couchbase/tools-common/types/ptr"
-
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
+	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/apigen"
+	"github.com/google/uuid"
 )
 
 // cluster is created with enterprise plan as some features require this.
-func createCluster(ctx context.Context, client *api.Client) error {
-	node := clusterapi.Node{}
-	diskAws := clusterapi.DiskAWS{
-		Type:    clusterapi.DiskAWSType("gp3"),
-		Storage: 50,
-		Iops:    3000,
-	}
+func createCluster(ctx context.Context, clientV2 *apigen.ClientWithResponses) error {
+	n := apigen.Node{}
+	_ = n.Disk.FromDiskAWS(apigen.DiskAWS{Type: apigen.DiskAWSType("gp3")})
 
-	_ = node.FromDiskAWS(diskAws)
-
-	clusterRequest := clusterapi.CreateClusterRequest{
-		Name: "tf_acc_test_cluster_common",
-		Availability: clusterapi.Availability{
-			Type: "multi",
-		},
-		CloudProvider: clusterapi.CloudProvider{
-			Region: "us-east-1",
-			Type:   "aws",
-		},
-		ServiceGroups: []clusterapi.ServiceGroup{
+	clusterRequest := apigen.CreateClusterRequest{
+		Name:          "tf_acc_test_cluster_common",
+		Availability:  apigen.Availability{Type: apigen.AvailabilityType("multi")},
+		CloudProvider: apigen.CloudProvider{Region: "us-east-1", Type: apigen.CloudProviderType("aws")},
+		ServiceGroups: []apigen.ServiceGroup{
 			{
-				Node: &clusterapi.Node{
-					Compute: clusterapi.Compute{
-						Cpu: 4,
-						Ram: 16,
-					},
-					Disk: node.Disk,
+				Node: &apigen.Node{
+					Compute: apigen.Compute{Cpu: 4, Ram: 16},
+					Disk:    n.Disk,
 				},
-				Services: &[]clusterapi.Service{
-					clusterapi.Service("data"),
-					clusterapi.Service("index"),
-					clusterapi.Service("query")},
-				NumOfNodes: ptr.To(3),
+				Services:   &[]apigen.Service{apigen.Service("data"), apigen.Service("index"), apigen.Service("query")},
+				NumOfNodes: func() *int { v := 3; return &v }(),
 			},
 		},
-		Support: clusterapi.Support{
-			Plan:     "enterprise",
-			Timezone: "PT",
-		},
+		Support: apigen.Support{Plan: apigen.SupportPlan("enterprise"), Timezone: func() *apigen.SupportTimezone { v := apigen.SupportTimezone("PT"); return &v }()},
 	}
 
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", globalHost, globalOrgId, globalProjectId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
-	response, err := client.ExecuteWithRetry(
-		ctx,
-		cfg,
-		clusterRequest,
-		globalToken,
-		nil,
-	)
+	orgUUID, _ := uuid.Parse(globalOrgId)
+	projUUID, _ := uuid.Parse(globalProjectId)
+
+	res, err := clientV2.PostClusterWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID), clusterRequest)
 	if err != nil {
 		return err
 	}
-
-	clusterResponse := clusterapi.GetClusterResponse{}
-	if err = json.Unmarshal(response.Body, &clusterResponse); err != nil {
-		return err
+	if res.JSON202 == nil {
+		return fmt.Errorf("unexpected status: %s", res.Status())
 	}
-
-	globalClusterId = clusterResponse.Id.String()
-
+	globalClusterId = res.JSON202.Id.String()
 	return nil
 }
 
-func destroyCluster(ctx context.Context, client *api.Client) error {
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", globalHost, globalOrgId, globalProjectId, globalClusterId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
-	_, err := client.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		globalToken,
-		nil,
-	)
-	if err != nil {
-		return err
-	}
-
-	return nil
+func destroyCluster(ctx context.Context, clientV2 *apigen.ClientWithResponses) error {
+	orgUUID, _ := uuid.Parse(globalOrgId)
+	projUUID, _ := uuid.Parse(globalProjectId)
+	cluUUID, _ := uuid.Parse(globalClusterId)
+	_, err := clientV2.DeleteClusterWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID), apigen.ClusterId(cluUUID), nil)
+	return err
 }
 
-func clusterWait(ctx context.Context, client *api.Client, destroy bool) error {
+func clusterWait(ctx context.Context, clientV2 *apigen.ClientWithResponses, destroy bool) error {
 	const maxWaitTime = 30 * time.Minute
 	const checkInterval = 1 * time.Minute
 
 	deadline := time.Now().Add(maxWaitTime)
 
+	orgUUID, _ := uuid.Parse(globalOrgId)
+	projUUID, _ := uuid.Parse(globalProjectId)
+	cluUUID, _ := uuid.Parse(globalClusterId)
+
 	for time.Now().Before(deadline) {
-		url := fmt.Sprintf(
-			"%s/v4/organizations/%s/projects/%s/clusters/%s",
-			globalHost,
-			globalOrgId,
-			globalProjectId,
-			globalClusterId,
-		)
-
-		cfg := api.EndpointCfg{
-			Url:           url,
-			Method:        http.MethodGet,
-			SuccessStatus: http.StatusOK,
-		}
-
-		response, err := client.ExecuteWithRetry(
-			ctx,
-			cfg,
-			nil,
-			globalToken,
-			nil,
-		)
+		res, err := clientV2.GetClusterWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID), apigen.ClusterId(cluUUID))
 		if err != nil {
-			resourceNotFound, errMsg := api.CheckResourceNotFoundError(err)
-			if destroy && resourceNotFound {
-				log.Print("cluster destroyed")
-				return nil
-			}
-			if destroy && !resourceNotFound {
-				return errors.New(errMsg)
-			}
-
 			return err
 		}
 
-		if !destroy {
-			clusterResp := clusterapi.GetClusterResponse{}
-			err = json.Unmarshal(response.Body, &clusterResp)
-			if err != nil {
-				return err
+		if destroy {
+			if res.StatusCode() == 404 {
+				log.Print("cluster destroyed")
+				return nil
 			}
-
-			if clusterResp.CurrentState == clusterapi.Healthy {
+		} else {
+			if res.JSON200 != nil && res.JSON200.CurrentState == apigen.CurrentState("healthy") {
 				log.Print("cluster created")
 				return nil
 			}
@@ -154,5 +86,5 @@ func clusterWait(ctx context.Context, client *api.Client, destroy bool) error {
 		time.Sleep(checkInterval)
 	}
 
-	return fmt.Errorf("timeout waiting for cluster to be created or destroyed")
+	return errors.New("timeout waiting for cluster to be created or destroyed")
 }

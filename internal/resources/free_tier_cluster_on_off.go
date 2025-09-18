@@ -2,7 +2,6 @@ package resources
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -13,8 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	cluster_api "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
+	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/apigen"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+
+	"github.com/google/uuid"
 )
 
 var (
@@ -233,31 +234,20 @@ func (f *FreeTierClusterOnOff) manageFreeTierClusterActivation(ctx context.Conte
 // retrieveFreeTierClusterOnOff retrieves the current state of the free-tier cluster.
 // if the cluster is in "TurnedOff" state, it returns "off", otherwise it returns "on".
 func (f *FreeTierClusterOnOff) retrieveFreeTierClusterOnOff(ctx context.Context, organizationId, projectId, clusterId string) (*providerschema.FreeTierClusterOnOff, error) {
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", f.HostURL, organizationId, projectId, clusterId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := f.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		f.Token,
-		nil,
-	)
+	orgUUID, _ := uuid.Parse(organizationId)
+	projUUID, _ := uuid.Parse(projectId)
+	cluUUID, _ := uuid.Parse(clusterId)
+	res, err := f.ClientV2.GetClusterWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID), apigen.ClusterId(cluUUID))
 	if err != nil {
 		return nil, err
 	}
-	var state string
-	clusterResp := cluster_api.GetClusterResponse{}
-	err = json.Unmarshal(response.Body, &clusterResp)
-	if err != nil {
-		return nil, err
+	if res.JSON200 == nil {
+		return nil, fmt.Errorf("unexpected status: %s", res.Status())
 	}
-
-	if clusterResp.CurrentState != cluster_api.TurnedOff {
-		state = "on"
-	} else {
+	state := "on"
+	if res.JSON200.CurrentState == apigen.CurrentState("turnedOff") {
 		state = "off"
 	}
-
 	refreshedState := providerschema.FreeTierClusterOnOff{
 		ClusterId:      types.StringValue(clusterId),
 		ProjectId:      types.StringValue(projectId),
@@ -271,25 +261,14 @@ func (f *FreeTierClusterOnOff) retrieveFreeTierClusterOnOff(ctx context.Context,
 // This function checks the cluster's current state and waits until it matches the desired state.
 // When Turning on the cluster it checks for "Healthy" state and when turning off it checks for "TurnedOff" state.
 func (f *FreeTierClusterOnOff) checkClusterForDesiredStatus(ctx context.Context, organizationId, projectId, clusterId, state string) (*providerschema.FreeTierClusterOnOff, error) {
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/freeTier/%s", f.HostURL, organizationId, projectId, clusterId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-
-	var clusterResp cluster_api.GetClusterResponse
+	orgUUID, _ := uuid.Parse(organizationId)
+	projUUID, _ := uuid.Parse(projectId)
+	cluUUID, _ := uuid.Parse(clusterId)
 	const timeout = 20 * time.Minute
-	const retryInterval = 3 * time.Second // Added retry delay.
+	const retryInterval = 3 * time.Second
 
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
-
-	var desiredState cluster_api.State
-	switch state {
-	case "on":
-		desiredState = cluster_api.Healthy
-	case "off":
-		desiredState = cluster_api.TurnedOff
-	default:
-		return nil, fmt.Errorf("invalid state: %s", state)
-	}
 
 	ticker := time.NewTicker(retryInterval)
 	defer ticker.Stop()
@@ -299,26 +278,26 @@ func (f *FreeTierClusterOnOff) checkClusterForDesiredStatus(ctx context.Context,
 		case <-ctx.Done():
 			return nil, fmt.Errorf("cluster state check timed out: %w", ctx.Err())
 		case <-ticker.C:
-			response, err := f.ClientV1.ExecuteWithRetry(ctx, cfg, nil, f.Token, nil)
+			res, err := f.ClientV2.GetClusterWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID), apigen.ClusterId(cluUUID))
 			if err != nil {
 				return nil, fmt.Errorf("API request failed: %w", err)
 			}
-
-			if err := json.Unmarshal(response.Body, &clusterResp); err != nil {
-				return nil, fmt.Errorf("failed to parse response: %w", err)
-			}
-
-			if clusterResp.CurrentState == desiredState {
-				refreshedState := providerschema.FreeTierClusterOnOff{
-					ClusterId:      types.StringValue(clusterId),
-					ProjectId:      types.StringValue(projectId),
-					OrganizationId: types.StringValue(organizationId),
-					State:          types.StringValue(state),
+			if res.JSON200 != nil {
+				desired := apigen.CurrentState("healthy")
+				if state == "off" {
+					desired = apigen.CurrentState("turnedOff")
 				}
-				return &refreshedState, nil
+				if res.JSON200.CurrentState == desired {
+					refreshedState := providerschema.FreeTierClusterOnOff{
+						ClusterId:      types.StringValue(clusterId),
+						ProjectId:      types.StringValue(projectId),
+						OrganizationId: types.StringValue(organizationId),
+						State:          types.StringValue(state),
+					}
+					return &refreshedState, nil
+				}
+				tflog.Debug(ctx, fmt.Sprintf("Current cluster state: %s", res.JSON200.CurrentState))
 			}
-
-			tflog.Debug(ctx, fmt.Sprintf("Current cluster state: %s (waiting for %s)", clusterResp.CurrentState, desiredState))
 		}
 	}
 }

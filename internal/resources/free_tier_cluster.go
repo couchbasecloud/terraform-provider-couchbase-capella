@@ -2,22 +2,20 @@ package resources
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
-	freeTierClusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/freeTierCluster"
+	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/apigen"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 var (
@@ -51,72 +49,67 @@ func (f *FreeTierCluster) Create(ctx context.Context, request resource.CreateReq
 		return
 	}
 
-	freeTierClusterCreateRequest := freeTierClusterapi.CreateFreeTierClusterRequest{
+	orgUUID, _ := uuid.Parse(plan.OrganizationId.ValueString())
+	projUUID, _ := uuid.Parse(plan.ProjectId.ValueString())
+
+	freeTierClusterCreateRequest := apigen.CreateFreeTierClusterRequest{
 		Name: plan.Name.ValueString(),
-		CloudProvider: clusterapi.CloudProvider{
-			Cidr:   plan.CloudProvider.Cidr.ValueString(),
+		CloudProvider: apigen.CloudProvider{
+			Cidr: func() *string {
+				if plan.CloudProvider.Cidr.IsNull() || plan.CloudProvider.Cidr.IsUnknown() {
+					return nil
+				}
+				v := plan.CloudProvider.Cidr.ValueString()
+				return &v
+			}(),
 			Region: plan.CloudProvider.Region.ValueString(),
-			Type:   clusterapi.CloudProviderType(plan.CloudProvider.Type.ValueString()),
+			Type:   apigen.CloudProviderType(plan.CloudProvider.Type.ValueString()),
 		},
 	}
 	if !plan.Description.IsNull() && !plan.Description.IsUnknown() {
-		freeTierClusterCreateRequest.Description = plan.Description.ValueStringPointer()
+		d := plan.Description.ValueString()
+		freeTierClusterCreateRequest.Description = &d
 	}
 
-	var organizationId = plan.OrganizationId.ValueString()
-	var projectId = plan.ProjectId.ValueString()
-
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/freeTier", f.HostURL, organizationId, projectId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
-	res, err := f.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		freeTierClusterCreateRequest,
-		f.Token,
-		nil,
-	)
+	res, err := f.ClientV2.CreateFreeTierClusterWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID), freeTierClusterCreateRequest)
 	if err != nil {
 		response.Diagnostics.AddError(
 			"Error creating cluster",
-			errors.ErrorMessageWhileFreeTierClusterCreation.Error()+api.ParseError(err),
+			errors.ErrorMessageWhileFreeTierClusterCreation.Error()+err.Error(),
 		)
 		return
 	}
-	freeTierClusterResponse := clusterapi.GetClusterResponse{}
-	err = json.Unmarshal(res.Body, &freeTierClusterResponse)
-	if err != nil {
-		response.Diagnostics.AddError(
-			"Error unmarshalling the response",
-			errors.ErrorMessageWhileFreeTierClusterCreation.Error()+"error during unmarshalling:"+err.Error(),
-		)
+	if res.JSON202 == nil {
+		response.Diagnostics.AddError("Error creating cluster", "unexpected status: "+res.Status())
 		return
 	}
-	diags = response.State.Set(ctx, initializePendingFreeTierClusterWithPlanAndId(plan, freeTierClusterResponse.Id.String()))
+
+	diags = response.State.Set(ctx, initializePendingFreeTierClusterWithPlanAndId(plan, res.JSON202.Id.String()))
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-	clusterResp, err := f.checkForFreeTierClusterDesiredStatus(ctx, organizationId, projectId, freeTierClusterResponse.Id.String())
+	clusterResp, err := f.checkForFreeTierClusterDesiredStatus(ctx, plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), res.JSON202.Id.String())
 	if err != nil {
 		response.Diagnostics.AddWarning(
 			"error getting cluster status",
-			"failed to get cluster status, please refresh state later "+api.ParseError(err),
+			"failed to get cluster status, please refresh state later "+err.Error(),
 		)
 		return
 	}
 
-	if clusterResp.CurrentState != clusterapi.Healthy {
+	if clusterResp.CurrentState != apigen.CurrentState("healthy") {
 		response.Diagnostics.AddWarning(
 			"Error creating cluster",
 			fmt.Sprintf("Could not create cluster id %s, as current Cluster state: %s", clusterResp.Id, clusterResp.CurrentState),
 		)
 
 	}
-	morphedState, err := f.morphFreeTierClusterRespToTerraformObj(ctx, organizationId, projectId, clusterResp)
+	morphedState, err := f.morphFreeTierClusterRespToTerraformObj(ctx, plan.OrganizationId.ValueString(), plan.ProjectId.ValueString(), clusterResp)
 	if err != nil {
 		response.Diagnostics.AddWarning(
 			"Error fetching the cluster info",
-			errors.ErrorMessageAfterFreeTierClusterCreationInitiation.Error()+api.ParseError(err),
+			errors.ErrorMessageAfterFreeTierClusterCreationInitiation.Error()+err.Error(),
 		)
 		return
 	}
@@ -154,15 +147,9 @@ func (f *FreeTierCluster) Read(ctx context.Context, request resource.ReadRequest
 	//get refreshed cluster values from capella.
 	refreshedState, err := f.retrieveFreeTierCluster(ctx, organizationId, projectId, clusterId)
 	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			response.State.RemoveResource(ctx)
-			return
-		}
 		response.Diagnostics.AddError(
 			"Error Reading Capella Cluster",
-			"Could Not Read Capella Cluster "+state.Id.String()+": "+errString,
+			"Could Not Read Capella Cluster "+state.Id.String()+": "+err.Error(),
 		)
 		return
 	}
@@ -202,31 +189,20 @@ func (f *FreeTierCluster) Update(ctx context.Context, request resource.UpdateReq
 		clusterId      = resourceIDs[providerschema.Id]
 	)
 
-	freeTierClusterUpdateRequest := freeTierClusterapi.UpdateFreeTierClusterRequest{
+	orgUUID, _ := uuid.Parse(organizationId)
+	projUUID, _ := uuid.Parse(projectId)
+
+	updateReq := apigen.UpdateFreeTierClusterRequest{
 		Name:        plan.Name.ValueString(),
 		Description: plan.Description.ValueString(),
 	}
 
-	// Update existing Cluster.
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/freeTier/%s", f.HostURL, organizationId, projectId, clusterId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err = f.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		freeTierClusterUpdateRequest,
-		f.Token,
-		nil,
-	)
+	cluUUID, _ := uuid.Parse(clusterId)
+	_, err = f.ClientV2.UpdateFreeTierClusterWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID), apigen.ClusterId(cluUUID), nil, updateReq)
 	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			response.State.RemoveResource(ctx)
-			return
-		}
 		response.Diagnostics.AddError(
 			"Error updating free tier cluster",
-			"Could not update cluster id "+state.Id.String()+": "+errString,
+			"Could not update cluster id "+state.Id.String()+": "+err.Error(),
 		)
 		return
 	}
@@ -235,7 +211,7 @@ func (f *FreeTierCluster) Update(ctx context.Context, request resource.UpdateReq
 	if err != nil {
 		response.Diagnostics.AddError(
 			"Error updating free tier cluster",
-			"Could not update cluster id "+state.Id.String()+": "+api.ParseError(err),
+			"Could not update cluster id "+state.Id.String()+": "+err.Error(),
 		)
 		return
 	}
@@ -272,26 +248,15 @@ func (f *FreeTierCluster) Delete(ctx context.Context, request resource.DeleteReq
 		clusterId      = resourceIDs[providerschema.Id]
 	)
 
-	// Delete existing Cluster.
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/freeTier/%s", f.HostURL, organizationId, projectId, clusterId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
-	_, err = f.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		f.Token,
-		nil,
-	)
+	orgUUID, _ := uuid.Parse(organizationId)
+	projUUID, _ := uuid.Parse(projectId)
+
+	cluUUID, _ := uuid.Parse(clusterId)
+	_, err = f.ClientV2.DeleteFreeTierClusterWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID), apigen.ClusterId(cluUUID))
 	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			response.State.RemoveResource(ctx)
-			return
-		}
 		response.Diagnostics.AddError(
 			"Error Deleting Free Tier Cluster",
-			"Could not delete cluster id "+state.Id.String()+": "+errString,
+			"Could not delete cluster id "+state.Id.String()+": "+err.Error(),
 		)
 		return
 	}
@@ -299,19 +264,14 @@ func (f *FreeTierCluster) Delete(ctx context.Context, request resource.DeleteReq
 	freeTierClusterResp, err := f.checkForFreeTierClusterDesiredStatus(ctx, state.OrganizationId.ValueString(), state.ProjectId.ValueString(), state.Id.ValueString())
 
 	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if !resourceNotFound {
-			response.Diagnostics.AddError(
-				"Error Deleting Capella Cluster",
-				"Could not delete cluster id "+state.Id.String()+": "+errString,
-			)
-			return
-		}
-		// resourceNotFound as expected.
+		response.Diagnostics.AddError(
+			"Error Deleting Capella Cluster",
+			"Could not delete cluster id "+state.Id.String()+": "+err.Error(),
+		)
 		return
 	}
 
-	if freeTierClusterResp.CurrentState == clusterapi.DestroyFailed {
+	if freeTierClusterResp.CurrentState == apigen.CurrentState("destroyFailed") {
 		response.Diagnostics.AddError(
 			"Error Deleting Free Tier Cluster",
 			"Could not delete cluster id "+state.Id.String()+": cluster in destroy failed state",
@@ -362,17 +322,51 @@ func initializePendingFreeTierClusterWithPlanAndId(plan providerschema.FreeTierC
 	return plan
 }
 
-// checkFreeTierClusterStatus monitors the status of a cluster creation, update and deletion operation for a specified,
-// organization, project, and cluster ID. It periodically fetches the cluster status using the `getCluster`
-// function and waits until the cluster reaches a final state or until a specified timeout is reached.
-// The function returns an error if the operation times out or encounters an error during status retrieval.
-func (f *FreeTierCluster) checkForFreeTierClusterDesiredStatus(ctx context.Context, organizationId, projectId, ClusterId string) (*clusterapi.GetClusterResponse, error) {
+// checkFreeTierClusterStatus monitors the status of a cluster creation/update/deletion.
+func (f *FreeTierCluster) checkForFreeTierClusterDesiredStatus(ctx context.Context, organizationId, projectId, ClusterId string) (*struct {
+	AppServiceId               *openapi_types.UUID       `json:"appServiceId,omitempty"`
+	Audit                      apigen.CouchbaseAuditData `json:"audit"`
+	Availability               apigen.Availability       `json:"availability"`
+	CloudProvider              apigen.CloudProvider      `json:"cloudProvider"`
+	CmekId                     *string                   `json:"cmekId,omitempty"`
+	ConfigurationType          apigen.ConfigurationType  `json:"configurationType"`
+	ConnectionString           string                    `json:"connectionString"`
+	CouchbaseServer            apigen.CouchbaseServer    `json:"couchbaseServer"`
+	CurrentState               apigen.CurrentState       `json:"currentState"`
+	Description                string                    `json:"description"`
+	EnablePrivateDNSResolution *bool                     `json:"enablePrivateDNSResolution,omitempty"`
+	Id                         openapi_types.UUID        `json:"id"`
+	Name                       string                    `json:"name"`
+	ServiceGroups              []apigen.ServiceGroup     `json:"serviceGroups"`
+	Support                    struct {
+		Plan     apigen.GetFreeTierCluster200SupportPlan `json:"plan"`
+		Timezone apigen.SupportTimezone                  `json:"timezone"`
+	} `json:"support"`
+}, error) {
 	var (
-		clusterResp *clusterapi.GetClusterResponse
-		err         error
+		clusterResp *struct {
+			AppServiceId               *openapi_types.UUID       `json:"appServiceId,omitempty"`
+			Audit                      apigen.CouchbaseAuditData `json:"audit"`
+			Availability               apigen.Availability       `json:"availability"`
+			CloudProvider              apigen.CloudProvider      `json:"cloudProvider"`
+			CmekId                     *string                   `json:"cmekId,omitempty"`
+			ConfigurationType          apigen.ConfigurationType  `json:"configurationType"`
+			ConnectionString           string                    `json:"connectionString"`
+			CouchbaseServer            apigen.CouchbaseServer    `json:"couchbaseServer"`
+			CurrentState               apigen.CurrentState       `json:"currentState"`
+			Description                string                    `json:"description"`
+			EnablePrivateDNSResolution *bool                     `json:"enablePrivateDNSResolution,omitempty"`
+			Id                         openapi_types.UUID        `json:"id"`
+			Name                       string                    `json:"name"`
+			ServiceGroups              []apigen.ServiceGroup     `json:"serviceGroups"`
+			Support                    struct {
+				Plan     apigen.GetFreeTierCluster200SupportPlan `json:"plan"`
+				Timezone apigen.SupportTimezone                  `json:"timezone"`
+			} `json:"support"`
+		}
+		err error
 	)
 
-	// Assuming 60 minutes is the max time deployment takes, can change after discussion.
 	const timeout = time.Minute * 60
 
 	var cancel context.CancelFunc
@@ -381,55 +375,68 @@ func (f *FreeTierCluster) checkForFreeTierClusterDesiredStatus(ctx context.Conte
 
 	ticker := time.NewTicker(3 * time.Second)
 
+	orgUUID, _ := uuid.Parse(organizationId)
+	projUUID, _ := uuid.Parse(projectId)
+
 	for {
 		select {
 		case <-ctx.Done():
 			return clusterResp, fmt.Errorf("cluster creation status transition timed out after initiation, unexpected error: %w", err)
 		case <-ticker.C:
-			clusterResp, err = f.getFreeTierCluster(ctx, organizationId, projectId, ClusterId)
-			switch err {
-			case nil:
-				if clusterapi.IsFinalState(clusterResp.CurrentState) {
+			cluUUID, _ := uuid.Parse(ClusterId)
+			res, err := f.ClientV2.GetFreeTierClusterWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID), apigen.ClusterId(cluUUID))
+			if err != nil {
+				return clusterResp, err
+			}
+			if res.JSON200 != nil {
+				clusterResp = res.JSON200
+				if clusterResp.CurrentState == apigen.CurrentState("healthy") || clusterResp.CurrentState == apigen.CurrentState("destroyFailed") {
 					tflog.Info(ctx, "cluster status is in final state")
 					return clusterResp, nil
 				}
 				const msg = "waiting for cluster to complete the execution"
 				tflog.Info(ctx, msg)
-			default:
-				return clusterResp, err
 			}
 		}
 	}
 }
 
-// getFreeTierCluster retrieves cluster information from the specified organization and project.
-// using the provided cluster ID by open-api call.
+// getFreeTierCluster retrieves cluster information using v2 API.
 func (f *FreeTierCluster) getFreeTierCluster(ctx context.Context, organizationId, projectId, clusterId string,
-) (*clusterapi.GetClusterResponse, error) {
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/freeTier/%s", f.HostURL, organizationId, projectId, clusterId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := f.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		f.Token,
-		nil,
-	)
+) (*struct {
+	AppServiceId               *openapi_types.UUID       `json:"appServiceId,omitempty"`
+	Audit                      apigen.CouchbaseAuditData `json:"audit"`
+	Availability               apigen.Availability       `json:"availability"`
+	CloudProvider              apigen.CloudProvider      `json:"cloudProvider"`
+	CmekId                     *string                   `json:"cmekId,omitempty"`
+	ConfigurationType          apigen.ConfigurationType  `json:"configurationType"`
+	ConnectionString           string                    `json:"connectionString"`
+	CouchbaseServer            apigen.CouchbaseServer    `json:"couchbaseServer"`
+	CurrentState               apigen.CurrentState       `json:"currentState"`
+	Description                string                    `json:"description"`
+	EnablePrivateDNSResolution *bool                     `json:"enablePrivateDNSResolution,omitempty"`
+	Id                         openapi_types.UUID        `json:"id"`
+	Name                       string                    `json:"name"`
+	ServiceGroups              []apigen.ServiceGroup     `json:"serviceGroups"`
+	Support                    struct {
+		Plan     apigen.GetFreeTierCluster200SupportPlan `json:"plan"`
+		Timezone apigen.SupportTimezone                  `json:"timezone"`
+	} `json:"support"`
+}, error) {
+	orgUUID, _ := uuid.Parse(organizationId)
+	projUUID, _ := uuid.Parse(projectId)
+	cluUUID, _ := uuid.Parse(clusterId)
+	res, err := f.ClientV2.GetFreeTierClusterWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID), apigen.ClusterId(cluUUID))
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 	}
-
-	clusterResp := clusterapi.GetClusterResponse{}
-	err = json.Unmarshal(response.Body, &clusterResp)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
+	if res.JSON200 == nil {
+		return nil, fmt.Errorf("%s: unexpected status %s", errors.ErrExecutingRequest, res.Status())
 	}
-	clusterResp.Etag = response.Response.Header.Get("ETag")
-	return &clusterResp, nil
+	return res.JSON200, nil
 }
 
-// retrieveFreeTierCluster retrieves cluster information for a specified.
-// organization, project, and cluster ID.
+// retrieveFreeTierCluster retrieves cluster information.
 func (f *FreeTierCluster) retrieveFreeTierCluster(
 	ctx context.Context,
 	organizationId,
@@ -441,25 +448,37 @@ func (f *FreeTierCluster) retrieveFreeTierCluster(
 		return nil, fmt.Errorf("%s: %w", errors.ErrNotFound, err)
 	}
 
-	audit := providerschema.NewCouchbaseAuditData(freeTierClusterResp.Audit)
+	audit := providerschema.CouchbaseAuditData{
+		CreatedAt:  types.StringValue(freeTierClusterResp.Audit.CreatedAt.String()),
+		CreatedBy:  types.StringValue(freeTierClusterResp.Audit.CreatedBy),
+		ModifiedAt: types.StringValue(freeTierClusterResp.Audit.ModifiedAt.String()),
+		ModifiedBy: types.StringValue(freeTierClusterResp.Audit.ModifiedBy),
+		Version:    types.Int64Value(int64(freeTierClusterResp.Audit.Version)),
+	}
 	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
 	if diags.HasError() {
 		return nil, fmt.Errorf("%s: %w", errors.ErrUnableToConvertAuditData, err)
 	}
 
-	availability := providerschema.NewAvailability(freeTierClusterResp.Availability)
+	availability := providerschema.NewAvailability(apigen.Availability{Type: apigen.AvailabilityType(freeTierClusterResp.Availability.Type)})
 	availabilityObj, diags := types.ObjectValueFrom(ctx, availability.AttributeTypes(), availability)
 	if diags.HasError() {
 		return nil, fmt.Errorf("unable to convert availability data %w", err)
 	}
 
-	support := providerschema.NewSupport(freeTierClusterResp.Support)
+	support := providerschema.NewSupport(struct {
+		Plan     apigen.GetFreeTierCluster200SupportPlan
+		Timezone apigen.SupportTimezone
+	}{Plan: freeTierClusterResp.Support.Plan, Timezone: freeTierClusterResp.Support.Timezone})
 	supportObj, diags := types.ObjectValueFrom(ctx, support.AttributeTypes(), support)
 	if diags.HasError() {
 		return nil, fmt.Errorf("unable to convert support data %w", err)
 	}
 
-	serviceGroups, err := providerschema.NewTerraformServiceGroups(freeTierClusterResp)
+	serviceGroups, err := providerschema.NewTerraformServiceGroups(&apigen.GetClusterResponse{
+		ServiceGroups: freeTierClusterResp.ServiceGroups,
+		CloudProvider: freeTierClusterResp.CloudProvider,
+	})
 	if diags.HasError() {
 		return nil, fmt.Errorf("unable to convert service groups data %w", err)
 	}
@@ -482,51 +501,30 @@ func (f *FreeTierCluster) retrieveFreeTierCluster(
 	return refreshedState, nil
 }
 
-// morphFreeTierClusterRespToTerraformObj transforms the FreeTierCluster response to a terraform object.
 func (f *FreeTierCluster) morphFreeTierClusterRespToTerraformObj(
 	ctx context.Context,
 	organizationId string,
 	projectId string,
-	freeTierClusterResp *clusterapi.GetClusterResponse,
+	freeTierClusterResp *struct {
+		AppServiceId               *openapi_types.UUID       `json:"appServiceId,omitempty"`
+		Audit                      apigen.CouchbaseAuditData `json:"audit"`
+		Availability               apigen.Availability       `json:"availability"`
+		CloudProvider              apigen.CloudProvider      `json:"cloudProvider"`
+		CmekId                     *string                   `json:"cmekId,omitempty"`
+		ConfigurationType          apigen.ConfigurationType  `json:"configurationType"`
+		ConnectionString           string                    `json:"connectionString"`
+		CouchbaseServer            apigen.CouchbaseServer    `json:"couchbaseServer"`
+		CurrentState               apigen.CurrentState       `json:"currentState"`
+		Description                string                    `json:"description"`
+		EnablePrivateDNSResolution *bool                     `json:"enablePrivateDNSResolution,omitempty"`
+		Id                         openapi_types.UUID        `json:"id"`
+		Name                       string                    `json:"name"`
+		ServiceGroups              []apigen.ServiceGroup     `json:"serviceGroups"`
+		Support                    struct {
+			Plan     apigen.GetFreeTierCluster200SupportPlan `json:"plan"`
+			Timezone apigen.SupportTimezone                  `json:"timezone"`
+		} `json:"support"`
+	},
 ) (*providerschema.FreeTierCluster, error) {
-
-	audit := providerschema.NewCouchbaseAuditData(freeTierClusterResp.Audit)
-	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
-	if diags.HasError() {
-		return nil, errors.ErrUnableToConvertAuditData
-	}
-
-	availability := providerschema.NewAvailability(freeTierClusterResp.Availability)
-	availabilityObj, diags := types.ObjectValueFrom(ctx, availability.AttributeTypes(), availability)
-	if diags.HasError() {
-		return nil, fmt.Errorf("unable to convert availability data")
-	}
-
-	support := providerschema.NewSupport(freeTierClusterResp.Support)
-	supportObj, diags := types.ObjectValueFrom(ctx, support.AttributeTypes(), support)
-	if diags.HasError() {
-		return nil, fmt.Errorf("unable to convert support data")
-	}
-
-	serviceGroups, err := providerschema.NewTerraformServiceGroups(freeTierClusterResp)
-	if diags.HasError() {
-		return nil, fmt.Errorf("unable to convert service groups data : %w", err)
-	}
-	serviceGroupObjList, err, diag := providerschema.NewServiceGroups(ctx, serviceGroups)
-	if err != nil {
-		if diag.HasError() {
-			return nil, err
-		}
-	}
-
-	serviceGroupsObj, diags := types.SetValueFrom(ctx, types.ObjectType{}.WithAttributeTypes(providerschema.ServiceGroupAttributeTypes()), serviceGroupObjList)
-	if diags.HasError() {
-		return nil, fmt.Errorf("error while converting servicegroups to service group object ")
-	}
-
-	refreshedState, err := providerschema.NewFreeTierCluster(ctx, freeTierClusterResp, organizationId, projectId, auditObj, availabilityObj, supportObj, serviceGroupsObj)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrRefreshingState, err)
-	}
-	return refreshedState, nil
+	return f.retrieveFreeTierCluster(ctx, organizationId, projectId, freeTierClusterResp.Id.String())
 }

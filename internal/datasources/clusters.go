@@ -3,13 +3,13 @@ package datasources
 import (
 	"context"
 	"fmt"
-	"net/http"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
+	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/apigen"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -66,51 +66,59 @@ func (d *Clusters) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 		return
 	}
 
-	var (
-		organizationId = state.OrganizationId.ValueString()
-		projectId      = state.ProjectId.ValueString()
-	)
+	orgUUID, _ := uuid.Parse(state.OrganizationId.ValueString())
+	projUUID, _ := uuid.Parse(state.ProjectId.ValueString())
 
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", d.HostURL, organizationId, projectId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-
-	response, err := api.GetPaginated[[]clusterapi.GetClusterResponse](ctx, d.ClientV1, d.Token, cfg, api.SortById)
+	listResp, err := d.ClientV2.ListClustersWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID), nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Clusters",
 			fmt.Sprintf(
 				"Could not read clusters in organization %s and project %s, unexpected error: %s",
-				organizationId, projectId, api.ParseError(err),
+				state.OrganizationId.ValueString(), state.ProjectId.ValueString(), api.ParseError(err),
 			),
 		)
 		return
 	}
+	if listResp.JSON200 == nil {
+		resp.Diagnostics.AddError("Error Reading Capella Clusters", "unexpected response status: "+listResp.Status())
+		return
+	}
 
-	for i := range response {
-		cluster := response[i]
+	for i := range listResp.JSON200.Data {
+		cluster := listResp.JSON200.Data[i]
 		if d.FreeTierClusterFilter {
 			if cluster.Support.Plan != "free" {
 				continue
 			}
 		}
-		audit := providerschema.NewCouchbaseAuditData(cluster.Audit)
+		audit := providerschema.CouchbaseAuditData{
+			CreatedAt:  types.StringValue(cluster.Audit.CreatedAt.String()),
+			CreatedBy:  types.StringValue(cluster.Audit.CreatedBy),
+			ModifiedAt: types.StringValue(cluster.Audit.ModifiedAt.String()),
+			ModifiedBy: types.StringValue(cluster.Audit.ModifiedBy),
+			Version:    types.Int64Value(int64(cluster.Audit.Version)),
+		}
 
 		auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
 		if diags.HasError() {
 			resp.Diagnostics.AddError(
 				"Error Reading Capella Clusters",
-				fmt.Sprintf("Could not read clusters in organization %s and project %s, unexpected error: %s", organizationId, projectId, errors.ErrUnableToConvertAuditData),
+				fmt.Sprintf("Could not read clusters in organization %s and project %s, unexpected error: %s", state.OrganizationId.ValueString(), state.ProjectId.ValueString(), errors.ErrUnableToConvertAuditData),
 			)
 		}
 
-		newClusterData, err := providerschema.NewClusterData(&cluster, organizationId, projectId, auditObj)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error Reading Capella Clusters",
-				fmt.Sprintf("Could not read clusters in organization %s and project %s, unexpected error: %s", organizationId, projectId, err.Error()),
-			)
+		cd := providerschema.ClusterData{
+			Id:               types.StringValue(cluster.Id.String()),
+			OrganizationId:   types.StringValue(state.OrganizationId.ValueString()),
+			ProjectId:        types.StringValue(state.ProjectId.ValueString()),
+			Name:             types.StringValue(cluster.Name),
+			Description:      types.StringValue(cluster.Description),
+			Audit:            auditObj,
+			CurrentState:     types.StringValue(string(cluster.CurrentState)),
+			ConnectionString: types.StringValue(cluster.ConnectionString),
 		}
-		state.Data = append(state.Data, *newClusterData)
+		state.Data = append(state.Data, cd)
 	}
 
 	// Set state

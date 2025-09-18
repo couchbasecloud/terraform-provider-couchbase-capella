@@ -2,44 +2,35 @@ package acceptance_tests
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"time"
 
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	bucketapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/bucket"
+	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/apigen"
+	"github.com/google/uuid"
 )
 
-func createBucket(ctx context.Context, client *api.Client) error {
-	bucketRequest := bucketapi.CreateBucketRequest{
+func createBucket(ctx context.Context, clientV2 *apigen.ClientWithResponses) error {
+	bucketRequest := apigen.CreateBucketRequest{
 		Name: globalBucketName,
 	}
 
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets", globalHost, globalOrgId, globalProjectId, globalClusterId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-	response, err := client.ExecuteWithRetry(
-		ctx,
-		cfg,
-		bucketRequest,
-		globalToken,
-		nil,
-	)
+	orgUUID, _ := uuid.Parse(globalOrgId)
+	projUUID, _ := uuid.Parse(globalProjectId)
+	cluUUID, _ := uuid.Parse(globalClusterId)
+
+	res, err := clientV2.PostBucketWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID), apigen.ClusterId(cluUUID), bucketRequest)
 	if err != nil {
 		return err
 	}
-
-	bucketResponse := bucketapi.GetBucketResponse{}
-	if err = json.Unmarshal(response.Body, &bucketResponse); err != nil {
-		return err
+	if res.JSON201 == nil {
+		return fmt.Errorf("unexpected status: %s", res.Status())
 	}
-
-	globalBucketId = bucketResponse.Id
+	globalBucketId = res.JSON201.Id
 	return nil
 }
 
-func bucketWait(ctx context.Context, client *api.Client) error {
+func bucketWait(ctx context.Context, clientV2 *apigen.ClientWithResponses) error {
 	const maxWaitTime = 5 * time.Minute
 
 	var cancel context.CancelFunc
@@ -49,32 +40,25 @@ func bucketWait(ctx context.Context, client *api.Client) error {
 	ticker := time.NewTicker(1 * time.Minute)
 	defer ticker.Stop()
 
+	orgUUID, _ := uuid.Parse(globalOrgId)
+	projUUID, _ := uuid.Parse(globalProjectId)
+	cluUUID, _ := uuid.Parse(globalClusterId)
+
 	for {
 		select {
 		case <-ctx.Done():
 			return ErrTimeoutWaitingForBucket
 		case <-ticker.C:
-			url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", globalHost, globalOrgId, globalProjectId, globalClusterId, globalBucketId)
-			cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-			_, err := client.ExecuteWithRetry(
-				ctx,
-				cfg,
-				nil,
-				globalToken,
-				nil,
-			)
-			if err == nil {
+			res, err := clientV2.GetBucketByIDWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID), apigen.ClusterId(cluUUID), apigen.BucketId(globalBucketId))
+			if err != nil {
+				return err
+			}
+			if res.JSON200 != nil {
 				log.Print("bucket created")
 				return nil
 			}
-
-			apiError, ok := err.(*api.Error)
-			if ok {
-				if apiError.HttpStatusCode != http.StatusNotFound {
-					return err
-				}
-			} else {
-				return err
+			if res.StatusCode() != 404 {
+				return fmt.Errorf("unexpected status while waiting bucket: %s", res.Status())
 			}
 		}
 	}

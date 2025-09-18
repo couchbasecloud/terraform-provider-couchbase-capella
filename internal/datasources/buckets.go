@@ -3,13 +3,13 @@ package datasources
 import (
 	"context"
 	"fmt"
-	"net/http"
 
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/bucket"
+	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/apigen"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -170,10 +170,11 @@ func (d *Buckets) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 		return
 	}
 
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets", d.HostURL, organizationId, projectId, clusterId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	orgUUID, _ := uuid.Parse(organizationId)
+	projUUID, _ := uuid.Parse(projectId)
+	cluUUID, _ := uuid.Parse(clusterId)
 
-	response, err := api.GetPaginated[[]bucket.GetBucketResponse](ctx, d.ClientV1, d.Token, cfg, api.SortById)
+	listResp, err := d.ClientV2.ListBucketsWithResponse(ctx, apigen.OrganizationId(orgUUID), apigen.ProjectId(projUUID), apigen.ClusterId(cluUUID))
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Buckets",
@@ -181,30 +182,38 @@ func (d *Buckets) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 		)
 		return
 	}
+	if listResp.JSON200 == nil {
+		resp.Diagnostics.AddError("Error Reading Capella Buckets", "unexpected response status: "+listResp.Status())
+		return
+	}
 
-	// Map response body to model
-	for _, bucket := range response {
+	for _, b := range listResp.JSON200.Data {
 		bucketState := providerschema.OneBucket{
-			Id:                       types.StringValue(bucket.Id),
-			Name:                     types.StringValue(bucket.Name),
-			Type:                     types.StringValue(bucket.Type),
+			Id:                       types.StringValue(b.Id),
+			Name:                     types.StringValue(b.Name),
+			Type:                     types.StringValue(b.Type),
 			OrganizationId:           types.StringValue(organizationId),
 			ProjectId:                types.StringValue(projectId),
 			ClusterId:                types.StringValue(clusterId),
-			StorageBackend:           types.StringValue(bucket.StorageBackend),
-			MemoryAllocationInMB:     types.Int64Value(bucket.MemoryAllocationInMb),
-			BucketConflictResolution: types.StringValue(bucket.BucketConflictResolution),
-			DurabilityLevel:          types.StringValue(bucket.DurabilityLevel),
-			Replicas:                 types.Int64Value(bucket.Replicas),
-			Flush:                    types.BoolValue(bucket.Flush),
-			TimeToLiveInSeconds:      types.Int64Value(bucket.TimeToLiveInSeconds),
-			EvictionPolicy:           types.StringValue(bucket.EvictionPolicy),
-			Stats: &providerschema.Stats{
-				ItemCount:       types.Int64Value(bucket.Stats.ItemCount),
-				OpsPerSecond:    types.Int64Value(bucket.Stats.OpsPerSecond),
-				DiskUsedInMiB:   types.Int64Value(bucket.Stats.DiskUsedInMib),
-				MemoryUsedInMiB: types.Int64Value(bucket.Stats.MemoryUsedInMib),
-			},
+			StorageBackend:           types.StringValue(b.StorageBackend),
+			MemoryAllocationInMB:     types.Int64Value(int64(b.MemoryAllocationInMb)),
+			BucketConflictResolution: types.StringValue(b.BucketConflictResolution),
+			DurabilityLevel:          types.StringValue(b.DurabilityLevel),
+			Replicas:                 types.Int64Value(int64(b.Replicas)),
+			TimeToLiveInSeconds:      types.Int64Value(int64(b.TimeToLiveInSeconds)),
+			EvictionPolicy:           types.StringValue(string(b.EvictionPolicy)),
+		}
+		if b.Flush != nil {
+			bucketState.Flush = types.BoolValue(*b.Flush)
+		} else {
+			bucketState.Flush = types.BoolNull()
+		}
+		// Stats is a value type in v2; map fields
+		bucketState.Stats = &providerschema.Stats{
+			ItemCount:       types.Int64Value(int64(b.Stats.ItemCount)),
+			OpsPerSecond:    types.Int64Value(int64(b.Stats.OpsPerSecond)),
+			DiskUsedInMiB:   types.Int64Value(int64(b.Stats.DiskUsedInMib)),
+			MemoryUsedInMiB: types.Int64Value(int64(b.Stats.MemoryUsedInMib)),
 		}
 		state.Data = append(state.Data, bucketState)
 	}
