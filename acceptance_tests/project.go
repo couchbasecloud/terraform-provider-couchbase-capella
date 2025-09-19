@@ -2,59 +2,33 @@ package acceptance_tests
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"log"
-	"net/http"
 
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	"github.com/google/uuid"
+
+	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 )
 
-func createProject(ctx context.Context, client *api.Client) error {
-	projectRequest := api.CreateProjectRequest{
+func createProject(ctx context.Context, client *apigen.ClientWithResponses) error {
+	req := apigen.CreateProjectRequest{
 		Name: "tf_acc_test_project_common",
 	}
 
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects", globalHost, globalOrgId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-	response, err := client.ExecuteWithRetry(
-		ctx,
-		cfg,
-		projectRequest,
-		globalToken,
-		nil,
-	)
+	orgUUID, _ := uuid.Parse(globalOrgId)
+	resp, err := client.PostProjectWithResponse(ctx, orgUUID, req)
 	if err != nil {
 		return err
 	}
-
-	projectResponse := api.GetProjectResponse{}
-	if err = json.Unmarshal(response.Body, &projectResponse); err != nil {
-		return err
+	if resp.JSON201 == nil {
+		return fmt.Errorf("unexpected status: %s", resp.Status())
 	}
-
-	log.Print("project created")
-
-	globalProjectId = projectResponse.Id.String()
-
+	globalProjectId = resp.JSON201.Id.String()
 	return nil
 }
 
-func destroyProject(ctx context.Context, client *api.Client) error {
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s", globalHost, globalOrgId, globalProjectId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err := client.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		globalToken,
-		nil,
-	)
-	if err != nil {
-		return err
-	}
-
-	log.Print("project destroyed")
-
-	return nil
+func destroyProject(ctx context.Context, client *apigen.ClientWithResponses) error {
+	orgUUID, _ := uuid.Parse(globalOrgId)
+	projUUID, _ := uuid.Parse(globalProjectId)
+	_, err := client.DeleteProjectByIDWithResponse(ctx, orgUUID, projUUID)
+	return err
 }

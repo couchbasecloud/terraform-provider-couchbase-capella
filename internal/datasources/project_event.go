@@ -110,7 +110,7 @@ func (d *ProjectEvent) getProjectEvent(ctx context.Context, organizationId, proj
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
-	response, err := d.Client.ExecuteWithRetry(
+	response, err := d.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

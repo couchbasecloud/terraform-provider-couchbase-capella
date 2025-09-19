@@ -136,7 +136,7 @@ func (d *DatabaseCredentials) Read(ctx context.Context, req datasource.ReadReque
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users", d.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
-	response, err := api.GetPaginated[[]api.GetDatabaseCredentialResponse](ctx, d.Client, d.Token, cfg, api.SortById)
+	response, err := api.GetPaginated[[]api.GetDatabaseCredentialResponse](ctx, d.ClientV1, d.Token, cfg, api.SortById)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Database Credentials",

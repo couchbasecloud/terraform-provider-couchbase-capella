@@ -117,7 +117,7 @@ func (a *AuditLogExport) Create(ctx context.Context, req resource.CreateRequest,
 		plan.ClusterId.ValueString(),
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
-	response, err := a.Client.ExecuteWithRetry(
+	response, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		auditLogExportRequest,
@@ -260,7 +260,7 @@ func (a *AuditLogExport) getAuditLogExport(ctx context.Context, organizationId, 
 		exportId,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := a.Client.ExecuteWithRetry(
+	response, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

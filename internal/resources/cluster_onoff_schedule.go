@@ -106,7 +106,7 @@ func (c *ClusterOnOffSchedule) Create(ctx context.Context, req resource.CreateRe
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/onOffSchedule", c.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusNoContent}
-	_, err = c.Client.ExecuteWithRetry(
+	_, err = c.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		scheduleRequest,
@@ -271,7 +271,7 @@ func (c *ClusterOnOffSchedule) Update(ctx context.Context, req resource.UpdateRe
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/onOffSchedule", c.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err = c.Client.ExecuteWithRetry(
+	_, err = c.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		BackupScheduleRequest,
@@ -337,7 +337,7 @@ func (c *ClusterOnOffSchedule) Delete(ctx context.Context, req resource.DeleteRe
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
 
 	// Delete existing backup schedule
-	_, err = c.Client.ExecuteWithRetry(
+	_, err = c.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -407,7 +407,7 @@ func (c *ClusterOnOffSchedule) validateCreateClusterOnOffScheduleRequest(plan pr
 func (c *ClusterOnOffSchedule) retrieveClusterOnOffSchedule(ctx context.Context, organizationId, projectId, clusterId string) (*providerschema.ClusterOnOffSchedule, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/onOffSchedule", c.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := c.Client.ExecuteWithRetry(
+	response, err := c.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

@@ -217,7 +217,7 @@ func (f *FreeTierClusterOnOff) manageFreeTierClusterActivation(ctx context.Conte
 
 	cfg := api.EndpointCfg{Url: url, Method: method, SuccessStatus: http.StatusAccepted}
 	tflog.Info(ctx, url)
-	_, err := f.Client.ExecuteWithRetry(
+	_, err := f.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -235,7 +235,7 @@ func (f *FreeTierClusterOnOff) manageFreeTierClusterActivation(ctx context.Conte
 func (f *FreeTierClusterOnOff) retrieveFreeTierClusterOnOff(ctx context.Context, organizationId, projectId, clusterId string) (*providerschema.FreeTierClusterOnOff, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", f.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := f.Client.ExecuteWithRetry(
+	response, err := f.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -299,7 +299,7 @@ func (f *FreeTierClusterOnOff) checkClusterForDesiredStatus(ctx context.Context,
 		case <-ctx.Done():
 			return nil, fmt.Errorf("cluster state check timed out: %w", ctx.Err())
 		case <-ticker.C:
-			response, err := f.Client.ExecuteWithRetry(ctx, cfg, nil, f.Token, nil)
+			response, err := f.ClientV1.ExecuteWithRetry(ctx, cfg, nil, f.Token, nil)
 			if err != nil {
 				return nil, fmt.Errorf("API request failed: %w", err)
 			}

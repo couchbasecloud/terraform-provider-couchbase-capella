@@ -121,7 +121,7 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
 
-	response, err := n.Client.ExecuteWithRetry(
+	response, err := n.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		networkPeerRequest,
@@ -323,7 +323,7 @@ func (n *NetworkPeer) Delete(ctx context.Context, req resource.DeleteRequest, re
 		peerId,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err = n.Client.ExecuteWithRetry(
+	_, err = n.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -448,7 +448,7 @@ func (n *NetworkPeer) getNetworkPeer(
 ) (*network_peer_api.GetNetworkPeeringRecordResponse, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/networkPeers/%s", n.HostURL, organizationId, projectId, clusterId, peerId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := n.Client.ExecuteWithRetry(
+	response, err := n.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

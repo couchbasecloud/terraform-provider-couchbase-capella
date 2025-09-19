@@ -2,11 +2,13 @@ package provider
 
 import (
 	"context"
+	"net/http"
 	"os"
 	"time"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/datasources"
+	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/version"
@@ -149,11 +151,20 @@ func (p *capellaProvider) Configure(
 
 	tflog.Debug(ctx, "Creating Capella client")
 
-	// Create a new capella client using the configuration values
+	// Create clients using the configuration values
+	clientV1 := api.NewClient(apiRequestTimeout)
+	// Use retrying HTTP client for v2 as well
+	retryingHTTP := api.NewRetryHTTPClient(apiRequestTimeout)
+	clientV2, _ := apigen.NewClientWithResponses(host, apigen.WithHTTPClient(retryingHTTP), apigen.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
+		req.Header.Set("Authorization", "Bearer "+authenticationToken)
+		req.Header.Set("User-Agent", providerName+"/"+version.ProviderVersion)
+		return nil
+	}))
 	providerData := &providerschema.Data{
-		HostURL: host,
-		Token:   authenticationToken,
-		Client:  api.NewClient(apiRequestTimeout),
+		HostURL:  host,
+		Token:    authenticationToken,
+		ClientV1: clientV1,
+		ClientV2: clientV2,
 	}
 
 	// Make the Capella client available during DataSource and Resource
