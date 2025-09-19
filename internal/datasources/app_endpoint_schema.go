@@ -8,7 +8,7 @@ import (
 )
 
 // AppEndpointsSchema defines the schema for the AppEndpoints datasource.
-func AppEndpointSchema() schema.Schema {
+func AppEndpointsSchema() schema.Schema {
 	return schema.Schema{
 		MarkdownDescription: "The data source retrieves App Endpoint configurations for an App Service.",
 		Attributes: map[string]schema.Attribute{
