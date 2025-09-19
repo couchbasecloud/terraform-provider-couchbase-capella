@@ -134,7 +134,7 @@ func (r *AppEndpointOidcProvider) Create(ctx context.Context, req resource.Creat
 		)
 		return
 	}
-	r.mapResponseToState(&plan, details, true)
+	r.mapResponseToState(&plan, details)
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 }
@@ -174,7 +174,7 @@ func (r *AppEndpointOidcProvider) Read(ctx context.Context, req resource.ReadReq
 	}
 
 	// On Read, populate all fields from remote
-	r.mapResponseToState(&state, details, false)
+	r.mapResponseToState(&state, details)
 
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
@@ -241,7 +241,7 @@ func (r *AppEndpointOidcProvider) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	r.mapResponseToState(&plan, details, true)
+	r.mapResponseToState(&plan, details)
 
 	diags = resp.State.Set(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -316,7 +316,7 @@ func (r *AppEndpointOidcProvider) getOidcProvider(ctx context.Context, organizat
 
 // mapResponseToState maps response fields to state.
 // If preserveNulls is true, optional attributes that are null in state will not be populated.
-func (r *AppEndpointOidcProvider) mapResponseToState(state *providerschema.AppEndpointOidcProvider, resp api.AppEndpointOIDCProviderResponse, preserveNulls bool) {
+func (r *AppEndpointOidcProvider) mapResponseToState(state *providerschema.AppEndpointOidcProvider, resp api.AppEndpointOIDCProviderResponse) {
 	// Required fields
 	if resp.Issuer != "" {
 		state.Issuer = types.StringValue(resp.Issuer)
@@ -326,29 +326,20 @@ func (r *AppEndpointOidcProvider) mapResponseToState(state *providerschema.AppEn
 	}
 
 	// Optional fields with null-preservation on create
-	if resp.DiscoveryURL != "" {
-		if !(preserveNulls && state.DiscoveryUrl.IsNull()) {
-			state.DiscoveryUrl = types.StringValue(resp.DiscoveryURL)
-		}
+	if resp.DiscoveryURL != "" && !state.DiscoveryUrl.IsNull() {
+		state.DiscoveryUrl = types.StringValue(resp.DiscoveryURL)
 	}
-	if resp.UserPrefix != "" {
-		if !(preserveNulls && state.UserPrefix.IsNull()) {
-			state.UserPrefix = types.StringValue(resp.UserPrefix)
-		}
+	if resp.UserPrefix != "" && !state.UserPrefix.IsNull() {
+		state.UserPrefix = types.StringValue(resp.UserPrefix)
 	}
-	if resp.UsernameClaim != "" {
-		if !(preserveNulls && state.UsernameClaim.IsNull()) {
-			state.UsernameClaim = types.StringValue(resp.UsernameClaim)
-		}
+	if resp.UsernameClaim != "" && !state.UsernameClaim.IsNull() {
+		state.UsernameClaim = types.StringValue(resp.UsernameClaim)
 	}
-	if resp.RolesClaim != "" {
-		if !(preserveNulls && state.RolesClaim.IsNull()) {
-			state.RolesClaim = types.StringValue(resp.RolesClaim)
-		}
+	if resp.RolesClaim != "" && !state.RolesClaim.IsNull() {
+		state.RolesClaim = types.StringValue(resp.RolesClaim)
 	}
 	// Preserve null for optional bool on create if not set in config
-	// if preserveNulls is false, then we should set the register to the value from the response
-	if !state.Register.IsNull() || !preserveNulls {
+	if !state.Register.IsNull() {
 		state.Register = types.BoolValue(resp.Register)
 	}
 
