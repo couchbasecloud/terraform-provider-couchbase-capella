@@ -65,7 +65,7 @@ func (d *AppServices) Read(ctx context.Context, req datasource.ReadRequest, resp
 	url := fmt.Sprintf("%s/v4/organizations/%s/appservices", d.HostURL, organizationId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
-	response, err := api.GetPaginated[[]appservice.GetAppServiceResponse](ctx, d.Client, d.Token, cfg, api.SortById)
+	response, err := api.GetPaginated[[]appservice.GetAppServiceResponse](ctx, d.ClientV1, d.Token, cfg, api.SortById)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella App Services",

@@ -29,9 +29,9 @@ func randomStringWithPrefix(prefix string) string {
 
 func newTestClient() *providerschema.Data {
 	providerData := &providerschema.Data{
-		HostURL: globalHost,
-		Token:   globalToken,
-		Client:  api.NewClient(timeout),
+		HostURL:  globalHost,
+		Token:    globalToken,
+		ClientV1: api.NewClient(timeout),
 	}
 	return providerData
 }

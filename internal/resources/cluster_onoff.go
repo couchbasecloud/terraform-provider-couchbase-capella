@@ -160,7 +160,7 @@ func (c *ClusterOnOffOnDemand) manageClusterActivation(ctx context.Context, stat
 	}
 
 	cfg := cluster_onoff_api.EndpointCfg{Url: url, Method: method, SuccessStatus: http.StatusAccepted}
-	_, err := c.Client.ExecuteWithRetry(
+	_, err := c.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		payload,
@@ -202,7 +202,7 @@ func (c *ClusterOnOffOnDemand) validateClusterOnOffRequest(plan providerschema.C
 func (c *ClusterOnOffOnDemand) retrieveClusterOnOff(ctx context.Context, organizationId, projectId, clusterId, state string, linkedApp bool) (*providerschema.ClusterOnOffOnDemand, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", c.HostURL, organizationId, projectId, clusterId)
 	cfg := cluster_onoff_api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := c.Client.ExecuteWithRetry(
+	response, err := c.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

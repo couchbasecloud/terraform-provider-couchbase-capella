@@ -57,7 +57,7 @@ func (c *FlushBucket) Create(ctx context.Context, req resource.CreateRequest, re
 	// Execute flush bucket. Nothing gets returned for it.
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/flush", c.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusOK}
-	_, err := c.Client.ExecuteWithRetry(
+	_, err := c.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

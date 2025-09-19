@@ -122,7 +122,7 @@ func testAccDeleteUserResource(resourceReference string) resource.TestCheckFunc 
 func deleteUserFromServer(data *providerschema.Data, organizationId, clusterId string) error {
 	url := fmt.Sprintf("%s/v4/organizations/%s/users/%s", data.HostURL, organizationId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err := data.Client.Execute(
+	_, err := data.ClientV1.Execute(
 		cfg,
 		nil,
 		data.Token,
@@ -138,7 +138,7 @@ func deleteUserFromServer(data *providerschema.Data, organizationId, clusterId s
 func readUserFromServer(data *providerschema.Data, organizationId, clusterId string) error {
 	url := fmt.Sprintf("%s/v4/organizations/%s/users/%s", data.HostURL, organizationId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	_, err := data.Client.Execute(
+	_, err := data.ClientV1.Execute(
 		cfg,
 		nil,
 		data.Token,

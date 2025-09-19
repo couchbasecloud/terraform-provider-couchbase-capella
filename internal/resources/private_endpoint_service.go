@@ -102,7 +102,7 @@ func (p *PrivateEndpointService) Create(ctx context.Context, req resource.Create
 	)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
-	_, err = p.Client.ExecuteWithRetry(
+	_, err = p.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -220,7 +220,7 @@ func (p *PrivateEndpointService) Update(ctx context.Context, req resource.Update
 		status = "disabling"
 	}
 
-	_, err := p.Client.ExecuteWithRetry(
+	_, err := p.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -305,7 +305,7 @@ func (p *PrivateEndpointService) Delete(ctx context.Context, req resource.Delete
 		clusterId,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
-	_, err = p.Client.ExecuteWithRetry(
+	_, err = p.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -409,7 +409,7 @@ func (p *PrivateEndpointService) waitUntilStatusChanges(ctx context.Context, fin
 func (p *PrivateEndpointService) getServiceStatus(ctx context.Context, organizationId, projectId, clusterId string) (*api.GetPrivateEndpointServiceStatusResponse, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/privateEndpointService", p.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := p.Client.ExecuteWithRetry(
+	response, err := p.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

@@ -163,7 +163,7 @@ func (g *GsiDefinitions) Read(ctx context.Context, req datasource.ReadRequest, r
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
-	response, err := g.Client.ExecuteWithRetry(
+	response, err := g.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
