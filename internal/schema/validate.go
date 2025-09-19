@@ -23,6 +23,7 @@ var (
 		"app_service_id":    AppServiceId,
 		"app_endpoint_name": AppEndpointName,
 		"endpoint_id":       EndpointId,
+		"provider_id":       ProviderId,
 	}
 )
 
