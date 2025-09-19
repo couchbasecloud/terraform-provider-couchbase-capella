@@ -7,10 +7,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// AppEndpointSchema defines the schema for the single App Endpoint datasource.
-func AppEndpointSchema() schema.Schema {
+// AppEndpointsSchema defines the schema for the AppEndpoints datasource.
+func AppEndpointsSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "The data source retrieves a single App Endpoint configuration for an App Service.",
+		MarkdownDescription: "The data source retrieves App Endpoint configurations for an App Service.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
@@ -40,42 +40,47 @@ func AppEndpointSchema() schema.Schema {
 					stringvalidator.LengthAtLeast(1),
 				},
 			},
-			"name": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The name of the App Endpoint.",
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
-			},
-			"bucket": schema.StringAttribute{
+			"data": schema.SetNestedAttribute{
 				Computed:            true,
-				MarkdownDescription: "The name of the bucket associated with this App Endpoint.",
-			},
-			"user_xattr_key": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "The user extended attribute key for the App Endpoint.",
-			},
-			"delta_sync_enabled": schema.BoolAttribute{
-				Computed:            true,
-				MarkdownDescription: "Enable or disable delta sync on this App Endpoint.",
-			},
-			"scopes": schema.MapNestedAttribute{
-				Computed:            true,
-				MarkdownDescription: "Configuration for scopes within the App Endpoint.",
+				MarkdownDescription: "List of App Endpoint configurations.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"collections": schema.MapNestedAttribute{
+						"bucket": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "Configuration for collections within the App Endpoint.",
+							MarkdownDescription: "The name of the bucket associated with this App Endpoint.",
+						},
+						"name": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "The name of the App Endpoint.",
+						},
+						"user_xattr_key": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "The user extended attribute key for the App Endpoint.",
+						},
+						"delta_sync_enabled": schema.BoolAttribute{
+							Computed:            true,
+							MarkdownDescription: "Enable or disable delta sync on this App Endpoint.",
+						},
+						"scopes": schema.MapNestedAttribute{
+							Computed:            true,
+							MarkdownDescription: "Configuration for scopes within the App Endpoint.",
 							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
-									"access_control_function": schema.StringAttribute{
+									"collections": schema.MapNestedAttribute{
 										Computed:            true,
-										MarkdownDescription: "The Javascript function that is used to specify the access control policies to be applied to documents in this collection.",
-									},
-									"import_filter": schema.StringAttribute{
-										Computed:            true,
-										MarkdownDescription: "The JavaScript function used to filter which documents in the collection that are to be imported by the App Endpoint.",
+										MarkdownDescription: "Configuration for collections within the App Endpoint.",
+										NestedObject: schema.NestedAttributeObject{
+											Attributes: map[string]schema.Attribute{
+												"access_control_function": schema.StringAttribute{
+													Computed:            true,
+													MarkdownDescription: "The Javascript function that is used to specify the access control policies to be applied to documents in this collection.",
+												},
+												"import_filter": schema.StringAttribute{
+													Computed:            true,
+													MarkdownDescription: "The JavaScript function used to filter which documents in the collection that are to be imported by the App Endpoint.",
+												},
+											},
+										},
 									},
 								},
 							},
