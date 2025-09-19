@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/apigen"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/datasources"
+	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/version"
@@ -153,7 +153,9 @@ func (p *capellaProvider) Configure(
 
 	// Create clients using the configuration values
 	clientV1 := api.NewClient(apiRequestTimeout)
-	clientV2, _ := apigen.NewClientWithResponses(host, apigen.WithHTTPClient(clientV1), apigen.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
+	// Use retrying HTTP client for v2 as well
+	retryingHTTP := apigen.NewRetryHTTPClient(apiRequestTimeout)
+	clientV2, _ := apigen.NewClientWithResponses(host, apigen.WithHTTPClient(retryingHTTP), apigen.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
 		req.Header.Set("Authorization", "Bearer "+authenticationToken)
 		req.Header.Set("User-Agent", providerName+"/"+version.ProviderVersion)
 		return nil

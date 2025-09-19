@@ -2,16 +2,16 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
-	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -88,24 +88,20 @@ func (r *Project) Create(ctx context.Context, req resource.CreateRequest, resp *
 	}
 	var organizationId = plan.OrganizationId.ValueString()
 
-	createReq := apigen.CreateProjectRequest{
-		Description: func() *string {
-			s := plan.Description.ValueString()
-			if s == "" {
-				return nil
-			}
-			return &s
-		}(),
-		Name: plan.Name.ValueString(),
+	projectRequest := api.CreateProjectRequest{
+		Description: plan.Description.ValueString(),
+		Name:        plan.Name.ValueString(),
 	}
 
-	orgUUID, err := uuid.Parse(organizationId)
-	if err != nil {
-		resp.Diagnostics.AddError("Error creating project", "invalid organization_id: "+err.Error())
-		return
-	}
-
-	res, err := r.ClientV2.PostProjectWithResponse(ctx, orgUUID, createReq)
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects", r.HostURL, organizationId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
+	response, err := r.ClientV1.ExecuteWithRetry(
+		ctx,
+		cfg,
+		projectRequest,
+		r.Token,
+		nil,
+	)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating project",
@@ -113,18 +109,24 @@ func (r *Project) Create(ctx context.Context, req resource.CreateRequest, resp *
 		)
 		return
 	}
-	if res.JSON201 == nil {
-		resp.Diagnostics.AddError("Error creating project", "unexpected response status: "+res.Status())
+
+	projectResponse := api.GetProjectResponse{}
+	err = json.Unmarshal(response.Body, &projectResponse)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating project",
+			errorMessageWhileProjectCreation+"error during unmarshalling: "+err.Error(),
+		)
 		return
 	}
 
-	diags = resp.State.Set(ctx, initializeProjectWithPlanAndId(plan, res.JSON201.Id.String()))
+	diags = resp.State.Set(ctx, initializeProjectWithPlanAndId(plan, projectResponse.Id.String()))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	refreshedState, err := r.retrieveProject(ctx, organizationId, res.JSON201.Id.String())
+	refreshedState, err := r.retrieveProject(ctx, organizationId, projectResponse.Id.String())
 	if err != nil {
 		resp.Diagnostics.AddWarning(
 			"Error creating project",
@@ -226,35 +228,25 @@ func (r *Project) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		projectId      = IDs[providerschema.Id]
 	)
 
-	putReq := apigen.PutProjectJSONRequestBody{
-		Description: func() *string {
-			s := state.Description.ValueString()
-			if s == "" {
-				return nil
-			}
-			return &s
-		}(),
-		Name: state.Name.ValueString(),
+	projectRequest := api.PutProjectRequest{
+		Description: state.Description.ValueString(),
+		Name:        state.Name.ValueString(),
 	}
 
-	orgUUID, err := uuid.Parse(organizationId)
-	if err != nil {
-		resp.Diagnostics.AddError("Error Updating Capella Project", "invalid organization_id: "+err.Error())
-		return
-	}
-	projUUID, err := uuid.Parse(projectId)
-	if err != nil {
-		resp.Diagnostics.AddError("Error Updating Capella Project", "invalid project_id: "+err.Error())
-		return
-	}
-
-	var params *apigen.PutProjectParams
+	var headers = make(map[string]string)
 	if !state.IfMatch.IsUnknown() && !state.IfMatch.IsNull() {
-		ifMatch := state.IfMatch.ValueString()
-		params = &apigen.PutProjectParams{IfMatch: &ifMatch}
+		headers["If-Match"] = state.IfMatch.ValueString()
 	}
 
-	_, err = r.ClientV2.PutProjectWithResponse(ctx, orgUUID, projUUID, params, putReq)
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s", r.HostURL, organizationId, projectId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
+	_, err = r.ClientV1.ExecuteWithRetry(
+		ctx,
+		cfg,
+		projectRequest,
+		r.Token,
+		headers,
+	)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -320,18 +312,15 @@ func (r *Project) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 		projectId      = IDs[providerschema.Id]
 	)
 
-	orgUUID, err := uuid.Parse(organizationId)
-	if err != nil {
-		resp.Diagnostics.AddError("Error Deleting Capella Project", "invalid organization_id: "+err.Error())
-		return
-	}
-	projUUID, err := uuid.Parse(projectId)
-	if err != nil {
-		resp.Diagnostics.AddError("Error Deleting Capella Project", "invalid project_id: "+err.Error())
-		return
-	}
-
-	_, err = r.ClientV2.DeleteProjectByIDWithResponse(ctx, orgUUID, projUUID)
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s", r.HostURL, organizationId, projectId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
+	_, err = r.ClientV1.ExecuteWithRetry(
+		ctx,
+		cfg,
+		nil,
+		r.Token,
+		nil,
+	)
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -359,29 +348,26 @@ func (r *Project) ImportState(ctx context.Context, req resource.ImportStateReque
 }
 
 func (r *Project) retrieveProject(ctx context.Context, organizationId, projectId string) (*providerschema.OneProject, error) {
-	orgUUID, err := uuid.Parse(organizationId)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
-	}
-	projUUID, err := uuid.Parse(projectId)
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s", r.HostURL, organizationId, projectId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	response, err := r.ClientV1.ExecuteWithRetry(
+		ctx,
+		cfg,
+		nil,
+		r.Token,
+		nil,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 	}
 
-	res, err := r.ClientV2.GetProjectByIDWithResponse(ctx, orgUUID, projUUID)
+	projectResp := api.GetProjectResponse{}
+	err = json.Unmarshal(response.Body, &projectResp)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
-	}
-	if res.JSON200 == nil {
-		return nil, fmt.Errorf("%s: unexpected status %s", errors.ErrExecutingRequest, res.Status())
+		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
 
-	projectResp := *res.JSON200
-
-	etag := ""
-	if res.HTTPResponse != nil {
-		etag = res.HTTPResponse.Header.Get("ETag")
-	}
+	projectResp.Etag = response.Response.Header.Get("ETag")
 
 	refreshedState := providerschema.OneProject{
 		Id:             types.StringValue(projectResp.Id.String()),
@@ -395,7 +381,7 @@ func (r *Project) retrieveProject(ctx context.Context, organizationId, projectId
 			ModifiedBy: types.StringValue(projectResp.Audit.ModifiedBy),
 			Version:    types.Int64Value(int64(projectResp.Audit.Version)),
 		},
-		Etag: types.StringValue(etag),
+		Etag: types.StringValue(projectResp.Etag),
 	}
 
 	return &refreshedState, nil

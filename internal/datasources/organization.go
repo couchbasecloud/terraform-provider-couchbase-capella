@@ -2,8 +2,12 @@ package datasources
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/organization"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -11,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
-	"github.com/google/uuid"
 )
 
 var (
@@ -78,34 +81,38 @@ func (o *Organization) Read(ctx context.Context, req datasource.ReadRequest, res
 		return
 	}
 
-	orgID := state.OrganizationId.ValueString()
-	orgUUID, parseErr := uuid.Parse(orgID)
-	if parseErr != nil {
-		resp.Diagnostics.AddError("Error Reading Capella Organization", "invalid organization_id: "+parseErr.Error())
-		return
-	}
+	var organizationId = state.OrganizationId.ValueString()
 
-	res, err := o.ClientV2.GetOrganizationByIDWithResponse(ctx, orgUUID)
+	// Make request to get organization
+	url := fmt.Sprintf("%s/v4/organizations/%s", o.HostURL, organizationId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	response, err := o.ClientV1.ExecuteWithRetry(
+		ctx,
+		cfg,
+		nil,
+		o.Token,
+		nil,
+	)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Organization",
-			"Could not read organization in cluster "+state.OrganizationId.String()+": "+err.Error(),
+			"Could not read organization in cluster "+state.OrganizationId.String()+": "+api.ParseError(err),
 		)
 		return
 	}
-	if res.JSON200 == nil {
-		resp.Diagnostics.AddError("Error Reading Capella Organization", "unexpected response status: "+res.Status())
+
+	organizationsResponse := organization.GetOrganizationResponse{}
+	err = json.Unmarshal(response.Body, &organizationsResponse)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error reading organization",
+			"Could not create organization, unexpected error: "+err.Error(),
+		)
 		return
 	}
 
-	org := *res.JSON200
-	audit := providerschema.CouchbaseAuditData{
-		CreatedAt:  types.StringValue(org.Audit.CreatedAt.String()),
-		CreatedBy:  types.StringValue(org.Audit.CreatedBy),
-		ModifiedAt: types.StringValue(org.Audit.ModifiedAt.String()),
-		ModifiedBy: types.StringValue(org.Audit.ModifiedBy),
-		Version:    types.Int64Value(int64(org.Audit.Version)),
-	}
+	audit := providerschema.NewCouchbaseAuditData(organizationsResponse.Audit)
+
 	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
 	if diags.HasError() {
 		resp.Diagnostics.AddError(
@@ -115,12 +122,11 @@ func (o *Organization) Read(ctx context.Context, req datasource.ReadRequest, res
 		return
 	}
 
-	preferences := providerschema.Preferences{}
-	if org.Preferences.SessionDuration != nil {
-		preferences.SessionDuration = types.Int64Value(int64(*org.Preferences.SessionDuration))
-	} else {
-		preferences.SessionDuration = types.Int64Null()
+	var preferences providerschema.Preferences
+	if organizationsResponse.Preferences != nil {
+		preferences = providerschema.NewPreferences(*organizationsResponse.Preferences)
 	}
+
 	preferencesObj, diags := types.ObjectValueFrom(ctx, preferences.AttributeTypes(), preferences)
 	if diags.HasError() {
 		resp.Diagnostics.AddError(
@@ -130,15 +136,17 @@ func (o *Organization) Read(ctx context.Context, req datasource.ReadRequest, res
 		return
 	}
 
-	state = providerschema.Organization{
-		OrganizationId: types.StringValue(org.Id.String()),
-		Name:           types.StringValue(org.Name),
-		Description:    types.StringValue(org.Description),
+	orgState := providerschema.Organization{
+		OrganizationId: types.StringValue(organizationsResponse.Id.String()),
+		Name:           types.StringValue(organizationsResponse.Name),
+		Description:    types.StringValue(*organizationsResponse.Description),
 		Audit:          auditObj,
 		Preferences:    preferencesObj,
 	}
+	state = orgState
 
 	diags = resp.State.Set(ctx, &state)
+
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

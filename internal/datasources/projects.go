@@ -3,11 +3,11 @@ package datasources
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -97,13 +97,10 @@ func (d *Projects) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 	}
 	var organizationId = state.OrganizationId.ValueString()
 
-	orgUUID, err := uuid.Parse(organizationId)
-	if err != nil {
-		resp.Diagnostics.AddError("Error Reading Capella Projects", "invalid organization_id: "+err.Error())
-		return
-	}
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects", d.HostURL, organizationId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
-	listResp, err := d.ClientV2.ListProjectsWithResponse(ctx, orgUUID, nil)
+	response, err := api.GetPaginated[[]api.GetProjectResponse](ctx, d.ClientV1, d.Token, cfg, api.SortById)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Projects",
@@ -111,12 +108,8 @@ func (d *Projects) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 		)
 		return
 	}
-	if listResp.JSON200 == nil {
-		resp.Diagnostics.AddError("Error Reading Capella Projects", "unexpected response status: "+listResp.Status())
-		return
-	}
 
-	for _, project := range listResp.JSON200.Data {
+	for _, project := range response {
 		projectState := providerschema.OneProject{
 			Id:             types.StringValue(project.Id.String()),
 			OrganizationId: types.StringValue(state.OrganizationId.ValueString()),
