@@ -88,6 +88,10 @@ func (d *Buckets) Schema(_ context.Context, _ datasource.SchemaRequest, resp *da
 							Computed:            true,
 							MarkdownDescription: "The bucket storage engine type (Magma or Couchstore).",
 						},
+						"vbuckets": schema.Int64Attribute{
+							Computed:            true,
+							MarkdownDescription: "Number of vbuckets for the bucket. This is only configurable on Magma buckets for Couchbase 8.0 and above.  This requires provider version 1.5.4 or later.",
+						},
 						"memory_allocation_in_mb": schema.Int64Attribute{
 							Optional:            true,
 							Computed:            true,
@@ -192,6 +196,7 @@ func (d *Buckets) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 			ProjectId:                types.StringValue(projectId),
 			ClusterId:                types.StringValue(clusterId),
 			StorageBackend:           types.StringValue(bucket.StorageBackend),
+			Vbuckets:                 types.Int64Value(bucket.Vbuckets),
 			MemoryAllocationInMB:     types.Int64Value(bucket.MemoryAllocationInMb),
 			BucketConflictResolution: types.StringValue(bucket.BucketConflictResolution),
 			DurabilityLevel:          types.StringValue(bucket.DurabilityLevel),
