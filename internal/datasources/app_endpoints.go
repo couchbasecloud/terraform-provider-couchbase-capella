@@ -15,34 +15,34 @@ import (
 )
 
 var (
-	_ datasource.DataSource              = (*AppEndpoint)(nil)
-	_ datasource.DataSourceWithConfigure = (*AppEndpoint)(nil)
+	_ datasource.DataSource              = (*AppEndpoints)(nil)
+	_ datasource.DataSourceWithConfigure = (*AppEndpoints)(nil)
 )
 
-// AppEndpoint is the data source implementation for retrieving App Endpoints for an App Service.
-type AppEndpoint struct {
+// AppEndpoints is the data source implementation for retrieving App Endpoints for an App Service.
+type AppEndpoints struct {
 	*providerschema.Data
 }
 
 // NewAppEndpoint is used in (p *capellaProvider) DataSources for building the provider.
-func NewAppEndpoint() datasource.DataSource {
-	return &AppEndpoint{}
+func NewAppEndpoints() datasource.DataSource {
+	return &AppEndpoints{}
 }
 
 // Metadata returns the App Endpoints data source type name.
-func (a *AppEndpoint) Metadata(
+func (a *AppEndpoints) Metadata(
 	_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse,
 ) {
 	resp.TypeName = req.ProviderTypeName + "_app_endpoints"
 }
 
 // Schema defines the schema for the App Endpoints data source.
-func (a *AppEndpoint) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = AppEndpointSchema()
+func (a *AppEndpoints) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = AppEndpointsSchema()
 }
 
 // Read refreshes the Terraform state with the latest App Endpoints configs.
-func (a *AppEndpoint) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (a *AppEndpoints) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var config providerschema.AppEndpoints
 	diags := req.Config.Get(ctx, &config)
 	resp.Diagnostics.Append(diags...)
@@ -266,7 +266,7 @@ func (a *AppEndpoint) Read(ctx context.Context, req datasource.ReadRequest, resp
 }
 
 // Configure defines the schema for the App Endpoints data source.
-func (a *AppEndpoint) Configure(
+func (a *AppEndpoints) Configure(
 	_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse,
 ) {
 	if req.ProviderData == nil {
