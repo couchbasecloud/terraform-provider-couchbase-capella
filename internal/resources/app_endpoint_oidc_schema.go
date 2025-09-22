@@ -1,39 +1,23 @@
 package resources
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
 func AppEndpointOidcProviderSchema() schema.Schema {
 	return schema.Schema{
 		MarkdownDescription: "App Endpoint OpenID Connect Provider Resource",
 		Attributes: map[string]schema.Attribute{
-			"app_endpoint_name": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplaceIfConfigured(),
-				},
-				MarkdownDescription: `The name of the App Endpoint. Requires replacement if changed.`,
-			},
-			"app_service_id": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplaceIfConfigured(),
-				},
-				MarkdownDescription: `The GUID4 ID of the App Service. Requires replacement if changed.`,
-			},
+			"organization_id":   WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The GUID4 ID of the Capella organization."),
+			"project_id":        WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The GUID4 ID of the Capella project."),
+			"cluster_id":        WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The GUID4 ID of the Capella cluster."),
+			"app_service_id":    WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The GUID4 ID of the Capella App Service."),
+			"app_endpoint_name": WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The name of the App Endpoint."),
 			"client_id": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: `The OpenID Connect provider client ID.`,
-			},
-			"cluster_id": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplaceIfConfigured(),
-				},
-				MarkdownDescription: `The GUID4 ID of the Capella Cluster. Requires replacement if changed.`,
 			},
 			"discovery_url": schema.StringAttribute{
 				Optional:            true,
@@ -46,20 +30,6 @@ func AppEndpointOidcProviderSchema() schema.Schema {
 			"is_default": schema.BoolAttribute{
 				Computed:            true,
 				MarkdownDescription: `Indicates whether this is the default OpenID Connect provider for this App Endpoint.`,
-			},
-			"organization_id": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplaceIfConfigured(),
-				},
-				MarkdownDescription: `The GUID4 ID of the Capella Organization. Requires replacement if changed.`,
-			},
-			"project_id": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplaceIfConfigured(),
-				},
-				MarkdownDescription: `The GUID4 ID of the Capella Project. Requires replacement if changed.`,
 			},
 			"provider_id": schema.StringAttribute{
 				Computed:            true,
