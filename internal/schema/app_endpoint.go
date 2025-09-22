@@ -60,7 +60,7 @@ type AppEndpoint struct {
 	Cors *AppEndpointCors `tfsdk:"cors"`
 
 	// Oidc is a list of OIDC provider configurations for the App Endpoint.
-	Oidc types.Set `tfsdk:"oidc"`
+	Oidc []AppEndpointOidc `tfsdk:"oidc"`
 
 	// RequireResync is a map of scopes to a list of collection names that require resync.
 	RequireResync types.Map `tfsdk:"require_resync"`
@@ -116,7 +116,7 @@ type OneAppEndpoint struct {
 	Cors *AppEndpointCors `tfsdk:"cors"`
 
 	// Oidc is a list of OIDC provider configurations for the App Endpoint.
-	Oidc types.Set `tfsdk:"oidc"`
+	Oidc []AppEndpointOidc `tfsdk:"oidc"`
 
 	// RequireResync is a map of scopes to a list of collection names that require resync.
 	RequireResync types.Map `tfsdk:"require_resync"`

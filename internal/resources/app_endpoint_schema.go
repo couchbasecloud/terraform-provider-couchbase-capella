@@ -84,7 +84,7 @@ func AppEndpointSchema() schema.Schema {
 					},
 				},
 			},
-			"oidc": schema.SetNestedAttribute{
+			"oidc": schema.ListNestedAttribute{
 				Optional:            true,
 				MarkdownDescription: "List of OIDC configurations for the App Endpoint.",
 				NestedObject: schema.NestedAttributeObject{
@@ -92,7 +92,7 @@ func AppEndpointSchema() schema.Schema {
 						"issuer":         WithDescription(stringAttribute([]string{required}), "The OIDC issuer URL."),
 						"register":       WithDescription(boolAttribute(optional, computed), "States whether to register the OIDC client."),
 						"client_id":      WithDescription(stringAttribute([]string{required}), "The OIDC client ID."),
-						"user_prefix":    WithDescription(stringAttribute([]string{optional}), "The user prefix for OIDC users."),
+						"user_prefix":    WithDescription(stringAttribute([]string{optional, computed}), "The user prefix for OIDC users."),
 						"discovery_url":  WithDescription(stringAttribute([]string{optional, computed}), "The OIDC discovery URL."),
 						"username_claim": WithDescription(stringAttribute([]string{optional, computed}), "The username claim for OIDC."),
 						"roles_claim":    WithDescription(stringAttribute([]string{optional, computed}), "The roles claim for OIDC."),

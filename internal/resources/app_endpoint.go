@@ -110,12 +110,6 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	diags = resp.State.Set(ctx, plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	refreshedState, err := a.refreshAppEndpoint(
 		ctx,
 		organizationId,
@@ -228,43 +222,24 @@ func initComputedAttributesToNullBeforeRefresh(ctx context.Context, plan *provid
 		}
 	}
 
-	if !plan.Oidc.IsNull() {
-		var oidcList []providerschema.AppEndpointOidc
-		diags.Append(plan.Oidc.ElementsAs(ctx, &oidcList, false)...)
-		if diags.HasError() {
-			return diags
-		}
-
+	var oidcList []providerschema.AppEndpointOidc
+	if len(plan.Oidc) > 0 {
+		oidcList = make([]providerschema.AppEndpointOidc, len(plan.Oidc))
 		for i := range oidcList {
-			oidcList[i].ProviderId = types.StringNull()
-			oidcList[i].IsDefault = types.BoolNull()
-
-			if oidcList[i].Register.IsNull() || oidcList[i].Register.IsUnknown() {
-				oidcList[i].Register = types.BoolNull()
-			}
-			if oidcList[i].DiscoveryUrl.IsNull() || oidcList[i].DiscoveryUrl.IsUnknown() {
-				oidcList[i].DiscoveryUrl = types.StringNull()
-			}
-			if oidcList[i].UsernameClaim.IsNull() || oidcList[i].UsernameClaim.IsUnknown() {
-				oidcList[i].UsernameClaim = types.StringNull()
-			}
-			if oidcList[i].RolesClaim.IsNull() || oidcList[i].RolesClaim.IsUnknown() {
-				oidcList[i].RolesClaim = types.StringNull()
+			oidcList[i] = providerschema.AppEndpointOidc{
+				ProviderId: types.StringNull(),
+				IsDefault:  types.BoolNull(),
+				//Register:      types.BoolNull(),
+				//UserPrefix:    types.StringNull(),
+				//RolesClaim:    types.StringNull(),
+				//UsernameClaim: types.StringNull(),
+				//DiscoveryUrl:  types.StringNull(),
+				ClientId: plan.Oidc[i].ClientId,
+				Issuer:   plan.Oidc[i].Issuer,
 			}
 		}
-
-		oidcSet, d := types.SetValueFrom(ctx, types.ObjectType{
-			AttrTypes: schema.
-				AppEndpointOidc{}.
-				AttributeTypes(),
-		}, oidcList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-		plan.Oidc = oidcSet
 	}
-
+	plan.Oidc = oidcList
 	return diags
 }
 
@@ -653,26 +628,24 @@ func (a *AppEndpoint) refreshAppEndpoint(
 	}
 
 	if len(appEndpoint.Oidc) > 0 {
-		oidcSet, diags := types.SetValueFrom(
-			ctx,
-			types.ObjectType{
-				AttrTypes: providerschema.
-					AppEndpointOidc{}.
-					AttributeTypes(),
-			},
-			appEndpoint.Oidc,
-		)
-		if diags.HasError() {
-			return nil, fmt.Errorf("error converting OIDC configurations: %v", diags.Errors())
+		var oidcList []providerschema.AppEndpointOidc
+		for _, oidc := range appEndpoint.Oidc {
+			oidcList = append(oidcList, providerschema.AppEndpointOidc{
+				Issuer:        types.StringValue(oidc.Issuer),
+				ClientId:      types.StringValue(oidc.ClientId),
+				DiscoveryUrl:  types.StringValue(oidc.DiscoveryUrl),
+				UsernameClaim: types.StringValue(oidc.UsernameClaim),
+				UserPrefix:    types.StringValue(oidc.UserPrefix),
+				RolesClaim:    types.StringValue(oidc.RolesClaim),
+				ProviderId:    types.StringValue(oidc.ProviderId),
+				IsDefault:     types.BoolValue(oidc.IsDefault),
+				Register:      types.BoolValue(oidc.Register),
+			})
 		}
-		state.Oidc = oidcSet
+		state.Oidc = oidcList
 
 	} else {
-		state.Oidc = types.SetNull(types.ObjectType{
-			AttrTypes: providerschema.
-				AppEndpointOidc{}.
-				AttributeTypes(),
-		})
+		state.Oidc = []providerschema.AppEndpointOidc{}
 	}
 
 	return state, nil
@@ -759,12 +732,22 @@ func morphToAppEndpointRequest(
 		appEndpointRequest.Cors = corsRequest
 	}
 
-	if !plan.Oidc.IsNull() {
-		oidc := []app_endpoints.AppEndpointOidc{}
-		if diags := plan.Oidc.ElementsAs(ctx, &oidc, false); diags.HasError() {
-			return nil, diags
+	if len(plan.Oidc) > 0 {
+		var oidcList []app_endpoints.AppEndpointOidc
+		for _, oidc := range plan.Oidc {
+			oidcList = append(oidcList, app_endpoints.AppEndpointOidc{
+				Issuer:        oidc.Issuer.ValueString(),
+				ClientId:      oidc.ClientId.ValueString(),
+				DiscoveryUrl:  oidc.DiscoveryUrl.ValueString(),
+				UsernameClaim: oidc.UsernameClaim.ValueString(),
+				UserPrefix:    oidc.UserPrefix.ValueString(),
+				RolesClaim:    oidc.RolesClaim.ValueString(),
+				ProviderId:    oidc.ProviderId.ValueString(),
+				IsDefault:     oidc.IsDefault.ValueBool(),
+				Register:      oidc.Register.ValueBool(),
+			})
 		}
-		appEndpointRequest.Oidc = oidc
+		appEndpointRequest.Oidc = oidcList
 	}
 
 	return appEndpointRequest, nil
