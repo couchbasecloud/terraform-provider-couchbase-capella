@@ -1,6 +1,7 @@
 package datasources
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -40,9 +41,9 @@ func AppEndpointSchema() schema.Schema {
 					stringvalidator.LengthAtLeast(1),
 				},
 			},
-			"data": schema.SetNestedAttribute{
+			"app_endpoints": schema.SetNestedAttribute{
 				Computed:            true,
-				MarkdownDescription: "List of App Endpoint configurations.",
+				MarkdownDescription: "List of App Endpoints.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"bucket": schema.StringAttribute{
@@ -186,6 +187,28 @@ func AppEndpointSchema() schema.Schema {
 						"public_url": schema.StringAttribute{
 							Computed:            true,
 							MarkdownDescription: "The public URL for the App Endpoint.",
+						},
+					},
+				},
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"filter": schema.SingleNestedBlock{
+				MarkdownDescription: "Filter criteria for App Endpoints.  Only filtering by App Endpoint name is supported.",
+				Attributes: map[string]schema.Attribute{
+					"name": schema.StringAttribute{
+						MarkdownDescription: "The name of the attribute to filter.",
+						Optional:            true,
+						Validators: []validator.String{
+							stringvalidator.OneOf("name"),
+						},
+					},
+					"values": schema.SetAttribute{
+						MarkdownDescription: "List of values to match against.",
+						Optional:            true,
+						ElementType:         types.StringType,
+						Validators: []validator.Set{
+							setvalidator.SizeAtLeast(1),
 						},
 					},
 				},
