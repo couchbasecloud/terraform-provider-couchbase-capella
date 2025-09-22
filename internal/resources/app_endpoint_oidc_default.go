@@ -126,20 +126,7 @@ func (r *AppEndpointDefaultOidcProvider) Read(ctx context.Context, req resource.
 
 	selected, err := r.getDefaultProvider(ctx, IDs[providerschema.OrganizationId], IDs[providerschema.ProjectId], IDs[providerschema.ClusterId], IDs[providerschema.AppServiceId], IDs[providerschema.AppEndpointName])
 	if err != nil {
-		// If list returns 404, remove from state
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if resourceNotFound {
-			resp.State.RemoveResource(ctx)
-			return
-		}
-		resp.Diagnostics.AddError("Error Reading Default OIDC Provider", "Could not list OIDC providers: "+errString)
-		return
-	}
-
-	if selected.ProviderID == "" {
-		// No default currently set; remove from state so plan can set it
-		tflog.Info(ctx, "No default OIDC provider found; removing from state")
-		resp.State.RemoveResource(ctx)
+		resp.Diagnostics.AddError("Error Reading Default OIDC Provider", "Could not list OIDC providers: "+err.Error())
 		return
 	}
 
@@ -150,9 +137,7 @@ func (r *AppEndpointDefaultOidcProvider) Read(ctx context.Context, req resource.
 // Update sets the default provider (idempotent with Create).
 func (r *AppEndpointDefaultOidcProvider) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan providerschema.AppEndpointDefaultOidcProvider
-	var state providerschema.AppEndpointDefaultOidcProvider
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -176,7 +161,7 @@ func (r *AppEndpointDefaultOidcProvider) Update(ctx context.Context, req resourc
 
 	payload := api.AppEndpointOIDCDefaultProviderRequest{ProviderID: providerId}
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err := r.Client.ExecuteWithRetry(ctx, cfg, payload, r.Token, map[string]string{"Content-Type": "application/json"})
+	_, err := r.Client.ExecuteWithRetry(ctx, cfg, payload, r.Token, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Error Updating Default OIDC Provider", api.ParseError(err))
 		return
@@ -185,10 +170,8 @@ func (r *AppEndpointDefaultOidcProvider) Update(ctx context.Context, req resourc
 	selected, err := r.getDefaultProvider(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName)
 	if err != nil {
 		resp.Diagnostics.AddWarning("Error reading default OIDC provider after update", api.ParseError(err))
-		plan.ProviderId = types.StringValue(providerId)
-	} else if selected.ProviderID != "" {
-		plan.ProviderId = types.StringValue(selected.ProviderID)
 	}
+	plan.ProviderId = types.StringValue(selected.ProviderID)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -226,7 +209,7 @@ func (r *AppEndpointDefaultOidcProvider) getDefaultProvider(ctx context.Context,
 			return p, nil
 		}
 	}
-	return api.AppEndpointOIDCProviderResponse{}, nil
+	return api.AppEndpointOIDCProviderResponse{}, fmt.Errorf("no default OIDC provider found")
 }
 
 // waitForDefaultProvider waits up to 15 seconds, checking every 5 seconds, for the default provider to match the given providerId.
