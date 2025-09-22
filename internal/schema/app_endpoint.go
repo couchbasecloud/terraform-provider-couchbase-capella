@@ -1,8 +1,13 @@
 package schema
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 )
 
 type AppEndpoints struct {
@@ -71,6 +76,23 @@ type AppEndpoint struct {
 
 	// PublicURL A URL for the public API used for access to functions for data access and manipulation. For more information, read the [Capella App Services Public API Reference](https://docs.couchbase.com/cloud/app-services/references/rest_api_public.html)
 	PublicURL types.String `tfsdk:"public_url"`
+}
+
+// Validate verifies required identifiers for the App Endpoint are present and returns them.
+func (a *AppEndpoint) Validate() (map[Attr]string, error) {
+	state := map[Attr]basetypes.StringValue{
+		OrganizationId:  a.OrganizationId,
+		ProjectId:       a.ProjectId,
+		ClusterId:       a.ClusterId,
+		AppServiceId:    a.AppServiceId,
+		AppEndpointName: a.Name,
+	}
+
+	IDs, err := validateSchemaState(state, AppEndpointName)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
+	}
+	return IDs, nil
 }
 
 // OneAppEndpoint represents the Terraform schema for an App Endpoint configuration.
