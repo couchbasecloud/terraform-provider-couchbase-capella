@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -98,14 +97,6 @@ func (r *AppEndpointDefaultOidcProvider) Create(ctx context.Context, req resourc
 		return
 	}
 
-	// Refresh state by listing providers and picking the default
-	selected, err := r.waitForDefaultProvider(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, providerId)
-	if err != nil {
-		resp.Diagnostics.AddWarning("Error reading default OIDC provider after create", api.ParseError(err))
-	} else if selected.ProviderID != "" {
-		plan.ProviderId = types.StringValue(selected.ProviderID)
-	}
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -167,12 +158,6 @@ func (r *AppEndpointDefaultOidcProvider) Update(ctx context.Context, req resourc
 		return
 	}
 
-	selected, err := r.getDefaultProvider(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName)
-	if err != nil {
-		resp.Diagnostics.AddWarning("Error reading default OIDC provider after update", api.ParseError(err))
-	}
-	plan.ProviderId = types.StringValue(selected.ProviderID)
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -210,40 +195,4 @@ func (r *AppEndpointDefaultOidcProvider) getDefaultProvider(ctx context.Context,
 		}
 	}
 	return api.AppEndpointOIDCProviderResponse{}, fmt.Errorf("no default OIDC provider found")
-}
-
-// waitForDefaultProvider waits up to 15 seconds, checking every 5 seconds, for the default provider to match the given providerId.
-func (r *AppEndpointDefaultOidcProvider) waitForDefaultProvider(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName, providerId string) (api.AppEndpointOIDCProviderResponse, error) {
-	const (
-		totalWait = 15 // seconds
-		interval  = 5  // seconds
-	)
-	var lastResp api.AppEndpointOIDCProviderResponse
-	var lastErr error
-
-	deadline := time.Now().Add(time.Duration(totalWait) * time.Second)
-	for {
-		resp, err := r.getDefaultProvider(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName)
-		if err != nil {
-			lastErr = err
-		} else if resp.ProviderID == providerId {
-			return resp, nil
-		} else {
-			lastResp = resp
-		}
-
-		if time.Now().After(deadline) {
-			break
-		}
-		select {
-		case <-ctx.Done():
-			return api.AppEndpointOIDCProviderResponse{}, ctx.Err()
-		case <-time.After(time.Duration(interval) * time.Second):
-			// retry
-		}
-	}
-	if lastErr != nil {
-		return api.AppEndpointOIDCProviderResponse{}, lastErr
-	}
-	return lastResp, fmt.Errorf("default OIDC provider did not match provider_id %s after %d seconds", providerId, totalWait)
 }
