@@ -102,19 +102,14 @@ func (r *AppEndpointOidcProvider) Create(ctx context.Context, req resource.Creat
 		resp.Diagnostics.AddError("Error Creating OIDC Provider", api.ParseError(err))
 		return
 	}
-	initOidcProviderNullsBeforeRefresh(&plan)
 
 	// Capture providerId from response
 	var created api.AppEndpointOIDCProviderResponse
-	var providerId string
 	if err := json.Unmarshal(res.Body, &created); err != nil {
 		resp.Diagnostics.AddError("Error unmarshalling create OIDC Provider response", api.ParseError(err))
 		return
 	}
-	if created.ProviderID != "" {
-		providerId = created.ProviderID
-		plan.ProviderId = types.StringValue(created.ProviderID)
-	} else {
+	if created.ProviderID == "" {
 		resp.Diagnostics.AddError(
 			"Error Creating App Endpoint OIDC Provider",
 			"Empty provider Id returned.",
@@ -124,13 +119,14 @@ func (r *AppEndpointOidcProvider) Create(ctx context.Context, req resource.Creat
 	// Initialize optional/computed attributes to null before refresh to preserve user intent
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
+	initOidcProviderNullsBeforeRefresh(&plan)
 
-	// Refresh using GET; preserve nulls for optional attributes during create
-	details, err := r.getOidcProvider(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, providerId)
+	// Refresh using GET
+	details, err := r.getOidcProvider(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, created.ProviderID)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"Error refreshing App Endpoint OIDC Provider after creation",
-			fmt.Sprintf("Could not read OIDC provider %s on App Endpoint %s ", providerId, appEndpointName)+". "+api.ParseError(err),
+			fmt.Sprintf("Could not read OIDC provider %s on App Endpoint %s ", created.ProviderID, appEndpointName)+". "+api.ParseError(err),
 		)
 		return
 	}
@@ -154,14 +150,13 @@ func (r *AppEndpointOidcProvider) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	providerId := IDs[providerschema.ProviderId]
-	if providerId == "" {
+	if IDs[providerschema.ProviderId] == "" {
 		tflog.Info(ctx, "providerId missing; removing from state")
 		resp.State.RemoveResource(ctx)
 		return
 	}
 
-	details, err := r.getOidcProvider(ctx, IDs[providerschema.OrganizationId], IDs[providerschema.ProjectId], IDs[providerschema.ClusterId], IDs[providerschema.AppServiceId], IDs[providerschema.AppEndpointName], providerId)
+	details, err := r.getOidcProvider(ctx, IDs[providerschema.OrganizationId], IDs[providerschema.ProjectId], IDs[providerschema.ClusterId], IDs[providerschema.AppServiceId], IDs[providerschema.AppEndpointName], IDs[providerschema.ProviderId])
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -314,8 +309,7 @@ func (r *AppEndpointOidcProvider) getOidcProvider(ctx context.Context, organizat
 	return out, nil
 }
 
-// mapResponseToState maps response fields to state.
-// If preserveNulls is true, optional attributes that are null in state will not be populated.
+// mapResponseToState maps get OIDC provider response fields to state.
 func (r *AppEndpointOidcProvider) mapResponseToState(state *providerschema.AppEndpointOidcProvider, resp api.AppEndpointOIDCProviderResponse) {
 	// Required fields
 	if resp.Issuer != "" {
@@ -325,7 +319,6 @@ func (r *AppEndpointOidcProvider) mapResponseToState(state *providerschema.AppEn
 		state.ClientId = types.StringValue(resp.ClientID)
 	}
 
-	// Optional fields with null-preservation on create
 	if resp.DiscoveryURL != "" && !state.DiscoveryUrl.IsNull() {
 		state.DiscoveryUrl = types.StringValue(resp.DiscoveryURL)
 	}
@@ -338,15 +331,11 @@ func (r *AppEndpointOidcProvider) mapResponseToState(state *providerschema.AppEn
 	if resp.RolesClaim != "" && !state.RolesClaim.IsNull() {
 		state.RolesClaim = types.StringValue(resp.RolesClaim)
 	}
-	// Preserve null for optional bool on create if not set in config
 	if !state.Register.IsNull() {
 		state.Register = types.BoolValue(resp.Register)
 	}
 
-	// Computed ID
-	if resp.ProviderID != "" {
-		state.ProviderId = types.StringValue(resp.ProviderID)
-	}
+	state.ProviderId = types.StringValue(resp.ProviderID)
 	state.IsDefault = types.BoolValue(resp.IsDefault)
 
 }
