@@ -23,8 +23,20 @@ type AppEndpoints struct {
 	// AppServiceId is the ID of the App Service to which the App Endpoints belong.
 	AppServiceId types.String `tfsdk:"app_service_id"`
 
-	// Data is a list of App Endpoints.
-	Data []OneAppEndpoint `tfsdk:"data"`
+	// AppEndpoints is a list of App Endpoints.
+	AppEndpoints []OneAppEndpoint `tfsdk:"app_endpoints"`
+
+	// Filters is an optional filter to apply to the App Endpoints list.
+	Filters *Filter `tfsdk:"filter"`
+}
+
+// Filter represents a filter block for App Endpoints.
+type Filter struct {
+	// Name is the attribute to filter by.
+	Name types.String `tfsdk:"name"`
+
+	// Values is a set of values for the filter.
+	Values types.Set `tfsdk:"values"`
 }
 
 // AppEndpoint represents the Terraform schema for an App Endpoint configuration.
