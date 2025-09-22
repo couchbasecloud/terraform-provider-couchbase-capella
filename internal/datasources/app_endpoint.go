@@ -51,21 +51,12 @@ func (a *AppEndpoint) Read(ctx context.Context, req datasource.ReadRequest, resp
 		return
 	}
 
-	IDs, err := config.Validate()
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error validating App Endpoint config",
-			fmt.Sprintf("Could not validate App Endpoint inputs %s: %s", config.Name.String(), err.Error()),
-		)
-		return
-	}
-
 	var (
-		organizationId = IDs[providerschema.OrganizationId]
-		projectId      = IDs[providerschema.ProjectId]
-		clusterId      = IDs[providerschema.ClusterId]
-		appServiceId   = IDs[providerschema.AppServiceId]
-		endpointName   = IDs[providerschema.AppEndpointName]
+		organizationId = config.OrganizationId.ValueString()
+		projectId      = config.ProjectId.ValueString()
+		clusterId      = config.ClusterId.ValueString()
+		appServiceId   = config.AppServiceId.ValueString()
+		endpointName   = config.Name.ValueString()
 	)
 
 	url := fmt.Sprintf(
