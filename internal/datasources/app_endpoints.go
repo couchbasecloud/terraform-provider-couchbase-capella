@@ -16,8 +16,9 @@ import (
 )
 
 var (
-	_ datasource.DataSource              = (*AppEndpoints)(nil)
-	_ datasource.DataSourceWithConfigure = (*AppEndpoints)(nil)
+	_ datasource.DataSource                   = (*AppEndpoints)(nil)
+	_ datasource.DataSourceWithConfigure      = (*AppEndpoints)(nil)
+	_ datasource.DataSourceWithValidateConfig = (*AppEndpoints)(nil)
 )
 
 // AppEndpoint is the data source implementation for retrieving App Endpoints for an App Service.
@@ -177,7 +178,7 @@ func (a *AppEndpoints) Read(ctx context.Context, req datasource.ReadRequest, res
 				ctx,
 				types.ObjectType{
 					AttrTypes: providerschema.
-						AppEndpointOidc{}.
+					AppEndpointOidc{}.
 						AttributeTypes(),
 				},
 				appEndpoint.Oidc,
@@ -190,7 +191,7 @@ func (a *AppEndpoints) Read(ctx context.Context, req datasource.ReadRequest, res
 			oidcSet = types.SetNull(
 				types.ObjectType{
 					AttrTypes: providerschema.
-						AppEndpointOidc{}.
+					AppEndpointOidc{}.
 						AttributeTypes(),
 				},
 			)
@@ -224,7 +225,7 @@ func (a *AppEndpoints) Read(ctx context.Context, req datasource.ReadRequest, res
 					ctx,
 					types.ObjectType{
 						AttrTypes: providerschema.
-							AppEndpointCollection{}.
+						AppEndpointCollection{}.
 							AttributeTypes(),
 					},
 					collectionsMapElements,
@@ -252,7 +253,7 @@ func (a *AppEndpoints) Read(ctx context.Context, req datasource.ReadRequest, res
 				ctx,
 				types.ObjectType{
 					AttrTypes: providerschema.
-						AppEndpointScope{}.
+					AppEndpointScope{}.
 						AttributeTypes(),
 				},
 				scopesMapElements,
@@ -303,4 +304,26 @@ func (a *AppEndpoints) Configure(
 	}
 
 	a.Data = data
+}
+
+// ValidateConfig checks that if 'name' or 'values' is set in filter block', then both are set.
+func (a *AppEndpoints) ValidateConfig(
+	ctx context.Context, req datasource.ValidateConfigRequest, resp *datasource.ValidateConfigResponse,
+) {
+	var config providerschema.AppEndpoints
+	diags := req.Config.Get(ctx, &config)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if config.Filters != nil {
+		if (config.Filters.Name.IsNull() && !config.Filters.Values.IsNull()) ||
+			(!config.Filters.Name.IsNull() && config.Filters.Values.IsNull()) {
+			resp.Diagnostics.AddError(
+				"Invalid Filters Configuration",
+				"Both 'name' and 'values' in filter block must be configured.",
+			)
+		}
+	}
 }
