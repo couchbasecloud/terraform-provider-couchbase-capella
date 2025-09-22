@@ -92,7 +92,7 @@ func (r *AppEndpointDefaultOidcProvider) Create(ctx context.Context, req resourc
 
 	payload := api.AppEndpointOIDCDefaultProviderRequest{ProviderID: providerId}
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err := r.Client.ExecuteWithRetry(ctx, cfg, payload, r.Token, map[string]string{"Content-Type": "application/json"})
+	_, err := r.Client.ExecuteWithRetry(ctx, cfg, payload, r.Token, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Error Setting Default OIDC Provider", api.ParseError(err))
 		return
