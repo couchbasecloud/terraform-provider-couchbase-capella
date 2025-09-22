@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -15,34 +16,34 @@ import (
 )
 
 var (
-	_ datasource.DataSource              = (*AppEndpoint)(nil)
-	_ datasource.DataSourceWithConfigure = (*AppEndpoint)(nil)
+	_ datasource.DataSource              = (*AppEndpoints)(nil)
+	_ datasource.DataSourceWithConfigure = (*AppEndpoints)(nil)
 )
 
 // AppEndpoint is the data source implementation for retrieving App Endpoints for an App Service.
-type AppEndpoint struct {
+type AppEndpoints struct {
 	*providerschema.Data
 }
 
 // NewAppEndpoint is used in (p *capellaProvider) DataSources for building the provider.
-func NewAppEndpoint() datasource.DataSource {
-	return &AppEndpoint{}
+func NewAppEndpoints() datasource.DataSource {
+	return &AppEndpoints{}
 }
 
 // Metadata returns the App Endpoints data source type name.
-func (a *AppEndpoint) Metadata(
+func (a *AppEndpoints) Metadata(
 	_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse,
 ) {
 	resp.TypeName = req.ProviderTypeName + "_app_endpoints"
 }
 
 // Schema defines the schema for the App Endpoints data source.
-func (a *AppEndpoint) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (a *AppEndpoints) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = AppEndpointSchema()
 }
 
 // Read refreshes the Terraform state with the latest App Endpoints configs.
-func (a *AppEndpoint) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (a *AppEndpoints) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var config providerschema.AppEndpoints
 	diags := req.Config.Get(ctx, &config)
 	resp.Diagnostics.Append(diags...)
@@ -85,7 +86,26 @@ func (a *AppEndpoint) Read(ctx context.Context, req datasource.ReadRequest, resp
 		return
 	}
 
+	var filteredAppEndpoints []app_endpoints.GetAppEndpointResponse
+	var names []string
+
+	// Since the list API doesn't implement query parameters useful for filtering,
+	// filtering is done by provider.
+	if config.Filters != nil {
+		diags := config.Filters.Values.ElementsAs(ctx, &names, false)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
 	for _, appEndpoint := range appEndpoints {
+		if slices.Contains(names, appEndpoint.Name) || len(names) == 0 { // If no names are provided, include all app endpoints.
+			filteredAppEndpoints = append(filteredAppEndpoints, appEndpoint)
+		}
+	}
+
+	for _, appEndpoint := range filteredAppEndpoints {
 		var requireResyncMap types.Map
 		if appEndpoint.RequireResync != nil {
 			requireResyncMap, diags = types.MapValueFrom(
@@ -258,15 +278,14 @@ func (a *AppEndpoint) Read(ctx context.Context, req datasource.ReadRequest, resp
 			Scopes:           scopesMap,
 		}
 
-		config.Data = append(config.Data, ae)
+		config.AppEndpoints = append(config.AppEndpoints, ae)
 	}
 
 	diags = resp.State.Set(ctx, &config)
 	resp.Diagnostics.Append(diags...)
 }
 
-// Configure defines the schema for the App Endpoints data source.
-func (a *AppEndpoint) Configure(
+func (a *AppEndpoints) Configure(
 	_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse,
 ) {
 	if req.ProviderData == nil {
