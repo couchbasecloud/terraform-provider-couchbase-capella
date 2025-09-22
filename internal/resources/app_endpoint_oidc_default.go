@@ -163,14 +163,6 @@ func (r *AppEndpointDefaultOidcProvider) Update(ctx context.Context, req resourc
 	appServiceId := plan.AppServiceId.ValueString()
 	appEndpointName := plan.AppEndpointName.ValueString()
 	providerId := plan.ProviderId.ValueString()
-	if providerId == "" {
-		// fall back to state if plan doesn't include it
-		providerId = state.ProviderId.ValueString()
-	}
-	if providerId == "" {
-		resp.Diagnostics.AddError("Error Updating Default OIDC Provider", "provider_id is required to set default provider")
-		return
-	}
 
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/oidcProviders/defaultProvider",
