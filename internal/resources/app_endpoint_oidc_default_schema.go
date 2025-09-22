@@ -17,8 +17,11 @@ func AppEndpointDefaultOidcProviderSchema() schema.Schema {
 			"app_service_id":    WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The GUID4 ID of the Capella App Service."),
 			"app_endpoint_name": WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The name of the App Endpoint."),
 			"provider_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The providerId to set as the default for this App Endpoint.",
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
+				MarkdownDescription: "The Id of the OpenID Connect provider to set as the default for this App Endpoint.",
 			},
 		},
 	}

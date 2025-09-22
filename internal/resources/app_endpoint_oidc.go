@@ -229,10 +229,6 @@ func (r *AppEndpointOidcProvider) Update(ctx context.Context, req resource.Updat
 	details, err := r.getOidcProvider(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, providerId)
 	if err != nil {
 		resp.Diagnostics.AddWarning("Error reading OIDC Provider after update", api.ParseError(err))
-		// Preserve providerId even if read failed
-		plan.ProviderId = types.StringValue(providerId)
-		diags = resp.State.Set(ctx, plan)
-		resp.Diagnostics.Append(diags...)
 		return
 	}
 
@@ -257,10 +253,6 @@ func (r *AppEndpointOidcProvider) Delete(ctx context.Context, req resource.Delet
 	appServiceId := state.AppServiceId.ValueString()
 	appEndpointName := state.AppEndpointName.ValueString()
 	providerId := state.ProviderId.ValueString()
-
-	if providerId == "" {
-		return
-	}
 
 	url := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/oidcProviders/%s",
