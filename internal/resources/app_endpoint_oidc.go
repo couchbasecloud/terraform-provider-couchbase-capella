@@ -103,7 +103,6 @@ func (r *AppEndpointOidcProvider) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	// Capture providerId from response
 	var created api.AppEndpointOIDCProviderResponse
 	if err := json.Unmarshal(res.Body, &created); err != nil {
 		resp.Diagnostics.AddError("Error unmarshalling create OIDC Provider response", api.ParseError(err))
@@ -116,15 +115,16 @@ func (r *AppEndpointOidcProvider) Create(ctx context.Context, req resource.Creat
 		)
 		return
 	}
-	// Initialize optional/computed attributes to null before refresh to preserve user intent
+
+	initOidcProviderNullsBeforeRefresh(&plan)
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
-	initOidcProviderNullsBeforeRefresh(&plan)
 
 	// Refresh using GET
 	details, err := r.getOidcProvider(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, created.ProviderID)
 	if err != nil {
 		resp.Diagnostics.AddWarning(
+
 			"Error refreshing App Endpoint OIDC Provider after creation",
 			fmt.Sprintf("Could not read OIDC provider %s on App Endpoint %s ", created.ProviderID, appEndpointName)+". "+api.ParseError(err),
 		)
