@@ -21,12 +21,12 @@ var (
 	_ datasource.DataSourceWithValidateConfig = (*AppEndpoints)(nil)
 )
 
-// AppEndpoint is the data source implementation for retrieving App Endpoints for an App Service.
+// AppEndpoints is the data source implementation for retrieving App Endpoints for an App Service.
 type AppEndpoints struct {
 	*providerschema.Data
 }
 
-// NewAppEndpoint is used in (p *capellaProvider) DataSources for building the provider.
+// NewAppEndpoints is a helper function to simplify the provider implementation.
 func NewAppEndpoints() datasource.DataSource {
 	return &AppEndpoints{}
 }
@@ -40,7 +40,7 @@ func (a *AppEndpoints) Metadata(
 
 // Schema defines the schema for the App Endpoints data source.
 func (a *AppEndpoints) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = AppEndpointSchema()
+	resp.Schema = AppEndpointsSchema()
 }
 
 // Read refreshes the Terraform state with the latest App Endpoints configs.
