@@ -178,7 +178,7 @@ func (a *AppEndpoints) Read(ctx context.Context, req datasource.ReadRequest, res
 				ctx,
 				types.ObjectType{
 					AttrTypes: providerschema.
-					AppEndpointOidc{}.
+						AppEndpointOidc{}.
 						AttributeTypes(),
 				},
 				appEndpoint.Oidc,
@@ -191,7 +191,7 @@ func (a *AppEndpoints) Read(ctx context.Context, req datasource.ReadRequest, res
 			oidcSet = types.SetNull(
 				types.ObjectType{
 					AttrTypes: providerschema.
-					AppEndpointOidc{}.
+						AppEndpointOidc{}.
 						AttributeTypes(),
 				},
 			)
@@ -225,7 +225,7 @@ func (a *AppEndpoints) Read(ctx context.Context, req datasource.ReadRequest, res
 					ctx,
 					types.ObjectType{
 						AttrTypes: providerschema.
-						AppEndpointCollection{}.
+							AppEndpointCollection{}.
 							AttributeTypes(),
 					},
 					collectionsMapElements,
@@ -253,7 +253,7 @@ func (a *AppEndpoints) Read(ctx context.Context, req datasource.ReadRequest, res
 				ctx,
 				types.ObjectType{
 					AttrTypes: providerschema.
-					AppEndpointScope{}.
+						AppEndpointScope{}.
 						AttributeTypes(),
 				},
 				scopesMapElements,
