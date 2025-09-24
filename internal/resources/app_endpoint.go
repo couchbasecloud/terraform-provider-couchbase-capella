@@ -760,11 +760,24 @@ func morphToAppEndpointRequest(
 	}
 
 	if !plan.Oidc.IsNull() {
-		oidc := []app_endpoints.AppEndpointOidc{}
-		if diags := plan.Oidc.ElementsAs(ctx, &oidc, false); diags.HasError() {
+		var tfOidcList []providerschema.AppEndpointOidc
+		if diags := plan.Oidc.ElementsAs(ctx, &tfOidcList, false); diags.HasError() {
 			return nil, diags
 		}
-		appEndpointRequest.Oidc = oidc
+
+		apiOidcList := make([]app_endpoints.AppEndpointOidc, len(tfOidcList))
+		for i, tfOidc := range tfOidcList {
+			apiOidcList[i] = app_endpoints.AppEndpointOidc{
+				Issuer:        tfOidc.Issuer.ValueString(),
+				Register:      tfOidc.Register.ValueBool(),
+				ClientId:      tfOidc.ClientId.ValueString(),
+				UserPrefix:    tfOidc.UserPrefix.ValueString(),
+				DiscoveryUrl:  tfOidc.DiscoveryUrl.ValueString(),
+				UsernameClaim: tfOidc.UsernameClaim.ValueString(),
+				RolesClaim:    tfOidc.RolesClaim.ValueString(),
+			}
+		}
+		appEndpointRequest.Oidc = apiOidcList
 	}
 
 	return appEndpointRequest, nil
