@@ -56,7 +56,7 @@ func (a *AppEndpointResync) Schema(_ context.Context, _ resource.SchemaRequest, 
 			"project_id":             WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the project."),
 			"cluster_id":             WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the cluster."),
 			"app_service_id":         WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the app service."),
-			"app_endpoint":           WithDescription(stringAttribute([]string{required, requiresReplace}), "The name of the app endpoint."),
+			"app_endpoint_name":      WithDescription(stringAttribute([]string{required, requiresReplace}), "The name of the app endpoint."),
 			"scopes":                 WithDescription(mapAttribute(types.SetType{ElemType: types.StringType}, []string{optional}...), "A map of scope names to their collections that need to be resynced. Each scope maps to a set of collection names."),
 			"collections_processing": WithDescription(mapAttribute(types.SetType{ElemType: types.StringType}, []string{computed}...), "A map of collections currently being processed, organized by scope."),
 			"docs_changed":           WithDescription(int64Attribute(computed), "The number of documents that have been changed during the resync operation."),
@@ -280,123 +280,12 @@ func (a *AppEndpointResync) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 }
 
+// Update is not supported as app endpoint resync operation cannot be updated.
 func (a *AppEndpointResync) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan providerschema.AppEndpointResync
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	organizationId := plan.OrganizationId.ValueString()
-	projectId := plan.ProjectId.ValueString()
-	clusterId := plan.ClusterId.ValueString()
-	appServiceId := plan.AppServiceId.ValueString()
-	appEndpointName := plan.AppEndpoint.ValueString()
-
-	var scopes map[string][]string
-
-	diags = plan.Scopes.ElementsAs(ctx, &scopes, false)
-	if diags.HasError() {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	resyncRequest := api.CreateResyncRequest{
-		Scopes: scopes,
-	}
-
-	url := fmt.Sprintf(
-		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/resync",
-		a.HostURL,
-		organizationId,
-		projectId,
-		clusterId,
-		appServiceId,
-		appEndpointName,
-	)
-
-	cfg := api.EndpointCfg{
-		Url:           url,
-		Method:        http.MethodPost,
-		SuccessStatus: http.StatusAccepted,
-	}
-
-	_, err := a.Client.ExecuteWithRetry(
-		ctx,
-		cfg,
-		resyncRequest,
-		a.Token,
-		nil,
-	)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error parsing app endpoint resync response",
-			errorInitiatingAppEndpointResync+api.ParseError(err),
-		)
-		return
-	}
-
-	// Set computed attributes to null before refreshing
-	plan.CollectionsProcessing = types.MapNull(types.SetType{ElemType: types.StringType})
-	plan.DocsChanged = types.Int64Null()
-	plan.DocsProcessed = types.Int64Null()
-	plan.LastError = types.StringNull()
-	plan.StartTime = types.StringNull()
-	plan.State = types.StringNull()
-
-	// Refresh the state by getting the latest data
-	url = fmt.Sprintf(
-		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/resync",
-		a.HostURL,
-		organizationId,
-		projectId,
-		clusterId,
-		appServiceId,
-		appEndpointName,
-	)
-
-	cfg = api.EndpointCfg{
-		Url:           url,
-		Method:        http.MethodGet,
-		SuccessStatus: http.StatusOK,
-	}
-
-	response, err := a.Client.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		a.Token,
-		nil,
-	)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error reading app endpoint resync after creation",
-			errorAfterAppEndpointResyncInitiation+api.ParseError(err),
-		)
-		return
-	}
-
-	var resyncResponse api.CreateResyncResponse
-	if err = json.Unmarshal(response.Body, &resyncResponse); err != nil {
-		resp.Diagnostics.AddError(
-			"Error parsing app endpoint resync response",
-			errorAfterAppEndpointResyncInitiation+"error during unmarshalling: "+err.Error(),
-		)
-		return
-	}
-
-	refreshedState, diags := a.mapResponseToState(ctx, &resyncResponse, &plan)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	diags = resp.State.Set(ctx, refreshedState)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	// From https://developer.hashicorp.com/terraform/plugin/framework/resources/update#caveats
+	// If the resource does not support modification and should always be recreated on configuration value updates,
+	// the Update logic can be left empty and ensure all configurable schema attributes
+	// implement the resource.RequiresReplace() attribute plan modifier.
 }
 
 // Delete stops the app endpoint resync operation.
@@ -445,8 +334,8 @@ func (a *AppEndpointResync) Delete(ctx context.Context, req resource.DeleteReque
 			return
 		}
 		resp.Diagnostics.AddError(
-			"Error deleting app endpoint resync",
-			"Could not delete app endpoint resync, unexpected error: "+errString,
+			"Error stopping app endpoint resync",
+			"Could not stop app endpoint resync, unexpected error: "+errString,
 		)
 		return
 	}
@@ -456,7 +345,7 @@ func (a *AppEndpointResync) Delete(ctx context.Context, req resource.DeleteReque
 func (a *AppEndpointResync) ImportState(
 	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
 ) {
-	resource.ImportStatePassthroughID(ctx, path.Root("app_endpoint"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("app_endpoint_name"), req, resp)
 }
 
 // Configure adds the provider configured api to AppEndpointResync.
