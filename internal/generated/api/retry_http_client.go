@@ -55,13 +55,13 @@ func (t *RetryTransport) base() http.RoundTripper {
 
 // baseBackoffDelay is the initial delay used as the base for exponential backoff calculations.
 // The first retry will wait approximately this duration (plus jitter).
-// Value: 1 second
+// Value: 1 second.
 const baseBackoffDelay = time.Second * 1
 
 // maxBackoffDelay is the maximum delay that will be applied between retry attempts.
 // This prevents exponentially growing delays from becoming excessively long.
 // Even with jitter, delays will not exceed this value by more than 25%.
-// Value: 30 seconds
+// Value: 30 seconds.
 const maxBackoffDelay = time.Second * 30
 
 // maxRetryAttempts defines the maximum number of retry attempts that will be made
@@ -95,19 +95,19 @@ const maxRetryAttempts = 5
 //   - Attempt 4: ~16s (12s - 20s with jitter)
 //   - Attempt 5+: ~30s (22.5s - 37.5s with jitter, capped at maxBackoffDelay)
 func calculateBackoff(attempt int) time.Duration {
-	// Calculate exponential backoff: baseDelay * 2^attempt
+	// Calculate exponential backoff: baseDelay * 2^attempt.
 	delay := baseBackoffDelay * time.Duration(1<<attempt)
 
-	// Cap the delay at maxBackoffDelay
+	// Cap the delay at maxBackoffDelay.
 	if delay > maxBackoffDelay {
 		delay = maxBackoffDelay
 	}
 
-	// Add jitter: +/-25% of the calculated delay to prevent thundering herd
-	jitter := float64(delay) * 0.25 * (rand.Float64() - 0.5) * 2
+	// Add jitter: +/-25% of the calculated delay to prevent thundering herd.
+	jitter := float64(delay) * 0.25 * (rand.Float64() - 0.5) * 2 // #nosec G404 -- non-cryptographic jitter
 	finalDelay := float64(delay) + jitter
 
-	// Ensure delay is not negative
+	// Ensure delay is not negative.
 	if finalDelay < 0 {
 		finalDelay = float64(baseBackoffDelay)
 	}
@@ -158,7 +158,7 @@ func calculateBackoff(attempt int) time.Duration {
 // Thread Safety:
 // This method is safe for concurrent use by multiple goroutines.
 func (t *RetryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	// Buffer the body so we can retry non-idempotent requests as well
+	// Buffer the body so we can retry non-idempotent requests as well.
 	var bodyBytes []byte
 	if req.Body != nil {
 		b, err := io.ReadAll(req.Body)
@@ -195,7 +195,7 @@ func (t *RetryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 			}
 
 			var backoff time.Duration
-			// Respect Retry-After header if present, otherwise use exponential backoff
+			// Respect Retry-After header if present, otherwise use exponential backoff.
 			if ra := res.Header.Get("Retry-After"); ra != "" {
 				if secs, err := strconv.Atoi(ra); err == nil && secs > 0 {
 					backoff = time.Second * time.Duration(secs)
@@ -206,7 +206,7 @@ func (t *RetryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 				backoff = calculateBackoff(retryCount)
 			}
 
-			// Drain and retry
+			// Drain and retry.
 			if _, err := io.Copy(io.Discard, res.Body); err != nil {
 				return res, err
 			}
@@ -222,7 +222,7 @@ func (t *RetryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 			if retryCount >= maxRetryAttempts {
 				return res, nil
 			}
-			// Peek body to check for special code 7001 (do not retry)
+			// Peek body to check for special code 7001 (do not retry).
 			b, err := io.ReadAll(res.Body)
 			if err != nil {
 				return res, err
@@ -230,21 +230,21 @@ func (t *RetryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 			if err := res.Body.Close(); err != nil {
 				return res, err
 			}
-			// restore body for caller if we return
+			// Restore body for caller if we return.
 			res.Body = io.NopCloser(bytes.NewReader(b))
 
 			var apiErr struct {
 				Code int `json:"code"`
 			}
 			if err := json.Unmarshal(b, &apiErr); err != nil {
-				// If we can't parse the error, treat it as a regular 504 and retry
+				// If we can't parse the error, treat it as a regular 504 and retry.
 				apiErr.Code = 0
 			}
 			if apiErr.Code == 7001 {
 				return res, nil
 			}
 
-			// Use exponential backoff for 504 errors
+			// Use exponential backoff for 504 errors.
 			backoff := calculateBackoff(retryCount)
 			if err := sleepOrDone(req.Context(), backoff); err != nil {
 				return res, err
