@@ -24,7 +24,7 @@ variable "app_endpoint_name" {
 }
 
 variable "origin" {
-  description = "Set of allowed origins for CORS"
+  description = "Set of allowed origins for CORS. Use ['*'] to allow access from everywhere"
   type        = set(string)
 }
 
@@ -41,7 +41,7 @@ variable "headers" {
 }
 
 variable "max_age" {
-  description = "Max age in seconds for preflight cache"
+  description = "Specifies the duration (in seconds) for which the results of a preflight request can be cached."
   type        = number
   default     = null
 }
