@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"math"
 	"math/rand"
 	"net/http"
 	"strconv"
