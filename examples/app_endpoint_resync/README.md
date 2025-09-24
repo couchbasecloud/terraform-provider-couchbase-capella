@@ -23,15 +23,7 @@ Command: `terraform plan`
 
 Example output:
 ```
- $ terraform plan                                                                                                                                                                                                                                                         1 ↵
-╷
-│ Warning: Provider development overrides are in effect
-│ 
-│ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Applications/gh_2.14.6_macOS_amd64/bin/terraform-provider-couchbase-capella/bin
-│ 
-│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
-╵
+ $ terraform plan
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   + create
@@ -70,7 +62,7 @@ Command: `terraform apply`
 
 ```
 
-$ terraform apply                                                                                                                                                                                                                                                            1 ↵
+$ terraform apply
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   + create

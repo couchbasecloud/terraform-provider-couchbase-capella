@@ -24,7 +24,6 @@ Command: `terraform plan`
 Example output:
 
 ```
-(base) mohammedmadi@F9MHGP992N:~/terraform 
  $ terraform plan   
 
 
