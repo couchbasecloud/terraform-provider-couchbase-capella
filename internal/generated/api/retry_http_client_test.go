@@ -179,11 +179,11 @@ func TestCalculateBackoff(t *testing.T) {
 		minWant time.Duration
 		maxWant time.Duration
 	}{
-		{"first retry", 0, 750 * time.Millisecond, 1250 * time.Millisecond},   // 1s ± 25%
-		{"second retry", 1, 1500 * time.Millisecond, 2500 * time.Millisecond}, // 2s ± 25%
-		{"third retry", 2, 3 * time.Second, 5 * time.Second},                   // 4s ± 25%
-		{"fourth retry", 3, 6 * time.Second, 10 * time.Second},                 // 8s ± 25%
-		{"fifth retry", 4, 12 * time.Second, 20 * time.Second},                 // 16s ± 25%
+		{"first retry", 0, 750 * time.Millisecond, 1250 * time.Millisecond},       // 1s ± 25%
+		{"second retry", 1, 1500 * time.Millisecond, 2500 * time.Millisecond},     // 2s ± 25%
+		{"third retry", 2, 3 * time.Second, 5 * time.Second},                      // 4s ± 25%
+		{"fourth retry", 3, 6 * time.Second, 10 * time.Second},                    // 8s ± 25%
+		{"fifth retry", 4, 12 * time.Second, 20 * time.Second},                    // 16s ± 25%
 		{"max delay cap", 10, 22500 * time.Millisecond, 37500 * time.Millisecond}, // Should cap at 30s ± 25%
 	}
 
@@ -191,7 +191,7 @@ func TestCalculateBackoff(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			backoff := calculateBackoff(tt.attempt)
 			if backoff < tt.minWant || backoff > tt.maxWant {
-				t.Errorf("calculateBackoff(%d) = %v, want between %v and %v", 
+				t.Errorf("calculateBackoff(%d) = %v, want between %v and %v",
 					tt.attempt, backoff, tt.minWant, tt.maxWant)
 			}
 		})
@@ -201,11 +201,11 @@ func TestCalculateBackoff(t *testing.T) {
 func TestRoundTrip_429_NoRetryAfter_UsesExponentialBackoff(t *testing.T) {
 	var calls int64
 	var callTimes []time.Time
-	
+
 	transport := &RetryTransport{Base: roundTripFunc(func(req *http.Request) (*http.Response, error) {
 		atomic.AddInt64(&calls, 1)
 		callTimes = append(callTimes, time.Now())
-		
+
 		// Always return 429 - after maxRetryAttempts retries, it should stop trying
 		return &http.Response{
 			StatusCode: http.StatusTooManyRequests,
@@ -222,7 +222,7 @@ func TestRoundTrip_429_NoRetryAfter_UsesExponentialBackoff(t *testing.T) {
 	start := time.Now()
 	res, err := transport.RoundTrip(req)
 	duration := time.Since(start)
-	
+
 	if err != nil {
 		t.Fatalf("round trip unexpected error: %v", err)
 	}
@@ -246,10 +246,10 @@ func TestRoundTrip_429_NoRetryAfter_UsesExponentialBackoff(t *testing.T) {
 
 func TestRoundTrip_504_UsesExponentialBackoff(t *testing.T) {
 	var calls int64
-	
+
 	transport := &RetryTransport{Base: roundTripFunc(func(req *http.Request) (*http.Response, error) {
 		atomic.AddInt64(&calls, 1)
-		
+
 		// Always return 504 without special error code
 		return &http.Response{
 			StatusCode: http.StatusGatewayTimeout,
@@ -265,7 +265,7 @@ func TestRoundTrip_504_UsesExponentialBackoff(t *testing.T) {
 	start := time.Now()
 	res, err := transport.RoundTrip(req)
 	duration := time.Since(start)
-	
+
 	if err != nil {
 		t.Fatalf("round trip unexpected error: %v", err)
 	}
@@ -289,7 +289,7 @@ func TestRoundTrip_504_UsesExponentialBackoff(t *testing.T) {
 
 func TestRoundTrip_RetryLimitEnforced_429(t *testing.T) {
 	var calls int64
-	
+
 	transport := &RetryTransport{Base: roundTripFunc(func(req *http.Request) (*http.Response, error) {
 		atomic.AddInt64(&calls, 1)
 		return &http.Response{
@@ -319,7 +319,7 @@ func TestRoundTrip_RetryLimitEnforced_429(t *testing.T) {
 
 func TestRoundTrip_RetryLimitEnforced_504(t *testing.T) {
 	var calls int64
-	
+
 	transport := &RetryTransport{Base: roundTripFunc(func(req *http.Request) (*http.Response, error) {
 		atomic.AddInt64(&calls, 1)
 		return &http.Response{
@@ -349,11 +349,11 @@ func TestRoundTrip_RetryLimitEnforced_504(t *testing.T) {
 func TestRoundTrip_429_RetryAfter_StillRespected(t *testing.T) {
 	var calls int64
 	var callTimes []time.Time
-	
+
 	transport := &RetryTransport{Base: roundTripFunc(func(req *http.Request) (*http.Response, error) {
 		atomic.AddInt64(&calls, 1)
 		callTimes = append(callTimes, time.Now())
-		
+
 		if atomic.LoadInt64(&calls) == 1 {
 			res := &http.Response{
 				StatusCode: http.StatusTooManyRequests,
@@ -378,7 +378,7 @@ func TestRoundTrip_429_RetryAfter_StillRespected(t *testing.T) {
 	start := time.Now()
 	res, err := transport.RoundTrip(req)
 	duration := time.Since(start)
-	
+
 	if err != nil {
 		t.Fatalf("round trip unexpected error: %v", err)
 	}
@@ -403,46 +403,46 @@ func TestCalculateBackoff_ExponentialGrowth(t *testing.T) {
 	// Test multiple samples to ensure exponential growth pattern overall
 	samples := 10
 	attempts := []int{0, 1, 2, 3, 4}
-	
+
 	for _, attempt := range attempts {
 		delays := make([]time.Duration, samples)
-		
+
 		// Collect multiple samples for this attempt
 		for i := 0; i < samples; i++ {
 			delays[i] = calculateBackoff(attempt)
 		}
-		
+
 		// Calculate average delay for this attempt
 		var total time.Duration
 		for _, d := range delays {
 			total += d
 		}
 		avgDelay := total / time.Duration(samples)
-		
+
 		// Expected base delay without jitter: baseBackoffDelay * 2^attempt
 		multiplier := 1 << uint(attempt)
 		expectedBase := time.Duration(float64(baseBackoffDelay) * float64(multiplier))
 		if expectedBase > maxBackoffDelay {
 			expectedBase = maxBackoffDelay
 		}
-		
+
 		// Average should be close to expected base (within reasonable bounds considering jitter)
 		tolerance := expectedBase / 4 // 25% tolerance
 		if avgDelay < expectedBase-tolerance || avgDelay > expectedBase+tolerance {
-			t.Errorf("attempt %d: average delay %v should be close to expected %v (±%v)", 
+			t.Errorf("attempt %d: average delay %v should be close to expected %v (±%v)",
 				attempt, avgDelay, expectedBase, tolerance)
 		}
-		
+
 		// All individual delays should be positive and within reasonable bounds
 		for i, delay := range delays {
 			if delay <= 0 {
 				t.Errorf("attempt %d sample %d: delay %v should be positive", attempt, i, delay)
 			}
-			
+
 			// Should not exceed max + jitter tolerance
 			maxWithJitter := maxBackoffDelay + maxBackoffDelay/4
 			if delay > maxWithJitter {
-				t.Errorf("attempt %d sample %d: delay %v exceeds maximum %v", 
+				t.Errorf("attempt %d sample %d: delay %v exceeds maximum %v",
 					attempt, i, delay, maxWithJitter)
 			}
 		}
