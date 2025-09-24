@@ -148,7 +148,7 @@ Command: `terraform import couchbase-capella_app_endpoint_cors.example organizat
 
 Example output:
 ```
- $ terraform import  couchbase-capella_app_endpoint_cors.cors app_endpoint_name=api,organization_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,app_service_id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000\
+ $ terraform import  couchbase-capella_app_endpoint_cors.cors app_endpoint_name=api,organization_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,app_service_id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000
 
 couchbase-capella_app_endpoint_cors.cors: Importing from ID "app_endpoint_name=api,organization_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,app_service_id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000"...
 couchbase-capella_app_endpoint_cors.cors: Import prepared!
