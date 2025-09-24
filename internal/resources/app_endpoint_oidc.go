@@ -46,7 +46,6 @@ func (r *AppEndpointOidcProvider) Schema(_ context.Context, _ resource.SchemaReq
 func (r *AppEndpointOidcProvider) ImportState(
 	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
 ) {
-	// The import ID should be in the format: organizationId,projectId,clusterId,appServiceId,app_endpoint_name,provider_id
 	resource.ImportStatePassthroughID(ctx, path.Root("app_endpoint_name"), req, resp)
 }
 
@@ -117,7 +116,6 @@ func (r *AppEndpointOidcProvider) Create(ctx context.Context, req resource.Creat
 	details, err := r.getOidcProvider(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, created.ProviderID)
 	if err != nil {
 		resp.Diagnostics.AddWarning(
-
 			"Error refreshing App Endpoint OIDC Provider after creation",
 			fmt.Sprintf("Could not read OIDC provider %s on App Endpoint %s ", created.ProviderID, appEndpointName)+". "+api.ParseError(err),
 		)
@@ -212,7 +210,6 @@ func (r *AppEndpointOidcProvider) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	// Refresh from server to ensure state matches remote
 	details, err := r.getOidcProvider(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, providerId)
 	if err != nil {
 		resp.Diagnostics.AddWarning("Error reading OIDC Provider after update", api.ParseError(err))
