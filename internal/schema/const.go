@@ -15,4 +15,5 @@ const (
 	AppEndpointName Attr = "appEndpointName"
 	EndpointId      Attr = "endpointId"
 	IndexName       Attr = "indexName"
+	ProviderId      Attr = "providerId"
 )

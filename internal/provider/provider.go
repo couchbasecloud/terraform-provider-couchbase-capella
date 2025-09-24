@@ -253,5 +253,7 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewAppEndpointResync,
 		resources.NewCors,
 		resources.NewAppEndpoint,
+		resources.NewAppEndpointOidcProvider,
+		resources.NewAppEndpointDefaultOidcProvider,
 	}
 }
