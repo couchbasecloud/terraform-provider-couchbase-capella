@@ -2,7 +2,8 @@
 
 This example shows how to initiate and manage App Endpoint Resync operations in Capella.
 
-It uses the organization ID, project ID, cluster ID, app service ID, and app endpoint name to start a resync. You can optionally scope the resync to specific collections per scope.
+It uses the organization ID, project ID, cluster ID, app service ID, and app endpoint name to start a resync. 
+You can add collections to be resynced within the scopes attribute on the resource. The specified collections will be resynced, along with any collections that require a resync.
 
 To run, configure your Couchbase Capella provider as described in the README in the root of this project.
 
@@ -10,9 +11,9 @@ To run, configure your Couchbase Capella provider as described in the README in 
 
 In this example, we are going to do the following:
 
-1. CREATE: Initiate a resync for an App Endpoint as defined in `create_app_endpoint_resync.tf`.
-2. IMPORT: Import an existing resync into Terraform state (for tracking/read-back).
-3. DESTROY: Stop an ongoing resync operation.
+1. CREATE: Initiate a resync operation for an App Endpoint as defined in `create_app_endpoint_resync.tf`.
+2. DESTROY: Stop an ongoing resync operation.
+3. IMPORT: Import the status an existing resync operation into Terraform state.
 
 If you check the `terraform.template.tfvars` file — copy it to `terraform.tfvars` and update variable values for your environment.
 
@@ -46,14 +47,6 @@ Terraform will perform the following actions:
     }
 
 Plan: 1 to add, 0 to change, 0 to destroy.
-╷
-│ Warning: Value for undeclared variable
-│ 
-│ The root module does not declare a variable named "access_control_function" but a value was found in file "terraform.tfvars". If you meant to use this value, add a "variable" block to the configuration.
-│ 
-│ To silence these warnings, use TF_VAR_... environment variables to provide certain "global" settings to all configurations in your organization. To reduce the verbosity of these warnings, use the -compact-warnings option.
-╵
-
 ```
 
 ### Apply the plan to initiate a resync

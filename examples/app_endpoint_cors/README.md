@@ -2,7 +2,7 @@
 
 This example shows how to configure CORS (Cross-Origin Resource Sharing) for an App Endpoint in Capella.
 
-It uses the organization ID, project ID, cluster ID, app service ID, and app endpoint name to manage CORS settings. You can set allowed `origin`, optional `login_origin`, optional `headers`, and optionally `max_age` and `disabled` values.
+It uses the organization ID, project ID, cluster ID, app service ID, and app endpoint name to manage CORS settings. You can set allowed `origin`, optional `login_origin`, `headers`, `max_age` and `disabled` values.
 
 To run, configure your Couchbase Capella provider as described in the README in the root of this project.
 
