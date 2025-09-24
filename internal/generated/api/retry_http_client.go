@@ -97,16 +97,16 @@ const maxRetryAttempts = 5
 //   - Attempt 5+: ~30s (22.5s - 37.5s with jitter, capped at maxBackoffDelay)
 func calculateBackoff(attempt int) time.Duration {
 	// Calculate exponential backoff: baseDelay * 2^attempt
-	delay := float64(baseBackoffDelay) * math.Pow(2, float64(attempt))
+	delay := baseBackoffDelay * time.Duration(1<<attempt)
 
 	// Cap the delay at maxBackoffDelay
-	if delay > float64(maxBackoffDelay) {
-		delay = float64(maxBackoffDelay)
+	if delay > maxBackoffDelay {
+		delay = maxBackoffDelay
 	}
 
 	// Add jitter: +/-25% of the calculated delay to prevent thundering herd
-	jitter := delay * 0.25 * (rand.Float64() - 0.5) * 2
-	finalDelay := delay + jitter
+	jitter := float64(delay) * 0.25 * (rand.Float64() - 0.5) * 2
+	finalDelay := float64(delay) + jitter
 
 	// Ensure delay is not negative
 	if finalDelay < 0 {
