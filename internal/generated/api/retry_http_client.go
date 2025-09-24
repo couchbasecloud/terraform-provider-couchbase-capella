@@ -67,7 +67,7 @@ const maxBackoffDelay = time.Second * 30
 // maxRetryAttempts defines the maximum number of retry attempts that will be made
 // for retryable HTTP responses (429 and 504). After this many failed attempts,
 // the last response will be returned to the caller without further retries.
-// Value: 5 attempts (6 total requests including the initial request)
+// Value: 5 attempts (6 total requests including the initial request).
 const maxRetryAttempts = 5
 
 // calculateBackoff computes the delay duration for retry attempts using exponential

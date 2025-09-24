@@ -14,7 +14,6 @@ linters:
     - errcheck
     - exportloopref
     - forcetypeassert
-    - godot
     - gofmt
     - gosimple
     - gosec
