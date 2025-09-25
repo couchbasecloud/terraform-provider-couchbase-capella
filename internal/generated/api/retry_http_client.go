@@ -7,13 +7,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
-	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 )
@@ -23,6 +23,21 @@ import (
 // the last response will be returned to the caller without further retries.
 // Value: 5 attempts (6 total requests including the initial request).
 const maxRetryAttempts = 5
+
+// tflogBridge implements retryablehttp.Logger interface and forwards log messages to tflog.
+// This ensures consistent logging throughout the provider using Terraform's structured logging system.
+type tflogBridge struct {
+	ctx context.Context
+}
+
+// Printf implements the retryablehttp.Logger interface by forwarding to tflog.Debug.
+// This integrates retry logging with Terraform's logging system, allowing users to control
+// retry logging via TF_LOG environment variable alongside other provider logs.
+func (t *tflogBridge) Printf(format string, args ...interface{}) {
+	// Use tflog.Debug for retry messages as they are diagnostic information
+	// The [RETRY] prefix helps identify these logs among other provider logs
+	tflog.Debug(t.ctx, fmt.Sprintf("[RETRY] "+format, args...))
+}
 
 // customRetryPolicy implements retry logic for the Couchbase Capella API.
 // It handles specific cases for 429 (rate limiting) and 504 (gateway timeout) responses.
@@ -142,22 +157,22 @@ func WithLogger(logger retryablehttp.Logger) RetryOption {
 // Example Usage:
 //
 //	// Production client with no retry logging
-//	client := NewRetryHTTPClient(30 * time.Second, false)
+//	client := NewRetryHTTPClient(ctx, 30 * time.Second, false)
 //
-//	// Debug client with retry logging enabled
-//	debugClient := NewRetryHTTPClient(30 * time.Second, true)
+//	// Debug client with retry logging enabled  
+//	debugClient := NewRetryHTTPClient(ctx, 30 * time.Second, true)
 //
 //	// Testing client with fast backoff and debug logging
-//	testClient := NewRetryHTTPClient(30 * time.Second, true, WithFastBackoff())
+//	testClient := NewRetryHTTPClient(ctx, 30 * time.Second, true, WithFastBackoff())
 //
 //	// Custom configuration
-//	customClient := NewRetryHTTPClient(30 * time.Second, false,
+//	customClient := NewRetryHTTPClient(ctx, 30 * time.Second, false,
 //		WithMaxRetries(3),
 //		WithFastBackoff())
 //
 // Thread Safety:
 // The returned client is safe for concurrent use by multiple goroutines.
-func NewRetryHTTPClient(timeout time.Duration, debugLogging bool, opts ...RetryOption) *http.Client {
+func NewRetryHTTPClient(ctx context.Context, timeout time.Duration, debugLogging bool, opts ...RetryOption) *http.Client {
 	retryClient := retryablehttp.NewClient()
 
 	// Configure default retry behavior for Couchbase Capella API
@@ -167,10 +182,10 @@ func NewRetryHTTPClient(timeout time.Duration, debugLogging bool, opts ...RetryO
 
 	// Configure logging based on debug setting
 	if debugLogging {
-		// Create a logger that writes to stderr with [RETRY] prefix
-		// This will show retry attempts, backoff delays, and HTTP status codes
-		// The provider can control this via TF_LOG=DEBUG or similar settings
-		retryClient.Logger = log.New(os.Stderr, "[RETRY] ", log.LstdFlags)
+		// Use tflogBridge for consistent structured logging throughout the provider
+		// This integrates retry logs with Terraform's logging system via tflog.Debug
+		// The provider can control this via TF_LOG=DEBUG or TF_LOG_PROVIDER=DEBUG
+		retryClient.Logger = &tflogBridge{ctx: ctx}
 	} else {
 		retryClient.Logger = nil
 	}

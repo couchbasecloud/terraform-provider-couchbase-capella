@@ -165,7 +165,7 @@ func (p *capellaProvider) Configure(
 	}
 
 	// Use retrying HTTP client for v2 with controlled debug logging
-	retryingHTTP := apigen.NewRetryHTTPClient(apiRequestTimeout, debugLogging)
+	retryingHTTP := apigen.NewRetryHTTPClient(ctx, apiRequestTimeout, debugLogging)
 	clientV2, err := apigen.NewClientWithResponses(host, apigen.WithHTTPClient(retryingHTTP), apigen.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
 		req.Header.Set("Authorization", "Bearer "+authenticationToken)
 		req.Header.Set("User-Agent", providerName+"/"+version.ProviderVersion)
