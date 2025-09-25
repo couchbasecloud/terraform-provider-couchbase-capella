@@ -215,3 +215,35 @@ app_endpoint_import_filter = {
   collection    = "_default"
   import_filter = "function(doc) { if (doc.type != 'mobile') { return false; } return true; }"
 }
+
+app_endpoint_cors = {
+  origin       = ["*"]
+  # login_origin = ["https://login.example.com"]
+  headers      = ["Content-Type", "Authorization"]
+  max_age      = 3600
+  disabled     = false
+}
+
+app_endpoint_activation = {
+  state = "Online"
+}
+
+app_endpoint_resync = {
+  scopes = {
+    _default = ["_default"]
+  }
+}
+
+app_endpoint_oidc = {
+  issuer    = "https://accounts.example.com"
+  client_id = "example-client-id"
+  discovery_url  = "https://accounts.example.com/.well-known/openid-configuration"
+  register       = true
+  roles_claim    = "roles"
+  user_prefix    = "oidc:"
+  username_claim = "email"
+}
+
+app_endpoint_default_oidc = {
+  provider_id = "ffffffff-aaaa-1414-eeee-000000000000"
+}

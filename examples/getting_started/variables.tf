@@ -285,3 +285,48 @@ variable "app_endpoint_import_filter" {
     import_filter = string
   })
 }
+
+variable "app_endpoint_cors" {
+  description = "App Endpoint CORS configuration"
+  type = object({
+    origin       = set(string)
+    login_origin = optional(set(string))
+    headers      = optional(set(string))
+    max_age      = optional(number)
+    disabled     = optional(bool)
+  })
+}
+
+variable "app_endpoint_activation" {
+  description = "App Endpoint activation status"
+  type = object({
+    state = string
+  })
+}
+
+variable "app_endpoint_resync" {
+  description = "App Endpoint resync configuration"
+  type = object({
+    scopes = optional(map(set(string)))
+  })
+}
+
+variable "app_endpoint_oidc" {
+  description = "App Endpoint OIDC provider configuration"
+  type = object({
+    issuer         = string
+    client_id      = string
+    discovery_url  = optional(string)
+    register       = optional(bool)
+    roles_claim    = optional(string)
+    user_prefix    = optional(string)
+    username_claim = optional(string)
+  })
+}
+
+variable "app_endpoint_default_oidc" {
+  description = "App Endpoint default OIDC provider mapping"
+  type = object({
+    provider_id = string
+  })
+}
