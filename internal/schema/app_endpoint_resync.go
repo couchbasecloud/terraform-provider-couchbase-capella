@@ -25,7 +25,7 @@ type AppEndpointResync struct {
 	AppServiceId types.String `tfsdk:"app_service_id"`
 
 	// AppEndpoint is the endpoint name for the App Service.
-	AppEndpoint types.String `tfsdk:"app_endpoint"`
+	AppEndpoint types.String `tfsdk:"app_endpoint_name"`
 
 	// Scopes is a map where each key represents a scope name and the value
 	// is a list of collection names within that scope to be resynced.
@@ -87,7 +87,7 @@ type AppEndpointResyncData struct {
 	AppServiceId types.String `tfsdk:"app_service_id"`
 
 	// AppEndpoint is the endpoint name for the App Service.
-	AppEndpoint types.String `tfsdk:"app_endpoint"`
+	AppEndpoint types.String `tfsdk:"app_endpoint_name"`
 
 	// CollectionsProcessing contains a map of collections currently being processed,
 	// organized by scope. This field is populated in the response.
