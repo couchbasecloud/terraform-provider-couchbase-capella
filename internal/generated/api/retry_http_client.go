@@ -85,7 +85,7 @@ type RetryOption func(*retryablehttp.Client)
 // This reduces retry delays to: 50ms, 100ms, 200ms, 400ms, 800ms for quick test feedback.
 func WithFastBackoff() RetryOption {
 	return func(client *retryablehttp.Client) {
-		client.Backoff = func(min, max time.Duration, attemptNum int, resp *http.Response) time.Duration {
+		client.Backoff = func(minDelay, maxDelay time.Duration, attemptNum int, resp *http.Response) time.Duration {
 			// Use very short delays for testing: 50ms, 100ms, 200ms, 400ms, 800ms
 			delay := 50 * time.Millisecond * (1 << attemptNum)
 			if delay > 800*time.Millisecond {

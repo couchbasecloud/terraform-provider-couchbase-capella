@@ -1,3 +1,5 @@
+version: 2
+
 issues:
   max-per-linter: 0
   max-same-issues: 0
@@ -12,20 +14,15 @@ linters:
   enable:
     - durationcheck
     - errcheck
-    - exportloopref
     - forcetypeassert
-    - gofmt
-    - gosimple
     - gosec
     - ineffassign
     - makezero
-    - goimports
     - misspell
     - nilerr
     - predeclared
     - staticcheck
-    - tenv
     - unconvert
     - unparam
     - unused
-    - vet
+    - govet
