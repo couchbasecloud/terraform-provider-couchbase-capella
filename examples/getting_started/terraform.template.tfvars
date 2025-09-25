@@ -198,3 +198,20 @@ where      = "dept = 'sales'"
 with = {
   defer_build = false
 }
+
+app_endpoint = {
+  bucket = "new_terraform_bucket"
+  name   = "api"
+}
+
+app_endpoint_function = {
+  scope                   = "_default"
+  collection              = "_default"
+  access_control_function = "function (doc, oldDoc, meta) {channel(doc.channels); }"
+}
+
+app_endpoint_import_filter = {
+  scope         = "_default"
+  collection    = "_default"
+  import_filter = "function(doc) { if (doc.type != 'mobile') { return false; } return true; }"
+}

@@ -259,3 +259,29 @@ variable "with" {
     num_partition = optional(number)
   })
 }
+
+variable "app_endpoint" {
+  description = "App Endpoint configuration"
+  type = object({
+    bucket = string
+    name   = string
+  })
+}
+
+variable "app_endpoint_function" {
+  description = "App Endpoint access control function config"
+  type = object({
+    scope                   = string
+    collection              = string
+    access_control_function = string
+  })
+}
+
+variable "app_endpoint_import_filter" {
+  description = "App Endpoint import filter config"
+  type = object({
+    scope         = string
+    collection    = string
+    import_filter = string
+  })
+}
