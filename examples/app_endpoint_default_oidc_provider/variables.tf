@@ -23,6 +23,8 @@ variable "app_endpoint_name" {
   description = "App Endpoint name"
 }
 
-variable "provider_id" {
-  description = "OIDC provider ID to set as default"
+variable "default_provider_id" {
+  description = "Default OIDC Provider ID"
 }
+
+
