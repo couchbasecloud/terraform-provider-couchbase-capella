@@ -109,6 +109,10 @@ type CreateBucketRequest struct {
 	// The name cannot have 0 characters or empty. Minimum length of name is 1.
 	// The name cannot start with a . (period).
 	Name string `json:"name"`
+
+	// Vbuckets is the number of vbuckets in the bucket.
+	// This is only configurable on magma buckets for Couchbase 8.0 and above.
+	Vbuckets int64 `json:"vbuckets,omitempty"`
 }
 
 // CreateBucketResponse is the response received from Capella V4 Public API on requesting to create a new bucket.
@@ -170,6 +174,10 @@ type GetBucketResponse struct {
 
 	// Flush determines whether flushing is enabled on the bucket.
 	Flush bool `json:"flush"`
+
+	// Vbuckets is the number of vbuckets in the bucket.
+	// This is only configurable on magma buckets for Couchbase 8.0 and above.
+	Vbuckets int64 `json:"vbuckets"`
 }
 
 // PutBucketRequest is the request payload sent to the Capella V4 Public API in order to update an existing bucket.
