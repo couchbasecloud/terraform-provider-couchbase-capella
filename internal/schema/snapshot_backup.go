@@ -161,7 +161,7 @@ func (s SnapshotBackup) Validate() (map[Attr]string, error) {
 	return IDs, nil
 }
 
-// ConvertRegionsToCopy is used to convert all regionsToCopy
+// ConvertStringValueList is used to convert all elements
 // in an array of basetypes.StringValue to strings.
 func ConvertStringValueList(stringValueList []basetypes.StringValue) []string {
 	var stringList []string
