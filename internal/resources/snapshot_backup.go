@@ -80,7 +80,7 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 
 	createSnapshotBackupRequest := snapshot_backup.CreateSnapshotBackupRequest{
 		Retention:     int(plan.Retention.ValueInt64()),
-		RegionsToCopy: providerschema.ConvertRegionsToCopy(plan.RegionsToCopy),
+		RegionsToCopy: providerschema.ConvertStringValueList(plan.RegionsToCopy),
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups", s.HostURL, organizationId, projectId, clusterId)

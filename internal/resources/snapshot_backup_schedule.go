@@ -13,7 +13,6 @@ import (
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/snapshot_backup_schedule"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
@@ -56,18 +55,6 @@ func (s *SnapshotBackupSchedule) Create(ctx context.Context, req resource.Create
 	resp.Diagnostics.Append(diags...)
 
 	if resp.Diagnostics.HasError() {
-		return
-	}
-	err := s.validateCreateSnapshotBackupScheduleRequest(plan)
-	if err != nil {
-		tflog.Debug(ctx, "Error validating snapshot backup schedule", map[string]interface{}{
-			"plan": plan,
-			"err":  err,
-		})
-		resp.Diagnostics.AddError(
-			"Error parsing create snapshot backup request",
-			"Could not create snapshot backup "+err.Error(),
-		)
 		return
 	}
 
@@ -162,19 +149,6 @@ func (s *SnapshotBackupSchedule) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	err := s.validateCreateSnapshotBackupScheduleRequest(plan)
-	if err != nil {
-		tflog.Debug(ctx, "Error validating snapshot backup schedule IDs", map[string]interface{}{
-			"plan": plan,
-			"err":  err,
-		})
-		resp.Diagnostics.AddError(
-			"Error parsing create snapshot backup request",
-			"Could not create snapshot backup "+err.Error(),
-		)
-		return
-	}
-
 	var (
 		organizationId = plan.OrganizationID.ValueString()
 		projectId      = plan.ProjectID.ValueString()
@@ -265,9 +239,10 @@ func (s *SnapshotBackupSchedule) Delete(ctx context.Context, req resource.Delete
 
 func (s *SnapshotBackupSchedule) upsertSnapshotBackupSchedule(ctx context.Context, organizationId, projectId, clusterId string, plan providerschema.SnapshotBackupSchedule) (*providerschema.SnapshotBackupSchedule, error) {
 	createSnapshotBackupScheduleRequest := snapshot_backup_schedule.SnapshotBackupSchedule{
-		Interval:  int(plan.Interval.ValueInt64()),
-		Retention: int(plan.Retention.ValueInt64()),
-		StartTime: plan.StartTime.ValueString(),
+		Interval:      int(plan.Interval.ValueInt64()),
+		Retention:     int(plan.Retention.ValueInt64()),
+		StartTime:     plan.StartTime.ValueString(),
+		CopyToRegions: providerschema.ConvertStringValueList(plan.CopyToRegions),
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackupschedule", s.HostURL, organizationId, projectId, clusterId)
@@ -304,19 +279,6 @@ func (s *SnapshotBackupSchedule) upsertSnapshotBackupSchedule(ctx context.Contex
 
 	refreshedState := providerschema.NewSnapshotBackupSchedule(*snapshotBackupSchedule, organizationId, projectId, clusterId)
 	return &refreshedState, nil
-}
-
-func (s *SnapshotBackupSchedule) validateCreateSnapshotBackupScheduleRequest(plan providerschema.SnapshotBackupSchedule) error {
-	if plan.OrganizationID.IsNull() {
-		return errors.ErrOrganizationIdCannotBeEmpty
-	}
-	if plan.ProjectID.IsNull() {
-		return errors.ErrProjectIdCannotBeEmpty
-	}
-	if plan.ID.IsNull() {
-		return errors.ErrClusterIdCannotBeEmpty
-	}
-	return nil
 }
 
 func (s *SnapshotBackupSchedule) getSnapshotBackupSchedule(ctx context.Context, organizationId, projectId, clusterId string, stateTimeString string) (*snapshot_backup_schedule.SnapshotBackupSchedule, error) {

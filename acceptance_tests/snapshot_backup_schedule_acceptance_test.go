@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -22,13 +23,14 @@ func TestAccSnapshotBackupScheduleResource(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_snapshot_backup_schedule_")
 	resourceReference := "couchbase-capella_snapshot_backup_schedule." + resourceName
 
-	startTimeString := time.Now().Add(24 * time.Hour).Truncate(time.Hour).Format(time.RFC3339)
+	startTime := time.Now().Add(24 * time.Hour).Truncate(time.Hour).Format(time.RFC3339)
+	copyToRegions := "[" + strings.Join([]string{"\"eu-west-1\"", "\"ap-southeast-1\""}, ",") + "]"
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotBackupScheduleResourceConfig(resourceName, 12, 240, startTimeString),
+				Config: testAccSnapshotBackupScheduleResourceConfigWithCopyToRegions(resourceName, 12, 240, startTime, copyToRegions),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsSnapshotBackupScheduleResource(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
@@ -36,7 +38,9 @@ func TestAccSnapshotBackupScheduleResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "id", globalClusterId),
 					resource.TestCheckResourceAttr(resourceReference, "interval", "12"),
 					resource.TestCheckResourceAttr(resourceReference, "retention", "240"),
-					resource.TestCheckResourceAttr(resourceReference, "start_time", startTimeString),
+					resource.TestCheckResourceAttr(resourceReference, "start_time", startTime),
+					resource.TestCheckResourceAttr(resourceReference, "copy_to_regions.0", "eu-west-1"),
+					resource.TestCheckResourceAttr(resourceReference, "copy_to_regions.1", "ap-southeast-1"),
 				),
 			},
 		},
@@ -52,7 +56,7 @@ func TestAccSnapshotBackupScheduleResourceInvalidInterval(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccSnapshotBackupScheduleResourceConfig(resourceName, 0, 240, startTime),
+				Config:      testAccSnapshotBackupScheduleResourceConfigWithCopyToRegions(resourceName, 0, 240, startTime, "[]"),
 				ExpectError: regexp.MustCompile("There is an error during snapshot backup schedule creation"),
 			},
 		},
@@ -62,13 +66,13 @@ func TestAccSnapshotBackupScheduleResourceInvalidInterval(t *testing.T) {
 func TestAccSnapshotBackupScheduleResourceInvalidRetention(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_snapshot_backup_schedule_")
 
-	startTime := time.Now().Add(24 * time.Hour).Format(time.RFC3339)
+	startTime := time.Now().Add(24 * time.Hour).Truncate(time.Hour).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccSnapshotBackupScheduleResourceConfig(resourceName, 12, 721, startTime),
+				Config:      testAccSnapshotBackupScheduleResourceConfigWithCopyToRegions(resourceName, 12, 721, startTime, "[]"),
 				ExpectError: regexp.MustCompile("There is an error during snapshot backup schedule creation"),
 			},
 		},
@@ -82,14 +86,32 @@ func TestAccSnapshotBackupScheduleResourceInvalidStartTime(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccSnapshotBackupScheduleResourceConfig(resourceName, 12, 240, "invalid_time"),
+				Config:      testAccSnapshotBackupScheduleResourceConfigWithCopyToRegions(resourceName, 12, 240, "invalid_time", "[]"),
 				ExpectError: regexp.MustCompile("There is an error during snapshot backup schedule creation"),
 			},
 		},
 	})
 }
 
-func testAccSnapshotBackupScheduleResourceConfig(resourceName string, interval int, retention int, startTime string) string {
+func TestAccSnapshotBackupScheduleResourceInvalidCopyToRegions(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_snapshot_backup_schedule_")
+
+	startTime := time.Now().Add(24 * time.Hour).Truncate(time.Hour).Format(time.RFC3339)
+
+	copyToRegions := "[" + strings.Join([]string{"\"us-east-1\""}, ",") + "]"
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccSnapshotBackupScheduleResourceConfigWithCopyToRegions(resourceName, 12, 240, startTime, copyToRegions),
+				ExpectError: regexp.MustCompile("There is an error during snapshot backup schedule creation"),
+			},
+		},
+	})
+}
+
+func testAccSnapshotBackupScheduleResourceConfigWithCopyToRegions(resourceName string, interval, retention int, startTime, copyToRegions string) string {
 	return fmt.Sprintf(`
 	%[1]s
 
@@ -100,8 +122,9 @@ func testAccSnapshotBackupScheduleResourceConfig(resourceName string, interval i
 		interval = %[6]d
 		retention = %[7]d
 		start_time = "%[8]s"
+		copy_to_regions = %[9]s
 	}
-	`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, interval, retention, startTime)
+	`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, interval, retention, startTime, copyToRegions)
 }
 
 func testAccExistsSnapshotBackupScheduleResource(resourceReference string) resource.TestCheckFunc {

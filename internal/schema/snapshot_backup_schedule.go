@@ -12,12 +12,13 @@ import (
 )
 
 type SnapshotBackupSchedule struct {
-	OrganizationID types.String `tfsdk:"organization_id"`
-	ProjectID      types.String `tfsdk:"project_id"`
-	ID             types.String `tfsdk:"id"`
-	Interval       types.Int64  `tfsdk:"interval"`
-	Retention      types.Int64  `tfsdk:"retention"`
-	StartTime      types.String `tfsdk:"start_time"`
+	OrganizationID types.String   `tfsdk:"organization_id"`
+	ProjectID      types.String   `tfsdk:"project_id"`
+	ID             types.String   `tfsdk:"id"`
+	Interval       types.Int64    `tfsdk:"interval"`
+	Retention      types.Int64    `tfsdk:"retention"`
+	StartTime      types.String   `tfsdk:"start_time"`
+	CopyToRegions  []types.String `tfsdk:"copy_to_regions"`
 }
 
 func (s SnapshotBackupSchedule) AttributeTypes() map[string]attr.Type {
@@ -28,6 +29,7 @@ func (s SnapshotBackupSchedule) AttributeTypes() map[string]attr.Type {
 		"interval":        types.Int64Type,
 		"retention":       types.Int64Type,
 		"start_time":      types.StringType,
+		"copy_to_regions": types.ListType{ElemType: types.StringType},
 	}
 }
 
@@ -39,6 +41,7 @@ func NewSnapshotBackupSchedule(snapshotBackupSchedule snapshot_backup_schedule.S
 		Interval:       types.Int64Value(int64(snapshotBackupSchedule.Interval)),
 		Retention:      types.Int64Value(int64(snapshotBackupSchedule.Retention)),
 		StartTime:      types.StringValue(snapshotBackupSchedule.StartTime),
+		CopyToRegions:  ConvertStringList(snapshotBackupSchedule.CopyToRegions),
 	}
 }
 
@@ -55,4 +58,12 @@ func (s SnapshotBackupSchedule) Validate() (map[Attr]string, error) {
 		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
 	}
 	return IDs, nil
+}
+
+func ConvertStringList(stringList []string) []basetypes.StringValue {
+	var stringValueList []basetypes.StringValue
+	for _, stringElement := range stringList {
+		stringValueList = append(stringValueList, types.StringValue(stringElement))
+	}
+	return stringValueList
 }
