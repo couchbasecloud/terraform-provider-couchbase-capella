@@ -50,7 +50,6 @@ vet:
 .PHONY: lint-fix
 lint-fix:
 	@echo "==> Fixing linters errors..."
-	fieldalignment -json -fix ./...
 	golangci-lint run --fix
 
 .PHONY: setup

@@ -35,6 +35,8 @@ const maxRetryAttempts = 5
 //
 // For 504 responses with code 7001, it returns the specific ErrGatewayTimeoutForIndexDDL
 // error to provide better error context to callers, matching V1 client behavior.
+//
+//nolint:nilerr // returning nil error is expected behavior for retryablehttp.CheckRetry interface
 func customRetryPolicy(ctx context.Context, resp *http.Response, err error) (bool, error) {
 	// Handle connection errors - retry these
 	if err != nil {
