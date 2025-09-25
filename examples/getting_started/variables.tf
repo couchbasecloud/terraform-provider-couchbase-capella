@@ -163,6 +163,10 @@ variable "app_service" {
   })
 }
 
+variable "app_endpoint" {
+  description = "App Endpoint name"
+}
+
 variable "scope" {
   description = "Scope configuration details useful for creation"
 
