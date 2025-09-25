@@ -229,13 +229,8 @@ func initComputedAttributesToNullBeforeRefresh(ctx context.Context, plan *provid
 			oidcList[i] = providerschema.AppEndpointOidc{
 				ProviderId: types.StringNull(),
 				IsDefault:  types.BoolNull(),
-				//Register:      types.BoolNull(),
-				//UserPrefix:    types.StringNull(),
-				//RolesClaim:    types.StringNull(),
-				//UsernameClaim: types.StringNull(),
-				//DiscoveryUrl:  types.StringNull(),
-				ClientId: plan.Oidc[i].ClientId,
-				Issuer:   plan.Oidc[i].Issuer,
+				ClientId:   plan.Oidc[i].ClientId,
+				Issuer:     plan.Oidc[i].Issuer,
 			}
 		}
 	}
