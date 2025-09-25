@@ -8,7 +8,9 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -74,6 +76,38 @@ func customRetryPolicy(ctx context.Context, resp *http.Response, err error) (boo
 	}
 }
 
+// RetryOption configures retry behavior for the HTTP client.
+type RetryOption func(*retryablehttp.Client)
+
+// WithFastBackoff configures the client to use fast backoff delays suitable for testing.
+// This reduces retry delays to: 50ms, 100ms, 200ms, 400ms, 800ms for quick test feedback.
+func WithFastBackoff() RetryOption {
+	return func(client *retryablehttp.Client) {
+		client.Backoff = func(min, max time.Duration, attemptNum int, resp *http.Response) time.Duration {
+			// Use very short delays for testing: 50ms, 100ms, 200ms, 400ms, 800ms
+			delay := 50 * time.Millisecond * (1 << attemptNum)
+			if delay > 800*time.Millisecond {
+				delay = 800 * time.Millisecond
+			}
+			return delay
+		}
+	}
+}
+
+// WithMaxRetries configures the maximum number of retry attempts.
+func WithMaxRetries(maxRetries int) RetryOption {
+	return func(client *retryablehttp.Client) {
+		client.RetryMax = maxRetries
+	}
+}
+
+// WithLogger configures a custom logger for the retry client.
+func WithLogger(logger retryablehttp.Logger) RetryOption {
+	return func(client *retryablehttp.Client) {
+		client.Logger = logger
+	}
+}
+
 // NewRetryHTTPClient creates and returns a new HTTP client configured with intelligent
 // retry logic using the Hashicorp retryablehttp library. The client automatically handles
 // transient failures such as rate limiting (429) and gateway timeouts (504) with
@@ -83,43 +117,66 @@ func customRetryPolicy(ctx context.Context, resp *http.Response, err error) (boo
 // It provides the same interface as a standard http.Client but with enhanced reliability
 // for API interactions.
 //
-// Configuration:
+// Default Configuration:
 //   - Uses retryablehttp.Client with custom retry policy for Couchbase Capella API
 //   - Applies LinearJitterBackoff for optimal retry spacing and thundering herd prevention
 //   - Sets the specified timeout for all requests (applies to entire retry sequence)
 //   - Respects Retry-After headers automatically when present
 //   - Limits retries to maxRetryAttempts (5) per request
 //   - Handles special 7001 error codes for index DDL operations
+//   - Enables/disables retry logging based on debugLogging parameter
 //
 // Parameters:
 //   - timeout: The maximum duration for each individual HTTP request (including retries).
 //     This timeout applies to the entire retry sequence, not individual attempts.
 //     Use 0 for no timeout, though this is not recommended for production use.
+//   - debugLogging: When true, enables retry attempt logging. Should be controlled by
+//     the provider's debug logging settings (e.g., TF_LOG=DEBUG).
+//   - opts: Optional configuration functions to customize retry behavior
 //
 // Returns:
 //   - *http.Client: A fully configured HTTP client ready for use
 //
 // Example Usage:
 //
-//	client := NewRetryHTTPClient(30 * time.Second)
-//	resp, err := client.Get("https://api.example.com/data")
-//	if err != nil {
-//	    // Handle error (this will be returned only after all retries are exhausted)
-//	}
-//	defer resp.Body.Close()
+//	// Production client with no retry logging
+//	client := NewRetryHTTPClient(30 * time.Second, false)
+//
+//	// Debug client with retry logging enabled
+//	debugClient := NewRetryHTTPClient(30 * time.Second, true)
+//
+//	// Testing client with fast backoff and debug logging
+//	testClient := NewRetryHTTPClient(30 * time.Second, true, WithFastBackoff())
+//
+//	// Custom configuration
+//	customClient := NewRetryHTTPClient(30 * time.Second, false,
+//		WithMaxRetries(3),
+//		WithFastBackoff())
 //
 // Thread Safety:
 // The returned client is safe for concurrent use by multiple goroutines.
-func NewRetryHTTPClient(timeout time.Duration) *http.Client {
+func NewRetryHTTPClient(timeout time.Duration, debugLogging bool, opts ...RetryOption) *http.Client {
 	retryClient := retryablehttp.NewClient()
 
-	// Configure retry behavior for Couchbase Capella API
+	// Configure default retry behavior for Couchbase Capella API
 	retryClient.RetryMax = maxRetryAttempts
 	retryClient.CheckRetry = customRetryPolicy
 	retryClient.Backoff = retryablehttp.LinearJitterBackoff
 
-	// Disable default logging to avoid noise - clients can configure their own
-	retryClient.Logger = nil
+	// Configure logging based on debug setting
+	if debugLogging {
+		// Create a logger that writes to stderr with [RETRY] prefix
+		// This will show retry attempts, backoff delays, and HTTP status codes
+		// The provider can control this via TF_LOG=DEBUG or similar settings
+		retryClient.Logger = log.New(os.Stderr, "[RETRY] ", log.LstdFlags)
+	} else {
+		retryClient.Logger = nil
+	}
+
+	// Apply optional configurations
+	for _, opt := range opts {
+		opt(retryClient)
+	}
 
 	// Convert to standard HTTP client and set timeout
 	httpClient := retryClient.StandardClient()

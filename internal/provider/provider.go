@@ -153,13 +153,33 @@ func (p *capellaProvider) Configure(
 
 	// Create clients using the configuration values
 	clientV1 := api.NewClient(apiRequestTimeout)
-	// Use retrying HTTP client for v2 as well
-	retryingHTTP := apigen.NewRetryHTTPClient(apiRequestTimeout)
-	clientV2, _ := apigen.NewClientWithResponses(host, apigen.WithHTTPClient(retryingHTTP), apigen.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
+
+	// Enable debug logging for V2 client based on Terraform logging environment variables
+	// Users can enable this with TF_LOG=DEBUG or TF_LOG=TRACE
+	debugLogging := false
+	if tfLogLevel := os.Getenv("TF_LOG"); tfLogLevel == "DEBUG" || tfLogLevel == "TRACE" {
+		debugLogging = true
+	}
+	if tfLogProvider := os.Getenv("TF_LOG_PROVIDER"); tfLogProvider == "DEBUG" || tfLogProvider == "TRACE" {
+		debugLogging = true
+	}
+
+	// Use retrying HTTP client for v2 with controlled debug logging
+	retryingHTTP := apigen.NewRetryHTTPClient(apiRequestTimeout, debugLogging)
+	clientV2, err := apigen.NewClientWithResponses(host, apigen.WithHTTPClient(retryingHTTP), apigen.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
 		req.Header.Set("Authorization", "Bearer "+authenticationToken)
 		req.Header.Set("User-Agent", providerName+"/"+version.ProviderVersion)
 		return nil
 	}))
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to Create Capella V2 API Client",
+			"An unexpected error occurred when creating the Capella V2 API client. "+
+				"If the error is not clear, please contact the provider developers.\n\n"+
+				"Capella V2 Client Error: "+err.Error(),
+		)
+		return
+	}
 	providerData := &providerschema.Data{
 		HostURL:  host,
 		Token:    authenticationToken,

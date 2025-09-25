@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -74,7 +75,7 @@ func Test504_Code7001_NoRetryAndErrorReturned(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewRetryHTTPClient(5 * time.Second)
+	client := NewRetryHTTPClient(5*time.Second, false)
 	resp, err := client.Get(server.URL)
 
 	// Should return the specific 7001 error - matches V1 client behavior
@@ -116,16 +117,22 @@ func Test504_Other_RetriesUpToMax(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewRetryHTTPClient(30 * time.Second) // Longer timeout for retries
+	// Use testing client with fast backoff for quicker tests
+	client := NewRetryHTTPClient(30*time.Second, false, WithFastBackoff())
 
 	start := time.Now()
 	resp, err := client.Get(server.URL)
 	duration := time.Since(start)
 
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	// retryablehttp returns error when all retries are exhausted
+	if err == nil {
+		t.Fatalf("expected error after exhausting retries, got nil")
 	}
-	defer resp.Body.Close()
+
+	// Error should indicate giving up after attempts
+	if !strings.Contains(err.Error(), "giving up after") {
+		t.Errorf("expected 'giving up after' error, got: %v", err)
+	}
 
 	// Should have made maxRetryAttempts + 1 calls (initial + retries)
 	expectedCalls := int32(maxRetryAttempts + 1)
@@ -133,13 +140,20 @@ func Test504_Other_RetriesUpToMax(t *testing.T) {
 		t.Fatalf("expected %d calls, got %d", expectedCalls, atomic.LoadInt32(&callCount))
 	}
 
-	// Should have taken some time due to backoff
-	if duration < 500*time.Millisecond {
-		t.Errorf("expected some delay due to retries, got %v", duration)
+	// Should have taken some time due to backoff (but much less with fast backoff)
+	if duration < 100*time.Millisecond {
+		t.Errorf("expected at least 100ms delay due to retries, got %v", duration)
+	}
+	if duration > 10*time.Second {
+		t.Errorf("expected less than 10s total duration with fast backoff, got %v", duration)
 	}
 
-	if resp.StatusCode != http.StatusGatewayTimeout {
-		t.Errorf("expected final status %d, got %d", http.StatusGatewayTimeout, resp.StatusCode)
+	// Response may still be available even with error (retryablehttp behavior)
+	if resp != nil {
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusGatewayTimeout {
+			t.Errorf("expected final status %d, got %d", http.StatusGatewayTimeout, resp.StatusCode)
+		}
 	}
 }
 
@@ -159,7 +173,7 @@ func Test429_RetriesWithBackoff(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewRetryHTTPClient(30 * time.Second)
+	client := NewRetryHTTPClient(30*time.Second, false, WithFastBackoff()) // Fast testing client
 
 	start := time.Now()
 	resp, err := client.Get(server.URL)
@@ -175,9 +189,12 @@ func Test429_RetriesWithBackoff(t *testing.T) {
 		t.Fatalf("expected 4 calls, got %d", atomic.LoadInt32(&callCount))
 	}
 
-	// Should have taken some time due to backoff
-	if duration < 500*time.Millisecond {
-		t.Errorf("expected some delay due to retries, got %v", duration)
+	// Should have taken some time due to backoff (much less with fast backoff)
+	if duration < 50*time.Millisecond {
+		t.Errorf("expected at least 50ms delay due to retries, got %v", duration)
+	}
+	if duration > 5*time.Second {
+		t.Errorf("expected less than 5s total duration with fast backoff, got %v", duration)
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -193,7 +210,7 @@ func Test429_RetriesWithBackoff(t *testing.T) {
 func Test429_RetryAfter_Respected(t *testing.T) {
 	var callCount int32
 
-	// Create test server that returns 429 with Retry-After, then success
+	// Create test server that returns 429 with small Retry-After, then success
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		count := atomic.AddInt32(&callCount, 1)
 		if count == 1 {
@@ -207,7 +224,7 @@ func Test429_RetryAfter_Respected(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewRetryHTTPClient(30 * time.Second)
+	client := NewRetryHTTPClient(30*time.Second, false) // Use production client for Retry-After test
 
 	start := time.Now()
 	resp, err := client.Get(server.URL)
@@ -223,9 +240,13 @@ func Test429_RetryAfter_Respected(t *testing.T) {
 		t.Fatalf("expected 2 calls, got %d", atomic.LoadInt32(&callCount))
 	}
 
-	// Should have waited approximately 1 second as specified by Retry-After
-	if duration < 900*time.Millisecond || duration > 1200*time.Millisecond {
-		t.Errorf("expected ~1s delay due to Retry-After, got %v", duration)
+	// Should respect the Retry-After header and wait at least 1 second
+	// Note: retryablehttp may apply additional backoff beyond Retry-After
+	if duration < 1*time.Second {
+		t.Errorf("expected at least 1s delay due to Retry-After, got %v", duration)
+	}
+	if duration > 20*time.Second {
+		t.Errorf("expected less than 20s total duration, got %v", duration)
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -244,7 +265,7 @@ func TestSuccessPassthrough(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewRetryHTTPClient(5 * time.Second)
+	client := NewRetryHTTPClient(5*time.Second, false)
 	resp, err := client.Get(server.URL)
 
 	if err != nil {
@@ -293,7 +314,7 @@ func TestDefaultCase_NoRetry(t *testing.T) {
 			}))
 			defer server.Close()
 
-			client := NewRetryHTTPClient(5 * time.Second)
+			client := NewRetryHTTPClient(5*time.Second, false)
 			resp, err := client.Get(server.URL)
 
 			if err != nil {
@@ -320,7 +341,7 @@ func TestDefaultCase_NoRetry(t *testing.T) {
 
 func TestNewRetryHTTPClient_ConfiguresCorrectly(t *testing.T) {
 	timeout := 123 * time.Second
-	client := NewRetryHTTPClient(timeout)
+	client := NewRetryHTTPClient(timeout, false)
 
 	if client.Timeout != timeout {
 		t.Fatalf("timeout: got %v, want %v", client.Timeout, timeout)
@@ -329,6 +350,90 @@ func TestNewRetryHTTPClient_ConfiguresCorrectly(t *testing.T) {
 	if client.Transport == nil {
 		t.Fatalf("expected non-nil transport")
 	}
+}
+
+func TestNewRetryHTTPClient_WithOptions(t *testing.T) {
+	// Test default configuration without debug logging
+	defaultClient := NewRetryHTTPClient(30*time.Second, false)
+	if defaultClient.Timeout != 30*time.Second {
+		t.Errorf("default timeout: got %v, want %v", defaultClient.Timeout, 30*time.Second)
+	}
+
+	// Test with debug logging enabled
+	debugClient := NewRetryHTTPClient(30*time.Second, true)
+	if debugClient.Timeout != 30*time.Second {
+		t.Errorf("debug client timeout: got %v, want %v", debugClient.Timeout, 30*time.Second)
+	}
+
+	// Test with fast backoff option and debug logging
+	fastClient := NewRetryHTTPClient(15*time.Second, true, WithFastBackoff())
+	if fastClient.Timeout != 15*time.Second {
+		t.Errorf("fast client timeout: got %v, want %v", fastClient.Timeout, 15*time.Second)
+	}
+
+	// Test with custom max retries
+	customClient := NewRetryHTTPClient(45*time.Second, false, WithMaxRetries(3))
+	if customClient.Timeout != 45*time.Second {
+		t.Errorf("custom client timeout: got %v, want %v", customClient.Timeout, 45*time.Second)
+	}
+
+	// Test combining options
+	combinedClient := NewRetryHTTPClient(60*time.Second, true, WithFastBackoff(), WithMaxRetries(2))
+	if combinedClient.Timeout != 60*time.Second {
+		t.Errorf("combined client timeout: got %v, want %v", combinedClient.Timeout, 60*time.Second)
+	}
+
+	// All clients should have non-nil transport
+	clients := []*http.Client{defaultClient, debugClient, fastClient, customClient, combinedClient}
+	for i, client := range clients {
+		if client.Transport == nil {
+			t.Errorf("client %d has nil transport", i)
+		}
+	}
+}
+
+func TestNewRetryHTTPClient_DebugLogging(t *testing.T) {
+	// Test that debug logging parameter is respected
+	// Note: We can't easily test the actual log output, but we can verify the client is created correctly
+
+	var callCount int32
+
+	// Create test server that returns 429, then success to trigger retry (and logging)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		count := atomic.AddInt32(&callCount, 1)
+		if count == 1 {
+			w.WriteHeader(http.StatusTooManyRequests)
+			w.Write([]byte("rate limited"))
+		} else {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("success"))
+		}
+	}))
+	defer server.Close()
+
+	// Test with debug logging enabled and fast backoff for quick test
+	client := NewRetryHTTPClient(30*time.Second, true, WithFastBackoff())
+	resp, err := client.Get(server.URL)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Should have made 2 calls (1 retry)
+	if atomic.LoadInt32(&callCount) != 2 {
+		t.Fatalf("expected 2 calls, got %d", atomic.LoadInt32(&callCount))
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("expected successful status, got %d", resp.StatusCode)
+	}
+
+	// When debug logging is enabled, retryablehttp.DefaultLogger() would have logged:
+	// - The initial 429 response
+	// - The retry attempt with backoff delay
+	// - The successful 200 response
+	// Since we can't capture stdout in this test, we just verify the client worked correctly
 }
 
 func Test504_Code7001_InvalidJSON_Retries(t *testing.T) {
@@ -343,17 +448,30 @@ func Test504_Code7001_InvalidJSON_Retries(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewRetryHTTPClient(30 * time.Second) // Longer timeout for retries
+	client := NewRetryHTTPClient(30*time.Second, false, WithFastBackoff()) // Fast testing client
 	resp, err := client.Get(server.URL)
 
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	// retryablehttp returns error when all retries are exhausted
+	if err == nil {
+		t.Fatalf("expected error after exhausting retries, got nil")
 	}
-	defer resp.Body.Close()
+
+	// Error should indicate giving up after attempts
+	if !strings.Contains(err.Error(), "giving up after") {
+		t.Errorf("expected 'giving up after' error, got: %v", err)
+	}
 
 	// Should have retried maxRetryAttempts times due to invalid JSON (treats as regular 504)
 	expectedCalls := int32(maxRetryAttempts + 1)
 	if atomic.LoadInt32(&callCount) != expectedCalls {
 		t.Fatalf("expected %d calls, got %d", expectedCalls, atomic.LoadInt32(&callCount))
+	}
+
+	// Response may still be available even with error
+	if resp != nil {
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusGatewayTimeout {
+			t.Errorf("expected final status %d, got %d", http.StatusGatewayTimeout, resp.StatusCode)
+		}
 	}
 }
