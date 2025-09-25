@@ -181,7 +181,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", c.HostURL, organizationId, projectId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
-	response, err := c.Client.ExecuteWithRetry(
+	response, err := c.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		clusterRequest,
@@ -421,7 +421,7 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 	// Update existing Cluster
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", c.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err = c.Client.ExecuteWithRetry(
+	_, err = c.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		ClusterRequest,
@@ -510,7 +510,7 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 	// Delete existing Cluster
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", r.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
-	_, err = r.Client.ExecuteWithRetry(
+	_, err = r.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -583,7 +583,7 @@ func (c *Cluster) getCluster(
 ) (*clusterapi.GetClusterResponse, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", c.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := c.Client.ExecuteWithRetry(
+	response, err := c.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

@@ -3,13 +3,14 @@ package datasources
 import (
 	"context"
 	"fmt"
-	"net/http"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	datasource_projects "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/tf/datasource_projects"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
+	"github.com/google/uuid"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -35,53 +36,13 @@ func (d *Projects) Metadata(_ context.Context, req datasource.MetadataRequest, r
 }
 
 // Schema defines the schema for the project data source.
-func (d *Projects) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		MarkdownDescription: "Data source to retrieve project details in an organization.",
-		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the organization.",
-			},
-			"data": schema.ListNestedAttribute{
-				Computed: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"id": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The GUID4 ID of the project.",
-						},
-						"organization_id": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The GUID4 ID of the organization.",
-						},
-						"name": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The name of the project.",
-						},
-						"description": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The description of a particular project.",
-						},
-						"audit": computedAuditAttribute,
-						"if_match": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "A precondition header that specifies the entity tag of a resource.",
-						},
-						"etag": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The ETag header value returned by the server, used for optimistic concurrency control.",
-						},
-					},
-				},
-			},
-		},
-	}
+func (d *Projects) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = datasource_projects.ProjectsDataSourceSchema(ctx)
 }
 
 // Read refreshes the Terraform state with the latest data of projects.
 func (d *Projects) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state providerschema.Projects
+	var state datasource_projects.ProjectsModel
 	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -97,10 +58,13 @@ func (d *Projects) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 	}
 	var organizationId = state.OrganizationId.ValueString()
 
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects", d.HostURL, organizationId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	orgUUID, err := uuid.Parse(organizationId)
+	if err != nil {
+		resp.Diagnostics.AddError("Error Reading Capella Projects", "invalid organization_id: "+err.Error())
+		return
+	}
 
-	response, err := api.GetPaginated[[]api.GetProjectResponse](ctx, d.Client, d.Token, cfg, api.SortById)
+	listResp, err := d.ClientV2.ListProjectsWithResponse(ctx, orgUUID, nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Projects",
@@ -108,23 +72,37 @@ func (d *Projects) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 		)
 		return
 	}
-
-	for _, project := range response {
-		projectState := providerschema.OneProject{
-			Id:             types.StringValue(project.Id.String()),
-			OrganizationId: types.StringValue(state.OrganizationId.ValueString()),
-			Name:           types.StringValue(project.Name),
-			Description:    types.StringValue(project.Description),
-			Audit: providerschema.CouchbaseAuditData{
-				CreatedAt:  types.StringValue(project.Audit.CreatedAt.String()),
-				CreatedBy:  types.StringValue(project.Audit.CreatedBy),
-				ModifiedAt: types.StringValue(project.Audit.ModifiedAt.String()),
-				ModifiedBy: types.StringValue(project.Audit.ModifiedBy),
-				Version:    types.Int64Value(int64(project.Audit.Version)),
-			},
-		}
-		state.Data = append(state.Data, projectState)
+	if listResp.JSON200 == nil {
+		resp.Diagnostics.AddError("Error Reading Capella Projects", "unexpected response status: "+listResp.Status())
+		return
 	}
+
+	// Build list of project objects using generated DataValue
+	dataItems := make([]attr.Value, 0, len(listResp.JSON200.Data))
+	for _, project := range listResp.JSON200.Data {
+		audit := datasource_projects.NewAuditValueMust(
+			datasource_projects.AuditValue{}.AttributeTypes(ctx),
+			map[string]attr.Value{
+				"created_at":  types.StringValue(project.Audit.CreatedAt.String()),
+				"created_by":  types.StringValue(project.Audit.CreatedBy),
+				"modified_at": types.StringValue(project.Audit.ModifiedAt.String()),
+				"modified_by": types.StringValue(project.Audit.ModifiedBy),
+				"version":     types.Int64Value(int64(project.Audit.Version)),
+			},
+		)
+		// Convert AuditValue to ObjectValue
+		auditObj, _ := audit.ToObjectValue(ctx)
+		item := datasource_projects.DataValue{
+			Audit:       auditObj,
+			Description: types.StringValue(project.Description),
+			Id:          types.StringValue(project.Id.String()),
+			Name:        types.StringValue(project.Name),
+		}
+		dataItems = append(dataItems, item)
+	}
+	list, di := types.ListValue(datasource_projects.DataValue{}.Type(ctx), dataItems)
+	resp.Diagnostics.Append(di...)
+	state.Data = list
 
 	// Set state
 	diags = resp.State.Set(ctx, &state)

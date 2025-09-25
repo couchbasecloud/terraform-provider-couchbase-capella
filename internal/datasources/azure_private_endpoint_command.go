@@ -99,7 +99,7 @@ func (a *AzurePrivateEndpointCommand) Read(ctx context.Context, req datasource.R
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/privateEndpointService/endpointCommand", a.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusOK}
-	response, err := a.Client.ExecuteWithRetry(
+	response, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		AzureCommandRequest,

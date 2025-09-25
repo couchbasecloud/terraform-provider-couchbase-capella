@@ -178,7 +178,7 @@ func (a *AuditLogExport) listAuditLogExports(ctx context.Context, organizationId
 	)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	return api.GetPaginated[[]api.GetClusterAuditLogExportResponse](ctx, a.Client, a.Token, cfg, "")
+	return api.GetPaginated[[]api.GetClusterAuditLogExportResponse](ctx, a.ClientV1, a.Token, cfg, "")
 }
 
 // validate is used to verify that all the fields in the datasource have been populated.

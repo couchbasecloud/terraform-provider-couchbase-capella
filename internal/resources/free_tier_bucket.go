@@ -84,7 +84,7 @@ func (f *FreeTierBucket) Create(ctx context.Context, request resource.CreateRequ
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/freeTier", f.HostURL, organizationId, projectId, clusterId)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-	resp, err := f.Client.ExecuteWithRetry(
+	resp, err := f.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		freeTierBucketRequest,
@@ -194,7 +194,7 @@ func (f *FreeTierBucket) Update(ctx context.Context, request resource.UpdateRequ
 	}
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err := f.Client.ExecuteWithRetry(
+	_, err := f.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		updateBucketRequest,
@@ -244,7 +244,7 @@ func (f *FreeTierBucket) Delete(ctx context.Context, request resource.DeleteRequ
 	freeTierBucketId := currentState.Id.ValueString()
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/freeTier/%s", f.HostURL, organizationId, projectId, clusterId, freeTierBucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err := f.Client.ExecuteWithRetry(
+	_, err := f.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -269,7 +269,7 @@ func (f *FreeTierBucket) Delete(ctx context.Context, request resource.DeleteRequ
 func (f *FreeTierBucket) retrieveFreeTierBucket(ctx context.Context, organizationId, projectId, clusterId, bucketId string) (*providerschema.OneBucket, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/freeTier/%s", f.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := f.Client.ExecuteWithRetry(
+	response, err := f.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
