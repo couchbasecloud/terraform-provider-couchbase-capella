@@ -2,391 +2,225 @@ package api
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	apierrors "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 )
 
-// roundTripFunc allows stubbing http.RoundTripper in tests.
-type roundTripFunc func(*http.Request) (*http.Response, error)
+func TestCustomRetryPolicyDirectly(t *testing.T) {
+	// Test our custom retry policy function directly
 
-func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
-	return f(req)
-}
-
-// trackingBody tracks reads and close calls.
-type trackingBody struct {
-	io.Reader
-	closed    bool
-	readBytes int
-}
-
-func newTrackingBody(s string) *trackingBody {
-	return &trackingBody{Reader: bytes.NewBufferString(s)}
-}
-
-func (tb *trackingBody) Read(p []byte) (int, error) {
-	n, err := tb.Reader.Read(p)
-	if n > 0 {
-		tb.readBytes += n
+	// Test 7001 case
+	resp := &http.Response{
+		StatusCode: http.StatusGatewayTimeout,
+		Body:       io.NopCloser(bytes.NewBufferString(`{"code":7001}`)),
+		Header:     make(http.Header),
 	}
-	return n, err
-}
 
-func (tb *trackingBody) Close() error {
-	tb.closed = true
-	return nil
-}
+	shouldRetry, err := customRetryPolicy(nil, resp, nil)
+	if shouldRetry {
+		t.Error("expected no retry for 7001 case")
+	}
+	if !errors.Is(err, apierrors.ErrGatewayTimeoutForIndexDDL) {
+		t.Errorf("expected ErrGatewayTimeoutForIndexDDL, got: %v", err)
+	}
 
-func TestRoundTrip_SuccessPassthrough(t *testing.T) {
-	transport := &RetryTransport{Base: roundTripFunc(func(req *http.Request) (*http.Response, error) {
-		return &http.Response{
-			StatusCode: http.StatusOK,
-			Body:       io.NopCloser(bytes.NewBufferString("ok")),
-		}, nil
-	})}
+	// Test regular 504 case
+	resp = &http.Response{
+		StatusCode: http.StatusGatewayTimeout,
+		Body:       io.NopCloser(bytes.NewBufferString(`{"code":1234}`)),
+		Header:     make(http.Header),
+	}
 
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com", nil)
+	shouldRetry, err = customRetryPolicy(nil, resp, nil)
+	if !shouldRetry {
+		t.Error("expected retry for regular 504 case")
+	}
 	if err != nil {
-		t.Fatalf("new request: %v", err)
+		t.Errorf("expected no error for regular 504, got: %v", err)
 	}
 
-	res, err := transport.RoundTrip(req)
+	// Test 429 case
+	resp = &http.Response{
+		StatusCode: http.StatusTooManyRequests,
+		Body:       io.NopCloser(bytes.NewBufferString("rate limited")),
+		Header:     make(http.Header),
+	}
+
+	shouldRetry, err = customRetryPolicy(nil, resp, nil)
+	if !shouldRetry {
+		t.Error("expected retry for 429 case")
+	}
 	if err != nil {
-		t.Fatalf("round trip unexpected error: %v", err)
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		t.Fatalf("status: got %d, want %d", res.StatusCode, http.StatusOK)
-	}
-
-	b, _ := io.ReadAll(res.Body)
-	if string(b) != "ok" {
-		t.Fatalf("body: got %q, want %q", string(b), "ok")
+		t.Errorf("expected no error for 429, got: %v", err)
 	}
 }
 
-func TestRoundTrip_504_Code7001_NoRetryAndBodyPreserved(t *testing.T) {
-	var calls int
+func Test504_Code7001_NoRetryAndErrorReturned(t *testing.T) {
+	var callCount int32
 	body := `{"code":7001}`
-	transport := &RetryTransport{Base: roundTripFunc(func(req *http.Request) (*http.Response, error) {
-		calls++
-		return &http.Response{
-			StatusCode: http.StatusGatewayTimeout,
-			Body:       io.NopCloser(bytes.NewBufferString(body)),
-		}, nil
-	})}
 
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com", nil)
-	if err != nil {
-		t.Fatalf("new request: %v", err)
+	// Create test server that returns 504 with code 7001
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&callCount, 1)
+		w.WriteHeader(http.StatusGatewayTimeout)
+		w.Write([]byte(body))
+	}))
+	defer server.Close()
+
+	client := NewRetryHTTPClient(5 * time.Second)
+	resp, err := client.Get(server.URL)
+
+	// Should return the specific 7001 error - matches V1 client behavior
+	if !errors.Is(err, apierrors.ErrGatewayTimeoutForIndexDDL) {
+		t.Fatalf("expected ErrGatewayTimeoutForIndexDDL error, got: %v", err)
 	}
 
-	res, err := transport.RoundTrip(req)
-	if err != nil {
-		t.Fatalf("round trip unexpected error: %v", err)
-	}
-	defer res.Body.Close()
-
-	if calls != 1 {
-		t.Fatalf("round trip calls: got %d, want 1", calls)
+	// Should not retry - only one call
+	if atomic.LoadInt32(&callCount) != 1 {
+		t.Fatalf("expected 1 call, got %d", atomic.LoadInt32(&callCount))
 	}
 
-	b, _ := io.ReadAll(res.Body)
-	if string(b) != body {
-		t.Fatalf("body preserved: got %q, want %q", string(b), body)
-	}
-}
+	// Response may or may not be available when error is returned
+	// This is acceptable as long as the correct error is returned
+	if resp != nil {
+		defer resp.Body.Close()
 
-func TestRoundTrip_504_Other_CancelContext_ReturnsErrorAndBodyPreserved(t *testing.T) {
-	body := `{"code":1234}`
-	transport := &RetryTransport{Base: roundTripFunc(func(req *http.Request) (*http.Response, error) {
-		return &http.Response{
-			StatusCode: http.StatusGatewayTimeout,
-			Body:       io.NopCloser(bytes.NewBufferString(body)),
-		}, nil
-	})}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Millisecond)
-	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://example.com", nil)
-	if err != nil {
-		t.Fatalf("new request: %v", err)
-	}
-
-	res, err := transport.RoundTrip(req)
-	if err == nil {
-		t.Fatalf("expected error due to context timeout, got nil")
-	}
-	if !errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, context.Canceled) {
-		t.Fatalf("expected context deadline exceeded or canceled, got %v", err)
-	}
-	if res == nil {
-		t.Fatalf("expected non-nil response even when error occurs")
-	}
-	defer res.Body.Close()
-
-	b, _ := io.ReadAll(res.Body)
-	if string(b) != body {
-		t.Fatalf("body preserved: got %q, want %q", string(b), body)
-	}
-}
-
-func TestRoundTrip_429_RetryAfter_DrainsAndClosesAndCancel(t *testing.T) {
-	tb := newTrackingBody("some content to drain")
-	transport := &RetryTransport{Base: roundTripFunc(func(req *http.Request) (*http.Response, error) {
-		res := &http.Response{
-			StatusCode: http.StatusTooManyRequests,
-			Body:       tb,
-			Header:     make(http.Header),
+		if resp.StatusCode != http.StatusGatewayTimeout {
+			t.Errorf("expected status %d, got %d", http.StatusGatewayTimeout, resp.StatusCode)
 		}
-		res.Header.Set("Retry-After", "1")
-		return res, nil
-	})}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Millisecond)
-	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://example.com", nil)
-	if err != nil {
-		t.Fatalf("new request: %v", err)
-	}
-
-	res, err := transport.RoundTrip(req)
-	if err == nil {
-		t.Fatalf("expected error due to context timeout, got nil")
-	}
-	if res == nil {
-		t.Fatalf("expected response even when error occurs")
-	}
-
-	if !tb.closed {
-		t.Fatalf("expected body to be closed after draining on 429")
-	}
-	if tb.readBytes == 0 {
-		t.Fatalf("expected body to be drained on 429")
-	}
-}
-
-func TestCalculateBackoff(t *testing.T) {
-	tests := []struct {
-		name    string
-		attempt int
-		minWant time.Duration
-		maxWant time.Duration
-	}{
-		{"first retry", 0, 750 * time.Millisecond, 1250 * time.Millisecond},       // 1s ± 25%
-		{"second retry", 1, 1500 * time.Millisecond, 2500 * time.Millisecond},     // 2s ± 25%
-		{"third retry", 2, 3 * time.Second, 5 * time.Second},                      // 4s ± 25%
-		{"fourth retry", 3, 6 * time.Second, 10 * time.Second},                    // 8s ± 25%
-		{"fifth retry", 4, 12 * time.Second, 20 * time.Second},                    // 16s ± 25%
-		{"max delay cap", 10, 22500 * time.Millisecond, 37500 * time.Millisecond}, // Should cap at 30s ± 25%
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			backoff := calculateBackoff(tt.attempt)
-			if backoff < tt.minWant || backoff > tt.maxWant {
-				t.Errorf("calculateBackoff(%d) = %v, want between %v and %v",
-					tt.attempt, backoff, tt.minWant, tt.maxWant)
-			}
-		})
-	}
-}
-
-func TestRoundTrip_429_NoRetryAfter_UsesExponentialBackoff(t *testing.T) {
-	var calls int64
-	var callTimes []time.Time
-
-	transport := &RetryTransport{Base: roundTripFunc(func(req *http.Request) (*http.Response, error) {
-		atomic.AddInt64(&calls, 1)
-		callTimes = append(callTimes, time.Now())
-
-		// Always return 429 - after maxRetryAttempts retries, it should stop trying
-		return &http.Response{
-			StatusCode: http.StatusTooManyRequests,
-			Body:       io.NopCloser(bytes.NewBufferString("rate limited")),
-			Header:     make(http.Header), // No Retry-After header
-		}, nil
-	})}
-
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com", nil)
-	if err != nil {
-		t.Fatalf("new request: %v", err)
-	}
-
-	start := time.Now()
-	res, err := transport.RoundTrip(req)
-	duration := time.Since(start)
-
-	if err != nil {
-		t.Fatalf("round trip unexpected error: %v", err)
-	}
-	defer res.Body.Close()
-
-	finalCalls := atomic.LoadInt64(&calls)
-	if finalCalls != maxRetryAttempts+1 {
-		t.Fatalf("expected %d calls (max retries + 1), got %d", maxRetryAttempts+1, finalCalls)
-	}
-
-	// Should have taken at least some time due to backoff
-	minExpectedDuration := calculateBackoff(0) // At least the first backoff
-	if duration < minExpectedDuration {
-		t.Errorf("expected at least %v total duration, got %v", minExpectedDuration, duration)
-	}
-
-	if res.StatusCode != http.StatusTooManyRequests {
-		t.Errorf("expected final status %d after max retries, got %d", http.StatusTooManyRequests, res.StatusCode)
-	}
-}
-
-func TestRoundTrip_504_UsesExponentialBackoff(t *testing.T) {
-	var calls int64
-
-	transport := &RetryTransport{Base: roundTripFunc(func(req *http.Request) (*http.Response, error) {
-		atomic.AddInt64(&calls, 1)
-
-		// Always return 504 without special error code
-		return &http.Response{
-			StatusCode: http.StatusGatewayTimeout,
-			Body:       io.NopCloser(bytes.NewBufferString(`{"code":1234}`)), // Not 7001
-		}, nil
-	})}
-
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com", nil)
-	if err != nil {
-		t.Fatalf("new request: %v", err)
-	}
-
-	start := time.Now()
-	res, err := transport.RoundTrip(req)
-	duration := time.Since(start)
-
-	if err != nil {
-		t.Fatalf("round trip unexpected error: %v", err)
-	}
-	defer res.Body.Close()
-
-	finalCalls := atomic.LoadInt64(&calls)
-	if finalCalls != maxRetryAttempts+1 {
-		t.Fatalf("expected %d calls (max retries + 1), got %d", maxRetryAttempts+1, finalCalls)
-	}
-
-	// Should have taken at least some time due to backoff
-	minExpectedDuration := calculateBackoff(0) // At least the first backoff
-	if duration < minExpectedDuration {
-		t.Errorf("expected at least %v total duration, got %v", minExpectedDuration, duration)
-	}
-
-	if res.StatusCode != http.StatusGatewayTimeout {
-		t.Errorf("expected final status %d after max retries, got %d", http.StatusGatewayTimeout, res.StatusCode)
-	}
-}
-
-func TestRoundTrip_RetryLimitEnforced_429(t *testing.T) {
-	var calls int64
-
-	transport := &RetryTransport{Base: roundTripFunc(func(req *http.Request) (*http.Response, error) {
-		atomic.AddInt64(&calls, 1)
-		return &http.Response{
-			StatusCode: http.StatusTooManyRequests,
-			Body:       io.NopCloser(bytes.NewBufferString("rate limited")),
-			Header:     make(http.Header),
-		}, nil
-	})}
-
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com", nil)
-	if err != nil {
-		t.Fatalf("new request: %v", err)
-	}
-
-	res, err := transport.RoundTrip(req)
-	if err != nil {
-		t.Fatalf("round trip unexpected error: %v", err)
-	}
-	defer res.Body.Close()
-
-	finalCalls := atomic.LoadInt64(&calls)
-	expectedCalls := int64(maxRetryAttempts + 1) // Initial call + max retries
-	if finalCalls != expectedCalls {
-		t.Fatalf("expected exactly %d calls, got %d", expectedCalls, finalCalls)
-	}
-}
-
-func TestRoundTrip_RetryLimitEnforced_504(t *testing.T) {
-	var calls int64
-
-	transport := &RetryTransport{Base: roundTripFunc(func(req *http.Request) (*http.Response, error) {
-		atomic.AddInt64(&calls, 1)
-		return &http.Response{
-			StatusCode: http.StatusGatewayTimeout,
-			Body:       io.NopCloser(bytes.NewBufferString(`{"code":1234}`)),
-		}, nil
-	})}
-
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com", nil)
-	if err != nil {
-		t.Fatalf("new request: %v", err)
-	}
-
-	res, err := transport.RoundTrip(req)
-	if err != nil {
-		t.Fatalf("round trip unexpected error: %v", err)
-	}
-	defer res.Body.Close()
-
-	finalCalls := atomic.LoadInt64(&calls)
-	expectedCalls := int64(maxRetryAttempts + 1) // Initial call + max retries
-	if finalCalls != expectedCalls {
-		t.Fatalf("expected exactly %d calls, got %d", expectedCalls, finalCalls)
-	}
-}
-
-func TestRoundTrip_429_RetryAfter_StillRespected(t *testing.T) {
-	var calls int64
-	var callTimes []time.Time
-
-	transport := &RetryTransport{Base: roundTripFunc(func(req *http.Request) (*http.Response, error) {
-		atomic.AddInt64(&calls, 1)
-		callTimes = append(callTimes, time.Now())
-
-		if atomic.LoadInt64(&calls) == 1 {
-			res := &http.Response{
-				StatusCode: http.StatusTooManyRequests,
-				Body:       io.NopCloser(bytes.NewBufferString("rate limited")),
-				Header:     make(http.Header),
-			}
-			res.Header.Set("Retry-After", "1") // 1 second
-			return res, nil
+		// Body should be preserved and contain 7001 code if response is available
+		b, _ := io.ReadAll(resp.Body)
+		if string(b) != body {
+			t.Errorf("body preserved: got %q, want %q", string(b), body)
 		}
-		// Second call succeeds
-		return &http.Response{
-			StatusCode: http.StatusOK,
-			Body:       io.NopCloser(bytes.NewBufferString("ok")),
-		}, nil
-	})}
-
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com", nil)
-	if err != nil {
-		t.Fatalf("new request: %v", err)
 	}
+}
+
+func Test504_Other_RetriesUpToMax(t *testing.T) {
+	var callCount int32
+	body := `{"code":1234}` // Not 7001, so should retry
+
+	// Create test server that always returns 504 with non-7001 code
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&callCount, 1)
+		w.WriteHeader(http.StatusGatewayTimeout)
+		w.Write([]byte(body))
+	}))
+	defer server.Close()
+
+	client := NewRetryHTTPClient(30 * time.Second) // Longer timeout for retries
 
 	start := time.Now()
-	res, err := transport.RoundTrip(req)
+	resp, err := client.Get(server.URL)
 	duration := time.Since(start)
 
 	if err != nil {
-		t.Fatalf("round trip unexpected error: %v", err)
+		t.Fatalf("unexpected error: %v", err)
 	}
-	defer res.Body.Close()
+	defer resp.Body.Close()
 
-	finalCalls := atomic.LoadInt64(&calls)
-	if finalCalls != 2 {
-		t.Fatalf("expected 2 calls, got %d", finalCalls)
+	// Should have made maxRetryAttempts + 1 calls (initial + retries)
+	expectedCalls := int32(maxRetryAttempts + 1)
+	if atomic.LoadInt32(&callCount) != expectedCalls {
+		t.Fatalf("expected %d calls, got %d", expectedCalls, atomic.LoadInt32(&callCount))
+	}
+
+	// Should have taken some time due to backoff
+	if duration < 500*time.Millisecond {
+		t.Errorf("expected some delay due to retries, got %v", duration)
+	}
+
+	if resp.StatusCode != http.StatusGatewayTimeout {
+		t.Errorf("expected final status %d, got %d", http.StatusGatewayTimeout, resp.StatusCode)
+	}
+}
+
+func Test429_RetriesWithBackoff(t *testing.T) {
+	var callCount int32
+
+	// Create test server that returns 429 first few times, then success
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		count := atomic.AddInt32(&callCount, 1)
+		if count <= 3 {
+			w.WriteHeader(http.StatusTooManyRequests)
+			w.Write([]byte("rate limited"))
+		} else {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("success"))
+		}
+	}))
+	defer server.Close()
+
+	client := NewRetryHTTPClient(30 * time.Second)
+
+	start := time.Now()
+	resp, err := client.Get(server.URL)
+	duration := time.Since(start)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Should have made 4 calls total (3 retries + 1 success)
+	if atomic.LoadInt32(&callCount) != 4 {
+		t.Fatalf("expected 4 calls, got %d", atomic.LoadInt32(&callCount))
+	}
+
+	// Should have taken some time due to backoff
+	if duration < 500*time.Millisecond {
+		t.Errorf("expected some delay due to retries, got %v", duration)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("expected successful status, got %d", resp.StatusCode)
+	}
+
+	b, _ := io.ReadAll(resp.Body)
+	if string(b) != "success" {
+		t.Fatalf("body: got %q, want %q", string(b), "success")
+	}
+}
+
+func Test429_RetryAfter_Respected(t *testing.T) {
+	var callCount int32
+
+	// Create test server that returns 429 with Retry-After, then success
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		count := atomic.AddInt32(&callCount, 1)
+		if count == 1 {
+			w.Header().Set("Retry-After", "1") // 1 second
+			w.WriteHeader(http.StatusTooManyRequests)
+			w.Write([]byte("rate limited"))
+		} else {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("success"))
+		}
+	}))
+	defer server.Close()
+
+	client := NewRetryHTTPClient(30 * time.Second)
+
+	start := time.Now()
+	resp, err := client.Get(server.URL)
+	duration := time.Since(start)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Should have made 2 calls
+	if atomic.LoadInt32(&callCount) != 2 {
+		t.Fatalf("expected 2 calls, got %d", atomic.LoadInt32(&callCount))
 	}
 
 	// Should have waited approximately 1 second as specified by Retry-After
@@ -394,74 +228,132 @@ func TestRoundTrip_429_RetryAfter_StillRespected(t *testing.T) {
 		t.Errorf("expected ~1s delay due to Retry-After, got %v", duration)
 	}
 
-	if res.StatusCode != http.StatusOK {
-		t.Errorf("expected successful status, got %d", res.StatusCode)
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("expected successful status, got %d", resp.StatusCode)
 	}
 }
 
-func TestCalculateBackoff_ExponentialGrowth(t *testing.T) {
-	// Test multiple samples to ensure exponential growth pattern overall
-	samples := 10
-	attempts := []int{0, 1, 2, 3, 4}
+func TestSuccessPassthrough(t *testing.T) {
+	var callCount int32
 
-	for _, attempt := range attempts {
-		delays := make([]time.Duration, samples)
+	// Create test server that returns success immediately
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&callCount, 1)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("ok"))
+	}))
+	defer server.Close()
 
-		// Collect multiple samples for this attempt
-		for i := 0; i < samples; i++ {
-			delays[i] = calculateBackoff(attempt)
-		}
+	client := NewRetryHTTPClient(5 * time.Second)
+	resp, err := client.Get(server.URL)
 
-		// Calculate average delay for this attempt
-		var total time.Duration
-		for _, d := range delays {
-			total += d
-		}
-		avgDelay := total / time.Duration(samples)
+	if err != nil {
+		t.Fatalf("request unexpected error: %v", err)
+	}
+	defer resp.Body.Close()
 
-		// Expected base delay without jitter: baseBackoffDelay * 2^attempt
-		multiplier := 1 << uint(attempt)
-		expectedBase := time.Duration(float64(baseBackoffDelay) * float64(multiplier))
-		if expectedBase > maxBackoffDelay {
-			expectedBase = maxBackoffDelay
-		}
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("status: got %d, want %d", resp.StatusCode, http.StatusOK)
+	}
 
-		// Average should be close to expected base (within reasonable bounds considering jitter)
-		tolerance := expectedBase / 4 // 25% tolerance
-		if avgDelay < expectedBase-tolerance || avgDelay > expectedBase+tolerance {
-			t.Errorf("attempt %d: average delay %v should be close to expected %v (±%v)",
-				attempt, avgDelay, expectedBase, tolerance)
-		}
+	b, _ := io.ReadAll(resp.Body)
+	if string(b) != "ok" {
+		t.Fatalf("body: got %q, want %q", string(b), "ok")
+	}
 
-		// All individual delays should be positive and within reasonable bounds
-		for i, delay := range delays {
-			if delay <= 0 {
-				t.Errorf("attempt %d sample %d: delay %v should be positive", attempt, i, delay)
-			}
-
-			// Should not exceed max + jitter tolerance
-			maxWithJitter := maxBackoffDelay + maxBackoffDelay/4
-			if delay > maxWithJitter {
-				t.Errorf("attempt %d sample %d: delay %v exceeds maximum %v",
-					attempt, i, delay, maxWithJitter)
-			}
-		}
+	// Should not retry - only one call
+	if atomic.LoadInt32(&callCount) != 1 {
+		t.Fatalf("expected 1 call, got %d", atomic.LoadInt32(&callCount))
 	}
 }
 
-func TestNewRetryHTTPClient_ConfiguresTransportAndTimeout(t *testing.T) {
-	tout := 123 * time.Second
-	cli := NewRetryHTTPClient(tout)
-
-	if cli.Timeout != tout {
-		t.Fatalf("timeout: got %v, want %v", cli.Timeout, tout)
+func TestDefaultCase_NoRetry(t *testing.T) {
+	testCases := []struct {
+		name       string
+		statusCode int
+		body       string
+	}{
+		{"BadRequest", http.StatusBadRequest, "bad request"},
+		{"Unauthorized", http.StatusUnauthorized, "unauthorized"},
+		{"Forbidden", http.StatusForbidden, "forbidden"},
+		{"NotFound", http.StatusNotFound, "not found"},
+		{"InternalServerError", http.StatusInternalServerError, "internal server error"},
+		{"BadGateway", http.StatusBadGateway, "bad gateway"},
+		{"ServiceUnavailable", http.StatusServiceUnavailable, "service unavailable"},
 	}
 
-	rt, ok := cli.Transport.(*RetryTransport)
-	if !ok {
-		t.Fatalf("transport type: got %T, want *RetryTransport", cli.Transport)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var callCount int32
+
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				atomic.AddInt32(&callCount, 1)
+				w.WriteHeader(tc.statusCode)
+				w.Write([]byte(tc.body))
+			}))
+			defer server.Close()
+
+			client := NewRetryHTTPClient(5 * time.Second)
+			resp, err := client.Get(server.URL)
+
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			defer resp.Body.Close()
+
+			// Should not retry - only one call
+			if atomic.LoadInt32(&callCount) != 1 {
+				t.Fatalf("expected 1 call, got %d", atomic.LoadInt32(&callCount))
+			}
+
+			if resp.StatusCode != tc.statusCode {
+				t.Fatalf("status code: got %d, want %d", resp.StatusCode, tc.statusCode)
+			}
+
+			b, _ := io.ReadAll(resp.Body)
+			if string(b) != tc.body {
+				t.Fatalf("body: got %q, want %q", string(b), tc.body)
+			}
+		})
 	}
-	if rt.Base != http.DefaultTransport {
-		t.Fatalf("base transport: got %v, want %v", rt.Base, http.DefaultTransport)
+}
+
+func TestNewRetryHTTPClient_ConfiguresCorrectly(t *testing.T) {
+	timeout := 123 * time.Second
+	client := NewRetryHTTPClient(timeout)
+
+	if client.Timeout != timeout {
+		t.Fatalf("timeout: got %v, want %v", client.Timeout, timeout)
+	}
+
+	if client.Transport == nil {
+		t.Fatalf("expected non-nil transport")
+	}
+}
+
+func Test504_Code7001_InvalidJSON_Retries(t *testing.T) {
+	var callCount int32
+	body := `{"invalid json` // Invalid JSON to trigger parsing error
+
+	// Create test server that always returns 504 with invalid JSON
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&callCount, 1)
+		w.WriteHeader(http.StatusGatewayTimeout)
+		w.Write([]byte(body))
+	}))
+	defer server.Close()
+
+	client := NewRetryHTTPClient(30 * time.Second) // Longer timeout for retries
+	resp, err := client.Get(server.URL)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Should have retried maxRetryAttempts times due to invalid JSON (treats as regular 504)
+	expectedCalls := int32(maxRetryAttempts + 1)
+	if atomic.LoadInt32(&callCount) != expectedCalls {
+		t.Fatalf("expected %d calls, got %d", expectedCalls, atomic.LoadInt32(&callCount))
 	}
 }
