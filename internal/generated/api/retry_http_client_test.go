@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"io"
 	"net/http"
@@ -75,7 +76,7 @@ func Test504_Code7001_NoRetryAndErrorReturned(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewRetryHTTPClient(5*time.Second, false)
+	client := NewRetryHTTPClient(context.Background(), 5*time.Second, false)
 	resp, err := client.Get(server.URL)
 
 	// Should return the specific 7001 error - matches V1 client behavior
@@ -118,7 +119,7 @@ func Test504_Other_RetriesUpToMax(t *testing.T) {
 	defer server.Close()
 
 	// Use testing client with fast backoff for quicker tests
-	client := NewRetryHTTPClient(30*time.Second, false, WithFastBackoff())
+	client := NewRetryHTTPClient(context.Background(), 30*time.Second, false, WithFastBackoff())
 
 	start := time.Now()
 	resp, err := client.Get(server.URL)
@@ -173,7 +174,7 @@ func Test429_RetriesWithBackoff(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewRetryHTTPClient(30*time.Second, false, WithFastBackoff()) // Fast testing client
+	client := NewRetryHTTPClient(context.Background(), 30*time.Second, false, WithFastBackoff()) // Fast testing client
 
 	start := time.Now()
 	resp, err := client.Get(server.URL)
@@ -226,7 +227,7 @@ func Test429_RetryAfter_Respected(t *testing.T) {
 
 	// Use fast backoff for more predictable timing in tests
 	// The retryablehttp library's default LinearJitterBackoff can have unpredictable delays
-	client := NewRetryHTTPClient(30*time.Second, false, WithFastBackoff())
+	client := NewRetryHTTPClient(context.Background(), 30*time.Second, false, WithFastBackoff())
 
 	start := time.Now()
 	resp, err := client.Get(server.URL)
@@ -267,7 +268,7 @@ func TestSuccessPassthrough(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewRetryHTTPClient(5*time.Second, false)
+	client := NewRetryHTTPClient(context.Background(), 5*time.Second, false)
 	resp, err := client.Get(server.URL)
 
 	if err != nil {
@@ -316,7 +317,7 @@ func TestDefaultCase_NoRetry(t *testing.T) {
 			}))
 			defer server.Close()
 
-			client := NewRetryHTTPClient(5*time.Second, false)
+			client := NewRetryHTTPClient(context.Background(), 5*time.Second, false)
 			resp, err := client.Get(server.URL)
 
 			if err != nil {
@@ -343,7 +344,7 @@ func TestDefaultCase_NoRetry(t *testing.T) {
 
 func TestNewRetryHTTPClient_ConfiguresCorrectly(t *testing.T) {
 	timeout := 123 * time.Second
-	client := NewRetryHTTPClient(timeout, false)
+	client := NewRetryHTTPClient(context.Background(), timeout, false)
 
 	if client.Timeout != timeout {
 		t.Fatalf("timeout: got %v, want %v", client.Timeout, timeout)
@@ -356,31 +357,31 @@ func TestNewRetryHTTPClient_ConfiguresCorrectly(t *testing.T) {
 
 func TestNewRetryHTTPClient_WithOptions(t *testing.T) {
 	// Test default configuration without debug logging
-	defaultClient := NewRetryHTTPClient(30*time.Second, false)
+	defaultClient := NewRetryHTTPClient(context.Background(), 30*time.Second, false)
 	if defaultClient.Timeout != 30*time.Second {
 		t.Errorf("default timeout: got %v, want %v", defaultClient.Timeout, 30*time.Second)
 	}
 
 	// Test with debug logging enabled
-	debugClient := NewRetryHTTPClient(30*time.Second, true)
+	debugClient := NewRetryHTTPClient(context.Background(), 30*time.Second, true)
 	if debugClient.Timeout != 30*time.Second {
 		t.Errorf("debug client timeout: got %v, want %v", debugClient.Timeout, 30*time.Second)
 	}
 
 	// Test with fast backoff option and debug logging
-	fastClient := NewRetryHTTPClient(15*time.Second, true, WithFastBackoff())
+	fastClient := NewRetryHTTPClient(context.Background(), 15*time.Second, true, WithFastBackoff())
 	if fastClient.Timeout != 15*time.Second {
 		t.Errorf("fast client timeout: got %v, want %v", fastClient.Timeout, 15*time.Second)
 	}
 
 	// Test with custom max retries
-	customClient := NewRetryHTTPClient(45*time.Second, false, WithMaxRetries(3))
+	customClient := NewRetryHTTPClient(context.Background(), 45*time.Second, false, WithMaxRetries(3))
 	if customClient.Timeout != 45*time.Second {
 		t.Errorf("custom client timeout: got %v, want %v", customClient.Timeout, 45*time.Second)
 	}
 
 	// Test combining options
-	combinedClient := NewRetryHTTPClient(60*time.Second, true, WithFastBackoff(), WithMaxRetries(2))
+	combinedClient := NewRetryHTTPClient(context.Background(), 60*time.Second, true, WithFastBackoff(), WithMaxRetries(2))
 	if combinedClient.Timeout != 60*time.Second {
 		t.Errorf("combined client timeout: got %v, want %v", combinedClient.Timeout, 60*time.Second)
 	}
@@ -414,7 +415,7 @@ func TestNewRetryHTTPClient_DebugLogging(t *testing.T) {
 	defer server.Close()
 
 	// Test with debug logging enabled and fast backoff for quick test
-	client := NewRetryHTTPClient(30*time.Second, true, WithFastBackoff())
+	client := NewRetryHTTPClient(context.Background(), 30*time.Second, true, WithFastBackoff())
 	resp, err := client.Get(server.URL)
 
 	if err != nil {
@@ -450,7 +451,7 @@ func Test504_Code7001_InvalidJSON_Retries(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := NewRetryHTTPClient(30*time.Second, false, WithFastBackoff()) // Fast testing client
+	client := NewRetryHTTPClient(context.Background(), 30*time.Second, false, WithFastBackoff()) // Fast testing client
 	resp, err := client.Get(server.URL)
 
 	// retryablehttp returns error when all retries are exhausted

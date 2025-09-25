@@ -4,11 +4,9 @@
 package api
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"time"
 
@@ -65,19 +63,11 @@ func customRetryPolicy(ctx context.Context, resp *http.Response, err error) (boo
 
 	case http.StatusGatewayTimeout:
 		// Check for special code 7001 (do not retry)
-		body, readErr := io.ReadAll(resp.Body)
-		if readErr != nil {
-			// If we can't read the body, treat it as a regular 504 and retry
-			return true, nil
-		}
-		// Restore body for subsequent reads
-		resp.Body = io.NopCloser(bytes.NewReader(body))
-
 		var apiErr struct {
 			Code int `json:"code"`
 		}
-		if err := json.Unmarshal(body, &apiErr); err != nil {
-			// If we can't parse the error, treat it as a regular 504 and retry
+		if err := json.NewDecoder(resp.Body).Decode(&apiErr); err != nil {
+			// If we can't decode the JSON, treat it as a regular 504 and retry
 			return true, nil
 		}
 		if apiErr.Code == 7001 {
@@ -159,7 +149,7 @@ func WithLogger(logger retryablehttp.Logger) RetryOption {
 //	// Production client with no retry logging
 //	client := NewRetryHTTPClient(ctx, 30 * time.Second, false)
 //
-//	// Debug client with retry logging enabled  
+//	// Debug client with retry logging enabled
 //	debugClient := NewRetryHTTPClient(ctx, 30 * time.Second, true)
 //
 //	// Testing client with fast backoff and debug logging
