@@ -8,7 +8,23 @@ This directory contains examples that are mostly used for documentation, but can
 
 [App Endpoint](app_endpoint)
 
+[App Endpoint Access Control Function](access_control_function)
+
+[App Endpoint Activation Status](app_endpoint_activation_status)
+
+[App Endpoint Import Filter](app_endpoint)
+
+[App Endpoint CORS](app_endpoint_cors)
+
+[App Endpoint Resync](app_endpoint_resync)
+
+[App Endpoint Default OIDC Provider](app_endpoint_default_oidc_provider)
+
+[App Endpoint OIDC Provider](app_endpoint_oidc_provider)
+
 [App Service](appservice)
+
+[App Service Allowed CIDRs](app_services_cidr)
 
 [App Service On Off OnDemand](app_service_onoff_ondemand)
 
