@@ -107,12 +107,12 @@ func AppEndpointSchema() schema.Schema {
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"items": schema.SetAttribute{
-							Computed: true,
+							Computed:            true,
+							ElementType:         types.StringType,
+							MarkdownDescription: "List of collections that require resync.",
 							PlanModifiers: []planmodifier.Set{
 								setplanmodifier.UseStateForUnknown(),
 							},
-							ElementType:         types.StringType,
-							MarkdownDescription: "List of collections that require resync.",
 						},
 					},
 				},
