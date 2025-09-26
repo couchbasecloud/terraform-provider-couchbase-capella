@@ -73,6 +73,7 @@ Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
 ```
 
 ## UPDATE
+### Now update the App Endpoint to add CORS configuration
 
 Command: `terraform apply`
 
