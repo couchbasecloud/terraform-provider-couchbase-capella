@@ -151,29 +151,21 @@ func (a *AppEndpoints) Read(ctx context.Context, req datasource.ReadRequest, res
 			}
 		}
 
-		var oidcSet types.Set
+		var oidcSet []providerschema.AppEndpointOidc
 		if len(appEndpoint.Oidc) > 0 {
-			oidcSet, diags = types.SetValueFrom(
-				ctx,
-				types.ObjectType{
-					AttrTypes: providerschema.
-						AppEndpointOidc{}.
-						AttributeTypes(),
-				},
-				appEndpoint.Oidc,
-			)
-			resp.Diagnostics.Append(diags...)
-			if diags.HasError() {
-				return
+			for _, oidc := range appEndpoint.Oidc {
+				oidcSet = append(oidcSet, providerschema.AppEndpointOidc{
+					Issuer:        types.StringValue(oidc.Issuer),
+					ClientId:      types.StringValue(oidc.ClientId),
+					DiscoveryUrl:  types.StringValue(oidc.DiscoveryUrl),
+					UsernameClaim: types.StringValue(oidc.UsernameClaim),
+					RolesClaim:    types.StringValue(oidc.RolesClaim),
+					UserPrefix:    types.StringValue(oidc.UserPrefix),
+					ProviderId:    types.StringValue(oidc.ProviderId),
+					IsDefault:     types.BoolValue(oidc.IsDefault),
+					Register:      types.BoolValue(oidc.Register),
+				})
 			}
-		} else {
-			oidcSet = types.SetNull(
-				types.ObjectType{
-					AttrTypes: providerschema.
-						AppEndpointOidc{}.
-						AttributeTypes(),
-				},
-			)
 		}
 
 		var scopesMap types.Map

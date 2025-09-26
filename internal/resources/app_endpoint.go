@@ -15,7 +15,6 @@ import (
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/app_endpoints"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
@@ -110,12 +109,6 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	diags = resp.State.Set(ctx, plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	refreshedState, err := a.refreshAppEndpoint(
 		ctx,
 		organizationId,
@@ -188,7 +181,7 @@ func initComputedAttributesToNullBeforeRefresh(ctx context.Context, plan *provid
 				}
 
 				collectionsMapValue, d := types.MapValueFrom(ctx, types.ObjectType{
-					AttrTypes: schema.
+					AttrTypes: providerschema.
 						AppEndpointCollection{}.
 						AttributeTypes(),
 				}, collectionsMap)
@@ -205,7 +198,7 @@ func initComputedAttributesToNullBeforeRefresh(ctx context.Context, plan *provid
 			AttrTypes: map[string]attr.Type{
 				"collections": types.MapType{
 					ElemType: types.ObjectType{
-						AttrTypes: schema.
+						AttrTypes: providerschema.
 							AppEndpointCollection{}.
 							AttributeTypes(),
 					},
@@ -227,44 +220,32 @@ func initComputedAttributesToNullBeforeRefresh(ctx context.Context, plan *provid
 			plan.Cors.Disabled = types.BoolNull()
 		}
 	}
-
-	if !plan.Oidc.IsNull() {
-		var oidcList []providerschema.AppEndpointOidc
-		diags.Append(plan.Oidc.ElementsAs(ctx, &oidcList, false)...)
-		if diags.HasError() {
-			return diags
-		}
-
-		for i := range oidcList {
+	oidcList := make([]providerschema.AppEndpointOidc, len(plan.Oidc))
+	if len(plan.Oidc) > 0 {
+		for i := range plan.Oidc {
 			oidcList[i].ProviderId = types.StringNull()
 			oidcList[i].IsDefault = types.BoolNull()
-
-			if oidcList[i].Register.IsNull() || oidcList[i].Register.IsUnknown() {
+			if plan.Oidc[i].Register.IsNull() || plan.Oidc[i].Register.IsUnknown() {
 				oidcList[i].Register = types.BoolNull()
 			}
-			if oidcList[i].DiscoveryUrl.IsNull() || oidcList[i].DiscoveryUrl.IsUnknown() {
+			if plan.Oidc[i].DiscoveryUrl.IsNull() || plan.Oidc[i].DiscoveryUrl.IsUnknown() {
 				oidcList[i].DiscoveryUrl = types.StringNull()
 			}
-			if oidcList[i].UsernameClaim.IsNull() || oidcList[i].UsernameClaim.IsUnknown() {
+			if plan.Oidc[i].UsernameClaim.IsNull() || plan.Oidc[i].UsernameClaim.IsUnknown() {
 				oidcList[i].UsernameClaim = types.StringNull()
 			}
-			if oidcList[i].RolesClaim.IsNull() || oidcList[i].RolesClaim.IsUnknown() {
+			if plan.Oidc[i].RolesClaim.IsNull() || plan.Oidc[i].RolesClaim.IsUnknown() {
 				oidcList[i].RolesClaim = types.StringNull()
 			}
+			if plan.Oidc[i].UserPrefix.IsNull() || plan.Oidc[i].UserPrefix.IsUnknown() {
+				oidcList[i].UserPrefix = types.StringNull()
+			}
 		}
-
-		oidcSet, d := types.SetValueFrom(ctx, types.ObjectType{
-			AttrTypes: schema.
-				AppEndpointOidc{}.
-				AttributeTypes(),
-		}, oidcList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-		plan.Oidc = oidcSet
+	} else {
+		plan.Oidc = []providerschema.AppEndpointOidc{}
 	}
 
+	plan.Oidc = oidcList
 	return diags
 }
 
@@ -653,26 +634,21 @@ func (a *AppEndpoint) refreshAppEndpoint(
 	}
 
 	if len(appEndpoint.Oidc) > 0 {
-		oidcSet, diags := types.SetValueFrom(
-			ctx,
-			types.ObjectType{
-				AttrTypes: providerschema.
-					AppEndpointOidc{}.
-					AttributeTypes(),
-			},
-			appEndpoint.Oidc,
-		)
-		if diags.HasError() {
-			return nil, fmt.Errorf("error converting OIDC configurations: %v", diags.Errors())
+		var oidcList []providerschema.AppEndpointOidc
+		for _, oidc := range appEndpoint.Oidc {
+			oidcList = append(oidcList, providerschema.AppEndpointOidc{
+				Issuer:        types.StringValue(oidc.Issuer),
+				ClientId:      types.StringValue(oidc.ClientId),
+				DiscoveryUrl:  types.StringValue(oidc.DiscoveryUrl),
+				UsernameClaim: types.StringValue(oidc.UsernameClaim),
+				UserPrefix:    types.StringValue(oidc.UserPrefix),
+				RolesClaim:    types.StringValue(oidc.RolesClaim),
+				ProviderId:    types.StringValue(oidc.ProviderId),
+				IsDefault:     types.BoolValue(oidc.IsDefault),
+				Register:      types.BoolValue(oidc.Register),
+			})
 		}
-		state.Oidc = oidcSet
-
-	} else {
-		state.Oidc = types.SetNull(types.ObjectType{
-			AttrTypes: providerschema.
-				AppEndpointOidc{}.
-				AttributeTypes(),
-		})
+		state.Oidc = oidcList
 	}
 
 	return state, nil
@@ -759,12 +735,22 @@ func morphToAppEndpointRequest(
 		appEndpointRequest.Cors = corsRequest
 	}
 
-	if !plan.Oidc.IsNull() {
-		oidc := []app_endpoints.AppEndpointOidc{}
-		if diags := plan.Oidc.ElementsAs(ctx, &oidc, false); diags.HasError() {
-			return nil, diags
+	if len(plan.Oidc) > 0 {
+		var oidcList []app_endpoints.AppEndpointOidc
+		for _, oidc := range plan.Oidc {
+			oidcList = append(oidcList, app_endpoints.AppEndpointOidc{
+				Issuer:        oidc.Issuer.ValueString(),
+				ClientId:      oidc.ClientId.ValueString(),
+				DiscoveryUrl:  oidc.DiscoveryUrl.ValueString(),
+				UsernameClaim: oidc.UsernameClaim.ValueString(),
+				UserPrefix:    oidc.UserPrefix.ValueString(),
+				RolesClaim:    oidc.RolesClaim.ValueString(),
+				ProviderId:    oidc.ProviderId.ValueString(),
+				IsDefault:     oidc.IsDefault.ValueBool(),
+				Register:      oidc.Register.ValueBool(),
+			})
 		}
-		appEndpointRequest.Oidc = oidc
+		appEndpointRequest.Oidc = oidcList
 	}
 
 	return appEndpointRequest, nil

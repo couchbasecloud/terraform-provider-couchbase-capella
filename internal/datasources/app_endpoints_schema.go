@@ -114,7 +114,7 @@ func AppEndpointsSchema() schema.Schema {
 								},
 							},
 						},
-						"oidc": schema.SetNestedAttribute{
+						"oidc": schema.ListNestedAttribute{
 							Computed:            true,
 							MarkdownDescription: "List of OIDC configurations for the App Endpoint.",
 							NestedObject: schema.NestedAttributeObject{
