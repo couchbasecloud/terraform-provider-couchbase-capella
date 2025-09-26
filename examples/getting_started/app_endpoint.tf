@@ -11,7 +11,7 @@ resource "couchbase-capella_app_endpoint" "endpoint1" {
       collections = {
         (var.collection.collection_name) = {
           access_control_function = "function (doc, oldDoc, meta) {channel('c1');}"
-          import_filter           = ""
+          import_filter           = "function(doc) { if (doc.type != 'mobile') { return false; } return true; }"
         }
       }
     }
