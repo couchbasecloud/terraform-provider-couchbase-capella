@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -15,8 +16,9 @@ import (
 )
 
 var (
-	_ datasource.DataSource              = (*AppEndpoints)(nil)
-	_ datasource.DataSourceWithConfigure = (*AppEndpoints)(nil)
+	_ datasource.DataSource                   = (*AppEndpoints)(nil)
+	_ datasource.DataSourceWithConfigure      = (*AppEndpoints)(nil)
+	_ datasource.DataSourceWithValidateConfig = (*AppEndpoints)(nil)
 )
 
 // AppEndpoints is the data source implementation for retrieving App Endpoints for an App Service.
@@ -24,7 +26,7 @@ type AppEndpoints struct {
 	*providerschema.Data
 }
 
-// NewAppEndpoint is used in (p *capellaProvider) DataSources for building the provider.
+// NewAppEndpoints is a helper function to simplify the provider implementation.
 func NewAppEndpoints() datasource.DataSource {
 	return &AppEndpoints{}
 }
@@ -85,7 +87,26 @@ func (a *AppEndpoints) Read(ctx context.Context, req datasource.ReadRequest, res
 		return
 	}
 
+	var filteredAppEndpoints []app_endpoints.GetAppEndpointResponse
+	var names []string
+
+	// Since the list API doesn't implement query parameters useful for filtering,
+	// filtering is done by provider.
+	if config.Filters != nil {
+		diags := config.Filters.Values.ElementsAs(ctx, &names, false)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
 	for _, appEndpoint := range appEndpoints {
+		if slices.Contains(names, appEndpoint.Name) || len(names) == 0 { // If no names are provided, include all app endpoints.
+			filteredAppEndpoints = append(filteredAppEndpoints, appEndpoint)
+		}
+	}
+
+	for _, appEndpoint := range filteredAppEndpoints {
 		var requireResyncMap types.Map
 		if appEndpoint.RequireResync != nil {
 			requireResyncMap, diags = types.MapValueFrom(
@@ -250,14 +271,13 @@ func (a *AppEndpoints) Read(ctx context.Context, req datasource.ReadRequest, res
 			Scopes:           scopesMap,
 		}
 
-		config.Data = append(config.Data, ae)
+		config.AppEndpoints = append(config.AppEndpoints, ae)
 	}
 
 	diags = resp.State.Set(ctx, &config)
 	resp.Diagnostics.Append(diags...)
 }
 
-// Configure defines the schema for the App Endpoints data source.
 func (a *AppEndpoints) Configure(
 	_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse,
 ) {
@@ -276,4 +296,26 @@ func (a *AppEndpoints) Configure(
 	}
 
 	a.Data = data
+}
+
+// ValidateConfig checks that if 'name' or 'values' is set in filter block', then both are set.
+func (a *AppEndpoints) ValidateConfig(
+	ctx context.Context, req datasource.ValidateConfigRequest, resp *datasource.ValidateConfigResponse,
+) {
+	var config providerschema.AppEndpoints
+	diags := req.Config.Get(ctx, &config)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if config.Filters != nil {
+		if (config.Filters.Name.IsNull() && !config.Filters.Values.IsNull()) ||
+			(!config.Filters.Name.IsNull() && config.Filters.Values.IsNull()) {
+			resp.Diagnostics.AddError(
+				"Invalid Filters Configuration",
+				"Both 'name' and 'values' in filter block must be configured.",
+			)
+		}
+	}
 }
