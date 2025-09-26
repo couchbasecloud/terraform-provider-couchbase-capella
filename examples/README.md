@@ -6,6 +6,8 @@ This directory contains examples that are mostly used for documentation, but can
 
 [API Key](apikey)
 
+[App Endpoint](app_endpoint)
+
 [App Service](appservice)
 
 [App Service On Off OnDemand](app_service_onoff_ondemand)

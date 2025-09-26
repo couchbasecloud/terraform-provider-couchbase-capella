@@ -240,6 +240,10 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewFreeTierBuckets,
 		datasources.NewFreeTierClusters,
 		datasources.NewAppServiceCidrs,
+		datasources.NewAppEndpointResync,
+		datasources.NewAppEndpoints,
+		datasources.NewAppEndpoint,
+		datasources.NewAppEndpointActivationStatus,
 	}
 }
 
@@ -262,6 +266,7 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewClusterOnOffSchedule,
 		resources.NewClusterOnOffOnDemand,
 		resources.NewAppServiceOnOffOnDemand,
+		resources.NewAppEndpointActivationStatus,
 		resources.NewAuditLogSettings,
 		resources.NewAuditLogExport,
 		resources.NewPrivateEndpointService,
@@ -274,5 +279,12 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewFreeTierCluster,
 		resources.NewFreeTierAppService,
 		resources.NewAppServiceCidr,
+		resources.NewAccessControlFunction,
+		resources.NewImportFilter,
+		resources.NewAppEndpointResync,
+		resources.NewCors,
+		resources.NewAppEndpoint,
+		resources.NewAppEndpointOidcProvider,
+		resources.NewAppEndpointDefaultOidcProvider,
 	}
 }
