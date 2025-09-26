@@ -26,7 +26,6 @@ func CorsSchema() schema.Schema {
 				},
 				MarkdownDescription: "Set of allowed origins for CORS. Use ['*'] to allow access from everywhere.",
 			},
-			//"origin":            WithDescription(stringSetAttribute(required), "Set of allowed origins for CORS. Use ['*'] to allow access from everywhere."),
 			"login_origin": WithDescription(stringSetAttribute(optional), "Set of allowed login origins for CORS."),
 			"headers":      WithDescription(stringSetAttribute(optional), "Set of allowed headers for CORS."),
 			"max_age":      WithDescription(int64Attribute(optional, computed), "Specifies the duration (in seconds) for which the results of a preflight request can be cached."),
