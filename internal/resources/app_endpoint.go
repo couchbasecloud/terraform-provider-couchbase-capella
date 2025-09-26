@@ -220,19 +220,31 @@ func initComputedAttributesToNullBeforeRefresh(ctx context.Context, plan *provid
 			plan.Cors.Disabled = types.BoolNull()
 		}
 	}
-
-	var oidcList []providerschema.AppEndpointOidc
+	oidcList := make([]providerschema.AppEndpointOidc, len(plan.Oidc))
 	if len(plan.Oidc) > 0 {
-		oidcList = make([]providerschema.AppEndpointOidc, len(plan.Oidc))
-		for i := range oidcList {
-			oidcList[i] = providerschema.AppEndpointOidc{
-				ProviderId: types.StringNull(),
-				IsDefault:  types.BoolNull(),
-				ClientId:   plan.Oidc[i].ClientId,
-				Issuer:     plan.Oidc[i].Issuer,
+		for i := range plan.Oidc {
+			oidcList[i].ProviderId = types.StringNull()
+			oidcList[i].IsDefault = types.BoolNull()
+			if plan.Oidc[i].Register.IsNull() || plan.Oidc[i].Register.IsUnknown() {
+				oidcList[i].Register = types.BoolNull()
+			}
+			if plan.Oidc[i].DiscoveryUrl.IsNull() || plan.Oidc[i].DiscoveryUrl.IsUnknown() {
+				oidcList[i].DiscoveryUrl = types.StringNull()
+			}
+			if plan.Oidc[i].UsernameClaim.IsNull() || plan.Oidc[i].UsernameClaim.IsUnknown() {
+				oidcList[i].UsernameClaim = types.StringNull()
+			}
+			if plan.Oidc[i].RolesClaim.IsNull() || plan.Oidc[i].RolesClaim.IsUnknown() {
+				oidcList[i].RolesClaim = types.StringNull()
+			}
+			if plan.Oidc[i].UserPrefix.IsNull() || plan.Oidc[i].UserPrefix.IsUnknown() {
+				oidcList[i].UserPrefix = types.StringNull()
 			}
 		}
+	} else {
+		plan.Oidc = []providerschema.AppEndpointOidc{}
 	}
+
 	plan.Oidc = oidcList
 	return diags
 }
@@ -637,9 +649,6 @@ func (a *AppEndpoint) refreshAppEndpoint(
 			})
 		}
 		state.Oidc = oidcList
-
-	} else {
-		state.Oidc = []providerschema.AppEndpointOidc{}
 	}
 
 	return state, nil
