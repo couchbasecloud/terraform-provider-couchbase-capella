@@ -15,7 +15,6 @@ import (
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/app_endpoints"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
@@ -182,7 +181,7 @@ func initComputedAttributesToNullBeforeRefresh(ctx context.Context, plan *provid
 				}
 
 				collectionsMapValue, d := types.MapValueFrom(ctx, types.ObjectType{
-					AttrTypes: schema.
+					AttrTypes: providerschema.
 						AppEndpointCollection{}.
 						AttributeTypes(),
 				}, collectionsMap)
@@ -199,7 +198,7 @@ func initComputedAttributesToNullBeforeRefresh(ctx context.Context, plan *provid
 			AttrTypes: map[string]attr.Type{
 				"collections": types.MapType{
 					ElemType: types.ObjectType{
-						AttrTypes: schema.
+						AttrTypes: providerschema.
 							AppEndpointCollection{}.
 							AttributeTypes(),
 					},
