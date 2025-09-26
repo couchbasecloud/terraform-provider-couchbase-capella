@@ -92,6 +92,8 @@ app_service = {
   }
 }
 
+app_endpoint = "app-endpoint-1"
+
 sample_bucket = {
   name = "gamesim-sample"
 }
