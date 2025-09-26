@@ -16,10 +16,23 @@ resource "couchbase-capella_app_endpoint" "endpoint1" {
       }
     }
   }
-  
+
+  oidc = [
+    {
+      issuer         = "https://example-issuer.com"
+      register       = false
+      client_id      = "example-client-id"
+      user_prefix    = "user_"
+      discovery_url  = "https://example-issuer.com/.well-known/openid-configuration"
+      username_claim = "sub"
+      roles_claim    = "roles"
+    }
+  ]
+
   cors = {
     disabled = false
-    origin   = ["*"]
+    origin   = ["http://example.com", "http://staging.example.com"]
+    last_origin = ["http://example.com"]
     headers  = ["Authorization", "Content-Type"]
     max_age  = 3600
   }
