@@ -133,7 +133,7 @@ func (c *ClusterOnOffSchedule) Read(ctx context.Context, req datasource.ReadRequ
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/onOffSchedule", c.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := c.Client.ExecuteWithRetry(
+	response, err := c.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

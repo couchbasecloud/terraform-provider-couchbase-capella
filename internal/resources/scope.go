@@ -109,7 +109,7 @@ func (s *Scope) Create(ctx context.Context, req resource.CreateRequest, resp *re
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/scopes", s.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-	_, err := s.Client.ExecuteWithRetry(
+	_, err := s.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		scopeRequest,
@@ -189,7 +189,7 @@ func (s *Scope) validateScopeAttributesTrimmed(plan providerschema.Scope) error 
 func (s *Scope) retrieveScope(ctx context.Context, organizationId, projectId, clusterId, bucketId, scopeName string) (*providerschema.Scope, error, diag.Diagnostics) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/scopes/%s", s.HostURL, organizationId, projectId, clusterId, bucketId, scopeName)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := s.Client.ExecuteWithRetry(
+	response, err := s.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -339,7 +339,7 @@ func (s *Scope) Delete(ctx context.Context, req resource.DeleteRequest, resp *re
 	// Delete existing scope
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/scopes/%s", s.HostURL, organizationId, projectId, clusterId, bucketId, scopeName)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err = s.Client.ExecuteWithRetry(
+	_, err = s.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

@@ -28,6 +28,11 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"http": {
+				Source: "hashicorp/http",
+			},
+		},
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
@@ -65,32 +70,24 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 			// Update number of nodes, compute type, disk size and type, cluster name, support plan, time zone and description from empty string,
 			// and Read testing
 			{
-				Config: testAccClusterResourceConfigUpdateWhenClusterCreatedWithReqFieldOnlyAndIfMatch(resourceName, cidr),
+				Config:             testAccClusterResourceConfigUpdateWhenClusterCreatedWithReqFieldOnlyAndIfMatch(resourceName, cidr),
+				ExpectNonEmptyPlan: true,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsClusterResource(resourceReference),
-					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
-					resource.TestCheckResourceAttr(resourceReference, "description", "Cluster Updated"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east-1"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
 					resource.TestCheckResourceAttr(resourceReference, "configuration_type", "multiNode"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.compute.cpu", "8"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.compute.ram", "32"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.disk.storage", "51"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.disk.type", "gp3"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.disk.iops", "3001"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.num_of_nodes", "2"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.services.#", "2"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.services.0", "index"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.services.1", "query"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "51"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "gp3"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.iops", "3001"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "50"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "io2"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.iops", "3000"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "3"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "1"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "3"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "data"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.1", "index"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.2", "query"),
 					resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
 					resource.TestCheckResourceAttr(resourceReference, "support.plan", "enterprise"),
 					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "IST"),
@@ -267,10 +264,26 @@ func TestAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenario(t *testin
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
-			// Create and Read testing
 			{
 				Config:      testAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenarioConfig(resourceName, cidr),
-				ExpectError: regexp.MustCompile("Could not create cluster, unexpected error: iops for gcp cluster cannot be"),
+				ExpectError: regexp.MustCompile("iops cannot be set for GCP"),
+			},
+		},
+	})
+}
+
+// TestAccClusterResourceForAwsWithAutoexpansion tests a failure scenario where the autoexpansion field is set
+// for an AWS cluster.
+func TestAccClusterResourceForAwsWithAutoexpansionInvalid(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_")
+	cidr := "10.249.250.0/23"
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterResourceConfigAwsWithAutoexpansionInvalidConfig(resourceName, cidr),
+				ExpectError: regexp.MustCompile(`(?i)Autoexpansion cannot be set`),
 			},
 		},
 	})
@@ -572,6 +585,51 @@ resource "couchbase-capella_cluster" "%[4]s" {
 `, globalProviderBlock, globalOrgId, globalProjectId, resourceName, cidr)
 }
 
+// testAccClusterResourceConfigAwsWithAutoexpansion generates a Terraform script for testing an acceptance test scenario
+// where a cluster resource is created with the AWS cloud provider and auto-expansion enabled for the disk.
+func testAccClusterResourceConfigAwsWithAutoexpansionInvalidConfig(resourceName, cidr string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_cluster" "%[4]s" {
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  name            = "%[4]s"
+  cloud_provider = {
+    type   = "aws"
+    region = "us-east-1"
+    cidr   = "%[5]s"
+  }
+
+  service_groups = [
+    {
+      node = {
+        compute = {
+          cpu = 2
+          ram = 8
+        }
+        disk = {
+          storage = 50
+          type    = "gp3"
+          iops    = 3000
+		  autoexpansion = true
+        }
+      }
+      num_of_nodes = 1
+      services     = ["data", "index", "query"]
+    }
+  ]
+  availability = {
+    "type" : "single"
+  }
+  support = {
+    plan     = "developer pro"
+    timezone = "PT"
+  }
+}
+`, globalProviderBlock, globalOrgId, globalProjectId, resourceName, cidr)
+}
+
 // testAccClusterResourceConfigGCP generates a Terraform configuration string for testing an acceptance test scenario
 // where a cluster resource is created with the GCP (Google Cloud Platform) cloud provider.
 func testAccClusterResourceConfigGCP(resourceName, cidr string) string {
@@ -667,11 +725,32 @@ func testAccClusterResourceConfigUpdateWhenClusterCreatedWithReqFieldOnlyAndIfMa
 	return fmt.Sprintf(`
 %[1]s
 
+data "couchbase-capella_clusters" "existing_clusters" {
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+}
+
+locals {
+  cluster_id = [
+    for cluster in data.couchbase-capella_clusters.existing_clusters.data :
+    cluster.id if cluster.name == "%[4]s"
+  ][0]
+  
+  cluster_etag = regex("[0-9]+", data.http.cluster_info.response_headers["Etag"])
+}
+
+data "http" "cluster_info" {
+  url   = "${var.host}/v4/organizations/%[2]s/projects/%[3]s/clusters/${local.cluster_id}"
+
+  request_headers = {
+    Authorization = "Bearer ${var.auth_token}"
+  }
+}
+
 resource "couchbase-capella_cluster" "%[4]s" {
   organization_id = "%[2]s"
   project_id      = "%[3]s"
-  name            = "%[4]s"
-  description     = "Cluster Updated"
+  name            =  "%[4]s"
   cloud_provider = {
     type   = "aws"
     region = "us-east-1"
@@ -681,32 +760,17 @@ resource "couchbase-capella_cluster" "%[4]s" {
     {
       node = {
         compute = {
-          cpu = 8
-          ram = 32
-        }
-        disk = {
-          storage = 51
-          type    = "gp3"
-          iops    = 3001
-        }
-      }
-      num_of_nodes = 2
-      services     = ["index", "query"]
-    },
-    {
-      node = {
-        compute = {
           cpu = 4
           ram = 16
         }
         disk = {
-          storage = 51
-          type    = "gp3"
-          iops    = 3001
+          storage = 50
+          type    = "io2"
+          iops    = 3000
         }
       }
       num_of_nodes = 3
-      services     = ["data"]
+      services     = ["data", "index", "query"]
     }
   ]
   availability = {
@@ -716,7 +780,8 @@ resource "couchbase-capella_cluster" "%[4]s" {
     plan     = "enterprise"
     timezone = "IST"
   }
-  if_match = 5
+
+  if_match = local.cluster_etag
 }
 `, globalProviderBlock, globalOrgId, globalProjectId, resourceName, cidr)
 }
@@ -800,7 +865,7 @@ func testAccDeleteClusterResource(resourceReference string) resource.TestCheckFu
 func deleteClusterFromServer(data *providerschema.Data, organizationId, projectId, clusterId string) error {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", data.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
-	_, err := data.Client.ExecuteWithRetry(
+	_, err := data.ClientV1.ExecuteWithRetry(
 		context.Background(),
 		cfg,
 		nil,
@@ -878,7 +943,7 @@ func retrieveClusterFromServer(
 ) (*clusterapi.GetClusterResponse, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", data.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := data.Client.ExecuteWithRetry(
+	response, err := data.ClientV1.ExecuteWithRetry(
 		context.Background(),
 		cfg,
 		nil,

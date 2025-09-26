@@ -109,7 +109,7 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 	// Execute request
 	url := fmt.Sprintf("%s/v4/organizations/%s/users", r.HostURL, organizationId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-	response, err := r.Client.ExecuteWithRetry(
+	response, err := r.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		createUserRequest,
@@ -493,7 +493,7 @@ func (r *User) updateUser(ctx context.Context, organizationId, userId string, pa
 	// Update existing user
 	url := fmt.Sprintf("%s/v4/organizations/%s/users/%s", r.HostURL, organizationId, userId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPatch, SuccessStatus: http.StatusOK}
-	_, err := r.Client.ExecuteWithRetry(
+	_, err := r.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		patch,
@@ -512,7 +512,7 @@ func (r *User) updateUserName(ctx context.Context, organizationId, userId, usern
 	// Update existing user
 	url := fmt.Sprintf("%s/v4/organizations/%s/users/%s", r.HostURL, organizationId, userId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err := r.Client.ExecuteWithRetry(
+	_, err := r.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		&api.PutUserRequest{Name: username},
@@ -556,7 +556,7 @@ func (r *User) Delete(ctx context.Context, req resource.DeleteRequest, resp *res
 		userId,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err = r.Client.ExecuteWithRetry(
+	_, err = r.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -588,7 +588,7 @@ func (r *User) getUser(ctx context.Context, organizationId, userId string) (*api
 	)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := r.Client.ExecuteWithRetry(
+	response, err := r.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
