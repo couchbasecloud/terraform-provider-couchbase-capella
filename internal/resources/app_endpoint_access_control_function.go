@@ -79,7 +79,7 @@ func (a *AccessControlFunction) Create(ctx context.Context, req resource.CreateR
 	)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err := a.Client.ExecuteWithRetry(
+	_, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		plan.AccessControlFunction.ValueString(),
@@ -186,7 +186,7 @@ func (a *AccessControlFunction) Update(ctx context.Context, req resource.UpdateR
 	)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err := a.Client.ExecuteWithRetry(
+	_, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		plan.AccessControlFunction.ValueString(),
@@ -238,7 +238,7 @@ func (a *AccessControlFunction) Delete(ctx context.Context, req resource.DeleteR
 	)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
-	_, err := a.Client.ExecuteWithRetry(
+	_, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -300,7 +300,7 @@ func (a *AccessControlFunction) getAccessFunction(
 	)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := a.Client.ExecuteWithRetry(
+	response, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

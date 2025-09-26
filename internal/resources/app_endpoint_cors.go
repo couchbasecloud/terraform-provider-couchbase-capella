@@ -108,7 +108,7 @@ func (c *Cors) Create(ctx context.Context, req resource.CreateRequest, resp *res
 		Method:        http.MethodPut,
 		SuccessStatus: http.StatusNoContent,
 	}
-	_, err := c.Client.ExecuteWithRetry(
+	_, err := c.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		corsReq,
@@ -167,7 +167,7 @@ func (c *Cors) getCors(
 		appEndpointName,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := c.Client.ExecuteWithRetry(
+	response, err := c.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -341,7 +341,7 @@ func (c *Cors) Update(ctx context.Context, req resource.UpdateRequest, resp *res
 		appEndpointName,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err := c.Client.ExecuteWithRetry(
+	_, err := c.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		corsReq,

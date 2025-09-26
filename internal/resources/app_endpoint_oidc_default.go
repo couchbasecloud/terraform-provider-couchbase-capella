@@ -91,7 +91,7 @@ func (r *AppEndpointDefaultOidcProvider) Create(ctx context.Context, req resourc
 
 	payload := api.AppEndpointOIDCDefaultProviderRequest{ProviderID: providerId}
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err := r.Client.ExecuteWithRetry(ctx, cfg, payload, r.Token, nil)
+	_, err := r.ClientV1.ExecuteWithRetry(ctx, cfg, payload, r.Token, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Error Setting Default OIDC Provider", api.ParseError(err))
 		return
@@ -152,7 +152,7 @@ func (r *AppEndpointDefaultOidcProvider) Update(ctx context.Context, req resourc
 
 	payload := api.AppEndpointOIDCDefaultProviderRequest{ProviderID: providerId}
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err := r.Client.ExecuteWithRetry(ctx, cfg, payload, r.Token, nil)
+	_, err := r.ClientV1.ExecuteWithRetry(ctx, cfg, payload, r.Token, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Error Updating Default OIDC Provider", api.ParseError(err))
 		return
@@ -181,7 +181,7 @@ func (r *AppEndpointDefaultOidcProvider) getDefaultProvider(ctx context.Context,
 		appEndpointName,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	res, err := r.Client.ExecuteWithRetry(ctx, cfg, nil, r.Token, nil)
+	res, err := r.ClientV1.ExecuteWithRetry(ctx, cfg, nil, r.Token, nil)
 	if err != nil {
 		return api.AppEndpointOIDCProviderResponse{}, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 	}

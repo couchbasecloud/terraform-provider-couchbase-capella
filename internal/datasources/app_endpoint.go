@@ -75,7 +75,7 @@ func (a *AppEndpoint) Read(ctx context.Context, req datasource.ReadRequest, resp
 		SuccessStatus: http.StatusOK,
 	}
 
-	response, err := a.Client.ExecuteWithRetry(
+	response, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

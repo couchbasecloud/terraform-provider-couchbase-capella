@@ -73,7 +73,7 @@ func (a *AppEndpoints) Read(ctx context.Context, req datasource.ReadRequest, res
 		SuccessStatus: http.StatusOK,
 	}
 
-	appEndpoints, err := api.GetPaginated[[]app_endpoints.GetAppEndpointResponse](ctx, a.Client, a.Token, cfg, api.SortByName)
+	appEndpoints, err := api.GetPaginated[[]app_endpoints.GetAppEndpointResponse](ctx, a.ClientV1, a.Token, cfg, api.SortByName)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading App Endpoints",

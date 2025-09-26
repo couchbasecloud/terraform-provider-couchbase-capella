@@ -96,7 +96,7 @@ func (r *AppEndpointOidcProvider) Create(ctx context.Context, req resource.Creat
 	payload := buildAppEndpointOIDCProviderPayload(plan)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-	res, err := r.Client.ExecuteWithRetry(ctx, cfg, payload, r.Token, nil)
+	res, err := r.ClientV1.ExecuteWithRetry(ctx, cfg, payload, r.Token, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Error Creating OIDC Provider", api.ParseError(err))
 		return
@@ -204,7 +204,7 @@ func (r *AppEndpointOidcProvider) Update(ctx context.Context, req resource.Updat
 	payload := buildAppEndpointOIDCProviderPayload(plan)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err := r.Client.ExecuteWithRetry(ctx, cfg, payload, r.Token, nil)
+	_, err := r.ClientV1.ExecuteWithRetry(ctx, cfg, payload, r.Token, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Error Updating OIDC Provider", api.ParseError(err))
 		return
@@ -249,7 +249,7 @@ func (r *AppEndpointOidcProvider) Delete(ctx context.Context, req resource.Delet
 		providerId,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
-	_, err := r.Client.ExecuteWithRetry(ctx, cfg, nil, r.Token, nil)
+	_, err := r.ClientV1.ExecuteWithRetry(ctx, cfg, nil, r.Token, nil)
 	if err != nil {
 		resourceNotFound, _ := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -274,7 +274,7 @@ func (r *AppEndpointOidcProvider) getOidcProvider(ctx context.Context, organizat
 		providerId,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	res, err := r.Client.ExecuteWithRetry(ctx, cfg, nil, r.Token, nil)
+	res, err := r.ClientV1.ExecuteWithRetry(ctx, cfg, nil, r.Token, nil)
 	if err != nil {
 		return api.AppEndpointOIDCProviderResponse{}, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 	}

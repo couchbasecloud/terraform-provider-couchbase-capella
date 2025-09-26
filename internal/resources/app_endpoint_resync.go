@@ -113,7 +113,7 @@ func (a *AppEndpointResync) Create(ctx context.Context, req resource.CreateReque
 		SuccessStatus: http.StatusAccepted,
 	}
 
-	_, err := a.Client.ExecuteWithRetry(
+	_, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		resyncRequest,
@@ -158,7 +158,7 @@ func (a *AppEndpointResync) Create(ctx context.Context, req resource.CreateReque
 		SuccessStatus: http.StatusOK,
 	}
 
-	response, err := a.Client.ExecuteWithRetry(
+	response, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -237,7 +237,7 @@ func (a *AppEndpointResync) Read(ctx context.Context, req resource.ReadRequest, 
 		SuccessStatus: http.StatusOK,
 	}
 
-	response, err := a.Client.ExecuteWithRetry(
+	response, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -319,7 +319,7 @@ func (a *AppEndpointResync) Delete(ctx context.Context, req resource.DeleteReque
 		SuccessStatus: http.StatusAccepted,
 	}
 
-	_, err := a.Client.ExecuteWithRetry(
+	_, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

@@ -69,7 +69,7 @@ func (d *AppEndpointActivationStatusDS) Read(ctx context.Context, req datasource
 	)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := d.Client.ExecuteWithRetry(ctx, cfg, nil, d.Token, nil)
+	response, err := d.ClientV1.ExecuteWithRetry(ctx, cfg, nil, d.Token, nil)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella App Endpoint Activation Status",

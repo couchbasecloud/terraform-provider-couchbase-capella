@@ -72,7 +72,7 @@ func (f *ImportFilter) fetchImportFilter(ctx context.Context, organizationId, pr
 		keyspace,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := f.Client.ExecuteWithRetry(ctx, cfg, nil, f.Token, nil)
+	response, err := f.ClientV1.ExecuteWithRetry(ctx, cfg, nil, f.Token, nil)
 	if err != nil {
 		return "", err
 	}
@@ -112,7 +112,7 @@ func (f *ImportFilter) Create(ctx context.Context, req resource.CreateRequest, r
 	)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err := f.Client.ExecuteWithRetry(
+	_, err := f.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		plan.ImportFilter.ValueString(),
@@ -218,7 +218,7 @@ func (f *ImportFilter) Update(ctx context.Context, req resource.UpdateRequest, r
 	)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err := f.Client.ExecuteWithRetry(
+	_, err := f.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		plan.ImportFilter.ValueString(),
@@ -284,7 +284,7 @@ func (f *ImportFilter) Delete(ctx context.Context, req resource.DeleteRequest, r
 	)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
-	_, err := f.Client.ExecuteWithRetry(
+	_, err := f.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

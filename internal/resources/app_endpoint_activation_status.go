@@ -145,7 +145,7 @@ func (r *AppEndpointActivationStatus) manageAppEndpointActivation(ctx context.Co
 	}
 
 	cfg := api.EndpointCfg{Url: url, Method: method, SuccessStatus: http.StatusAccepted}
-	_, err := r.Client.ExecuteWithRetry(
+	_, err := r.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -289,7 +289,7 @@ func (r *AppEndpointActivationStatus) Delete(_ context.Context, _ resource.Delet
 func (r *AppEndpointActivationStatus) retrieveAppEndpointActivation(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string) (*app_service_api.GetAppEndpointStateResp, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s", r.HostURL, organizationId, projectId, clusterId, appServiceId, appEndpointName)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := r.Client.ExecuteWithRetry(
+	response, err := r.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

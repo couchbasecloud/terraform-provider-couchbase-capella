@@ -89,7 +89,7 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		SuccessStatus: http.StatusCreated,
 	}
 
-	if _, err := a.Client.ExecuteWithRetry(
+	if _, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		appEndpointRequest,
@@ -333,7 +333,7 @@ func (a *AppEndpoint) Update(ctx context.Context, req resource.UpdateRequest, re
 		endpointName,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err := a.Client.ExecuteWithRetry(
+	_, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		appEndpointRequest,
@@ -397,7 +397,7 @@ func (a *AppEndpoint) Delete(ctx context.Context, req resource.DeleteRequest, re
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
 
-	_, err := a.Client.ExecuteWithRetry(
+	_, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -466,7 +466,7 @@ func (a *AppEndpoint) refreshAppEndpoint(
 		SuccessStatus: http.StatusOK,
 	}
 
-	response, err := a.Client.ExecuteWithRetry(
+	response, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
