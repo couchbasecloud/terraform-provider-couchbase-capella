@@ -33,14 +33,6 @@ var (
 	_ resource.ResourceWithImportState = &SnapshotBackup{}
 )
 
-type ID struct {
-	ID string `json:"id"`
-}
-
-type IDList struct {
-	Data []ID `json:"data"`
-}
-
 type SnapshotBackup struct {
 	*providerschema.Data
 }
@@ -50,7 +42,7 @@ func NewSnapshotBackup() resource.Resource {
 }
 
 func (s *SnapshotBackup) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_snapshot_backup"
+	resp.TypeName = req.ProviderTypeName + "_cloud_snapshot_backup"
 }
 
 func (s *SnapshotBackup) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {

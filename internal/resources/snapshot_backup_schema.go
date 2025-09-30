@@ -10,7 +10,6 @@ func SnapshotBackupSchema() schema.Schema {
 	return schema.Schema{
 		MarkdownDescription: "Manages snapshot backup resource",
 		Attributes: map[string]schema.Attribute{
-			"app_service":     WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The GUID4 ID of the app service."),
 			"id":              WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The GUID4 ID of the snapshot backup."),
 			"cluster_id":      WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The GUID4 ID of the cluster."),
 			"project_id":      WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The GUID4 ID of the project."),
@@ -18,7 +17,7 @@ func SnapshotBackupSchema() schema.Schema {
 			"created_at":      WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The RFC3339 timestamp representing the time at which snapshot backup was created."),
 			"expiration":      WithDescription(stringAttribute([]string{computed}), "The RFC3339 timestamp representing the time at which snapshot backup will expire."),
 			"retention":       WithDescription(int64Attribute(optional, computed), "The retention of the snapshot backup in hours."),
-			"regions_to_copy": WithDescription(stringListAttribute(optional), "The regions to copy the snapshot backup to."),
+			"regions_to_copy": WithDescription(stringSetAttribute(optional), "The regions to copy the snapshot backup to."),
 			"cross_region_copies": schema.SetNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
@@ -52,7 +51,7 @@ func SnapshotBackupSchema() schema.Schema {
 					"version": WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The version of the server."),
 				},
 			},
-			"size": WithDescription(int64Attribute(computed, useStateForUnknown), "The size of the snapshot backup in megabytes."),
+			"size": WithDescription(int64Attribute(computed, useStateForUnknown), "The size of the snapshot backup in bytes."),
 			"type": WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The type of the snapshot backup."),
 		},
 	}
