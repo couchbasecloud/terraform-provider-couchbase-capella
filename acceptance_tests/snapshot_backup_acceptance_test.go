@@ -94,7 +94,7 @@ func testAccSnapshotBackupResourceConfig(resourceName string, retention int) str
 	return fmt.Sprintf(`
 	%[1]s
 
-	resource "couchbase-capella_snapshot_backup" "%[2]s" {
+	resource "couchbase-capella_cloud_snapshot_backup" "%[2]s" {
 		organization_id = "%[3]s"
 		project_id = "%[4]s"
 		cluster_id = "%[5]s"
