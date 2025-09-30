@@ -120,7 +120,7 @@ func generateSnapshotBackupImportIdForResource(resourceReference string) resourc
 func retrieveSnapshotBackupFromServer(data *providerschema.Data, organizationId, projectId, clusterId, id string) error {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups", data.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := data.Client.ExecuteWithRetry(
+	response, err := data.ClientV1.ExecuteWithRetry(
 		context.Background(),
 		cfg,
 		nil,

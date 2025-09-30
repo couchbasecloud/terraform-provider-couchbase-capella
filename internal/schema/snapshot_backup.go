@@ -114,7 +114,7 @@ func (s SnapshotBackup) AttributeTypes() map[string]attr.Type {
 		"progress":            types.ObjectType{AttrTypes: Progress{}.AttributeTypes()},
 		"project_id":          types.StringType,
 		"retention":           types.Int64Type,
-		"regions_to_copy":     types.ListType{ElemType: types.StringType},
+		"regions_to_copy":     types.SetType{ElemType: types.StringType},
 		"cross_region_copies": types.SetType{ElemType: types.ObjectType{AttrTypes: CrossRegionCopy{}.AttributeTypes()}},
 		"cmek":                types.SetType{ElemType: types.ObjectType{AttrTypes: CMEK{}.AttributeTypes()}},
 		"server":              types.ObjectType{AttrTypes: Server{}.AttributeTypes()},
