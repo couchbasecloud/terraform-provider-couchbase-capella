@@ -85,7 +85,7 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups", s.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
-	createResp, err := s.Client.ExecuteWithRetry(
+	createResp, err := s.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		createSnapshotBackupRequest,
@@ -280,7 +280,7 @@ func (s *SnapshotBackup) Update(ctx context.Context, req resource.UpdateRequest,
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups/%s", s.HostURL, organizationId, projectId, clusterId, Id)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err = s.Client.ExecuteWithRetry(
+	_, err = s.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		updateSnapshotBackupRequest,
@@ -367,7 +367,7 @@ func (s *SnapshotBackup) Delete(ctx context.Context, req resource.DeleteRequest,
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups/%s", s.HostURL, organizationId, projectId, clusterId, Id)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
-	_, err = s.Client.ExecuteWithRetry(
+	_, err = s.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -485,7 +485,7 @@ func (s *SnapshotBackup) checkCrossRegionCopyStatus(backupResp *snapshot_backup.
 func (s *SnapshotBackup) getSnapshotBackups(ctx context.Context, organizationId, projectId, clusterId string) (*snapshot_backup.ListSnapshotBackupsResponse, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups", s.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	resp, err := s.Client.ExecuteWithRetry(
+	resp, err := s.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
