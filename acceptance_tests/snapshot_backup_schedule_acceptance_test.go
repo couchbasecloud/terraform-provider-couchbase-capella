@@ -127,7 +127,7 @@ func testAccExistsSnapshotBackupScheduleResource(resourceReference string) resou
 func retrieveSnapshotBackupScheduleFromServer(data *providerschema.Data, organizationId, projectId, clusterId string) error {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackupschedule", data.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	backupScheduleResp, err := data.Client.ExecuteWithRetry(
+	backupScheduleResp, err := data.ClientV1.ExecuteWithRetry(
 		context.Background(),
 		cfg,
 		nil,
