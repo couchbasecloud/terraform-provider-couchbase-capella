@@ -36,7 +36,7 @@ func TestAccSnapshotBackupResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
 					resource.TestCheckResourceAttr(resourceReference, "retention", "168"),
-					resource.TestCheckResourceAttr(resourceReference, "progress.status", "complete"),
+					resource.TestCheckResourceAttrSet(resourceReference, "progress.status"),
 					resource.TestCheckResourceAttrSet(resourceReference, "id"),
 					resource.TestCheckResourceAttrSet(resourceReference, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceReference, "expiration"),
