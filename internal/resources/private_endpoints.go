@@ -108,7 +108,7 @@ func (p *PrivateEndpoint) Create(ctx context.Context, req resource.CreateRequest
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusNoContent}
 
-	_, err = p.Client.ExecuteWithRetry(
+	_, err = p.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -230,7 +230,7 @@ func (p *PrivateEndpoint) Delete(ctx context.Context, req resource.DeleteRequest
 		endpointId,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusNoContent}
-	_, err = p.Client.ExecuteWithRetry(
+	_, err = p.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -320,7 +320,7 @@ func (p *PrivateEndpoint) getPrivateEndpointState(ctx context.Context, organizat
 func (p *PrivateEndpoint) getPrivateEndpointStatus(ctx context.Context, organizationId, projectId, clusterId, endpointId string) (string, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/privateEndpointService/endpoints", p.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := p.Client.ExecuteWithRetry(
+	response, err := p.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

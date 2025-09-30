@@ -117,7 +117,7 @@ func (c *Bucket) Create(ctx context.Context, req resource.CreateRequest, resp *r
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets", c.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-	response, err := c.Client.ExecuteWithRetry(
+	response, err := c.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		BucketRequest,
@@ -279,7 +279,7 @@ func (r *Bucket) Delete(ctx context.Context, req resource.DeleteRequest, resp *r
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", r.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err := r.Client.ExecuteWithRetry(
+	_, err := r.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -308,10 +308,12 @@ func (c *Bucket) ImportState(ctx context.Context, req resource.ImportStateReques
 }
 
 // retrieveBucket retrieves bucket information for a specified organization, project, cluster and bucket ID.
-func (c *Bucket) retrieveBucket(ctx context.Context, organizationId, projectId, clusterId, bucketId string) (*providerschema.OneBucket, error) {
+func (c *Bucket) retrieveBucket(
+	ctx context.Context, organizationId, projectId, clusterId, bucketId string,
+) (*providerschema.OneBucket, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", c.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := c.Client.ExecuteWithRetry(
+	response, err := c.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -389,7 +391,7 @@ func (c *Bucket) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", c.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err = c.Client.ExecuteWithRetry(
+	_, err = c.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		bucketUpdateRequest,
@@ -437,6 +439,28 @@ func initializeBucketWithPlanAndId(plan providerschema.Bucket, id string) provid
 	if plan.EvictionPolicy.IsNull() || plan.EvictionPolicy.IsUnknown() {
 		plan.EvictionPolicy = types.StringNull()
 	}
+	if plan.MemoryAllocationInMB.IsNull() || plan.MemoryAllocationInMB.IsUnknown() {
+		plan.MemoryAllocationInMB = types.Int64Null()
+	}
+	if plan.BucketConflictResolution.IsNull() || plan.BucketConflictResolution.IsUnknown() {
+		plan.BucketConflictResolution = types.StringNull()
+	}
+	if plan.DurabilityLevel.IsNull() || plan.DurabilityLevel.IsUnknown() {
+		plan.DurabilityLevel = types.StringNull()
+	}
+	if plan.Replicas.IsNull() || plan.Replicas.IsUnknown() {
+		plan.Replicas = types.Int64Null()
+	}
+	if plan.Flush.IsNull() || plan.Flush.IsUnknown() {
+		plan.Flush = types.BoolNull()
+	}
+	if plan.TimeToLiveInSeconds.IsNull() || plan.TimeToLiveInSeconds.IsUnknown() {
+		plan.TimeToLiveInSeconds = types.Int64Null()
+	}
+	if plan.Type.IsNull() || plan.Type.IsUnknown() {
+		plan.Type = types.StringNull()
+	}
+	// Stats is a read-only attribute, so we set it to null in the initial state
 	plan.Stats = types.ObjectNull(providerschema.Stats{}.AttributeTypes())
 	return plan
 }

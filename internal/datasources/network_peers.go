@@ -61,7 +61,7 @@ func (n *NetworkPeers) Read(ctx context.Context, req datasource.ReadRequest, res
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/networkPeers", n.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
-	response, err := api.GetPaginated[[]network_peer_api.GetNetworkPeeringRecordResponse](ctx, n.Client, n.Token, cfg, api.SortById)
+	response, err := api.GetPaginated[[]network_peer_api.GetNetworkPeeringRecordResponse](ctx, n.ClientV1, n.Token, cfg, api.SortById)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Network Peering",

@@ -151,7 +151,7 @@ func (a *AppServiceOnOffOnDemand) manageAppServiceActivation(ctx context.Context
 	}
 
 	cfg := app_service_onoff_api.EndpointCfg{Url: url, Method: method, SuccessStatus: http.StatusAccepted}
-	_, err := a.Client.ExecuteWithRetry(
+	_, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -187,7 +187,7 @@ func (a *AppServiceOnOffOnDemand) validateAppServiceOnOffRequest(plan providersc
 func (a *AppServiceOnOffOnDemand) retrieveAppServiceOnOff(ctx context.Context, organizationId, projectId, clusterId, appServiceId, state string) (*providerschema.AppServiceOnOffOnDemand, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s", a.HostURL, organizationId, projectId, clusterId, appServiceId)
 	cfg := app_service_onoff_api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := a.Client.ExecuteWithRetry(
+	response, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

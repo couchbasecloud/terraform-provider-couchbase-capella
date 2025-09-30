@@ -135,7 +135,7 @@ func (d *ProjectEvents) Configure(_ context.Context, req datasource.ConfigureReq
 func (d *ProjectEvents) listEvents(ctx context.Context, url string) (api.GetEventsResponse, error) {
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
-	response, err := d.Client.ExecuteWithRetry(
+	response, err := d.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

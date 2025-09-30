@@ -108,7 +108,7 @@ func (d *Event) getEvent(ctx context.Context, organizationId, eventId string) (a
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
-	response, err := d.Client.ExecuteWithRetry(
+	response, err := d.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
