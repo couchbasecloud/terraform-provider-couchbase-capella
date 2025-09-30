@@ -132,7 +132,7 @@ func NewSnapshotBackup(ctx context.Context, snapshotBackup snapshot_backup.Snaps
 		ProjectID:         types.StringValue(projectID),
 		OrganizationId:    types.StringValue(organizationID),
 		CreatedAt:         types.StringValue(snapshotBackup.CreatedAt),
-		Retention:         types.Int64Value(int64(snapshotBackup.Retention)),
+		Retention:         types.Int64Value(snapshotBackup.Retention),
 		CrossRegionCopies: crossRegionCopySet,
 		Progress:          progressObj,
 		CMEK:              cmekSet,
