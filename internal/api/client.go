@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/version"
 )
@@ -159,6 +161,11 @@ func (c *Client) ExecuteWithRetry(
 				return nil, dur, fmt.Errorf("error parsing Retry-After value from response header")
 			}
 			dur = time.Second * time.Duration(retryAfter)
+			tflog.Debug(ctx, "API rate limited", map[string]interface{}{
+				"method":      endpointCfg.Method,
+				"url":         endpointCfg.Url,
+				"retry_after": dur.Seconds(),
+			})
 			return nil, dur, errors.ErrRatelimit
 		case http.StatusGatewayTimeout:
 			var apiError Error

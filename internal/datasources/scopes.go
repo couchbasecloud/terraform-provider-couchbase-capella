@@ -110,7 +110,7 @@ func (s *Scopes) Read(ctx context.Context, req datasource.ReadRequest, resp *dat
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/scopes", s.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
-	response, err := s.Client.ExecuteWithRetry(
+	response, err := s.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

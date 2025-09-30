@@ -95,7 +95,7 @@ func (r *Project) Create(ctx context.Context, req resource.CreateRequest, resp *
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects", r.HostURL, organizationId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-	response, err := r.Client.ExecuteWithRetry(
+	response, err := r.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		projectRequest,
@@ -240,7 +240,7 @@ func (r *Project) Update(ctx context.Context, req resource.UpdateRequest, resp *
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s", r.HostURL, organizationId, projectId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err = r.Client.ExecuteWithRetry(
+	_, err = r.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		projectRequest,
@@ -314,7 +314,7 @@ func (r *Project) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s", r.HostURL, organizationId, projectId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err = r.Client.ExecuteWithRetry(
+	_, err = r.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -350,7 +350,7 @@ func (r *Project) ImportState(ctx context.Context, req resource.ImportStateReque
 func (r *Project) retrieveProject(ctx context.Context, organizationId, projectId string) (*providerschema.OneProject, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s", r.HostURL, organizationId, projectId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := r.Client.ExecuteWithRetry(
+	response, err := r.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

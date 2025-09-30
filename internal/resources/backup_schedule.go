@@ -93,7 +93,7 @@ func (b *BackupSchedule) Create(ctx context.Context, req resource.CreateRequest,
 	}
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/schedules", b.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
-	_, err = b.Client.ExecuteWithRetry(
+	_, err = b.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		BackupScheduleRequest,
@@ -231,7 +231,7 @@ func (b *BackupSchedule) Update(ctx context.Context, req resource.UpdateRequest,
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/schedules", b.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err = b.Client.ExecuteWithRetry(
+	_, err = b.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		BackupScheduleRequest,
@@ -298,7 +298,7 @@ func (b *BackupSchedule) Delete(ctx context.Context, req resource.DeleteRequest,
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/schedules", b.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
 	// Delete existing backup schedule
-	_, err = b.Client.ExecuteWithRetry(
+	_, err = b.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -369,7 +369,7 @@ func (a *BackupSchedule) validateCreateBackupScheduleRequest(plan providerschema
 func (b *BackupSchedule) retrieveBackupSchedule(ctx context.Context, organizationId, projectId, clusterId, bucketId, planDayOfWeek string) (*providerschema.BackupSchedule, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backup/schedules", b.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := b.Client.ExecuteWithRetry(
+	response, err := b.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
