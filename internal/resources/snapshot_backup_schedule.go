@@ -234,7 +234,7 @@ func (s *SnapshotBackupSchedule) Delete(ctx context.Context, req resource.Delete
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackupschedule", s.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err = s.Client.ExecuteWithRetry(
+	_, err = s.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -272,7 +272,7 @@ func (s *SnapshotBackupSchedule) upsertSnapshotBackupSchedule(ctx context.Contex
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackupschedule", s.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err := s.Client.ExecuteWithRetry(
+	_, err := s.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		createSnapshotBackupScheduleRequest,
@@ -322,7 +322,7 @@ func (s *SnapshotBackupSchedule) validateCreateSnapshotBackupScheduleRequest(pla
 func (s *SnapshotBackupSchedule) getSnapshotBackupSchedule(ctx context.Context, organizationId, projectId, clusterId string, stateTimeString string) (*snapshot_backup_schedule.SnapshotBackupSchedule, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackupschedule", s.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	backupScheduleResp, err := s.Client.ExecuteWithRetry(
+	backupScheduleResp, err := s.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
