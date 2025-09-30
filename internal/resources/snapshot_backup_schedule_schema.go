@@ -16,7 +16,7 @@ func SnapshotBackupScheduleSchema() schema.Schema {
 			"interval":        WithDescription(int64Attribute(optional, computed), "The interval of the snapshot backup schedule."),
 			"retention":       WithDescription(int64Attribute(optional, computed), "The retention of the snapshot backup schedule."),
 			"start_time":      WithDescription(stringAttribute([]string{optional, computed}), "The start time of the snapshot backup schedule."),
-			"copy_to_regions": WithDescription(stringListAttribute(optional, computed), "The regions to copy the snapshot backup to."),
+			"copy_to_regions": WithDescription(stringSetAttribute(optional, computed), "The regions to copy the snapshot backup to."),
 		},
 	}
 }
