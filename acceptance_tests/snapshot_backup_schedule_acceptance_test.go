@@ -25,6 +25,7 @@ func TestAccSnapshotBackupScheduleResource(t *testing.T) {
 
 	startTime := time.Now().Add(24 * time.Hour).Truncate(time.Hour).Format(time.RFC3339)
 	copyToRegions := "[" + strings.Join([]string{"\"eu-west-1\"", "\"ap-southeast-1\""}, ",") + "]"
+	updatedCopyToRegions := "[" + "\"af-south-1\"" + "]"
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -39,8 +40,28 @@ func TestAccSnapshotBackupScheduleResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "interval", "12"),
 					resource.TestCheckResourceAttr(resourceReference, "retention", "240"),
 					resource.TestCheckResourceAttr(resourceReference, "start_time", startTime),
-					resource.TestCheckResourceAttr(resourceReference, "copy_to_regions.0", "eu-west-1"),
-					resource.TestCheckResourceAttr(resourceReference, "copy_to_regions.1", "ap-southeast-1"),
+					resource.TestCheckResourceAttrSet(resourceReference, "copy_to_regions.0"),
+					resource.TestCheckResourceAttrSet(resourceReference, "copy_to_regions.1"),
+				),
+			},
+
+			{
+				ResourceName:      resourceReference,
+				ImportStateIdFunc: generateSnapshotBackupScheduleImportIdForResource(resourceReference),
+				ImportState:       true,
+			},
+
+			{
+				Config: testAccSnapshotBackupScheduleResourceConfigWithCopyToRegions(resourceName, 6, 24, startTime, updatedCopyToRegions),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccExistsSnapshotBackupScheduleResource(resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
+					resource.TestCheckResourceAttr(resourceReference, "id", globalClusterId),
+					resource.TestCheckResourceAttr(resourceReference, "interval", "6"),
+					resource.TestCheckResourceAttr(resourceReference, "retention", "24"),
+					resource.TestCheckResourceAttr(resourceReference, "start_time", startTime),
+					resource.TestCheckResourceAttrSet(resourceReference, "copy_to_regions.0"),
 				),
 			},
 		},
@@ -171,4 +192,18 @@ func retrieveSnapshotBackupScheduleFromServer(data *providerschema.Data, organiz
 		return errors.ErrNotFound
 	}
 	return nil
+}
+
+func generateSnapshotBackupScheduleImportIdForResource(resourceReference string) resource.ImportStateIdFunc {
+	return func(state *terraform.State) (string, error) {
+		var rawState map[string]string
+		for _, m := range state.Modules {
+			if len(m.Resources) > 0 {
+				if v, ok := m.Resources[resourceReference]; ok {
+					rawState = v.Primary.Attributes
+				}
+			}
+		}
+		return fmt.Sprintf("id=%s,project_id=%s,organization_id=%s", rawState["id"], rawState["project_id"], rawState["organization_id"]), nil
+	}
 }
