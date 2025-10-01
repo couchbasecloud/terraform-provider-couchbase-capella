@@ -188,15 +188,15 @@ Destroy complete! Resources: 1 destroyed.
 
 ## IMPORT
 
-Command: `terraform import couchbase-capella_app_endpoint.endpoint1 name=test-endpoint-1,organization_id=<org_id>,project_id=<project_id>,app_service_id=<app_service_id>,cluster_id=<cluster_id>`
+Command: `terraform import couchbase-capella_app_endpoint.endpoint1 app_endpoint_name=test-endpoint-1,organization_id=<org_id>,project_id=<project_id>,app_service_id=<app_service_id>,cluster_id=<cluster_id>`
 
 Sample Output:
 ```
-$ terraform import couchbase-capella_app_endpoint.endpoint1 name=test-endpoint-1,organization_id=<org_id>,project_id=<project_id>,app_service_id=dffe37cc-07b9-4095-a8e0-70594b8456ea,cluster_id=<cluster_id>
-couchbase-capella_app_endpoint.endpoint1: Importing from ID "name=test-endpoint-1,organization_id=<org_id>,project_id=<project_id>,app_service_id=dffe37cc-07b9-4095-a8e0-70594b8456ea,cluster_id=<cluster_id>"...
+$ terraform import couchbase-capella_app_endpoint.endpoint1 app_endpoint_name=test-endpoint-1,organization_id=<org_id>,project_id=<project_id>,app_service_id=dffe37cc-07b9-4095-a8e0-70594b8456ea,cluster_id=<cluster_id>
+couchbase-capella_app_endpoint.endpoint1: Importing from ID "app_endpoint_name=test-endpoint-1,organization_id=<org_id>,project_id=<project_id>,app_service_id=dffe37cc-07b9-4095-a8e0-70594b8456ea,cluster_id=<cluster_id>"...
 couchbase-capella_app_endpoint.endpoint1: Import prepared!
   Prepared couchbase-capella_app_endpoint for import
-couchbase-capella_app_endpoint.endpoint1: Refreshing state... [name=name=test-endpoint-1,organization_id=<org_id>,project_id=<project_id>,app_service_id=dffe37cc-07b9-4095-a8e0-70594b8456ea,cluster_id=<cluster_id>]
+couchbase-capella_app_endpoint.endpoint1: Refreshing state... [name=app_endpoint_name=test-endpoint-1,organization_id=<org_id>,project_id=<project_id>,app_service_id=dffe37cc-07b9-4095-a8e0-70594b8456ea,cluster_id=<cluster_id>]
 2025-09-09T14:43:55.539-0700 [WARN]  Provider "registry.terraform.io/couchbasecloud/couchbase-capella" produced an unexpected new value for couchbase-capella_app_endpoint.endpoint1 during refresh.
       - .scopes: was null, but now cty.MapVal(map[string]cty.Value{"s1":cty.ObjectVal(map[string]cty.Value{"collections":cty.MapVal(map[string]cty.Value{"c1":cty.ObjectVal(map[string]cty.Value{"access_control_function":cty.StringVal("function (doc, oldDoc, meta) {channel('c1');}"), "import_filter":cty.StringVal("function (doc) {\n  if (doc.type != \"mobile\") {\n    return false;\n  }\n  return true;\n}")}), "c2":cty.ObjectVal(map[string]cty.Value{"access_control_function":cty.StringVal("function (doc, oldDoc, meta) {channel('c2');}"), "import_filter":cty.StringVal("function (doc) {\n  if (doc.type != \"mobile\") {\n    return false;\n  }\n  return true;\n}")})})})})
       - .user_xattr_key: was null, but now cty.StringVal("")
@@ -207,7 +207,7 @@ couchbase-capella_app_endpoint.endpoint1: Refreshing state... [name=name=test-en
       - .cors: was null, but now cty.ObjectVal(map[string]cty.Value{"disabled":cty.False, "headers":cty.SetVal([]cty.Value{cty.StringVal("")}), "login_origin":cty.NullVal(cty.Set(cty.String)), "max_age":cty.NumberIntVal(5), "origin":cty.SetVal([]cty.Value{cty.StringVal("*")})})
       - .state: was null, but now cty.StringVal("Offline")
       - .cluster_id: was null, but now cty.StringVal("<cluster_id>")
-      - .name: was cty.StringVal("name=test-endpoint-1,organization_id=<org_id>,project_id=<project_id>,app_service_id=dffe37cc-07b9-4095-a8e0-70594b8456ea,cluster_id=<cluster_id>"), but now cty.StringVal("test-endpoint-1")
+      - .name: was cty.StringVal("app_endpoint_name=test-endpoint-1,organization_id=<org_id>,project_id=<project_id>,app_service_id=dffe37cc-07b9-4095-a8e0-70594b8456ea,cluster_id=<cluster_id>"), but now cty.StringVal("test-endpoint-1")
       - .project_id: was null, but now cty.StringVal("<project_id>")
       - .bucket: was null, but now cty.StringVal("b1")
       - .delta_sync_enabled: was null, but now cty.False
