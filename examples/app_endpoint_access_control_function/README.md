@@ -25,14 +25,6 @@ Command: `terraform apply`
 Sample Output:
 ```
 $ terraform apply
-╷
-│ Warning: Provider development overrides are in effect
-│ 
-│ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/$USER/GolandProjects/terraform-provider-couchbase-capella/bin
-│ 
-│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
-╵
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   + create
@@ -72,14 +64,7 @@ Command: `terraform apply`
 Sample Output:
 ```
 $ terraform apply
-╷
-│ Warning: Provider development overrides are in effect
-│ 
-│ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/$USER/GolandProjects/terraform-provider-couchbase-capella/bin
-│ 
-│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
-╵
+
 couchbase-capella_app_endpoint_access_control_function.acf: Refreshing state...
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
@@ -89,7 +74,7 @@ Terraform will perform the following actions:
 
   # couchbase-capella_app_endpoint_access_control_function.acf will be updated in-place
   ~ resource "couchbase-capella_app_endpoint_access_control_function" "acf" {
-      ~ access_control_function = "function (doc, oldDoc, meta) {channel(doc.channels); }" -> "function (currentDoc, oldDoc, meta) {channel(doc.channels); }"
+      ~ access_control_function = "function (doc, oldDoc, meta) {channel(doc.channels); }" -> "function (currentDoc, oldDoc, meta) {channel(currentDoc.channels); }"
         # (7 unchanged attributes hidden)
     }
 
@@ -115,14 +100,7 @@ Command: `terraform destroy`
 Sample Output:
 ```
 $ terraform destroy
-╷
-│ Warning: Provider development overrides are in effect
-│ 
-│ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/$USER/GolandProjects/terraform-provider-couchbase-capella/bin
-│ 
-│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
-╵
+
 couchbase-capella_app_endpoint_access_control_function.acf: Refreshing state...
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
