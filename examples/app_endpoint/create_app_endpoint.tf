@@ -3,7 +3,7 @@ resource "couchbase-capella_app_endpoint" "endpoint2" {
   project_id      = var.project_id
   cluster_id      = var.cluster_id
   app_service_id  = var.app_service_id
-  name            = "${var.app_endpoint_name}-cors"
+  name            = "api-terraform"
   bucket          = var.bucket_name
   
   scopes = {
@@ -16,6 +16,14 @@ resource "couchbase-capella_app_endpoint" "endpoint2" {
       }
     }
   }
+
+  oidc = [
+    {
+      client_id = "oidc-provider-1"
+      issuer    = "https://accounts.google.com"
+      register  = true
+    }
+  ]
   
   cors = {
     disabled = false
