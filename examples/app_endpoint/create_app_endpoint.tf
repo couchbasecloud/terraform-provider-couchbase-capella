@@ -3,7 +3,7 @@ resource "couchbase-capella_app_endpoint" "endpoint2" {
   project_id      = var.project_id
   cluster_id      = var.cluster_id
   app_service_id  = var.app_service_id
-  name            = "api-terraform"
+  name            = var.app_endpoint_name
   bucket          = var.bucket_name
   
   scopes = {
