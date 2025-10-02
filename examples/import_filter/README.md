@@ -10,15 +10,15 @@ To run, configure your Couchbase Capella provider as described in README in the 
 
 1. CREATE: Create a new Import Filter in an existing Capella App Endpoint as stated in the `create_import_filter.tf` file.
 2. UPDATE: Update the app service configuration using Terraform.
-3. LIST: List existing app services in Capella as stated in the `list_access_functions.tf` file.
 4. IMPORT: Import an app services that exists in Capella but not in the terraform state file.
 5. DELETE: Delete the newly created app service from Capella.
 
 ## Example Walkthrough
 
-### 1. CREATE: View the plan for the resources that Terraform will create
+### 1. CREATE: Create an import filter
 
-#### View the plan
+First, lets view the plan for the import filter resource that will be created.
+
 Command: `terraform plan`
 
 Sample Output:
@@ -44,7 +44,8 @@ Terraform will perform the following actions:
 
 Plan: 1 to add, 0 to change, 0 to destroy.
 ```
-#### Apply the terraform config to create the resource
+Now let's apply the terraform config to create the resource
+
 Command: `terraform apply`
 
 Sample Output:
@@ -83,7 +84,7 @@ couchbase-capella_app_endpoint_import_filter.example_import_filter: Creation com
 Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
 ```
 
-### View the current list of resources that are present in Terraform State
+To view the current list of resources that are present in Terraform State, and output the current state of the resource, we use the `terraform show` command.
 
 Command: `terraform show`
 
@@ -115,7 +116,7 @@ couchbase-capella_app_endpoint_import_filter.example_import_filter
 ```
 
 
-### 2. Update the Import Filter
+### 2. UPDATE: Update the Import Filter
 
 Make changes to the `import_filter` attribute in `create_import_filter.tf` and run:
 
@@ -154,8 +155,9 @@ Apply complete! Resources: 0 added, 1 changed, 0 destroyed.
 ```
 
 
-## IMPORT
-### Remove the resource `example_access_function` from the Terraform State file
+### 3:IMPORT: Import an Import filter resource from remote
+
+### Remove the resource `example_import_filter` from the Terraform State file
 
 Command: `terraform state rm couchbase-capella_app_endpoint_import_filter.example_import_filter`
 
@@ -190,7 +192,7 @@ your Terraform state and will henceforth be managed by Terraform.
 
 ``` 
 
-### 5. Delete the resources that Terraform manages
+### 4. Delete the resources that Terraform manages
 
 Command: `terraform destroy`
 
