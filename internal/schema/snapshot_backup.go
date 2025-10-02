@@ -33,7 +33,6 @@ type CrossRegionCopy struct {
 }
 
 type SnapshotBackup struct {
-	AppService                   types.String   `tfsdk:"app_service"`
 	ClusterID                    types.String   `tfsdk:"cluster_id"`
 	CreatedAt                    types.String   `tfsdk:"created_at"`
 	Expiration                   types.String   `tfsdk:"expiration"`
@@ -110,7 +109,6 @@ func NewCrossRegionCopy(crossRegionCopy snapshot_backup.CrossRegionCopy) CrossRe
 
 func (s SnapshotBackup) AttributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
-		"app_service":         types.StringType,
 		"cluster_id":          types.StringType,
 		"created_at":          types.StringType,
 		"expiration":          types.StringType,
@@ -118,7 +116,7 @@ func (s SnapshotBackup) AttributeTypes() map[string]attr.Type {
 		"progress":            types.ObjectType{AttrTypes: Progress{}.AttributeTypes()},
 		"project_id":          types.StringType,
 		"retention":           types.Int64Type,
-		"regions_to_copy":     types.ListType{ElemType: types.StringType},
+		"regions_to_copy":     types.SetType{ElemType: types.StringType},
 		"cross_region_copies": types.SetType{ElemType: types.ObjectType{AttrTypes: CrossRegionCopy{}.AttributeTypes()}},
 		"cmek":                types.SetType{ElemType: types.ObjectType{AttrTypes: CMEK{}.AttributeTypes()}},
 		"server":              types.ObjectType{AttrTypes: Server{}.AttributeTypes()},
@@ -130,7 +128,6 @@ func (s SnapshotBackup) AttributeTypes() map[string]attr.Type {
 
 func NewSnapshotBackup(ctx context.Context, snapshotBackup snapshot_backup.SnapshotBackup, ID, clusterID, projectID, organizationID string, progressObj, serverObj basetypes.ObjectValue, cmekSet, crossRegionCopySet basetypes.SetValue) SnapshotBackup {
 	return SnapshotBackup{
-		AppService:        types.StringValue(snapshotBackup.AppService),
 		ID:                types.StringValue(ID),
 		ClusterID:         types.StringValue(clusterID),
 		Expiration:        types.StringValue(snapshotBackup.Expiration),

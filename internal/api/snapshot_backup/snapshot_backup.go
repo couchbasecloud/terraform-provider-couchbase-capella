@@ -23,7 +23,6 @@ type CrossRegionCopy struct {
 }
 
 type SnapshotBackup struct {
-	AppService        string            `json:"appService"`
 	ClusterID         string            `json:"clusterId"`
 	CreatedAt         string            `json:"createdAt"`
 	Expiration        string            `json:"expiration"`
@@ -40,7 +39,7 @@ type SnapshotBackup struct {
 }
 
 type CreateSnapshotBackupRequest struct {
-	Retention     int      `json:"retention"`
+	Retention     int64    `json:"retention"`
 	RegionsToCopy []string `json:"regionsToCopy"`
 }
 
