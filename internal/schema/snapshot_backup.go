@@ -33,21 +33,23 @@ type CrossRegionCopy struct {
 }
 
 type SnapshotBackup struct {
-	AppService        types.String   `tfsdk:"app_service"`
-	ClusterID         types.String   `tfsdk:"cluster_id"`
-	CreatedAt         types.String   `tfsdk:"created_at"`
-	Expiration        types.String   `tfsdk:"expiration"`
-	ID                types.String   `tfsdk:"id"`
-	Retention         types.Int64    `tfsdk:"retention"`
-	RegionsToCopy     []types.String `tfsdk:"regions_to_copy"`
-	CrossRegionCopies types.Set      `tfsdk:"cross_region_copies"`
-	Progress          types.Object   `tfsdk:"progress"`
-	CMEK              types.Set      `tfsdk:"cmek"`
-	ProjectID         types.String   `tfsdk:"project_id"`
-	Server            types.Object   `tfsdk:"server"`
-	Size              types.Int64    `tfsdk:"size"`
-	OrganizationId    types.String   `tfsdk:"organization_id"`
-	Type              types.String   `tfsdk:"type"`
+	AppService                   types.String   `tfsdk:"app_service"`
+	ClusterID                    types.String   `tfsdk:"cluster_id"`
+	CreatedAt                    types.String   `tfsdk:"created_at"`
+	Expiration                   types.String   `tfsdk:"expiration"`
+	ID                           types.String   `tfsdk:"id"`
+	Retention                    types.Int64    `tfsdk:"retention"`
+	RegionsToCopy                []types.String `tfsdk:"regions_to_copy"`
+	CrossRegionCopies            types.Set      `tfsdk:"cross_region_copies"`
+	Progress                     types.Object   `tfsdk:"progress"`
+	CMEK                         types.Set      `tfsdk:"cmek"`
+	ProjectID                    types.String   `tfsdk:"project_id"`
+	Server                       types.Object   `tfsdk:"server"`
+	Size                         types.Int64    `tfsdk:"size"`
+	OrganizationId               types.String   `tfsdk:"organization_id"`
+	Type                         types.String   `tfsdk:"type"`
+	RestoreTimes                 types.Number   `tfsdk:"restore_times"`
+	CrossRegionRestorePreference []types.String `tfsdk:"cross_region_restore_preference"`
 }
 
 func (p Progress) AttributeTypes() map[string]attr.Type {
@@ -163,10 +165,10 @@ func (s SnapshotBackup) Validate() (map[Attr]string, error) {
 
 // ConvertRegionsToCopy is used to convert all regionsToCopy
 // in an array of basetypes.StringValue to strings.
-func ConvertRegionsToCopy(regionsToCopy []basetypes.StringValue) []string {
-	var convertedRegionsToCopy []string
-	for _, region := range regionsToCopy {
-		convertedRegionsToCopy = append(convertedRegionsToCopy, region.ValueString())
+func ConvertStringValueList(stringValueList []basetypes.StringValue) []string {
+	var stringList []string
+	for _, stringValue := range stringValueList {
+		stringList = append(stringList, stringValue.ValueString())
 	}
-	return convertedRegionsToCopy
+	return stringList
 }

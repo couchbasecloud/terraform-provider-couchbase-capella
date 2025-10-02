@@ -50,7 +50,7 @@ func NewSnapshotBackup() resource.Resource {
 }
 
 func (s *SnapshotBackup) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_snapshot_backup"
+	resp.TypeName = req.ProviderTypeName + "_cloud_snapshot_backup"
 }
 
 func (s *SnapshotBackup) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -80,12 +80,12 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 
 	createSnapshotBackupRequest := snapshot_backup.CreateSnapshotBackupRequest{
 		Retention:     int(plan.Retention.ValueInt64()),
-		RegionsToCopy: providerschema.ConvertRegionsToCopy(plan.RegionsToCopy),
+		RegionsToCopy: providerschema.ConvertStringValueList(plan.RegionsToCopy),
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups", s.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
-	createResp, err := s.Client.ExecuteWithRetry(
+	createResp, err := s.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		createSnapshotBackupRequest,
@@ -231,7 +231,8 @@ func (s *SnapshotBackup) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	refreshedState.RegionsToCopy = state.RegionsToCopy
+	refreshedState.RestoreTimes = state.RestoreTimes
+	refreshedState.CrossRegionRestorePreference = state.CrossRegionRestorePreference
 
 	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
@@ -274,33 +275,49 @@ func (s *SnapshotBackup) Update(ctx context.Context, req resource.UpdateRequest,
 		Id             = IDs[providerschema.Id]
 	)
 
-	updateSnapshotBackupRequest := snapshot_backup.EditBackupRetentionRequest{
-		Retention: int(plan.Retention.ValueInt64()),
+	if state.Retention.ValueInt64() != plan.Retention.ValueInt64() {
+		err = s.updateRetention(ctx, organizationId, projectId, clusterId, Id, int(plan.Retention.ValueInt64()))
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error updating snapshot backup retention",
+				"Could not update snapshot backup id "+state.ID.String()+": "+err.Error(),
+			)
+			return
+		}
 	}
 
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups/%s", s.HostURL, organizationId, projectId, clusterId, Id)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err = s.Client.ExecuteWithRetry(
-		ctx,
-		cfg,
-		updateSnapshotBackupRequest,
-		s.Token,
-		nil,
-	)
-	if err != nil {
+	if plan.RestoreTimes.IsUnknown() {
 		resp.Diagnostics.AddError(
-			"Error executing update snapshot backup retention",
-			"Could not update snapshot backup id "+Id+": "+api.ParseError(err),
+			"Error restoring backup",
+			"Could not restore backup id "+state.ID.String()+": plan restore times value is not set",
 		)
-		tflog.Debug(ctx, "error executing update snapshot backup retention", map[string]interface{}{
-			"OrganizationId": organizationId,
-			"ProjectID":      projectId,
-			"ClusterID":      clusterId,
-			"ID":             Id,
-			"retention":      plan.Retention.ValueInt64(),
-			"err":            err,
-		})
 		return
+	}
+
+	if !plan.RestoreTimes.IsNull() {
+		if !state.RestoreTimes.IsNull() && !state.RestoreTimes.IsUnknown() {
+			tflog.Debug(ctx, "restoring snapshot backup", map[string]interface{}{
+				"state": state,
+				"plan":  plan,
+			})
+			planRestoreTimes := *plan.RestoreTimes.ValueBigFloat()
+			stateRestoreTimes := *state.RestoreTimes.ValueBigFloat()
+			if planRestoreTimes.Cmp(&stateRestoreTimes) != 1 {
+				resp.Diagnostics.AddError(
+					"Error restoring backup",
+					"Could not restore backup id "+state.ID.String()+": plan restore times value is not greater than state restore times value",
+				)
+				return
+			}
+		}
+		err = s.restoreSnapshotBackup(ctx, organizationId, projectId, clusterId, Id, providerschema.ConvertStringValueList(plan.CrossRegionRestorePreference))
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error restoring snapshot backup",
+				"Could not restore snapshot backup id "+state.ID.String()+": "+err.Error(),
+			)
+			return
+		}
 	}
 
 	refreshedState, err := s.getSnapshotBackup(ctx, organizationId, projectId, clusterId, Id)
@@ -322,6 +339,8 @@ func (s *SnapshotBackup) Update(ctx context.Context, req resource.UpdateRequest,
 
 	state.Retention = types.Int64Value(int64(refreshedState.Retention))
 	state.Expiration = types.StringValue(refreshedState.Expiration)
+	state.RegionsToCopy = plan.RegionsToCopy
+	state.RestoreTimes = plan.RestoreTimes
 
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
@@ -367,7 +386,7 @@ func (s *SnapshotBackup) Delete(ctx context.Context, req resource.DeleteRequest,
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups/%s", s.HostURL, organizationId, projectId, clusterId, Id)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
-	_, err = s.Client.ExecuteWithRetry(
+	_, err = s.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -485,7 +504,7 @@ func (s *SnapshotBackup) checkCrossRegionCopyStatus(backupResp *snapshot_backup.
 func (s *SnapshotBackup) getSnapshotBackups(ctx context.Context, organizationId, projectId, clusterId string) (*snapshot_backup.ListSnapshotBackupsResponse, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups", s.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	resp, err := s.Client.ExecuteWithRetry(
+	resp, err := s.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -617,4 +636,85 @@ func createSnapshotBackup(ctx context.Context, backupResp *snapshot_backup.Snaps
 
 	snapshotBackup := providerschema.NewSnapshotBackup(ctx, *backupResp, backupResp.ID, clusterId, projectId, organizationId, progressObj, serverObj, cmekSet, crossRegionCopySet)
 	return &snapshotBackup, nil
+}
+
+func (s *SnapshotBackup) updateRetention(ctx context.Context, organizationId, projectId, clusterId, Id string, retention int) error {
+	updateSnapshotBackupRequest := snapshot_backup.EditBackupRetentionRequest{
+		Retention: retention,
+	}
+
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups/%s", s.HostURL, organizationId, projectId, clusterId, Id)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
+	_, err := s.ClientV1.ExecuteWithRetry(
+		ctx,
+		cfg,
+		updateSnapshotBackupRequest,
+		s.Token,
+		nil,
+	)
+	if err != nil {
+		tflog.Debug(ctx, "error executing update snapshot backup retention", map[string]interface{}{
+			"OrganizationId": organizationId,
+			"ProjectID":      projectId,
+			"ClusterID":      clusterId,
+			"ID":             Id,
+			"retention":      retention,
+			"err":            err,
+		})
+		return err
+	}
+	return nil
+}
+
+func (s *SnapshotBackup) restoreSnapshotBackup(ctx context.Context, organizationId, projectId, clusterId, Id string, crossRegionRestorePreference []string) error {
+	var (
+		resp *api.Response
+		err  error
+	)
+
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups/%s/restore", s.HostURL, organizationId, projectId, clusterId, Id)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
+
+	if len(crossRegionRestorePreference) > 0 {
+		restoreSnapshotBackupRequest := snapshot_backup.RestoreSnapshotBackupRequest{
+			CrossRegionRestorePreference: crossRegionRestorePreference,
+		}
+		resp, err = s.ClientV1.ExecuteWithRetry(
+			ctx,
+			cfg,
+			restoreSnapshotBackupRequest,
+			s.Token,
+			nil,
+		)
+	} else {
+		resp, err = s.ClientV1.ExecuteWithRetry(
+			ctx,
+			cfg,
+			nil,
+			s.Token,
+			nil,
+		)
+	}
+	if err != nil {
+		tflog.Debug(ctx, "error executing restore snapshot backup", map[string]interface{}{
+			"OrganizationId": organizationId,
+			"ProjectID":      projectId,
+			"ClusterID":      clusterId,
+			"ID":             Id,
+			"err":            err,
+		})
+		return err
+	}
+
+	var restoreResp snapshot_backup.RestoreSnapshotBackupResponse
+	err = json.Unmarshal(resp.Body, &restoreResp)
+	if err != nil {
+		tflog.Debug(ctx, "error unmarshalling the restore snapshot backup response", map[string]interface{}{
+			"resp": resp,
+			"err":  err,
+		})
+		return err
+	}
+
+	return nil
 }
