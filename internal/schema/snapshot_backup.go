@@ -32,7 +32,6 @@ type CrossRegionCopy struct {
 }
 
 type SnapshotBackup struct {
-	AppService                   types.String   `tfsdk:"app_service"`
 	ClusterID                    types.String   `tfsdk:"cluster_id"`
 	CreatedAt                    types.String   `tfsdk:"created_at"`
 	Expiration                   types.String   `tfsdk:"expiration"`

@@ -204,6 +204,7 @@ func (s *SnapshotBackup) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
+	refreshedState.RegionsToCopy = state.RegionsToCopy
 	refreshedState.RestoreTimes = state.RestoreTimes
 	refreshedState.CrossRegionRestorePreference = state.CrossRegionRestorePreference
 
