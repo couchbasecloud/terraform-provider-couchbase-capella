@@ -104,7 +104,7 @@ func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequ
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users", r.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-	response, err := r.Client.ExecuteWithRetry(
+	response, err := r.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		dbCredRequest,
@@ -263,7 +263,7 @@ func (r *DatabaseCredential) Update(ctx context.Context, req resource.UpdateRequ
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", r.HostURL, organizationId, projectId, clusterId, dbId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err = r.Client.ExecuteWithRetry(
+	_, err = r.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		dbCredRequest,
@@ -338,7 +338,7 @@ func (r *DatabaseCredential) Delete(ctx context.Context, req resource.DeleteRequ
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", r.HostURL, organizationId, projectId, clusterId, dbId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err = r.Client.ExecuteWithRetry(
+	_, err = r.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -376,7 +376,7 @@ func (r *DatabaseCredential) ImportState(ctx context.Context, req resource.Impor
 func (r *DatabaseCredential) retrieveDatabaseCredential(ctx context.Context, organizationId, projectId, clusterId, dbId string) (*providerschema.DatabaseCredential, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", r.HostURL, organizationId, projectId, clusterId, dbId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := r.Client.ExecuteWithRetry(
+	response, err := r.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

@@ -96,7 +96,7 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 				tflog.Error(ctx, "rate limiter error: "+err.Error())
 			}
 
-			return g.Client.ExecuteWithRetry(
+			return g.ClientV1.ExecuteWithRetry(
 				ctx,
 				cfg,
 				nil,
@@ -589,7 +589,7 @@ func (g *GSI) executeGsiDdl(ctx context.Context, plan *providerschema.GsiDefinit
 		// do not block if rate limiter fails
 		tflog.Error(ctx, "rate limiter error: "+err.Error())
 	}
-	response, err := g.Client.ExecuteWithRetry(
+	response, err := g.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		ddlRequest,
@@ -665,7 +665,7 @@ func (g *GSI) getQueryIndex(
 	}
 
 	cfg := api.EndpointCfg{Url: uri, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := g.Client.ExecuteWithRetry(
+	response, err := g.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

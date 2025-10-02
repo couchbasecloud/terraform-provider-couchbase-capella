@@ -3,7 +3,6 @@ package acceptance_tests
 import (
 	"context"
 	"fmt"
-
 	"log"
 	"os"
 	"testing"

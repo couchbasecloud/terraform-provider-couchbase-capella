@@ -86,7 +86,7 @@ func (o *Organization) Read(ctx context.Context, req datasource.ReadRequest, res
 	// Make request to get organization
 	url := fmt.Sprintf("%s/v4/organizations/%s", o.HostURL, organizationId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := o.Client.ExecuteWithRetry(
+	response, err := o.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

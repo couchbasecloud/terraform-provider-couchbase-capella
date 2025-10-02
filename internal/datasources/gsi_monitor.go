@@ -123,7 +123,7 @@ func (g *GsiMonitor) Read(ctx context.Context, req datasource.ReadRequest, resp 
 			tflog.Error(ctx, "rate limiter error: "+err.Error())
 		}
 
-		return g.Client.ExecuteWithRetry(
+		return g.ClientV1.ExecuteWithRetry(
 			ctx,
 			cfg,
 			nil,

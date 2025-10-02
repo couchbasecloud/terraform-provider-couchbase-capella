@@ -105,7 +105,7 @@ func (p *PrivateEndpoints) Read(ctx context.Context, req datasource.ReadRequest,
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/privateEndpointService/endpoints", p.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := p.Client.ExecuteWithRetry(
+	response, err := p.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

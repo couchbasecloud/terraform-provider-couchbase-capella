@@ -86,7 +86,7 @@ func (a *AppServiceCidrs) listAllowedCIDRs(ctx context.Context, organizationId, 
 	)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	return api.GetPaginated[[]api.AppServiceAllowedCIDRResponse](ctx, a.Client, a.Token, cfg, api.SortById)
+	return api.GetPaginated[[]api.AppServiceAllowedCIDRResponse](ctx, a.ClientV1, a.Token, cfg, api.SortById)
 }
 
 // Read refreshes the Terraform state with the allowed CIDRs in the Terraform state file.

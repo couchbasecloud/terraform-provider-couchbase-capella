@@ -99,7 +99,7 @@ func (r *AllowList) Create(ctx context.Context, req resource.CreateRequest, resp
 		plan.ClusterId.ValueString(),
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-	response, err := r.Client.ExecuteWithRetry(
+	response, err := r.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		allowListRequest,
@@ -256,7 +256,7 @@ func (r *AllowList) Delete(ctx context.Context, req resource.DeleteRequest, resp
 		allowListId,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err = r.Client.ExecuteWithRetry(
+	_, err = r.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -300,7 +300,7 @@ func (r *AllowList) getAllowList(ctx context.Context, organizationId, projectId,
 		allowListId,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := r.Client.ExecuteWithRetry(
+	response, err := r.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

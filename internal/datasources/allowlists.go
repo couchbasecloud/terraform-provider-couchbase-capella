@@ -149,7 +149,7 @@ func (d *AllowLists) listAllowLists(ctx context.Context, organizationId, project
 	)
 
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	return api.GetPaginated[[]api.GetAllowListResponse](ctx, d.Client, d.Token, cfg, api.SortById)
+	return api.GetPaginated[[]api.GetAllowListResponse](ctx, d.ClientV1, d.Token, cfg, api.SortById)
 }
 
 // Configure adds the provider configured client to the allowlist data source.

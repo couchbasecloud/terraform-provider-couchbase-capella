@@ -105,7 +105,7 @@ func (s *SampleBucket) Create(ctx context.Context, req resource.CreateRequest, r
 	var clusterId = plan.ClusterId.ValueString()
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/sampleBuckets", s.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-	response, err := s.Client.ExecuteWithRetry(
+	response, err := s.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		sampleBucketRequest,
@@ -258,7 +258,7 @@ func (s *SampleBucket) Delete(ctx context.Context, req resource.DeleteRequest, r
 	var bucketId = state.Id.ValueString()
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/sampleBuckets/%s", s.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err := s.Client.ExecuteWithRetry(
+	_, err := s.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -309,7 +309,7 @@ func (r *SampleBucket) validateSampleBucketName(plan providerschema.SampleBucket
 func (s *SampleBucket) retrieveSampleBucket(ctx context.Context, organizationId, projectId, clusterId, bucketId string) (*providerschema.SampleBucket, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/sampleBuckets/%s", s.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := s.Client.ExecuteWithRetry(
+	response, err := s.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

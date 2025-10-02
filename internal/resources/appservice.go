@@ -103,7 +103,7 @@ func (a *AppService) Create(ctx context.Context, req resource.CreateRequest, res
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices", a.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
 
-	response, err := a.Client.ExecuteWithRetry(
+	response, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		appServiceRequest,
@@ -274,7 +274,7 @@ func (a *AppService) Update(ctx context.Context, req resource.UpdateRequest, res
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s", a.HostURL, organizationId, projectId, clusterId, appServiceId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err = a.Client.ExecuteWithRetry(
+	_, err = a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		appServiceRequest,
@@ -347,7 +347,7 @@ func (a *AppService) Delete(ctx context.Context, req resource.DeleteRequest, res
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s", a.HostURL, organizationId, projectId, clusterId, appServiceId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
 	// Delete existing App Service
-	_, err = a.Client.ExecuteWithRetry(
+	_, err = a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -522,7 +522,7 @@ func (a *AppService) getAppService(ctx context.Context, organizationId, projectI
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s", a.HostURL, organizationId, projectId, clusterId, appServiceId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
-	response, err := a.Client.ExecuteWithRetry(
+	response, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

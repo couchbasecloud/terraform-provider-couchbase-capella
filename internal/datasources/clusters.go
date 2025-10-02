@@ -74,7 +74,7 @@ func (d *Clusters) Read(ctx context.Context, req datasource.ReadRequest, resp *d
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", d.HostURL, organizationId, projectId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
-	response, err := api.GetPaginated[[]clusterapi.GetClusterResponse](ctx, d.Client, d.Token, cfg, api.SortById)
+	response, err := api.GetPaginated[[]clusterapi.GetClusterResponse](ctx, d.ClientV1, d.Token, cfg, api.SortById)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Clusters",

@@ -90,7 +90,7 @@ func (a *AppServiceCidr) Create(ctx context.Context, req resource.CreateRequest,
 		appServiceId,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-	response, err := a.Client.ExecuteWithRetry(
+	response, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		cidrReq,
@@ -168,7 +168,7 @@ func (a *AppServiceCidr) getAllowedCIDR(ctx context.Context, organizationId, pro
 		appServiceId,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := a.Client.ExecuteWithRetry(
+	response, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,
@@ -318,7 +318,7 @@ func (a *AppServiceCidr) Delete(ctx context.Context, req resource.DeleteRequest,
 		allowedCIDRId,
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err = a.Client.ExecuteWithRetry(
+	_, err = a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		nil,

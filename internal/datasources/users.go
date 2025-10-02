@@ -149,7 +149,7 @@ func (d *Users) Read(ctx context.Context, req datasource.ReadRequest, resp *data
 	url := fmt.Sprintf("%s/v4/organizations/%s/users", d.HostURL, organizationId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
-	response, err := api.GetPaginated[[]api.GetUserResponse](ctx, d.Client, d.Token, cfg, api.SortById)
+	response, err := api.GetPaginated[[]api.GetUserResponse](ctx, d.ClientV1, d.Token, cfg, api.SortById)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Users",

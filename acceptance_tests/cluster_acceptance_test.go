@@ -865,7 +865,7 @@ func testAccDeleteClusterResource(resourceReference string) resource.TestCheckFu
 func deleteClusterFromServer(data *providerschema.Data, organizationId, projectId, clusterId string) error {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", data.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
-	_, err := data.Client.ExecuteWithRetry(
+	_, err := data.ClientV1.ExecuteWithRetry(
 		context.Background(),
 		cfg,
 		nil,
@@ -943,7 +943,7 @@ func retrieveClusterFromServer(
 ) (*clusterapi.GetClusterResponse, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", data.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := data.Client.ExecuteWithRetry(
+	response, err := data.ClientV1.ExecuteWithRetry(
 		context.Background(),
 		cfg,
 		nil,

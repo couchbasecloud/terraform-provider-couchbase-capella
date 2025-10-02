@@ -50,7 +50,6 @@ vet:
 .PHONY: lint-fix
 lint-fix:
 	@echo "==> Fixing linters errors..."
-	fieldalignment -json -fix ./...
 	golangci-lint run --fix
 
 .PHONY: setup
@@ -72,6 +71,13 @@ docs-lint:
 .PHONY: docs
 docs:
 	@echo "Use this site to preview markdown rendering: https://registry.terraform.io/tools/doc-preview"
+
+
+.PHONY: gen-api
+gen-api: ## Generate OpenAPI client into internal/generated/api
+	@echo "==> Generating OpenAPI client (internal/generated/api)"
+	PATH="$(shell go env GOPATH)/bin:$(PATH)" go generate ./internal/generated/api
+	@echo "==> Done"
 
 .PHONT: build-docs
 build-docs:
