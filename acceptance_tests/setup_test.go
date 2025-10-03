@@ -78,6 +78,13 @@ func setup(ctx context.Context, client *api.Client) error {
 		return err
 	}
 
+	if err := createAppEndpoint(ctx, client); err != nil {
+		return err
+	}
+	if err := appEndpointWait(ctx, client, false); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -90,6 +97,15 @@ func cleanup(ctx context.Context, client *api.Client) error {
 		if err := appServiceWait(ctx, client, true); err != nil {
 			return err
 		}
+	}
+
+	if globalAppEndpointName != "" {
+		if err := destroyAppEndpoint(ctx, client); err != nil {
+			return err
+		}
+	}
+	if err := appEndpointWait(ctx, client, true); err != nil {
+		return err
 	}
 
 	if globalClusterId != "" {
