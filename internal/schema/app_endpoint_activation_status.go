@@ -3,8 +3,6 @@ package schema
 import (
 	"fmt"
 
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
-
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -38,25 +36,6 @@ func (a *AppEndpointActivationStatus) Validate() (map[Attr]string, error) {
 		ClusterId:       a.ClusterId,
 		AppServiceId:    a.AppServiceId,
 		AppEndpointName: a.AppEndpointName,
-	}
-
-	if a.OrganizationId.IsNull() {
-		return nil, errors.ErrOrganizationIdCannotBeEmpty
-	}
-	if a.ProjectId.IsNull() {
-		return nil, errors.ErrProjectIdCannotBeEmpty
-	}
-	if a.ClusterId.IsNull() {
-		return nil, errors.ErrClusterIdCannotBeEmpty
-	}
-	if a.AppServiceId.IsNull() {
-		return nil, errors.ErrAppServiceIdCannotBeEmpty
-	}
-	if a.AppEndpointName.IsNull() {
-		return nil, errors.ErrEndpointIdMissing
-	}
-	if a.State.IsNull() {
-		return nil, errors.ErrAppEndpointInvalidState
 	}
 
 	IDs, err := validateSchemaState(state, AppEndpointName)
