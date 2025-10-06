@@ -177,4 +177,4 @@ couchbase-capella_app_endpoint_activation_status.example_activation_status: Modi
 ```
 
 ## DELETE
-The underlying API cannot delete the remote activation status, it can only be set to online or offline. Deleting the activation status resource will only remove it from the state file,
+The underlying API cannot delete the remote activation status, it can only be set to online or offline. Deleting the activation status resource will only remove it from the state file.
