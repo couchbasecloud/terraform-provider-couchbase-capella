@@ -288,30 +288,18 @@ func (r *AppEndpointOidcProvider) getOidcProvider(ctx context.Context, organizat
 // mapResponseToState maps get OIDC provider response fields to state.
 func (r *AppEndpointOidcProvider) mapResponseToState(state *providerschema.AppEndpointOidcProvider, resp api.AppEndpointOIDCProviderResponse) {
 	// optional fields
-	if resp.Issuer != "" {
-		state.Issuer = types.StringValue(resp.Issuer)
-	}
-	if resp.ClientID != "" {
-		state.ClientId = types.StringValue(resp.ClientID)
-	}
-	if resp.DiscoveryURL != "" && !state.DiscoveryUrl.IsNull() {
-		state.DiscoveryUrl = types.StringValue(resp.DiscoveryURL)
-	}
-	if resp.UserPrefix != "" && !state.UserPrefix.IsNull() {
-		state.UserPrefix = types.StringValue(resp.UserPrefix)
-	}
-	if resp.UsernameClaim != "" && !state.UsernameClaim.IsNull() {
-		state.UsernameClaim = types.StringValue(resp.UsernameClaim)
-	}
-	if resp.RolesClaim != "" && !state.RolesClaim.IsNull() {
-		state.RolesClaim = types.StringValue(resp.RolesClaim)
-	}
-	if !state.Register.IsNull() {
-		state.Register = types.BoolValue(resp.Register)
-	}
+	state.Issuer = types.StringValue(resp.Issuer)
+	state.ClientId = types.StringValue(resp.ClientID)
+	state.DiscoveryUrl = types.StringValue(resp.DiscoveryURL)
+	state.UserPrefix = types.StringValue(resp.UserPrefix)
+	state.UsernameClaim = types.StringValue(resp.UsernameClaim)
+	state.RolesClaim = types.StringValue(resp.RolesClaim)
+	state.Register = types.BoolValue(resp.Register)
+
 	// required fields, updating state for drift detection
 	state.Issuer = types.StringValue(resp.Issuer)
 	state.ClientId = types.StringValue(resp.ClientID)
+
 	// Computed fields
 	state.ProviderId = types.StringValue(resp.ProviderID)
 	state.IsDefault = types.BoolValue(resp.IsDefault)
