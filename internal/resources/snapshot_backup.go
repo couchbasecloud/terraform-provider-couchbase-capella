@@ -267,27 +267,24 @@ func (s *SnapshotBackup) Update(ctx context.Context, req resource.UpdateRequest,
 
 	if !plan.RestoreTimes.IsNull() {
 		if !state.RestoreTimes.IsNull() && !state.RestoreTimes.IsUnknown() {
-			tflog.Debug(ctx, "restoring snapshot backup", map[string]interface{}{
-				"state": state,
-				"plan":  plan,
-			})
 			planRestoreTimes := *plan.RestoreTimes.ValueBigFloat()
 			stateRestoreTimes := *state.RestoreTimes.ValueBigFloat()
-			if planRestoreTimes.Cmp(&stateRestoreTimes) != 1 {
+			if planRestoreTimes.Cmp(&stateRestoreTimes) == -1 {
 				resp.Diagnostics.AddError(
 					"Error restoring backup",
 					"Could not restore backup id "+state.ID.String()+": plan restore times value is not greater than state restore times value",
 				)
 				return
+			} else if planRestoreTimes.Cmp(&stateRestoreTimes) == 1 {
+				err = s.restoreSnapshotBackup(ctx, organizationId, projectId, clusterId, Id, providerschema.ConvertStringValueList(plan.CrossRegionRestorePreference))
+				if err != nil {
+					resp.Diagnostics.AddError(
+						"Error restoring snapshot backup",
+						"Could not restore snapshot backup id "+state.ID.String()+": "+err.Error(),
+					)
+					return
+				}
 			}
-		}
-		err = s.restoreSnapshotBackup(ctx, organizationId, projectId, clusterId, Id, providerschema.ConvertStringValueList(plan.CrossRegionRestorePreference))
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error restoring snapshot backup",
-				"Could not restore snapshot backup id "+state.ID.String()+": "+err.Error(),
-			)
-			return
 		}
 	}
 
@@ -315,6 +312,7 @@ func (s *SnapshotBackup) Update(ctx context.Context, req resource.UpdateRequest,
 	state.Expiration = types.StringValue(refreshedState.Expiration)
 	state.RegionsToCopy = plan.RegionsToCopy
 	state.RestoreTimes = plan.RestoreTimes
+	state.CrossRegionRestorePreference = plan.CrossRegionRestorePreference
 
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
