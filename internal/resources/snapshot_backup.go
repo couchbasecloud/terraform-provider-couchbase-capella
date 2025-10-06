@@ -56,6 +56,8 @@ func (s *SnapshotBackup) ImportState(ctx context.Context, req resource.ImportSta
 
 func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan providerschema.SnapshotBackup
+	var refreshedState *providerschema.SnapshotBackup
+
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 
@@ -94,7 +96,6 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 			"projectId":                   projectId,
 			"clusterId":                   clusterId,
 			"createSnapshotBackupRequest": createSnapshotBackupRequest,
-			"createResp":                  createResp,
 			"err":                         api.ParseError(err),
 		})
 		return
@@ -110,35 +111,23 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		tflog.Debug(ctx, "error initializing snapshot backup state", map[string]interface{}{
-			"OrganizationId": organizationId,
-			"ProjectID":      projectId,
-			"ClusterID":      clusterId,
-			"ID":             createSnapshotBackupResponse.ID,
-			"err":            err,
-		})
-		return
-	}
-
-	// Checks the snapshot backup creation is complete.
 	backupResp, err := s.getSnapshotBackup(ctx, organizationId, projectId, clusterId, createSnapshotBackupResponse.ID)
 	if err != nil {
 		resp.Diagnostics.AddWarning(
 			"Error while checking latest snapshot backup status",
 			errorMessageWhileSnapshotBackupCreation+api.ParseError(err),
 		)
-		return
-	}
-
-	refreshedState, err := morphToTerraformCloudSnapshotBackup(ctx, backupResp, clusterId, projectId, organizationId)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating snapshot backup",
-			"Could not create snapshot backup: "+err.Error(),
-		)
-		return
+		refreshedState = &providerschema.SnapshotBackup{}
+		refreshedState = setNullValues(refreshedState, clusterId, projectId, organizationId, createSnapshotBackupResponse.ID)
+	} else {
+		refreshedState, err = morphToTerraformCloudSnapshotBackup(ctx, backupResp, clusterId, projectId, organizationId)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error creating snapshot backup",
+				"Could not create snapshot backup: "+err.Error(),
+			)
+			return
+		}
 	}
 
 	refreshedState.RegionsToCopy = plan.RegionsToCopy
@@ -459,6 +448,26 @@ func (s *SnapshotBackup) getSnapshotBackup(ctx context.Context, organizationId, 
 		"Id":             Id,
 	})
 	return nil, errors.ErrNotFound
+}
+
+func setNullValues(refreshedState *providerschema.SnapshotBackup, clusterId, projectId, organizationId, Id string) *providerschema.SnapshotBackup {
+	refreshedState.ID = types.StringValue(Id)
+	refreshedState.ClusterID = types.StringValue(clusterId)
+	refreshedState.ProjectID = types.StringValue(projectId)
+	refreshedState.OrganizationId = types.StringValue(organizationId)
+	refreshedState.CreatedAt = types.StringNull()
+	refreshedState.Expiration = types.StringNull()
+	refreshedState.Progress = types.ObjectNull(providerschema.Progress{}.AttributeTypes())
+	refreshedState.Server = types.ObjectNull(providerschema.Server{}.AttributeTypes())
+	refreshedState.CMEK = types.SetNull(types.ObjectType{AttrTypes: providerschema.CMEK{}.AttributeTypes()})
+	refreshedState.CrossRegionCopies = types.SetNull(types.ObjectType{AttrTypes: providerschema.CrossRegionCopy{}.AttributeTypes()})
+	refreshedState.Size = types.Int64Null()
+	refreshedState.Type = types.StringNull()
+
+	if refreshedState.Retention.IsNull() || refreshedState.Retention.IsUnknown() {
+		refreshedState.Retention = types.Int64Null()
+	}
+	return refreshedState
 }
 
 // morphToTerraformCloudSnapshotBackup creates a snapshot backup from a snapshot backup response.
