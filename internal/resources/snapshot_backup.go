@@ -265,8 +265,17 @@ func (s *SnapshotBackup) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	if !plan.RestoreTimes.IsNull() {
-		if !state.RestoreTimes.IsNull() && !state.RestoreTimes.IsUnknown() {
+	if !plan.RestoreTimes.IsNull() && !state.RestoreTimes.IsUnknown() {
+		if state.RestoreTimes.IsNull() {
+			err = s.restoreSnapshotBackup(ctx, organizationId, projectId, clusterId, Id, providerschema.ConvertStringValueList(plan.CrossRegionRestorePreference))
+			if err != nil {
+				resp.Diagnostics.AddError(
+					"Error restoring snapshot backup",
+					"Could not restore snapshot backup id "+state.ID.String()+": "+err.Error(),
+				)
+				return
+			}
+		} else {
 			planRestoreTimes := *plan.RestoreTimes.ValueBigFloat()
 			stateRestoreTimes := *state.RestoreTimes.ValueBigFloat()
 			if planRestoreTimes.Cmp(&stateRestoreTimes) == -1 {
