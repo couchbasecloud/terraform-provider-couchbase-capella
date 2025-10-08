@@ -2,7 +2,7 @@ resource "couchbase-capella_app_endpoint" "endpoint1" {
   organization_id = var.organization_id
   project_id      = couchbase-capella_project.new_project.id
   cluster_id      = couchbase-capella_cluster.new_cluster.id
-  app_service_id = var.app_service.id
+  app_service_id = couchbase-capella_app_service.new_app_service.id
   name          = var.app_endpoint
   bucket        = var.bucket.name
   
@@ -19,11 +19,11 @@ resource "couchbase-capella_app_endpoint" "endpoint1" {
 
   oidc = [
     {
-      issuer         = "https://example-issuer.com"
+      issuer         = "https://accounts.google.com"
       register       = false
       client_id      = "example-client-id"
       user_prefix    = "user_"
-      discovery_url  = "https://example-issuer.com/.well-known/openid-configuration"
+      discovery_url  = "https://accounts.google.com/.well-known/openid-configuration"
       username_claim = "sub"
       roles_claim    = "roles"
     }
