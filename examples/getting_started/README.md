@@ -43,20 +43,13 @@ Command: `terraform plan`
 Sample Output:
 ```
 terraform plan
-╷
-│ Warning: Provider development overrides are in effect
-│ 
-│ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/$USER/GolandProjects/terraform-provider-couchbase-capella/bin
-│ 
-│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
 data.couchbase-capella_events.existing_events: Reading...
 data.couchbase-capella_organization.existing_organization: Reading...
-data.couchbase-capella_organization.existing_organization: Read complete after 1s [name=my-org]apella-prod]
+data.couchbase-capella_organization.existing_organization: Read complete after 1s [name=cbc-dev]
 data.couchbase-capella_events.existing_events: Read complete after 1s
 data.couchbase-capella_event.existing_event: Reading...
-data.couchbase-capella_event.existing_event: Read complete after 0s [id=ffffffff-aaaa-1414-eeee-000000000000]
+data.couchbase-capella_event.existing_event: Read complete after 4s [id=ed99bbef-2377-4299-bf5d-cea181d68f11]
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   + create
@@ -138,6 +131,7 @@ Terraform will perform the following actions:
           + "10.1.43.0/23",
         ]
       + audit              = (known after apply)
+      + description        = ""
       + expiry             = 180
       + id                 = (known after apply)
       + name               = "My First Terraform API Key"
@@ -160,6 +154,132 @@ Terraform will perform the following actions:
       + token              = (sensitive value)
     }
 
+  # couchbase-capella_app_endpoint.endpoint1 will be created
+  + resource "couchbase-capella_app_endpoint" "endpoint1" {
+      + admin_url          = (known after apply)
+      + app_service_id     = (known after apply)
+      + bucket             = "new_terraform_bucket"
+      + cluster_id         = (known after apply)
+      + cors               = {
+          + disabled = false
+          + headers  = [
+              + "Authorization",
+              + "Content-Type",
+            ]
+          + max_age  = 3600
+          + origin   = [
+              + "http://example.com",
+              + "http://staging.example.com",
+            ]
+        }
+      + delta_sync_enabled = (known after apply)
+      + metrics_url        = (known after apply)
+      + name               = "app-endpoint-1"
+      + oidc               = [
+          + {
+              + client_id      = "example-client-id"
+              + discovery_url  = "https://accounts.google.com/.well-known/openid-configuration"
+              + is_default     = (known after apply)
+              + issuer         = "https://accounts.google.com"
+              + provider_id    = (known after apply)
+              + register       = false
+              + roles_claim    = "roles"
+              + user_prefix    = "user_"
+              + username_claim = "sub"
+            },
+        ]
+      + organization_id    = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id         = (known after apply)
+      + public_url         = (known after apply)
+      + require_resync     = (known after apply)
+      + scopes             = {
+          + "new_terraform_scope" = {
+              + collections = {
+                  + "new_terraform_collection" = {
+                      + access_control_function = "function (doc, oldDoc, meta) {channel('c1');}"
+                      + import_filter           = "function(doc) { if (doc.type != 'mobile') { return false; } return true; }"
+                    },
+                }
+            },
+        }
+      + state              = (known after apply)
+      + user_xattr_key     = (known after apply)
+    }
+
+  # couchbase-capella_app_endpoint_access_control_function.acf1 will be created
+  + resource "couchbase-capella_app_endpoint_access_control_function" "acf1" {
+      + access_control_function = "function (doc, oldDoc, meta) {channel('c1');}"
+      + app_endpoint_name       = "app-endpoint-1"
+      + app_service_id          = (known after apply)
+      + cluster_id              = (known after apply)
+      + collection              = "new_terraform_collection"
+      + organization_id         = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id              = (known after apply)
+      + scope                   = "new_terraform_scope"
+    }
+
+  # couchbase-capella_app_endpoint_activation_status.activation1 will be created
+  + resource "couchbase-capella_app_endpoint_activation_status" "activation1" {
+      + app_endpoint_name = "app-endpoint-1"
+      + app_service_id    = (known after apply)
+      + cluster_id        = (known after apply)
+      + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id        = (known after apply)
+      + state             = "Online"
+    }
+
+  # couchbase-capella_app_endpoint_cors.cors1 will be created
+  + resource "couchbase-capella_app_endpoint_cors" "cors1" {
+      + app_endpoint_name = "app-endpoint-1"
+      + app_service_id    = (known after apply)
+      + cluster_id        = (known after apply)
+      + disabled          = false
+      + headers           = [
+          + "Authorization",
+          + "Content-Type",
+        ]
+      + login_origin      = [
+          + "http://example.com",
+        ]
+      + max_age           = 3600
+      + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      + origin            = [
+          + "http://example.com",
+          + "http://staging.example.com",
+        ]
+      + project_id        = (known after apply)
+    }
+
+  # couchbase-capella_app_endpoint_import_filter.import_filter1 will be created
+  + resource "couchbase-capella_app_endpoint_import_filter" "import_filter1" {
+      + app_endpoint_name = "app-endpoint-1"
+      + app_service_id    = (known after apply)
+      + cluster_id        = (known after apply)
+      + collection        = "new_terraform_collection"
+      + import_filter     = "function(doc) { if (doc.type != 'mobile') { return false; } return true; }"
+      + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id        = (known after apply)
+      + scope             = "new_terraform_scope"
+    }
+
+  # couchbase-capella_app_endpoint_oidc_provider.oidc1 will be created
+  + resource "couchbase-capella_app_endpoint_oidc_provider" "oidc1" {
+      + app_endpoint_name = "app-endpoint-1"
+      + app_service_id    = (known after apply)
+      + client_id         = "example-client-id"
+      + cluster_id        = (known after apply)
+      + discovery_url     = "https://accounts.google.com/.well-known/openid-configuration"
+      + is_default        = (known after apply)
+      + issuer            = "https://accounts.google.com"
+      + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id        = (known after apply)
+      + provider_id       = (known after apply)
+      + register          = false
+      + roles_claim       = "roles"
+      + user_prefix       = "user_"
+      + username_claim    = "sub"
+    }
+
   # couchbase-capella_app_service.new_app_service will be created
   + resource "couchbase-capella_app_service" "new_app_service" {
       + audit           = (known after apply)
@@ -178,6 +298,19 @@ Terraform will perform the following actions:
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id      = (known after apply)
       + version         = (known after apply)
+    }
+
+  # couchbase-capella_app_services_cidr.new_allowed_cidr will be created
+  + resource "couchbase-capella_app_services_cidr" "new_allowed_cidr" {
+      + app_service_id  = (known after apply)
+      + audit           = (known after apply)
+      + cidr            = "8.8.8.8/32"
+      + cluster_id      = (known after apply)
+      + comment         = "Allow access from a public IP"
+      + expires_at      = "2043-11-30T23:59:59.465Z"
+      + id              = (known after apply)
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = (known after apply)
     }
 
   # couchbase-capella_audit_log_settings.new_auditlogsettings will be created
@@ -420,8 +553,8 @@ Terraform will perform the following actions:
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
     }
 
-  # couchbase-capella_query_indexes.idx will be created
-  + resource "couchbase-capella_query_indexes" "idx" {
+  # couchbase-capella_query_indexes.idx1 will be created
+  + resource "couchbase-capella_query_indexes" "idx1" {
       + bucket_name     = "new_terraform_bucket"
       + cluster_id      = (known after apply)
       + collection_name = "new_terraform_collection"
@@ -438,7 +571,51 @@ Terraform will perform the following actions:
       + where           = "dept = 'sales'"
       + with            = {
           + defer_build = false
-          + num_replica = 1
+          + num_replica = (known after apply)
+        }
+    }
+
+  # couchbase-capella_query_indexes.idx2 will be created
+  + resource "couchbase-capella_query_indexes" "idx2" {
+      + bucket_name     = "new_terraform_bucket"
+      + cluster_id      = (known after apply)
+      + collection_name = "new_terraform_collection"
+      + index_keys      = [
+          + "id",
+          + "age",
+          + "name",
+        ]
+      + index_name      = "idx2"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = (known after apply)
+      + scope_name      = "new_terraform_scope"
+      + status          = (known after apply)
+      + where           = "dept = 'sales'"
+      + with            = {
+          + defer_build = false
+          + num_replica = (known after apply)
+        }
+    }
+
+  # couchbase-capella_query_indexes.idx3 will be created
+  + resource "couchbase-capella_query_indexes" "idx3" {
+      + bucket_name     = "new_terraform_bucket"
+      + cluster_id      = (known after apply)
+      + collection_name = "new_terraform_collection"
+      + index_keys      = [
+          + "id",
+          + "age",
+          + "name",
+        ]
+      + index_name      = "idx3"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = (known after apply)
+      + scope_name      = "new_terraform_scope"
+      + status          = (known after apply)
+      + where           = "dept = 'sales'"
+      + with            = {
+          + defer_build = false
+          + num_replica = (known after apply)
         }
     }
 
@@ -500,7 +677,7 @@ Terraform will perform the following actions:
       + time_zone            = (known after apply)
     }
 
-Plan: 16 to add, 0 to change, 0 to destroy.
+Plan: 25 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
   + apikey                  = (sensitive value)
@@ -669,288 +846,144 @@ Changes to Outputs:
     }
   + database_credential     = (sensitive value)
   + existing_event          = {
-      + alert_key        = "logged_in"
+      + alert_key        = "cluster_deletion_completed"
       + app_service_id   = null
       + app_service_name = null
-      + cluster_id       = null
-      + cluster_name     = null
-      + id               = "ffffffff-aaaa-1414-eeee-000000000000"
+      + cluster_id       = "4e26e101-ea65-43eb-b9ec-47f7bf21feb8"
+      + cluster_name     = "cbdc2_d14ffb3d8ce748e19b4fce992670155e"
+      + id               = "ed99bbef-2377-4299-bf5d-cea181d68f11"
       + image_url        = null
       + incident_ids     = []
-      + key              = "logged_in"
+      + key              = "cluster_deletion_completed"
       + kv               = "null"
       + occurrence_count = null
       + organization_id  = "ffffffff-aaaa-1414-eeee-000000000000"
-      + project_id       = null
-      + project_name     = null
-      + request_id       = null
+      + project_id       = "6291575b-28b0-4b6f-bf56-a80ecd273f29"
+      + project_name     = "cbdc2_q57vmfccst4e36qfpqcics0lbo_20251007-110445"
+      + request_id       = "cf8ef6bd-3cc7-4a28-88ad-23f8296edb97"
       + session_id       = null
       + severity         = "info"
-      + source           = "cp-ns"
+      + source           = "cp-jobs"
       + summary          = null
-      + timestamp        = "2024-12-11 20:33:36.600542622 +0000 UTC"
+      + timestamp        = "2025-10-07 15:57:57.162544024 +0000 UTC"
       + user_email       = null
-      + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-      + user_name        = "SDK QE"
+      + user_id          = "e8977bcf-f4b9-4ec2-80ae-7aecca0fac93"
+      + user_name        = "Will Broadbelt"
     }
   + existing_events         = {
       + cluster_ids     = null
       + cursor          = {
           + hrefs = {
-              + first    = "http://cloudapi.cloud.couchbase.com/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/events?page=1&perPage=10"
-              + last     = "http://cloudapi.cloud.couchbase.com/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/events?page=37&perPage=10"
-              + next     = "http://cloudapi.cloud.couchbase.com/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/events?page=2&perPage=10"
+              + first    = "http://cloudapi.dev.nonprod-project-avengers.com/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/events?page=1&perPage=10"
+              + last     = "http://cloudapi.dev.nonprod-project-avengers.com/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/events?page=486&perPage=10"
+              + next     = "http://cloudapi.dev.nonprod-project-avengers.com/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/events?page=2&perPage=10"
               + previous = ""
             }
           + pages = {
-              + last        = 37
+              + last        = 486
               + next        = 2
               + page        = 1
               + per_page    = 10
               + previous    = 0
-              + total_items = 369
+              + total_items = 4858
             }
         }
       + data            = [
           + {
-              + alert_key        = "logged_in"
+              + alert_key        = "cluster_deletion_completed"
               + app_service_id   = null
               + app_service_name = null
-              + cluster_id       = null
-              + cluster_name     = null
-              + id               = "ffffffff-aaaa-1414-eeee-000000000000"
+              + cluster_id       = "4e26e101-ea65-43eb-b9ec-47f7bf21feb8"
+              + cluster_name     = "cbdc2_d14ffb3d8ce748e19b4fce992670155e"
+              + id               = "ed99bbef-2377-4299-bf5d-cea181d68f11"
               + image_url        = null
               + incident_ids     = []
-              + key              = "logged_in"
+              + key              = "cluster_deletion_completed"
               + kv               = "null"
               + occurrence_count = null
-              + project_id       = null
-              + project_name     = null
-              + request_id       = null
+              + project_id       = "6291575b-28b0-4b6f-bf56-a80ecd273f29"
+              + project_name     = "cbdc2_q57vmfccst4e36qfpqcics0lbo_20251007-110445"
+              + request_id       = "cf8ef6bd-3cc7-4a28-88ad-23f8296edb97"
               + session_id       = null
               + severity         = "info"
-              + source           = "cp-ns"
+              + source           = "cp-jobs"
               + summary          = null
-              + timestamp        = "2024-12-11 20:33:36.600542622 +0000 UTC"
+              + timestamp        = "2025-10-07 15:57:57.162544024 +0000 UTC"
               + user_email       = null
-              + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
+              + user_id          = "e8977bcf-f4b9-4ec2-80ae-7aecca0fac93"
+              + user_name        = "Will Broadbelt"
             },
           + {
-              + alert_key        = "logged_in"
+              + alert_key        = "cluster_deletion_completed"
               + app_service_id   = null
               + app_service_name = null
-              + cluster_id       = null
-              + cluster_name     = null
-              + id               = "ffffffff-aaaa-1414-eeee-000000000000"
+              + cluster_id       = "bca23444-1c3e-42ef-8370-3e9b657f2e59"
+              + cluster_name     = "cbdc2_bdbd3bfaf11942fba74d35067af9856c"
+              + id               = "baa38b90-33fe-4080-b60a-0ebf7161520a"
               + image_url        = null
               + incident_ids     = []
-              + key              = "logged_in"
+              + key              = "cluster_deletion_completed"
               + kv               = "null"
               + occurrence_count = null
-              + project_id       = null
-              + project_name     = null
-              + request_id       = null
+              + project_id       = "48b2c2e7-c0ce-4fbc-b4cb-5420ce795d51"
+              + project_name     = "cbdc2_nmujnunh351fn9qd6k37luc5dg_20251007-115818"
+              + request_id       = "45a8bf63-1749-4d1e-99c6-271698804916"
               + session_id       = null
               + severity         = "info"
-              + source           = "cp-ns"
+              + source           = "cp-jobs"
               + summary          = null
-              + timestamp        = "2024-12-11 20:38:27.417814023 +0000 UTC"
+              + timestamp        = "2025-10-07 15:58:04.464778071 +0000 UTC"
               + user_email       = null
-              + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
+              + user_id          = "e8977bcf-f4b9-4ec2-80ae-7aecca0fac93"
+              + user_name        = "Will Broadbelt"
             },
           + {
-              + alert_key        = "logged_in"
+              + alert_key        = "cluster_deletion_completed"
               + app_service_id   = null
               + app_service_name = null
-              + cluster_id       = null
-              + cluster_name     = null
-              + id               = "7e74fc9b-3d7c-746d-0c36-751a984a5747"
+              + cluster_id       = "dcdad429-467b-4a61-9081-84f220415262"
+              + cluster_name     = "cbdc2_115af94481654c8cb2ab79f1c50d978d"
+              + id               = "b1c1783b-18a6-4e6c-b2cd-5abd0d1d71ec"
               + image_url        = null
               + incident_ids     = []
-              + key              = "logged_in"
+              + key              = "cluster_deletion_completed"
               + kv               = "null"
               + occurrence_count = null
-              + project_id       = null
-              + project_name     = null
-              + request_id       = null
+              + project_id       = "c391abb6-a6f2-4399-9d02-ca2b9e28e9c9"
+              + project_name     = "cbdc2_25dfih41cl68pclbf7osa3cnhk_20251007-122758"
+              + request_id       = "f836d206-347e-45b5-9bbf-4ada8638241c"
               + session_id       = null
               + severity         = "info"
-              + source           = "cp-ns"
+              + source           = "cp-jobs"
               + summary          = null
-              + timestamp        = "2024-12-11 20:38:33.290122146 +0000 UTC"
+              + timestamp        = "2025-10-07 15:58:14.641773845 +0000 UTC"
               + user_email       = null
-              + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
+              + user_id          = "e8977bcf-f4b9-4ec2-80ae-7aecca0fac93"
+              + user_name        = "Will Broadbelt"
             },
           + {
-              + alert_key        = "logged_in"
+              + alert_key        = "cluster_deletion_completed"
               + app_service_id   = null
               + app_service_name = null
-              + cluster_id       = null
-              + cluster_name     = null
-              + id               = "ffffffff-aaaa-1414-eeee-000000000000"
+              + cluster_id       = "5463545f-e5d0-492d-b4ab-249770cc7b37"
+              + cluster_name     = "cbdc2_651ed17f6c764bc0b0ca0a468423e171"
+              + id               = "3fd9a9b9-33dd-49d9-89e6-dca56ac878ac"
               + image_url        = null
               + incident_ids     = []
-              + key              = "logged_in"
+              + key              = "cluster_deletion_completed"
               + kv               = "null"
               + occurrence_count = null
-              + project_id       = null
-              + project_name     = null
-              + request_id       = null
+              + project_id       = "121e1794-88d0-43f9-a81a-493bf0fa19f9"
+              + project_name     = "cbdc2_ckfd2vrcep5s1c6a193888v1e4_20251007-113242"
+              + request_id       = "2ce5f5a7-9eb9-4421-a5cc-904cf7d1c255"
               + session_id       = null
               + severity         = "info"
-              + source           = "cp-ns"
+              + source           = "cp-jobs"
               + summary          = null
-              + timestamp        = "2024-12-11 20:38:41.431711495 +0000 UTC"
+              + timestamp        = "2025-10-07 15:58:30.768626242 +0000 UTC"
               + user_email       = null
-              + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
-            },
-          + {
-              + alert_key        = "logged_in"
-              + app_service_id   = null
-              + app_service_name = null
-              + cluster_id       = null
-              + cluster_name     = null
-              + id               = "43ce65aa-9d2c-6320-5045-357f8e5a7ec8"
-              + image_url        = null
-              + incident_ids     = []
-              + key              = "logged_in"
-              + kv               = "null"
-              + occurrence_count = null
-              + project_id       = null
-              + project_name     = null
-              + request_id       = null
-              + session_id       = null
-              + severity         = "info"
-              + source           = "cp-ns"
-              + summary          = null
-              + timestamp        = "2024-12-11 20:39:37.974685759 +0000 UTC"
-              + user_email       = null
-              + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
-            },
-          + {
-              + alert_key        = "logged_in"
-              + app_service_id   = null
-              + app_service_name = null
-              + cluster_id       = null
-              + cluster_name     = null
-              + id               = "1ce5b903-9f45-eea3-a601-2597282a2a09"
-              + image_url        = null
-              + incident_ids     = []
-              + key              = "logged_in"
-              + kv               = "null"
-              + occurrence_count = null
-              + project_id       = null
-              + project_name     = null
-              + request_id       = null
-              + session_id       = null
-              + severity         = "info"
-              + source           = "cp-ns"
-              + summary          = null
-              + timestamp        = "2024-12-11 20:39:42.809020171 +0000 UTC"
-              + user_email       = null
-              + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
-            },
-          + {
-              + alert_key        = "logged_in"
-              + app_service_id   = null
-              + app_service_name = null
-              + cluster_id       = null
-              + cluster_name     = null
-              + id               = "126012e4-95cb-0002-13be-34b673035f31"
-              + image_url        = null
-              + incident_ids     = []
-              + key              = "logged_in"
-              + kv               = "null"
-              + occurrence_count = null
-              + project_id       = null
-              + project_name     = null
-              + request_id       = null
-              + session_id       = null
-              + severity         = "info"
-              + source           = "cp-ns"
-              + summary          = null
-              + timestamp        = "2024-12-11 20:39:49.230386108 +0000 UTC"
-              + user_email       = null
-              + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
-            },
-          + {
-              + alert_key        = "logged_in"
-              + app_service_id   = null
-              + app_service_name = null
-              + cluster_id       = null
-              + cluster_name     = null
-              + id               = "9fb9f8bd-787d-6604-5887-b67d34e8be64"
-              + image_url        = null
-              + incident_ids     = []
-              + key              = "logged_in"
-              + kv               = "null"
-              + occurrence_count = null
-              + project_id       = null
-              + project_name     = null
-              + request_id       = null
-              + session_id       = null
-              + severity         = "info"
-              + source           = "cp-ns"
-              + summary          = null
-              + timestamp        = "2024-12-11 20:41:53.158231931 +0000 UTC"
-              + user_email       = null
-              + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
-            },
-          + {
-              + alert_key        = "logged_in"
-              + app_service_id   = null
-              + app_service_name = null
-              + cluster_id       = null
-              + cluster_name     = null
-              + id               = "ffffffff-aaaa-1414-eeee-000000000000"
-              + image_url        = null
-              + incident_ids     = []
-              + key              = "logged_in"
-              + kv               = "null"
-              + occurrence_count = null
-              + project_id       = null
-              + project_name     = null
-              + request_id       = null
-              + session_id       = null
-              + severity         = "info"
-              + source           = "cp-ns"
-              + summary          = null
-              + timestamp        = "2024-12-11 20:41:59.204057247 +0000 UTC"
-              + user_email       = null
-              + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
-            },
-          + {
-              + alert_key        = "logged_in"
-              + app_service_id   = null
-              + app_service_name = null
-              + cluster_id       = null
-              + cluster_name     = null
-              + id               = "ffffffff-aaaa-1414-eeee-000000000000"
-              + image_url        = null
-              + incident_ids     = []
-              + key              = "logged_in"
-              + kv               = "null"
-              + occurrence_count = null
-              + project_id       = null
-              + project_name     = null
-              + request_id       = null
-              + session_id       = null
-              + severity         = "info"
-              + source           = "cp-ns"
-              + summary          = null
-              + timestamp        = "2024-12-11 20:42:05.079807567 +0000 UTC"
-              + user_email       = null
-              + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
+              + user_id          = "e8977bcf-f4b9-4ec2-80ae-7aecca0fac93"
+              + user_name        = "Will Broadbelt"
             },
         ]
       + from            = null
@@ -1006,30 +1039,6 @@ Changes to Outputs:
       + to              = null
       + user_ids        = null
     }
-  + idx                     = {
-      + bucket_name     = "new_terraform_bucket"
-      + build_indexes   = null
-      + cluster_id      = (known after apply)
-      + collection_name = "new_terraform_collection"
-      + index_keys      = [
-          + "id",
-          + "age",
-          + "name",
-        ]
-      + index_name      = "idx1"
-      + is_primary      = null
-      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
-      + partition_by    = null
-      + project_id      = (known after apply)
-      + scope_name      = "new_terraform_scope"
-      + status          = (known after apply)
-      + where           = "dept = 'sales'"
-      + with            = {
-          + defer_build   = false
-          + num_partition = null
-          + num_replica   = 1
-        }
-    }
   + network_peer            = {
       + audit           = (known after apply)
       + cluster_id      = (known after apply)
@@ -1062,14 +1071,14 @@ Changes to Outputs:
     }
   + organization            = {
       + audit           = {
-          + created_at  = "2021-12-03 16:14:45.105347711 +0000 UTC"
-          + created_by  = "b1cf2366-0401-4cac-8770-f24e511f6c0a"
-          + modified_at = "2024-11-18 15:22:27.933390014 +0000 UTC"
-          + modified_by = "ab88be62-e7f5-4701-828d-129e8641d111"
-          + version     = 39
+          + created_at  = "2020-07-22 12:38:57.437248116 +0000 UTC"
+          + created_by  = ""
+          + modified_at = "2025-09-16 17:57:52.686805057 +0000 UTC"
+          + modified_by = "92bc9f6e-bf27-4b04-95d8-3620cf45afa1"
+          + version     = 0
         }
       + description     = ""
-      + name            = "capella-prod"
+      + name            = "cbc-dev"
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + preferences     = {
           + session_duration = 7200
@@ -1113,7 +1122,7 @@ Changes to Outputs:
       + time_zone            = (known after apply)
     }
 
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly these actions if you run "terraform apply" now.
 ```
