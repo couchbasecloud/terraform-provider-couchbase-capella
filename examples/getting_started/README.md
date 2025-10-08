@@ -13,13 +13,19 @@ In this demo, we will perform the following operations:
 9. Create a new bucket in the cluster.
 10. Create a new sample bucket in the cluster.
 11. Create a new app service in the cluster.
-12. Create a new scope in the bucket of the cluster.
-13. Create a new collection in the scope of a bucket.
-14. Create a new on/off schedule for the cluster.
-15. Create a new audit log settings.
-16. Enable private endpoint service on the cluster.
-17. Create a new network peer.
-18. Create an non-deferred secondary index.
+12. Create an app endpoint in the created app service.
+13. Configure an access control function in the app endpoint.
+14. Configure an import filter in the app endpoint.
+15. Configure an OIDC provider on the app endpoint.
+16. Configure a CORS policy on the app endpoint.
+17. Change the app endpoint's activation status.
+18. Create a new scope in the bucket of the cluster.
+19. Create a new collection in the scope of a bucket.
+20. Create a new on/off schedule for the cluster.
+21. Create a new audit log settings.
+22. Enable private endpoint service on the cluster.
+23. Create a new network peer.
+24. Create an non-deferred secondary index.
 
 ## Pre-Requisites:
 
