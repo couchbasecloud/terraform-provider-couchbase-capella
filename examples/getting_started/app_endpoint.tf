@@ -19,11 +19,11 @@ resource "couchbase-capella_app_endpoint" "endpoint1" {
     
     oidc = [
     {
-      issuer         = "https://accounts.google.com"
+      issuer         = "<example-issuer-url>"
       register       = false
       client_id      = "example-client-id"
       user_prefix    = "user_"
-      discovery_url  = "https://accounts.google.com/.well-known/openid-configuration"
+      discovery_url  = "<example-discovery-url>"
       username_claim = "sub"
       roles_claim    = "roles"
     }

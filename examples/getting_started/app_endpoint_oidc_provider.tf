@@ -5,9 +5,9 @@ resource "couchbase-capella_app_endpoint_oidc_provider" "oidc1" {
     app_service_id    = couchbase-capella_app_service.new_app_service.id
     app_endpoint_name = var.app_endpoint
     
-    issuer        = "https://accounts.google.com"
+    issuer        = "<example-issuer-url>"
     client_id     = "example-client-id"
-    discovery_url = "https://accounts.google.com/.well-known/openid-configuration"
+    discovery_url = "<example-discovery_url-url>"
     register      = false
     username_claim = "sub"
     roles_claim    = "roles"
