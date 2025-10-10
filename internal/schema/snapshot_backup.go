@@ -1,7 +1,6 @@
 package schema
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -124,7 +123,7 @@ func (s SnapshotBackup) AttributeTypes() map[string]attr.Type {
 	}
 }
 
-func NewSnapshotBackup(ctx context.Context, snapshotBackup snapshot_backup.SnapshotBackup, ID, clusterID, projectID, organizationID string, progressObj, serverObj basetypes.ObjectValue, cmekSet, crossRegionCopySet basetypes.SetValue) SnapshotBackup {
+func NewSnapshotBackup(snapshotBackup snapshot_backup.SnapshotBackup, ID, clusterID, projectID, organizationID string, progressObj, serverObj basetypes.ObjectValue, cmekSet, crossRegionCopySet basetypes.SetValue) SnapshotBackup {
 	return SnapshotBackup{
 		ID:                types.StringValue(ID),
 		ClusterID:         types.StringValue(clusterID),

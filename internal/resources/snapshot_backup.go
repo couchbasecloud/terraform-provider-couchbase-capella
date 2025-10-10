@@ -21,8 +21,6 @@ import (
 const (
 	errorMessageWhileSnapshotBackupCreation = "There is an error during snapshot backup creation. Please check in Capella to see if any hanging resources" +
 		" have been created, unexpected error: "
-	errorMessageWhileSnapshotBackupUpdate = "There is an error during snapshot backup update. Please check in Capella to see if any hanging resources" +
-		" have been created, unexpected error: "
 	errorMessageConfigure = "Expected *ProviderSourceData, got:"
 )
 
@@ -32,18 +30,22 @@ var (
 	_ resource.ResourceWithImportState = &SnapshotBackup{}
 )
 
+// SnapshotBackup is the Snapshot Backup resource implementation.
 type SnapshotBackup struct {
 	*providerschema.Data
 }
 
+// NewSnapshotBackup is a helper function to simplify the provider implementation.
 func NewSnapshotBackup() resource.Resource {
 	return &SnapshotBackup{}
 }
 
+// Metadata returns the Snapshot Backup resource type name.
 func (s *SnapshotBackup) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_cloud_snapshot_backup"
 }
 
+// Schema defines the schema for the Snapshot Backup resource.
 func (s *SnapshotBackup) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = SnapshotBackupSchema()
 }
@@ -54,6 +56,7 @@ func (s *SnapshotBackup) ImportState(ctx context.Context, req resource.ImportSta
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
+// Create creates a new Snapshot Backup.
 func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan providerschema.SnapshotBackup
 	var refreshedState *providerschema.SnapshotBackup
@@ -137,6 +140,7 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 	resp.Diagnostics.Append(diags...)
 }
 
+// Read reads snapshot backup information.
 func (s *SnapshotBackup) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state providerschema.SnapshotBackup
 	diags := req.State.Get(ctx, &state)
@@ -170,6 +174,9 @@ func (s *SnapshotBackup) Read(ctx context.Context, req resource.ReadRequest, res
 			"Error reading snapshot backup",
 			"Could not read snapshot backup id "+Id+": "+err.Error(),
 		)
+		if err == errors.ErrNotFound {
+			resp.State.RemoveResource(ctx)
+		}
 		tflog.Debug(ctx, "error reading snapshot backup", map[string]interface{}{
 			"OrganizationId": organizationId,
 			"ProjectID":      projectId,
@@ -201,9 +208,6 @@ func (s *SnapshotBackup) Read(ctx context.Context, req resource.ReadRequest, res
 
 	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 
 }
 
@@ -275,6 +279,9 @@ func (s *SnapshotBackup) Update(ctx context.Context, req resource.UpdateRequest,
 			"Error reading snapshot backup",
 			"Could not read snapshot backup id "+Id+": "+err.Error(),
 		)
+		if err == errors.ErrNotFound {
+			resp.State.RemoveResource(ctx)
+		}
 		tflog.Debug(ctx, "error reading snapshot backup", map[string]interface{}{
 			"OrganizationId": organizationId,
 			"ProjectID":      projectId,
@@ -291,15 +298,9 @@ func (s *SnapshotBackup) Update(ctx context.Context, req resource.UpdateRequest,
 
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		tflog.Debug(ctx, "error setting snapshot backup state", map[string]interface{}{
-			"state": state,
-			"err":   err,
-		})
-		return
-	}
 }
 
+// Delete deletes the snapshot backup.
 func (s *SnapshotBackup) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state providerschema.SnapshotBackup
 	diags := req.State.Get(ctx, &state)
@@ -350,7 +351,6 @@ func (s *SnapshotBackup) Delete(ctx context.Context, req resource.DeleteRequest,
 				"ID":             Id,
 				"err":            err,
 			})
-			resp.State.RemoveResource(ctx)
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -385,6 +385,7 @@ func (s *SnapshotBackup) Configure(ctx context.Context, req resource.ConfigureRe
 	s.Data = data
 }
 
+// getSnapshotBackups retrieves a list of snapshot backups for a cluster.
 func (s *SnapshotBackup) getSnapshotBackups(ctx context.Context, organizationId, projectId, clusterId string) (*snapshot_backup.ListSnapshotBackupsResponse, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups", s.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
@@ -450,6 +451,7 @@ func (s *SnapshotBackup) getSnapshotBackup(ctx context.Context, organizationId, 
 	return nil, errors.ErrNotFound
 }
 
+// setNullValues sets the snapshot backup's computed values to null.
 func setNullValues(refreshedState *providerschema.SnapshotBackup, clusterId, projectId, organizationId, Id string) *providerschema.SnapshotBackup {
 	refreshedState.ID = types.StringValue(Id)
 	refreshedState.ClusterID = types.StringValue(clusterId)
@@ -538,6 +540,6 @@ func morphToTerraformCloudSnapshotBackup(ctx context.Context, backupResp *snapsh
 		return nil, fmt.Errorf("error during cross region copy conversion")
 	}
 
-	snapshotBackup := providerschema.NewSnapshotBackup(ctx, *backupResp, backupResp.ID, clusterId, projectId, organizationId, progressObj, serverObj, cmekSet, crossRegionCopySet)
+	snapshotBackup := providerschema.NewSnapshotBackup(*backupResp, backupResp.ID, clusterId, projectId, organizationId, progressObj, serverObj, cmekSet, crossRegionCopySet)
 	return &snapshotBackup, nil
 }
