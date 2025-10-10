@@ -232,7 +232,6 @@ Import successful!
 
 The resources that were imported are shown above. These resources are now in
 your Terraform state and will henceforth be managed by Terraform.
-
 ```
 
 Here, we pass the IDs as a single comma-separated string.

@@ -1,26 +1,26 @@
 variable "host" {
   description = "Capella Host URL"
-  type        = string
+  type = string
 }
 
 variable "organization_id" {
   description = "Capella Organization ID"
-  type        = string
+  type = string
 }
 
 variable "auth_token" {
   description = "Authentication API Key"
-  type        = string
+  type = string
 }
 
 variable "project_id" {
-  description = "Capella Project ID"
-  type        = string
+  description = "Capella Project ID"  
+  type = string
 }
 
 variable "cluster_id" {
   description = "Capella Cluster ID"
-  type        = string
+  type = string
 }
 
 variable "cloud_snapshot_backup" {
