@@ -28,9 +28,7 @@ variable "cloud_snapshot_backup" {
 
   type = object({
     retention = optional(number)
-    regions_to_copy = optional(list(string))
-    restore_times = optional(number)
-    cross_region_restore_preference = optional(list(string))
+    regions_to_copy = optional(list(string), [])
   })
 
   validation {
