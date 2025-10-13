@@ -13,6 +13,6 @@ resource "couchbase-capella_database_credential" "new_database_credential" {
   password        = var.password
   access          = var.access
   
-  depends_on = [couchbase-capella_cluster.new_cluster, couchbase-capella_bucket.new_bucket]
+  depends_on = [couchbase-capella_cluster.new_cluster]
 }
 
