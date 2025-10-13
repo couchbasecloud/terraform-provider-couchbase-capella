@@ -29,7 +29,7 @@ func (s SnapshotBackupSchedule) AttributeTypes() map[string]attr.Type {
 		"interval":        types.Int64Type,
 		"retention":       types.Int64Type,
 		"start_time":      types.StringType,
-		"copy_to_regions": types.ListType{ElemType: types.StringType},
+		"copy_to_regions": types.SetType{ElemType: types.StringType},
 	}
 }
 
