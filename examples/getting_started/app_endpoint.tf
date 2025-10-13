@@ -18,15 +18,14 @@ resource "couchbase-capella_app_endpoint" "endpoint1" {
     }
     
     oidc = [
-    {
-      issuer         = "<example-issuer-url>"
-      register       = false
-      client_id      = "example-client-id"
-      user_prefix    = "user_"
-      discovery_url  = "<example-discovery-url>"
-      username_claim = "sub"
-      roles_claim    = "roles"
-    }
+        {
+            issuer         = var.app_endpoint_oidc.issuer
+            client_id      = var.app_endpoint_oidc.client_id
+            register       = var.app_endpoint_oidc.register
+            username_claim = var.app_endpoint_oidc.username_claim
+            roles_claim    = var.app_endpoint_oidc.roles_claim
+            user_prefix    = var.app_endpoint_oidc.user_prefix
+        }
     ]
     
     cors = {

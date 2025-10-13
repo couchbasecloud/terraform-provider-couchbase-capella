@@ -12,5 +12,7 @@ resource "couchbase-capella_database_credential" "new_database_credential" {
   cluster_id      = couchbase-capella_cluster.new_cluster.id
   password        = var.password
   access          = var.access
+  
+  depends_on = [couchbase-capella_cluster.new_cluster, couchbase-capella_bucket.new_bucket]
 }
 
