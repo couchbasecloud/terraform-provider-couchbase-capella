@@ -48,6 +48,29 @@ type SnapshotBackup struct {
 	Type              types.String   `tfsdk:"type"`
 }
 
+type SnapshotBackupData struct {
+	CreatedAt         types.String `tfsdk:"created_at"`
+	Expiration        types.String `tfsdk:"expiration"`
+	ID                types.String `tfsdk:"id"`
+	Retention         types.Int64  `tfsdk:"retention"`
+	CrossRegionCopies types.Set    `tfsdk:"cross_region_copies"`
+	Progress          types.Object `tfsdk:"progress"`
+	CMEK              types.Set    `tfsdk:"cmek"`
+	Server            types.Object `tfsdk:"server"`
+	Size              types.Int64  `tfsdk:"size"`
+	Type              types.String `tfsdk:"type"`
+}
+
+// SnapshotBackups defines structure based on the response received from V4 Capella Public API when asked to list snapshot backups.
+type SnapshotBackups struct {
+	OrganizationId types.String `tfsdk:"organization_id"`
+	ProjectId      types.String `tfsdk:"project_id"`
+	ClusterId      types.String `tfsdk:"cluster_id"`
+
+	// Data contains the list of resources.
+	Data []SnapshotBackupData `tfsdk:"data"`
+}
+
 func (p Progress) AttributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"status": types.StringType,
@@ -130,6 +153,21 @@ func NewSnapshotBackup(snapshotBackup snapshot_backup.SnapshotBackup, ID, cluste
 		Expiration:        types.StringValue(snapshotBackup.Expiration),
 		ProjectID:         types.StringValue(projectID),
 		OrganizationId:    types.StringValue(organizationID),
+		CreatedAt:         types.StringValue(snapshotBackup.CreatedAt),
+		Retention:         types.Int64Value(snapshotBackup.Retention),
+		CrossRegionCopies: crossRegionCopySet,
+		Progress:          progressObj,
+		CMEK:              cmekSet,
+		Server:            serverObj,
+		Size:              types.Int64Value(int64(snapshotBackup.Size)),
+		Type:              types.StringValue(snapshotBackup.Type),
+	}
+}
+
+func NewSnapshotBackupData(snapshotBackup snapshot_backup.SnapshotBackup, ID, clusterID, projectID, organizationID string, progressObj, serverObj basetypes.ObjectValue, cmekSet, crossRegionCopySet basetypes.SetValue) SnapshotBackupData {
+	return SnapshotBackupData{
+		ID:                types.StringValue(ID),
+		Expiration:        types.StringValue(snapshotBackup.Expiration),
 		CreatedAt:         types.StringValue(snapshotBackup.CreatedAt),
 		Retention:         types.Int64Value(snapshotBackup.Retention),
 		CrossRegionCopies: crossRegionCopySet,
