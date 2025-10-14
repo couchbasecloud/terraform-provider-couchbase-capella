@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -22,8 +21,6 @@ import (
 const (
 	errorMessageWhileSnapshotBackupCreation = "There is an error during snapshot backup creation. Please check in Capella to see if any hanging resources" +
 		" have been created, unexpected error: "
-	errorMessageWhileSnapshotBackupUpdate = "There is an error during snapshot backup update. Please check in Capella to see if any hanging resources" +
-		" have been created, unexpected error: "
 	errorMessageConfigure = "Expected *ProviderSourceData, got:"
 )
 
@@ -33,26 +30,22 @@ var (
 	_ resource.ResourceWithImportState = &SnapshotBackup{}
 )
 
-type ID struct {
-	ID string `json:"id"`
-}
-
-type IDList struct {
-	Data []ID `json:"data"`
-}
-
+// SnapshotBackup is the Snapshot Backup resource implementation.
 type SnapshotBackup struct {
 	*providerschema.Data
 }
 
+// NewSnapshotBackup is a helper function to simplify the provider implementation.
 func NewSnapshotBackup() resource.Resource {
 	return &SnapshotBackup{}
 }
 
+// Metadata returns the Snapshot Backup resource type name.
 func (s *SnapshotBackup) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_snapshot_backup"
+	resp.TypeName = req.ProviderTypeName + "_cloud_snapshot_backup"
 }
 
+// Schema defines the schema for the Snapshot Backup resource.
 func (s *SnapshotBackup) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = SnapshotBackupSchema()
 }
@@ -63,8 +56,11 @@ func (s *SnapshotBackup) ImportState(ctx context.Context, req resource.ImportSta
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
+// Create creates a new Snapshot Backup.
 func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan providerschema.SnapshotBackup
+	var refreshedState *providerschema.SnapshotBackup
+
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 
@@ -79,7 +75,7 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 	)
 
 	createSnapshotBackupRequest := snapshot_backup.CreateSnapshotBackupRequest{
-		Retention:     int(plan.Retention.ValueInt64()),
+		Retention:     plan.Retention.ValueInt64(),
 		RegionsToCopy: providerschema.ConvertStringValueList(plan.RegionsToCopy),
 	}
 
@@ -103,7 +99,6 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 			"projectId":                   projectId,
 			"clusterId":                   clusterId,
 			"createSnapshotBackupRequest": createSnapshotBackupRequest,
-			"createResp":                  createResp,
 			"err":                         api.ParseError(err),
 		})
 		return
@@ -116,48 +111,26 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 			"Error unmarshalling create snapshot backup response",
 			"Could not unmarshal create snapshot backup response: "+err.Error(),
 		)
-		tflog.Debug(ctx, "error unmarshalling create snapshot backup response", map[string]interface{}{
-			"organizationId":              organizationId,
-			"projectId":                   projectId,
-			"clusterId":                   clusterId,
-			"createSnapshotBackupRequest": createSnapshotBackupRequest,
-			"createResp":                  createResp,
-			"err":                         api.ParseError(err),
-		})
 		return
 	}
 
-	// Checks the snapshot backup creation is complete.
-	backupResp, err := s.checkSnapshotBackupStatus(ctx, organizationId, projectId, clusterId, createSnapshotBackupResponse.ID)
+	backupResp, err := s.getSnapshotBackup(ctx, organizationId, projectId, clusterId, createSnapshotBackupResponse.ID)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"Error while checking latest snapshot backup status",
 			errorMessageWhileSnapshotBackupCreation+api.ParseError(err),
 		)
-		tflog.Debug(ctx, "error checking latest snapshot backup status", map[string]interface{}{
-			"organizationId": organizationId,
-			"projectId":      projectId,
-			"clusterId":      clusterId,
-			"Id":             createSnapshotBackupResponse.ID,
-			"err":            err,
-		})
-		return
-	}
-
-	refreshedState, err := createSnapshotBackup(ctx, backupResp, clusterId, projectId, organizationId)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating snapshot backup",
-			"Could not create snapshot backup: "+err.Error(),
-		)
-		tflog.Debug(ctx, "error creating snapshot backup", map[string]interface{}{
-			"organizationId": organizationId,
-			"projectId":      projectId,
-			"clusterId":      clusterId,
-			"refreshedState": refreshedState,
-			"err":            err,
-		})
-		return
+		refreshedState = &providerschema.SnapshotBackup{}
+		refreshedState = setNullValues(refreshedState, clusterId, projectId, organizationId, createSnapshotBackupResponse.ID)
+	} else {
+		refreshedState, err = morphToTerraformCloudSnapshotBackup(ctx, backupResp, clusterId, projectId, organizationId)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error creating snapshot backup",
+				"Could not create snapshot backup: "+err.Error(),
+			)
+			return
+		}
 	}
 
 	refreshedState.RegionsToCopy = plan.RegionsToCopy
@@ -165,12 +138,9 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 	// Sets state to fully populated data.
 	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 }
 
+// Read reads snapshot backup information.
 func (s *SnapshotBackup) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state providerschema.SnapshotBackup
 	diags := req.State.Get(ctx, &state)
@@ -204,6 +174,9 @@ func (s *SnapshotBackup) Read(ctx context.Context, req resource.ReadRequest, res
 			"Error reading snapshot backup",
 			"Could not read snapshot backup id "+Id+": "+err.Error(),
 		)
+		if err == errors.ErrNotFound {
+			resp.State.RemoveResource(ctx)
+		}
 		tflog.Debug(ctx, "error reading snapshot backup", map[string]interface{}{
 			"OrganizationId": organizationId,
 			"ProjectID":      projectId,
@@ -214,7 +187,7 @@ func (s *SnapshotBackup) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	refreshedState, err := createSnapshotBackup(ctx, snapshotBackup, clusterId, projectId, organizationId)
+	refreshedState, err := morphToTerraformCloudSnapshotBackup(ctx, snapshotBackup, clusterId, projectId, organizationId)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating snapshot backup",
@@ -235,9 +208,6 @@ func (s *SnapshotBackup) Read(ctx context.Context, req resource.ReadRequest, res
 
 	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 
 }
 
@@ -275,7 +245,7 @@ func (s *SnapshotBackup) Update(ctx context.Context, req resource.UpdateRequest,
 	)
 
 	updateSnapshotBackupRequest := snapshot_backup.EditBackupRetentionRequest{
-		Retention: int(plan.Retention.ValueInt64()),
+		Retention: plan.Retention.ValueInt64(),
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups/%s", s.HostURL, organizationId, projectId, clusterId, Id)
@@ -309,6 +279,9 @@ func (s *SnapshotBackup) Update(ctx context.Context, req resource.UpdateRequest,
 			"Error reading snapshot backup",
 			"Could not read snapshot backup id "+Id+": "+err.Error(),
 		)
+		if err == errors.ErrNotFound {
+			resp.State.RemoveResource(ctx)
+		}
 		tflog.Debug(ctx, "error reading snapshot backup", map[string]interface{}{
 			"OrganizationId": organizationId,
 			"ProjectID":      projectId,
@@ -320,20 +293,14 @@ func (s *SnapshotBackup) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	state.Retention = types.Int64Value(int64(refreshedState.Retention))
+	state.Retention = types.Int64Value(refreshedState.Retention)
 	state.Expiration = types.StringValue(refreshedState.Expiration)
 
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		tflog.Debug(ctx, "error setting snapshot backup state", map[string]interface{}{
-			"state": state,
-			"err":   err,
-		})
-		return
-	}
 }
 
+// Delete deletes the snapshot backup.
 func (s *SnapshotBackup) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state providerschema.SnapshotBackup
 	diags := req.State.Get(ctx, &state)
@@ -384,7 +351,6 @@ func (s *SnapshotBackup) Delete(ctx context.Context, req resource.DeleteRequest,
 				"ID":             Id,
 				"err":            err,
 			})
-			resp.State.RemoveResource(ctx)
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -419,69 +385,7 @@ func (s *SnapshotBackup) Configure(ctx context.Context, req resource.ConfigureRe
 	s.Data = data
 }
 
-// checkLatestSnapshotBackupStatus monitors the status of a snapshot backup creation operation for a specified organization, project, and cluster ID.
-// It periodically fetches the snapshot backup job status using the `getLatestSnapshotBackup` function and waits until the snapshot backup reaches a final state or until a specified timeout is reached.
-// function and waits until the snapshot backup reaches a final state or until a specified timeout is reached.
-func (s *SnapshotBackup) checkSnapshotBackupStatus(ctx context.Context, organizationId, projectId, clusterId, Id string) (*snapshot_backup.SnapshotBackup, error) {
-	var (
-		backupResp *snapshot_backup.SnapshotBackup
-		err        error
-	)
-
-	// Assuming 60 minutes is the max time snapshot backup creation takes.
-	const timeout = time.Minute * 60
-
-	var cancel context.CancelFunc
-	ctx, cancel = context.WithTimeout(ctx, timeout)
-	defer cancel()
-
-	const sleep = time.Second * 1
-
-	timer := time.NewTimer(1 * time.Second)
-
-	for {
-		select {
-		case <-ctx.Done():
-			tflog.Debug(ctx, "snapshot backup creation status timeout", map[string]interface{}{
-				"organizationId": organizationId,
-				"projectId":      projectId,
-				"clusterId":      clusterId,
-			})
-			return nil, errors.ErrSnapshotBackupCreationStatusTimeout
-
-		case <-timer.C:
-			backupResp, err = s.getSnapshotBackup(ctx, organizationId, projectId, clusterId, Id)
-			switch err {
-			case nil:
-				if snapshot_backup.IsFinalState(backupResp.Progress.Status) && s.checkCrossRegionCopyStatus(backupResp) == nil {
-					return backupResp, nil
-				}
-
-				tflog.Debug(ctx, "waiting for snapshot backup to complete the execution")
-			default:
-				tflog.Debug(ctx, "error getting snapshot backup", map[string]interface{}{
-					"organizationId": organizationId,
-					"projectId":      projectId,
-					"clusterId":      clusterId,
-					"Id":             Id,
-					"err":            err,
-				})
-				return nil, err
-			}
-			timer.Reset(sleep)
-		}
-	}
-}
-
-func (s *SnapshotBackup) checkCrossRegionCopyStatus(backupResp *snapshot_backup.SnapshotBackup) error {
-	for _, crossRegionCopy := range backupResp.CrossRegionCopies {
-		if !snapshot_backup.IsFinalState(crossRegionCopy.Status) {
-			return fmt.Errorf("cross region copy status is not final")
-		}
-	}
-	return nil
-}
-
+// getSnapshotBackups retrieves a list of snapshot backups for a cluster.
 func (s *SnapshotBackup) getSnapshotBackups(ctx context.Context, organizationId, projectId, clusterId string) (*snapshot_backup.ListSnapshotBackupsResponse, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups", s.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
@@ -547,8 +451,29 @@ func (s *SnapshotBackup) getSnapshotBackup(ctx context.Context, organizationId, 
 	return nil, errors.ErrNotFound
 }
 
-// createSnapshotBackup creates a snapshot backup from a snapshot backup response.
-func createSnapshotBackup(ctx context.Context, backupResp *snapshot_backup.SnapshotBackup, clusterId, projectId, organizationId string) (*providerschema.SnapshotBackup, error) {
+// setNullValues sets the snapshot backup's computed values to null.
+func setNullValues(refreshedState *providerschema.SnapshotBackup, clusterId, projectId, organizationId, Id string) *providerschema.SnapshotBackup {
+	refreshedState.ID = types.StringValue(Id)
+	refreshedState.ClusterID = types.StringValue(clusterId)
+	refreshedState.ProjectID = types.StringValue(projectId)
+	refreshedState.OrganizationId = types.StringValue(organizationId)
+	refreshedState.CreatedAt = types.StringNull()
+	refreshedState.Expiration = types.StringNull()
+	refreshedState.Progress = types.ObjectNull(providerschema.Progress{}.AttributeTypes())
+	refreshedState.Server = types.ObjectNull(providerschema.Server{}.AttributeTypes())
+	refreshedState.CMEK = types.SetNull(types.ObjectType{AttrTypes: providerschema.CMEK{}.AttributeTypes()})
+	refreshedState.CrossRegionCopies = types.SetNull(types.ObjectType{AttrTypes: providerschema.CrossRegionCopy{}.AttributeTypes()})
+	refreshedState.Size = types.Int64Null()
+	refreshedState.Type = types.StringNull()
+
+	if refreshedState.Retention.IsNull() || refreshedState.Retention.IsUnknown() {
+		refreshedState.Retention = types.Int64Null()
+	}
+	return refreshedState
+}
+
+// morphToTerraformCloudSnapshotBackup creates a snapshot backup from a snapshot backup response.
+func morphToTerraformCloudSnapshotBackup(ctx context.Context, backupResp *snapshot_backup.SnapshotBackup, clusterId, projectId, organizationId string) (*providerschema.SnapshotBackup, error) {
 	progress := providerschema.NewProgress(backupResp.Progress)
 	progressObj, diags := types.ObjectValueFrom(ctx, progress.AttributeTypes(), progress)
 	if diags.HasError() {
@@ -615,6 +540,6 @@ func createSnapshotBackup(ctx context.Context, backupResp *snapshot_backup.Snaps
 		return nil, fmt.Errorf("error during cross region copy conversion")
 	}
 
-	snapshotBackup := providerschema.NewSnapshotBackup(ctx, *backupResp, backupResp.ID, clusterId, projectId, organizationId, progressObj, serverObj, cmekSet, crossRegionCopySet)
+	snapshotBackup := providerschema.NewSnapshotBackup(*backupResp, backupResp.ID, clusterId, projectId, organizationId, progressObj, serverObj, cmekSet, crossRegionCopySet)
 	return &snapshotBackup, nil
 }

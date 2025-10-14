@@ -21,8 +21,8 @@ import (
 
 func TestAccSnapshotBackupResource(t *testing.T) {
 
-	resourceName := randomStringWithPrefix("tf_acc_snapshot_backup_")
-	resourceReference := "couchbase-capella_snapshot_backup." + resourceName
+	resourceName := randomStringWithPrefix("tf_acc_cloud_snapshot_backup_")
+	resourceReference := "couchbase-capella_cloud_snapshot_backup." + resourceName
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -36,13 +36,11 @@ func TestAccSnapshotBackupResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
 					resource.TestCheckResourceAttr(resourceReference, "retention", "168"),
-					resource.TestCheckResourceAttr(resourceReference, "progress.status", "complete"),
-					resource.TestCheckResourceAttrSet(resourceReference, "app_service"),
 					resource.TestCheckResourceAttrSet(resourceReference, "id"),
 					resource.TestCheckResourceAttrSet(resourceReference, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceReference, "expiration"),
+					resource.TestCheckResourceAttrSet(resourceReference, "progress.status"),
 					resource.TestCheckResourceAttrSet(resourceReference, "progress.time"),
-					resource.TestCheckResourceAttrSet(resourceReference, "server.version"),
 					resource.TestCheckResourceAttrSet(resourceReference, "size"),
 					resource.TestCheckResourceAttrSet(resourceReference, "type"),
 				),
@@ -63,13 +61,11 @@ func TestAccSnapshotBackupResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
 					resource.TestCheckResourceAttr(resourceReference, "retention", "240"),
-					resource.TestCheckResourceAttr(resourceReference, "progress.status", "complete"),
-					resource.TestCheckResourceAttrSet(resourceReference, "app_service"),
 					resource.TestCheckResourceAttrSet(resourceReference, "id"),
 					resource.TestCheckResourceAttrSet(resourceReference, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceReference, "expiration"),
+					resource.TestCheckResourceAttrSet(resourceReference, "progress.status"),
 					resource.TestCheckResourceAttrSet(resourceReference, "progress.time"),
-					resource.TestCheckResourceAttrSet(resourceReference, "server.version"),
 					resource.TestCheckResourceAttrSet(resourceReference, "size"),
 					resource.TestCheckResourceAttrSet(resourceReference, "type"),
 				),
@@ -79,7 +75,7 @@ func TestAccSnapshotBackupResource(t *testing.T) {
 }
 
 func TestAccSnapshotBackupResourceInvalidRetention(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_snapshot_backup_")
+	resourceName := randomStringWithPrefix("tf_acc_cloud_snapshot_backup_")
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -96,7 +92,7 @@ func testAccSnapshotBackupResourceConfig(resourceName string, retention int) str
 	return fmt.Sprintf(`
 	%[1]s
 
-	resource "couchbase-capella_snapshot_backup" "%[2]s" {
+	resource "couchbase-capella_cloud_snapshot_backup" "%[2]s" {
 		organization_id = "%[3]s"
 		project_id = "%[4]s"
 		cluster_id = "%[5]s"
