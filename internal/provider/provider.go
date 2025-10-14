@@ -244,6 +244,7 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewAppEndpoints,
 		datasources.NewAppEndpoint,
 		datasources.NewAppEndpointActivationStatus,
+		datasources.NewSnapshotBackups,
 	}
 }
 
