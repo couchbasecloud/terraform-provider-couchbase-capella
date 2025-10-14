@@ -28,7 +28,7 @@ Sample Output:
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/sophie.wegmann/terraform-provider-couchbase-capella/bin
+│  - couchbasecloud/couchbase-capella in /Users/$USER/terraform-provider-couchbase-capella/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -38,18 +38,17 @@ Terraform used the selected providers to generate the following execution plan. 
 
 Terraform will perform the following actions:
 
-  # couchbase-capella_snapshot_backup.new_snapshot_backup will be created
-  + resource "couchbase-capella_snapshot_backup" "new_snapshot_backup" {
-      + app_service         = (known after apply)
-      + cluster_id          = "caf9f40b-0078-4e37-8700-7bdb2e42ae8f"
+  # couchbase-capella_cloud_snapshot_backup.new_cloud_snapshot_backup will be created
+  + resource "couchbase-capella_cloud_snapshot_backup" "new_cloud_snapshot_backup" {
+      + cluster_id          = "ffffffff-aaaa-1414-eeee-000000000000"
       + cmek                = (known after apply)
       + created_at          = (known after apply)
       + cross_region_copies = (known after apply)
       + expiration          = (known after apply)
       + id                  = (known after apply)
-      + organization_id     = "adb4fb4c-1d98-4287-ac33-230742d2cc76"
+      + organization_id     = "ffffffff-aaaa-1414-eeee-000000000000"
       + progress            = (known after apply)
-      + project_id          = "c5b4fcc2-3158-4e23-addf-52157a6e6ae0"
+      + project_id          = "ffffffff-aaaa-1414-eeee-000000000000"
       + regions_to_copy     = [
           + "ap-southeast-1",
           + "eu-west-1",
@@ -63,18 +62,17 @@ Terraform will perform the following actions:
 Plan: 1 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
-  + new_snapshot_backup = {
-      + app_service                     = (known after apply)
-      + cluster_id                      = "caf9f40b-0078-4e37-8700-7bdb2e42ae8f"
+  + new_cloud_snapshot_backup = {
+      + cluster_id                      = "ffffffff-aaaa-1414-eeee-000000000000"
       + cmek                            = (known after apply)
       + created_at                      = (known after apply)
       + cross_region_copies             = (known after apply)
       + cross_region_restore_preference = null
       + expiration                      = (known after apply)
       + id                              = (known after apply)
-      + organization_id                 = "adb4fb4c-1d98-4287-ac33-230742d2cc76"
+      + organization_id                 = "ffffffff-aaaa-1414-eeee-000000000000"
       + progress                        = (known after apply)
-      + project_id                      = "c5b4fcc2-3158-4e23-addf-52157a6e6ae0"
+      + project_id                      = "ffffffff-aaaa-1414-eeee-000000000000"
       + regions_to_copy                 = [
           + "ap-southeast-1",
           + "eu-west-1",
@@ -97,7 +95,7 @@ Sample Output:
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/sophie.wegmann/terraform-provider-couchbase-capella/bin
+│  - couchbasecloud/couchbase-capella in /Users/$USER/terraform-provider-couchbase-capella/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
@@ -107,18 +105,17 @@ Terraform used the selected providers to generate the following execution plan. 
 
 Terraform will perform the following actions:
 
-  # couchbase-capella_snapshot_backup.new_snapshot_backup will be created
-  + resource "couchbase-capella_snapshot_backup" "new_snapshot_backup" {
-      + app_service         = (known after apply)
-      + cluster_id          = "caf9f40b-0078-4e37-8700-7bdb2e42ae8f"
+  # couchbase-capella_cloud_snapshot_backup.new_cloud_snapshot_backup will be created
+  + resource "couchbase-capella_cloud_snapshot_backup" "new_cloud_snapshot_backup" {
+      + cluster_id          = "ffffffff-aaaa-1414-eeee-000000000000"
       + cmek                = (known after apply)
       + created_at          = (known after apply)
       + cross_region_copies = (known after apply)
       + expiration          = (known after apply)
       + id                  = (known after apply)
-      + organization_id     = "adb4fb4c-1d98-4287-ac33-230742d2cc76"
+      + organization_id     = "ffffffff-aaaa-1414-eeee-000000000000"
       + progress            = (known after apply)
-      + project_id          = "c5b4fcc2-3158-4e23-addf-52157a6e6ae0"
+      + project_id          = "ffffffff-aaaa-1414-eeee-000000000000"
       + regions_to_copy     = [
           + "ap-southeast-1",
           + "eu-west-1",
@@ -132,18 +129,17 @@ Terraform will perform the following actions:
 Plan: 1 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
-  + new_snapshot_backup = {
-      + app_service                     = (known after apply)
-      + cluster_id                      = "caf9f40b-0078-4e37-8700-7bdb2e42ae8f"
+  + new_cloud_snapshot_backup = {
+      + cluster_id                      = "ffffffff-aaaa-1414-eeee-000000000000"
       + cmek                            = (known after apply)
       + created_at                      = (known after apply)
       + cross_region_copies             = (known after apply)
       + cross_region_restore_preference = null
       + expiration                      = (known after apply)
       + id                              = (known after apply)
-      + organization_id                 = "adb4fb4c-1d98-4287-ac33-230742d2cc76"
+      + organization_id                 = "ffffffff-aaaa-1414-eeee-000000000000"
       + progress                        = (known after apply)
-      + project_id                      = "c5b4fcc2-3158-4e23-addf-52157a6e6ae0"
+      + project_id                      = "ffffffff-aaaa-1414-eeee-000000000000"
       + regions_to_copy                 = [
           + "ap-southeast-1",
           + "eu-west-1",
@@ -162,39 +158,27 @@ Do you want to perform these actions?
   Enter a value: yes
 
 couchbase-capella_cloud_snapshot_backup.new_cloud_snapshot_backup: Creating...
-couchbase-capella_cloud_snapshot_backup.new_cloud_snapshot_backup: Creation complete after 0s [id=cd7206eb-1914-46b0-832d-1257936b149b]
+couchbase-capella_cloud_snapshot_backup.new_cloud_snapshot_backup: Creation complete after 0s [id=ffffffff-aaaa-1414-eeee-000000000000]
 
 Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
 
 Outputs:
 
-new_snapshot_backup = {
-  "app_service" = ""
-  "cluster_id" = "caf9f40b-0078-4e37-8700-7bdb2e42ae8f"
+new_cloud_snapshot_backup = {
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "cmek" = toset([])
-  "created_at" = "2025-09-26T16:37:32.127711554Z"
-  "cross_region_copies" = toset([
-    {
-      "region_code" = "ap-southeast-1"
-      "status" = "complete"
-      "time" = "2025-09-26T16:39:48.237639173Z"
-    },
-    {
-      "region_code" = "eu-west-1"
-      "status" = "complete"
-      "time" = "2025-09-26T16:40:22.145533091Z"
-    },
-  ])
+  "created_at" = "2025-10-14T11:58:56.331819513Z"
+  "cross_region_copies" = toset([])
   "cross_region_restore_preference" = tolist(null) /* of string */
-  "expiration" = "2025-10-02T16:37:32.127711554Z"
-  "id" = "d4faa99f-8967-42ce-8769-3d27ba5a30f4"
-  "organization_id" = "adb4fb4c-1d98-4287-ac33-230742d2cc76"
+  "expiration" = "2025-10-20T11:58:56.331819513Z"
+  "id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "progress" = {
-    "status" = "complete"
-    "time" = "2025-09-26T16:38:24.102226342Z"
+    "status" = "processing"
+    "time" = "2025-10-14T11:58:56.374332305Z"
   }
-  "project_id" = "c5b4fcc2-3158-4e23-addf-52157a6e6ae0"
-  "regions_to_copy" = tolist([
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "regions_to_copy" = toset([
     "ap-southeast-1",
     "eu-west-1",
   ])
@@ -208,51 +192,6 @@ new_snapshot_backup = {
 }
 ```
 
-### Note the Snapshot Backup ID of the new Snapshot Backup
-Command: `terraform output new_cloud_snapshot_backup`
-
-Sample Output:
-```
-{
-  "app_service" = ""
-  "cluster_id" = "caf9f40b-0078-4e37-8700-7bdb2e42ae8f"
-  "cmek" = toset([])
-  "created_at" = "2025-09-26T16:37:32.127711554Z"
-  "cross_region_copies" = toset([
-    {
-      "region_code" = "ap-southeast-1"
-      "status" = "complete"
-      "time" = "2025-09-26T16:39:48.237639173Z"
-    },
-    {
-      "region_code" = "eu-west-1"
-      "status" = "complete"
-      "time" = "2025-09-26T16:40:22.145533091Z"
-    },
-  ])
-  "cross_region_restore_preference" = tolist(null) /* of string */
-  "expiration" = "2025-10-02T16:37:32.127711554Z"
-  "id" = "d4faa99f-8967-42ce-8769-3d27ba5a30f4"
-  "organization_id" = "adb4fb4c-1d98-4287-ac33-230742d2cc76"
-  "progress" = {
-    "status" = "complete"
-    "time" = "2025-09-26T16:38:24.102226342Z"
-  }
-  "project_id" = "c5b4fcc2-3158-4e23-addf-52157a6e6ae0"
-  "regions_to_copy" = tolist([
-    "ap-southeast-1",
-    "eu-west-1",
-  ])
-  "restore_times" = tonumber(null)
-  "retention" = 144
-  "server" = {
-    "version" = ""
-  }
-  "size" = 0
-  "type" = "on_demand"
-}
-```
-In this case, the snapshot backup ID for my new snapshot backup is `d4faa99f-8967-42ce-8769-3d27ba5a30f4`
 
 ### List the resources that are present in the Terraform State file.
 
@@ -260,17 +199,17 @@ Command: `terraform state list`
 
 Sample Output:
 ``` 
-couchbase-capella_snapshot_backup.new_snapshot_backup
+couchbase-capella_cloud_snapshot_backup.new_cloud_snapshot_backup
 ```
 
 ## IMPORT
-### Remove the resource `new_snapshot_backup` from the Terraform State file
+### Remove the resource `new_cloud_snapshot_backup` from the Terraform State file
 
 Command: `terraform state rm couchbase-capella_cloud_snapshot_backup.new_cloud_snapshot_backup`
 
 Sample Output:
 ``` 
-Removed couchbase-capella_snapshot_backup.new_snapshot_backup
+Removed couchbase-capella_cloud_snapshot_backup.new_cloud_snapshot_backup
 Successfully removed 1 resource instance(s).
 ```
 Please note, this command will only remove the resource from the Terraform State file, but in reality, the resource exists in Capella.
@@ -280,14 +219,14 @@ Please note, this command will only remove the resource from the Terraform State
 Command: `terraform import couchbase-capella_cloud_snapshot_backup.new_cloud_snapshot_backup id=<snapshot_backup_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
 In this case, the complete command is:
-`terraform import couchbase-capella_snapshot_backup.new_snapshot_backup id=d4faa99f-8967-42ce-8769-3d27ba5a30f4,cluster_id=caf9f40b-0078-4e37-8700-7bdb2e42ae8f,project_id=c5b4fcc2-3158-4e23-addf-52157a6e6ae0,organization_id=adb4fb4c-1d98-4287-ac33-230742d2cc76`
+`terraform import couchbase-capella_cloud_snapshot_backup.new_cloud_snapshot_backup id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000`
 
 Sample Output:
 ``` 
-couchbase-capella_snapshot_backup.new_snapshot_backup: Importing from ID "id=d4faa99f-8967-42ce-8769-3d27ba5a30f4,cluster_id=caf9f40b-0078-4e37-8700-7bdb2e42ae8f,project_id=c5b4fcc2-3158-4e23-addf-52157a6e6ae0,organization_id=adb4fb4c-1d98-4287-ac33-230742d2cc76"...
-couchbase-capella_snapshot_backup.new_snapshot_backup: Import prepared!
-  Prepared couchbase-capella_snapshot_backup for import
-couchbase-capella_snapshot_backup.new_snapshot_backup: Refreshing state... [id=id=d4faa99f-8967-42ce-8769-3d27ba5a30f4,cluster_id=caf9f40b-0078-4e37-8700-7bdb2e42ae8f,project_id=c5b4fcc2-3158-4e23-addf-52157a6e6ae0,organization_id=adb4fb4c-1d98-4287-ac33-230742d2cc76]
+couchbase-capella_cloud_snapshot_backup.new_cloud_snapshot_backup: Importing from ID "id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000"...
+couchbase-capella_cloud_snapshot_backup.new_cloud_snapshot_backup: Import prepared!
+  Prepared couchbase-capella_cloud_snapshot_backup for import
+couchbase-capella_cloud_snapshot_backup.new_cloud_snapshot_backup: Refreshing state... [id=id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000]
 
 Import successful!
 
@@ -318,6 +257,110 @@ Command: `terraform plan`
 Sample Output:
 
 ``` 
+╷
+│ Warning: Provider development overrides are in effect
+│ 
+│ The following provider development overrides are set in the CLI configuration:
+│  - couchbasecloud/couchbase-capella in /Users/$USER/terraform-provider-couchbase-capella/bin
+│ 
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
+╵
+couchbase-capella_cloud_snapshot_backup.new_cloud_snapshot_backup: Refreshing state... [id=ffffffff-aaaa-1414-eeee-000000000000]
+
+Note: Objects have changed outside of Terraform
+
+Terraform detected the following changes made outside of Terraform since the last "terraform apply" which may have affected this plan:
+
+  # couchbase-capella_cloud_snapshot_backup.new_cloud_snapshot_backup has changed
+  ~ resource "couchbase-capella_cloud_snapshot_backup" "new_cloud_snapshot_backup" {
+      ~ cross_region_copies = [
+          + {
+              + region_code = "ap-southeast-1"
+              + status      = "complete"
+              + time        = "2025-10-14T12:00:47.10315555Z"
+            },
+          + {
+              + region_code = "eu-west-1"
+              + status      = "complete"
+              + time        = "2025-10-14T12:01:20.18712051Z"
+            },
+        ]
+        id                  = "ffffffff-aaaa-1414-eeee-000000000000"
+      ~ progress            = {
+          ~ status = "processing" -> "complete"
+          ~ time   = "2025-10-14T11:58:56.374332305Z" -> "2025-10-14T11:59:49.049001884Z"
+        }
+      ~ server              = {
+          ~ version = "" -> "7.6.7"
+        }
+        # (10 unchanged attributes hidden)
+    }
+
+
+Unless you have made equivalent changes to your configuration, or ignored the relevant attributes using ignore_changes, the following plan may include actions to undo or
+respond to these changes.
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  ~ update in-place
+
+Terraform will perform the following actions:
+
+  # couchbase-capella_cloud_snapshot_backup.new_cloud_snapshot_backup will be updated in-place
+  ~ resource "couchbase-capella_cloud_snapshot_backup" "new_cloud_snapshot_backup" {
+      ~ cmek                            = [] -> (known after apply)
+      ~ cross_region_copies             = [
+          - {
+              - region_code = "ap-southeast-1" -> null
+              - status      = "complete" -> null
+              - time        = "2025-10-14T12:00:47.10315555Z" -> null
+            },
+          - {
+              - region_code = "eu-west-1" -> null
+              - status      = "complete" -> null
+              - time        = "2025-10-14T12:01:20.18712051Z" -> null
+            },
+        ] -> (known after apply)
+      + cross_region_restore_preference = [
+          + "eu-west-1",
+        ]
+      ~ expiration                      = "2025-10-20T11:58:56.331819513Z" -> (known after apply)
+        id                              = "ffffffff-aaaa-1414-eeee-000000000000"
+      ~ progress                        = {
+          ~ status = "complete" -> (known after apply)
+          ~ time   = "2025-10-14T11:59:49.049001884Z" -> (known after apply)
+        } -> (known after apply)
+      + restore_times                   = 1
+      ~ retention                       = 144 -> 168
+      ~ server                          = {
+          ~ version = "7.6.7" -> (known after apply)
+        } -> (known after apply)
+        # (7 unchanged attributes hidden)
+    }
+
+Plan: 0 to add, 1 to change, 0 to destroy.
+
+Changes to Outputs:
+  ~ new_cloud_snapshot_backup = {
+      ~ cmek                            = [] -> (known after apply)
+      ~ cross_region_copies             = [] -> (known after apply)
+      ~ cross_region_restore_preference = null -> [
+          + "eu-west-1",
+        ]
+      ~ expiration                      = "2025-10-20T11:58:56.331819513Z" -> (known after apply)
+        id                              = "ffffffff-aaaa-1414-eeee-000000000000"
+      ~ progress                        = {
+          - status = "processing"
+          - time   = "2025-10-14T11:58:56.374332305Z"
+        } -> (known after apply)
+      ~ restore_times                   = null -> 1
+      ~ retention                       = 144 -> 168
+      ~ server                          = {
+          - version = ""
+        } -> (known after apply)
+        # (7 unchanged attributes hidden)
+    }
 ```
 
 command: `terrafom apply`
@@ -325,6 +368,163 @@ command: `terrafom apply`
 Sample Output:
 
 ```
+╷
+│ Warning: Provider development overrides are in effect
+│ 
+│ The following provider development overrides are set in the CLI configuration:
+│  - couchbasecloud/couchbase-capella in /Users/$USER/terraform-provider-couchbase-capella/bin
+│ 
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
+╵
+couchbase-capella_cloud_snapshot_backup.new_cloud_snapshot_backup: Refreshing state... [id=ffffffff-aaaa-1414-eeee-000000000000]
+
+Note: Objects have changed outside of Terraform
+
+Terraform detected the following changes made outside of Terraform since the last "terraform apply" which may have affected this plan:
+
+  # couchbase-capella_cloud_snapshot_backup.new_cloud_snapshot_backup has changed
+  ~ resource "couchbase-capella_cloud_snapshot_backup" "new_cloud_snapshot_backup" {
+      ~ cross_region_copies = [
+          + {
+              + region_code = "ap-southeast-1"
+              + status      = "complete"
+              + time        = "2025-10-14T12:00:47.10315555Z"
+            },
+          + {
+              + region_code = "eu-west-1"
+              + status      = "complete"
+              + time        = "2025-10-14T12:01:20.18712051Z"
+            },
+        ]
+        id                  = "ffffffff-aaaa-1414-eeee-000000000000"
+      ~ progress            = {
+          ~ status = "processing" -> "complete"
+          ~ time   = "2025-10-14T11:58:56.374332305Z" -> "2025-10-14T11:59:49.049001884Z"
+        }
+      ~ server              = {
+          ~ version = "" -> "7.6.7"
+        }
+        # (10 unchanged attributes hidden)
+    }
+
+
+Unless you have made equivalent changes to your configuration, or ignored the relevant attributes using ignore_changes, the following plan may include actions to undo or
+respond to these changes.
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  ~ update in-place
+
+Terraform will perform the following actions:
+
+  # couchbase-capella_cloud_snapshot_backup.new_cloud_snapshot_backup will be updated in-place
+  ~ resource "couchbase-capella_cloud_snapshot_backup" "new_cloud_snapshot_backup" {
+      ~ cmek                            = [] -> (known after apply)
+      ~ cross_region_copies             = [
+          - {
+              - region_code = "ap-southeast-1" -> null
+              - status      = "complete" -> null
+              - time        = "2025-10-14T12:00:47.10315555Z" -> null
+            },
+          - {
+              - region_code = "eu-west-1" -> null
+              - status      = "complete" -> null
+              - time        = "2025-10-14T12:01:20.18712051Z" -> null
+            },
+        ] -> (known after apply)
+      + cross_region_restore_preference = [
+          + "eu-west-1",
+        ]
+      ~ expiration                      = "2025-10-20T11:58:56.331819513Z" -> (known after apply)
+        id                              = "ffffffff-aaaa-1414-eeee-000000000000"
+      ~ progress                        = {
+          ~ status = "complete" -> (known after apply)
+          ~ time   = "2025-10-14T11:59:49.049001884Z" -> (known after apply)
+        } -> (known after apply)
+      + restore_times                   = 1
+      ~ retention                       = 144 -> 168
+      ~ server                          = {
+          ~ version = "7.6.7" -> (known after apply)
+        } -> (known after apply)
+        # (7 unchanged attributes hidden)
+    }
+
+Plan: 0 to add, 1 to change, 0 to destroy.
+
+Changes to Outputs:
+  ~ new_cloud_snapshot_backup = {
+      ~ cmek                            = [] -> (known after apply)
+      ~ cross_region_copies             = [] -> (known after apply)
+      ~ cross_region_restore_preference = null -> [
+          + "eu-west-1",
+        ]
+      ~ expiration                      = "2025-10-20T11:58:56.331819513Z" -> (known after apply)
+        id                              = "ffffffff-aaaa-1414-eeee-000000000000"
+      ~ progress                        = {
+          - status = "processing"
+          - time   = "2025-10-14T11:58:56.374332305Z"
+        } -> (known after apply)
+      ~ restore_times                   = null -> 1
+      ~ retention                       = 144 -> 168
+      ~ server                          = {
+          - version = ""
+        } -> (known after apply)
+        # (7 unchanged attributes hidden)
+    }
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+couchbase-capella_cloud_snapshot_backup.new_cloud_snapshot_backup: Modifying... [id=ffffffff-aaaa-1414-eeee-000000000000]
+couchbase-capella_cloud_snapshot_backup.new_cloud_snapshot_backup: Modifications complete after 0s [id=ffffffff-aaaa-1414-eeee-000000000000]
+
+Apply complete! Resources: 0 added, 1 changed, 0 destroyed.
+
+Outputs:
+
+new_cloud_snapshot_backup = {
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "cmek" = toset([])
+  "created_at" = "2025-10-14T11:58:56.331819513Z"
+  "cross_region_copies" = toset([
+    {
+      "region_code" = "ap-southeast-1"
+      "status" = "complete"
+      "time" = "2025-10-14T12:00:47.10315555Z"
+    },
+    {
+      "region_code" = "eu-west-1"
+      "status" = "complete"
+      "time" = "2025-10-14T12:01:20.18712051Z"
+    },
+  ])
+  "cross_region_restore_preference" = tolist([
+    "eu-west-1",
+  ])
+  "expiration" = "2025-10-21T11:58:56.331819513Z"
+  "id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "progress" = {
+    "status" = "complete"
+    "time" = "2025-10-14T11:59:49.049001884Z"
+  }
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "regions_to_copy" = toset([
+    "ap-southeast-1",
+    "eu-west-1",
+  ])
+  "restore_times" = 1
+  "retention" = 168
+  "server" = {
+    "version" = "7.6.7"
+  }
+  "size" = 0
+  "type" = "on_demand"
+}
 ```
 
 ## DESTROY
@@ -334,4 +534,113 @@ Command: `terraform destroy`
 
 Sample Output:
 ```
+╷
+│ Warning: Provider development overrides are in effect
+│ 
+│ The following provider development overrides are set in the CLI configuration:
+│  - couchbasecloud/couchbase-capella in /Users/$USER/terraform-provider-couchbase-capella/bin
+│ 
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
+╵
+couchbase-capella_cloud_snapshot_backup.new_cloud_snapshot_backup: Refreshing state... [id=ffffffff-aaaa-1414-eeee-000000000000]
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  - destroy
+
+Terraform will perform the following actions:
+
+  # couchbase-capella_cloud_snapshot_backup.new_cloud_snapshot_backup will be destroyed
+  - resource "couchbase-capella_cloud_snapshot_backup" "new_cloud_snapshot_backup" {
+      - cluster_id                      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - cmek                            = [] -> null
+      - created_at                      = "2025-10-14T11:58:56.331819513Z" -> null
+      - cross_region_copies             = [
+          - {
+              - region_code = "ap-southeast-1" -> null
+              - status      = "complete" -> null
+              - time        = "2025-10-14T12:00:47.10315555Z" -> null
+            },
+          - {
+              - region_code = "eu-west-1" -> null
+              - status      = "complete" -> null
+              - time        = "2025-10-14T12:01:20.18712051Z" -> null
+            },
+        ] -> null
+      - cross_region_restore_preference = [
+          - "eu-west-1",
+        ] -> null
+      - expiration                      = "2025-10-21T11:58:56.331819513Z" -> null
+      - id                              = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - organization_id                 = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - progress                        = {
+          - status = "complete" -> null
+          - time   = "2025-10-14T11:59:49.049001884Z" -> null
+        } -> null
+      - project_id                      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - regions_to_copy                 = [
+          - "ap-southeast-1",
+          - "eu-west-1",
+        ] -> null
+      - restore_times                   = 1 -> null
+      - retention                       = 168 -> null
+      - server                          = {
+          - version = "7.6.7" -> null
+        } -> null
+      - size                            = 0 -> null
+      - type                            = "on_demand" -> null
+    }
+
+Plan: 0 to add, 0 to change, 1 to destroy.
+
+Changes to Outputs:
+  - new_cloud_snapshot_backup = {
+      - cluster_id                      = "ffffffff-aaaa-1414-eeee-000000000000"
+      - cmek                            = []
+      - created_at                      = "2025-10-14T11:58:56.331819513Z"
+      - cross_region_copies             = [
+          - {
+              - region_code = "ap-southeast-1"
+              - status      = "complete"
+              - time        = "2025-10-14T12:00:47.10315555Z"
+            },
+          - {
+              - region_code = "eu-west-1"
+              - status      = "complete"
+              - time        = "2025-10-14T12:01:20.18712051Z"
+            },
+        ]
+      - cross_region_restore_preference = [
+          - "eu-west-1",
+        ]
+      - expiration                      = "2025-10-21T11:58:56.331819513Z"
+      - id                              = "ffffffff-aaaa-1414-eeee-000000000000"
+      - organization_id                 = "ffffffff-aaaa-1414-eeee-000000000000"
+      - progress                        = {
+          - status = "complete"
+          - time   = "2025-10-14T11:59:49.049001884Z"
+        }
+      - project_id                      = "ffffffff-aaaa-1414-eeee-000000000000"
+      - regions_to_copy                 = [
+          - "ap-southeast-1",
+          - "eu-west-1",
+        ]
+      - restore_times                   = 1
+      - retention                       = 168
+      - server                          = {
+          - version = "7.6.7"
+        }
+      - size                            = 0
+      - type                            = "on_demand"
+    } -> null
+
+Do you really want to destroy all resources?
+  Terraform will destroy all your managed infrastructure, as shown above.
+  There is no undo. Only 'yes' will be accepted to confirm.
+
+  Enter a value: yes
+
+couchbase-capella_cloud_snapshot_backup.new_cloud_snapshot_backup: Destroying... [id=ffffffff-aaaa-1414-eeee-000000000000]
+couchbase-capella_cloud_snapshot_backup.new_cloud_snapshot_backup: Destruction complete after 0s
+
+Destroy complete! Resources: 1 destroyed.
 ```
