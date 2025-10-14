@@ -27,18 +27,22 @@ var (
 	_ resource.ResourceWithImportState = &SnapshotBackupSchedule{}
 )
 
+// SnapshotBackupSchedule is the Snapshot Backup Schedule resource implementation.
 type SnapshotBackupSchedule struct {
 	*providerschema.Data
 }
 
+// NewSnapshotBackupSchedule is a helper function to simplify the provider implementation.
 func NewSnapshotBackupSchedule() resource.Resource {
 	return &SnapshotBackupSchedule{}
 }
 
+// Metadata returns the Snapshot Backup Schedule resource type name.
 func (s *SnapshotBackupSchedule) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_snapshot_backup_schedule"
 }
 
+// Schema defines the schema for the Snapshot Backup Schedule resource.
 func (s *SnapshotBackupSchedule) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = SnapshotBackupScheduleSchema()
 }
@@ -49,6 +53,7 @@ func (s *SnapshotBackupSchedule) ImportState(ctx context.Context, req resource.I
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
+// Create creates a new Snapshot Backup Schedule.
 func (s *SnapshotBackupSchedule) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan providerschema.SnapshotBackupSchedule
 	diags := req.Plan.Get(ctx, &plan)
@@ -84,6 +89,7 @@ func (s *SnapshotBackupSchedule) Create(ctx context.Context, req resource.Create
 	resp.Diagnostics.Append(diags...)
 }
 
+// Read reads snapshot backup schedule information.
 func (s *SnapshotBackupSchedule) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state providerschema.SnapshotBackupSchedule
 	diags := req.State.Get(ctx, &state)
@@ -124,6 +130,7 @@ func (s *SnapshotBackupSchedule) Read(ctx context.Context, req resource.ReadRequ
 	resp.Diagnostics.Append(diags...)
 }
 
+// Update updates the snapshot backup schedule.
 func (s *SnapshotBackupSchedule) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var state, plan providerschema.SnapshotBackupSchedule
 
@@ -157,6 +164,7 @@ func (s *SnapshotBackupSchedule) Update(ctx context.Context, req resource.Update
 	resp.Diagnostics.Append(diags...)
 }
 
+// Delete deletes the snapshot backup schedule.
 func (s *SnapshotBackupSchedule) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state providerschema.SnapshotBackupSchedule
 	diags := req.State.Get(ctx, &state)
@@ -210,6 +218,7 @@ func (s *SnapshotBackupSchedule) Delete(ctx context.Context, req resource.Delete
 	}
 }
 
+// upsertSnapshotBackupSchedule creates or updates the snapshot backup schedule.
 func (s *SnapshotBackupSchedule) upsertSnapshotBackupSchedule(ctx context.Context, organizationId, projectId, clusterId string, plan providerschema.SnapshotBackupSchedule) (*providerschema.SnapshotBackupSchedule, error) {
 	createSnapshotBackupScheduleRequest := snapshot_backup_schedule.SnapshotBackupSchedule{
 		Interval:      int(plan.Interval.ValueInt64()),
@@ -254,6 +263,7 @@ func (s *SnapshotBackupSchedule) upsertSnapshotBackupSchedule(ctx context.Contex
 	return &refreshedState, nil
 }
 
+// getSnapshotBackupSchedule retrieves the snapshot backup schedule for a cluster.
 func (s *SnapshotBackupSchedule) getSnapshotBackupSchedule(ctx context.Context, organizationId, projectId, clusterId string, stateTimeString string) (*snapshot_backup_schedule.SnapshotBackupSchedule, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackupschedule", s.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
@@ -321,7 +331,7 @@ func (s *SnapshotBackupSchedule) getStartTime(ctx context.Context, currentStartT
 	return newStartTime.Format(time.RFC3339), nil
 }
 
-// Configure adds the provider configured api to the snapshot backup resource.
+// Configure adds the provider configured api to the snapshot backup schedule resource.
 func (s *SnapshotBackupSchedule) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
