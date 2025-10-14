@@ -33,7 +33,7 @@ func SnapshotBackupSchema() schema.Schema {
 			},
 			"data": schema.ListNestedAttribute{
 				Computed:            true,
-				MarkdownDescription: "Lists the snapshotbackups associated with a cluster.",
+				MarkdownDescription: "Lists the snapshot backups associated with a cluster.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"created_at": schema.StringAttribute{
