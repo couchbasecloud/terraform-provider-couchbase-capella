@@ -101,7 +101,7 @@ TEST_FLAGS ?= -short -cover -race -coverprofile .testCoverage.txt
 # this is for unit tests
 .PHONY: test
 test:
-	go test $(TEST_FILES) $(TEST_FLAGS)
+	CAPELLA_OPENAPI_SPEC_PATH=$(PWD)/openapi.generated.yaml go test $(TEST_FILES) $(TEST_FLAGS)
 
 .PHONY: test-acceptance testacc
 testacc: test-acceptance

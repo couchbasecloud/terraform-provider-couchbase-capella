@@ -11,30 +11,10 @@ import (
 var openAPIDoc *openapi3.T
 
 func init() {
-	// Get OpenAPI spec path from environment variable (set by Makefile for build-docs)
+	// Get OpenAPI spec path from environment variable, or assume project root
 	openAPIPath := os.Getenv("CAPELLA_OPENAPI_SPEC_PATH")
 	if openAPIPath == "" {
-		// Try common locations (works for tests and when running from project root)
-		possiblePaths := []string{
-			"openapi.generated.yaml",          // From project root
-			"../../openapi.generated.yaml",    // From internal/docs or internal/schema
-			"../../../openapi.generated.yaml", // From deeper test locations
-		}
-
-		for _, path := range possiblePaths {
-			if _, err := os.Stat(path); err == nil {
-				openAPIPath = path
-				break
-			}
-		}
-
-		if openAPIPath == "" {
-			// Gracefully degrade - descriptions will be empty but provider still works
-			fmt.Fprintf(os.Stderr, "Warning: Could not locate openapi.generated.yaml in common locations\n")
-			fmt.Fprintf(os.Stderr, "Field descriptions will not be enhanced with OpenAPI metadata.\n")
-			fmt.Fprintf(os.Stderr, "Hint: Set CAPELLA_OPENAPI_SPEC_PATH environment variable or run from project root.\n")
-			return
-		}
+		openAPIPath = "openapi.generated.yaml"
 	}
 
 	data, err := os.ReadFile(openAPIPath)

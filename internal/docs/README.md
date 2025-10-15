@@ -188,21 +188,19 @@ The OpenAPI spec is **loaded from the filesystem at runtime**, not embedded in t
 
 ### Finding the Spec
 
-The loader automatically finds `openapi.generated.yaml` by checking:
+The loader looks for `openapi.generated.yaml`:
 1. **Environment variable**: `CAPELLA_OPENAPI_SPEC_PATH` (if set)
-2. **Common locations**: 
-   - `openapi.generated.yaml` (from project root)
-   - `../../openapi.generated.yaml` (from test packages)
-   - `../../../openapi.generated.yaml` (from nested test packages)
+2. **Default**: `openapi.generated.yaml` in the current directory
 
 If the spec can't be found, the provider gracefully degrades - it still works, but field descriptions won't be enhanced with OpenAPI metadata.
 
 ### Running Commands
 
-- **From project root**: `go test ./...` or `make build-docs` works automatically
-- **Custom location**: Set `CAPELLA_OPENAPI_SPEC_PATH` environment variable
+- **`make test`**: Sets `CAPELLA_OPENAPI_SPEC_PATH` automatically ✓
+- **`make build-docs`**: Sets `CAPELLA_OPENAPI_SPEC_PATH` automatically ✓
+- **Manual test**: `CAPELLA_OPENAPI_SPEC_PATH=./openapi.generated.yaml go test ./...`
 
-The `make build-docs` target sets the environment variable for reliability.
+**Assumption**: All commands are run from the project root (standard practice).
 
 **Note:** We use YAML (not JSON) as the single source of truth. The `kin-openapi` library parses YAML directly, so no conversion is needed.
 
