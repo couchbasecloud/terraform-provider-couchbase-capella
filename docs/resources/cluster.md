@@ -137,8 +137,8 @@ Required:
 
 Optional:
 
-- `autoexpansion` (Boolean) Enable or disable automatic disk expansion.
-- `iops` (Number) The number of IOPS for the disk. Only applicable for certain disk types.
+- `autoexpansion` (Boolean) Enable or disable automatic disk expansion.  This can only be set for Azure.
+- `iops` (Number) The number of IOPS for the disk. Only applicable for AWS and Azure.
 - `storage` (Number) The size of the disk in GB.
 
 
@@ -178,6 +178,8 @@ Read-Only:
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 terraform import couchbase-capella_cluster.new_cluster id=test_id,cluster_id=test_id,project_id=test_id,organization_id=test_id

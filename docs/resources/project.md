@@ -26,18 +26,25 @@ resource "couchbase-capella_project" "new_project" {
 ### Required
 
 - `name` (String) The name of the project (up to 128 characters).
+
+**Constraints:**
+  - Maximum length: 128 characters
 - `organization_id` (String) The GUID4 ID of the organization.
 
 ### Optional
 
 - `description` (String) A short description of the project (up to 256 characters).
+
+**Constraints:**
+  - Maximum length: 256 characters
 - `if_match` (String) A precondition header that specifies the entity tag of a resource.
 
 ### Read-Only
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
 - `etag` (String) The ETag header value returned by the server, used for optimistic concurrency control.
-- `id` (String) The ID of the project created.
+- `id` (String) A GUID4 identifier of the project.
+**Format:** UUID (GUID4)
 
 <a id="nestedatt--audit"></a>
 ### Nested Schema for `audit`
@@ -53,6 +60,8 @@ Read-Only:
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 terraform import couchbase-capella_project.new_project id=<project_id>,organization_id=<organization_id>

@@ -37,6 +37,8 @@ resource "couchbase-capella_app_service_onoff_ondemand" "new_app_service_onoff_o
 
 Import is supported using the following syntax:
 
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
 ```shell
 terraform import couchbase-capella_app_service_onoff_ondemand.new_app_service_onoff_ondemand app_service_id=<app_service_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>
 ```
