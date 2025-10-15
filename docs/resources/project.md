@@ -37,12 +37,12 @@ resource "couchbase-capella_project" "new_project" {
 
 **Constraints:**
   - Maximum length: 256 characters
-- `if_match` (String) A precondition header that specifies the entity tag of a resource. Used for optimistic concurrency control to prevent concurrent modifications.
+- `if_match` (String) A precondition header that specifies the entity tag of a resource.
 
 ### Read-Only
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
-- `etag` (String) The ETag header value returned by the server, used for optimistic concurrency control.
+- `etag` (String) Entity tag for the resource, used for caching and conditional requests.
 - `id` (String) A GUID4 identifier of the project.
 **Format:** UUID (GUID4)
 

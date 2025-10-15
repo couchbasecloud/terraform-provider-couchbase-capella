@@ -45,15 +45,26 @@ func ProjectSchema() schema.Schema {
 
 ### Description Resolution Priority
 
-`AddAttr` automatically finds descriptions using a three-tier fallback:
+`AddAttr` automatically finds **ALL** descriptions from the OpenAPI spec:
 
-**1. OpenAPI Path Parameters (highest priority for *_id fields)**
+**1. OpenAPI Path Parameters (for *_id fields)**
 - For fields ending in `_id` (e.g., `organization_id`, `project_id`, `cluster_id`)
-- Looks up in `components.parameters` section of OpenAPI spec
+- Looks up in `components.parameters` section
 - Converts snake_case → CapitalizedCamelCase (e.g., `organization_id` → `OrganizationId`)
-- Returns the path parameter description
 
-**2. OpenAPI Schema Properties (primary for other fields)**
+**2. OpenAPI Header Parameters (for if_match)**
+- Looks up in `components.parameters["If-Match"]`
+- Gets description from header parameter definition
+
+**3. OpenAPI Response Headers (for etag)**
+- Looks up in `components.headers["ETag"]`
+- Gets description from response header definition
+
+**4. OpenAPI Schema References (for audit)**
+- Looks up in `components.schemas["CouchbaseAuditData"]`
+- Returns standard description for nested audit data
+
+**5. OpenAPI Schema Properties (for request/response fields)**
 - Converts `field_name` from snake_case to camelCase (`fieldName`)
 - Tries common OpenAPI schema patterns:
   - `CreateResourceRequest`
@@ -63,16 +74,7 @@ func ProjectSchema() schema.Schema {
 - Extracts rich constraints (maxLength, pattern, enum, etc.)
 - Formats as readable markdown with examples
 
-**3. Common Descriptions Registry (fallback for special fields)**
-- For fields not in OpenAPI spec:
-  - **HTTP headers**: `if_match`, `etag`
-  - **Special nested attributes**: `audit`
-- Defined in `internal/schema/common_descriptions.go`
-- Minimal set - most descriptions come from OpenAPI now
-
-**4. Empty** (if not found anywhere)
-
-This means **ALL fields can use `AddAttr`** with consistent syntax, and most descriptions come directly from the OpenAPI spec!
+**Result:** **ALL field descriptions come directly from the OpenAPI spec** - no hardcoded descriptions!
 
 ## What Gets Enhanced
 
@@ -186,21 +188,21 @@ The OpenAPI spec is **loaded from the filesystem at runtime**, not embedded in t
 
 ### Finding the Spec
 
-The loader automatically finds `openapi.generated.yaml` by:
-1. **Checking environment variable**: `CAPELLA_OPENAPI_SPEC_PATH` (if set)
-2. **Walking up directories**: Looking for `go.mod` to find project root
-3. **Reading from project root**: `<project_root>/openapi.generated.yaml`
+The loader automatically finds `openapi.generated.yaml` by checking:
+1. **Environment variable**: `CAPELLA_OPENAPI_SPEC_PATH` (if set)
+2. **Common locations**: 
+   - `openapi.generated.yaml` (from project root)
+   - `../../openapi.generated.yaml` (from test packages)
+   - `../../../openapi.generated.yaml` (from nested test packages)
 
 If the spec can't be found, the provider gracefully degrades - it still works, but field descriptions won't be enhanced with OpenAPI metadata.
 
-### Environment Variable (for special cases)
+### Running Commands
 
-If running from a non-standard location, set:
-```bash
-export CAPELLA_OPENAPI_SPEC_PATH="/path/to/openapi.generated.yaml"
-```
+- **From project root**: `go test ./...` or `make build-docs` works automatically
+- **Custom location**: Set `CAPELLA_OPENAPI_SPEC_PATH` environment variable
 
-The `make build-docs` target automatically sets this for you.
+The `make build-docs` target sets the environment variable for reliability.
 
 **Note:** We use YAML (not JSON) as the single source of truth. The `kin-openapi` library parses YAML directly, so no conversion is needed.
 

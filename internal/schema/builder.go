@@ -63,10 +63,12 @@ func WithOpenAPIDescription[T SchemaAttribute](b *SchemaBuilder, attr T, fieldNa
 // AddAttr adds an attribute with automatic description to the attributes map.
 // This eliminates the duplication of the field name.
 //
-// Description priority:
-// 1. First tries OpenAPI spec (via SchemaBuilder)
-// 2. Falls back to CommonDescriptions for standard fields (organization_id, if_match, etc.)
-// 3. If not found in either, description remains empty
+// Description is automatically loaded from the OpenAPI spec:
+// 1. Path parameters (organization_id, project_id, etc.) from components.parameters
+// 2. Header parameters (if_match) from components.parameters
+// 3. Response headers (etag) from components.headers
+// 4. Schema references (audit) from components.schemas
+// 5. Schema properties (name, description, etc.) from request/response schemas
 //
 // Example:
 //
@@ -79,15 +81,8 @@ func AddAttr[T SchemaAttribute](
 	builder *SchemaBuilder,
 	attr T,
 ) {
-	// Try OpenAPI first
+	// Get description from OpenAPI spec
 	description := docs.GetOpenAPIDescription(builder.resourceName, fieldName)
-
-	// Fall back to common descriptions if not in OpenAPI
-	if description == "" {
-		if commonDesc, ok := CommonDescriptions[fieldName]; ok {
-			description = commonDesc
-		}
-	}
 
 	// Set the description
 	switch v := any(attr).(type) {

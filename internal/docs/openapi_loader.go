@@ -3,7 +3,6 @@ package docs
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -11,47 +10,31 @@ import (
 
 var openAPIDoc *openapi3.T
 
-// findProjectRoot walks up the directory tree to find go.mod
-func findProjectRoot() (string, error) {
-	// Start from current working directory
-	dir, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-
-	// Walk up until we find go.mod
-	for {
-		goModPath := filepath.Join(dir, "go.mod")
-		if _, err := os.Stat(goModPath); err == nil {
-			return dir, nil
-		}
-
-		// Move up one directory
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			// Reached root without finding go.mod
-			return "", fmt.Errorf("could not find go.mod in any parent directory")
-		}
-		dir = parent
-	}
-}
-
 func init() {
-	var openAPIPath string
+	// Get OpenAPI spec path from environment variable (set by Makefile for build-docs)
+	openAPIPath := os.Getenv("CAPELLA_OPENAPI_SPEC_PATH")
+	if openAPIPath == "" {
+		// Try common locations (works for tests and when running from project root)
+		possiblePaths := []string{
+			"openapi.generated.yaml",          // From project root
+			"../../openapi.generated.yaml",    // From internal/docs or internal/schema
+			"../../../openapi.generated.yaml", // From deeper test locations
+		}
 
-	// Try environment variable first (for build/test scenarios)
-	if envPath := os.Getenv("CAPELLA_OPENAPI_SPEC_PATH"); envPath != "" {
-		openAPIPath = envPath
-	} else {
-		// Find project root by locating go.mod
-		projectRoot, err := findProjectRoot()
-		if err != nil {
+		for _, path := range possiblePaths {
+			if _, err := os.Stat(path); err == nil {
+				openAPIPath = path
+				break
+			}
+		}
+
+		if openAPIPath == "" {
 			// Gracefully degrade - descriptions will be empty but provider still works
-			fmt.Fprintf(os.Stderr, "Warning: Could not locate project root: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Warning: Could not locate openapi.generated.yaml in common locations\n")
 			fmt.Fprintf(os.Stderr, "Field descriptions will not be enhanced with OpenAPI metadata.\n")
+			fmt.Fprintf(os.Stderr, "Hint: Set CAPELLA_OPENAPI_SPEC_PATH environment variable or run from project root.\n")
 			return
 		}
-		openAPIPath = filepath.Join(projectRoot, "openapi.generated.yaml")
 	}
 
 	data, err := os.ReadFile(openAPIPath)
@@ -78,7 +61,10 @@ func init() {
 // GetOpenAPIDescription retrieves an enhanced description for a field from the OpenAPI spec.
 // Priority order:
 // 1. Path parameters (components.parameters) - for fields ending in _id
-// 2. Schema properties (CreateXRequest, GetXResponse, etc.)
+// 2. Header parameters (components.parameters) - for if_match
+// 3. Response headers (components.headers) - for etag
+// 4. Schema references (components.schemas) - for audit
+// 5. Schema properties (CreateXRequest, GetXResponse, etc.)
 // Converts snake_case field names to camelCase.
 // Returns empty string if schema or field not found.
 func GetOpenAPIDescription(resourceName, tfFieldName string) string {
@@ -86,13 +72,44 @@ func GetOpenAPIDescription(resourceName, tfFieldName string) string {
 		return ""
 	}
 
-	// First, check if this is a path parameter (e.g., organization_id, project_id)
-	if strings.HasSuffix(tfFieldName, "_id") && openAPIDoc.Components.Parameters != nil {
-		// Convert organization_id → OrganizationId (capitalized for parameter lookup)
-		paramName := snakeToCapitalizedCamel(tfFieldName)
-		if paramRef, ok := openAPIDoc.Components.Parameters[paramName]; ok && paramRef.Value != nil {
-			if paramRef.Value.Description != "" {
-				return strings.TrimSpace(paramRef.Value.Description)
+	// Check for special fields first
+	switch tfFieldName {
+	case "if_match":
+		// Header parameter
+		if openAPIDoc.Components.Parameters != nil {
+			if paramRef, ok := openAPIDoc.Components.Parameters["If-Match"]; ok && paramRef.Value != nil {
+				if paramRef.Value.Description != "" {
+					return strings.TrimSpace(paramRef.Value.Description)
+				}
+			}
+		}
+
+	case "etag":
+		// Response header
+		if openAPIDoc.Components.Headers != nil {
+			if headerRef, ok := openAPIDoc.Components.Headers["ETag"]; ok && headerRef.Value != nil {
+				if headerRef.Value.Description != "" {
+					return strings.TrimSpace(headerRef.Value.Description)
+				}
+			}
+		}
+
+	case "audit":
+		// Schema reference
+		if openAPIDoc.Components.Schemas != nil {
+			if schemaRef, ok := openAPIDoc.Components.Schemas["CouchbaseAuditData"]; ok && schemaRef.Value != nil {
+				return "Couchbase audit data."
+			}
+		}
+
+	default:
+		// Check if this is a path parameter (e.g., organization_id, project_id)
+		if strings.HasSuffix(tfFieldName, "_id") && openAPIDoc.Components.Parameters != nil {
+			paramName := snakeToCapitalizedCamel(tfFieldName)
+			if paramRef, ok := openAPIDoc.Components.Parameters[paramName]; ok && paramRef.Value != nil {
+				if paramRef.Value.Description != "" {
+					return strings.TrimSpace(paramRef.Value.Description)
+				}
 			}
 		}
 	}
