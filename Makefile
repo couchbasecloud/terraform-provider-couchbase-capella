@@ -79,8 +79,13 @@ gen-api: ## Generate OpenAPI client into internal/generated/api
 	PATH="$(shell go env GOPATH)/bin:$(PATH)" go generate ./internal/generated/api
 	@echo "==> Done"
 
+.PHONY: sync-openapi
+sync-openapi:
+	@echo "Syncing OpenAPI spec to internal/docs..."
+	@cp openapi.generated.yaml internal/docs/openapi.generated.yaml
+
 .PHONT: build-docs
-build-docs:
+build-docs: sync-openapi
 	go get github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --examples-dir ./examples
 

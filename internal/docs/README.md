@@ -154,12 +154,22 @@ var usersBuilder = capellaschema.NewSchemaBuilder("users")
 
 ## Maintaining the OpenAPI Spec
 
-The `openapi.generated.json` file in this directory is embedded at compile time. 
+The `openapi.generated.yaml` file in this directory is a copy of the root `openapi.generated.yaml` and is embedded at compile time using `//go:embed`. 
 
-To update it:
+**Important:** When the root `openapi.generated.yaml` is updated, you must copy it to this directory:
+
 ```bash
-cp ../../openapi.generated.json .
+# From the project root
+cp openapi.generated.yaml internal/docs/
 ```
+
+After updating, rebuild the provider and regenerate docs:
+```bash
+make build
+make build-docs
+```
+
+**Note:** We use YAML (not JSON) as the single source of truth. The `kin-openapi` library parses YAML directly, so no conversion is needed.
 
 ## Testing
 
@@ -177,6 +187,7 @@ go test -v
 - Run tests to verify the loader can find the field
 
 **Build errors?**
-- Ensure `openapi.generated.json` exists in this directory
+- Ensure `openapi.generated.yaml` exists in this directory
 - Run `go mod tidy` if dependencies are missing
+- If you see "cannot embed irregular file", ensure the YAML file is a regular file, not a symlink
 

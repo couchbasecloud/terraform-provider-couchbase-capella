@@ -8,8 +8,8 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
-//go:embed openapi.generated.json
-var openAPISpecJSON []byte
+//go:embed openapi.generated.yaml
+var openAPISpecYAML []byte
 
 var openAPIDoc *openapi3.T
 
@@ -17,7 +17,8 @@ func init() {
 	loader := openapi3.NewLoader()
 	loader.IsExternalRefsAllowed = true
 
-	doc, err := loader.LoadFromData(openAPISpecJSON)
+	// kin-openapi can parse YAML directly
+	doc, err := loader.LoadFromData(openAPISpecYAML)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to load OpenAPI spec: %v", err))
 	}
@@ -132,7 +133,7 @@ func buildEnhancedDescription(prop *openapi3.Schema) string {
 
 	// Add deprecation warning
 	if prop.Deprecated {
-		parts = append(parts, "\n⚠️ **Deprecated**: This field is deprecated and will be removed in a future release.\n")
+		parts = append(parts, "\n **Deprecated**: This field is deprecated and will be removed in a future release.\n")
 	}
 
 	return strings.Join(parts, "")
