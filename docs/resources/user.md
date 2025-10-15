@@ -50,7 +50,7 @@ resource "couchbase-capella_user" "new_user" {
 
 ### Read-Only
 
-- `audit` (Attributes) (see [below for nested schema](#nestedatt--audit))
+- `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
 - `enable_notifications` (Boolean) After enabling email notifications for your account, you will start receiving email notification alerts from all databases in projects you are a part of.
 - `expires_at` (String) Time at which the user expires.
 - `id` (String) The UUID of the user created.

@@ -78,7 +78,7 @@ resource "couchbase-capella_cluster" "new_cluster" {
 ### Read-Only
 
 - `app_service_id` (String) The ID of the App Service associated with this cluster.
-- `audit` (Attributes) (see [below for nested schema](#nestedatt--audit))
+- `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
 - `connection_string` (String) The connection string to use to connect to the cluster.
 - `current_state` (String) The current state of the cluster.
 - `etag` (String) The ETag header value returned by the server, used for optimistic concurrency control.

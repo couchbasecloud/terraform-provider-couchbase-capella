@@ -43,7 +43,7 @@ resource "couchbase-capella_free_tier_cluster" "new_free_tier_cluster" {
 ### Read-Only
 
 - `app_service_id` (String) The GUID4 ID of the App Service.
-- `audit` (Attributes) (see [below for nested schema](#nestedatt--audit))
+- `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
 - `availability` (Attributes) Availability zone details for the free tier cluster. Free tier clusters have single availability zones (AZ). (see [below for nested schema](#nestedatt--availability))
 - `cmek_id` (String) The customer-managed encryption key (CMEK) ID.
 - `connection_string` (String) The connection string of the free tier cluster.

@@ -47,7 +47,7 @@ resource "couchbase-capella_app_service" "new_app_service" {
 
 ### Read-Only
 
-- `audit` (Attributes) (see [below for nested schema](#nestedatt--audit))
+- `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
 - `current_state` (String) The current state of the App Service.
 - `etag` (String)
 - `id` (String) The ID of the App Service created.

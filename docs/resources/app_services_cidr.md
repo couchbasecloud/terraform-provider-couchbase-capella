@@ -42,7 +42,7 @@ resource "couchbase-capella_app_services_cidr" "new_app_services_cidr"{
 
 ### Read-Only
 
-- `audit` (Attributes) (see [below for nested schema](#nestedatt--audit))
+- `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
 - `id` (String) The ID of the allowed CIDR block.
 
 <a id="nestedatt--audit"></a>

@@ -293,8 +293,8 @@ func stringSetAttribute(fields ...string) *schema.SetAttribute {
 // represent couchbase audit data using terraform schema types.
 func computedAuditAttribute() *schema.SingleNestedAttribute {
 	return &schema.SingleNestedAttribute{
-		// Description is set by AddAttr from CommonDescriptions
-		Computed: true,
+		MarkdownDescription: "Couchbase audit data.",
+		Computed:            true,
 		Attributes: map[string]schema.Attribute{
 			"created_at": schema.StringAttribute{
 				Computed:            true,

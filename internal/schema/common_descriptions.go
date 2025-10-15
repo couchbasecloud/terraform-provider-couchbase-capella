@@ -19,5 +19,5 @@ var CommonDescriptions = map[string]string{
 	"etag":     "The ETag header value returned by the server, used for optimistic concurrency control.",
 
 	// Standard metadata
-	"audit": "Audit metadata tracking when and by whom the resource was created and last modified.",
+	"audit": "Couchbase audit data.",
 }

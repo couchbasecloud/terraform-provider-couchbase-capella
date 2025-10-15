@@ -47,7 +47,7 @@ resource "couchbase-capella_database_credential" "new_database_credential" {
 
 ### Read-Only
 
-- `audit` (Attributes) (see [below for nested schema](#nestedatt--audit))
+- `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
 - `id` (String) The ID of the database credential created.
 
 <a id="nestedatt--access"></a>
