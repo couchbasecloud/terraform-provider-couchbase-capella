@@ -82,7 +82,7 @@ resource "couchbase-capella_network_peer" "new_network_peer" {
 
 ### Read-Only
 
-- `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
+- `audit` (Attributes) (see [below for nested schema](#nestedatt--audit))
 - `commands` (Set of String) The list of commands required to set up network peering.
 - `id` (String) The unique identifier for the network peering record.
 - `status` (Attributes) Current status of the network peering connection. (see [below for nested schema](#nestedatt--status))

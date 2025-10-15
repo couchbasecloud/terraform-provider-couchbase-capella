@@ -40,7 +40,7 @@ resource "couchbase-capella_allowlist" "new_allowlist" {
 
 ### Read-Only
 
-- `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
+- `audit` (Attributes) (see [below for nested schema](#nestedatt--audit))
 - `id` (String) The ID of the allowed CIDR.
 
 <a id="nestedatt--audit"></a>

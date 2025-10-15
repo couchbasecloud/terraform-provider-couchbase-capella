@@ -293,29 +293,28 @@ func stringSetAttribute(fields ...string) *schema.SetAttribute {
 // represent couchbase audit data using terraform schema types.
 func computedAuditAttribute() *schema.SingleNestedAttribute {
 	return &schema.SingleNestedAttribute{
-		Description: "Couchbase audit data.",
-		Computed:    true,
+		// Description is set by AddAttr from CommonDescriptions
+		Computed: true,
 		Attributes: map[string]schema.Attribute{
 			"created_at": schema.StringAttribute{
-				Computed:    true,
-				Description: "The RFC3339 timestamp when the resource was created.",
+				Computed:            true,
+				MarkdownDescription: "The RFC3339 timestamp when the resource was created.",
 			},
 			"created_by": schema.StringAttribute{
-				Computed:    true,
-				Description: "The user who created the resource.",
+				Computed:            true,
+				MarkdownDescription: "The user who created the resource.",
 			},
 			"modified_at": schema.StringAttribute{
-				Computed:    true,
-				Description: "The RFC3339 timestamp when the resource was last modified.",
+				Computed:            true,
+				MarkdownDescription: "The RFC3339 timestamp when the resource was last modified.",
 			},
 			"modified_by": schema.StringAttribute{
-				Computed:    true,
-				Description: "The user who last modified the resource.",
+				Computed:            true,
+				MarkdownDescription: "The user who last modified the resource.",
 			},
 			"version": schema.Int64Attribute{
-				Computed: true,
-				Description: "The version of the document. " +
-					"This value is incremented each time the resource is modified.",
+				Computed:            true,
+				MarkdownDescription: "The version of the document. This value is incremented each time the resource is modified.",
 			},
 		},
 	}

@@ -67,16 +67,17 @@ This command:
 
 ### OpenAPI-Enhanced Descriptions
 
-Field descriptions are automatically extracted from the OpenAPI spec using the `SchemaBuilder` interface:
+Field descriptions are automatically extracted from the OpenAPI spec using the `SchemaBuilder` and a generic function:
 
 ```go
 // In internal/resources/project_schema.go
 var projectBuilder = capellaschema.NewSchemaBuilder("project")
 
-"name": projectBuilder.WithOpenAPIDescription(
+"name": capellaschema.WithOpenAPIDescription(
+    projectBuilder,
     stringAttribute([]string{required}),
     "name",  // Automatically finds description in OpenAPI spec
-).(*schema.StringAttribute),
+),  // ✨ No type assertion needed - fully type-safe!
 ```
 
 This provides rich documentation with:

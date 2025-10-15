@@ -10,9 +10,6 @@ func TestSchemaBuilder(t *testing.T) {
 	// Create a builder for "project" resource
 	builder := NewSchemaBuilder("project")
 
-	// Verify it implements the interface
-	var _ SchemaBuilder = builder
-
 	// Verify resource name is stored correctly
 	if builder.GetResourceName() != "project" {
 		t.Errorf("Expected resource name 'project', got '%s'", builder.GetResourceName())
@@ -23,21 +20,18 @@ func TestSchemaBuilder(t *testing.T) {
 		Required: true,
 	}
 
-	result := builder.WithOpenAPIDescription(attr, "name")
-	resultAttr, ok := result.(*schema.StringAttribute)
-	if !ok {
-		t.Fatalf("Expected *schema.StringAttribute, got %T", result)
-	}
+	// Use the generic function
+	result := WithOpenAPIDescription(builder, attr, "name")
 
 	// Verify description was set (should be non-empty for "name" field)
-	if resultAttr.MarkdownDescription == "" {
+	if result.MarkdownDescription == "" {
 		t.Error("Expected non-empty MarkdownDescription for 'name' field")
 	}
 
-	t.Logf("Description for project.name: %s", resultAttr.MarkdownDescription)
+	t.Logf("Description for project.name: %s", result.MarkdownDescription)
 }
 
-func TestSchemaBuilderInterface(t *testing.T) {
+func TestSchemaBuilderMultipleResources(t *testing.T) {
 	// Test that we can create builders for multiple resources and data sources
 	items := []string{"project", "bucket", "cluster", "app_service", "allowlist", "users"}
 
@@ -47,76 +41,50 @@ func TestSchemaBuilderInterface(t *testing.T) {
 		if builder.GetResourceName() != itemName {
 			t.Errorf("Expected resource name '%s', got '%s'", itemName, builder.GetResourceName())
 		}
-
-		// Verify it implements the interface
-		var _ SchemaBuilder = builder
 	}
 }
 
 func TestSchemaBuilderWithDifferentAttributeTypes(t *testing.T) {
 	builder := NewSchemaBuilder("test")
 
-	tests := []struct {
-		name     string
-		attr     any
-		wantType string
-	}{
-		{
-			name:     "StringAttribute",
-			attr:     &schema.StringAttribute{},
-			wantType: "*schema.StringAttribute",
-		},
-		{
-			name:     "Int64Attribute",
-			attr:     &schema.Int64Attribute{},
-			wantType: "*schema.Int64Attribute",
-		},
-		{
-			name:     "BoolAttribute",
-			attr:     &schema.BoolAttribute{},
-			wantType: "*schema.BoolAttribute",
-		},
-		{
-			name:     "ObjectAttribute",
-			attr:     &schema.ObjectAttribute{},
-			wantType: "*schema.ObjectAttribute",
-		},
-		{
-			name:     "SingleNestedAttribute",
-			attr:     &schema.SingleNestedAttribute{},
-			wantType: "*schema.SingleNestedAttribute",
-		},
-	}
+	t.Run("StringAttribute", func(t *testing.T) {
+		attr := &schema.StringAttribute{}
+		result := WithOpenAPIDescription(builder, attr, "test_field")
+		// Type is preserved, no casting needed!
+		if result != attr {
+			t.Error("Result should be the same pointer as input")
+		}
+	})
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := builder.WithOpenAPIDescription(tt.attr, "test_field")
+	t.Run("Int64Attribute", func(t *testing.T) {
+		attr := &schema.Int64Attribute{}
+		result := WithOpenAPIDescription(builder, attr, "test_field")
+		if result != attr {
+			t.Error("Result should be the same pointer as input")
+		}
+	})
 
-			// Verify the type is preserved
-			switch result.(type) {
-			case *schema.StringAttribute:
-				if tt.wantType != "*schema.StringAttribute" {
-					t.Errorf("Expected %s, got *schema.StringAttribute", tt.wantType)
-				}
-			case *schema.Int64Attribute:
-				if tt.wantType != "*schema.Int64Attribute" {
-					t.Errorf("Expected %s, got *schema.Int64Attribute", tt.wantType)
-				}
-			case *schema.BoolAttribute:
-				if tt.wantType != "*schema.BoolAttribute" {
-					t.Errorf("Expected %s, got *schema.BoolAttribute", tt.wantType)
-				}
-			case *schema.ObjectAttribute:
-				if tt.wantType != "*schema.ObjectAttribute" {
-					t.Errorf("Expected %s, got *schema.ObjectAttribute", tt.wantType)
-				}
-			case *schema.SingleNestedAttribute:
-				if tt.wantType != "*schema.SingleNestedAttribute" {
-					t.Errorf("Expected %s, got *schema.SingleNestedAttribute", tt.wantType)
-				}
-			default:
-				t.Errorf("Unexpected type: %T", result)
-			}
-		})
-	}
+	t.Run("BoolAttribute", func(t *testing.T) {
+		attr := &schema.BoolAttribute{}
+		result := WithOpenAPIDescription(builder, attr, "test_field")
+		if result != attr {
+			t.Error("Result should be the same pointer as input")
+		}
+	})
+
+	t.Run("ObjectAttribute", func(t *testing.T) {
+		attr := &schema.ObjectAttribute{}
+		result := WithOpenAPIDescription(builder, attr, "test_field")
+		if result != attr {
+			t.Error("Result should be the same pointer as input")
+		}
+	})
+
+	t.Run("SingleNestedAttribute", func(t *testing.T) {
+		attr := &schema.SingleNestedAttribute{}
+		result := WithOpenAPIDescription(builder, attr, "test_field")
+		if result != attr {
+			t.Error("Result should be the same pointer as input")
+		}
+	})
 }

@@ -6,67 +6,111 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/docs"
 )
 
-// SchemaBuilder provides methods for building resource and data source schemas with OpenAPI integration.
-// Each resource or data source should have its own SchemaBuilder instance with the resource/data source name.
-type SchemaBuilder interface {
-	// GetResourceName returns the name of the resource or data source (e.g., "project", "bucket", "cluster")
-	GetResourceName() string
-
-	// WithOpenAPIDescription sets the MarkdownDescription by looking up the field
-	// description from the OpenAPI specification for this resource/data source.
-	WithOpenAPIDescription(attr any, fieldName string) any
+// SchemaAttribute is a type constraint for supported attribute types
+type SchemaAttribute interface {
+	*schema.StringAttribute | *schema.Int64Attribute | *schema.BoolAttribute |
+		*schema.SetAttribute | *schema.Float64Attribute | *schema.NumberAttribute |
+		*schema.ListAttribute | *schema.SingleNestedAttribute | *schema.ObjectAttribute
 }
 
-// BaseSchemaBuilder implements SchemaBuilder interface
-type BaseSchemaBuilder struct {
+// SchemaBuilder provides methods for building resource and data source schemas with OpenAPI integration.
+// Each resource or data source should have its own SchemaBuilder instance.
+type SchemaBuilder struct {
 	resourceName string
 }
 
 // NewSchemaBuilder creates a new SchemaBuilder for a specific resource or data source
-func NewSchemaBuilder(resourceName string) SchemaBuilder {
-	return &BaseSchemaBuilder{resourceName: resourceName}
+func NewSchemaBuilder(resourceName string) *SchemaBuilder {
+	return &SchemaBuilder{resourceName: resourceName}
 }
 
 // GetResourceName returns the resource name
-func (b *BaseSchemaBuilder) GetResourceName() string {
+func (b *SchemaBuilder) GetResourceName() string {
 	return b.resourceName
 }
 
 // WithOpenAPIDescription sets the MarkdownDescription for the provided attribute
 // by looking up the field description from the OpenAPI specification.
 // It accepts an attribute and the Terraform field name in snake_case.
-func (b *BaseSchemaBuilder) WithOpenAPIDescription(attr any, fieldName string) any {
+// Returns the same attribute with the description set, preserving the type.
+func WithOpenAPIDescription[T SchemaAttribute](b *SchemaBuilder, attr T, fieldName string) T {
 	description := docs.GetOpenAPIDescription(b.resourceName, fieldName)
 
-	switch v := attr.(type) {
+	switch v := any(attr).(type) {
 	case *schema.StringAttribute:
 		v.MarkdownDescription = description
-		return v
 	case *schema.Int64Attribute:
 		v.MarkdownDescription = description
-		return v
 	case *schema.BoolAttribute:
 		v.MarkdownDescription = description
-		return v
 	case *schema.SetAttribute:
 		v.MarkdownDescription = description
-		return v
 	case *schema.Float64Attribute:
 		v.MarkdownDescription = description
-		return v
 	case *schema.NumberAttribute:
 		v.MarkdownDescription = description
-		return v
 	case *schema.ListAttribute:
 		v.MarkdownDescription = description
-		return v
 	case *schema.SingleNestedAttribute:
 		v.MarkdownDescription = description
-		return v
 	case *schema.ObjectAttribute:
 		v.MarkdownDescription = description
-		return v
-	default:
-		return attr
 	}
+
+	return attr
+}
+
+// AddAttr adds an attribute with automatic description to the attributes map.
+// This eliminates the duplication of the field name.
+//
+// Description priority:
+// 1. First tries OpenAPI spec (via SchemaBuilder)
+// 2. Falls back to CommonDescriptions for standard fields (organization_id, if_match, etc.)
+// 3. If not found in either, description remains empty
+//
+// Example:
+//
+//	attrs := make(map[string]schema.Attribute)
+//	capellaschema.AddAttr(attrs, "name", projectBuilder, stringAttribute([]string{required}))
+//	capellaschema.AddAttr(attrs, "organization_id", projectBuilder, stringAttribute([]string{required}))
+func AddAttr[T SchemaAttribute](
+	attrs map[string]schema.Attribute,
+	fieldName string,
+	builder *SchemaBuilder,
+	attr T,
+) {
+	// Try OpenAPI first
+	description := docs.GetOpenAPIDescription(builder.resourceName, fieldName)
+
+	// Fall back to common descriptions if not in OpenAPI
+	if description == "" {
+		if commonDesc, ok := CommonDescriptions[fieldName]; ok {
+			description = commonDesc
+		}
+	}
+
+	// Set the description
+	switch v := any(attr).(type) {
+	case *schema.StringAttribute:
+		v.MarkdownDescription = description
+	case *schema.Int64Attribute:
+		v.MarkdownDescription = description
+	case *schema.BoolAttribute:
+		v.MarkdownDescription = description
+	case *schema.SetAttribute:
+		v.MarkdownDescription = description
+	case *schema.Float64Attribute:
+		v.MarkdownDescription = description
+	case *schema.NumberAttribute:
+		v.MarkdownDescription = description
+	case *schema.ListAttribute:
+		v.MarkdownDescription = description
+	case *schema.SingleNestedAttribute:
+		v.MarkdownDescription = description
+	case *schema.ObjectAttribute:
+		v.MarkdownDescription = description
+	}
+
+	// Convert to schema.Attribute interface
+	attrs[fieldName] = any(attr).(schema.Attribute)
 }

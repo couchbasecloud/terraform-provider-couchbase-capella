@@ -4,9 +4,9 @@ This package provides automatic documentation enhancement by extracting field de
 
 ## Usage
 
-### Using the SchemaBuilder Interface
+### Using the SchemaBuilder
 
-The `SchemaBuilder` interface is defined in `internal/schema/builder.go` and can be used by both **resources** and **data sources**.
+The `SchemaBuilder` type is defined in `internal/schema/builder.go` and can be used by both **resources** and **data sources**.
 
 Each resource or data source should create a `SchemaBuilder` instance at the package level:
 
@@ -19,13 +19,18 @@ import (
 var projectBuilder = capellaschema.NewSchemaBuilder("project")
 
 func ProjectSchema() schema.Schema {
+    attrs := make(map[string]schema.Attribute)
+    
+    // AddAttr automatically finds descriptions from OpenAPI OR common registry
+    capellaschema.AddAttr(attrs, "name", projectBuilder, stringAttribute([]string{required}))
+    capellaschema.AddAttr(attrs, "organization_id", projectBuilder, stringAttribute([]string{required}))
+    capellaschema.AddAttr(attrs, "if_match", projectBuilder, stringAttribute([]string{optional}))
+    
+    // Special attributes that are pre-built
+    attrs["audit"] = computedAuditAttribute()
+    
     return schema.Schema{
-        Attributes: map[string]schema.Attribute{
-            "name": projectBuilder.WithOpenAPIDescription(
-                stringAttribute([]string{required}),
-                "name",  // Only the field name!
-            ).(*schema.StringAttribute),
-        },
+        Attributes: attrs,
     }
 }
 ```
@@ -33,29 +38,36 @@ func ProjectSchema() schema.Schema {
 **Key Benefits:**
 - ✅ Shared between resources and data sources
 - ✅ Resource name defined once per file
-- ✅ Interface enforces contract across all schemas
-- ✅ Type-safe at compile time
+- ✅ **No field name duplication** - `AddAttr` takes the field name once
+- ✅ **Uniform syntax** - all fields use the same pattern
+- ✅ Type-safe at compile time with generics
 - ✅ Clean, readable code
 
-The `SchemaBuilder` automatically:
+### Description Resolution Priority
+
+`AddAttr` automatically finds descriptions using a two-tier fallback:
+
+**1. OpenAPI Specification (primary)**
 - Converts `field_name` from snake_case to camelCase (`fieldName`)
 - Tries common OpenAPI schema patterns:
   - `CreateResourceRequest`
   - `GetResourceResponse`
   - `UpdateResourceRequest`
-  - etc.
-- Returns the first matching field description found
+  - `ResourceRequest`, `ResourceResponse`
+- Extracts rich constraints (maxLength, pattern, enum, etc.)
+- Formats as readable markdown with examples
 
-### For Terraform-specific fields
+**2. Common Descriptions Registry (fallback)**
+- For standard fields not in OpenAPI bodies:
+  - **Path parameters**: `organization_id`, `project_id`, `cluster_id`, etc.
+  - **HTTP headers**: `if_match`, `etag`
+  - **Standard metadata**: `audit`, `id`
+- Defined in `internal/schema/common_descriptions.go`
+- Easy to extend for new common fields
 
-Continue using the existing `WithDescription()` function:
+**3. Empty** (if not found in either)
 
-```go
-"if_match": WithDescription(
-    stringAttribute([]string{optional}),
-    "Custom description for Terraform-specific field"
-)
-```
+This means **ALL fields can use `AddAttr`** with consistent syntax!
 
 ## What Gets Enhanced
 
@@ -95,61 +107,68 @@ The OpenAPI loader automatically extracts and formats:
 ## Examples
 
 ### Project Resource (in internal/resources/project_schema.go)
-```go
-import (
-    capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
-)
 
-// At the top of the file
+**Before** (mixed patterns):
+```go
+Attributes: map[string]schema.Attribute{
+    "name": WithOpenAPIDescription(..., "name"),
+    "organization_id": WithDescription(..., "The GUID4 ID..."),
+    "if_match": WithDescription(..., "A precondition header..."),
+}
+```
+
+**After** (uniform `AddAttr` for everything):
+```go
 var projectBuilder = capellaschema.NewSchemaBuilder("project")
 
-// In ProjectSchema()
-"name": projectBuilder.WithOpenAPIDescription(
-    stringAttribute([]string{required}),
-    "name",
-).(*schema.StringAttribute),
-
-"description": projectBuilder.WithOpenAPIDescription(
-    stringAttribute([]string{optional}),
-    "description",
-).(*schema.StringAttribute),
+func ProjectSchema() schema.Schema {
+    attrs := make(map[string]schema.Attribute)
+    
+    capellaschema.AddAttr(attrs, "name", projectBuilder, stringAttribute([]string{required}))
+    capellaschema.AddAttr(attrs, "organization_id", projectBuilder, stringAttribute([]string{required}))
+    capellaschema.AddAttr(attrs, "if_match", projectBuilder, stringAttribute([]string{optional}))
+    capellaschema.AddAttr(attrs, "etag", projectBuilder, stringAttribute([]string{computed}))
+    
+    // Only special pre-built attributes are different
+    attrs["audit"] = computedAuditAttribute()
+    
+    return schema.Schema{Attributes: attrs}
+}
 ```
+
+✨ **All fields use the same pattern!** Descriptions are automatically found from OpenAPI or the common registry.
 
 ### Bucket Resource (in internal/resources/bucket_schema.go)
 ```go
-import (
-    capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
-)
-
-// At the top of the file
 var bucketBuilder = capellaschema.NewSchemaBuilder("bucket")
 
-// In BucketSchema()
-"memory_allocation_in_mb": bucketBuilder.WithOpenAPIDescription(
-    int64Attribute([]string{optional}),
-    "memory_allocation_in_mb",  // Automatically converts to memoryAllocationInMb
-).(*schema.Int64Attribute),
-
-"storage_backend": bucketBuilder.WithOpenAPIDescription(
-    stringAttribute([]string{optional}),
-    "storage_backend",  // Automatically converts to storageBackend
-).(*schema.StringAttribute),
+func BucketSchema() schema.Schema {
+    attrs := make(map[string]schema.Attribute)
+    
+    // Automatically converts memory_allocation_in_mb → memoryAllocationInMb
+    capellaschema.AddAttr(attrs, "memory_allocation_in_mb", bucketBuilder,
+        int64Attribute([]string{optional}))
+    
+    // Automatically converts storage_backend → storageBackend
+    capellaschema.AddAttr(attrs, "storage_backend", bucketBuilder,
+        stringAttribute([]string{optional}))
+    
+    return schema.Schema{Attributes: attrs}
+}
 ```
 
 ### Data Source Example (in internal/datasources/users_schema.go)
 ```go
-import (
-    capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
-)
-
-// At the top of the file
 var usersBuilder = capellaschema.NewSchemaBuilder("users")
 
-// In UsersSchema()
-"email": usersBuilder.WithOpenAPIDescription(
-    stringAttribute([]string{optional}),
-    "email",
-).(*schema.StringAttribute),
+func UsersSchema() schema.Schema {
+    attrs := make(map[string]schema.Attribute)
+    
+    capellaschema.AddAttr(attrs, "email", usersBuilder,
+        stringAttribute([]string{optional}))
+    
+    return schema.Schema{Attributes: attrs}
+}
 ```
 
 ## How OpenAPI Spec Loading Works

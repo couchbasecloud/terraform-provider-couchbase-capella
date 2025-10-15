@@ -38,7 +38,7 @@ resource "couchbase-capella_free_tier_app_service" "new_free_tier_app_service" {
 
 ### Read-Only
 
-- `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
+- `audit` (Attributes) (see [below for nested schema](#nestedatt--audit))
 - `cloud_provider` (String) The Cloud Service Provider of the free tier App Service. The supported Cloud Service Providers are AWS, GCP, and Azure.
 - `compute` (Attributes) Compute configuration of the free tier App Service. (see [below for nested schema](#nestedatt--compute))
 - `current_state` (String) Current state of the free tier App Service.
