@@ -36,18 +36,24 @@ func ProjectSchema() schema.Schema {
 ```
 
 **Key Benefits:**
-- ✅ Shared between resources and data sources
-- ✅ Resource name defined once per file
-- ✅ **No field name duplication** - `AddAttr` takes the field name once
-- ✅ **Uniform syntax** - all fields use the same pattern
-- ✅ Type-safe at compile time with generics
-- ✅ Clean, readable code
+- Shared between resources and data sources
+- Resource name defined once per file
+- **No field name duplication** - `AddAttr` takes the field name once
+- **Uniform syntax** - all fields use the same pattern
+- Type-safe at compile time with generics
+- Clean, readable code
 
 ### Description Resolution Priority
 
-`AddAttr` automatically finds descriptions using a two-tier fallback:
+`AddAttr` automatically finds descriptions using a three-tier fallback:
 
-**1. OpenAPI Specification (primary)**
+**1. OpenAPI Path Parameters (highest priority for *_id fields)**
+- For fields ending in `_id` (e.g., `organization_id`, `project_id`, `cluster_id`)
+- Looks up in `components.parameters` section of OpenAPI spec
+- Converts snake_case → CapitalizedCamelCase (e.g., `organization_id` → `OrganizationId`)
+- Returns the path parameter description
+
+**2. OpenAPI Schema Properties (primary for other fields)**
 - Converts `field_name` from snake_case to camelCase (`fieldName`)
 - Tries common OpenAPI schema patterns:
   - `CreateResourceRequest`
@@ -57,17 +63,16 @@ func ProjectSchema() schema.Schema {
 - Extracts rich constraints (maxLength, pattern, enum, etc.)
 - Formats as readable markdown with examples
 
-**2. Common Descriptions Registry (fallback)**
-- For standard fields not in OpenAPI bodies:
-  - **Path parameters**: `organization_id`, `project_id`, `cluster_id`, etc.
+**3. Common Descriptions Registry (fallback for special fields)**
+- For fields not in OpenAPI spec:
   - **HTTP headers**: `if_match`, `etag`
-  - **Standard metadata**: `audit`, `id`
+  - **Special nested attributes**: `audit`
 - Defined in `internal/schema/common_descriptions.go`
-- Easy to extend for new common fields
+- Minimal set - most descriptions come from OpenAPI now
 
-**3. Empty** (if not found in either)
+**4. Empty** (if not found anywhere)
 
-This means **ALL fields can use `AddAttr`** with consistent syntax!
+This means **ALL fields can use `AddAttr`** with consistent syntax, and most descriptions come directly from the OpenAPI spec!
 
 ## What Gets Enhanced
 
@@ -136,7 +141,7 @@ func ProjectSchema() schema.Schema {
 }
 ```
 
-✨ **All fields use the same pattern!** Descriptions are automatically found from OpenAPI or the common registry.
+**All fields use the same pattern!** Descriptions are automatically found from OpenAPI or the common registry.
 
 ### Bucket Resource (in internal/resources/bucket_schema.go)
 ```go
@@ -174,10 +179,10 @@ func UsersSchema() schema.Schema {
 ## How OpenAPI Spec Loading Works
 
 The OpenAPI spec is **loaded from the filesystem at runtime**, not embedded in the binary. This means:
-- ✅ Always uses the latest `openapi.generated.yaml` from the project root
-- ✅ No need to copy or sync files
-- ✅ No need to rebuild when the spec changes
-- ✅ Simpler architecture
+- Always uses the latest `openapi.generated.yaml` from the project root
+- No need to copy or sync files
+- No need to rebuild when the spec changes
+- Simpler architecture
 
 ### Finding the Spec
 

@@ -77,7 +77,7 @@ var projectBuilder = capellaschema.NewSchemaBuilder("project")
     projectBuilder,
     stringAttribute([]string{required}),
     "name",  // Automatically finds description in OpenAPI spec
-),  // ✨ No type assertion needed - fully type-safe!
+),  // No type assertion needed - fully type-safe!
 ```
 
 This provides rich documentation with:
@@ -124,11 +124,11 @@ When `tfplugindocs` runs, it:
 
 If `templates/` were inside `docs/`, it would be deleted during generation! This pattern is used by all official Terraform providers (AWS, Google, Azure, etc.) and is the default behavior of `tfplugindocs`.
 
-⚠️ **Important:** Never edit files in `docs/` directly - they will be overwritten!
+**Important:** Never edit files in `docs/` directly - they will be overwritten!
 
-- ✅ **DO** edit files in `templates/` for custom content
-- ✅ **DO** edit Go schema files for field descriptions  
-- ✅ **DO** run `make build-docs` after changes
-- ❌ **DON'T** manually edit generated files in `docs/`
+- **DO** edit files in `templates/` for custom content
+- **DO** edit Go schema files for field descriptions  
+- **DO** run `make build-docs` after changes
+- **DON'T** manually edit generated files in `docs/`
 
 See `templates/README.md` for more details.

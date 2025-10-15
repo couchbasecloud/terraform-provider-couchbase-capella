@@ -10,12 +10,12 @@ func TestAddAttrWithCommonDescriptions(t *testing.T) {
 	builder := NewSchemaBuilder("test")
 	attrs := make(map[string]schema.Attribute)
 
-	// Test common field that's not in OpenAPI
+	// Test path parameter field (should come from OpenAPI, not CommonDescriptions)
 	AddAttr(attrs, "organization_id", builder, &schema.StringAttribute{
 		Required: true,
 	})
 
-	// Verify the attribute was added and has the expected description
+	// Verify the attribute was added and has a description
 	attr := attrs["organization_id"]
 	if attr == nil {
 		t.Fatal("Expected organization_id attribute to be added")
@@ -27,8 +27,26 @@ func TestAddAttrWithCommonDescriptions(t *testing.T) {
 		t.Fatalf("Expected *schema.StringAttribute, got %T", attr)
 	}
 
-	if strAttr.MarkdownDescription != CommonDescriptions["organization_id"] {
-		t.Errorf("Expected organization_id description from CommonDescriptions, got: %s", strAttr.MarkdownDescription)
+	// Should get description from OpenAPI path parameters now
+	if strAttr.MarkdownDescription == "" {
+		t.Error("Expected organization_id to have description from OpenAPI path parameters")
+	}
+	if strAttr.MarkdownDescription != "The GUID4 ID of the organization." {
+		t.Errorf("Expected OpenAPI path parameter description, got: %s", strAttr.MarkdownDescription)
+	}
+
+	// Test HTTP header field (should come from CommonDescriptions)
+	AddAttr(attrs, "if_match", builder, &schema.StringAttribute{
+		Optional: true,
+	})
+
+	ifMatchAttr, ok := attrs["if_match"].(*schema.StringAttribute)
+	if !ok {
+		t.Fatalf("Expected *schema.StringAttribute for if_match, got %T", attrs["if_match"])
+	}
+
+	if ifMatchAttr.MarkdownDescription != CommonDescriptions["if_match"] {
+		t.Errorf("Expected if_match description from CommonDescriptions, got: %s", ifMatchAttr.MarkdownDescription)
 	}
 }
 
@@ -57,11 +75,8 @@ func TestAddAttrFallbackChain(t *testing.T) {
 }
 
 func TestCommonDescriptionsRegistry(t *testing.T) {
-	// Verify common fields are registered
+	// Verify common fields are registered (only non-OpenAPI fields)
 	requiredFields := []string{
-		"organization_id",
-		"project_id",
-		"cluster_id",
 		"if_match",
 		"etag",
 		"audit",
@@ -70,6 +85,19 @@ func TestCommonDescriptionsRegistry(t *testing.T) {
 	for _, field := range requiredFields {
 		if desc, ok := CommonDescriptions[field]; !ok || desc == "" {
 			t.Errorf("Expected CommonDescriptions to have non-empty entry for %s", field)
+		}
+	}
+
+	// Verify ID fields are NOT in CommonDescriptions (they come from OpenAPI now)
+	idFieldsShouldNotExist := []string{
+		"organization_id",
+		"project_id",
+		"cluster_id",
+	}
+
+	for _, field := range idFieldsShouldNotExist {
+		if _, ok := CommonDescriptions[field]; ok {
+			t.Errorf("Expected %s to NOT be in CommonDescriptions (should come from OpenAPI parameters)", field)
 		}
 	}
 }

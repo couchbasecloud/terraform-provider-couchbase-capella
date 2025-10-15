@@ -76,15 +76,32 @@ func init() {
 }
 
 // GetOpenAPIDescription retrieves an enhanced description for a field from the OpenAPI spec.
-// Automatically tries common schema patterns (CreateXRequest, GetXResponse, UpdateXRequest).
+// Priority order:
+// 1. Path parameters (components.parameters) - for fields ending in _id
+// 2. Schema properties (CreateXRequest, GetXResponse, etc.)
 // Converts snake_case field names to camelCase.
 // Returns empty string if schema or field not found.
 func GetOpenAPIDescription(resourceName, tfFieldName string) string {
-	if openAPIDoc == nil || openAPIDoc.Components == nil || openAPIDoc.Components.Schemas == nil {
+	if openAPIDoc == nil || openAPIDoc.Components == nil {
 		return ""
 	}
 
-	// Convert snake_case to camelCase
+	// First, check if this is a path parameter (e.g., organization_id, project_id)
+	if strings.HasSuffix(tfFieldName, "_id") && openAPIDoc.Components.Parameters != nil {
+		// Convert organization_id → OrganizationId (capitalized for parameter lookup)
+		paramName := snakeToCapitalizedCamel(tfFieldName)
+		if paramRef, ok := openAPIDoc.Components.Parameters[paramName]; ok && paramRef.Value != nil {
+			if paramRef.Value.Description != "" {
+				return strings.TrimSpace(paramRef.Value.Description)
+			}
+		}
+	}
+
+	if openAPIDoc.Components.Schemas == nil {
+		return ""
+	}
+
+	// Convert snake_case to camelCase for schema property lookup
 	camelFieldName := snakeToCamel(tfFieldName)
 
 	// Capitalize resource name for schema patterns
@@ -128,6 +145,23 @@ func snakeToCamel(s string) string {
 	// Capitalize first letter of remaining parts
 	for i := 1; i < len(parts); i++ {
 		result += capitalize(parts[i])
+	}
+
+	return result
+}
+
+// snakeToCapitalizedCamel converts snake_case to CapitalizedCamelCase (PascalCase)
+// Used for OpenAPI parameter names: organization_id → OrganizationId
+func snakeToCapitalizedCamel(s string) string {
+	parts := strings.Split(s, "_")
+	if len(parts) == 0 {
+		return s
+	}
+
+	// Capitalize first letter of all parts
+	result := ""
+	for _, part := range parts {
+		result += capitalize(part)
 	}
 
 	return result
