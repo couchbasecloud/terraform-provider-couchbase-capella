@@ -59,9 +59,11 @@ make build-docs
 ```
 
 This command:
-1. Syncs the OpenAPI spec from `openapi.generated.yaml` to `internal/docs/`
-2. Generates documentation using `tfplugindocs`
-3. Copies custom content from `templates/` to `docs/`
+1. Generates documentation using `tfplugindocs`
+2. Copies custom content from `templates/` to `docs/`
+3. **Automatically reads** OpenAPI spec from `openapi.generated.yaml` at runtime
+
+> **Note:** The OpenAPI spec is loaded from the filesystem at runtime, so documentation is always up-to-date with the latest spec changes - no rebuild needed!
 
 ### OpenAPI-Enhanced Descriptions
 

@@ -1,8 +1,9 @@
 package schema
 
 import (
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/docs"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/docs"
 )
 
 // SchemaBuilder provides methods for building resource and data source schemas with OpenAPI integration.

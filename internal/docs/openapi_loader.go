@@ -1,26 +1,75 @@
 package docs
 
 import (
-	_ "embed"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
-//go:embed openapi.generated.yaml
-var openAPISpecYAML []byte
-
 var openAPIDoc *openapi3.T
 
+// findProjectRoot walks up the directory tree to find go.mod
+func findProjectRoot() (string, error) {
+	// Start from current working directory
+	dir, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	// Walk up until we find go.mod
+	for {
+		goModPath := filepath.Join(dir, "go.mod")
+		if _, err := os.Stat(goModPath); err == nil {
+			return dir, nil
+		}
+
+		// Move up one directory
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			// Reached root without finding go.mod
+			return "", fmt.Errorf("could not find go.mod in any parent directory")
+		}
+		dir = parent
+	}
+}
+
 func init() {
+	var openAPIPath string
+
+	// Try environment variable first (for build/test scenarios)
+	if envPath := os.Getenv("CAPELLA_OPENAPI_SPEC_PATH"); envPath != "" {
+		openAPIPath = envPath
+	} else {
+		// Find project root by locating go.mod
+		projectRoot, err := findProjectRoot()
+		if err != nil {
+			// Gracefully degrade - descriptions will be empty but provider still works
+			fmt.Fprintf(os.Stderr, "Warning: Could not locate project root: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Field descriptions will not be enhanced with OpenAPI metadata.\n")
+			return
+		}
+		openAPIPath = filepath.Join(projectRoot, "openapi.generated.yaml")
+	}
+
+	data, err := os.ReadFile(openAPIPath)
+	if err != nil {
+		// Gracefully degrade - descriptions will be empty but provider still works
+		fmt.Fprintf(os.Stderr, "Warning: Could not load OpenAPI spec at %s: %v\n", openAPIPath, err)
+		fmt.Fprintf(os.Stderr, "Field descriptions will not be enhanced with OpenAPI metadata.\n")
+		return
+	}
+
 	loader := openapi3.NewLoader()
 	loader.IsExternalRefsAllowed = true
 
-	// kin-openapi can parse YAML directly
-	doc, err := loader.LoadFromData(openAPISpecYAML)
+	doc, err := loader.LoadFromData(data)
 	if err != nil {
-		panic(fmt.Sprintf("Failed to load OpenAPI spec: %v", err))
+		fmt.Fprintf(os.Stderr, "Warning: Failed to parse OpenAPI spec: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Field descriptions will not be enhanced with OpenAPI metadata.\n")
+		return
 	}
 
 	openAPIDoc = doc

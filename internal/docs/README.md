@@ -152,22 +152,31 @@ var usersBuilder = capellaschema.NewSchemaBuilder("users")
 ).(*schema.StringAttribute),
 ```
 
-## Maintaining the OpenAPI Spec
+## How OpenAPI Spec Loading Works
 
-The `openapi.generated.yaml` file in this directory is a copy of the root `openapi.generated.yaml` and is embedded at compile time using `//go:embed`. 
+The OpenAPI spec is **loaded from the filesystem at runtime**, not embedded in the binary. This means:
+- ✅ Always uses the latest `openapi.generated.yaml` from the project root
+- ✅ No need to copy or sync files
+- ✅ No need to rebuild when the spec changes
+- ✅ Simpler architecture
 
-**Important:** When the root `openapi.generated.yaml` is updated, you must copy it to this directory:
+### Finding the Spec
 
+The loader automatically finds `openapi.generated.yaml` by:
+1. **Checking environment variable**: `CAPELLA_OPENAPI_SPEC_PATH` (if set)
+2. **Walking up directories**: Looking for `go.mod` to find project root
+3. **Reading from project root**: `<project_root>/openapi.generated.yaml`
+
+If the spec can't be found, the provider gracefully degrades - it still works, but field descriptions won't be enhanced with OpenAPI metadata.
+
+### Environment Variable (for special cases)
+
+If running from a non-standard location, set:
 ```bash
-# From the project root
-cp openapi.generated.yaml internal/docs/
+export CAPELLA_OPENAPI_SPEC_PATH="/path/to/openapi.generated.yaml"
 ```
 
-After updating, rebuild the provider and regenerate docs:
-```bash
-make build
-make build-docs
-```
+The `make build-docs` target automatically sets this for you.
 
 **Note:** We use YAML (not JSON) as the single source of truth. The `kin-openapi` library parses YAML directly, so no conversion is needed.
 
