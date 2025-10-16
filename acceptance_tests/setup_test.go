@@ -103,9 +103,9 @@ func cleanup(ctx context.Context, client *api.Client) error {
 		if err := destroyAppEndpoint(ctx, client); err != nil {
 			return err
 		}
-	}
-	if err := appEndpointWait(ctx, client, true); err != nil {
-		return err
+		if err := appEndpointWait(ctx, client, true); err != nil {
+			return err
+		}
 	}
 
 	if globalClusterId != "" {

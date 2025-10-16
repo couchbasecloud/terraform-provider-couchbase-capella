@@ -13,7 +13,7 @@ func TestAccAppEndpointActivationStatus(t *testing.T) {
 	resourceReference := "couchbase-capella_app_endpoint_activation_status." + resourceName
 
 	// Use a stable endpoint name so we can import by name
-	endpointName := "tf-acc-endpoint"
+	endpointName := globalAppEndpointName
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -50,45 +50,25 @@ func TestAccAppEndpointActivationStatus(t *testing.T) {
 func testAccAppEndpointActivationStatusConfig(resourceName, endpointName, desiredState string) string {
 	// Create the underlying App Endpoint if it does not exist, then manage activation status
 	return fmt.Sprintf(`
-%[1]s
+	%[1]s
 
-resource "couchbase-capella_app_endpoint" "endpoint" {
-  organization_id = "%[2]s"
-  project_id      = "%[3]s"
-  cluster_id      = "%[4]s"
-  app_service_id  = "%[5]s"
-  bucket          = "%[6]s"
-  name            = "%[7]s"
-
-  scopes = {
-    "%[8]s" = {
-      collections = {
-        "%[9]s" = {}
-      }
-    }
-  }
-}
-
-resource "couchbase-capella_app_endpoint_activation_status" "%[10]s" {
-  organization_id   = "%[2]s"
-  project_id        = "%[3]s"
-  cluster_id        = "%[4]s"
-  app_service_id    = "%[5]s"
-  app_endpoint_name = couchbase-capella_app_endpoint.endpoint.name
-  state             = "%[11]s"
-}
-`,
+	resource "couchbase-capella_app_endpoint_activation_status" "%[8]s" {
+	  organization_id   = "%[2]s"
+	  project_id        = "%[3]s"
+	  cluster_id        = "%[4]s"
+	  app_service_id    = "%[5]s"
+	  app_endpoint_name = "%[6]s"
+	  state             = "%[7]s"
+	}
+	`,
 		globalProviderBlock,
 		globalOrgId,
 		globalProjectId,
 		globalClusterId,
 		globalAppServiceId,
-		globalBucketName,
 		endpointName,
-		globalScopeName,
-		globalCollectionName,
-		resourceName,
 		desiredState,
+		resourceName,
 	)
 }
 
