@@ -16,7 +16,7 @@ import (
 func createAppEndpoint(ctx context.Context, client *api.Client) error {
 	appEndpointRequest := app_endpoints.AppEndpointRequest{
 		Name:             globalAppEndpointName,
-		Bucket:           globalBucketId,
+		Bucket:           globalBucketName,
 		UserXattrKey:     "syncFnXattr",
 		DeltaSyncEnabled: true,
 		Scopes: app_endpoints.Scopes{
@@ -39,14 +39,13 @@ func createAppEndpoint(ctx context.Context, client *api.Client) error {
 		globalClusterId,
 		globalAppServiceId,
 	)
-
 	cfg := api.EndpointCfg{
 		Url:           url,
 		Method:        http.MethodPost,
 		SuccessStatus: http.StatusCreated,
 	}
 
-	response, err := client.ExecuteWithRetry(
+	_, err := client.ExecuteWithRetry(
 		ctx,
 		cfg,
 		appEndpointRequest,
@@ -54,11 +53,6 @@ func createAppEndpoint(ctx context.Context, client *api.Client) error {
 		nil,
 	)
 	if err != nil {
-		return err
-	}
-
-	appEndpointResponse := app_endpoints.GetAppEndpointResponse{}
-	if err = json.Unmarshal(response.Body, &appEndpointResponse); err != nil {
 		return err
 	}
 
