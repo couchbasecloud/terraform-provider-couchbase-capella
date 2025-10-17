@@ -3,7 +3,6 @@ package acceptance_tests
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -59,7 +58,7 @@ func createAppEndpoint(ctx context.Context, client *api.Client) error {
 	return nil
 }
 
-func appEndpointWait(ctx context.Context, client *api.Client, destroy bool) error {
+func appEndpointWait(ctx context.Context, client *api.Client) error {
 	const maxWaitTime = 10 * time.Minute
 	const checkInterval = 1 * time.Minute
 
@@ -90,63 +89,23 @@ func appEndpointWait(ctx context.Context, client *api.Client, destroy bool) erro
 			nil,
 		)
 		if err != nil {
-			resourceNotFound, errMsg := api.CheckResourceNotFoundError(err)
-			if destroy && resourceNotFound {
-				log.Print("app endpoint destroyed")
-				return nil
+			if resourceNotFound, errMsg := api.CheckResourceNotFoundError(err); resourceNotFound {
+				return fmt.Errorf("app endpoint not found: %s", errMsg)
 			}
-			if destroy && !resourceNotFound {
-				return errors.New(errMsg)
-			}
-
-			return err
 		}
 
-		if !destroy {
-			var appEndpointResponse app_endpoints.GetAppEndpointResponse
-			if err = json.Unmarshal(response.Body, &appEndpointResponse); err != nil {
-				return fmt.Errorf("Error unmarshalling app endpoint response: %v", err)
-			}
+		var appEndpointResponse app_endpoints.GetAppEndpointResponse
+		if err = json.Unmarshal(response.Body, &appEndpointResponse); err != nil {
+			return fmt.Errorf("Error unmarshalling app endpoint response: %v", err)
+		}
 
-			if appEndpointResponse.State == "Online" || appEndpointResponse.State == "Offline" {
-				log.Print("app endpoint created")
-				return nil
-			}
+		if appEndpointResponse.State == "Online" || appEndpointResponse.State == "Offline" {
+			log.Print("app endpoint created")
+			return nil
 		}
 
 		time.Sleep(checkInterval)
 	}
 
 	return fmt.Errorf("timeout waiting for app endpoint to be created or destroyed")
-}
-
-func destroyAppEndpoint(ctx context.Context, client *api.Client) error {
-	url := fmt.Sprintf(
-		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
-		globalHost,
-		globalOrgId,
-		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
-		globalAppEndpointName,
-	)
-
-	cfg := api.EndpointCfg{
-		Url:           url,
-		Method:        http.MethodDelete,
-		SuccessStatus: http.StatusAccepted,
-	}
-
-	_, err := client.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		globalToken,
-		nil,
-	)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

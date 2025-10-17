@@ -81,7 +81,7 @@ func setup(ctx context.Context, client *api.Client) error {
 	if err := createAppEndpoint(ctx, client); err != nil {
 		return err
 	}
-	if err := appEndpointWait(ctx, client, false); err != nil {
+	if err := appEndpointWait(ctx, client); err != nil {
 		return err
 	}
 
@@ -95,15 +95,6 @@ func cleanup(ctx context.Context, client *api.Client) error {
 		}
 
 		if err := appServiceWait(ctx, client, true); err != nil {
-			return err
-		}
-	}
-
-	if globalAppEndpointName != "" {
-		if err := destroyAppEndpoint(ctx, client); err != nil {
-			return err
-		}
-		if err := appEndpointWait(ctx, client, true); err != nil {
 			return err
 		}
 	}
