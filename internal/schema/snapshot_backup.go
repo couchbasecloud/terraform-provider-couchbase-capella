@@ -50,6 +50,19 @@ type SnapshotBackup struct {
 	CrossRegionRestorePreference []types.String `tfsdk:"cross_region_restore_preference"`
 }
 
+type SnapshotBackupData struct {
+	CreatedAt         types.String `tfsdk:"created_at"`
+	Expiration        types.String `tfsdk:"expiration"`
+	ID                types.String `tfsdk:"id"`
+	Retention         types.Int64  `tfsdk:"retention"`
+	CrossRegionCopies types.Set    `tfsdk:"cross_region_copies"`
+	Progress          types.Object `tfsdk:"progress"`
+	CMEK              types.Set    `tfsdk:"cmek"`
+	Server            types.Object `tfsdk:"server"`
+	Size              types.Int64  `tfsdk:"size"`
+	Type              types.String `tfsdk:"type"`
+}
+
 func (p Progress) AttributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"status": types.StringType,
