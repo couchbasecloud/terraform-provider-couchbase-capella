@@ -63,6 +63,16 @@ type SnapshotBackupData struct {
 	Type              types.String `tfsdk:"type"`
 }
 
+// SnapshotBackups defines structure based on the response received from V4 Capella Public API when asked to list snapshot backups.
+type SnapshotBackups struct {
+	OrganizationId types.String `tfsdk:"organization_id"`
+	ProjectId      types.String `tfsdk:"project_id"`
+	ClusterId      types.String `tfsdk:"cluster_id"`
+
+	// Data contains the list of resources.
+	Data []SnapshotBackupData `tfsdk:"data"`
+}
+
 func (p Progress) AttributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"status": types.StringType,
