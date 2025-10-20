@@ -567,7 +567,7 @@ func morphToTerraformCloudSnapshotBackup(ctx context.Context, backupResp *snapsh
 		return nil, fmt.Errorf("error during cross region copy conversion")
 	}
 
-	snapshotBackup := providerschema.NewSnapshotBackup(ctx, *backupResp, backupResp.ID, clusterId, projectId, organizationId, progressObj, serverObj, cmekSet, crossRegionCopySet)
+	snapshotBackup := providerschema.NewSnapshotBackup(*backupResp, backupResp.ID, clusterId, projectId, organizationId, progressObj, serverObj, cmekSet, crossRegionCopySet)
 	return &snapshotBackup, nil
 }
 
