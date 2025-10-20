@@ -17,7 +17,7 @@ func SnapshotBackupSchema() schema.Schema {
 			"created_at":      WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The RFC3339 timestamp representing the time at which snapshot backup was created."),
 			"expiration":      WithDescription(stringAttribute([]string{computed}), "The RFC3339 timestamp representing the time at which snapshot backup will expire."),
 			"retention":       WithDescription(int64Attribute(optional, computed), "The retention of the snapshot backup in hours."),
-			"regions_to_copy": WithDescription(stringSetAttribute(optional), "The regions to copy the snapshot backup to."),
+			"regions_to_copy": WithDescription(stringSetAttribute(optional, useStateForUnknown), "The regions to copy the snapshot backup to."),
 			"cross_region_copies": schema.SetNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{

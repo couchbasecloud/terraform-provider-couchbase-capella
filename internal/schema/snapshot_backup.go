@@ -1,7 +1,6 @@
 package schema
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -126,7 +125,7 @@ func (s SnapshotBackup) AttributeTypes() map[string]attr.Type {
 	}
 }
 
-func NewSnapshotBackup(ctx context.Context, snapshotBackup snapshot_backup.SnapshotBackup, ID, clusterID, projectID, organizationID string, progressObj, serverObj basetypes.ObjectValue, cmekSet, crossRegionCopySet basetypes.SetValue) SnapshotBackup {
+func NewSnapshotBackup(snapshotBackup snapshot_backup.SnapshotBackup, ID, clusterID, projectID, organizationID string, progressObj, serverObj basetypes.ObjectValue, cmekSet, crossRegionCopySet basetypes.SetValue) SnapshotBackup {
 	return SnapshotBackup{
 		ID:                types.StringValue(ID),
 		ClusterID:         types.StringValue(clusterID),
@@ -134,7 +133,22 @@ func NewSnapshotBackup(ctx context.Context, snapshotBackup snapshot_backup.Snaps
 		ProjectID:         types.StringValue(projectID),
 		OrganizationId:    types.StringValue(organizationID),
 		CreatedAt:         types.StringValue(snapshotBackup.CreatedAt),
-		Retention:         types.Int64Value(int64(snapshotBackup.Retention)),
+		Retention:         types.Int64Value(snapshotBackup.Retention),
+		CrossRegionCopies: crossRegionCopySet,
+		Progress:          progressObj,
+		CMEK:              cmekSet,
+		Server:            serverObj,
+		Size:              types.Int64Value(int64(snapshotBackup.Size)),
+		Type:              types.StringValue(snapshotBackup.Type),
+	}
+}
+
+func NewSnapshotBackupData(snapshotBackup snapshot_backup.SnapshotBackup, ID, clusterID, projectID, organizationID string, progressObj, serverObj basetypes.ObjectValue, cmekSet, crossRegionCopySet basetypes.SetValue) SnapshotBackupData {
+	return SnapshotBackupData{
+		ID:                types.StringValue(ID),
+		Expiration:        types.StringValue(snapshotBackup.Expiration),
+		CreatedAt:         types.StringValue(snapshotBackup.CreatedAt),
+		Retention:         types.Int64Value(snapshotBackup.Retention),
 		CrossRegionCopies: crossRegionCopySet,
 		Progress:          progressObj,
 		CMEK:              cmekSet,
