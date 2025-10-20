@@ -573,7 +573,7 @@ func morphToTerraformCloudSnapshotBackup(ctx context.Context, backupResp *snapsh
 
 func (s *SnapshotBackup) updateRetention(ctx context.Context, organizationId, projectId, clusterId, Id string, retention int) error {
 	updateSnapshotBackupRequest := snapshot_backup.EditBackupRetentionRequest{
-		Retention: retention,
+		Retention: int64(retention),
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups/%s", s.HostURL, organizationId, projectId, clusterId, Id)
