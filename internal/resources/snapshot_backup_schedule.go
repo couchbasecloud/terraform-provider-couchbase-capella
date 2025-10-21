@@ -39,7 +39,7 @@ func NewSnapshotBackupSchedule() resource.Resource {
 
 // Metadata returns the Snapshot Backup Schedule resource type name.
 func (s *SnapshotBackupSchedule) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_snapshot_backup_schedule"
+	resp.TypeName = req.ProviderTypeName + "_cloud_snapshot_backup_schedule"
 }
 
 // Schema defines the schema for the Snapshot Backup Schedule resource.
@@ -49,8 +49,8 @@ func (s *SnapshotBackupSchedule) Schema(_ context.Context, _ resource.SchemaRequ
 
 // ImportState imports a remote snapshot backup schedule that is not created by Terraform.
 func (s *SnapshotBackupSchedule) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	// Retrieve import ID and save to id attribute
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	// Retrieve import ID and save to cluster_id attribute
+	resource.ImportStatePassthroughID(ctx, path.Root("cluster_id"), req, resp)
 }
 
 // Create creates a new Snapshot Backup Schedule.
@@ -66,7 +66,7 @@ func (s *SnapshotBackupSchedule) Create(ctx context.Context, req resource.Create
 	var (
 		organizationId = plan.OrganizationID.ValueString()
 		projectId      = plan.ProjectID.ValueString()
-		clusterId      = plan.ID.ValueString()
+		clusterId      = plan.ClusterID.ValueString()
 	)
 
 	refreshedState, err := s.upsertSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId, plan)
@@ -105,7 +105,7 @@ func (s *SnapshotBackupSchedule) Read(ctx context.Context, req resource.ReadRequ
 		})
 		resp.Diagnostics.AddError(
 			"Error Validating Backup Schedule in Capella",
-			"Could not validate Capella Backup Schedule for cluster with ID "+state.ID.String()+": "+err.Error(),
+			"Could not validate Capella Backup Schedule for cluster with ID "+state.ClusterID.String()+": "+err.Error(),
 		)
 		return
 	}
@@ -113,14 +113,14 @@ func (s *SnapshotBackupSchedule) Read(ctx context.Context, req resource.ReadRequ
 	var (
 		organizationId = IDs[providerschema.OrganizationId]
 		projectId      = IDs[providerschema.ProjectId]
-		clusterId      = IDs[providerschema.Id]
+		clusterId      = IDs[providerschema.ClusterId]
 	)
 
 	snapshotBackupSchedule, err := s.getSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId, state.StartTime.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Getting Snapshot Backup Schedule in Capella",
-			"Could not get Capella Snapshot Backup Schedule for cluster with ID "+state.ID.String()+": "+err.Error(),
+			"Could not get Capella Snapshot Backup Schedule for cluster with ID "+state.ClusterID.String()+": "+err.Error(),
 		)
 		return
 	}
@@ -147,7 +147,7 @@ func (s *SnapshotBackupSchedule) Update(ctx context.Context, req resource.Update
 	var (
 		organizationId = plan.OrganizationID.ValueString()
 		projectId      = plan.ProjectID.ValueString()
-		clusterId      = plan.ID.ValueString()
+		clusterId      = plan.ClusterID.ValueString()
 	)
 
 	refreshedState, err := s.upsertSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId, plan)
@@ -182,7 +182,7 @@ func (s *SnapshotBackupSchedule) Delete(ctx context.Context, req resource.Delete
 
 		resp.Diagnostics.AddError(
 			"Error deleting backup",
-			"Could not delete backup id "+state.ID.String()+" unexpected error: "+err.Error(),
+			"Could not delete backup id "+state.ClusterID.String()+" unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -190,7 +190,7 @@ func (s *SnapshotBackupSchedule) Delete(ctx context.Context, req resource.Delete
 	var (
 		organizationId = IDs[providerschema.OrganizationId]
 		projectId      = IDs[providerschema.ProjectId]
-		clusterId      = IDs[providerschema.Id]
+		clusterId      = IDs[providerschema.ClusterId]
 	)
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackupschedule", s.HostURL, organizationId, projectId, clusterId)
@@ -212,7 +212,7 @@ func (s *SnapshotBackupSchedule) Delete(ctx context.Context, req resource.Delete
 		}
 		resp.Diagnostics.AddError(
 			"Error deleting backup",
-			"Could not delete snapshot backup schedule for cluster with ID "+state.ID.String()+": "+errString,
+			"Could not delete snapshot backup schedule for cluster with ID "+state.ClusterID.String()+": "+errString,
 		)
 		return
 	}
