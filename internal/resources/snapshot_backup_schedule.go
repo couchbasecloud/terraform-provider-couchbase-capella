@@ -39,7 +39,7 @@ func NewSnapshotBackupSchedule() resource.Resource {
 
 // Metadata returns the Snapshot Backup Schedule resource type name.
 func (s *SnapshotBackupSchedule) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_snapshot_backup_schedule"
+	resp.TypeName = req.ProviderTypeName + "_cloud_snapshot_backup_schedule"
 }
 
 // Schema defines the schema for the Snapshot Backup Schedule resource.
@@ -49,7 +49,7 @@ func (s *SnapshotBackupSchedule) Schema(_ context.Context, _ resource.SchemaRequ
 
 // ImportState imports a remote snapshot backup schedule that is not created by Terraform.
 func (s *SnapshotBackupSchedule) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	// Retrieve import ID and save to id attribute
+	// Retrieve import ID and save to cluster_id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("cluster_id"), req, resp)
 }
 
@@ -212,7 +212,7 @@ func (s *SnapshotBackupSchedule) Delete(ctx context.Context, req resource.Delete
 	var (
 		organizationId = IDs[providerschema.OrganizationId]
 		projectId      = IDs[providerschema.ProjectId]
-		clusterId      = IDs[providerschema.Id]
+		clusterId      = IDs[providerschema.ClusterId]
 	)
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackupschedule", s.HostURL, organizationId, projectId, clusterId)
