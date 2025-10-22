@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -19,24 +20,48 @@ import (
 )
 
 func TestAccSnapshotBackupScheduleResource(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_snapshot_backup_schedule_")
-	resourceReference := "couchbase-capella_snapshot_backup_schedule." + resourceName
+	resourceName := randomStringWithPrefix("tf_acc_cloud_snapshot_backup_schedule_")
+	resourceReference := "couchbase-capella_cloud_snapshot_backup_schedule." + resourceName
 
-	startTimeString := time.Now().Add(24 * time.Hour).Truncate(time.Hour).Format(time.RFC3339)
+	startTime := time.Now().Add(24 * time.Hour).Truncate(time.Hour).Format(time.RFC3339)
+	copyToRegions := "[" + strings.Join([]string{"\"eu-west-1\"", "\"ap-southeast-1\""}, ",") + "]"
+	updatedCopyToRegions := "[" + "\"af-south-1\"" + "]"
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotBackupScheduleResourceConfig(resourceName, 12, 240, startTimeString),
+				Config: testAccSnapshotBackupScheduleResourceConfigWithCopyToRegions(resourceName, 12, 240, startTime, copyToRegions),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsSnapshotBackupScheduleResource(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(resourceReference, "id", globalClusterId),
+					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
 					resource.TestCheckResourceAttr(resourceReference, "interval", "12"),
 					resource.TestCheckResourceAttr(resourceReference, "retention", "240"),
-					resource.TestCheckResourceAttr(resourceReference, "start_time", startTimeString),
+					resource.TestCheckResourceAttr(resourceReference, "start_time", startTime),
+					resource.TestCheckResourceAttrSet(resourceReference, "copy_to_regions.0"),
+					resource.TestCheckResourceAttrSet(resourceReference, "copy_to_regions.1"),
+				),
+			},
+
+			{
+				ResourceName:      resourceReference,
+				ImportStateIdFunc: generateSnapshotBackupScheduleImportIdForResource(resourceReference),
+				ImportState:       true,
+			},
+
+			{
+				Config: testAccSnapshotBackupScheduleResourceConfigWithCopyToRegions(resourceName, 6, 24, startTime, updatedCopyToRegions),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccExistsSnapshotBackupScheduleResource(resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
+					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(resourceReference, "interval", "6"),
+					resource.TestCheckResourceAttr(resourceReference, "retention", "24"),
+					resource.TestCheckResourceAttr(resourceReference, "start_time", startTime),
+					resource.TestCheckResourceAttrSet(resourceReference, "copy_to_regions.0"),
 				),
 			},
 		},
@@ -44,7 +69,7 @@ func TestAccSnapshotBackupScheduleResource(t *testing.T) {
 }
 
 func TestAccSnapshotBackupScheduleResourceInvalidInterval(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_snapshot_backup_schedule_")
+	resourceName := randomStringWithPrefix("tf_acc_cloud_snapshot_backup_schedule_")
 
 	startTime := time.Now().Add(24 * time.Hour).Format(time.RFC3339)
 
@@ -52,7 +77,7 @@ func TestAccSnapshotBackupScheduleResourceInvalidInterval(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccSnapshotBackupScheduleResourceConfig(resourceName, 0, 240, startTime),
+				Config:      testAccSnapshotBackupScheduleResourceConfigWithCopyToRegions(resourceName, 0, 240, startTime, "[]"),
 				ExpectError: regexp.MustCompile("There is an error during snapshot backup schedule creation"),
 			},
 		},
@@ -60,15 +85,15 @@ func TestAccSnapshotBackupScheduleResourceInvalidInterval(t *testing.T) {
 }
 
 func TestAccSnapshotBackupScheduleResourceInvalidRetention(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_snapshot_backup_schedule_")
+	resourceName := randomStringWithPrefix("tf_acc_cloud_snapshot_backup_schedule_")
 
-	startTime := time.Now().Add(24 * time.Hour).Format(time.RFC3339)
+	startTime := time.Now().Add(24 * time.Hour).Truncate(time.Hour).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccSnapshotBackupScheduleResourceConfig(resourceName, 12, 721, startTime),
+				Config:      testAccSnapshotBackupScheduleResourceConfigWithCopyToRegions(resourceName, 12, 721, startTime, "[]"),
 				ExpectError: regexp.MustCompile("There is an error during snapshot backup schedule creation"),
 			},
 		},
@@ -76,32 +101,51 @@ func TestAccSnapshotBackupScheduleResourceInvalidRetention(t *testing.T) {
 }
 
 func TestAccSnapshotBackupScheduleResourceInvalidStartTime(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_snapshot_backup_schedule_")
+	resourceName := randomStringWithPrefix("tf_acc_cloud_snapshot_backup_schedule_")
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccSnapshotBackupScheduleResourceConfig(resourceName, 12, 240, "invalid_time"),
+				Config:      testAccSnapshotBackupScheduleResourceConfigWithCopyToRegions(resourceName, 12, 240, "invalid_time", "[]"),
 				ExpectError: regexp.MustCompile("There is an error during snapshot backup schedule creation"),
 			},
 		},
 	})
 }
 
-func testAccSnapshotBackupScheduleResourceConfig(resourceName string, interval int, retention int, startTime string) string {
+func TestAccSnapshotBackupScheduleResourceInvalidCopyToRegions(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cloud_snapshot_backup_schedule_")
+
+	startTime := time.Now().Add(24 * time.Hour).Truncate(time.Hour).Format(time.RFC3339)
+
+	copyToRegions := "[" + strings.Join([]string{"\"us-east-1\""}, ",") + "]"
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccSnapshotBackupScheduleResourceConfigWithCopyToRegions(resourceName, 12, 240, startTime, copyToRegions),
+				ExpectError: regexp.MustCompile("There is an error during snapshot backup schedule creation"),
+			},
+		},
+	})
+}
+
+func testAccSnapshotBackupScheduleResourceConfigWithCopyToRegions(resourceName string, interval, retention int, startTime, copyToRegions string) string {
 	return fmt.Sprintf(`
 	%[1]s
 
-	resource "couchbase-capella_snapshot_backup_schedule" "%[2]s" {
+	resource "couchbase-capella_cloud_snapshot_backup_schedule" "%[2]s" {
 		organization_id = "%[3]s"
 		project_id = "%[4]s"
-		id = "%[5]s"
+		cluster_id = "%[5]s"
 		interval = %[6]d
 		retention = %[7]d
 		start_time = "%[8]s"
+		copy_to_regions = %[9]s
 	}
-	`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, interval, retention, startTime)
+	`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, interval, retention, startTime, copyToRegions)
 }
 
 func testAccExistsSnapshotBackupScheduleResource(resourceReference string) resource.TestCheckFunc {
@@ -116,7 +160,7 @@ func testAccExistsSnapshotBackupScheduleResource(resourceReference string) resou
 			}
 		}
 		data := newTestClient()
-		err := retrieveSnapshotBackupScheduleFromServer(data, rawState["organization_id"], rawState["project_id"], rawState["id"])
+		err := retrieveSnapshotBackupScheduleFromServer(data, rawState["organization_id"], rawState["project_id"], rawState["cluster_id"])
 		if err != nil {
 			return err
 		}
@@ -148,4 +192,18 @@ func retrieveSnapshotBackupScheduleFromServer(data *providerschema.Data, organiz
 		return errors.ErrNotFound
 	}
 	return nil
+}
+
+func generateSnapshotBackupScheduleImportIdForResource(resourceReference string) resource.ImportStateIdFunc {
+	return func(state *terraform.State) (string, error) {
+		var rawState map[string]string
+		for _, m := range state.Modules {
+			if len(m.Resources) > 0 {
+				if v, ok := m.Resources[resourceReference]; ok {
+					rawState = v.Primary.Attributes
+				}
+			}
+		}
+		return fmt.Sprintf("cluster_id=%s,project_id=%s,organization_id=%s", rawState["cluster_id"], rawState["project_id"], rawState["organization_id"]), nil
+	}
 }
