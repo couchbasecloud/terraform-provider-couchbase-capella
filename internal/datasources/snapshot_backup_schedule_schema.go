@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 func SnapshotBackupScheduleSchema() schema.Schema {
@@ -24,7 +25,7 @@ func SnapshotBackupScheduleSchema() schema.Schema {
 					stringvalidator.LengthAtLeast(1),
 				},
 			},
-			"id": schema.StringAttribute{
+			"cluster_id": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "The GUID4 ID of the cluster.",
 				Validators: []validator.String{
@@ -43,9 +44,10 @@ func SnapshotBackupScheduleSchema() schema.Schema {
 				Computed:            true,
 				MarkdownDescription: "The start time for the snapshot backup schedule.",
 			},
-			"copy_to_regions": schema.StringAttribute{
+			"copy_to_regions": schema.SetAttribute{
 				Computed:            true,
 				MarkdownDescription: "The region to copy the snapshot backup to.",
+				ElementType:         types.StringType,
 			},
 		},
 	}
