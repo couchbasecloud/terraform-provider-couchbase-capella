@@ -20,8 +20,8 @@ import (
 )
 
 func TestAccSnapshotBackupScheduleResource(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_snapshot_backup_schedule_")
-	resourceReference := "couchbase-capella_snapshot_backup_schedule." + resourceName
+	resourceName := randomStringWithPrefix("tf_acc_cloud_snapshot_backup_schedule_")
+	resourceReference := "couchbase-capella_cloud_snapshot_backup_schedule." + resourceName
 
 	startTime := time.Now().Add(24 * time.Hour).Truncate(time.Hour).Format(time.RFC3339)
 	copyToRegions := "[" + strings.Join([]string{"\"eu-west-1\"", "\"ap-southeast-1\""}, ",") + "]"
@@ -36,7 +36,7 @@ func TestAccSnapshotBackupScheduleResource(t *testing.T) {
 					testAccExistsSnapshotBackupScheduleResource(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(resourceReference, "id", globalClusterId),
+					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
 					resource.TestCheckResourceAttr(resourceReference, "interval", "12"),
 					resource.TestCheckResourceAttr(resourceReference, "retention", "240"),
 					resource.TestCheckResourceAttr(resourceReference, "start_time", startTime),
@@ -57,7 +57,7 @@ func TestAccSnapshotBackupScheduleResource(t *testing.T) {
 					testAccExistsSnapshotBackupScheduleResource(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(resourceReference, "id", globalClusterId),
+					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
 					resource.TestCheckResourceAttr(resourceReference, "interval", "6"),
 					resource.TestCheckResourceAttr(resourceReference, "retention", "24"),
 					resource.TestCheckResourceAttr(resourceReference, "start_time", startTime),
@@ -69,7 +69,7 @@ func TestAccSnapshotBackupScheduleResource(t *testing.T) {
 }
 
 func TestAccSnapshotBackupScheduleResourceInvalidInterval(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_snapshot_backup_schedule_")
+	resourceName := randomStringWithPrefix("tf_acc_cloud_snapshot_backup_schedule_")
 
 	startTime := time.Now().Add(24 * time.Hour).Format(time.RFC3339)
 
@@ -85,7 +85,7 @@ func TestAccSnapshotBackupScheduleResourceInvalidInterval(t *testing.T) {
 }
 
 func TestAccSnapshotBackupScheduleResourceInvalidRetention(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_snapshot_backup_schedule_")
+	resourceName := randomStringWithPrefix("tf_acc_cloud_snapshot_backup_schedule_")
 
 	startTime := time.Now().Add(24 * time.Hour).Truncate(time.Hour).Format(time.RFC3339)
 
@@ -101,7 +101,7 @@ func TestAccSnapshotBackupScheduleResourceInvalidRetention(t *testing.T) {
 }
 
 func TestAccSnapshotBackupScheduleResourceInvalidStartTime(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_snapshot_backup_schedule_")
+	resourceName := randomStringWithPrefix("tf_acc_cloud_snapshot_backup_schedule_")
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -115,7 +115,7 @@ func TestAccSnapshotBackupScheduleResourceInvalidStartTime(t *testing.T) {
 }
 
 func TestAccSnapshotBackupScheduleResourceInvalidCopyToRegions(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_snapshot_backup_schedule_")
+	resourceName := randomStringWithPrefix("tf_acc_cloud_snapshot_backup_schedule_")
 
 	startTime := time.Now().Add(24 * time.Hour).Truncate(time.Hour).Format(time.RFC3339)
 
@@ -136,10 +136,10 @@ func testAccSnapshotBackupScheduleResourceConfigWithCopyToRegions(resourceName s
 	return fmt.Sprintf(`
 	%[1]s
 
-	resource "couchbase-capella_snapshot_backup_schedule" "%[2]s" {
+	resource "couchbase-capella_cloud_snapshot_backup_schedule" "%[2]s" {
 		organization_id = "%[3]s"
 		project_id = "%[4]s"
-		id = "%[5]s"
+		cluster_id = "%[5]s"
 		interval = %[6]d
 		retention = %[7]d
 		start_time = "%[8]s"
@@ -160,7 +160,7 @@ func testAccExistsSnapshotBackupScheduleResource(resourceReference string) resou
 			}
 		}
 		data := newTestClient()
-		err := retrieveSnapshotBackupScheduleFromServer(data, rawState["organization_id"], rawState["project_id"], rawState["id"])
+		err := retrieveSnapshotBackupScheduleFromServer(data, rawState["organization_id"], rawState["project_id"], rawState["cluster_id"])
 		if err != nil {
 			return err
 		}
@@ -204,6 +204,6 @@ func generateSnapshotBackupScheduleImportIdForResource(resourceReference string)
 				}
 			}
 		}
-		return fmt.Sprintf("id=%s,project_id=%s,organization_id=%s", rawState["id"], rawState["project_id"], rawState["organization_id"]), nil
+		return fmt.Sprintf("cluster_id=%s,project_id=%s,organization_id=%s", rawState["cluster_id"], rawState["project_id"], rawState["organization_id"]), nil
 	}
 }
