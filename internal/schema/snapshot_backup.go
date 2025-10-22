@@ -1,7 +1,6 @@
 package schema
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -33,7 +32,6 @@ type CrossRegionCopy struct {
 }
 
 type SnapshotBackup struct {
-	AppService        types.String   `tfsdk:"app_service"`
 	ClusterID         types.String   `tfsdk:"cluster_id"`
 	CreatedAt         types.String   `tfsdk:"created_at"`
 	Expiration        types.String   `tfsdk:"expiration"`
@@ -48,6 +46,29 @@ type SnapshotBackup struct {
 	Size              types.Int64    `tfsdk:"size"`
 	OrganizationId    types.String   `tfsdk:"organization_id"`
 	Type              types.String   `tfsdk:"type"`
+}
+
+type SnapshotBackupData struct {
+	CreatedAt         types.String `tfsdk:"created_at"`
+	Expiration        types.String `tfsdk:"expiration"`
+	ID                types.String `tfsdk:"id"`
+	Retention         types.Int64  `tfsdk:"retention"`
+	CrossRegionCopies types.Set    `tfsdk:"cross_region_copies"`
+	Progress          types.Object `tfsdk:"progress"`
+	CMEK              types.Set    `tfsdk:"cmek"`
+	Server            types.Object `tfsdk:"server"`
+	Size              types.Int64  `tfsdk:"size"`
+	Type              types.String `tfsdk:"type"`
+}
+
+// SnapshotBackups defines structure based on the response received from V4 Capella Public API when asked to list snapshot backups.
+type SnapshotBackups struct {
+	OrganizationId types.String `tfsdk:"organization_id"`
+	ProjectId      types.String `tfsdk:"project_id"`
+	ClusterId      types.String `tfsdk:"cluster_id"`
+
+	// Data contains the list of resources.
+	Data []SnapshotBackupData `tfsdk:"data"`
 }
 
 func (p Progress) AttributeTypes() map[string]attr.Type {
@@ -108,7 +129,6 @@ func NewCrossRegionCopy(crossRegionCopy snapshot_backup.CrossRegionCopy) CrossRe
 
 func (s SnapshotBackup) AttributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
-		"app_service":         types.StringType,
 		"cluster_id":          types.StringType,
 		"created_at":          types.StringType,
 		"expiration":          types.StringType,
@@ -116,7 +136,7 @@ func (s SnapshotBackup) AttributeTypes() map[string]attr.Type {
 		"progress":            types.ObjectType{AttrTypes: Progress{}.AttributeTypes()},
 		"project_id":          types.StringType,
 		"retention":           types.Int64Type,
-		"regions_to_copy":     types.ListType{ElemType: types.StringType},
+		"regions_to_copy":     types.SetType{ElemType: types.StringType},
 		"cross_region_copies": types.SetType{ElemType: types.ObjectType{AttrTypes: CrossRegionCopy{}.AttributeTypes()}},
 		"cmek":                types.SetType{ElemType: types.ObjectType{AttrTypes: CMEK{}.AttributeTypes()}},
 		"server":              types.ObjectType{AttrTypes: Server{}.AttributeTypes()},
@@ -126,16 +146,30 @@ func (s SnapshotBackup) AttributeTypes() map[string]attr.Type {
 	}
 }
 
-func NewSnapshotBackup(ctx context.Context, snapshotBackup snapshot_backup.SnapshotBackup, ID, clusterID, projectID, organizationID string, progressObj, serverObj basetypes.ObjectValue, cmekSet, crossRegionCopySet basetypes.SetValue) SnapshotBackup {
+func NewSnapshotBackup(snapshotBackup snapshot_backup.SnapshotBackup, ID, clusterID, projectID, organizationID string, progressObj, serverObj basetypes.ObjectValue, cmekSet, crossRegionCopySet basetypes.SetValue) SnapshotBackup {
 	return SnapshotBackup{
-		AppService:        types.StringValue(snapshotBackup.AppService),
 		ID:                types.StringValue(ID),
 		ClusterID:         types.StringValue(clusterID),
 		Expiration:        types.StringValue(snapshotBackup.Expiration),
 		ProjectID:         types.StringValue(projectID),
 		OrganizationId:    types.StringValue(organizationID),
 		CreatedAt:         types.StringValue(snapshotBackup.CreatedAt),
-		Retention:         types.Int64Value(int64(snapshotBackup.Retention)),
+		Retention:         types.Int64Value(snapshotBackup.Retention),
+		CrossRegionCopies: crossRegionCopySet,
+		Progress:          progressObj,
+		CMEK:              cmekSet,
+		Server:            serverObj,
+		Size:              types.Int64Value(int64(snapshotBackup.Size)),
+		Type:              types.StringValue(snapshotBackup.Type),
+	}
+}
+
+func NewSnapshotBackupData(snapshotBackup snapshot_backup.SnapshotBackup, ID, clusterID, projectID, organizationID string, progressObj, serverObj basetypes.ObjectValue, cmekSet, crossRegionCopySet basetypes.SetValue) SnapshotBackupData {
+	return SnapshotBackupData{
+		ID:                types.StringValue(ID),
+		Expiration:        types.StringValue(snapshotBackup.Expiration),
+		CreatedAt:         types.StringValue(snapshotBackup.CreatedAt),
+		Retention:         types.Int64Value(snapshotBackup.Retention),
 		CrossRegionCopies: crossRegionCopySet,
 		Progress:          progressObj,
 		CMEK:              cmekSet,
@@ -161,12 +195,10 @@ func (s SnapshotBackup) Validate() (map[Attr]string, error) {
 	return IDs, nil
 }
 
-// ConvertStringValueList is used to convert all elements
-// in an array of basetypes.StringValue to strings.
-func ConvertStringValueList(stringValueList []basetypes.StringValue) []string {
-	var stringList []string
-	for _, stringValue := range stringValueList {
-		stringList = append(stringList, stringValue.ValueString())
+func ConvertStringList(stringList []string) []basetypes.StringValue {
+	var stringValueList []basetypes.StringValue
+	for _, stringElement := range stringList {
+		stringValueList = append(stringValueList, types.StringValue(stringElement))
 	}
-	return stringList
+	return stringValueList
 }
