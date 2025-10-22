@@ -195,10 +195,12 @@ func (s SnapshotBackup) Validate() (map[Attr]string, error) {
 	return IDs, nil
 }
 
-func ConvertStringList(stringList []string) []basetypes.StringValue {
-	var stringValueList []basetypes.StringValue
-	for _, stringElement := range stringList {
-		stringValueList = append(stringValueList, types.StringValue(stringElement))
+// ConvertStringValueList is used to convert all elements
+// in an array of basetypes.StringValue to strings.
+func ConvertStringValueList(stringValueList []basetypes.StringValue) []string {
+	var stringList []string
+	for _, stringValue := range stringValueList {
+		stringList = append(stringList, stringValue.ValueString())
 	}
-	return stringValueList
+	return stringList
 }
