@@ -47,7 +47,7 @@ func (s *SnapshotBackupSchedule) Schema(_ context.Context, _ resource.SchemaRequ
 // ImportState imports a remote snapshot backup schedule that is not created by Terraform.
 func (s *SnapshotBackupSchedule) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("cluster_id"), req, resp)
 }
 
 func (s *SnapshotBackupSchedule) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -74,7 +74,7 @@ func (s *SnapshotBackupSchedule) Create(ctx context.Context, req resource.Create
 	var (
 		organizationId = plan.OrganizationID.ValueString()
 		projectId      = plan.ProjectID.ValueString()
-		clusterId      = plan.ID.ValueString()
+		clusterId      = plan.ClusterID.ValueString()
 	)
 
 	refreshedState, err := s.upsertSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId, plan)
@@ -107,6 +107,7 @@ func (s *SnapshotBackupSchedule) Read(ctx context.Context, req resource.ReadRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	IDs, err := state.Validate()
 	if err != nil {
 		tflog.Debug(ctx, "Error validating snapshot backup schedule", map[string]interface{}{
@@ -115,7 +116,7 @@ func (s *SnapshotBackupSchedule) Read(ctx context.Context, req resource.ReadRequ
 		})
 		resp.Diagnostics.AddError(
 			"Error Validating Backup Schedule in Capella",
-			"Could not validate Capella Backup Schedule for cluster with ID "+state.ID.String()+": "+err.Error(),
+			"Could not validate Capella Backup Schedule for cluster with ID "+state.ClusterID.String()+": "+err.Error(),
 		)
 		return
 	}
@@ -123,7 +124,7 @@ func (s *SnapshotBackupSchedule) Read(ctx context.Context, req resource.ReadRequ
 	var (
 		organizationId = IDs[providerschema.OrganizationId]
 		projectId      = IDs[providerschema.ProjectId]
-		clusterId      = IDs[providerschema.Id]
+		clusterId      = IDs[providerschema.ClusterId]
 	)
 
 	snapshotBackupSchedule, err := s.getSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId, state.StartTime.ValueString())
@@ -136,7 +137,7 @@ func (s *SnapshotBackupSchedule) Read(ctx context.Context, req resource.ReadRequ
 		})
 		resp.Diagnostics.AddError(
 			"Error Getting Snapshot Backup Schedule in Capella",
-			"Could not get Capella Snapshot Backup Schedule for cluster with ID "+state.ID.String()+": "+err.Error(),
+			"Could not get Capella Snapshot Backup Schedule for cluster with ID "+state.ClusterID.String()+": "+err.Error(),
 		)
 		return
 	}
@@ -178,7 +179,7 @@ func (s *SnapshotBackupSchedule) Update(ctx context.Context, req resource.Update
 	var (
 		organizationId = plan.OrganizationID.ValueString()
 		projectId      = plan.ProjectID.ValueString()
-		clusterId      = plan.ID.ValueString()
+		clusterId      = plan.ClusterID.ValueString()
 	)
 
 	refreshedState, err := s.upsertSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId, plan)
@@ -221,7 +222,7 @@ func (s *SnapshotBackupSchedule) Delete(ctx context.Context, req resource.Delete
 
 		resp.Diagnostics.AddError(
 			"Error deleting backup",
-			"Could not delete backup id "+state.ID.String()+" unexpected error: "+err.Error(),
+			"Could not delete backup id "+state.ClusterID.String()+" unexpected error: "+err.Error(),
 		)
 		return
 	}
@@ -257,7 +258,7 @@ func (s *SnapshotBackupSchedule) Delete(ctx context.Context, req resource.Delete
 		})
 		resp.Diagnostics.AddError(
 			"Error deleting backup",
-			"Could not delete snapshot backup schedule for cluster with ID "+state.ID.String()+": "+errString,
+			"Could not delete snapshot backup schedule for cluster with ID "+state.ClusterID.String()+": "+errString,
 		)
 		return
 	}

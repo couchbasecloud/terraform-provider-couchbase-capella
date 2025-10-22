@@ -50,7 +50,7 @@ func (d *SnapshotBackupSchedule) Read(ctx context.Context, req datasource.ReadRe
 
 	organizationId := state.OrganizationID.ValueString()
 	projectId := state.ProjectID.ValueString()
-	clusterId := state.ID.ValueString()
+	clusterId := state.ClusterID.ValueString()
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackupschedule", d.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
