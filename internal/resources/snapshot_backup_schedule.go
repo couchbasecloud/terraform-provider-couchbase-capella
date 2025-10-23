@@ -252,10 +252,18 @@ func (s *SnapshotBackupSchedule) Delete(ctx context.Context, req resource.Delete
 
 // upsertSnapshotBackupSchedule creates or updates the snapshot backup schedule.
 func (s *SnapshotBackupSchedule) upsertSnapshotBackupSchedule(ctx context.Context, organizationId, projectId, clusterId string, plan providerschema.SnapshotBackupSchedule) error {
+	var startTime string
+
+	if plan.StartTime.IsNull() || plan.StartTime.IsUnknown() {
+		startTime = time.Now().Truncate(time.Hour).Format(time.RFC3339)
+	} else {
+		startTime = plan.StartTime.ValueString()
+	}
+
 	createSnapshotBackupScheduleRequest := snapshot_backup_schedule.SnapshotBackupSchedule{
 		Interval:      int(plan.Interval.ValueInt64()),
 		Retention:     int(plan.Retention.ValueInt64()),
-		StartTime:     plan.StartTime.ValueString(),
+		StartTime:     startTime,
 		CopyToRegions: providerschema.ConvertStringValueList(plan.CopyToRegions),
 	}
 

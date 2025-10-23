@@ -22,14 +22,14 @@ variable "cloud_snapshot_backup_schedule" {
   description = "Snapshot backup schedule configuration details useful for creation"
 
   type = object({
-    interval = optional(number)
-    retention = optional(number)
+    interval = number
+    retention = number
     start_time = optional(string)
     copy_to_regions = optional(list(string))
   })
 
   validation {
-    condition = (var.cloud_snapshot_backup_schedule == null && var.cloud_snapshot_backup_schedule.interval == null && var.cloud_snapshot_backup_schedule.start_time == null) || (var.cloud_snapshot_backup_schedule != null && var.cloud_snapshot_backup_schedule.interval != null && var.cloud_snapshot_backup_schedule.start_time != null)
+    condition = (var.cloud_snapshot_backup_schedule == null && var.cloud_snapshot_backup_schedule.interval == null && var.cloud_snapshot_backup_schedule.start_time == null) || (var.cloud_snapshot_backup_schedule.retention != null && var.cloud_snapshot_backup_schedule.interval != null)
     error_message = "Either all or none of the snapshot backup schedule attributes must be provided."
   }
 
