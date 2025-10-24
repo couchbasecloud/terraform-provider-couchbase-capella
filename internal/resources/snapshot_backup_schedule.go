@@ -36,7 +36,7 @@ func NewSnapshotBackupSchedule() resource.Resource {
 }
 
 func (s *SnapshotBackupSchedule) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_snapshot_backup_schedule"
+	resp.TypeName = req.ProviderTypeName + "_cloud_snapshot_backup_schedule"
 }
 
 func (s *SnapshotBackupSchedule) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
