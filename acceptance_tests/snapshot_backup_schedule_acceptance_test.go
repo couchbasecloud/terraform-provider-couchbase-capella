@@ -160,7 +160,7 @@ func testAccExistsSnapshotBackupScheduleResource(resourceReference string) resou
 			}
 		}
 		data := newTestClient()
-		err := retrieveSnapshotBackupScheduleFromServer(data, rawState["organization_id"], rawState["project_id"], rawState["id"])
+		err := retrieveSnapshotBackupScheduleFromServer(data, rawState["organization_id"], rawState["project_id"], rawState["cluster_id"])
 		if err != nil {
 			return err
 		}
