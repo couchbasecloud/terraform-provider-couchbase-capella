@@ -71,33 +71,6 @@ type SnapshotBackups struct {
 	Data []SnapshotBackupData `tfsdk:"data"`
 }
 
-type SnapshotRestore struct {
-	ClusterID      types.String `tfsdk:"cluster_id"`
-	CreatedAt      types.String `tfsdk:"created_at"`
-	ID             types.String `tfsdk:"id"`
-	ProjectID      types.String `tfsdk:"project_id"`
-	RestoreTo      types.String `tfsdk:"restore_to"`
-	Snapshot       types.String `tfsdk:"snapshot"`
-	Status         types.String `tfsdk:"status"`
-	OrganizationID types.String `tfsdk:"organization_id"`
-}
-
-type SnapshotRestoreData struct {
-	CreatedAt types.String `tfsdk:"created_at"`
-	ID        types.String `tfsdk:"id"`
-	RestoreTo types.String `tfsdk:"restore_to"`
-	Snapshot  types.String `tfsdk:"snapshot"`
-	Status    types.String `tfsdk:"status"`
-}
-
-type SnapshotRestores struct {
-	ClusterID      types.String `tfsdk:"cluster_id"`
-	ProjectID      types.String `tfsdk:"project_id"`
-	OrganizationID types.String `tfsdk:"organization_id"`
-
-	Data []SnapshotRestoreData `tfsdk:"data"`
-}
-
 func (p Progress) AttributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"status": types.StringType,
@@ -216,29 +189,6 @@ func (s SnapshotRestore) AttributeTypes() map[string]attr.Type {
 		"snapshot":        types.StringType,
 		"status":          types.StringType,
 		"organization_id": types.StringType,
-	}
-}
-
-func NewSnapshotRestore(snapshotRestore snapshot_backup.SnapshotRestore, clusterID, backupID, projectID string) SnapshotRestore {
-	return SnapshotRestore{
-		ClusterID:      types.StringValue(clusterID),
-		CreatedAt:      types.StringValue(snapshotRestore.CreatedAt),
-		ID:             types.StringValue(backupID),
-		ProjectID:      types.StringValue(projectID),
-		RestoreTo:      types.StringValue(snapshotRestore.RestoreTo),
-		Snapshot:       types.StringValue(snapshotRestore.Snapshot),
-		Status:         types.StringValue(string(snapshotRestore.Status)),
-		OrganizationID: types.StringValue(snapshotRestore.OrganizationID),
-	}
-}
-
-func NewSnapshotRestoreData(snapshotRestore snapshot_backup.SnapshotRestore, ID, clusterID, projectID, organizationID string) SnapshotRestoreData {
-	return SnapshotRestoreData{
-		CreatedAt: types.StringValue(snapshotRestore.CreatedAt),
-		ID:        types.StringValue(ID),
-		RestoreTo: types.StringValue(snapshotRestore.RestoreTo),
-		Snapshot:  types.StringValue(snapshotRestore.Snapshot),
-		Status:    types.StringValue(string(snapshotRestore.Status)),
 	}
 }
 

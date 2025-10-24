@@ -38,17 +38,6 @@ type SnapshotBackup struct {
 	Type              string            `json:"type"`
 }
 
-type SnapshotRestore struct {
-	ClusterID      string `json:"clusterId"`
-	CreatedAt      string `json:"createdAt"`
-	ID             string `json:"id"`
-	ProjectID      string `json:"projectId"`
-	RestoreTo      string `json:"restoreTo"`
-	Snapshot       string `json:"snapshot"`
-	Status         State  `json:"status"`
-	OrganizationID string `json:"tenantId"`
-}
-
 type CreateSnapshotBackupRequest struct {
 	Retention     int64    `json:"retention"`
 	RegionsToCopy []string `json:"regionsToCopy"`
@@ -64,8 +53,4 @@ type ListSnapshotBackupsResponse struct {
 
 type EditBackupRetentionRequest struct {
 	Retention int64 `json:"retention"`
-}
-
-type ListSnapshotRestoresResponse struct {
-	Data []SnapshotRestore `json:"data"`
 }

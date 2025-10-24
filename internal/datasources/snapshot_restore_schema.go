@@ -1,6 +1,10 @@
 package datasources
 
-import "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+import (
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+)
 
 func SnapshotRestoreSchema() schema.Schema {
 	return schema.Schema{
@@ -9,18 +13,30 @@ func SnapshotRestoreSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "The GUID4 ID of the snapshot restore.",
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"cluster_id": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "The GUID4 ID of the cluster.",
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"project_id": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "The GUID4 ID of the project.",
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"organization_id": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "The GUID4 ID of the organization.",
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"created_at": schema.StringAttribute{
 				Computed:            true,
