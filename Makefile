@@ -82,7 +82,7 @@ gen-api: ## Generate OpenAPI client into internal/generated/api
 .PHONT: build-docs
 build-docs:
 	go get github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
-	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --examples-dir ./examples
+	CAPELLA_OPENAPI_SPEC_PATH="$(shell pwd)/openapi.generated.yaml" go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --examples-dir ./examples
 
 .PHONY: terraform-check tfcheck
 tfcheck: terraform-check
@@ -101,7 +101,7 @@ TEST_FLAGS ?= -short -cover -race -coverprofile .testCoverage.txt
 # this is for unit tests
 .PHONY: test
 test:
-	go test $(TEST_FILES) $(TEST_FLAGS)
+	CAPELLA_OPENAPI_SPEC_PATH=$(PWD)/openapi.generated.yaml go test $(TEST_FILES) $(TEST_FLAGS)
 
 .PHONY: test-acceptance testacc
 testacc: test-acceptance
