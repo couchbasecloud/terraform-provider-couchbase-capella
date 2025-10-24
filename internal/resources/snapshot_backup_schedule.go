@@ -183,7 +183,7 @@ func (s *SnapshotBackupSchedule) Delete(ctx context.Context, req resource.Delete
 	var (
 		organizationId = IDs[providerschema.OrganizationId]
 		projectId      = IDs[providerschema.ProjectId]
-		clusterId      = IDs[providerschema.Id]
+		clusterId      = IDs[providerschema.ClusterId]
 	)
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackupschedule", s.HostURL, organizationId, projectId, clusterId)
