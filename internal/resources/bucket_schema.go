@@ -46,7 +46,7 @@ func BucketSchema() schema.Schema {
 				Validators: []validator.Int64{
 					int64validator.AtLeast(1),
 				},
-				MarkdownDescription: "Number of vbuckets for the bucket. This is only configurable on Magma buckets for Couchbase 8.0 and above.  This requires provider version 1.5.4 or later.",
+				MarkdownDescription: "Number of vbuckets for the bucket. This value cannot be changed.  This is only configurable on Magma buckets for Couchbase 8.0 and above.  This requires provider version 1.5.4 or later.",
 			},
 			"bucket_conflict_resolution": schema.StringAttribute{
 				Computed: true,
