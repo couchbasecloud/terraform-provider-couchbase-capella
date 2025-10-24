@@ -2,7 +2,7 @@
 
 This example shows how to list cloud snapshot restores that already exist in Capella for a given cluster. It uses the organization ID, project ID, and cluster ID to do so. 
 
-You can filter by the snapshot restore status. In this example, we will only list the snapshot restores that are 'complete'.
+You can filter by the snapshot restore `status`. In this example, we will only list the snapshot restores that are 'complete'.
 
 To run, configure your Couchbase Capella provider as described in README in the root of this project.
 
