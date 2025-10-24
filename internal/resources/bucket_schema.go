@@ -1,11 +1,14 @@
 package resources
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
 func BucketSchema() schema.Schema {
@@ -32,6 +35,18 @@ func BucketSchema() schema.Schema {
 				Optional:            true,
 				Computed:            true,
 				MarkdownDescription: "Bucket size allocation in MB.",
+			},
+			"vbuckets": schema.Int64Attribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.Int64{
+					int64validator.AtLeast(1),
+				},
+				MarkdownDescription: "Number of vbuckets for the bucket. This value cannot be changed.  This is only configurable on Magma buckets for Couchbase 8.0 and above.  This requires provider version 1.5.4 or later.",
 			},
 			"bucket_conflict_resolution": schema.StringAttribute{
 				Computed: true,
