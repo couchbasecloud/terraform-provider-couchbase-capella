@@ -1,0 +1,10 @@
+auth_token = "v4-api-key-secret"
+
+organization_id         = "<organization_id>"
+project_id              = "<project_id>"
+cluster_id              = "<cluster_id>"
+app_service_id          = "<app_service_id>"
+app_endpoint_name       = "<app_endpoint_name>"
+scope                   = "<scope_name>"
+collection              = "<collection_name>"
+access_control_function = "function (doc, oldDoc, meta) {channel(doc.channels); }"

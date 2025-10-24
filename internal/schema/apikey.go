@@ -78,7 +78,7 @@ func NewApiKey(apiKey *api.GetApiKeyResponse, organizationId string, auditObject
 
 	newApiKey.AllowedCIDRs = newAllowedCidrs
 
-	newApiKey.OrganizationRoles = MorphApiKeyOrganizationRoles(apiKey.OrganizationRoles)
+	newApiKey.OrganizationRoles = StringsToBaseStrings(apiKey.OrganizationRoles)
 
 	newApiKey.Resources = MorphApiKeyResources(apiKey.Resources)
 
@@ -101,17 +101,6 @@ func MorphAllowedCidrs(allowedCIDRs []string) (basetypes.SetValue, error) {
 	return newAllowedCidrs, nil
 }
 
-// MorphApiKeyOrganizationRoles is used to convert nested organizationRoles from
-// strings to terraform type.String.
-// TODO : add unit testing.
-func MorphApiKeyOrganizationRoles(organizationRoles []string) []basetypes.StringValue {
-	var newOrganizationRoles []types.String
-	for _, organizationRole := range organizationRoles {
-		newOrganizationRoles = append(newOrganizationRoles, types.StringValue(organizationRole))
-	}
-	return newOrganizationRoles
-}
-
 // MorphApiKeyResources is used to covert nested resources from strings
 // to terraform types.String
 // TODO : add unit testing.
@@ -124,11 +113,7 @@ func MorphApiKeyResources(resources api.Resources) []ApiKeyResourcesItems {
 		if resource.Type != nil {
 			newResourceItem.Type = types.StringValue(*resource.Type)
 		}
-		var newRoles []types.String
-		for _, role := range resource.Roles {
-			newRoles = append(newRoles, types.StringValue(role))
-		}
-		newResourceItem.Roles = newRoles
+		newResourceItem.Roles = StringsToBaseStrings(resource.Roles)
 		newApiKeyResourcesItems = append(newApiKeyResourcesItems, newResourceItem)
 	}
 	return newApiKeyResourcesItems

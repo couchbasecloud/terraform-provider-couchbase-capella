@@ -1,0 +1,6 @@
+organization_id = "<org_id>"
+project_id      = "<project_id>"
+cluster_id      = "<cluster_id>"
+app_service_id  = "<app_service_id>"
+app_endpoint_name = "test-endpoint-1"
+bucket_name     = "b1"
