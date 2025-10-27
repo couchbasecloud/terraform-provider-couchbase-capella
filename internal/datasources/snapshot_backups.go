@@ -39,7 +39,7 @@ func (d *SnapshotBackups) Metadata(_ context.Context, req datasource.MetadataReq
 
 // Schema defines the schema for the SnapshotBackups data source.
 func (d *SnapshotBackups) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = SnapshotBackupSchema()
+	resp.Schema = SnapshotBackupsSchema()
 }
 
 func (d *SnapshotBackups) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -178,8 +178,8 @@ func (d *SnapshotBackups) Read(ctx context.Context, req datasource.ReadRequest, 
 			return
 		}
 
-		newSnapshotBackupData := providerschema.NewSnapshotBackupData(snapshotBackup, organizationId, projectId, clusterId, snapshotBackup.ID, progressObj, serverObj, cmekSet, crossRegionCopySet)
-		state.Data = append(state.Data, newSnapshotBackupData)
+		newSnapshotBackupsData := providerschema.NewSnapshotBackupsData(snapshotBackup, snapshotBackup.ID, clusterId, projectId, organizationId, progressObj, serverObj, cmekSet, crossRegionCopySet)
+		state.Data = append(state.Data, newSnapshotBackupsData)
 	}
 
 	diags = resp.State.Set(ctx, state)
