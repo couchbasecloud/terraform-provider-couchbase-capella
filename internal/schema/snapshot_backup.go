@@ -69,6 +69,17 @@ type SnapshotBackups struct {
 
 	// Data contains the list of resources.
 	Data []SnapshotBackupData `tfsdk:"data"`
+
+	Filters *Filter `tfsdk:"filter"`
+}
+
+// Filter represents a filter block for App Endpoints.
+type Filter struct {
+	// Name is the attribute to filter by.
+	Name types.String `tfsdk:"name"`
+
+	// Values is a set of values for the filter.
+	Values types.Set `tfsdk:"values"`
 }
 
 func (p Progress) AttributeTypes() map[string]attr.Type {
