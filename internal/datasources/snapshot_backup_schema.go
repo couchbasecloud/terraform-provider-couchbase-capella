@@ -8,7 +8,7 @@ import (
 
 func SnapshotBackupSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "The snapshot backups data source retrieves snapshot backups associated with a bucket for an operational cluster.",
+		MarkdownDescription: "The snapshot backup data source retrieves snapshot backups associated with a cluster.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
@@ -31,93 +31,85 @@ func SnapshotBackupSchema() schema.Schema {
 					stringvalidator.LengthAtLeast(1),
 				},
 			},
-			"data": schema.ListNestedAttribute{
+			"id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "The GUID4 ID of the snapshot backup resource.",
+			},
+			"created_at": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "Lists the snapshot backups associated with a cluster.",
+				MarkdownDescription: "The RFC3339 timestamp representing the time at which backup was created.",
+			},
+			"expiration": schema.StringAttribute{
+				Computed:            true,
+				MarkdownDescription: "The RFC3339 timestamp representing the time at which the backup will expire.",
+			},
+			"progress": schema.SingleNestedAttribute{
+				Computed:            true,
+				MarkdownDescription: "The progress of the snapshot backup.",
+				Attributes: map[string]schema.Attribute{
+					"status": schema.StringAttribute{
+						Computed:            true,
+						MarkdownDescription: "The status of the snapshot backup.",
+					},
+					"time": schema.StringAttribute{
+						Computed:            true,
+						MarkdownDescription: "The time of the snapshot backup.",
+					},
+				},
+			},
+			"retention": schema.Int64Attribute{
+				Computed:            true,
+				MarkdownDescription: "The retention time in hours.",
+			},
+			"cmek": schema.SetNestedAttribute{
+				Computed:            true,
+				MarkdownDescription: "The CMEK configuration for the snapshot backup.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"created_at": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The RFC3339 timestamp representing the time at which backup was created.",
-						},
-						"expiration": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The RFC3339 timestamp representing the time at which the backup will expire.",
-						},
 						"id": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The GUID4 ID of the snapshot backup resource.",
+							MarkdownDescription: "The GUID4 ID of the CMEK configuration.",
 						},
-						"progress": schema.SingleNestedAttribute{
+						"provider_id": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The progress of the snapshot backup.",
-							Attributes: map[string]schema.Attribute{
-								"status": schema.StringAttribute{
-									Computed:            true,
-									MarkdownDescription: "The status of the snapshot backup.",
-								},
-								"time": schema.StringAttribute{
-									Computed:            true,
-									MarkdownDescription: "The time of the snapshot backup.",
-								},
-							},
+							MarkdownDescription: "The GUID4 ID of the provider.",
 						},
-						"retention": schema.Int64Attribute{
+					},
+				},
+			},
+			"server": schema.SingleNestedAttribute{
+				Computed: true,
+				Attributes: map[string]schema.Attribute{
+					"version": schema.StringAttribute{
+						Computed:            true,
+						MarkdownDescription: "The version of the server.",
+					},
+				},
+			},
+			"size": schema.Int64Attribute{
+				Computed:            true,
+				MarkdownDescription: "The size of the snapshot backup.",
+			},
+			"type": schema.StringAttribute{
+				Computed:            true,
+				MarkdownDescription: "The type of the snapshot backup.",
+			},
+			"cross_region_copies": schema.SetNestedAttribute{
+				Computed:            true,
+				MarkdownDescription: "The cross region copies of the snapshot backup.",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"region_code": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The retention time in hours.",
+							MarkdownDescription: "The region the snapshot backup has been copied to.",
 						},
-						"cmek": schema.SetNestedAttribute{
+						"status": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The CMEK configuration for the snapshot backup.",
-							NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"id": schema.StringAttribute{
-										Computed:            true,
-										MarkdownDescription: "The GUID4 ID of the CMEK configuration.",
-									},
-									"provider_id": schema.StringAttribute{
-										Computed:            true,
-										MarkdownDescription: "The GUID4 ID of the provider.",
-									},
-								},
-							},
+							MarkdownDescription: "The status of the cross region copy.",
 						},
-						"server": schema.SingleNestedAttribute{
-							Computed: true,
-							Attributes: map[string]schema.Attribute{
-								"version": schema.StringAttribute{
-									Computed:            true,
-									MarkdownDescription: "The version of the server.",
-								},
-							},
-						},
-						"size": schema.Int64Attribute{
+						"time": schema.StringAttribute{
 							Computed:            true,
-							MarkdownDescription: "The size of the snapshot backup.",
-						},
-						"type": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The type of the snapshot backup.",
-						},
-						"cross_region_copies": schema.SetNestedAttribute{
-							Computed:            true,
-							MarkdownDescription: "The cross region copies of the snapshot backup.",
-							NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"region_code": schema.StringAttribute{
-										Computed:            true,
-										MarkdownDescription: "The region the snapshot backup has been copied to.",
-									},
-									"status": schema.StringAttribute{
-										Computed:            true,
-										MarkdownDescription: "The status of the cross region copy.",
-									},
-									"time": schema.StringAttribute{
-										Computed:            true,
-										MarkdownDescription: "The RFC3339 timestamp representing the time at which the status was last updated.",
-									},
-								},
-							},
+							MarkdownDescription: "The RFC3339 timestamp representing the time at which the status was last updated.",
 						},
 					},
 				},
