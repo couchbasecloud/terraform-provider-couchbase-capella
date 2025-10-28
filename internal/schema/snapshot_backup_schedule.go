@@ -38,8 +38,8 @@ func NewSnapshotBackupSchedule(snapshotBackupSchedule snapshot_backup_schedule.S
 		OrganizationID: types.StringValue(organizationID),
 		ProjectID:      types.StringValue(projectID),
 		ClusterID:      types.StringValue(clusterID),
-		Interval:       types.Int64Value(int64(snapshotBackupSchedule.Interval)),
-		Retention:      types.Int64Value(int64(snapshotBackupSchedule.Retention)),
+		Interval:       types.Int64Value(snapshotBackupSchedule.Interval),
+		Retention:      types.Int64Value(snapshotBackupSchedule.Retention),
 		StartTime:      types.StringValue(snapshotBackupSchedule.StartTime),
 		CopyToRegions:  ConvertStringList(snapshotBackupSchedule.CopyToRegions),
 	}
