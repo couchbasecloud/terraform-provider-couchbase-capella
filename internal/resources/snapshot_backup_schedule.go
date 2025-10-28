@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -84,6 +85,7 @@ func (s *SnapshotBackupSchedule) Create(ctx context.Context, req resource.Create
 		return
 	}
 
+	var refreshedState *providerschema.SnapshotBackupSchedule
 	snapshotBackupSchedule, err := s.getSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId, plan.StartTime.ValueString())
 	if err != nil {
 		tflog.Debug(ctx, "Error getting snapshot backup schedule after upsert", map[string]interface{}{
@@ -92,14 +94,16 @@ func (s *SnapshotBackupSchedule) Create(ctx context.Context, req resource.Create
 			"clusterId":      clusterId,
 			"err":            err,
 		})
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"Error Getting Snapshot Backup Schedule in Capella",
 			"Could not get Capella Snapshot Backup Schedule for cluster with ID "+plan.ClusterID.String()+": "+err.Error(),
 		)
-		return
+		refreshedState = &providerschema.SnapshotBackupSchedule{}
+		refreshedState.CopyToRegions = []types.String{}
+	} else {
+		newSnapshotBackupSchedule := providerschema.NewSnapshotBackupSchedule(*snapshotBackupSchedule, organizationId, projectId, clusterId)
+		refreshedState = &newSnapshotBackupSchedule
 	}
-
-	refreshedState := providerschema.NewSnapshotBackupSchedule(*snapshotBackupSchedule, organizationId, projectId, clusterId)
 
 	// Sets state to fully populated data.
 	diags = resp.State.Set(ctx, refreshedState)
@@ -187,8 +191,8 @@ func (s *SnapshotBackupSchedule) Update(ctx context.Context, req resource.Update
 			"Error Getting Snapshot Backup Schedule in Capella",
 			"Could not get Capella Snapshot Backup Schedule for cluster with ID "+plan.ClusterID.String()+": "+err.Error(),
 		)
-		return
 	}
+
 	refreshedState := providerschema.NewSnapshotBackupSchedule(*snapshotBackupSchedule, organizationId, projectId, clusterId)
 
 	// Sets state to fully populated data.
@@ -252,18 +256,11 @@ func (s *SnapshotBackupSchedule) Delete(ctx context.Context, req resource.Delete
 
 // upsertSnapshotBackupSchedule creates or updates the snapshot backup schedule.
 func (s *SnapshotBackupSchedule) upsertSnapshotBackupSchedule(ctx context.Context, organizationId, projectId, clusterId string, plan providerschema.SnapshotBackupSchedule) error {
-	var startTime string
-
-	if plan.StartTime.IsNull() || plan.StartTime.IsUnknown() {
-		startTime = time.Now().Truncate(time.Hour).Format(time.RFC3339)
-	} else {
-		startTime = plan.StartTime.ValueString()
-	}
 
 	createSnapshotBackupScheduleRequest := snapshot_backup_schedule.SnapshotBackupSchedule{
-		Interval:      int(plan.Interval.ValueInt64()),
-		Retention:     int(plan.Retention.ValueInt64()),
-		StartTime:     startTime,
+		Interval:      plan.Interval.ValueInt64(),
+		Retention:     plan.Retention.ValueInt64(),
+		StartTime:     plan.StartTime.ValueString(),
 		CopyToRegions: providerschema.ConvertStringValueList(plan.CopyToRegions),
 	}
 
