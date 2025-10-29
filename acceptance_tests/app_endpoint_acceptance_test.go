@@ -2,11 +2,9 @@ package acceptance_tests
 
 import (
 	"fmt"
-	"testing"
-	"time"
-
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"testing"
 )
 
 func TestAccAppEndpoint(t *testing.T) {
@@ -14,7 +12,7 @@ func TestAccAppEndpoint(t *testing.T) {
 	resourceReference := "couchbase-capella_app_endpoint." + resourceName
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 	bucket := randomStringWithPrefix("tf_acc_app_endpoint_bucket_")
-	time.Sleep(25 * time.Second) // to wait for app service to be ready
+
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{

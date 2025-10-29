@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources"
 	"log"
 	"net/http"
 	"time"
@@ -16,7 +17,6 @@ func createAppEndpoint(ctx context.Context, client *api.Client) error {
 	appEndpointRequest := app_endpoints.AppEndpointRequest{
 		Name:             globalAppEndpointName,
 		Bucket:           globalBucketName,
-		UserXattrKey:     "syncFnXattr",
 		DeltaSyncEnabled: true,
 		Scopes: app_endpoints.Scopes{
 			"_default": app_endpoints.Scope{
@@ -99,8 +99,8 @@ func appEndpointWait(ctx context.Context, client *api.Client) error {
 			return fmt.Errorf("Error unmarshalling app endpoint response: %v", err)
 		}
 
-		if appEndpointResponse.State == "Online" || appEndpointResponse.State == "Offline" {
-			log.Print("app endpoint created")
+		if appEndpointResponse.State == resources.AppEndpointStateOnline || appEndpointResponse.State == resources.AppEndpointStateOffline {
+			log.Print(fmt.Sprintf("app endpoint state %s", appEndpointResponse.State))
 			return nil
 		}
 
