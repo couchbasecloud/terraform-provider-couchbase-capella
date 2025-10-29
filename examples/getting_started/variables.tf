@@ -263,3 +263,20 @@ variable "with" {
     num_partition = optional(number)
   })
 }
+
+variable app_services_cidr {
+  description = "App Services CIDR"
+}
+
+variable "app_endpoint_oidc" {
+    description = "App Endpoint OIDC configuration options"
+    type = object({
+        client_id       = string
+        issuer          = string
+        discovery_url   = string
+        user_prefix    = string
+        roles_claim   = string
+        username_claim = string
+        register       = bool
+    })
+}
