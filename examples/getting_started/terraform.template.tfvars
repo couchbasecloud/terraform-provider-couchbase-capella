@@ -52,9 +52,10 @@ access = [
   }
 ]
 
-comment    = "Allow access from a public IP"
-cidr       = "8.8.8.8/32"
-expires_at = "2043-11-30T23:59:59.465Z"
+comment             = "Allow access from a public IP"
+cidr                = "8.8.8.8/32"
+app_services_cidr   = "10.0.0.1/32"
+expires_at          = "2043-11-30T23:59:59.465Z"
 
 bucket = {
   name                       = "new_terraform_bucket"
@@ -91,6 +92,8 @@ app_service = {
     ram = 4
   }
 }
+
+app_endpoint = "app-endpoint-1"
 
 sample_bucket = {
   name = "gamesim-sample"
@@ -197,4 +200,14 @@ where      = "dept = 'sales'"
 
 with = {
   defer_build = false
+}
+
+app_endpoint_oidc = {
+    client_id              = "your-client-id"
+    discovery_url          = "<example-discovery-url>"
+    issuer                 = "<example-issuer-url>"
+    register               = false
+    username_claim         = "sub"
+    roles_claim            = "roles"
+    user_prefix            = "user_"
 }

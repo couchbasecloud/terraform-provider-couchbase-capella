@@ -11,17 +11,19 @@ import (
 
 var (
 	importIds = map[string]Attr{
-		"organization_id": OrganizationId,
-		"project_id":      ProjectId,
-		"cluster_id":      ClusterId,
-		"bucket_id":       BucketId,
-		"id":              Id,
-		"bucket_name":     BucketName,
-		"scope_name":      ScopeName,
-		"collection_name": CollectionName,
-		"index_name":      IndexName,
-		"app_service_id":  AppServiceId,
-		"endpoint_id":     EndpointId,
+		"organization_id":   OrganizationId,
+		"project_id":        ProjectId,
+		"cluster_id":        ClusterId,
+		"bucket_id":         BucketId,
+		"id":                Id,
+		"bucket_name":       BucketName,
+		"scope_name":        ScopeName,
+		"collection_name":   CollectionName,
+		"index_name":        IndexName,
+		"app_service_id":    AppServiceId,
+		"app_endpoint_name": AppEndpointName,
+		"endpoint_id":       EndpointId,
+		"provider_id":       ProviderId,
 	}
 )
 

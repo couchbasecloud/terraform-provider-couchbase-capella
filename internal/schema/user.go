@@ -112,17 +112,6 @@ func MorphRoles(roles []string) []basetypes.StringValue {
 	return morphedRoles
 }
 
-// ConvertRoles is used to convert all roles
-// in an array of basetypes.StringValue to strings.
-// TODO (AV-53457): add unit testing.
-func ConvertRoles(roles []basetypes.StringValue) []string {
-	var convertedRoles []string
-	for _, role := range roles {
-		convertedRoles = append(convertedRoles, role.ValueString())
-	}
-	return convertedRoles
-}
-
 // ConvertResources is used to convert an array of resource objects containing nested fields
 // of type basetypes.StringValue to resource objects containing nested fields of type string.
 // TODO (AV-53457): add unit testing.

@@ -13,13 +13,19 @@ In this demo, we will perform the following operations:
 9. Create a new bucket in the cluster.
 10. Create a new sample bucket in the cluster.
 11. Create a new app service in the cluster.
-12. Create a new scope in the bucket of the cluster.
-13. Create a new collection in the scope of a bucket.
-14. Create a new on/off schedule for the cluster.
-15. Create a new audit log settings.
-16. Enable private endpoint service on the cluster.
-17. Create a new network peer.
-18. Create an non-deferred secondary index.
+12. Create an app endpoint in the created app service.
+13. Configure an access control function in the app endpoint.
+14. Configure an import filter in the app endpoint.
+15. Configure an OIDC provider on the app endpoint.
+16. Configure a CORS policy on the app endpoint.
+17. Change the app endpoint's activation status.
+18. Create a new scope in the bucket of the cluster.
+19. Create a new collection in the scope of a bucket.
+20. Create a new on/off schedule for the cluster.
+21. Create a new audit log settings.
+22. Enable private endpoint service on the cluster.
+23. Create a new network peer.
+24. Create an non-deferred secondary index.
 
 ## Pre-Requisites:
 
@@ -43,20 +49,13 @@ Command: `terraform plan`
 Sample Output:
 ```
 terraform plan
-╷
-│ Warning: Provider development overrides are in effect
-│ 
-│ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/$USER/GolandProjects/terraform-provider-couchbase-capella/bin
-│ 
-│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
 data.couchbase-capella_events.existing_events: Reading...
 data.couchbase-capella_organization.existing_organization: Reading...
-data.couchbase-capella_organization.existing_organization: Read complete after 1s [name=my-org]apella-prod]
+data.couchbase-capella_organization.existing_organization: Read complete after 1s [name=<org-id>]
 data.couchbase-capella_events.existing_events: Read complete after 1s
 data.couchbase-capella_event.existing_event: Reading...
-data.couchbase-capella_event.existing_event: Read complete after 0s [id=ffffffff-aaaa-1414-eeee-000000000000]
+data.couchbase-capella_event.existing_event: Read complete after 4s [id=ffffffff-aaaa-1414-eeee-000000000000]
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   + create
@@ -138,6 +137,7 @@ Terraform will perform the following actions:
           + "10.1.43.0/23",
         ]
       + audit              = (known after apply)
+      + description        = ""
       + expiry             = 180
       + id                 = (known after apply)
       + name               = "My First Terraform API Key"
@@ -160,6 +160,132 @@ Terraform will perform the following actions:
       + token              = (sensitive value)
     }
 
+  # couchbase-capella_app_endpoint.endpoint1 will be created
+  + resource "couchbase-capella_app_endpoint" "endpoint1" {
+      + admin_url          = (known after apply)
+      + app_service_id     = (known after apply)
+      + bucket             = "new_terraform_bucket"
+      + cluster_id         = (known after apply)
+      + cors               = {
+          + disabled = false
+          + headers  = [
+              + "Authorization",
+              + "Content-Type",
+            ]
+          + max_age  = 3600
+          + origin   = [
+              + "http://example.com",
+              + "http://staging.example.com",
+            ]
+        }
+      + delta_sync_enabled = (known after apply)
+      + metrics_url        = (known after apply)
+      + name               = "app-endpoint-1"
+      + oidc               = [
+          + {
+              + client_id      = "example-client-id"
+              + discovery_url  = "<issuer_url>/.well-known/openid-configuration"
+              + is_default     = (known after apply)
+              + issuer         = "<issuer_url>"
+              + provider_id    = (known after apply)
+              + register       = false
+              + roles_claim    = "roles"
+              + user_prefix    = "user_"
+              + username_claim = "sub"
+            },
+        ]
+      + organization_id    = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id         = (known after apply)
+      + public_url         = (known after apply)
+      + require_resync     = (known after apply)
+      + scopes             = {
+          + "new_terraform_scope" = {
+              + collections = {
+                  + "new_terraform_collection" = {
+                      + access_control_function = "function (doc, oldDoc, meta) {channel('c1');}"
+                      + import_filter           = "function(doc) { if (doc.type != 'mobile') { return false; } return true; }"
+                    },
+                }
+            },
+        }
+      + state              = (known after apply)
+      + user_xattr_key     = (known after apply)
+    }
+
+  # couchbase-capella_app_endpoint_access_control_function.acf1 will be created
+  + resource "couchbase-capella_app_endpoint_access_control_function" "acf1" {
+      + access_control_function = "function (doc, oldDoc, meta) {channel('c1');}"
+      + app_endpoint_name       = "app-endpoint-1"
+      + app_service_id          = (known after apply)
+      + cluster_id              = (known after apply)
+      + collection              = "new_terraform_collection"
+      + organization_id         = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id              = (known after apply)
+      + scope                   = "new_terraform_scope"
+    }
+
+  # couchbase-capella_app_endpoint_activation_status.activation1 will be created
+  + resource "couchbase-capella_app_endpoint_activation_status" "activation1" {
+      + app_endpoint_name = "app-endpoint-1"
+      + app_service_id    = (known after apply)
+      + cluster_id        = (known after apply)
+      + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id        = (known after apply)
+      + state             = "Online"
+    }
+
+  # couchbase-capella_app_endpoint_cors.cors1 will be created
+  + resource "couchbase-capella_app_endpoint_cors" "cors1" {
+      + app_endpoint_name = "app-endpoint-1"
+      + app_service_id    = (known after apply)
+      + cluster_id        = (known after apply)
+      + disabled          = false
+      + headers           = [
+          + "Authorization",
+          + "Content-Type",
+        ]
+      + login_origin      = [
+          + "http://example.com",
+        ]
+      + max_age           = 3600
+      + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      + origin            = [
+          + "http://example.com",
+          + "http://staging.example.com",
+        ]
+      + project_id        = (known after apply)
+    }
+
+  # couchbase-capella_app_endpoint_import_filter.import_filter1 will be created
+  + resource "couchbase-capella_app_endpoint_import_filter" "import_filter1" {
+      + app_endpoint_name = "app-endpoint-1"
+      + app_service_id    = (known after apply)
+      + cluster_id        = (known after apply)
+      + collection        = "new_terraform_collection"
+      + import_filter     = "function(doc) { if (doc.type != 'mobile') { return false; } return true; }"
+      + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id        = (known after apply)
+      + scope             = "new_terraform_scope"
+    }
+
+  # couchbase-capella_app_endpoint_oidc_provider.oidc1 will be created
+  + resource "couchbase-capella_app_endpoint_oidc_provider" "oidc1" {
+      + app_endpoint_name = "app-endpoint-1"
+      + app_service_id    = (known after apply)
+      + client_id         = "example-client-id"
+      + cluster_id        = (known after apply)
+      + discovery_url     = "<issuer_url>/.well-known/openid-configuration"
+      + is_default        = (known after apply)
+      + issuer            = "<issuer_url>"
+      + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id        = (known after apply)
+      + provider_id       = (known after apply)
+      + register          = false
+      + roles_claim       = "roles"
+      + user_prefix       = "user_"
+      + username_claim    = "sub"
+    }
+
   # couchbase-capella_app_service.new_app_service will be created
   + resource "couchbase-capella_app_service" "new_app_service" {
       + audit           = (known after apply)
@@ -178,6 +304,19 @@ Terraform will perform the following actions:
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id      = (known after apply)
       + version         = (known after apply)
+    }
+
+  # couchbase-capella_app_services_cidr.new_allowed_cidr will be created
+  + resource "couchbase-capella_app_services_cidr" "new_allowed_cidr" {
+      + app_service_id  = (known after apply)
+      + audit           = (known after apply)
+      + cidr            = "8.8.8.8/32"
+      + cluster_id      = (known after apply)
+      + comment         = "Allow access from a public IP"
+      + expires_at      = "2043-11-30T23:59:59.465Z"
+      + id              = (known after apply)
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = (known after apply)
     }
 
   # couchbase-capella_audit_log_settings.new_auditlogsettings will be created
@@ -420,8 +559,8 @@ Terraform will perform the following actions:
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
     }
 
-  # couchbase-capella_query_indexes.idx will be created
-  + resource "couchbase-capella_query_indexes" "idx" {
+  # couchbase-capella_query_indexes.idx1 will be created
+  + resource "couchbase-capella_query_indexes" "idx1" {
       + bucket_name     = "new_terraform_bucket"
       + cluster_id      = (known after apply)
       + collection_name = "new_terraform_collection"
@@ -438,7 +577,51 @@ Terraform will perform the following actions:
       + where           = "dept = 'sales'"
       + with            = {
           + defer_build = false
-          + num_replica = 1
+          + num_replica = (known after apply)
+        }
+    }
+
+  # couchbase-capella_query_indexes.idx2 will be created
+  + resource "couchbase-capella_query_indexes" "idx2" {
+      + bucket_name     = "new_terraform_bucket"
+      + cluster_id      = (known after apply)
+      + collection_name = "new_terraform_collection"
+      + index_keys      = [
+          + "id",
+          + "age",
+          + "name",
+        ]
+      + index_name      = "idx2"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = (known after apply)
+      + scope_name      = "new_terraform_scope"
+      + status          = (known after apply)
+      + where           = "dept = 'sales'"
+      + with            = {
+          + defer_build = false
+          + num_replica = (known after apply)
+        }
+    }
+
+  # couchbase-capella_query_indexes.idx3 will be created
+  + resource "couchbase-capella_query_indexes" "idx3" {
+      + bucket_name     = "new_terraform_bucket"
+      + cluster_id      = (known after apply)
+      + collection_name = "new_terraform_collection"
+      + index_keys      = [
+          + "id",
+          + "age",
+          + "name",
+        ]
+      + index_name      = "idx3"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = (known after apply)
+      + scope_name      = "new_terraform_scope"
+      + status          = (known after apply)
+      + where           = "dept = 'sales'"
+      + with            = {
+          + defer_build = false
+          + num_replica = (known after apply)
         }
     }
 
@@ -500,7 +683,7 @@ Terraform will perform the following actions:
       + time_zone            = (known after apply)
     }
 
-Plan: 16 to add, 0 to change, 0 to destroy.
+Plan: 25 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
   + apikey                  = (sensitive value)
@@ -669,288 +852,144 @@ Changes to Outputs:
     }
   + database_credential     = (sensitive value)
   + existing_event          = {
-      + alert_key        = "logged_in"
+      + alert_key        = "cluster_deletion_completed"
       + app_service_id   = null
       + app_service_name = null
-      + cluster_id       = null
-      + cluster_name     = null
+      + cluster_id       = "ffffffff-aaaa-1414-eeee-000000000000"
+      + cluster_name     = "cbdc2_d14ffb3d8ce748e19b4fce992670155e"
       + id               = "ffffffff-aaaa-1414-eeee-000000000000"
       + image_url        = null
       + incident_ids     = []
-      + key              = "logged_in"
+      + key              = "cluster_deletion_completed"
       + kv               = "null"
       + occurrence_count = null
       + organization_id  = "ffffffff-aaaa-1414-eeee-000000000000"
-      + project_id       = null
-      + project_name     = null
-      + request_id       = null
+      + project_id       = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_name     = "cbdc2_q57vmfccst4e36qfpqcics0lbo_20251007-110445"
+      + request_id       = "ffffffff-aaaa-1414-eeee-000000000000"
       + session_id       = null
       + severity         = "info"
-      + source           = "cp-ns"
+      + source           = "cp-jobs"
       + summary          = null
-      + timestamp        = "2024-12-11 20:33:36.600542622 +0000 UTC"
+      + timestamp        = "2025-10-07 15:57:57.162544024 +0000 UTC"
       + user_email       = null
       + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-      + user_name        = "SDK QE"
+      + user_name        = "Will Broadbelt"
     }
   + existing_events         = {
       + cluster_ids     = null
       + cursor          = {
           + hrefs = {
-              + first    = "http://cloudapi.cloud.couchbase.com/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/events?page=1&perPage=10"
-              + last     = "http://cloudapi.cloud.couchbase.com/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/events?page=37&perPage=10"
-              + next     = "http://cloudapi.cloud.couchbase.com/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/events?page=2&perPage=10"
+              + first    = "http://cloudapi.dev.nonprod-project-avengers.com/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/events?page=1&perPage=10"
+              + last     = "http://cloudapi.dev.nonprod-project-avengers.com/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/events?page=486&perPage=10"
+              + next     = "http://cloudapi.dev.nonprod-project-avengers.com/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/events?page=2&perPage=10"
               + previous = ""
             }
           + pages = {
-              + last        = 37
+              + last        = 486
               + next        = 2
               + page        = 1
               + per_page    = 10
               + previous    = 0
-              + total_items = 369
+              + total_items = 4858
             }
         }
       + data            = [
           + {
-              + alert_key        = "logged_in"
+              + alert_key        = "cluster_deletion_completed"
               + app_service_id   = null
               + app_service_name = null
-              + cluster_id       = null
-              + cluster_name     = null
+              + cluster_id       = "ffffffff-aaaa-1414-eeee-000000000000"
+              + cluster_name     = "cbdc2_d14ffb3d8ce748e19b4fce992670155e"
               + id               = "ffffffff-aaaa-1414-eeee-000000000000"
               + image_url        = null
               + incident_ids     = []
-              + key              = "logged_in"
+              + key              = "cluster_deletion_completed"
               + kv               = "null"
               + occurrence_count = null
-              + project_id       = null
-              + project_name     = null
-              + request_id       = null
+              + project_id       = "ffffffff-aaaa-1414-eeee-000000000000"
+              + project_name     = "cbdc2_q57vmfccst4e36qfpqcics0lbo_20251007-110445"
+              + request_id       = "ffffffff-aaaa-1414-eeee-000000000000"
               + session_id       = null
               + severity         = "info"
-              + source           = "cp-ns"
+              + source           = "cp-jobs"
               + summary          = null
-              + timestamp        = "2024-12-11 20:33:36.600542622 +0000 UTC"
+              + timestamp        = "2025-10-07 15:57:57.162544024 +0000 UTC"
               + user_email       = null
               + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
+              + user_name        = "Will Broadbelt"
             },
           + {
-              + alert_key        = "logged_in"
+              + alert_key        = "cluster_deletion_completed"
               + app_service_id   = null
               + app_service_name = null
-              + cluster_id       = null
-              + cluster_name     = null
+              + cluster_id       = "ffffffff-aaaa-1414-eeee-000000000000"
+              + cluster_name     = "cbdc2_bdbd3bfaf11942fba74d35067af9856c"
               + id               = "ffffffff-aaaa-1414-eeee-000000000000"
               + image_url        = null
               + incident_ids     = []
-              + key              = "logged_in"
+              + key              = "cluster_deletion_completed"
               + kv               = "null"
               + occurrence_count = null
-              + project_id       = null
-              + project_name     = null
-              + request_id       = null
+              + project_id       = "ffffffff-aaaa-1414-eeee-000000000000"
+              + project_name     = "cbdc2_nmujnunh351fn9qd6k37luc5dg_20251007-115818"
+              + request_id       = "ffffffff-aaaa-1414-eeee-000000000000"
               + session_id       = null
               + severity         = "info"
-              + source           = "cp-ns"
+              + source           = "cp-jobs"
               + summary          = null
-              + timestamp        = "2024-12-11 20:38:27.417814023 +0000 UTC"
+              + timestamp        = "2025-10-07 15:58:04.464778071 +0000 UTC"
               + user_email       = null
               + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
+              + user_name        = "Will Broadbelt"
             },
           + {
-              + alert_key        = "logged_in"
+              + alert_key        = "cluster_deletion_completed"
               + app_service_id   = null
               + app_service_name = null
-              + cluster_id       = null
-              + cluster_name     = null
-              + id               = "7e74fc9b-3d7c-746d-0c36-751a984a5747"
-              + image_url        = null
-              + incident_ids     = []
-              + key              = "logged_in"
-              + kv               = "null"
-              + occurrence_count = null
-              + project_id       = null
-              + project_name     = null
-              + request_id       = null
-              + session_id       = null
-              + severity         = "info"
-              + source           = "cp-ns"
-              + summary          = null
-              + timestamp        = "2024-12-11 20:38:33.290122146 +0000 UTC"
-              + user_email       = null
-              + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
-            },
-          + {
-              + alert_key        = "logged_in"
-              + app_service_id   = null
-              + app_service_name = null
-              + cluster_id       = null
-              + cluster_name     = null
+              + cluster_id       = "ffffffff-aaaa-1414-eeee-000000000000"
+              + cluster_name     = "cbdc2_115af94481654c8cb2ab79f1c50d978d"
               + id               = "ffffffff-aaaa-1414-eeee-000000000000"
               + image_url        = null
               + incident_ids     = []
-              + key              = "logged_in"
+              + key              = "cluster_deletion_completed"
               + kv               = "null"
               + occurrence_count = null
-              + project_id       = null
-              + project_name     = null
-              + request_id       = null
+              + project_id       = "ffffffff-aaaa-1414-eeee-000000000000"
+              + project_name     = "cbdc2_25dfih41cl68pclbf7osa3cnhk_20251007-122758"
+              + request_id       = "ffffffff-aaaa-1414-eeee-000000000000"
               + session_id       = null
               + severity         = "info"
-              + source           = "cp-ns"
+              + source           = "cp-jobs"
               + summary          = null
-              + timestamp        = "2024-12-11 20:38:41.431711495 +0000 UTC"
+              + timestamp        = "2025-10-07 15:58:14.641773845 +0000 UTC"
               + user_email       = null
               + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
+              + user_name        = "Will Broadbelt"
             },
           + {
-              + alert_key        = "logged_in"
+              + alert_key        = "cluster_deletion_completed"
               + app_service_id   = null
               + app_service_name = null
-              + cluster_id       = null
-              + cluster_name     = null
-              + id               = "43ce65aa-9d2c-6320-5045-357f8e5a7ec8"
-              + image_url        = null
-              + incident_ids     = []
-              + key              = "logged_in"
-              + kv               = "null"
-              + occurrence_count = null
-              + project_id       = null
-              + project_name     = null
-              + request_id       = null
-              + session_id       = null
-              + severity         = "info"
-              + source           = "cp-ns"
-              + summary          = null
-              + timestamp        = "2024-12-11 20:39:37.974685759 +0000 UTC"
-              + user_email       = null
-              + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
-            },
-          + {
-              + alert_key        = "logged_in"
-              + app_service_id   = null
-              + app_service_name = null
-              + cluster_id       = null
-              + cluster_name     = null
-              + id               = "1ce5b903-9f45-eea3-a601-2597282a2a09"
-              + image_url        = null
-              + incident_ids     = []
-              + key              = "logged_in"
-              + kv               = "null"
-              + occurrence_count = null
-              + project_id       = null
-              + project_name     = null
-              + request_id       = null
-              + session_id       = null
-              + severity         = "info"
-              + source           = "cp-ns"
-              + summary          = null
-              + timestamp        = "2024-12-11 20:39:42.809020171 +0000 UTC"
-              + user_email       = null
-              + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
-            },
-          + {
-              + alert_key        = "logged_in"
-              + app_service_id   = null
-              + app_service_name = null
-              + cluster_id       = null
-              + cluster_name     = null
-              + id               = "126012e4-95cb-0002-13be-34b673035f31"
-              + image_url        = null
-              + incident_ids     = []
-              + key              = "logged_in"
-              + kv               = "null"
-              + occurrence_count = null
-              + project_id       = null
-              + project_name     = null
-              + request_id       = null
-              + session_id       = null
-              + severity         = "info"
-              + source           = "cp-ns"
-              + summary          = null
-              + timestamp        = "2024-12-11 20:39:49.230386108 +0000 UTC"
-              + user_email       = null
-              + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
-            },
-          + {
-              + alert_key        = "logged_in"
-              + app_service_id   = null
-              + app_service_name = null
-              + cluster_id       = null
-              + cluster_name     = null
-              + id               = "9fb9f8bd-787d-6604-5887-b67d34e8be64"
-              + image_url        = null
-              + incident_ids     = []
-              + key              = "logged_in"
-              + kv               = "null"
-              + occurrence_count = null
-              + project_id       = null
-              + project_name     = null
-              + request_id       = null
-              + session_id       = null
-              + severity         = "info"
-              + source           = "cp-ns"
-              + summary          = null
-              + timestamp        = "2024-12-11 20:41:53.158231931 +0000 UTC"
-              + user_email       = null
-              + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
-            },
-          + {
-              + alert_key        = "logged_in"
-              + app_service_id   = null
-              + app_service_name = null
-              + cluster_id       = null
-              + cluster_name     = null
+              + cluster_id       = "ffffffff-aaaa-1414-eeee-000000000000"
+              + cluster_name     = "cbdc2_651ed17f6c764bc0b0ca0a468423e171"
               + id               = "ffffffff-aaaa-1414-eeee-000000000000"
               + image_url        = null
               + incident_ids     = []
-              + key              = "logged_in"
+              + key              = "cluster_deletion_completed"
               + kv               = "null"
               + occurrence_count = null
-              + project_id       = null
-              + project_name     = null
-              + request_id       = null
+              + project_id       = "ffffffff-aaaa-1414-eeee-000000000000"
+              + project_name     = "cbdc2_ckfd2vrcep5s1c6a193888v1e4_20251007-113242"
+              + request_id       = "ffffffff-aaaa-1414-eeee-000000000000"
               + session_id       = null
               + severity         = "info"
-              + source           = "cp-ns"
+              + source           = "cp-jobs"
               + summary          = null
-              + timestamp        = "2024-12-11 20:41:59.204057247 +0000 UTC"
+              + timestamp        = "2025-10-07 15:58:30.768626242 +0000 UTC"
               + user_email       = null
               + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
-            },
-          + {
-              + alert_key        = "logged_in"
-              + app_service_id   = null
-              + app_service_name = null
-              + cluster_id       = null
-              + cluster_name     = null
-              + id               = "ffffffff-aaaa-1414-eeee-000000000000"
-              + image_url        = null
-              + incident_ids     = []
-              + key              = "logged_in"
-              + kv               = "null"
-              + occurrence_count = null
-              + project_id       = null
-              + project_name     = null
-              + request_id       = null
-              + session_id       = null
-              + severity         = "info"
-              + source           = "cp-ns"
-              + summary          = null
-              + timestamp        = "2024-12-11 20:42:05.079807567 +0000 UTC"
-              + user_email       = null
-              + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
+              + user_name        = "Will Broadbelt"
             },
         ]
       + from            = null
@@ -1006,30 +1045,6 @@ Changes to Outputs:
       + to              = null
       + user_ids        = null
     }
-  + idx                     = {
-      + bucket_name     = "new_terraform_bucket"
-      + build_indexes   = null
-      + cluster_id      = (known after apply)
-      + collection_name = "new_terraform_collection"
-      + index_keys      = [
-          + "id",
-          + "age",
-          + "name",
-        ]
-      + index_name      = "idx1"
-      + is_primary      = null
-      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
-      + partition_by    = null
-      + project_id      = (known after apply)
-      + scope_name      = "new_terraform_scope"
-      + status          = (known after apply)
-      + where           = "dept = 'sales'"
-      + with            = {
-          + defer_build   = false
-          + num_partition = null
-          + num_replica   = 1
-        }
-    }
   + network_peer            = {
       + audit           = (known after apply)
       + cluster_id      = (known after apply)
@@ -1062,14 +1077,14 @@ Changes to Outputs:
     }
   + organization            = {
       + audit           = {
-          + created_at  = "2021-12-03 16:14:45.105347711 +0000 UTC"
-          + created_by  = "b1cf2366-0401-4cac-8770-f24e511f6c0a"
-          + modified_at = "2024-11-18 15:22:27.933390014 +0000 UTC"
-          + modified_by = "ab88be62-e7f5-4701-828d-129e8641d111"
-          + version     = 39
+          + created_at  = "2020-07-22 12:38:57.437248116 +0000 UTC"
+          + created_by  = ""
+          + modified_at = "2025-09-16 17:57:52.686805057 +0000 UTC"
+          + modified_by = "ffffffff-aaaa-1414-eeee-000000000000"
+          + version     = 0
         }
       + description     = ""
-      + name            = "capella-prod"
+      + name            = "<org-id>"
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + preferences     = {
           + session_duration = 7200
@@ -1113,7 +1128,7 @@ Changes to Outputs:
       + time_zone            = (known after apply)
     }
 
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly these actions if you run "terraform apply" now.
 ```
@@ -1127,14 +1142,14 @@ terraform apply
 │ Warning: Provider development overrides are in effect
 │ 
 │ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/$USER/GolandProjects/terraform-provider-couchbase-capella/bin
+│  - couchbasecloud/couchbase-capella in /Applications/gh_2.14.6_macOS_amd64/bin/terraform-provider-couchbase-capella/bin
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
-data.couchbase-capella_organization.existing_organization: Reading...
 data.couchbase-capella_events.existing_events: Reading...
-data.couchbase-capella_organization.existing_organization: Read complete after 0s [name=my-org]apella-prod]
-data.couchbase-capella_events.existing_events: Read complete after 0s
+data.couchbase-capella_organization.existing_organization: Reading...
+data.couchbase-capella_organization.existing_organization: Read complete after 1s [name=<org-id>]
+data.couchbase-capella_events.existing_events: Read complete after 1s
 data.couchbase-capella_event.existing_event: Reading...
 data.couchbase-capella_event.existing_event: Read complete after 1s [id=ffffffff-aaaa-1414-eeee-000000000000]
 
@@ -1218,6 +1233,7 @@ Terraform will perform the following actions:
           + "10.1.43.0/23",
         ]
       + audit              = (known after apply)
+      + description        = ""
       + expiry             = 180
       + id                 = (known after apply)
       + name               = "My First Terraform API Key"
@@ -1240,6 +1256,132 @@ Terraform will perform the following actions:
       + token              = (sensitive value)
     }
 
+  # couchbase-capella_app_endpoint.endpoint1 will be created
+  + resource "couchbase-capella_app_endpoint" "endpoint1" {
+      + admin_url          = (known after apply)
+      + app_service_id     = (known after apply)
+      + bucket             = "new_terraform_bucket"
+      + cluster_id         = (known after apply)
+      + cors               = {
+          + disabled = false
+          + headers  = [
+              + "Authorization",
+              + "Content-Type",
+            ]
+          + max_age  = 3600
+          + origin   = [
+              + "http://example.com",
+              + "http://staging.example.com",
+            ]
+        }
+      + delta_sync_enabled = (known after apply)
+      + metrics_url        = (known after apply)
+      + name               = "app-endpoint-1"
+      + oidc               = [
+          + {
+              + client_id      = "your-client-id"
+              + discovery_url  = (known after apply)
+              + is_default     = (known after apply)
+              + issuer         = "<issuer_url>"
+              + provider_id    = (known after apply)
+              + register       = false
+              + roles_claim    = "roles"
+              + user_prefix    = "user_"
+              + username_claim = "sub"
+            },
+        ]
+      + organization_id    = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id         = (known after apply)
+      + public_url         = (known after apply)
+      + require_resync     = (known after apply)
+      + scopes             = {
+          + "new_terraform_scope" = {
+              + collections = {
+                  + "new_terraform_collection" = {
+                      + access_control_function = "function (doc, oldDoc, meta) {channel('c1');}"
+                      + import_filter           = "function(doc) { if (doc.type != 'mobile') { return false; } return true; }"
+                    },
+                }
+            },
+        }
+      + state              = (known after apply)
+      + user_xattr_key     = (known after apply)
+    }
+
+  # couchbase-capella_app_endpoint_access_control_function.acf1 will be created
+  + resource "couchbase-capella_app_endpoint_access_control_function" "acf1" {
+      + access_control_function = "function (doc, oldDoc, meta) {channel('c1');}"
+      + app_endpoint_name       = "app-endpoint-1"
+      + app_service_id          = (known after apply)
+      + cluster_id              = (known after apply)
+      + collection              = "new_terraform_collection"
+      + organization_id         = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id              = (known after apply)
+      + scope                   = "new_terraform_scope"
+    }
+
+  # couchbase-capella_app_endpoint_activation_status.activation1 will be created
+  + resource "couchbase-capella_app_endpoint_activation_status" "activation1" {
+      + app_endpoint_name = "app-endpoint-1"
+      + app_service_id    = (known after apply)
+      + cluster_id        = (known after apply)
+      + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id        = (known after apply)
+      + state             = "Online"
+    }
+
+  # couchbase-capella_app_endpoint_cors.cors1 will be created
+  + resource "couchbase-capella_app_endpoint_cors" "cors1" {
+      + app_endpoint_name = "app-endpoint-1"
+      + app_service_id    = (known after apply)
+      + cluster_id        = (known after apply)
+      + disabled          = false
+      + headers           = [
+          + "Authorization",
+          + "Content-Type",
+        ]
+      + login_origin      = [
+          + "http://example.com",
+        ]
+      + max_age           = 3600
+      + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      + origin            = [
+          + "http://example.com",
+          + "http://staging.example.com",
+        ]
+      + project_id        = (known after apply)
+    }
+
+  # couchbase-capella_app_endpoint_import_filter.import_filter1 will be created
+  + resource "couchbase-capella_app_endpoint_import_filter" "import_filter1" {
+      + app_endpoint_name = "app-endpoint-1"
+      + app_service_id    = (known after apply)
+      + cluster_id        = (known after apply)
+      + collection        = "new_terraform_collection"
+      + import_filter     = "function(doc) { if (doc.type != 'mobile') { return false; } return true; }"
+      + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id        = (known after apply)
+      + scope             = "new_terraform_scope"
+    }
+
+  # couchbase-capella_app_endpoint_oidc_provider.oidc1 will be created
+  + resource "couchbase-capella_app_endpoint_oidc_provider" "oidc1" {
+      + app_endpoint_name = "app-endpoint-1"
+      + app_service_id    = (known after apply)
+      + client_id         = "your-client-id"
+      + cluster_id        = (known after apply)
+      + discovery_url     = (known after apply)
+      + is_default        = (known after apply)
+      + issuer            = "<issuer_url>"
+      + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id        = (known after apply)
+      + provider_id       = (known after apply)
+      + register          = false
+      + roles_claim       = "roles"
+      + user_prefix       = "user_"
+      + username_claim    = "sub"
+    }
+
   # couchbase-capella_app_service.new_app_service will be created
   + resource "couchbase-capella_app_service" "new_app_service" {
       + audit           = (known after apply)
@@ -1258,6 +1400,19 @@ Terraform will perform the following actions:
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id      = (known after apply)
       + version         = (known after apply)
+    }
+
+  # couchbase-capella_app_services_cidr.new_allowed_cidr will be created
+  + resource "couchbase-capella_app_services_cidr" "new_allowed_cidr" {
+      + app_service_id  = (known after apply)
+      + audit           = (known after apply)
+      + cidr            = "10.0.0.1/16"
+      + cluster_id      = (known after apply)
+      + comment         = "Allow access from a public IP"
+      + expires_at      = "2043-11-30T23:59:59.465Z"
+      + id              = (known after apply)
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = (known after apply)
     }
 
   # couchbase-capella_audit_log_settings.new_auditlogsettings will be created
@@ -1460,28 +1615,6 @@ Terraform will perform the following actions:
       + project_id      = (known after apply)
     }
 
-  # couchbase-capella_network_peer.new_network_peer will be created
-  + resource "couchbase-capella_network_peer" "new_network_peer" {
-      + audit           = (known after apply)
-      + cluster_id      = (known after apply)
-      + commands        = (known after apply)
-      + id              = (known after apply)
-      + name            = "VPCPeerTFTestAWS"
-      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
-      + project_id      = (known after apply)
-      + provider_config = {
-          + aws_config = {
-              + account_id  = "123456789123"
-              + cidr        = "10.0.0.0/16"
-              + provider_id = (known after apply)
-              + region      = "us-east-1"
-              + vpc_id      = "vpc-141f0fffff141aa00"
-            }
-        }
-      + provider_type   = "aws"
-      + status          = (known after apply)
-    }
-
   # couchbase-capella_private_endpoint_service.new_service will be created
   + resource "couchbase-capella_private_endpoint_service" "new_service" {
       + cluster_id      = (known after apply)
@@ -1500,8 +1633,8 @@ Terraform will perform the following actions:
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
     }
 
-  # couchbase-capella_query_indexes.idx will be created
-  + resource "couchbase-capella_query_indexes" "idx" {
+  # couchbase-capella_query_indexes.idx1 will be created
+  + resource "couchbase-capella_query_indexes" "idx1" {
       + bucket_name     = "new_terraform_bucket"
       + cluster_id      = (known after apply)
       + collection_name = "new_terraform_collection"
@@ -1518,7 +1651,51 @@ Terraform will perform the following actions:
       + where           = "dept = 'sales'"
       + with            = {
           + defer_build = false
-          + num_replica = 1
+          + num_replica = (known after apply)
+        }
+    }
+
+  # couchbase-capella_query_indexes.idx2 will be created
+  + resource "couchbase-capella_query_indexes" "idx2" {
+      + bucket_name     = "new_terraform_bucket"
+      + cluster_id      = (known after apply)
+      + collection_name = "new_terraform_collection"
+      + index_keys      = [
+          + "id",
+          + "age",
+          + "name",
+        ]
+      + index_name      = "idx2"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = (known after apply)
+      + scope_name      = "new_terraform_scope"
+      + status          = (known after apply)
+      + where           = "dept = 'sales'"
+      + with            = {
+          + defer_build = false
+          + num_replica = (known after apply)
+        }
+    }
+
+  # couchbase-capella_query_indexes.idx3 will be created
+  + resource "couchbase-capella_query_indexes" "idx3" {
+      + bucket_name     = "new_terraform_bucket"
+      + cluster_id      = (known after apply)
+      + collection_name = "new_terraform_collection"
+      + index_keys      = [
+          + "id",
+          + "age",
+          + "name",
+        ]
+      + index_name      = "idx3"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = (known after apply)
+      + scope_name      = "new_terraform_scope"
+      + status          = (known after apply)
+      + where           = "dept = 'sales'"
+      + with            = {
+          + defer_build = false
+          + num_replica = (known after apply)
         }
     }
 
@@ -1554,13 +1731,13 @@ Terraform will perform the following actions:
   # couchbase-capella_user.new_user will be created
   + resource "couchbase-capella_user" "new_user" {
       + audit                = (known after apply)
-      + email                = "johndoe@couchbase.com"
+      + email                = "mohammed.madi@couchbase.com"
       + enable_notifications = (known after apply)
       + expires_at           = (known after apply)
       + id                   = (known after apply)
       + inactive             = (known after apply)
       + last_login           = (known after apply)
-      + name                 = "John Doe"
+      + name                 = "Mohammed - terraform test"
       + organization_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + organization_roles   = [
           + "organizationMember",
@@ -1580,7 +1757,7 @@ Terraform will perform the following actions:
       + time_zone            = (known after apply)
     }
 
-Plan: 16 to add, 0 to change, 0 to destroy.
+Plan: 24 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
   + apikey                  = (sensitive value)
@@ -1763,15 +1940,15 @@ Changes to Outputs:
       + organization_id  = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id       = null
       + project_name     = null
-      + request_id       = null
+      + request_id       = "ffffffff-aaaa-1414-eeee-000000000000"
       + session_id       = null
       + severity         = "info"
-      + source           = "cp-ns"
+      + source           = "cp-api"
       + summary          = null
-      + timestamp        = "2024-12-11 20:33:36.600542622 +0000 UTC"
+      + timestamp        = "2025-10-09 15:48:27.755748643 +0000 UTC"
       + user_email       = null
       + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-      + user_name        = "SDK QE"
+      + user_name        = "<username>"
     }
   + existing_events         = {
       + cluster_ids     = null
@@ -1783,12 +1960,12 @@ Changes to Outputs:
               + previous = ""
             }
           + pages = {
-              + last        = 37
+              + last        = 404
               + next        = 2
               + page        = 1
               + per_page    = 10
               + previous    = 0
-              + total_items = 369
+              + total_items = 4033
             }
         }
       + data            = [
@@ -1806,15 +1983,15 @@ Changes to Outputs:
               + occurrence_count = null
               + project_id       = null
               + project_name     = null
-              + request_id       = null
+              + request_id       = "ffffffff-aaaa-1414-eeee-000000000000"
               + session_id       = null
               + severity         = "info"
-              + source           = "cp-ns"
+              + source           = "cp-api"
               + summary          = null
-              + timestamp        = "2024-12-11 20:33:36.600542622 +0000 UTC"
+              + timestamp        = "2025-10-09 15:48:27.755748643 +0000 UTC"
               + user_email       = null
               + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
+              + user_name        = "<username>"
             },
           + {
               + alert_key        = "logged_in"
@@ -1830,39 +2007,15 @@ Changes to Outputs:
               + occurrence_count = null
               + project_id       = null
               + project_name     = null
-              + request_id       = null
+              + request_id       = "ffffffff-aaaa-1414-eeee-000000000000"
               + session_id       = null
               + severity         = "info"
-              + source           = "cp-ns"
+              + source           = "cp-api"
               + summary          = null
-              + timestamp        = "2024-12-11 20:38:27.417814023 +0000 UTC"
+              + timestamp        = "2025-10-09 15:52:41.420973368 +0000 UTC"
               + user_email       = null
               + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
-            },
-          + {
-              + alert_key        = "logged_in"
-              + app_service_id   = null
-              + app_service_name = null
-              + cluster_id       = null
-              + cluster_name     = null
-              + id               = "7e74fc9b-3d7c-746d-0c36-751a984a5747"
-              + image_url        = null
-              + incident_ids     = []
-              + key              = "logged_in"
-              + kv               = "null"
-              + occurrence_count = null
-              + project_id       = null
-              + project_name     = null
-              + request_id       = null
-              + session_id       = null
-              + severity         = "info"
-              + source           = "cp-ns"
-              + summary          = null
-              + timestamp        = "2024-12-11 20:38:33.290122146 +0000 UTC"
-              + user_email       = null
-              + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
+              + user_name        = "<username>"
             },
           + {
               + alert_key        = "logged_in"
@@ -1878,114 +2031,90 @@ Changes to Outputs:
               + occurrence_count = null
               + project_id       = null
               + project_name     = null
-              + request_id       = null
+              + request_id       = "ffffffff-aaaa-1414-eeee-000000000000"
               + session_id       = null
               + severity         = "info"
-              + source           = "cp-ns"
+              + source           = "cp-api"
               + summary          = null
-              + timestamp        = "2024-12-11 20:38:41.431711495 +0000 UTC"
+              + timestamp        = "2025-10-09 15:59:19.088187116 +0000 UTC"
               + user_email       = null
               + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
+              + user_name        = "<username>"
             },
           + {
-              + alert_key        = "logged_in"
+              + alert_key        = "cluster_deletion_requested"
               + app_service_id   = null
               + app_service_name = null
-              + cluster_id       = null
-              + cluster_name     = null
-              + id               = "43ce65aa-9d2c-6320-5045-357f8e5a7ec8"
+              + cluster_id       = "ffffffff-aaaa-1414-eeee-000000000000"
+              + cluster_name     = "ffffffff-aaaa-1414-eeee-000000000000"
+              + id               = "ffffffff-aaaa-1414-eeee-000000000000"
               + image_url        = null
               + incident_ids     = []
-              + key              = "logged_in"
+              + key              = "cluster_deletion_requested"
               + kv               = "null"
               + occurrence_count = null
-              + project_id       = null
-              + project_name     = null
-              + request_id       = null
+              + project_id       = "ffffffff-aaaa-1414-eeee-000000000000"
+              + project_name     = "ffffffff-aaaa-1414-eeee-000000000000"
+              + request_id       = "ffffffff-aaaa-1414-eeee-000000000000"
               + session_id       = null
               + severity         = "info"
-              + source           = "cp-ns"
+              + source           = "cp-api"
               + summary          = null
-              + timestamp        = "2024-12-11 20:39:37.974685759 +0000 UTC"
+              + timestamp        = "2025-10-09 16:00:17.53145632 +0000 UTC"
               + user_email       = null
-              + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
+              + user_id          = "<username>"
+              + user_name        = null
             },
           + {
-              + alert_key        = "logged_in"
+              + alert_key        = "cluster_deletion_requested"
               + app_service_id   = null
               + app_service_name = null
-              + cluster_id       = null
-              + cluster_name     = null
-              + id               = "1ce5b903-9f45-eea3-a601-2597282a2a09"
+              + cluster_id       = "ffffffff-aaaa-1414-eeee-000000000000"
+              + cluster_name     = "ffffffff-aaaa-1414-eeee-000000000000"
+              + id               = "ffffffff-aaaa-1414-eeee-000000000000"
               + image_url        = null
               + incident_ids     = []
-              + key              = "logged_in"
+              + key              = "cluster_deletion_requested"
               + kv               = "null"
               + occurrence_count = null
-              + project_id       = null
-              + project_name     = null
-              + request_id       = null
+              + project_id       = "ffffffff-aaaa-1414-eeee-000000000000"
+              + project_name     = "ffffffff-aaaa-1414-eeee-000000000000"
+              + request_id       = "ffffffff-aaaa-1414-eeee-000000000000"
               + session_id       = null
               + severity         = "info"
-              + source           = "cp-ns"
+              + source           = "cp-api"
               + summary          = null
-              + timestamp        = "2024-12-11 20:39:42.809020171 +0000 UTC"
+              + timestamp        = "2025-10-09 16:00:17.609334223 +0000 UTC"
               + user_email       = null
-              + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
+              + user_id          = "<username>"
+              + user_name        = null
             },
           + {
-              + alert_key        = "logged_in"
+              + alert_key        = "cluster_deletion_requested"
               + app_service_id   = null
               + app_service_name = null
-              + cluster_id       = null
-              + cluster_name     = null
-              + id               = "126012e4-95cb-0002-13be-34b673035f31"
+              + cluster_id       = "ffffffff-aaaa-1414-eeee-000000000000"
+              + cluster_name     = "cluster1"
+              + id               = "ffffffff-aaaa-1414-eeee-000000000000"
               + image_url        = null
               + incident_ids     = []
-              + key              = "logged_in"
+              + key              = "cluster_deletion_requested"
               + kv               = "null"
               + occurrence_count = null
-              + project_id       = null
-              + project_name     = null
-              + request_id       = null
+              + project_id       = "ffffffff-aaaa-1414-eeee-000000000000"
+              + project_name     = "ffffffff-aaaa-1414-eeee-000000000000"
+              + request_id       = "ffffffff-aaaa-1414-eeee-000000000000"
               + session_id       = null
               + severity         = "info"
-              + source           = "cp-ns"
+              + source           = "cp-api"
               + summary          = null
-              + timestamp        = "2024-12-11 20:39:49.230386108 +0000 UTC"
+              + timestamp        = "2025-10-09 16:00:24.020562735 +0000 UTC"
               + user_email       = null
-              + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
+              + user_id          = "<username>"
+              + user_name        = null
             },
           + {
-              + alert_key        = "logged_in"
-              + app_service_id   = null
-              + app_service_name = null
-              + cluster_id       = null
-              + cluster_name     = null
-              + id               = "9fb9f8bd-787d-6604-5887-b67d34e8be64"
-              + image_url        = null
-              + incident_ids     = []
-              + key              = "logged_in"
-              + kv               = "null"
-              + occurrence_count = null
-              + project_id       = null
-              + project_name     = null
-              + request_id       = null
-              + session_id       = null
-              + severity         = "info"
-              + source           = "cp-ns"
-              + summary          = null
-              + timestamp        = "2024-12-11 20:41:53.158231931 +0000 UTC"
-              + user_email       = null
-              + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
-            },
-          + {
-              + alert_key        = "logged_in"
+              + alert_key        = "snapshot_backups_destroyed"
               + app_service_id   = null
               + app_service_name = null
               + cluster_id       = null
@@ -1993,44 +2122,20 @@ Changes to Outputs:
               + id               = "ffffffff-aaaa-1414-eeee-000000000000"
               + image_url        = null
               + incident_ids     = []
-              + key              = "logged_in"
+              + key              = "snapshot_backups_destroyed"
               + kv               = "null"
               + occurrence_count = null
-              + project_id       = null
-              + project_name     = null
-              + request_id       = null
+              + project_id       = "ffffffff-aaaa-1414-eeee-000000000000"
+              + project_name     = "ffffffff-aaaa-1414-eeee-000000000000"
+              + request_id       = "ffffffff-aaaa-1414-eeee-000000000000"
               + session_id       = null
               + severity         = "info"
-              + source           = "cp-ns"
+              + source           = "cp-jobs"
               + summary          = null
-              + timestamp        = "2024-12-11 20:41:59.204057247 +0000 UTC"
+              + timestamp        = "2025-10-09 16:01:33.926641017 +0000 UTC"
               + user_email       = null
               + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
-            },
-          + {
-              + alert_key        = "logged_in"
-              + app_service_id   = null
-              + app_service_name = null
-              + cluster_id       = null
-              + cluster_name     = null
-              + id               = "ffffffff-aaaa-1414-eeee-000000000000"
-              + image_url        = null
-              + incident_ids     = []
-              + key              = "logged_in"
-              + kv               = "null"
-              + occurrence_count = null
-              + project_id       = null
-              + project_name     = null
-              + request_id       = null
-              + session_id       = null
-              + severity         = "info"
-              + source           = "cp-ns"
-              + summary          = null
-              + timestamp        = "2024-12-11 20:42:05.079807567 +0000 UTC"
-              + user_email       = null
-              + user_id          = "ffffffff-aaaa-1414-eeee-000000000000"
-              + user_name        = "SDK QE"
+              + user_name        = "<username>"
             },
         ]
       + from            = null
@@ -2143,13 +2248,13 @@ Changes to Outputs:
   + organization            = {
       + audit           = {
           + created_at  = "2021-12-03 16:14:45.105347711 +0000 UTC"
-          + created_by  = "b1cf2366-0401-4cac-8770-f24e511f6c0a"
-          + modified_at = "2024-11-18 15:22:27.933390014 +0000 UTC"
-          + modified_by = "ab88be62-e7f5-4701-828d-129e8641d111"
-          + version     = 39
+          + created_by  = ""
+          + modified_at = "2025-09-16 17:57:52.686805057 +0000 UTC"
+          + modified_by = "ffffffff-aaaa-1414-eeee-000000000000"
+          + version     = 0
         }
       + description     = ""
-      + name            = "capella-prod"
+      + name            = "<org-id>"
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + preferences     = {
           + session_duration = 7200
@@ -2200,124 +2305,160 @@ Do you want to perform these actions?
   Enter a value: yes
 
 couchbase-capella_project.new_project: Creating...
-couchbase-capella_project.new_project: Creation complete after 0s [id=ffffffff-aaaa-1414-eeee-000000000000]
+couchbase-capella_project.new_project: Creation complete after 1s [id=ffffffff-aaaa-1414-eeee-000000000000]
+data.couchbase-capella_project_events.existing_project_events: Reading...
 couchbase-capella_user.new_user: Creating...
 couchbase-capella_apikey.new_apikey: Creating...
 couchbase-capella_cluster.new_cluster: Creating...
-couchbase-capella_apikey.new_apikey: Creation complete after 1s [id=ffffffff-aaaa-1414-eeee-000000000000]
-couchbase-capella_user.new_user: Creation complete after 3s [id=ffffffff-aaaa-1414-eeee-000000000000]
-couchbase-capella_cluster.new_cluster: Still creating... [10s elapsed]
-couchbase-capella_cluster.new_cluster: Still creating... [20s elapsed]
-couchbase-capella_cluster.new_cluster: Still creating... [30s elapsed]
-couchbase-capella_cluster.new_cluster: Still creating... [40s elapsed]
-couchbase-capella_cluster.new_cluster: Still creating... [50s elapsed]
-couchbase-capella_cluster.new_cluster: Still creating... [1m0s elapsed]
-couchbase-capella_cluster.new_cluster: Still creating... [1m10s elapsed]
-couchbase-capella_cluster.new_cluster: Still creating... [1m20s elapsed]
-couchbase-capella_cluster.new_cluster: Still creating... [1m30s elapsed]
-couchbase-capella_cluster.new_cluster: Still creating... [1m40s elapsed]
-couchbase-capella_cluster.new_cluster: Still creating... [1m50s elapsed]
-couchbase-capella_cluster.new_cluster: Still creating... [2m0s elapsed]
-couchbase-capella_cluster.new_cluster: Still creating... [2m10s elapsed]
-couchbase-capella_cluster.new_cluster: Creation complete after 2m20s [id=ffffffff-aaaa-1414-eeee-000000000000]
+data.couchbase-capella_project_events.existing_project_events: Read complete after 0s
+data.couchbase-capella_project_event.existing_project_event: Reading...
+couchbase-capella_apikey.new_apikey: Creation complete after 1s [id=CImSz3IA0BoypC0k3LUGmXAXSpInRI1P]
+data.couchbase-capella_project_event.existing_project_event: Read complete after 2s [id=ffffffff-aaaa-1414-eeee-000000000000]
+couchbase-capella_cluster.new_cluster: Still creating... [00m10s elapsed]
+couchbase-capella_cluster.new_cluster: Still creating... [00m20s elapsed]
+couchbase-capella_cluster.new_cluster: Still creating... [00m30s elapsed]
+couchbase-capella_cluster.new_cluster: Still creating... [00m40s elapsed]
+couchbase-capella_cluster.new_cluster: Still creating... [00m50s elapsed]
+couchbase-capella_cluster.new_cluster: Still creating... [01m00s elapsed]
+couchbase-capella_cluster.new_cluster: Still creating... [01m10s elapsed]
+couchbase-capella_cluster.new_cluster: Still creating... [01m20s elapsed]
+couchbase-capella_cluster.new_cluster: Still creating... [01m30s elapsed]
+couchbase-capella_cluster.new_cluster: Still creating... [01m40s elapsed]
+couchbase-capella_cluster.new_cluster: Still creating... [01m50s elapsed]
+couchbase-capella_cluster.new_cluster: Still creating... [02m00s elapsed]
+couchbase-capella_cluster.new_cluster: Still creating... [02m10s elapsed]
+couchbase-capella_cluster.new_cluster: Still creating... [02m20s elapsed]
+couchbase-capella_cluster.new_cluster: Still creating... [02m30s elapsed]
+couchbase-capella_cluster.new_cluster: Still creating... [02m40s elapsed]
+couchbase-capella_cluster.new_cluster: Still creating... [02m50s elapsed]
+couchbase-capella_cluster.new_cluster: Still creating... [03m00s elapsed]
+couchbase-capella_cluster.new_cluster: Still creating... [03m10s elapsed]
+couchbase-capella_cluster.new_cluster: Still creating... [03m20s elapsed]
+couchbase-capella_cluster.new_cluster: Creation complete after 3m23s [id=ffffffff-aaaa-1414-eeee-000000000000]
+couchbase-capella_private_endpoint_service.new_service: Creating...
 data.couchbase-capella_certificate.existing_certificate: Reading...
+data.couchbase-capella_audit_log_event_ids.event_list: Reading...
 couchbase-capella_allowlist.new_allowlist: Creating...
-couchbase-capella_bucket.new_bucket: Creating...
 couchbase-capella_sample_bucket.new_sample_bucket: Creating...
+couchbase-capella_bucket.new_bucket: Creating...
 couchbase-capella_cluster_onoff_schedule.new_cluster_onoff_schedule: Creating...
-couchbase-capella_database_credential.new_database_credential: Creating...
 data.couchbase-capella_certificate.existing_certificate: Read complete after 0s
-couchbase-capella_cluster_onoff_schedule.new_cluster_onoff_schedule: Creation complete after 1s
-couchbase-capella_bucket.new_bucket: Creation complete after 7s [id=ffffffff-aaaa-1414-eeee-000000000000]
+data.couchbase-capella_audit_log_event_ids.event_list: Read complete after 7s
+couchbase-capella_audit_log_settings.new_auditlogsettings: Creating...
+couchbase-capella_cluster_onoff_schedule.new_cluster_onoff_schedule: Creation complete after 7s
+couchbase-capella_bucket.new_bucket: Creation complete after 7s [id=bmV3X3RlcnJhZm9ybV9idWNrZXQ=]
 couchbase-capella_scope.new_scope: Creating...
-couchbase-capella_database_credential.new_database_credential: Creation complete after 7s [id=ffffffff-aaaa-1414-eeee-000000000000]
-couchbase-capella_scope.new_scope: Creation complete after 0s
-couchbase-capella_collection.new_collection: Creating...
+couchbase-capella_database_credential.new_database_credential: Creating...
 couchbase-capella_allowlist.new_allowlist: Creation complete after 8s [id=ffffffff-aaaa-1414-eeee-000000000000]
+couchbase-capella_scope.new_scope: Creation complete after 1s
+couchbase-capella_collection.new_collection: Creating...
+couchbase-capella_database_credential.new_database_credential: Creation complete after 1s [id=ffffffff-aaaa-1414-eeee-000000000000]
 couchbase-capella_collection.new_collection: Creation complete after 1s
 couchbase-capella_query_indexes.idx: Creating...
 couchbase-capella_query_indexes.idx: Creation complete after 3s
 couchbase-capella_sample_bucket.new_sample_bucket: Still creating... [10s elapsed]
 couchbase-capella_sample_bucket.new_sample_bucket: Creation complete after 17s [id=ffffffff-aaaa-1414-eeee-000000000000]
 couchbase-capella_app_service.new_app_service: Creating...
-couchbase-capella_app_service.new_app_service: Still creating... [10s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [20s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [30s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [40s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [50s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [1m0s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [1m10s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [1m20s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [1m30s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [1m40s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [1m50s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [2m0s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [2m10s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [2m20s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [2m30s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [2m40s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [2m50s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [3m0s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [3m10s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [3m20s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [3m30s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [3m40s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [3m50s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [4m0s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [4m10s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [4m20s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [4m30s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [4m40s elapsed]
-couchbase-capella_app_service.new_app_service: Still creating... [4m50s elapsed]
-couchbase-capella_app_service.new_app_service: Creation complete after 4m55s [id=ffffffff-aaaa-1414-eeee-000000000000]
-couchbase-capella_audit_log_export.new_auditlogexport: Creating...
-couchbase-capella_audit_log_export.new_auditlogexport: Creation complete after 0s [id=ffffffff-aaaa-1414-eeee-000000000000]
-couchbase-capella_private_endpoint_service.new_service: Creating...
-couchbase-capella_private_endpoint_service.new_service: Still creating... [10s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [20s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [30s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [40s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [50s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [1m0s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [1m10s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [1m20s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [1m30s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [1m40s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [1m50s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [2m0s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [2m10s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [2m20s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [2m30s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [2m40s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [2m50s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [3m0s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [3m10s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [3m20s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [3m30s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [3m40s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [3m50s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [4m0s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [4m10s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [4m20s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [4m30s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [4m40s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [4m50s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [5m0s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [5m10s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [5m20s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [5m30s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [5m40s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [5m50s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [6m0s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [6m10s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [6m20s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [6m30s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [6m40s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [6m50s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Still creating... [7m0s elapsed]
-couchbase-capella_private_endpoint_service.new_service: Creation complete after 7m0s
+couchbase-capella_private_endpoint_service.new_service: Still creating... [00m30s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [00m10s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [00m40s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [00m20s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [00m50s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [00m30s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [01m00s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [00m40s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [01m10s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [00m50s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [01m20s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [01m00s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [01m30s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [01m10s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [01m40s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [01m20s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [01m50s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [01m30s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [02m00s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [01m40s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [02m10s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [01m50s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [02m20s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [02m00s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [02m30s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [02m10s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [02m40s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [02m20s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [02m50s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [02m30s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [03m00s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [02m40s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [03m10s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [02m50s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [03m20s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [03m00s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [03m30s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [03m10s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [03m40s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [03m20s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [03m50s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [03m30s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [04m00s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [03m40s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [04m10s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [03m50s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [04m20s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [04m00s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [04m30s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [04m10s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [04m40s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [04m20s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [04m50s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [04m30s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [05m00s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [04m40s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [05m10s elapsed]
+couchbase-capella_app_service.new_app_service: Still creating... [04m50s elapsed]
+couchbase-capella_app_service.new_app_service: Creation complete after 4m52s [id=ffffffff-aaaa-1414-eeee-000000000000]
+couchbase-capella_app_services_cidr.new_allowed_cidr: Creating...
+couchbase-capella_app_endpoint.endpoint1: Creating...
+couchbase-capella_app_endpoint.endpoint1: Creation complete after 1s [name=app-endpoint-1]
+couchbase-capella_app_endpoint_import_filter.import_filter1: Creating...
+couchbase-capella_app_endpoint_access_control_function.acf1: Creating...
+couchbase-capella_app_endpoint_activation_status.activation1: Creating...
+couchbase-capella_app_endpoint_oidc_provider.oidc1: Creating...
+couchbase-capella_app_endpoint_cors.cors1: Creating...
+couchbase-capella_app_endpoint_access_control_function.acf1: Creation complete after 1s
+couchbase-capella_app_endpoint_import_filter.import_filter1: Creation complete after 1s
+couchbase-capella_private_endpoint_service.new_service: Still creating... [05m20s elapsed]
+couchbase-capella_app_endpoint_oidc_provider.oidc1: Creation complete after 2s
+couchbase-capella_app_services_cidr.new_allowed_cidr: Creation complete after 8s [id=ffffffff-aaaa-1414-eeee-000000000000]
+couchbase-capella_app_endpoint_activation_status.activation1: Still creating... [00m10s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [05m30s elapsed]
+couchbase-capella_app_endpoint_activation_status.activation1: Still creating... [00m20s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [05m40s elapsed]
+couchbase-capella_app_endpoint_activation_status.activation1: Creation complete after 28s
+couchbase-capella_private_endpoint_service.new_service: Still creating... [05m50s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [06m00s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [06m10s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [06m20s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [06m30s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [06m40s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [06m50s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [07m00s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [07m10s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [07m20s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [07m30s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [07m40s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [07m50s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [08m00s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [08m10s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [08m20s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [08m30s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [08m40s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [08m50s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Still creating... [09m00s elapsed]
+couchbase-capella_private_endpoint_service.new_service: Creation complete after 9m3s
 
-Apply complete! Resources: 16 added, 0 changed, 0 destroyed.
+Apply complete! Resources: 24 added, 0 changed, 0 destroyed.
 
 Outputs:
 
@@ -2557,15 +2698,15 @@ network_peer = {
 }
 peer_id = "ffffffff-aaaa-1414-eeee-000000000000"
 organization = {
-  "audit" = {
-    "created_at" = "2020-07-22 12:38:57.437248116 +0000 UTC"
-    "created_by" = ""
-    "modified_at" = "2024-03-23 20:41:47.693734149 +0000 UTC"
-    "modified_by" = "ffffffff-aaaa-1414-eeee-000000000000"
-    "version" = 0
-  }
+  "audit"  = {
+      "created_at"  = "2021-12-03 16:14:45.105347711 +0000 UTC"
+      "created_by"  = ""
+      "modified_at" = "2025-09-16 17:57:52.686805057 +0000 UTC"
+      "modified_by" = "ffffffff-aaaa-1414-eeee-000000000000"
+      "version"     = 0
+    }
   "description" = ""
-  "name" = "cbc-dev"
+  "name" = "<org-id>"
   "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "preferences" = {
     "session_duration" = 7200
@@ -2905,7 +3046,7 @@ organization = {
     "version" = 0
   }
   "description" = ""
-  "name" = "cbc-dev"
+  "name" = "<org-id>"
   "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "preferences" = {
     "session_duration" = 7200
@@ -3106,10 +3247,10 @@ Terraform will perform the following actions:
   # couchbase-capella_allowlist.new_allowlist will be destroyed
   - resource "couchbase-capella_allowlist" "new_allowlist" {
       - audit           = {
-          - created_at  = "2024-03-27 22:48:15.382200967 +0000 UTC" -> null
-          - created_by  = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT" -> null
-          - modified_at = "2024-03-27 22:48:15.382200967 +0000 UTC" -> null
-          - modified_by = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT" -> null
+          - created_at  = "2025-10-10 15:51:42.383960248 +0000 UTC" -> null
+          - created_by  = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+          - modified_at = "2025-10-10 15:51:42.383960248 +0000 UTC" -> null
+          - modified_by = "ffffffff-aaaa-1414-eeee-000000000000" -> null
           - version     = 1 -> null
         } -> null
       - cidr            = "8.8.8.8/32" -> null
@@ -3126,21 +3267,21 @@ Terraform will perform the following actions:
       - allowed_cidrs      = [
           - "10.1.42.0/23",
           - "10.1.43.0/23",
-          - "10.5.30.0/23",
         ] -> null
       - audit              = {
-          - created_at  = "2024-03-27 22:45:48.449403667 +0000 UTC" -> null
-          - created_by  = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT" -> null
-          - modified_at = "2024-03-27 22:45:48.449403667 +0000 UTC" -> null
-          - modified_by = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT" -> null
+          - created_at  = "2025-10-10 15:48:12.568968432 +0000 UTC" -> null
+          - created_by  = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+          - modified_at = "2025-10-10 15:48:12.568968432 +0000 UTC" -> null
+          - modified_by = "ffffffff-aaaa-1414-eeee-000000000000" -> null
           - version     = 1 -> null
         } -> null
+      - description        = "" -> null
       - expiry             = 180 -> null
-      - id                 = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - id                 = "CImSz3IA0BoypC0k3LUGmXAXSpInRI1P" -> null
       - name               = "My First Terraform API Key" -> null
       - organization_id    = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - organization_roles = [
-          - "organizationOwner",
+          - "organizationMember",
         ] -> null
       - resources          = [
           - {
@@ -3155,13 +3296,127 @@ Terraform will perform the following actions:
       - token              = (sensitive value) -> null
     }
 
+  # couchbase-capella_app_endpoint.endpoint1 will be destroyed
+  - resource "couchbase-capella_app_endpoint" "endpoint1" {
+      - admin_url          = "https://r90n1oeu8hdvraj.apps.nonprod-project-avengers.com:4985/app-endpoint-1" -> null
+      - app_service_id     = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - bucket             = "new_terraform_bucket" -> null
+      - cluster_id         = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - cors               = {
+          - disabled = false -> null
+          - headers  = [
+              - "Authorization",
+              - "Content-Type",
+            ] -> null
+          - max_age  = 3600 -> null
+          - origin   = [
+              - "http://example.com",
+              - "http://staging.example.com",
+            ] -> null
+        } -> null
+      - delta_sync_enabled = false -> null
+      - metrics_url        = "https://r90n1oeu8hdvraj.apps.nonprod-project-avengers.com:4988/metrics" -> null
+      - name               = "app-endpoint-1" -> null
+      - oidc               = [
+          - {
+              - client_id      = "your-client-id" -> null
+              - is_default     = true -> null
+              - issuer         = "<issuer_url>" -> null
+              - provider_id    = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+              - register       = false -> null
+              - roles_claim    = "roles" -> null
+              - user_prefix    = "user_" -> null
+              - username_claim = "sub" -> null
+                # (1 unchanged attribute hidden)
+            },
+          - {
+              - client_id      = "your-client-id" -> null
+              - is_default     = false -> null
+              - issuer         = "<issuer_url>" -> null
+              - provider_id    = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+              - register       = false -> null
+              - roles_claim    = "roles" -> null
+              - user_prefix    = "user_" -> null
+              - username_claim = "sub" -> null
+                # (1 unchanged attribute hidden)
+            },
+        ] -> null
+      - organization_id    = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - project_id         = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - public_url         = "wss://r90n1oeu8hdvraj.apps.nonprod-project-avengers.com:4984/app-endpoint-1" -> null
+      - scopes             = {
+          - "new_terraform_scope" = {
+              - collections = {
+                  - "new_terraform_collection" = {
+                      - access_control_function = "function (doc, oldDoc, meta) {channel('c1');}" -> null
+                      - import_filter           = "function(doc) { if (doc.type != 'mobile') { return false; } return true; }" -> null
+                    },
+                } -> null
+            },
+        } -> null
+      - state              = "Online" -> null
+      - user_xattr_key     = "" -> null
+    }
+
+  # couchbase-capella_app_endpoint_access_control_function.acf1 will be destroyed
+  - resource "couchbase-capella_app_endpoint_access_control_function" "acf1" {
+      - access_control_function = "function (doc, oldDoc, meta) {channel('c1');}" -> null
+      - app_endpoint_name       = "app-endpoint-1" -> null
+      - app_service_id          = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - cluster_id              = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - collection              = "new_terraform_collection" -> null
+      - organization_id         = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - project_id              = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - scope                   = "new_terraform_scope" -> null
+    }
+
+  # couchbase-capella_app_endpoint_activation_status.activation1 will be destroyed
+  - resource "couchbase-capella_app_endpoint_activation_status" "activation1" {
+      - app_endpoint_name = "app-endpoint-1" -> null
+      - app_service_id    = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - cluster_id        = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - organization_id   = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - project_id        = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - state             = "Online" -> null
+    }
+
+  # couchbase-capella_app_endpoint_import_filter.import_filter1 will be destroyed
+  - resource "couchbase-capella_app_endpoint_import_filter" "import_filter1" {
+      - app_endpoint_name = "app-endpoint-1" -> null
+      - app_service_id    = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - cluster_id        = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - collection        = "new_terraform_collection" -> null
+      - import_filter     = "function(doc) { if (doc.type != 'mobile') { return false; } return true; }" -> null
+      - organization_id   = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - project_id        = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - scope             = "new_terraform_scope" -> null
+    }
+
+  # couchbase-capella_app_endpoint_oidc_provider.oidc1 will be destroyed
+  - resource "couchbase-capella_app_endpoint_oidc_provider" "oidc1" {
+      - app_endpoint_name = "app-endpoint-1" -> null
+      - app_service_id    = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - client_id         = "your-client-id" -> null
+      - cluster_id        = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - is_default        = false -> null
+      - issuer            = "<issuer_url>" -> null
+      - organization_id   = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - project_id        = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - provider_id       = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - register          = false -> null
+      - roles_claim       = "roles" -> null
+      - user_prefix       = "user_" -> null
+      - username_claim    = "sub" -> null
+        # (1 unchanged attribute hidden)
+    }
+
   # couchbase-capella_app_service.new_app_service will be destroyed
   - resource "couchbase-capella_app_service" "new_app_service" {
       - audit           = {
-          - created_at  = "2024-03-27 22:48:25.514164834 +0000 UTC" -> null
-          - created_by  = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT" -> null
-          - modified_at = "2024-03-27 22:53:18.418467595 +0000 UTC" -> null
-          - modified_by = "tEsTNwA3pfwAY3MgddFfbHTDs5tEsT" -> null
+          - created_at  = "2025-10-10 15:52:01.645520048 +0000 UTC" -> null
+          - created_by  = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+          - modified_at = "2025-10-10 15:56:51.259457287 +0000 UTC" -> null
+          - modified_by = "apikey-ffffffff-aaaa-1414-eeee-000000000000" -> null
           - version     = 7 -> null
         } -> null
       - cloud_provider  = "AWS" -> null
@@ -3178,7 +3433,7 @@ Terraform will perform the following actions:
       - nodes           = 2 -> null
       - organization_id = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - project_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
-      - version         = "3.1.4-1.0.0" -> null
+      - version         = "3.3.0-1.0.1" -> null
     }
 
   # couchbase-capella_bucket.new_bucket will be destroyed
@@ -3445,7 +3700,7 @@ Terraform will perform the following actions:
     # couchbase-capella_query_indexes.idx will be destroyed
   - resource "couchbase-capella_query_indexes" "idx" {
       - bucket_name     = "new_terraform_bucket" -> null
-      - cluster_id      = "dad8fd4b-7df7-4851-b9b9-7dc7f1fd8545" -> null
+      - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - collection_name = "new_terraform_collection" -> null
       - index_keys      = [
           - "id",
@@ -3453,8 +3708,8 @@ Terraform will perform the following actions:
           - "name",
         ] -> null
       - index_name      = "idx1" -> null
-      - organization_id = "7a99d00c-f55b-4b39-bc72-1b4cc68ba894" -> null
-      - project_id      = "6717e550-0620-4a16-b472-b4388a0582b3" -> null
+      - organization_id = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - project_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - scope_name      = "new_terraform_scope" -> null
       - where           = "dept = 'sales'" -> null
       - with            = {
@@ -3857,7 +4112,7 @@ Changes to Outputs:
           - version     = 0
         }
       - description     = ""
-      - name            = "cbc-dev"
+      - name            = "<org-id>"
       - organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       - preferences     = {
           - session_duration = 7200

@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -9,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
@@ -34,7 +36,7 @@ const (
 // Float64Attribute, NumberAttribute, and ListAttribute.
 type SchemaAttribute interface {
 	*schema.StringAttribute | *schema.Int64Attribute | *schema.BoolAttribute | *schema.SetAttribute |
-		*schema.Float64Attribute | *schema.NumberAttribute | *schema.ListAttribute
+		*schema.Float64Attribute | *schema.NumberAttribute | *schema.ListAttribute | *schema.MapAttribute
 }
 
 // WithDescription sets the MarkdownDescription for the provided attribute.
@@ -282,6 +284,31 @@ func stringSetAttribute(fields ...string) *schema.SetAttribute {
 		case requiresReplace:
 			var planModifiers = []planmodifier.Set{
 				setplanmodifier.RequiresReplace(),
+			}
+			attribute.PlanModifiers = planModifiers
+		}
+	}
+	return &attribute
+}
+
+func mapAttribute(T attr.Type, fields ...string) *schema.MapAttribute {
+	attribute := schema.MapAttribute{
+		ElementType: T,
+	}
+
+	for _, field := range fields {
+		switch field {
+		case required:
+			attribute.Required = true
+		case optional:
+			attribute.Optional = true
+		case computed:
+			attribute.Computed = true
+		case sensitive:
+			attribute.Sensitive = true
+		case requiresReplace:
+			var planModifiers = []planmodifier.Map{
+				mapplanmodifier.RequiresReplace(),
 			}
 			attribute.PlanModifiers = planModifiers
 		}

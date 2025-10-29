@@ -2,6 +2,8 @@ data "couchbase-capella_audit_log_event_ids" "event_list" {
   organization_id = var.organization_id
   project_id      = couchbase-capella_project.new_project.id
   cluster_id      = couchbase-capella_cluster.new_cluster.id
+  
+  depends_on = [couchbase-capella_cluster.new_cluster]
 }
 
 # List of query event ids
