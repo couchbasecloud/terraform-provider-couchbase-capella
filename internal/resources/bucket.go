@@ -103,6 +103,10 @@ func (c *Bucket) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		BucketRequest.Type = plan.Type.ValueStringPointer()
 	}
 
+	if !plan.Vbuckets.IsNull() && !plan.Vbuckets.IsUnknown() {
+		BucketRequest.Vbuckets = plan.Vbuckets.ValueInt64()
+	}
+
 	if err := c.validateCreateBucket(plan); err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating bucket",
@@ -338,6 +342,7 @@ func (c *Bucket) retrieveBucket(
 		ClusterId:                types.StringValue(clusterId),
 		Type:                     types.StringValue(bucketResp.Type),
 		StorageBackend:           types.StringValue(bucketResp.StorageBackend),
+		Vbuckets:                 types.Int64Value(bucketResp.Vbuckets),
 		MemoryAllocationInMB:     types.Int64Value(bucketResp.MemoryAllocationInMb),
 		BucketConflictResolution: types.StringValue(bucketResp.BucketConflictResolution),
 		DurabilityLevel:          types.StringValue(bucketResp.DurabilityLevel),
@@ -460,7 +465,10 @@ func initializeBucketWithPlanAndId(plan providerschema.Bucket, id string) provid
 	if plan.Type.IsNull() || plan.Type.IsUnknown() {
 		plan.Type = types.StringNull()
 	}
-	// Stats is a read-only attribute, so we set it to null in the initial state
+	if plan.Vbuckets.IsNull() || plan.Vbuckets.IsUnknown() {
+		plan.Vbuckets = types.Int64Null()
+	}
+
 	plan.Stats = types.ObjectNull(providerschema.Stats{}.AttributeTypes())
 	return plan
 }

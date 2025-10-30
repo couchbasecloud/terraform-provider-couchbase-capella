@@ -118,6 +118,10 @@ type Bucket struct {
 	// Disable Flush to avoid inadvertent data loss.
 	// Default: false
 	Flush types.Bool `tfsdk:"flush"`
+
+	// Vbuckets is the number of vBuckets for the bucket.
+	// This is only configurable on magma buckets for Couchbase 8.0 and above.
+	Vbuckets types.Int64 `tfsdk:"vbuckets"`
 }
 
 // Stats has the bucket stats that are related to memory and disk consumption.
@@ -172,6 +176,7 @@ type OneBucket struct {
 	Replicas                 types.Int64  `tfsdk:"replicas"`
 	MemoryAllocationInMB     types.Int64  `tfsdk:"memory_allocation_in_mb"`
 	Flush                    types.Bool   `tfsdk:"flush"`
+	Vbuckets                 types.Int64  `tfsdk:"vbuckets"`
 }
 
 // Validate will split the IDs by a delimiter i.e. comma , in case a terraform import CLI is invoked.
