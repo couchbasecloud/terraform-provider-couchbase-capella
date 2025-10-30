@@ -44,10 +44,10 @@ Terraform will perform the following actions:
           + "eu-west-1",
           + "ap-southeast-1",
         ]
-      + id              = "eaa5facc-2a30-463a-8ffc-e1df47539028"
+      + id              = "ffffffff-aaaa-1414-eeee-000000000000"
       + interval        = 4
-      + organization_id = "adb4fb4c-1d98-4287-ac33-230742d2cc76"
-      + project_id      = "d6552b0c-ca66-4412-b1e1-68bd36a7e364"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + retention       = 24
       + start_time      = "2025-09-15T16:00:00+00:00"
     }
@@ -60,10 +60,10 @@ Changes to Outputs:
           + "eu-west-1",
           + "ap-southeast-1",
         ]
-      + id              = "eaa5facc-2a30-463a-8ffc-e1df47539028"
+      + id              = "ffffffff-aaaa-1414-eeee-000000000000"
       + interval        = 4
-      + organization_id = "adb4fb4c-1d98-4287-ac33-230742d2cc76"
-      + project_id      = "d6552b0c-ca66-4412-b1e1-68bd36a7e364"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + retention       = 24
       + start_time      = "2025-09-15T16:00:00+00:00"
     }
@@ -95,10 +95,10 @@ Terraform will perform the following actions:
           + "eu-west-1",
           + "ap-southeast-1",
         ]
-      + id              = "eaa5facc-2a30-463a-8ffc-e1df47539028"
+      + id              = "ffffffff-aaaa-1414-eeee-000000000000"
       + interval        = 4
-      + organization_id = "adb4fb4c-1d98-4287-ac33-230742d2cc76"
-      + project_id      = "d6552b0c-ca66-4412-b1e1-68bd36a7e364"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + retention       = 24
       + start_time      = "2025-09-15T16:00:00+00:00"
     }
@@ -111,10 +111,10 @@ Changes to Outputs:
           + "eu-west-1",
           + "ap-southeast-1",
         ]
-      + id              = "eaa5facc-2a30-463a-8ffc-e1df47539028"
+      + id              = "ffffffff-aaaa-1414-eeee-000000000000"
       + interval        = 4
-      + organization_id = "adb4fb4c-1d98-4287-ac33-230742d2cc76"
-      + project_id      = "d6552b0c-ca66-4412-b1e1-68bd36a7e364"
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + retention       = 24
       + start_time      = "2025-09-15T16:00:00+00:00"
     }
@@ -126,7 +126,7 @@ Do you want to perform these actions?
   Enter a value: yes
 
 couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Creating...
-couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Creation complete after 0s [id=eaa5facc-2a30-463a-8ffc-e1df47539028]
+couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Creation complete after 0s [id=ffffffff-aaaa-1414-eeee-000000000000]
 
 Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
 
@@ -137,10 +137,10 @@ new_snapshot_backup_schedule = {
     "eu-west-1",
     "ap-southeast-1",
   ])
-  "id" = "eaa5facc-2a30-463a-8ffc-e1df47539028"
+  "id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "interval" = 4
-  "organization_id" = "adb4fb4c-1d98-4287-ac33-230742d2cc76"
-  "project_id" = "d6552b0c-ca66-4412-b1e1-68bd36a7e364"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "retention" = 24
   "start_time" = "2025-09-15T16:00:00+00:00"
 }
@@ -156,15 +156,14 @@ Sample Output:
     "eu-west-1",
     "ap-southeast-1",
   ])
-  "id" = "eaa5facc-2a30-463a-8ffc-e1df47539028"
+  "id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "interval" = 4
-  "organization_id" = "adb4fb4c-1d98-4287-ac33-230742d2cc76"
-  "project_id" = "d6552b0c-ca66-4412-b1e1-68bd36a7e364"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "retention" = 24
   "start_time" = "2025-09-15T16:00:00+00:00"
 }
 ```
-In this case, the cluster ID is `eaa5facc-2a30-463a-8ffc-e1df47539028`
 
 ### List the resources that are present in the Terraform State file.
 
@@ -192,14 +191,14 @@ Please note, this command will only remove the resource from the Terraform State
 Command: `terraform import couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule "id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>"`
 
 In this case, the complete command is:
-`terraform import couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule "id=eaa5facc-2a30-463a-8ffc-e1df47539028,project_id=d6552b0c-ca66-4412-b1e1-68bd36a7e364,organization_id=adb4fb4c-1d98-4287-ac33-230742d2cc76"`
+`terraform import couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule "id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000"`
 
 Sample Output:
 ``` 
-couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Importing from ID "id=eaa5facc-2a30-463a-8ffc-e1df47539028,project_id=d6552b0c-ca66-4412-b1e1-68bd36a7e364,organization_id=adb4fb4c-1d98-4287-ac33-230742d2cc76"...
+couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Importing from ID "id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000"...
 couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Import prepared!
   Prepared couchbase-capella_snapshot_backup_schedule for import
-couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Refreshing state... [id=id=eaa5facc-2a30-463a-8ffc-e1df47539028,project_id=d6552b0c-ca66-4412-b1e1-68bd36a7e364,organization_id=adb4fb4c-1d98-4287-ac33-230742d2cc76]
+couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Refreshing state... [id=id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000]
 
 Import successful!
 
@@ -229,7 +228,7 @@ Sample Output:
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
-couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Refreshing state... [id=eaa5facc-2a30-463a-8ffc-e1df47539028]
+couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Refreshing state... [id=ffffffff-aaaa-1414-eeee-000000000000]
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   ~ update in-place
@@ -243,7 +242,7 @@ Terraform will perform the following actions:
           - "ap-southeast-1",
           + "af-south-1",
         ]
-        id              = "eaa5facc-2a30-463a-8ffc-e1df47539028"
+        id              = "ffffffff-aaaa-1414-eeee-000000000000"
       ~ interval        = 4 -> 8
       ~ retention       = 24 -> 168
       ~ start_time      = "2025-09-15T16:00:00Z" -> "2026-01-23T03:30:00+00:00"
@@ -259,7 +258,7 @@ Changes to Outputs:
           - "ap-southeast-1",
           + "af-south-1",
         ]
-        id              = "eaa5facc-2a30-463a-8ffc-e1df47539028"
+        id              = "ffffffff-aaaa-1414-eeee-000000000000"
       ~ interval        = 4 -> 8
       ~ retention       = 24 -> 168
       ~ start_time      = "2025-09-15T16:00:00Z" -> "2026-01-23T03:30:00+00:00"
@@ -280,7 +279,7 @@ Sample Output:
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
-couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Refreshing state... [id=eaa5facc-2a30-463a-8ffc-e1df47539028]
+couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Refreshing state... [id=ffffffff-aaaa-1414-eeee-000000000000]
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   ~ update in-place
@@ -294,7 +293,7 @@ Terraform will perform the following actions:
           - "ap-southeast-1",
           + "af-south-1",
         ]
-        id              = "eaa5facc-2a30-463a-8ffc-e1df47539028"
+        id              = "ffffffff-aaaa-1414-eeee-000000000000"
       ~ interval        = 4 -> 8
       ~ retention       = 24 -> 168
       ~ start_time      = "2025-09-15T16:00:00Z" -> "2026-01-23T03:30:00+00:00"
@@ -310,7 +309,7 @@ Changes to Outputs:
           - "ap-southeast-1",
           + "af-south-1",
         ]
-        id              = "eaa5facc-2a30-463a-8ffc-e1df47539028"
+        id              = "ffffffff-aaaa-1414-eeee-000000000000"
       ~ interval        = 4 -> 8
       ~ retention       = 24 -> 168
       ~ start_time      = "2025-09-15T16:00:00Z" -> "2026-01-23T03:30:00+00:00"
@@ -323,8 +322,8 @@ Do you want to perform these actions?
 
   Enter a value: yes
 
-couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Modifying... [id=eaa5facc-2a30-463a-8ffc-e1df47539028]
-couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Modifications complete after 0s [id=eaa5facc-2a30-463a-8ffc-e1df47539028]
+couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Modifying... [id=ffffffff-aaaa-1414-eeee-000000000000]
+couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Modifications complete after 0s [id=ffffffff-aaaa-1414-eeee-000000000000]
 
 Apply complete! Resources: 0 added, 1 changed, 0 destroyed.
 
@@ -334,10 +333,10 @@ new_snapshot_backup_schedule = {
   "copy_to_regions" = tolist([
     "af-south-1",
   ])
-  "id" = "eaa5facc-2a30-463a-8ffc-e1df47539028"
+  "id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "interval" = 8
-  "organization_id" = "adb4fb4c-1d98-4287-ac33-230742d2cc76"
-  "project_id" = "d6552b0c-ca66-4412-b1e1-68bd36a7e364"
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "retention" = 168
   "start_time" = "2026-01-23T03:30:00+00:00"
 }
@@ -358,7 +357,7 @@ Sample Output:
 │ 
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
-couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Refreshing state... [id=eaa5facc-2a30-463a-8ffc-e1df47539028]
+couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Refreshing state... [id=ffffffff-aaaa-1414-eeee-000000000000]
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   - destroy
@@ -370,10 +369,10 @@ Terraform will perform the following actions:
       - copy_to_regions = [
           - "af-south-1",
         ] -> null
-      - id              = "eaa5facc-2a30-463a-8ffc-e1df47539028" -> null
+      - id              = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - interval        = 8 -> null
-      - organization_id = "adb4fb4c-1d98-4287-ac33-230742d2cc76" -> null
-      - project_id      = "d6552b0c-ca66-4412-b1e1-68bd36a7e364" -> null
+      - organization_id = "ffffffff-aaaa-1414-eeee-000000000000" -> null
+      - project_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - retention       = 168 -> null
       - start_time      = "2026-01-23T03:30:00+00:00" -> null
     }
@@ -385,10 +384,10 @@ Changes to Outputs:
       - copy_to_regions = [
           - "af-south-1",
         ]
-      - id              = "eaa5facc-2a30-463a-8ffc-e1df47539028"
+      - id              = "ffffffff-aaaa-1414-eeee-000000000000"
       - interval        = 8
-      - organization_id = "adb4fb4c-1d98-4287-ac33-230742d2cc76"
-      - project_id      = "d6552b0c-ca66-4412-b1e1-68bd36a7e364"
+      - organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      - project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       - retention       = 168
       - start_time      = "2026-01-23T03:30:00+00:00"
     } -> null
@@ -399,7 +398,7 @@ Do you really want to destroy all resources?
 
   Enter a value: yes
 
-couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Destroying... [id=eaa5facc-2a30-463a-8ffc-e1df47539028]
+couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Destroying... [id=ffffffff-aaaa-1414-eeee-000000000000]
 couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Destruction complete after 0s
 
 Destroy complete! Resources: 1 destroyed.
