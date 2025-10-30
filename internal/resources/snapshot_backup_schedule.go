@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -84,6 +85,7 @@ func (s *SnapshotBackupSchedule) Create(ctx context.Context, req resource.Create
 		return
 	}
 
+	var refreshedState *providerschema.SnapshotBackupSchedule
 	snapshotBackupSchedule, err := s.getSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId, plan.StartTime.ValueString())
 	if err != nil {
 		tflog.Debug(ctx, "Error getting snapshot backup schedule after upsert", map[string]interface{}{
@@ -92,21 +94,20 @@ func (s *SnapshotBackupSchedule) Create(ctx context.Context, req resource.Create
 			"clusterId":      clusterId,
 			"err":            err,
 		})
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"Error Getting Snapshot Backup Schedule in Capella",
 			"Could not get Capella Snapshot Backup Schedule for cluster with ID "+plan.ClusterID.String()+": "+err.Error(),
 		)
-		return
+		refreshedState = &providerschema.SnapshotBackupSchedule{}
+		refreshedState.CopyToRegions = []types.String{}
+	} else {
+		newSnapshotBackupSchedule := providerschema.NewSnapshotBackupSchedule(*snapshotBackupSchedule, organizationId, projectId, clusterId)
+		refreshedState = &newSnapshotBackupSchedule
 	}
-
-	refreshedState := providerschema.NewSnapshotBackupSchedule(*snapshotBackupSchedule, organizationId, projectId, clusterId)
 
 	// Sets state to fully populated data.
 	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 }
 
 // Read reads snapshot backup schedule information.
@@ -117,7 +118,6 @@ func (s *SnapshotBackupSchedule) Read(ctx context.Context, req resource.ReadRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	IDs, err := state.Validate()
 	if err != nil {
 		tflog.Debug(ctx, "Error validating snapshot backup schedule", map[string]interface{}{
@@ -139,12 +139,6 @@ func (s *SnapshotBackupSchedule) Read(ctx context.Context, req resource.ReadRequ
 
 	snapshotBackupSchedule, err := s.getSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId, state.StartTime.ValueString())
 	if err != nil {
-		tflog.Debug(ctx, "Error getting snapshot backup schedule", map[string]interface{}{
-			"organizationId": organizationId,
-			"projectId":      projectId,
-			"clusterId":      clusterId,
-			"err":            err,
-		})
 		resp.Diagnostics.AddError(
 			"Error Getting Snapshot Backup Schedule in Capella",
 			"Could not get Capella Snapshot Backup Schedule for cluster with ID "+state.ClusterID.String()+": "+err.Error(),
@@ -155,9 +149,6 @@ func (s *SnapshotBackupSchedule) Read(ctx context.Context, req resource.ReadRequ
 	refreshedState := providerschema.NewSnapshotBackupSchedule(*snapshotBackupSchedule, organizationId, projectId, clusterId)
 	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 }
 
 // Update updates the snapshot backup schedule.
@@ -182,12 +173,6 @@ func (s *SnapshotBackupSchedule) Update(ctx context.Context, req resource.Update
 
 	err := s.upsertSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId, plan)
 	if err != nil {
-		tflog.Debug(ctx, "Error upserting snapshot backup schedule", map[string]interface{}{
-			"organizationId": organizationId,
-			"projectId":      projectId,
-			"clusterId":      clusterId,
-			"err":            err,
-		})
 		resp.Diagnostics.AddError(
 			"Error Upserting Snapshot Backup Schedule in Capella",
 			"Could not upsert Capella Snapshot Backup Schedule for cluster with ID "+clusterId+": "+err.Error(),
@@ -206,16 +191,13 @@ func (s *SnapshotBackupSchedule) Update(ctx context.Context, req resource.Update
 			"Error Getting Snapshot Backup Schedule in Capella",
 			"Could not get Capella Snapshot Backup Schedule for cluster with ID "+plan.ClusterID.String()+": "+err.Error(),
 		)
-		return
 	}
+
 	refreshedState := providerschema.NewSnapshotBackupSchedule(*snapshotBackupSchedule, organizationId, projectId, clusterId)
 
 	// Sets state to fully populated data.
 	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 }
 
 // Delete deletes the snapshot backup schedule.
@@ -264,12 +246,6 @@ func (s *SnapshotBackupSchedule) Delete(ctx context.Context, req resource.Delete
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		tflog.Debug(ctx, "Error deleting snapshot backup schedule", map[string]interface{}{
-			"organizationId": organizationId,
-			"projectId":      projectId,
-			"clusterId":      clusterId,
-			"err":            err,
-		})
 		resp.Diagnostics.AddError(
 			"Error deleting backup",
 			"Could not delete snapshot backup schedule for cluster with ID "+state.ClusterID.String()+": "+errString,
@@ -280,10 +256,12 @@ func (s *SnapshotBackupSchedule) Delete(ctx context.Context, req resource.Delete
 
 // upsertSnapshotBackupSchedule creates or updates the snapshot backup schedule.
 func (s *SnapshotBackupSchedule) upsertSnapshotBackupSchedule(ctx context.Context, organizationId, projectId, clusterId string, plan providerschema.SnapshotBackupSchedule) error {
+
 	createSnapshotBackupScheduleRequest := snapshot_backup_schedule.SnapshotBackupSchedule{
-		Interval:  int(plan.Interval.ValueInt64()),
-		Retention: int(plan.Retention.ValueInt64()),
-		StartTime: plan.StartTime.ValueString(),
+		Interval:      plan.Interval.ValueInt64(),
+		Retention:     plan.Retention.ValueInt64(),
+		StartTime:     plan.StartTime.ValueString(),
+		CopyToRegions: providerschema.ConvertStringValueList(plan.CopyToRegions),
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackupschedule", s.HostURL, organizationId, projectId, clusterId)

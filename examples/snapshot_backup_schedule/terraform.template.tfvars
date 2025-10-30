@@ -14,4 +14,5 @@ cloud_snapshot_backup_schedule = {
     retention = "<retention>"
     interval = "<interval>"
     start_time = "<start_time>"
+    copy_to_regions = ["<region_1>", "<region_2>"]
 }

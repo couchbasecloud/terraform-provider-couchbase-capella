@@ -49,7 +49,7 @@ Terraform will perform the following actions:
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + retention       = 24
-      + start_time      = "2025-09-15T12:00:00+00:00"
+      + start_time      = "2025-09-15T16:00:00+00:00"
     }
 
 Plan: 1 to add, 0 to change, 0 to destroy.
@@ -65,7 +65,7 @@ Changes to Outputs:
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + retention       = 24
-      + start_time      = "2025-09-15T12:00:00+00:00"
+      + start_time      = "2025-09-15T16:00:00+00:00"
     }
 ```
 
@@ -100,7 +100,7 @@ Terraform will perform the following actions:
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + retention       = 24
-      + start_time      = "2025-09-15T12:00:00+00:00"
+      + start_time      = "2025-09-15T16:00:00+00:00"
     }
 
 Plan: 1 to add, 0 to change, 0 to destroy.
@@ -142,7 +142,7 @@ new_snapshot_backup_schedule = {
   "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "retention" = 24
-  "start_time" = "2025-09-15T12:00:00+00:00"
+  "start_time" = "2025-09-15T16:00:00+00:00"
 }
 ```
 
@@ -161,7 +161,7 @@ Sample Output:
   "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "retention" = 24
-  "start_time" = "2025-09-15T12:00:00+00:00"
+  "start_time" = "2025-09-15T16:00:00+00:00"
 }
 ```
 
@@ -245,7 +245,7 @@ Terraform will perform the following actions:
         id              = "ffffffff-aaaa-1414-eeee-000000000000"
       ~ interval        = 4 -> 8
       ~ retention       = 24 -> 168
-      ~ start_time      = "2025-09-15T12:00:00Z" -> "2026-12-02T17:30:00+00:00"
+      ~ start_time      = "2025-09-15T16:00:00Z" -> "2026-01-23T03:30:00+00:00"
         # (2 unchanged attributes hidden)
     }
 
@@ -261,10 +261,9 @@ Changes to Outputs:
         id              = "ffffffff-aaaa-1414-eeee-000000000000"
       ~ interval        = 4 -> 8
       ~ retention       = 24 -> 168
-      ~ start_time      = "2025-09-15T12:00:00Z" -> "2026-12-02T17:30:00+00:00"
+      ~ start_time      = "2025-09-15T16:00:00Z" -> "2026-01-23T03:30:00+00:00"
         # (2 unchanged attributes hidden)
     }
-
 ```
 
 command: `terrafom apply`
@@ -297,7 +296,7 @@ Terraform will perform the following actions:
         id              = "ffffffff-aaaa-1414-eeee-000000000000"
       ~ interval        = 4 -> 8
       ~ retention       = 24 -> 168
-      ~ start_time      = "2025-09-15T12:00:00Z" -> "2026-12-02T17:30:00+00:00"
+      ~ start_time      = "2025-09-15T16:00:00Z" -> "2026-01-23T03:30:00+00:00"
         # (2 unchanged attributes hidden)
     }
 
@@ -313,7 +312,7 @@ Changes to Outputs:
         id              = "ffffffff-aaaa-1414-eeee-000000000000"
       ~ interval        = 4 -> 8
       ~ retention       = 24 -> 168
-      ~ start_time      = "2025-09-15T12:00:00Z" -> "2026-12-02T17:30:00+00:00"
+      ~ start_time      = "2025-09-15T16:00:00Z" -> "2026-01-23T03:30:00+00:00"
         # (2 unchanged attributes hidden)
     }
 
@@ -339,7 +338,7 @@ new_snapshot_backup_schedule = {
   "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "retention" = 168
-  "start_time" = "2026-12-02T17:30:00+00:00"
+  "start_time" = "2026-01-23T03:30:00+00:00"
 }
 ```
 
@@ -375,7 +374,7 @@ Terraform will perform the following actions:
       - organization_id = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - project_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - retention       = 168 -> null
-      - start_time      = "2026-12-02T17:30:00+00:00" -> null
+      - start_time      = "2026-01-23T03:30:00+00:00" -> null
     }
 
 Plan: 0 to add, 0 to change, 1 to destroy.
@@ -390,7 +389,7 @@ Changes to Outputs:
       - organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       - project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       - retention       = 168
-      - start_time      = "2026-12-02T17:30:00+00:00"
+      - start_time      = "2026-01-23T03:30:00+00:00"
     } -> null
 
 Do you really want to destroy all resources?

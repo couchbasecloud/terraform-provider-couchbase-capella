@@ -38,9 +38,10 @@ func NewSnapshotBackupSchedule(snapshotBackupSchedule snapshot_backup_schedule.S
 		OrganizationID: types.StringValue(organizationID),
 		ProjectID:      types.StringValue(projectID),
 		ClusterID:      types.StringValue(clusterID),
-		Interval:       types.Int64Value(int64(snapshotBackupSchedule.Interval)),
-		Retention:      types.Int64Value(int64(snapshotBackupSchedule.Retention)),
+		Interval:       types.Int64Value(snapshotBackupSchedule.Interval),
+		Retention:      types.Int64Value(snapshotBackupSchedule.Retention),
 		StartTime:      types.StringValue(snapshotBackupSchedule.StartTime),
+		CopyToRegions:  ConvertStringList(snapshotBackupSchedule.CopyToRegions),
 	}
 }
 
@@ -57,4 +58,12 @@ func (s SnapshotBackupSchedule) Validate() (map[Attr]string, error) {
 		return nil, fmt.Errorf("%s: %w", errors.ErrValidatingResource, err)
 	}
 	return IDs, nil
+}
+
+func ConvertStringList(stringList []string) []basetypes.StringValue {
+	var stringValueList []basetypes.StringValue
+	for _, stringElement := range stringList {
+		stringValueList = append(stringValueList, types.StringValue(stringElement))
+	}
+	return stringValueList
 }
