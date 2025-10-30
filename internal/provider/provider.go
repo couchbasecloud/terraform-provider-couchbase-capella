@@ -240,7 +240,8 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewFreeTierBuckets,
 		datasources.NewFreeTierClusters,
 		datasources.NewAppServiceCidrs,
-		datasources.NewSnapshotRestores,
+		datasources.NewSnapshotBackups,
+    datasources.NewSnapshotRestores,
 		datasources.NewSnapshotRestore,
 	}
 }
@@ -277,5 +278,6 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewFreeTierAppService,
 		resources.NewAppServiceCidr,
 		resources.NewSnapshotBackup,
+		resources.NewSnapshotBackupSchedule,
 	}
 }
