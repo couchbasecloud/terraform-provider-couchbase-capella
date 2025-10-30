@@ -14,6 +14,22 @@ variable "cluster_id" {
   description = "Capella Cluster ID"
 }
 
+variable "page" {
+  description = "page"
+}
+
+variable "per_page" {
+  description = "number per page"
+}
+
+variable "sort_by" {
+  description = "sort by"
+}
+
+variable "sort_direction" {
+  description = "sort_direction"
+}
+
 variable "existing_cloud_project_snapshot_backups" {
   description = "Existing project backups"
   type        = list(object({

@@ -9,6 +9,6 @@ project_id      = "<project_id>"
 #existing_cloud_project_snapshot_backups = {
 #  page            = 1
 #  per_page        = 2
-#  sort_by         = "timestamp"
+#  sort_by         = "region"
 #  sort_direction  = "asc"
 #}
