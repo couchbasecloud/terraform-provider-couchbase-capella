@@ -17,13 +17,14 @@ var (
 	globalOrgId string
 
 	// these global variables are set by setup().
-	globalProjectId      string
-	globalClusterId      string
-	globalBucketName     = "default"
-	globalScopeName      = "_default"
-	globalCollectionName = "_default"
-	globalBucketId       string
-	globalAppServiceId   string
+	globalProjectId       string
+	globalClusterId       string
+	globalBucketName      = "default"
+	globalScopeName       = "_default"
+	globalCollectionName  = "_default"
+	globalBucketId        string
+	globalAppServiceId    string
+	globalAppEndpointName = "tf_acc_test_app_endpoint_common"
 
 	// this global variable is set in TestMain.
 	globalProviderBlock string
