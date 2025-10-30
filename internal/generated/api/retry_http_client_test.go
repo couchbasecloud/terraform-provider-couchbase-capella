@@ -66,83 +66,83 @@ func TestCustomRetryPolicyDirectly(t *testing.T) {
 
 func TestCustomRetryPolicyJSONDecoder(t *testing.T) {
 	// Test comprehensive JSON decoder scenarios for 504 responses
-	
+
 	tests := []struct {
-		name           string
-		responseBody   string
-		expectedRetry  bool
-		expectedError  error
-		description    string
+		name          string
+		responseBody  string
+		expectedRetry bool
+		expectedError error
+		description   string
 	}{
 		{
-			name:           "Valid JSON with code 7001",
-			responseBody:   `{"code":7001}`,
-			expectedRetry:  false,
-			expectedError:  apierrors.ErrGatewayTimeoutForIndexDDL,
-			description:    "Should not retry and return specific error for 7001",
+			name:          "Valid JSON with code 7001",
+			responseBody:  `{"code":7001}`,
+			expectedRetry: false,
+			expectedError: apierrors.ErrGatewayTimeoutForIndexDDL,
+			description:   "Should not retry and return specific error for 7001",
 		},
 		{
-			name:           "Valid JSON with code 7001 and extra fields",
-			responseBody:   `{"code":7001,"message":"Index DDL timeout","timestamp":"2023-09-25T10:30:00Z"}`,
-			expectedRetry:  false,
-			expectedError:  apierrors.ErrGatewayTimeoutForIndexDDL,
-			description:    "Should handle 7001 with additional JSON fields",
+			name:          "Valid JSON with code 7001 and extra fields",
+			responseBody:  `{"code":7001,"message":"Index DDL timeout","timestamp":"2023-09-25T10:30:00Z"}`,
+			expectedRetry: false,
+			expectedError: apierrors.ErrGatewayTimeoutForIndexDDL,
+			description:   "Should handle 7001 with additional JSON fields",
 		},
 		{
-			name:           "Valid JSON with different error code",
-			responseBody:   `{"code":5001}`,
-			expectedRetry:  true,
-			expectedError:  nil,
-			description:    "Should retry for non-7001 error codes",
+			name:          "Valid JSON with different error code",
+			responseBody:  `{"code":5001}`,
+			expectedRetry: true,
+			expectedError: nil,
+			description:   "Should retry for non-7001 error codes",
 		},
 		{
-			name:           "Valid JSON with zero code",
-			responseBody:   `{"code":0}`,
-			expectedRetry:  true,
-			expectedError:  nil,
-			description:    "Should retry for zero error code",
+			name:          "Valid JSON with zero code",
+			responseBody:  `{"code":0}`,
+			expectedRetry: true,
+			expectedError: nil,
+			description:   "Should retry for zero error code",
 		},
 		{
-			name:           "Invalid JSON - missing quotes",
-			responseBody:   `{code:7001}`,
-			expectedRetry:  true,
-			expectedError:  nil,
-			description:    "Should retry when JSON is malformed",
+			name:          "Invalid JSON - missing quotes",
+			responseBody:  `{code:7001}`,
+			expectedRetry: true,
+			expectedError: nil,
+			description:   "Should retry when JSON is malformed",
 		},
 		{
-			name:           "Invalid JSON - incomplete",
-			responseBody:   `{"code":70`,
-			expectedRetry:  true,
-			expectedError:  nil,
-			description:    "Should retry when JSON is incomplete",
+			name:          "Invalid JSON - incomplete",
+			responseBody:  `{"code":70`,
+			expectedRetry: true,
+			expectedError: nil,
+			description:   "Should retry when JSON is incomplete",
 		},
 		{
-			name:           "Non-JSON response",
-			responseBody:   `Gateway Timeout`,
-			expectedRetry:  true,
-			expectedError:  nil,
-			description:    "Should retry when response is not JSON",
+			name:          "Non-JSON response",
+			responseBody:  `Gateway Timeout`,
+			expectedRetry: true,
+			expectedError: nil,
+			description:   "Should retry when response is not JSON",
 		},
 		{
-			name:           "Empty JSON object",
-			responseBody:   `{}`,
-			expectedRetry:  true,
-			expectedError:  nil,
-			description:    "Should retry when code field is missing (defaults to 0)",
+			name:          "Empty JSON object",
+			responseBody:  `{}`,
+			expectedRetry: true,
+			expectedError: nil,
+			description:   "Should retry when code field is missing (defaults to 0)",
 		},
 		{
-			name:           "JSON with code as string",
-			responseBody:   `{"code":"7001"}`,
-			expectedRetry:  true,
-			expectedError:  nil,
-			description:    "Should retry when code is string instead of int",
+			name:          "JSON with code as string",
+			responseBody:  `{"code":"7001"}`,
+			expectedRetry: true,
+			expectedError: nil,
+			description:   "Should retry when code is string instead of int",
 		},
 		{
-			name:           "Empty response body",
-			responseBody:   ``,
-			expectedRetry:  true,
-			expectedError:  nil,
-			description:    "Should retry when response body is empty",
+			name:          "Empty response body",
+			responseBody:  ``,
+			expectedRetry: true,
+			expectedError: nil,
+			description:   "Should retry when response body is empty",
 		},
 	}
 
