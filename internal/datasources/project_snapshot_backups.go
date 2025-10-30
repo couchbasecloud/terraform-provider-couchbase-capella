@@ -54,14 +54,7 @@ func (d *ProjectSnapshotBackups) Read(ctx context.Context, req datasource.ReadRe
 	organizationId := state.OrganizationId.ValueString()
 	projectId := state.ProjectId.ValueString()
 
-	queryParam, err := buildQueryParams(&state)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Reading Capella Project Events",
-			"Could not read project events : "+err.Error(),
-		)
-		return
-	}
+	queryParam := buildQueryParams(&state)
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/cloudsnapshotbackups", d.HostURL, organizationId, projectId)
 	if len(queryParam) > 0 {
@@ -254,7 +247,7 @@ func morphProjectSnapshotBackup(ctx context.Context, resp *datasource.ReadRespon
 	return &projectSnapshotFormated
 }
 
-func buildQueryParams(state *providerschema.ProjectSnapshotBackups) (map[string][]string, error) {
+func buildQueryParams(state *providerschema.ProjectSnapshotBackups) map[string][]string {
 	queryParam := make(map[string][]string)
 	if !state.Page.IsNull() && !state.Page.IsUnknown() {
 		page := int(state.Page.ValueInt64())
@@ -272,7 +265,7 @@ func buildQueryParams(state *providerschema.ProjectSnapshotBackups) (map[string]
 		sortDir := state.SortDirection.ValueString()
 		queryParam["sortDirection"] = []string{sortDir}
 	}
-	return queryParam, nil
+	return queryParam
 }
 
 // Configure adds the provider configured client to the snapshot backup data source.

@@ -1,4 +1,4 @@
-# List Existin Project Level Cloud Snapshot Backups
+# List Existing Project Level Cloud Snapshot Backups
 
 This example shows how to list cloud snapshot backups that already exist in Capella for a given cluster. It uses the organization ID and project ID to do so. 
 

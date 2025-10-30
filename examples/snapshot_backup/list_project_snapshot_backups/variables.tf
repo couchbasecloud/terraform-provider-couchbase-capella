@@ -32,7 +32,7 @@ variable "sort_direction" {
 
 variable "existing_cloud_project_snapshot_backups" {
   description = "Existing project backups"
-  type        = list(object({
+  type = list(object({
     organization_id = string
     project_id      = string
     page            = optional(number)
