@@ -9,4 +9,6 @@ cluster_id      = "<cluster_id>"
 snapshot_backup = {
     retention = "<retention>"
     regions_to_copy = ["<region_1>", "<region_2>"]
+    restore_times = "<restore_times>"
+    cross_region_restore_preference = ["<region_1>", "<region_2>"]
 }

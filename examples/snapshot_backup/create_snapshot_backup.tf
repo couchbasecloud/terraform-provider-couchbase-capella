@@ -9,4 +9,8 @@ resource "couchbase-capella_cloud_snapshot_backup" "new_cloud_snapshot_backup" {
 
   retention  = var.cloud_snapshot_backup.retention
   regions_to_copy = var.cloud_snapshot_backup.regions_to_copy
+
+  restore_times = var.cloud_snapshot_backup.restore_times
+  cross_region_restore_preference = var.cloud_snapshot_backup.cross_region_restore_preference
+
 }

@@ -54,3 +54,11 @@ type ListSnapshotBackupsResponse struct {
 type EditBackupRetentionRequest struct {
 	Retention int64 `json:"retention"`
 }
+
+type RestoreSnapshotBackupRequest struct {
+	CrossRegionRestorePreference []string `json:"crossRegionRestorePreference"`
+}
+
+type RestoreSnapshotBackupResponse struct {
+	ID string `json:"restoreId"`
+}
