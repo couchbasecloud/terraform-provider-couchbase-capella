@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	re "regexp"
 	"testing"
 )
 
@@ -45,6 +46,56 @@ func TestAccAppEndpoint(t *testing.T) {
 	})
 }
 
+func TestAccAppEndpointInexistentCollection(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_endpoint_")
+	epName := randomStringWithPrefix("tf_acc_endpoint_")
+	bucket := randomStringWithPrefix("bkt_")
+	cfg := fmt.Sprintf(`
+	%[1]s
+	
+	resource "couchbase-capella_bucket" "%[2]s_bucket" {
+		organization_id = "%[3]s"
+		project_id      = "%[4]s"
+		cluster_id      = "%[5]s"
+		name           = "%[7]s"
+	}
+	
+	resource "couchbase-capella_app_endpoint" "%[2]s" {
+	organization_id = "%[3]s"
+		project_id      = "%[4]s"
+		cluster_id      = "%[5]s"
+		app_service_id  = "%[6]s"
+		bucket          = "%[7]s"
+		name            = "%[8]s"
+		scopes = {
+			"_default" = {
+			  collections = {
+				"INVALID_COLLLECTION" = {}
+			  }
+			}
+		}
+		depends_on = [couchbase-capella_bucket.%[2]s_bucket]
+	}`,
+		globalProviderBlock,
+		resourceName,
+		globalOrgId,
+		globalProjectId,
+		globalClusterId,
+		globalAppServiceId,
+		bucket,
+		epName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      cfg,
+				ExpectError: re.MustCompile("Collection Not Found"),
+			},
+		},
+	})
+}
+
 func testAccAppEndpointResourceConfig(resourceName, endpointName, bucketName, userXattr string, deltaSync bool) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -76,11 +127,11 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	]
 	
 	scopes = {
-	"_default" = {
-	  collections = {
-		"_default" = {}
-	  }
-	}
+		"_default" = {
+		  collections = {
+			"_default" = {}
+		  }
+		}
 	}
 	depends_on = [couchbase-capella_bucket.%[2]s_bucket]
 }
@@ -95,8 +146,6 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		endpointName,
 		userXattr,
 		deltaSync,
-		globalScopeName,
-		globalCollectionName,
 	)
 }
 
