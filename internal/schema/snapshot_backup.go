@@ -49,6 +49,22 @@ type SnapshotBackup struct {
 }
 
 type SnapshotBackupData struct {
+	ClusterID         types.String `tfsdk:"cluster_id"`
+	CreatedAt         types.String `tfsdk:"created_at"`
+	Expiration        types.String `tfsdk:"expiration"`
+	ID                types.String `tfsdk:"id"`
+	Retention         types.Int64  `tfsdk:"retention"`
+	CrossRegionCopies types.Set    `tfsdk:"cross_region_copies"`
+	Progress          types.Object `tfsdk:"progress"`
+	CMEK              types.Set    `tfsdk:"cmek"`
+	ProjectID         types.String `tfsdk:"project_id"`
+	Server            types.Object `tfsdk:"server"`
+	Size              types.Int64  `tfsdk:"size"`
+	OrganizationId    types.String `tfsdk:"organization_id"`
+	Type              types.String `tfsdk:"type"`
+}
+
+type SnapshotBackupsData struct {
 	CreatedAt         types.String `tfsdk:"created_at"`
 	Expiration        types.String `tfsdk:"expiration"`
 	ID                types.String `tfsdk:"id"`
@@ -68,7 +84,7 @@ type SnapshotBackups struct {
 	ClusterId      types.String `tfsdk:"cluster_id"`
 
 	// Data contains the list of resources.
-	Data []SnapshotBackupData `tfsdk:"data"`
+	Data []SnapshotBackupsData `tfsdk:"data"`
 }
 
 func (p Progress) AttributeTypes() map[string]attr.Type {
@@ -164,10 +180,28 @@ func NewSnapshotBackup(snapshotBackup snapshot_backup.SnapshotBackup, ID, cluste
 	}
 }
 
+func NewSnapshotBackupsData(snapshotBackup snapshot_backup.SnapshotBackup, ID, clusterID, projectID, organizationID string, progressObj, serverObj basetypes.ObjectValue, cmekSet, crossRegionCopySet basetypes.SetValue) SnapshotBackupsData {
+	return SnapshotBackupsData{
+		ID:                types.StringValue(ID),
+		Expiration:        types.StringValue(snapshotBackup.Expiration),
+		CreatedAt:         types.StringValue(snapshotBackup.CreatedAt),
+		Retention:         types.Int64Value(snapshotBackup.Retention),
+		CrossRegionCopies: crossRegionCopySet,
+		Progress:          progressObj,
+		CMEK:              cmekSet,
+		Server:            serverObj,
+		Size:              types.Int64Value(int64(snapshotBackup.Size)),
+		Type:              types.StringValue(snapshotBackup.Type),
+	}
+}
+
 func NewSnapshotBackupData(snapshotBackup snapshot_backup.SnapshotBackup, ID, clusterID, projectID, organizationID string, progressObj, serverObj basetypes.ObjectValue, cmekSet, crossRegionCopySet basetypes.SetValue) SnapshotBackupData {
 	return SnapshotBackupData{
 		ID:                types.StringValue(ID),
+		ClusterID:         types.StringValue(clusterID),
 		Expiration:        types.StringValue(snapshotBackup.Expiration),
+		ProjectID:         types.StringValue(projectID),
+		OrganizationId:    types.StringValue(organizationID),
 		CreatedAt:         types.StringValue(snapshotBackup.CreatedAt),
 		Retention:         types.Int64Value(snapshotBackup.Retention),
 		CrossRegionCopies: crossRegionCopySet,
