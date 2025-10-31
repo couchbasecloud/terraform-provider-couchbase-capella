@@ -1,9 +1,11 @@
 package datasources
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 func SnapshotBackupSchema() schema.Schema {
@@ -118,6 +120,28 @@ func SnapshotBackupSchema() schema.Schema {
 									},
 								},
 							},
+						},
+					},
+				},
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"filters": schema.SingleNestedBlock{
+				MarkdownDescription: "Filter criteria for Snapshot Backups.  Only filtering by Snapshot Backup status is supported.",
+				Attributes: map[string]schema.Attribute{
+					"name": schema.StringAttribute{
+						MarkdownDescription: "The name of the attribute to filter.",
+						Optional:            true,
+						Validators: []validator.String{
+							stringvalidator.OneOf("status"),
+						},
+					},
+					"values": schema.SetAttribute{
+						MarkdownDescription: "List of values to match against.",
+						Optional:            true,
+						ElementType:         types.StringType,
+						Validators: []validator.Set{
+							setvalidator.SizeAtLeast(1),
 						},
 					},
 				},
