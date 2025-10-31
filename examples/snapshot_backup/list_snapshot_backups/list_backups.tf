@@ -7,7 +7,7 @@ data "couchbase-capella_cloud_snapshot_backups" "existing_cloud_snapshot_backups
   project_id      = var.project_id
   cluster_id      = var.cluster_id
 
-  filter {
+  filters {
     name = "status"
     values = ["complete"]
   }

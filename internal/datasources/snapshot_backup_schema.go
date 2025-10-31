@@ -126,7 +126,7 @@ func SnapshotBackupSchema() schema.Schema {
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"filter": schema.SingleNestedBlock{
+			"filters": schema.SingleNestedBlock{
 				MarkdownDescription: "Filter criteria for Snapshot Backups.  Only filtering by Snapshot Backup status is supported.",
 				Attributes: map[string]schema.Attribute{
 					"name": schema.StringAttribute{

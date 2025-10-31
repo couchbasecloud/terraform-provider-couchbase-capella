@@ -70,11 +70,12 @@ type SnapshotBackups struct {
 	// Data contains the list of resources.
 	Data []SnapshotBackupData `tfsdk:"data"`
 
-	Filters *Filter `tfsdk:"filter"`
+	// Filters is the list of filters to apply to the list of snapshot backups.
+	Filters *Filters `tfsdk:"filters"`
 }
 
 // Filter represents a filter block for App Endpoints.
-type Filter struct {
+type Filters struct {
 	// Name is the attribute to filter by.
 	Name types.String `tfsdk:"name"`
 
