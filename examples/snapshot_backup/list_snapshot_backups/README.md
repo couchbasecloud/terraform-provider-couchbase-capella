@@ -1,8 +1,12 @@
 # List Existing Cloud Snapshot Backups
 
-This example shows how to list cloud snapshot backups that already exist in Capella for a given cluster. It uses the organization ID, project ID, and cluster ID to do so. 
+This example shows how to list cloud snapshot backups that already exist in Capella for a given cluster. It uses the organization ID, project ID, and cluster ID to do so.
 
-In this example, we will filter by the `status` attribute, so we will only return cloud snapshot backups that are 'complete'.
+The list can be filtered. Only filtering by the `status` attribute is currently supported. If no filter is provided all results are returned.
+
+Valid `status` values to filter by are `queued`, `pending`, `processing`, `complete`, and `failed`.
+
+In this example, we will filter by the `status` attribute, so we will only return cloud snapshot backups that are `complete`. 
 
 To run, configure your Couchbase Capella provider as described in README in the root of this project.
 
