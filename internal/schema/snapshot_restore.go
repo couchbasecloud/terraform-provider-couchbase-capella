@@ -1,7 +1,6 @@
 package schema
 
 import (
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/snapshot_backup"
@@ -42,19 +41,6 @@ type SnapshotRestores struct {
 	Data []SnapshotRestoreData `tfsdk:"data"`
 
 	Filters *Filter `tfsdk:"filter"`
-}
-
-func (s SnapshotRestore) AttributeTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"cluster_id":      types.StringType,
-		"created_at":      types.StringType,
-		"id":              types.StringType,
-		"project_id":      types.StringType,
-		"restore_to":      types.StringType,
-		"snapshot":        types.StringType,
-		"status":          types.StringType,
-		"organization_id": types.StringType,
-	}
 }
 
 func NewSnapshotRestore(snapshotRestore snapshot_backup.SnapshotRestore, clusterID, projectID, organizationID string) SnapshotRestore {
