@@ -14,14 +14,7 @@ Sample Output:
 ```
 
  terraform plan
-╷
-│ Warning: Provider development overrides are in effect
-│ 
-│ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/laura.silaja/code/Lagher0/terraform-provider-couchbase-capella/bin
-│ 
-│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
-╵
+
 data.couchbase-capella_cloud_project_snapshot_backups.existing_cloud_project_snapshot_backups: Reading...
 data.couchbase-capella_cloud_project_snapshot_backups.existing_cloud_project_snapshot_backups: Read complete after 0s
 
@@ -29,9 +22,9 @@ Changes to Outputs:
   + project_backups_list = {
       + cursor          = {
           + hrefs = {
-              + first    = "http://localhost:8084/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/projects/ffffffff-AAAA-1414-eeee-000000000000/cloudsnapshotbackups?page=1&perPage=2"
-              + last     = "http://localhost:8084/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/projects/ffffffff-AAAA-1414-eeee-000000000000/cloudsnapshotbackups?page=1&perPage=2"
-              + next     = "http://localhost:8084/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/projects/ffffffff-AAAA-1414-eeee-000000000000/cloudsnapshotbackups?page=0&perPage=2"
+              + first    = "https://cloudapi.cloud.couchbase.com/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/projects/ffffffff-AAAA-1414-eeee-000000000000/cloudsnapshotbackups?page=1&perPage=2"
+              + last     = "https://cloudapi.cloud.couchbase.com/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/projects/ffffffff-AAAA-1414-eeee-000000000000/cloudsnapshotbackups?page=1&perPage=2"
+              + next     = "https://cloudapi.cloud.couchbase.com/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/projects/ffffffff-AAAA-1414-eeee-000000000000/cloudsnapshotbackups?page=0&perPage=2"
               + previous = ""
             }
           + pages = {
@@ -183,14 +176,7 @@ You can apply this plan to save these new output values to the Terraform state, 
 
 ```
 terraform apply
-╷
-│ Warning: Provider development overrides are in effect
-│ 
-│ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/laura.silaja/code/Lagher0/terraform-provider-couchbase-capella/bin
-│ 
-│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
-╵
+
 data.couchbase-capella_cloud_project_snapshot_backups.existing_cloud_project_snapshot_backups: Reading...
 data.couchbase-capella_cloud_project_snapshot_backups.existing_cloud_project_snapshot_backups: Read complete after 0s
 
@@ -198,9 +184,9 @@ Changes to Outputs:
   + project_backups_list = {
       + cursor          = {
           + hrefs = {
-              + first    = "http://localhost:8084/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/projects/ffffffff-AAAA-1414-eeee-000000000000/cloudsnapshotbackups?page=1&perPage=2"
-              + last     = "http://localhost:8084/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/projects/ffffffff-AAAA-1414-eeee-000000000000/cloudsnapshotbackups?page=1&perPage=2"
-              + next     = "http://localhost:8084/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/projects/ffffffff-AAAA-1414-eeee-000000000000/cloudsnapshotbackups?page=0&perPage=2"
+              + first    = "https://cloudapi.cloud.couchbase.com/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/projects/ffffffff-AAAA-1414-eeee-000000000000/cloudsnapshotbackups?page=1&perPage=2"
+              + last     = "https://cloudapi.cloud.couchbase.com/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/projects/ffffffff-AAAA-1414-eeee-000000000000/cloudsnapshotbackups?page=1&perPage=2"
+              + next     = "https://cloudapi.cloud.couchbase.com/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/projects/ffffffff-AAAA-1414-eeee-000000000000/cloudsnapshotbackups?page=0&perPage=2"
               + previous = ""
             }
           + pages = {
@@ -358,9 +344,9 @@ Outputs:
 project_backups_list = {
   "cursor" = {
     "hrefs" = {
-      "first" = "http://localhost:8084/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/projects/ffffffff-AAAA-1414-eeee-000000000000/cloudsnapshotbackups?page=1&perPage=2"
-      "last" = "http://localhost:8084/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/projects/ffffffff-AAAA-1414-eeee-000000000000/cloudsnapshotbackups?page=1&perPage=2"
-      "next" = "http://localhost:8084/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/projects/ffffffff-AAAA-1414-eeee-000000000000/cloudsnapshotbackups?page=0&perPage=2"
+      "first" = "https://cloudapi.cloud.couchbase.com/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/projects/ffffffff-AAAA-1414-eeee-000000000000/cloudsnapshotbackups?page=1&perPage=2"
+      "last" = "https://cloudapi.cloud.couchbase.com/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/projects/ffffffff-AAAA-1414-eeee-000000000000/cloudsnapshotbackups?page=1&perPage=2"
+      "next" = "https://cloudapi.cloud.couchbase.com/v4/organizations/ffffffff-aaaa-1414-eeee-000000000000/projects/ffffffff-AAAA-1414-eeee-000000000000/cloudsnapshotbackups?page=0&perPage=2"
       "previous" = ""
     }
     "pages" = {

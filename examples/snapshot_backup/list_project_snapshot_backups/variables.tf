@@ -10,9 +10,6 @@ variable "project_id" {
   description = "Capella Project ID"
 }
 
-variable "cluster_id" {
-  description = "Capella Cluster ID"
-}
 
 variable "page" {
   description = "page"
