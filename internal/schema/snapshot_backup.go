@@ -179,19 +179,6 @@ func NewSnapshotBackupData(snapshotBackup snapshot_backup.SnapshotBackup, ID, cl
 	}
 }
 
-func (s SnapshotRestore) AttributeTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"cluster_id":      types.StringType,
-		"created_at":      types.StringType,
-		"id":              types.StringType,
-		"project_id":      types.StringType,
-		"restore_to":      types.StringType,
-		"snapshot":        types.StringType,
-		"status":          types.StringType,
-		"organization_id": types.StringType,
-	}
-}
-
 // Validate is used to verify that IDs have been properly imported.
 func (s SnapshotBackup) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
