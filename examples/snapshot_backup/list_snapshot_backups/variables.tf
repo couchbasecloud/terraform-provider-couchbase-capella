@@ -16,7 +16,7 @@ variable "cluster_id" {
 
 variable "existing_cloud_snapshot_backups" {
   description = "Existing backups"
-  type        = list(object({
+  type = list(object({
     organization_id = string
     project_id      = string
     cluster_id      = string
