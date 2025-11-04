@@ -163,6 +163,10 @@ variable "app_service" {
   })
 }
 
+variable "app_endpoint" {
+  description = "App Endpoint name"
+}
+
 variable "scope" {
   description = "Scope configuration details useful for creation"
 
@@ -258,4 +262,21 @@ variable "with" {
     num_replica   = optional(number)
     num_partition = optional(number)
   })
+}
+
+variable app_services_cidr {
+  description = "App Services CIDR"
+}
+
+variable "app_endpoint_oidc" {
+    description = "App Endpoint OIDC configuration options"
+    type = object({
+        client_id       = string
+        issuer          = string
+        discovery_url   = string
+        user_prefix    = string
+        roles_claim   = string
+        username_claim = string
+        register       = bool
+    })
 }
