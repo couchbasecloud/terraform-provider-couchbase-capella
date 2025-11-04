@@ -93,7 +93,7 @@ func (r *User) Create(ctx context.Context, req resource.CreateRequest, resp *res
 
 	createUserRequest := api.CreateUserRequest{
 		Email:             plan.Email.ValueString(),
-		OrganizationRoles: providerschema.ConvertRoles(plan.OrganizationRoles),
+		OrganizationRoles: providerschema.BaseStringsToStrings(plan.OrganizationRoles),
 	}
 
 	// check for optional fields
@@ -356,18 +356,18 @@ func handleOrganizationRoles(existingRoles, proposedRoles []basetypes.StringValu
 	// Handle changes to organizationRoles
 	addRoles, removeRoles := compare(existingRoles, proposedRoles)
 	if len(addRoles) > 0 {
-		providerschema.ConvertRoles(addRoles)
+		providerschema.BaseStringsToStrings(addRoles)
 		entries = append(entries, api.PatchEntry{
 			Op:    string(api.Add),
 			Path:  "/organizationRoles",
-			Value: providerschema.ConvertRoles(addRoles),
+			Value: providerschema.BaseStringsToStrings(addRoles),
 		})
 	}
 	if len(removeRoles) > 0 {
 		entries = append(entries, api.PatchEntry{
 			Op:    string(api.Remove),
 			Path:  "/organizationRoles",
-			Value: providerschema.ConvertRoles(removeRoles),
+			Value: providerschema.BaseStringsToStrings(removeRoles),
 		})
 	}
 
@@ -408,14 +408,14 @@ func handleProjectRoles(existingResources, proposedResources []providerschema.Re
 				entries = append(entries, api.PatchEntry{
 					Op:    string(api.Add),
 					Path:  path,
-					Value: providerschema.ConvertRoles(addRoles),
+					Value: providerschema.BaseStringsToStrings(addRoles),
 				})
 			}
 			if len(removeRoles) > 0 {
 				entries = append(entries, api.PatchEntry{
 					Op:    string(api.Remove),
 					Path:  path,
-					Value: providerschema.ConvertRoles(removeRoles),
+					Value: providerschema.BaseStringsToStrings(removeRoles),
 				})
 			}
 		}
