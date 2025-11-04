@@ -243,6 +243,7 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewSnapshotBackups,
 		datasources.NewSnapshotRestores,
 		datasources.NewSnapshotRestore,
+		datasources.NewSnapshotBackupSchedule,
 		datasources.NewProjectSnapshotBackups,
 	}
 }

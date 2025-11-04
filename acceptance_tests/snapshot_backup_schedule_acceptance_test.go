@@ -119,7 +119,7 @@ func TestAccSnapshotBackupScheduleResourceInvalidCopyToRegions(t *testing.T) {
 
 	startTime := time.Now().Add(24 * time.Hour).Truncate(time.Hour).Format(time.RFC3339)
 
-	copyToRegions := "[" + strings.Join([]string{"\"us-east-1\""}, ",") + "]"
+	copyToRegions := "[\"us-east-1\"]"
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
