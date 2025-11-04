@@ -7,14 +7,6 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/snapshot_backup"
 )
 
-type Filter struct {
-	// Name is the attribute to filter by.
-	Name types.String `tfsdk:"name"`
-
-	// Values is a set of values for the filter.
-	Values types.Set `tfsdk:"values"`
-}
-
 type SnapshotRestore struct {
 	ClusterID      types.String `tfsdk:"cluster_id"`
 	CreatedAt      types.String `tfsdk:"created_at"`
