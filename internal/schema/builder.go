@@ -107,5 +107,10 @@ func AddAttr[T SchemaAttribute](
 	}
 
 	// Convert to schema.Attribute interface
-	attrs[fieldName] = any(attr).(schema.Attribute)
+	// This assertion is safe because all types in SchemaAttribute constraint implement schema.Attribute
+	result, ok := any(attr).(schema.Attribute)
+	if !ok {
+		panic("failed to convert attribute to schema.Attribute - this should never happen")
+	}
+	attrs[fieldName] = result
 }
