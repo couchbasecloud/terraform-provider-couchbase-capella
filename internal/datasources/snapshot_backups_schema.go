@@ -93,7 +93,7 @@ func SnapshotBackupsSchema() schema.Schema {
 						},
 						"size": schema.Int64Attribute{
 							Computed:            true,
-							MarkdownDescription: "The size of the snapshot backup.",
+							MarkdownDescription: "The size of the snapshot backup in megabytes.",
 						},
 						"type": schema.StringAttribute{
 							Computed:            true,

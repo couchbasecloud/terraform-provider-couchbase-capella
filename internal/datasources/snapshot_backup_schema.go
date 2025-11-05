@@ -8,7 +8,7 @@ import (
 
 func SnapshotBackupSchema() schema.Schema {
 	return schema.Schema{
-		MarkdownDescription: "The snapshot backup data source retrieves snapshot backups associated with a cluster.",
+		MarkdownDescription: "The snapshot backup data source retrieves one snapshot backup.",
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.StringAttribute{
 				Required:            true,
@@ -88,7 +88,7 @@ func SnapshotBackupSchema() schema.Schema {
 			},
 			"size": schema.Int64Attribute{
 				Computed:            true,
-				MarkdownDescription: "The size of the snapshot backup.",
+				MarkdownDescription: "The size of the snapshot backup in megabytes.",
 			},
 			"type": schema.StringAttribute{
 				Computed:            true,
