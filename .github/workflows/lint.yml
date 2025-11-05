@@ -23,7 +23,7 @@ jobs:
           path: ~/go/pkg/mod
           key: cache-${{ github.run_id }}
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v7
         with:
           version: v1.64
           args: "--config .golangci.yml --out-format=colored-line-number"
