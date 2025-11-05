@@ -247,11 +247,9 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewAppEndpoints,
 		datasources.NewAppEndpoint,
 		datasources.NewAppEndpointActivationStatus,
-		datasources.NewSnapshotBackups,
 		datasources.NewSnapshotRestores,
 		datasources.NewSnapshotRestore,
 		datasources.NewSnapshotBackupSchedule,
-		datasources.NewProjectSnapshotBackups,
 	}
 }
 
@@ -287,6 +285,7 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewFreeTierCluster,
 		resources.NewFreeTierAppService,
 		resources.NewAppServiceCidr,
+		resources.NewSnapshotBackup,
 		resources.NewAccessControlFunction,
 		resources.NewImportFilter,
 		resources.NewAppEndpointResync,
@@ -294,7 +293,6 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewAppEndpoint,
 		resources.NewAppEndpointOidcProvider,
 		resources.NewAppEndpointDefaultOidcProvider,
-		resources.NewSnapshotBackup,
 		resources.NewSnapshotBackupSchedule,
 	}
 }

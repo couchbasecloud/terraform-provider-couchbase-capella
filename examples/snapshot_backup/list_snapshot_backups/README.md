@@ -1,6 +1,12 @@
 # List Existing Cloud Snapshot Backups
 
-This example shows how to list cloud snapshot backups that already exist in Capella for a given cluster. It uses the organization ID, project ID, and cluster ID to do so. 
+This example shows how to list cloud snapshot backups that already exist in Capella for a given cluster. It uses the organization ID, project ID, and cluster ID to do so.
+
+The list can be filtered. Only filtering by the `status` attribute is currently supported. If no filter is provided all results are returned.
+
+Valid `status` values to filter by are `queued`, `pending`, `processing`, `complete`, and `failed`.
+
+In this example, we will filter by the `status` attribute, so we will only return cloud snapshot backups that are `complete`. 
 
 To run, configure your Couchbase Capella provider as described in README in the root of this project.
 
@@ -29,24 +35,24 @@ Changes to Outputs:
       + data            = [
           + {
               + cmek                = []
-              + created_at          = "2025-10-01T10:50:52.51832872Z"
+              + created_at          = "2025-10-27T17:50:25.835979676Z"
               + cross_region_copies = [
                   + {
                       + region_code = "ap-southeast-1"
-                      + status      = "deleting"
-                      + time        = "2025-10-01T15:06:12.294832427Z"
+                      + status      = "complete"
+                      + time        = "2025-10-27T17:52:51.567396382Z"
                     },
                   + {
                       + region_code = "eu-west-1"
-                      + status      = "deleting"
-                      + time        = "2025-10-01T15:06:12.294832635Z"
+                      + status      = "complete"
+                      + time        = "2025-10-27T17:51:50.869670882Z"
                     },
                 ]
-              + expiration          = "2025-10-08T10:50:52.51832872Z"
+              + expiration          = "2025-11-03T17:50:25.835979676Z"
               + id                  = "ffffffff-aaaa-1414-eeee-000000000000"
               + progress            = {
-                  + status = "deleting"
-                  + time   = "2025-10-01T15:06:12.294831885Z"
+                  + status = "complete"
+                  + time   = "2025-10-27T17:51:17.984429339Z"
                 }
               + retention           = 168
               + server              = {
@@ -57,41 +63,24 @@ Changes to Outputs:
             },
           + {
               + cmek                = []
-              + created_at          = "2025-10-01T10:53:06.540292046Z"
-              + cross_region_copies = []
-              + expiration          = "2025-10-08T10:53:06.540292046Z"
-              + id                  = "ffffffff-aaaa-1414-eeee-000000000000"
-              + progress            = {
-                  + status = "complete"
-                  + time   = "2025-10-01T10:54:25.049507013Z"
-                }
-              + retention           = 168
-              + server              = {
-                  + version = "7.6.7"
-                }
-              + size                = 0
-              + type                = "on_demand"
-            },
-          + {
-              + cmek                = []
-              + created_at          = "2025-10-01T14:22:31.580812042Z"
+              + created_at          = "2025-10-27T17:51:31.129978179Z"
               + cross_region_copies = [
                   + {
                       + region_code = "ap-southeast-1"
                       + status      = "complete"
-                      + time        = "2025-10-01T14:41:47.217926638Z"
+                      + time        = "2025-10-27T17:54:03.036830888Z"
                     },
                   + {
                       + region_code = "eu-west-1"
                       + status      = "complete"
-                      + time        = "2025-10-01T14:40:21.843839959Z"
+                      + time        = "2025-10-27T17:53:24.021451217Z"
                     },
                 ]
-              + expiration          = "2025-10-08T14:22:31.580812042Z"
+              + expiration          = "2025-11-03T17:51:31.129978179Z"
               + id                  = "ffffffff-aaaa-1414-eeee-000000000000"
               + progress            = {
                   + status = "complete"
-                  + time   = "2025-10-01T14:23:51.074934843Z"
+                  + time   = "2025-10-27T17:52:47.948078964Z"
                 }
               + retention           = 168
               + server              = {
@@ -101,6 +90,12 @@ Changes to Outputs:
               + type                = "on_demand"
             },
         ]
+      + filter          = {
+          + name   = "status"
+          + values = [
+              + "complete",
+            ]
+        }
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
     }
@@ -118,7 +113,7 @@ Changes to Outputs:
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
 ╵
 data.couchbase-capella_cloud_snapshot_backups.existing_cloud_snapshot_backups: Reading...
-data.couchbase-capella_cloud_snapshot_backups.existing_cloud_snapshot_backups: Read complete after 0s
+data.couchbase-capella_cloud_snapshot_backups.existing_cloud_snapshot_backups: Read complete after 1s
 
 Changes to Outputs:
   + backups_list = {
@@ -126,24 +121,24 @@ Changes to Outputs:
       + data            = [
           + {
               + cmek                = []
-              + created_at          = "2025-10-01T10:50:52.51832872Z"
+              + created_at          = "2025-10-27T17:50:25.835979676Z"
               + cross_region_copies = [
                   + {
                       + region_code = "ap-southeast-1"
-                      + status      = "deleting"
-                      + time        = "2025-10-01T15:06:12.294832427Z"
+                      + status      = "complete"
+                      + time        = "2025-10-27T17:52:51.567396382Z"
                     },
                   + {
                       + region_code = "eu-west-1"
-                      + status      = "deleting"
-                      + time        = "2025-10-01T15:06:12.294832635Z"
+                      + status      = "complete"
+                      + time        = "2025-10-27T17:51:50.869670882Z"
                     },
                 ]
-              + expiration          = "2025-10-08T10:50:52.51832872Z"
+              + expiration          = "2025-11-03T17:50:25.835979676Z"
               + id                  = "ffffffff-aaaa-1414-eeee-000000000000"
               + progress            = {
-                  + status = "deleting"
-                  + time   = "2025-10-01T15:06:12.294831885Z"
+                  + status = "complete"
+                  + time   = "2025-10-27T17:51:17.984429339Z"
                 }
               + retention           = 168
               + server              = {
@@ -154,41 +149,24 @@ Changes to Outputs:
             },
           + {
               + cmek                = []
-              + created_at          = "2025-10-01T10:53:06.540292046Z"
-              + cross_region_copies = []
-              + expiration          = "2025-10-08T10:53:06.540292046Z"
-              + id                  = "ffffffff-aaaa-1414-eeee-000000000000"
-              + progress            = {
-                  + status = "complete"
-                  + time   = "2025-10-01T10:54:25.049507013Z"
-                }
-              + retention           = 168
-              + server              = {
-                  + version = "7.6.7"
-                }
-              + size                = 0
-              + type                = "on_demand"
-            },
-          + {
-              + cmek                = []
-              + created_at          = "2025-10-01T14:22:31.580812042Z"
+              + created_at          = "2025-10-27T17:51:31.129978179Z"
               + cross_region_copies = [
                   + {
                       + region_code = "ap-southeast-1"
                       + status      = "complete"
-                      + time        = "2025-10-01T14:41:47.217926638Z"
+                      + time        = "2025-10-27T17:54:03.036830888Z"
                     },
                   + {
                       + region_code = "eu-west-1"
                       + status      = "complete"
-                      + time        = "2025-10-01T14:40:21.843839959Z"
+                      + time        = "2025-10-27T17:53:24.021451217Z"
                     },
                 ]
-              + expiration          = "2025-10-08T14:22:31.580812042Z"
+              + expiration          = "2025-11-03T17:51:31.129978179Z"
               + id                  = "ffffffff-aaaa-1414-eeee-000000000000"
               + progress            = {
                   + status = "complete"
-                  + time   = "2025-10-01T14:23:51.074934843Z"
+                  + time   = "2025-10-27T17:52:47.948078964Z"
                 }
               + retention           = 168
               + server              = {
@@ -198,6 +176,12 @@ Changes to Outputs:
               + type                = "on_demand"
             },
         ]
+      + filter          = {
+          + name   = "status"
+          + values = [
+              + "complete",
+            ]
+        }
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
     }
@@ -220,24 +204,24 @@ backups_list = {
   "data" = tolist([
     {
       "cmek" = toset([])
-      "created_at" = "2025-10-01T10:50:52.51832872Z"
+      "created_at" = "2025-10-27T17:50:25.835979676Z"
       "cross_region_copies" = toset([
         {
           "region_code" = "ap-southeast-1"
-          "status" = "deleting"
-          "time" = "2025-10-01T15:06:12.294832427Z"
+          "status" = "complete"
+          "time" = "2025-10-27T17:52:51.567396382Z"
         },
         {
           "region_code" = "eu-west-1"
-          "status" = "deleting"
-          "time" = "2025-10-01T15:06:12.294832635Z"
+          "status" = "complete"
+          "time" = "2025-10-27T17:51:50.869670882Z"
         },
       ])
-      "expiration" = "2025-10-08T10:50:52.51832872Z"
+      "expiration" = "2025-11-03T17:50:25.835979676Z"
       "id" = "ffffffff-aaaa-1414-eeee-000000000000"
       "progress" = {
-        "status" = "deleting"
-        "time" = "2025-10-01T15:06:12.294831885Z"
+        "status" = "complete"
+        "time" = "2025-10-27T17:51:17.984429339Z"
       }
       "retention" = 168
       "server" = {
@@ -248,41 +232,24 @@ backups_list = {
     },
     {
       "cmek" = toset([])
-      "created_at" = "2025-10-01T10:53:06.540292046Z"
-      "cross_region_copies" = toset([])
-      "expiration" = "2025-10-08T10:53:06.540292046Z"
-      "id" = "ffffffff-aaaa-1414-eeee-000000000000"
-      "progress" = {
-        "status" = "complete"
-        "time" = "2025-10-01T10:54:25.049507013Z"
-      }
-      "retention" = 168
-      "server" = {
-        "version" = "7.6.7"
-      }
-      "size" = 0
-      "type" = "on_demand"
-    },
-    {
-      "cmek" = toset([])
-      "created_at" = "2025-10-01T14:22:31.580812042Z"
+      "created_at" = "2025-10-27T17:51:31.129978179Z"
       "cross_region_copies" = toset([
         {
           "region_code" = "ap-southeast-1"
           "status" = "complete"
-          "time" = "2025-10-01T14:41:47.217926638Z"
+          "time" = "2025-10-27T17:54:03.036830888Z"
         },
         {
           "region_code" = "eu-west-1"
           "status" = "complete"
-          "time" = "2025-10-01T14:40:21.843839959Z"
+          "time" = "2025-10-27T17:53:24.021451217Z"
         },
       ])
-      "expiration" = "2025-10-08T14:22:31.580812042Z"
+      "expiration" = "2025-11-03T17:51:31.129978179Z"
       "id" = "ffffffff-aaaa-1414-eeee-000000000000"
       "progress" = {
         "status" = "complete"
-        "time" = "2025-10-01T14:23:51.074934843Z"
+        "time" = "2025-10-27T17:52:47.948078964Z"
       }
       "retention" = 168
       "server" = {
@@ -292,6 +259,12 @@ backups_list = {
       "type" = "on_demand"
     },
   ])
+  "filter" = {
+    "name" = "status"
+    "values" = toset([
+      "complete",
+    ])
+  }
   "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
 }
