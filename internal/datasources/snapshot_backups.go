@@ -192,8 +192,8 @@ func (d *SnapshotBackups) Read(ctx context.Context, req datasource.ReadRequest, 
 				return
 			}
 
-			newSnapshotBackupData := providerschema.NewSnapshotBackupData(snapshotBackup, snapshotBackup.ID, clusterId, projectId, organizationId, progressObj, serverObj, cmekSet, crossRegionCopySet)
-			state.Data = append(state.Data, newSnapshotBackupData)
+			newSnapshotBackupsData := providerschema.NewSnapshotBackupsData(snapshotBackup, snapshotBackup.ID, clusterId, projectId, organizationId, progressObj, serverObj, cmekSet, crossRegionCopySet)
+			state.Data = append(state.Data, newSnapshotBackupsData)
 
 		}
 	}
