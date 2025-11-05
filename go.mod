@@ -2,6 +2,8 @@ module github.com/couchbasecloud/terraform-provider-couchbase-capella
 
 go 1.24.0
 
+toolchain go1.24.2
+
 require (
 	emperror.dev/errors v0.8.1
 	github.com/couchbase/tools-common/functional v1.3.1
