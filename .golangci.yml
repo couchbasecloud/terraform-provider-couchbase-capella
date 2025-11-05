@@ -1,4 +1,4 @@
-version: 2
+version: "2"
 
 issues:
   max-per-linter: 0
