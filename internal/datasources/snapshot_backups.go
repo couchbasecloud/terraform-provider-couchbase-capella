@@ -90,8 +90,8 @@ func (d *SnapshotBackups) Read(ctx context.Context, req datasource.ReadRequest, 
 
 	// Since the list API doesn't implement query parameters useful for filtering,
 	// filtering is done by provider.
-	if state.Filters != nil {
-		diags := state.Filters.Values.ElementsAs(ctx, &names, false)
+	if state.Filter != nil {
+		diags := state.Filter.Values.ElementsAs(ctx, &names, false)
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -231,11 +231,11 @@ func (d *SnapshotBackups) ValidateConfig(
 		return
 	}
 
-	if config.Filters != nil {
-		if (config.Filters.Name.IsNull() && !config.Filters.Values.IsNull()) ||
-			(!config.Filters.Name.IsNull() && config.Filters.Values.IsNull()) {
+	if config.Filter != nil {
+		if (config.Filter.Name.IsNull() && !config.Filter.Values.IsNull()) ||
+			(!config.Filter.Name.IsNull() && config.Filter.Values.IsNull()) {
 			resp.Diagnostics.AddError(
-				"Invalid Filters Configuration",
+				"Invalid Filter Configuration",
 				"Both 'name' and 'values' in filter block must be configured.",
 			)
 		}
