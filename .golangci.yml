@@ -1,11 +1,11 @@
-version: "2"
-
 issues:
-  max-per-linter: 0
-  max-same-issues: 0
   exclude-files:
     - (.+)_test.go
     - internal/testing
+
+run:
+  skip-dirs:
+    - vendor
 
 linters:
   disable-all: true
