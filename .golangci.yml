@@ -1,11 +1,6 @@
 issues:
   exclude-files:
-    - (.+)_test.go
-    - internal/testing
-
-run:
-  skip-dirs:
-    - vendor
+    - "(.+)_test.go"
 
 linters:
   disable-all: true

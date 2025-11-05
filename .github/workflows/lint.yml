@@ -25,8 +25,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.63.4
-          args: "--config .golangci.yml --out-format=colored-line-number"
+          version: v1.64.8
           only-new-issues: true
 
   tfproviderlint:
