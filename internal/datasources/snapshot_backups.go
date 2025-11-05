@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -85,101 +86,116 @@ func (d *SnapshotBackups) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
+	var names []string
+
+	// Since the list API doesn't implement query parameters useful for filtering,
+	// filtering is done by provider.
+	if state.Filters != nil {
+		diags := state.Filters.Values.ElementsAs(ctx, &names, false)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
 	for i := range snapshotBackups.Data {
 		snapshotBackup := snapshotBackups.Data[i]
 
-		progress := providerschema.NewProgress(snapshotBackup.Progress)
-		progressObj, diags := types.ObjectValueFrom(ctx, progress.AttributeTypes(), progress)
-		if diags.HasError() {
-			resp.Diagnostics.AddError(
-				"Error during progress conversion",
-				fmt.Sprintf("Could not convert progress to object: %s", diags.Errors()),
-			)
-			tflog.Debug(ctx, "error during progress conversion", map[string]interface{}{
-				"snapshotBackup": snapshotBackup,
-				"progress":       progress,
-			})
-			return
-		}
+		if slices.Contains(names, string(snapshotBackup.Progress.Status)) || len(names) == 0 {
+			progress := providerschema.NewProgress(snapshotBackup.Progress)
+			progressObj, diags := types.ObjectValueFrom(ctx, progress.AttributeTypes(), progress)
+			if diags.HasError() {
+				resp.Diagnostics.AddError(
+					"Error during progress conversion",
+					fmt.Sprintf("Could not convert progress to object: %s", diags.Errors()),
+				)
+				tflog.Debug(ctx, "error during progress conversion", map[string]interface{}{
+					"snapshotBackup": snapshotBackup,
+					"progress":       progress,
+				})
+				return
+			}
 
-		server := providerschema.NewServer(snapshotBackup.Server)
-		serverObj, diags := types.ObjectValueFrom(ctx, server.AttributeTypes(), server)
-		if diags.HasError() {
-			resp.Diagnostics.AddError(
-				"Error during server conversion",
-				fmt.Sprintf("Could not convert server to object: %s", diags.Errors()),
-			)
-			tflog.Debug(ctx, "error during server conversion", map[string]interface{}{
-				"snapshotBackup": snapshotBackup,
-				"server":         server,
-			})
-			return
-		}
+			server := providerschema.NewServer(snapshotBackup.Server)
+			serverObj, diags := types.ObjectValueFrom(ctx, server.AttributeTypes(), server)
+			if diags.HasError() {
+				resp.Diagnostics.AddError(
+					"Error during server conversion",
+					fmt.Sprintf("Could not convert server to object: %s", diags.Errors()),
+				)
+				tflog.Debug(ctx, "error during server conversion", map[string]interface{}{
+					"snapshotBackup": snapshotBackup,
+					"server":         server,
+				})
+				return
+			}
 
-		cmekObjs := make([]basetypes.ObjectValue, 0)
-		for _, cmek := range snapshotBackup.CMEK {
-			cmek := providerschema.NewCMEK(cmek)
-			cmekObj, diags := types.ObjectValueFrom(ctx, cmek.AttributeTypes(), cmek)
+			cmekObjs := make([]basetypes.ObjectValue, 0)
+			for _, cmek := range snapshotBackup.CMEK {
+				cmek := providerschema.NewCMEK(cmek)
+				cmekObj, diags := types.ObjectValueFrom(ctx, cmek.AttributeTypes(), cmek)
+				if diags.HasError() {
+					resp.Diagnostics.AddError(
+						"Error during CMEK conversion",
+						fmt.Sprintf("Could not convert CMEK to object: %s", diags.Errors()),
+					)
+					tflog.Debug(ctx, "error during CMEK conversion", map[string]interface{}{
+						"snapshotBackup": snapshotBackup,
+						"cmek":           cmek,
+					})
+					return
+				}
+				cmekObjs = append(cmekObjs, cmekObj)
+			}
+
+			cmekSet, diags := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: providerschema.CMEK{}.AttributeTypes()}, cmekObjs)
 			if diags.HasError() {
 				resp.Diagnostics.AddError(
 					"Error during CMEK conversion",
-					fmt.Sprintf("Could not convert CMEK to object: %s", diags.Errors()),
+					fmt.Sprintf("Could not convert CMEK to set: %s", diags.Errors()),
 				)
 				tflog.Debug(ctx, "error during CMEK conversion", map[string]interface{}{
 					"snapshotBackup": snapshotBackup,
-					"cmek":           cmek,
+					"cmekObjs":       cmekObjs,
 				})
 				return
 			}
-			cmekObjs = append(cmekObjs, cmekObj)
-		}
 
-		cmekSet, diags := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: providerschema.CMEK{}.AttributeTypes()}, cmekObjs)
-		if diags.HasError() {
-			resp.Diagnostics.AddError(
-				"Error during CMEK conversion",
-				fmt.Sprintf("Could not convert CMEK to set: %s", diags.Errors()),
-			)
-			tflog.Debug(ctx, "error during CMEK conversion", map[string]interface{}{
-				"snapshotBackup": snapshotBackup,
-				"cmekObjs":       cmekObjs,
-			})
-			return
-		}
+			crossRegionCopyObjs := make([]basetypes.ObjectValue, 0)
+			for _, region := range snapshotBackup.CrossRegionCopies {
+				crossRegionCopy := providerschema.NewCrossRegionCopy(region)
+				crossRegionCopyObj, diags := types.ObjectValueFrom(ctx, crossRegionCopy.AttributeTypes(), crossRegionCopy)
+				if diags.HasError() {
+					resp.Diagnostics.AddError(
+						"Error during cross region copy conversion",
+						fmt.Sprintf("Could not convert cross region copy to object: %s", diags.Errors()),
+					)
+					tflog.Debug(ctx, "error during cross region copy conversion", map[string]interface{}{
+						"snapshotBackup":  snapshotBackup,
+						"crossRegionCopy": region,
+					})
+					return
+				}
+				crossRegionCopyObjs = append(crossRegionCopyObjs, crossRegionCopyObj)
+			}
 
-		crossRegionCopyObjs := make([]basetypes.ObjectValue, 0)
-		for _, region := range snapshotBackup.CrossRegionCopies {
-			crossRegionCopy := providerschema.NewCrossRegionCopy(region)
-			crossRegionCopyObj, diags := types.ObjectValueFrom(ctx, crossRegionCopy.AttributeTypes(), crossRegionCopy)
+			crossRegionCopySet, diags := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: providerschema.CrossRegionCopy{}.AttributeTypes()}, crossRegionCopyObjs)
 			if diags.HasError() {
 				resp.Diagnostics.AddError(
 					"Error during cross region copy conversion",
-					fmt.Sprintf("Could not convert cross region copy to object: %s", diags.Errors()),
+					fmt.Sprintf("Could not convert cross region copy to set: %s", diags.Errors()),
 				)
 				tflog.Debug(ctx, "error during cross region copy conversion", map[string]interface{}{
-					"snapshotBackup":  snapshotBackup,
-					"crossRegionCopy": region,
+					"snapshotBackup":      snapshotBackup,
+					"crossRegionCopyObjs": crossRegionCopyObjs,
 				})
 				return
 			}
-			crossRegionCopyObjs = append(crossRegionCopyObjs, crossRegionCopyObj)
-		}
 
-		crossRegionCopySet, diags := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: providerschema.CrossRegionCopy{}.AttributeTypes()}, crossRegionCopyObjs)
-		if diags.HasError() {
-			resp.Diagnostics.AddError(
-				"Error during cross region copy conversion",
-				fmt.Sprintf("Could not convert cross region copy to set: %s", diags.Errors()),
-			)
-			tflog.Debug(ctx, "error during cross region copy conversion", map[string]interface{}{
-				"snapshotBackup":      snapshotBackup,
-				"crossRegionCopyObjs": crossRegionCopyObjs,
-			})
-			return
-		}
+			newSnapshotBackupData := providerschema.NewSnapshotBackupData(snapshotBackup, snapshotBackup.ID, clusterId, projectId, organizationId, progressObj, serverObj, cmekSet, crossRegionCopySet)
+			state.Data = append(state.Data, newSnapshotBackupData)
 
-		newSnapshotBackupData := providerschema.NewSnapshotBackupData(snapshotBackup, organizationId, projectId, clusterId, snapshotBackup.ID, progressObj, serverObj, cmekSet, crossRegionCopySet)
-		state.Data = append(state.Data, newSnapshotBackupData)
+		}
 	}
 
 	diags = resp.State.Set(ctx, state)
@@ -202,4 +218,26 @@ func (d *SnapshotBackups) Configure(_ context.Context, req datasource.ConfigureR
 		return
 	}
 	d.Data = data
+}
+
+// ValidateConfig checks that if 'name' or 'values' is set in filter block', then both are set.
+func (d *SnapshotBackups) ValidateConfig(
+	ctx context.Context, req datasource.ValidateConfigRequest, resp *datasource.ValidateConfigResponse,
+) {
+	var config providerschema.SnapshotBackups
+	diags := req.Config.Get(ctx, &config)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if config.Filters != nil {
+		if (config.Filters.Name.IsNull() && !config.Filters.Values.IsNull()) ||
+			(!config.Filters.Name.IsNull() && config.Filters.Values.IsNull()) {
+			resp.Diagnostics.AddError(
+				"Invalid Filters Configuration",
+				"Both 'name' and 'values' in filter block must be configured.",
+			)
+		}
+	}
 }
