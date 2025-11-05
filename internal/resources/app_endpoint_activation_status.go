@@ -27,6 +27,8 @@ var (
 )
 
 const errorMessageWhileAppEndpointActivation = "There is an error during switching online/offline the app endpoint. Unexpected error: "
+const AppEndpointStateOnline = "Online"
+const AppEndpointStateOffline = "Offline"
 
 // AppEndpointActivationStatus manages activation status (online/offline) of an App Endpoint.
 type AppEndpointActivationStatus struct {
@@ -349,9 +351,9 @@ func (r *AppEndpointActivationStatus) waitForAppEndpointStatus(ctx context.Conte
 
 // validateAppEndpointState checks if the provided state is either "online" or "offline" and returns an appropriate bool.
 func validateAppEndpointState(state types.String) (bool, error) {
-	if state.ValueString() == "Online" {
+	if state.ValueString() == AppEndpointStateOnline {
 		return true, nil
-	} else if state.ValueString() == "Offline" {
+	} else if state.ValueString() == AppEndpointStateOffline {
 		return false, nil
 	}
 
