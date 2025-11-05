@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/app_endpoints"
@@ -21,7 +22,7 @@ func createAppEndpoint(ctx context.Context, client *api.Client) error {
 		Scopes: app_endpoints.Scopes{
 			"_default": app_endpoints.Scope{
 				Collections: map[string]app_endpoints.Collection{
-					"_default": app_endpoints.Collection{
+					"_default": {
 						AccessControlFunction: "function (doc, oldDoc, meta) {return true;}",
 						ImportFilter:          "function (doc) {return true;}",
 					},
