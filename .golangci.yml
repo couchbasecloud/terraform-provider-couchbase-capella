@@ -3,9 +3,7 @@ version: "2"
 issues:
   max-per-linter: 0
   max-same-issues: 0
-
-run:
-  skip-files:
+  exclude-files:
     - (.+)_test.go
     - internal/testing
 
