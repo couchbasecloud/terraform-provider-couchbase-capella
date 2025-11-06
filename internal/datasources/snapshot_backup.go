@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"slices"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -19,32 +18,32 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ datasource.DataSource              = &SnapshotBackups{}
-	_ datasource.DataSourceWithConfigure = &SnapshotBackups{}
+	_ datasource.DataSource              = &SnapshotBackup{}
+	_ datasource.DataSourceWithConfigure = &SnapshotBackup{}
 )
 
 // SnapshotBackups is the SnapshotBackups data source implementation.
-type SnapshotBackups struct {
+type SnapshotBackup struct {
 	*providerschema.Data
 }
 
-// NewSnapshotBackups is a helper function to simplify the provider implementation.
-func NewSnapshotBackups() datasource.DataSource {
-	return &SnapshotBackups{}
+// NewSnapshotBackup is a helper function to simplify the provider implementation.
+func NewSnapshotBackup() datasource.DataSource {
+	return &SnapshotBackup{}
 }
 
 // Metadata returns the snapshot backup data source type name.
-func (d *SnapshotBackups) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_cloud_snapshot_backups"
+func (d *SnapshotBackup) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_cloud_snapshot_backup"
 }
 
-// Schema defines the schema for the SnapshotBackups data source.
-func (d *SnapshotBackups) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = SnapshotBackupsSchema()
+// Schema defines the schema for the SnapshotBackup data source.
+func (d *SnapshotBackup) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = SnapshotBackupSchema()
 }
 
-func (d *SnapshotBackups) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state providerschema.SnapshotBackups
+func (d *SnapshotBackup) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var state providerschema.SnapshotBackupData
 	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -52,8 +51,9 @@ func (d *SnapshotBackups) Read(ctx context.Context, req datasource.ReadRequest, 
 	}
 
 	organizationId := state.OrganizationId.ValueString()
-	projectId := state.ProjectId.ValueString()
-	clusterId := state.ClusterId.ValueString()
+	projectId := state.ProjectID.ValueString()
+	clusterId := state.ClusterID.ValueString()
+	id := state.ID.ValueString()
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups", d.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
@@ -86,22 +86,11 @@ func (d *SnapshotBackups) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	var names []string
-
-	// Since the list API doesn't implement query parameters useful for filtering,
-	// filtering is done by provider.
-	if state.Filters != nil {
-		diags := state.Filters.Values.ElementsAs(ctx, &names, false)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-
 	for i := range snapshotBackups.Data {
-		snapshotBackup := snapshotBackups.Data[i]
 
-		if slices.Contains(names, string(snapshotBackup.Progress.Status)) || len(names) == 0 {
+		if snapshotBackups.Data[i].ID == id {
+			snapshotBackup := snapshotBackups.Data[i]
+
 			progress := providerschema.NewProgress(snapshotBackup.Progress)
 			progressObj, diags := types.ObjectValueFrom(ctx, progress.AttributeTypes(), progress)
 			if diags.HasError() {
@@ -191,19 +180,21 @@ func (d *SnapshotBackups) Read(ctx context.Context, req datasource.ReadRequest, 
 				})
 				return
 			}
-
-			newSnapshotBackupsData := providerschema.NewSnapshotBackupsData(snapshotBackup, snapshotBackup.ID, clusterId, projectId, organizationId, progressObj, serverObj, cmekSet, crossRegionCopySet)
-			state.Data = append(state.Data, newSnapshotBackupsData)
-
+			newSnapshotBackup := providerschema.NewSnapshotBackupData(snapshotBackup, id, clusterId, projectId, organizationId, progressObj, serverObj, cmekSet, crossRegionCopySet)
+			diags = resp.State.Set(ctx, newSnapshotBackup)
+			resp.Diagnostics.Append(diags...)
+			return
 		}
-	}
 
-	diags = resp.State.Set(ctx, state)
-	resp.Diagnostics.Append(diags...)
+	}
+	resp.Diagnostics.AddError(
+		"Snapshot Backup Not Found",
+		fmt.Sprintf("Snapshot backup with ID %s not found", id),
+	)
 }
 
 // Configure adds the provider configured client to the snapshot backup data source.
-func (d *SnapshotBackups) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *SnapshotBackup) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -218,26 +209,4 @@ func (d *SnapshotBackups) Configure(_ context.Context, req datasource.ConfigureR
 		return
 	}
 	d.Data = data
-}
-
-// ValidateConfig checks that if 'name' or 'values' is set in filter block', then both are set.
-func (d *SnapshotBackups) ValidateConfig(
-	ctx context.Context, req datasource.ValidateConfigRequest, resp *datasource.ValidateConfigResponse,
-) {
-	var config providerschema.SnapshotBackups
-	diags := req.Config.Get(ctx, &config)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if config.Filters != nil {
-		if (config.Filters.Name.IsNull() && !config.Filters.Values.IsNull()) ||
-			(!config.Filters.Name.IsNull() && config.Filters.Values.IsNull()) {
-			resp.Diagnostics.AddError(
-				"Invalid Filters Configuration",
-				"Both 'name' and 'values' in filter block must be configured.",
-			)
-		}
-	}
 }
