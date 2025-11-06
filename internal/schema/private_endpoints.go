@@ -25,6 +25,9 @@ type PrivateEndpoint struct {
 
 	// OrganizationId is the ID of the organization to which the Capella cluster belongs.
 	OrganizationId types.String `tfsdk:"organization_id"`
+
+	// ServiceName is the name of the private endpoint service.
+	ServiceName types.String `tfsdk:"service_name"`
 }
 
 // PrivateEndpoints defines a structure used by the LIST endpoint for private endpoints.
