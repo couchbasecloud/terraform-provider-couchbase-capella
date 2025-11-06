@@ -72,6 +72,10 @@ func (p *PrivateEndpoints) Schema(_ context.Context, _ datasource.SchemaRequest,
 								"* `unrecognized` - The endpoint state cannot be determined\n" +
 								"* `failed` - The endpoint creation or connection attempt failed",
 						},
+						"service_name": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "The name of the private endpoint service.",
+						},
 					},
 				},
 			},
@@ -134,6 +138,7 @@ func (p *PrivateEndpoints) Read(ctx context.Context, req datasource.ReadRequest,
 		endpointData := providerschema.PrivateEndpointData{}
 		endpointData.Id = types.StringValue(e.Id)
 		endpointData.Status = types.StringValue(e.Status)
+		endpointData.ServiceName = types.StringValue(e.ServiceName)
 		state.Data = append(state.Data, endpointData)
 	}
 

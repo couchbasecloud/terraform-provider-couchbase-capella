@@ -41,6 +41,8 @@ type PrivateEndpointData struct {
 	Id types.String `tfsdk:"id"`
 	// Status is the endpoint status.  Possible values are failed, linked, pending, pendingAcceptance, rejected and unrecognized.
 	Status types.String `tfsdk:"status"`
+	// ServiceName is the name of the endpoint service.
+	ServiceName types.String `tfsdk:"service_name"`
 }
 
 // Validate is used to verify that IDs have been properly imported.
