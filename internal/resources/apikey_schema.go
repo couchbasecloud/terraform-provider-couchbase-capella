@@ -32,8 +32,7 @@ func ApiKeySchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "secret", apiKeyBuilder, stringAttribute([]string{optional, computed, sensitive}))
 	capellaschema.AddAttr(attrs, "token", apiKeyBuilder, stringAttribute([]string{computed, sensitive}))
 	capellaschema.AddAttr(attrs, "audit", apiKeyBuilder, computedAuditAttribute())
-
-	attrs["allowed_cidrs"] = &schema.SetAttribute{
+	capellaschema.AddAttr(attrs, "allowed_cidrs", apiKeyBuilder, &schema.SetAttribute{
 		Optional:    true,
 		Computed:    true,
 		ElementType: types.StringType,
@@ -45,9 +44,8 @@ func ApiKeySchema() schema.Schema {
 			setvalidator.SizeAtLeast(1),
 		},
 		Default: setdefault.StaticValue(types.SetValueMust(types.StringType, []attr.Value{types.StringValue("0.0.0.0/0")})),
-	}
-
-	attrs["organization_roles"] = stringSetAttribute(required, requiresReplace)
+	})
+	capellaschema.AddAttr(attrs, "organization_roles", apiKeyBuilder, stringSetAttribute(required, requiresReplace))
 
 	resourceAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(resourceAttrs, "id", apiKeyBuilder, stringAttribute([]string{required}))
@@ -64,10 +62,10 @@ func ApiKeySchema() schema.Schema {
 		},
 	}
 
-	attrs["rotate"] = &schema.NumberAttribute{
+	capellaschema.AddAttr(attrs, "rotate", apiKeyBuilder, &schema.NumberAttribute{
 		Optional: true,
 		Computed: true,
-	}
+	})
 
 	return schema.Schema{
 		MarkdownDescription: "This resource allows you to create and manage API keys in Capella. API keys are used to authenticate and authorize access to Capella resources and services.",
