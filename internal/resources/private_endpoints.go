@@ -69,6 +69,10 @@ func (p *PrivateEndpoint) Schema(_ context.Context, _ resource.SchemaRequest, re
 					"* `unrecognized` - The endpoint state cannot be determined\n" +
 					"* `failed` - The endpoint creation or connection attempt failed",
 			},
+			"service_name": schema.StringAttribute{
+				Computed:            true,
+				MarkdownDescription: "The name of the private endpoint service associated with the operational cluster.",
+			},
 		},
 	}
 }
@@ -299,7 +303,7 @@ func initializePrivateEndpointPlan(plan providerschema.PrivateEndpoint) provider
 
 // getPrivateEndpointState morphs private endpoint status to terraform schema.
 func (p *PrivateEndpoint) getPrivateEndpointState(ctx context.Context, organizationId, projectId, clusterId, endpointId string) (*providerschema.PrivateEndpoint, error) {
-	status, err := p.getPrivateEndpointStatus(ctx, organizationId, projectId, clusterId, endpointId)
+	status, serviceName, err := p.getPrivateEndpointStatus(ctx, organizationId, projectId, clusterId, endpointId)
 	if err != nil {
 		return nil, err
 	}
@@ -310,6 +314,7 @@ func (p *PrivateEndpoint) getPrivateEndpointState(ctx context.Context, organizat
 		ClusterId:      types.StringValue(clusterId),
 		ProjectId:      types.StringValue(projectId),
 		OrganizationId: types.StringValue(organizationId),
+		ServiceName:    types.StringValue(serviceName),
 	}
 
 	return &state, nil
@@ -317,7 +322,7 @@ func (p *PrivateEndpoint) getPrivateEndpointState(ctx context.Context, organizat
 
 // There is currently no V4 endpoint to get a single private endpoint.  We have to loop through the entire list to find
 // the desired private endpoint.
-func (p *PrivateEndpoint) getPrivateEndpointStatus(ctx context.Context, organizationId, projectId, clusterId, endpointId string) (string, error) {
+func (p *PrivateEndpoint) getPrivateEndpointStatus(ctx context.Context, organizationId, projectId, clusterId, endpointId string) (string, string, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/privateEndpointService/endpoints", p.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := p.ClientV1.ExecuteWithRetry(
@@ -328,20 +333,20 @@ func (p *PrivateEndpoint) getPrivateEndpointStatus(ctx context.Context, organiza
 		nil,
 	)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	privateEndpointsResp := api.GetPrivateEndpointsResponse{}
 	err = json.Unmarshal(response.Body, &privateEndpointsResp)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	for _, e := range privateEndpointsResp.Endpoints {
 		if e.Id == endpointId {
-			return e.Status, nil
+			return e.Status, e.ServiceName, nil
 		}
 	}
 
-	return "", errors.ErrNotFound
+	return "", "", errors.ErrNotFound
 }

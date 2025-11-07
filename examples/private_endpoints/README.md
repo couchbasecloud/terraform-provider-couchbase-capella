@@ -23,14 +23,7 @@ Command: `terraform apply`
 Sample Output:
 ```
 terraform apply
-╷
-│ Warning: Provider development overrides are in effect
-│
-│ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/$USER/GolandProjects/terraform-provider-couchbase-capella/bin
-│
-│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
-╵
+
 data.couchbase-capella_private_endpoints.list_endpoints: Reading...
 data.couchbase-capella_private_endpoints.list_endpoints: Read complete after 1s
 
@@ -56,27 +49,8 @@ Changes to Outputs:
       + data            = [
           + {
               + id     = "vpce-1"
-              + status = "rejected"
-            },
-          + {
-              + id     = "vpce-2"
-              + status = "rejected"
-            },
-          + {
-              + id     = "vpce-3"
-              + status = "rejected"
-            },
-          + {
-              + id     = "vpce-4"
-              + status = "rejected"
-            },
-          + {
-              + id     = "vpce-5"
-              + status = "rejected"
-            },
-          + {
-              + id     = "vpce-6"
-              + status = "rejected"
+              + service_name = "com.amazonaws.vpce.us-east-1.vpce-svc-11223344556677aab"
+              + status = "pendingAcceptance"
             },
         ]
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
@@ -89,10 +63,8 @@ Do you want to perform these actions?
 
   Enter a value: yes
 
-couchbase-capella_private_endpoints.accept_endpoint: Creating...
-couchbase-capella_private_endpoints.accept_endpoint: Creation complete after 1s
 
-Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
 
 Outputs:
 
@@ -100,33 +72,15 @@ list_endpoints = {
   "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "data" = tolist([
     {
-      "id" = "vpce-1"
-      "status" = "rejected"
-    },
-    {
-      "id" = "vpce-2"
-      "status" = "rejected"
-    },
-    {
-      "id" = "vpce-3"
-      "status" = "rejected"
-    },
-    {
-      "id" = "vpce-4"
-      "status" = "rejected"
-    },
-    {
-      "id" = "vpce-5"
-      "status" = "rejected"
-    },
-    {
-      "id" = "vpce-6"
-      "status" = "rejected"
+      "id"           = "vpce-1"
+      "service_name" = "com.amazonaws.vpce.us-east-1.vpce-svc-11223344556677aab"
+      "status"       = "pendingAcceptance"
     },
   ])
   "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
 }
+
 ```
 
 ## DELETE
@@ -168,28 +122,9 @@ Changes to Outputs:
       - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       - data            = [
           - {
-              - id     = "vpce-1"
-              - status = "rejected"
-            },
-          - {
-              - id     = "vpce-2"
-              - status = "rejected"
-            },
-          - {
-              - id     = "vpce-3"
-              - status = "rejected"
-            },
-          - {
-              - id     = "vpce-4"
-              - status = "rejected"
-            },
-          - {
-              - id     = "vpce-5"
-              - status = "rejected"
-            },
-          - {
-              - id     = "6"
-              - status = "rejected"
+              - id           = "vpce-1"
+              - service_name = "com.amazonaws.vpce.us-east-1.vpce-svc-11223344556677aab"
+              - status       = "pendingAcceptance"
             },
         ]
       - organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
@@ -209,6 +144,8 @@ Apply complete! Resources: 0 added, 0 changed, 1 destroyed.
 ```
 
 ## IMPORT
+
+The private endpoints resource can be imported using the following example command.
 
 Command: `terraform import couchbase-capella_private_endpoint_service.new_service endpoint_id=<endpoint_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
