@@ -191,6 +191,7 @@ func (a *AppServiceCidr) getAllowedCIDR(ctx context.Context, organizationId, pro
 			return &allowlist, nil
 		}
 	}
+
 	return nil, errors.ErrNotFound
 }
 
@@ -252,7 +253,7 @@ func (a *AppServiceCidr) Read(ctx context.Context, req resource.ReadRequest, res
 
 	// refresh the existing allow list
 	refreshedState, err := a.refreshAllowedCIDR(ctx, organizationId, projectId, clusterId, appServiceId, allowedCIDRId)
-	if err != errors.ErrNotFound {
+	if err == errors.ErrNotFound {
 		tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
 		resp.State.RemoveResource(ctx)
 		return
