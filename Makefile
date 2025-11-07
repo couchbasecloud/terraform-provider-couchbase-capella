@@ -11,7 +11,7 @@ GITTAG=$(shell git describe --tags --abbrev=0)
 VERSION=$(GITTAG:v%=%)
 LINKER_FLAGS=-s -w -X 'github.com/couchbasecloud/terraform-provider-couchbase-capella/version.ProviderVersion=${VERSION}'
 
-GOLANGCI_VERSION=v1.55.2
+GOLANGCI_VERSION=v1.64.8
 
 export PATH := $(shell go env GOPATH)/bin:$(PATH)
 export SHELL := env PATH=$(PATH) /bin/bash
@@ -82,7 +82,7 @@ gen-api: ## Generate OpenAPI client into internal/generated/api
 .PHONT: build-docs
 build-docs:
 	go get github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
-	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --examples-dir ./examples
+	CAPELLA_OPENAPI_SPEC_PATH="$(shell pwd)/openapi.generated.yaml" go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --examples-dir ./examples
 
 .PHONY: terraform-check tfcheck
 tfcheck: terraform-check
@@ -101,7 +101,7 @@ TEST_FLAGS ?= -short -cover -race -coverprofile .testCoverage.txt
 # this is for unit tests
 .PHONY: test
 test:
-	go test $(TEST_FILES) $(TEST_FLAGS)
+	CAPELLA_OPENAPI_SPEC_PATH=$(PWD)/openapi.generated.yaml go test $(TEST_FILES) $(TEST_FLAGS)
 
 .PHONY: test-acceptance testacc
 testacc: test-acceptance

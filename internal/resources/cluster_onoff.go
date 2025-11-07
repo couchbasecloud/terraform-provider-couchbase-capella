@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -15,7 +16,7 @@ import (
 	cluster_onoff_api "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	cluster_api "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
 
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	internal_errors "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
@@ -156,7 +157,7 @@ func (c *ClusterOnOffOnDemand) manageClusterActivation(ctx context.Context, stat
 	case "off":
 		method = http.MethodDelete
 	default:
-		return fmt.Errorf("invalid state value: state must be either 'on' or 'off'")
+		return errors.New("invalid state value: state must be either 'on' or 'off'")
 	}
 
 	cfg := cluster_onoff_api.EndpointCfg{Url: url, Method: method, SuccessStatus: http.StatusAccepted}
@@ -168,7 +169,7 @@ func (c *ClusterOnOffOnDemand) manageClusterActivation(ctx context.Context, stat
 		nil,
 	)
 	if err != nil {
-		return fmt.Errorf(errorMessageWhileClusterOnOffCreation + cluster_onoff_api.ParseError(err))
+		return errors.New(errorMessageWhileClusterOnOffCreation + cluster_onoff_api.ParseError(err))
 	}
 	return nil
 }
@@ -184,16 +185,16 @@ func initializeClusterOnOffWithPlan(plan providerschema.ClusterOnOffOnDemand) pr
 
 func (c *ClusterOnOffOnDemand) validateClusterOnOffRequest(plan providerschema.ClusterOnOffOnDemand) error {
 	if plan.OrganizationId.IsNull() {
-		return errors.ErrOrganizationIdCannotBeEmpty
+		return internal_errors.ErrOrganizationIdCannotBeEmpty
 	}
 	if plan.ProjectId.IsNull() {
-		return errors.ErrProjectIdCannotBeEmpty
+		return internal_errors.ErrProjectIdCannotBeEmpty
 	}
 	if plan.ClusterId.IsNull() {
-		return errors.ErrClusterIdCannotBeEmpty
+		return internal_errors.ErrClusterIdCannotBeEmpty
 	}
 	if plan.State.IsNull() {
-		return errors.ErrOnoffStateCannotBeEmpty
+		return internal_errors.ErrOnoffStateCannotBeEmpty
 	}
 	return nil
 }

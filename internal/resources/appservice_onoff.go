@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -14,7 +15,7 @@ import (
 
 	app_service_onoff_api "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	apps_service_api "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/appservice"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	internal_errors "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
@@ -159,26 +160,26 @@ func (a *AppServiceOnOffOnDemand) manageAppServiceActivation(ctx context.Context
 		nil,
 	)
 	if err != nil {
-		return fmt.Errorf(errorMessageWhileAppServiceOnOffCreation + app_service_onoff_api.ParseError(err))
+		return errors.New(errorMessageWhileAppServiceOnOffCreation + app_service_onoff_api.ParseError(err))
 	}
 	return nil
 }
 
 func (a *AppServiceOnOffOnDemand) validateAppServiceOnOffRequest(plan providerschema.AppServiceOnOffOnDemand) error {
 	if plan.OrganizationId.IsNull() {
-		return errors.ErrOrganizationIdCannotBeEmpty
+		return internal_errors.ErrOrganizationIdCannotBeEmpty
 	}
 	if plan.ProjectId.IsNull() {
-		return errors.ErrProjectIdCannotBeEmpty
+		return internal_errors.ErrProjectIdCannotBeEmpty
 	}
 	if plan.ClusterId.IsNull() {
-		return errors.ErrClusterIdCannotBeEmpty
+		return internal_errors.ErrClusterIdCannotBeEmpty
 	}
 	if plan.AppServiceId.IsNull() {
-		return errors.ErrAppServiceIdCannotBeEmpty
+		return internal_errors.ErrAppServiceIdCannotBeEmpty
 	}
 	if plan.State.IsNull() {
-		return errors.ErrOnoffStateCannotBeEmpty
+		return internal_errors.ErrOnoffStateCannotBeEmpty
 	}
 	return nil
 }

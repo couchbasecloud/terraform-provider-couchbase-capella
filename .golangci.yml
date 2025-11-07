@@ -1,13 +1,6 @@
-version: 2
-
 issues:
-  max-per-linter: 0
-  max-same-issues: 0
-
-run:
-  skip-files:
-    - (.+)_test.go
-    - internal/testing
+  exclude-files:
+    - "(.+)_test.go"
 
 linters:
   disable-all: true
