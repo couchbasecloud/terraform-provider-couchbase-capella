@@ -2,35 +2,43 @@ package resources
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+
+	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
+var userBuilder = capellaschema.NewSchemaBuilder("user")
+
 func UserSchema() schema.Schema {
+	attrs := make(map[string]schema.Attribute)
+
+	capellaschema.AddAttr(attrs, "id", userBuilder, stringAttribute([]string{computed}))
+	capellaschema.AddAttr(attrs, "name", userBuilder, stringAttribute([]string{optional, computed}))
+	capellaschema.AddAttr(attrs, "status", userBuilder, stringAttribute([]string{computed}))
+	capellaschema.AddAttr(attrs, "inactive", userBuilder, boolAttribute(computed))
+	capellaschema.AddAttr(attrs, "email", userBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "organization_id", userBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "organization_roles", userBuilder, stringListAttribute(required))
+	capellaschema.AddAttr(attrs, "last_login", userBuilder, stringAttribute([]string{computed}))
+	capellaschema.AddAttr(attrs, "region", userBuilder, stringAttribute([]string{computed}))
+	capellaschema.AddAttr(attrs, "time_zone", userBuilder, stringAttribute([]string{computed}))
+	capellaschema.AddAttr(attrs, "enable_notifications", userBuilder, boolAttribute(computed))
+	capellaschema.AddAttr(attrs, "expires_at", userBuilder, stringAttribute([]string{computed}))
+	capellaschema.AddAttr(attrs, "audit", userBuilder, computedAuditAttribute())
+
+	resourceAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(resourceAttrs, "type", userBuilder, stringDefaultAttribute("project", optional, computed))
+	capellaschema.AddAttr(resourceAttrs, "id", userBuilder, stringAttribute([]string{required}))
+	capellaschema.AddAttr(resourceAttrs, "roles", userBuilder, stringSetAttribute(required))
+
+	capellaschema.AddAttr(attrs, "resources", userBuilder, &schema.SetNestedAttribute{
+		Optional: true,
+		NestedObject: schema.NestedAttributeObject{
+			Attributes: resourceAttrs,
+		},
+	})
+
 	return schema.Schema{
 		MarkdownDescription: "This User resource allows you to manage users in your Capella organization. You can create, update, and delete users, as well as manage their roles and permissions within the organization.",
-		Attributes: map[string]schema.Attribute{
-			"id":                   WithDescription(stringAttribute([]string{computed}), "The UUID of the user created."),
-			"name":                 WithDescription(stringAttribute([]string{optional, computed}), "The name of the user."),
-			"status":               WithDescription(stringAttribute([]string{computed}), "Depicts the user's status by determining whether they are verified or not. It can be one of the following values: verified, not-verified, pending-primary."),
-			"inactive":             WithDescription(boolAttribute(computed), "Inactive depicts whether the user has accepted the invite for the organization."),
-			"email":                WithDescription(stringAttribute([]string{required, requiresReplace}), "Email of the user."),
-			"organization_id":      WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the organization."),
-			"organization_roles":   WithDescription(stringListAttribute(required), "The organization roles associated to the user. They determines the privileges user possesses in the organization."),
-			"last_login":           WithDescription(stringAttribute([]string{computed}), "Time(UTC) at which user last logged in."),
-			"region":               WithDescription(stringAttribute([]string{computed}), "The region of the user."),
-			"time_zone":            WithDescription(stringAttribute([]string{computed}), "The time zone of the user."),
-			"enable_notifications": WithDescription(boolAttribute(computed), "After enabling email notifications for your account, you will start receiving email notification alerts from all databases in projects you are a part of."),
-			"expires_at":           WithDescription(stringAttribute([]string{computed}), "Time at which the user expires."),
-			"resources": schema.SetNestedAttribute{
-				Optional: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"type":  WithDescription(stringDefaultAttribute("project", optional, computed), "Resource type."),
-						"id":    WithDescription(stringAttribute([]string{required}), "The GUID4 ID of the project."),
-						"roles": WithDescription(stringSetAttribute(required), "The project roles associated with the user."),
-					},
-				},
-			},
-			"audit": computedAuditAttribute(),
-		},
+		Attributes:          attrs,
 	}
 }
