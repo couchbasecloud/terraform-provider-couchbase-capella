@@ -2,25 +2,19 @@ package resources
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-
-	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
-
-var appEndpointActivationStatusBuilder = capellaschema.NewSchemaBuilder("appEndpointActivationStatus")
 
 // AppEndpointActivationStatusSchema defines the schema for the App Endpoint activation status resource.
 func AppEndpointActivationStatusSchema() schema.Schema {
-	attrs := make(map[string]schema.Attribute)
-
-	capellaschema.AddAttr(attrs, "organization_id", appEndpointActivationStatusBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "project_id", appEndpointActivationStatusBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "cluster_id", appEndpointActivationStatusBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "app_service_id", appEndpointActivationStatusBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "app_endpoint_name", appEndpointActivationStatusBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "state", appEndpointActivationStatusBuilder, stringAttribute([]string{required}))
-
 	return schema.Schema{
 		MarkdownDescription: "Manages the activation status of an App Endpoint. This resource is used to activate or deactivate an App Endpoint on-demand.",
-		Attributes:          attrs,
+		Attributes: map[string]schema.Attribute{
+			"organization_id":   WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the organization."),
+			"project_id":        WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the project."),
+			"cluster_id":        WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the cluster."),
+			"app_service_id":    WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the app service."),
+			"app_endpoint_name": WithDescription(stringAttribute([]string{required, requiresReplace}), "The name of the app endpoint."),
+			"state":             WithDescription(stringAttribute([]string{required}), "The current state of the app endpoint. Valid values are `Online` and `Offline`. The provider may set other values on refresh based on remote state."),
+		},
 	}
 }

@@ -6,36 +6,30 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-
-	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
-
-var corsBuilder = capellaschema.NewSchemaBuilder("cors")
 
 // CorsSchema returns the schema for the CORS resource.
 func CorsSchema() schema.Schema {
-	attrs := make(map[string]schema.Attribute)
-
-	capellaschema.AddAttr(attrs, "organization_id", corsBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
-	capellaschema.AddAttr(attrs, "project_id", corsBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
-	capellaschema.AddAttr(attrs, "cluster_id", corsBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
-	capellaschema.AddAttr(attrs, "app_service_id", corsBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
-	capellaschema.AddAttr(attrs, "app_endpoint_name", corsBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
-	capellaschema.AddAttr(attrs, "login_origin", corsBuilder, stringSetAttribute(optional))
-	capellaschema.AddAttr(attrs, "headers", corsBuilder, stringSetAttribute(optional))
-	capellaschema.AddAttr(attrs, "max_age", corsBuilder, int64Attribute(optional, computed))
-	capellaschema.AddAttr(attrs, "disabled", corsBuilder, boolAttribute(optional, computed))
-
-	attrs["origin"] = &schema.SetAttribute{
-		ElementType: types.StringType,
-		Required:    true,
-		Validators: []validator.Set{
-			setvalidator.SizeAtLeast(1),
-		},
-	}
-
 	return schema.Schema{
 		MarkdownDescription: "Manages CORS (Cross-Origin Resource Sharing) configuration for App Endpoints in Couchbase Capella.",
-		Attributes:          attrs,
+		Attributes: map[string]schema.Attribute{
+			"organization_id":   WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The ID of the Capella organization."),
+			"project_id":        WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The ID of the Capella project."),
+			"cluster_id":        WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The ID of the Capella cluster."),
+			"app_service_id":    WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The ID of the Capella App Service."),
+			"app_endpoint_name": WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The name of the App Endpoint."),
+			"origin": schema.SetAttribute{
+				ElementType: types.StringType,
+				Required:    true,
+				Validators: []validator.Set{
+					setvalidator.SizeAtLeast(1),
+				},
+				MarkdownDescription: "Set of allowed origins for CORS. Use ['*'] to allow access from everywhere.",
+			},
+			"login_origin": WithDescription(stringSetAttribute(optional), "Set of allowed login origins for CORS."),
+			"headers":      WithDescription(stringSetAttribute(optional), "Set of allowed headers for CORS."),
+			"max_age":      WithDescription(int64Attribute(optional, computed), "Specifies the duration (in seconds) for which the results of a preflight request can be cached."),
+			"disabled":     WithDescription(boolAttribute(optional, computed), "Indicates whether CORS is disabled."),
+		},
 	}
 }

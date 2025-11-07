@@ -2,34 +2,28 @@ package resources
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-
-	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-var backupScheduleBuilder = capellaschema.NewSchemaBuilder("backupSchedule")
-
 func BackupScheduleSchema() schema.Schema {
-	attrs := make(map[string]schema.Attribute)
-
-	capellaschema.AddAttr(attrs, "organization_id", backupScheduleBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "project_id", backupScheduleBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "cluster_id", backupScheduleBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "bucket_id", backupScheduleBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "type", backupScheduleBuilder, stringAttribute([]string{required, requiresReplace}))
-
-	attrs["weekly_schedule"] = schema.SingleNestedAttribute{
-		Required: true,
-		Attributes: map[string]schema.Attribute{
-			"day_of_week":              stringAttribute([]string{required}),
-			"start_at":                 int64Attribute(required),
-			"incremental_every":        int64Attribute(required),
-			"retention_time":           stringAttribute([]string{required}),
-			"cost_optimized_retention": boolAttribute(required),
-		},
-	}
-
 	return schema.Schema{
 		MarkdownDescription: "Manages the backup schedule resource associated with a bucket for an operational cluster.",
-		Attributes:          attrs,
+		Attributes: map[string]schema.Attribute{
+			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the organization."),
+			"project_id":      WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the project."),
+			"cluster_id":      WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the cluster."),
+			"bucket_id":       WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the bucket."),
+			"type":            WithDescription(stringAttribute([]string{required, requiresReplace}), "Type of the backup schedule."),
+			"weekly_schedule": schema.SingleNestedAttribute{
+				Required:            true,
+				MarkdownDescription: "Schedule a full backup once a week with regular incrementals.",
+				Attributes: map[string]schema.Attribute{
+					"day_of_week":              WithDescription(stringAttribute([]string{required}), "Day of the week for the backup. Values can be \"sunday\", \"monday\", \"tuesday\", \"wednesday\", \"thursday\", \"friday\", or \"saturday\""),
+					"start_at":                 WithDescription(int64Attribute(required), "The starting hour (in 24-Hour format). Integer value between 0 and 23."),
+					"incremental_every":        WithDescription(int64Attribute(required), "Interval in hours for incremental backup. Integer value between 1 and 24."),
+					"retention_time":           WithDescription(stringAttribute([]string{required}), "Retention time in days. For example: 30days, 1year, 5years."),
+					"cost_optimized_retention": WithDescription(boolAttribute(required), "Optimize backup retention to reduce total cost of ownership (TCO). This gives the option to keep all but the last backup cycle of the month for thirty days; the last cycle will be kept for the defined retention period."),
+				},
+			},
+		},
 	}
 }
