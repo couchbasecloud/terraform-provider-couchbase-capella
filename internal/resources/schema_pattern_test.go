@@ -49,7 +49,6 @@ func TestAllSchemasUseAddAttrPattern(t *testing.T) {
 		"sample_bucket_schema.go":                        true,
 		"scope_schema.go":                                true,
 		"database_credential_schema.go":                  true,
-		"user_schema.go":                                 true,
 		"cluster_onoff_schedule_schema.go":               true,
 		"network_peer_schema.go":                         true,
 		"gsi_schema.go":                                  true,
@@ -171,7 +170,6 @@ func TestNoLegacyFilesRemaining(t *testing.T) {
 		"sample_bucket_schema.go",
 		"scope_schema.go",
 		"database_credential_schema.go",
-		"user_schema.go",
 		"cluster_onoff_schedule_schema.go",
 		"network_peer_schema.go",
 		"gsi_schema.go",
@@ -188,6 +186,7 @@ func TestNoLegacyFilesRemaining(t *testing.T) {
 		"audit_log_export_schema.go",
 		"backup_schedule_schema.go",
 		"allowlist_schema.go",
+		"user_schema.go",
 	}
 
 	if len(notYetMigrated) > 0 {
