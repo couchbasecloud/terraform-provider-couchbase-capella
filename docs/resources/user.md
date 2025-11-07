@@ -46,6 +46,9 @@ resource "couchbase-capella_user" "new_user" {
 ### Optional
 
 - `name` (String) The name of the user.
+
+**Constraints:**
+  - Maximum length: 128 characters
 - `resources` (Attributes Set) (see [below for nested schema](#nestedatt--resources))
 
 ### Read-Only

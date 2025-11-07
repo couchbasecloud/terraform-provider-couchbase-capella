@@ -28,7 +28,7 @@ resource "couchbase-capella_audit_log_settings" "new_auditlogsettings" {
 
 ### Required
 
-- `cluster_id` (String) The GUID4 ID of the cluster to configure audit log settings.
+- `cluster_id` (String) The GUID4 ID of the cluster.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 

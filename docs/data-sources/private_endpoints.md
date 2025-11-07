@@ -39,6 +39,7 @@ data "couchbase-capella_private_endpoints" "list_endpoints" {
 Read-Only:
 
 - `id` (String) The unique identifier of the private endpoint.
+- `service_name` (String) The name of the private endpoint service.
 - `status` (String) The current status of the private endpoint. Possible values are:
 * `pending` - The endpoint creation is in progress
 * `pendingAcceptance` - The endpoint is waiting for acceptance from Capella

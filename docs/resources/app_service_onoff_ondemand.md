@@ -27,7 +27,7 @@ resource "couchbase-capella_app_service_onoff_ondemand" "new_app_service_onoff_o
 
 ### Required
 
-- `app_service_id` (String) The GUID4 ID of the app service.
+- `app_service_id` (String) The GUID4 ID of the appService.
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.

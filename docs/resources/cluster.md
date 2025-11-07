@@ -60,7 +60,10 @@ resource "couchbase-capella_cluster" "new_cluster" {
 
 - `availability` (Attributes) Availability configuration for the cluster. (see [below for nested schema](#nestedatt--availability))
 - `cloud_provider` (Attributes) The Cloud Service Provider where the cluster will be hosted. (see [below for nested schema](#nestedatt--cloud_provider))
-- `name` (String) The name of the cluster (up to 256 characters).
+- `name` (String) Name of the cluster (up to 256 characters).
+
+**Constraints:**
+  - Maximum length: 256 characters
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 - `service_groups` (Attributes Set) Configuration for the Service Groups in the cluster. Each Service Group represents a set of nodes with the same configuration. (see [below for nested schema](#nestedatt--service_groups))
@@ -71,18 +74,43 @@ resource "couchbase-capella_cluster" "new_cluster" {
 - `configuration_type` (String, Deprecated) The configuration type of the cluster. This field is deprecated.
 - `couchbase_server` (Attributes) Configuration for the Couchbase Server running on the cluster. (see [below for nested schema](#nestedatt--couchbase_server))
 - `description` (String) Description of the cluster (up to 1024 characters).
+
+**Constraints:**
+  - Maximum length: 1024 characters
 - `enable_private_dns_resolution` (Boolean) EnablePrivateDNSResolution signals that the cluster should have hostnames that are hosted in a public DNS zone that resolve to a private DNS address. This exists to support the use case of customers connecting from their own data centers where it is not possible to make use of a Cloud Service Provider DNS zone.
-- `if_match` (String) The If-Match header value used for optimistic concurrency control.
+- `if_match` (String) A precondition header that specifies the entity tag of a resource.
 - `zones` (Set of String) The Cloud Services Provider's availability zones for the cluster.For single availability zone clusters, only 1 zone is allowed in list.
 
 ### Read-Only
 
-- `app_service_id` (String) The ID of the App Service associated with this cluster.
+- `app_service_id` (String) The GUID4 ID of the appService.
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
-- `connection_string` (String) The connection string to use to connect to the cluster.
-- `current_state` (String) The current state of the cluster.
-- `etag` (String) The ETag header value returned by the server, used for optimistic concurrency control.
-- `id` (String) The ID of the operational cluster.
+- `connection_string` (String) ConnectionString specifies the Capella database endpoint for your client connection.
+- `current_state` (String) **Valid Values:**
+  - `draft`
+  - `deploying`
+  - `scaling`
+  - `upgrading`
+  - `rebalancing`
+  - `peering`
+  - `destroying`
+  - `healthy`
+  - `degraded`
+  - `turnedOff`
+  - `turningOff`
+  - `turningOn`
+  - `deploymentFailed`
+  - `scaleFailed`
+  - `upgradeFailed`
+  - `rebalanceFailed`
+  - `peeringFailed`
+  - `destroyFailed`
+  - `offline`
+  - `turningOffFailed`
+  - `turningOnFailed`
+- `etag` (String) Entity tag for the resource, used for caching and conditional requests.
+- `id` (String) The ID of the cluster created.
+**Format:** UUID (GUID4)
 
 <a id="nestedatt--availability"></a>
 ### Nested Schema for `availability`

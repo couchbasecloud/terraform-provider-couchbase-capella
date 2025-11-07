@@ -33,6 +33,7 @@ resource "couchbase-capella_private_endpoints" "accept_endpoint" {
 
 ### Read-Only
 
+- `service_name` (String) The name of the private endpoint service associated with the operational cluster.
 - `status` (String) The current status of the private endpoint. Possible values are:
 * `pending` - The endpoint creation is in progress
 * `pendingAcceptance` - The endpoint is waiting for acceptance from Capella
