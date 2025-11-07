@@ -266,7 +266,15 @@ func (s *SnapshotBackup) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	if !plan.RestoreTimes.IsNull() && !state.RestoreTimes.IsUnknown() {
-		if state.RestoreTimes.IsNull() {
+		planRestoreTimes := plan.RestoreTimes.ValueBigFloat()
+		if !state.RestoreTimes.IsNull() && planRestoreTimes.Cmp(state.RestoreTimes.ValueBigFloat()) == -1 {
+			resp.Diagnostics.AddError(
+				"Error restoring backup",
+				"Could not restore backup id "+state.ID.String()+": plan restore times value is not greater than state restore times value",
+			)
+			return
+		}
+		if state.RestoreTimes.IsNull() || planRestoreTimes.Cmp(state.RestoreTimes.ValueBigFloat()) == 1 {
 			err = s.restoreSnapshotBackup(ctx, organizationId, projectId, clusterId, Id, providerschema.ConvertStringValueList(plan.CrossRegionRestorePreference))
 			if err != nil {
 				resp.Diagnostics.AddError(
@@ -274,25 +282,6 @@ func (s *SnapshotBackup) Update(ctx context.Context, req resource.UpdateRequest,
 					"Could not restore snapshot backup id "+state.ID.String()+": "+err.Error(),
 				)
 				return
-			}
-		} else {
-			planRestoreTimes := *plan.RestoreTimes.ValueBigFloat()
-			stateRestoreTimes := *state.RestoreTimes.ValueBigFloat()
-			if planRestoreTimes.Cmp(&stateRestoreTimes) == -1 {
-				resp.Diagnostics.AddError(
-					"Error restoring backup",
-					"Could not restore backup id "+state.ID.String()+": plan restore times value is not greater than state restore times value",
-				)
-				return
-			} else if planRestoreTimes.Cmp(&stateRestoreTimes) == 1 {
-				err = s.restoreSnapshotBackup(ctx, organizationId, projectId, clusterId, Id, providerschema.ConvertStringValueList(plan.CrossRegionRestorePreference))
-				if err != nil {
-					resp.Diagnostics.AddError(
-						"Error restoring snapshot backup",
-						"Could not restore snapshot backup id "+state.ID.String()+": "+err.Error(),
-					)
-					return
-				}
 			}
 		}
 	}
