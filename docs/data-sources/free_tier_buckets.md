@@ -56,7 +56,6 @@ Read-Only:
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 - `stats` (Attributes) Bucket statistics. (see [below for nested schema](#nestedatt--data--stats))
-- `vbuckets` (Number) Number of vbuckets for the bucket. This is only configurable on Magma buckets for Couchbase 8.0 and above.  This requires provider version 1.5.4 or later.
 
 <a id="nestedatt--data--stats"></a>
 ### Nested Schema for `data.stats`

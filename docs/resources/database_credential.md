@@ -37,19 +37,7 @@ resource "couchbase-capella_database_credential" "new_database_credential" {
 
 - `access` (Attributes Set) Describes the access information of the database credential. (see [below for nested schema](#nestedatt--access))
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `name` (String) Username for the database credential. The name should adhere to the following rules:
-
-1. The name must be between 2 & 128 characters.
-
-2. The name cannot contain spaces.
-
-3. The name cannot contain the following characters - `) ( > < , ; : " \ / ] [ ? = } {`
-
-4. The name cannot begin with `@` character.
-
-**Constraints:**
-  - Minimum length: 2 characters
-  - Maximum length: 128 characters
+- `name` (String) Username for the database credential.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
@@ -61,7 +49,6 @@ resource "couchbase-capella_database_credential" "new_database_credential" {
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
 - `id` (String) The ID of the database credential created.
-**Format:** UUID (GUID4)
 
 <a id="nestedatt--access"></a>
 ### Nested Schema for `access`

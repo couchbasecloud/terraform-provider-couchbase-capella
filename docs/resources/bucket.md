@@ -51,7 +51,6 @@ resource "couchbase-capella_bucket" "new_bucket" {
 - `storage_backend` (String) The bucket storage engine type (Magma or Couchstore).
 - `time_to_live_in_seconds` (Number) Time-to-live (TTL) for items in the bucket, in seconds.
 - `type` (String) The bucket type (couchbase or ephemeral).
-- `vbuckets` (Number) Number of vbuckets for the bucket. This value cannot be changed.  This is only configurable on Magma buckets for Couchbase 8.0 and above.  This requires provider version 1.5.4 or later.
 
 ### Read-Only
 

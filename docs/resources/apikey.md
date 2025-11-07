@@ -29,14 +29,14 @@ resource "couchbase-capella_apikey" "new_apikey" {
 
 ### Required
 
-- `name` (String)
+- `name` (String) Name of the API key.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `organization_roles` (Set of String)
 
 ### Optional
 
 - `allowed_cidrs` (Set of String) List of inbound CIDRs for the API key. The system making a request must come from one of the allowed CIDRs.
-- `description` (String)
+- `description` (String) Description for the API key.
 - `expiry` (Number) Expiry of the API key in number of days. If set to -1, the token will not expire.
 - `resources` (Attributes Set) Resources are the resource level permissions associated with the API key. (see [below for nested schema](#nestedatt--resources))
 - `rotate` (Number)
@@ -45,7 +45,7 @@ resource "couchbase-capella_apikey" "new_apikey" {
 ### Read-Only
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
-- `id` (String) The ID of this resource.
+- `id` (String) The ID (Access key) of the API key.
 - `token` (String, Sensitive) The Token is a confidential piece of information that is used to authorize requests made to v4 endpoints.
 
 <a id="nestedatt--resources"></a>

@@ -73,8 +73,8 @@ resource "couchbase-capella_network_peer" "new_network_peer" {
 
 ### Required
 
-- `cluster_id` (String) The GUID4 ID of the cluster.
-- `name` (String)
+- `cluster_id` (String) The GUID4 ID of the cluster to set up network peering.
+- `name` (String) The name of the network peering relationship.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 - `provider_config` (Attributes) The Cloud Service Provider's specific configuration for the network peering. The 'accountId', 'vpcId', 'region', and 'cidr' fields are required for AWS VPC peering. For GCP, the 'networkName', 'projectId', 'serviceAccount', and 'cidr' fields are required for VPC peering. (see [below for nested schema](#nestedatt--provider_config))
@@ -84,7 +84,7 @@ resource "couchbase-capella_network_peer" "new_network_peer" {
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
 - `commands` (Set of String) The list of commands required to set up network peering.
-- `id` (String) The ID of this resource.
+- `id` (String) The unique identifier for the network peering record.
 - `status` (Attributes) Current status of the network peering connection. (see [below for nested schema](#nestedatt--status))
 
 <a id="nestedatt--provider_config"></a>

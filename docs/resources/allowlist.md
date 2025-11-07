@@ -29,9 +29,9 @@ resource "couchbase-capella_allowlist" "new_allowlist" {
 ### Required
 
 - `cidr` (String) The trusted CIDR to allow the database connections from.
-- `cluster_id` (String) The GUID4 ID of the cluster.
-- `organization_id` (String) The GUID4 ID of the organization.
-- `project_id` (String) The GUID4 ID of the project.
+- `cluster_id` (String) The ID of the Capella cluster.
+- `organization_id` (String) The ID of the Capella organization.
+- `project_id` (String) The ID of the Capella project.
 
 ### Optional
 
@@ -41,7 +41,7 @@ resource "couchbase-capella_allowlist" "new_allowlist" {
 ### Read-Only
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
-- `id` (String) The ID of this resource.
+- `id` (String) The ID of the allowed CIDR.
 
 <a id="nestedatt--audit"></a>
 ### Nested Schema for `audit`
