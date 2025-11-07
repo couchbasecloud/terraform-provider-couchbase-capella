@@ -24,10 +24,10 @@ func BackupScheduleSchema() schema.Schema {
 	capellaschema.AddAttr(weeklyScheduleAttrs, "retention_time", backupScheduleBuilder, stringAttribute([]string{required}))
 	capellaschema.AddAttr(weeklyScheduleAttrs, "cost_optimized_retention", backupScheduleBuilder, boolAttribute(required))
 
-	attrs["weekly_schedule"] = &schema.SingleNestedAttribute{
+	capellaschema.AddAttr(attrs, "weekly_schedule", backupScheduleBuilder, &schema.SingleNestedAttribute{
 		Required:   true,
 		Attributes: weeklyScheduleAttrs,
-	}
+	})
 
 	return schema.Schema{
 		MarkdownDescription: "Manages the backup schedule resource associated with a bucket for an operational cluster.",

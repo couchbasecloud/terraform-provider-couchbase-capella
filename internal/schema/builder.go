@@ -10,7 +10,8 @@ import (
 type SchemaAttribute interface {
 	*schema.StringAttribute | *schema.Int64Attribute | *schema.BoolAttribute |
 		*schema.SetAttribute | *schema.Float64Attribute | *schema.NumberAttribute |
-		*schema.ListAttribute | *schema.SingleNestedAttribute | *schema.ObjectAttribute
+		*schema.ListAttribute | *schema.SingleNestedAttribute | *schema.ObjectAttribute |
+		*schema.SetNestedAttribute | *schema.ListNestedAttribute
 }
 
 // SchemaBuilder provides methods for building resource and data source schemas with OpenAPI integration.
@@ -54,6 +55,10 @@ func WithOpenAPIDescription[T SchemaAttribute](b *SchemaBuilder, attr T, fieldNa
 	case *schema.SingleNestedAttribute:
 		v.MarkdownDescription = description
 	case *schema.ObjectAttribute:
+		v.MarkdownDescription = description
+	case *schema.SetNestedAttribute:
+		v.MarkdownDescription = description
+	case *schema.ListNestedAttribute:
 		v.MarkdownDescription = description
 	}
 
@@ -103,6 +108,10 @@ func AddAttr[T SchemaAttribute](
 	case *schema.SingleNestedAttribute:
 		v.MarkdownDescription = description
 	case *schema.ObjectAttribute:
+		v.MarkdownDescription = description
+	case *schema.SetNestedAttribute:
+		v.MarkdownDescription = description
+	case *schema.ListNestedAttribute:
 		v.MarkdownDescription = description
 	}
 

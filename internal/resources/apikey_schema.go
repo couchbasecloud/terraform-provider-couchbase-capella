@@ -52,7 +52,7 @@ func ApiKeySchema() schema.Schema {
 	capellaschema.AddAttr(resourceAttrs, "roles", apiKeyBuilder, stringSetAttribute(required))
 	capellaschema.AddAttr(resourceAttrs, "type", apiKeyBuilder, stringDefaultAttribute("project", optional, computed))
 
-	attrs["resources"] = &schema.SetNestedAttribute{
+	capellaschema.AddAttr(attrs, "resources", apiKeyBuilder, &schema.SetNestedAttribute{
 		Optional: true,
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: resourceAttrs,
@@ -60,7 +60,7 @@ func ApiKeySchema() schema.Schema {
 		PlanModifiers: []planmodifier.Set{
 			setplanmodifier.RequiresReplace(),
 		},
-	}
+	})
 
 	capellaschema.AddAttr(attrs, "rotate", apiKeyBuilder, &schema.NumberAttribute{
 		Optional: true,

@@ -26,13 +26,13 @@ func AuditLogSettingsSchema() schema.Schema {
 	capellaschema.AddAttr(disabledUserAttrs, "domain", auditLogSettingsBuilder, stringAttribute([]string{required}))
 	capellaschema.AddAttr(disabledUserAttrs, "name", auditLogSettingsBuilder, stringAttribute([]string{required}))
 
-	attrs["disabled_users"] = &schema.SetNestedAttribute{
+	capellaschema.AddAttr(attrs, "disabled_users", auditLogSettingsBuilder, &schema.SetNestedAttribute{
 		Computed: true,
 		Optional: true,
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: disabledUserAttrs,
 		},
-	}
+	})
 
 	return schema.Schema{
 		MarkdownDescription: "This resource allows you to manage audit log configuration settings for an operational cluster. These settings control which audit events are logged and which users are excluded from audit logging.",
