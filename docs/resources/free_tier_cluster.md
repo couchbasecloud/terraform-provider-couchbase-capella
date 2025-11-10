@@ -31,27 +31,16 @@ resource "couchbase-capella_free_tier_cluster" "new_free_tier_cluster" {
 
 ### Required
 
-- `cloud_provider` (Attributes) The cloud provider where the cluster will be hosted.
-For information about providers and supported regions, see:
-
-- [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html)
-
-- [Google Cloud Platform](https://docs.couchbase.com/cloud/reference/gcp.html)
-
-- [Microsoft Azure](https://docs.couchbase.com/cloud/reference/azure.html) (see [below for nested schema](#nestedatt--cloud_provider))
-- `name` (String) Name of the cluster (up to 256 characters).
-
-**Constraints:**
-  - Maximum length: 256 characters
+- `cloud_provider` (Attributes) - The cloud provider where the cluster will be hosted. For information about providers and supported regions, see: [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html) [Google Cloud Platform](https://docs.couchbase.com/cloud/reference/gcp.html) [Microsoft Azure](https://docs.couchbase.com/cloud/reference/azure.html) (see [below for nested schema](#nestedatt--cloud_provider))
+- `name` (String) - Name of the cluster (up to 256 characters).
+ - **Constraints**: Maximum length: 256 characters
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
 ### Optional
 
-- `description` (String) Description of the cluster (up to 1024 characters).
-
-**Constraints:**
-  - Maximum length: 1024 characters
+- `description` (String) - Description of the cluster (up to 1024 characters).
+ - **Constraints**: Maximum length: 1024 characters
 
 ### Read-Only
 
@@ -64,7 +53,8 @@ For information about providers and supported regions, see:
 - `current_state` (String)
 - `enable_private_dns_resolution` (Boolean)
 - `etag` (String) Entity tag for the resource, used for caching and conditional requests.
-- `id` (String) The ID of this resource.
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
 - `service_groups` (Attributes Set) (see [below for nested schema](#nestedatt--service_groups))
 - `support` (Attributes) (see [below for nested schema](#nestedatt--support))
 
@@ -75,7 +65,9 @@ Required:
 
 - `cidr` (String)
 - `region` (String)
-- `type` (String)
+- `type` (String) - Type of the resource.
+ - **Valid Values**: `project`
+ - **Default**: `project`
 
 
 <a id="nestedatt--audit"></a>
@@ -95,7 +87,9 @@ Read-Only:
 
 Read-Only:
 
-- `type` (String)
+- `type` (String) - Type of the resource.
+ - **Valid Values**: `project`
+ - **Default**: `project`
 
 
 <a id="nestedatt--couchbase_server"></a>
@@ -140,7 +134,9 @@ Read-Only:
 - `autoexpansion` (Boolean)
 - `iops` (Number)
 - `storage` (Number)
-- `type` (String)
+- `type` (String) - Type of the resource.
+ - **Valid Values**: `project`
+ - **Default**: `project`
 
 
 

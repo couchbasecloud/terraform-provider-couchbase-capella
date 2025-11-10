@@ -17,14 +17,18 @@ This Import Filter resource allows you to manage the JavaScript import filter fo
 
 ### Required
 
-- `app_endpoint_name` (String)
+- `app_endpoint_name` (String) The name of the App Endpoint.
 - `app_service_id` (String) The GUID4 ID of the appService.
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `import_filter` (String)
+- `import_filter` (String) - The Javascript function used to specify the documents in this collection that are to be imported by the App Endpoint. By default, all documents in corresponding collection are imported.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
 ### Optional
 
-- `collection` (String)
-- `scope` (String)
+- `collection` (String) A specific collection denoted by the App Endpoint name, the scope name and collection name separated by a period, for example "endpoint1.scope1.collection1".
+If only an App Endpoint name is provided this will be interpreted as "endpoint1._default._default". If only an App Endpoint name and collection name are
+provided these will interpreted as a named collection within the default scope, for example "endpoint1.collection1" will be interpreted as "endpoint1._default.collection1".
+- `scope` (String) A specific collection denoted by the App Endpoint name, the scope name and collection name separated by a period, for example "endpoint1.scope1.collection1".
+If only an App Endpoint name is provided this will be interpreted as "endpoint1._default._default". If only an App Endpoint name and collection name are
+provided these will interpreted as a named collection within the default scope, for example "endpoint1.collection1" will be interpreted as "endpoint1._default.collection1".

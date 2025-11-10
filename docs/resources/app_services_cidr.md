@@ -30,20 +30,21 @@ resource "couchbase-capella_app_services_cidr" "new_app_services_cidr"{
 ### Required
 
 - `app_service_id` (String) The GUID4 ID of the appService.
-- `cidr` (String)
+- `cidr` (String) - The trusted CIDR to allow network connections from. The example represents a single IP address (i.e. a subnet mask of 32).
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
 ### Optional
 
-- `comment` (String)
-- `expires_at` (String)
+- `comment` (String) - A short description of the allowed CIDR.
+- `expires_at` (String) - An RFC3339 timestamp determining when the allowed CIDR will expire. If this field is omitted then the allowed CIDR is permanent and will never automatically expire.
+ - **Format**: Date-time in RFC3339 format
 
 ### Read-Only
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
-- `id` (String) The ID of this resource.
+- `id` (String) - The ID of the allowed CIDR.
 
 <a id="nestedatt--audit"></a>
 ### Nested Schema for `audit`

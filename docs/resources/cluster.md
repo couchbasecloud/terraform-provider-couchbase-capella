@@ -59,82 +59,45 @@ resource "couchbase-capella_cluster" "new_cluster" {
 ### Required
 
 - `availability` (Attributes) (see [below for nested schema](#nestedatt--availability))
-- `cloud_provider` (Attributes) The cloud provider where the cluster will be hosted.
-For information about providers and supported regions, see:
-
-- [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html)
-
-- [Google Cloud Platform](https://docs.couchbase.com/cloud/reference/gcp.html)
-
-- [Microsoft Azure](https://docs.couchbase.com/cloud/reference/azure.html) (see [below for nested schema](#nestedatt--cloud_provider))
-- `name` (String) Name of the cluster (up to 256 characters).
-
-**Constraints:**
-  - Maximum length: 256 characters
+- `cloud_provider` (Attributes) - The cloud provider where the cluster will be hosted. For information about providers and supported regions, see: [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html) [Google Cloud Platform](https://docs.couchbase.com/cloud/reference/gcp.html) [Microsoft Azure](https://docs.couchbase.com/cloud/reference/azure.html) (see [below for nested schema](#nestedatt--cloud_provider))
+- `name` (String) - Name of the cluster (up to 256 characters).
+ - **Constraints**: Maximum length: 256 characters
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
-- `service_groups` (Attributes Set) The couchbase service groups to be run. - The set of nodes that share the same disk, number of nodes and services. - At least one service group must contain the data service. (see [below for nested schema](#nestedatt--service_groups))
+- `service_groups` (Attributes Set) - The couchbase service groups to be run. - The set of nodes that share the same disk, number of nodes and services. - At least one service group must contain the data service. (see [below for nested schema](#nestedatt--service_groups))
 - `support` (Attributes) (see [below for nested schema](#nestedatt--support))
 
 ### Optional
 
-- `configuration_type` (String, Deprecated) - Multi-node databases are best for deployments that require high availability. If your app requires high performance and high availability, choose the Multi-node option.
-- Single-node databases have resource limitations that make them a good choice for learning, prototyping, and non-production uses. They have limited availability.
-- Single-node databases should contain only 1 node and 1 Service Group. Adding number of nodes or service groups > 1 is not allowed for such databases.
-- By default the configurationType is multiNode.
-**Valid Values:**
-  - `singleNode`
-  - `multiNode`
-
-**Default:** `[multiNode]`
-
- **Deprecated**: This field is deprecated and will be removed in a future release.
+- `configuration_type` (String, Deprecated) - Multi-node databases are best for deployments that require high availability. If your app requires high performance and high availability, choose the Multi-node option. Single-node databases have resource limitations that make them a good choice for learning, prototyping, and non-production uses. They have limited availability. Single-node databases should contain only 1 node and 1 Service Group. Adding number of nodes or service groups > 1 is not allowed for such databases. By default the configurationType is multiNode.
+ - **Valid Values**: `singleNode`, `multiNode`
+ - **Default**: `[multiNode]`
+ - **Deprecated**: This field is deprecated and will be removed in a future release.
 - `couchbase_server` (Attributes) (see [below for nested schema](#nestedatt--couchbase_server))
-- `description` (String) Description of the cluster (up to 1024 characters).
-
-**Constraints:**
-  - Maximum length: 1024 characters
+- `description` (String) - Description of the cluster (up to 1024 characters).
+ - **Constraints**: Maximum length: 1024 characters
 - `enable_private_dns_resolution` (Boolean)
 - `if_match` (String) A precondition header that specifies the entity tag of a resource.
-- `zones` (Set of String) Zones is the cloud services provider availability zones for the cluster. Currently Supported only for single AZ clusters so only 1 zone is allowed in list.
+- `zones` (Set of String) - Zones is the cloud services provider availability zones for the cluster. Currently Supported only for single AZ clusters so only 1 zone is allowed in list.
 
 ### Read-Only
 
 - `app_service_id` (String) The GUID4 ID of the appService.
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
-- `connection_string` (String) ConnectionString specifies the Capella database endpoint for your client connection.
-- `current_state` (String) **Valid Values:**
-  - `draft`
-  - `deploying`
-  - `scaling`
-  - `upgrading`
-  - `rebalancing`
-  - `peering`
-  - `destroying`
-  - `healthy`
-  - `degraded`
-  - `turnedOff`
-  - `turningOff`
-  - `turningOn`
-  - `deploymentFailed`
-  - `scaleFailed`
-  - `upgradeFailed`
-  - `rebalanceFailed`
-  - `peeringFailed`
-  - `destroyFailed`
-  - `offline`
-  - `turningOffFailed`
-  - `turningOnFailed`
+- `connection_string` (String) - ConnectionString specifies the Capella database endpoint for your client connection.
+- `current_state` (String) - **Valid Values**: `draft`, `deploying`, `scaling`, `upgrading`, `rebalancing`, `peering`, `destroying`, `healthy`, `degraded`, `turnedOff`, `turningOff`, `turningOn`, `deploymentFailed`, `scaleFailed`, `upgradeFailed`, `rebalanceFailed`, `peeringFailed`, `destroyFailed`, `offline`, `turningOffFailed`, `turningOnFailed`
 - `etag` (String) Entity tag for the resource, used for caching and conditional requests.
-- `id` (String) The ID of the cluster created.
-**Format:** UUID (GUID4)
+- `id` (String) - The ID of the cluster created.
+ - **Format**: UUID (GUID4)
 
 <a id="nestedatt--availability"></a>
 ### Nested Schema for `availability`
 
 Required:
 
-- `type` (String)
+- `type` (String) - Type of the resource.
+ - **Valid Values**: `project`
+ - **Default**: `project`
 
 
 <a id="nestedatt--cloud_provider"></a>
@@ -144,7 +107,9 @@ Required:
 
 - `cidr` (String)
 - `region` (String)
-- `type` (String)
+- `type` (String) - Type of the resource.
+ - **Valid Values**: `project`
+ - **Default**: `project`
 
 
 <a id="nestedatt--service_groups"></a>
@@ -178,7 +143,9 @@ Required:
 
 Required:
 
-- `type` (String)
+- `type` (String) - Type of the resource.
+ - **Valid Values**: `project`
+ - **Default**: `project`
 
 Optional:
 

@@ -36,8 +36,9 @@ Read-Only:
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--data--audit))
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `id` (String)
-- `name` (String)
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
+- `name` (String) - The name of the bucket.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
@@ -64,11 +65,11 @@ Optional:
 
 Required:
 
-- `name` (String)
+- `name` (String) - The name of the bucket.
 
 Optional:
 
-- `scopes` (Attributes List) (see [below for nested schema](#nestedatt--data--access--resources--buckets--scopes))
+- `scopes` (Attributes List) - The scopes under a bucket. (see [below for nested schema](#nestedatt--data--access--resources--buckets--scopes))
 
 <a id="nestedatt--data--access--resources--buckets--scopes"></a>
 ### Nested Schema for `data.access.resources.buckets.scopes`

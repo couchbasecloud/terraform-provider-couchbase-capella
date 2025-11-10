@@ -41,4 +41,4 @@ data "couchbase-capella_audit_log_settings" "existing_auditlogsettings" {
 Read-Only:
 
 - `domain` (String)
-- `name` (String)
+- `name` (String) - The name of the bucket.

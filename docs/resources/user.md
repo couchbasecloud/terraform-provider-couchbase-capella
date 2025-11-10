@@ -39,50 +39,46 @@ resource "couchbase-capella_user" "new_user" {
 
 ### Required
 
-- `email` (String) Email of the user.
+- `email` (String) - Email of the user.
 - `organization_id` (String) The GUID4 ID of the organization.
-- `organization_roles` (List of String)
+- `organization_roles` (List of String) - Organization roles assigned to the User. To learn more, see [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
+ - **Valid Values**: `organizationOwner`, `organizationMember`, `projectCreator`
 
 ### Optional
 
-- `name` (String) The name of the user.
-
-**Constraints:**
-  - Maximum length: 128 characters
-- `resources` (Attributes Set) **Default:** `[]` (see [below for nested schema](#nestedatt--resources))
+- `name` (String) - The name of the user.
+ - **Constraints**: Maximum length: 128 characters
+- `resources` (Attributes Set) - **Default**: `[]` (see [below for nested schema](#nestedatt--resources))
 
 ### Read-Only
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
-- `enable_notifications` (Boolean) After enabling email notifications for your account, you will start receiving email notification alerts from all databases in projects you are a part of.
-- `expires_at` (String) Time at which user expires.
-**Format:** Date-time in RFC3339 format
-- `id` (String) The UUID of the user created.
-- `inactive` (Boolean) Depicts whether the user has accepted the invite for the organization.
-- `last_login` (String) Time(UTC) at which user last logged in.
-**Format:** Date-time in RFC3339 format
-- `region` (String) Region of the user.
-- `status` (String) Depicts user status whether they are verified or not.
-- verified: It reflects a verified state for an email address where the user has proven that they have access to the email account.
-- not-verified: It reflects an unverified or pending verification state.
-- pending-primary: It reflects an unverified primary email address
-**Valid Values:**
-  - `verified`
-  - `not-verified`
-  - `pending-primary`
-- `time_zone` (String) Time zone of the user.
+- `enable_notifications` (Boolean) - After enabling email notifications for your account, you will start receiving email notification alerts from all databases in projects you are a part of.
+- `expires_at` (String) - Time at which user expires.
+ - **Format**: Date-time in RFC3339 format
+- `id` (String) - The UUID of the user created.
+- `inactive` (Boolean) - Depicts whether the user has accepted the invite for the organization.
+- `last_login` (String) - Time(UTC) at which user last logged in.
+ - **Format**: Date-time in RFC3339 format
+- `region` (String) - Region of the user.
+- `status` (String) - Depicts user status whether they are verified or not. verified: It reflects a verified state for an email address where the user has proven that they have access to the email account. not-verified: It reflects an unverified or pending verification state. pending-primary: It reflects an unverified primary email address
+ - **Valid Values**: `verified`, `not-verified`, `pending-primary`
+- `time_zone` (String) - Time zone of the user.
 
 <a id="nestedatt--resources"></a>
 ### Nested Schema for `resources`
 
 Required:
 
-- `id` (String) The UUID of the user created.
-- `roles` (Set of String)
+- `id` (String) - The UUID of the user created.
+- `roles` (Set of String) - Project Roles associated with the User. To learn more about Project Roles, see [Project Roles](https://docs.couchbase.com/cloud/projects/project-roles.html).
+ - **Valid Values**: `projectOwner`, `projectManager`, `projectViewer`, `projectDataReaderWriter`, `projectDataReader`
 
 Optional:
 
-- `type` (String)
+- `type` (String) - Type of the resource.
+ - **Valid Values**: `project`
+ - **Default**: `project`
 
 
 <a id="nestedatt--audit"></a>

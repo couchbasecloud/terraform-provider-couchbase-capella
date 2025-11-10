@@ -28,25 +28,15 @@ resource "couchbase-capella_free_tier_bucket" "new_free_tier_bucket" {
 ### Required
 
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `name` (String) Name of the bucket. This field cannot be changed later. The name should adhere to the following rules:
-
-1. Characters used for the name should be in the ranges of A-Z, a-z, and 0-9; plus the underscore, period, dash, and percent characters.
-
-2. The name can be a maximum of 100 characters in length.
-
-3. The name cannot have 0 characters or empty. Minimum length of name is 1.
-
-4. The name cannot start with a `.` (period).
-
-**Constraints:**
-  - Maximum length: 100 characters
+- `name` (String) - Name of the bucket. This field cannot be changed later. The name should adhere to the following rules: Characters used for the name should be in the ranges of A-Z, a-z, and 0-9; plus the underscore, period, dash, and percent characters. The name can be a maximum of 100 characters in length. The name cannot have 0 characters or empty. Minimum length of name is 1. The name cannot start with a `.` (period).
+ - **Constraints**: Maximum length: 100 characters
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
 ### Optional
 
-- `memory_allocation_in_mb` (Number) The bucket memory quota. It defaults to 100 MiB.
-**Default:** `100`
+- `memory_allocation_in_mb` (Number) - The bucket memory quota. It defaults to 100 MiB.
+ - **Default**: `100`
 
 ### Read-Only
 
@@ -54,12 +44,15 @@ resource "couchbase-capella_free_tier_bucket" "new_free_tier_bucket" {
 - `durability_level` (String)
 - `eviction_policy` (String)
 - `flush` (Boolean)
-- `id` (String) The ID of this resource.
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
 - `replicas` (Number)
 - `stats` (Attributes) (see [below for nested schema](#nestedatt--stats))
 - `storage_backend` (String)
 - `time_to_live_in_seconds` (Number)
-- `type` (String)
+- `type` (String) - Type of the resource.
+ - **Valid Values**: `project`
+ - **Default**: `project`
 
 <a id="nestedatt--stats"></a>
 ### Nested Schema for `stats`

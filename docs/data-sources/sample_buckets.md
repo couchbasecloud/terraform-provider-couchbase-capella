@@ -35,16 +35,19 @@ Read-Only:
 - `durability_level` (String)
 - `eviction_policy` (String)
 - `flush` (Boolean)
-- `id` (String)
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
 - `memory_allocation_in_mb` (Number)
-- `name` (String)
+- `name` (String) - The name of the bucket.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 - `replicas` (Number)
 - `stats` (Attributes) (see [below for nested schema](#nestedatt--data--stats))
 - `storage_backend` (String)
 - `time_to_live_in_seconds` (Number)
-- `type` (String)
+- `type` (String) - Type of the resource.
+ - **Valid Values**: `project`
+ - **Default**: `project`
 
 <a id="nestedatt--data--stats"></a>
 ### Nested Schema for `data.stats`

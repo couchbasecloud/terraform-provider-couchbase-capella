@@ -74,17 +74,18 @@ resource "couchbase-capella_network_peer" "new_network_peer" {
 ### Required
 
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `name` (String)
+- `name` (String) - Name of the peering relationship. -  The name of the peering relationship must be at least 2 characters long. -  The name can not exceed 128 characters.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
-- `provider_config` (Attributes) (see [below for nested schema](#nestedatt--provider_config))
-- `provider_type` (String)
+- `provider_config` (Attributes) - The config data for a peering relationship for a cluster on AWS, GCP, or Azure. (see [below for nested schema](#nestedatt--provider_config))
+- `provider_type` (String) Type of provider to filter on. By default all providers are returned.
 
 ### Read-Only
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
 - `commands` (Set of String)
-- `id` (String) The ID of this resource.
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
 - `status` (Attributes) (see [below for nested schema](#nestedatt--status))
 
 <a id="nestedatt--provider_config"></a>

@@ -3,6 +3,8 @@ package datasources
 import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
 // Helper functions for common datasource attribute patterns
@@ -58,24 +60,27 @@ func computedStringSet() *schema.SetAttribute {
 }
 
 func computedAudit() *schema.SingleNestedAttribute {
-	return &schema.SingleNestedAttribute{
+	tempBuilder := capellaschema.NewSchemaBuilder("audit")
+	auditAttrs := make(map[string]schema.Attribute)
+
+	capellaschema.AddAttr(auditAttrs, "created_at", tempBuilder, &schema.StringAttribute{
 		Computed: true,
-		Attributes: map[string]schema.Attribute{
-			"created_at": schema.StringAttribute{
-				Computed: true,
-			},
-			"created_by": schema.StringAttribute{
-				Computed: true,
-			},
-			"modified_at": schema.StringAttribute{
-				Computed: true,
-			},
-			"modified_by": schema.StringAttribute{
-				Computed: true,
-			},
-			"version": schema.Int64Attribute{
-				Computed: true,
-			},
-		},
+	}, "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "created_by", tempBuilder, &schema.StringAttribute{
+		Computed: true,
+	}, "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "modified_at", tempBuilder, &schema.StringAttribute{
+		Computed: true,
+	}, "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "modified_by", tempBuilder, &schema.StringAttribute{
+		Computed: true,
+	}, "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "version", tempBuilder, &schema.Int64Attribute{
+		Computed: true,
+	}, "CouchbaseAuditData")
+
+	return &schema.SingleNestedAttribute{
+		Computed:   true,
+		Attributes: auditAttrs,
 	}
 }

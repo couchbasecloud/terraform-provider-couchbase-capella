@@ -27,7 +27,7 @@ resource "couchbase-capella_private_endpoint_service" "new_service" {
 ### Required
 
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `enabled` (Boolean) Returns true if private endpoint is enabled
+- `enabled` (Boolean) - Returns true if private endpoint is enabled
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 

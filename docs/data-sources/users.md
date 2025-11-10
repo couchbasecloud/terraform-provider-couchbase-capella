@@ -32,10 +32,11 @@ Read-Only:
 - `email` (String)
 - `enable_notifications` (Boolean)
 - `expires_at` (String)
-- `id` (String)
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
 - `inactive` (Boolean)
 - `last_login` (String)
-- `name` (String)
+- `name` (String) - The name of the bucket.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `organization_roles` (List of String)
 - `region` (String)
@@ -60,9 +61,13 @@ Read-Only:
 
 Optional:
 
-- `type` (String)
+- `type` (String) - Type of the resource.
+ - **Valid Values**: `project`
+ - **Default**: `project`
 
 Read-Only:
 
-- `id` (String)
-- `roles` (List of String)
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
+- `roles` (List of String) - Project Roles associated with the User. To learn more about Project Roles, see [Project Roles](https://docs.couchbase.com/cloud/projects/project-roles.html).
+ - **Valid Values**: `projectOwner`, `projectManager`, `projectViewer`, `projectDataReaderWriter`, `projectDataReader`

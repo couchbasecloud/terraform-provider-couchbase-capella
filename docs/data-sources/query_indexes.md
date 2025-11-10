@@ -35,8 +35,8 @@ data "couchbase-capella_query_indexes" "list" {
 
 ### Optional
 
-- `collection_name` (String)
-- `scope_name` (String)
+- `collection_name` (String) The name of the collection.
+- `scope_name` (String) The name of the scope.
 
 ### Read-Only
 
@@ -48,8 +48,8 @@ data "couchbase-capella_query_indexes" "list" {
 Read-Only:
 
 - `bucket_name` (String)
-- `collection_name` (String)
+- `collection_name` (String) The name of the collection.
 - `index_keys` (Set of String)
-- `index_name` (String)
-- `scope_name` (String)
+- `index_name` (String) The name of the index.
+- `scope_name` (String) The name of the scope.
 - `status` (String)

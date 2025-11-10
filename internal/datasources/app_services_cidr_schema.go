@@ -25,11 +25,11 @@ func AppServicesCidrSchema() schema.Schema {
 
 	// Build audit attributes
 	auditAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(auditAttrs, "created_at", appServicesCidrBuilder, computedString())
-	capellaschema.AddAttr(auditAttrs, "created_by", appServicesCidrBuilder, computedString())
-	capellaschema.AddAttr(auditAttrs, "modified_at", appServicesCidrBuilder, computedString())
-	capellaschema.AddAttr(auditAttrs, "modified_by", appServicesCidrBuilder, computedString())
-	capellaschema.AddAttr(auditAttrs, "version", appServicesCidrBuilder, computedInt64())
+	capellaschema.AddAttr(auditAttrs, "created_at", appServicesCidrBuilder, computedString(), "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "created_by", appServicesCidrBuilder, computedString(), "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "modified_at", appServicesCidrBuilder, computedString(), "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "modified_by", appServicesCidrBuilder, computedString(), "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "version", appServicesCidrBuilder, computedInt64(), "CouchbaseAuditData")
 
 	capellaschema.AddAttr(dataAttrs, "audit", appServicesCidrBuilder, &schema.SingleNestedAttribute{
 		Computed:   true,

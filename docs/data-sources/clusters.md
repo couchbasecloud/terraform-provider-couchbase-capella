@@ -39,52 +39,20 @@ Read-Only:
 - `app_service_id` (String) The GUID4 ID of the appService.
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--data--audit))
 - `availability` (Attributes) (see [below for nested schema](#nestedatt--data--availability))
-- `cloud_provider` (Attributes) The cloud provider where the cluster will be hosted.
-For information about providers and supported regions, see:
-
-- [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html)
-
-- [Google Cloud Platform](https://docs.couchbase.com/cloud/reference/gcp.html)
-
-- [Microsoft Azure](https://docs.couchbase.com/cloud/reference/azure.html) (see [below for nested schema](#nestedatt--data--cloud_provider))
-- `connection_string` (String) ConnectionString specifies the Capella database endpoint for your client connection.
+- `cloud_provider` (Attributes) - The cloud provider where the cluster will be hosted. For information about providers and supported regions, see: [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html) [Google Cloud Platform](https://docs.couchbase.com/cloud/reference/gcp.html) [Microsoft Azure](https://docs.couchbase.com/cloud/reference/azure.html) (see [below for nested schema](#nestedatt--data--cloud_provider))
+- `connection_string` (String) - ConnectionString specifies the Capella database endpoint for your client connection.
 - `couchbase_server` (Attributes) (see [below for nested schema](#nestedatt--data--couchbase_server))
-- `current_state` (String) **Valid Values:**
-  - `draft`
-  - `deploying`
-  - `scaling`
-  - `upgrading`
-  - `rebalancing`
-  - `peering`
-  - `destroying`
-  - `healthy`
-  - `degraded`
-  - `turnedOff`
-  - `turningOff`
-  - `turningOn`
-  - `deploymentFailed`
-  - `scaleFailed`
-  - `upgradeFailed`
-  - `rebalanceFailed`
-  - `peeringFailed`
-  - `destroyFailed`
-  - `offline`
-  - `turningOffFailed`
-  - `turningOnFailed`
-- `description` (String) Description of the cluster (up to 1024 characters).
-
-**Constraints:**
-  - Maximum length: 1024 characters
+- `current_state` (String) - **Valid Values**: `draft`, `deploying`, `scaling`, `upgrading`, `rebalancing`, `peering`, `destroying`, `healthy`, `degraded`, `turnedOff`, `turningOff`, `turningOn`, `deploymentFailed`, `scaleFailed`, `upgradeFailed`, `rebalanceFailed`, `peeringFailed`, `destroyFailed`, `offline`, `turningOffFailed`, `turningOnFailed`
+- `description` (String) - Description of the cluster (up to 1024 characters).
+ - **Constraints**: Maximum length: 1024 characters
 - `enable_private_dns_resolution` (Boolean)
-- `id` (String) The ID of the cluster created.
-**Format:** UUID (GUID4)
-- `name` (String) Name of the cluster (up to 256 characters).
-
-**Constraints:**
-  - Maximum length: 256 characters
+- `id` (String) - The ID of the cluster created.
+ - **Format**: UUID (GUID4)
+- `name` (String) - Name of the cluster (up to 256 characters).
+ - **Constraints**: Maximum length: 256 characters
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
-- `service_groups` (Attributes List) The couchbase service groups to be run. - The set of nodes that share the same disk, number of nodes and services. - At least one service group must contain the data service. (see [below for nested schema](#nestedatt--data--service_groups))
+- `service_groups` (Attributes List) - The couchbase service groups to be run. - The set of nodes that share the same disk, number of nodes and services. - At least one service group must contain the data service. (see [below for nested schema](#nestedatt--data--service_groups))
 - `support` (Attributes) (see [below for nested schema](#nestedatt--data--support))
 
 <a id="nestedatt--data--audit"></a>
@@ -104,7 +72,9 @@ Read-Only:
 
 Read-Only:
 
-- `type` (String)
+- `type` (String) - Type of the resource.
+ - **Valid Values**: `project`
+ - **Default**: `project`
 
 
 <a id="nestedatt--data--cloud_provider"></a>
@@ -114,7 +84,9 @@ Read-Only:
 
 - `cidr` (String)
 - `region` (String)
-- `type` (String)
+- `type` (String) - Type of the resource.
+ - **Valid Values**: `project`
+ - **Default**: `project`
 
 
 <a id="nestedatt--data--couchbase_server"></a>
@@ -159,7 +131,9 @@ Read-Only:
 - `autoexpansion` (Boolean)
 - `iops` (Number)
 - `storage` (Number)
-- `type` (String)
+- `type` (String) - Type of the resource.
+ - **Valid Values**: `project`
+ - **Default**: `project`
 
 
 

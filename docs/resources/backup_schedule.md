@@ -38,8 +38,8 @@ resource "couchbase-capella_backup_schedule" "new_backup_schedule" {
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
-- `type` (String)
-- `weekly_schedule` (Attributes) (see [below for nested schema](#nestedatt--weekly_schedule))
+- `type` (String) - **Valid Values**: `weekly`
+- `weekly_schedule` (Attributes) - Schedule a full backup once a week with regular incrementals. (see [below for nested schema](#nestedatt--weekly_schedule))
 
 <a id="nestedatt--weekly_schedule"></a>
 ### Nested Schema for `weekly_schedule`

@@ -31,7 +31,7 @@ data "couchbase-capella_collections" "existing_collections" {
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
-- `scope_name` (String)
+- `scope_name` (String) The name of the scope.
 
 ### Read-Only
 
@@ -42,5 +42,5 @@ data "couchbase-capella_collections" "existing_collections" {
 
 Read-Only:
 
-- `collection_name` (String)
+- `collection_name` (String) The name of the collection.
 - `max_ttl` (Number)

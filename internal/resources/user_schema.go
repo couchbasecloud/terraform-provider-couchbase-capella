@@ -26,9 +26,9 @@ func UserSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "audit", userBuilder, computedAuditAttribute())
 
 	resourceAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(resourceAttrs, "type", userBuilder, stringDefaultAttribute("project", optional, computed))
-	capellaschema.AddAttr(resourceAttrs, "id", userBuilder, stringAttribute([]string{required}))
-	capellaschema.AddAttr(resourceAttrs, "roles", userBuilder, stringSetAttribute(required))
+	capellaschema.AddAttr(resourceAttrs, "type", userBuilder, stringDefaultAttribute("project", optional, computed), "Resource")
+	capellaschema.AddAttr(resourceAttrs, "id", userBuilder, stringAttribute([]string{required}), "Resource")
+	capellaschema.AddAttr(resourceAttrs, "roles", userBuilder, stringSetAttribute(required), "Resource")
 
 	capellaschema.AddAttr(attrs, "resources", userBuilder, &schema.SetNestedAttribute{
 		Optional: true,

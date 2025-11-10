@@ -28,19 +28,15 @@ resource "couchbase-capella_free_tier_app_service" "new_free_tier_app_service" {
 ### Required
 
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `name` (String) Name of App Service.
-
-**Constraints:**
-  - Maximum length: 256 characters
+- `name` (String) - Name of App Service.
+ - **Constraints**: Maximum length: 256 characters
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
 ### Optional
 
-- `description` (String) A short description of the App Service.
-
-**Constraints:**
-  - Maximum length: 256 characters
+- `description` (String) - A short description of the App Service.
+ - **Constraints**: Maximum length: 256 characters
 
 ### Read-Only
 
@@ -49,7 +45,8 @@ resource "couchbase-capella_free_tier_app_service" "new_free_tier_app_service" {
 - `compute` (Attributes) (see [below for nested schema](#nestedatt--compute))
 - `current_state` (String)
 - `etag` (String) Entity tag for the resource, used for caching and conditional requests.
-- `id` (String) The ID of this resource.
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
 - `nodes` (Number)
 - `plan` (String)
 - `version` (String)

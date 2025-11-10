@@ -83,12 +83,43 @@ func GetOpenAPIDescription(resourceName, tfFieldName string) string {
 		}
 
 	default:
-		// Check if this is a path parameter (e.g., organization_id, project_id)
-		if strings.HasSuffix(tfFieldName, "_id") && openAPIDoc.Components.Parameters != nil {
-			paramName := snakeToCapitalizedCamel(tfFieldName)
-			if paramRef, ok := openAPIDoc.Components.Parameters[paramName]; ok && paramRef.Value != nil {
-				if paramRef.Value.Description != "" {
-					return strings.TrimSpace(paramRef.Value.Description)
+		// Check for fields that map to string-type schemas
+		// These are fields where the entire field value IS the schema type
+		stringSchemaMap := map[string]string{
+			"access_control_function": "AccessFunction",
+			"import_filter":           "ImportFilter",
+		}
+
+		if schemaName, ok := stringSchemaMap[tfFieldName]; ok {
+			if schemaRef, ok := openAPIDoc.Components.Schemas[schemaName]; ok && schemaRef.Value != nil {
+				if schemaRef.Value.Description != "" {
+					return buildEnhancedDescription(schemaRef.Value, openAPIDoc)
+				}
+			}
+		}
+
+		// Check if this is a path parameter (e.g., organization_id, project_id, app_endpoint_name)
+		if openAPIDoc.Components.Parameters != nil {
+			// Try different parameter name patterns
+			paramPatterns := []string{
+				snakeToCapitalizedCamel(tfFieldName), // e.g., organization_id -> OrganizationId
+			}
+
+			// Special mappings for common parameters
+			switch tfFieldName {
+			case "app_endpoint_name":
+				paramPatterns = append(paramPatterns, "appEndpointId", "appEndpointKeyspace")
+			case "scope":
+				paramPatterns = append(paramPatterns, "scopeName", "appEndpointKeyspace")
+			case "collection":
+				paramPatterns = append(paramPatterns, "collectionName", "appEndpointKeyspace")
+			}
+
+			for _, paramName := range paramPatterns {
+				if paramRef, ok := openAPIDoc.Components.Parameters[paramName]; ok && paramRef.Value != nil {
+					if paramRef.Value.Description != "" {
+						return strings.TrimSpace(paramRef.Value.Description)
+					}
 				}
 			}
 		}
@@ -106,6 +137,7 @@ func GetOpenAPIDescription(resourceName, tfFieldName string) string {
 
 	// Try common schema name patterns
 	schemaPatterns := []string{
+		capitalizedResource, // Exact match (e.g., CORSConfig, AccessFunction)
 		"Create" + capitalizedResource + "Request",
 		"Get" + capitalizedResource + "Response",
 		"Update" + capitalizedResource + "Request",
@@ -122,7 +154,27 @@ func GetOpenAPIDescription(resourceName, tfFieldName string) string {
 
 		propRef := schemaRef.Value.Properties[camelFieldName]
 		if propRef != nil && propRef.Value != nil {
-			return buildEnhancedDescription(propRef.Value)
+			return buildEnhancedDescription(propRef.Value, openAPIDoc)
+		}
+	}
+
+	// If not found in main schema, try common nested schemas
+	// This handles fields like "type", "roles" that are inside nested Resource objects
+	nestedSchemas := []string{
+		"Resource",                       // For user resources, API key resources
+		"ResourceBucket",                 // For bucket-specific resources
+		capitalizedResource + "Resource", // e.g., UserResource if it exists
+	}
+
+	for _, schemaName := range nestedSchemas {
+		schemaRef := openAPIDoc.Components.Schemas[schemaName]
+		if schemaRef == nil || schemaRef.Value == nil {
+			continue
+		}
+
+		propRef := schemaRef.Value.Properties[camelFieldName]
+		if propRef != nil && propRef.Value != nil {
+			return buildEnhancedDescription(propRef.Value, openAPIDoc)
 		}
 	}
 
@@ -172,51 +224,263 @@ func capitalize(s string) string {
 	return strings.ToUpper(s[:1]) + s[1:]
 }
 
-// buildEnhancedDescription creates a rich markdown description from OpenAPI property
-func buildEnhancedDescription(prop *openapi3.Schema) string {
+// buildEnhancedDescription creates a rich markdown description from OpenAPI property.
+// It resolves references, extracts metadata, and formats the output as markdown bullets.
+func buildEnhancedDescription(prop *openapi3.Schema, doc *openapi3.T) string {
+	referencedSchema := resolveArrayReference(prop, doc)
+	description := extractDescription(prop, referencedSchema)
+	enumValues := collectEnumValues(prop, referencedSchema)
+
 	var parts []string
 
-	// Base description
-	if prop.Description != "" {
-		parts = append(parts, strings.TrimSpace(prop.Description))
+	// Add main description or enum values if no description exists
+	if description != "" {
+		parts = append(parts, formatDescriptionBullet(description))
+	} else if len(enumValues) > 0 {
+		parts = append(parts, formatValidValuesBullet(enumValues))
 	}
 
-	// Add constraints section if any exist
-	constraints := buildConstraints(prop)
-	if len(constraints) > 0 {
-		parts = append(parts, "\n\n**Constraints:**\n")
-		for _, constraint := range constraints {
-			parts = append(parts, fmt.Sprintf("  - %s\n", constraint))
-		}
+	// Add constraints
+	if constraints := buildConstraints(prop); len(constraints) > 0 {
+		parts = append(parts, formatConstraintsBullet(constraints))
 	}
 
-	// Add enum values
-	if len(prop.Enum) > 0 {
-		parts = append(parts, "\n**Valid Values:**\n")
-		for _, val := range prop.Enum {
-			parts = append(parts, fmt.Sprintf("  - `%v`\n", val))
-		}
+	// Add enum values if description exists (avoid duplication)
+	if description != "" && len(enumValues) > 0 {
+		parts = append(parts, formatValidValuesBullet(enumValues))
 	}
 
 	// Add default value
 	if prop.Default != nil {
-		parts = append(parts, fmt.Sprintf("\n**Default:** `%v`\n", prop.Default))
+		parts = append(parts, formatDefaultBullet(prop.Default))
 	}
 
 	// Add format information
 	if prop.Format != "" {
-		formatDesc := getFormatDescription(prop.Format)
-		if formatDesc != "" {
-			parts = append(parts, fmt.Sprintf("\n**Format:** %s\n", formatDesc))
+		if formatDesc := getFormatDescription(prop.Format); formatDesc != "" {
+			parts = append(parts, formatFormatBullet(formatDesc))
 		}
 	}
 
 	// Add deprecation warning
 	if prop.Deprecated {
-		parts = append(parts, "\n **Deprecated**: This field is deprecated and will be removed in a future release.\n")
+		parts = append(parts, formatDeprecationBullet())
 	}
 
 	return strings.Join(parts, "")
+}
+
+// resolveArrayReference extracts the referenced schema for array types with items.$ref.
+// Returns nil if the property is not an array or has no reference.
+func resolveArrayReference(prop *openapi3.Schema, doc *openapi3.T) *openapi3.Schema {
+	if doc == nil || prop.Type == nil || !prop.Type.Is("array") {
+		return nil
+	}
+
+	if prop.Items == nil || prop.Items.Ref == "" {
+		return nil
+	}
+
+	// Extract schema name from $ref (e.g., "#/components/schemas/OrganizationRoles" -> "OrganizationRoles")
+	refParts := strings.Split(prop.Items.Ref, "/")
+	if len(refParts) == 0 {
+		return nil
+	}
+
+	schemaName := refParts[len(refParts)-1]
+	if schemaRef := doc.Components.Schemas[schemaName]; schemaRef != nil && schemaRef.Value != nil {
+		return schemaRef.Value
+	}
+
+	return nil
+}
+
+// extractDescription gets the description from the property or falls back to referenced schema.
+// It cleans the description by removing markdown list formatting.
+func extractDescription(prop *openapi3.Schema, referencedSchema *openapi3.Schema) string {
+	if prop.Description != "" {
+		return cleanDescription(prop.Description)
+	}
+
+	if referencedSchema != nil && referencedSchema.Description != "" {
+		return cleanDescription(referencedSchema.Description)
+	}
+
+	return ""
+}
+
+// cleanDescription removes markdown list formatting from description text while
+// preserving important markdown structures like tables.
+//
+// Behavior:
+//   - Removes list markers (-, *, +) and numbered lists (1., 2., etc.)
+//   - Joins non-table text into paragraphs
+//   - Preserves markdown tables with proper spacing
+//   - Ensures tables start on a new line
+func cleanDescription(desc string) string {
+	if desc = strings.TrimSpace(desc); desc == "" {
+		return ""
+	}
+
+	lines := strings.Split(desc, "\n")
+	cleanedLines := make([]string, 0, len(lines))
+	textBuffer := make([]string, 0)
+	inTable := false
+
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		isTable := isTableRow(line)
+
+		switch {
+		case isTable && !inTable:
+			// Entering table: flush text buffer, add spacing, start table
+			cleanedLines = appendTextBuffer(cleanedLines, textBuffer)
+			textBuffer = textBuffer[:0] // Reset buffer
+			cleanedLines = append(cleanedLines, "", line)
+			inTable = true
+
+		case !isTable && inTable:
+			// Exiting table: add spacing if next line has content
+			inTable = false
+			if line != "" {
+				cleanedLines = append(cleanedLines, "")
+			}
+			// Fall through to process the line as text
+
+		case inTable:
+			// Inside table: preserve line as-is
+			cleanedLines = append(cleanedLines, line)
+			continue
+		}
+
+		// Process non-table text
+		if !inTable && line != "" {
+			cleaned := removeListMarkers(line)
+			if cleaned != "" {
+				textBuffer = append(textBuffer, cleaned)
+			}
+		}
+	}
+
+	// Flush any remaining text buffer
+	cleanedLines = appendTextBuffer(cleanedLines, textBuffer)
+
+	return strings.Join(cleanedLines, "\n")
+}
+
+// isTableRow determines if a line is part of a markdown table.
+// Tables are identified by having pipe characters (|) and at least 2 of them.
+// This simple heuristic works for most OpenAPI descriptions.
+func isTableRow(line string) bool {
+	// Count pipe characters - tables typically have at least 2 pipes per row
+	return strings.Count(line, "|") >= 2
+}
+
+// removeListMarkers removes markdown list markers from the beginning of a line.
+// Handles:
+//   - Unordered lists: -, *, +
+//   - Ordered lists: 1., 2., 3., 42., etc.
+func removeListMarkers(line string) string {
+	line = strings.TrimSpace(line)
+	if line == "" {
+		return ""
+	}
+
+	// Remove unordered list markers (-, *, +)
+	if len(line) > 0 && isListMarker(line[0]) {
+		line = strings.TrimSpace(line[1:])
+		return line
+	}
+
+	// Remove ordered list markers (1., 2., 42., etc.)
+	// Find where the number ends and the period begins
+	if len(line) > 0 && isDigit(line[0]) {
+		dotIndex := strings.Index(line, ".")
+		if dotIndex > 0 && dotIndex < len(line)-1 {
+			// Check if all characters before the dot are digits
+			allDigits := true
+			for i := 0; i < dotIndex; i++ {
+				if !isDigit(line[i]) {
+					allDigits = false
+					break
+				}
+			}
+			if allDigits {
+				line = strings.TrimSpace(line[dotIndex+1:])
+			}
+		}
+	}
+
+	return line
+}
+
+// appendTextBuffer flushes the text buffer by joining it into a paragraph
+// and appending to the result. Returns the result with the flushed text.
+func appendTextBuffer(result []string, buffer []string) []string {
+	if len(buffer) > 0 {
+		result = append(result, strings.Join(buffer, " "))
+	}
+	return result
+}
+
+// collectEnumValues gets enum values from the property or referenced schema.
+// Prefers the property's own enums over the referenced schema.
+func collectEnumValues(prop *openapi3.Schema, referencedSchema *openapi3.Schema) []interface{} {
+	if len(prop.Enum) > 0 {
+		return prop.Enum
+	}
+
+	if referencedSchema != nil && len(referencedSchema.Enum) > 0 {
+		return referencedSchema.Enum
+	}
+
+	return nil
+}
+
+// formatEnumValues converts enum values to backtick-quoted strings.
+func formatEnumValues(enumValues []interface{}) []string {
+	formatted := make([]string, len(enumValues))
+	for i, val := range enumValues {
+		formatted[i] = fmt.Sprintf("`%v`", val)
+	}
+	return formatted
+}
+
+// Formatting helper functions for consistent markdown output
+
+func formatDescriptionBullet(desc string) string {
+	return fmt.Sprintf("\n - %s", desc)
+}
+
+func formatConstraintsBullet(constraints []string) string {
+	return fmt.Sprintf("\n - **Constraints**: %s", strings.Join(constraints, ", "))
+}
+
+func formatValidValuesBullet(enumValues []interface{}) string {
+	formatted := formatEnumValues(enumValues)
+	return fmt.Sprintf("\n - **Valid Values**: %s", strings.Join(formatted, ", "))
+}
+
+func formatDefaultBullet(defaultVal interface{}) string {
+	return fmt.Sprintf("\n - **Default**: `%v`", defaultVal)
+}
+
+func formatFormatBullet(formatDesc string) string {
+	return fmt.Sprintf("\n - **Format**: %s", formatDesc)
+}
+
+func formatDeprecationBullet() string {
+	return "\n - **Deprecated**: This field is deprecated and will be removed in a future release."
+}
+
+// Helper functions for character checking
+
+func isListMarker(c byte) bool {
+	return c == '-' || c == '*' || c == '+'
+}
+
+func isDigit(c byte) bool {
+	return c >= '0' && c <= '9'
 }
 
 // buildConstraints extracts constraint information from schema

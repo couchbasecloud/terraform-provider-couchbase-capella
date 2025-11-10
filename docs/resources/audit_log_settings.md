@@ -34,8 +34,8 @@ resource "couchbase-capella_audit_log_settings" "new_auditlogsettings" {
 
 ### Optional
 
-- `audit_enabled` (Boolean)
-- `disabled_users` (Attributes Set) (see [below for nested schema](#nestedatt--disabled_users))
+- `audit_enabled` (Boolean) - Determines whether audit logging is enabled or not on the cluster.
+- `disabled_users` (Attributes Set) - List of users whose filterable events will not be logged. (see [below for nested schema](#nestedatt--disabled_users))
 - `enabled_event_ids` (Set of Number)
 
 <a id="nestedatt--disabled_users"></a>
@@ -44,7 +44,7 @@ resource "couchbase-capella_audit_log_settings" "new_auditlogsettings" {
 Required:
 
 - `domain` (String)
-- `name` (String)
+- `name` (String) - The name of the bucket.
 
 ## Import
 

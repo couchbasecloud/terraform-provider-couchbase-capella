@@ -6,7 +6,7 @@ import (
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-var accessControlFunctionBuilder = capellaschema.NewSchemaBuilder("accessControlFunction")
+var accessControlFunctionBuilder = capellaschema.NewSchemaBuilder("accessControlFunction", "accessFunction")
 
 func AccessControlFunctionSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)

@@ -27,7 +27,8 @@ resource "couchbase-capella_sample_bucket" "new_sample_bucket" {
 ### Required
 
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `name` (String)
+- `name` (String) - The name of the sample dataset to be loaded. The name has to be one of the following sample datasets. travel-sample gamesim-sample beer-sample
+ - **Valid Values**: `travel-sample`, `gamesim-sample`, `beer-sample`
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
@@ -37,13 +38,16 @@ resource "couchbase-capella_sample_bucket" "new_sample_bucket" {
 - `durability_level` (String)
 - `eviction_policy` (String)
 - `flush` (Boolean)
-- `id` (String) The ID of this resource.
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
 - `memory_allocation_in_mb` (Number)
 - `replicas` (Number)
 - `stats` (Attributes) (see [below for nested schema](#nestedatt--stats))
 - `storage_backend` (String)
 - `time_to_live_in_seconds` (Number)
-- `type` (String)
+- `type` (String) - Type of the resource.
+ - **Valid Values**: `project`
+ - **Default**: `project`
 
 <a id="nestedatt--stats"></a>
 ### Nested Schema for `stats`

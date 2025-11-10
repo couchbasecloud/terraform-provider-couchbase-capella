@@ -28,17 +28,17 @@ data "couchbase-capella_project_events" "existing_project_events" {
 
 ### Optional
 
-- `cluster_ids` (Set of String)
-- `from` (String)
-- `page` (Number)
-- `per_page` (Number)
+- `cluster_ids` (Set of String) List of clusterIds to filter on. By default events corresponding to all clusters are returned.
+- `from` (String) Start date in  RFC3339 format. If not provided, events starting from last 24 hours are returned.
+- `page` (Number) Sets the page you would like to view.
+- `per_page` (Number) Sets the number of results you would like to have on each page.
 - `project_id` (String) The GUID4 ID of the project.
-- `severity_levels` (Set of String)
+- `severity_levels` (Set of String) Filter by severity levels. Default is to return events corresponding to all supported severity levels.
 - `sort_by` (String)
-- `sort_direction` (String)
-- `tags` (Set of String)
-- `to` (String)
-- `user_ids` (Set of String)
+- `sort_direction` (String) The order in which the items will be sorted.
+- `tags` (Set of String) Filter by tags. Default is to return events corresponding to all supported tag. Tags are **availability**, **billing**, **maintenance**, **performance**, **security**, **alert**.
+- `to` (String) End datetime in the last 24 hours, RFC3339 format. Defaults to Now.
+- `user_ids` (Set of String) Filter by user UUID. Default is to return events corresponding to all users.
 
 ### Read-Only
 
@@ -71,8 +71,8 @@ Read-Only:
 
 - `last` (Number)
 - `next` (Number)
-- `page` (Number)
-- `per_page` (Number)
+- `page` (Number) Sets the page you would like to view.
+- `per_page` (Number) Sets the number of results you would like to have on each page.
 - `previous` (Number)
 - `total_items` (Number)
 
@@ -88,7 +88,8 @@ Read-Only:
 - `app_service_name` (String)
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `cluster_name` (String)
-- `id` (String)
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
 - `image_url` (String)
 - `incident_ids` (Set of String)
 - `key` (String)

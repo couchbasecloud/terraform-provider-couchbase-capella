@@ -29,36 +29,45 @@ resource "couchbase-capella_apikey" "new_apikey" {
 
 ### Required
 
-- `name` (String)
+- `name` (String) - Name of the API key.
 - `organization_id` (String) The GUID4 ID of the organization.
-- `organization_roles` (Set of String)
+- `organization_roles` (Set of String) - Organization roles assigned to the API key. To learn more, see [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
+ - **Valid Values**: `organizationOwner`, `organizationMember`, `projectCreator`
 
 ### Optional
 
 - `allowed_cidrs` (Set of String)
-- `description` (String)
-- `expiry` (Number)
-- `resources` (Attributes Set) (see [below for nested schema](#nestedatt--resources))
-- `rotate` (Number)
-- `secret` (String, Sensitive)
+- `description` (String) - Description for the API key.
+ - **Default**: ``
+- `expiry` (Number) - Expiry of the API key in number of days. If set to -1, the token will not expire.
+ - **Default**: `180`
+- `resources` (Attributes Set) - Resources are the resource level permissions associated with the API key. To learn more about Organization Roles, see [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
+ - **Default**: `[]` (see [below for nested schema](#nestedatt--resources))
+- `rotate` (Number) - Set this value in incremental order from the previously set rotate value (starting from 1) to trigger rotation of the API key. When rotated, a new token and secret are generated.
+- `secret` (String, Sensitive) - A secret associated with API key. One has to follow the secret key policy, such as allowed characters and a length of 64 characters. If this field is left empty, a secret will be auto-generated.
 
 ### Read-Only
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
-- `id` (String) The ID of this resource.
-- `token` (String, Sensitive)
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
+- `token` (String, Sensitive) - The Token is a confidential piece of information that is used to authorize requests made to v4 endpoints.
 
 <a id="nestedatt--resources"></a>
 ### Nested Schema for `resources`
 
 Required:
 
-- `id` (String)
-- `roles` (Set of String)
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
+- `roles` (Set of String) - Project Roles associated with the User. To learn more about Project Roles, see [Project Roles](https://docs.couchbase.com/cloud/projects/project-roles.html).
+ - **Valid Values**: `projectOwner`, `projectManager`, `projectViewer`, `projectDataReaderWriter`, `projectDataReader`
 
 Optional:
 
-- `type` (String)
+- `type` (String) - Type of the resource.
+ - **Valid Values**: `project`
+ - **Default**: `project`
 
 
 <a id="nestedatt--audit"></a>

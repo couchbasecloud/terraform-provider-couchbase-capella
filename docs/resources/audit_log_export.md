@@ -28,18 +28,24 @@ resource "couchbase-capella_audit_log_export" "new_auditlogexport" {
 ### Required
 
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `end` (String)
+- `end` (String) - Specifies the audit log's end date and time.
+ - **Format**: Date-time in RFC3339 format
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
-- `start` (String)
+- `start` (String) - Specifies the audit log's start date and time.
+ - **Format**: Date-time in RFC3339 format
 
 ### Read-Only
 
 - `audit_log_download_url` (String)
-- `created_at` (String)
-- `expiration` (String)
-- `id` (String) The ID of this resource.
-- `status` (String)
+- `created_at` (String) - The timestamp when the audit logs were exported.
+ - **Format**: Date-time in RFC3339 format
+- `expiration` (String) - The timestamp when the download link expires.
+ - **Format**: Date-time in RFC3339 format
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
+- `status` (String) - Indicates status of audit log creation. When status is complete, the compressed file can be manually downloaded.
+ - **Valid Values**: `In Progress`, `Completed`, `Queued`, `Failed`
 
 ## Import
 

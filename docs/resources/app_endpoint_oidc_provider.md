@@ -17,23 +17,23 @@ App Endpoint OpenID Connect Provider Resource
 
 ### Required
 
-- `app_endpoint_name` (String)
+- `app_endpoint_name` (String) The name of the App Endpoint.
 - `app_service_id` (String) The GUID4 ID of the appService.
-- `client_id` (String)
+- `client_id` (String) - The OpenID Connect provider client ID.
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `issuer` (String)
+- `issuer` (String) - The URL for the OpenID Connect issuer.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
 ### Optional
 
-- `discovery_url` (String)
-- `register` (Boolean)
-- `roles_claim` (String)
-- `user_prefix` (String)
-- `username_claim` (String)
+- `discovery_url` (String) - The URL for the non-standard discovery endpoint.
+- `register` (Boolean) - Indicates whether to register a new App Service user account when a user logs in using OpenID Connect.
+- `roles_claim` (String) - If set, the value(s) of the given OpenID Connect authentication token claim will be added to the user's roles. The value of this claim in the OIDC token must be either a string or an array of strings, any other type will result in an error.
+- `user_prefix` (String) - Username prefix for all users created for this provider
+- `username_claim` (String) - Allows a different OpenID Connect field to be specified instead of the Subject (sub).
 
 ### Read-Only
 
-- `is_default` (Boolean)
+- `is_default` (Boolean) - Indicates whether this is the default OpenID Connect provider.
 - `provider_id` (String) The unique identifier of the provider.

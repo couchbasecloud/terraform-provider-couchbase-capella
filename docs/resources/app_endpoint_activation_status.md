@@ -17,7 +17,7 @@ Manages the activation status of an App Endpoint. This resource is used to activ
 
 ### Required
 
-- `app_endpoint_name` (String)
+- `app_endpoint_name` (String) The name of the App Endpoint.
 - `app_service_id` (String) The GUID4 ID of the appService.
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `organization_id` (String) The GUID4 ID of the organization.

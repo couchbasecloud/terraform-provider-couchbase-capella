@@ -25,6 +25,8 @@ data "couchbase-capella_project_event" "existing_project_event" {
 
 ### Required
 
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
@@ -35,7 +37,6 @@ data "couchbase-capella_project_event" "existing_project_event" {
 - `app_service_name` (String)
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `cluster_name` (String)
-- `id` (String) The ID of this resource.
 - `image_url` (String)
 - `incident_ids` (Set of String)
 - `key` (String)

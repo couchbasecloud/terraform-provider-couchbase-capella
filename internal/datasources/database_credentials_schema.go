@@ -27,11 +27,11 @@ func DatabaseCredentialsSchema() schema.Schema {
 
 	// Build audit attributes
 	auditAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(auditAttrs, "created_at", databaseCredentialsBuilder, computedString())
-	capellaschema.AddAttr(auditAttrs, "created_by", databaseCredentialsBuilder, computedString())
-	capellaschema.AddAttr(auditAttrs, "modified_at", databaseCredentialsBuilder, computedString())
-	capellaschema.AddAttr(auditAttrs, "modified_by", databaseCredentialsBuilder, computedString())
-	capellaschema.AddAttr(auditAttrs, "version", databaseCredentialsBuilder, computedInt64())
+	capellaschema.AddAttr(auditAttrs, "created_at", databaseCredentialsBuilder, computedString(), "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "created_by", databaseCredentialsBuilder, computedString(), "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "modified_at", databaseCredentialsBuilder, computedString(), "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "modified_by", databaseCredentialsBuilder, computedString(), "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "version", databaseCredentialsBuilder, computedInt64(), "CouchbaseAuditData")
 
 	capellaschema.AddAttr(dataAttrs, "audit", databaseCredentialsBuilder, &schema.SingleNestedAttribute{
 		Computed:   true,

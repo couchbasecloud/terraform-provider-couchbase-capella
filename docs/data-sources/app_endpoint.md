@@ -19,24 +19,24 @@ The data source retrieves a single App Endpoint configuration for an App Service
 
 - `app_service_id` (String) The GUID4 ID of the appService.
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `name` (String) App Endpoint name. Must be less than 228 characters. It can only contain lowercase letters, numbers, or the following characters `-_$+()`
+- `name` (String) - App Endpoint name. Must be less than 228 characters. It can only contain lowercase letters, numbers, or the following characters `-_$+()`
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
 ### Read-Only
 
 - `admin_url` (String)
-- `bucket` (String) The Capella Cluster backing bucket for the App Endpoint.
+- `bucket` (String) - The Capella Cluster backing bucket for the App Endpoint.
 - `cors` (Attributes) (see [below for nested schema](#nestedatt--cors))
-- `delta_sync_enabled` (Boolean) Enable/disable delta sync
-**Default:** `false`
+- `delta_sync_enabled` (Boolean) - Enable/disable delta sync
+ - **Default**: `false`
 - `metrics_url` (String)
-- `oidc` (Attributes Set) OpenID Connect provider configuration. (see [below for nested schema](#nestedatt--oidc))
+- `oidc` (Attributes Set) - OpenID Connect provider configuration. (see [below for nested schema](#nestedatt--oidc))
 - `public_url` (String)
-- `require_resync` (Attributes Map) Scopes and collections that require resyncing. (see [below for nested schema](#nestedatt--require_resync))
-- `scopes` (Attributes Map) **Default:** `map[_default:map[collections:map[_default:map[accessControlFunction:function(doc){channel(doc.channels);} importFilter: function(doc) { if (doc.type != 'mobile') { return false; } return true; }]]]]` (see [below for nested schema](#nestedatt--scopes))
-- `state` (String) App Endpoint state.
-- `user_xattr_key` (String) The key of the user-extended attributes (xattr) that will be accessible from the Access control and validation function. If left empty, the feature will be disabled.
+- `require_resync` (Attributes Map) - Scopes and collections that require resyncing. (see [below for nested schema](#nestedatt--require_resync))
+- `scopes` (Attributes Map) - **Default**: `map[_default:map[collections:map[_default:map[accessControlFunction:function(doc){channel(doc.channels);} importFilter: function(doc) { if (doc.type != 'mobile') { return false; } return true; }]]]]` (see [below for nested schema](#nestedatt--scopes))
+- `state` (String) - App Endpoint state.
+- `user_xattr_key` (String) - The key of the user-extended attributes (xattr) that will be accessible from the Access control and validation function. If left empty, the feature will be disabled.
 
 <a id="nestedatt--cors"></a>
 ### Nested Schema for `cors`
@@ -86,5 +86,5 @@ Read-Only:
 
 Read-Only:
 
-- `access_control_function` (String)
-- `import_filter` (String)
+- `access_control_function` (String) - All mutations in this collection are processed by this Javascript function
+- `import_filter` (String) - The Javascript function used to specify the documents in this collection that are to be imported by the App Endpoint. By default, all documents in corresponding collection are imported.

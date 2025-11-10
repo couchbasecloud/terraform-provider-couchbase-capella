@@ -18,39 +18,40 @@ This resource allows you to manage an App Endpoint configuration for a Couchbase
 ### Required
 
 - `app_service_id` (String) The GUID4 ID of the appService.
-- `bucket` (String) The Capella Cluster backing bucket for the App Endpoint.
+- `bucket` (String) - The Capella Cluster backing bucket for the App Endpoint.
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `name` (String) App Endpoint name. Must be less than 228 characters. It can only contain lowercase letters, numbers, or the following characters `-_$+()`
+- `name` (String) - App Endpoint name. Must be less than 228 characters. It can only contain lowercase letters, numbers, or the following characters `-_$+()`
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
 ### Optional
 
 - `cors` (Attributes) (see [below for nested schema](#nestedatt--cors))
-- `delta_sync_enabled` (Boolean) Enable/disable delta sync
-**Default:** `false`
-- `oidc` (Attributes List) OpenID Connect provider configuration. (see [below for nested schema](#nestedatt--oidc))
-- `scopes` (Attributes Map) **Default:** `map[_default:map[collections:map[_default:map[accessControlFunction:function(doc){channel(doc.channels);} importFilter: function(doc) { if (doc.type != 'mobile') { return false; } return true; }]]]]` (see [below for nested schema](#nestedatt--scopes))
-- `user_xattr_key` (String) The key of the user-extended attributes (xattr) that will be accessible from the Access control and validation function. If left empty, the feature will be disabled.
+- `delta_sync_enabled` (Boolean) - Enable/disable delta sync
+ - **Default**: `false`
+- `oidc` (Attributes List) - OpenID Connect provider configuration. (see [below for nested schema](#nestedatt--oidc))
+- `scopes` (Attributes Map) - **Default**: `map[_default:map[collections:map[_default:map[accessControlFunction:function(doc){channel(doc.channels);} importFilter: function(doc) { if (doc.type != 'mobile') { return false; } return true; }]]]]` (see [below for nested schema](#nestedatt--scopes))
+- `user_xattr_key` (String) - The key of the user-extended attributes (xattr) that will be accessible from the Access control and validation function. If left empty, the feature will be disabled.
 
 ### Read-Only
 
 - `admin_url` (String)
 - `metrics_url` (String)
 - `public_url` (String)
-- `require_resync` (Attributes Map) Scopes and collections that require resyncing. (see [below for nested schema](#nestedatt--require_resync))
-- `state` (String) App Endpoint state.
+- `require_resync` (Attributes Map) - Scopes and collections that require resyncing. (see [below for nested schema](#nestedatt--require_resync))
+- `state` (String) - App Endpoint state.
 
 <a id="nestedatt--cors"></a>
 ### Nested Schema for `cors`
 
 Optional:
 
-- `disabled` (Boolean)
-- `headers` (Set of String)
-- `login_origin` (Set of String)
-- `max_age` (Number)
-- `origin` (Set of String)
+- `disabled` (Boolean) - disable CORS
+- `headers` (Set of String) - List of allowed headers
+- `login_origin` (Set of String) - List of allowed login origins
+- `max_age` (Number) - Specifies the duration (in seconds) for which the results of a preflight request can be cached.
+ - **Default**: `5`
+- `origin` (Set of String) - List of allowed origins, use ['*'] to allow access from everywhere
 
 
 <a id="nestedatt--oidc"></a>
@@ -58,20 +59,20 @@ Optional:
 
 Required:
 
-- `client_id` (String)
-- `issuer` (String)
+- `client_id` (String) - The OpenID Connect provider client ID.
+- `issuer` (String) - The URL for the OpenID Connect issuer.
 
 Optional:
 
-- `discovery_url` (String)
-- `register` (Boolean)
-- `roles_claim` (String)
-- `user_prefix` (String)
-- `username_claim` (String)
+- `discovery_url` (String) - The URL for the non-standard discovery endpoint.
+- `register` (Boolean) - Indicates whether to register a new App Service user account when a user logs in using OpenID Connect.
+- `roles_claim` (String) - If set, the value(s) of the given OpenID Connect authentication token claim will be added to the user's roles. The value of this claim in the OIDC token must be either a string or an array of strings, any other type will result in an error.
+- `user_prefix` (String) - Username prefix for all users created for this provider
+- `username_claim` (String) - Allows a different OpenID Connect field to be specified instead of the Subject (sub).
 
 Read-Only:
 
-- `is_default` (Boolean)
+- `is_default` (Boolean) - Indicates whether this is the default OpenID Connect provider.
 - `provider_id` (String) The unique identifier of the provider.
 
 
@@ -87,8 +88,8 @@ Optional:
 
 Optional:
 
-- `access_control_function` (String)
-- `import_filter` (String)
+- `access_control_function` (String) - All mutations in this collection are processed by this Javascript function
+- `import_filter` (String) - The Javascript function used to specify the documents in this collection that are to be imported by the App Endpoint. By default, all documents in corresponding collection are imported.
 
 
 

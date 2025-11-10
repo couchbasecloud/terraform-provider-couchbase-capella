@@ -49,11 +49,11 @@ Read-Only:
 - `cors` (Attributes) (see [below for nested schema](#nestedatt--app_endpoints--cors))
 - `delta_sync_enabled` (Boolean)
 - `metrics_url` (String)
-- `name` (String)
+- `name` (String) - The name of the bucket.
 - `oidc` (Attributes List) (see [below for nested schema](#nestedatt--app_endpoints--oidc))
 - `public_url` (String)
 - `require_resync` (Attributes Map) (see [below for nested schema](#nestedatt--app_endpoints--require_resync))
-- `scopes` (Attributes Map) (see [below for nested schema](#nestedatt--app_endpoints--scopes))
+- `scopes` (Attributes Map) - The scopes under a bucket. (see [below for nested schema](#nestedatt--app_endpoints--scopes))
 - `state` (String)
 - `user_xattr_key` (String)
 
@@ -105,5 +105,5 @@ Read-Only:
 
 Read-Only:
 
-- `access_control_function` (String)
-- `import_filter` (String)
+- `access_control_function` (String) - All mutations in this collection are processed by this Javascript function
+- `import_filter` (String) - The Javascript function used to specify the documents in this collection that are to be imported by the App Endpoint. By default, all documents in corresponding collection are imported.

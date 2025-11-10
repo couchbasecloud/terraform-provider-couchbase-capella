@@ -11,8 +11,8 @@ func TestAccClusterResourceAzureDiskAutoExpansion(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "couchbase-capella_cluster." + resourceName
 
-	// TODO: AV-96938: dynamically generate CIDR
-	cidr := "10.254.250.0/23"
+	// Generate a random CIDR to avoid conflicts with existing clusters
+	cidr := generateRandomCIDR()
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,

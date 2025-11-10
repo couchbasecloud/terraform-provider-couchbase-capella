@@ -38,12 +38,12 @@ func UsersSchema() schema.Schema {
 	capellaschema.AddAttr(resourcesAttrs, "type", usersBuilder, &schema.StringAttribute{
 		Optional: true,
 		Computed: true,
-	})
-	capellaschema.AddAttr(resourcesAttrs, "id", usersBuilder, computedString())
+	}, "Resource")
+	capellaschema.AddAttr(resourcesAttrs, "id", usersBuilder, computedString(), "Resource")
 	capellaschema.AddAttr(resourcesAttrs, "roles", usersBuilder, &schema.ListAttribute{
 		ElementType: types.StringType,
 		Computed:    true,
-	})
+	}, "Resource")
 
 	capellaschema.AddAttr(dataAttrs, "resources", usersBuilder, &schema.ListNestedAttribute{
 		Computed: true,
@@ -54,11 +54,11 @@ func UsersSchema() schema.Schema {
 
 	// Build audit attributes
 	auditAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(auditAttrs, "created_at", usersBuilder, computedString())
-	capellaschema.AddAttr(auditAttrs, "created_by", usersBuilder, computedString())
-	capellaschema.AddAttr(auditAttrs, "modified_at", usersBuilder, computedString())
-	capellaschema.AddAttr(auditAttrs, "modified_by", usersBuilder, computedString())
-	capellaschema.AddAttr(auditAttrs, "version", usersBuilder, computedInt64())
+	capellaschema.AddAttr(auditAttrs, "created_at", usersBuilder, computedString(), "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "created_by", usersBuilder, computedString(), "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "modified_at", usersBuilder, computedString(), "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "modified_by", usersBuilder, computedString(), "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "version", usersBuilder, computedInt64(), "CouchbaseAuditData")
 
 	capellaschema.AddAttr(dataAttrs, "audit", usersBuilder, &schema.SingleNestedAttribute{
 		Computed:   true,

@@ -8,7 +8,7 @@ import (
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-var appEndpointOidcBuilder = capellaschema.NewSchemaBuilder("appEndpointOidc")
+var appEndpointOidcBuilder = capellaschema.NewSchemaBuilder("appEndpointOidc", "OIDCProvider")
 
 func AppEndpointOidcProviderSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)

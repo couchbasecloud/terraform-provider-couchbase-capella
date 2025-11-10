@@ -25,26 +25,22 @@ resource "couchbase-capella_project" "new_project" {
 
 ### Required
 
-- `name` (String) The name of the project (up to 128 characters).
-
-**Constraints:**
-  - Maximum length: 128 characters
+- `name` (String) - The name of the project (up to 128 characters).
+ - **Constraints**: Maximum length: 128 characters
 - `organization_id` (String) The GUID4 ID of the organization.
 
 ### Optional
 
-- `description` (String) A short description of the project (up to 256 characters).
-
-**Constraints:**
-  - Maximum length: 256 characters
+- `description` (String) - A short description of the project (up to 256 characters).
+ - **Constraints**: Maximum length: 256 characters
 - `if_match` (String) A precondition header that specifies the entity tag of a resource.
 
 ### Read-Only
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
 - `etag` (String) Entity tag for the resource, used for caching and conditional requests.
-- `id` (String) A GUID4 identifier of the project.
-**Format:** UUID (GUID4)
+- `id` (String) - A GUID4 identifier of the project.
+ - **Format**: UUID (GUID4)
 
 <a id="nestedatt--audit"></a>
 ### Nested Schema for `audit`

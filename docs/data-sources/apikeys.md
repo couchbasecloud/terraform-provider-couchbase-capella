@@ -32,8 +32,9 @@ Read-Only:
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--data--audit))
 - `description` (String)
 - `expiry` (Number)
-- `id` (String)
-- `name` (String)
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
+- `name` (String) - The name of the bucket.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `organization_roles` (List of String)
 - `resources` (Attributes List) (see [below for nested schema](#nestedatt--data--resources))
@@ -55,6 +56,10 @@ Read-Only:
 
 Read-Only:
 
-- `id` (String)
-- `roles` (List of String)
-- `type` (String)
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
+- `roles` (List of String) - Project Roles associated with the User. To learn more about Project Roles, see [Project Roles](https://docs.couchbase.com/cloud/projects/project-roles.html).
+ - **Valid Values**: `projectOwner`, `projectManager`, `projectViewer`, `projectDataReaderWriter`, `projectDataReader`
+- `type` (String) - Type of the resource.
+ - **Valid Values**: `project`
+ - **Default**: `project`

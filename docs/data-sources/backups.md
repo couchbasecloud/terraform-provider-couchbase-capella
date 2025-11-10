@@ -42,37 +42,26 @@ Read-Only:
 
 - `backup_stats` (Attributes) (see [below for nested schema](#nestedatt--data--backup_stats))
 - `bucket_id` (String) The ID of the bucket. It is the URL-compatible base64 encoding of the bucket name.
-- `bucket_name` (String) The name of the bucket for which the backup belongs to.
+- `bucket_name` (String) - The name of the bucket for which the backup belongs to.
 - `cloud_provider` (String)
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `cycle_id` (String) The GUID4 ID of the cycle.
-- `date` (String) The RFC3339 timestamp representing the time at which backup was created.
-**Format:** Date-time in RFC3339 format
-- `elapsed_time_in_seconds` (Number) The amount of seconds that have elapsed between the creation and completion of the backup.
-- `id` (String) The ID of the backup created.
-**Format:** UUID (GUID4)
-- `method` (String) The mechanism of the backup.
-1. Incremental backups include the data that has changed since the last scheduled backup.
-2. Full backup includes all bucket data from the time the backup was created.
-**Valid Values:**
-  - `incremental`
-  - `full`
+- `date` (String) - The RFC3339 timestamp representing the time at which backup was created.
+ - **Format**: Date-time in RFC3339 format
+- `elapsed_time_in_seconds` (Number) - The amount of seconds that have elapsed between the creation and completion of the backup.
+- `id` (String) - The ID of the backup created.
+ - **Format**: UUID (GUID4)
+- `method` (String) - The mechanism of the backup. Incremental backups include the data that has changed since the last scheduled backup. Full backup includes all bucket data from the time the backup was created.
+ - **Valid Values**: `incremental`, `full`
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
-- `restore_before` (String) The RFC3339 timestamp representing the time at which backup will expire.
-**Format:** Date-time in RFC3339 format
-- `schedule_info` (Attributes) Represents the schedule information of the backup. (see [below for nested schema](#nestedatt--data--schedule_info))
-- `source` (String) The way a backup job was initiated.
-1. Manual represents a manually triggered backup job or on-demand.
-2. Scheduled represents a backup job created from a schedule.
-**Valid Values:**
-  - `manual`
-  - `scheduled`
-- `status` (String) The status of the backup.
-**Valid Values:**
-  - `pending`
-  - `ready`
-  - `failed`
+- `restore_before` (String) - The RFC3339 timestamp representing the time at which backup will expire.
+ - **Format**: Date-time in RFC3339 format
+- `schedule_info` (Attributes) - Represents the schedule information of the backup. (see [below for nested schema](#nestedatt--data--schedule_info))
+- `source` (String) - The way a backup job was initiated. Manual represents a manually triggered backup job or on-demand. Scheduled represents a backup job created from a schedule.
+ - **Valid Values**: `manual`, `scheduled`
+- `status` (String) - The status of the backup.
+ - **Valid Values**: `pending`, `ready`, `failed`
 
 <a id="nestedatt--data--backup_stats"></a>
 ### Nested Schema for `data.backup_stats`

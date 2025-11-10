@@ -29,23 +29,59 @@ type SchemaAttributeMap interface {
 
 // SchemaBuilder provides methods for building resource and data source schemas with OpenAPI integration.
 type SchemaBuilder struct {
-	resourceName string
+	resourceName      string
+	openAPISchemaName string // Optional: OpenAPI schema name if different from resourceName
 }
 
-// NewSchemaBuilder creates a new SchemaBuilder for a specific resource or data source
-func NewSchemaBuilder(resourceName string) *SchemaBuilder {
-	return &SchemaBuilder{resourceName: resourceName}
+// NewSchemaBuilder creates a new SchemaBuilder for a specific resource or data source.
+// The second parameter (openAPISchemaName) is optional and only needed when the OpenAPI schema name
+// differs from the Terraform resource name.
+//
+// Examples:
+//   - NewSchemaBuilder("project")                      // OpenAPI schema is also "project"
+//   - NewSchemaBuilder("allowlist", "allowedCidr")     // OpenAPI schema is "allowedCidr"
+func NewSchemaBuilder(resourceName string, openAPISchemaName ...string) *SchemaBuilder {
+	schemaName := resourceName // Default to same name
+	if len(openAPISchemaName) > 0 && openAPISchemaName[0] != "" {
+		schemaName = openAPISchemaName[0]
+	}
+
+	return &SchemaBuilder{
+		resourceName:      resourceName,
+		openAPISchemaName: schemaName,
+	}
 }
 
-// GetResourceName returns the resource name
+// GetResourceName returns the Terraform resource name
 func (b *SchemaBuilder) GetResourceName() string {
 	return b.resourceName
 }
 
+// GetOpenAPISchemaName returns the OpenAPI schema name
+func (b *SchemaBuilder) GetOpenAPISchemaName() string {
+	return b.openAPISchemaName
+}
+
 // WithOpenAPIDescription sets the MarkdownDescription for the provided attribute
 // by looking up the field description from the OpenAPI specification.
-func WithOpenAPIDescription[T SchemaAttribute](b *SchemaBuilder, attr T, fieldName string) T {
-	description := docs.GetOpenAPIDescription(b.resourceName, fieldName)
+// If alternateSchemas are provided, it will try those schemas first before falling back to the builder's schema.
+// Example: WithOpenAPIDescription(apiKeyBuilder, attr, "secret", "RotateAPIKeyRequest")
+func WithOpenAPIDescription[T SchemaAttribute](b *SchemaBuilder, attr T, fieldName string, alternateSchemas ...string) T {
+	var description string
+
+	// Try alternate schemas first (e.g., RotateAPIKeyRequest, CreateAPIKeyResponse)
+	for _, altSchema := range alternateSchemas {
+		description = docs.GetOpenAPIDescription(altSchema, fieldName)
+		if description != "" {
+			break
+		}
+	}
+
+	// Fall back to the builder's default schema
+	if description == "" {
+		description = docs.GetOpenAPIDescription(b.openAPISchemaName, fieldName)
+	}
+
 	setMarkdownDescription(attr, description)
 	return attr
 }
@@ -60,18 +96,35 @@ func WithOpenAPIDescription[T SchemaAttribute](b *SchemaBuilder, attr T, fieldNa
 // 4. Schema references (audit) from components.schemas
 // 5. Schema properties (name, description, etc.) from request/response schemas
 //
+// If alternateSchemas are provided, it will try those schemas first before falling back to the builder's schema.
+//
 // Example:
 //
 //	attrs := make(map[string]schema.Attribute)
 //	capellaschema.AddAttr(attrs, "name", projectBuilder, stringAttribute([]string{required}))
-//	capellaschema.AddAttr(attrs, "organization_id", projectBuilder, stringAttribute([]string{required}))
+//	capellaschema.AddAttr(attrs, "secret", apiKeyBuilder, stringAttribute([]string{optional}), "RotateAPIKeyRequest")
 func AddAttr[M SchemaAttributeMap, T SchemaAttribute](
 	attrs M,
 	fieldName string,
 	builder *SchemaBuilder,
 	attr T,
+	alternateSchemas ...string,
 ) {
-	description := docs.GetOpenAPIDescription(builder.resourceName, fieldName)
+	var description string
+
+	// Try alternate schemas first (e.g., RotateAPIKeyRequest, CreateAPIKeyResponse)
+	for _, altSchema := range alternateSchemas {
+		description = docs.GetOpenAPIDescription(altSchema, fieldName)
+		if description != "" {
+			break
+		}
+	}
+
+	// Fall back to the builder's default schema
+	if description == "" {
+		description = docs.GetOpenAPIDescription(builder.openAPISchemaName, fieldName)
+	}
+
 	setMarkdownDescription(attr, description)
 
 	// Add to map based on map type

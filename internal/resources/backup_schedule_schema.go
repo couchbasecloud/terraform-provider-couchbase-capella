@@ -6,7 +6,7 @@ import (
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-var backupScheduleBuilder = capellaschema.NewSchemaBuilder("backupSchedule")
+var backupScheduleBuilder = capellaschema.NewSchemaBuilder("backupSchedule", "scheduledBackup")
 
 func BackupScheduleSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)

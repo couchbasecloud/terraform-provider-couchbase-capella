@@ -30,16 +30,10 @@ data "couchbase-capella_azure_private_endpoint_command" "azure_command" {
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
-- `resource_group_name` (String) The name of your resource group
-
-**Constraints:**
-  - Minimum length: 1 characters
-  - Maximum length: 90 characters
-- `virtual_network` (String) The virtual network and subnet name
-
-**Constraints:**
-  - Minimum length: 2 characters
-  - Maximum length: 64 characters
+- `resource_group_name` (String) - The name of your resource group
+ - **Constraints**: Minimum length: 1 characters, Maximum length: 90 characters
+- `virtual_network` (String) - The virtual network and subnet name
+ - **Constraints**: Minimum length: 2 characters, Maximum length: 64 characters
 
 ### Read-Only
 

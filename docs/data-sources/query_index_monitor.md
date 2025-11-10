@@ -19,11 +19,11 @@ The data source to monitor the build progress of a GSI index.
 
 - `bucket_name` (String)
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `collection_name` (String)
-- `index_name` (String)
+- `collection_name` (String) The name of the collection.
+- `index_name` (String) The name of the index.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
-- `scope_name` (String)
+- `scope_name` (String) The name of the scope.
 
 ### Read-Only
 

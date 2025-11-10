@@ -34,39 +34,22 @@ resource "couchbase-capella_backup" "new_backup" {
 ### Optional
 
 - `restore` (Attributes) (see [below for nested schema](#nestedatt--restore))
-- `restore_before` (String) The RFC3339 timestamp representing the time at which backup will expire.
-**Format:** Date-time in RFC3339 format
+- `restore_before` (String)
 - `restore_times` (Number)
 
 ### Read-Only
 
 - `backup_stats` (Attributes) (see [below for nested schema](#nestedatt--backup_stats))
-- `bucket_name` (String) The name of the bucket for which the backup belongs to.
+- `bucket_name` (String)
 - `cloud_provider` (String)
 - `cycle_id` (String) The GUID4 ID of the cycle.
-- `date` (String) The RFC3339 timestamp representing the time at which backup was created.
-**Format:** Date-time in RFC3339 format
-- `elapsed_time_in_seconds` (Number) The amount of seconds that have elapsed between the creation and completion of the backup.
-- `id` (String) The ID of the backup created.
-**Format:** UUID (GUID4)
-- `method` (String) The mechanism of the backup.
-1. Incremental backups include the data that has changed since the last scheduled backup.
-2. Full backup includes all bucket data from the time the backup was created.
-**Valid Values:**
-  - `incremental`
-  - `full`
-- `schedule_info` (Attributes) Represents the schedule information of the backup. (see [below for nested schema](#nestedatt--schedule_info))
-- `source` (String) The way a backup job was initiated.
-1. Manual represents a manually triggered backup job or on-demand.
-2. Scheduled represents a backup job created from a schedule.
-**Valid Values:**
-  - `manual`
-  - `scheduled`
-- `status` (String) The status of the backup.
-**Valid Values:**
-  - `pending`
-  - `ready`
-  - `failed`
+- `date` (String)
+- `elapsed_time_in_seconds` (Number)
+- `id` (String) The ID of this resource.
+- `method` (String)
+- `schedule_info` (Attributes) (see [below for nested schema](#nestedatt--schedule_info))
+- `source` (String)
+- `status` (String)
 
 <a id="nestedatt--restore"></a>
 ### Nested Schema for `restore`
@@ -91,11 +74,7 @@ Optional:
 
 Read-Only:
 
-- `status` (String) The status of the backup.
-**Valid Values:**
-  - `pending`
-  - `ready`
-  - `failed`
+- `status` (String)
 
 
 <a id="nestedatt--backup_stats"></a>
@@ -121,7 +100,7 @@ Read-Only:
 - `backup_time` (String)
 - `backup_type` (String)
 - `increment` (Number)
-- `retention` (String)
+- `retention` (String) - Represents interval in hours to retain the backup.
 
 ## Import
 

@@ -41,7 +41,7 @@ data "couchbase-capella_scopes" "existing_scopes" {
 Read-Only:
 
 - `collections` (Attributes Set) (see [below for nested schema](#nestedatt--scopes--collections))
-- `scope_name` (String)
+- `scope_name` (String) The name of the scope.
 
 <a id="nestedatt--scopes--collections"></a>
 ### Nested Schema for `scopes.collections`
@@ -49,4 +49,4 @@ Read-Only:
 Read-Only:
 
 - `max_ttl` (Number)
-- `name` (String)
+- `name` (String) - The name of the bucket.

@@ -8,7 +8,7 @@ import (
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-var appEndpointOidcDefaultBuilder = capellaschema.NewSchemaBuilder("appEndpointOidcDefault")
+var appEndpointOidcDefaultBuilder = capellaschema.NewSchemaBuilder("appEndpointOidcDefault", "OIDCProvider")
 
 // AppEndpointDefaultOidcProviderSchema defines the schema for the default OIDC provider resource.
 func AppEndpointDefaultOidcProviderSchema() schema.Schema {

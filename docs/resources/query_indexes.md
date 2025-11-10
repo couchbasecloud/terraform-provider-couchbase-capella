@@ -131,12 +131,12 @@ resource "couchbase-capella_query_indexes" "idx" {
 ### Optional
 
 - `build_indexes` (Set of String)
-- `collection_name` (String)
+- `collection_name` (String) The name of the collection.
 - `index_keys` (List of String)
-- `index_name` (String)
+- `index_name` (String) The name of the index.
 - `is_primary` (Boolean)
 - `partition_by` (List of String)
-- `scope_name` (String)
+- `scope_name` (String) The name of the scope.
 - `where` (String)
 - `with` (Attributes) (see [below for nested schema](#nestedatt--with))
 

@@ -93,7 +93,8 @@ resource "couchbase-capella_cluster_onoff_schedule" "new_cluster_onoff_schedule"
 - `days` (Attributes List) (see [below for nested schema](#nestedatt--days))
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
-- `timezone` (String)
+- `timezone` (String) - Timezone for the schedule
+ - **Valid Values**: `Pacific/Midway`, `US/Hawaii`, `US/Alaska`, `US/Pacific`, `US/Mountain`, `US/Central`, `US/Eastern`, `America/Puerto_Rico`, `Canada/Newfoundland`, `America/Argentina/Buenos_Aires`, `Atlantic/Cape_Verde`, `Europe/London`, `Europe/Amsterdam`, `Europe/Athens`, `Africa/Nairobi`, `Asia/Tehran`, `Indian/Mauritius`, `Asia/Karachi`, `Asia/Calcutta`, `Asia/Dhaka`, `Asia/Bangkok`, `Asia/Hong_Kong`, `Asia/Tokyo`, `Australia/North`, `Australia/Sydney`, `Pacific/Ponape`, `Antarctica/South_Pole`
 
 <a id="nestedatt--days"></a>
 ### Nested Schema for `days`
@@ -105,8 +106,8 @@ Required:
 
 Optional:
 
-- `from` (Attributes) (see [below for nested schema](#nestedatt--days--from))
-- `to` (Attributes) (see [below for nested schema](#nestedatt--days--to))
+- `from` (Attributes) Start date in  RFC3339 format. If not provided, events starting from last 24 hours are returned. (see [below for nested schema](#nestedatt--days--from))
+- `to` (Attributes) End datetime in the last 24 hours, RFC3339 format. Defaults to Now. (see [below for nested schema](#nestedatt--days--to))
 
 <a id="nestedatt--days--from"></a>
 ### Nested Schema for `days.from`

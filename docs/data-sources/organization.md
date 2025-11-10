@@ -28,9 +28,9 @@ data "couchbase-capella_organization" "existing_organization" {
 ### Read-Only
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
-- `description` (String) The description of a particular organization.
-- `name` (String) The name of the organization.
-- `preferences` (Attributes) Preferences stores preferences for the organization. (see [below for nested schema](#nestedatt--preferences))
+- `description` (String) - The description of a particular organization.
+- `name` (String) - The name of the organization.
+- `preferences` (Attributes) - Preferences stores preferences for the organization. (see [below for nested schema](#nestedatt--preferences))
 
 <a id="nestedatt--audit"></a>
 ### Nested Schema for `audit`
