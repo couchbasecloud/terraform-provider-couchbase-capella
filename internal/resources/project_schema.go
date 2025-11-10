@@ -2,8 +2,6 @@ package resources
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
@@ -16,12 +14,7 @@ func ProjectSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
 	// All fields use AddAttr - automatically finds description from OpenAPI or common registry
-	capellaschema.AddAttr(attrs, "id", projectBuilder, &schema.StringAttribute{
-		Computed: true,
-		PlanModifiers: []planmodifier.String{
-			stringplanmodifier.UseStateForUnknown(),
-		},
-	})
+	capellaschema.AddAttr(attrs, "id", projectBuilder, stringAttribute([]string{computed, useStateForUnknown}))
 	capellaschema.AddAttr(attrs, "organization_id", projectBuilder, stringAttribute([]string{required, requiresReplace}))
 	capellaschema.AddAttr(attrs, "name", projectBuilder, stringAttribute([]string{required}))
 	capellaschema.AddAttr(attrs, "description", projectBuilder, stringAttribute([]string{optional, computed}))
