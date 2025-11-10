@@ -15,8 +15,10 @@ func TestAllSchemasUseAddAttrPattern(t *testing.T) {
 			// Helper file, not a schema
 			"attributes.go": true,
 		},
-		// No legacy attributes allowed for resources - all migrated
-		AllowLegacyAttributes: []string{},
+		// Terraform-specific fields that don't exist in OpenAPI spec
+		AllowLegacyAttributes: []string{
+			"apikey_schema.go:rotate", // Terraform lifecycle field for API key rotation
+		},
 	}
 
 	result, err := validator.ValidateSchemaPatterns(".", opts)

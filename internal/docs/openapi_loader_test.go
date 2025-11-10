@@ -1,9 +1,19 @@
 package docs
 
 import (
+	"os"
 	"strings"
 	"testing"
 )
+
+// TestMain sets up the environment for tests
+func TestMain(m *testing.M) {
+	// Set the OpenAPI spec path to the repository root
+	os.Setenv("CAPELLA_OPENAPI_SPEC_PATH", "../../openapi.generated.yaml")
+	
+	// Run tests
+	os.Exit(m.Run())
+}
 
 func TestGetOpenAPIDescription(t *testing.T) {
 	tests := []struct {

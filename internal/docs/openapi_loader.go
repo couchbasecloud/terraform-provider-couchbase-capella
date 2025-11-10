@@ -11,10 +11,26 @@ import (
 var openAPIDoc *openapi3.T
 
 func init() {
-	// Get OpenAPI spec path from environment variable, or assume project root
+	// Get OpenAPI spec path from environment variable, or try multiple locations
 	openAPIPath := os.Getenv("CAPELLA_OPENAPI_SPEC_PATH")
 	if openAPIPath == "" {
-		openAPIPath = "openapi.generated.yaml"
+		// Try multiple locations - first current dir, then parent dirs for tests
+		possiblePaths := []string{
+			"openapi.generated.yaml",           // From project root
+			"../../openapi.generated.yaml",    // From internal/docs/
+			"../../../openapi.generated.yaml", // From internal/docs/subdir if needed
+		}
+		
+		for _, path := range possiblePaths {
+			if _, err := os.Stat(path); err == nil {
+				openAPIPath = path
+				break
+			}
+		}
+		
+		if openAPIPath == "" {
+			openAPIPath = "openapi.generated.yaml" // Fallback
+		}
 	}
 
 	data, err := os.ReadFile(openAPIPath)
