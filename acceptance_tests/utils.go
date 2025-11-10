@@ -35,7 +35,11 @@ func randomStringWithPrefix(prefix string) string {
 func generateRandomCIDR() string {
 	// Use crypto/rand for better randomness
 	buf := make([]byte, 2)
-	cryptorand.Read(buf)
+	if _, err := cryptorand.Read(buf); err != nil {
+		// Fall back to a pseudo-random CIDR if crypto/rand fails
+		// This should never happen in practice, but we need to handle it for the linter
+		return fmt.Sprintf("10.%d.%d.0/23", rand.Intn(256), (rand.Intn(128))*2)
+	}
 
 	// Second octet: 0-255
 	secondOctet := int(buf[0])
