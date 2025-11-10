@@ -3,7 +3,6 @@ package resources
 import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -35,11 +34,7 @@ func FreeTierBucketSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "flush", freeTierBucketBuilder, boolAttribute(computed, useStateForUnknown))
 	capellaschema.AddAttr(attrs, "time_to_live_in_seconds", freeTierBucketBuilder, int64Attribute(computed, useStateForUnknown))
 	capellaschema.AddAttr(attrs, "eviction_policy", freeTierBucketBuilder, stringAttribute([]string{computed, useStateForUnknown}))
-	capellaschema.AddAttr(attrs, "memory_allocation_in_mb", freeTierBucketBuilder, &schema.Int64Attribute{
-		Computed: true,
-		Optional: true,
-		Default:  int64default.StaticInt64(100),
-	})
+	capellaschema.AddAttr(attrs, "memory_allocation_in_mb", freeTierBucketBuilder, int64DefaultAttribute(100, computed, optional))
 
 	statsAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(statsAttrs, "item_count", freeTierBucketBuilder, int64Attribute(computed))

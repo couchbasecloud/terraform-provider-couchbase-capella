@@ -4,7 +4,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -46,30 +45,25 @@ func GsiSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "partition_by", gsiBuilder, stringListAttribute(optional, requiresReplace))
 	capellaschema.AddAttr(attrs, "build_indexes", gsiBuilder, stringSetAttribute(optional))
 
-	capellaschema.AddAttr(attrs, "with", gsiBuilder, &schema.SingleNestedAttribute{
+	withAttrs := make(map[string]schema.Attribute)
+	withAttrs["defer_build"] = &schema.BoolAttribute{
+		Optional:      true,
+		PlanModifiers: []planmodifier.Bool{custom_plan_modifiers.ImmutableBoolAttribute()},
+	}
+	capellaschema.AddAttr(withAttrs, "num_replica", gsiBuilder, int64Attribute(optional, computed, useStateForUnknown))
+	withAttrs["num_partition"] = &schema.Int64Attribute{
 		Optional: true,
-		Computed: true,
-		Default:  objectdefault.StaticValue(defaultObject),
-		Attributes: map[string]schema.Attribute{
-			"defer_build": &schema.BoolAttribute{
-				Optional:      true,
-				PlanModifiers: []planmodifier.Bool{custom_plan_modifiers.ImmutableBoolAttribute()},
-			},
-			"num_replica": &schema.Int64Attribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.UseStateForUnknown(),
-				},
-			},
-			"num_partition": &schema.Int64Attribute{
-				Optional: true,
-				Validators: []validator.Int64{
-					int64validator.AtLeast(1),
-				},
-				PlanModifiers: []planmodifier.Int64{custom_plan_modifiers.ImmutableInt64Attribute()},
-			},
+		Validators: []validator.Int64{
+			int64validator.AtLeast(1),
 		},
+		PlanModifiers: []planmodifier.Int64{custom_plan_modifiers.ImmutableInt64Attribute()},
+	}
+
+	capellaschema.AddAttr(attrs, "with", gsiBuilder, &schema.SingleNestedAttribute{
+		Optional:   true,
+		Computed:   true,
+		Default:    objectdefault.StaticValue(defaultObject),
+		Attributes: withAttrs,
 	})
 
 	return schema.Schema{

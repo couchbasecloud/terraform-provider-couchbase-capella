@@ -18,12 +18,8 @@ func ScopeSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "scope_name", scopeBuilder, stringAttribute([]string{required, requiresReplace}))
 
 	collectionAttrs := make(map[string]schema.Attribute)
-	collectionAttrs["max_ttl"] = &schema.Int64Attribute{
-		Computed: true,
-	}
-	collectionAttrs["name"] = &schema.StringAttribute{
-		Computed: true,
-	}
+	capellaschema.AddAttr(collectionAttrs, "max_ttl", scopeBuilder, int64Attribute(computed))
+	capellaschema.AddAttr(collectionAttrs, "name", scopeBuilder, stringAttribute([]string{computed}))
 
 	capellaschema.AddAttr(attrs, "collections", scopeBuilder, &schema.SetNestedAttribute{
 		Computed: true,

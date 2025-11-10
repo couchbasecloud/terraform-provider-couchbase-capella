@@ -27,14 +27,7 @@ func TestAllSchemasUseAddAttrPattern(t *testing.T) {
 	// Files that are being migrated or have legacy patterns
 	// Remove files from this list as they are committed in PRs
 	legacyFiles := map[string]bool{
-		// Never migrated (old inline pattern)
-		"cluster_schema.go":      true,
-		"bucket_schema.go":       true,
-		"backup_schema.go":       true,
-		"app_endpoint_schema.go": true,
-
-		// Migrated but not yet committed (will be in future PRs)
-		// None remaining!
+		// All resource schemas have been migrated! 🎉
 
 		// Helper file, not a schema
 		"attributes.go": true,
@@ -127,14 +120,14 @@ func TestNoLegacyFilesRemaining(t *testing.T) {
 	// Update this list as files are committed in PRs
 
 	notYetMigrated := []string{
+		// All 33 resource schemas have been migrated! 🎉
+	}
+
+	migratedNotCommitted := []string{
 		"cluster_schema.go",
 		"bucket_schema.go",
 		"backup_schema.go",
 		"app_endpoint_schema.go",
-	}
-
-	migratedNotCommitted := []string{
-		// None remaining - all migrated files have been committed!
 	}
 
 	committed := []string{
@@ -154,6 +147,19 @@ func TestNoLegacyFilesRemaining(t *testing.T) {
 		"app_service_cidr_schema.go",
 		"appservice_onoff_schema.go",
 		"appservice_schema.go",
+		"cluster_onoff_schedule_schema.go",
+		"cluster_onoff_schema.go",
+		"collection_schema.go",
+		"database_credential_schema.go",
+		"flush_bucket_schema.go",
+		"free_tier_appservice_schema.go",
+		"free_tier_bucket_schema.go",
+		"free_tier_cluster_on_off_schema.go",
+		"free_tier_cluster_schema.go",
+		"gsi_schema.go",
+		"network_peer_schema.go",
+		"sample_bucket_schema.go",
+		"scope_schema.go",
 	}
 
 	if len(notYetMigrated) > 0 {
