@@ -117,7 +117,7 @@ func ValidateSchemaPatterns(schemaDir string, opts ValidationOptions) (*Validati
 							break
 						}
 					}
-					
+
 					// Check if this MarkdownDescription is part of an allowed legacy attribute
 					isAllowedLegacy := false
 					for _, allowedPattern := range opts.AllowLegacyAttributes {
@@ -136,7 +136,7 @@ func ValidateSchemaPatterns(schemaDir string, opts ValidationOptions) (*Validati
 							break
 						}
 					}
-					
+
 					if !isTopLevel && !isFilterBlock && !isAllowedLegacy {
 						result.Failures = append(result.Failures, formatError(filename, lineNum, "MarkdownDescription inside attribute - remove it, AddAttr handles this", line))
 					}

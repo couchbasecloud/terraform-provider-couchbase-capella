@@ -16,18 +16,18 @@ func init() {
 	if openAPIPath == "" {
 		// Try multiple locations - first current dir, then parent dirs for tests
 		possiblePaths := []string{
-			"openapi.generated.yaml",           // From project root
+			"openapi.generated.yaml",          // From project root
 			"../../openapi.generated.yaml",    // From internal/docs/
 			"../../../openapi.generated.yaml", // From internal/docs/subdir if needed
 		}
-		
+
 		for _, path := range possiblePaths {
 			if _, err := os.Stat(path); err == nil {
 				openAPIPath = path
 				break
 			}
 		}
-		
+
 		if openAPIPath == "" {
 			openAPIPath = "openapi.generated.yaml" // Fallback
 		}
