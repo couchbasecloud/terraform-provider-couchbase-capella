@@ -1,9 +1,6 @@
-issues:
-  exclude-files:
-    - "(.+)_test.go"
+version: "2"
 
 linters:
-  disable-all: true
   enable:
     - durationcheck
     - errcheck

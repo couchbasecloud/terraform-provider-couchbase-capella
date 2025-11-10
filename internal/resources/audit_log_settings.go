@@ -96,7 +96,7 @@ func (a *AuditLogSettings) Create(ctx context.Context, req resource.CreateReques
 
 	eventIds := make([]int32, len(plan.EnabledEventIDs))
 	for i, event := range plan.EnabledEventIDs {
-		eventIds[i] = int32(event.ValueInt64())
+		eventIds[i] = int32(event.ValueInt64()) //nolint:gosec // Event IDs are small integers, no overflow risk
 	}
 
 	disabledUsers := make([]api.AuditSettingsDisabledUser, len(plan.DisabledUsers))
@@ -214,7 +214,7 @@ func (a *AuditLogSettings) Update(ctx context.Context, req resource.UpdateReques
 
 	eventIds := make([]int32, len(state.EnabledEventIDs))
 	for i, event := range state.EnabledEventIDs {
-		eventIds[i] = int32(event.ValueInt64())
+		eventIds[i] = int32(event.ValueInt64()) //nolint:gosec // Event IDs are small integers, no overflow risk
 	}
 
 	disabledUsers := make([]api.AuditSettingsDisabledUser, len(state.DisabledUsers))

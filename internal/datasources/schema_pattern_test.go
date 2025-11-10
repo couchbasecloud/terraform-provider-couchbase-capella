@@ -15,12 +15,8 @@ func TestAllSchemasUseAddAttrPattern(t *testing.T) {
 			// Helper file, not a schema
 			"attributes.go": true,
 		},
-		// Legacy attributes that are still used in some datasource schemas
-		AllowLegacyAttributes: []string{
-			"computedEventAttributes",
-			"computedCursorAttribute",
-			"computedAuditAttribute",
-		},
+		// No legacy attributes allowed - all datasources now use AddAttr or inline definitions
+		AllowLegacyAttributes: []string{},
 	}
 
 	result, err := validator.ValidateSchemaPatterns(".", opts)

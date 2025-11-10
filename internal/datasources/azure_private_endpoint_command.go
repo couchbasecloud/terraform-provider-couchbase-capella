@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -37,35 +36,7 @@ func (a *AzurePrivateEndpointCommand) Metadata(_ context.Context, req datasource
 
 // Schema defines the schema for the private endpoint command data source.
 func (a *AzurePrivateEndpointCommand) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		MarkdownDescription: "The data source to generate an Azure CLI command for setting up a private endpoint connection to a Capella cluster. Retrieves the command or script to create the private endpoint, which establishes a private connection between the specified VPC and the designated Capella private endpoint service.",
-		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the organization.",
-			},
-			"project_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the project.",
-			},
-			"cluster_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the cluster.",
-			},
-			"resource_group_name": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The name of your Azure resource group.",
-			},
-			"virtual_network": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The virtual network and subnet name",
-			},
-			"command": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "The generated Azure CLI command that can be used to create the private endpoint connection within Azure.",
-			},
-		},
-	}
+	resp.Schema = AzurePrivateEndpointCommandSchema()
 }
 
 // Read refreshes the Terraform state with the latest data of private endpoint command .

@@ -11,7 +11,6 @@ import (
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -37,48 +36,7 @@ func (a *AuditLogSettings) Metadata(_ context.Context, req datasource.MetadataRe
 }
 
 func (a *AuditLogSettings) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		MarkdownDescription: "The data source to retrieve audit log configuration settings for an operational cluster. These settings control which events are logged and which users are excluded.",
-		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the organization.",
-			},
-			"project_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the project.",
-			},
-			"cluster_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the cluster.",
-			},
-			"audit_enabled": schema.BoolAttribute{
-				Computed:            true,
-				MarkdownDescription: "Specifies whether audit logging is enabled for this cluster.",
-			},
-			"enabled_event_ids": schema.SetAttribute{
-				Computed:            true,
-				ElementType:         types.Int64Type,
-				MarkdownDescription: "List of audit event IDs that are currently enabled for logging. These IDs correspond to specific types of events that will be recorded in the audit log.",
-			},
-			"disabled_users": schema.SetNestedAttribute{
-				Computed:            true,
-				MarkdownDescription: "List of users whose actions are excluded from audit logging.",
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"domain": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The authentication domain of the excluded user.",
-						},
-						"name": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The username of the excluded user.",
-						},
-					},
-				},
-			},
-		},
-	}
+	resp.Schema = AuditLogSettingsSchema()
 }
 
 // Read refreshes the Terraform state with the latest audit log settings.

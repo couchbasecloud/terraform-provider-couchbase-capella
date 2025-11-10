@@ -92,7 +92,7 @@ func ValidateSchemaPatterns(schemaDir string, opts ValidationOptions) (*Validati
 				if !strings.Contains(trimmed, "schema.Schema{") && !strings.Contains(trimmed, "return schema.Schema{") {
 					// Check if the previous few lines have 'return schema.Schema'
 					isTopLevel := false
-					for j := max(0, i-5); j < i; j++ {
+					for j := maxInt(0, i-5); j < i; j++ {
 						if strings.Contains(lines[j], "return schema.Schema{") {
 							isTopLevel = true
 							break
@@ -100,7 +100,7 @@ func ValidateSchemaPatterns(schemaDir string, opts ValidationOptions) (*Validati
 					}
 					// Check if it's in a filter block (some datasources have this)
 					isFilterBlock := false
-					for j := max(0, i-10); j < i; j++ {
+					for j := maxInt(0, i-10); j < i; j++ {
 						if strings.Contains(lines[j], `filterAttrs["`) || strings.Contains(lines[j], `filterAttrs :=`) {
 							isFilterBlock = true
 							break
@@ -157,7 +157,7 @@ func formatError(file string, line int, message string, code string) string {
 	return fmt.Sprintf("  %s: %s", file, message)
 }
 
-func max(a, b int) int {
+func maxInt(a, b int) int {
 	if a > b {
 		return a
 	}
