@@ -37,11 +37,13 @@ data "couchbase-capella_organization" "existing_organization" {
 
 Read-Only:
 
-- `created_at` (String)
-- `created_by` (String)
-- `modified_at` (String)
-- `modified_by` (String)
-- `version` (Number)
+- `created_at` (String) - The RFC3339 timestamp associated with when the resource was initially created.
+ - **Format**: Date-time in RFC3339 format
+- `created_by` (String) - The user who created the resource; this will be a UUID4 ID for standard users and will be a string such as "internal-support" for internal Couchbase support users.
+- `modified_at` (String) - The RFC3339 timestamp associated with when the resource was last modified.
+ - **Format**: Date-time in RFC3339 format
+- `modified_by` (String) - The user who last modified the resource; this will be a UUID4 ID for standard users and wilmal be a string such as "internal-support" for internal Couchbase support users.
+- `version` (Number) - The version of the document. This value is incremented each time the resource is modified.
 
 
 <a id="nestedatt--preferences"></a>
