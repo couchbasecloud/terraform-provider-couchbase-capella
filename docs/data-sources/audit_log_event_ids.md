@@ -31,14 +31,14 @@ data "couchbase-capella_audit_log_event_ids" "existing_auditlogeventids" {
 
 ### Read-Only
 
-- `data` (Attributes Set) Lists the available audit log events and their details. (see [below for nested schema](#nestedatt--data))
+- `data` (Attributes Set) (see [below for nested schema](#nestedatt--data))
 
 <a id="nestedatt--data"></a>
 ### Nested Schema for `data`
 
 Read-Only:
 
-- `description` (String) A description of the audit log event.
-- `id` (Number) The unique identifier for the audit log event.
-- `module` (String) The Couchbase Server module that generates this type of audit log event.
-- `name` (String) The name of the audit log event type.
+- `description` (String)
+- `id` (Number)
+- `module` (String)
+- `name` (String)

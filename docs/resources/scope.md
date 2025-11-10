@@ -31,19 +31,27 @@ resource "couchbase-capella_scope" "new_scope" {
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
-- `scope_name` (String) The name of the scope.
+- `scope_name` (String)
 
 ### Read-Only
 
-- `collections` (Attributes Set) The list of collections within this scope. (see [below for nested schema](#nestedatt--collections))
+- `collections` (Attributes Set) (see [below for nested schema](#nestedatt--collections))
 
 <a id="nestedatt--collections"></a>
 ### Nested Schema for `collections`
 
 Read-Only:
 
-- `max_ttl` (Number) The maximum Time To Live (TTL) for documents in the collection.
-- `name` (String) The name of the collection.
+- `max_ttl` (Number)
+- `name` (String) The name of the scope. The name should adhere to the following rules:
+
+1. The name must be between 1 and 251 characters in length.
+
+2. The name can contain only the characters A-Z, a-z, 0-9, and the symbols _, -, and %.
+
+3. The name cannot start with _ or %.
+
+Note that scope and collection names are case-sensitive.
 
 ## Import
 

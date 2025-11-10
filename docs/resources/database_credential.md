@@ -37,29 +37,53 @@ resource "couchbase-capella_database_credential" "new_database_credential" {
 
 - `access` (Attributes Set) Describes the access information of the database credential. (see [below for nested schema](#nestedatt--access))
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `name` (String) Username for the database credential.
+- `name` (String) Username for the database credential. The name should adhere to the following rules:
+
+1. The name must be between 2 & 128 characters.
+
+2. The name cannot contain spaces.
+
+3. The name cannot contain the following characters - `) ( > < , ; : " \ / ] [ ? = } {`
+
+4. The name cannot begin with `@` character.
+
+**Constraints:**
+  - Minimum length: 2 characters
+  - Maximum length: 128 characters
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
 ### Optional
 
-- `password` (String, Sensitive) A password associated with the database credential.
+- `password` (String, Sensitive) A password associated with the database credential. If this field is left empty, a password will be auto-generated.
+
+- The password should adhere to the following rules:
+
+  1. The password should have at least 8 characters.
+
+  2. Characters used for the password should contain at least one uppercase (A-Z), one lowercase (a-z), one numerical (0-9), and one special character.
+
+  3. The password must not contain any of the following characters: `< > ; . * & | £`
+
+**Constraints:**
+  - Minimum length: 8 characters
 
 ### Read-Only
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
 - `id` (String) The ID of the database credential created.
+**Format:** UUID (GUID4)
 
 <a id="nestedatt--access"></a>
 ### Nested Schema for `access`
 
 Required:
 
-- `privileges` (Set of String) The privileges field in this API represents the privilege level for users.
+- `privileges` (Set of String)
 
 Optional:
 
-- `resources` (Attributes) The resources for which access will be granted on. Leaving this empty will grant access to all buckets. (see [below for nested schema](#nestedatt--access--resources))
+- `resources` (Attributes) (see [below for nested schema](#nestedatt--access--resources))
 
 <a id="nestedatt--access--resources"></a>
 ### Nested Schema for `access.resources`
@@ -73,22 +97,46 @@ Optional:
 
 Required:
 
-- `name` (String) The name of the bucket.
+- `name` (String) Username for the database credential. The name should adhere to the following rules:
+
+1. The name must be between 2 & 128 characters.
+
+2. The name cannot contain spaces.
+
+3. The name cannot contain the following characters - `) ( > < , ; : " \ / ] [ ? = } {`
+
+4. The name cannot begin with `@` character.
+
+**Constraints:**
+  - Minimum length: 2 characters
+  - Maximum length: 128 characters
 
 Optional:
 
-- `scopes` (Attributes Set) The scopes under a bucket. (see [below for nested schema](#nestedatt--access--resources--buckets--scopes))
+- `scopes` (Attributes Set) (see [below for nested schema](#nestedatt--access--resources--buckets--scopes))
 
 <a id="nestedatt--access--resources--buckets--scopes"></a>
 ### Nested Schema for `access.resources.buckets.scopes`
 
 Required:
 
-- `name` (String) The name of the scope.
+- `name` (String) Username for the database credential. The name should adhere to the following rules:
+
+1. The name must be between 2 & 128 characters.
+
+2. The name cannot contain spaces.
+
+3. The name cannot contain the following characters - `) ( > < , ; : " \ / ] [ ? = } {`
+
+4. The name cannot begin with `@` character.
+
+**Constraints:**
+  - Minimum length: 2 characters
+  - Maximum length: 128 characters
 
 Optional:
 
-- `collections` (Set of String) The collections under a scope.
+- `collections` (Set of String)
 
 
 

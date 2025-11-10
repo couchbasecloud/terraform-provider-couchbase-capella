@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_private_endpoints Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  The data source to retrieve private endpoints for an operational cluster. Access your operational cluster from your Cloud Service Provider's private network. Returns a list of private endpoints associated with the endpoint service for your operational cluster, along with the endpoint state. Each private endpoint connects a private network to the operational cluster.
+  The data source to retrieve private endpoints for a cluster.
 ---
 
 # couchbase-capella_private_endpoints (Data Source)
 
-The data source to retrieve private endpoints for an operational cluster. Access your operational cluster from your Cloud Service Provider's private network. Returns a list of private endpoints associated with the endpoint service for your operational cluster, along with the endpoint state. Each private endpoint connects a private network to the operational cluster.
+The data source to retrieve private endpoints for a cluster.
 
 ## Example Usage
 
@@ -25,24 +25,22 @@ data "couchbase-capella_private_endpoints" "list_endpoints" {
 
 ### Required
 
-- `cluster_id` (String) The GUID4 ID of the cluster. Private endpoints enable secure access to this cluster through your Cloud Service Provider's private network.
+- `cluster_id` (String) The GUID4 ID of the cluster.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
 ### Read-Only
 
-- `data` (Attributes List) Lists the private endpoints associated with the cluster. Each entry represents a connection point between your private network and the Capella cluster. (see [below for nested schema](#nestedatt--data))
+- `data` (Attributes List) (see [below for nested schema](#nestedatt--data))
 
 <a id="nestedatt--data"></a>
 ### Nested Schema for `data`
 
 Read-Only:
 
-- `id` (String) The unique identifier of the private endpoint.
-- `status` (String) The current status of the private endpoint. Possible values are:
-* `pending` - The endpoint creation is in progress
-* `pendingAcceptance` - The endpoint is waiting for acceptance from Capella
-* `linked` - The endpoint is successfully connected and active
-* `rejected` - The endpoint connection request was rejected
-* `unrecognized` - The endpoint state cannot be determined
-* `failed` - The endpoint creation or connection attempt failed
+- `cloud_provider` (String)
+- `cluster_id` (String) The GUID4 ID of the cluster.
+- `id` (String)
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
+- `status` (String)

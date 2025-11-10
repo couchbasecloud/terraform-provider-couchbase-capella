@@ -33,24 +33,54 @@ resource "couchbase-capella_app_service" "new_app_service" {
 ### Required
 
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `compute` (Attributes) The CPU and RAM configuration of the App Service. (see [below for nested schema](#nestedatt--compute))
-- `name` (String) Name of the cluster (up to 256 characters).
+- `compute` (Attributes) The CPU and RAM configuration of the App Service. The supported combinations are:
+| CPU (cores)| RAM  (GB)   |
+| --------   |   -------   |
+| 2          | 4           |
+| 4          | 8           |
+| 8          | 16          |
+| 16         | 32          |
+| 36         | 72          | (see [below for nested schema](#nestedatt--compute))
+- `name` (String) Name of the App Service (up to 256 characters).
+
+**Constraints:**
+  - Maximum length: 256 characters
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
 ### Optional
 
-- `cloud_provider` (String) The Cloud Service Provider for the App Service.
-- `description` (String) A short description of the App Service.
+- `cloud_provider` (String) Provider is the cloud service provider for the App Service.
+- `description` (String) Description of the App Service (up to 1024 characters).
+
+**Constraints:**
+  - Maximum length: 1024 characters
 - `if_match` (String) A precondition header that specifies the entity tag of a resource.
-- `nodes` (Number) Number of nodes configured for the App Service. Number of nodes configured for the App Service. The number of nodes can range from 2 to 12.
+- `nodes` (Number) Number of nodes configured for the App Service.
 
 ### Read-Only
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
-- `current_state` (String) The current state of the App Service.
-- `etag` (String)
+- `current_state` (String) **Valid Values:**
+  - `pending`
+  - `deploying`
+  - `deploymentFailed`
+  - `destroying`
+  - `destroyFailed`
+  - `healthy`
+  - `degraded`
+  - `scaling`
+  - `scaleFailed`
+  - `upgrading`
+  - `upgradeFailed`
+  - `turnedOff`
+  - `turningOff`
+  - `turnOffFailed`
+  - `turningOn`
+  - `turnOnFailed`
+- `etag` (String) Entity tag for the resource, used for caching and conditional requests.
 - `id` (String) The ID of the App Service created.
+**Format:** UUID (GUID4)
 - `version` (String) The version of the App Service server. If left empty, it will be defaulted to the latest available version.
 
 <a id="nestedatt--compute"></a>
@@ -58,8 +88,8 @@ resource "couchbase-capella_app_service" "new_app_service" {
 
 Required:
 
-- `cpu` (Number) CPU units (cores).
-- `ram` (Number) RAM units (GB).
+- `cpu` (Number)
+- `ram` (Number)
 
 
 <a id="nestedatt--audit"></a>

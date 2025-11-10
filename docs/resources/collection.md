@@ -31,14 +31,14 @@ resource "couchbase-capella_collection" "new_collection" {
 
 - `bucket_id` (String) The ID of the bucket. It is the URL-compatible base64 encoding of the bucket name.
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `collection_name` (String) The name of the collection.
+- `collection_name` (String)
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
-- `scope_name` (String) The name of the scope.
+- `scope_name` (String)
 
 ### Optional
 
-- `max_ttl` (Number) The maximum Time To Live (TTL) for documents in the collection.
+- `max_ttl` (Number)
 
 ## Import
 

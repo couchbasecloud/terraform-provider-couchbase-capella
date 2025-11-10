@@ -73,45 +73,45 @@ resource "couchbase-capella_network_peer" "new_network_peer" {
 
 ### Required
 
-- `cluster_id` (String) The GUID4 ID of the cluster to set up network peering.
-- `name` (String) The name of the network peering relationship.
+- `cluster_id` (String) The GUID4 ID of the cluster.
+- `name` (String)
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
-- `provider_config` (Attributes) The Cloud Service Provider's specific configuration for the network peering. The 'accountId', 'vpcId', 'region', and 'cidr' fields are required for AWS VPC peering. For GCP, the 'networkName', 'projectId', 'serviceAccount', and 'cidr' fields are required for VPC peering. (see [below for nested schema](#nestedatt--provider_config))
-- `provider_type` (String) The Cloud Service Provider type for the network peering. Currently supporting AWS, GCP, or Azure.
+- `provider_config` (Attributes) (see [below for nested schema](#nestedatt--provider_config))
+- `provider_type` (String)
 
 ### Read-Only
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
-- `commands` (Set of String) The list of commands required to set up network peering.
-- `id` (String) The unique identifier for the network peering record.
-- `status` (Attributes) Current status of the network peering connection. (see [below for nested schema](#nestedatt--status))
+- `commands` (Set of String)
+- `id` (String) The ID of this resource.
+- `status` (Attributes) (see [below for nested schema](#nestedatt--status))
 
 <a id="nestedatt--provider_config"></a>
 ### Nested Schema for `provider_config`
 
 Optional:
 
-- `aws_config` (Attributes) AWS-specific configuration for VPC peering. (see [below for nested schema](#nestedatt--provider_config--aws_config))
-- `azure_config` (Attributes) Azure-specific configuration for VNet peering. (see [below for nested schema](#nestedatt--provider_config--azure_config))
-- `gcp_config` (Attributes) GCP-specific configuration for VPC network peering. (see [below for nested schema](#nestedatt--provider_config--gcp_config))
+- `aws_config` (Attributes) (see [below for nested schema](#nestedatt--provider_config--aws_config))
+- `azure_config` (Attributes) (see [below for nested schema](#nestedatt--provider_config--azure_config))
+- `gcp_config` (Attributes) (see [below for nested schema](#nestedatt--provider_config--gcp_config))
 
 <a id="nestedatt--provider_config--aws_config"></a>
 ### Nested Schema for `provider_config.aws_config`
 
 Required:
 
-- `cidr` (String) The AWS VPC CIDR block of network in which your application runs. This cannot overlap with your Capella CIDR Block.
+- `cidr` (String)
 
 Optional:
 
-- `account_id` (String) The numeric AWS Account ID or Owner ID.
-- `region` (String) The AWS region where your VPC is deployed.
-- `vpc_id` (String) The alphanumeric VPC ID which starts with 'vpc-'. This is also known as the networkId.
+- `account_id` (String)
+- `region` (String)
+- `vpc_id` (String)
 
 Read-Only:
 
-- `provider_id` (String) The ID of the VPC peer on AWS.
+- `provider_id` (String) The unique identifier of the provider.
 
 
 <a id="nestedatt--provider_config--azure_config"></a>
@@ -119,18 +119,18 @@ Read-Only:
 
 Required:
 
-- `cidr` (String) The CIDR block from the virtual network that you created in Azure. This cannot overlap with your Capella CIDR Block.
+- `cidr` (String)
 
 Optional:
 
-- `resource_group` (String) The resource group name holding the resource you're connecting with Capella.
-- `subscription_id` (String) The Azure subscription ID where the VNet exists.
-- `tenant_id` (String) The Azure tenant ID where the VNet exists.
-- `vnet_id` (String) The VNet ID is the name of the virtual network peering in Azure.
+- `resource_group` (String)
+- `subscription_id` (String)
+- `tenant_id` (String)
+- `vnet_id` (String)
 
 Read-Only:
 
-- `provider_id` (String) The ID of the VNet peer on Azure.
+- `provider_id` (String) The unique identifier of the provider.
 
 
 <a id="nestedatt--provider_config--gcp_config"></a>
@@ -138,17 +138,17 @@ Read-Only:
 
 Required:
 
-- `cidr` (String) The GCP VPC CIDR block of network in which your application runs. This cannot overlap with your Capella CIDR Block.
+- `cidr` (String)
 
 Optional:
 
-- `network_name` (String) The name of the network that you want to peer with.
-- `project_id` (String) The unique identifier for your GCP project.
-- `service_account` (String) ServiceAccount created or assigned on the external VPC project. GCP Service Account with DNS Admin and Compute.NetworkAdmin permissions. Must be in email form shown by 'gcloud iam service-accounts list'.
+- `network_name` (String)
+- `project_id` (String) The GUID4 ID of the project.
+- `service_account` (String)
 
 Read-Only:
 
-- `provider_id` (String) The ID of the VPC peer on GCP.
+- `provider_id` (String) The unique identifier of the provider.
 
 
 
@@ -169,8 +169,8 @@ Read-Only:
 
 Read-Only:
 
-- `reasoning` (String) Detailed reason for the current status of the peering connection.
-- `state` (String) Current state of the peering connection. The status options are 'pending', 'active', or 'failed'.
+- `reasoning` (String)
+- `state` (String)
 
 ## Import
 

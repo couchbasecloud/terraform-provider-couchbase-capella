@@ -28,25 +28,31 @@ resource "couchbase-capella_free_tier_app_service" "new_free_tier_app_service" {
 ### Required
 
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `name` (String) Name of the free tier App Service.
+- `name` (String) Name of App Service.
+
+**Constraints:**
+  - Maximum length: 256 characters
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
 ### Optional
 
-- `description` (String) Description of the free tier App Service.
+- `description` (String) A short description of the App Service.
+
+**Constraints:**
+  - Maximum length: 256 characters
 
 ### Read-Only
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
-- `cloud_provider` (String) The Cloud Service Provider of the free tier App Service. The supported Cloud Service Providers are AWS, GCP, and Azure.
-- `compute` (Attributes) Compute configuration of the free tier App Service. (see [below for nested schema](#nestedatt--compute))
-- `current_state` (String) Current state of the free tier App Service.
-- `etag` (String) ETag of the free tier App Service.
-- `id` (String) ID of the free tier App Service.
-- `nodes` (Number) Number of nodes in the free tier App Service.
-- `plan` (String) The Support plan associated with the free tier App Service. The Support plan options are 'Basic', 'Developer Pro', or 'Enterprise'.
-- `version` (String) The Server version of the free tier App Service.
+- `cloud_provider` (String)
+- `compute` (Attributes) (see [below for nested schema](#nestedatt--compute))
+- `current_state` (String)
+- `etag` (String) Entity tag for the resource, used for caching and conditional requests.
+- `id` (String) The ID of this resource.
+- `nodes` (Number)
+- `plan` (String)
+- `version` (String)
 
 <a id="nestedatt--audit"></a>
 ### Nested Schema for `audit`
@@ -65,8 +71,8 @@ Read-Only:
 
 Read-Only:
 
-- `cpu` (Number) The number of CPUs of the free tier App Service node.
-- `ram` (Number) The amount of RAM of the free tier App Service node.
+- `cpu` (Number)
+- `ram` (Number)
 
 ## Import
 

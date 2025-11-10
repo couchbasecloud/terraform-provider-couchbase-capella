@@ -33,20 +33,20 @@ data "couchbase-capella_scopes" "existing_scopes" {
 
 ### Read-Only
 
-- `scopes` (Attributes List) The list of scopes in the bucket. (see [below for nested schema](#nestedatt--scopes))
+- `scopes` (Attributes List) (see [below for nested schema](#nestedatt--scopes))
 
 <a id="nestedatt--scopes"></a>
 ### Nested Schema for `scopes`
 
 Read-Only:
 
-- `collections` (Attributes Set) The list of collections in the scope. (see [below for nested schema](#nestedatt--scopes--collections))
-- `scope_name` (String) The name of the scope.
+- `collections` (Attributes Set) (see [below for nested schema](#nestedatt--scopes--collections))
+- `scope_name` (String)
 
 <a id="nestedatt--scopes--collections"></a>
 ### Nested Schema for `scopes.collections`
 
 Read-Only:
 
-- `max_ttl` (Number) The maximum time-to-live (TTL) for documents in the collection, in seconds.
-- `name` (String) The name of the collection.
+- `max_ttl` (Number)
+- `name` (String)

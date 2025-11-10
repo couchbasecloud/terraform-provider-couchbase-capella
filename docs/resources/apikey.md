@@ -29,36 +29,36 @@ resource "couchbase-capella_apikey" "new_apikey" {
 
 ### Required
 
-- `name` (String) Name of the API key.
+- `name` (String)
 - `organization_id` (String) The GUID4 ID of the organization.
 - `organization_roles` (Set of String)
 
 ### Optional
 
-- `allowed_cidrs` (Set of String) List of inbound CIDRs for the API key. The system making a request must come from one of the allowed CIDRs.
-- `description` (String) Description for the API key.
-- `expiry` (Number) Expiry of the API key in number of days. If set to -1, the token will not expire.
-- `resources` (Attributes Set) Resources are the resource level permissions associated with the API key. (see [below for nested schema](#nestedatt--resources))
+- `allowed_cidrs` (Set of String)
+- `description` (String)
+- `expiry` (Number)
+- `resources` (Attributes Set) (see [below for nested schema](#nestedatt--resources))
 - `rotate` (Number)
-- `secret` (String, Sensitive) A secret associated with API key. One has to follow the secret key policy, such as allowed characters and a length of 64 characters. If this field is left empty, a secret will be auto-generated.
+- `secret` (String, Sensitive)
 
 ### Read-Only
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
-- `id` (String) The ID (Access key) of the API key.
-- `token` (String, Sensitive) The Token is a confidential piece of information that is used to authorize requests made to v4 endpoints.
+- `id` (String) The ID of this resource.
+- `token` (String, Sensitive)
 
 <a id="nestedatt--resources"></a>
 ### Nested Schema for `resources`
 
 Required:
 
-- `id` (String) The GUID4 ID of the project.
-- `roles` (Set of String) Project Roles associated with the API key.
+- `id` (String)
+- `roles` (Set of String)
 
 Optional:
 
-- `type` (String) Resource type.
+- `type` (String)
 
 
 <a id="nestedatt--audit"></a>

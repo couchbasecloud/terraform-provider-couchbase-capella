@@ -26,30 +26,30 @@ data "couchbase-capella_app_services_cidr" "existing_allowed_cidr" {
 
 ### Read-Only
 
-- `data` (Attributes List) The list of allowed CIDR blocks for an App Service. (see [below for nested schema](#nestedatt--data))
+- `data` (Attributes List) (see [below for nested schema](#nestedatt--data))
 
 <a id="nestedatt--data"></a>
 ### Nested Schema for `data`
 
 Read-Only:
 
-- `app_service_id` (String)
+- `app_service_id` (String) The GUID4 ID of the appService.
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--data--audit))
-- `cidr` (String) The trusted CIDR block to allow the database connections from.
-- `cluster_id` (String)
-- `comment` (String) A short description of the allowed CIDR block.
-- `expires_at` (String) An RFC3339 timestamp determining when the allowed CIDR block will expire. If this field is empty/omitted then the allowed CIDR block is permanent. It will never automatically expire.
-- `id` (String) The ID of the allowed CIDR block.
-- `organization_id` (String)
-- `project_id` (String)
+- `cidr` (String)
+- `cluster_id` (String) The GUID4 ID of the cluster.
+- `comment` (String)
+- `expires_at` (String)
+- `id` (String)
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
 
 <a id="nestedatt--data--audit"></a>
 ### Nested Schema for `data.audit`
 
 Read-Only:
 
-- `created_at` (String) The RFC3339 timestamp when the resource was created.
-- `created_by` (String) The user who created the resource.
-- `modified_at` (String) The RFC3339 timestamp when the resource was last modified.
-- `modified_by` (String) The user who last modified the resource.
-- `version` (Number) The version of the document. This value is incremented each time the resource is modified.
+- `created_at` (String)
+- `created_by` (String)
+- `modified_at` (String)
+- `modified_by` (String)
+- `version` (Number)

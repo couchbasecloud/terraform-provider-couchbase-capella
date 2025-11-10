@@ -44,10 +44,10 @@ Required:
 
 Read-Only:
 
-- `audit_log_download_url` (String) Pre-signed URL to download cluster audit logs. This URL is only available when the export job status is 'completed'.
-- `created_at` (String) The timestamp when this audit log export job was created.
-- `end` (String) The end timestamp for the audit log export in RFC3339 format (e.g., '2024-01-02T00:00:00Z'). This defines the end of the time period to export logs from.
-- `expiration` (String) The timestamp for when the audit log export expires and will no longer be available for download.
-- `id` (String) The ID of the audit log export job.
-- `start` (String) The start timestamp for the audit log export in RFC3339 format (e.g., '2024-01-01T00:00:00Z'). This defines the beginning of the time period to export logs from.
-- `status` (String) The current status of the audit log export job. Audit log export job statuses are 'queued', 'in progress', 'completed', or 'failed'.
+- `audit_log_download_url` (String)
+- `created_at` (String)
+- `end` (String)
+- `expiration` (String)
+- `id` (String)
+- `start` (String)
+- `status` (String)

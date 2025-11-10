@@ -90,31 +90,31 @@ resource "couchbase-capella_cluster_onoff_schedule" "new_cluster_onoff_schedule"
 ### Required
 
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `days` (Attributes List) List of days the On/Off schedule is active. (see [below for nested schema](#nestedatt--days))
+- `days` (Attributes List) (see [below for nested schema](#nestedatt--days))
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
-- `timezone` (String) Timezone for the schedule. Should be the TZ identifier. For example, 'US/Hawaii', 'Indian/Mauritius'
+- `timezone` (String)
 
 <a id="nestedatt--days"></a>
 ### Nested Schema for `days`
 
 Required:
 
-- `day` (String) Day of the week for scheduling on/off.
-- `state` (String) The cluster state. It can be 'on', 'off', or 'custom'.
+- `day` (String)
+- `state` (String)
 
 Optional:
 
-- `from` (Attributes) OnTimeBoundary corresponds to "from" and "to" time boundaries for when the cluster needs to be in the turned on (healthy) state on a day with "custom" scheduling timings. (see [below for nested schema](#nestedatt--days--from))
-- `to` (Attributes) OnTimeBoundary corresponds to "from" and "to" time boundaries for when the cluster needs to be in the turned on (healthy) state on a day with "custom" scheduling timings. (see [below for nested schema](#nestedatt--days--to))
+- `from` (Attributes) (see [below for nested schema](#nestedatt--days--from))
+- `to` (Attributes) (see [below for nested schema](#nestedatt--days--to))
 
 <a id="nestedatt--days--from"></a>
 ### Nested Schema for `days.from`
 
 Optional:
 
-- `hour` (Number) Hour of the time boundary. The valid hour values are from 0 to 23 inclusive.
-- `minute` (Number) Minute of the time boundary. The valid minute values are 0 and 30.
+- `hour` (Number)
+- `minute` (Number)
 
 
 <a id="nestedatt--days--to"></a>
@@ -122,8 +122,8 @@ Optional:
 
 Optional:
 
-- `hour` (Number) Hour of the time boundary. The valid hour values are from 0 to 23 inclusive.
-- `minute` (Number) Minute of the time boundary. The valid minute values are 0 and 30.
+- `hour` (Number)
+- `minute` (Number)
 
 ## Import
 

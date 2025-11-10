@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_azure_private_endpoint_command Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  The data source to generate an Azure CLI command for setting up a private endpoint connection to a Capella cluster. Retrieves the command or script to create the private endpoint, which establishes a private connection between the specified VPC and the designated Capella private endpoint service.
+  The data source to generate an Azure CLI command for setting up a private endpoint connection to an operational cluster.
 ---
 
 # couchbase-capella_azure_private_endpoint_command (Data Source)
 
-The data source to generate an Azure CLI command for setting up a private endpoint connection to a Capella cluster. Retrieves the command or script to create the private endpoint, which establishes a private connection between the specified VPC and the designated Capella private endpoint service.
+The data source to generate an Azure CLI command for setting up a private endpoint connection to an operational cluster.
 
 ## Example Usage
 
@@ -30,9 +30,17 @@ data "couchbase-capella_azure_private_endpoint_command" "azure_command" {
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
-- `resource_group_name` (String) The name of your Azure resource group.
+- `resource_group_name` (String) The name of your resource group
+
+**Constraints:**
+  - Minimum length: 1 characters
+  - Maximum length: 90 characters
 - `virtual_network` (String) The virtual network and subnet name
+
+**Constraints:**
+  - Minimum length: 2 characters
+  - Maximum length: 64 characters
 
 ### Read-Only
 
-- `command` (String) The generated Azure CLI command that can be used to create the private endpoint connection within Azure.
+- `command` (String)

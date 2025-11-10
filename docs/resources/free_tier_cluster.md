@@ -31,38 +31,51 @@ resource "couchbase-capella_free_tier_cluster" "new_free_tier_cluster" {
 
 ### Required
 
-- `cloud_provider` (Attributes) The Cloud Service Provider details for the free tier cluster. (see [below for nested schema](#nestedatt--cloud_provider))
-- `name` (String) Name of the free tier cluster.
+- `cloud_provider` (Attributes) The cloud provider where the cluster will be hosted.
+For information about providers and supported regions, see:
+
+- [Amazon Web Services](https://docs.couchbase.com/cloud/reference/aws.html)
+
+- [Google Cloud Platform](https://docs.couchbase.com/cloud/reference/gcp.html)
+
+- [Microsoft Azure](https://docs.couchbase.com/cloud/reference/azure.html) (see [below for nested schema](#nestedatt--cloud_provider))
+- `name` (String) Name of the cluster (up to 256 characters).
+
+**Constraints:**
+  - Maximum length: 256 characters
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
 ### Optional
 
-- `description` (String) Description of the free tier cluster.
+- `description` (String) Description of the cluster (up to 1024 characters).
+
+**Constraints:**
+  - Maximum length: 1024 characters
 
 ### Read-Only
 
-- `app_service_id` (String) The GUID4 ID of the App Service.
+- `app_service_id` (String) The GUID4 ID of the appService.
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
-- `availability` (Attributes) Availability zone details for the free tier cluster. Free tier clusters have single availability zones (AZ). (see [below for nested schema](#nestedatt--availability))
-- `cmek_id` (String) The customer-managed encryption key (CMEK) ID.
-- `connection_string` (String) The connection string of the free tier cluster.
-- `couchbase_server` (Attributes) Couchbase Server details for the free tier cluster. (see [below for nested schema](#nestedatt--couchbase_server))
-- `current_state` (String) The current state of the free tier cluster.
-- `enable_private_dns_resolution` (Boolean) Indicates if the private DNS resolution is enabled for the cluster.
-- `etag` (String) The etag of the free tier cluster, part of the response header
-- `id` (String) The GUID4 ID of the free tier cluster.
-- `service_groups` (Attributes Set) The Service Groups for the free tier cluster. (see [below for nested schema](#nestedatt--service_groups))
-- `support` (Attributes) The Support information for the free tier cluster. (see [below for nested schema](#nestedatt--support))
+- `availability` (Attributes) (see [below for nested schema](#nestedatt--availability))
+- `cmek_id` (String)
+- `connection_string` (String)
+- `couchbase_server` (Attributes) (see [below for nested schema](#nestedatt--couchbase_server))
+- `current_state` (String)
+- `enable_private_dns_resolution` (Boolean)
+- `etag` (String) Entity tag for the resource, used for caching and conditional requests.
+- `id` (String) The ID of this resource.
+- `service_groups` (Attributes Set) (see [below for nested schema](#nestedatt--service_groups))
+- `support` (Attributes) (see [below for nested schema](#nestedatt--support))
 
 <a id="nestedatt--cloud_provider"></a>
 ### Nested Schema for `cloud_provider`
 
 Required:
 
-- `cidr` (String) CIDR block for the Cloud Service Provider.
-- `region` (String) The region for the Cloud Service Provider. This should be a valid region for the specified Cloud Service Provider. For example 'us-west-2'.
-- `type` (String) The Cloud Service Provider type. Currently supporting AWS, GCP and Azure.
+- `cidr` (String)
+- `region` (String)
+- `type` (String)
 
 
 <a id="nestedatt--audit"></a>
@@ -82,7 +95,7 @@ Read-Only:
 
 Read-Only:
 
-- `type` (String) The availability zone type. This should be 'single' for the free tier cluster.
+- `type` (String)
 
 
 <a id="nestedatt--couchbase_server"></a>
@@ -90,7 +103,7 @@ Read-Only:
 
 Read-Only:
 
-- `version` (String) The version of Couchbase Server for the free tier cluster.
+- `version` (String)
 
 
 <a id="nestedatt--service_groups"></a>
@@ -98,25 +111,25 @@ Read-Only:
 
 Read-Only:
 
-- `node` (Attributes) Node details for the Service Group. (see [below for nested schema](#nestedatt--service_groups--node))
-- `num_of_nodes` (Number) The number of nodes in the Service Group.
-- `services` (Set of String) The services enabled for the Service Group. Should be a comma-separated list of services. For example, 'data,index,query'.
+- `node` (Attributes) (see [below for nested schema](#nestedatt--service_groups--node))
+- `num_of_nodes` (Number)
+- `services` (Set of String)
 
 <a id="nestedatt--service_groups--node"></a>
 ### Nested Schema for `service_groups.node`
 
 Read-Only:
 
-- `compute` (Attributes) Compute details for the node (see [below for nested schema](#nestedatt--service_groups--node--compute))
-- `disk` (Attributes) Disk details for the node (see [below for nested schema](#nestedatt--service_groups--node--disk))
+- `compute` (Attributes) (see [below for nested schema](#nestedatt--service_groups--node--compute))
+- `disk` (Attributes) (see [below for nested schema](#nestedatt--service_groups--node--disk))
 
 <a id="nestedatt--service_groups--node--compute"></a>
 ### Nested Schema for `service_groups.node.compute`
 
 Read-Only:
 
-- `cpu` (Number) The number of CPU cores for the node.
-- `ram` (Number) The amount of RAM for the node.
+- `cpu` (Number)
+- `ram` (Number)
 
 
 <a id="nestedatt--service_groups--node--disk"></a>
@@ -124,10 +137,10 @@ Read-Only:
 
 Read-Only:
 
-- `autoexpansion` (Boolean) Indicates if auto-expansion is enabled for the disk.
-- `iops` (Number) Input/Output Operations Per Second (IOPS) for the disk.
-- `storage` (Number) Storage size of the disk.
-- `type` (String) The type of disk for the node. Should be one of 'ssd', 'hdd', or 'nvme'.
+- `autoexpansion` (Boolean)
+- `iops` (Number)
+- `storage` (Number)
+- `type` (String)
 
 
 
@@ -137,8 +150,8 @@ Read-Only:
 
 Read-Only:
 
-- `plan` (String) The Support plan for the free tier cluster. The free tier plan is automatically assigned to free tier clusters.
-- `timezone` (String) The standard timezone for the cluster. Should be the TZ identifier. For example, 'ET'.
+- `plan` (String)
+- `timezone` (String)
 
 ## Import
 

@@ -29,7 +29,7 @@ resource "couchbase-capella_free_tier_cluster_on_off" "new_free_tier_cluster_on_
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
-- `state` (String) The On/Off state of the free tier cluster.
+- `state` (String)
 
 ## Import
 

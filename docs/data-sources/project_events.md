@@ -28,17 +28,17 @@ data "couchbase-capella_project_events" "existing_project_events" {
 
 ### Optional
 
-- `cluster_ids` (Set of String) List of clusterIds to filter on. By default, events corresponding to all clusters are returned.
-- `from` (String) Start date in RFC3339 format. If not provided, events starting from last 24 hours are returned.
-- `page` (Number) Sets the page you would like to view.
-- `per_page` (Number) Sets the number of results you would like to have on each page.
+- `cluster_ids` (Set of String)
+- `from` (String)
+- `page` (Number)
+- `per_page` (Number)
 - `project_id` (String) The GUID4 ID of the project.
-- `severity_levels` (Set of String) Filter by severity levels. Default is to return events corresponding to all supported severity levels.
-- `sort_by` (String) Sets the order of how you would like to sort the results and the key you would like to order by. Valid fields to sort the results are: severity, timestamp.
-- `sort_direction` (String) The order in which the items will be sorted.
-- `tags` (Set of String) Filter by tags. Default is to return events corresponding to all supported tag. The tags are: availability, billing, maintenance, performance, security, alert.
-- `to` (String) End datetime in the last 24 hours, RFC3339 format. Defaults to Now.
-- `user_ids` (Set of String) Filter by user UUID. Default is to return events corresponding to all users.
+- `severity_levels` (Set of String)
+- `sort_by` (String)
+- `sort_direction` (String)
+- `tags` (Set of String)
+- `to` (String)
+- `user_ids` (Set of String)
 
 ### Read-Only
 
@@ -58,10 +58,10 @@ Read-Only:
 
 Read-Only:
 
-- `first` (String) The base URL, endpoint, and path parameters required to fetch the first page of results.
-- `last` (String) The base URL, endpoint, and path parameters required to fetch the last page of results.
-- `next` (String) The base URL, endpoint, and path parameters required to fetch the next page of results. Empty if there is no next page.
-- `previous` (String) The base URL, endpoint, and path parameters required to fetch the previous page of results. Empty if there is no previous page.
+- `first` (String)
+- `last` (String)
+- `next` (String)
+- `previous` (String)
 
 
 <a id="nestedatt--cursor--pages"></a>
@@ -69,12 +69,12 @@ Read-Only:
 
 Read-Only:
 
-- `last` (Number) Number of the last page of results.
-- `next` (Number) Number of the next page of results. Not set on the last page.
-- `page` (Number) Current page of results, starting from page 1.
-- `per_page` (Number) Number of items displayed in each page.
-- `previous` (Number) Number of the previous page of results. Not set on the first page.
-- `total_items` (Number) Total number of items across all pages.
+- `last` (Number)
+- `next` (Number)
+- `page` (Number)
+- `per_page` (Number)
+- `previous` (Number)
+- `total_items` (Number)
 
 
 
@@ -83,25 +83,25 @@ Read-Only:
 
 Read-Only:
 
-- `alert_key` (String) Populated on demand based on the Event.Key and select labels in KV.
-- `app_service_id` (String) SyncGatewayID this Event refers to.
-- `app_service_name` (String) Name of the sync gateway at the time of event emission.
+- `alert_key` (String)
+- `app_service_id` (String) The GUID4 ID of the appService.
+- `app_service_name` (String)
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `cluster_name` (String) Name of the cluster at the time of event emission.
-- `id` (String) UUID for this instance of an event.
-- `image_url` (String) URL to a rendered chart image representing the alert event.
-- `incident_ids` (Set of String) Group events related to an alert incident.
-- `key` (String) Defines the specific kind of event.
-- `kv` (String) Key-value pairs for additional event data.
-- `occurrence_count` (Number) Number of times the alert has fired within this "incident".
+- `cluster_name` (String)
+- `id` (String)
+- `image_url` (String)
+- `incident_ids` (Set of String)
+- `key` (String)
+- `kv` (String)
+- `occurrence_count` (Number)
 - `project_id` (String) The GUID4 ID of the project.
-- `project_name` (String) Name of the project at the time of event emission.
-- `request_id` (String) The request ID for an event.
-- `session_id` (String) ID of the session associated with the user that initiated the request for this event.
-- `severity` (String) Severity of the event.
-- `source` (String) Identifies the originator of the event.
-- `summary` (String) Metadata.SummaryTemplate rendered for this event.
-- `timestamp` (String) The RFC3339 timestamp when the event was emitted.
-- `user_email` (String) Email of the associated user at the time of event emission.
-- `user_id` (String) User ID that initiated the request for this event.
-- `user_name` (String) Name of the associated user at the time of event emission.
+- `project_name` (String)
+- `request_id` (String)
+- `session_id` (String)
+- `severity` (String)
+- `source` (String)
+- `summary` (String)
+- `timestamp` (String)
+- `user_email` (String)
+- `user_id` (String) The GUID4 ID of the database credential.
+- `user_name` (String)

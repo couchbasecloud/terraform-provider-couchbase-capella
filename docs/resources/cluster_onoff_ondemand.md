@@ -30,11 +30,11 @@ resource "couchbase-capella_cluster_onoff_ondemand" "new_cluster_onoff_ondemand"
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
-- `state` (String) State of the cluster. It can be `on` and `off`.
+- `state` (String)
 
 ### Optional
 
-- `turn_on_linked_app_service` (Boolean) Whether to turn on the linked App Service when the cluster is turned on.
+- `turn_on_linked_app_service` (Boolean)
 
 ## Import
 

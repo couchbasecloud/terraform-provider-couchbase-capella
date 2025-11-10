@@ -28,26 +28,26 @@ The data source to retrieve API keys in an organization. API keys are used to au
 
 Read-Only:
 
-- `allowed_cidrs` (List of String) The list of inbound CIDRs for the API key. The system making a request must come from one of the allowed CIDRs.
+- `allowed_cidrs` (List of String)
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--data--audit))
-- `description` (String) A description for the API key.
-- `expiry` (Number) Expiry of the API key in number of days. If set to -1, the token will not expire.
-- `id` (String) The unique identifier for the API key.
-- `name` (String) Name of the API key.
+- `description` (String)
+- `expiry` (Number)
+- `id` (String)
+- `name` (String)
 - `organization_id` (String) The GUID4 ID of the organization.
-- `organization_roles` (List of String) List of the organization roles associated with the API key.
-- `resources` (Attributes List) Resource level permissions associated with the API key. (see [below for nested schema](#nestedatt--data--resources))
+- `organization_roles` (List of String)
+- `resources` (Attributes List) (see [below for nested schema](#nestedatt--data--resources))
 
 <a id="nestedatt--data--audit"></a>
 ### Nested Schema for `data.audit`
 
 Read-Only:
 
-- `created_at` (String) The RFC3339 timestamp when the resource was created.
-- `created_by` (String) The user who created the resource.
-- `modified_at` (String) The RFC3339 timestamp when the resource was last modified.
-- `modified_by` (String) The user who last modified the resource.
-- `version` (Number) The version of the document. This value is incremented each time the resource is modified.
+- `created_at` (String)
+- `created_by` (String)
+- `modified_at` (String)
+- `modified_by` (String)
+- `version` (Number)
 
 
 <a id="nestedatt--data--resources"></a>
@@ -55,6 +55,6 @@ Read-Only:
 
 Read-Only:
 
-- `id` (String) The GUID4 ID of the project.
-- `roles` (List of String) Project Roles associated with the API key.
-- `type` (String) Resource type.
+- `id` (String)
+- `roles` (List of String)
+- `type` (String)

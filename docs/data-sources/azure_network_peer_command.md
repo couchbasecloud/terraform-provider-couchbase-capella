@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_azure_network_peer_command Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  The data source to generate an Azure CLI command for setting up VNet peering between your Azure VNet and a Capella cluster. Retrieves the role assignment command or script to be executed in the Azure CLI to assign a new network contributor role. It scopes only to the specified subscription and the virtual network within that subscription.
+  The data source to generate an Azure CLI command for setting up a network peering connection to a cluster.
 ---
 
 # couchbase-capella_azure_network_peer_command (Data Source)
 
-The data source to generate an Azure CLI command for setting up VNet peering between your Azure VNet and a Capella cluster. Retrieves the role assignment command or script to be executed in the Azure CLI to assign a new network contributor role. It scopes only to the specified subscription and the virtual network within that subscription.
+The data source to generate an Azure CLI command for setting up a network peering connection to a cluster.
 
 ## Example Usage
 
@@ -33,12 +33,12 @@ data "couchbase-capella_azure_network_peer_command" "azure_network_peer_command"
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
-- `resource_group` (String) The resource group name holding the resource you’re connecting with Capella.
-- `subscription_id` (String) The GUID ID of your Azure service subscription.
-- `tenant_id` (String) The ID of the Azure tenant where your VNet resides.
-- `vnet_id` (String) The VNet ID is the name of the virtual network in Azure.
-- `vnet_peering_service_principal` (String) The enterprise application object ID for the Capella service principal. You can find this ID in Azure by selecting Azure Active Directory -> Enterprise applications. Next, select the application name, the object ID is in the Object ID box.
+- `resource_group` (String)
+- `subscription_id` (String)
+- `tenant_id` (String)
+- `vnet_id` (String)
+- `vnet_peering_service_principal` (String)
 
 ### Read-Only
 
-- `command` (String) The command you need to run in your external Azure account to assign the Network Contributor role to the service principal, which is required for VNet peering.
+- `command` (String)

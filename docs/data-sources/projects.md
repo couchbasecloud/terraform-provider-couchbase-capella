@@ -29,11 +29,11 @@ Data source to retrieve project details in an organization.
 Read-Only:
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--data--audit))
-- `description` (String) The description of a particular project.
-- `etag` (String) The ETag header value returned by the server, used for optimistic concurrency control.
-- `id` (String) The GUID4 ID of the project.
+- `description` (String)
+- `etag` (String) Entity tag for the resource, used for caching and conditional requests.
+- `id` (String)
 - `if_match` (String) A precondition header that specifies the entity tag of a resource.
-- `name` (String) The name of the project.
+- `name` (String)
 - `organization_id` (String) The GUID4 ID of the organization.
 
 <a id="nestedatt--data--audit"></a>
@@ -41,8 +41,8 @@ Read-Only:
 
 Read-Only:
 
-- `created_at` (String) The RFC3339 timestamp when the resource was created.
-- `created_by` (String) The user who created the resource.
-- `modified_at` (String) The RFC3339 timestamp when the resource was last modified.
-- `modified_by` (String) The user who last modified the resource.
-- `version` (Number) The version of the document. This value is incremented each time the resource is modified.
+- `created_at` (String)
+- `created_by` (String)
+- `modified_at` (String)
+- `modified_by` (String)
+- `version` (Number)

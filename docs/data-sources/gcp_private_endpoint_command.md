@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_gcp_private_endpoint_command Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  The data source to generate an GCP CLI command for setting up a private endpoint connection to an operational cluster. Retrieves the command or script to create the private endpoint, which establishes a private connection between the specified VPC and the Capella private endpoint service.
+  The data source to generate a GCP CLI command for setting up a private endpoint connection to an operational cluster.
 ---
 
 # couchbase-capella_gcp_private_endpoint_command (Data Source)
 
-The data source to generate an GCP CLI command for setting up a private endpoint connection to an operational cluster. Retrieves the command or script to create the private endpoint, which establishes a private connection between the specified VPC and the Capella private endpoint service.
+The data source to generate a GCP CLI command for setting up a private endpoint connection to an operational cluster.
 
 ## Example Usage
 
@@ -30,9 +30,9 @@ data "couchbase-capella_gcp_private_endpoint_command" "gcp_command" {
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
-- `subnet_ids` (Set of String) List of subnet IDs in your VPC where the private endpoint interface will be created. These subnets must be in the same VPC.
-- `vpc_network_id` (String) The ID of your GCP VPC where the private endpoint will be created.
+- `subnet_ids` (Set of String)
+- `vpc_network_id` (String)
 
 ### Read-Only
 
-- `command` (String) The generated GCP CLI command. Use this command to create the private endpoint connection within GCP.
+- `command` (String)

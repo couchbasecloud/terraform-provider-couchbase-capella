@@ -31,14 +31,14 @@ data "couchbase-capella_audit_log_settings" "existing_auditlogsettings" {
 
 ### Read-Only
 
-- `audit_enabled` (Boolean) Specifies whether audit logging is enabled for this cluster.
-- `disabled_users` (Attributes Set) List of users whose actions are excluded from audit logging. (see [below for nested schema](#nestedatt--disabled_users))
-- `enabled_event_ids` (Set of Number) List of audit event IDs that are currently enabled for logging. These IDs correspond to specific types of events that will be recorded in the audit log.
+- `audit_enabled` (Boolean)
+- `disabled_users` (Attributes Set) (see [below for nested schema](#nestedatt--disabled_users))
+- `enabled_event_ids` (Set of Number)
 
 <a id="nestedatt--disabled_users"></a>
 ### Nested Schema for `disabled_users`
 
 Read-Only:
 
-- `domain` (String) The authentication domain of the excluded user.
-- `name` (String) The username of the excluded user.
+- `domain` (String)
+- `name` (String)
