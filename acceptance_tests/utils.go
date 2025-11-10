@@ -33,12 +33,12 @@ func randomStringWithPrefix(prefix string) string {
 // to avoid conflicts with existing clusters in the organization.
 // Format: 10.X.Y.0/23 where X is 0-255 and Y is an even number (0, 2, 4, ..., 254)
 func generateRandomCIDR() string {
-	// Use crypto/rand for better randomness
+	// Use crypto/rand for cryptographically secure randomness
 	buf := make([]byte, 2)
 	if _, err := cryptorand.Read(buf); err != nil {
-		// Fall back to a pseudo-random CIDR if crypto/rand fails
-		// This should never happen in practice, but we need to handle it for the linter
-		return fmt.Sprintf("10.%d.%d.0/23", rand.Intn(256), (rand.Intn(128))*2)
+		// If crypto/rand fails, this indicates a serious system issue.
+		// For test utilities, it's appropriate to panic rather than continue with weak randomness.
+		panic(fmt.Sprintf("failed to generate random CIDR: crypto/rand.Read failed: %v", err))
 	}
 
 	// Second octet: 0-255
