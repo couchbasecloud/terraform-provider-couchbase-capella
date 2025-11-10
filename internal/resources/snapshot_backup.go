@@ -205,6 +205,8 @@ func (s *SnapshotBackup) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 
 	refreshedState.RegionsToCopy = state.RegionsToCopy
+	refreshedState.RestoreTimes = state.RestoreTimes
+	refreshedState.CrossRegionRestorePreference = state.CrossRegionRestorePreference
 
 	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
@@ -244,33 +246,44 @@ func (s *SnapshotBackup) Update(ctx context.Context, req resource.UpdateRequest,
 		Id             = IDs[providerschema.Id]
 	)
 
-	updateSnapshotBackupRequest := snapshot_backup.EditBackupRetentionRequest{
-		Retention: plan.Retention.ValueInt64(),
+	if state.Retention.ValueInt64() != plan.Retention.ValueInt64() {
+		err = s.updateRetention(ctx, organizationId, projectId, clusterId, Id, plan.Retention.ValueInt64())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error updating snapshot backup retention",
+				"Could not update snapshot backup id "+state.ID.String()+": "+err.Error(),
+			)
+			return
+		}
 	}
 
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups/%s", s.HostURL, organizationId, projectId, clusterId, Id)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err = s.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		updateSnapshotBackupRequest,
-		s.Token,
-		nil,
-	)
-	if err != nil {
+	if plan.RestoreTimes.IsUnknown() {
 		resp.Diagnostics.AddError(
-			"Error executing update snapshot backup retention",
-			"Could not update snapshot backup id "+Id+": "+api.ParseError(err),
+			"Error restoring backup",
+			"Could not restore backup id "+state.ID.String()+": plan restore times value is not set",
 		)
-		tflog.Debug(ctx, "error executing update snapshot backup retention", map[string]interface{}{
-			"OrganizationId": organizationId,
-			"ProjectID":      projectId,
-			"ClusterID":      clusterId,
-			"ID":             Id,
-			"retention":      plan.Retention.ValueInt64(),
-			"err":            err,
-		})
 		return
+	}
+
+	if !plan.RestoreTimes.IsNull() && !state.RestoreTimes.IsUnknown() {
+		planRestoreTimes := plan.RestoreTimes.ValueBigFloat()
+		if !state.RestoreTimes.IsNull() && planRestoreTimes.Cmp(state.RestoreTimes.ValueBigFloat()) == -1 {
+			resp.Diagnostics.AddError(
+				"Error restoring backup",
+				"Could not restore backup id "+state.ID.String()+": plan restore times value is not greater than state restore times value",
+			)
+			return
+		}
+		if state.RestoreTimes.IsNull() || planRestoreTimes.Cmp(state.RestoreTimes.ValueBigFloat()) == 1 {
+			err = s.restoreSnapshotBackup(ctx, organizationId, projectId, clusterId, Id, providerschema.ConvertStringValueList(plan.CrossRegionRestorePreference))
+			if err != nil {
+				resp.Diagnostics.AddError(
+					"Error restoring snapshot backup",
+					"Could not restore snapshot backup id "+state.ID.String()+": "+err.Error(),
+				)
+				return
+			}
+		}
 	}
 
 	refreshedState, err := s.getSnapshotBackup(ctx, organizationId, projectId, clusterId, Id)
@@ -295,6 +308,9 @@ func (s *SnapshotBackup) Update(ctx context.Context, req resource.UpdateRequest,
 
 	state.Retention = types.Int64Value(refreshedState.Retention)
 	state.Expiration = types.StringValue(refreshedState.Expiration)
+	state.RegionsToCopy = plan.RegionsToCopy
+	state.RestoreTimes = plan.RestoreTimes
+	state.CrossRegionRestorePreference = plan.CrossRegionRestorePreference
 
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
@@ -542,4 +558,85 @@ func morphToTerraformCloudSnapshotBackup(ctx context.Context, backupResp *snapsh
 
 	snapshotBackup := providerschema.NewSnapshotBackup(*backupResp, backupResp.ID, clusterId, projectId, organizationId, progressObj, serverObj, cmekSet, crossRegionCopySet)
 	return &snapshotBackup, nil
+}
+
+func (s *SnapshotBackup) updateRetention(ctx context.Context, organizationId, projectId, clusterId, Id string, retention int64) error {
+	updateSnapshotBackupRequest := snapshot_backup.EditBackupRetentionRequest{
+		Retention: retention,
+	}
+
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups/%s", s.HostURL, organizationId, projectId, clusterId, Id)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
+	_, err := s.ClientV1.ExecuteWithRetry(
+		ctx,
+		cfg,
+		updateSnapshotBackupRequest,
+		s.Token,
+		nil,
+	)
+	if err != nil {
+		tflog.Debug(ctx, "error executing update snapshot backup retention", map[string]interface{}{
+			"OrganizationId": organizationId,
+			"ProjectID":      projectId,
+			"ClusterID":      clusterId,
+			"ID":             Id,
+			"retention":      retention,
+			"err":            err,
+		})
+		return err
+	}
+	return nil
+}
+
+func (s *SnapshotBackup) restoreSnapshotBackup(ctx context.Context, organizationId, projectId, clusterId, Id string, crossRegionRestorePreference []string) error {
+	var (
+		resp *api.Response
+		err  error
+	)
+
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups/%s/restore", s.HostURL, organizationId, projectId, clusterId, Id)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
+
+	if len(crossRegionRestorePreference) > 0 {
+		restoreSnapshotBackupRequest := snapshot_backup.RestoreSnapshotBackupRequest{
+			CrossRegionRestorePreference: crossRegionRestorePreference,
+		}
+		resp, err = s.ClientV1.ExecuteWithRetry(
+			ctx,
+			cfg,
+			restoreSnapshotBackupRequest,
+			s.Token,
+			nil,
+		)
+	} else {
+		resp, err = s.ClientV1.ExecuteWithRetry(
+			ctx,
+			cfg,
+			nil,
+			s.Token,
+			nil,
+		)
+	}
+	if err != nil {
+		tflog.Debug(ctx, "error executing restore snapshot backup", map[string]interface{}{
+			"OrganizationId": organizationId,
+			"ProjectID":      projectId,
+			"ClusterID":      clusterId,
+			"ID":             Id,
+			"err":            err,
+		})
+		return err
+	}
+
+	var restoreResp snapshot_backup.RestoreSnapshotBackupResponse
+	err = json.Unmarshal(resp.Body, &restoreResp)
+	if err != nil {
+		tflog.Debug(ctx, "error unmarshalling the restore snapshot backup response", map[string]interface{}{
+			"resp": resp,
+			"err":  err,
+		})
+		return err
+	}
+
+	return nil
 }

@@ -90,3 +90,11 @@ type ListProjectSnapshotBackupsResponse struct {
 	Data   []ProjectSnapshotBackupData `json:"data"`
 	Cursor *api.Cursor                 `json:"cursor"`
 }
+
+type RestoreSnapshotBackupRequest struct {
+	CrossRegionRestorePreference []string `json:"crossRegionRestorePreference"`
+}
+
+type RestoreSnapshotBackupResponse struct {
+	ID string `json:"restoreId"`
+}

@@ -51,8 +51,10 @@ func SnapshotBackupSchema() schema.Schema {
 					"version": WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The version of the server."),
 				},
 			},
-			"size": WithDescription(int64Attribute(computed, useStateForUnknown), "The size of the snapshot backup in bytes."),
-			"type": WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The type of the snapshot backup."),
+			"size":                            WithDescription(int64Attribute(computed, useStateForUnknown), "The size of the snapshot backup in megabytes."),
+			"type":                            WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The type of the snapshot backup."),
+			"restore_times":                   WithDescription(numberAttribute(optional), "Number of times the backup is to be restored."),
+			"cross_region_restore_preference": WithDescription(stringListAttribute(optional), "The cross region restore preference."),
 		},
 	}
 }
