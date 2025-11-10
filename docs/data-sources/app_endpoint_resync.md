@@ -26,8 +26,10 @@ The data source to retrieve the resync status of an App Endpoint.
 ### Read-Only
 
 - `collections_processing` (Map of Set of String)
-- `docs_changed` (Number)
-- `docs_processed` (Number)
-- `last_error` (Number)
-- `start_time` (String)
-- `state` (String)
+- `docs_changed` (Number) - Number of documents that were changed during the resync operation.
+- `docs_processed` (Number) - The amount of docs that have been processed so far in the resync operation.
+- `last_error` (String) - The last error that occurred in the resync operation (if any).
+- `start_time` (String) - The ISO-8601 date and time the resync operation was started.
+ - **Format**: Date-time in RFC3339 format
+- `state` (String) - The status of the current operation.
+ - **Valid Values**: `running`, `completed`, `stopping`, `stopped`, `error`

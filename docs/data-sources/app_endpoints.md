@@ -62,11 +62,12 @@ Read-Only:
 
 Read-Only:
 
-- `disabled` (Boolean)
-- `headers` (Set of String)
-- `login_origin` (Set of String)
-- `max_age` (Number)
-- `origin` (Set of String)
+- `disabled` (Boolean) - disable CORS
+- `headers` (Set of String) - List of allowed headers
+- `login_origin` (Set of String) - List of allowed login origins
+- `max_age` (Number) - Specifies the duration (in seconds) for which the results of a preflight request can be cached.
+ - **Default**: `5`
+- `origin` (Set of String) - List of allowed origins, use ['*'] to allow access from everywhere
 
 
 <a id="nestedatt--app_endpoints--oidc"></a>
@@ -74,15 +75,15 @@ Read-Only:
 
 Read-Only:
 
-- `client_id` (String)
-- `discovery_url` (String)
-- `is_default` (Boolean)
-- `issuer` (String)
+- `client_id` (String) - The OpenID Connect provider client ID.
+- `discovery_url` (String) - The URL for the non-standard discovery endpoint.
+- `is_default` (Boolean) - Indicates whether this is the default OpenID Connect provider.
+- `issuer` (String) - The URL for the OpenID Connect issuer.
 - `provider_id` (String) The unique identifier of the provider.
-- `register` (Boolean)
-- `roles_claim` (String)
-- `user_prefix` (String)
-- `username_claim` (String)
+- `register` (Boolean) - Indicates whether to register a new App Service user account when a user logs in using OpenID Connect.
+- `roles_claim` (String) - If set, the value(s) of the given OpenID Connect authentication token claim will be added to the user's roles. The value of this claim in the OIDC token must be either a string or an array of strings, any other type will result in an error.
+- `user_prefix` (String) - Username prefix for all users created for this provider
+- `username_claim` (String) - Allows a different OpenID Connect field to be specified instead of the Subject (sub).
 
 
 <a id="nestedatt--app_endpoints--require_resync"></a>

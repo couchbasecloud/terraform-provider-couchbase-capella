@@ -581,6 +581,11 @@ func TestGetOpenAPIDescription_NewMappings(t *testing.T) {
 		{"ClusterOnOffSchedule has days field", "ClusterOnOffSchedule", "days", false}, // No description in OpenAPI spec for this field
 		{"indexDDLRequest has definition field", "indexDDLRequest", "definition", true},
 		{"PostSampleBucket has name field", "PostSampleBucket", "name", true},
+		{"WeeklySchedule has day_of_week field", "WeeklySchedule", "day_of_week", true},
+		{"WeeklySchedule has start_at field", "WeeklySchedule", "start_at", true},
+		{"WeeklySchedule has incremental_every field", "WeeklySchedule", "incremental_every", true},
+		{"WeeklySchedule has retention_time field", "WeeklySchedule", "retention_time", true},
+		{"WeeklySchedule has cost_optimized_retention field", "WeeklySchedule", "cost_optimized_retention", true},
 	}
 
 	for _, tt := range tests {

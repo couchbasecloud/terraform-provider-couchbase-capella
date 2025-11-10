@@ -23,12 +23,12 @@ func AppEndpointResyncSchema() schema.Schema {
 			ElemType: types.StringType,
 		},
 		Computed: true,
-	})
-	capellaschema.AddAttr(attrs, "docs_changed", appEndpointResyncBuilder, computedInt64())
-	capellaschema.AddAttr(attrs, "docs_processed", appEndpointResyncBuilder, computedInt64())
-	capellaschema.AddAttr(attrs, "last_error", appEndpointResyncBuilder, computedInt64())
-	capellaschema.AddAttr(attrs, "start_time", appEndpointResyncBuilder, computedString())
-	capellaschema.AddAttr(attrs, "state", appEndpointResyncBuilder, computedString())
+	}, "ResyncStatus")
+	capellaschema.AddAttr(attrs, "docs_changed", appEndpointResyncBuilder, computedInt64(), "ResyncStatus")
+	capellaschema.AddAttr(attrs, "docs_processed", appEndpointResyncBuilder, computedInt64(), "ResyncStatus")
+	capellaschema.AddAttr(attrs, "last_error", appEndpointResyncBuilder, computedString(), "ResyncStatus")
+	capellaschema.AddAttr(attrs, "start_time", appEndpointResyncBuilder, computedString(), "ResyncStatus")
+	capellaschema.AddAttr(attrs, "state", appEndpointResyncBuilder, computedString(), "ResyncStatus")
 
 	return schema.Schema{
 		MarkdownDescription: "The data source to retrieve the resync status of an App Endpoint.",
