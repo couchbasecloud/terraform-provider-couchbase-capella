@@ -18,11 +18,16 @@ import sys
 from datetime import datetime
 from typing import Dict, List
 
+# Add scripts directory to path so we can import local modules
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+if SCRIPT_DIR not in sys.path:
+    sys.path.insert(0, SCRIPT_DIR)
+
 # Import helper functions
 import extract_pr_content as extractor
 
 try:
-    from github import Github
+    from github import Github, Auth
 except ImportError:
     print("ERROR: PyGithub not installed")
     print("   Install it with: pip install PyGithub")
@@ -31,23 +36,29 @@ except ImportError:
 
 def get_prs_since_tag(repo, since_tag: str):
     """Get all merged PRs since a specific tag."""
-    print(f"   Fetching PRs merged since {since_tag}...")
+    print(f"   Looking up tag {since_tag}...")
     
     try:
         tag = repo.get_git_ref(f"tags/{since_tag}")
         tag_sha = tag.object.sha
         tag_commit = repo.get_commit(tag_sha)
         tag_date = tag_commit.commit.author.date
+        print(f"   Tag date: {tag_date.strftime('%Y-%m-%d')}")
     except Exception as e:
-        print(f"   WARNING:  Could not find tag {since_tag}: {e}")
+        print(f"   WARNING: Could not find tag {since_tag}: {e}")
         print("   Using last 30 days instead...")
         from datetime import timedelta
         tag_date = datetime.now() - timedelta(days=30)
     
+    print(f"   Fetching closed PRs (this may take 30-60 seconds)...")
     pulls = repo.get_pulls(state='closed', sort='updated', direction='desc')
     recent_prs = []
     
+    pr_count = 0
     for pr in pulls:
+        pr_count += 1
+        if pr_count % 20 == 0:
+            print(f"   Scanned {pr_count} PRs, found {len(recent_prs)} relevant...")
         if pr.merged and pr.merged_at and pr.merged_at > tag_date:
             recent_prs.append(pr)
     
@@ -379,7 +390,8 @@ def main():
     
     # Connect to GitHub
     try:
-        g = Github(token)
+        auth = Auth.Token(token)
+        g = Github(auth=auth)
         repo = g.get_repo("couchbasecloud/terraform-provider-couchbase-capella")
     except Exception as e:
         print(f"ERROR: Failed to connect to GitHub: {e}")
@@ -394,16 +406,21 @@ def main():
         sys.exit(1)
     
     # Enrich PR data with extracted content
-    print(f"   Extracting content from PRs...")
+    print(f"   Extracting content from {len(prs)} PRs (this may take 1-2 minutes)...")
     enriched_prs = []
-    for pr in prs:
+    for i, pr in enumerate(prs, 1):
+        if i % 3 == 0 or i == 1:
+            print(f"   Processing PR {i}/{len(prs)}: #{pr.number} - {pr.title[:50]}...")
         enriched = enrich_pr_data(pr, repo)
         enriched_prs.append(enriched)
     
     # Categorize PRs
+    print(f"   Categorizing PRs by type...")
     prs_by_category = categorize_enriched_prs(enriched_prs)
     
     # Print summary
+    print(f"")
+    print(f"   PR Summary:")
     print(f"   - Features: {len(prs_by_category['features'])}")
     print(f"   - Enhancements: {len(prs_by_category['enhancements'])}")
     print(f"   - Bug Fixes: {len(prs_by_category['bug_fixes'])}")
@@ -426,9 +443,12 @@ def main():
         print(f"   - Features with detected resources: {with_resources}/{total_features}")
     
     # Generate guide
+    print(f"")
+    print(f"   Generating upgrade guide document...")
     guide_content = generate_guide(version, previous_version, prs_by_category)
     
     # Write to file
+    print(f"   Writing guide to file...")
     guide_file = f"templates/guides/{version}-upgrade-guide.md"
     try:
         with open(guide_file, 'w') as f:

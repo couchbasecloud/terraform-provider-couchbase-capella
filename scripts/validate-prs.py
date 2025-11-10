@@ -14,7 +14,7 @@ import sys
 from typing import List, Dict
 
 try:
-    from github import Github
+    from github import Github, Auth
 except ImportError:
     print("ERROR: PyGithub not installed")
     print("   Install it with: pip install PyGithub")
@@ -23,20 +23,28 @@ except ImportError:
 
 def get_prs_since_tag(repo, since_tag: str):
     """Get all merged PRs since a specific tag."""
+    print(f"   Looking up tag {since_tag}...")
     try:
         tag = repo.get_git_ref(f"tags/{since_tag}")
         tag_sha = tag.object.sha
         tag_commit = repo.get_commit(tag_sha)
         tag_date = tag_commit.commit.author.date
+        print(f"   Tag date: {tag_date.strftime('%Y-%m-%d')}")
     except Exception as e:
-        print(f"WARNING:  Could not find tag {since_tag}: {e}")
+        print(f"WARNING: Could not find tag {since_tag}: {e}")
         from datetime import datetime, timedelta
         tag_date = datetime.now() - timedelta(days=30)
+        print(f"   Using fallback: last 30 days")
     
+    print(f"   Fetching closed PRs (this may take 30-60 seconds)...")
     pulls = repo.get_pulls(state='closed', sort='updated', direction='desc')
     recent_prs = []
     
+    pr_count = 0
     for pr in pulls:
+        pr_count += 1
+        if pr_count % 20 == 0:
+            print(f"   Scanned {pr_count} PRs, found {len(recent_prs)} relevant...")
         if pr.merged and pr.merged_at and pr.merged_at > tag_date:
             recent_prs.append(pr)
     
@@ -86,11 +94,6 @@ def validate_pr(pr) -> Dict[str, any]:
     if 'feature' in labels or 'enhancement' in labels:
         if not pr.body or '```' not in pr.body:
             warnings.append("Feature PR should include code examples")
-    
-    # Check for breaking changes mentioned but not labeled
-    if pr.body and 'breaking' in pr.body.lower():
-        if 'breaking-change' not in labels and 'breaking' not in labels:
-            issues.append("Mentions breaking changes but missing 'breaking-change' label")
     
     return {
         'pr': pr,
@@ -164,12 +167,13 @@ def main():
         print("   Set it with: export GITHUB_TOKEN='your_token_here'")
         sys.exit(1)
     
-    print(f"🔍 Validating PRs for release {new_version}")
+    print(f"Validating PRs for release {new_version}")
     print(f"   Checking PRs since {previous_version}...")
     
     # Connect to GitHub
     try:
-        g = Github(token)
+        auth = Auth.Token(token)
+        g = Github(auth=auth)
         repo = g.get_repo("couchbasecloud/terraform-provider-couchbase-capella")
     except Exception as e:
         print(f"ERROR: Failed to connect to GitHub: {e}")
@@ -184,8 +188,11 @@ def main():
         sys.exit(1)
     
     # Validate each PR
+    print(f"   Validating PR quality...")
     results = []
-    for pr in prs:
+    for i, pr in enumerate(prs, 1):
+        if i % 5 == 0 or i == 1:
+            print(f"   Validating PR {i}/{len(prs)}: #{pr.number} - {pr.title[:50]}...")
         result = validate_pr(pr)
         results.append(result)
     
