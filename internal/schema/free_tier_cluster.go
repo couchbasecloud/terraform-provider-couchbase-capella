@@ -234,12 +234,12 @@ func NewSupport(apiSupport clusterapi.Support) Support {
 }
 
 // NewServiceGroups returns a new ServiceGroup object from the given API ServiceGroup object.
-func NewServiceGroups(ctx context.Context, serviceGroups []ServiceGroup) ([]types.Object, error, diag.Diagnostics) {
+func NewServiceGroups(ctx context.Context, serviceGroups []ServiceGroup) ([]types.Object, diag.Diagnostics, error) {
 	serviceGroupObjList := make([]types.Object, 0)
 	for _, serviceGroup := range serviceGroups {
 		serviceGroupObj, diags := types.ObjectValueFrom(ctx, ServiceGroupAttributeTypes(), serviceGroup)
 		if diags.HasError() {
-			return nil, fmt.Errorf("service group object error"), diags
+			return nil, diags, fmt.Errorf("service group object error")
 		}
 
 		serviceGroupObjList = append(serviceGroupObjList, serviceGroupObj)

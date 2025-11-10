@@ -1,21 +1,32 @@
 package schema
 
 import (
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"reflect"
+
+	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	resourceschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/docs"
 )
 
-// SchemaAttribute is a type constraint for supported attribute types
+// SchemaAttribute is a type constraint for supported attribute types across resources and datasources
 type SchemaAttribute interface {
-	*schema.StringAttribute | *schema.Int64Attribute | *schema.BoolAttribute |
-		*schema.SetAttribute | *schema.Float64Attribute | *schema.NumberAttribute |
-		*schema.ListAttribute | *schema.SingleNestedAttribute | *schema.ObjectAttribute |
-		*schema.SetNestedAttribute | *schema.ListNestedAttribute
+	*resourceschema.StringAttribute | *resourceschema.Int64Attribute | *resourceschema.BoolAttribute |
+		*resourceschema.SetAttribute | *resourceschema.Float64Attribute | *resourceschema.NumberAttribute |
+		*resourceschema.ListAttribute | *resourceschema.SingleNestedAttribute | *resourceschema.ObjectAttribute |
+		*resourceschema.SetNestedAttribute | *resourceschema.ListNestedAttribute | *resourceschema.MapNestedAttribute |
+		*datasourceschema.StringAttribute | *datasourceschema.Int64Attribute | *datasourceschema.BoolAttribute |
+		*datasourceschema.SetAttribute | *datasourceschema.Float64Attribute | *datasourceschema.NumberAttribute |
+		*datasourceschema.ListAttribute | *datasourceschema.SingleNestedAttribute | *datasourceschema.ObjectAttribute |
+		*datasourceschema.SetNestedAttribute | *datasourceschema.ListNestedAttribute | *datasourceschema.MapNestedAttribute
+}
+
+// SchemaAttributeMap is a type constraint for attribute maps
+type SchemaAttributeMap interface {
+	map[string]resourceschema.Attribute | map[string]datasourceschema.Attribute
 }
 
 // SchemaBuilder provides methods for building resource and data source schemas with OpenAPI integration.
-// Each resource or data source should have its own SchemaBuilder instance.
 type SchemaBuilder struct {
 	resourceName string
 }
@@ -32,41 +43,14 @@ func (b *SchemaBuilder) GetResourceName() string {
 
 // WithOpenAPIDescription sets the MarkdownDescription for the provided attribute
 // by looking up the field description from the OpenAPI specification.
-// It accepts an attribute and the Terraform field name in snake_case.
-// Returns the same attribute with the description set, preserving the type.
 func WithOpenAPIDescription[T SchemaAttribute](b *SchemaBuilder, attr T, fieldName string) T {
 	description := docs.GetOpenAPIDescription(b.resourceName, fieldName)
-
-	switch v := any(attr).(type) {
-	case *schema.StringAttribute:
-		v.MarkdownDescription = description
-	case *schema.Int64Attribute:
-		v.MarkdownDescription = description
-	case *schema.BoolAttribute:
-		v.MarkdownDescription = description
-	case *schema.SetAttribute:
-		v.MarkdownDescription = description
-	case *schema.Float64Attribute:
-		v.MarkdownDescription = description
-	case *schema.NumberAttribute:
-		v.MarkdownDescription = description
-	case *schema.ListAttribute:
-		v.MarkdownDescription = description
-	case *schema.SingleNestedAttribute:
-		v.MarkdownDescription = description
-	case *schema.ObjectAttribute:
-		v.MarkdownDescription = description
-	case *schema.SetNestedAttribute:
-		v.MarkdownDescription = description
-	case *schema.ListNestedAttribute:
-		v.MarkdownDescription = description
-	}
-
+	setMarkdownDescription(attr, description)
 	return attr
 }
 
 // AddAttr adds an attribute with automatic description to the attributes map.
-// This eliminates the duplication of the field name.
+// Works for both resource and datasource schemas.
 //
 // Description is automatically loaded from the OpenAPI spec:
 // 1. Path parameters (organization_id, project_id, etc.) from components.parameters
@@ -80,46 +64,45 @@ func WithOpenAPIDescription[T SchemaAttribute](b *SchemaBuilder, attr T, fieldNa
 //	attrs := make(map[string]schema.Attribute)
 //	capellaschema.AddAttr(attrs, "name", projectBuilder, stringAttribute([]string{required}))
 //	capellaschema.AddAttr(attrs, "organization_id", projectBuilder, stringAttribute([]string{required}))
-func AddAttr[T SchemaAttribute](
-	attrs map[string]schema.Attribute,
+func AddAttr[M SchemaAttributeMap, T SchemaAttribute](
+	attrs M,
 	fieldName string,
 	builder *SchemaBuilder,
 	attr T,
 ) {
-	// Get description from OpenAPI spec
 	description := docs.GetOpenAPIDescription(builder.resourceName, fieldName)
+	setMarkdownDescription(attr, description)
 
-	// Set the description
-	switch v := any(attr).(type) {
-	case *schema.StringAttribute:
-		v.MarkdownDescription = description
-	case *schema.Int64Attribute:
-		v.MarkdownDescription = description
-	case *schema.BoolAttribute:
-		v.MarkdownDescription = description
-	case *schema.SetAttribute:
-		v.MarkdownDescription = description
-	case *schema.Float64Attribute:
-		v.MarkdownDescription = description
-	case *schema.NumberAttribute:
-		v.MarkdownDescription = description
-	case *schema.ListAttribute:
-		v.MarkdownDescription = description
-	case *schema.SingleNestedAttribute:
-		v.MarkdownDescription = description
-	case *schema.ObjectAttribute:
-		v.MarkdownDescription = description
-	case *schema.SetNestedAttribute:
-		v.MarkdownDescription = description
-	case *schema.ListNestedAttribute:
-		v.MarkdownDescription = description
+	// Add to map based on map type
+	switch m := any(&attrs).(type) {
+	case *map[string]resourceschema.Attribute:
+		result, ok := any(attr).(resourceschema.Attribute)
+		if !ok {
+			panic("failed to convert attribute to resourceschema.Attribute")
+		}
+		(*m)[fieldName] = result
+	case *map[string]datasourceschema.Attribute:
+		result, ok := any(attr).(datasourceschema.Attribute)
+		if !ok {
+			panic("failed to convert attribute to datasourceschema.Attribute")
+		}
+		(*m)[fieldName] = result
+	default:
+		panic("unsupported attribute map type")
 	}
+}
 
-	// Convert to schema.Attribute interface
-	// This assertion is safe because all types in SchemaAttribute constraint implement schema.Attribute
-	result, ok := any(attr).(schema.Attribute)
-	if !ok {
-		panic("failed to convert attribute to schema.Attribute - this should never happen")
+// setMarkdownDescription uses reflection to set the MarkdownDescription field on any attribute type
+func setMarkdownDescription(attr any, description string) {
+	v := reflect.ValueOf(attr)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
 	}
-	attrs[fieldName] = result
+	if v.Kind() != reflect.Struct {
+		return
+	}
+	field := v.FieldByName("MarkdownDescription")
+	if field.IsValid() && field.CanSet() && field.Kind() == reflect.String {
+		field.SetString(description)
+	}
 }

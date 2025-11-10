@@ -1,40 +1,71 @@
 package datasources
 
-import "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+import (
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+
+	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+)
+
+var appServiceDSBuilder = capellaschema.NewSchemaBuilder("appService")
 
 func AppServiceSchema() schema.Schema {
+	attrs := make(map[string]schema.Attribute)
+
+	capellaschema.AddAttr(attrs, "organization_id", appServiceDSBuilder, &schema.StringAttribute{
+		Required: true,
+	})
+
+	computeAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(computeAttrs, "cpu", appServiceDSBuilder, &schema.Int64Attribute{
+		Computed: true,
+	})
+	capellaschema.AddAttr(computeAttrs, "ram", appServiceDSBuilder, &schema.Int64Attribute{
+		Computed: true,
+	})
+
+	dataAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(dataAttrs, "id", appServiceDSBuilder, &schema.StringAttribute{
+		Computed: true,
+	})
+	capellaschema.AddAttr(dataAttrs, "organization_id", appServiceDSBuilder, &schema.StringAttribute{
+		Computed: true,
+	})
+	capellaschema.AddAttr(dataAttrs, "cluster_id", appServiceDSBuilder, &schema.StringAttribute{
+		Computed: true,
+	})
+	capellaschema.AddAttr(dataAttrs, "name", appServiceDSBuilder, &schema.StringAttribute{
+		Computed: true,
+	})
+	capellaschema.AddAttr(dataAttrs, "description", appServiceDSBuilder, &schema.StringAttribute{
+		Computed: true,
+	})
+	capellaschema.AddAttr(dataAttrs, "nodes", appServiceDSBuilder, &schema.Int64Attribute{
+		Computed: true,
+	})
+	capellaschema.AddAttr(dataAttrs, "cloud_provider", appServiceDSBuilder, &schema.StringAttribute{
+		Computed: true,
+	})
+	capellaschema.AddAttr(dataAttrs, "current_state", appServiceDSBuilder, &schema.StringAttribute{
+		Computed: true,
+	})
+	capellaschema.AddAttr(dataAttrs, "compute", appServiceDSBuilder, &schema.SingleNestedAttribute{
+		Computed:   true,
+		Attributes: computeAttrs,
+	})
+	capellaschema.AddAttr(dataAttrs, "version", appServiceDSBuilder, &schema.StringAttribute{
+		Computed: true,
+	})
+	dataAttrs["audit"] = computedAuditAttribute
+
+	capellaschema.AddAttr(attrs, "data", appServiceDSBuilder, &schema.ListNestedAttribute{
+		Computed: true,
+		NestedObject: schema.NestedAttributeObject{
+			Attributes: dataAttrs,
+		},
+	})
+
 	return schema.Schema{
 		MarkdownDescription: "The data source retrieves information for an App Service in Capella. App Service is a fully managed application backend designed to provide data synchronization between mobile or IoT applications running Couchbase Lite and your Couchbase Capella database.",
-		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the organization.",
-			},
-			"data": schema.ListNestedAttribute{
-				Computed: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"id":              schema.StringAttribute{Computed: true, MarkdownDescription: "The ID of the App Service created."},
-						"organization_id": schema.StringAttribute{Computed: true, MarkdownDescription: "The GUID4 ID of the organization."},
-						"cluster_id":      schema.StringAttribute{Computed: true, MarkdownDescription: "The GUID4 ID of the cluster."},
-						"name":            schema.StringAttribute{Computed: true, MarkdownDescription: "Name of the App Service (up to 256 characters)."},
-						"description":     schema.StringAttribute{Computed: true, MarkdownDescription: "A description of the App Service (up to 1024 characters)."},
-						"nodes":           schema.Int64Attribute{Computed: true, MarkdownDescription: "Number of nodes configured for the App Service."},
-						"cloud_provider":  schema.StringAttribute{Computed: true, MarkdownDescription: "The Cloud Service Provider for the App Service."},
-						"current_state":   schema.StringAttribute{Computed: true, MarkdownDescription: "The current state of the App Service."},
-						"compute": schema.SingleNestedAttribute{
-							Computed:            true,
-							MarkdownDescription: "The CPU and RAM configuration of the App Service.",
-							Attributes: map[string]schema.Attribute{
-								"cpu": schema.Int64Attribute{Computed: true, MarkdownDescription: "CPU units (cores)."},
-								"ram": schema.Int64Attribute{Computed: true, MarkdownDescription: "RAM units (GB)."},
-							},
-						},
-						"version": schema.StringAttribute{Computed: true, MarkdownDescription: "The version of the App Service server. If left empty, it will be defaulted to the latest available version."},
-						"audit":   computedAuditAttribute,
-					},
-				},
-			},
-		},
+		Attributes:          attrs,
 	}
 }
