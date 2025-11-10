@@ -17,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
 const (
@@ -286,31 +288,30 @@ func mapAttribute(T attr.Type, fields ...string) *schema.MapAttribute {
 
 // computedAuditAttribute returns a SingleNestedAttribute to
 // represent couchbase audit data using terraform schema types.
+// NOTE: This function uses a temporary builder to fetch descriptions from OpenAPI.
+// The builder name doesn't matter since we override it with CouchbaseAuditData.
 func computedAuditAttribute() *schema.SingleNestedAttribute {
+	tempBuilder := capellaschema.NewSchemaBuilder("audit")
+	auditAttrs := make(map[string]schema.Attribute)
+
+	capellaschema.AddAttr(auditAttrs, "created_at", tempBuilder, &schema.StringAttribute{
+		Computed: true,
+	}, "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "created_by", tempBuilder, &schema.StringAttribute{
+		Computed: true,
+	}, "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "modified_at", tempBuilder, &schema.StringAttribute{
+		Computed: true,
+	}, "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "modified_by", tempBuilder, &schema.StringAttribute{
+		Computed: true,
+	}, "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "version", tempBuilder, &schema.Int64Attribute{
+		Computed: true,
+	}, "CouchbaseAuditData")
+
 	return &schema.SingleNestedAttribute{
-		MarkdownDescription: "Couchbase audit data.",
-		Computed:            true,
-		Attributes: map[string]schema.Attribute{
-			"created_at": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "The RFC3339 timestamp when the resource was created.",
-			},
-			"created_by": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "The user who created the resource.",
-			},
-			"modified_at": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "The RFC3339 timestamp when the resource was last modified.",
-			},
-			"modified_by": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "The user who last modified the resource.",
-			},
-			"version": schema.Int64Attribute{
-				Computed:            true,
-				MarkdownDescription: "The version of the document. This value is incremented each time the resource is modified.",
-			},
-		},
+		Computed:   true,
+		Attributes: auditAttrs,
 	}
 }

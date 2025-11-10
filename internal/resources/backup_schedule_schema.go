@@ -6,7 +6,7 @@ import (
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-var backupScheduleBuilder = capellaschema.NewSchemaBuilder("backupSchedule")
+var backupScheduleBuilder = capellaschema.NewSchemaBuilder("backupSchedule", "scheduledBackup")
 
 func BackupScheduleSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
@@ -18,11 +18,11 @@ func BackupScheduleSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "type", backupScheduleBuilder, stringAttribute([]string{required, requiresReplace}))
 
 	weeklyScheduleAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(weeklyScheduleAttrs, "day_of_week", backupScheduleBuilder, stringAttribute([]string{required}))
-	capellaschema.AddAttr(weeklyScheduleAttrs, "start_at", backupScheduleBuilder, int64Attribute(required))
-	capellaschema.AddAttr(weeklyScheduleAttrs, "incremental_every", backupScheduleBuilder, int64Attribute(required))
-	capellaschema.AddAttr(weeklyScheduleAttrs, "retention_time", backupScheduleBuilder, stringAttribute([]string{required}))
-	capellaschema.AddAttr(weeklyScheduleAttrs, "cost_optimized_retention", backupScheduleBuilder, boolAttribute(required))
+	capellaschema.AddAttr(weeklyScheduleAttrs, "day_of_week", backupScheduleBuilder, stringAttribute([]string{required}), "WeeklySchedule")
+	capellaschema.AddAttr(weeklyScheduleAttrs, "start_at", backupScheduleBuilder, int64Attribute(required), "WeeklySchedule")
+	capellaschema.AddAttr(weeklyScheduleAttrs, "incremental_every", backupScheduleBuilder, int64Attribute(required), "WeeklySchedule")
+	capellaschema.AddAttr(weeklyScheduleAttrs, "retention_time", backupScheduleBuilder, stringAttribute([]string{required}), "WeeklySchedule")
+	capellaschema.AddAttr(weeklyScheduleAttrs, "cost_optimized_retention", backupScheduleBuilder, boolAttribute(required), "WeeklySchedule")
 
 	capellaschema.AddAttr(attrs, "weekly_schedule", backupScheduleBuilder, &schema.SingleNestedAttribute{
 		Required:   true,

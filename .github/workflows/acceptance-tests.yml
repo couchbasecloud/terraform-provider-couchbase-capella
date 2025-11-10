@@ -16,6 +16,7 @@ jobs:
       TF_VAR_auth_token: ${{ secrets.CAPELLA_AUTH_TOKEN }}
       TF_VAR_organization_id: ${{ secrets.CAPELLA_ORGANIZATION_ID }}
       TF_VAR_host: ${{ secrets.CAPELLA_HOST }}
+      CAPELLA_OPENAPI_SPEC_PATH: ${{ github.workspace }}/openapi.generated.yaml
 
     steps:
       - name: Check out code

@@ -76,9 +76,20 @@ func ValidateSchemaPatterns(schemaDir string, opts ValidationOptions) (*Validati
 					// Check if it's a known legacy attribute that's allowed
 					isAllowed := false
 					for _, allowedPattern := range opts.AllowLegacyAttributes {
-						if strings.Contains(trimmed, allowedPattern) {
-							isAllowed = true
-							break
+						// Parse pattern as file:field (e.g., "apikey_schema.go:rotate")
+						parts := strings.SplitN(allowedPattern, ":", 2)
+						if len(parts) == 2 {
+							// Check if this is the right file and field
+							if parts[0] == filename && strings.Contains(trimmed, `attrs["`+parts[1]+`"]`) {
+								isAllowed = true
+								break
+							}
+						} else {
+							// Legacy: check if pattern is in the line
+							if strings.Contains(trimmed, allowedPattern) {
+								isAllowed = true
+								break
+							}
 						}
 					}
 					if !isAllowed {
@@ -106,7 +117,27 @@ func ValidateSchemaPatterns(schemaDir string, opts ValidationOptions) (*Validati
 							break
 						}
 					}
-					if !isTopLevel && !isFilterBlock {
+					
+					// Check if this MarkdownDescription is part of an allowed legacy attribute
+					isAllowedLegacy := false
+					for _, allowedPattern := range opts.AllowLegacyAttributes {
+						parts := strings.SplitN(allowedPattern, ":", 2)
+						if len(parts) == 2 && parts[0] == filename {
+							// Check if this MarkdownDescription is within an allowed field definition
+							// Look back a few lines for the field assignment
+							for j := maxInt(0, i-5); j < i; j++ {
+								if strings.Contains(lines[j], `attrs["`+parts[1]+`"]`) {
+									isAllowedLegacy = true
+									break
+								}
+							}
+						}
+						if isAllowedLegacy {
+							break
+						}
+					}
+					
+					if !isTopLevel && !isFilterBlock && !isAllowedLegacy {
 						result.Failures = append(result.Failures, formatError(filename, lineNum, "MarkdownDescription inside attribute - remove it, AddAttr handles this", line))
 					}
 				}

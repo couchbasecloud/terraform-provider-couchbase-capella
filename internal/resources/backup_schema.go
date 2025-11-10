@@ -8,7 +8,7 @@ import (
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-var backupBuilder = capellaschema.NewSchemaBuilder("backup")
+var backupBuilder = capellaschema.NewSchemaBuilder("backup", "cloudSnapshotBackup")
 
 func BackupSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)

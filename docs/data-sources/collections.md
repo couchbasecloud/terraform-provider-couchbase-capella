@@ -27,7 +27,7 @@ data "couchbase-capella_collections" "existing_collections" {
 
 ### Required
 
-- `bucket_id` (String) The ID of the bucket. It is the URL-compatible base64 encoding of the bucket name
+- `bucket_id` (String) The ID of the bucket. It is the URL-compatible base64 encoding of the bucket name.
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
@@ -35,7 +35,7 @@ data "couchbase-capella_collections" "existing_collections" {
 
 ### Read-Only
 
-- `data` (Attributes List) List of collections in the scope. (see [below for nested schema](#nestedatt--data))
+- `data` (Attributes List) (see [below for nested schema](#nestedatt--data))
 
 <a id="nestedatt--data"></a>
 ### Nested Schema for `data`
@@ -43,4 +43,4 @@ data "couchbase-capella_collections" "existing_collections" {
 Read-Only:
 
 - `collection_name` (String) The name of the collection.
-- `max_ttl` (Number) The maximum Time To Live (TTL) for documents in the collection.
+- `max_ttl` (Number)

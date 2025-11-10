@@ -38,7 +38,7 @@ resource "couchbase-capella_collection" "new_collection" {
 
 ### Optional
 
-- `max_ttl` (Number) The maximum Time To Live (TTL) for documents in the collection.
+- `max_ttl` (Number)
 
 ## Import
 

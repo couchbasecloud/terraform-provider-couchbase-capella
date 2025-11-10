@@ -6,7 +6,7 @@ import (
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-var importFilterBuilder = capellaschema.NewSchemaBuilder("importFilter")
+var importFilterBuilder = capellaschema.NewSchemaBuilder("importFilter", "importFilter")
 
 // ImportFilterSchema defines the Terraform resource schema for managing App Endpoint Import Filters.
 func ImportFilterSchema() schema.Schema {

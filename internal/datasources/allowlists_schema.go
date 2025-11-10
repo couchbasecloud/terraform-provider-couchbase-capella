@@ -28,11 +28,11 @@ func AllowListsSchema() schema.Schema {
 
 	// Build audit attributes
 	auditAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(auditAttrs, "created_at", allowlistsBuilder, computedString())
-	capellaschema.AddAttr(auditAttrs, "created_by", allowlistsBuilder, computedString())
-	capellaschema.AddAttr(auditAttrs, "modified_at", allowlistsBuilder, computedString())
-	capellaschema.AddAttr(auditAttrs, "modified_by", allowlistsBuilder, computedString())
-	capellaschema.AddAttr(auditAttrs, "version", allowlistsBuilder, computedInt64())
+	capellaschema.AddAttr(auditAttrs, "created_at", allowlistsBuilder, computedString(), "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "created_by", allowlistsBuilder, computedString(), "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "modified_at", allowlistsBuilder, computedString(), "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "modified_by", allowlistsBuilder, computedString(), "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "version", allowlistsBuilder, computedInt64(), "CouchbaseAuditData")
 
 	capellaschema.AddAttr(dataAttrs, "audit", allowlistsBuilder, &schema.SingleNestedAttribute{
 		Computed:   true,

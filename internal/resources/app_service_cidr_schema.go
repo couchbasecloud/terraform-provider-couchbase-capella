@@ -8,7 +8,7 @@ import (
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-var appServiceCIDRBuilder = capellaschema.NewSchemaBuilder("appServiceCIDR")
+var appServiceCIDRBuilder = capellaschema.NewSchemaBuilder("appServiceCIDR", "AppServiceAllowedCidr")
 
 // AllowedCIDRsSchema returns the schema for the App Service allowed CIDRs resource.
 func AllowedCIDRsSchema() schema.Schema {

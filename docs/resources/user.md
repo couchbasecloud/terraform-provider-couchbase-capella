@@ -39,38 +39,47 @@ resource "couchbase-capella_user" "new_user" {
 
 ### Required
 
-- `email` (String) Email of the user.
+- `email` (String) - Email of the user.
 - `organization_id` (String) The GUID4 ID of the organization.
-- `organization_roles` (List of String) The organization roles associated to the user. They determines the privileges user possesses in the organization.
+- `organization_roles` (List of String) - Organization roles assigned to the User. To learn more, see [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
+ - **Valid Values**: `organizationOwner`, `organizationMember`, `projectCreator`
 
 ### Optional
 
-- `name` (String) The name of the user.
-- `resources` (Attributes Set) (see [below for nested schema](#nestedatt--resources))
+- `name` (String) - The name of the user.
+ - **Constraints**: Maximum length: 128 characters
+- `resources` (Attributes Set) - **Default**: `[]` (see [below for nested schema](#nestedatt--resources))
 
 ### Read-Only
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
-- `enable_notifications` (Boolean) After enabling email notifications for your account, you will start receiving email notification alerts from all databases in projects you are a part of.
-- `expires_at` (String) Time at which the user expires.
-- `id` (String) The UUID of the user created.
-- `inactive` (Boolean) Inactive depicts whether the user has accepted the invite for the organization.
-- `last_login` (String) Time(UTC) at which user last logged in.
-- `region` (String) The region of the user.
-- `status` (String) Depicts the user's status by determining whether they are verified or not. It can be one of the following values: verified, not-verified, pending-primary.
-- `time_zone` (String) The time zone of the user.
+- `enable_notifications` (Boolean) - After enabling email notifications for your account, you will start receiving email notification alerts from all databases in projects you are a part of.
+- `expires_at` (String) - Time at which user expires.
+ - **Format**: Date-time in RFC3339 format
+- `id` (String) - The UUID of the user created.
+- `inactive` (Boolean) - Depicts whether the user has accepted the invite for the organization.
+- `last_login` (String) - Time(UTC) at which user last logged in.
+ - **Format**: Date-time in RFC3339 format
+- `region` (String) - Region of the user.
+- `status` (String) - Depicts user status whether they are verified or not. verified: It reflects a verified state for an email address where the user has proven that they have access to the email account. not-verified: It reflects an unverified or pending verification state. pending-primary: It reflects an unverified primary email address
+ - **Valid Values**: `verified`, `not-verified`, `pending-primary`
+- `time_zone` (String) - Time zone of the user.
 
 <a id="nestedatt--resources"></a>
 ### Nested Schema for `resources`
 
 Required:
 
-- `id` (String) The GUID4 ID of the project.
-- `roles` (Set of String) The project roles associated with the user.
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
+- `roles` (Set of String) - Project Roles associated with the User. To learn more about Project Roles, see [Project Roles](https://docs.couchbase.com/cloud/projects/project-roles.html).
+ - **Valid Values**: `projectOwner`, `projectManager`, `projectViewer`, `projectDataReaderWriter`, `projectDataReader`
 
 Optional:
 
-- `type` (String) Resource type.
+- `type` (String) - Type of the resource.
+ - **Valid Values**: `project`
+ - **Default**: `project`
 
 
 <a id="nestedatt--audit"></a>
@@ -78,11 +87,13 @@ Optional:
 
 Read-Only:
 
-- `created_at` (String) The RFC3339 timestamp when the resource was created.
-- `created_by` (String) The user who created the resource.
-- `modified_at` (String) The RFC3339 timestamp when the resource was last modified.
-- `modified_by` (String) The user who last modified the resource.
-- `version` (Number) The version of the document. This value is incremented each time the resource is modified.
+- `created_at` (String) - The RFC3339 timestamp associated with when the resource was initially created.
+ - **Format**: Date-time in RFC3339 format
+- `created_by` (String) - The user who created the resource; this will be a UUID4 ID for standard users and will be a string such as "internal-support" for internal Couchbase support users.
+- `modified_at` (String) - The RFC3339 timestamp associated with when the resource was last modified.
+ - **Format**: Date-time in RFC3339 format
+- `modified_by` (String) - The user who last modified the resource; this will be a UUID4 ID for standard users and wilmal be a string such as "internal-support" for internal Couchbase support users.
+- `version` (Number) - The version of the document. This value is incremented each time the resource is modified.
 
 ## Import
 

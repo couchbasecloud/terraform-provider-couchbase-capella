@@ -10,7 +10,7 @@ import (
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-var corsBuilder = capellaschema.NewSchemaBuilder("cors")
+var corsBuilder = capellaschema.NewSchemaBuilder("cors", "CORSConfig")
 
 // CorsSchema returns the schema for the CORS resource.
 func CorsSchema() schema.Schema {

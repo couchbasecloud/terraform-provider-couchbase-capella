@@ -14,8 +14,8 @@ func AppServiceSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "organization_id", appServiceDSBuilder, requiredString())
 
 	computeAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(computeAttrs, "cpu", appServiceDSBuilder, computedInt64())
-	capellaschema.AddAttr(computeAttrs, "ram", appServiceDSBuilder, computedInt64())
+	capellaschema.AddAttr(computeAttrs, "cpu", appServiceDSBuilder, computedInt64(), "AppServiceCompute")
+	capellaschema.AddAttr(computeAttrs, "ram", appServiceDSBuilder, computedInt64(), "AppServiceCompute")
 
 	dataAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(dataAttrs, "id", appServiceDSBuilder, computedString())

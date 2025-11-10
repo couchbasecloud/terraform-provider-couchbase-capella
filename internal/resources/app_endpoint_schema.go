@@ -28,9 +28,10 @@ func AppEndpointSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "user_xattr_key", appEndpointBuilder, stringAttribute([]string{optional, computed, useStateForUnknown}))
 	capellaschema.AddAttr(attrs, "delta_sync_enabled", appEndpointBuilder, boolAttribute(optional, computed, useStateForUnknown))
 
+	// Collection attributes - use alternate schemas for string-type schemas
 	collectionAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(collectionAttrs, "access_control_function", appEndpointBuilder, stringAttribute([]string{optional, computed, useStateForUnknown}))
-	capellaschema.AddAttr(collectionAttrs, "import_filter", appEndpointBuilder, stringAttribute([]string{optional, computed, useStateForUnknown}))
+	capellaschema.AddAttr(collectionAttrs, "access_control_function", appEndpointBuilder, stringAttribute([]string{optional, computed, useStateForUnknown}), "accessFunction")
+	capellaschema.AddAttr(collectionAttrs, "import_filter", appEndpointBuilder, stringAttribute([]string{optional, computed, useStateForUnknown}), "importFilter")
 
 	scopeAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(scopeAttrs, "collections", appEndpointBuilder, &schema.MapNestedAttribute{
@@ -47,43 +48,45 @@ func AppEndpointSchema() schema.Schema {
 		},
 	})
 
+	// CORS attributes - use CORSConfig schema
 	corsAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(corsAttrs, "origin", appEndpointBuilder, &schema.SetAttribute{
 		Optional:    true,
 		ElementType: types.StringType,
-	})
+	}, "CORSConfig")
 	capellaschema.AddAttr(corsAttrs, "login_origin", appEndpointBuilder, &schema.SetAttribute{
 		Optional:    true,
 		ElementType: types.StringType,
-	})
+	}, "CORSConfig")
 	capellaschema.AddAttr(corsAttrs, "headers", appEndpointBuilder, &schema.SetAttribute{
 		Optional:    true,
 		ElementType: types.StringType,
-	})
-	capellaschema.AddAttr(corsAttrs, "max_age", appEndpointBuilder, int64Attribute(optional, computed, useStateForUnknown))
+	}, "CORSConfig")
+	capellaschema.AddAttr(corsAttrs, "max_age", appEndpointBuilder, int64Attribute(optional, computed, useStateForUnknown), "CORSConfig")
 	capellaschema.AddAttr(corsAttrs, "disabled", appEndpointBuilder, &schema.BoolAttribute{
 		Optional: true,
 		Computed: true,
 		PlanModifiers: []planmodifier.Bool{
 			boolplanmodifier.UseStateForUnknown(),
 		},
-	})
+	}, "CORSConfig")
 
 	capellaschema.AddAttr(attrs, "cors", appEndpointBuilder, &schema.SingleNestedAttribute{
 		Optional:   true,
 		Attributes: corsAttrs,
 	})
 
+	// OIDC attributes - use OIDCProvider schema
 	oidcAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(oidcAttrs, "issuer", appEndpointBuilder, stringAttribute([]string{required}))
-	capellaschema.AddAttr(oidcAttrs, "register", appEndpointBuilder, boolAttribute(optional, computed))
-	capellaschema.AddAttr(oidcAttrs, "client_id", appEndpointBuilder, stringAttribute([]string{required}))
-	capellaschema.AddAttr(oidcAttrs, "user_prefix", appEndpointBuilder, stringAttribute([]string{optional, computed}))
-	capellaschema.AddAttr(oidcAttrs, "discovery_url", appEndpointBuilder, stringAttribute([]string{optional, computed}))
-	capellaschema.AddAttr(oidcAttrs, "username_claim", appEndpointBuilder, stringAttribute([]string{optional, computed}))
-	capellaschema.AddAttr(oidcAttrs, "roles_claim", appEndpointBuilder, stringAttribute([]string{optional, computed}))
-	capellaschema.AddAttr(oidcAttrs, "provider_id", appEndpointBuilder, stringAttribute([]string{computed}))
-	capellaschema.AddAttr(oidcAttrs, "is_default", appEndpointBuilder, boolAttribute(computed))
+	capellaschema.AddAttr(oidcAttrs, "issuer", appEndpointBuilder, stringAttribute([]string{required}), "OIDCProvider")
+	capellaschema.AddAttr(oidcAttrs, "register", appEndpointBuilder, boolAttribute(optional, computed), "OIDCProvider")
+	capellaschema.AddAttr(oidcAttrs, "client_id", appEndpointBuilder, stringAttribute([]string{required}), "OIDCProvider")
+	capellaschema.AddAttr(oidcAttrs, "user_prefix", appEndpointBuilder, stringAttribute([]string{optional, computed}), "OIDCProvider")
+	capellaschema.AddAttr(oidcAttrs, "discovery_url", appEndpointBuilder, stringAttribute([]string{optional, computed}), "OIDCProvider")
+	capellaschema.AddAttr(oidcAttrs, "username_claim", appEndpointBuilder, stringAttribute([]string{optional, computed}), "OIDCProvider")
+	capellaschema.AddAttr(oidcAttrs, "roles_claim", appEndpointBuilder, stringAttribute([]string{optional, computed}), "OIDCProvider")
+	capellaschema.AddAttr(oidcAttrs, "provider_id", appEndpointBuilder, stringAttribute([]string{computed}), "OIDCProvider")
+	capellaschema.AddAttr(oidcAttrs, "is_default", appEndpointBuilder, boolAttribute(computed), "OIDCProvider")
 
 	capellaschema.AddAttr(attrs, "oidc", appEndpointBuilder, &schema.ListNestedAttribute{
 		Optional: true,

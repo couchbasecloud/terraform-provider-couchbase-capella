@@ -6,7 +6,7 @@ import (
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-var auditLogExportBuilder = capellaschema.NewSchemaBuilder("auditLogExport")
+var auditLogExportBuilder = capellaschema.NewSchemaBuilder("auditLogExport", "clusterAuditLogExport")
 
 func AuditLogExportSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)

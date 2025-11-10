@@ -29,36 +29,45 @@ resource "couchbase-capella_apikey" "new_apikey" {
 
 ### Required
 
-- `name` (String) Name of the API key.
+- `name` (String) - Name of the API key.
 - `organization_id` (String) The GUID4 ID of the organization.
-- `organization_roles` (Set of String)
+- `organization_roles` (Set of String) - Organization roles assigned to the API key. To learn more, see [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
+ - **Valid Values**: `organizationOwner`, `organizationMember`, `projectCreator`
 
 ### Optional
 
-- `allowed_cidrs` (Set of String) List of inbound CIDRs for the API key. The system making a request must come from one of the allowed CIDRs.
-- `description` (String) Description for the API key.
-- `expiry` (Number) Expiry of the API key in number of days. If set to -1, the token will not expire.
-- `resources` (Attributes Set) Resources are the resource level permissions associated with the API key. (see [below for nested schema](#nestedatt--resources))
-- `rotate` (Number)
-- `secret` (String, Sensitive) A secret associated with API key. One has to follow the secret key policy, such as allowed characters and a length of 64 characters. If this field is left empty, a secret will be auto-generated.
+- `allowed_cidrs` (Set of String)
+- `description` (String) - Description for the API key.
+ - **Default**: ``
+- `expiry` (Number) - Expiry of the API key in number of days. If set to -1, the token will not expire.
+ - **Default**: `180`
+- `resources` (Attributes Set) - Resources are the resource level permissions associated with the API key. To learn more about Organization Roles, see [Organization Roles](https://docs.couchbase.com/cloud/organizations/organization-user-roles.html).
+ - **Default**: `[]` (see [below for nested schema](#nestedatt--resources))
+- `rotate` (Number) - Set this value in incremental order from the previously set rotate value (starting from 1) to trigger rotation of the API key. When rotated, a new token and secret are generated.
+- `secret` (String, Sensitive) - A secret associated with API key. One has to follow the secret key policy, such as allowed characters and a length of 64 characters. If this field is left empty, a secret will be auto-generated.
 
 ### Read-Only
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
-- `id` (String) The ID (Access key) of the API key.
-- `token` (String, Sensitive) The Token is a confidential piece of information that is used to authorize requests made to v4 endpoints.
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
+- `token` (String, Sensitive) - The Token is a confidential piece of information that is used to authorize requests made to v4 endpoints.
 
 <a id="nestedatt--resources"></a>
 ### Nested Schema for `resources`
 
 Required:
 
-- `id` (String) The GUID4 ID of the project.
-- `roles` (Set of String) Project Roles associated with the API key.
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
+- `roles` (Set of String) - Project Roles associated with the User. To learn more about Project Roles, see [Project Roles](https://docs.couchbase.com/cloud/projects/project-roles.html).
+ - **Valid Values**: `projectOwner`, `projectManager`, `projectViewer`, `projectDataReaderWriter`, `projectDataReader`
 
 Optional:
 
-- `type` (String) Resource type.
+- `type` (String) - Type of the resource.
+ - **Valid Values**: `project`
+ - **Default**: `project`
 
 
 <a id="nestedatt--audit"></a>
@@ -66,11 +75,13 @@ Optional:
 
 Read-Only:
 
-- `created_at` (String) The RFC3339 timestamp when the resource was created.
-- `created_by` (String) The user who created the resource.
-- `modified_at` (String) The RFC3339 timestamp when the resource was last modified.
-- `modified_by` (String) The user who last modified the resource.
-- `version` (Number) The version of the document. This value is incremented each time the resource is modified.
+- `created_at` (String) - The RFC3339 timestamp associated with when the resource was initially created.
+ - **Format**: Date-time in RFC3339 format
+- `created_by` (String) - The user who created the resource; this will be a UUID4 ID for standard users and will be a string such as "internal-support" for internal Couchbase support users.
+- `modified_at` (String) - The RFC3339 timestamp associated with when the resource was last modified.
+ - **Format**: Date-time in RFC3339 format
+- `modified_by` (String) - The user who last modified the resource; this will be a UUID4 ID for standard users and wilmal be a string such as "internal-support" for internal Couchbase support users.
+- `version` (Number) - The version of the document. This value is incremented each time the resource is modified.
 
 ## Import
 

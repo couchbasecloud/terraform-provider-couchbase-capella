@@ -27,11 +27,11 @@ func OrganizationSchema() schema.Schema {
 
 	// Build audit attributes
 	auditAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(auditAttrs, "created_at", organizationBuilder, computedString())
-	capellaschema.AddAttr(auditAttrs, "created_by", organizationBuilder, computedString())
-	capellaschema.AddAttr(auditAttrs, "modified_at", organizationBuilder, computedString())
-	capellaschema.AddAttr(auditAttrs, "modified_by", organizationBuilder, computedString())
-	capellaschema.AddAttr(auditAttrs, "version", organizationBuilder, computedInt64())
+	capellaschema.AddAttr(auditAttrs, "created_at", organizationBuilder, computedString(), "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "created_by", organizationBuilder, computedString(), "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "modified_at", organizationBuilder, computedString(), "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "modified_by", organizationBuilder, computedString(), "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "version", organizationBuilder, computedInt64(), "CouchbaseAuditData")
 
 	capellaschema.AddAttr(attrs, "audit", organizationBuilder, &schema.SingleNestedAttribute{
 		Computed:   true,

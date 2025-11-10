@@ -8,7 +8,7 @@ import (
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-var appServiceBuilder = capellaschema.NewSchemaBuilder("appService")
+var appServiceBuilder = capellaschema.NewSchemaBuilder("appService", "appServicer")
 
 func AppServiceSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)

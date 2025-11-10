@@ -8,7 +8,7 @@ import (
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-var sampleBucketBuilder = capellaschema.NewSchemaBuilder("sampleBucket")
+var sampleBucketBuilder = capellaschema.NewSchemaBuilder("sampleBucket", "PostSampleBucket")
 
 func SampleBucketSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)

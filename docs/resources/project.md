@@ -25,37 +25,35 @@ resource "couchbase-capella_project" "new_project" {
 
 ### Required
 
-- `name` (String) The name of the project (up to 128 characters).
-
-**Constraints:**
-  - Maximum length: 128 characters
+- `name` (String) - The name of the project (up to 128 characters).
+ - **Constraints**: Maximum length: 128 characters
 - `organization_id` (String) The GUID4 ID of the organization.
 
 ### Optional
 
-- `description` (String) A short description of the project (up to 256 characters).
-
-**Constraints:**
-  - Maximum length: 256 characters
+- `description` (String) - A short description of the project (up to 256 characters).
+ - **Constraints**: Maximum length: 256 characters
 - `if_match` (String) A precondition header that specifies the entity tag of a resource.
 
 ### Read-Only
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
 - `etag` (String) Entity tag for the resource, used for caching and conditional requests.
-- `id` (String) A GUID4 identifier of the project.
-**Format:** UUID (GUID4)
+- `id` (String) - A GUID4 identifier of the project.
+ - **Format**: UUID (GUID4)
 
 <a id="nestedatt--audit"></a>
 ### Nested Schema for `audit`
 
 Read-Only:
 
-- `created_at` (String) The RFC3339 timestamp when the resource was created.
-- `created_by` (String) The user who created the resource.
-- `modified_at` (String) The RFC3339 timestamp when the resource was last modified.
-- `modified_by` (String) The user who last modified the resource.
-- `version` (Number) The version of the document. This value is incremented each time the resource is modified.
+- `created_at` (String) - The RFC3339 timestamp associated with when the resource was initially created.
+ - **Format**: Date-time in RFC3339 format
+- `created_by` (String) - The user who created the resource; this will be a UUID4 ID for standard users and will be a string such as "internal-support" for internal Couchbase support users.
+- `modified_at` (String) - The RFC3339 timestamp associated with when the resource was last modified.
+ - **Format**: Date-time in RFC3339 format
+- `modified_by` (String) - The user who last modified the resource; this will be a UUID4 ID for standard users and wilmal be a string such as "internal-support" for internal Couchbase support users.
+- `version` (Number) - The version of the document. This value is incremented each time the resource is modified.
 
 ## Import
 

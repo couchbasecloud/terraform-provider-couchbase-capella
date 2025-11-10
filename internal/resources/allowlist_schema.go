@@ -8,7 +8,7 @@ import (
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-var allowlistBuilder = capellaschema.NewSchemaBuilder("allowlist")
+var allowlistBuilder = capellaschema.NewSchemaBuilder("allowlist", "allowedCidr")
 
 func AllowlistsSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)

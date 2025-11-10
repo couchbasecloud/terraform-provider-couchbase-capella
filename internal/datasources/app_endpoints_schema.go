@@ -41,8 +41,8 @@ func AppEndpointsSchema() schema.Schema {
 	})
 
 	collectionAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(collectionAttrs, "access_control_function", appEndpointsBuilder, computedString())
-	capellaschema.AddAttr(collectionAttrs, "import_filter", appEndpointsBuilder, computedString())
+	capellaschema.AddAttr(collectionAttrs, "access_control_function", appEndpointsBuilder, computedString(), "AccessFunction")
+	capellaschema.AddAttr(collectionAttrs, "import_filter", appEndpointsBuilder, computedString(), "ImportFilter")
 
 	scopeAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(scopeAttrs, "collections", appEndpointsBuilder, &schema.MapNestedAttribute{
@@ -56,28 +56,28 @@ func AppEndpointsSchema() schema.Schema {
 	capellaschema.AddAttr(corsAttrs, "origin", appEndpointsBuilder, &schema.SetAttribute{
 		Computed:    true,
 		ElementType: types.StringType,
-	})
+	}, "CORSConfig")
 	capellaschema.AddAttr(corsAttrs, "login_origin", appEndpointsBuilder, &schema.SetAttribute{
 		Computed:    true,
 		ElementType: types.StringType,
-	})
+	}, "CORSConfig")
 	capellaschema.AddAttr(corsAttrs, "headers", appEndpointsBuilder, &schema.SetAttribute{
 		Computed:    true,
 		ElementType: types.StringType,
-	})
-	capellaschema.AddAttr(corsAttrs, "max_age", appEndpointsBuilder, computedInt64())
-	capellaschema.AddAttr(corsAttrs, "disabled", appEndpointsBuilder, computedBool())
+	}, "CORSConfig")
+	capellaschema.AddAttr(corsAttrs, "max_age", appEndpointsBuilder, computedInt64(), "CORSConfig")
+	capellaschema.AddAttr(corsAttrs, "disabled", appEndpointsBuilder, computedBool(), "CORSConfig")
 
 	oidcAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(oidcAttrs, "issuer", appEndpointsBuilder, computedString())
-	capellaschema.AddAttr(oidcAttrs, "register", appEndpointsBuilder, computedBool())
-	capellaschema.AddAttr(oidcAttrs, "client_id", appEndpointsBuilder, computedString())
-	capellaschema.AddAttr(oidcAttrs, "user_prefix", appEndpointsBuilder, computedString())
-	capellaschema.AddAttr(oidcAttrs, "discovery_url", appEndpointsBuilder, computedString())
-	capellaschema.AddAttr(oidcAttrs, "username_claim", appEndpointsBuilder, computedString())
-	capellaschema.AddAttr(oidcAttrs, "roles_claim", appEndpointsBuilder, computedString())
-	capellaschema.AddAttr(oidcAttrs, "provider_id", appEndpointsBuilder, computedString())
-	capellaschema.AddAttr(oidcAttrs, "is_default", appEndpointsBuilder, computedBool())
+	capellaschema.AddAttr(oidcAttrs, "issuer", appEndpointsBuilder, computedString(), "OIDCProvider")
+	capellaschema.AddAttr(oidcAttrs, "register", appEndpointsBuilder, computedBool(), "OIDCProvider")
+	capellaschema.AddAttr(oidcAttrs, "client_id", appEndpointsBuilder, computedString(), "OIDCProvider")
+	capellaschema.AddAttr(oidcAttrs, "user_prefix", appEndpointsBuilder, computedString(), "OIDCProvider")
+	capellaschema.AddAttr(oidcAttrs, "discovery_url", appEndpointsBuilder, computedString(), "OIDCProvider")
+	capellaschema.AddAttr(oidcAttrs, "username_claim", appEndpointsBuilder, computedString(), "OIDCProvider")
+	capellaschema.AddAttr(oidcAttrs, "roles_claim", appEndpointsBuilder, computedString(), "OIDCProvider")
+	capellaschema.AddAttr(oidcAttrs, "provider_id", appEndpointsBuilder, computedString(), "OIDCProvider")
+	capellaschema.AddAttr(oidcAttrs, "is_default", appEndpointsBuilder, computedBool(), "OIDCProvider")
 
 	requireResyncAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(requireResyncAttrs, "items", appEndpointsBuilder, &schema.SetAttribute{

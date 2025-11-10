@@ -14,7 +14,7 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources/custom_plan_modifiers"
 )
 
-var gsiBuilder = capellaschema.NewSchemaBuilder("gsi")
+var gsiBuilder = capellaschema.NewSchemaBuilder("gsi", "indexDDLRequest")
 
 func GsiSchema() schema.Schema {
 	defaultObject, _ := types.ObjectValue(

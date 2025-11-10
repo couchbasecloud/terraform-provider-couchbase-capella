@@ -109,6 +109,6 @@ test-acceptance:
 	@[ "${TF_VAR_auth_token}" ] || ( echo "export TF_VAR_auth_token before running the acceptance tests"; exit 1 )
 	@[ "${TF_VAR_host}" ] || ( echo "export TF_VAR_host before running the acceptance tests"; exit 1 )
 	@[ "${TF_VAR_organization_id}" ] || ( echo "export TF_VAR_organization_id before running the acceptance tests"; exit 1 )
-	TF_ACC=1 go test -timeout=120m -v ./acceptance_tests/
+	CAPELLA_OPENAPI_SPEC_PATH=$(PWD)/openapi.generated.yaml TF_ACC=1 go test -timeout=120m -v ./acceptance_tests/
 
 

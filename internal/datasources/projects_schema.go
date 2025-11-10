@@ -23,11 +23,11 @@ func ProjectsSchema() schema.Schema {
 
 	// Build audit attributes
 	auditAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(auditAttrs, "created_at", projectsBuilder, computedString())
-	capellaschema.AddAttr(auditAttrs, "created_by", projectsBuilder, computedString())
-	capellaschema.AddAttr(auditAttrs, "modified_at", projectsBuilder, computedString())
-	capellaschema.AddAttr(auditAttrs, "modified_by", projectsBuilder, computedString())
-	capellaschema.AddAttr(auditAttrs, "version", projectsBuilder, computedInt64())
+	capellaschema.AddAttr(auditAttrs, "created_at", projectsBuilder, computedString(), "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "created_by", projectsBuilder, computedString(), "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "modified_at", projectsBuilder, computedString(), "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "modified_by", projectsBuilder, computedString(), "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "version", projectsBuilder, computedInt64(), "CouchbaseAuditData")
 
 	capellaschema.AddAttr(dataAttrs, "audit", projectsBuilder, &schema.SingleNestedAttribute{
 		Computed:   true,

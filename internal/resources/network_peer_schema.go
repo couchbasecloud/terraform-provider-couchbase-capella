@@ -10,7 +10,7 @@ import (
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-var networkPeerBuilder = capellaschema.NewSchemaBuilder("networkPeer")
+var networkPeerBuilder = capellaschema.NewSchemaBuilder("networkPeer", "networkPeering")
 
 func NetworkPeerSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)

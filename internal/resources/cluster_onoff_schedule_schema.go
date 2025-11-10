@@ -8,7 +8,7 @@ import (
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-var onOffScheduleBuilder = capellaschema.NewSchemaBuilder("onOffSchedule")
+var onOffScheduleBuilder = capellaschema.NewSchemaBuilder("onOffSchedule", "ClusterOnOffSchedule")
 
 func OnOffScheduleSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)

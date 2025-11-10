@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_free_tier_buckets Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  The bucket data source retrieves the bucket information for an operational cluster.
+  The data source to retrieve buckets for a cluster.
 ---
 
 # couchbase-capella_free_tier_buckets (Data Source)
 
-The bucket data source retrieves the bucket information for an operational cluster.
+The data source to retrieve buckets for a cluster.
 
 ## Example Usage
 
@@ -31,38 +31,38 @@ data "couchbase-capella_free_tier_buckets" "existing_buckets" {
 
 ### Read-Only
 
-- `data` (Attributes List) Lists the bucket data in the cluster. (see [below for nested schema](#nestedatt--data))
+- `data` (Attributes List) (see [below for nested schema](#nestedatt--data))
 
 <a id="nestedatt--data"></a>
 ### Nested Schema for `data`
 
-Optional:
-
-- `bucket_conflict_resolution` (String) Conflict-resolution mechanism of the bucket.
-- `durability_level` (String) Durability of the bucket.
-- `eviction_policy` (String) Eviction policy for the bucket.
-- `flush` (Boolean) Determines whether flushing is enabled in the bucket.
-- `memory_allocation_in_mb` (Number) Bucket size in MB.
-- `replicas` (Number) Number of replicas for the data.
-- `storage_backend` (String) The bucket storage engine type (Magma or Couchstore).
-- `time_to_live_in_seconds` (Number) Time-to-live (TTL) for items in the bucket, in seconds.
-- `type` (String) The bucket type (Couchbase or Ephemeral).
-
 Read-Only:
 
+- `bucket_conflict_resolution` (String)
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `id` (String) The ID of the bucket.
-- `name` (String) The name of the bucket.
+- `durability_level` (String)
+- `eviction_policy` (String)
+- `flush` (Boolean)
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
+- `memory_allocation_in_mb` (Number)
+- `name` (String) - The name of the bucket.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
-- `stats` (Attributes) Bucket statistics. (see [below for nested schema](#nestedatt--data--stats))
+- `replicas` (Number)
+- `stats` (Attributes) (see [below for nested schema](#nestedatt--data--stats))
+- `storage_backend` (String)
+- `time_to_live_in_seconds` (Number)
+- `type` (String) - Type of the resource.
+ - **Valid Values**: `project`
+ - **Default**: `project`
 
 <a id="nestedatt--data--stats"></a>
 ### Nested Schema for `data.stats`
 
 Read-Only:
 
-- `disk_used_in_mib` (Number) Disk used in MiB.
-- `item_count` (Number) Bucket item count.
-- `memory_used_in_mib` (Number) Memory used in MiB.
-- `ops_per_second` (Number) Bucket operations per second.
+- `disk_used_in_mib` (Number)
+- `item_count` (Number)
+- `memory_used_in_mib` (Number)
+- `ops_per_second` (Number)

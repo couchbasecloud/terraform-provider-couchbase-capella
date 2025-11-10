@@ -26,20 +26,15 @@ resource "couchbase-capella_private_endpoints" "accept_endpoint" {
 
 ### Required
 
-- `cluster_id` (String) The GUID4 ID of the operational cluster to create the private endpoint for. This enables secure access to the cluster through your Cloud Service Provider's private network.
-- `endpoint_id` (String) The ID of the private endpoint in your cloud provider.
-- `organization_id` (String) The GUID4 ID of the organization where the private endpoint will be created.
-- `project_id` (String) The GUID4 ID of the project containing the cluster where the private endpoint will be created.
+- `cluster_id` (String) The GUID4 ID of the cluster.
+- `endpoint_id` (String)
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
 
 ### Read-Only
 
-- `status` (String) The current status of the private endpoint. Possible values are:
-* `pending` - The endpoint creation is in progress
-* `pendingAcceptance` - The endpoint is waiting for acceptance from Capella
-* `linked` - The endpoint is successfully connected and active
-* `rejected` - The endpoint connection request was rejected
-* `unrecognized` - The endpoint state cannot be determined
-* `failed` - The endpoint creation or connection attempt failed
+- `service_name` (String)
+- `status` (String)
 
 ## Import
 
