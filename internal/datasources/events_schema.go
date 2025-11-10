@@ -2,7 +2,6 @@ package datasources
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
@@ -13,47 +12,18 @@ var eventsBuilder = capellaschema.NewSchemaBuilder("events")
 func EventsSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
-	capellaschema.AddAttr(attrs, "organization_id", eventsBuilder, &schema.StringAttribute{
-		Required: true,
-	})
-	capellaschema.AddAttr(attrs, "project_ids", eventsBuilder, &schema.SetAttribute{
-		ElementType: types.StringType,
-		Optional:    true,
-	})
-	capellaschema.AddAttr(attrs, "cluster_ids", eventsBuilder, &schema.SetAttribute{
-		ElementType: types.StringType,
-		Optional:    true,
-	})
-	capellaschema.AddAttr(attrs, "user_ids", eventsBuilder, &schema.SetAttribute{
-		ElementType: types.StringType,
-		Optional:    true,
-	})
-	capellaschema.AddAttr(attrs, "severity_levels", eventsBuilder, &schema.SetAttribute{
-		ElementType: types.StringType,
-		Optional:    true,
-	})
-	capellaschema.AddAttr(attrs, "tags", eventsBuilder, &schema.SetAttribute{
-		ElementType: types.StringType,
-		Optional:    true,
-	})
-	capellaschema.AddAttr(attrs, "from", eventsBuilder, &schema.StringAttribute{
-		Optional: true,
-	})
-	capellaschema.AddAttr(attrs, "to", eventsBuilder, &schema.StringAttribute{
-		Optional: true,
-	})
-	capellaschema.AddAttr(attrs, "page", eventsBuilder, &schema.Int64Attribute{
-		Optional: true,
-	})
-	capellaschema.AddAttr(attrs, "per_page", eventsBuilder, &schema.Int64Attribute{
-		Optional: true,
-	})
-	capellaschema.AddAttr(attrs, "sort_by", eventsBuilder, &schema.StringAttribute{
-		Optional: true,
-	})
-	capellaschema.AddAttr(attrs, "sort_direction", eventsBuilder, &schema.StringAttribute{
-		Optional: true,
-	})
+	capellaschema.AddAttr(attrs, "organization_id", eventsBuilder, requiredString())
+	capellaschema.AddAttr(attrs, "project_ids", eventsBuilder, optionalStringSet())
+	capellaschema.AddAttr(attrs, "cluster_ids", eventsBuilder, optionalStringSet())
+	capellaschema.AddAttr(attrs, "user_ids", eventsBuilder, optionalStringSet())
+	capellaschema.AddAttr(attrs, "severity_levels", eventsBuilder, optionalStringSet())
+	capellaschema.AddAttr(attrs, "tags", eventsBuilder, optionalStringSet())
+	capellaschema.AddAttr(attrs, "from", eventsBuilder, optionalString())
+	capellaschema.AddAttr(attrs, "to", eventsBuilder, optionalString())
+	capellaschema.AddAttr(attrs, "page", eventsBuilder, optionalInt64())
+	capellaschema.AddAttr(attrs, "per_page", eventsBuilder, optionalInt64())
+	capellaschema.AddAttr(attrs, "sort_by", eventsBuilder, optionalString())
+	capellaschema.AddAttr(attrs, "sort_direction", eventsBuilder, optionalString())
 
 	attrs["data"] = computedEventAttributes
 	attrs["cursor"] = computedCursorAttribute

@@ -13,12 +13,13 @@ import (
 type SchemaAttribute interface {
 	*resourceschema.StringAttribute | *resourceschema.Int64Attribute | *resourceschema.BoolAttribute |
 		*resourceschema.SetAttribute | *resourceschema.Float64Attribute | *resourceschema.NumberAttribute |
-		*resourceschema.ListAttribute | *resourceschema.SingleNestedAttribute | *resourceschema.ObjectAttribute |
-		*resourceschema.SetNestedAttribute | *resourceschema.ListNestedAttribute | *resourceschema.MapNestedAttribute |
-		*datasourceschema.StringAttribute | *datasourceschema.Int64Attribute | *datasourceschema.BoolAttribute |
-		*datasourceschema.SetAttribute | *datasourceschema.Float64Attribute | *datasourceschema.NumberAttribute |
-		*datasourceschema.ListAttribute | *datasourceschema.SingleNestedAttribute | *datasourceschema.ObjectAttribute |
-		*datasourceschema.SetNestedAttribute | *datasourceschema.ListNestedAttribute | *datasourceschema.MapNestedAttribute
+		*resourceschema.ListAttribute | *resourceschema.MapAttribute | *resourceschema.SingleNestedAttribute |
+		*resourceschema.ObjectAttribute | *resourceschema.SetNestedAttribute | *resourceschema.ListNestedAttribute |
+		*resourceschema.MapNestedAttribute | *datasourceschema.StringAttribute | *datasourceschema.Int64Attribute |
+		*datasourceschema.BoolAttribute | *datasourceschema.SetAttribute | *datasourceschema.Float64Attribute |
+		*datasourceschema.NumberAttribute | *datasourceschema.ListAttribute | *datasourceschema.MapAttribute |
+		*datasourceschema.SingleNestedAttribute | *datasourceschema.ObjectAttribute | *datasourceschema.SetNestedAttribute |
+		*datasourceschema.ListNestedAttribute | *datasourceschema.MapNestedAttribute
 }
 
 // SchemaAttributeMap is a type constraint for attribute maps

@@ -11,51 +11,27 @@ var appServiceDSBuilder = capellaschema.NewSchemaBuilder("appService")
 func AppServiceSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
-	capellaschema.AddAttr(attrs, "organization_id", appServiceDSBuilder, &schema.StringAttribute{
-		Required: true,
-	})
+	capellaschema.AddAttr(attrs, "organization_id", appServiceDSBuilder, requiredString())
 
 	computeAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(computeAttrs, "cpu", appServiceDSBuilder, &schema.Int64Attribute{
-		Computed: true,
-	})
-	capellaschema.AddAttr(computeAttrs, "ram", appServiceDSBuilder, &schema.Int64Attribute{
-		Computed: true,
-	})
+	capellaschema.AddAttr(computeAttrs, "cpu", appServiceDSBuilder, computedInt64())
+	capellaschema.AddAttr(computeAttrs, "ram", appServiceDSBuilder, computedInt64())
 
 	dataAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(dataAttrs, "id", appServiceDSBuilder, &schema.StringAttribute{
-		Computed: true,
-	})
-	capellaschema.AddAttr(dataAttrs, "organization_id", appServiceDSBuilder, &schema.StringAttribute{
-		Computed: true,
-	})
-	capellaschema.AddAttr(dataAttrs, "cluster_id", appServiceDSBuilder, &schema.StringAttribute{
-		Computed: true,
-	})
-	capellaschema.AddAttr(dataAttrs, "name", appServiceDSBuilder, &schema.StringAttribute{
-		Computed: true,
-	})
-	capellaschema.AddAttr(dataAttrs, "description", appServiceDSBuilder, &schema.StringAttribute{
-		Computed: true,
-	})
-	capellaschema.AddAttr(dataAttrs, "nodes", appServiceDSBuilder, &schema.Int64Attribute{
-		Computed: true,
-	})
-	capellaschema.AddAttr(dataAttrs, "cloud_provider", appServiceDSBuilder, &schema.StringAttribute{
-		Computed: true,
-	})
-	capellaschema.AddAttr(dataAttrs, "current_state", appServiceDSBuilder, &schema.StringAttribute{
-		Computed: true,
-	})
+	capellaschema.AddAttr(dataAttrs, "id", appServiceDSBuilder, computedString())
+	capellaschema.AddAttr(dataAttrs, "organization_id", appServiceDSBuilder, computedString())
+	capellaschema.AddAttr(dataAttrs, "cluster_id", appServiceDSBuilder, computedString())
+	capellaschema.AddAttr(dataAttrs, "name", appServiceDSBuilder, computedString())
+	capellaschema.AddAttr(dataAttrs, "description", appServiceDSBuilder, computedString())
+	capellaschema.AddAttr(dataAttrs, "nodes", appServiceDSBuilder, computedInt64())
+	capellaschema.AddAttr(dataAttrs, "cloud_provider", appServiceDSBuilder, computedString())
+	capellaschema.AddAttr(dataAttrs, "current_state", appServiceDSBuilder, computedString())
 	capellaschema.AddAttr(dataAttrs, "compute", appServiceDSBuilder, &schema.SingleNestedAttribute{
 		Computed:   true,
 		Attributes: computeAttrs,
 	})
-	capellaschema.AddAttr(dataAttrs, "version", appServiceDSBuilder, &schema.StringAttribute{
-		Computed: true,
-	})
-	dataAttrs["audit"] = computedAuditAttribute
+	capellaschema.AddAttr(dataAttrs, "version", appServiceDSBuilder, computedString())
+	capellaschema.AddAttr(dataAttrs, "audit", appServiceDSBuilder, computedAudit())
 
 	capellaschema.AddAttr(attrs, "data", appServiceDSBuilder, &schema.ListNestedAttribute{
 		Computed: true,

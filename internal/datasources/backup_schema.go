@@ -1,151 +1,70 @@
 package datasources
 
-import "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+import (
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+
+	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+)
+
+var backupBuilder = capellaschema.NewSchemaBuilder("backup")
 
 func BackupSchema() schema.Schema {
+	attrs := make(map[string]schema.Attribute)
+
+	capellaschema.AddAttr(attrs, "organization_id", backupBuilder, requiredString())
+	capellaschema.AddAttr(attrs, "project_id", backupBuilder, requiredString())
+	capellaschema.AddAttr(attrs, "cluster_id", backupBuilder, requiredString())
+	capellaschema.AddAttr(attrs, "bucket_id", backupBuilder, requiredString())
+
+	backupStatsAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(backupStatsAttrs, "size_in_mb", backupBuilder, &schema.Float64Attribute{Computed: true})
+	capellaschema.AddAttr(backupStatsAttrs, "items", backupBuilder, computedInt64())
+	capellaschema.AddAttr(backupStatsAttrs, "mutations", backupBuilder, computedInt64())
+	capellaschema.AddAttr(backupStatsAttrs, "tombstones", backupBuilder, computedInt64())
+	capellaschema.AddAttr(backupStatsAttrs, "gsi", backupBuilder, computedInt64())
+	capellaschema.AddAttr(backupStatsAttrs, "fts", backupBuilder, computedInt64())
+	capellaschema.AddAttr(backupStatsAttrs, "cbas", backupBuilder, computedInt64())
+	capellaschema.AddAttr(backupStatsAttrs, "event", backupBuilder, computedInt64())
+
+	scheduleInfoAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(scheduleInfoAttrs, "backup_type", backupBuilder, computedString())
+	capellaschema.AddAttr(scheduleInfoAttrs, "backup_time", backupBuilder, computedString())
+	capellaschema.AddAttr(scheduleInfoAttrs, "increment", backupBuilder, computedInt64())
+	capellaschema.AddAttr(scheduleInfoAttrs, "retention", backupBuilder, computedString())
+
+	dataAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(dataAttrs, "id", backupBuilder, computedString())
+	capellaschema.AddAttr(dataAttrs, "organization_id", backupBuilder, computedString())
+	capellaschema.AddAttr(dataAttrs, "project_id", backupBuilder, computedString())
+	capellaschema.AddAttr(dataAttrs, "cluster_id", backupBuilder, computedString())
+	capellaschema.AddAttr(dataAttrs, "bucket_id", backupBuilder, computedString())
+	capellaschema.AddAttr(dataAttrs, "cycle_id", backupBuilder, computedString())
+	capellaschema.AddAttr(dataAttrs, "date", backupBuilder, computedString())
+	capellaschema.AddAttr(dataAttrs, "restore_before", backupBuilder, computedString())
+	capellaschema.AddAttr(dataAttrs, "status", backupBuilder, computedString())
+	capellaschema.AddAttr(dataAttrs, "method", backupBuilder, computedString())
+	capellaschema.AddAttr(dataAttrs, "bucket_name", backupBuilder, computedString())
+	capellaschema.AddAttr(dataAttrs, "source", backupBuilder, computedString())
+	capellaschema.AddAttr(dataAttrs, "cloud_provider", backupBuilder, computedString())
+	capellaschema.AddAttr(dataAttrs, "backup_stats", backupBuilder, &schema.SingleNestedAttribute{
+		Computed:   true,
+		Attributes: backupStatsAttrs,
+	})
+	capellaschema.AddAttr(dataAttrs, "elapsed_time_in_seconds", backupBuilder, computedInt64())
+	capellaschema.AddAttr(dataAttrs, "schedule_info", backupBuilder, &schema.SingleNestedAttribute{
+		Computed:   true,
+		Attributes: scheduleInfoAttrs,
+	})
+
+	capellaschema.AddAttr(attrs, "data", backupBuilder, &schema.ListNestedAttribute{
+		Computed: true,
+		NestedObject: schema.NestedAttributeObject{
+			Attributes: dataAttrs,
+		},
+	})
+
 	return schema.Schema{
 		MarkdownDescription: "The backups data source retrieves backups associated with a bucket for an operational cluster.",
-		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the organization.",
-			},
-			"project_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the project.",
-			},
-			"cluster_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the cluster.",
-			},
-			"bucket_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The ID of the bucket. It is the URL-compatible base64 encoding of the bucket name.",
-			},
-			"data": schema.ListNestedAttribute{
-				Computed:            true,
-				MarkdownDescription: "Lists the backups associated with a bucket.",
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"id": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The GUID4 ID of the backup resource.",
-						},
-						"organization_id": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The GUID4 ID of the organization.",
-						},
-						"project_id": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The GUID4 ID of the project.",
-						},
-						"cluster_id": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The GUID4 ID of the cluster.",
-						},
-						"bucket_id": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The ID of the bucket. It is the URL-compatible base64 encoding of the bucket name.",
-						},
-						"cycle_id": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The GUID4 ID of the cycle this backup belongs to.",
-						},
-						"date": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The RFC3339 timestamp representing the time at which backup was created.",
-						},
-						"restore_before": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The RFC3339 timestamp representing the time at which the backup will expire.",
-						},
-						"status": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The status of the backup. Backup statuses are 'pending', 'ready', 'failed'.",
-						},
-						"method": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The mechanism of the backup. It can be either incremental or full.",
-						},
-						"bucket_name": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The name of the bucket for which the backup belongs to.",
-						},
-						"source": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "Specifies whether the backup job was initiated manually or by a schedule.",
-						},
-						"cloud_provider": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The Cloud Service Provider where the cluster is hosted.",
-						},
-						"backup_stats": schema.SingleNestedAttribute{
-							Computed:            true,
-							MarkdownDescription: "Lists the backup level data that Couchbase provides.",
-							Attributes: map[string]schema.Attribute{
-								"size_in_mb": schema.Float64Attribute{
-									Computed:            true,
-									MarkdownDescription: "Size in MB is the total size of the backup in megabytes. It represents the amount of data that was backed up during the backup operation.",
-								},
-								"items": schema.Int64Attribute{
-									Computed:            true,
-									MarkdownDescription: "The number of items saved during the backup.",
-								},
-								"mutations": schema.Int64Attribute{
-									Computed:            true,
-									MarkdownDescription: "The number of mutations saved during the backup.",
-								},
-								"tombstones": schema.Int64Attribute{
-									Computed:            true,
-									MarkdownDescription: "The number of tombstones saved during the backup.",
-								},
-								"gsi": schema.Int64Attribute{
-									Computed:            true,
-									MarkdownDescription: "The number of global secondary indexes saved during the backup.",
-								},
-								"fts": schema.Int64Attribute{
-									Computed:            true,
-									MarkdownDescription: "The number of full text search entities saved during the backup.",
-								},
-								"cbas": schema.Int64Attribute{
-									Computed:            true,
-									MarkdownDescription: "The number of analytics entities saved during the backup.",
-								},
-								"event": schema.Int64Attribute{
-									Computed:            true,
-									MarkdownDescription: "The number of eventing entities saved during the backup.",
-								},
-							},
-						},
-						"elapsed_time_in_seconds": schema.Int64Attribute{
-							Computed:            true,
-							MarkdownDescription: "The amount of seconds that have elapsed between the creation and completion of the backup.",
-						},
-						"schedule_info": schema.SingleNestedAttribute{
-							Computed:            true,
-							MarkdownDescription: "The schedule information of the backup.",
-							Attributes: map[string]schema.Attribute{
-								"backup_type": schema.StringAttribute{
-									Computed:            true,
-									MarkdownDescription: "Specifies if the backup frequency is daily or weekly.",
-								},
-								"backup_time": schema.StringAttribute{
-									Computed:            true,
-									MarkdownDescription: "The timestamp indicating when the backup was created.",
-								},
-								"increment": schema.Int64Attribute{
-									Computed:            true,
-									MarkdownDescription: "The interval in hours for incremental backups.",
-								},
-								"retention": schema.StringAttribute{
-									Computed:            true,
-									MarkdownDescription: "The retention time in days.",
-								},
-							},
-						},
-					},
-				},
-			},
-		},
+		Attributes:          attrs,
 	}
 }
