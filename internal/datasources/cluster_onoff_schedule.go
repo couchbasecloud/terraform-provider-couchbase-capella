@@ -12,7 +12,6 @@ import (
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -40,71 +39,7 @@ func (c *ClusterOnOffSchedule) Metadata(_ context.Context, req datasource.Metada
 
 // Schema defines the schema for the cluster on/off schedule data source.
 func (c *ClusterOnOffSchedule) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		MarkdownDescription: "The On/Off schedule data source allows you to retrieve the on/off schedule for an operational cluster.",
-		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the organization.",
-			},
-			"project_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the project.",
-			},
-			"cluster_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the cluster.",
-			},
-			"timezone": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "The standard timezone for the cluster. Should be the TZ identifier. For example, 'ET'.",
-			},
-			"days": schema.ListNestedAttribute{
-				Computed:            true,
-				MarkdownDescription: "The list of days for the cluster on/off schedule. Each day should have a 'state', 'day', and 'from' and 'to' time.",
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"state": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The state of the cluster on/off schedule. The states are 'on' or 'off'.",
-						},
-						"day": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: " The day of the week for the cluster on/off schedule. One of the following: 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', or 'saturday'.",
-						},
-						"from": schema.SingleNestedAttribute{
-							Optional:            true,
-							MarkdownDescription: "The start time of the cluster on/off schedule.",
-							Attributes: map[string]schema.Attribute{
-								"hour": schema.Int64Attribute{
-									Computed:            true,
-									MarkdownDescription: "Specifies the hour of the day for the cluster on/off schedule, ranging from 0 to 23.",
-								},
-								"minute": schema.Int64Attribute{
-									Computed:            true,
-									MarkdownDescription: "Specifies the minute of the hour for the cluster on/off schedule, ranging from 0 to 59.",
-								},
-							},
-						},
-						"to": schema.SingleNestedAttribute{
-							Optional:            true,
-							MarkdownDescription: "The end time of the cluster on/off schedule.",
-							Attributes: map[string]schema.Attribute{
-								"hour": schema.Int64Attribute{
-									Computed:            true,
-									MarkdownDescription: "Specifies the hour of the day for the cluster on/off schedule, ranging from 0 to 23.",
-								},
-								"minute": schema.Int64Attribute{
-									Computed:            true,
-									MarkdownDescription: "Specifies the minute of the hour for the cluster on/off schedule, ranging from 0 to 59.",
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
+	resp.Schema = ClusterOnOffScheduleSchema()
 }
 
 // Read refreshes the Terraform state with the latest data of cluster on/off schedules.

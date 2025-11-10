@@ -10,7 +10,6 @@ import (
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -37,91 +36,7 @@ func (d *Users) Metadata(_ context.Context, req datasource.MetadataRequest, resp
 
 // Schema defines the schema for the User data source.
 func (d *Users) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		MarkdownDescription: "The data source to retrieve users in a Capella organization.",
-		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the organization.",
-			},
-			"data": schema.ListNestedAttribute{
-				Computed: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"id": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The ID of the user.",
-						},
-						"name": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The name of the user.",
-						},
-						"status": schema.StringAttribute{
-							Computed: true,
-							MarkdownDescription: "Status depicts user status whether they are verified or not. " +
-								"It can be one of the following values: verified, not-verified, pending-primary.",
-						},
-						"inactive": schema.BoolAttribute{
-							Computed:            true,
-							MarkdownDescription: "Inactive depicts whether the user has accepted the invite for the organization.",
-						},
-						"email": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The email of the user.",
-						},
-						"organization_id": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The GUID4 ID of the organization.",
-						},
-						"organization_roles": schema.ListAttribute{
-							ElementType:         types.StringType,
-							Computed:            true,
-							MarkdownDescription: "The organization roles associated with the user. They determine the privileges a user possesses in the organization.",
-						},
-						"last_login": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "Time(UTC) when the user last logged in.",
-						},
-						"region": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The region of the user.",
-						},
-						"time_zone": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "Time zone of the user.",
-						},
-						"enable_notifications": schema.BoolAttribute{
-							Computed:            true,
-							MarkdownDescription: "After enabling email notifications for your account, you will start receiving email notification alerts from all databases in projects you are a part of.",
-						},
-						"expires_at": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "Time at which the user expires.",
-						},
-						"resources": schema.ListNestedAttribute{
-							Computed: true,
-							NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"type": schema.StringAttribute{
-										Optional:            true,
-										Computed:            true,
-										MarkdownDescription: "Type of the resource.",
-									},
-									"id": schema.StringAttribute{Computed: true, MarkdownDescription: "The GUID4 ID of the project."},
-									"roles": schema.ListAttribute{
-										ElementType:         types.StringType,
-										Computed:            true,
-										MarkdownDescription: "Project Roles associated with the user.",
-									},
-								},
-							},
-						},
-						"audit": computedAuditAttribute,
-					},
-				},
-			},
-		},
-	}
+	resp.Schema = UsersSchema()
 }
 
 // Read refreshes the Terraform state with the latest data of Users.

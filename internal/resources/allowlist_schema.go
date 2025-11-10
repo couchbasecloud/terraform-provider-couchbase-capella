@@ -19,43 +19,12 @@ func AllowlistsSchema() schema.Schema {
 			stringplanmodifier.UseStateForUnknown(),
 		},
 	})
-	capellaschema.AddAttr(attrs, "organization_id", allowlistBuilder, &schema.StringAttribute{
-		Required: true,
-		PlanModifiers: []planmodifier.String{
-			stringplanmodifier.RequiresReplace(),
-		},
-	})
-	capellaschema.AddAttr(attrs, "project_id", allowlistBuilder, &schema.StringAttribute{
-		Required: true,
-		PlanModifiers: []planmodifier.String{
-			stringplanmodifier.RequiresReplace(),
-		},
-	})
-	capellaschema.AddAttr(attrs, "cluster_id", allowlistBuilder, &schema.StringAttribute{
-		Required: true,
-		PlanModifiers: []planmodifier.String{
-			stringplanmodifier.RequiresReplace(),
-		},
-	})
-	capellaschema.AddAttr(attrs, "cidr", allowlistBuilder, &schema.StringAttribute{
-		Required: true,
-		PlanModifiers: []planmodifier.String{
-			stringplanmodifier.RequiresReplace(),
-		},
-	})
-	capellaschema.AddAttr(attrs, "comment", allowlistBuilder, &schema.StringAttribute{
-		Optional: true,
-		Computed: true,
-		PlanModifiers: []planmodifier.String{
-			stringplanmodifier.RequiresReplace(),
-		},
-	})
-	capellaschema.AddAttr(attrs, "expires_at", allowlistBuilder, &schema.StringAttribute{
-		Optional: true,
-		PlanModifiers: []planmodifier.String{
-			stringplanmodifier.RequiresReplace(),
-		},
-	})
+	capellaschema.AddAttr(attrs, "organization_id", allowlistBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "project_id", allowlistBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "cluster_id", allowlistBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "cidr", allowlistBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "comment", allowlistBuilder, stringAttribute([]string{optional, computed, requiresReplace}))
+	capellaschema.AddAttr(attrs, "expires_at", allowlistBuilder, stringAttribute([]string{optional, requiresReplace}))
 	capellaschema.AddAttr(attrs, "audit", allowlistBuilder, computedAuditAttribute())
 
 	return schema.Schema{

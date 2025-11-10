@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -49,23 +48,7 @@ func (a *AppEndpointResync) Metadata(_ context.Context, req resource.MetadataReq
 
 // Schema returns the schema for the App Endpoint Resync resource.
 func (a *AppEndpointResync) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		MarkdownDescription: "Manages App Endpoint Resync operations. This resource allows you to create and manage resync operations for App Endpoints in Couchbase Capella.",
-		Attributes: map[string]schema.Attribute{
-			"organization_id":        WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the organization."),
-			"project_id":             WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the project."),
-			"cluster_id":             WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the cluster."),
-			"app_service_id":         WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the app service."),
-			"app_endpoint_name":      WithDescription(stringAttribute([]string{required, requiresReplace}), "The name of the app endpoint."),
-			"scopes":                 WithDescription(mapAttribute(types.SetType{ElemType: types.StringType}, []string{optional}...), "A map of scope names to their collections that need to be resynced. Each scope maps to a set of collection names."),
-			"collections_processing": WithDescription(mapAttribute(types.SetType{ElemType: types.StringType}, []string{computed}...), "A map of collections currently being processed, organized by scope."),
-			"docs_changed":           WithDescription(int64Attribute(computed), "The number of documents that have been changed during the resync operation."),
-			"docs_processed":         WithDescription(int64Attribute(computed), "The total number of documents that have been processed during the resync operation."),
-			"last_error":             WithDescription(stringAttribute([]string{computed}), "The last error message encountered during the resync operation, if any."),
-			"start_time":             WithDescription(stringAttribute([]string{computed}), "The timestamp when the resync operation was initiated."),
-			"state":                  WithDescription(stringAttribute([]string{computed}), "The current state of the resync operation (e.g., 'running', 'completed', 'error', etc.)."),
-		},
-	}
+	resp.Schema = AppEndpointResyncSchema()
 }
 
 // Create initiates an app endpoint resync.

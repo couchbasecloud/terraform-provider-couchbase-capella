@@ -6,106 +6,87 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
+var networkPeerBuilder = capellaschema.NewSchemaBuilder("networkPeer")
+
 func NetworkPeerSchema() schema.Schema {
+	attrs := make(map[string]schema.Attribute)
+
+	capellaschema.AddAttr(attrs, "id", networkPeerBuilder, &schema.StringAttribute{
+		Computed: true,
+		PlanModifiers: []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		},
+	})
+	capellaschema.AddAttr(attrs, "organization_id", networkPeerBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "project_id", networkPeerBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "cluster_id", networkPeerBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "name", networkPeerBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "provider_type", networkPeerBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "audit", networkPeerBuilder, computedAuditAttribute())
+	capellaschema.AddAttr(attrs, "commands", networkPeerBuilder, &schema.SetAttribute{
+		Computed:    true,
+		ElementType: types.StringType,
+	})
+
+	awsConfigAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(awsConfigAttrs, "account_id", networkPeerBuilder, stringAttribute([]string{optional}))
+	capellaschema.AddAttr(awsConfigAttrs, "vpc_id", networkPeerBuilder, stringAttribute([]string{optional}))
+	capellaschema.AddAttr(awsConfigAttrs, "region", networkPeerBuilder, stringAttribute([]string{optional}))
+	capellaschema.AddAttr(awsConfigAttrs, "cidr", networkPeerBuilder, stringAttribute([]string{required}))
+	capellaschema.AddAttr(awsConfigAttrs, "provider_id", networkPeerBuilder, stringAttribute([]string{computed}))
+
+	gcpConfigAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(gcpConfigAttrs, "cidr", networkPeerBuilder, stringAttribute([]string{required}))
+	capellaschema.AddAttr(gcpConfigAttrs, "network_name", networkPeerBuilder, stringAttribute([]string{optional}))
+	capellaschema.AddAttr(gcpConfigAttrs, "project_id", networkPeerBuilder, stringAttribute([]string{optional}))
+	capellaschema.AddAttr(gcpConfigAttrs, "service_account", networkPeerBuilder, stringAttribute([]string{optional}))
+	capellaschema.AddAttr(gcpConfigAttrs, "provider_id", networkPeerBuilder, stringAttribute([]string{computed}))
+
+	azureConfigAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(azureConfigAttrs, "tenant_id", networkPeerBuilder, stringAttribute([]string{optional}))
+	capellaschema.AddAttr(azureConfigAttrs, "cidr", networkPeerBuilder, stringAttribute([]string{required}))
+	capellaschema.AddAttr(azureConfigAttrs, "resource_group", networkPeerBuilder, stringAttribute([]string{optional}))
+	capellaschema.AddAttr(azureConfigAttrs, "subscription_id", networkPeerBuilder, stringAttribute([]string{optional}))
+	capellaschema.AddAttr(azureConfigAttrs, "vnet_id", networkPeerBuilder, stringAttribute([]string{optional}))
+	capellaschema.AddAttr(azureConfigAttrs, "provider_id", networkPeerBuilder, stringAttribute([]string{computed}))
+
+	providerConfigAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(providerConfigAttrs, "aws_config", networkPeerBuilder, &schema.SingleNestedAttribute{
+		Optional:   true,
+		Attributes: awsConfigAttrs,
+	})
+	capellaschema.AddAttr(providerConfigAttrs, "gcp_config", networkPeerBuilder, &schema.SingleNestedAttribute{
+		Optional:   true,
+		Attributes: gcpConfigAttrs,
+	})
+	capellaschema.AddAttr(providerConfigAttrs, "azure_config", networkPeerBuilder, &schema.SingleNestedAttribute{
+		Optional:   true,
+		Attributes: azureConfigAttrs,
+	})
+
+	capellaschema.AddAttr(attrs, "provider_config", networkPeerBuilder, &schema.SingleNestedAttribute{
+		Required: true,
+		PlanModifiers: []planmodifier.Object{
+			objectplanmodifier.RequiresReplace(),
+		},
+		Attributes: providerConfigAttrs,
+	})
+
+	statusAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(statusAttrs, "reasoning", networkPeerBuilder, stringAttribute([]string{computed}))
+	capellaschema.AddAttr(statusAttrs, "state", networkPeerBuilder, stringAttribute([]string{computed}))
+
+	capellaschema.AddAttr(attrs, "status", networkPeerBuilder, &schema.SingleNestedAttribute{
+		Computed:   true,
+		Attributes: statusAttrs,
+	})
+
 	return schema.Schema{
 		MarkdownDescription: "This resource allows you to manage network peering for an operational cluster.",
-		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-				MarkdownDescription: "The unique identifier for the network peering record.",
-			},
-			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}),
-				"The GUID4 ID of the organization."),
-			"project_id": WithDescription(stringAttribute([]string{required, requiresReplace}),
-				"The GUID4 ID of the project."),
-			"cluster_id": WithDescription(stringAttribute([]string{required, requiresReplace}),
-				"The GUID4 ID of the cluster to set up network peering."),
-			"name": WithDescription(stringAttribute([]string{required, requiresReplace}),
-				"The name of the network peering relationship."),
-			"provider_type": WithDescription(stringAttribute([]string{required, requiresReplace}),
-				"The Cloud Service Provider type for the network peering. Currently supporting AWS, GCP, or Azure."),
-			"commands": schema.SetAttribute{
-				Computed:            true,
-				ElementType:         types.StringType,
-				MarkdownDescription: "The list of commands required to set up network peering.",
-			},
-			"provider_config": schema.SingleNestedAttribute{
-				Description: "The Cloud Service Provider's specific configuration for the network peering." +
-					" The 'accountId', 'vpcId', 'region', and 'cidr' fields are required for AWS VPC peering. " +
-					"For GCP, the 'networkName', 'projectId', 'serviceAccount', and 'cidr' fields are required for VPC peering. ",
-				Required: true,
-				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.RequiresReplace(),
-				},
-				Attributes: map[string]schema.Attribute{
-					"aws_config": schema.SingleNestedAttribute{
-						Optional:            true,
-						MarkdownDescription: "AWS-specific configuration for VPC peering.",
-						Attributes: map[string]schema.Attribute{
-							"account_id": WithDescription(stringAttribute([]string{optional}),
-								"The numeric AWS Account ID or Owner ID."),
-							"vpc_id": WithDescription(stringAttribute([]string{optional}),
-								"The alphanumeric VPC ID which starts with 'vpc-'. This is also known as the networkId."),
-							"region": WithDescription(stringAttribute([]string{optional}),
-								"The AWS region where your VPC is deployed."),
-							"cidr": WithDescription(stringAttribute([]string{required}),
-								"The AWS VPC CIDR block of network in which your application runs. This cannot overlap with your Capella CIDR Block."),
-							"provider_id": WithDescription(stringAttribute([]string{computed}),
-								"The ID of the VPC peer on AWS."),
-						},
-					},
-					"gcp_config": schema.SingleNestedAttribute{
-						Optional:            true,
-						MarkdownDescription: "GCP-specific configuration for VPC network peering.",
-						Attributes: map[string]schema.Attribute{
-							"cidr": WithDescription(stringAttribute([]string{required}),
-								"The GCP VPC CIDR block of network in which your application runs. This cannot overlap with your Capella CIDR Block."),
-							"network_name": WithDescription(stringAttribute([]string{optional}),
-								"The name of the network that you want to peer with."),
-							"project_id": WithDescription(stringAttribute([]string{optional}),
-								"The unique identifier for your GCP project."),
-							"service_account": WithDescription(stringAttribute([]string{optional}),
-								"ServiceAccount created or assigned on the external VPC project. GCP Service Account with DNS Admin and Compute.NetworkAdmin permissions. Must be in email form shown by 'gcloud iam service-accounts list'."),
-							"provider_id": WithDescription(stringAttribute([]string{computed}),
-								"The ID of the VPC peer on GCP."),
-						},
-					},
-					"azure_config": schema.SingleNestedAttribute{
-						Optional:            true,
-						MarkdownDescription: "Azure-specific configuration for VNet peering.",
-						Attributes: map[string]schema.Attribute{
-							"tenant_id": WithDescription(stringAttribute([]string{optional}),
-								"The Azure tenant ID where the VNet exists."),
-							"cidr": WithDescription(stringAttribute([]string{required}),
-								"The CIDR block from the virtual network that you created in Azure. This cannot overlap with your Capella CIDR Block."),
-							"resource_group": WithDescription(stringAttribute([]string{optional}),
-								"The resource group name holding the resource you're connecting with Capella."),
-							"subscription_id": WithDescription(stringAttribute([]string{optional}),
-								"The Azure subscription ID where the VNet exists."),
-							"vnet_id": WithDescription(stringAttribute([]string{optional}),
-								"The VNet ID is the name of the virtual network peering in Azure."),
-							"provider_id": WithDescription(stringAttribute([]string{computed}),
-								"The ID of the VNet peer on Azure."),
-						},
-					},
-				},
-			},
-			"status": schema.SingleNestedAttribute{
-				Computed:            true,
-				MarkdownDescription: "Current status of the network peering connection.",
-				Attributes: map[string]schema.Attribute{
-					"reasoning": WithDescription(stringAttribute([]string{computed}),
-						"Detailed reason for the current status of the peering connection."),
-					"state": WithDescription(stringAttribute([]string{computed}),
-						"Current state of the peering connection. The status options are 'pending', 'active', or 'failed'."),
-				},
-			},
-			"audit": computedAuditAttribute(),
-		},
+		Attributes:          attrs,
 	}
 }

@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -40,41 +39,7 @@ func (p *PrivateEndpoint) Metadata(_ context.Context, req resource.MetadataReque
 
 // Schema defines the schema for the private endpoint resource.
 func (p *PrivateEndpoint) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		MarkdownDescription: "This resource allows you to manage private endpoints for an operational cluster. Private endpoints allow you to securely connect your Cloud Service Provider's private network (VPC/VNET) to your operational cluster without exposing traffic to the public internet.",
-		Attributes: map[string]schema.Attribute{
-			"organization_id": WithDescription(
-				stringAttribute([]string{required, requiresReplace}),
-				"The GUID4 ID of the organization where the private endpoint will be created.",
-			),
-			"project_id": WithDescription(
-				stringAttribute([]string{required, requiresReplace}),
-				"The GUID4 ID of the project containing the cluster where the private endpoint will be created.",
-			),
-			"cluster_id": WithDescription(
-				stringAttribute([]string{required, requiresReplace}),
-				"The GUID4 ID of the operational cluster to create the private endpoint for. This enables secure access to the cluster through your Cloud Service Provider's private network.",
-			),
-			"endpoint_id": WithDescription(
-				stringAttribute([]string{required, requiresReplace}),
-				"The ID of the private endpoint in your cloud provider.",
-			),
-			"status": schema.StringAttribute{
-				Computed: true,
-				MarkdownDescription: "The current status of the private endpoint. Possible values are:\n" +
-					"* `pending` - The endpoint creation is in progress\n" +
-					"* `pendingAcceptance` - The endpoint is waiting for acceptance from Capella\n" +
-					"* `linked` - The endpoint is successfully connected and active\n" +
-					"* `rejected` - The endpoint connection request was rejected\n" +
-					"* `unrecognized` - The endpoint state cannot be determined\n" +
-					"* `failed` - The endpoint creation or connection attempt failed",
-			},
-			"service_name": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "The name of the private endpoint service associated with the operational cluster.",
-			},
-		},
-	}
+	resp.Schema = PrivateEndpointsSchema()
 }
 
 // Create accepts a private endpoint on the CSP.
