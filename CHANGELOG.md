@@ -1,40 +1,5 @@
 # Changelog
 
-## [v1.6.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.6.0) (2025-11-10)
-
-[Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.5.3...v1.6.0)
-
-**Implemented enhancements:**
-
-- \[AV-104554\] Add app endpoint acceptance test and common app endpoint [\#424](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/424) ([mohammed-madi](https://github.com/mohammed-madi))
-- \[AV-113428\] Improved Documentation [\#423](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/423) ([Talina06](https://github.com/Talina06))
-- \[AV-104506\] Feature App Endpoints [\#413](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/413) ([l0n3star](https://github.com/l0n3star))
-- \[AV-109643\] Log API rate limits [\#406](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/406) ([l0n3star](https://github.com/l0n3star))
-- \[AV-111371\] Allow configurable vbuckets [\#405](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/405) ([l0n3star](https://github.com/l0n3star))
-- \[AV-111366\] Introduce a V2 API client via openapi-codegen [\#404](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/404) ([Talina06](https://github.com/Talina06))
-
-**Fixed bugs:**
-
-- \[AV-115618\] Fix App Services Allowed CIDRs field requirement and error handling [\#432](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/432) ([mohammed-madi](https://github.com/mohammed-madi))
-- \[AV-115448\] Add service name to private endpoints resource and datasource [\#431](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/431) ([mohammed-madi](https://github.com/mohammed-madi))
-- \[AV-111247\] Do not set bucket defaults in provider [\#402](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/402) ([l0n3star](https://github.com/l0n3star))
-- \[AV-108831\] Use Token from Rotate API Key Response [\#382](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/382) ([SophieWegmann](https://github.com/SophieWegmann))
-- \[AV-108158\] Remove cluster ID arg from import command in examples readme [\#377](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/377) ([mohammed-madi](https://github.com/mohammed-madi))
-- \[AV-107859\] Update Rotate API Key Endpoint [\#374](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/374) ([SophieWegmann](https://github.com/SophieWegmann))
-- \[AV-107327\] Dynamically set if\_match [\#370](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/370) ([l0n3star](https://github.com/l0n3star))
-
-**Closed issues:**
-
-- Invalid checksum error v1.5.3 [\#376](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues/376)
-- Error: Plugin did not respond │  The Plugin encountered an error, and failed to respond to the │ plugin6.\(\*GRPCProvider\).ReadResource call [\#363](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues/363)
-
-**Merged pull requests:**
-
-- \[AV-113428\] Generate Enhanced Documentation [\#436](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/436) ([Talina06](https://github.com/Talina06))
-- \[AV-113428\] Migrate docs on resources to use the OpenAPI documentation \[Part 3\] [\#435](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/435) ([Talina06](https://github.com/Talina06))
-- \[AV-113428\] Migrate docs on resources to use the OpenAPI documentation \[Part 2\] [\#434](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/434) ([Talina06](https://github.com/Talina06))
-- \[AV-113428\] Migrate docs on resources to use the OpenAPI documentation \[Part 1\] [\#433](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/433) ([Talina06](https://github.com/Talina06))
-
 ## [v1.5.3](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.5.3) (2025-08-06)
 
 [Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.5.2...v1.5.3)
