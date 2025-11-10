@@ -34,20 +34,7 @@ func TestAllSchemasUseAddAttrPattern(t *testing.T) {
 		"app_endpoint_schema.go": true,
 
 		// Migrated but not yet committed (will be in future PRs)
-		"collection_schema.go":               true,
-		"flush_bucket_schema.go":             true,
-		"free_tier_cluster_on_off_schema.go": true,
-		"cluster_onoff_schema.go":            true,
-		"sample_bucket_schema.go":            true,
-		"scope_schema.go":                    true,
-		"database_credential_schema.go":      true,
-		"cluster_onoff_schedule_schema.go":   true,
-		"network_peer_schema.go":             true,
-		"gsi_schema.go":                      true,
-		"free_tier_cluster_schema.go":        true,
-		"free_tier_bucket_schema.go":         true,
-		"free_tier_appservice_schema.go":     true,
-		"appservice_schema.go":               true,
+		// None remaining!
 
 		// Helper file, not a schema
 		"attributes.go": true,
@@ -147,19 +134,7 @@ func TestNoLegacyFilesRemaining(t *testing.T) {
 	}
 
 	migratedNotCommitted := []string{
-		"collection_schema.go",
-		"flush_bucket_schema.go",
-		"free_tier_cluster_on_off_schema.go",
-		"cluster_onoff_schema.go",
-		"sample_bucket_schema.go",
-		"scope_schema.go",
-		"database_credential_schema.go",
-		"cluster_onoff_schedule_schema.go",
-		"network_peer_schema.go",
-		"gsi_schema.go",
-		"free_tier_cluster_schema.go",
-		"free_tier_bucket_schema.go",
-		"free_tier_appservice_schema.go",
+		// None remaining - all migrated files have been committed!
 	}
 
 	committed := []string{
@@ -179,6 +154,19 @@ func TestNoLegacyFilesRemaining(t *testing.T) {
 		"app_service_cidr_schema.go",
 		"appservice_onoff_schema.go",
 		"appservice_schema.go",
+		"cluster_onoff_schedule_schema.go",
+		"cluster_onoff_schema.go",
+		"collection_schema.go",
+		"database_credential_schema.go",
+		"flush_bucket_schema.go",
+		"free_tier_appservice_schema.go",
+		"free_tier_bucket_schema.go",
+		"free_tier_cluster_on_off_schema.go",
+		"free_tier_cluster_schema.go",
+		"gsi_schema.go",
+		"network_peer_schema.go",
+		"sample_bucket_schema.go",
+		"scope_schema.go",
 	}
 
 	if len(notYetMigrated) > 0 {
