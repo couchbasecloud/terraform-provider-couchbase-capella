@@ -69,9 +69,6 @@ func NetworkPeerSchema() schema.Schema {
 	})
 
 	capellaschema.AddAttr(attrs, "provider_config", networkPeerBuilder, &schema.SingleNestedAttribute{
-		Description: "The Cloud Service Provider's specific configuration for the network peering." +
-			" The 'accountId', 'vpcId', 'region', and 'cidr' fields are required for AWS VPC peering. " +
-			"For GCP, the 'networkName', 'projectId', 'serviceAccount', and 'cidr' fields are required for VPC peering. ",
 		Required: true,
 		PlanModifiers: []planmodifier.Object{
 			objectplanmodifier.RequiresReplace(),

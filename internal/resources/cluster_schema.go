@@ -65,9 +65,6 @@ func ClusterSchema() schema.Schema {
 		Attributes: computeAttrs,
 	})
 	capellaschema.AddAttr(nodeAttrs, "disk", clusterBuilder, &schema.SingleNestedAttribute{
-		Description: "The 'storage' and 'IOPS' fields are required for AWS. " +
-			"For Azure, only the 'disktype' field is required. For the Ultra disk type, you can provide storage, IOPS, and auto-expansion fields. For Premium type, you can only provide the auto-expansion field, others cannot be set." +
-			" In the case of GCP, only 'pd ssd' disk type is available, and you cannot set the 'IOPS' field.",
 		Required:   true,
 		Attributes: diskAttrs,
 	})
