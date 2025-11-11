@@ -213,6 +213,39 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 
   App Services synchronizes data between the Couchbase Capella database and your apps running on mobile applications.
 
+* [Configure App Endpoints](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/app_endpoint):
+
+  App Endpoints are logical entities that define how Couchbase Lite clients connect to and sync data with your Couchbase cluster through App Services. 
+  Each App Endpoint represents a distinct configuration that controls authentication, data access, CORS policies, and sync behavior for a specific set of clients.
+
+* [Manage App Endpoint Activation Status](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/app_endpoint_activation_status):
+
+  Control the activation state of App Endpoints. Endpoints can be activated or deactivated to manage client connectivity.
+
+* [Configure App Endpoint CORS](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/app_endpoint_cors):
+
+  Configure Cross-Origin Resource Sharing (CORS) settings for App Endpoints to control which web applications can access your endpoint.
+
+* [Configure App Endpoint OIDC Authentication](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/app_endpoint_oidc_provider):
+
+  Set up OpenID Connect (OIDC) authentication providers for App Endpoints to enable secure user authentication.
+
+* [Set App Endpoint Default OIDC Provider](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/app_endpoint_default_oidc_provider):
+
+  Configure the default OIDC provider for an App Endpoint when multiple providers are configured.
+
+* [Manage App Endpoint Access Control Functions](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/app_endpoint_access_control_function):
+
+  Define custom JavaScript access control functions to implement fine-grained data access policies for App Endpoints.
+
+* [Configure App Endpoint Import Filters](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/import_filter):
+
+  Set up import filters to control which documents are synced from the Couchbase Server to mobile clients.
+
+* [Trigger App Endpoint Resync](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/app_endpoint_resync):
+
+  Initiate a resynchronization operation to ensure consistency between the Couchbase cluster and connected mobile clients.
+
 * [Configure Bucket Backup & Restore](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/backup):
 
   A bucket is the fundamental space for storing data in Couchbase Capella.
