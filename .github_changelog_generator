@@ -9,3 +9,4 @@ breaking-labels=breaking-change,breaking
 deprecated-labels=deprecation,deprecated
 date-format=%Y-%m-%d
 base=CHANGELOG.md
+exclude-tags-regex=^((?!v\d+\.\d+\.\d+$).)*$

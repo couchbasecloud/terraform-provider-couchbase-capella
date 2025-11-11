@@ -27,6 +27,19 @@ REPO_NAME=$(echo "$REPO_INFO" | cut -d'/' -f2 | sed 's/\.git$//')
 
 echo "   Repository: $REPO_OWNER/$REPO_NAME"
 
+# Backup existing changelog if it exists
+if [ -f "CHANGELOG.md" ]; then
+    echo "   Backing up existing CHANGELOG.md..."
+    cp CHANGELOG.md CHANGELOG.md.backup
+    
+    # Remove existing section for this version to prevent duplicates
+    # This finds "## [VERSION]" and removes everything until the next "## [" or end of file
+    echo "   Removing existing ${VERSION} section (if any) to prevent duplicates..."
+    sed -i.tmp "/## \[${VERSION#v}\]/,/## \[/{//!d;}" CHANGELOG.md || true
+    sed -i.tmp "/## \[${VERSION#v}\]/d" CHANGELOG.md || true
+    rm -f CHANGELOG.md.tmp
+fi
+
 # Update changelog generator config
 cat > .github_changelog_generator << EOF
 user=${REPO_OWNER}
@@ -40,6 +53,7 @@ breaking-labels=breaking-change,breaking
 deprecated-labels=deprecation,deprecated
 date-format=%Y-%m-%d
 base=CHANGELOG.md
+exclude-tags-regex=^((?!v\d+\.\d+\.\d+$).)*$
 EOF
 
 echo "   Updated .github_changelog_generator config"
@@ -72,4 +86,8 @@ fi
 
 echo "SUCCESS: Changelog generated successfully!"
 echo "   Updated: CHANGELOG.md"
+echo ""
+echo "   If you see duplicates in CHANGELOG.md:"
+echo "   - Restore backup: cp CHANGELOG.md.backup CHANGELOG.md"
+echo "   - Or manually remove duplicate entries"
 

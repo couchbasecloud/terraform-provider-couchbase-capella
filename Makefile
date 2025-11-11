@@ -132,12 +132,50 @@ gen-api: ## Generate OpenAPI client code
 # Release Management
 # ============================================================================
 
+.PHONY: release-changelog
+release-changelog: ## Generate only the changelog (usage: make release-changelog VERSION=1.5.4)
+	@if [ -z "$(VERSION)" ]; then \
+		echo "ERROR: VERSION not specified"; \
+		echo "Usage: make release-changelog VERSION=1.5.4"; \
+		exit 1; \
+	fi
+	$(eval PREV_VERSION := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "v1.5.3"))
+	@echo "Generating changelog from $(PREV_VERSION) to v$(VERSION)..."
+	@bash scripts/generate-changelog.sh v$(VERSION) $(PREV_VERSION)
+	@echo ""
+	@echo "SUCCESS: Changelog generated!"
+	@echo "  Review CHANGELOG.md"
+
+.PHONY: release-upgrade-guide
+release-upgrade-guide: ## Generate only the upgrade guide (usage: make release-upgrade-guide VERSION=1.5.4)
+	@if [ -z "$(VERSION)" ]; then \
+		echo "ERROR: VERSION not specified"; \
+		echo "Usage: make release-upgrade-guide VERSION=1.5.4"; \
+		exit 1; \
+	fi
+	$(eval PREV_VERSION := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "v1.5.3"))
+	@echo "Generating upgrade guide for v$(VERSION) (changes since $(PREV_VERSION))..."
+	@if command -v python3 &> /dev/null && python3 -c "import github" 2>&1 >/dev/null; then \
+		python3 scripts/generate-upgrade-guide.py $(VERSION) $(PREV_VERSION); \
+	else \
+		bash scripts/generate-upgrade-guide.sh $(VERSION) $(PREV_VERSION); \
+		echo "   Tip: Install PyGithub for enhanced content extraction"; \
+	fi
+	@echo ""
+	@echo "SUCCESS: Upgrade guide generated!"
+	@echo "  Review templates/guides/$(VERSION)-upgrade-guide.md"
+	@echo "  Run 'make build-docs' to publish to docs/"
+
 .PHONY: release-prep
-release-prep: ## Prepare release artifacts (usage: make release-prep VERSION=1.5.4)
+release-prep: ## Prepare all release artifacts (usage: make release-prep VERSION=1.5.4)
 	@echo "==> Preparing release..."
 	@if [ -z "$(VERSION)" ]; then \
 		echo "ERROR: VERSION not specified"; \
 		echo "Usage: make release-prep VERSION=1.5.4"; \
+		echo ""; \
+		echo "Or use individual commands:"; \
+		echo "  make release-changelog VERSION=1.5.4"; \
+		echo "  make release-upgrade-guide VERSION=1.5.4"; \
 		exit 1; \
 	fi
 	@echo "Detecting previous version..."
