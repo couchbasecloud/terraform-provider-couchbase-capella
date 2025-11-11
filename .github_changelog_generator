@@ -1,5 +1,12 @@
-future-release=v1.5.3
-since-tag=v1.5.2
-exclude-labels=no-changelog-needed
+user=couchbasecloud
+project=terraform-provider-couchbase-capella
+future-release=v1.6.0
+since-tag=v1.5.3
+exclude-labels=no-changelog-needed,dependencies
+enhancement-labels=enhancement,feature
+bug-labels=bug,bugfix,fix
+breaking-labels=breaking-change,breaking
+deprecated-labels=deprecation,deprecated
 date-format=%Y-%m-%d
 base=CHANGELOG.md
+exclude-tags-regex=^((?!v\d+\.\d+\.\d+$).)*$

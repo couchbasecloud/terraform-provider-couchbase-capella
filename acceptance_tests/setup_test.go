@@ -78,6 +78,13 @@ func setup(ctx context.Context, client *api.Client) error {
 		return err
 	}
 
+	if err := createAppEndpoint(ctx, client); err != nil {
+		return err
+	}
+	if err := appEndpointWait(ctx, client); err != nil {
+		return err
+	}
+
 	return nil
 }
 

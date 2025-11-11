@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -36,18 +35,8 @@ func (d *AppEndpointActivationStatusDS) Metadata(_ context.Context, req datasour
 }
 
 // Schema describes required identifiers and computed state.
-func (d *AppEndpointActivationStatusDS) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		MarkdownDescription: "Reads the activation status of an App Endpoint by calling get App Endpoint and returning its state.",
-		Attributes: map[string]schema.Attribute{
-			"organization_id":   schema.StringAttribute{Required: true, MarkdownDescription: "The GUID4 ID of the Capella organization."},
-			"project_id":        schema.StringAttribute{Required: true, MarkdownDescription: "The GUID4 ID of the Capella project."},
-			"cluster_id":        schema.StringAttribute{Required: true, MarkdownDescription: "The GUID4 ID of the Capella Cluster."},
-			"app_service_id":    schema.StringAttribute{Required: true, MarkdownDescription: "The GUID4 ID of the App Service."},
-			"app_endpoint_name": schema.StringAttribute{Required: true, MarkdownDescription: "The name of the App Endpoint."},
-			"state":             schema.StringAttribute{Computed: true, MarkdownDescription: "The current activation state of the App Endpoint as reported by Capella."},
-		},
-	}
+func (a *AppEndpointActivationStatusDS) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = AppEndpointActivationStatusSchema()
 }
 
 // Read performs GET App Endpoint and extracts state.

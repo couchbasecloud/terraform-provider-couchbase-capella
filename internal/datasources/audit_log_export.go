@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -37,70 +36,7 @@ func (a *AuditLogExport) Metadata(_ context.Context, req datasource.MetadataRequ
 
 // Schema defines the schema for the audit log export data source.
 func (a *AuditLogExport) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		MarkdownDescription: "The data source to retrieve audit log exports for an operational cluster. It will show the pre-signed URL if the export was successful, a failure error if it was unsuccessful, or a message saying no audit logs available if there were no audit logs found.",
-		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the organization.",
-			},
-			"project_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the project.",
-			},
-			"cluster_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the cluster.",
-			},
-			"data": schema.SetNestedAttribute{
-				Computed: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"id": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The ID of the audit log export job.",
-						},
-						"organization_id": schema.StringAttribute{
-							Required:            true,
-							MarkdownDescription: "The GUID4 ID of the organization.",
-						},
-						"project_id": schema.StringAttribute{
-							Required:            true,
-							MarkdownDescription: "The GUID4 ID of the project.",
-						},
-						"cluster_id": schema.StringAttribute{
-							Required:            true,
-							MarkdownDescription: "The GUID4 ID of the cluster.",
-						},
-						"audit_log_download_url": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "Pre-signed URL to download cluster audit logs. This URL is only available when the export job status is 'completed'.",
-						},
-						"expiration": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The timestamp for when the audit log export expires and will no longer be available for download.",
-						},
-						"start": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The start timestamp for the audit log export in RFC3339 format (e.g., '2024-01-01T00:00:00Z'). This defines the beginning of the time period to export logs from.",
-						},
-						"end": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The end timestamp for the audit log export in RFC3339 format (e.g., '2024-01-02T00:00:00Z'). This defines the end of the time period to export logs from.",
-						},
-						"created_at": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The timestamp when this audit log export job was created.",
-						},
-						"status": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The current status of the audit log export job. Audit log export job statuses are 'queued', 'in progress', 'completed', or 'failed'.",
-						},
-					},
-				},
-			},
-		},
-	}
+	resp.Schema = AuditLogExportSchema()
 }
 
 // Configure adds the provider configured client to the audit log export data source.

@@ -29,11 +29,13 @@ resource "couchbase-capella_free_tier_cluster_on_off" "new_free_tier_cluster_on_
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
-- `state` (String) The On/Off state of the free tier cluster.
+- `state` (String)
 
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 terraform import couchbase-capella_free_tier_cluster_on_off.new_free_tier_cluster_on_off cluster_id=ffffffff-aaaaaaaa-bbbbbbbbb-cccccc,organization_id=ffffffff-aaaaaaaa-bbbbbbbbb-cccccc,project_id=ffffffff-aaaaaaaa-bbbbbbbbb-cccccc

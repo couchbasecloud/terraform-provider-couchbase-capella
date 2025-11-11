@@ -1,6 +1,7 @@
 package acceptance_tests
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"testing"
@@ -112,7 +113,7 @@ func testAccDeleteUserResource(resourceReference string) resource.TestCheckFunc 
 		err = readUserFromServer(data, rawState["organization_id"], rawState["id"])
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if !resourceNotFound {
-			return fmt.Errorf(errString)
+			return errors.New(errString)
 		}
 		return nil
 	}

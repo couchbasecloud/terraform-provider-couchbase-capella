@@ -31,11 +31,11 @@ data "couchbase-capella_certificate" "existing_certificate" {
 
 ### Read-Only
 
-- `data` (Attributes List) Lists the certificates. (see [below for nested schema](#nestedatt--data))
+- `data` (Attributes List) (see [below for nested schema](#nestedatt--data))
 
 <a id="nestedatt--data"></a>
 ### Nested Schema for `data`
 
 Read-Only:
 
-- `certificate` (String) The certificate in PEM format.
+- `certificate` (String)

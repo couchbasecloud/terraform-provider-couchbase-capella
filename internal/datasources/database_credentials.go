@@ -9,7 +9,6 @@ import (
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -36,83 +35,7 @@ func (d *DatabaseCredentials) Metadata(_ context.Context, req datasource.Metadat
 
 // Schema defines the schema for the database credential data source.
 func (d *DatabaseCredentials) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		MarkdownDescription: "The data source to retrieve database credentials for a cluster. Database credentials provide programmatic and application-level access to data on a database.",
-		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the organization.",
-			},
-			"project_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the project.",
-			},
-			"cluster_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the cluster.",
-			},
-			"data": schema.ListNestedAttribute{
-				Computed: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"id":              schema.StringAttribute{Computed: true, MarkdownDescription: "The ID of the database credential created."},
-						"name":            schema.StringAttribute{Computed: true, MarkdownDescription: "Name of the database credential created (up to 256 characters)."},
-						"organization_id": schema.StringAttribute{Computed: true, MarkdownDescription: "The GUID4 ID of the organization."},
-						"project_id":      schema.StringAttribute{Computed: true, MarkdownDescription: "The GUID4 ID of the project."},
-						"cluster_id":      schema.StringAttribute{Computed: true, MarkdownDescription: "The GUID4 ID of the cluster."},
-						"audit":           computedAuditAttribute,
-						"access": schema.ListNestedAttribute{
-							Optional:            true,
-							MarkdownDescription: "Describes the access information of the database credential.",
-							NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"privileges": schema.ListAttribute{
-										Required:            true,
-										ElementType:         types.StringType,
-										MarkdownDescription: "The privileges field in this API represents the privilege level for users.",
-									},
-									"resources": schema.SingleNestedAttribute{
-										Optional:            true,
-										MarkdownDescription: "The resources for which access will be granted on. Leaving this empty will grant access to all buckets.",
-										Attributes: map[string]schema.Attribute{
-											"buckets": schema.ListNestedAttribute{
-												Optional: true,
-												NestedObject: schema.NestedAttributeObject{
-													Attributes: map[string]schema.Attribute{
-														"name": schema.StringAttribute{
-															Required:            true,
-															MarkdownDescription: "The name of the bucket.",
-														},
-														"scopes": schema.ListNestedAttribute{
-															Optional:            true,
-															MarkdownDescription: "The scopes under a bucket.",
-															NestedObject: schema.NestedAttributeObject{
-																Attributes: map[string]schema.Attribute{
-																	"name": schema.StringAttribute{
-																		Required:            true,
-																		MarkdownDescription: "The name of the scope.",
-																	},
-																	"collections": schema.ListAttribute{
-																		Optional:            true,
-																		ElementType:         types.StringType,
-																		MarkdownDescription: "The collections under a scope.",
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
+	resp.Schema = DatabaseCredentialsSchema()
 }
 
 // Read refreshes the Terraform state with the latest data of database credentials.

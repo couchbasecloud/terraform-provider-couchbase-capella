@@ -28,40 +28,47 @@ resource "couchbase-capella_free_tier_bucket" "new_free_tier_bucket" {
 ### Required
 
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `name` (String) Name of the free tier bucket.
+- `name` (String) - Name of the bucket. This field cannot be changed later. The name should adhere to the following rules: Characters used for the name should be in the ranges of A-Z, a-z, and 0-9; plus the underscore, period, dash, and percent characters. The name can be a maximum of 100 characters in length. The name cannot have 0 characters or empty. Minimum length of name is 1. The name cannot start with a `.` (period).
+ - **Constraints**: Maximum length: 100 characters
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
 ### Optional
 
-- `memory_allocation_in_mb` (Number) Bucket size allocation in MB.
+- `memory_allocation_in_mb` (Number) - The bucket memory quota. It defaults to 100 MiB.
+ - **Default**: `100`
 
 ### Read-Only
 
-- `bucket_conflict_resolution` (String) Conflict-resolution mechanism of the bucket. The method used to resolve conflicts during replication. In Couchbase documentation, this field may be referred to as conflictResolution, with seqno and lww representing Sequence Number and Timestamp, respectively. For more details, see [Conflict Resolution](https://docs.couchbase.com/cloud/clusters/xdcr/xdcr.html#conflict-resolution).
-- `durability_level` (String) The durability level of the bucket. This setting defines the minimum durability level required for all writes to a Couchbase bucket. The available durability levels depend on the bucket type. For a Couchbase bucket, the options are: None, Replicate to Majority, Majority and Persist to Active, and Persist to Majority. For an Ephemeral bucket, the options are limited to: None and Replicate to Majority.
-- `eviction_policy` (String) The eviction policy for the bucket. This is the policy which Capella adopts to prevent data loss due to memory exhaustion. This may be also known as Ejection Policy in the Couchbase documentation.
-- `flush` (Boolean) Determines whether flushing is enabled in the bucket.
-- `id` (String) ID of the Free Tier bucket.
-- `replicas` (Number) Number of replicas for the data.
-- `stats` (Attributes) Bucket stats (see [below for nested schema](#nestedatt--stats))
-- `storage_backend` (String) The bucket storage engine type. The type will be either Magma or Couchstore.
-- `time_to_live_in_seconds` (Number) Time-to-live (TTL) for items in the bucket, in seconds.
-- `type` (String) The bucket type, which will be either Couchbase or Ephemeral.
+- `bucket_conflict_resolution` (String)
+- `durability_level` (String)
+- `eviction_policy` (String)
+- `flush` (Boolean)
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
+- `replicas` (Number)
+- `stats` (Attributes) (see [below for nested schema](#nestedatt--stats))
+- `storage_backend` (String)
+- `time_to_live_in_seconds` (Number)
+- `type` (String) - Type of the resource.
+ - **Valid Values**: `project`
+ - **Default**: `project`
 
 <a id="nestedatt--stats"></a>
 ### Nested Schema for `stats`
 
 Read-Only:
 
-- `disk_used_in_mib` (Number) Disk used in MiB.
-- `item_count` (Number) Bucket item count.
-- `memory_used_in_mib` (Number) Memory used in MiB.
-- `ops_per_second` (Number) The value for bucket operations per second.
+- `disk_used_in_mib` (Number)
+- `item_count` (Number)
+- `memory_used_in_mib` (Number)
+- `ops_per_second` (Number)
 
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 terraform import couchbase-capella_free_tier_bucket.new_free_tier_bucket id=aaaaa-bbbbbb-ccc,organization_id=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee,project_id=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee,cluster_id=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee

@@ -3,6 +3,7 @@ package acceptance_tests
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -15,7 +16,7 @@ import (
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	internal_errors "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
@@ -855,7 +856,7 @@ func testAccDeleteClusterResource(resourceReference string) resource.TestCheckFu
 		err = checkClusterStatus(data, context.Background(), rawState["organization_id"], rawState["project_id"], rawState["id"])
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if !resourceNotFound {
-			return fmt.Errorf(errString)
+			return errors.New(errString)
 		}
 		return nil
 	}
@@ -900,7 +901,7 @@ func checkClusterStatus(
 	for {
 		select {
 		case <-ctx.Done():
-			return errors.ErrClusterCreationTimeoutAfterInitiation
+			return internal_errors.ErrClusterCreationTimeoutAfterInitiation
 		case <-timer.C:
 			clusterResp, err = retrieveClusterFromServer(data, organizationId, projectId, ClusterId)
 			switch err {

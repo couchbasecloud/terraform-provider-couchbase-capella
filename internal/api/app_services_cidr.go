@@ -9,7 +9,7 @@ type CreateAllowedCIDRRequest struct {
 	Comment string `json:"comment,omitempty"`
 
 	//ExpiresAt is an RFC3339 timestamp determining when the allowed CIDR should expire.
-	ExpiresAt string `json:"expiresAt"`
+	ExpiresAt string `json:"expiresAt,omitempty"`
 }
 
 // AppServiceAllowedCIDRResponse is the response structure for an individual allowed CIDR entry on an App Service.

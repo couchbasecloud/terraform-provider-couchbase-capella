@@ -6,97 +6,108 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+
+	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
+var freeTierClusterBuilder = capellaschema.NewSchemaBuilder("freeTierCluster")
+
 func FreeTierClusterSchema() schema.Schema {
+	attrs := make(map[string]schema.Attribute)
+
+	capellaschema.AddAttr(attrs, "id", freeTierClusterBuilder, stringAttribute([]string{computed, useStateForUnknown}))
+	capellaschema.AddAttr(attrs, "organization_id", freeTierClusterBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
+	capellaschema.AddAttr(attrs, "project_id", freeTierClusterBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
+	capellaschema.AddAttr(attrs, "name", freeTierClusterBuilder, stringAttribute([]string{required}, validator.String(stringvalidator.LengthAtLeast(1))))
+	capellaschema.AddAttr(attrs, "description", freeTierClusterBuilder, stringAttribute([]string{optional, computed}))
+	capellaschema.AddAttr(attrs, "app_service_id", freeTierClusterBuilder, stringAttribute([]string{computed}))
+	capellaschema.AddAttr(attrs, "connection_string", freeTierClusterBuilder, stringAttribute([]string{computed}))
+	capellaschema.AddAttr(attrs, "current_state", freeTierClusterBuilder, stringAttribute([]string{computed}))
+	capellaschema.AddAttr(attrs, "cmek_id", freeTierClusterBuilder, stringAttribute([]string{computed}))
+	capellaschema.AddAttr(attrs, "etag", freeTierClusterBuilder, stringAttribute([]string{computed}))
+	capellaschema.AddAttr(attrs, "enable_private_dns_resolution", freeTierClusterBuilder, boolAttribute(computed))
+	capellaschema.AddAttr(attrs, "audit", freeTierClusterBuilder, computedAuditAttribute())
+
+	supportAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(supportAttrs, "plan", freeTierClusterBuilder, stringAttribute([]string{computed}))
+	capellaschema.AddAttr(supportAttrs, "timezone", freeTierClusterBuilder, stringAttribute([]string{computed}))
+
+	capellaschema.AddAttr(attrs, "support", freeTierClusterBuilder, &schema.SingleNestedAttribute{
+		Computed:   true,
+		Attributes: supportAttrs,
+	})
+
+	cloudProviderAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(cloudProviderAttrs, "type", freeTierClusterBuilder, stringAttribute([]string{required}))
+	capellaschema.AddAttr(cloudProviderAttrs, "region", freeTierClusterBuilder, stringAttribute([]string{required}))
+	capellaschema.AddAttr(cloudProviderAttrs, "cidr", freeTierClusterBuilder, stringAttribute([]string{required}))
+
+	capellaschema.AddAttr(attrs, "cloud_provider", freeTierClusterBuilder, &schema.SingleNestedAttribute{
+		Required:   true,
+		Attributes: cloudProviderAttrs,
+		PlanModifiers: []planmodifier.Object{
+			objectplanmodifier.RequiresReplace(),
+		},
+	})
+
+	couchbaseServerAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(couchbaseServerAttrs, "version", freeTierClusterBuilder, stringAttribute([]string{computed}))
+
+	capellaschema.AddAttr(attrs, "couchbase_server", freeTierClusterBuilder, &schema.SingleNestedAttribute{
+		Computed:   true,
+		Attributes: couchbaseServerAttrs,
+		PlanModifiers: []planmodifier.Object{
+			objectplanmodifier.RequiresReplace(),
+			objectplanmodifier.UseStateForUnknown(),
+		},
+	})
+
+	computeAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(computeAttrs, "cpu", freeTierClusterBuilder, int64Attribute(computed))
+	capellaschema.AddAttr(computeAttrs, "ram", freeTierClusterBuilder, int64Attribute(computed))
+
+	diskAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(diskAttrs, "type", freeTierClusterBuilder, stringAttribute([]string{computed}))
+	capellaschema.AddAttr(diskAttrs, "storage", freeTierClusterBuilder, int64Attribute(computed))
+	capellaschema.AddAttr(diskAttrs, "iops", freeTierClusterBuilder, int64Attribute(computed))
+	capellaschema.AddAttr(diskAttrs, "autoexpansion", freeTierClusterBuilder, boolAttribute(computed))
+
+	nodeAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(nodeAttrs, "compute", freeTierClusterBuilder, &schema.SingleNestedAttribute{
+		Computed:   true,
+		Attributes: computeAttrs,
+	})
+	capellaschema.AddAttr(nodeAttrs, "disk", freeTierClusterBuilder, &schema.SingleNestedAttribute{
+		Computed:   true,
+		Attributes: diskAttrs,
+	})
+
+	serviceGroupsAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(serviceGroupsAttrs, "node", freeTierClusterBuilder, &schema.SingleNestedAttribute{
+		Computed:   true,
+		Attributes: nodeAttrs,
+	})
+	capellaschema.AddAttr(serviceGroupsAttrs, "num_of_nodes", freeTierClusterBuilder, int64Attribute(computed))
+	capellaschema.AddAttr(serviceGroupsAttrs, "services", freeTierClusterBuilder, stringSetAttribute(computed))
+
+	capellaschema.AddAttr(attrs, "service_groups", freeTierClusterBuilder, &schema.SetNestedAttribute{
+		Computed: true,
+		NestedObject: schema.NestedAttributeObject{
+			Attributes: serviceGroupsAttrs,
+		},
+	})
+
+	availabilityAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(availabilityAttrs, "type", freeTierClusterBuilder, stringAttribute([]string{computed}))
+
+	capellaschema.AddAttr(attrs, "availability", freeTierClusterBuilder, &schema.SingleNestedAttribute{
+		Computed:   true,
+		Attributes: availabilityAttrs,
+	})
+
 	return schema.Schema{
 		MarkdownDescription: "This resource allows you to manage a free tier operational cluster.",
-		Attributes: map[string]schema.Attribute{
-			"id":                            WithDescription(stringAttribute([]string{computed, useStateForUnknown}), "The GUID4 ID of the free tier cluster."),
-			"organization_id":               WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The GUID4 ID of the organization."),
-			"project_id":                    WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The GUID4 ID of the project."),
-			"name":                          WithDescription(stringAttribute([]string{required}, validator.String(stringvalidator.LengthAtLeast(1))), "Name of the free tier cluster."),
-			"description":                   WithDescription(stringAttribute([]string{optional, computed}), "Description of the free tier cluster."),
-			"app_service_id":                WithDescription(stringAttribute([]string{computed}), "The GUID4 ID of the App Service."),
-			"connection_string":             WithDescription(stringAttribute([]string{computed}), "The connection string of the free tier cluster."),
-			"current_state":                 WithDescription(stringAttribute([]string{computed}), "The current state of the free tier cluster."),
-			"cmek_id":                       WithDescription(stringAttribute([]string{computed}), "The customer-managed encryption key (CMEK) ID."),
-			"etag":                          WithDescription(stringAttribute([]string{computed}), "The etag of the free tier cluster, part of the response header"),
-			"enable_private_dns_resolution": WithDescription(boolAttribute(computed), "Indicates if the private DNS resolution is enabled for the cluster."),
-			"audit":                         computedAuditAttribute(),
-			"support": schema.SingleNestedAttribute{
-				Computed:            true,
-				MarkdownDescription: "The Support information for the free tier cluster.",
-				Attributes: map[string]schema.Attribute{
-					"plan":     WithDescription(stringAttribute([]string{computed}), "The Support plan for the free tier cluster. The free tier plan is automatically assigned to free tier clusters."),
-					"timezone": WithDescription(stringAttribute([]string{computed}), "The standard timezone for the cluster. Should be the TZ identifier. For example, 'ET'."),
-				},
-			},
-			"cloud_provider": schema.SingleNestedAttribute{
-				Required:            true,
-				MarkdownDescription: "The Cloud Service Provider details for the free tier cluster.",
-				Attributes: map[string]schema.Attribute{
-					"type":   WithDescription(stringAttribute([]string{required}), "The Cloud Service Provider type. Currently supporting AWS, GCP and Azure."),
-					"region": WithDescription(stringAttribute([]string{required}), "The region for the Cloud Service Provider. This should be a valid region for the specified Cloud Service Provider. For example 'us-west-2'."),
-					"cidr":   WithDescription(stringAttribute([]string{required}), "CIDR block for the Cloud Service Provider."),
-				},
-				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.RequiresReplace(),
-				},
-			},
-			"couchbase_server": schema.SingleNestedAttribute{
-				Computed:            true,
-				MarkdownDescription: "Couchbase Server details for the free tier cluster.",
-				Attributes: map[string]schema.Attribute{
-					"version": WithDescription(stringAttribute([]string{computed}), "The version of Couchbase Server for the free tier cluster."),
-				},
-				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.RequiresReplace(),
-					objectplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"service_groups": schema.SetNestedAttribute{
-				Computed:            true,
-				MarkdownDescription: "The Service Groups for the free tier cluster.",
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"node": schema.SingleNestedAttribute{
-							Computed:            true,
-							MarkdownDescription: "Node details for the Service Group.",
-							Attributes: map[string]schema.Attribute{
-								"compute": schema.SingleNestedAttribute{
-									Computed:            true,
-									MarkdownDescription: "Compute details for the node",
-									Attributes: map[string]schema.Attribute{
-										"cpu": WithDescription(int64Attribute(computed), "The number of CPU cores for the node."),
-										"ram": WithDescription(int64Attribute(computed), "The amount of RAM for the node."),
-									},
-								},
-								"disk": schema.SingleNestedAttribute{
-									Computed:            true,
-									MarkdownDescription: "Disk details for the node",
-									Attributes: map[string]schema.Attribute{
-										"type":          WithDescription(stringAttribute([]string{computed}), "The type of disk for the node. Should be one of 'ssd', 'hdd', or 'nvme'."),
-										"storage":       WithDescription(int64Attribute(computed), "Storage size of the disk."),
-										"iops":          WithDescription(int64Attribute(computed), "Input/Output Operations Per Second (IOPS) for the disk."),
-										"autoexpansion": WithDescription(boolAttribute(computed), "Indicates if auto-expansion is enabled for the disk."),
-									},
-								},
-							},
-						},
-						"num_of_nodes": WithDescription(int64Attribute(computed), "The number of nodes in the Service Group."),
-						"services":     WithDescription(stringSetAttribute(computed), "The services enabled for the Service Group. Should be a comma-separated list of services. For example, 'data,index,query'."),
-					},
-				},
-			},
-			"availability": schema.SingleNestedAttribute{
-				Computed:            true,
-				MarkdownDescription: "Availability zone details for the free tier cluster. Free tier clusters have single availability zones (AZ).",
-				Attributes: map[string]schema.Attribute{
-					"type": WithDescription(stringAttribute([]string{computed}), "The availability zone type. This should be 'single' for the free tier cluster."),
-				},
-			},
-		},
+		Attributes:          attrs,
 	}
 
 }

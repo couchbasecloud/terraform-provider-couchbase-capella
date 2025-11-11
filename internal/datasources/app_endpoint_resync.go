@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -39,28 +38,7 @@ func (a *AppEndpointResync) Metadata(
 
 // Schema defines the schema for the collection data source.
 func (a *AppEndpointResync) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		MarkdownDescription: "Resync status of the given App Endpoint.",
-		Attributes: map[string]schema.Attribute{
-			"organization_id":   schema.StringAttribute{Required: true, MarkdownDescription: "The GUID4 ID of the organization."},
-			"project_id":        schema.StringAttribute{Required: true, MarkdownDescription: "The GUID4 ID of the project."},
-			"cluster_id":        schema.StringAttribute{Required: true, MarkdownDescription: "The GUID4 ID of the cluster."},
-			"app_service_id":    schema.StringAttribute{Required: true, MarkdownDescription: "The GUID4 ID of the app service."},
-			"app_endpoint_name": schema.StringAttribute{Required: true, MarkdownDescription: "The name of the app endpoint."},
-			"collections_processing": schema.MapAttribute{
-				ElementType: types.SetType{
-					ElemType: types.StringType,
-				},
-				Computed:            true,
-				MarkdownDescription: "A map of collections currently being processed during the resync operation.",
-			},
-			"docs_changed":   schema.Int64Attribute{Computed: true, MarkdownDescription: "The number of documents that have been changed during the resync operation."},
-			"docs_processed": schema.Int64Attribute{Computed: true, MarkdownDescription: "The number of documents that have been processed during the resync operation."},
-			"last_error":     schema.Int64Attribute{Computed: true, MarkdownDescription: "The last error that occurred during the resync operation."},
-			"start_time":     schema.StringAttribute{Computed: true, MarkdownDescription: "The timestamp when the resync operation was initiated."},
-			"state":          schema.StringAttribute{Computed: true, MarkdownDescription: "The current state of the resync operation."},
-		},
-	}
+	resp.Schema = AppEndpointResyncSchema()
 }
 
 // Read refreshes the Terraform state with the latest data of collections.

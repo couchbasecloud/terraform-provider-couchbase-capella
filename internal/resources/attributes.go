@@ -17,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
 const (
@@ -29,38 +31,6 @@ const (
 	deprecated         = "deprecated"
 	deprecationMessage = "Remove this attribute's configuration as it no longer in use and the attribute will be removed in the next major version of the provider."
 )
-
-// SchemaAttribute is a type alias that encapsulates the allowed attribute types.
-// It is used to define a set of types that can be used as attributes in the schema.
-// This alias includes various attribute types such as StringAttribute, Int64Attribute, BoolAttribute, SetAttribute,
-// Float64Attribute, NumberAttribute, and ListAttribute.
-type SchemaAttribute interface {
-	*schema.StringAttribute | *schema.Int64Attribute | *schema.BoolAttribute | *schema.SetAttribute |
-		*schema.Float64Attribute | *schema.NumberAttribute | *schema.ListAttribute | *schema.MapAttribute
-}
-
-// WithDescription sets the MarkdownDescription for the provided attribute.
-// It accepts an attribute of type SchemaAttribute, and a description string.
-// The function returns the modified attribute.
-func WithDescription[T SchemaAttribute](attr T, description string) T {
-	switch v := any(attr).(type) {
-	case *schema.StringAttribute:
-		v.MarkdownDescription = description
-	case *schema.Int64Attribute:
-		v.MarkdownDescription = description
-	case *schema.BoolAttribute:
-		v.MarkdownDescription = description
-	case *schema.SetAttribute:
-		v.MarkdownDescription = description
-	case *schema.Float64Attribute:
-		v.MarkdownDescription = description
-	case *schema.NumberAttribute:
-		v.MarkdownDescription = description
-	case *schema.ListAttribute:
-		v.MarkdownDescription = description
-	}
-	return attr
-}
 
 // stringAttribute is a variadic function which sets the requested fields
 // in a string attribute to true and then returns the string attribute.
@@ -318,32 +288,30 @@ func mapAttribute(T attr.Type, fields ...string) *schema.MapAttribute {
 
 // computedAuditAttribute returns a SingleNestedAttribute to
 // represent couchbase audit data using terraform schema types.
+// NOTE: This function uses a temporary builder to fetch descriptions from OpenAPI.
+// The builder name doesn't matter since we override it with CouchbaseAuditData.
 func computedAuditAttribute() *schema.SingleNestedAttribute {
+	tempBuilder := capellaschema.NewSchemaBuilder("audit")
+	auditAttrs := make(map[string]schema.Attribute)
+
+	capellaschema.AddAttr(auditAttrs, "created_at", tempBuilder, &schema.StringAttribute{
+		Computed: true,
+	}, "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "created_by", tempBuilder, &schema.StringAttribute{
+		Computed: true,
+	}, "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "modified_at", tempBuilder, &schema.StringAttribute{
+		Computed: true,
+	}, "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "modified_by", tempBuilder, &schema.StringAttribute{
+		Computed: true,
+	}, "CouchbaseAuditData")
+	capellaschema.AddAttr(auditAttrs, "version", tempBuilder, &schema.Int64Attribute{
+		Computed: true,
+	}, "CouchbaseAuditData")
+
 	return &schema.SingleNestedAttribute{
-		Description: "Couchbase audit data.",
-		Computed:    true,
-		Attributes: map[string]schema.Attribute{
-			"created_at": schema.StringAttribute{
-				Computed:    true,
-				Description: "The RFC3339 timestamp when the resource was created.",
-			},
-			"created_by": schema.StringAttribute{
-				Computed:    true,
-				Description: "The user who created the resource.",
-			},
-			"modified_at": schema.StringAttribute{
-				Computed:    true,
-				Description: "The RFC3339 timestamp when the resource was last modified.",
-			},
-			"modified_by": schema.StringAttribute{
-				Computed:    true,
-				Description: "The user who last modified the resource.",
-			},
-			"version": schema.Int64Attribute{
-				Computed: true,
-				Description: "The version of the document. " +
-					"This value is incremented each time the resource is modified.",
-			},
-		},
+		Computed:   true,
+		Attributes: auditAttrs,
 	}
 }
