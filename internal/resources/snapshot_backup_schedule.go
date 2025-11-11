@@ -261,7 +261,7 @@ func (s *SnapshotBackupSchedule) upsertSnapshotBackupSchedule(ctx context.Contex
 		Interval:      plan.Interval.ValueInt64(),
 		Retention:     plan.Retention.ValueInt64(),
 		StartTime:     plan.StartTime.ValueString(),
-		CopyToRegions: providerschema.ConvertStringValueList(plan.CopyToRegions),
+		CopyToRegions: providerschema.BaseStringsToStrings(plan.CopyToRegions),
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackupschedule", s.HostURL, organizationId, projectId, clusterId)
