@@ -205,10 +205,6 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
   Any IP address you add to this list can have a user-specified expiration time for temporary access, or be permanent. 
   Capella automatically denies any connection attempts to and from an IP not in the allowed IP list.
 
-* [Create & Manage Buckets](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/bucket):
-
-  The [buckets](https://docs.couchbase.com/cloud/clusters/data-service/about-buckets-scopes-collections.html#buckets) is the top-level storage container for data in a Capella database.
-
 * [Configure App Services](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/appservice):
 
   App Services synchronizes data between the Couchbase Capella database and your apps running on mobile applications.
@@ -245,6 +241,10 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 * [Trigger App Endpoint Resync](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/app_endpoint_resync):
 
   Initiate a resynchronization operation to ensure consistency between the Couchbase cluster and connected mobile clients.
+
+* [Create & Manage Buckets](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/bucket):
+
+  The [buckets](https://docs.couchbase.com/cloud/clusters/data-service/about-buckets-scopes-collections.html#buckets) is the top-level storage container for data in a Capella database.
 
 * [Configure Bucket Backup & Restore](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/backup):
 
