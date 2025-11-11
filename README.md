@@ -21,6 +21,17 @@ Documentation about the provider specific configuration options can be found on 
 ## Contributing to the Provider
 See [Contributing.md](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/CONTRIBUTING.md)
 
+## Release Process
+
+For information on how to prepare and release a new version of the provider, see [Release Process Documentation](RELEASE_PROCESS.md).
+
+The release process is automated with a single command:
+```bash
+make release-prep VERSION=1.5.4
+```
+
+This automatically generates changelogs and upgrade guides with intelligent content extraction from PRs.
+
 ## Discovering New API features
 
 Most of the new features of the provider are using [capella-public-apis](https://docs.couchbase.com/cloud/management-api-guide/management-api-intro.html)
