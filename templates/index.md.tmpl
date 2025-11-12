@@ -205,13 +205,42 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
   Any IP address you add to this list can have a user-specified expiration time for temporary access, or be permanent. 
   Capella automatically denies any connection attempts to and from an IP not in the allowed IP list.
 
-* [Create & Manage Buckets](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/bucket):
-
-  The [buckets](https://docs.couchbase.com/cloud/clusters/data-service/about-buckets-scopes-collections.html#buckets) is the top-level storage container for data in a Capella database.
-
 * [Configure App Services](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/appservice):
 
   App Services synchronizes data between the Couchbase Capella database and your apps running on mobile applications.
+
+* [Configure App Endpoints](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/app_endpoint):
+
+  App Endpoints are logical entities that define how Couchbase Lite clients connect to and sync data with your Couchbase cluster through App Services. 
+  Each App Endpoint represents a distinct configuration that controls authentication, data access, CORS policies, and sync behavior for a specific set of clients.
+
+* [Manage App Endpoint Activation Status](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/app_endpoint_activation_status):
+
+  Control the activation state of App Endpoints. Endpoints can be activated or deactivated to manage client connectivity.
+
+* [Configure App Endpoint CORS](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/app_endpoint_cors):
+
+  Configure Cross-Origin Resource Sharing (CORS) settings for App Endpoints to control which web applications can access your endpoint.
+
+* [Configure App Endpoint OIDC Authentication](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/app_endpoint_oidc_provider):
+
+  Set up OpenID Connect (OIDC) authentication providers for App Endpoints to enable secure user authentication.
+
+* [Set App Endpoint Default OIDC Provider](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/app_endpoint_default_oidc_provider):
+
+  Configure the default OIDC provider for an App Endpoint when multiple providers are configured.
+
+* [Manage App Endpoint Access Control Functions](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/app_endpoint_access_control_function):
+
+  Define custom JavaScript access control functions to implement fine-grained data access policies for App Endpoints.
+
+* [Configure App Endpoint Import Filters](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/import_filter):
+
+  Set up import filters to control which documents are synced from the Couchbase Server to mobile clients.
+
+* [Create & Manage Buckets](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/bucket):
+
+  The [buckets](https://docs.couchbase.com/cloud/clusters/data-service/about-buckets-scopes-collections.html#buckets) is the top-level storage container for data in a Capella database.
 
 * [Configure Bucket Backup & Restore](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/backup):
 
