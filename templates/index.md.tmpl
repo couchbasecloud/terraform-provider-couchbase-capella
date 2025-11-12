@@ -238,10 +238,6 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 
   Set up import filters to control which documents are synced from the Couchbase Server to mobile clients.
 
-* [Trigger App Endpoint Resync](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/app_endpoint_resync):
-
-  Initiate a resynchronization operation to ensure consistency between the Couchbase cluster and connected mobile clients.
-
 * [Create & Manage Buckets](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/bucket):
 
   The [buckets](https://docs.couchbase.com/cloud/clusters/data-service/about-buckets-scopes-collections.html#buckets) is the top-level storage container for data in a Capella database.
