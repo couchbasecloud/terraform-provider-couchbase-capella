@@ -6,19 +6,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+
+	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
+var snapshotBackupScheduleBuilder = capellaschema.NewSchemaBuilder("snapshotBackupSchedule", "cloudSnapshotBackupSchedule")
+
 func SnapshotBackupScheduleSchema() schema.Schema {
+
+	attrs := make(map[string]schema.Attribute)
+
+	capellaschema.AddAttr(attrs, "organization_id", snapshotBackupScheduleBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
+	capellaschema.AddAttr(attrs, "project_id", snapshotBackupScheduleBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
+	capellaschema.AddAttr(attrs, "cluster_id", snapshotBackupScheduleBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
+	capellaschema.AddAttr(attrs, "interval", snapshotBackupScheduleBuilder, int64Attribute(required))
+	capellaschema.AddAttr(attrs, "retention", snapshotBackupScheduleBuilder, int64Attribute(required))
+	capellaschema.AddAttr(attrs, "start_time", snapshotBackupScheduleBuilder, stringDefaultAttribute(time.Now().Truncate(time.Hour).Format(time.RFC3339), optional, computed))
+	capellaschema.AddAttr(attrs, "copy_to_regions", snapshotBackupScheduleBuilder, stringSetAttribute(optional, computed, useStateForUnknown))
+
 	return schema.Schema{
 		MarkdownDescription: "Manages snapshot backup schedule resource",
-		Attributes: map[string]schema.Attribute{
-			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The GUID4 ID of the organization."),
-			"project_id":      WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The GUID4 ID of the project."),
-			"cluster_id":      WithDescription(stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))), "The GUID4 ID of the cluster."),
-			"interval":        WithDescription(int64Attribute(required), "The interval of the snapshot backup schedule."),
-			"retention":       WithDescription(int64Attribute(required), "The retention of the snapshot backup schedule."),
-			"start_time":      WithDescription(stringDefaultAttribute(time.Now().Truncate(time.Hour).Format(time.RFC3339), optional, computed), "The start time of the snapshot backup schedule."),
-			"copy_to_regions": WithDescription(stringSetAttribute(optional, computed, useStateForUnknown), "The regions to copy the snapshot backup to."),
-		},
+		Attributes:          attrs,
 	}
 }
