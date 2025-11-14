@@ -275,7 +275,7 @@ func (s *SnapshotBackup) Update(ctx context.Context, req resource.UpdateRequest,
 			return
 		}
 		if state.RestoreTimes.IsNull() || planRestoreTimes.Cmp(state.RestoreTimes.ValueBigFloat()) == 1 {
-			err = s.restoreSnapshotBackup(ctx, organizationId, projectId, clusterId, Id, providerschema.ConvertStringValueList(plan.CrossRegionRestorePreference))
+			err = s.restoreSnapshotBackup(ctx, organizationId, projectId, clusterId, Id, providerschema.BaseStringsToStrings(plan.CrossRegionRestorePreference))
 			if err != nil {
 				resp.Diagnostics.AddError(
 					"Error restoring snapshot backup",
