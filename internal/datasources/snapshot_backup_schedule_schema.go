@@ -1,8 +1,9 @@
 package datasources
 
 import (
-	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+
+	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
 var snapshotBackupScheduleBuilder = capellaschema.NewSchemaBuilder("snapshotBackupSchedule")
