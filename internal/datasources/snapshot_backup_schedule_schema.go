@@ -1,54 +1,25 @@
 package datasources
 
 import (
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+var snapshotBackupScheduleBuilder = capellaschema.NewSchemaBuilder("snapshotBackupSchedule")
+
 func SnapshotBackupScheduleSchema() schema.Schema {
+
+	attrs := make(map[string]schema.Attribute)
+
+	capellaschema.AddAttr(attrs, "organization_id", snapshotBackupScheduleBuilder, requiredString())
+	capellaschema.AddAttr(attrs, "project_id", snapshotBackupScheduleBuilder, requiredString())
+	capellaschema.AddAttr(attrs, "cluster_id", snapshotBackupScheduleBuilder, requiredString())
+	capellaschema.AddAttr(attrs, "interval", snapshotBackupScheduleBuilder, requiredInt64())
+	capellaschema.AddAttr(attrs, "retention", snapshotBackupScheduleBuilder, requiredInt64())
+	capellaschema.AddAttr(attrs, "start_time", snapshotBackupScheduleBuilder, computedString())
+	capellaschema.AddAttr(attrs, "copy_to_regions", snapshotBackupScheduleBuilder, computedStringSet())
 	return schema.Schema{
-		MarkdownDescription: "The snapshot backups data source retrieves snapshot backups associated with a bucket for an operational cluster.",
-		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the tenant.",
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
-			},
-			"project_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the project.",
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
-			},
-			"cluster_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the cluster.",
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
-			},
-			"interval": schema.Int64Attribute{
-				Computed:            true,
-				MarkdownDescription: "The interval at which the snapshot backup schedule runs.",
-			},
-			"retention": schema.Int64Attribute{
-				Computed:            true,
-				MarkdownDescription: "The retention period for the snapshot backup schedule.",
-			},
-			"start_time": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "The start time for the snapshot backup schedule.",
-			},
-			"copy_to_regions": schema.SetAttribute{
-				Computed:            true,
-				MarkdownDescription: "The region to copy the snapshot backup to.",
-				ElementType:         types.StringType,
-			},
-		},
+		MarkdownDescription: "The snapshot backups data source retrieves the snapshot backup schedule for a cluster.",
+		Attributes:          attrs,
 	}
 }
