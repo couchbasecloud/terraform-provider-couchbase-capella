@@ -27,6 +27,12 @@ func optionalString() *schema.StringAttribute {
 	}
 }
 
+func requiredInt64() *schema.Int64Attribute {
+	return &schema.Int64Attribute{
+		Required: true,
+	}
+}
+
 func computedInt64() *schema.Int64Attribute {
 	return &schema.Int64Attribute{
 		Computed: true,
