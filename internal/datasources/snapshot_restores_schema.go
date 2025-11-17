@@ -55,8 +55,7 @@ func SnapshotRestoresSchema() schema.Schema {
 
 		Blocks: map[string]schema.Block{
 			"filter": schema.SingleNestedBlock{
-				MarkdownDescription: "Filter criteria for the Cloud Snapshot Restores. Only filtering by Snapshot Restore Status is supported.",
-				Attributes:          filterAttrs,
+				Attributes: filterAttrs,
 			},
 		},
 	}
