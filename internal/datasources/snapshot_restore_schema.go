@@ -6,15 +6,15 @@ import (
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-var snapshotRestoreBuilder = capellaschema.NewSchemaBuilder("snapshotRestore")
-
 func SnapshotRestoreSchema() schema.Schema {
 
+	snapshotRestoreBuilder := capellaschema.NewSchemaBuilder("snapshotRestore")
+
 	attrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(attrs, "id", snapshotRestoreBuilder, requiredString())
-	capellaschema.AddAttr(attrs, "cluster_id", snapshotRestoreBuilder, requiredString())
-	capellaschema.AddAttr(attrs, "project_id", snapshotRestoreBuilder, requiredString())
-	capellaschema.AddAttr(attrs, "organization_id", snapshotRestoreBuilder, requiredString())
+	capellaschema.AddAttr(attrs, "id", snapshotRestoreBuilder, requiredStringWithValidator())
+	capellaschema.AddAttr(attrs, "cluster_id", snapshotRestoreBuilder, requiredStringWithValidator())
+	capellaschema.AddAttr(attrs, "project_id", snapshotRestoreBuilder, requiredStringWithValidator())
+	capellaschema.AddAttr(attrs, "organization_id", snapshotRestoreBuilder, requiredStringWithValidator())
 	capellaschema.AddAttr(attrs, "created_at", snapshotRestoreBuilder, computedString())
 	capellaschema.AddAttr(attrs, "restore_to", snapshotRestoreBuilder, computedString())
 	capellaschema.AddAttr(attrs, "snapshot", snapshotRestoreBuilder, computedString())
