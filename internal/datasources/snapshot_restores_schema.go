@@ -12,26 +12,18 @@ import (
 
 var snapshotRestoresBuilder = capellaschema.NewSchemaBuilder("snapshotRestores")
 
-func SnapshotRestoresSchema() schema.Schema {
-
-	attrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(attrs, "cluster_id", snapshotRestoresBuilder, requiredString())
-	capellaschema.AddAttr(attrs, "project_id", snapshotRestoresBuilder, requiredString())
-	capellaschema.AddAttr(attrs, "organization_id", snapshotRestoresBuilder, requiredString())
-
+func getSnapshotRestoresDataAttrs() map[string]schema.Attribute {
 	dataAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(dataAttrs, "id", snapshotRestoresBuilder, computedString())
 	capellaschema.AddAttr(dataAttrs, "created_at", snapshotRestoresBuilder, computedString())
 	capellaschema.AddAttr(dataAttrs, "restore_to", snapshotRestoresBuilder, computedString())
 	capellaschema.AddAttr(dataAttrs, "snapshot", snapshotRestoresBuilder, computedString())
 	capellaschema.AddAttr(dataAttrs, "status", snapshotRestoresBuilder, computedString())
-	capellaschema.AddAttr(attrs, "data", snapshotRestoresBuilder, &schema.ListNestedAttribute{
-		Computed: true,
-		NestedObject: schema.NestedAttributeObject{
-			Attributes: dataAttrs,
-		},
-	})
 
+	return dataAttrs
+}
+
+func getFilterAttrs() map[string]schema.Attribute {
 	filterAttrs := make(map[string]schema.Attribute)
 	filterAttrs["name"] = schema.StringAttribute{
 		MarkdownDescription: "The name of the attribute to filter.",
@@ -49,13 +41,30 @@ func SnapshotRestoresSchema() schema.Schema {
 		},
 	}
 
+	return filterAttrs
+}
+
+func SnapshotRestoresSchema() schema.Schema {
+
+	attrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(attrs, "cluster_id", snapshotRestoresBuilder, requiredStringWithValidator())
+	capellaschema.AddAttr(attrs, "project_id", snapshotRestoresBuilder, requiredStringWithValidator())
+	capellaschema.AddAttr(attrs, "organization_id", snapshotRestoresBuilder, requiredStringWithValidator())
+
+	capellaschema.AddAttr(attrs, "data", snapshotRestoresBuilder, &schema.ListNestedAttribute{
+		Computed: true,
+		NestedObject: schema.NestedAttributeObject{
+			Attributes: getSnapshotRestoresDataAttrs(),
+		},
+	})
+
 	return schema.Schema{
 		MarkdownDescription: "The data source to retrieve all snapshot restore information for a cluster.",
 		Attributes:          attrs,
 
 		Blocks: map[string]schema.Block{
 			"filter": schema.SingleNestedBlock{
-				Attributes: filterAttrs,
+				Attributes: getFilterAttrs(),
 			},
 		},
 	}
