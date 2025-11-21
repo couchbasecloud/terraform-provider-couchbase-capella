@@ -1,7 +1,9 @@
 package datasources
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
@@ -12,6 +14,13 @@ import (
 func requiredString() *schema.StringAttribute {
 	return &schema.StringAttribute{
 		Required: true,
+	}
+}
+
+func requiredStringWithValidator() *schema.StringAttribute {
+	return &schema.StringAttribute{
+		Required:   true,
+		Validators: []validator.String{stringvalidator.LengthAtLeast(1)},
 	}
 }
 
