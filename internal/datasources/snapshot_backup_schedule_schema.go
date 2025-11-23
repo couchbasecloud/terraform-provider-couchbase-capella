@@ -7,7 +7,7 @@ import (
 )
 
 func SnapshotBackupScheduleSchema() schema.Schema {
-	snapshotBackupScheduleBuilder := capellaschema.NewSchemaBuilder("snapshotBackupSchedule")
+	snapshotBackupScheduleBuilder := capellaschema.NewSchemaBuilder("snapshotBackupSchedule", "GetCloudSnapshotBackupScheduleResponse")
 
 	attrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(attrs, "organization_id", snapshotBackupScheduleBuilder, requiredStringWithValidator())

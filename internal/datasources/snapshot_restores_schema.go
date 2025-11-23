@@ -10,7 +10,7 @@ import (
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-var snapshotRestoresBuilder = capellaschema.NewSchemaBuilder("snapshotRestores")
+var snapshotRestoresBuilder = capellaschema.NewSchemaBuilder("snapshotRestores", "GetCloudSnapshotRestoreResponse")
 
 func getSnapshotRestoresDataAttrs() map[string]schema.Attribute {
 	dataAttrs := make(map[string]schema.Attribute)

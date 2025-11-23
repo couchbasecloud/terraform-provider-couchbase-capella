@@ -10,6 +10,12 @@ import (
 
 var snapshotBackupBuilder = capellaschema.NewSchemaBuilder("snapshotBackup", "cloudSnapshotBackup")
 
+// Builders for nested referenced schemas
+var cmekBuilder = capellaschema.NewSchemaBuilder("cmek", "ClusterCMEKConfig")
+var progressBuilder = capellaschema.NewSchemaBuilder("progress", "CloudSnapshotBackupProgress")
+var crossRegionCopiesBuilder = capellaschema.NewSchemaBuilder("crossRegionCopies", "CloudSnapshotBackupCrossRegionCopies")
+var serverBuilder = capellaschema.NewSchemaBuilder("server", "CouchbaseServer")
+
 func SnapshotBackupSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
@@ -27,9 +33,9 @@ func SnapshotBackupSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "cross_region_restore_preference", snapshotBackupBuilder, stringListAttribute(optional))
 
 	crossRegionCopiesAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(crossRegionCopiesAttrs, "region_code", snapshotBackupBuilder, stringAttribute([]string{computed, useStateForUnknown}))
-	capellaschema.AddAttr(crossRegionCopiesAttrs, "status", snapshotBackupBuilder, stringAttribute([]string{computed, useStateForUnknown}))
-	capellaschema.AddAttr(crossRegionCopiesAttrs, "time", snapshotBackupBuilder, stringAttribute([]string{computed, useStateForUnknown}))
+	capellaschema.AddAttr(crossRegionCopiesAttrs, "region_code", crossRegionCopiesBuilder, stringAttribute([]string{computed, useStateForUnknown}))
+	capellaschema.AddAttr(crossRegionCopiesAttrs, "status", crossRegionCopiesBuilder, stringAttribute([]string{computed, useStateForUnknown}))
+	capellaschema.AddAttr(crossRegionCopiesAttrs, "time", crossRegionCopiesBuilder, stringAttribute([]string{computed, useStateForUnknown}))
 	capellaschema.AddAttr(attrs, "cross_region_copies", snapshotBackupBuilder, &schema.SetNestedAttribute{
 		Computed: true,
 		NestedObject: schema.NestedAttributeObject{
@@ -38,16 +44,16 @@ func SnapshotBackupSchema() schema.Schema {
 	})
 
 	progressAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(progressAttrs, "status", snapshotBackupBuilder, stringAttribute([]string{computed, useStateForUnknown}))
-	capellaschema.AddAttr(progressAttrs, "time", snapshotBackupBuilder, stringAttribute([]string{computed, useStateForUnknown}))
+	capellaschema.AddAttr(progressAttrs, "status", progressBuilder, stringAttribute([]string{computed, useStateForUnknown}))
+	capellaschema.AddAttr(progressAttrs, "time", progressBuilder, stringAttribute([]string{computed, useStateForUnknown}))
 	capellaschema.AddAttr(attrs, "progress", snapshotBackupBuilder, &schema.SingleNestedAttribute{
 		Computed:   true,
 		Attributes: progressAttrs,
 	})
 
 	cmekAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(cmekAttrs, "id", snapshotBackupBuilder, stringAttribute([]string{computed, useStateForUnknown}))
-	capellaschema.AddAttr(cmekAttrs, "provider_id", snapshotBackupBuilder, stringAttribute([]string{computed, useStateForUnknown}))
+	capellaschema.AddAttr(cmekAttrs, "id", cmekBuilder, stringAttribute([]string{computed, useStateForUnknown}))
+	capellaschema.AddAttr(cmekAttrs, "provider_id", cmekBuilder, stringAttribute([]string{computed, useStateForUnknown}))
 	capellaschema.AddAttr(attrs, "cmek", snapshotBackupBuilder, &schema.SetNestedAttribute{
 		Computed: true,
 		NestedObject: schema.NestedAttributeObject{
@@ -56,7 +62,7 @@ func SnapshotBackupSchema() schema.Schema {
 	})
 
 	serverAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(serverAttrs, "version", snapshotBackupBuilder, stringAttribute([]string{computed, useStateForUnknown}))
+	capellaschema.AddAttr(serverAttrs, "version", serverBuilder, stringAttribute([]string{computed, useStateForUnknown}))
 	capellaschema.AddAttr(attrs, "server", snapshotBackupBuilder, &schema.SingleNestedAttribute{
 		Computed:   true,
 		Attributes: serverAttrs,
