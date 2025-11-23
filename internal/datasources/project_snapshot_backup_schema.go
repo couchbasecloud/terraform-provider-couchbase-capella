@@ -10,33 +10,33 @@ var projectSnapshotBackupBuilder = capellaschema.NewSchemaBuilder("projectSnapsh
 
 func gethrefsAttrs() map[string]schema.Attribute {
 	hrefsAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(hrefsAttrs, "first", projectEventsBuilder, computedString())
-	capellaschema.AddAttr(hrefsAttrs, "last", projectEventsBuilder, computedString())
-	capellaschema.AddAttr(hrefsAttrs, "next", projectEventsBuilder, computedString())
-	capellaschema.AddAttr(hrefsAttrs, "previous", projectEventsBuilder, computedString())
+	capellaschema.AddAttr(hrefsAttrs, "first", projectSnapshotBackupBuilder, computedString())
+	capellaschema.AddAttr(hrefsAttrs, "last", projectSnapshotBackupBuilder, computedString())
+	capellaschema.AddAttr(hrefsAttrs, "next", projectSnapshotBackupBuilder, computedString())
+	capellaschema.AddAttr(hrefsAttrs, "previous", projectSnapshotBackupBuilder, computedString())
 
 	return hrefsAttrs
 }
 
 func getPagesAttrs() map[string]schema.Attribute {
 	pagesAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(pagesAttrs, "last", projectEventsBuilder, computedInt64())
-	capellaschema.AddAttr(pagesAttrs, "next", projectEventsBuilder, computedInt64())
-	capellaschema.AddAttr(pagesAttrs, "page", projectEventsBuilder, computedInt64())
-	capellaschema.AddAttr(pagesAttrs, "per_page", projectEventsBuilder, computedInt64())
-	capellaschema.AddAttr(pagesAttrs, "previous", projectEventsBuilder, computedInt64())
-	capellaschema.AddAttr(pagesAttrs, "total_items", projectEventsBuilder, computedInt64())
+	capellaschema.AddAttr(pagesAttrs, "last", projectSnapshotBackupBuilder, computedInt64())
+	capellaschema.AddAttr(pagesAttrs, "next", projectSnapshotBackupBuilder, computedInt64())
+	capellaschema.AddAttr(pagesAttrs, "page", projectSnapshotBackupBuilder, computedInt64())
+	capellaschema.AddAttr(pagesAttrs, "per_page", projectSnapshotBackupBuilder, computedInt64())
+	capellaschema.AddAttr(pagesAttrs, "previous", projectSnapshotBackupBuilder, computedInt64())
+	capellaschema.AddAttr(pagesAttrs, "total_items", projectSnapshotBackupBuilder, computedInt64())
 
 	return pagesAttrs
 }
 
 func getCursorAttrs() map[string]schema.Attribute {
 	cursorAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(cursorAttrs, "hrefs", projectEventsBuilder, &schema.SingleNestedAttribute{
+	capellaschema.AddAttr(cursorAttrs, "hrefs", projectSnapshotBackupBuilder, &schema.SingleNestedAttribute{
 		Computed:   true,
 		Attributes: gethrefsAttrs(),
 	})
-	capellaschema.AddAttr(cursorAttrs, "pages", projectEventsBuilder, &schema.SingleNestedAttribute{
+	capellaschema.AddAttr(cursorAttrs, "pages", projectSnapshotBackupBuilder, &schema.SingleNestedAttribute{
 		Computed:   true,
 		Attributes: getPagesAttrs(),
 	})
@@ -82,13 +82,9 @@ func getComputedProjectSnapshotAttrs() map[string]schema.Attribute {
 	capellaschema.AddAttr(computedProjectSnapshotAttrs, "created_at", projectSnapshotBackupBuilder, computedString())
 	capellaschema.AddAttr(computedProjectSnapshotAttrs, "expiration", projectSnapshotBackupBuilder, computedString())
 	capellaschema.AddAttr(computedProjectSnapshotAttrs, "id", projectSnapshotBackupBuilder, computedString())
-	capellaschema.AddAttr(computedProjectSnapshotAttrs, "progress", projectSnapshotBackupBuilder, computedString())
 	capellaschema.AddAttr(computedProjectSnapshotAttrs, "project_id", projectSnapshotBackupBuilder, computedString())
 	capellaschema.AddAttr(computedProjectSnapshotAttrs, "app_service", projectSnapshotBackupBuilder, computedString())
-	capellaschema.AddAttr(computedProjectSnapshotAttrs, "cmek", projectSnapshotBackupBuilder, computedString())
-	capellaschema.AddAttr(computedProjectSnapshotAttrs, "cross_region_copies", projectSnapshotBackupBuilder, computedString())
 	capellaschema.AddAttr(computedProjectSnapshotAttrs, "retention", projectSnapshotBackupBuilder, computedInt64())
-	capellaschema.AddAttr(computedProjectSnapshotAttrs, "server", projectSnapshotBackupBuilder, computedString())
 	capellaschema.AddAttr(computedProjectSnapshotAttrs, "database_size", projectSnapshotBackupBuilder, computedInt64())
 	capellaschema.AddAttr(computedProjectSnapshotAttrs, "organization_id", projectSnapshotBackupBuilder, computedString())
 	capellaschema.AddAttr(computedProjectSnapshotAttrs, "type", projectSnapshotBackupBuilder, computedString())
@@ -159,7 +155,7 @@ func ProjectSnapshotBackupSchema() schema.Schema {
 		},
 	})
 
-	capellaschema.AddAttr(attrs, "cursor", projectEventsBuilder, &schema.SingleNestedAttribute{
+	capellaschema.AddAttr(attrs, "cursor", projectSnapshotBackupBuilder, &schema.SingleNestedAttribute{
 		Computed:   true,
 		Attributes: getCursorAttrs(),
 	})
