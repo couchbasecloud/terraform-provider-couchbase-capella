@@ -8,7 +8,7 @@ import (
 
 func SnapshotRestoreSchema() schema.Schema {
 
-	snapshotRestoreBuilder := capellaschema.NewSchemaBuilder("snapshotRestore")
+	snapshotRestoreBuilder := capellaschema.NewSchemaBuilder("snapshotRestore", "GetCloudSnapshotRestoreResponse")
 
 	attrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(attrs, "id", snapshotRestoreBuilder, requiredStringWithValidator())

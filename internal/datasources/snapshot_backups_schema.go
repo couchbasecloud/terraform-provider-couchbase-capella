@@ -6,7 +6,13 @@ import (
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-var snapshotBackupsBuilder = capellaschema.NewSchemaBuilder("snapshotBackups")
+var snapshotBackupsBuilder = capellaschema.NewSchemaBuilder("snapshotBackups", "GetCloudSnapshotBackupResponse")
+
+// Use the same builders as snapshot_backup_schema for consistency
+var snapshotBackupsCmekBuilder = capellaschema.NewSchemaBuilder("cmek", "ClusterCMEKConfig")
+var snapshotBackupsProgressBuilder = capellaschema.NewSchemaBuilder("progress", "CloudSnapshotBackupProgress")
+var snapshotBackupsCrossRegionCopiesBuilder = capellaschema.NewSchemaBuilder("crossRegionCopies", "CloudSnapshotBackupCrossRegionCopies")
+var snapshotBackupsServerBuilder = capellaschema.NewSchemaBuilder("server", "CouchbaseServer")
 
 func getSnapshotBackupsDataAttrs() map[string]schema.Attribute {
 	dataAttrs := make(map[string]schema.Attribute)
@@ -19,29 +25,57 @@ func getSnapshotBackupsDataAttrs() map[string]schema.Attribute {
 
 	capellaschema.AddAttr(dataAttrs, "progress", snapshotBackupsBuilder, &schema.SingleNestedAttribute{
 		Computed:   true,
-		Attributes: getProgressAttrs(),
+		Attributes: getSnapshotBackupsProgressAttrs(),
 	})
 
 	capellaschema.AddAttr(dataAttrs, "cmek", snapshotBackupsBuilder, &schema.SetNestedAttribute{
 		Computed: true,
 		NestedObject: schema.NestedAttributeObject{
-			Attributes: getCmekAttrs(),
+			Attributes: getSnapshotBackupsCmekAttrs(),
 		},
 	})
 
 	capellaschema.AddAttr(dataAttrs, "server", snapshotBackupsBuilder, &schema.SingleNestedAttribute{
 		Computed:   true,
-		Attributes: getServerAttrs(),
+		Attributes: getSnapshotBackupsServerAttrs(),
 	})
 
 	capellaschema.AddAttr(dataAttrs, "cross_region_copies", snapshotBackupsBuilder, &schema.SetNestedAttribute{
 		Computed: true,
 		NestedObject: schema.NestedAttributeObject{
-			Attributes: getCrossRegionCopiesAttrs(),
+			Attributes: getSnapshotBackupsCrossRegionCopiesAttrs(),
 		},
 	})
 
 	return dataAttrs
+}
+
+func getSnapshotBackupsCmekAttrs() map[string]schema.Attribute {
+	cmekAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(cmekAttrs, "id", snapshotBackupsCmekBuilder, computedString())
+	capellaschema.AddAttr(cmekAttrs, "provider_id", snapshotBackupsCmekBuilder, computedString())
+	return cmekAttrs
+}
+
+func getSnapshotBackupsProgressAttrs() map[string]schema.Attribute {
+	progressAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(progressAttrs, "status", snapshotBackupsProgressBuilder, computedString())
+	capellaschema.AddAttr(progressAttrs, "time", snapshotBackupsProgressBuilder, computedString())
+	return progressAttrs
+}
+
+func getSnapshotBackupsCrossRegionCopiesAttrs() map[string]schema.Attribute {
+	crossRegionCopiesAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(crossRegionCopiesAttrs, "region_code", snapshotBackupsCrossRegionCopiesBuilder, computedString())
+	capellaschema.AddAttr(crossRegionCopiesAttrs, "status", snapshotBackupsCrossRegionCopiesBuilder, computedString())
+	capellaschema.AddAttr(crossRegionCopiesAttrs, "time", snapshotBackupsCrossRegionCopiesBuilder, computedString())
+	return crossRegionCopiesAttrs
+}
+
+func getSnapshotBackupsServerAttrs() map[string]schema.Attribute {
+	serverAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(serverAttrs, "version", snapshotBackupsServerBuilder, computedString())
+	return serverAttrs
 }
 
 func SnapshotBackupsSchema() schema.Schema {
