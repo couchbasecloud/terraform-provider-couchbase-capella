@@ -1,59 +1,27 @@
 package datasources
 
 import (
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+
+	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
 func SnapshotRestoreSchema() schema.Schema {
+
+	snapshotRestoreBuilder := capellaschema.NewSchemaBuilder("snapshotRestore", "GetCloudSnapshotRestoreResponse")
+
+	attrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(attrs, "id", snapshotRestoreBuilder, requiredStringWithValidator())
+	capellaschema.AddAttr(attrs, "cluster_id", snapshotRestoreBuilder, requiredStringWithValidator())
+	capellaschema.AddAttr(attrs, "project_id", snapshotRestoreBuilder, requiredStringWithValidator())
+	capellaschema.AddAttr(attrs, "organization_id", snapshotRestoreBuilder, requiredStringWithValidator())
+	capellaschema.AddAttr(attrs, "created_at", snapshotRestoreBuilder, computedString())
+	capellaschema.AddAttr(attrs, "restore_to", snapshotRestoreBuilder, computedString())
+	capellaschema.AddAttr(attrs, "snapshot", snapshotRestoreBuilder, computedString())
+	capellaschema.AddAttr(attrs, "status", snapshotRestoreBuilder, computedString())
+
 	return schema.Schema{
 		MarkdownDescription: "The data source to retrieve all snapshot restore information for a cluster.",
-		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the snapshot restore.",
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
-			},
-			"cluster_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the cluster.",
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
-			},
-			"project_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the project.",
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
-			},
-			"organization_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the organization.",
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
-			},
-			"created_at": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "The RFC3339 timestamp representing the time at which snapshot restore was created.",
-			},
-			"restore_to": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "The GUID4 ID of the cluster to restore to.",
-			},
-			"snapshot": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "The RFC3339 timestamp representing the time at which the snapshot was taken.",
-			},
-			"status": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "The status of the snapshot restore.",
-			},
-		},
+		Attributes:          attrs,
 	}
 }
