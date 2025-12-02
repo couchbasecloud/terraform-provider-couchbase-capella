@@ -1,119 +1,86 @@
 package datasources
 
 import (
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+
+	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
+// Builders for nested referenced schemas (single backup)
+var snapshotBackupCmekBuilder = capellaschema.NewSchemaBuilder("cmek", "ClusterCMEKConfig")
+var snapshotBackupProgressBuilder = capellaschema.NewSchemaBuilder("progress", "CloudSnapshotBackupProgress")
+var snapshotBackupCrossRegionCopiesBuilder = capellaschema.NewSchemaBuilder("crossRegionCopies", "CloudSnapshotBackupCrossRegionCopies")
+var snapshotBackupServerBuilder = capellaschema.NewSchemaBuilder("server", "CouchbaseServer")
+
+func getSnapshotBackupCmekAttrs() map[string]schema.Attribute {
+	cmekAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(cmekAttrs, "id", snapshotBackupCmekBuilder, computedString())
+	capellaschema.AddAttr(cmekAttrs, "provider_id", snapshotBackupCmekBuilder, computedString())
+	return cmekAttrs
+}
+
+func getSnapshotBackupProgressAttrs() map[string]schema.Attribute {
+	progressAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(progressAttrs, "status", snapshotBackupProgressBuilder, computedString())
+	capellaschema.AddAttr(progressAttrs, "time", snapshotBackupProgressBuilder, computedString())
+	return progressAttrs
+}
+
+func getSnapshotBackupCrossRegionCopiesAttrs() map[string]schema.Attribute {
+	crossRegionCopiesAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(crossRegionCopiesAttrs, "region_code", snapshotBackupCrossRegionCopiesBuilder, computedString())
+	capellaschema.AddAttr(crossRegionCopiesAttrs, "status", snapshotBackupCrossRegionCopiesBuilder, computedString())
+	capellaschema.AddAttr(crossRegionCopiesAttrs, "time", snapshotBackupCrossRegionCopiesBuilder, computedString())
+	return crossRegionCopiesAttrs
+}
+
+func getSnapshotBackupServerAttrs() map[string]schema.Attribute {
+	serverAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(serverAttrs, "version", snapshotBackupServerBuilder, computedString())
+	return serverAttrs
+}
+
 func SnapshotBackupSchema() schema.Schema {
+
+	snapshotBackupBuilder := capellaschema.NewSchemaBuilder("snapshotBackup", "GetCloudSnapshotBackupResponse")
+
+	attrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(attrs, "organization_id", snapshotBackupBuilder, requiredStringWithValidator())
+	capellaschema.AddAttr(attrs, "project_id", snapshotBackupBuilder, requiredStringWithValidator())
+	capellaschema.AddAttr(attrs, "cluster_id", snapshotBackupBuilder, requiredStringWithValidator())
+	capellaschema.AddAttr(attrs, "id", snapshotBackupBuilder, requiredStringWithValidator())
+	capellaschema.AddAttr(attrs, "created_at", snapshotBackupBuilder, computedString())
+	capellaschema.AddAttr(attrs, "expiration", snapshotBackupBuilder, computedString())
+	capellaschema.AddAttr(attrs, "retention", snapshotBackupBuilder, computedInt64())
+	capellaschema.AddAttr(attrs, "size", snapshotBackupBuilder, computedInt64())
+	capellaschema.AddAttr(attrs, "type", snapshotBackupBuilder, computedString())
+
+	capellaschema.AddAttr(attrs, "progress", snapshotBackupBuilder, &schema.SingleNestedAttribute{
+		Computed:   true,
+		Attributes: getSnapshotBackupProgressAttrs(),
+	})
+
+	capellaschema.AddAttr(attrs, "cmek", snapshotBackupBuilder, &schema.SetNestedAttribute{
+		Computed: true,
+		NestedObject: schema.NestedAttributeObject{
+			Attributes: getSnapshotBackupCmekAttrs(),
+		},
+	})
+
+	capellaschema.AddAttr(attrs, "server", snapshotBackupBuilder, &schema.SingleNestedAttribute{
+		Computed:   true,
+		Attributes: getSnapshotBackupServerAttrs(),
+	})
+
+	capellaschema.AddAttr(attrs, "cross_region_copies", snapshotBackupBuilder, &schema.SetNestedAttribute{
+		Computed: true,
+		NestedObject: schema.NestedAttributeObject{
+			Attributes: getSnapshotBackupCrossRegionCopiesAttrs(),
+		},
+	})
+
 	return schema.Schema{
 		MarkdownDescription: "The snapshot backup data source retrieves one snapshot backup.",
-		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the tenant.",
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
-			},
-			"project_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the project.",
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
-			},
-			"cluster_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the cluster.",
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
-			},
-			"id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the snapshot backup resource.",
-			},
-			"created_at": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "The RFC3339 timestamp representing the time at which backup was created.",
-			},
-			"expiration": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "The RFC3339 timestamp representing the time at which the backup will expire.",
-			},
-			"progress": schema.SingleNestedAttribute{
-				Computed:            true,
-				MarkdownDescription: "The progress of the snapshot backup.",
-				Attributes: map[string]schema.Attribute{
-					"status": schema.StringAttribute{
-						Computed:            true,
-						MarkdownDescription: "The status of the snapshot backup.",
-					},
-					"time": schema.StringAttribute{
-						Computed:            true,
-						MarkdownDescription: "The time of the snapshot backup.",
-					},
-				},
-			},
-			"retention": schema.Int64Attribute{
-				Computed:            true,
-				MarkdownDescription: "The retention time in hours.",
-			},
-			"cmek": schema.SetNestedAttribute{
-				Computed:            true,
-				MarkdownDescription: "The CMEK configuration for the snapshot backup.",
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"id": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The GUID4 ID of the CMEK configuration.",
-						},
-						"provider_id": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The GUID4 ID of the provider.",
-						},
-					},
-				},
-			},
-			"server": schema.SingleNestedAttribute{
-				Computed: true,
-				Attributes: map[string]schema.Attribute{
-					"version": schema.StringAttribute{
-						Computed:            true,
-						MarkdownDescription: "The version of the server.",
-					},
-				},
-			},
-			"size": schema.Int64Attribute{
-				Computed:            true,
-				MarkdownDescription: "The size of the snapshot backup in megabytes.",
-			},
-			"type": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "The type of the snapshot backup.",
-			},
-			"cross_region_copies": schema.SetNestedAttribute{
-				Computed:            true,
-				MarkdownDescription: "The cross region copies of the snapshot backup.",
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"region_code": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The region the snapshot backup has been copied to.",
-						},
-						"status": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The status of the cross region copy.",
-						},
-						"time": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The RFC3339 timestamp representing the time at which the status was last updated.",
-						},
-					},
-				},
-			},
-		},
+		Attributes:          attrs,
 	}
 }
