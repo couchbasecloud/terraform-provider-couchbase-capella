@@ -12,7 +12,7 @@ resource "couchbase-capella_query_indexes" "idx1" {
   where      = var.where
 
   with = {
-    defer_build   = var.with.defer_build
+    defer_build = var.with.defer_build
   }
 }
 
@@ -30,7 +30,7 @@ resource "couchbase-capella_query_indexes" "idx2" {
   where      = var.where
 
   with = {
-    defer_build   = var.with.defer_build
+    defer_build = var.with.defer_build
   }
 }
 
@@ -48,6 +48,6 @@ resource "couchbase-capella_query_indexes" "idx3" {
   where      = var.where
 
   with = {
-    defer_build   = var.with.defer_build
+    defer_build = var.with.defer_build
   }
 }
