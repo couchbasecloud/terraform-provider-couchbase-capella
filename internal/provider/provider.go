@@ -288,7 +288,6 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewSnapshotBackup,
 		resources.NewAccessControlFunction,
 		resources.NewImportFilter,
-		resources.NewAppEndpointResync,
 		resources.NewCors,
 		resources.NewAppEndpoint,
 		resources.NewAppEndpointOidcProvider,
