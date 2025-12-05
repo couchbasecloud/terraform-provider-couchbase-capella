@@ -92,3 +92,28 @@ func Test_ValidateSchemaState(t *testing.T) {
 		})
 	}
 }
+
+func TestSplitImportStringError(t *testing.T) {
+	type test struct {
+		importString string
+		keys         []Attr
+		shouldError  bool
+	}
+
+	tests := []test{
+		{"id=123,org=456", []Attr{"id", "org"}, false},
+		{"id=123,org=456", []Attr{"id", "org", "project"}, true},
+		{"id,org=456", []Attr{"id", "org"}, true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.importString, func(t *testing.T) {
+			_, err := splitImportString(test.importString, test.keys)
+			if test.shouldError {
+				assert.ErrorContains(t, err, "error parsing terraform import")
+			} else {
+				assert.NilError(t, err)
+			}
+		})
+	}
+}
