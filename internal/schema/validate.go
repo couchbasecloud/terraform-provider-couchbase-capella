@@ -101,6 +101,9 @@ func splitImportString(importString string, keyParams []Attr) (map[Attr]string, 
 	IDs := make(map[Attr]string)
 	for _, pair := range pairs {
 		keyValue := strings.SplitN(pair, equalsDelimiter, 2)
+		if len(keyValue) < 2 {
+			return nil, fmt.Errorf("error parsing terraform import: %s", errors.ErrInvalidImport)
+		}
 		IDs[importIds[keyValue[0]]] = keyValue[1]
 	}
 
