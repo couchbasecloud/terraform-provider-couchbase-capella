@@ -355,7 +355,14 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 	if !state.OrganizationId.IsNull() {
 		// when reading an index, update state and number of replicas.
 		state.Status = types.StringValue(index.Status)
-		state.With.NumReplica = types.Int64Value(int64(index.NumReplica))
+		switch state.With {
+		case nil:
+			state.With = &providerschema.WithOptions{
+				NumReplica: types.Int64Value(int64(index.NumReplica)),
+			}
+		default:
+			state.With.NumReplica = types.Int64Value(int64(index.NumReplica))
+		}
 
 	} else {
 		// when importing index, set all attributes.
