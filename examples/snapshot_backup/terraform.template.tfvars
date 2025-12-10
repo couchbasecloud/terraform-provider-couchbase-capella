@@ -8,7 +8,7 @@ cluster_id      = "<cluster_id>"
 // Retention must be an integer.
 // Do not set restore_times and cross_region_restore_preference until the snapshot backup has been created, 
 // as you cannot restore a snapshot backup before it is created.
-snapshot_backup = {
+cloud_snapshot_backup = {
     retention = "<retention>"
     regions_to_copy = ["<region_1>", "<region_2>"]
     restore_times = "<restore_times>"
