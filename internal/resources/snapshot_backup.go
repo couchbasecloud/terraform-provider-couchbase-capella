@@ -74,6 +74,22 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 		clusterId      = plan.ClusterID.ValueString()
 	)
 
+	if !plan.RestoreTimes.IsNull() {
+		resp.Diagnostics.AddError(
+			"Error creating snapshot backup",
+			"The snapshot backup cannot be restored before it is created. Please remove restore_times from the plan.",
+		)
+		return
+	}
+
+	if !(plan.CrossRegionRestorePreference == nil) {
+		resp.Diagnostics.AddError(
+			"Error creating snapshot backup",
+			"The snapshot backup cannot be restored before it is created. Please remove cross_region_restore_preference from the plan.",
+		)
+		return
+	}
+
 	createSnapshotBackupRequest := snapshot_backup.CreateSnapshotBackupRequest{
 		Retention:     plan.Retention.ValueInt64(),
 		RegionsToCopy: providerschema.BaseStringsToStrings(plan.RegionsToCopy),
