@@ -29,27 +29,40 @@ The data source retrieves information for an App Service in Capella. App Service
 Read-Only:
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--data--audit))
-- `cloud_provider` (String) The Cloud Service Provider for the App Service.
+- `cloud_provider` (String) - Provider is the cloud service provider for the App Service.
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `compute` (Attributes) The CPU and RAM configuration of the App Service. (see [below for nested schema](#nestedatt--data--compute))
-- `current_state` (String) The current state of the App Service.
-- `description` (String) A description of the App Service (up to 1024 characters).
-- `id` (String) The ID of the App Service created.
-- `name` (String) Name of the App Service (up to 256 characters).
-- `nodes` (Number) Number of nodes configured for the App Service.
+- `compute` (Attributes) - The CPU and RAM configuration of the App Service. The supported combinations are:
+
+| CPU (cores)| RAM  (GB)   |
+| --------   |   -------   |
+| 2          | 4           |
+| 4          | 8           |
+| 8          | 16          |
+| 16         | 32          |
+| 36         | 72          | (see [below for nested schema](#nestedatt--data--compute))
+- `current_state` (String) - **Valid Values**: `pending`, `deploying`, `deploymentFailed`, `destroying`, `destroyFailed`, `healthy`, `degraded`, `scaling`, `scaleFailed`, `upgrading`, `upgradeFailed`, `turnedOff`, `turningOff`, `turnOffFailed`, `turningOn`, `turnOnFailed`
+- `description` (String) - Description of the App Service (up to 1024 characters).
+ - **Constraints**: Maximum length: 1024 characters
+- `id` (String) - The ID of the App Service created.
+ - **Format**: UUID (GUID4)
+- `name` (String) - Name of the App Service (up to 256 characters).
+ - **Constraints**: Maximum length: 256 characters
+- `nodes` (Number) - Number of nodes configured for the App Service.
 - `organization_id` (String) The GUID4 ID of the organization.
-- `version` (String) The version of the App Service server. If left empty, it will be defaulted to the latest available version.
+- `version` (String) - The version of the App Service server. If left empty, it will be defaulted to the latest available version.
 
 <a id="nestedatt--data--audit"></a>
 ### Nested Schema for `data.audit`
 
 Read-Only:
 
-- `created_at` (String) The RFC3339 timestamp when the resource was created.
-- `created_by` (String) The user who created the resource.
-- `modified_at` (String) The RFC3339 timestamp when the resource was last modified.
-- `modified_by` (String) The user who last modified the resource.
-- `version` (Number) The version of the document. This value is incremented each time the resource is modified.
+- `created_at` (String) - The RFC3339 timestamp associated with when the resource was initially created.
+ - **Format**: Date-time in RFC3339 format
+- `created_by` (String) - The user who created the resource; this will be a UUID4 ID for standard users and will be a string such as "internal-support" for internal Couchbase support users.
+- `modified_at` (String) - The RFC3339 timestamp associated with when the resource was last modified.
+ - **Format**: Date-time in RFC3339 format
+- `modified_by` (String) - The user who last modified the resource; this will be a UUID4 ID for standard users and wilmal be a string such as "internal-support" for internal Couchbase support users.
+- `version` (Number) - The version of the document. This value is incremented each time the resource is modified.
 
 
 <a id="nestedatt--data--compute"></a>
@@ -57,5 +70,5 @@ Read-Only:
 
 Read-Only:
 
-- `cpu` (Number) CPU units (cores).
-- `ram` (Number) RAM units (GB).
+- `cpu` (Number) - CPU units (cores).
+- `ram` (Number) - RAM units (GB).

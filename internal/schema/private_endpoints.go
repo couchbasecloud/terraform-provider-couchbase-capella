@@ -25,6 +25,9 @@ type PrivateEndpoint struct {
 
 	// OrganizationId is the ID of the organization to which the Capella cluster belongs.
 	OrganizationId types.String `tfsdk:"organization_id"`
+
+	// ServiceName is the name of the private endpoint service.
+	ServiceName types.String `tfsdk:"service_name"`
 }
 
 // PrivateEndpoints defines a structure used by the LIST endpoint for private endpoints.
@@ -41,6 +44,8 @@ type PrivateEndpointData struct {
 	Id types.String `tfsdk:"id"`
 	// Status is the endpoint status.  Possible values are failed, linked, pending, pendingAcceptance, rejected and unrecognized.
 	Status types.String `tfsdk:"status"`
+	// ServiceName is the name of the endpoint service.
+	ServiceName types.String `tfsdk:"service_name"`
 }
 
 // Validate is used to verify that IDs have been properly imported.

@@ -28,20 +28,22 @@ data "couchbase-capella_organization" "existing_organization" {
 ### Read-Only
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
-- `description` (String) A description of the organization.
-- `name` (String) The name of the organization.
-- `preferences` (Attributes) Organization-wide preferences. (see [below for nested schema](#nestedatt--preferences))
+- `description` (String) - The description of a particular organization.
+- `name` (String) - The name of the organization.
+- `preferences` (Attributes) - Preferences stores preferences for the organization. (see [below for nested schema](#nestedatt--preferences))
 
 <a id="nestedatt--audit"></a>
 ### Nested Schema for `audit`
 
 Read-Only:
 
-- `created_at` (String) The RFC3339 timestamp when the resource was created.
-- `created_by` (String) The user who created the resource.
-- `modified_at` (String) The RFC3339 timestamp when the resource was last modified.
-- `modified_by` (String) The user who last modified the resource.
-- `version` (Number) The version of the document. This value is incremented each time the resource is modified.
+- `created_at` (String) - The RFC3339 timestamp associated with when the resource was initially created.
+ - **Format**: Date-time in RFC3339 format
+- `created_by` (String) - The user who created the resource; this will be a UUID4 ID for standard users and will be a string such as "internal-support" for internal Couchbase support users.
+- `modified_at` (String) - The RFC3339 timestamp associated with when the resource was last modified.
+ - **Format**: Date-time in RFC3339 format
+- `modified_by` (String) - The user who last modified the resource; this will be a UUID4 ID for standard users and wilmal be a string such as "internal-support" for internal Couchbase support users.
+- `version` (Number) - The version of the document. This value is incremented each time the resource is modified.
 
 
 <a id="nestedatt--preferences"></a>
@@ -49,4 +51,4 @@ Read-Only:
 
 Read-Only:
 
-- `session_duration` (Number) The maximum allowed time (in seconds) a users can spend in the organization.
+- `session_duration` (Number)

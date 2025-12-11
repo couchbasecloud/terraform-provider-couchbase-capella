@@ -33,33 +33,43 @@ resource "couchbase-capella_app_service" "new_app_service" {
 ### Required
 
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `compute` (Attributes) The CPU and RAM configuration of the App Service. (see [below for nested schema](#nestedatt--compute))
-- `name` (String) Name of the cluster (up to 256 characters).
+- `compute` (Attributes) - The CPU and RAM configuration of the App Service. The supported combinations are:
+
+| CPU (cores)| RAM  (GB)   |
+| --------   |   -------   |
+| 2          | 4           |
+| 4          | 8           |
+| 8          | 16          |
+| 16         | 32          |
+| 36         | 72          | (see [below for nested schema](#nestedatt--compute))
+- `name` (String) - Name of the cluster (up to 256 characters).
+ - **Constraints**: Maximum length: 256 characters
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
 ### Optional
 
-- `cloud_provider` (String) The Cloud Service Provider for the App Service.
-- `description` (String) A short description of the App Service.
+- `cloud_provider` (String)
+- `description` (String) - A short description of the App Service.
 - `if_match` (String) A precondition header that specifies the entity tag of a resource.
-- `nodes` (Number) Number of nodes configured for the App Service. Number of nodes configured for the App Service. The number of nodes can range from 2 to 12.
+- `nodes` (Number) - Number of nodes configured for the App Service. Number of nodes configured for the App Service. The number of nodes can range from 2 to 12.
 
 ### Read-Only
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
-- `current_state` (String) The current state of the App Service.
-- `etag` (String)
-- `id` (String) The ID of the App Service created.
-- `version` (String) The version of the App Service server. If left empty, it will be defaulted to the latest available version.
+- `current_state` (String)
+- `etag` (String) Entity tag for the resource, used for caching and conditional requests.
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
+- `version` (String) - The version of the App Service server. If left empty, it will be defaulted to the latest available version.
 
 <a id="nestedatt--compute"></a>
 ### Nested Schema for `compute`
 
 Required:
 
-- `cpu` (Number) CPU units (cores).
-- `ram` (Number) RAM units (GB).
+- `cpu` (Number)
+- `ram` (Number)
 
 
 <a id="nestedatt--audit"></a>
@@ -67,15 +77,19 @@ Required:
 
 Read-Only:
 
-- `created_at` (String) The RFC3339 timestamp when the resource was created.
-- `created_by` (String) The user who created the resource.
-- `modified_at` (String) The RFC3339 timestamp when the resource was last modified.
-- `modified_by` (String) The user who last modified the resource.
-- `version` (Number) The version of the document. This value is incremented each time the resource is modified.
+- `created_at` (String) - The RFC3339 timestamp associated with when the resource was initially created.
+ - **Format**: Date-time in RFC3339 format
+- `created_by` (String) - The user who created the resource; this will be a UUID4 ID for standard users and will be a string such as "internal-support" for internal Couchbase support users.
+- `modified_at` (String) - The RFC3339 timestamp associated with when the resource was last modified.
+ - **Format**: Date-time in RFC3339 format
+- `modified_by` (String) - The user who last modified the resource; this will be a UUID4 ID for standard users and wilmal be a string such as "internal-support" for internal Couchbase support users.
+- `version` (Number) - The version of the document. This value is incremented each time the resource is modified.
 
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 terraform import couchbase-capella_app_service.new_app_service id=<appservice_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>

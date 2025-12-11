@@ -7,9 +7,10 @@ import (
 	"net/http"
 	"time"
 
+	internal_errors "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	backupapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/backup"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -109,9 +110,9 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while checking latest backup status",
-			fmt.Sprintf("Could not read check latest backup status."+
+			"Could not read check latest backup status."+
 				"Please check in Capella to see if any hanging resources have "+
-				"been created, unexpected error: "+api.ParseError(err)),
+				"been created, unexpected error: "+api.ParseError(err),
 		)
 		return
 	}
@@ -384,19 +385,19 @@ func (b *Backup) Configure(ctx context.Context, req resource.ConfigureRequest, r
 
 func (a *Backup) validateCreateBackupRequest(plan providerschema.Backup) error {
 	if plan.OrganizationId.IsNull() {
-		return errors.ErrOrganizationIdCannotBeEmpty
+		return internal_errors.ErrOrganizationIdCannotBeEmpty
 	}
 	if plan.ProjectId.IsNull() {
-		return errors.ErrProjectIdCannotBeEmpty
+		return internal_errors.ErrProjectIdCannotBeEmpty
 	}
 	if plan.ClusterId.IsNull() {
-		return errors.ErrClusterIdCannotBeEmpty
+		return internal_errors.ErrClusterIdCannotBeEmpty
 	}
 	if plan.BucketId.IsNull() {
-		return errors.ErrBucketIdCannotBeEmpty
+		return internal_errors.ErrBucketIdCannotBeEmpty
 	}
 	if !plan.RestoreTimes.IsNull() && !plan.RestoreTimes.IsUnknown() {
-		return errors.ErrRestoreTimesMustNotBeSetWhileCreateBackup
+		return internal_errors.ErrRestoreTimesMustNotBeSetWhileCreateBackup
 	}
 	return nil
 }
@@ -425,7 +426,7 @@ func (b *Backup) checkLatestBackupStatus(ctx context.Context, organizationId, pr
 	for {
 		select {
 		case <-ctx.Done():
-			return nil, errors.ErrBucketCreationStatusTimeout
+			return nil, internal_errors.ErrBucketCreationStatusTimeout
 
 		case <-timer.C:
 			backupResp, err = b.getLatestBackup(ctx, organizationId, projectId, clusterId, bucketId)
@@ -473,13 +474,13 @@ func (b *Backup) retrieveBackup(ctx context.Context, organizationId, projectId, 
 	bStats := providerschema.NewBackupStats(*backupResp.BackupStats)
 	bStatsObj, diags := types.ObjectValueFrom(ctx, bStats.AttributeTypes(), bStats)
 	if diags.HasError() {
-		return nil, errors.ErrUnableToConvertAuditData
+		return nil, internal_errors.ErrUnableToConvertAuditData
 	}
 
 	sInfo := providerschema.NewScheduleInfo(*backupResp.ScheduleInfo)
 	sInfoObj, diags := types.ObjectValueFrom(ctx, sInfo.AttributeTypes(), sInfo)
 	if diags.HasError() {
-		return nil, errors.ErrUnableToConvertAuditData
+		return nil, internal_errors.ErrUnableToConvertAuditData
 	}
 
 	refreshedState := providerschema.NewBackup(&backupResp, organizationId, projectId, bStatsObj, sInfoObj)

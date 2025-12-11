@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -38,27 +37,7 @@ func (p *PrivateEndpointService) Metadata(_ context.Context, req datasource.Meta
 
 // Schema defines schema for private endpoint service resource.
 func (p *PrivateEndpointService) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		MarkdownDescription: "The data source to retrieve the status of the private endpoint service for an operational cluster. Private endpoint service enables secure connectivity between your Cloud Service Provider's private network (VPC/VNET) and your operational cluster.",
-		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the organization.",
-			},
-			"project_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the project.",
-			},
-			"cluster_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the cluster to retrieve private endpoint service status from. Private endpoint service enables secure access to this cluster through your cloud provider's private network.",
-			},
-			"enabled": schema.BoolAttribute{
-				Computed:            true,
-				MarkdownDescription: "Whether the private endpoint service is enabled for the cluster. When enabled, you can create private endpoints to connect your cloud provider's private network to the cluster.",
-			},
-		},
-	}
+	resp.Schema = PrivateEndpointServiceSchema()
 }
 
 // Read refreshes the Terraform state with the latest data of the private endpoint service.

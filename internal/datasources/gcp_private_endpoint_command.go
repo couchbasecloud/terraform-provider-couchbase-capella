@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -37,36 +36,7 @@ func (a *GCPPrivateEndpointCommand) Metadata(_ context.Context, req datasource.M
 
 // Schema defines the schema for the private endpoint command data source.
 func (a *GCPPrivateEndpointCommand) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		MarkdownDescription: "The data source to generate an GCP CLI command for setting up a private endpoint connection to an operational cluster. Retrieves the command or script to create the private endpoint, which establishes a private connection between the specified VPC and the Capella private endpoint service.",
-		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the organization.",
-			},
-			"project_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the project.",
-			},
-			"cluster_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the cluster.",
-			},
-			"vpc_network_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The ID of your GCP VPC where the private endpoint will be created.",
-			},
-			"subnet_ids": schema.SetAttribute{
-				Required:            true,
-				ElementType:         types.StringType,
-				MarkdownDescription: "List of subnet IDs in your VPC where the private endpoint interface will be created. These subnets must be in the same VPC.",
-			},
-			"command": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "The generated GCP CLI command. Use this command to create the private endpoint connection within GCP.",
-			},
-		},
-	}
+	resp.Schema = GcpPrivateEndpointCommandSchema()
 }
 
 // Read refreshes the Terraform state with the latest data of private endpoint.

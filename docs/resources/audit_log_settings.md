@@ -28,27 +28,29 @@ resource "couchbase-capella_audit_log_settings" "new_auditlogsettings" {
 
 ### Required
 
-- `cluster_id` (String) The GUID4 ID of the cluster to configure audit log settings.
+- `cluster_id` (String) The GUID4 ID of the cluster.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
 ### Optional
 
-- `audit_enabled` (Boolean) Determines whether audit logging is enabled or not on the cluster. Set to 'true' to enable audit logging.
-- `disabled_users` (Attributes Set) List of users whose actions will be excluded from audit logging. (see [below for nested schema](#nestedatt--disabled_users))
-- `enabled_event_ids` (Set of Number) List of audit event IDs to enable for logging. These IDs correspond to specific types of events that will be recorded in the audit log. Use the audit_log_event_ids data source to get the list of available event IDs.
+- `audit_enabled` (Boolean) - Determines whether audit logging is enabled or not on the cluster.
+- `disabled_users` (Attributes Set) - List of users whose filterable events will not be logged. (see [below for nested schema](#nestedatt--disabled_users))
+- `enabled_event_ids` (Set of Number)
 
 <a id="nestedatt--disabled_users"></a>
 ### Nested Schema for `disabled_users`
 
 Required:
 
-- `domain` (String) The authentication domain of the user to exclude. Specifies whether the user is local or external.
-- `name` (String) The username of the user to exclude from audit logging.
+- `domain` (String)
+- `name` (String) - The name of the bucket.
 
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 terraform import couchbase-capella_audit_log_settings.new_auditlogsettings id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000

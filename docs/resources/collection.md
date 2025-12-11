@@ -38,11 +38,13 @@ resource "couchbase-capella_collection" "new_collection" {
 
 ### Optional
 
-- `max_ttl` (Number) The maximum Time To Live (TTL) for documents in the collection.
+- `max_ttl` (Number)
 
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 terraform import couchbase-capella_collection.new_collection collection_name=c2,scope_name=s1,bucket_id=YjE=,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000

@@ -463,7 +463,7 @@ func (f *FreeTierCluster) retrieveFreeTierCluster(
 	if diags.HasError() {
 		return nil, fmt.Errorf("unable to convert service groups data %w", err)
 	}
-	serviceGroupObjList, err, diag := providerschema.NewServiceGroups(ctx, serviceGroups)
+	serviceGroupObjList, diag, err := providerschema.NewServiceGroups(ctx, serviceGroups)
 	if err != nil {
 		if diag.HasError() {
 			return nil, err
@@ -512,7 +512,7 @@ func (f *FreeTierCluster) morphFreeTierClusterRespToTerraformObj(
 	if diags.HasError() {
 		return nil, fmt.Errorf("unable to convert service groups data : %w", err)
 	}
-	serviceGroupObjList, err, diag := providerschema.NewServiceGroups(ctx, serviceGroups)
+	serviceGroupObjList, diag, err := providerschema.NewServiceGroups(ctx, serviceGroups)
 	if err != nil {
 		if diag.HasError() {
 			return nil, err

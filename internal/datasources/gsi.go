@@ -6,10 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -37,96 +34,8 @@ func (g *GsiDefinitions) Metadata(
 	resp.TypeName = req.ProviderTypeName + "_query_indexes"
 }
 
-func (g *GsiDefinitions) Schema(
-	_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse,
-) {
-	resp.Schema = schema.Schema{
-		MarkdownDescription: "The data source for retrieving Query Indexes in Couchbase Capella.",
-		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the organization.",
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
-			},
-			"project_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the project.",
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
-			},
-			"cluster_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the cluster.",
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
-			},
-			"bucket_name": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The name of the bucket where the indexes exist. Specifies the bucket portion of the keyspace.",
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
-			},
-			"scope_name": schema.StringAttribute{
-				Optional:            true,
-				MarkdownDescription: "The name of the scope where the indexes exist. Specifies the scope portion of the keyspace. If unspecified, this will be the default scope.",
-			},
-			"collection_name": schema.StringAttribute{
-				Optional:            true,
-				MarkdownDescription: "Specifies the collection portion of the keyspace. If unspecified, this will be the default collection.\n",
-			},
-			"data": schema.ListNestedAttribute{
-				Computed:            true,
-				MarkdownDescription: "List of indexes in the specified keyspace.",
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"name": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The name of the index.",
-						},
-						"is_primary": schema.BoolAttribute{
-							Computed:            true,
-							MarkdownDescription: "Specifies whether this is a primary index.",
-						},
-						"state": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The current state of the index. For example 'Created', 'Ready', etc.",
-						},
-						"keyspace_id": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The full keyspace identifier for the index (bucket.scope.collection).",
-						},
-						"index_key": schema.ListAttribute{
-							Computed:            true,
-							ElementType:         types.StringType,
-							MarkdownDescription: "List of document fields being indexed.",
-						},
-						"condition": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The WHERE clause condition for the index.",
-						},
-						"partition": schema.ListAttribute{
-							Computed:            true,
-							ElementType:         types.StringType,
-							MarkdownDescription: "List of fields the index is partitioned by.",
-						},
-						"replica_count": schema.Int64Attribute{
-							Computed:            true,
-							MarkdownDescription: "Number of index replicas.",
-						},
-						"partition_count": schema.Int64Attribute{
-							Computed:            true,
-							MarkdownDescription: "Number of partitions for the index.",
-						},
-					},
-				},
-			},
-		},
-	}
+func (g *GsiDefinitions) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = GsiSchema()
 }
 
 func (g *GsiDefinitions) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

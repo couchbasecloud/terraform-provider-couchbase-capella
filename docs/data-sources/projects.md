@@ -29,11 +29,12 @@ Data source to retrieve project details in an organization.
 Read-Only:
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--data--audit))
-- `description` (String) The description of a particular project.
-- `etag` (String) The ETag header value returned by the server, used for optimistic concurrency control.
-- `id` (String) The GUID4 ID of the project.
+- `description` (String)
+- `etag` (String) Entity tag for the resource, used for caching and conditional requests.
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
 - `if_match` (String) A precondition header that specifies the entity tag of a resource.
-- `name` (String) The name of the project.
+- `name` (String) - The name of the bucket.
 - `organization_id` (String) The GUID4 ID of the organization.
 
 <a id="nestedatt--data--audit"></a>
@@ -41,8 +42,10 @@ Read-Only:
 
 Read-Only:
 
-- `created_at` (String) The RFC3339 timestamp when the resource was created.
-- `created_by` (String) The user who created the resource.
-- `modified_at` (String) The RFC3339 timestamp when the resource was last modified.
-- `modified_by` (String) The user who last modified the resource.
-- `version` (Number) The version of the document. This value is incremented each time the resource is modified.
+- `created_at` (String) - The RFC3339 timestamp associated with when the resource was initially created.
+ - **Format**: Date-time in RFC3339 format
+- `created_by` (String) - The user who created the resource; this will be a UUID4 ID for standard users and will be a string such as "internal-support" for internal Couchbase support users.
+- `modified_at` (String) - The RFC3339 timestamp associated with when the resource was last modified.
+ - **Format**: Date-time in RFC3339 format
+- `modified_by` (String) - The user who last modified the resource; this will be a UUID4 ID for standard users and wilmal be a string such as "internal-support" for internal Couchbase support users.
+- `version` (Number) - The version of the document. This value is incremented each time the resource is modified.

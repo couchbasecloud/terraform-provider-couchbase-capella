@@ -130,7 +130,7 @@ func (s *Scope) Create(ctx context.Context, req resource.CreateRequest, resp *re
 		return
 	}
 
-	refreshedState, err, diag := s.retrieveScope(ctx, organizationId, projectId, clusterId, bucketId, plan.Name.ValueString())
+	refreshedState, diag, err := s.retrieveScope(ctx, organizationId, projectId, clusterId, bucketId, plan.Name.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Scope",
@@ -186,7 +186,7 @@ func (s *Scope) validateScopeAttributesTrimmed(plan providerschema.Scope) error 
 }
 
 // retrieveScope retrieves scope information from the specified organization and project using the provided bucket ID by open-api call.
-func (s *Scope) retrieveScope(ctx context.Context, organizationId, projectId, clusterId, bucketId, scopeName string) (*providerschema.Scope, error, diag.Diagnostics) {
+func (s *Scope) retrieveScope(ctx context.Context, organizationId, projectId, clusterId, bucketId, scopeName string) (*providerschema.Scope, diag.Diagnostics, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/scopes/%s", s.HostURL, organizationId, projectId, clusterId, bucketId, scopeName)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := s.ClientV1.ExecuteWithRetry(
@@ -197,13 +197,13 @@ func (s *Scope) retrieveScope(ctx context.Context, organizationId, projectId, cl
 		nil,
 	)
 	if err != nil {
-		return nil, err, nil
+		return nil, nil, err
 	}
 
 	scopeResp := scope_api.GetScopeResponse{}
 	err = json.Unmarshal(response.Body, &scopeResp)
 	if err != nil {
-		return nil, err, nil
+		return nil, nil, err
 	}
 
 	if validateScopeNameIsSameInPlanAndState(scopeName, *scopeResp.Name) {
@@ -225,7 +225,7 @@ func (s *Scope) retrieveScope(ctx context.Context, organizationId, projectId, cl
 		providerschemaCollection := providerschema.NewCollection(apiCollection)
 		collectionObj, diag := types.ObjectValueFrom(ctx, providerschema.CollectionAttributeTypes(), providerschemaCollection)
 		if diag.HasError() {
-			return nil, fmt.Errorf("collection object error"), diag
+			return nil, diag, fmt.Errorf("collection object error")
 		}
 		objectList = append(objectList, collectionObj)
 	}
@@ -234,7 +234,7 @@ func (s *Scope) retrieveScope(ctx context.Context, organizationId, projectId, cl
 	//using a set instead of list as we need unique list of collections, no duplicates
 	collectionSet, diag := types.SetValueFrom(ctx, types.ObjectType{}.WithAttributeTypes(providerschema.CollectionAttributeTypes()), objectList)
 	if diag.HasError() {
-		return nil, fmt.Errorf("collection set error"), diag
+		return nil, diag, fmt.Errorf("collection set error")
 	}
 
 	refreshedState.Collections = collectionSet
@@ -271,7 +271,7 @@ func (s *Scope) Read(ctx context.Context, req resource.ReadRequest, resp *resour
 		scopeName      = IDs[providerschema.ScopeName]
 	)
 
-	refreshedState, err, diag := s.retrieveScope(ctx, organizationId, projectId, clusterId, bucketId, scopeName)
+	refreshedState, diag, err := s.retrieveScope(ctx, organizationId, projectId, clusterId, bucketId, scopeName)
 	if diag.HasError() {
 
 		diags.Append(diag...)

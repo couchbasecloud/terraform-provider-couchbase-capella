@@ -34,27 +34,29 @@ resource "couchbase-capella_backup_schedule" "new_backup_schedule" {
 
 ### Required
 
-- `bucket_id` (String) The GUID4 ID of the bucket.
+- `bucket_id` (String) The ID of the bucket. It is the URL-compatible base64 encoding of the bucket name.
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
-- `type` (String) Type of the backup schedule.
-- `weekly_schedule` (Attributes) Schedule a full backup once a week with regular incrementals. (see [below for nested schema](#nestedatt--weekly_schedule))
+- `type` (String) - **Valid Values**: `weekly`
+- `weekly_schedule` (Attributes) - Schedule a full backup once a week with regular incrementals. (see [below for nested schema](#nestedatt--weekly_schedule))
 
 <a id="nestedatt--weekly_schedule"></a>
 ### Nested Schema for `weekly_schedule`
 
 Required:
 
-- `cost_optimized_retention` (Boolean) Optimize backup retention to reduce total cost of ownership (TCO). This gives the option to keep all but the last backup cycle of the month for thirty days; the last cycle will be kept for the defined retention period.
-- `day_of_week` (String) Day of the week for the backup. Values can be "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", or "saturday"
-- `incremental_every` (Number) Interval in hours for incremental backup. Integer value between 1 and 24.
-- `retention_time` (String) Retention time in days. For example: 30days, 1year, 5years.
-- `start_at` (Number) The starting hour (in 24-Hour format). Integer value between 0 and 23.
+- `cost_optimized_retention` (Boolean) - Optimize backup retention to reduce total cost of ownership (TCO). This gives the option to keep all but the last backup cycle of the month for thirty days; the last cycle will be kept for the defined retention period. To learn more, see [Cost Optimized Retention Policy](https://docs.couchbase.com/cloud/clusters/backup-restore.html#cost-optimized-retention-policy).
+- `day_of_week` (String) - Day of the week for the backup.
+- `incremental_every` (Number) - Interval in hours for incremental backup.
+- `retention_time` (String) - Retention time in days.
+- `start_at` (Number) - Start at hour (in 24-Hour format).
 
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 terraform import couchbase-capella_backup.new_backup id=<bucket_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>

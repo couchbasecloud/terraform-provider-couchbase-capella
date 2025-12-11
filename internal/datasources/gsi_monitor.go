@@ -6,12 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
@@ -38,57 +33,9 @@ func (g *GsiMonitor) Metadata(
 	resp.TypeName = req.ProviderTypeName + "_query_index_monitor"
 }
 
-func (g *GsiMonitor) Schema(
-	_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse,
-) {
-	resp.Schema = schema.Schema{
-		MarkdownDescription: "The data source for monitoring Query Indexes in Couchbase Capella.",
-		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the organization.",
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
-			},
-			"project_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the project.",
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
-			},
-			"cluster_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the cluster.",
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
-			},
-			"bucket_name": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The name of the bucket where the indexes exist. Specifies the bucket part of the key space.",
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
-			},
-			"scope_name": schema.StringAttribute{
-				Optional:            true,
-				MarkdownDescription: "The name of the scope where the indexes exist. Specifies the scope portion of the keyspace. If unspecified, this will be the default scope.",
-			},
-			"collection_name": schema.StringAttribute{
-				Optional:            true,
-				MarkdownDescription: "The name of the collection where the indexes exist. Specifies the collection portion of the keyspace. If unspecified, this will be the default collection.",
-			},
-			"indexes": schema.SetAttribute{
-				Required:            true,
-				ElementType:         types.StringType,
-				MarkdownDescription: "Set of index names to monitor. These indexes must exist in the specified keyspace.",
-			},
-		},
-	}
+func (g *GsiMonitor) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = GsiMonitorSchema()
 }
-
 func (g *GsiMonitor) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var config providerschema.GsiBuildStatus
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)

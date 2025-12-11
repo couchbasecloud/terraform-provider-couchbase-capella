@@ -8,8 +8,6 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
@@ -118,7 +116,7 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		)
 		return
 	} else {
-		clusterRequest.Zones = c.convertZones(plan.Zones)
+		clusterRequest.Zones = providerschema.BaseStringsToStrings(plan.Zones)
 	}
 
 	var couchbaseServer providerschema.CouchbaseServer
@@ -920,16 +918,6 @@ func initializePendingClusterWithPlanAndId(plan providerschema.Cluster, id strin
 		}
 	}
 	return plan
-}
-
-// convertZones is used to convert all roles
-// in an array of basetypes.StringValue to strings.
-func (c *Cluster) convertZones(zones []basetypes.StringValue) []string {
-	var convertedZones []string
-	for _, zone := range zones {
-		convertedZones = append(convertedZones, zone.ValueString())
-	}
-	return convertedZones
 }
 
 func (c *Cluster) checkDisk(plan providerschema.Cluster) error {

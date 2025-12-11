@@ -27,15 +27,17 @@ resource "couchbase-capella_app_service_onoff_ondemand" "new_app_service_onoff_o
 
 ### Required
 
-- `app_service_id` (String) The GUID4 ID of the app service.
+- `app_service_id` (String) The GUID4 ID of the appService.
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
-- `state` (String) The state of the app service on-demand. It can be 'on' or 'off'.
+- `state` (String)
 
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 terraform import couchbase-capella_app_service_onoff_ondemand.new_app_service_onoff_ondemand app_service_id=<app_service_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>

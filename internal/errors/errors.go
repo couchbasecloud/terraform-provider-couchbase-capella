@@ -27,6 +27,9 @@ var (
 	// ErrAppServiceIdMissing is returned when an expected App Service Id was not found after an import.
 	ErrAppServiceIdMissing = errors.New("app service ID is missing or was passed incorrectly, please check provider documentation for syntax")
 
+	// ErrAppEndpointInvalidState is returned when an invalid state is provided for an App Endpoint.
+	ErrAppEndpointInvalidState = errors.New("app endpoint state is invalid, valid values are 'Online' and 'Offline'")
+
 	// ErrPeerIdMissing is returned when an expected Peer Id was not found after an import.
 	ErrPeerIdMissing = errors.New("peer ID is missing or was passed incorrectly, please check provider documentation for syntax")
 
@@ -83,6 +86,9 @@ var (
 
 	// ErrUnableToUpdateCloudProvider is returned when it is not possible to update the cloud provider.
 	ErrUnableToUpdateCloudProvider = errors.New("unable to update cloud provider")
+
+	// ErrNotAString is returned when a payload is not a string.
+	ErrNotAString = errors.New("payload is not a string")
 
 	// ErrMarshallingPayload is returned when a payload has failed to marshal into a request body.
 	ErrMarshallingPayload = errors.New("failed to marshal payload")
@@ -238,6 +244,8 @@ var (
 	ErrPrivateEndpointServiceTimeout = errors.New("changing private endpoint service status timed out after initiation")
 
 	ErrBucketCreationStatusTimeout = errors.New("bucket backup creation status transition timed out after initiation")
+
+	ErrSnapshotBackupCreationStatusTimeout = errors.New("snapshot backup creation status transition timed out after initiation")
 
 	ErrAppServiceCreationStatusTimeout = errors.New("app service creation status transition timed out after initiation")
 

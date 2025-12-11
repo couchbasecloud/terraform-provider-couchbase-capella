@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -37,40 +36,7 @@ func (a *AppServiceCidrs) Metadata(
 
 // Schema defines the schema for the App Service CIDRs data source.
 func (a *AppServiceCidrs) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		MarkdownDescription: "Retrieves the allowed CIDR blocks for a Capella App Service.",
-		Attributes: map[string]schema.Attribute{
-			"data": schema.ListNestedAttribute{
-				MarkdownDescription: "The list of allowed CIDR blocks for an App Service. ",
-				Computed:            true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"id": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The ID of the allowed CIDR block.",
-						},
-						"organization_id": computedStringAttribute,
-						"project_id":      computedStringAttribute,
-						"cluster_id":      computedStringAttribute,
-						"app_service_id":  computedStringAttribute,
-						"cidr": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The trusted CIDR block to allow the database connections from.",
-						},
-						"comment": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "A short description of the allowed CIDR block.",
-						},
-						"expires_at": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "An RFC3339 timestamp determining when the allowed CIDR block will expire. If this field is empty/omitted then the allowed CIDR block is permanent. It will never automatically expire.",
-						},
-						"audit": computedAuditAttribute,
-					},
-				},
-			},
-		},
-	}
+	resp.Schema = AppServicesCidrSchema()
 }
 
 // listAllowedCIDRs executes calls to the list app service allowed cidrs endpoint. It handles pagination and
