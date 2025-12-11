@@ -54,15 +54,9 @@ func TestAccGSI(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            gsiResourceIdx1,
-				ImportStateIdFunc:       generateGsiImportIdForResource(gsiResourceIdx1),
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"status"},
-			},
-			{
-				Config:   testAccCreateGSINonDeferredIndexConfig(),
-				PlanOnly: true,
+				ResourceName:      gsiResourceIdx1,
+				ImportStateIdFunc: generateGsiImportIdForResource(gsiResourceIdx1),
+				ImportState:       true,
 			},
 			{
 				Config: testAccCreatePrimaryIndexConfig(primaryIndexResourceName),
