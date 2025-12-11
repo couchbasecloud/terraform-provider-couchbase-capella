@@ -145,10 +145,10 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 
 			var w primaryIndexWith
 			if plan.With != nil {
-				if !plan.With.DeferBuild.IsNull() || !plan.With.DeferBuild.IsUnknown() {
+				if !plan.With.DeferBuild.IsNull() && !plan.With.DeferBuild.IsUnknown() {
 					w.DeferBuild = plan.With.DeferBuild.ValueBool()
 				}
-				if !plan.With.NumReplica.IsNull() || !plan.With.DeferBuild.IsUnknown() {
+				if !plan.With.NumReplica.IsNull() && !plan.With.NumReplica.IsUnknown() {
 					w.NumReplica = plan.With.NumReplica.ValueInt64()
 				}
 			}
@@ -312,6 +312,9 @@ refresh state.`,
 		}
 
 		state.Status = types.StringValue(index.Status)
+		if state.With == nil {
+			state.With = &providerschema.WithOptions{}
+		}
 		state.With.NumReplica = types.Int64Value(int64(index.NumReplica))
 	}
 
@@ -381,6 +384,9 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 	if !state.OrganizationId.IsNull() {
 		// when reading an index, update state and number of replicas.
 		state.Status = types.StringValue(index.Status)
+		if state.With == nil {
+			state.With = &providerschema.WithOptions{}
+		}
 		state.With.NumReplica = types.Int64Value(int64(index.NumReplica))
 
 	} else {
