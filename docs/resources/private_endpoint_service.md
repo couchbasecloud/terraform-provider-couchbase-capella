@@ -26,14 +26,16 @@ resource "couchbase-capella_private_endpoint_service" "new_service" {
 
 ### Required
 
-- `cluster_id` (String) The GUID4 ID of the cluster where the private endpoint service will be enabled. This enables secure access to the cluster through your Cloud Service Provider's private network. This field cannot be changed after the private endpoint service is created.
-- `enabled` (Boolean) Whether to enable or disable the private endpoint service for the cluster. When enabled, you can create private endpoints to connect your Cloud Service Provider's private network to the cluster. Note: Setting this to false during creation will result in an error as the service must be enabled to be managed.
-- `organization_id` (String) The GUID4 ID of the organization where the private endpoint service will be enabled. This field cannot be changed after the private endpoint service is created.
-- `project_id` (String) The GUID4 ID of the project containing the cluster where the private endpoint service will be enabled. This field cannot be changed after the private endpoint service is created.
+- `cluster_id` (String) The GUID4 ID of the cluster.
+- `enabled` (Boolean) - Returns true if private endpoint is enabled
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
 
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 terraform import couchbase-capella_private_endpoint_service.new_service \

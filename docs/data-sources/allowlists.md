@@ -25,13 +25,13 @@ data "couchbase-capella_allowlists" "existing_allowlists" {
 
 ### Required
 
-- `cluster_id` (String) The ID of the Capella cluster.
-- `organization_id` (String) The ID of the Capella organization.
-- `project_id` (String) The ID of the Capella project.
+- `cluster_id` (String) The GUID4 ID of the cluster.
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
 
 ### Read-Only
 
-- `data` (Attributes List) The list of allowlists. (see [below for nested schema](#nestedatt--data))
+- `data` (Attributes List) (see [below for nested schema](#nestedatt--data))
 
 <a id="nestedatt--data"></a>
 ### Nested Schema for `data`
@@ -39,21 +39,24 @@ data "couchbase-capella_allowlists" "existing_allowlists" {
 Read-Only:
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--data--audit))
-- `cidr` (String) The trusted CIDR to allow the database connections from.
-- `cluster_id` (String)
-- `comment` (String) The trusted CIDR to allow the database connections from.
-- `expires_at` (String) An RFC3339 timestamp determining when the allowed CIDR will expire.
-- `id` (String) The ID of the allowed CIDR.
-- `organization_id` (String)
-- `project_id` (String)
+- `cidr` (String)
+- `cluster_id` (String) The GUID4 ID of the cluster.
+- `comment` (String)
+- `expires_at` (String)
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
+- `organization_id` (String) The GUID4 ID of the organization.
+- `project_id` (String) The GUID4 ID of the project.
 
 <a id="nestedatt--data--audit"></a>
 ### Nested Schema for `data.audit`
 
 Read-Only:
 
-- `created_at` (String) The RFC3339 timestamp when the resource was created.
-- `created_by` (String) The user who created the resource.
-- `modified_at` (String) The RFC3339 timestamp when the resource was last modified.
-- `modified_by` (String) The user who last modified the resource.
-- `version` (Number) The version of the document. This value is incremented each time the resource is modified.
+- `created_at` (String) - The RFC3339 timestamp associated with when the resource was initially created.
+ - **Format**: Date-time in RFC3339 format
+- `created_by` (String) - The user who created the resource; this will be a UUID4 ID for standard users and will be a string such as "internal-support" for internal Couchbase support users.
+- `modified_at` (String) - The RFC3339 timestamp associated with when the resource was last modified.
+ - **Format**: Date-time in RFC3339 format
+- `modified_by` (String) - The user who last modified the resource; this will be a UUID4 ID for standard users and wilmal be a string such as "internal-support" for internal Couchbase support users.
+- `version` (Number) - The version of the document. This value is incremented each time the resource is modified.

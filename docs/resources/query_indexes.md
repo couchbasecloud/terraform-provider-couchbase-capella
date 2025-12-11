@@ -123,39 +123,41 @@ resource "couchbase-capella_query_indexes" "idx" {
 
 ### Required
 
-- `bucket_name` (String) The name of the bucket where the index will be created. Specifies the bucket part of the key space.
-- `cluster_id` (String) The GUID4 ID of the cluster where the index will be created.
+- `bucket_name` (String)
+- `cluster_id` (String) The GUID4 ID of the cluster.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
 ### Optional
 
-- `build_indexes` (Set of String) List of index names to build.
-- `collection_name` (String) Specifies the collection part of the key space. If unspecified, this will be the default collection.
-- `index_keys` (List of String) List of document fields to index.
+- `build_indexes` (Set of String)
+- `collection_name` (String) The name of the collection.
+- `index_keys` (List of String)
 - `index_name` (String) The name of the index.
-- `is_primary` (Boolean) Specifies whether this is a primary index.
-- `partition_by` (List of String) List of fields to partition the index by.
-- `scope_name` (String) The name of the scope where the index will be created. Specifies the scope part of the key space. If unspecified, this will be the default scope.
-- `where` (String) WHERE clause for the index.
-- `with` (Attributes) Additional index configuration options. (see [below for nested schema](#nestedatt--with))
+- `is_primary` (Boolean)
+- `partition_by` (List of String)
+- `scope_name` (String) The name of the scope.
+- `where` (String)
+- `with` (Attributes) (see [below for nested schema](#nestedatt--with))
 
 ### Read-Only
 
-- `status` (String) The current status of the index. For example 'Created', 'Ready', etc.
+- `status` (String)
 
 <a id="nestedatt--with"></a>
 ### Nested Schema for `with`
 
 Optional:
 
-- `defer_build` (Boolean) If true, the index will not be built immediately after creation.
-- `num_partition` (Number) Number of partitions for the index.
-- `num_replica` (Number) Number of index replicas to create.
+- `defer_build` (Boolean)
+- `num_partition` (Number)
+- `num_replica` (Number)
 
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 import couchbase-capella_query_indexes.idx1 index_name=idx1,collection_name=memory,scope_name=metrics,bucket_name=api,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000

@@ -36,40 +36,60 @@ resource "couchbase-capella_bucket" "new_bucket" {
 ### Required
 
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `name` (String) Name of the Capella bucket
-- `organization_id` (String) The GUID4 ID of the organization
+- `name` (String) - Name of the bucket. This field cannot be changed later. The name should adhere to the following rules: Characters used for the name should be in the ranges of A-Z, a-z, and 0-9; plus the underscore, period, dash, and percent characters. The name can be a maximum of 100 characters in length. The name cannot have 0 characters or empty. Minimum length of name is 1. The name cannot start with a `.` (period).
+ - **Constraints**: Maximum length: 100 characters
+- `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
 ### Optional
 
-- `bucket_conflict_resolution` (String) Conflict-resolution mechanism of the bucket.
-- `durability_level` (String) Durability level of the bucket.
-- `eviction_policy` (String) Eviction policy for the bucket.
-- `flush` (Boolean) Determines whether the flushing is enabled in the bucket.
-- `memory_allocation_in_mb` (Number) Bucket size allocation in MB.
-- `replicas` (Number) Number of replicas for the data.
-- `storage_backend` (String) The bucket storage engine type (Magma or Couchstore).
-- `time_to_live_in_seconds` (Number) Time-to-live (TTL) for items in the bucket, in seconds.
-- `type` (String) The bucket type (couchbase or ephemeral).
+- `bucket_conflict_resolution` (String) - The means by which conflicts are resolved during replication. This field may be referred to as "conflict resolution" in the Couchbase documentation, and `seqno` and `lww` may be referred to as "sequence number" and "timestamp" respectively. This field cannot be changed later. To learn more, see [Conflict Resolution](https://docs.couchbase.com/cloud/clusters/xdcr/xdcr.html#conflict-resolution).
+ - **Valid Values**: `seqno`, `lww`
+ - **Default**: `seqno`
+- `durability_level` (String) - This is the minimum level at which all writes to the bucket must occur. The options for Durability level are as follows, according to the bucket type. For a Couchbase bucket: None Replicate to Majority Majority and Persist to Active Persist to Majority For an Ephemeral bucket: None Replicate to Majority To learn more, see [Create a Bucket](https://docs.couchbase.com/cloud/clusters/data-service/manage-buckets.html#add-bucket).
+ - **Valid Values**: `none`, `majority`, `majorityAndPersistActive`, `persistToMajority`
+ - **Default**: `none`
+- `eviction_policy` (String) - The policy which Capella adopts to prevent data loss due to memory exhaustion. This may be also known as Ejection Policy in the Couchbase documentation. For Couchbase bucket, Eviction Policy is `fullEviction` by default. For Ephemeral buckets, Eviction Policy is a required field, and should be one of the following: noEviction nruEviction To learn more, see [Ejection Policy](https://docs.couchbase.com/server/current/rest-api/rest-bucket-create.html#evictionpolicy).
+ - **Valid Values**: `fullEviction`, `noEviction`, `nruEviction`
+ - **Default**: `fullEviction`
+- `flush` (Boolean) - Replaced by flushEnabled. This property is deprecated and will be removed in a future release. Determines whether flushing is enabled on the bucket. Enable Flush to delete all items in this bucket at the earliest opportunity. Disable Flush to avoid inadvertent data loss.
+ - **Default**: `false`
+ - **Deprecated**: This field is deprecated and will be removed in a future release.
+- `memory_allocation_in_mb` (Number) - The amount of memory to allocate for the bucket memory in MiB. This is the maximum limit is dependent on the allocation of the KV service. For example, 80% of the allocation. For Couchbase buckets, the default and minimum memory allocation changes according to the Storage Backend type as follows: For Couchstore, the default and minimum memory allocation is 100 MiB. For Magma, the default and minimum memory allocation is 1024 MiB with 1024 buckets for Couchbase server below 8.0. The default and minimum memory allocation is 100 MiB with 128 vbuckets for Couchbase server version 8.0 and above. For Ephemeral buckets, the default and minimum memory allocation is 100 MiB.
+- `replicas` (Number) - The number of replicas for the bucket. To learn more, see [Create a Bucket](https://docs.couchbase.com/cloud/clusters/data-service/manage-buckets.html#add-bucket).
+ - **Valid Values**: `1`, `2`, `3`
+ - **Default**: `1`
+- `storage_backend` (String) - The storage engine to be assigned to and used by the bucket. Ephemeral buckets do not support StorageBackend, hence not applicable for Ephemeral buckets and throws an error if this field is added. This field is only applicable for a Couchbase bucket. The default value before Couchbase Server 8.0 is `couchstore`. The default value for Couchbase Server 8.0 and above is `magma` with 128 vbuckets. This field cannot be changed later. To learn more, see [Storage Engines](https://docs.couchbase.com/cloud/clusters/data-service/storage-engines.html).
+ - **Valid Values**: `couchstore`, `magma`
+- `time_to_live_in_seconds` (Number) - Specify the time to live (TTL) value in seconds. This is the maximum time to live for items in the bucket. Default is 0, that means TTL is disabled. This is a non-negative value.
+ - **Default**: `0`
+- `type` (String) - Type of the bucket. If selected Ephemeral, it is not eligible for imports or App Endpoints creation. This field cannot be changed later. The options may also be referred to as Memory and Disk (Couchbase), Memory Only (Ephemeral) in the Couchbase documentation. To learn more, see [Create a Bucket](https://docs.couchbase.com/cloud/clusters/data-service/manage-buckets.html#add-bucket).
+ - **Valid Values**: `couchbase`, `ephemeral`
+ - **Default**: `couchbase`
+- `vbuckets` (Number) - This field only applies to Couchbase Server 8.0 and above for magma buckets. There are two options for the number of vBuckets: 128 and 1024. The number of vBuckets cannot be changed after the bucket is created.
+ - **Valid Values**: `128`, `1024`
+ - **Default**: `128`
 
 ### Read-Only
 
-- `id` (String) The ID of the bucket.
-- `stats` (Attributes) Bucket stats (see [below for nested schema](#nestedatt--stats))
+- `id` (String) - The ID of the bucket. This is the base64 encoding of the bucket name.
+- `stats` (Attributes) (see [below for nested schema](#nestedatt--stats))
 
 <a id="nestedatt--stats"></a>
 ### Nested Schema for `stats`
 
 Read-Only:
 
-- `disk_used_in_mib` (Number) Disk used in MiB.
-- `item_count` (Number) Bucket item count.
-- `memory_used_in_mib` (Number) Memory used in MiB.
-- `ops_per_second` (Number) The value for bucket operations per second.
+- `disk_used_in_mib` (Number)
+- `item_count` (Number)
+- `memory_used_in_mib` (Number)
+- `ops_per_second` (Number)
 
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 terraform import couchbase-capella_bucket.new_bucket id=<bucket_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>

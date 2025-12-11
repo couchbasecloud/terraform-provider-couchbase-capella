@@ -11,7 +11,6 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
@@ -35,34 +34,7 @@ func (o *Organization) Metadata(_ context.Context, req datasource.MetadataReques
 }
 
 func (o *Organization) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		MarkdownDescription: "The data source to retrieve information about a Capella organization.",
-		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the organization.",
-			},
-			"name": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "The name of the organization.",
-			},
-			"description": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "A description of the organization.",
-			},
-			"preferences": schema.SingleNestedAttribute{
-				Computed:            true,
-				MarkdownDescription: "Organization-wide preferences.",
-				Attributes: map[string]schema.Attribute{
-					"session_duration": schema.Int64Attribute{
-						Computed:            true,
-						MarkdownDescription: "The maximum allowed time (in seconds) a users can spend in the organization.",
-					},
-				},
-			},
-			"audit": computedAuditAttribute,
-		},
-	}
+	resp.Schema = OrganizationSchema()
 }
 
 func (o *Organization) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

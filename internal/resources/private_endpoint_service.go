@@ -7,17 +7,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
-	custommodifier "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources/custom_plan_modifiers"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
@@ -49,25 +45,7 @@ func (p *PrivateEndpointService) Metadata(_ context.Context, req resource.Metada
 
 // Schema defines the schema for a private endpoint service resource.
 func (p *PrivateEndpointService) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		MarkdownDescription: "This resource allows you to manage the private endpoint service for an operational cluster. The private endpoint service must be enabled before you can create private endpoints to connect your Cloud Service Provider's private network (VPC/VNET) to your operational cluster. This enables secure access to your cluster without exposing traffic to the public internet.",
-		Attributes: map[string]schema.Attribute{
-			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}),
-				"The GUID4 ID of the organization where the private endpoint service will be enabled. This field cannot be changed after the private endpoint service is created.",
-			),
-			"project_id": WithDescription(stringAttribute([]string{required, requiresReplace}),
-				"The GUID4 ID of the project containing the cluster where the private endpoint service will be enabled. This field cannot be changed after the private endpoint service is created.",
-			),
-			"cluster_id": WithDescription(stringAttribute([]string{required, requiresReplace}),
-				"The GUID4 ID of the cluster where the private endpoint service will be enabled. This enables secure access to the cluster through your Cloud Service Provider's private network. This field cannot be changed after the private endpoint service is created.",
-			),
-			"enabled": schema.BoolAttribute{
-				Required:            true,
-				MarkdownDescription: "Whether to enable or disable the private endpoint service for the cluster. When enabled, you can create private endpoints to connect your Cloud Service Provider's private network to the cluster. Note: Setting this to false during creation will result in an error as the service must be enabled to be managed.",
-				PlanModifiers:       []planmodifier.Bool{custommodifier.BlockCreateWhenEnabledSetToFalse()},
-			},
-		},
-	}
+	resp.Schema = PrivateEndpointServiceSchema()
 }
 
 // Create enables private endpoint service.

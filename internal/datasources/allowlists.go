@@ -10,7 +10,6 @@ import (
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -37,51 +36,7 @@ func (d *AllowLists) Metadata(_ context.Context, req datasource.MetadataRequest,
 
 // Schema defines the schema for the allowlist data source.
 func (d *AllowLists) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		MarkdownDescription: "Retrieves the allowlists details for a Capella cluster.",
-		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The ID of the Capella organization.",
-			},
-			"project_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The ID of the Capella project.",
-			},
-			"cluster_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The ID of the Capella cluster.",
-			},
-			"data": schema.ListNestedAttribute{
-				MarkdownDescription: "The list of allowlists.",
-				Computed:            true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"id": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The ID of the allowed CIDR.",
-						},
-						"organization_id": computedStringAttribute,
-						"project_id":      computedStringAttribute,
-						"cluster_id":      computedStringAttribute,
-						"cidr": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The trusted CIDR to allow the database connections from.",
-						},
-						"comment": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The trusted CIDR to allow the database connections from.",
-						},
-						"expires_at": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "An RFC3339 timestamp determining when the allowed CIDR will expire.",
-						},
-						"audit": computedAuditAttribute,
-					},
-				},
-			},
-		},
-	}
+	resp.Schema = AllowListsSchema()
 }
 
 // Read refreshes the Terraform state with the latest data of allowlists.

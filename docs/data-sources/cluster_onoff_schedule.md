@@ -31,29 +31,30 @@ data "couchbase-capella_cluster_onoff_schedule" "existing_cluster_onoff_schedule
 
 ### Read-Only
 
-- `days` (Attributes List) The list of days for the cluster on/off schedule. Each day should have a 'state', 'day', and 'from' and 'to' time. (see [below for nested schema](#nestedatt--days))
-- `timezone` (String) The standard timezone for the cluster. Should be the TZ identifier. For example, 'ET'.
+- `days` (Attributes List) (see [below for nested schema](#nestedatt--days))
+- `timezone` (String) - Timezone for the schedule
+ - **Valid Values**: `Pacific/Midway`, `US/Hawaii`, `US/Alaska`, `US/Pacific`, `US/Mountain`, `US/Central`, `US/Eastern`, `America/Puerto_Rico`, `Canada/Newfoundland`, `America/Argentina/Buenos_Aires`, `Atlantic/Cape_Verde`, `Europe/London`, `Europe/Amsterdam`, `Europe/Athens`, `Africa/Nairobi`, `Asia/Tehran`, `Indian/Mauritius`, `Asia/Karachi`, `Asia/Calcutta`, `Asia/Dhaka`, `Asia/Bangkok`, `Asia/Hong_Kong`, `Asia/Tokyo`, `Australia/North`, `Australia/Sydney`, `Pacific/Ponape`, `Antarctica/South_Pole`
 
 <a id="nestedatt--days"></a>
 ### Nested Schema for `days`
 
 Optional:
 
-- `from` (Attributes) The start time of the cluster on/off schedule. (see [below for nested schema](#nestedatt--days--from))
-- `to` (Attributes) The end time of the cluster on/off schedule. (see [below for nested schema](#nestedatt--days--to))
+- `from` (Attributes) Start date in  RFC3339 format. If not provided, events starting from last 24 hours are returned. (see [below for nested schema](#nestedatt--days--from))
+- `to` (Attributes) End datetime in the last 24 hours, RFC3339 format. Defaults to Now. (see [below for nested schema](#nestedatt--days--to))
 
 Read-Only:
 
-- `day` (String) The day of the week for the cluster on/off schedule. One of the following: 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', or 'saturday'.
-- `state` (String) The state of the cluster on/off schedule. The states are 'on' or 'off'.
+- `day` (String)
+- `state` (String)
 
 <a id="nestedatt--days--from"></a>
 ### Nested Schema for `days.from`
 
 Read-Only:
 
-- `hour` (Number) Specifies the hour of the day for the cluster on/off schedule, ranging from 0 to 23.
-- `minute` (Number) Specifies the minute of the hour for the cluster on/off schedule, ranging from 0 to 59.
+- `hour` (Number)
+- `minute` (Number)
 
 
 <a id="nestedatt--days--to"></a>
@@ -61,5 +62,5 @@ Read-Only:
 
 Read-Only:
 
-- `hour` (Number) Specifies the hour of the day for the cluster on/off schedule, ranging from 0 to 23.
-- `minute` (Number) Specifies the minute of the hour for the cluster on/off schedule, ranging from 0 to 59.
+- `hour` (Number)
+- `minute` (Number)

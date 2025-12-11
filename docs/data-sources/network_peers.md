@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_network_peers Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  The data source to retrieve network peering records for a Capella cluster.
+  The network peers data source retrieves all network peers that have been created for a specific cluster.
 ---
 
 # couchbase-capella_network_peers (Data Source)
 
-The data source to retrieve network peering records for a Capella cluster.
+The network peers data source retrieves all network peers that have been created for a specific cluster.
 
 ## Example Usage
 
@@ -31,7 +31,7 @@ data "couchbase-capella_network_peers" "existing_network_peers" {
 
 ### Read-Only
 
-- `data` (Attributes List) Lists the network peering records. (see [below for nested schema](#nestedatt--data))
+- `data` (Attributes List) (see [below for nested schema](#nestedatt--data))
 
 <a id="nestedatt--data"></a>
 ### Nested Schema for `data`
@@ -39,67 +39,59 @@ data "couchbase-capella_network_peers" "existing_network_peers" {
 Read-Only:
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--data--audit))
-- `id` (String) The unique identifier for the VPC peering record.
-- `name` (String) The name of the network peering relationship.
-- `provider_config` (Attributes) The Cloud Service Provider-specific configuration for the network peering. This provides details about the configuration and the ID of the VPC peer on AWS, GCP, or Azure. (see [below for nested schema](#nestedatt--data--provider_config))
-- `status` (Attributes) Current status of the network peering connection. (see [below for nested schema](#nestedatt--data--status))
+- `commands` (Attributes) (see [below for nested schema](#nestedatt--data--commands))
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
+- `name` (String) - The name of the bucket.
+- `provider_config` (String)
+- `provider_type` (String) Type of provider to filter on. By default all providers are returned.
+- `status` (Attributes) (see [below for nested schema](#nestedatt--data--status))
 
 <a id="nestedatt--data--audit"></a>
 ### Nested Schema for `data.audit`
 
 Read-Only:
 
-- `created_at` (String) The RFC3339 timestamp when the resource was created.
-- `created_by` (String) The user who created the resource.
-- `modified_at` (String) The RFC3339 timestamp when the resource was last modified.
-- `modified_by` (String) The user who last modified the resource.
-- `version` (Number) The version of the document. This value is incremented each time the resource is modified.
+- `created_at` (String) - The RFC3339 timestamp associated with when the resource was initially created.
+ - **Format**: Date-time in RFC3339 format
+- `created_by` (String) - The user who created the resource; this will be a UUID4 ID for standard users and will be a string such as "internal-support" for internal Couchbase support users.
+- `modified_at` (String) - The RFC3339 timestamp associated with when the resource was last modified.
+ - **Format**: Date-time in RFC3339 format
+- `modified_by` (String) - The user who last modified the resource; this will be a UUID4 ID for standard users and wilmal be a string such as "internal-support" for internal Couchbase support users.
+- `version` (Number) - The version of the document. This value is incremented each time the resource is modified.
 
 
-<a id="nestedatt--data--provider_config"></a>
-### Nested Schema for `data.provider_config`
-
-Read-Only:
-
-- `aws_config` (Attributes) AWS configuration data required to establish a VPC peering relationship. (see [below for nested schema](#nestedatt--data--provider_config--aws_config))
-- `azure_config` (Attributes) Azure configuration data required to establish a VNet peering relationship. (see [below for nested schema](#nestedatt--data--provider_config--azure_config))
-- `gcp_config` (Attributes) GCP configuration data required to establish a VPC peering relationship. (see [below for nested schema](#nestedatt--data--provider_config--gcp_config))
-
-<a id="nestedatt--data--provider_config--aws_config"></a>
-### Nested Schema for `data.provider_config.aws_config`
+<a id="nestedatt--data--commands"></a>
+### Nested Schema for `data.commands`
 
 Read-Only:
 
-- `account_id` (String) The numeric AWS Account ID or Owner ID.
-- `cidr` (String) The AWS VPC CIDR block of network in which your application runs. This cannot overlap with your Capella CIDR Block.
-- `provider_id` (String) The ID of the VPC peer on AWS.
-- `region` (String) The AWS region where your VPC is deployed
-- `vpc_id` (String) The alphanumeric VPC ID which starts with 'vpc-'. This is also known as the networkId.
+- `aws` (Attributes) (see [below for nested schema](#nestedatt--data--commands--aws))
+- `azure` (Attributes) (see [below for nested schema](#nestedatt--data--commands--azure))
+- `gcp` (Attributes) (see [below for nested schema](#nestedatt--data--commands--gcp))
 
-
-<a id="nestedatt--data--provider_config--azure_config"></a>
-### Nested Schema for `data.provider_config.azure_config`
+<a id="nestedatt--data--commands--aws"></a>
+### Nested Schema for `data.commands.aws`
 
 Read-Only:
 
-- `cidr` (String) The CIDR block from the virtual network that you created in Azure.
-- `provider_id` (String) The ID of the VNet peer on Azure.
-- `resource_group` (String) The resource group name holding the resource you’re connecting with Capella.
-- `subscription_id` (String) The Azure subscription ID where the VNet exists. For more information, see [Find Your Azure Subscription](https://learn.microsoft.com/en-us/azure/azure-portal/get-subscription-tenant-id#find-your-azure-subscription)
-- `tenant_id` (String) The Azure tenant ID where the VNet exists. For more information, see [How to Find Tenant](https://learn.microsoft.com/en-us/entra/fundamentals/how-to-find-tenant)
-- `vnet_id` (String) The VNet ID is the name of the virtual network peering in Azure.
+- `command` (String)
 
 
-<a id="nestedatt--data--provider_config--gcp_config"></a>
-### Nested Schema for `data.provider_config.gcp_config`
+<a id="nestedatt--data--commands--azure"></a>
+### Nested Schema for `data.commands.azure`
 
 Read-Only:
 
-- `cidr` (String) The GCP VPC CIDR block of network in which your application runs. This cannot overlap with your Capella CIDR Block.
-- `network_name` (String) The name of the network that you want to peer with.
-- `project_id` (String) The unique identifier for your GCP project.
-- `provider_id` (String) The ID of the VPC peer on GCP.
-- `service_account` (String) The Service Account created or assigned on the external VPC project. The GCP Service Account should have the following permission:DNS Admin and Network Admin. It must be in the form of an email address, as shown by the output of the gcloud iam service-accounts list command. [Reference](https://cloud.google.com/iam/docs/service-accounts-create#creating)
+- `command` (String)
+
+
+<a id="nestedatt--data--commands--gcp"></a>
+### Nested Schema for `data.commands.gcp`
+
+Read-Only:
+
+- `command` (String)
 
 
 
@@ -108,5 +100,5 @@ Read-Only:
 
 Read-Only:
 
-- `reasoning` (String) Detailed reason for the current status of the peering connection.
-- `state` (String) Current state of the peering connection.
+- `reasoning` (String)
+- `state` (String)

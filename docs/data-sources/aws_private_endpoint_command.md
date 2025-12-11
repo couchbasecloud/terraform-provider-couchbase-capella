@@ -30,9 +30,9 @@ data "couchbase-capella_aws_private_endpoint_command" "aws_command" {
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
-- `subnet_ids` (Set of String) List of subnet IDs in your VPC where the private endpoint interface will be created. These subnets must be in the same VPC.
-- `vpc_id` (String) The ID of your AWS VPC where the private endpoint will be created.
+- `subnet_ids` (Set of String)
+- `vpc_id` (String)
 
 ### Read-Only
 
-- `command` (String) The generated AWS CLI command. Use this command to create the private endpoint connection within AWS.
+- `command` (String)

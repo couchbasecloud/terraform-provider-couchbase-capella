@@ -28,36 +28,41 @@ resource "couchbase-capella_free_tier_app_service" "new_free_tier_app_service" {
 ### Required
 
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `name` (String) Name of the free tier App Service.
+- `name` (String) - Name of App Service.
+ - **Constraints**: Maximum length: 256 characters
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
 ### Optional
 
-- `description` (String) Description of the free tier App Service.
+- `description` (String) - A short description of the App Service.
+ - **Constraints**: Maximum length: 256 characters
 
 ### Read-Only
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
-- `cloud_provider` (String) The Cloud Service Provider of the free tier App Service. The supported Cloud Service Providers are AWS, GCP, and Azure.
-- `compute` (Attributes) Compute configuration of the free tier App Service. (see [below for nested schema](#nestedatt--compute))
-- `current_state` (String) Current state of the free tier App Service.
-- `etag` (String) ETag of the free tier App Service.
-- `id` (String) ID of the free tier App Service.
-- `nodes` (Number) Number of nodes in the free tier App Service.
-- `plan` (String) The Support plan associated with the free tier App Service. The Support plan options are 'Basic', 'Developer Pro', or 'Enterprise'.
-- `version` (String) The Server version of the free tier App Service.
+- `cloud_provider` (String)
+- `compute` (Attributes) (see [below for nested schema](#nestedatt--compute))
+- `current_state` (String)
+- `etag` (String) Entity tag for the resource, used for caching and conditional requests.
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
+- `nodes` (Number)
+- `plan` (String)
+- `version` (String)
 
 <a id="nestedatt--audit"></a>
 ### Nested Schema for `audit`
 
 Read-Only:
 
-- `created_at` (String) The RFC3339 timestamp when the resource was created.
-- `created_by` (String) The user who created the resource.
-- `modified_at` (String) The RFC3339 timestamp when the resource was last modified.
-- `modified_by` (String) The user who last modified the resource.
-- `version` (Number) The version of the document. This value is incremented each time the resource is modified.
+- `created_at` (String) - The RFC3339 timestamp associated with when the resource was initially created.
+ - **Format**: Date-time in RFC3339 format
+- `created_by` (String) - The user who created the resource; this will be a UUID4 ID for standard users and will be a string such as "internal-support" for internal Couchbase support users.
+- `modified_at` (String) - The RFC3339 timestamp associated with when the resource was last modified.
+ - **Format**: Date-time in RFC3339 format
+- `modified_by` (String) - The user who last modified the resource; this will be a UUID4 ID for standard users and wilmal be a string such as "internal-support" for internal Couchbase support users.
+- `version` (Number) - The version of the document. This value is incremented each time the resource is modified.
 
 
 <a id="nestedatt--compute"></a>
@@ -65,12 +70,14 @@ Read-Only:
 
 Read-Only:
 
-- `cpu` (Number) The number of CPUs of the free tier App Service node.
-- `ram` (Number) The amount of RAM of the free tier App Service node.
+- `cpu` (Number)
+- `ram` (Number)
 
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 terraform import <resource_name> id=<resource_id>,organization_id=<organization_id>,project_id=<project_id>,cluster_id=<cluster_id>

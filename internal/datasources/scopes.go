@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -38,55 +37,7 @@ func (s *Scopes) Metadata(_ context.Context, req datasource.MetadataRequest, res
 
 // Schema defines the schema for the scope data source.
 func (s *Scopes) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		MarkdownDescription: "The scopes data source retrieves the scopes in a bucket.",
-		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the organization.",
-			},
-			"project_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the project.",
-			},
-			"cluster_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the cluster.",
-			},
-			"bucket_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The ID of the bucket. It is the URL-compatible base64 encoding of the bucket name.",
-			},
-			"scopes": schema.ListNestedAttribute{
-				Computed:            true,
-				MarkdownDescription: "The list of scopes in the bucket.",
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"scope_name": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The name of the scope.",
-						},
-						"collections": schema.SetNestedAttribute{
-							Computed:            true,
-							MarkdownDescription: "The list of collections in the scope.",
-							NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"max_ttl": schema.Int64Attribute{
-										Computed:            true,
-										MarkdownDescription: "The maximum time-to-live (TTL) for documents in the collection, in seconds.",
-									},
-									"name": schema.StringAttribute{
-										Computed:            true,
-										MarkdownDescription: "The name of the collection.",
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
+	resp.Schema = ScopesSchema()
 }
 
 // Read refreshes the Terraform state with the latest data of scopes.

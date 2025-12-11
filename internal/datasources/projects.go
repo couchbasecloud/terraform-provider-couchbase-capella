@@ -9,7 +9,6 @@ import (
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -36,47 +35,7 @@ func (d *Projects) Metadata(_ context.Context, req datasource.MetadataRequest, r
 
 // Schema defines the schema for the project data source.
 func (d *Projects) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		MarkdownDescription: "Data source to retrieve project details in an organization.",
-		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The GUID4 ID of the organization.",
-			},
-			"data": schema.ListNestedAttribute{
-				Computed: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"id": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The GUID4 ID of the project.",
-						},
-						"organization_id": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The GUID4 ID of the organization.",
-						},
-						"name": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The name of the project.",
-						},
-						"description": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The description of a particular project.",
-						},
-						"audit": computedAuditAttribute,
-						"if_match": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "A precondition header that specifies the entity tag of a resource.",
-						},
-						"etag": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "The ETag header value returned by the server, used for optimistic concurrency control.",
-						},
-					},
-				},
-			},
-		},
-	}
+	resp.Schema = ProjectsSchema()
 }
 
 // Read refreshes the Terraform state with the latest data of projects.

@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_private_endpoint_service Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  The data source to retrieve the status of the private endpoint service for an operational cluster. Private endpoint service enables secure connectivity between your Cloud Service Provider's private network (VPC/VNET) and your operational cluster.
+  The data source to retrieve private endpoint service information for a cluster.
 ---
 
 # couchbase-capella_private_endpoint_service (Data Source)
 
-The data source to retrieve the status of the private endpoint service for an operational cluster. Private endpoint service enables secure connectivity between your Cloud Service Provider's private network (VPC/VNET) and your operational cluster.
+The data source to retrieve private endpoint service information for a cluster.
 
 ## Example Usage
 
@@ -25,10 +25,10 @@ data "couchbase-capella_private_endpoint_service" "service_status" {
 
 ### Required
 
-- `cluster_id` (String) The GUID4 ID of the cluster to retrieve private endpoint service status from. Private endpoint service enables secure access to this cluster through your cloud provider's private network.
+- `cluster_id` (String) The GUID4 ID of the cluster.
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
 ### Read-Only
 
-- `enabled` (Boolean) Whether the private endpoint service is enabled for the cluster. When enabled, you can create private endpoints to connect your cloud provider's private network to the cluster.
+- `enabled` (Boolean) - Returns true if private endpoint is enabled

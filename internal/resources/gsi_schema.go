@@ -4,14 +4,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources/custom_plan_modifiers"
 )
+
+var gsiBuilder = capellaschema.NewSchemaBuilder("gsi", "indexDDLRequest")
 
 func GsiSchema() schema.Schema {
 	defaultObject, _ := types.ObjectValue(
@@ -26,66 +29,45 @@ func GsiSchema() schema.Schema {
 			"num_partition": types.Int64Null(),
 		})
 
+	attrs := make(map[string]schema.Attribute)
+
+	capellaschema.AddAttr(attrs, "organization_id", gsiBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "project_id", gsiBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "cluster_id", gsiBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "bucket_name", gsiBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "scope_name", gsiBuilder, stringDefaultAttribute("_default", optional, computed, useStateForUnknown, requiresReplace))
+	capellaschema.AddAttr(attrs, "collection_name", gsiBuilder, stringDefaultAttribute("_default", optional, computed, useStateForUnknown, requiresReplace))
+	capellaschema.AddAttr(attrs, "index_name", gsiBuilder, stringAttribute([]string{optional, requiresReplace}))
+	capellaschema.AddAttr(attrs, "is_primary", gsiBuilder, boolAttribute(optional))
+	capellaschema.AddAttr(attrs, "index_keys", gsiBuilder, stringListAttribute(optional, requiresReplace))
+	capellaschema.AddAttr(attrs, "where", gsiBuilder, stringAttribute([]string{optional, requiresReplace}))
+	capellaschema.AddAttr(attrs, "status", gsiBuilder, stringAttribute([]string{computed, useStateForUnknown}))
+	capellaschema.AddAttr(attrs, "partition_by", gsiBuilder, stringListAttribute(optional, requiresReplace))
+	capellaschema.AddAttr(attrs, "build_indexes", gsiBuilder, stringSetAttribute(optional))
+
+	withAttrs := make(map[string]schema.Attribute)
+	withAttrs["defer_build"] = &schema.BoolAttribute{
+		Optional:      true,
+		PlanModifiers: []planmodifier.Bool{custom_plan_modifiers.ImmutableBoolAttribute()},
+	}
+	capellaschema.AddAttr(withAttrs, "num_replica", gsiBuilder, int64Attribute(optional, computed, useStateForUnknown))
+	withAttrs["num_partition"] = &schema.Int64Attribute{
+		Optional: true,
+		Validators: []validator.Int64{
+			int64validator.AtLeast(1),
+		},
+		PlanModifiers: []planmodifier.Int64{custom_plan_modifiers.ImmutableInt64Attribute()},
+	}
+
+	capellaschema.AddAttr(attrs, "with", gsiBuilder, &schema.SingleNestedAttribute{
+		Optional:   true,
+		Computed:   true,
+		Default:    objectdefault.StaticValue(defaultObject),
+		Attributes: withAttrs,
+	})
+
 	return schema.Schema{
 		MarkdownDescription: "This resource allows you to manage Query Indexes in Couchbase Capella.",
-		Attributes: map[string]schema.Attribute{
-			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}),
-				"The GUID4 ID of the organization."),
-			"project_id": WithDescription(stringAttribute([]string{required, requiresReplace}),
-				"The GUID4 ID of the project."),
-			"cluster_id": WithDescription(stringAttribute([]string{required, requiresReplace}),
-				"The GUID4 ID of the cluster where the index will be created."),
-			"bucket_name": WithDescription(stringAttribute([]string{required, requiresReplace}),
-				"The name of the bucket where the index will be created. Specifies the bucket part of the key space."),
-			"scope_name": WithDescription(stringDefaultAttribute(
-				"_default", optional, computed, useStateForUnknown, requiresReplace,
-			), "The name of the scope where the index will be created. Specifies the scope part of the key space. If unspecified, this will be the default scope."),
-			"collection_name": WithDescription(stringDefaultAttribute(
-				"_default", optional, computed, useStateForUnknown, requiresReplace,
-			), "Specifies the collection part of the key space. If unspecified, this will be the default collection."),
-			"index_name": WithDescription(stringAttribute([]string{optional, requiresReplace}),
-				"The name of the index."),
-			"is_primary": WithDescription(boolAttribute(optional),
-				"Specifies whether this is a primary index."),
-			"index_keys": WithDescription(stringListAttribute(optional, requiresReplace),
-				"List of document fields to index."),
-			"where": WithDescription(stringAttribute([]string{optional, requiresReplace}),
-				"WHERE clause for the index."),
-			"status": WithDescription(stringAttribute([]string{computed, useStateForUnknown}),
-				"The current status of the index. For example 'Created', 'Ready', etc."),
-			"partition_by": WithDescription(stringListAttribute(optional, requiresReplace),
-				"List of fields to partition the index by."),
-			"with": schema.SingleNestedAttribute{
-				Optional:            true,
-				Computed:            true,
-				Default:             objectdefault.StaticValue(defaultObject),
-				MarkdownDescription: "Additional index configuration options.",
-				Attributes: map[string]schema.Attribute{
-					"defer_build": schema.BoolAttribute{
-						Optional:            true,
-						MarkdownDescription: "If true, the index will not be built immediately after creation.",
-						PlanModifiers:       []planmodifier.Bool{custom_plan_modifiers.ImmutableBoolAttribute()},
-					},
-					"num_replica": schema.Int64Attribute{
-						Optional:            true,
-						Computed:            true,
-						MarkdownDescription: "Number of index replicas to create.",
-						PlanModifiers: []planmodifier.Int64{
-							int64planmodifier.UseStateForUnknown(),
-						},
-					},
-					"num_partition": schema.Int64Attribute{
-						Optional:            true,
-						MarkdownDescription: "Number of partitions for the index.",
-						Validators: []validator.Int64{
-							int64validator.AtLeast(1),
-						},
-						PlanModifiers: []planmodifier.Int64{custom_plan_modifiers.ImmutableInt64Attribute()},
-					},
-				},
-			},
-			"build_indexes": WithDescription(stringSetAttribute(optional),
-				"List of index names to build."),
-		},
+		Attributes:          attrs,
 	}
 }

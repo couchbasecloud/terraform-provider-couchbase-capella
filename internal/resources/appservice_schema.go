@@ -4,39 +4,45 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+
+	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
+var appServiceBuilder = capellaschema.NewSchemaBuilder("appService", "appServicer")
+
 func AppServiceSchema() schema.Schema {
+	attrs := make(map[string]schema.Attribute)
+
+	capellaschema.AddAttr(attrs, "id", appServiceBuilder, &schema.StringAttribute{
+		Computed: true,
+		PlanModifiers: []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		},
+	})
+	capellaschema.AddAttr(attrs, "organization_id", appServiceBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "project_id", appServiceBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "cluster_id", appServiceBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "name", appServiceBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "description", appServiceBuilder, stringDefaultAttribute("", optional, computed, requiresReplace))
+	capellaschema.AddAttr(attrs, "nodes", appServiceBuilder, int64Attribute(optional, computed))
+	capellaschema.AddAttr(attrs, "cloud_provider", appServiceBuilder, stringAttribute([]string{optional, computed}))
+	capellaschema.AddAttr(attrs, "current_state", appServiceBuilder, stringAttribute([]string{computed}))
+	capellaschema.AddAttr(attrs, "version", appServiceBuilder, stringAttribute([]string{computed}))
+	capellaschema.AddAttr(attrs, "audit", appServiceBuilder, computedAuditAttribute())
+	capellaschema.AddAttr(attrs, "if_match", appServiceBuilder, stringAttribute([]string{optional}))
+	capellaschema.AddAttr(attrs, "etag", appServiceBuilder, stringAttribute([]string{computed}))
+
+	computeAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(computeAttrs, "cpu", appServiceBuilder, int64Attribute(required))
+	capellaschema.AddAttr(computeAttrs, "ram", appServiceBuilder, int64Attribute(required))
+
+	capellaschema.AddAttr(attrs, "compute", appServiceBuilder, &schema.SingleNestedAttribute{
+		Required:   true,
+		Attributes: computeAttrs,
+	})
+
 	return schema.Schema{
 		MarkdownDescription: "This resource allows you to create and manage an App Service in Capella. App Service is a fully managed application backend designed to provide data synchronization between mobile or IoT applications running Couchbase Lite and your Couchbase Capella database.",
-		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-				MarkdownDescription: "The ID of the App Service created.",
-			},
-			"organization_id": WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the organization."),
-			"project_id":      WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the project."),
-			"cluster_id":      WithDescription(stringAttribute([]string{required, requiresReplace}), "The GUID4 ID of the cluster."),
-			"name":            WithDescription(stringAttribute([]string{required, requiresReplace}), "Name of the cluster (up to 256 characters)."),
-			"description":     WithDescription(stringDefaultAttribute("", optional, computed, requiresReplace), "A short description of the App Service."),
-			"nodes":           WithDescription(int64Attribute(optional, computed), "Number of nodes configured for the App Service. Number of nodes configured for the App Service. The number of nodes can range from 2 to 12."),
-			"cloud_provider":  WithDescription(stringAttribute([]string{optional, computed}), "The Cloud Service Provider for the App Service."),
-			"current_state":   WithDescription(stringAttribute([]string{computed}), "The current state of the App Service."),
-			"version":         WithDescription(stringAttribute([]string{computed}), "The version of the App Service server. If left empty, it will be defaulted to the latest available version."),
-			"compute": schema.SingleNestedAttribute{
-				Required:            true,
-				MarkdownDescription: "The CPU and RAM configuration of the App Service.",
-				Attributes: map[string]schema.Attribute{
-					"cpu": WithDescription(int64Attribute(required), "CPU units (cores)."),
-					"ram": WithDescription(int64Attribute(required), "RAM units (GB)."),
-				},
-			},
-			"audit":    computedAuditAttribute(),
-			"if_match": WithDescription(stringAttribute([]string{optional}), "A precondition header that specifies the entity tag of a resource."),
-			"etag":     stringAttribute([]string{computed}),
-		},
+		Attributes:          attrs,
 	}
 }
