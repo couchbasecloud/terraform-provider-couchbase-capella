@@ -216,13 +216,13 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 				}
 
 				var w secondaryIndexWith
-				if !plan.With.DeferBuild.IsNull() {
+				if !plan.With.DeferBuild.IsNull() && !plan.With.DeferBuild.IsUnknown() {
 					w.DeferBuild = plan.With.DeferBuild.ValueBool()
 				}
-				if !plan.With.NumReplica.IsNull() {
+				if !plan.With.NumReplica.IsNull() && !plan.With.NumReplica.IsUnknown() {
 					w.NumReplica = plan.With.NumReplica.ValueInt64()
 				}
-				if !plan.With.NumPartition.IsNull() {
+				if !plan.With.NumPartition.IsNull() && !plan.With.NumPartition.IsUnknown() {
 					w.NumPartition = plan.With.NumPartition.ValueInt64()
 				}
 
@@ -410,8 +410,9 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 		if newDiags.HasError() {
 			resp.Diagnostics.AddError(
 				"Error converting index keys to set type",
-				"Could not convert index keys to set type for index "+state.IndexName.ValueString()+": "+err.Error(),
+				"Could not convert index keys to set type for index "+state.IndexName.ValueString(),
 			)
+			resp.Diagnostics.Append(newDiags...)
 			return
 		}
 
