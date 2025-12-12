@@ -6,6 +6,8 @@ cluster_id      = "<cluster_id>"
 
 // Minimum retention is 24 hours and maximum is 720 hours.
 // Retention must be an integer.
+// Do not set restore_times and cross_region_restore_preference until the snapshot backup has been created, 
+// as you cannot restore a snapshot backup before it is created.
 cloud_snapshot_backup = {
     retention = "<retention>"
     regions_to_copy = ["<region_1>", "<region_2>"]
