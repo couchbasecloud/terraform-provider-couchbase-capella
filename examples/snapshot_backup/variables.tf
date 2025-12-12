@@ -39,6 +39,11 @@ variable "cloud_snapshot_backup" {
   }
 
   validation {
+    condition = var.cloud_snapshot_backup.regions_to_copy == null || length(var.cloud_snapshot_backup.regions_to_copy) <= 2
+    error_message = "You can only specify up to 2 regions_to_copy."
+  }
+
+  validation {
     condition = var.cloud_snapshot_backup.restore_times == null || var.cloud_snapshot_backup.restore_times == floor(var.cloud_snapshot_backup.restore_times)
     error_message = "Restore times must be an integer."
   }
