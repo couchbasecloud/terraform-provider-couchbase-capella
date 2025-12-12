@@ -357,12 +357,9 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 		state.Status = types.StringValue(index.Status)
 		if state.With == nil {
 			state.With = &providerschema.WithOptions{}
-			state.With.NumReplica = types.Int64Value(int64(index.NumReplica))
-			state.With.NumPartition = types.Int64Value(int64(index.NumPartition))
-		} else {
-			state.With.NumReplica = types.Int64Value(int64(index.NumReplica))
-			state.With.NumPartition = types.Int64Value(int64(index.NumPartition))
 		}
+		state.With.NumReplica = types.Int64Value(int64(index.NumReplica))
+
 	} else {
 		// when importing index, set all attributes.
 		state.OrganizationId = types.StringValue(organizationID)
