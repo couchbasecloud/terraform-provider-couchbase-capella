@@ -419,10 +419,9 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 		state.IndexKeys = keyList
 		// TODO:  set partition by.
 		state.Where = types.StringValue(index.Where)
-		if state.With != nil {
-			state.With.NumReplica = types.Int64Value(int64(index.NumReplica))
-			state.With.NumPartition = types.Int64Value(int64(index.NumPartition))
-		}
+		state.With = &providerschema.WithOptions{}
+		state.With.NumReplica = types.Int64Value(int64(index.NumReplica))
+		state.With.NumPartition = types.Int64Value(int64(index.NumPartition))
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
