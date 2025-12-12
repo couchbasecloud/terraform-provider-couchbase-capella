@@ -138,15 +138,41 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 			} else {
 				indexName = "#primary"
 			}
+			type primaryIndexWith struct {
+				DeferBuild bool  `json:"defer_build,omitempty"`
+				NumReplica int64 `json:"num_replica,omitempty"`
+			}
+
+			var w primaryIndexWith
+			if plan.With != nil {
+				if !plan.With.DeferBuild.IsNull() && !plan.With.DeferBuild.IsUnknown() {
+					w.DeferBuild = plan.With.DeferBuild.ValueBool()
+				}
+				if !plan.With.NumReplica.IsNull() && !plan.With.NumReplica.IsUnknown() {
+					w.NumReplica = plan.With.NumReplica.ValueInt64()
+				}
+			}
+
+			withJSON, err := json.Marshal(w)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					"Could not marshal with clause",
+					"Unable to marshal with clause.  Error: "+err.Error(),
+				)
+				return
+			}
+
 			ddl = fmt.Sprintf(
-				"CREATE PRIMARY INDEX `%s` ON `%s`.`%s`.`%s`  WITH { \"defer_build\": %t,  \"num_replica\": %d }",
+				"CREATE PRIMARY INDEX `%s` ON `%s`.`%s`.`%s`",
 				indexName,
 				plan.BucketName.ValueString(),
 				plan.ScopeName.ValueString(),
 				plan.CollectionName.ValueString(),
-				plan.With.DeferBuild.ValueBool(),
-				plan.With.NumReplica.ValueInt64(),
 			)
+
+			if string(withJSON) != "{}" {
+				ddl = ddl + " WITH " + string(withJSON)
+			}
 
 		} else {
 			// create secondary index statement.
@@ -183,34 +209,34 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 			}
 
 			if plan.With != nil {
-				type with struct {
-					Defer_build   bool  `json:"defer_build,omitempty"`
-					Num_replica   int64 `json:"num_replica,omitempty"`
-					Num_partition int64 `json:"num_partition,omitempty"`
+				type secondaryIndexWith struct {
+					DeferBuild   bool  `json:"defer_build,omitempty"`
+					NumReplica   int64 `json:"num_replica,omitempty"`
+					NumPartition int64 `json:"num_partition,omitempty"`
 				}
 
-				var w with
+				var w secondaryIndexWith
+				if !plan.With.DeferBuild.IsNull() && !plan.With.DeferBuild.IsUnknown() {
+					w.DeferBuild = plan.With.DeferBuild.ValueBool()
+				}
+				if !plan.With.NumReplica.IsNull() && !plan.With.NumReplica.IsUnknown() {
+					w.NumReplica = plan.With.NumReplica.ValueInt64()
+				}
+				if !plan.With.NumPartition.IsNull() && !plan.With.NumPartition.IsUnknown() {
+					w.NumPartition = plan.With.NumPartition.ValueInt64()
+				}
 
-				if !plan.With.DeferBuild.IsNull() {
-					w.Defer_build = plan.With.DeferBuild.ValueBool()
-				}
-				if !plan.With.NumReplica.IsNull() {
-					w.Num_replica = plan.With.NumReplica.ValueInt64()
-				}
-				if !plan.With.NumPartition.IsNull() {
-					w.Num_partition = plan.With.NumPartition.ValueInt64()
-				}
-
-				b, err := json.Marshal(w)
+				withJSON, err := json.Marshal(w)
 				if err != nil {
 					resp.Diagnostics.AddError(
 						"Could not marshal with clause",
 						"Unable to marshal with clause.  Error: "+err.Error(),
 					)
+					return
 				}
 
-				if string(b) != "{}" {
-					ddl = ddl + " WITH " + string(b)
+				if string(withJSON) != "{}" {
+					ddl = ddl + " WITH " + string(withJSON)
 				}
 			}
 		}
@@ -286,6 +312,9 @@ refresh state.`,
 		}
 
 		state.Status = types.StringValue(index.Status)
+		if state.With == nil {
+			state.With = &providerschema.WithOptions{}
+		}
 		state.With.NumReplica = types.Int64Value(int64(index.NumReplica))
 	}
 
@@ -381,8 +410,9 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 		if newDiags.HasError() {
 			resp.Diagnostics.AddError(
 				"Error converting index keys to set type",
-				"Could not convert index keys to set type for index "+state.IndexName.ValueString()+": "+err.Error(),
+				"Could not convert index keys to set type for index "+state.IndexName.ValueString(),
 			)
+			resp.Diagnostics.Append(newDiags...)
 			return
 		}
 
@@ -409,13 +439,41 @@ func (g *GSI) Update(ctx context.Context, req resource.UpdateRequest, resp *reso
 		return
 	}
 
+	// Update only supports changing num_replica. Validate it's provided.
+	if plan.With == nil || plan.With.NumReplica.IsNull() || plan.With.NumReplica.IsUnknown() {
+		resp.Diagnostics.AddError(
+			"Missing Required Attribute",
+			"num_replica must be specified for index updates. The update operation only supports changing the number of replicas.",
+		)
+		return
+	}
+
+	type updateIndexWith struct {
+		Action     string `json:"action"`
+		NumReplica int64  `json:"num_replica,omitempty"`
+	}
+
+	w := updateIndexWith{
+		Action:     "replica_count",
+		NumReplica: plan.With.NumReplica.ValueInt64(),
+	}
+
+	withJSON, err := json.Marshal(w)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Could not marshal with clause",
+			"Unable to marshal with clause.  Error: "+err.Error(),
+		)
+		return
+	}
+
 	ddl := fmt.Sprintf(
-		"ALTER INDEX `%s` ON `%s`.`%s`.`%s` WITH { \"action\": \"replica_count\", \"num_replica\" : %d }",
+		"ALTER INDEX `%s` ON `%s`.`%s`.`%s` WITH %s",
 		plan.IndexName.ValueString(),
 		plan.BucketName.ValueString(),
 		plan.ScopeName.ValueString(),
 		plan.CollectionName.ValueString(),
-		plan.With.NumReplica.ValueInt64(),
+		string(withJSON),
 	)
 
 	if err := g.executeGsiDdl(ctx, &plan, ddl); err != nil {
