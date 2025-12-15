@@ -13,18 +13,22 @@ variable "project_id" {
 
 variable "page" {
   description = "page"
+  default = 1
 }
 
 variable "per_page" {
   description = "number per page"
+  default = 10
 }
 
 variable "sort_by" {
   description = "sort by"
+  default = "region"
 }
 
 variable "sort_direction" {
   description = "sort_direction"
+  default = "asc"
 }
 
 variable "existing_cloud_project_snapshot_backups" {
