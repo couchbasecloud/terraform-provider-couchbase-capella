@@ -30,7 +30,8 @@ Sample Output:
 │ The following provider development overrides are set in the CLI configuration:
 │  - couchbasecloud/couchbase-capella in /Users/$USER/terraform-provider-couchbase-capella/bin
 │ 
-│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
+│ published releases.
 ╵
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
@@ -38,34 +39,32 @@ Terraform used the selected providers to generate the following execution plan. 
 
 Terraform will perform the following actions:
 
-  # couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule will be created
-  + resource "couchbase-capella_snapshot_backup_schedule" "new_snapshot_backup_schedule" {
+  # couchbase-capella_cloud_snapshot_backup_schedule.new_cloud_snapshot_backup_schedule will be created
+  + resource "couchbase-capella_cloud_snapshot_backup_schedule" "new_cloud_snapshot_backup_schedule" {
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + copy_to_regions = [
-          + "eu-west-1",
-          + "ap-southeast-1",
+          + "af-south-1",
         ]
-      + id              = "ffffffff-aaaa-1414-eeee-000000000000"
-      + interval        = 4
+      + interval        = 12
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + retention       = 24
-      + start_time      = "2025-09-15T16:00:00+00:00"
+      + start_time      = "2025-12-15T10:00:00Z"
     }
 
 Plan: 1 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
-  + new_snapshot_backup_schedule = {
+  + new_cloud_snapshot_backup_schedule = {
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + copy_to_regions = [
-          + "eu-west-1",
-          + "ap-southeast-1",
+          + "af-south-1",
         ]
-      + id              = "ffffffff-aaaa-1414-eeee-000000000000"
-      + interval        = 4
+      + interval        = 12
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + retention       = 24
-      + start_time      = "2025-09-15T16:00:00+00:00"
+      + start_time      = "2025-12-15T10:00:00Z"
     }
 ```
 
@@ -81,7 +80,8 @@ Sample Output:
 │ The following provider development overrides are set in the CLI configuration:
 │  - couchbasecloud/couchbase-capella in /Users/$USER/terraform-provider-couchbase-capella/bin
 │ 
-│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
+│ published releases.
 ╵
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
@@ -89,34 +89,32 @@ Terraform used the selected providers to generate the following execution plan. 
 
 Terraform will perform the following actions:
 
-  # couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule will be created
-  + resource "couchbase-capella_snapshot_backup_schedule" "new_snapshot_backup_schedule" {
+  # couchbase-capella_cloud_snapshot_backup_schedule.new_cloud_snapshot_backup_schedule will be created
+  + resource "couchbase-capella_cloud_snapshot_backup_schedule" "new_cloud_snapshot_backup_schedule" {
+      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + copy_to_regions = [
-          + "eu-west-1",
-          + "ap-southeast-1",
+          + "af-south-1",
         ]
-      + id              = "ffffffff-aaaa-1414-eeee-000000000000"
-      + interval        = 4
+      + interval        = 12
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + retention       = 24
-      + start_time      = "2025-09-15T16:00:00+00:00"
+      + start_time      = "2025-12-15T10:00:00Z"
     }
 
 Plan: 1 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
-  + new_snapshot_backup_schedule = {
+  + new_cloud_snapshot_backup_schedule = {
+      + cluster_id      = "36c03330-94c5-44a6-b812-265b10098f33"
       + copy_to_regions = [
-          + "eu-west-1",
-          + "ap-southeast-1",
+          + "af-south-1",
         ]
-      + id              = "ffffffff-aaaa-1414-eeee-000000000000"
-      + interval        = 4
+      + interval        = 12
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       + retention       = 24
-      + start_time      = "2025-09-15T16:00:00+00:00"
+      + start_time      = "2025-12-15T10:00:00Z"
     }
 
 Do you want to perform these actions?
@@ -125,43 +123,41 @@ Do you want to perform these actions?
 
   Enter a value: yes
 
-couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Creating...
-couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Creation complete after 0s [id=ffffffff-aaaa-1414-eeee-000000000000]
+couchbase-capella_cloud_snapshot_backup_schedule.new_cloud_snapshot_backup_schedule: Creating...
+couchbase-capella_cloud_snapshot_backup_schedule.new_cloud_snapshot_backup_schedule: Creation complete after 1s
 
 Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
 
 Outputs:
 
-new_snapshot_backup_schedule = {
-  "copy_to_regions" = tolist([
-    "eu-west-1",
-    "ap-southeast-1",
+new_cloud_snapshot_backup_schedule = {
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "copy_to_regions" = toset([
+    "af-south-1",
   ])
-  "id" = "ffffffff-aaaa-1414-eeee-000000000000"
-  "interval" = 4
+  "interval" = 12
   "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "retention" = 24
-  "start_time" = "2025-09-15T16:00:00+00:00"
+  "start_time" = "2025-12-15T10:00:00Z"
 }
 ```
 
 ### Note the Cluster ID of the new Snapshot Backup Schedule required for import.
-Command: `terraform output new_snapshot_backup_schedule`
+Command: `terraform output new_cloud_snapshot_backup_schedule`
 
 Sample Output:
 ```
 {
-  "copy_to_regions" = tolist([
-    "eu-west-1",
-    "ap-southeast-1",
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "copy_to_regions" = toset([
+    "af-south-1",
   ])
-  "id" = "ffffffff-aaaa-1414-eeee-000000000000"
-  "interval" = 4
+  "interval" = 12
   "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "retention" = 24
-  "start_time" = "2025-09-15T16:00:00+00:00"
+  "start_time" = "2025-12-15T10:00:00Z"
 }
 ```
 
@@ -171,34 +167,34 @@ Command: `terraform state list`
 
 Sample Output:
 ``` 
-couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule
+couchbase-capella_cloud_snapshot_backup_schedule.new_cloud_snapshot_backup_schedule
 ```
 
 ## IMPORT
-### Remove the resource `new_snapshot_backup_schedule` from the Terraform State file
+### Remove the resource `new_cloud_snapshot_backup_schedule` from the Terraform State file
 
-Command: `terraform state rm couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule`
+Command: `terraform state rm couchbase-capella_cloud_snapshot_backup_schedule.new_cloud_snapshot_backup_schedule`
 
 Sample Output:
 ``` 
-Removed couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule
+Removed couchbase-capella_cloud_snapshot_backup_schedule.new_cloud_snapshot_backup_schedule
 Successfully removed 1 resource instance(s).
 ```
 Please note, this command will only remove the resource from the Terraform State file, but in reality, the resource exists in Capella.
 
 ### Now, let's import the resource in Terraform
 
-Command: `terraform import couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule "id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>"`
+Command: `terraform import couchbase-capella_cloud_snapshot_backup_schedule.new_cloud_snapshot_backup_schedule "cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>"`
 
 In this case, the complete command is:
-`terraform import couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule "id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000"`
+`terraform import couchbase-capella_cloud_snapshot_backup_schedule.new_cloud_snapshot_backup_schedule "cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000"`
 
 Sample Output:
 ``` 
-couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Importing from ID "id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000"...
-couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Import prepared!
-  Prepared couchbase-capella_snapshot_backup_schedule for import
-couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Refreshing state... [id=id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000]
+couchbase-capella_cloud_snapshot_backup_schedule.new_cloud_snapshot_backup_schedule: Importing from ID "cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000"...
+couchbase-capella_cloud_snapshot_backup_schedule.new_cloud_snapshot_backup_schedule: Import prepared!
+  Prepared couchbase-capella_cloud_snapshot_backup_schedule for import
+couchbase-capella_cloud_snapshot_backup_schedule.new_cloud_snapshot_backup_schedule: Refreshing state...
 
 Import successful!
 
@@ -226,43 +222,42 @@ Sample Output:
 │ The following provider development overrides are set in the CLI configuration:
 │  - couchbasecloud/couchbase-capella in /Users/$USER/terraform-provider-couchbase-capella/bin
 │ 
-│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
+│ published releases.
 ╵
-couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Refreshing state... [id=ffffffff-aaaa-1414-eeee-000000000000]
+couchbase-capella_cloud_snapshot_backup_schedule.new_cloud_snapshot_backup_schedule: Refreshing state...
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   ~ update in-place
 
 Terraform will perform the following actions:
 
-  # couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule will be updated in-place
-  ~ resource "couchbase-capella_snapshot_backup_schedule" "new_snapshot_backup_schedule" {
+  # couchbase-capella_cloud_snapshot_backup_schedule.new_cloud_snapshot_backup_schedule will be updated in-place
+  ~ resource "couchbase-capella_cloud_snapshot_backup_schedule" "new_cloud_snapshot_backup_schedule" {
       ~ copy_to_regions = [
-          - "eu-west-1",
-          - "ap-southeast-1",
-          + "af-south-1",
+          - "af-south-1",
+          + "ap-southeast-1",
+          + "eu-west-1",
         ]
-        id              = "ffffffff-aaaa-1414-eeee-000000000000"
-      ~ interval        = 4 -> 8
-      ~ retention       = 24 -> 168
-      ~ start_time      = "2025-09-15T16:00:00Z" -> "2026-01-23T03:30:00+00:00"
-        # (2 unchanged attributes hidden)
+      ~ interval        = 12 -> 8
+      ~ retention       = 24 -> 48
+      ~ start_time      = "2025-12-15T10:00:00Z" -> "2025-12-16T10:00:00Z"
+        # (3 unchanged attributes hidden)
     }
 
 Plan: 0 to add, 1 to change, 0 to destroy.
 
 Changes to Outputs:
-  ~ new_snapshot_backup_schedule = {
+  ~ new_cloud_snapshot_backup_schedule = {
       ~ copy_to_regions = [
-          - "eu-west-1",
-          - "ap-southeast-1",
-          + "af-south-1",
+          - "af-south-1",
+          + "ap-southeast-1",
+          + "eu-west-1",
         ]
-        id              = "ffffffff-aaaa-1414-eeee-000000000000"
-      ~ interval        = 4 -> 8
-      ~ retention       = 24 -> 168
-      ~ start_time      = "2025-09-15T16:00:00Z" -> "2026-01-23T03:30:00+00:00"
-        # (2 unchanged attributes hidden)
+      ~ interval        = 12 -> 8
+      ~ retention       = 24 -> 48
+      ~ start_time      = "2025-12-15T10:00:00Z" -> "2025-12-16T10:00:00Z"
+        # (3 unchanged attributes hidden)
     }
 ```
 
@@ -277,43 +272,42 @@ Sample Output:
 │ The following provider development overrides are set in the CLI configuration:
 │  - couchbasecloud/couchbase-capella in /Users/$USER/terraform-provider-couchbase-capella/bin
 │ 
-│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
+│ published releases.
 ╵
-couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Refreshing state... [id=ffffffff-aaaa-1414-eeee-000000000000]
+couchbase-capella_cloud_snapshot_backup_schedule.new_cloud_snapshot_backup_schedule: Refreshing state...
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   ~ update in-place
 
 Terraform will perform the following actions:
 
-  # couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule will be updated in-place
-  ~ resource "couchbase-capella_snapshot_backup_schedule" "new_snapshot_backup_schedule" {
+  # couchbase-capella_cloud_snapshot_backup_schedule.new_cloud_snapshot_backup_schedule will be updated in-place
+  ~ resource "couchbase-capella_cloud_snapshot_backup_schedule" "new_cloud_snapshot_backup_schedule" {
       ~ copy_to_regions = [
-          - "eu-west-1",
-          - "ap-southeast-1",
-          + "af-south-1",
+          - "af-south-1",
+          + "ap-southeast-1",
+          + "eu-west-1",
         ]
-        id              = "ffffffff-aaaa-1414-eeee-000000000000"
-      ~ interval        = 4 -> 8
-      ~ retention       = 24 -> 168
-      ~ start_time      = "2025-09-15T16:00:00Z" -> "2026-01-23T03:30:00+00:00"
-        # (2 unchanged attributes hidden)
+      ~ interval        = 12 -> 8
+      ~ retention       = 24 -> 48
+      ~ start_time      = "2025-12-15T10:00:00Z" -> "2025-12-16T10:00:00Z"
+        # (3 unchanged attributes hidden)
     }
 
 Plan: 0 to add, 1 to change, 0 to destroy.
 
 Changes to Outputs:
-  ~ new_snapshot_backup_schedule = {
+  ~ new_cloud_snapshot_backup_schedule = {
       ~ copy_to_regions = [
-          - "eu-west-1",
-          - "ap-southeast-1",
-          + "af-south-1",
+          - "af-south-1",
+          + "ap-southeast-1",
+          + "eu-west-1",
         ]
-        id              = "ffffffff-aaaa-1414-eeee-000000000000"
-      ~ interval        = 4 -> 8
-      ~ retention       = 24 -> 168
-      ~ start_time      = "2025-09-15T16:00:00Z" -> "2026-01-23T03:30:00+00:00"
-        # (2 unchanged attributes hidden)
+      ~ interval        = 12 -> 8
+      ~ retention       = 24 -> 48
+      ~ start_time      = "2025-12-15T10:00:00Z" -> "2025-12-16T10:00:00Z"
+        # (3 unchanged attributes hidden)
     }
 
 Do you want to perform these actions?
@@ -322,23 +316,24 @@ Do you want to perform these actions?
 
   Enter a value: yes
 
-couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Modifying... [id=ffffffff-aaaa-1414-eeee-000000000000]
-couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Modifications complete after 0s [id=ffffffff-aaaa-1414-eeee-000000000000]
+couchbase-capella_cloud_snapshot_backup_schedule.new_cloud_snapshot_backup_schedule: Modifying...
+couchbase-capella_cloud_snapshot_backup_schedule.new_cloud_snapshot_backup_schedule: Modifications complete after 0s
 
 Apply complete! Resources: 0 added, 1 changed, 0 destroyed.
 
 Outputs:
 
-new_snapshot_backup_schedule = {
-  "copy_to_regions" = tolist([
-    "af-south-1",
+new_cloud_snapshot_backup_schedule = {
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "copy_to_regions" = toset([
+    "ap-southeast-1",
+    "eu-west-1",
   ])
-  "id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "interval" = 8
   "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
-  "retention" = 168
-  "start_time" = "2026-01-23T03:30:00+00:00"
+  "retention" = 48
+  "start_time" = "2025-12-16T10:00:00Z"
 }
 ```
 
@@ -355,41 +350,44 @@ Sample Output:
 │ The following provider development overrides are set in the CLI configuration:
 │  - couchbasecloud/couchbase-capella in /Users/$USER/terraform-provider-couchbase-capella/bin
 │ 
-│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
+│ published releases.
 ╵
-couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Refreshing state... [id=ffffffff-aaaa-1414-eeee-000000000000]
+couchbase-capella_cloud_snapshot_backup_schedule.new_cloud_snapshot_backup_schedule: Refreshing state...
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   - destroy
 
 Terraform will perform the following actions:
 
-  # couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule will be destroyed
-  - resource "couchbase-capella_snapshot_backup_schedule" "new_snapshot_backup_schedule" {
+  # couchbase-capella_cloud_snapshot_backup_schedule.new_cloud_snapshot_backup_schedule will be destroyed
+  - resource "couchbase-capella_cloud_snapshot_backup_schedule" "new_cloud_snapshot_backup_schedule" {
+      - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - copy_to_regions = [
-          - "af-south-1",
+          - "ap-southeast-1",
+          - "eu-west-1",
         ] -> null
-      - id              = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - interval        = 8 -> null
       - organization_id = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - project_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
-      - retention       = 168 -> null
-      - start_time      = "2026-01-23T03:30:00+00:00" -> null
+      - retention       = 48 -> null
+      - start_time      = "2025-12-16T10:00:00Z" -> null
     }
 
 Plan: 0 to add, 0 to change, 1 to destroy.
 
 Changes to Outputs:
-  - new_snapshot_backup_schedule = {
+  - new_cloud_snapshot_backup_schedule = {
+      - cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
       - copy_to_regions = [
-          - "af-south-1",
+          - "ap-southeast-1",
+          - "eu-west-1",
         ]
-      - id              = "ffffffff-aaaa-1414-eeee-000000000000"
       - interval        = 8
       - organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       - project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
-      - retention       = 168
-      - start_time      = "2026-01-23T03:30:00+00:00"
+      - retention       = 48
+      - start_time      = "2025-12-16T10:00:00Z"
     } -> null
 
 Do you really want to destroy all resources?
@@ -398,8 +396,8 @@ Do you really want to destroy all resources?
 
   Enter a value: yes
 
-couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Destroying... [id=ffffffff-aaaa-1414-eeee-000000000000]
-couchbase-capella_snapshot_backup_schedule.new_snapshot_backup_schedule: Destruction complete after 0s
+couchbase-capella_cloud_snapshot_backup_schedule.new_cloud_snapshot_backup_schedule: Destroying...
+couchbase-capella_cloud_snapshot_backup_schedule.new_cloud_snapshot_backup_schedule: Destruction complete after 1s
 
 Destroy complete! Resources: 1 destroyed.
 ```
