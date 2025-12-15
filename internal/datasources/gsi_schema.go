@@ -21,11 +21,7 @@ func GsiSchema() schema.Schema {
 
 	dataAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(dataAttrs, "index_name", gsiBuilder, computedString())
-	capellaschema.AddAttr(dataAttrs, "bucket_name", gsiBuilder, computedString())
-	capellaschema.AddAttr(dataAttrs, "scope_name", gsiBuilder, computedString())
-	capellaschema.AddAttr(dataAttrs, "collection_name", gsiBuilder, computedString())
-	capellaschema.AddAttr(dataAttrs, "index_keys", gsiBuilder, computedStringSet())
-	capellaschema.AddAttr(dataAttrs, "status", gsiBuilder, computedString())
+	capellaschema.AddAttr(dataAttrs, "definition", gsiBuilder, computedString())
 
 	capellaschema.AddAttr(attrs, "data", gsiBuilder, &schema.ListNestedAttribute{
 		Computed: true,
