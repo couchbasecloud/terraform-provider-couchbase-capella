@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -50,7 +51,16 @@ func GsiSchema() schema.Schema {
 		Optional:      true,
 		PlanModifiers: []planmodifier.Bool{custom_plan_modifiers.ImmutableBoolAttribute()},
 	}
-	capellaschema.AddAttr(withAttrs, "num_replica", gsiBuilder, int64Attribute(optional, computed, useStateForUnknown))
+	capellaschema.AddAttr(withAttrs, "num_replica", gsiBuilder, &schema.Int64Attribute{
+		Optional: true,
+		Computed: true,
+		PlanModifiers: []planmodifier.Int64{
+			int64planmodifier.UseStateForUnknown(),
+		},
+		Validators: []validator.Int64{
+			int64validator.AtLeast(1),
+		},
+	})
 	withAttrs["num_partition"] = &schema.Int64Attribute{
 		Optional: true,
 		Validators: []validator.Int64{
