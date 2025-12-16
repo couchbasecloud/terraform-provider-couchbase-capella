@@ -20,9 +20,8 @@ func GsiMonitorSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "scope_name", gsiMonitorBuilder, requiredString())
 	capellaschema.AddAttr(attrs, "collection_name", gsiMonitorBuilder, requiredString())
 	capellaschema.AddAttr(attrs, "indexes", gsiMonitorBuilder, &schema.SetAttribute{
-		Required:            true,
-		ElementType:         types.StringType,
-		MarkdownDescription: "Set of index names to monitor. These indexes must exist in the specified keyspace.",
+		Required:    true,
+		ElementType: types.StringType,
 	})
 
 	return schema.Schema{
