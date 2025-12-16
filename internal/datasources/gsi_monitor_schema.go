@@ -2,6 +2,7 @@ package datasources
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
@@ -18,9 +19,11 @@ func GsiMonitorSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "bucket_name", gsiMonitorBuilder, requiredString())
 	capellaschema.AddAttr(attrs, "scope_name", gsiMonitorBuilder, requiredString())
 	capellaschema.AddAttr(attrs, "collection_name", gsiMonitorBuilder, requiredString())
-	capellaschema.AddAttr(attrs, "index_name", gsiMonitorBuilder, requiredString())
-	capellaschema.AddAttr(attrs, "status", gsiMonitorBuilder, computedString())
-	capellaschema.AddAttr(attrs, "progress", gsiMonitorBuilder, computedInt64())
+	capellaschema.AddAttr(attrs, "indexes", gsiMonitorBuilder, &schema.SetAttribute{
+		Required:            true,
+		ElementType:         types.StringType,
+		MarkdownDescription: "Set of index names to monitor. These indexes must exist in the specified keyspace.",
+	})
 
 	return schema.Schema{
 		MarkdownDescription: "The data source to monitor the build progress of a GSI index.",
