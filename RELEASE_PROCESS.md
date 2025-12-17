@@ -94,10 +94,10 @@ make release-prep VERSION=1.5.4
    git diff CHANGELOG.md
    ```
 
-2. **Edit the upgrade guide:**
+2. **(Optional) Edit the upgrade guide:**
    ```bash
-   # Edit the scaffold with real content
-   vim templates/guides/1.5.4-upgrade-guide.md
+   # Edit the scaffold with real content (replace <VERSION> with your version, e.g., 1.7.0)
+   vim templates/guides/<VERSION>-upgrade-guide.md
    ```
    
    Add:
@@ -106,29 +106,62 @@ make release-prep VERSION=1.5.4
    - Migration steps for breaking changes
    - Bug fix details
 
-3. **Test examples:**
+3. **(Optional) Test examples:**
    ```bash
    # Test any code examples in the upgrade guide
    cd examples/feature_name
    terraform init && terraform plan
    ```
 
-4. **Rebuild docs:**
+4. **(Optional) Rebuild docs:**
    ```bash
    # After editing templates, rebuild docs
    make build-docs
    ```
 
-### Step 3: Commit and Tag
+### Step 3: Create Pull Request
+
+> **Note:** Replace `<VERSION>` with your actual version number (e.g., `1.7.0`)
 
 ```bash
+# Create a new branch for the release
+git checkout -b release/v<VERSION>
+
 # Commit all changes
 git add .
-git commit -m "Prepare release v1.5.4"
+git commit -m "Prepare release v<VERSION>"
 
-# Create and push the tag
-git tag v1.5.4
-git push origin v1.5.4
+# Push the branch
+git push origin release/v<VERSION>
+```
+
+**Example for version 1.7.0:**
+```bash
+git checkout -b release/v1.7.0
+git add .
+git commit -m "Prepare release v1.7.0"
+git push origin release/v1.7.0
+```
+
+Open a Pull Request for review on GitHub.
+
+### Step 4: Merge and Tag
+
+After the PR is reviewed and approved:
+
+> **Note:** Replace `<VERSION>` with your actual version number (e.g., `1.7.0`)
+
+```bash
+# Merge the PR to main (via GitHub UI or CLI)
+gh pr merge release/v<VERSION> --merge
+
+# Switch to main and pull the latest changes
+git checkout main
+git pull origin main
+
+# Create and push the tag from main branch
+git tag v<VERSION>
+git push origin v<VERSION>
 
 # GitHub Actions will automatically:
 # - Build binaries
@@ -136,7 +169,16 @@ git push origin v1.5.4
 # - Upload to Terraform Registry
 ```
 
-### Step 4: Verify
+**Example for version 1.7.0:**
+```bash
+gh pr merge release/v1.7.0 --merge
+git checkout main
+git pull origin main
+git tag v1.7.0
+git push origin v1.7.0
+```
+
+### Step 5: Verify
 
 1. Check GitHub Actions workflow: https://github.com/couchbasecloud/terraform-provider-couchbase-capella/actions
 2. Verify release: https://github.com/couchbasecloud/terraform-provider-couchbase-capella/releases
@@ -187,7 +229,7 @@ touch templates/guides/1.5.4-upgrade-guide.md
 make build-docs
 ```
 
-### 5. Continue with Step 3 above (Commit and Tag)
+### 5. Continue with Step 3 above (Create Pull Request, Merge and Tag)
 
 ## Troubleshooting
 
