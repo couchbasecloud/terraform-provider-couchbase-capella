@@ -96,8 +96,8 @@ make release-prep VERSION=1.5.4
 
 2. **(Optional) Edit the upgrade guide:**
    ```bash
-   # Edit the scaffold with real content
-   vim templates/guides/1.5.4-upgrade-guide.md
+   # Edit the scaffold with real content (replace <VERSION> with your version, e.g., 1.7.0)
+   vim templates/guides/<VERSION>-upgrade-guide.md
    ```
    
    Add:
@@ -121,16 +121,26 @@ make release-prep VERSION=1.5.4
 
 ### Step 3: Create Pull Request
 
+> **Note:** Replace `<VERSION>` with your actual version number (e.g., `1.7.0`)
+
 ```bash
 # Create a new branch for the release
-git checkout -b release/v1.5.4
+git checkout -b release/v<VERSION>
 
 # Commit all changes
 git add .
-git commit -m "Prepare release v1.5.4"
+git commit -m "Prepare release v<VERSION>"
 
 # Push the branch
-git push origin release/v1.5.4
+git push origin release/v<VERSION>
+```
+
+**Example for version 1.7.0:**
+```bash
+git checkout -b release/v1.7.0
+git add .
+git commit -m "Prepare release v1.7.0"
+git push origin release/v1.7.0
 ```
 
 Open a Pull Request for review on GitHub.
@@ -139,22 +149,33 @@ Open a Pull Request for review on GitHub.
 
 After the PR is reviewed and approved:
 
+> **Note:** Replace `<VERSION>` with your actual version number (e.g., `1.7.0`)
+
 ```bash
 # Merge the PR to main (via GitHub UI or CLI)
-gh pr merge release/v1.5.4 --merge
+gh pr merge release/v<VERSION> --merge
 
 # Switch to main and pull the latest changes
 git checkout main
 git pull origin main
 
 # Create and push the tag from main branch
-git tag v1.5.4
-git push origin v1.5.4
+git tag v<VERSION>
+git push origin v<VERSION>
 
 # GitHub Actions will automatically:
 # - Build binaries
 # - Create GitHub release
 # - Upload to Terraform Registry
+```
+
+**Example for version 1.7.0:**
+```bash
+gh pr merge release/v1.7.0 --merge
+git checkout main
+git pull origin main
+git tag v1.7.0
+git push origin v1.7.0
 ```
 
 ### Step 5: Verify
