@@ -57,9 +57,6 @@ func GsiSchema() schema.Schema {
 		PlanModifiers: []planmodifier.Int64{
 			int64planmodifier.UseStateForUnknown(),
 		},
-		Validators: []validator.Int64{
-			int64validator.AtLeast(1),
-		},
 	})
 	withAttrs["num_partition"] = &schema.Int64Attribute{
 		Optional: true,

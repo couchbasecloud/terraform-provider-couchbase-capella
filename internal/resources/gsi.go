@@ -139,17 +139,19 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 				indexName = "#primary"
 			}
 			type primaryIndexWith struct {
-				DeferBuild bool  `json:"defer_build,omitempty"`
-				NumReplica int64 `json:"num_replica,omitempty"`
+				DeferBuild *bool  `json:"defer_build,omitempty"`
+				NumReplica *int64 `json:"num_replica,omitempty"`
 			}
 
 			var w primaryIndexWith
 			if plan.With != nil {
 				if !plan.With.DeferBuild.IsNull() && !plan.With.DeferBuild.IsUnknown() {
-					w.DeferBuild = plan.With.DeferBuild.ValueBool()
+					val := plan.With.DeferBuild.ValueBool()
+					w.DeferBuild = &val
 				}
 				if !plan.With.NumReplica.IsNull() && !plan.With.NumReplica.IsUnknown() {
-					w.NumReplica = plan.With.NumReplica.ValueInt64()
+					val := plan.With.NumReplica.ValueInt64()
+					w.NumReplica = &val
 				}
 			}
 
@@ -210,20 +212,23 @@ func (g *GSI) Create(ctx context.Context, req resource.CreateRequest, resp *reso
 
 			if plan.With != nil {
 				type secondaryIndexWith struct {
-					DeferBuild   bool  `json:"defer_build,omitempty"`
-					NumReplica   int64 `json:"num_replica,omitempty"`
-					NumPartition int64 `json:"num_partition,omitempty"`
+					DeferBuild   *bool  `json:"defer_build,omitempty"`
+					NumReplica   *int64 `json:"num_replica,omitempty"`
+					NumPartition *int64 `json:"num_partition,omitempty"`
 				}
 
 				var w secondaryIndexWith
 				if !plan.With.DeferBuild.IsNull() && !plan.With.DeferBuild.IsUnknown() {
-					w.DeferBuild = plan.With.DeferBuild.ValueBool()
+					val := plan.With.DeferBuild.ValueBool()
+					w.DeferBuild = &val
 				}
 				if !plan.With.NumReplica.IsNull() && !plan.With.NumReplica.IsUnknown() {
-					w.NumReplica = plan.With.NumReplica.ValueInt64()
+					val := plan.With.NumReplica.ValueInt64()
+					w.NumReplica = &val
 				}
 				if !plan.With.NumPartition.IsNull() && !plan.With.NumPartition.IsUnknown() {
-					w.NumPartition = plan.With.NumPartition.ValueInt64()
+					val := plan.With.NumPartition.ValueInt64()
+					w.NumPartition = &val
 				}
 
 				withJSON, err := json.Marshal(w)
@@ -449,12 +454,13 @@ func (g *GSI) Update(ctx context.Context, req resource.UpdateRequest, resp *reso
 
 	type updateIndexWith struct {
 		Action     string `json:"action"`
-		NumReplica int64  `json:"num_replica,omitempty"`
+		NumReplica *int64 `json:"num_replica,omitempty"`
 	}
 
+	val := plan.With.NumReplica.ValueInt64()
 	w := updateIndexWith{
 		Action:     "replica_count",
-		NumReplica: plan.With.NumReplica.ValueInt64(),
+		NumReplica: &val,
 	}
 
 	withJSON, err := json.Marshal(w)
