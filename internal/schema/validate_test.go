@@ -6,7 +6,7 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_ValidateSchemaState(t *testing.T) {
@@ -110,9 +110,9 @@ func TestSplitImportStringError(t *testing.T) {
 		t.Run(test.importString, func(t *testing.T) {
 			_, err := splitImportString(test.importString, test.keys)
 			if test.shouldError {
-				assert.ErrorContains(t, err, "error parsing terraform import")
+				assert.ErrorIs(t, err, errors.ErrInvalidImport)
 			} else {
-				assert.NilError(t, err)
+				assert.NoError(t, err)
 			}
 		})
 	}
