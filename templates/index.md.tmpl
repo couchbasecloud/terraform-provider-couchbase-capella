@@ -247,6 +247,16 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
   A bucket is the fundamental space for storing data in Couchbase Capella.
   Create and Manage Backups in Capella.
 
+* [Manage Cloud Snapshot Backups](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/backup):
+
+  Create and manage on-demand cloud snapshot backups for your Couchbase Capella clusters.
+  Cloud snapshots provide point-in-time recovery capabilities and can be copied to additional regions for disaster recovery.
+
+* [Configure Cloud Snapshot Backup Schedules](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/backup_schedule):
+
+  Set up automated backup schedules for your clusters.
+  Configure backup intervals, retention periods, and cross-region copy settings to ensure your data is protected.
+
 * [Create & Manage Scopes](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/bucket/scopes):
 
   Create and Manage Scopes within a bucket. A scope is a mechanism for the grouping of multiple collections.
