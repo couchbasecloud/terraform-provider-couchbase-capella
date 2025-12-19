@@ -1,7 +1,7 @@
 user=couchbasecloud
 project=terraform-provider-couchbase-capella
-future-release=v1.6.0
-since-tag=v1.5.3
+future-release=v1.7.0
+since-tag=v1.6.0
 exclude-labels=no-changelog-needed,dependencies
 enhancement-labels=enhancement,feature
 bug-labels=bug,bugfix,fix

@@ -247,6 +247,31 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
   A bucket is the fundamental space for storing data in Couchbase Capella.
   Create and Manage Backups in Capella.
 
+* [Manage Cloud Snapshot Backups](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/backup):
+
+  Create and manage on-demand cloud snapshot backups for your Couchbase Capella clusters.
+  Cloud snapshots provide point-in-time recovery capabilities and can be copied to additional regions for disaster recovery.
+
+* [Configure Cloud Snapshot Backup Schedules](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/backup_schedule):
+
+  Set up automated backup schedules for your clusters.
+  Configure backup intervals, retention periods, and cross-region copy settings to ensure your data is protected.
+
+* [List Cloud Snapshot Backups for a Cluster](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/backup):
+
+  Retrieve all cloud snapshot backups associated with a specific cluster.
+  Use filters to narrow down results based on backup attributes.
+
+* [List Cloud Snapshot Backups for a Project](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/backup):
+
+  Retrieve all cloud snapshot backups across all clusters within a project.
+  View summary information including most recent and oldest snapshots for each cluster.
+
+* [Monitor Cloud Snapshot Restore Operations](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/snapshot_restores):
+
+  Track and monitor snapshot restore operations for your clusters.
+  View restore status, target cluster, and completion information.
+
 * [Create & Manage Scopes](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/bucket/scopes):
 
   Create and Manage Scopes within a bucket. A scope is a mechanism for the grouping of multiple collections.

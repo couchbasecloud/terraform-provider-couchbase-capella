@@ -1,5 +1,61 @@
 # Changelog
 
+## [v1.7.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.7.0) (2025-12-19)
+
+[Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.6.0...v1.7.0)
+
+**Implemented enhancements:**
+
+- \[AV-118765\] Make Retention and Interval Computed [\#458](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/458) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-118738\] Add Validation for regions\_to\_copy [\#457](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/457) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-118736\] Improve terraform.template.tfvars Comments [\#456](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/456) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-118524\] Prevent Attempts to Restore a Snapshot Backup before it is Created [\#453](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/453) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-96486\] Cloud Snapshot Backup, Backup Schedule and Restore [\#430](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/430) ([SophieWegmann](https://github.com/SophieWegmann))
+
+**Fixed bugs:**
+
+- \[AV-118846\] Fix num-replicas zero value not getting populated [\#464](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/464) ([aniket-Kumar-c](https://github.com/aniket-Kumar-c))
+- \[AV-118846\] Added validation check on num\_replica [\#463](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/463) ([aniket-Kumar-c](https://github.com/aniket-Kumar-c))
+- \[AV-118778\] GSI Monitor schema reverted [\#462](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/462) ([aniket-Kumar-c](https://github.com/aniket-Kumar-c))
+- \[AV-118672\] Reverted datasource gsi schema to original state [\#461](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/461) ([aniket-Kumar-c](https://github.com/aniket-Kumar-c))
+- \[AV-118742\] Fix Project Snapshot Backup List Examples [\#459](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/459) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-118477\] Correct terraform.template.tfvars [\#452](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/452) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-118556\] Prevent populating defaults when client omits value [\#451](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/451) ([aniket-Kumar-c](https://github.com/aniket-Kumar-c))
+- \[AV-118243\] Null pointer exception fix for terraform imports [\#449](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/449) ([aniket-Kumar-c](https://github.com/aniket-Kumar-c))
+
+**Merged pull requests:**
+
+- \[AV-119055\] Improve release process documentation [\#465](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/465) ([Talina06](https://github.com/Talina06))
+- \[AV-118746\] Fix Snapshot Backup Schedule README [\#460](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/460) ([SophieWegmann](https://github.com/SophieWegmann))
+
+## [v1.7.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.7.0) (2025-12-19)
+
+[Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.6.0...v1.7.0)
+
+**Implemented enhancements:**
+
+- \[AV-118738\] Add Validation for regions\_to\_copy [\#457](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/457) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-118736\] Improve terraform.template.tfvars Comments [\#456](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/456) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-96486\] Cloud Snapshot Backup, Backup Schedule and Restore [\#430](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/430) ([SophieWegmann](https://github.com/SophieWegmann))
+
+**Fixed bugs:**
+
+- \[AV-118778\] GSI Monitor schema reverted [\#462](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/462) ([aniket-Kumar-c](https://github.com/aniket-Kumar-c))
+- \[AV-118742\] Fix Project Snapshot Backup List Examples [\#459](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/459) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-118477\] Correct terraform.template.tfvars [\#452](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/452) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-118556\] Prevent populating defaults when client omits value [\#451](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/451) ([aniket-Kumar-c](https://github.com/aniket-Kumar-c))
+- \[AV-118243\] Null pointer exception fix for terraform imports [\#449](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/449) ([aniket-Kumar-c](https://github.com/aniket-Kumar-c))
+
+**Merged pull requests:**
+
+- \[AV-119055\] Improve release process documentation [\#465](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/465) ([Talina06](https://github.com/Talina06))
+- \[AV-118846\] Fix num-replicas zero value not getting populated [\#464](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/464) ([aniket-Kumar-c](https://github.com/aniket-Kumar-c))
+- \[AV-118846\] Added validation check on num\_replica [\#463](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/463) ([aniket-Kumar-c](https://github.com/aniket-Kumar-c))
+- \[AV-118672\] Reverted datasource gsi schema to original state [\#461](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/461) ([aniket-Kumar-c](https://github.com/aniket-Kumar-c))
+- \[AV-118746\] Fix Snapshot Backup Schedule README [\#460](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/460) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-118765\] Make Retention and Interval Computed [\#458](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/458) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-118524\] Prevent Attempts to Restore a Snapshot Backup before it is Created [\#453](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/453) ([SophieWegmann](https://github.com/SophieWegmann))
+
 ## [v1.6.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.6.0) (2025-11-11)
 
 [Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.5.3...v1.6.0)
