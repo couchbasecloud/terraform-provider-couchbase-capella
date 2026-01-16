@@ -56,7 +56,7 @@ func TestGetPaginated_SinglePage(t *testing.T) {
 		assert.Contains(t, r.URL.RawQuery, "perPage=25")
 
 		w.WriteHeader(http.StatusOK)
-		w.Write(createMockPaginatedResponse(items, 1, 0, 1, 3, nil))
+		_, _ = w.Write(createMockPaginatedResponse(items, 1, 0, 1, 3, nil))
 	}))
 	defer server.Close()
 
@@ -99,10 +99,10 @@ func TestGetPaginated_MultiplePages(t *testing.T) {
 
 		if requestCount == 1 {
 			// First page - has next page
-			w.Write(createMockPaginatedResponse(page1Items, 1, 2, 2, 30, nil))
+			_, _ = w.Write(createMockPaginatedResponse(page1Items, 1, 2, 2, 30, nil))
 		} else {
 			// Second page - no next page
-			w.Write(createMockPaginatedResponse(page2Items, 2, 0, 2, 30, nil))
+			_, _ = w.Write(createMockPaginatedResponse(page2Items, 2, 0, 2, 30, nil))
 		}
 	}))
 	defer server.Close()
@@ -135,7 +135,7 @@ func TestGetPaginatedWithMeta_SinglePage(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write(createMockPaginatedResponse(items, 1, 0, 1, 2, clusterStats))
+		_, _ = w.Write(createMockPaginatedResponse(items, 1, 0, 1, 2, clusterStats))
 	}))
 	defer server.Close()
 
@@ -187,10 +187,10 @@ func TestGetPaginatedWithMeta_MultiplePages_MetadataFromFirstPage(t *testing.T) 
 		w.WriteHeader(http.StatusOK)
 
 		if requestCount == 1 {
-			w.Write(createMockPaginatedResponse(page1Items, 1, 2, 2, 2, page1ClusterStats))
+			_, _ = w.Write(createMockPaginatedResponse(page1Items, 1, 2, 2, 2, page1ClusterStats))
 		} else {
 			// Second page doesn't have clusterStats (simulating real API behavior)
-			w.Write(createMockPaginatedResponse(page2Items, 2, 0, 2, 2, nil))
+			_, _ = w.Write(createMockPaginatedResponse(page2Items, 2, 0, 2, 2, nil))
 		}
 	}))
 	defer server.Close()
@@ -225,7 +225,7 @@ func TestGetPaginatedWithMeta_MultiplePages_MetadataFromFirstPage(t *testing.T) 
 func TestGetPaginated_EmptyResponse(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write(createMockPaginatedResponse([]TestItem{}, 1, 0, 1, 0, nil))
+		_, _ = w.Write(createMockPaginatedResponse([]TestItem{}, 1, 0, 1, 0, nil))
 	}))
 	defer server.Close()
 
@@ -248,7 +248,7 @@ func TestGetPaginated_WithSortParameter(t *testing.T) {
 		assert.Contains(t, r.URL.RawQuery, "sortBy=name")
 
 		w.WriteHeader(http.StatusOK)
-		w.Write(createMockPaginatedResponse([]TestItem{{Id: "1", Name: "test"}}, 1, 0, 1, 1, nil))
+		_, _ = w.Write(createMockPaginatedResponse([]TestItem{{Id: "1", Name: "test"}}, 1, 0, 1, 1, nil))
 	}))
 	defer server.Close()
 
@@ -271,7 +271,7 @@ func TestGetPaginated_WithoutSortParameter(t *testing.T) {
 		assert.NotContains(t, r.URL.RawQuery, "sortBy")
 
 		w.WriteHeader(http.StatusOK)
-		w.Write(createMockPaginatedResponse([]TestItem{{Id: "1", Name: "test"}}, 1, 0, 1, 1, nil))
+		_, _ = w.Write(createMockPaginatedResponse([]TestItem{{Id: "1", Name: "test"}}, 1, 0, 1, 1, nil))
 	}))
 	defer server.Close()
 
@@ -297,17 +297,17 @@ func TestGetPaginated_ThreePages(t *testing.T) {
 
 		switch requestCount {
 		case 1:
-			w.Write(createMockPaginatedResponse(
+			_, _ = w.Write(createMockPaginatedResponse(
 				[]TestItem{{Id: "1", Name: "page1"}},
 				1, 2, 3, 3, nil,
 			))
 		case 2:
-			w.Write(createMockPaginatedResponse(
+			_, _ = w.Write(createMockPaginatedResponse(
 				[]TestItem{{Id: "2", Name: "page2"}},
 				2, 3, 3, 3, nil,
 			))
 		case 3:
-			w.Write(createMockPaginatedResponse(
+			_, _ = w.Write(createMockPaginatedResponse(
 				[]TestItem{{Id: "3", Name: "page3"}},
 				3, 0, 3, 3, nil, // next=0 means last page
 			))
@@ -341,7 +341,7 @@ func TestGetPaginatedWithMeta_BackwardCompatibility(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write(createMockPaginatedResponse(items, 1, 0, 1, 2, nil))
+		_, _ = w.Write(createMockPaginatedResponse(items, 1, 0, 1, 2, nil))
 	}))
 	defer server.Close()
 
@@ -359,7 +359,7 @@ func TestGetPaginatedWithMeta_BackwardCompatibility(t *testing.T) {
 	// Reset server for second call
 	server2 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write(createMockPaginatedResponse(items, 1, 0, 1, 2, nil))
+		_, _ = w.Write(createMockPaginatedResponse(items, 1, 0, 1, 2, nil))
 	}))
 	defer server2.Close()
 
