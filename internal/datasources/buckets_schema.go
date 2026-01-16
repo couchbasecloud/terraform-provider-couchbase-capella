@@ -31,6 +31,7 @@ func BucketsSchema() schema.Schema {
 	capellaschema.AddAttr(dataAttrs, "flush", bucketsBuilder, computedBool())
 	capellaschema.AddAttr(dataAttrs, "time_to_live_in_seconds", bucketsBuilder, computedInt64())
 	capellaschema.AddAttr(dataAttrs, "eviction_policy", bucketsBuilder, computedString())
+	capellaschema.AddAttr(dataAttrs, "vbuckets", bucketsBuilder, computedInt64())
 
 	statsAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(statsAttrs, "item_count", bucketsBuilder, computedInt64())
@@ -48,6 +49,16 @@ func BucketsSchema() schema.Schema {
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: dataAttrs,
 		},
+	})
+
+	clusterStatsAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(clusterStatsAttrs, "free_memory_in_mb", bucketsBuilder, computedInt64())
+	capellaschema.AddAttr(clusterStatsAttrs, "max_replicas", bucketsBuilder, computedInt64())
+	capellaschema.AddAttr(clusterStatsAttrs, "total_memory_in_mb", bucketsBuilder, computedInt64())
+
+	capellaschema.AddAttr(attrs, "cluster_stats", bucketsBuilder, &schema.SingleNestedAttribute{
+		Computed:   true,
+		Attributes: clusterStatsAttrs,
 	})
 
 	return schema.Schema{

@@ -2,6 +2,7 @@ package datasources
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -59,7 +60,7 @@ func (d *Buckets) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets", d.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
-	response, err := api.GetPaginated[[]bucket.GetBucketResponse](ctx, d.ClientV1, d.Token, cfg, api.SortById)
+	response, err := api.GetPaginatedWithMeta[[]bucket.GetBucketResponse](ctx, d.ClientV1, d.Token, cfg, api.SortById)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Buckets",
@@ -68,29 +69,41 @@ func (d *Buckets) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 		return
 	}
 
+	// Extract clusterStats from the raw first page response
+	var clusterStatsResponse struct {
+		ClusterStats *bucket.ClusterStats `json:"clusterStats"`
+	}
+	if err := json.Unmarshal(response.RawFirstPage, &clusterStatsResponse); err == nil && clusterStatsResponse.ClusterStats != nil {
+		state.ClusterStats = &providerschema.ClusterStats{
+			FreeMemoryInMb:  types.Int64Value(clusterStatsResponse.ClusterStats.FreeMemoryInMb),
+			MaxReplicas:     types.Int64Value(clusterStatsResponse.ClusterStats.MaxReplicas),
+			TotalMemoryInMb: types.Int64Value(clusterStatsResponse.ClusterStats.TotalMemoryInMb),
+		}
+	}
+
 	// Map response body to model
-	for _, bucket := range response {
+	for _, bucketItem := range response.Data {
 		bucketState := providerschema.OneBucket{
-			Id:                       types.StringValue(bucket.Id),
-			Name:                     types.StringValue(bucket.Name),
-			Type:                     types.StringValue(bucket.Type),
+			Id:                       types.StringValue(bucketItem.Id),
+			Name:                     types.StringValue(bucketItem.Name),
+			Type:                     types.StringValue(bucketItem.Type),
 			OrganizationId:           types.StringValue(organizationId),
 			ProjectId:                types.StringValue(projectId),
 			ClusterId:                types.StringValue(clusterId),
-			StorageBackend:           types.StringValue(bucket.StorageBackend),
-			Vbuckets:                 types.Int64Value(bucket.Vbuckets),
-			MemoryAllocationInMB:     types.Int64Value(bucket.MemoryAllocationInMb),
-			BucketConflictResolution: types.StringValue(bucket.BucketConflictResolution),
-			DurabilityLevel:          types.StringValue(bucket.DurabilityLevel),
-			Replicas:                 types.Int64Value(bucket.Replicas),
-			Flush:                    types.BoolValue(bucket.Flush),
-			TimeToLiveInSeconds:      types.Int64Value(bucket.TimeToLiveInSeconds),
-			EvictionPolicy:           types.StringValue(bucket.EvictionPolicy),
+			StorageBackend:           types.StringValue(bucketItem.StorageBackend),
+			Vbuckets:                 types.Int64Value(bucketItem.Vbuckets),
+			MemoryAllocationInMB:     types.Int64Value(bucketItem.MemoryAllocationInMb),
+			BucketConflictResolution: types.StringValue(bucketItem.BucketConflictResolution),
+			DurabilityLevel:          types.StringValue(bucketItem.DurabilityLevel),
+			Replicas:                 types.Int64Value(bucketItem.Replicas),
+			Flush:                    types.BoolValue(bucketItem.Flush),
+			TimeToLiveInSeconds:      types.Int64Value(bucketItem.TimeToLiveInSeconds),
+			EvictionPolicy:           types.StringValue(bucketItem.EvictionPolicy),
 			Stats: &providerschema.Stats{
-				ItemCount:       types.Int64Value(bucket.Stats.ItemCount),
-				OpsPerSecond:    types.Int64Value(bucket.Stats.OpsPerSecond),
-				DiskUsedInMiB:   types.Int64Value(bucket.Stats.DiskUsedInMib),
-				MemoryUsedInMiB: types.Int64Value(bucket.Stats.MemoryUsedInMib),
+				ItemCount:       types.Int64Value(bucketItem.Stats.ItemCount),
+				OpsPerSecond:    types.Int64Value(bucketItem.Stats.OpsPerSecond),
+				DiskUsedInMiB:   types.Int64Value(bucketItem.Stats.DiskUsedInMib),
+				MemoryUsedInMiB: types.Int64Value(bucketItem.Stats.MemoryUsedInMib),
 			},
 		}
 		state.Data = append(state.Data, bucketState)
