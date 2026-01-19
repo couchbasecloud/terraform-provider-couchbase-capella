@@ -73,7 +73,15 @@ func (d *Buckets) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 	var clusterStatsResponse struct {
 		ClusterStats *bucket.ClusterStats `json:"clusterStats"`
 	}
-	if err := json.Unmarshal(response.RawFirstPage, &clusterStatsResponse); err == nil && clusterStatsResponse.ClusterStats != nil {
+	if err := json.Unmarshal(response.RawFirstPage, &clusterStatsResponse); err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Capella Buckets",
+			"Could not read buckets in cluster "+clusterId+": "+api.ParseError(err),
+		)
+		return
+	}
+
+	if clusterStatsResponse.ClusterStats != nil {
 		state.ClusterStats = &providerschema.ClusterStats{
 			FreeMemoryInMb:  types.Int64Value(clusterStatsResponse.ClusterStats.FreeMemoryInMb),
 			MaxReplicas:     types.Int64Value(clusterStatsResponse.ClusterStats.MaxReplicas),
