@@ -1,0 +1,97 @@
+# ========================================
+# Sanity Test Suite - Critical Path Tests
+# ========================================
+# This list contains essential smoke tests that verify core functionality
+# Run with: make testacc-list (or ./scripts/run-test-list.sh acceptance_tests/sanity.list)
+# Lines starting with # are comments and will be ignored
+# ========================================
+
+# ----------------------------------------
+# 1. ORGANIZATION (Foundation)
+# ----------------------------------------
+# Tests reading organization data - foundational resource
+TestAccReadOrganization
+
+# ----------------------------------------
+# 2. PROJECT (Core Resource)
+# ----------------------------------------
+# Tests basic project creation with required fields only
+TestAccProjectCreateWithReqFields
+
+# ----------------------------------------
+# 3. CLUSTER (Critical Resource)
+# ----------------------------------------
+# Tests AWS cluster creation with only required fields - most common use case
+TestAccClusterResourceWithOnlyReqFieldAWS
+
+# Tests GCP cluster creation and horizontal scaling
+TestAccClusterResourceGCP
+
+# ----------------------------------------
+# 4. BUCKET (Data Layer)
+# ----------------------------------------
+# Tests sample bucket creation (travel-sample)
+TestAccSampleBucket
+
+# ----------------------------------------
+# 5. DATABASE CREDENTIALS (Access Control)
+# ----------------------------------------
+# Tests creating database credentials with required fields
+TestAccDatabaseCredentialWithReqFields
+
+# Tests creating database credentials with optional password field
+TestAccDatabaseCredentialWithOptionalFields
+
+# ----------------------------------------
+# 6. SECURITY & NETWORKING
+# ----------------------------------------
+# Tests IP allowlist creation with required fields
+TestAccAllowListWithRequiredFields
+
+# Tests enabling private endpoint service for secure connectivity
+TestAccPrivateEndpointServiceEnable
+
+# ----------------------------------------
+# 7. API KEYS (Authentication)
+# ----------------------------------------
+# Tests API key creation with only required fields
+TestAccApiKeyResourceWithOnlyReqField
+
+# ----------------------------------------
+# 8. USERS (Access Management)
+# ----------------------------------------
+# Tests user creation, import, and update operations
+TestAccUserResource
+
+# ----------------------------------------
+# 9. APP SERVICES (Data Sync)
+# ----------------------------------------
+# Tests app service creation (non-parallel test)
+TestAppServiceResource
+
+# Tests app endpoint creation
+TestAccAppEndpoint
+
+# Tests app endpoint activation status management
+TestAccAppEndpointActivationStatus
+
+# ----------------------------------------
+# 10. QUERY INDEXES (Performance)
+# ----------------------------------------
+# Tests GSI (Global Secondary Index) creation
+TestAccGSI
+
+# ----------------------------------------
+# 11. BACKUP & RECOVERY
+# ----------------------------------------
+# Tests snapshot backup creation
+TestAccSnapshotBackupResource
+
+# Tests snapshot backup schedule configuration
+TestAccSnapshotBackupScheduleResource
+
+# ----------------------------------------
+# 12. AZURE-SPECIFIC FEATURES
+# ----------------------------------------
+# Tests Azure disk auto-expansion feature
+TestAccClusterResourceAzureDiskAutoExpansion
