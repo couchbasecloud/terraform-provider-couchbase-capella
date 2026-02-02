@@ -104,18 +104,3 @@ func testAccPrivateEndpointServiceEnableConfig(resourceName string, enabled bool
 		}
 		`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, enabled)
 }
-
-// testAccPrivateEndpointAcceptConfig returns terraform config for accepting a private endpoint
-func testAccPrivateEndpointAcceptConfig(resourceName string, endpointId string) string {
-	return fmt.Sprintf(
-		`
-		%[1]s
-
-		resource "couchbase-capella_private_endpoints" "%[2]s" {
-			organization_id = "%[3]s"
-			project_id      = "%[4]s"
-			cluster_id      = "%[5]s"
-			endpoint_id     = "%[6]s"
-		}
-		`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, endpointId)
-}
