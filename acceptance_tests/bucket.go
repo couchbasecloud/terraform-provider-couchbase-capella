@@ -13,6 +13,24 @@ import (
 )
 
 func createBucket(ctx context.Context, client *api.Client) error {
+	// First, check if bucket already exists
+	listUrl := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets", globalHost, globalOrgId, globalProjectId, globalClusterId)
+	listCfg := api.EndpointCfg{Url: listUrl, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	
+	// Use the paginated API to get all buckets
+	buckets, err := api.GetPaginated[[]bucketapi.GetBucketResponse](ctx, client, globalToken, listCfg, api.SortById)
+	if err == nil {
+		// Check if bucket with globalBucketName already exists
+		for _, bucket := range buckets {
+			if bucket.Name == globalBucketName {
+				globalBucketId = bucket.Id
+				log.Printf("Bucket '%s' already exists with ID: %s", globalBucketName, globalBucketId)
+				return nil
+			}
+		}
+	}
+
+	// Bucket doesn't exist, create it
 	bucketRequest := bucketapi.CreateBucketRequest{
 		Name: globalBucketName,
 	}

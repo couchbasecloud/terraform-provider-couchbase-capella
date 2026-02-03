@@ -18,5 +18,11 @@ func getEnvVars() error {
 		return ErrOrgIdMissing
 	}
 
+	// Optional: Use existing resources instead of creating new ones
+	globalProjectId = os.Getenv("TF_VAR_project_id")
+	globalClusterId = os.Getenv("TF_VAR_cluster_id")
+	globalAppServiceId = os.Getenv("TF_VAR_app_service_id")
+	globalBucketId = os.Getenv("TF_VAR_bucket_id")
+
 	return nil
 }
