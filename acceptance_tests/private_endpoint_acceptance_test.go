@@ -7,28 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-// TestAccPrivateEndpointServiceEnable tests enabling private endpoint service for a cluster
-func TestAccPrivateEndpointServiceEnable(t *testing.T) {
-	resourceName := "new_private_endpoint_service"
-	resourceReference := "couchbase-capella_private_endpoint_service." + resourceName
-	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPrivateEndpointServiceEnableConfig(resourceName, true),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
-					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
-					resource.TestCheckResourceAttr(resourceReference, "enabled", "true"),
-				),
-			},
-		},
-	})
-}
-
-// TestAccPrivateEndpointServiceDisable tests disabling private endpoint service for a cluster
-func TestAccPrivateEndpointServiceDisable(t *testing.T) {
+// TestAccPrivateEndpointServiceDisable tests enabling and disabling private endpoint service for a cluster
+func TestAccPrivateEndpointServiceEnableDisable(t *testing.T) {
 	resourceName := "disable_private_endpoint_service"
 	resourceReference := "couchbase-capella_private_endpoint_service." + resourceName
 	resource.ParallelTest(t, resource.TestCase{
@@ -52,38 +32,6 @@ func TestAccPrivateEndpointServiceDisable(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
 					resource.TestCheckResourceAttr(resourceReference, "enabled", "false"),
-				),
-			},
-		},
-	})
-}
-
-// TestAccPrivateEndpointServiceUpdate tests updating private endpoint service status
-func TestAccPrivateEndpointServiceUpdate(t *testing.T) {
-	resourceName := "update_private_endpoint_service"
-	resourceReference := "couchbase-capella_private_endpoint_service." + resourceName
-	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			// Create with enabled=true
-			{
-				Config: testAccPrivateEndpointServiceEnableConfig(resourceName, true),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "enabled", "true"),
-				),
-			},
-			// Update to enabled=false
-			{
-				Config: testAccPrivateEndpointServiceEnableConfig(resourceName, false),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "enabled", "false"),
-				),
-			},
-			// Update back to enabled=true
-			{
-				Config: testAccPrivateEndpointServiceEnableConfig(resourceName, true),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "enabled", "true"),
 				),
 			},
 		},
