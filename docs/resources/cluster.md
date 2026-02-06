@@ -71,7 +71,7 @@ resource "couchbase-capella_cluster" "new_cluster" {
 
 - `configuration_type` (String, Deprecated) - Multi-node databases are best for deployments that require high availability. If your app requires high performance and high availability, choose the Multi-node option. Single-node databases have resource limitations that make them a good choice for learning, prototyping, and non-production uses. They have limited availability. Single-node databases should contain only 1 node and 1 Service Group. Adding number of nodes or service groups > 1 is not allowed for such databases. By default the configurationType is multiNode.
  - **Valid Values**: `singleNode`, `multiNode`
- - **Default**: `[multiNode]`
+ - **Default**: `multiNode`
  - **Deprecated**: This field is deprecated and will be removed in a future release.
 - `couchbase_server` (Attributes) (see [below for nested schema](#nestedatt--couchbase_server))
 - `description` (String) - Description of the cluster (up to 1024 characters).
