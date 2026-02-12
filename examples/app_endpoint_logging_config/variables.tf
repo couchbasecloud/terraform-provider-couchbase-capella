@@ -49,18 +49,18 @@ variable "app_endpoint_log_streaming_config" {
     condition = alltrue([
       for log_key in var.app_endpoint_log_streaming_config.log_keys : contains([
         "Admin",
-		"Access",
-		"Auth",
-		"Cache",
-		"Changes",
-		"CRUD",
-		"HTTP",
-		"HTTP+",
-		"Import",
-		"Javascript",
-		"Query",
-		"Sync",
-		"SyncMsg"], log_key)
+		    "Access",
+		    "Auth",
+		    "Cache",
+		    "Changes",
+		    "CRUD",
+		    "HTTP",
+		    "HTTP+",
+		    "Import",
+		    "Javascript",
+		    "Query",
+		    "Sync",
+		    "SyncMsg"], log_key)
     ])
     error_message = "log_key must be 'Admin', 'Access, 'Auth', 'Cache', 'Changes, 'CRUD', 'HTTP', 'HTTP+', 'Import', 'Javascript', 'Query', 'Sync' or 'SyncMsg'"
   }
