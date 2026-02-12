@@ -1,6 +1,7 @@
 package docs
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"golang.org/x/net/html"
 )
 
 var openAPIDoc *openapi3.T
@@ -84,7 +86,6 @@ func fetchFromURL(url string) ([]byte, error) {
 
 // isHTML checks if the data appears to be HTML content
 func isHTML(data []byte) bool {
-	// Check for common HTML indicators
 	trimmed := strings.TrimSpace(string(data[:min(500, len(data))]))
 	return strings.HasPrefix(trimmed, "<!DOCTYPE") ||
 		strings.HasPrefix(trimmed, "<html") ||
@@ -92,24 +93,51 @@ func isHTML(data []byte) bool {
 }
 
 // extractEmbeddedSpec extracts the OpenAPI JSON spec embedded in an HTML page
-// The Couchbase docs page embeds the spec as a JSON object starting with {"openapi":"3.0.2"
+// using proper HTML parsing to find script tags containing the spec.
 func extractEmbeddedSpec(htmlData []byte) ([]byte, error) {
-	content := string(htmlData)
-
-	// Find the start of the embedded OpenAPI spec
-	marker := `{"openapi":"3.0`
-	startIdx := strings.Index(content, marker)
-	if startIdx == -1 {
-		return nil, fmt.Errorf("could not find embedded OpenAPI spec in HTML page")
-	}
-
-	// Extract the JSON by finding matching braces
-	jsonStr, err := extractJSONObject(content[startIdx:])
+	doc, err := html.Parse(bytes.NewReader(htmlData))
 	if err != nil {
-		return nil, fmt.Errorf("failed to extract JSON from HTML: %w", err)
+		return nil, fmt.Errorf("failed to parse HTML: %w", err)
 	}
 
-	return []byte(jsonStr), nil
+	// Find all script tags and look for embedded OpenAPI spec
+	var specJSON string
+	var findSpec func(*html.Node)
+	findSpec = func(n *html.Node) {
+		if n.Type == html.ElementNode && n.Data == "script" {
+			// Check script content for OpenAPI spec
+			if n.FirstChild != nil && n.FirstChild.Type == html.TextNode {
+				content := n.FirstChild.Data
+				if idx := strings.Index(content, `{"openapi":"3.0`); idx != -1 {
+					if extracted, err := extractJSONObject(content[idx:]); err == nil {
+						specJSON = extracted
+						return
+					}
+				}
+			}
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			if specJSON != "" {
+				return
+			}
+			findSpec(c)
+		}
+	}
+	findSpec(doc)
+
+	if specJSON != "" {
+		return []byte(specJSON), nil
+	}
+
+	// Fallback: search entire content for spec (handles inline scripts)
+	content := string(htmlData)
+	if idx := strings.Index(content, `{"openapi":"3.0`); idx != -1 {
+		if extracted, err := extractJSONObject(content[idx:]); err == nil {
+			return []byte(extracted), nil
+		}
+	}
+
+	return nil, fmt.Errorf("could not find embedded OpenAPI spec in HTML page")
 }
 
 // extractJSONObject extracts a complete JSON object from a string starting with '{'
