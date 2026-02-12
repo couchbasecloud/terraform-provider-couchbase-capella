@@ -87,10 +87,8 @@ func fetchFromURL(url string) ([]byte, error) {
 
 // isHTML checks if the data appears to be HTML content
 func isHTML(data []byte) bool {
-	trimmed := strings.TrimSpace(string(data[:min(500, len(data))]))
-	return strings.HasPrefix(trimmed, "<!DOCTYPE") ||
-		strings.HasPrefix(trimmed, "<html") ||
-		strings.HasPrefix(trimmed, "<HTML")
+	contentType := http.DetectContentType(data)
+	return strings.HasPrefix(contentType, "text/html")
 }
 
 // extractEmbeddedSpec extracts the OpenAPI JSON spec embedded in an HTML page
