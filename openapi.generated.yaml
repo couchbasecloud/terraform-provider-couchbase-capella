@@ -23,6 +23,47 @@ servers:
   - url: 'https://cloudapi.cloud.couchbase.com'
 security:
   - token: []
+x-tagGroups:
+  - name: Capella Operational
+    tags:
+      - Alert Integration
+      - Allowed CIDRs (App Services)
+      - Allowed CIDRs (Cluster)
+      - Api Keys
+      - App Endpoints
+      - App Services
+      - App Services Audit Logging
+      - App Services Log Streaming
+      - App Services Private Endpoints
+      - Audit Logs
+      - Backup Schedule (Bucket)
+      - Backups & Restore (Bucket)
+      - 'Buckets, Scopes, & Collections'
+      - Certificates
+      - Cloud Snapshot Backups & Restore
+      - Cloud Snapshot Backups Schedule
+      - Clusters
+      - CMEK
+      - Data API
+      - Database Credentials
+      - Events
+      - Free Tier
+      - Mutual TLS
+      - Network Peers
+      - On/Off Schedule
+      - Organizations
+      - Private Endpoint Service
+      - Projects
+      - Query Indexes
+      - Replications
+      - Sample Bucket
+      - Users
+  - name: Capella AI Services
+    tags:
+      - AI Services Providers
+      - AI Workflows
+      - Model Services API Keys (AI Services)
+      - Models (AI Services)
 paths:
   '/v4/organizations/{organizationId}/cloudAccounts':
     parameters:
@@ -260,7 +301,7 @@ paths:
             examples:
               rotateOrganizationOwnerAPIKey:
                 value:
-                  secret: GaC4FQLCoUqoKUMBvl6BgRK1Ivqu5yF8OkDBhnP%#CH%S4T@bTVUdP#rY#VSicbx
+                  secret: <YOUR_SECRET_KEY_HERE>
       responses:
         '200':
           description: Successfully rotated the API key.
@@ -271,7 +312,8 @@ paths:
               examples:
                 rotateOrganizationOwnerAPIKey:
                   value:
-                    secretKey: GaC4FQLCoUqoKUMBvl6BgRK1Ivqu5yF8OkDBhnP%#CH%S4T@bTVUdP#rY#VSicbx
+                    secretKey: <YOUR_SECRET_KEY_HERE>
+                    token: <YOUR_TOKEN_HERE>
         '403':
           $ref: '#/components/responses/AccessForbidden'
         '404':
@@ -2067,13 +2109,46 @@ paths:
           $ref: '#/components/responses/RateLimitExceeded'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  '/v4/organizations/{organizationId}/cmekAzureApplication':
+    parameters:
+      - $ref: '#/components/parameters/OrganizationId'
+    get:
+      summary: Get Azure Application ID
+      description: |
+        Retrieves the application ID so that the customer can install the service principal in their Azure tenant.
+
+        In order to access this endpoint, the provided API key must have at least one of the following roles:
+        - Organization Owner
+        - Organization Member
+
+        To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
+      tags:
+        - CMEK
+      operationId: getAzureApplicationID
+      responses:
+        '200':
+          description: Successfully retrieved the Azure application ID.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAzureCMEKApplicationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/AccessForbidden'
+        '404':
+          $ref: '#/components/responses/ResourceNotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   '/v4/organizations/{organizationId}/cmek':
     parameters:
       - $ref: '#/components/parameters/OrganizationId'
     post:
       summary: Create Key Metadata
       description: |
-        Initializes the metadata record for a customer-managed encryption key stored in AWS or GCP, linking it to the organization.
+        Initializes the metadata record for a customer-managed encryption key stored in AWS, GCP or Azure, linking it to the organization.
 
         In order to access this endpoint, the provided API key must have at least one of the following roles:
         - Organization Owner
@@ -2299,6 +2374,58 @@ paths:
           $ref: '#/components/responses/AccessForbidden'
         '404':
           $ref: '#/components/responses/ResourceNotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  '/v4/organizations/{organizationId}/cmek/providers':
+    parameters:
+      - $ref: '#/components/parameters/OrganizationId'
+    put:
+      summary: Enable CMEK For Cloud Services Provider
+      description: |
+        Enables the customer-managed encryption keys feature for the specified cloud service provider within the
+        organization.
+
+        For AWS and GCP enabling the customer-managed encryption keys feature is only required if no AWS or GCP cluster
+        respectively has ever been created in the organization.
+
+        The customer-managed encryption keys feature must always be enabled for Azure before Azure keys can be created.
+        This operation provisions a multi-tenant Azure Entra ID application for the organization, which is required for
+        Capella to access customer-managed encryption keys.
+
+        In order to access this endpoint, the provided API key must have at least one of the following roles:
+        - Organization Owner
+
+        To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
+      tags:
+        - CMEK
+      operationId: enableCMEK
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - cloudProvider
+              properties:
+                cloudProvider:
+                  type: string
+                  description: Cloud provider for CMEK keys.
+                  enum:
+                    - aws
+                    - gcp
+                    - azure
+                  example: aws
+      responses:
+        '204':
+          description: Successfully enabled the CMEK feature for the cloud services provider.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/AccessForbidden'
         '422':
           $ref: '#/components/responses/UnprocessableContent'
         '429':
@@ -3388,6 +3515,8 @@ paths:
                 $ref: '#/components/schemas/CreateAppServicesResponse'
         '403':
           $ref: '#/components/responses/AccessForbidden'
+        '404':
+          $ref: '#/components/responses/ResourceNotFound'
         '412':
           $ref: '#/components/responses/PreconditionFailed'
         '422':
@@ -3719,7 +3848,7 @@ paths:
     post:
       summary: Turn On App Service
       description: |
-        Turn App Service on. Free tier App Service can only be turned on when the linked free tier cluster is turned on.
+        Turn App Service on. App Services can only be turned on when the linked cluster is turned on and healthy.
 
         In order to access this endpoint, the provided API key must have at least one of the roles referenced below:
         - Organization Owner
@@ -4213,6 +4342,73 @@ paths:
           $ref: '#/components/responses/RateLimitExceeded'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  '/v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/appservices/{appServiceId}/logStreaming/activationState':
+    x-internal: true
+    parameters:
+      - $ref: '#/components/parameters/OrganizationId'
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ClusterId'
+      - $ref: '#/components/parameters/AppServiceId'
+    post:
+      summary: Resume App Service Log Streaming
+      description: |
+        Re-enables Log Streaming for an App Service that was previously paused.  Log Streaming needs to be
+        previously configured for the App Service before it can be paused or resumed.
+
+        In order to access this endpoint, the provided API key must have at least one of the roles referenced below:
+        - Organization Owner
+        - Project Owner
+        - Project Manager
+
+        To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
+      tags:
+        - App Services Log Streaming
+      operationId: resumeAppServiceLogStreaming
+      responses:
+        '202':
+          description: Successfully resumed log streaming for the app service.
+        '403':
+          $ref: '#/components/responses/AppEndpointAccessForbidden'
+        '404':
+          $ref: '#/components/responses/ResourceNotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    delete:
+      summary: Pause App Service Log Streaming
+      description: |
+        Temporarily disables Log Streaming for an App Service.  Log Streaming needs to be
+        previously configured for the App Service before it can be paused or resumed.
+
+        In order to access this endpoint, the provided API key must have at least one of the roles referenced below:
+        - Organization Owner
+        - Project Owner
+        - Project Manager
+
+        To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
+      tags:
+        - App Services Log Streaming
+      operationId: pauseAppServiceLogStreaming
+      responses:
+        '202':
+          description: Successfully paused log streaming for the app service.
+        '403':
+          $ref: '#/components/responses/AppEndpointAccessForbidden'
+        '404':
+          $ref: '#/components/responses/ResourceNotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   '/v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/appservices/{appServiceId}/certificates':
     parameters:
       - $ref: '#/components/parameters/OrganizationId'
@@ -4305,6 +4501,7 @@ paths:
                       bucket: bucket1
                       name: defaultAppEndpoint
                       userXattrKey: key
+                      disablePublicAllDocs: false
                       deltaSyncEnabled: true
                       oidc:
                         - issuer: 'https://example.auth.com'
@@ -4360,6 +4557,7 @@ paths:
                       bucket: bucket1
                       name: defaultAppEndpoint
                       userXattrKey: key
+                      disablePublicAllDocs: false
                       deltaSyncEnabled: true
                       oidc:
                         - issuer: 'https://example.auth.com'
@@ -4451,6 +4649,7 @@ paths:
                   bucket: bucket1
                   name: defaultAppEndpoint
                   userXattrKey: key
+                  disablePublicAllDocs: false
                   deltaSyncEnabled: true
                   scopes:
                     _default:
@@ -4475,6 +4674,10 @@ paths:
                       discoveryUrl: 'https://foo.com/.well-known/openid-configuration'
                       usernameClaim: fooAlt
                       rolesClaim: roles
+                      scope:
+                        - openid
+                        - profile
+                        - email
                     - issuer: 'https://example.auth.com'
                       register: true
                       clientId: bar_client
@@ -4487,6 +4690,7 @@ paths:
                   name: storeAppEndpoint
                   deltaSyncEnabled: false
                   userXattrKey: key
+                  disablePublicAllDocs: false
                   scopes:
                     scope_1:
                       collections:
@@ -4569,6 +4773,7 @@ paths:
                     bucket: bucket1
                     name: defaultAppEndpoint
                     userXattrKey: key
+                    disablePublicAllDocs: false
                     deltaSyncEnabled: true
                     oidc:
                       - issuer: 'https://example.auth.com'
@@ -4607,6 +4812,7 @@ paths:
                     bucket: bucket1
                     name: defaultAppEndpoint
                     userXattrKey: key
+                    disablePublicAllDocs: false
                     deltaSyncEnabled: true
                     oidc:
                       - issuer: 'https://example.auth.com'
@@ -5047,6 +5253,8 @@ paths:
           $ref: '#/components/responses/AppEndpointAccessForbidden'
         '404':
           $ref: '#/components/responses/ResourceNotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '412':
           $ref: '#/components/responses/PreconditionFailed'
         '422':
@@ -5141,6 +5349,206 @@ paths:
           $ref: '#/components/responses/InternalServerError'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  '/v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/appservices/{appServiceId}/logStreaming':
+    x-internal: true
+    parameters:
+      - $ref: '#/components/parameters/OrganizationId'
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ClusterId'
+      - $ref: '#/components/parameters/AppServiceId'
+    post:
+      summary: Configure App Service Log Streaming
+      description: |
+        Sets up log streaming for a specific App Service.
+
+        Ensure you have provided collector credentials if you wish to begin streaming; log streaming cannot be enabled without credentials.
+        Refer to schema below to see required fields for your log collection provider.
+        Supported providers include Datadog, Sumo Logic, Grafana Loki, Elasticsearch (versions 8 and newer only), generic HTTP, Splunk, and Dynatrace.
+
+        Log streaming can only be configured while the config state is either enabled, paused, or disabled.
+
+        In order to access this endpoint, the provided API key must have at least one of the following roles:
+         - Organization Owner
+         - Project Owner
+         - Project Manager
+
+         To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
+      tags:
+        - App Services Log Streaming
+      operationId: postAppServiceLogStreaming
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostLogStreamingRequest'
+      responses:
+        '202':
+          description: Successful configuration of log streaming
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/AccessForbidden'
+        '404':
+          $ref: '#/components/responses/ResourceNotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    get:
+      summary: Get App Service Log Streaming Configuration and State
+      description: |
+        Retrieves the configured output type, current config state, current streaming state of log streaming for a specific App Service.
+
+        In order to access this endpoint, the provided API key must have at least one of the following roles:
+         - Organization Owner
+         - Project Owner
+         - Project Manager
+         - Project Viewer
+
+         To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
+      tags:
+        - App Services Log Streaming
+      operationId: getAppServiceLogStreaming
+      responses:
+        '200':
+          description: Successful retrieval of log streaming configuration and state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetLogStreamingResponse'
+        '403':
+          $ref: '#/components/responses/AccessForbidden'
+        '404':
+          $ref: '#/components/responses/ResourceNotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    delete:
+      summary: Disable App Service Log Streaming
+      description: |
+        Disables log streaming for a specific App Service.
+
+        This will remove the log streaming configuration for the App Service. To enable log streaming again, you will need to provide the configuration details once more using the "Configure App Service Log Streaming" endpoint.
+
+        Log streaming can only be disabled while the config state is either enabled or paused.
+
+        It may take a few minutes for the log streaming to be fully disabled.
+
+        In order to access this endpoint, the provided API key must have at least one of the following roles:
+         - Organization Owner
+         - Project Owner
+         - Project Manager
+
+         To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
+      tags:
+        - App Services Log Streaming
+      operationId: deleteAppServiceLogStreaming
+      responses:
+        '202':
+          description: Log streaming disabled
+        '403':
+          $ref: '#/components/responses/AccessForbidden'
+        '404':
+          $ref: '#/components/responses/ResourceNotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  '/v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/appservices/{appServiceId}/appEndpoints/{appEndpointName}/logStreaming':
+    x-internal: true
+    parameters:
+      - $ref: '#/components/parameters/OrganizationId'
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ClusterId'
+      - $ref: '#/components/parameters/AppServiceId'
+      - $ref: '#/components/parameters/appEndpointId'
+    put:
+      summary: Update App Endpoint Log Streaming Config
+      description: |
+        Updates the log streaming config for an app endpoint, which configures log levels and keys used to filter log messages.
+
+        In order to access this endpoint, the provided API key must have at least one of the following roles:
+         - Organization Owner
+         - Project Owner
+         - Project Manager
+
+         To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
+      tags:
+        - App Services Log Streaming
+      operationId: putAppEndpointLogStreamingConfig
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsoleLoggingConfig'
+      responses:
+        '204':
+          description: Successful update of the app endpoint log streaming configuration
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/AppEndpointAccessForbidden'
+        '404':
+          $ref: '#/components/responses/ResourceNotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '504':
+          $ref: '#/components/responses/GatewayTimeout'
+    get:
+      summary: Get App Endpoint Log Streaming Config
+      description: |
+        Retrieves log streaming config for an app endpoint, which shows log levels and keys used to filter log messages.
+
+        In order to access this endpoint, the provided API key must have at least one of the following roles:
+        - Organization Owner
+        - Project Owner
+        - Project Manager
+        - Project Viewer
+
+        To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
+      tags:
+        - App Services Log Streaming
+      operationId: getAppEndpointLogStreamingConfig
+      responses:
+        '200':
+          description: Successful retrieval of the app endpoint log streaming configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsoleLoggingConfig'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/AppEndpointAccessForbidden'
+        '404':
+          $ref: '#/components/responses/ResourceNotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '504':
+          $ref: '#/components/responses/GatewayTimeout'
   '/v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/appservices/{appServiceId}/appEndpoints/{appEndpointKeyspace}/accessControlFunction':
     parameters:
       - $ref: '#/components/parameters/OrganizationId'
@@ -7024,6 +7432,11 @@ paths:
           - Project Viewer
 
         To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
+      x-new-description:
+        x-internal: true
+        description: |
+          This endpoint determines if the endpoint service is enabled or disabled on your cluster, and shows which routes are configured to use private endpoints. The REST route (port 18091) is used by XDCR, so enabling it allows XDCR to use private endpoints.
+          The `routes` field is only present when private endpoint service is enabled (`enabled: true`), showing the current state of each route (e.g., `xdcr: true` if enabled, `xdcr: false` if disabled). When private endpoint service is disabled (`enabled: false`), the `routes` field is not included in the response.
       tags:
         - Private Endpoint Service
       operationId: getPrivateEndpointServiceStatus
@@ -7061,12 +7474,60 @@ paths:
         - Project Owner
 
         To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
+      x-new-description:
+        x-internal: true
+        description: |
+          You can optionally enable routes such as REST API (port 18091) to use private endpoints at the time of enablement. Enabling the REST route allows XDCR to use private endpoints since XDCR uses the REST API.
       tags:
         - Private Endpoint Service
       operationId: enablePrivateEndpointService
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnableAwsPrivateEndpointServiceRequest'
       responses:
         '202':
           description: Successfully submitted request to enable private endpoint service.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/AccessForbidden'
+        '404':
+          $ref: '#/components/responses/ResourceNotFound'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      x-internal: true
+      summary: Update Private Endpoint Service Configuration
+      description: |
+        Update the configuration of routes to use private endpoints after private endpoint service has been enabled.
+
+        This endpoint allows you to enable or disable private endpoint usage for routes. The REST route (port 18091) is used by XDCR, so enabling it allows XDCR to use private endpoints, while disabling it stops routing XDCR traffic via private endpoints. Setting a route to true routes traffic through private endpoints, while setting it to false stops routing that route's traffic via private endpoints.
+
+        In order to access this endpoint, the provided API key must have at least one of the following roles:
+        - Organization Owner
+        - Project Manager
+        - Project Owner
+
+        To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
+      tags:
+        - Private Endpoint Service
+      operationId: updatePrivateEndpointService
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAwsPrivateEndpointServiceRequest'
+      responses:
+        '202':
+          description: Successfully submitted request to update private endpoint service configuration.
         '400':
           $ref: '#/components/responses/BadRequest'
         '403':
@@ -8037,6 +8498,8 @@ paths:
           $ref: '#/components/responses/AccessForbidden'
         '404':
           $ref: '#/components/responses/ResourceNotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '429':
           $ref: '#/components/responses/RateLimitExceeded'
         '500':
@@ -8545,6 +9008,8 @@ paths:
           $ref: '#/components/responses/AccessForbidden'
         '404':
           $ref: '#/components/responses/ResourceNotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
         '429':
           $ref: '#/components/responses/RateLimitExceeded'
         '500':
@@ -11573,7 +12038,6 @@ paths:
   '/v4/organizations/{organizationId}/aiServices/providers':
     parameters:
       - $ref: '#/components/parameters/OrganizationId'
-    x-internal: true
     get:
       summary: List providers
       description: |
@@ -11581,8 +12045,6 @@ paths:
 
         In order to access this endpoint, the provided API key must have at least one of the following roles:
         - Organization Owner
-        - Project Creator
-        - Organization Member
 
         To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
       tags:
@@ -11616,7 +12078,6 @@ paths:
 
         In order to access this endpoint, the provided API key must have at least one of the following roles:
         - Organization Owner
-        - Project Creator
 
         To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
       tags:
@@ -11654,6 +12115,13 @@ paths:
                     sessionToken: your-session-token
                     awsRegion: us-east-1
                     bucket: my-bucket
+              CreateBedrockProviderExample:
+                value:
+                  type: awsBedrock
+                  name: provider1
+                  configuration:
+                    accessKeyId: your-access-key-id
+                    secretAccessKey: your-secret-access-key
       responses:
         '201':
           description: Successfully created a provider.
@@ -11677,7 +12145,6 @@ paths:
     parameters:
       - $ref: '#/components/parameters/OrganizationId'
       - $ref: '#/components/parameters/ProviderId'
-    x-internal: true
     get:
       summary: Get provider
       description: |
@@ -11685,8 +12152,6 @@ paths:
 
         In order to access this endpoint, the provided API key must have at least one of the following roles:
         - Organization Owner
-        - Project Creator
-        - Organization Member
 
         To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
       tags:
@@ -11745,6 +12210,17 @@ paths:
                       modifiedBy: ffffffff-aaaa-1414-eeee-000000000000
                       modifiedAt: '2021-09-01T12:34:56Z'
                       version: 1
+                GetBedrockProviderExample:
+                  value:
+                    name: provider1
+                    type: awsBedrock
+                    configuration: null
+                    audit:
+                      createdBy: ffffffff-aaaa-1414-eeee-000000000000
+                      createdAt: '2021-09-01T12:34:56Z'
+                      modifiedBy: ffffffff-aaaa-1414-eeee-000000000000
+                      modifiedAt: '2021-09-01T12:34:56Z'
+                      version: 1
         '400':
           $ref: '#/components/responses/BadRequest'
         '403':
@@ -11762,7 +12238,6 @@ paths:
 
         In order to access this endpoint, the provided API key must have at least one of the following roles:
         - Organization Owner
-        - Project Creator
 
         To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
       tags:
@@ -11791,6 +12266,11 @@ paths:
                     accessKeyId: your-new-access-key-id
                     secretAccessKey: your-new-secret-access-key
                     sessionToken: your-new-session-token
+              UpdateBedrockProviderExample:
+                value:
+                  configuration:
+                    accessKeyId: new-access-key-id
+                    secretAccessKey: new-secret-access-key
       responses:
         '204':
           description: Successfully submitted request to update provider.
@@ -11815,7 +12295,6 @@ paths:
 
         In order to access this endpoint, the provided API key must have at least one of the following roles:
         - Organization Owner
-        - Project Creator
 
         To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
       tags:
@@ -11841,7 +12320,6 @@ paths:
       - $ref: '#/components/parameters/OrganizationId'
       - $ref: '#/components/parameters/ProjectId'
       - $ref: '#/components/parameters/ClusterId'
-    x-internal: true
     get:
       summary: List AI Workflows
       description: |
@@ -11919,12 +12397,10 @@ paths:
                           sourceFields:
                             - field1
                             - field2
-                          encodingFormat: float
                         vectorEmbeddingField2:
                           sourceFields:
                             - field3
                             - field4
-                          encodingFormat: base64
                       embeddingModel:
                         capellaHosted:
                           id: 550e8400-e29b-41d4-a716-446655440000
@@ -11958,12 +12434,10 @@ paths:
                           sourceFields:
                             - field1
                             - field2
-                          encodingFormat: float
                         vectorEmbeddingField2:
                           sourceFields:
                             - field3
                             - field4
-                          encodingFormat: base64
                       embeddingModel:
                         external:
                           openAiIntegration:
@@ -11985,7 +12459,6 @@ paths:
                           sourceFields:
                             - field1
                             - field2
-                          encodingFormat: float
                       embeddingModel:
                         external:
                           openAiIntegration:
@@ -12016,7 +12489,6 @@ paths:
       - $ref: '#/components/parameters/ProjectId'
       - $ref: '#/components/parameters/ClusterId'
       - $ref: '#/components/parameters/WorkflowId'
-    x-internal: true
     get:
       summary: Get AI Workflow
       description: |
@@ -12062,7 +12534,6 @@ paths:
                             sourceFields:
                               - field1
                               - field2
-                            encodingFormat: float
                         embeddingModel:
                           external:
                             openAiIntegration:
@@ -12098,12 +12569,10 @@ paths:
                             sourceFields:
                               - field1
                               - field2
-                            encodingFormat: float
                           vectorEmbeddingField2:
                             sourceFields:
                               - field3
                               - field4
-                            encodingFormat: base64
                         embeddingModel:
                           external:
                             openAiIntegration:
@@ -12148,7 +12617,6 @@ paths:
                             sourceFields:
                               - field1
                               - field2
-                            encodingFormat: float
                           vectorEmbeddingField2:
                             sourceFields:
                               - field3
@@ -12204,7 +12672,6 @@ paths:
       - $ref: '#/components/parameters/ProjectId'
       - $ref: '#/components/parameters/ClusterId'
       - $ref: '#/components/parameters/WorkflowId'
-    x-internal: true
     get:
       summary: List AI Workflow Runs
       description: |
@@ -12312,7 +12779,6 @@ paths:
       - $ref: '#/components/parameters/ClusterId'
       - $ref: '#/components/parameters/WorkflowId'
       - $ref: '#/components/parameters/WorkflowRunId'
-    x-internal: true
     get:
       summary: Get AI Workflow Run
       description: |
@@ -12365,7 +12831,6 @@ paths:
       - $ref: '#/components/parameters/ClusterId'
       - $ref: '#/components/parameters/WorkflowId'
       - $ref: '#/components/parameters/WorkflowRunId'
-    x-internal: true
     get:
       summary: Get AI Workflow Run Processed Files
       description: |
@@ -12539,7 +13004,7 @@ paths:
                   description: Dimensions specify the vector dimensions for the underlying embedding model.
                 guardrails:
                   type: array
-                  description: Guardrails as a base-64 encoded string.
+                  description: List of guardrail categories as plain text strings. These will be formatted into a template and base64-encoded internally.
                   items:
                     type: string
                   example:
@@ -12552,11 +13017,11 @@ paths:
                     scoreThreshold:
                       type: number
                       format: double
-                      description: The score threshold for the jailbreak model. The value should be > 0.
+                      description: The score threshold for the jailbreak model. Ranges between 0-1; 0<score<1.
                       example: 0.9
                 caching:
                   $ref: '#/components/schemas/Caching'
-                isBatchingEnabled:
+                enableBatching:
                   type: boolean
                   description: Option to enable batching.
                   example: true
@@ -12640,19 +13105,16 @@ paths:
                   quantization: fullPrecision
                   optimization: throughput
                   caching:
-                    standard:
-                      enableStandard: true
-                    conversational:
-                      enableConversational: true
+                    enableStandard: true
+                    enableConversational: true
                     semantic:
-                      enableSemantic: true
                       embeddingModel: my-embedding-model-id
                       scoreThreshold: 0.75
                       dimensions: 4096
                       distanceMetric: dot_product
                     defaultCache: semantic
                     expiryTTL: 4000
-                  isBatchingEnabled: true
+                  enableBatching: true
                   keywordFiltering:
                     - death"
                     - massacre
@@ -12670,15 +13132,11 @@ paths:
                   quantization: fullPrecision
                   optimization: throughput
                   caching:
-                    standard:
-                      enableStandard: true
-                    conversational:
-                      enableConversational: true
-                    semantic:
-                      enableSemantic: false
+                    enableStandard: true
+                    enableConversational: true
                     defaultCache: standard
                     expiryTTL: 4000
-                  isBatchingEnabled: true
+                  enableBatching: true
                   keywordFiltering:
                     - death
                     - massacre
@@ -12696,19 +13154,16 @@ paths:
                   quantization: fullPrecision
                   optimization: throughput
                   caching:
-                    standard:
-                      enableStandard: false
-                    conversational:
-                      enableConversational: true
+                    enableStandard: false
+                    enableConversational: true
                     semantic:
-                      enableSemantic: true
                       embeddingModel: my-embedding-model-id
                       scoreThreshold: 0.75
                       dimensions: 4096
                       distanceMetric: dot_product
                     defaultCache: semantic
                     expiryTTL: 4000
-                  isBatchingEnabled: true
+                  enableBatching: true
                   keywordFiltering:
                     - death
                     - massacre
@@ -12726,19 +13181,16 @@ paths:
                   quantization: fullPrecision
                   optimization: throughput
                   caching:
-                    standard:
-                      enableStandard: false
-                    conversational:
-                      enableConversational: false
+                    enableStandard: false
+                    enableConversational: false
                     semantic:
-                      enableSemantic: true
                       embeddingModel: my-embedding-model-id
                       scoreThreshold: 0.75
                       dimensions: 4096
                       distanceMetric: dot_product
                     defaultCache: semantic
                     expiryTTL: 4000
-                  isBatchingEnabled: true
+                  enableBatching: true
                   keywordFiltering:
                     - death
                     - massacre
@@ -12756,19 +13208,16 @@ paths:
                   quantization: fullPrecision
                   optimization: throughput
                   caching:
-                    standard:
-                      enableStandard: true
-                    conversational:
-                      enableConversational: true
+                    enableStandard: true
+                    enableConversational: true
                     semantic:
-                      enableSemantic: true
                       embeddingModel: my-embedding-model-id
                       scoreThreshold: 0.75
                       dimensions: 4096
                       distanceMetric: dot_product
                     defaultCache: semantic
                     expiryTTL: 4000
-                  isBatchingEnabled: false
+                  enableBatching: false
                   keywordFiltering:
                     - death
                     - massacre
@@ -12786,19 +13235,16 @@ paths:
                   quantization: fullPrecision
                   optimization: throughput
                   caching:
-                    standard:
-                      enableStandard: true
-                    conversational:
-                      enableConversational: true
+                    enableStandard: true
+                    enableConversational: true
                     semantic:
-                      enableSemantic: true
                       embeddingModel: my-embedding-model-id
                       scoreThreshold: 0.75
                       dimensions: 4096
                       distanceMetric: dot_product
                     defaultCache: semantic
                     expiryTTL: 4000
-                  isBatchingEnabled: false
+                  enableBatching: false
       responses:
         '202':
           description: Model queued for deployment successfully.
@@ -12878,6 +13324,92 @@ paths:
           $ref: '#/components/responses/RateLimitExceeded'
         '500':
           $ref: '#/components/responses/InternalServerError'
+    put:
+      summary: Update Model
+      description: |
+        Updates an existing model.
+
+        Model updates may take up to a few minutes to take effect.
+
+        In order to access this endpoint, the provided API key must have at least one of the following roles:
+        - Organization Owner
+
+        To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
+      parameters:
+        - $ref: '#/components/parameters/If-Match'
+      tags:
+        - Models (AI Services)
+      operationId: putModel
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateModelRequest'
+            examples:
+              UpdateModelRequestExample:
+                summary: Update Model Request Payload
+                value:
+                  name: my-updated-text-generation-model
+                  caching:
+                    enableStandard: true
+                    enableConversational: true
+                    semantic:
+                      embeddingModel: my-embedding-model-id
+                      scoreThreshold: 0.8
+                      dimensions: 4096
+                      distanceMetric: dot_product
+                    defaultCache: semantic
+                    expiryTTL: 3600
+                  enableBatching: true
+                  keywordFiltering:
+                    - violence
+                    - harassment
+                    - inappropriate
+                  guardrails:
+                    - hate speech
+                    - sexual content
+                    - violence
+                  jailbreak:
+                    scoreThreshold: 0.85
+              UpdateModelRequestValueAdds:
+                summary: Update Model Request Payload - caching configuration
+                value:
+                  caching:
+                    enableStandard: false
+                    enableConversational: false
+                    semantic:
+                      embeddingModel: my-embedding-model-id
+                      scoreThreshold: 0.75
+                      dimensions: 1024
+                      distanceMetric: dot_product
+                    defaultCache: semantic
+                    expiryTTL: 7200
+                  enableBatching: false
+              UpdateModelRequestSecurity:
+                summary: Update Model Request Payload - Update security features
+                value:
+                  guardrails:
+                    - hate speech
+                    - violence
+                    - harassment
+                    - spam
+                  jailbreak:
+                    scoreThreshold: 0.9
+      responses:
+        '204':
+          description: Successfully submitted request to update model.
+        '403':
+          $ref: '#/components/responses/AccessForbidden'
+        '404':
+          $ref: '#/components/responses/ResourceNotFound'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   '/v4/organizations/{organizationId}/aiServices/models/{modelId}/connectionString':
     parameters:
       - $ref: '#/components/parameters/OrganizationId'
@@ -12886,6 +13418,8 @@ paths:
       summary: Get Model Connection String
       description: |
         Fetches the connection string to connect to the model.
+
+        Use this connection string as the base URL in your [Model Service API](https://docs.couchbase.com/ai/model-service-api-reference/rest-api.html) inference requests. For more information, see [Make an API Call with the Model Service API](https://docs.couchbase.com/ai/api-guide/api-use.html#model-api-call).
 
         In order to access this endpoint, the provided API key must have at least one of the following roles:
         - Organization Member
@@ -12911,15 +13445,76 @@ paths:
           $ref: '#/components/responses/RateLimitExceeded'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  '/v4/organizations/{organizationId}/aiServices/models/{modelId}/apiKeys':
+  '/v4/organizations/{organizationId}/aiServices/models/{modelId}/activationState':
     parameters:
       - $ref: '#/components/parameters/OrganizationId'
       - $ref: '#/components/parameters/ModelId'
     post:
-      summary: Create Model API Key
+      summary: Turn On Model
       description: |
-        Creates a new Language Model API Key for the specified model within an organization.
-        API Key created for a model can be used to access the model for inferencing.
+        Resumes the model or turns the model to On state.
+
+        The connection URL remains unchanged when the model is turned on or off.
+
+        In order to access this endpoint, the provided API key must have at least one of the roles referenced below:
+        - Organization Owner
+
+        To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
+      tags:
+        - Models (AI Services)
+      operationId: modelOn
+      responses:
+        '202':
+          description: Successfully switched the model to on state.
+        '403':
+          $ref: '#/components/responses/AccessForbidden'
+        '404':
+          $ref: '#/components/responses/ResourceNotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Turn Off Model
+      description: |
+        Pauses the model or turns the model to off state.
+
+        The connection URL remains unchanged when the model is turned on or off.
+
+        In order to access this endpoint, the provided API key must have at least one of the roles referenced below:
+        - Organization Owner
+
+        To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
+      tags:
+        - Models (AI Services)
+      operationId: modelOff
+      responses:
+        '202':
+          description: Successfully switched the model to off state.
+        '403':
+          $ref: '#/components/responses/AccessForbidden'
+        '404':
+          $ref: '#/components/responses/ResourceNotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  '/v4/organizations/{organizationId}/aiServices/models/apiKeys':
+    parameters:
+      - $ref: '#/components/parameters/OrganizationId'
+    post:
+      summary: Create API Key
+      description: |
+        Creates a new API Key for the specified region within an organization.
+        API Key created for a region can be used to access all the models of that region for inferencing.
 
         In order to access this endpoint, the provided API key must have at least one of the following roles:
           - Organization Owner
@@ -12936,18 +13531,20 @@ paths:
               $ref: '#/components/schemas/CreateLanguageModelAPIKeyRequest'
             examples:
               createLanguageModelAPIKeyExample:
-                summary: Create Language Model API Key Example
-                description: Example request for creating a new Language Model API Key
+                summary: Create API Key Example - All Models (default)
+                description: Example request for creating a new Language Model API Key with access to all models (allowedModels empty defaults to wildcard)
                 value:
-                  name: MyLanguageModelAPIKey
-                  description: API key for accessing GPT-4 and Claude models
+                  name: MyLanguageModelAPIKey-AllModels
+                  description: API key for accessing all models in the region
                   expiry: 180
                   allowedCIDRs:
                     - 192.168.1.0/24
                     - 10.0.0.0/8
+                  allowedModels: []
+                  region: us-east-1
       responses:
         '201':
-          description: Successfully created model API Key.
+          description: Successfully created API Key.
           content:
             application/json:
               schema:
@@ -12963,9 +13560,9 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
     get:
-      summary: List Model API keys
+      summary: List API keys
       description: |
-        Lists all Language Model API keys for the given model in an organization.
+        Lists all API keys for the given region in an organization.
 
         In order to access this endpoint, the provided API key must have at least one of the following roles:
           - Organization Owner
@@ -12977,9 +13574,12 @@ paths:
       parameters:
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/APIKeysSortBy'
+        - $ref: '#/components/parameters/SortDirection'
+        - $ref: '#/components/parameters/FilterByRegion'
       responses:
         '200':
-          description: Successfully listed all the Language Model API keys under the organization.
+          description: Successfully listed all the API keys.
           content:
             application/json:
               schema:
@@ -12992,15 +13592,14 @@ paths:
           $ref: '#/components/responses/UnprocessableContent'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  '/v4/organizations/{organizationId}/aiServices/models/{modelId}/apiKeys/{apiKeyId}':
+  '/v4/organizations/{organizationId}/aiServices/models/apiKeys/{apiKeyId}':
     parameters:
       - $ref: '#/components/parameters/OrganizationId'
-      - $ref: '#/components/parameters/ModelId'
       - $ref: '#/components/parameters/ModelAPIKeyId'
     get:
-      summary: Get Model API Key
+      summary: Get API Key
       description: |
-        Returns a Model API Key for the given model in the organization by its ID.
+        Returns an API Key for the given region in the organization by its ID.
 
         In order to access this endpoint, the provided API key must have at least one of the following roles:
          - Organization Owner
@@ -13011,7 +13610,7 @@ paths:
         - Model Services API Keys (AI Services)
       responses:
         '200':
-          description: Successfully retrieved the Language Model API Key
+          description: Successfully retrieved the API Key.
           content:
             application/json:
               schema:
@@ -13031,9 +13630,9 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
     delete:
-      summary: Delete Model API key
+      summary: Delete API key
       description: |
-        Deletes an existing Model API Key for the given model in the organization.
+        Deletes an existing API Key for the given region in the organization.
 
         In order to access this endpoint, the provided API key must have at least one of the following roles:
             - Organization Owner
@@ -13044,7 +13643,7 @@ paths:
         - Model Services API Keys (AI Services)
       responses:
         '204':
-          description: Language Model API key deleted successfully
+          description: API key deleted successfully.
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -13236,7 +13835,7 @@ paths:
          - Organization Owner
          - Project Owner
 
-        To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html). 
+        To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
       tags:
         - Replications
       operationId: deleteReplication
@@ -13287,7 +13886,7 @@ paths:
           - Organization Owner
           - Project Owner
 
-        To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html). 
+        To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
       operationId: updateReplication
       tags:
         - Replications
@@ -13373,6 +13972,40 @@ paths:
           $ref: '#/components/responses/UnprocessableContent'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  '/v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/replications/jobs/{jobId}':
+    parameters:
+      - $ref: '#/components/parameters/OrganizationId'
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/ClusterId'
+      - $ref: '#/components/parameters/JobId'
+    get:
+      summary: Get replication job details
+      description: |
+        Fetches the details of the given replication job.
+
+        In order to access this endpoint, the provided API key must have at least one of the following roles:
+         - Organization Owner
+         - Project Owner
+
+        To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
+      tags:
+        - Replications
+      operationId: getReplicationJob
+      responses:
+        '200':
+          description: Replication job detail response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetReplicationJobResponse'
+        '403':
+          $ref: '#/components/responses/AccessForbidden'
+        '404':
+          $ref: '#/components/responses/ResourceNotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   '/v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/replications':
     parameters:
       - $ref: '#/components/parameters/OrganizationId'
@@ -13387,7 +14020,7 @@ paths:
         - Organization Owner
         - Project Owner
 
-        To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html). 
+        To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
       tags:
         - Replications
       operationId: listClusterReplications
@@ -13425,7 +14058,7 @@ paths:
          - Organization Owner
          - Project Owner
 
-        To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html). 
+        To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
       operationId: createReplication
       tags:
         - Replications
@@ -13437,6 +14070,35 @@ paths:
               $ref: '#/components/schemas/CreateReplicationRequest'
             examples:
               createReplication:
+                value:
+                  sourceBucket: dGVzdA
+                  target:
+                    cluster: b95f56d2-d4c4-425c-8df6-eee7c2c8edab
+                    bucket: dPVzdB
+                  mappings:
+                    - sourceScope: source-scope-1
+                      targetScope: target-scope-1
+                      collections:
+                        - sourceCollection: source-collection-1
+                          targetCollection: target-collection-1
+                        - sourceCollection: source-collection-2
+                          targetCollection: target-collection-2
+              createReplicationAsync:
+                value:
+                  sourceBucket: dGVzdA
+                  mode: sync
+                  target:
+                    cluster: b95f56d2-d4c4-425c-8df6-eee7c2c8edab
+                    bucket: dPVzdB
+                  mappings:
+                    - sourceScope: source-scope-1
+                      targetScope: target-scope-1
+                      collections:
+                        - sourceCollection: source-collection-1
+                          targetCollection: target-collection-1
+                        - sourceCollection: source-collection-2
+                          targetCollection: target-collection-2
+              createReplicationSync:
                 value:
                   sourceBucket: dGVzdA
                   mode: sync
@@ -13511,6 +14173,16 @@ paths:
                   value:
                     replicationId: MDIwN23ewrerfetrmZmUzYzExYTcxMTA4MjJkYjJiNmYvdGVzdDEvdGVzdDI=
                     reverseReplicationId: MDIwN23ewrerfetrmZmUzYzExYTcxMTA4MjJkYjJiNmYvdGVzdDEvdGVzdDI=
+        '202':
+          description: Replication creation started asynchronously.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateReplicationResponseAsync'
+              examples:
+                createReplicationAsyncResponse:
+                  value:
+                    jobId: a83d322a-8350-4e77-8708-2b4e961a4259
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -13535,7 +14207,7 @@ paths:
         - Organization Owner
         - Project Owner
 
-        To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html). 
+        To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
       tags:
         - Replications
       operationId: listProjectReplications
@@ -13613,7 +14285,7 @@ paths:
           - Organization Owner
           - Project Owner
 
-        To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html). 
+        To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
       operationId: pauseReplication
       tags:
         - Replications
@@ -13645,7 +14317,7 @@ paths:
           - Organization Owner
           - Project Owner
 
-        To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html). 
+        To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
       operationId: resumeReplication
       tags:
         - Replications
@@ -13750,6 +14422,7 @@ paths:
                   - state
                   - enabledForNetworkPeering
                   - stateForNetworkPeering
+                  - connectionString
                 properties:
                   enabled:
                     type: boolean
@@ -13794,6 +14467,11 @@ paths:
                       - disabled
                       - disabling
                     example: enabled
+                  connectionString:
+                    type: string
+                    description: |
+                      The connection string for the Data API service. If the Data API is not enabled, this will be an empty string.
+                    example: 'https://dpmr2ygad6rwzvsf.data.cloud.couchbase.com'
         '400':
           $ref: '#/components/responses/BadRequest'
         '403':
@@ -14040,6 +14718,9 @@ tags:
       App Services is a fully managed application backend designed to provide data synchronization between mobile or IoT applications running Couchbase Lite and your Couchbase Capella database.
   - name: App Services Audit Logging
     description: Users can configure audit log support on Capella App Services and can export audit logs from cloud blob storage to an AWS S3 bucket. Users can retrieve audit logs from a pre-signed download URL. Logs are retained for 30 days.
+  - name: App Services Log Streaming
+    description: |
+      Log Streaming provides a mechanism for real-time streaming of App Services operational logs to third-party observability platforms or self-hosted HTTP logs collectors. This is a crucial tool to gain instant insights into application behavior, enabling rapid issue detection and resolution to enhance application reliability, performance, and security.
   - name: App Services Private Endpoints
     description: |
       App Services Private Endpoints enables you to configure a secure private network connection between the Virtual Private Cloud (VPC) hosting your applications and the VPC of your Couchbase Capella App Services. Note: This is currently only available for AWS.
@@ -14138,11 +14819,16 @@ tags:
   - name: Model Services API Keys (AI Services)
     description: |
       Couchbase Capella Model Services uses Bearer token authentication for secure access to the AI models. Each inference request to access the models must include a valid API key in the Authorization header.
-      The Model API Keys endpoints enable users to manage (create, retrieve, update, and delete) API keys for specific models, ensuring secure and controlled access to the models during inferencing.
+      The Model API Keys endpoints enable users to manage (create, retrieve, update, and delete) API keys for the models of a specific region, ensuring secure and controlled access to the models during inferencing.
+      The API keys created for a specific region can be used to access all the models available in that region.
+
+      To send inference requests to your models and receive outputs, use the [Model Service API](https://docs.couchbase.com/ai/model-service-api-reference/rest-api.html). For more information, see [Make an API Call with the Model Service API](https://docs.couchbase.com/ai/api-guide/api-use.html#model-api-call).
   - name: Models (AI Services)
     description: |
       The Model Service endpoints allows you to deploy and manage your models - open LLMs like Llama3 and embedding models in Capella close to your data.
       The users can create, get, update, and delete language models.
+
+      To send inference requests to your models and receive outputs, use the [Model Service API](https://docs.couchbase.com/ai/model-service-api-reference/rest-api.html). For more information about the Model Service API, see [Manage Deployments with AI Services APIs](https://docs.couchbase.com/ai/api-guide/api-intro.html#model-service-api).
   - name: Mutual TLS
     description: |
       Mutual TLS (mTLS) is a security protocol that uses certificates to authenticate both the client and the server.
@@ -14198,7 +14884,7 @@ components:
     APIKeysSortBy:
       in: query
       name: sortBy
-      description: ' Sets the order of how you would like to sort the results and the key you would like to order by. Valid fields to sort the results are: **name**, **expiry**, **description**.'
+      description: ' Sets the order of how you would like to sort the results and the key you would like to order by. Valid fields to sort the results are: **name**, **createdAt**, **expiry**.'
       example:
         - name
       required: false
@@ -14515,6 +15201,18 @@ components:
         type: string
         format: uuid
         description: Filter to fetch appservices belonging to a particular cluster.
+    FilterByRegion:
+      in: query
+      name: filterBy
+      description: |
+        Filter criteria in the format 'field:operator:value'. 
+        Supported operators are 'eq' (equals). 
+        Currently, only 'region' is supported as a filter field.
+        Example: region:eq:us-east-1
+      required: false
+      schema:
+        type: string
+        example: 'region:eq:us-east-1'
     From:
       name: from
       description: 'Start date in  RFC3339 format. If not provided, events starting from last 24 hours are returned.'
@@ -14538,6 +15236,15 @@ components:
       schema:
         type: string
         example: def_city
+    JobId:
+      name: jobId
+      description: The ID of the job.
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+        example: 3d4354af-6271-4ba3-aeba-469820d96d12
     ModelAPIKeyId:
       name: apiKeyId
       description: Unique identifier for the Language Model API key
@@ -14677,6 +15384,7 @@ components:
         enum:
           - awsS3
           - openAI
+          - awsBedrock
     ReplicationId:
       name: replicationId
       description: The ID of the replication.
@@ -15319,6 +16027,20 @@ components:
           enum:
             - single
             - multi
+    AzureConfig:
+      type: object
+      required:
+        - keyLocation
+        - region
+      properties:
+        keyLocation:
+          type: string
+          description: The URL of the Azure key.
+          example: 'https://my-vault.vault.azure.net/keys/my-key/846dec161545466586fd1f19849dd1ef'
+        region:
+          type: string
+          description: The region of the Azure key.
+          example: eastus
     AzureConfigData:
       type: object
       required:
@@ -15484,30 +16206,18 @@ components:
       type: object
       description: 'Caching configuration for the model. Caching improves system efficiency by caching frequently accessed data, both at the conversational level (storing request-specific conversation history) and at the semantic level (saving the embeddings for queries and results), ensuring optimal performance while managing memory costs effectively. Supports multiple caching strategies for improved response times and reduced strain on backend LLM services.'
       properties:
-        standard:
-          type: object
-          description: 'Standard caching configuration using exact match caching with SHA-256 hash of the prompt request/query as the document key. Returns cached response if hash matches, otherwise stores the new response with the SHA-256 hash as the key. Ideal for identical repeated requests.'
-          properties:
-            enableStandard:
-              type: boolean
-              description: Enables exact match caching using SHA-256 hash.
-              example: true
-        conversational:
-          type: object
-          description: Conversational caching can be enabled for both standard and semantic caching strategies. This enables contextual session-based caching where conversation context (session topic) is stored along with either standard or semantic cache. Allows searching entire conversations for matches and can return all conversations for a given context/session or only specific matched responses. Essential for maintaining conversation history and context.
-          properties:
-            enableConversational:
-              type: boolean
-              description: Enables conversational caching for maintaining conversation history and context for both standard and semantic caching strategies.
-              example: false
+        enableStandard:
+          type: boolean
+          description: 'Enables standard caching using exact match caching with SHA-256 hash of the prompt request/query as the document key. Returns cached response if hash matches, otherwise stores the new response with the SHA-256 hash as the key. Ideal for identical repeated requests.'
+          example: true
+        enableConversational:
+          type: boolean
+          description: Enables conversational caching for maintaining conversation history and context for both standard and semantic caching strategies. This enables contextual session-based caching where conversation context (session topic) is stored along with either standard or semantic cache. Allows searching entire conversations for matches and can return all conversations for a given context/session or only specific matched responses. Essential for maintaining conversation history and context.
+          example: false
         semantic:
           type: object
-          description: 'Semantic caching configuration that enables similarity-based caching using Couchbase FTS vector search. Creates embeddings for prompt queries, performs vector search with configurable score threshold, and returns cached responses for semantically similar requests.'
+          description: 'Semantic caching configuration that enables similarity-based caching using Couchbase FTS vector search. Creates embeddings for prompt queries, performs vector search with configurable score threshold, and returns cached responses for semantically similar requests. Semantic caching is enabled by the presence of this object.'
           properties:
-            enableSemantic:
-              type: boolean
-              description: Enables semantic similarity-based caching using vector embeddings.
-              example: true
             embeddingModel:
               type: string
               description: Specifies the embedding model deployed by the customer to use for generating vector embeddings. This model converts text queries into numerical vectors for semantic similarity matching in the cache.
@@ -15796,6 +16506,26 @@ components:
               state: 'off'
             - day: sunday
               state: 'off'
+    ClusterStats:
+      type: object
+      description: Cluster-level statistics including memory and replica information.
+      required:
+        - freeMemoryInMb
+        - totalMemoryInMb
+        - maxReplicas
+      properties:
+        freeMemoryInMb:
+          type: integer
+          description: The amount of free data memory left after accounting for all Couchbase bucket data allocations.
+          example: 640
+        totalMemoryInMb:
+          type: integer
+          description: The total amount of data memory available in the cluster for bucket allocations.
+          example: 1040
+        maxReplicas:
+          type: integer
+          description: The maximum number of replicas available for bucket configuration. This is typically n-1 where n is the number of data nodes in the cluster.
+          example: 2
     Collection:
       type: object
       properties:
@@ -15994,7 +16724,7 @@ components:
           example: 4096
         caching:
           $ref: '#/components/schemas/Caching'
-        isBatchingEnabled:
+        enableBatching:
           type: boolean
           description: 'Enables batch processing to provide cost savings and improved efficiency for users making multiple similar large volume requests. When enabled, the system groups requests together and processes them in bulk, resulting in lower inference costs and better resource utilization. Note that batching is good for processing large volumes of requests asynchronously, but it can have delayed results (no streaming), lack of real-time feedback, limited debugging visibility, and a longer turnaround time, hence unsuitable for latency-sensitive use cases. Users can check the status of their batches or cancel an ongoing batch using the AI gateway APIs for batching.'
           example: true
@@ -16017,8 +16747,7 @@ components:
       enum:
         - singleNode
         - multiNode
-      default:
-        - multiNode
+      default: multiNode
       example: multiNode
     ConsoleLoggingConfig:
       type: object
@@ -16234,6 +16963,10 @@ components:
           type: string
           example: syncFnXattr
           description: 'The key of the user-extended attributes (xattr) that will be accessible from the Access control and validation function. If left empty, the feature will be disabled.'
+        disablePublicAllDocs:
+          type: boolean
+          default: false
+          description: Disable the `_all_docs` endpoint for this App Endpoint on the App Services Public API.
     CreateAppServiceAdminUserRequest:
       type: object
       required:
@@ -16329,6 +17062,18 @@ components:
           maxLength: 64
           description: The virtual network and subnet name
           example: vnet-1/subnet-1
+    CreateBedrockConfigurationRequest:
+      type: object
+      required:
+        - accessKeyId
+        - secretAccessKey
+      properties:
+        accessKeyId:
+          type: string
+          description: The access key ID to access AWS Bedrock.
+        secretAccessKey:
+          type: string
+          description: The secret access key to access AWS Bedrock.
     CreateBucketRequest:
       type: object
       required:
@@ -16435,8 +17180,7 @@ components:
           oneOf:
             - $ref: '#/components/schemas/AWSConfig'
             - $ref: '#/components/schemas/GCPConfig'
-          example:
-            arn: 'arn:aws:kms:us-west-2:123456789012:key/abcd1234-a123-456a-a12b-a123b4cd56ef'
+            - $ref: '#/components/schemas/AzureConfig'
     CreateCMEKMetadataResponse:
       type: object
       required:
@@ -16890,7 +17634,9 @@ components:
       type: object
       required:
         - name
-        - expiryDuration
+        - expiry
+        - allowedCIDRs
+        - region
       properties:
         name:
           type: string
@@ -16916,6 +17662,24 @@ components:
           example:
             - 192.168.1.0/24
             - 10.0.0.0/8
+        allowedModels:
+          type: array
+          description: |
+            List of allowed model IDs for this API key.
+            - If empty or omitted, defaults to "*" (all models in the region).
+            - Can be set to ["*"] explicitly for all models.
+            - Can contain specific model IDs to restrict access to those models only.
+          items:
+            type: string
+          example:
+            - 5ca127fe-49da-4a6a-aef9-08393b97643f
+            - 6db238gf-50eb-5b7b-bfg0-09404c08754g
+          default:
+            - '*'
+        region:
+          type: string
+          description: The region where the API key will be created. The apikey created in a region can access all the models available in that region.
+          example: us-east-1
     CreateLanguageModelAPIKeyResponse:
       type: object
       properties:
@@ -17009,8 +17773,20 @@ components:
           description: |
             If set, the value(s) of the given OpenID Connect authentication token claim will be added to the user's roles.
             The value of this claim in the OIDC token must be either a string or an array of strings, any other type will result in an error.
+        scope:
+          type: array
+          items:
+            type: string
+          example:
+            - openid
+            - profile
+            - email
+          description: The scope sent for the OpenID Connect request.
+          default:
+            - openid
+            - email
       example:
-        issuer: foo
+        issuer: 'https://foo.com'
         register: true
         clientId: foo_client
         userPrefix: fooOIDC
@@ -17192,6 +17968,7 @@ components:
           enum:
             - awsS3
             - openAI
+            - awsBedrock
           description: The type of provider to create.
           example: awsS3
         name:
@@ -17205,6 +17982,7 @@ components:
           oneOf:
             - $ref: '#/components/schemas/CreateS3ConfigurationRequest'
             - $ref: '#/components/schemas/CreateOpenAIConfigurationRequest'
+            - $ref: '#/components/schemas/CreateBedrockConfigurationRequest'
     CreateProviderResponse:
       type: object
       required:
@@ -17232,7 +18010,6 @@ components:
       required:
         - sourceBucket
         - target
-        - mode
       properties:
         sourceBucket:
           type: string
@@ -17270,8 +18047,10 @@ components:
           type: string
           description: This specifies the replication creation mode.
           enum:
+            - async
             - sync
-          example: sync
+          default: async
+          example: async
         mappings:
           $ref: '#/components/schemas/mappings'
         direction:
@@ -17303,6 +18082,15 @@ components:
           example: 100
         filter:
           $ref: '#/components/schemas/filter'
+    CreateReplicationResponseAsync:
+      type: object
+      required:
+        - jobId
+      properties:
+        jobId:
+          type: string
+          description: The ID of the job for the async creation of the replication.
+          example: a83d322a-8350-4e77-8708-2b4e961a4259
     CreateS3ConfigurationRequest:
       type: object
       required:
@@ -17565,6 +18353,40 @@ components:
                   description: |
                     The overlap between the chunks.
                   example: 100
+            objectMetadataExtractionConfig:
+              type: object
+              description: |
+                Configuration for extracting metadata from S3 objects.
+                This allows you to copy system-defined and user-defined metadata from S3 objects
+                into the processed documents. System metadata includes properties like ContentType,
+                ContentLength, LastModified, etc. User metadata includes custom key-value pairs
+                added when uploading objects to S3 (x-amz-meta-* headers).
+              properties:
+                systemMetadataKeys:
+                  type: array
+                  description: |
+                    List of S3 system metadata keys to extract from objects.
+                    If empty array is provided, all system metadata will be extracted.
+                    Pass null or omit to skip extracting system metadata.
+                    Common keys: ContentType, ContentLength, LastModified, ETag, etc.
+                  example:
+                    - ContentType
+                    - LastModified
+                  items:
+                    type: string
+                userMetadataKeys:
+                  type: array
+                  description: |
+                    List of user-defined metadata keys to extract from S3 objects.
+                    If empty array is provided, all user metadata will be extracted.
+                    Pass null or omit to skip extracting user metadata.
+                    These correspond to x-amz-meta-* headers set when uploading objects.
+                  example:
+                    - author
+                    - department
+                    - version
+                  items:
+                    type: string
         vectorizationConfig:
           $ref: '#/components/schemas/VectorizationConfigCreation'
     CreateUserRequest:
@@ -17932,6 +18754,24 @@ components:
       type: string
       description: Email of the user.
       example: john.doe@example.com
+    EnableAwsPrivateEndpointServiceRequest:
+      x-internal: true
+      type: object
+      properties:
+        routes:
+          allOf:
+            - $ref: '#/components/schemas/PrivateEndpointRoutes'
+            - description: 'Optional routes configuration to enable for private endpoints. If not provided, defaults to false.'
+    EnableCrossClusterVersioning:
+      type: boolean
+      description: |
+        This being enabled is a pre-requisite to a few XDCR features.
+
+        When enabled, each document processed by XDCR will have additional metadata stored, called the Hybrid Logical Vector (HLV), in the document extended attributes (xattrs).
+
+        The Cross Cluster Versioning setting cannot be disabled after it is enabled. By default, this value reflects what its current value is in the bucket, so omit this setting to leave it as it's current value.
+
+        See the documentation for enableCrossClusterVersioning and the dependent features for important details on when to enable this setting.
     Error:
       type: object
       required:
@@ -18210,6 +19050,10 @@ components:
           type: string
           example: syncFnXattr
           description: 'The key of the user-extended attributes (xattr) that will be accessible from the Access control and validation function. If left empty, the feature will be disabled.'
+        disablePublicAllDocs:
+          type: boolean
+          default: false
+          description: Disable the `_all_docs` endpoint for this App Endpoint on the App Services Public API.
         state:
           type: string
           example: Online
@@ -18411,6 +19255,15 @@ components:
           type: string
           description: The type of output for the audit log streaming
           example: datadog
+    GetAzureCMEKApplicationResponse:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          description: The client ID of the multi-tenant entra application.
+          example: ffffffff-aaaa-1414-eeee-000000000000
     GetAzureVNetPeeringCommandRequest:
       type: object
       required:
@@ -18634,6 +19487,7 @@ components:
         - durabilityLevel
         - evictionPolicy
         - stats
+        - enableCrossClusterVersioning
       properties:
         id:
           type: string
@@ -18718,6 +19572,8 @@ components:
           type: integer
           description: 'Specifies the time to live (TTL) value in seconds. This is the maximum time to live for items in the bucket. If specified as 0, TTL is disabled. This is a non-negative value.'
           example: 100
+        enableCrossClusterVersioning:
+          $ref: '#/components/schemas/EnableCrossClusterVersioning'
         evictionPolicy:
           $ref: '#/components/schemas/EvictionPolicy'
         stats:
@@ -18733,6 +19589,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/GetBucketResponse'
+        clusterStats:
+          $ref: '#/components/schemas/ClusterStats'
     GetCMEKHistoryMetadataListResponse:
       type: object
       required:
@@ -18800,6 +19658,7 @@ components:
           anyOf:
             - $ref: '#/components/schemas/AWSConfig'
             - $ref: '#/components/schemas/GCPConfig'
+            - $ref: '#/components/schemas/AzureConfig'
         audit:
           $ref: '#/components/schemas/CouchbaseAuditData'
     GetCMEKMetadataListResponse:
@@ -19293,6 +20152,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/GetDatabaseCredentialResponse'
+    GetEmptyConfigurationResponse:
+      type: object
     GetEventResponse:
       type: object
       required:
@@ -19440,6 +20301,32 @@ components:
           example:
             - 192.168.1.0/24
             - 10.0.0.0/8
+        allowedModels:
+          type: array
+          description: 'List of allowed models for this API key. Returns "*" if all models in the region are allowed, or specific model IDs if restricted.'
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: Unique identifier for the model
+                example: 5ca127fe-49da-4a6a-aef9-08393b97643f
+              name:
+                type: string
+                description: Name of the model
+                example: GPT-4
+            required:
+              - id
+              - name
+          example:
+            - id: 5ca127fe-49da-4a6a-aef9-08393b97643f
+              name: GPT-4
+            - id: 6db238gf-50eb-5b7b-bfg0-09404c08754g
+              name: Claude 3
+        region:
+          type: string
+          description: The region where the API key will be created. The apikey created in a region can access all the models available in that region.
+          example: us-east-1
         audit:
           $ref: '#/components/schemas/CouchbaseAuditData'
     GetLanguageModelResponse:
@@ -19464,7 +20351,7 @@ components:
               $ref: '#/components/schemas/CloudConfig'
             status:
               type: string
-              description: 'Current status of the deployed model. Would be one of the following - deploying, destroying, deployFailed, destroyFailed.'
+              description: 'Current status of the deployed model. Would be one of the following - deploying, destroying, deployFailed, destroyFailed, pausing, pauseFailed, paused, resuming, resumeFailed.'
               example: deploying
             usageMetrics:
               $ref: '#/components/schemas/UsageMetrics'
@@ -19488,6 +20375,57 @@ components:
             $ref: '#/components/schemas/GetLanguageModelResponse'
         cursor:
           $ref: '#/components/schemas/Cursor'
+    GetLogStreamingResponse:
+      x-internal: true
+      type: object
+      properties:
+        outputType:
+          type: string
+          enum:
+            - datadog
+            - generic_http
+            - sumologic
+            - loki
+            - elastic
+            - splunk
+            - dynatrace
+          description: The log collector that is configured for the App Service.
+          example: datadog
+        configState:
+          type: string
+          enum:
+            - disabled
+            - disabling
+            - enabled
+            - enabling
+            - paused
+            - pausing
+            - errored
+          description: |
+            The current configuration state of log streaming for the App Service. This indicates if log streaming has been set up on the nodes.
+
+            Use the streamingState field to determine whether log streaming is actively streaming logs or not.
+          example: enabled
+        streamingState:
+          type: string
+          enum:
+            - unknown
+            - unsupported
+            - healthy
+            - degraded
+            - unhealthy
+          description: |
+            This indicates if logs are being successfully streamed from the App Service nodes.
+
+            The states meanings are:
+              - unknown - There is not enough data for us to determine if successfully streaming. Make sure the config state is enabled, that logs have been generated for the log levels and keys selected for the App Endpoints, then wait and check again.
+              - unsupported - The App Service version does not support the ability to determine if successfully streaming. Upgrade the App Service to version 3.3.2-2.0.0 or above to enable state checking.
+              - healthy: Logs are being successfully streamed from all nodes.
+              - degraded: At least one node has failed to stream logs. This could mean a transient problem streaming to the log collector, so check your log collector health.
+              - unhealthy: All nodes are failing to stream logs. This could indicate a problem to contact the log collector, so make sure you have the right credentials setup.
+
+            In case of a configuration change (e.g. credential change) or an error occurring while streaming logs, the streaming state may temporarily reflect the previous status for a few minutes, before transitioning to the correct state.
+          example: healthy
     GetMtlsConfigurationResponse:
       x-internal: true
       type: object
@@ -19541,8 +20479,6 @@ components:
             - $ref: '#/components/schemas/AZURE'
         audit:
           $ref: '#/components/schemas/CouchbaseAuditData'
-    GetOpenAIConfigurationResponse:
-      type: object
     GetOrganizationResponse:
       type: object
       required:
@@ -19645,6 +20581,10 @@ components:
           type: boolean
           description: The status of the private endpoint service.
           example: true
+        routes:
+          x-internal: true
+          allOf:
+            - $ref: '#/components/schemas/PrivateEndpointRoutes'
     GetPrivateEndpointsResponse:
       type: object
       required:
@@ -19743,9 +20683,54 @@ components:
           description: The credentials for the provider.
           oneOf:
             - $ref: '#/components/schemas/GetS3ConfigurationResponse'
-            - $ref: '#/components/schemas/GetOpenAIConfigurationResponse'
+            - $ref: '#/components/schemas/GetEmptyConfigurationResponse'
         audit:
           $ref: '#/components/schemas/CouchbaseAuditData'
+    GetReplicationJobResponse:
+      type: object
+      required:
+        - jobId
+        - state
+        - lastUpdatedTimestamp
+      properties:
+        jobId:
+          type: string
+          description: The ID of the job.
+          example: 3d4354af-6271-4ba3-aeba-469820d96d12
+        state:
+          type: string
+          description: The state of the job.
+          enum:
+            - pending
+            - processing
+            - complete
+            - failed
+            - skipped
+            - killed
+            - notfound
+            - unknown
+          example: pending
+        retryNumber:
+          type: integer
+          description: The attempt number for the job.
+          example: 1
+        lastError:
+          type: string
+          description: The last error message if the job encountered an error.
+          example: fake error
+        replicationId:
+          type: string
+          description: The ID of the created replication. Only present if the job is complete.
+          example: UmlqdSBpcyBhd2Vzb21l
+        reverseReplicationId:
+          type: string
+          description: The ID of the inverse replication if the direction is twoWay.
+          example: MDIwN23ewrerfetrmZmUzYzExYTcxMTA4MjJkYjJiNmYvdGVzdDEvdGVzdDI
+        lastUpdatedTimestamp:
+          type: string
+          format: date-time
+          description: The timestamp of the last modification of the job record.
+          example: '2021-09-01T12:34:56Z'
     GetReplicationResponse:
       type: object
       required:
@@ -19940,7 +20925,7 @@ components:
                   - Header
                   - Footer
                   - Table
-                  
+                
                 If not provided, all sections will be processed.
               example:
                 - header
@@ -19981,6 +20966,36 @@ components:
                   description: |
                     The overlap between the chunks.
                   example: 100
+            objectMetadataExtractionConfig:
+              type: object
+              description: |
+                Configuration for extracting metadata from S3 objects.
+                This allows you to copy system-defined and user-defined metadata from S3 objects
+                into the processed documents.
+              properties:
+                systemMetadataKeys:
+                  type: array
+                  description: |
+                    List of S3 system metadata keys to extract from objects.
+                    If empty array, all system metadata is extracted.
+                    If null/omitted, no system metadata is extracted.
+                  example:
+                    - ContentType
+                    - LastModified
+                  items:
+                    type: string
+                userMetadataKeys:
+                  type: array
+                  description: |
+                    List of user-defined metadata keys to extract from S3 objects.
+                    If empty array, all user metadata is extracted.
+                    If null/omitted, no user metadata is extracted.
+                  example:
+                    - author
+                    - department
+                    - version
+                  items:
+                    type: string
         vectorizationConfig:
           $ref: '#/components/schemas/VectorizationConfig'
     GetUserResponse:
@@ -20126,16 +21141,24 @@ components:
             properties:
               fileName:
                 type: string
-                description: Name of the file that failed.
+                description: Name of the file.
               filePath:
                 type: string
-                description: Path of the file that failed.
+                description: Path of the file.
               fileStatus:
                 type: string
                 enum:
                   - failed
                   - success
                 description: Status of the file in the workflow run.
+              s3Url:
+                type: string
+                description: 'Full S3 URL of the file (e.g., s3://bucket/path/file.pdf).'
+              fileMetadata:
+                type: object
+                additionalProperties:
+                  type: string
+                description: User-defined S3 metadata associated with the file.
         cursor:
           $ref: '#/components/schemas/Cursor'
     GetWorkflowRunResponse:
@@ -20612,7 +21635,7 @@ components:
                 description: The credentials for the provider.
                 oneOf:
                   - $ref: '#/components/schemas/GetS3ConfigurationResponse'
-                  - $ref: '#/components/schemas/GetOpenAIConfigurationResponse'
+                  - $ref: '#/components/schemas/GetEmptyConfigurationResponse'
               audit:
                 $ref: '#/components/schemas/CouchbaseAuditData'
         cursor:
@@ -20837,13 +21860,28 @@ components:
           type: boolean
           readOnly: true
           description: Indicates whether this is the default OpenID Connect provider.
+        scope:
+          type: array
+          items:
+            type: string
+          example:
+            - openid
+            - email
+            - profile
+          description: The scope sent for the OpenID Connect request.
+          default:
+            - openid
+            - email
       example:
-        issuer: foo
+        issuer: 'https://foo.com'
         register: true
         clientId: foo_client
         userPrefix: fooOIDC
         discoveryUrl: 'https://foo.com/.well-known/openid-configuration'
         usernameClaim: fooAlt
+        scope:
+          - openid
+          - foo
     OIDCProviderID:
       required:
         - providerId
@@ -20987,6 +22025,36 @@ components:
         reasoning:
           type: string
           example: sample_reasoning
+    PostLogStreamingRequest:
+      x-internal: true
+      type: object
+      required:
+        - outputType
+        - credentials
+      properties:
+        outputType:
+          type: string
+          enum:
+            - datadog
+            - generic_http
+            - sumologic
+            - loki
+            - elastic
+            - splunk
+            - dynatrace
+          description: The log collector to have logs streamed to.
+          example: datadog
+        credentials:
+          description: The credentials to be used to authenticate with the log collector.
+          type: object
+          oneOf:
+            - $ref: '#/components/schemas/datadog'
+            - $ref: '#/components/schemas/sumologic'
+            - $ref: '#/components/schemas/generic_http'
+            - $ref: '#/components/schemas/elastic'
+            - $ref: '#/components/schemas/loki'
+            - $ref: '#/components/schemas/splunk'
+            - $ref: '#/components/schemas/dynatrace'
     PostSampleBucket:
       type: object
       required:
@@ -21004,7 +22072,7 @@ components:
              - travel-sample 
              - gamesim-sample
              - beer-sample 
-             
+
           example: travel-sample
     PostSampleBucketResponse:
       type: object
@@ -21038,10 +22106,15 @@ components:
       properties:
         id:
           type: string
-          description: endpoint id
+          description: The ID of the private endpoint.
           example: vpce-000000000000aaaaa
+        serviceName:
+          type: string
+          description: The service name associated with the private endpoint.
+          example: com.amazonaws.vpce.us-east-1.vpce-svc-000000000000aaaaa
         status:
           type: string
+          description: The status of the private endpoint.
           enum:
             - pending
             - pendingAcceptance
@@ -21050,6 +22123,25 @@ components:
             - failed
             - unrecognized
           example: linked
+    PrivateEndpointRoutes:
+      x-internal: true
+      type: object
+      description: |
+        Routes configuration for private endpoints. Only present when private endpoint service is enabled (`enabled: true`), showing the current state of each route (true if enabled, false if disabled).
+      required:
+        - xdcr
+        - metrics
+      properties:
+        xdcr:
+          type: boolean
+          description: 'Whether XDCR is allowed to work over a Private Endpoint connection. This comes with node count limitations, refer to Capella Docs for more information.'
+          example: true
+          default: false
+        metrics:
+          type: boolean
+          description: Whether Prometheus metrics is allowed to work over a Private Endpoint connection.
+          example: false
+          default: false
     ProjectRoles:
       type: string
       enum:
@@ -21065,6 +22157,8 @@ components:
         To learn more about Project Roles, see [Project Roles](https://docs.couchbase.com/cloud/projects/project-roles.html).
     PutAuditLogStreamingRequest:
       type: object
+      required:
+        - streamingEnabled
       properties:
         streamingEnabled:
           type: boolean
@@ -21076,6 +22170,14 @@ components:
           description: List of App Endpoints to be excluded from audit log streaming.
         outputType:
           type: string
+          enum:
+            - datadog
+            - generic_http
+            - sumologic
+            - loki
+            - elastic
+            - splunk
+            - dynatrace
           description: 'The type of output for the audit log streaming. Required when starting, resuming or pausing log streaming.'
           example: datadog
         credentials:
@@ -21087,8 +22189,8 @@ components:
             - $ref: '#/components/schemas/generic_http'
             - $ref: '#/components/schemas/elastic'
             - $ref: '#/components/schemas/loki'
-          required:
-            - streamingEnabled
+            - $ref: '#/components/schemas/splunk'
+            - $ref: '#/components/schemas/dynatrace'
     Replicas:
       type: integer
       description: |-
@@ -21331,7 +22433,7 @@ components:
       properties:
         secretKey:
           type: string
-          example: GaC4FQLCoUqoKUMBvl6BgRK1Ivqu5yF8OkDBhnP%#CH%S4T@bTVUdP#rY#VSicbx
+          example: <YOUR_SECRET_KEY_HERE>
           description: |
             The Secret key is a confidential piece of information that is paired with the Access key.
             The API key is made of an Access key and a Secret key.
@@ -21346,6 +22448,7 @@ components:
           oneOf:
             - $ref: '#/components/schemas/AWSConfig'
             - $ref: '#/components/schemas/GCPConfig'
+            - $ref: '#/components/schemas/AzureConfig'
           example:
             arn: 'arn:aws:kms:us-west-2:123456789012:key/abcd1234-a123-456a-a12b-a123b4cd56ef'
     ScheduleInfo:
@@ -21576,6 +22679,7 @@ components:
         - scopes
         - deltaSyncEnabled
         - userXattrKey
+        - disablePublicAllDocs
         - oidc
         - cors
       properties:
@@ -21596,6 +22700,10 @@ components:
           type: string
           example: syncFnXattr
           description: 'Key of user xattr that will be accessible from the Access control and validation function. If empty, the feature will be disabled.'
+        disablePublicAllDocs:
+          type: boolean
+          default: false
+          description: Disable the `_all_docs` endpoint for this App Endpoint on the App Services Public API.
         oidc:
           description: OpenID Connect provider configuration.
           type: array
@@ -21638,6 +22746,24 @@ components:
           example: 2
         compute:
           $ref: '#/components/schemas/AppServiceCompute'
+    UpdateAwsPrivateEndpointServiceRequest:
+      x-internal: true
+      type: object
+      required:
+        - routes
+      properties:
+        routes:
+          allOf:
+            - $ref: '#/components/schemas/PrivateEndpointRoutes'
+    UpdateBedrockConfigurationRequest:
+      type: object
+      properties:
+        accessKeyId:
+          type: string
+          description: The access key ID to access AWS Bedrock.
+        secretAccessKey:
+          type: string
+          description: The secret access key to access AWS Bedrock.
     UpdateBucketRequest:
       type: object
       required:
@@ -21683,6 +22809,8 @@ components:
 
               2. Replicate to Majority
 
+              A Durability other than None cannot be set on a bucket that is linked with an App Endpoint.
+
               To learn more, see [Create a Bucket](https://docs.couchbase.com/cloud/clusters/data-service/manage-buckets.html#add-bucket).
           enum:
             - none
@@ -21712,8 +22840,15 @@ components:
           default: false
         timeToLiveInSeconds:
           type: integer
-          description: 'Specify the new time to live (TTL) value in seconds. This is the maximum time to live for items in the bucket. If specified as 0, TTL is disabled. This is a non-negative value.'
+          description: |
+            Specify the new time to live (TTL) value in seconds. This is the maximum time to live for items in the bucket.
+
+            If specified as 0, TTL is disabled. This is a non-negative value.
+
+            A bucket that is linked with an App Endpoint cannot have a TTL configured.
           example: 100
+        enableCrossClusterVersioning:
+          $ref: '#/components/schemas/EnableCrossClusterVersioning'
         priority:
           $ref: '#/components/schemas/BucketPriority'
     UpdateBucketStorageBackendRequest:
@@ -21811,6 +22946,8 @@ components:
              -  This value should be >= -1. Set to -1 to disable expiry for that collection.
              -  Set to 0 to use the bucket's maxTTL value.
              -  The maximum value that can be set for maxTTL is 2147483647.
+
+            A collection that is linked with an App Endpoint cannot have a TTL configured.
           example: 100
     UpdateColumnarAnalyticsClusterRequest:
       description: Update an analytics cluster
@@ -21872,6 +23009,8 @@ components:
           type: integer
           description: |
             The new amount of memory to allocate for the bucket memory in MiB.
+        enableCrossClusterVersioning:
+          $ref: '#/components/schemas/EnableCrossClusterVersioning'
     UpdateFreeTierClusterRequest:
       type: object
       required:
@@ -21888,6 +23027,45 @@ components:
           maxLength: 1024
           description: The new cluster description (up to 1024 characters).
           example: The extended description of my new cluster.
+    UpdateModelRequest:
+      type: object
+      description: Request body for creating a language model
+      properties:
+        name:
+          type: string
+          description: Name of the model.
+          example: my-new-model
+        caching:
+          $ref: '#/components/schemas/Caching'
+        enableBatching:
+          type: boolean
+          description: Option to enable batching.
+          example: true
+        keywordFiltering:
+          type: array
+          description: Keywords in a comma-separated string to filter the input.
+          items:
+            type: string
+          example:
+            - harassment
+            - murder
+        guardrails:
+          type: array
+          description: List of guardrail categories as plain text strings. These will be formatted into a template and base64-encoded internally.
+          items:
+            type: string
+          example:
+            - sexual crime
+            - hate speech
+        jailbreak:
+          type: object
+          description: Jailbreak model information.
+          properties:
+            scoreThreshold:
+              type: number
+              format: double
+              description: The score threshold for the jailbreak model. Ranges between 0-1; 0<score<1.
+              example: 0.9
     UpdateMtlsConfigRequest:
       x-internal: true
       type: object
@@ -21972,6 +23150,7 @@ components:
           oneOf:
             - $ref: '#/components/schemas/UpdateS3ConfigurationRequest'
             - $ref: '#/components/schemas/UpdateOpenAIConfigurationRequest'
+            - $ref: '#/components/schemas/UpdateBedrockConfigurationRequest'
     UpdateReplicationRequest:
       type: object
       properties:
@@ -22120,11 +23299,13 @@ components:
         embeddingFieldMappings:
           type: object
           description: |
-            A mapping of vector embedding field names to the object with their corresponding source field names and encoding format.
+            A mapping of vector embedding field names to the object with their corresponding source field names. It supports a minimum of 1 and maximum of 5 vector embedding field names.
+          minProperties: 1
+          maxProperties: 5
           additionalProperties:
             type: object
             description: |
-              Object containing the vector embedding field's corresponding source fields and encoding format.
+              Object containing the vector embedding field's corresponding source fields.
             properties:
               sourceFields:
                 type: array
@@ -22135,14 +23316,6 @@ components:
                   description: |
                     Name of a source field.
                   example: field1
-              encodingFormat:
-                type: string
-                description: |
-                  The encoding format of the vector embedding field.
-                enum:
-                  - float
-                  - base64
-                default: float
         embeddingModel:
           oneOf:
             - $ref: '#/components/schemas/ExternalModel'
@@ -22162,11 +23335,13 @@ components:
         embeddingFieldMappings:
           type: object
           description: |
-            A mapping of vector embedding field names to the object with their corresponding source field names and encoding format.
+            A mapping of vector embedding field names to the object with their corresponding source field names. It supports a minimum of 1 and maximum of 5 vector embedding field names.
+          minProperties: 1
+          maxProperties: 5
           additionalProperties:
             type: object
             description: |
-              Object containing the vector embedding field's corresponding source fields and encoding format.
+              Object containing the vector embedding field's corresponding source fields.
             properties:
               sourceFields:
                 type: array
@@ -22177,14 +23352,6 @@ components:
                   description: |
                     Name of a source field.
                   example: field1
-              encodingFormat:
-                type: string
-                description: |
-                  The encoding format of the vector embedding field.
-                enum:
-                  - float
-                  - base64
-                default: float
         embeddingModel:
           oneOf:
             - type: object
@@ -22298,6 +23465,21 @@ components:
       example:
         apiKey: apiKey
         url: 'https://http-intake.logs.datadoghq.eu'
+    dynatrace:
+      type: object
+      required:
+        - apiToken
+        - url
+      properties:
+        apiToken:
+          type: string
+          description: The token for the Dynatrace log collector
+        url:
+          type: string
+          description: The URL for the Dynatrace log collector
+      example:
+        apiToken: APIToken
+        url: 'https://instance.live.dynatrace.com/api/v2/logs/ingest'
     elastic:
       type: object
       required:
@@ -22643,6 +23825,21 @@ components:
             example: scope-1
           collections:
             $ref: '#/components/schemas/collections'
+    splunk:
+      type: object
+      required:
+        - splunkToken
+        - url
+      properties:
+        splunkToken:
+          type: string
+          description: The token for the Splunk log collector
+        url:
+          type: string
+          description: The URL for the Splunk log collector
+      example:
+        splunkToken: SplunkToken
+        url: 'https://splunk:8088'
     sumologic:
       type: object
       required:
