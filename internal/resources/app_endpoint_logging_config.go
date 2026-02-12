@@ -298,6 +298,7 @@ func (l *LoggingConfig) getLoggingConfig(ctx context.Context, organizationId, pr
 			"appServiceId":    appServiceId,
 			"appEndpointName": appEndpointName,
 		})
+		return nil, err
 	}
 
 	return &loggingConfig, nil
