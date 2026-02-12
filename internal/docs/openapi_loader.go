@@ -124,19 +124,11 @@ func extractEmbeddedSpec(htmlData []byte) ([]byte, error) {
 	}
 	findSpec(doc)
 
-	if specJSON != "" {
-		return []byte(specJSON), nil
+	if specJSON == "" {
+		return nil, fmt.Errorf("could not find embedded OpenAPI spec in HTML page")
 	}
 
-	// Fallback: search entire content for spec (handles inline scripts)
-	content := string(htmlData)
-	if idx := strings.Index(content, `{"openapi":"3.0`); idx != -1 {
-		if extracted, err := extractJSONObject(content[idx:]); err == nil {
-			return []byte(extracted), nil
-		}
-	}
-
-	return nil, fmt.Errorf("could not find embedded OpenAPI spec in HTML page")
+	return []byte(specJSON), nil
 }
 
 // extractJSONObject extracts a complete JSON object from a string starting with '{'
