@@ -99,36 +99,26 @@ func extractEmbeddedSpec(htmlData []byte) ([]byte, error) {
 		return nil, fmt.Errorf("failed to parse HTML: %w", err)
 	}
 
-	// Find all script tags and look for embedded OpenAPI spec
-	var specJSON string
-	var findSpec func(*html.Node)
-	findSpec = func(n *html.Node) {
-		if n.Type == html.ElementNode && n.Data == "script" {
-			// Check script content for OpenAPI spec
-			if n.FirstChild != nil && n.FirstChild.Type == html.TextNode {
-				content := n.FirstChild.Data
-				if idx := strings.Index(content, `{"openapi":"3.0`); idx != -1 {
-					if extracted, err := extractJSONObject(content[idx:]); err == nil {
-						specJSON = extracted
-						return
-					}
-				}
+	var findSpec func(*html.Node) string
+	findSpec = func(n *html.Node) string {
+		if n.Type == html.ElementNode && n.Data == "script" && n.FirstChild != nil {
+			if idx := strings.Index(n.FirstChild.Data, `{"openapi":"3.0`); idx != -1 {
+				spec, _ := extractJSONObject(n.FirstChild.Data[idx:])
+				return spec
 			}
 		}
 		for c := n.FirstChild; c != nil; c = c.NextSibling {
-			if specJSON != "" {
-				return
+			if spec := findSpec(c); spec != "" {
+				return spec
 			}
-			findSpec(c)
 		}
-	}
-	findSpec(doc)
-
-	if specJSON == "" {
-		return nil, fmt.Errorf("could not find embedded OpenAPI spec in HTML page")
+		return ""
 	}
 
-	return []byte(specJSON), nil
+	if spec := findSpec(doc); spec != "" {
+		return []byte(spec), nil
+	}
+	return nil, fmt.Errorf("could not find embedded OpenAPI spec in HTML page")
 }
 
 // extractJSONObject extracts a complete JSON object from a string starting with '{'
