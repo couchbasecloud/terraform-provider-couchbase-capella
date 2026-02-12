@@ -2,8 +2,11 @@ package docs
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/getkin/kin-openapi/openapi3"
 )
@@ -11,32 +14,25 @@ import (
 var openAPIDoc *openapi3.T
 
 func init() {
-	// Get OpenAPI spec path from environment variable, or try multiple locations
-	openAPIPath := os.Getenv("CAPELLA_OPENAPI_SPEC_PATH")
-	if openAPIPath == "" {
-		// Try multiple locations - first current dir, then parent dirs for tests
-		possiblePaths := []string{
-			"openapi.generated.yaml",          // From project root
-			"../../openapi.generated.yaml",    // From internal/docs/
-			"../../../openapi.generated.yaml", // From internal/docs/subdir if needed
-		}
+	loadOpenAPISpec()
+}
 
-		for _, path := range possiblePaths {
-			if _, err := os.Stat(path); err == nil {
-				openAPIPath = path
-				break
-			}
-		}
-
-		if openAPIPath == "" {
-			openAPIPath = "openapi.generated.yaml" // Fallback
-		}
+// loadOpenAPISpec loads the OpenAPI spec from the URL specified in CAPELLA_OPENAPI_SPEC_PATH.
+// This is called automatically during init() and can be called again from tests after
+// setting the environment variable.
+func loadOpenAPISpec() {
+	// Get OpenAPI spec URL from environment variable
+	// This is only set during make test, make testacc, or make build-docs
+	openAPISource := os.Getenv("OPENAPI_SPEC_URL")
+	if openAPISource == "" {
+		// No OpenAPI spec configured - this is normal for regular provider operation
+		// Enhanced descriptions won't be available, but the provider works fine
+		return
 	}
 
-	data, err := os.ReadFile(openAPIPath)
+	data, err := fetchFromURL(openAPISource)
 	if err != nil {
-		// Gracefully degrade - descriptions will be empty but provider still works
-		fmt.Fprintf(os.Stderr, "Warning: Could not load OpenAPI spec at %s: %v\n", openAPIPath, err)
+		fmt.Fprintf(os.Stderr, "Warning: Could not fetch OpenAPI spec from %s: %v\n", openAPISource, err)
 		fmt.Fprintf(os.Stderr, "Field descriptions will not be enhanced with OpenAPI metadata.\n")
 		return
 	}
@@ -52,6 +48,111 @@ func init() {
 	}
 
 	openAPIDoc = doc
+}
+
+// fetchFromURL fetches the OpenAPI spec from a URL.
+// If the URL returns an HTML page (like the Couchbase docs page), it extracts
+// the embedded JSON spec from the page.
+func fetchFromURL(url string) ([]byte, error) {
+	client := &http.Client{
+		Timeout: 60 * time.Second,
+	}
+
+	resp, err := client.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	// Check if the response is HTML (docs page with embedded spec)
+	// Look for the embedded OpenAPI JSON spec
+	if isHTML(data) {
+		return extractEmbeddedSpec(data)
+	}
+
+	return data, nil
+}
+
+// isHTML checks if the data appears to be HTML content
+func isHTML(data []byte) bool {
+	// Check for common HTML indicators
+	trimmed := strings.TrimSpace(string(data[:min(500, len(data))]))
+	return strings.HasPrefix(trimmed, "<!DOCTYPE") ||
+		strings.HasPrefix(trimmed, "<html") ||
+		strings.HasPrefix(trimmed, "<HTML")
+}
+
+// extractEmbeddedSpec extracts the OpenAPI JSON spec embedded in an HTML page
+// The Couchbase docs page embeds the spec as a JSON object starting with {"openapi":"3.0.2"
+func extractEmbeddedSpec(htmlData []byte) ([]byte, error) {
+	content := string(htmlData)
+
+	// Find the start of the embedded OpenAPI spec
+	marker := `{"openapi":"3.0`
+	startIdx := strings.Index(content, marker)
+	if startIdx == -1 {
+		return nil, fmt.Errorf("could not find embedded OpenAPI spec in HTML page")
+	}
+
+	// Extract the JSON by finding matching braces
+	jsonStr, err := extractJSONObject(content[startIdx:])
+	if err != nil {
+		return nil, fmt.Errorf("failed to extract JSON from HTML: %w", err)
+	}
+
+	return []byte(jsonStr), nil
+}
+
+// extractJSONObject extracts a complete JSON object from a string starting with '{'
+func extractJSONObject(s string) (string, error) {
+	if len(s) == 0 || s[0] != '{' {
+		return "", fmt.Errorf("string does not start with '{'")
+	}
+
+	depth := 0
+	inString := false
+	escaped := false
+
+	for i, ch := range s {
+		if escaped {
+			escaped = false
+			continue
+		}
+
+		if ch == '\\' && inString {
+			escaped = true
+			continue
+		}
+
+		if ch == '"' {
+			inString = !inString
+			continue
+		}
+
+		if inString {
+			continue
+		}
+
+		if ch == '{' {
+			depth++
+		} else if ch == '}' {
+			depth--
+			if depth == 0 {
+				return s[:i+1], nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("unbalanced JSON object")
 }
 
 // GetOpenAPIDescription retrieves an enhanced description for a field from the OpenAPI spec.
