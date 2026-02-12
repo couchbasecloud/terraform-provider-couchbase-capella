@@ -2,6 +2,7 @@ package docs
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -142,45 +143,12 @@ func extractEmbeddedSpec(htmlData []byte) ([]byte, error) {
 
 // extractJSONObject extracts a complete JSON object from a string starting with '{'
 func extractJSONObject(s string) (string, error) {
-	if len(s) == 0 || s[0] != '{' {
-		return "", fmt.Errorf("string does not start with '{'")
+	dec := json.NewDecoder(strings.NewReader(s))
+	var raw json.RawMessage
+	if err := dec.Decode(&raw); err != nil {
+		return "", fmt.Errorf("failed to decode JSON: %w", err)
 	}
-
-	depth := 0
-	inString := false
-	escaped := false
-
-	for i, ch := range s {
-		if escaped {
-			escaped = false
-			continue
-		}
-
-		if ch == '\\' && inString {
-			escaped = true
-			continue
-		}
-
-		if ch == '"' {
-			inString = !inString
-			continue
-		}
-
-		if inString {
-			continue
-		}
-
-		if ch == '{' {
-			depth++
-		} else if ch == '}' {
-			depth--
-			if depth == 0 {
-				return s[:i+1], nil
-			}
-		}
-	}
-
-	return "", fmt.Errorf("unbalanced JSON object")
+	return string(raw), nil
 }
 
 // GetOpenAPIDescription retrieves an enhanced description for a field from the OpenAPI spec.
