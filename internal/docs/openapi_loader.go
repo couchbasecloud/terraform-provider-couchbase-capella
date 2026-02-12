@@ -20,7 +20,7 @@ func init() {
 	loadOpenAPISpec()
 }
 
-// loadOpenAPISpec loads the OpenAPI spec from the URL specified in CAPELLA_OPENAPI_SPEC_PATH.
+// loadOpenAPISpec loads the OpenAPI spec from the URL specified in OPENAPI_SPEC_URL.
 // This is called automatically during init() and can be called again from tests after
 // setting the environment variable.
 func loadOpenAPISpec() {
