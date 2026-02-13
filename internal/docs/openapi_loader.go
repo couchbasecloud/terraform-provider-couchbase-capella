@@ -1,42 +1,41 @@
 package docs
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"golang.org/x/net/html"
 )
 
 var openAPIDoc *openapi3.T
 
 func init() {
-	// Get OpenAPI spec path from environment variable, or try multiple locations
-	openAPIPath := os.Getenv("CAPELLA_OPENAPI_SPEC_PATH")
-	if openAPIPath == "" {
-		// Try multiple locations - first current dir, then parent dirs for tests
-		possiblePaths := []string{
-			"openapi.generated.yaml",          // From project root
-			"../../openapi.generated.yaml",    // From internal/docs/
-			"../../../openapi.generated.yaml", // From internal/docs/subdir if needed
-		}
+	loadOpenAPISpec()
+}
 
-		for _, path := range possiblePaths {
-			if _, err := os.Stat(path); err == nil {
-				openAPIPath = path
-				break
-			}
-		}
-
-		if openAPIPath == "" {
-			openAPIPath = "openapi.generated.yaml" // Fallback
-		}
+// loadOpenAPISpec loads the OpenAPI spec from the URL specified in OPENAPI_SPEC_URL.
+// This is called automatically during init() and can be called again from tests after
+// setting the environment variable.
+func loadOpenAPISpec() {
+	// Get OpenAPI spec URL from environment variable
+	// This is only set during make test, make testacc, or make build-docs
+	openAPISource := os.Getenv("OPENAPI_SPEC_URL")
+	if openAPISource == "" {
+		// No OpenAPI spec configured - this is normal for regular provider operation
+		// Enhanced descriptions won't be available, but the provider works fine
+		return
 	}
 
-	data, err := os.ReadFile(openAPIPath)
+	data, err := fetchFromURL(openAPISource)
 	if err != nil {
-		// Gracefully degrade - descriptions will be empty but provider still works
-		fmt.Fprintf(os.Stderr, "Warning: Could not load OpenAPI spec at %s: %v\n", openAPIPath, err)
+		fmt.Fprintf(os.Stderr, "Warning: Could not fetch OpenAPI spec from %s: %v\n", openAPISource, err)
 		fmt.Fprintf(os.Stderr, "Field descriptions will not be enhanced with OpenAPI metadata.\n")
 		return
 	}
@@ -52,6 +51,84 @@ func init() {
 	}
 
 	openAPIDoc = doc
+}
+
+// fetchFromURL fetches the OpenAPI spec from a URL.
+// If the URL returns an HTML page (like the Couchbase docs page), it extracts
+// the embedded JSON spec from the page.
+func fetchFromURL(url string) ([]byte, error) {
+	client := &http.Client{
+		Timeout: 60 * time.Second,
+	}
+
+	resp, err := client.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	// Check if the response is HTML (docs page with embedded spec)
+	// Look for the embedded OpenAPI JSON spec
+	if isHTML(data) {
+		return extractEmbeddedSpec(data)
+	}
+
+	return data, nil
+}
+
+// isHTML checks if the data appears to be HTML content
+func isHTML(data []byte) bool {
+	contentType := http.DetectContentType(data)
+	return strings.HasPrefix(contentType, "text/html")
+}
+
+// extractEmbeddedSpec extracts the OpenAPI JSON spec embedded in an HTML page
+// using proper HTML parsing to find script tags containing the spec.
+func extractEmbeddedSpec(htmlData []byte) ([]byte, error) {
+	doc, err := html.Parse(bytes.NewReader(htmlData))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse HTML: %w", err)
+	}
+
+	var findSpec func(*html.Node) string
+	findSpec = func(n *html.Node) string {
+		if n.Type == html.ElementNode && n.Data == "script" && n.FirstChild != nil {
+			if idx := strings.Index(n.FirstChild.Data, `{"openapi":"3.0`); idx != -1 {
+				spec, _ := extractJSONObject(n.FirstChild.Data[idx:])
+				return spec
+			}
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			if spec := findSpec(c); spec != "" {
+				return spec
+			}
+		}
+		return ""
+	}
+
+	if spec := findSpec(doc); spec != "" {
+		return []byte(spec), nil
+	}
+	return nil, fmt.Errorf("could not find embedded OpenAPI spec in HTML page")
+}
+
+// extractJSONObject extracts a complete JSON object from a string starting with '{'
+func extractJSONObject(s string) (string, error) {
+	dec := json.NewDecoder(strings.NewReader(s))
+	var raw json.RawMessage
+	if err := dec.Decode(&raw); err != nil {
+		return "", fmt.Errorf("failed to decode JSON: %w", err)
+	}
+	return string(raw), nil
 }
 
 // GetOpenAPIDescription retrieves an enhanced description for a field from the OpenAPI spec.
