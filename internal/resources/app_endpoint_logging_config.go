@@ -2,7 +2,6 @@ package resources
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -13,10 +12,6 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
-)
-
-const (
-	errorMessageWhileLoggingConfigUpdate = "There is an error during app endpoint logging config update. Please check the logging config in capella"
 )
 
 var (
@@ -75,7 +70,7 @@ func (l *LoggingConfig) Create(ctx context.Context, req resource.CreateRequest, 
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error executing upsert app endpoint logging config",
-			errorMessageWhileLoggingConfigUpdate+err.Error(),
+			err.Error(),
 		)
 		return
 	}
@@ -165,7 +160,7 @@ func (l *LoggingConfig) Update(ctx context.Context, req resource.UpdateRequest, 
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error executing upsert app endpoint logging config",
-			errorMessageWhileLoggingConfigUpdate+err.Error(),
+			err.Error(),
 		)
 		return
 	}
@@ -288,20 +283,7 @@ func (l *LoggingConfig) getLoggingConfig(ctx context.Context, organizationId, pr
 		return nil, errors.ErrUnexpectedStatusGettingAppEndpointLoggingConfig
 	}
 
-	var loggingConfig api.ConsoleLoggingConfig
-	err = json.Unmarshal(getLoggingConfigResp.Body, &loggingConfig)
-	if err != nil {
-		tflog.Debug(ctx, "error unmarshalling app endpoint logging config", map[string]interface{}{
-			"organizationId":  organizationId,
-			"projectId":       projectId,
-			"clusterId":       clusterId,
-			"appServiceId":    appServiceId,
-			"appEndpointName": appEndpointName,
-		})
-		return nil, err
-	}
-
-	return &loggingConfig, nil
+	return getLoggingConfigResp.JSON200, nil
 }
 
 func (l *LoggingConfig) mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId string) (organizationUUID, projectUUID, clusterUUID, appServiceUUID uuid.UUID) {
