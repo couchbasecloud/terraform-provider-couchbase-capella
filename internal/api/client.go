@@ -7,8 +7,11 @@ import (
 	goer "errors"
 	"fmt"
 	"io"
+	"math/rand"
+	"net"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -151,6 +154,15 @@ func (c *Client) ExecuteWithRetry(
 		}
 		apiRes, err := c.Do(req)
 		if err != nil {
+			// Check for timeout errors before returning
+			if isTimeoutError(err) {
+				tflog.Debug(ctx, "Client timeout detected, will retry", map[string]interface{}{
+					"method": endpointCfg.Method,
+					"url":    endpointCfg.Url,
+					"error":  err.Error(),
+				})
+				return nil, dur, errors.ErrClientTimeout
+			}
 			return nil, dur, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 		}
 		defer apiRes.Body.Close()
@@ -223,6 +235,7 @@ func exec(
 		err      error
 		backOff  time.Duration
 		response *Response
+		attempt  int // track retry attempts for timeout errors
 	)
 
 	const timeout = time.Minute * 10
@@ -241,7 +254,18 @@ func exec(
 			case err == nil:
 				return response, nil
 			case goer.Is(err, errors.ErrRatelimit):
-			case !goer.Is(err, errors.ErrGatewayTimeout):
+				// Use server-specified backoff for rate limits
+			case goer.Is(err, errors.ErrClientTimeout):
+				// Handle client timeout with exponential backoff
+				attempt++
+				backOff = calculateExponentialBackoff(attempt, waitOnReattempt)
+				tflog.Debug(ctx, "Retrying after client timeout", map[string]interface{}{
+					"attempt":      attempt,
+					"backoff_secs": backOff.Seconds(),
+				})
+			case goer.Is(err, errors.ErrGatewayTimeout):
+				// Use default backoff for gateway timeouts
+			default:
 				return response, err
 			}
 
@@ -252,4 +276,49 @@ func exec(
 			}
 		}
 	}
+}
+
+// isTimeoutError checks if an error is a client-side timeout
+func isTimeoutError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	// Check for context deadline exceeded
+	if goer.Is(err, context.DeadlineExceeded) {
+		return true
+	}
+
+	// Check for timeout in error message
+	if strings.Contains(err.Error(), "context deadline exceeded") {
+		return true
+	}
+
+	// Check for net.Error with Timeout()
+	var netErr net.Error
+	if goer.As(err, &netErr) && netErr.Timeout() {
+		return true
+	}
+
+	return false
+}
+
+// calculateExponentialBackoff computes backoff duration with jitter
+func calculateExponentialBackoff(attempt int, baseWait time.Duration) time.Duration {
+	// Exponential: 2s, 4s, 8s, 16s, 32s (capped at 32s)
+	backoff := baseWait * (1 << uint(attempt-1))
+	maxBackoff := time.Second * 32
+	if backoff > maxBackoff {
+		backoff = maxBackoff
+	}
+
+	// Add jitter (±20%) to prevent thundering herd
+	jitter := time.Duration(rand.Int63n(int64(backoff) / 5))
+	if rand.Intn(2) == 0 {
+		backoff += jitter
+	} else {
+		backoff -= jitter
+	}
+
+	return backoff
 }
