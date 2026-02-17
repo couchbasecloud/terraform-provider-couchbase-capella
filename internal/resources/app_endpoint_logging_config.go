@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -222,7 +223,7 @@ func (l *LoggingConfig) upsertLoggingConfig(ctx context.Context, organizationId,
 		LogKeys:  providerschema.BaseStringsToStringsPointer(plan.LogKeys),
 	}
 
-	_, err := l.ClientV2.PutAppEndpointLogStreamingConfigWithResponse(
+	putLoggingConfigResp, err := l.ClientV2.PutAppEndpointLogStreamingConfigWithResponse(
 		ctx,
 		organizationUUID,
 		projectUUID,
@@ -242,6 +243,10 @@ func (l *LoggingConfig) upsertLoggingConfig(ctx context.Context, organizationId,
 			"err":                        err.Error(),
 		})
 		return err
+	}
+
+	if putLoggingConfigResp.HTTPResponse.StatusCode != http.StatusNoContent {
+		return errors.ErrUnexpectedStatusUpsertingAppEndpointLoggingConfig
 	}
 
 	return nil

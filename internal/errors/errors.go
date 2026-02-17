@@ -255,6 +255,8 @@ var (
 
 	ErrTimeoutWaitingForClientResponse = errors.New("timeout waiting for index build")
 
+	ErrUnexpectedStatusUpsertingAppEndpointLoggingConfig = errors.New("unexpected status upserting app endpoint logging config")
+
 	ErrUnexpectedStatusGettingAppEndpointLoggingConfig = errors.New("unexpected status getting app endpoint logging config")
 
 	ErrorMessageWhileFreeTierBucketCreation = errors.New("There is an error during free tier bucket creation. Please check in Capella to see if any hanging resources")
