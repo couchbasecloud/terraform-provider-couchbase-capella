@@ -28,7 +28,7 @@ var _ provider.Provider = &capellaProvider{}
 const (
 	capellaAuthenticationTokenField = "authentication_token"
 	capellaPublicAPIHostField       = "host"
-	apiRequestTimeout               = 60 * time.Second
+	apiRequestTimeout               = 5 * time.Minute
 	defaultAPIHostURL               = "https://cloudapi.cloud.couchbase.com"
 	providerName                    = "couchbase-capella"
 )
