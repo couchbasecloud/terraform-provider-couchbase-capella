@@ -30,7 +30,7 @@ The provider configuration block accepts the following arguments. In most cases 
 
 * `host` - Allows you to specify the host for the capella API. This can be useful if you are behind a reverse proxy. May be set via the `CAPELLA_HOST` environment variable. If not provided will default to "https://cloudapi.cloud.couchbase.com"
 * `authentication_token` - A valid [V4 REST API Key](https://docs.couchbase.com/cloud/management-api-guide/management-api-start.html#understand-management-api-keys) for authenticating with the Couchbase Capella API. May be set via the `CAPELLA_AUTHENTICATION_TOKEN` environment variable.
-* `global_http_client_timeout` - Global HTTP client timeout in seconds. May be set via the `CAPELLA_GLOBAL_HTTP_CLIENT_TIMEOUT` environment variable. If not provided will default to 300 seconds.
+* `global_api_request_timeout` - Global API request timeout in seconds. May be set via the `CAPELLA_GLOBAL_API_REQUEST_TIMEOUT` environment variable. If not provided will default to 300 seconds. Value must be greater than or equal to 300.
 
 ## Create and manage resources using terraform
 
@@ -49,6 +49,7 @@ terraform {
 
 provider "couchbase-capella" {
   authentication_token = "capella authentication token"
+  global_api_request_timeout = 600
 }
 
 
