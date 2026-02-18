@@ -196,3 +196,10 @@ type UpdateClusterRequest struct {
 	// service group must contain the data service.
 	ServiceGroups []ServiceGroup `json:"serviceGroups"`
 }
+
+// GetClusterStatsResponse is the response received from the Capella V4 Public API when asked to fetch stats of an existing cluster.
+type GetClusterStatsResponse struct {
+	FreeMemoryInMb  int64 `json:"freeMemoryInMb"`
+	MaxReplicas     int64 `json:"maxReplicas"`
+	TotalMemoryInMb int64 `json:"totalMemoryInMb"`
+}
