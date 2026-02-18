@@ -2,8 +2,10 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -28,7 +30,7 @@ var _ provider.Provider = &capellaProvider{}
 const (
 	capellaAuthenticationTokenField = "authentication_token"
 	capellaPublicAPIHostField       = "host"
-	apiRequestTimeout               = 5 * time.Minute
+	apiRequestTimeout               = 300 * time.Second
 	defaultAPIHostURL               = "https://cloudapi.cloud.couchbase.com"
 	providerName                    = "couchbase-capella"
 )
@@ -151,8 +153,20 @@ func (p *capellaProvider) Configure(
 
 	tflog.Debug(ctx, "Creating Capella client")
 
+	// set the global http client timeout in seconds.
+	// defaults to 300 sec if env var is not set or has invalid value.
+	clientTimeout := apiRequestTimeout
+	if t, found := os.LookupEnv("CAPELLA_GLOBAL_HTTP_CLIENT_TIMEOUT"); found {
+		seconds, err := strconv.Atoi(t)
+		if err == nil {
+			clientTimeout = time.Duration(seconds) * time.Second
+		} else {
+			tflog.Warn(ctx, fmt.Sprintf("Invalid client timeout value: %v", err))
+		}
+	}
+
 	// Create clients using the configuration values
-	clientV1 := api.NewClient(apiRequestTimeout)
+	clientV1 := api.NewClient(clientTimeout)
 
 	// Enable debug logging for V2 client based on Terraform logging environment variables
 	// Users can enable this with TF_LOG=DEBUG or TF_LOG=TRACE
