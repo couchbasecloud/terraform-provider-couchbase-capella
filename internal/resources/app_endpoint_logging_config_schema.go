@@ -19,7 +19,7 @@ func LoggingConfigSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "organization_id", loggingConfigBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
 
 	capellaschema.AddAttr(attrs, "log_level", loggingConfigBuilder, stringAttribute([]string{required}, validator.String(stringvalidator.LengthAtLeast(1))))
-	capellaschema.AddAttr(attrs, "log_keys", loggingConfigBuilder, stringListAttribute(required))
+	capellaschema.AddAttr(attrs, "log_keys", loggingConfigBuilder, stringSetAttribute(required))
 
 	return schema.Schema{
 		MarkdownDescription: "Manages the Logging Config for an App Endpoint.",
