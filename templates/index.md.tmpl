@@ -49,6 +49,7 @@ terraform {
 
 provider "couchbase-capella" {
   authentication_token = "capella authentication token"
+  global_http_client_timeout = 600
 }
 
 

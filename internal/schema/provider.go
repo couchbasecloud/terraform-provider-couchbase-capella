@@ -9,8 +9,9 @@ import (
 
 // Config maps provider schema data to a Go type.
 type Config struct {
-	Host                types.String `tfsdk:"host"`
-	AuthenticationToken types.String `tfsdk:"authentication_token"`
+	Host                    types.String `tfsdk:"host"`
+	AuthenticationToken     types.String `tfsdk:"authentication_token"`
+	GlobalHTTPClientTimeout types.Int64  `tfsdk:"global_http_client_timeout"`
 }
 
 // Data is provider-defined data, clients, etc. that is passed
