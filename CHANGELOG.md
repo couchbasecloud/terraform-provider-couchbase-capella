@@ -10,7 +10,7 @@
 
 **Fixed bugs:**
 
-- AV-122821 | set http request timeout to 5 min [\#480](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/480) ([l0n3star](https://github.com/l0n3star))
+- \[AV-122821\] Set http request timeout to 5 min [\#480](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/480) ([l0n3star](https://github.com/l0n3star))
 - \[AV-121786\] PE acceptance tests, create sanity list, Skip creation of capella res… [\#471](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/471) ([nimiyajoseph](https://github.com/nimiyajoseph))
 
 **Merged pull requests:**
