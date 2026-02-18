@@ -81,15 +81,6 @@ func (r *AppServiceLogStreaming) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	// Validate the request
-	if err := providerschema.ValidateAppServiceLogStreamingRequest(plan); err != nil {
-		resp.Diagnostics.AddError(
-			"Error validating Log Streaming request",
-			"Could not validate Log Streaming configuration plan: "+err.Error(),
-		)
-		return
-	}
-
 	organizationId := plan.OrganizationId.ValueString()
 	projectId := plan.ProjectId.ValueString()
 	clusterId := plan.ClusterId.ValueString()

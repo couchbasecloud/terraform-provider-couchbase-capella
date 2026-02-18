@@ -243,20 +243,3 @@ func (c SumologicCredentials) AttributeTypes() map[string]attr.Type {
 		"url": types.StringType,
 	}
 }
-
-// ValidateAppServiceLogStreamingRequest validates the required fields for creating/updating log streaming.
-func ValidateAppServiceLogStreamingRequest(plan AppServiceLogStreaming) error {
-	if plan.OrganizationId.IsNull() {
-		return errors.ErrOrganizationIdCannotBeEmpty
-	}
-	if plan.ProjectId.IsNull() {
-		return errors.ErrProjectIdCannotBeEmpty
-	}
-	if plan.ClusterId.IsNull() {
-		return errors.ErrClusterIdCannotBeEmpty
-	}
-	if plan.AppServiceId.IsNull() {
-		return errors.ErrAppServiceIdCannotBeEmpty
-	}
-	return nil
-}
