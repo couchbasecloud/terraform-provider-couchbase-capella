@@ -28,12 +28,12 @@ import (
 var _ provider.Provider = &capellaProvider{}
 
 const (
-	capellaAuthenticationTokenField   = "authentication_token"
-	capellaPublicAPIHostField         = "host"
+	capellaAuthenticationTokenField     = "authentication_token"
+	capellaPublicAPIHostField           = "host"
 	capellaGlobalHTTPClientTimeoutField = "global_http_client_timeout"
-	apiRequestTimeout                 = 300 * time.Second
-	defaultAPIHostURL                 = "https://cloudapi.cloud.couchbase.com"
-	providerName                      = "couchbase-capella"
+	apiRequestTimeout                   = 300 * time.Second
+	defaultAPIHostURL                   = "https://cloudapi.cloud.couchbase.com"
+	providerName                        = "couchbase-capella"
 )
 
 // capellaProvider is the provider implementation.
@@ -159,6 +159,7 @@ func (p *capellaProvider) Configure(
 	tflog.Debug(ctx, "Creating Capella client")
 
 	// Global HTTP client timeout: config attribute, then env var, then default (300 sec).
+	// Value must be >= default (300 seconds).
 	clientTimeout := apiRequestTimeout
 	if !config.GlobalHTTPClientTimeout.IsNull() && !config.GlobalHTTPClientTimeout.IsUnknown() {
 		clientTimeout = time.Duration(config.GlobalHTTPClientTimeout.ValueInt64()) * time.Second
@@ -170,6 +171,17 @@ func (p *capellaProvider) Configure(
 			tflog.Warn(ctx, fmt.Sprintf("Invalid client timeout value: %v", err))
 		}
 	}
+
+	if clientTimeout < apiRequestTimeout {
+		resp.Diagnostics.AddAttributeError(
+			path.Root(capellaGlobalHTTPClientTimeoutField),
+			"Invalid global HTTP client timeout",
+			fmt.Sprintf("global_http_client_timeout must be greater than or equal to %d seconds. Set via the provider config or CAPELLA_GLOBAL_HTTP_CLIENT_TIMEOUT environment variable.", int64(apiRequestTimeout.Seconds())),
+		)
+		return
+	}
+
+	tflog.Debug(ctx, "Using HTTP client timeout", map[string]any{"seconds": int64(clientTimeout.Seconds())})
 
 	// Create clients using the configuration values
 	clientV1 := api.NewClient(clientTimeout)
