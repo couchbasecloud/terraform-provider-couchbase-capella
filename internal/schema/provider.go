@@ -11,7 +11,7 @@ import (
 type Config struct {
 	Host                    types.String `tfsdk:"host"`
 	AuthenticationToken     types.String `tfsdk:"authentication_token"`
-	GlobalHTTPClientTimeout types.Int64  `tfsdk:"global_http_client_timeout"`
+	GlobalAPIRequestTimeout types.Int64  `tfsdk:"global_api_request_timeout"`
 }
 
 // Data is provider-defined data, clients, etc. that is passed

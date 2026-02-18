@@ -30,7 +30,7 @@ var _ provider.Provider = &capellaProvider{}
 const (
 	capellaAuthenticationTokenField     = "authentication_token"
 	capellaPublicAPIHostField           = "host"
-	capellaGlobalHTTPClientTimeoutField = "global_http_client_timeout"
+	capellaGlobalAPIRequestTimeoutField = "global_api_request_timeout"
 	apiRequestTimeout                   = 300 * time.Second
 	defaultAPIHostURL                   = "https://cloudapi.cloud.couchbase.com"
 	providerName                        = "couchbase-capella"
@@ -69,9 +69,9 @@ func (p *capellaProvider) Schema(_ context.Context, _ provider.SchemaRequest, re
 				Sensitive:   true,
 				Description: "Capella API Token that serves as an authentication mechanism. May be set via the CAPELLA_AUTHENTICATION_TOKEN environment variable.",
 			},
-			capellaGlobalHTTPClientTimeoutField: schema.Int64Attribute{
+			capellaGlobalAPIRequestTimeoutField: schema.Int64Attribute{
 				Optional:    true,
-				Description: "Global HTTP client timeout in seconds. May be set via the CAPELLA_GLOBAL_HTTP_CLIENT_TIMEOUT environment variable. Defaults to 300. Value must be greater than or equal to 300.",
+				Description: "Global API request timeout in seconds. May be set via the CAPELLA_GLOBAL_API_REQUEST_TIMEOUT environment variable. Defaults to 300. Value must be greater than or equal to 300.",
 			},
 		},
 	}
@@ -161,9 +161,9 @@ func (p *capellaProvider) Configure(
 	// Global HTTP client timeout: config attribute, then env var, then default (300 sec).
 	// Value must be >= default (300 seconds).
 	clientTimeout := apiRequestTimeout
-	if !config.GlobalHTTPClientTimeout.IsNull() && !config.GlobalHTTPClientTimeout.IsUnknown() {
-		clientTimeout = time.Duration(config.GlobalHTTPClientTimeout.ValueInt64()) * time.Second
-	} else if t, found := os.LookupEnv("CAPELLA_GLOBAL_HTTP_CLIENT_TIMEOUT"); found {
+	if !config.GlobalAPIRequestTimeout.IsNull() && !config.GlobalAPIRequestTimeout.IsUnknown() {
+		clientTimeout = time.Duration(config.GlobalAPIRequestTimeout.ValueInt64()) * time.Second
+	} else if t, found := os.LookupEnv("CAPELLA_GLOBAL_API_REQUEST_TIMEOUT"); found {
 		seconds, err := strconv.Atoi(t)
 		if err == nil {
 			clientTimeout = time.Duration(seconds) * time.Second
@@ -174,9 +174,9 @@ func (p *capellaProvider) Configure(
 
 	if clientTimeout < apiRequestTimeout {
 		resp.Diagnostics.AddAttributeError(
-			path.Root(capellaGlobalHTTPClientTimeoutField),
-			"Invalid global HTTP client timeout",
-			fmt.Sprintf("global_http_client_timeout must be greater than or equal to %d seconds. Set via the provider config or CAPELLA_GLOBAL_HTTP_CLIENT_TIMEOUT environment variable.", int64(apiRequestTimeout.Seconds())),
+			path.Root(capellaGlobalAPIRequestTimeoutField),
+			"Invalid global API request timeout",
+			fmt.Sprintf("global_api_request_timeout must be greater than or equal to %d seconds. Set via the provider config or CAPELLA_GLOBAL_API_REQUEST_TIMEOUT environment variable.", int64(apiRequestTimeout.Seconds())),
 		)
 		return
 	}

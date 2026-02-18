@@ -66,11 +66,11 @@ func TestCapellaProvider_Schema(t *testing.T) {
 		assert.True(t, sa.Sensitive, "authentication_token should be sensitive")
 	})
 
-	t.Run("has global_http_client_timeout attribute", func(t *testing.T) {
-		a, ok := attrs[capellaGlobalHTTPClientTimeoutField]
+	t.Run("has global_api_request_timeout attribute", func(t *testing.T) {
+		a, ok := attrs[capellaGlobalAPIRequestTimeoutField]
 		require.True(t, ok)
 		_, ok = a.(schema.Int64Attribute)
-		assert.True(t, ok, "global_http_client_timeout should be Int64Attribute")
+		assert.True(t, ok, "global_api_request_timeout should be Int64Attribute")
 	})
 }
 
