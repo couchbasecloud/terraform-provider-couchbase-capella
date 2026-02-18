@@ -71,7 +71,7 @@ func (p *capellaProvider) Schema(_ context.Context, _ provider.SchemaRequest, re
 			},
 			capellaGlobalHTTPClientTimeoutField: schema.Int64Attribute{
 				Optional:    true,
-				Description: "Global HTTP client timeout in seconds. May be set via the CAPELLA_GLOBAL_HTTP_CLIENT_TIMEOUT environment variable. Defaults to 300.",
+				Description: "Global HTTP client timeout in seconds. May be set via the CAPELLA_GLOBAL_HTTP_CLIENT_TIMEOUT environment variable. Defaults to 300. Value must be greater than or equal to 300.",
 			},
 		},
 	}
