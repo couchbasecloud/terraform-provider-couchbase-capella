@@ -261,8 +261,6 @@ var (
 
 	ErrUnexpectedStatusGettingLogStreamingConfigStatus = errors.New("unexpected status getting log streaming config status")
 
-	ErrLogStreamingConfigStatusDisabled = errors.New("log streaming config status is disabled")
-
 	ErrorMessageWhileFreeTierBucketCreation = errors.New("There is an error during free tier bucket creation. Please check in Capella to see if any hanging resources")
 
 	ErrorMessageAfterFreeTierClusterCreationInitiation = errors.New("Cluster creation is initiated, but encountered an error while checking the current" +
