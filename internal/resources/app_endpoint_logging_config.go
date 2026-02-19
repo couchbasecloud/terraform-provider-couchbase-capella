@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
@@ -262,7 +262,7 @@ func (l *LoggingConfig) upsertLoggingConfig(ctx context.Context, organizationId,
 	}
 
 	if putLoggingConfigResp.HTTPResponse.StatusCode != http.StatusNoContent {
-		return errors.ErrUnexpectedStatusUpsertingAppEndpointLoggingConfig
+		return errors.New("Unexpected status while upserting App Endpoint Logging Config: " + string(putLoggingConfigResp.Body))
 	}
 
 	return nil
@@ -301,7 +301,7 @@ func (l *LoggingConfig) getLoggingConfig(ctx context.Context, organizationId, pr
 			"appServiceId":    appServiceId,
 			"appEndpointName": appEndpointName,
 		})
-		return nil, errors.ErrUnexpectedStatusGettingAppEndpointLoggingConfig
+		return nil, errors.New("Unexpected status while getting App Endpoint Logging Config: " + string(getLoggingConfigResp.Body))
 	}
 
 	return getLoggingConfigResp.JSON200, nil
@@ -336,7 +336,7 @@ func (l *LoggingConfig) getLogStreamingStatus(ctx context.Context, organizationI
 			"clusterId":      clusterId,
 			"appServiceId":   appServiceId,
 		})
-		return nil, errors.ErrUnexpectedStatusGettingLogStreamingConfigStatus
+		return nil, errors.New("Unexpected status while getting Log Streaming Status: " + string(getLogStreamingStatusResp.Body))
 	}
 
 	return getLogStreamingStatusResp.JSON200.ConfigState, nil
