@@ -18,9 +18,10 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource                = &AppServiceLogStreaming{}
-	_ resource.ResourceWithConfigure   = &AppServiceLogStreaming{}
-	_ resource.ResourceWithImportState = &AppServiceLogStreaming{}
+	_ resource.Resource                   = &AppServiceLogStreaming{}
+	_ resource.ResourceWithConfigure      = &AppServiceLogStreaming{}
+	_ resource.ResourceWithImportState    = &AppServiceLogStreaming{}
+	_ resource.ResourceWithValidateConfig = &AppServiceLogStreaming{}
 )
 
 const (
@@ -140,7 +141,7 @@ func (r *AppServiceLogStreaming) Create(ctx context.Context, req resource.Create
 	// Wait for the log streaming to be enabled
 	err = r.waitForLogStreamingState(ctx, organizationId, projectId, clusterId, appServiceId, apigen.GetLogStreamingResponseConfigStateEnabled)
 	if err != nil {
-		resp.Diagnostics.AddWarning(
+		resp.Diagnostics.AddError(
 			"Error waiting for Log Streaming to be enabled",
 			errorMessageAfterLogStreamingCreation+err.Error(),
 		)
@@ -150,7 +151,7 @@ func (r *AppServiceLogStreaming) Create(ctx context.Context, req resource.Create
 	// Refresh the state from the API
 	refreshedState, err := r.refreshLogStreaming(ctx, organizationId, projectId, clusterId, appServiceId, plan.Credentials)
 	if err != nil {
-		resp.Diagnostics.AddWarning(
+		resp.Diagnostics.AddError(
 			"Error refreshing Log Streaming state",
 			errorMessageAfterLogStreamingCreation+err.Error(),
 		)
@@ -370,6 +371,66 @@ func (r *AppServiceLogStreaming) Delete(ctx context.Context, req resource.Delete
 		resp.Diagnostics.AddError(
 			"Error waiting for Log Streaming deletion to complete",
 			"Could not delete Log Streaming configuration: "+err.Error(),
+		)
+		return
+	}
+}
+
+// ValidateConfig validates the resource configuration.
+// It checks the output type is valid and matches the correct credentials object and that no other credentials objects are set.
+func (r *AppServiceLogStreaming) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var config providerschema.AppServiceLogStreaming
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	outputType := config.OutputType.ValueString()
+
+	// Map each output_type to a check for whether its matching credential block is provided.
+	type credentialCheck struct {
+		outputType string
+		isPresent  bool
+	}
+
+	checks := []credentialCheck{
+		{string(apigen.GetLogStreamingResponseOutputTypeDatadog), config.Credentials != nil && config.Credentials.Datadog != nil},
+		{string(apigen.GetLogStreamingResponseOutputTypeDynatrace), config.Credentials != nil && config.Credentials.Dynatrace != nil},
+		{string(apigen.GetLogStreamingResponseOutputTypeElastic), config.Credentials != nil && config.Credentials.Elastic != nil},
+		{string(apigen.GetLogStreamingResponseOutputTypeGenericHttp), config.Credentials != nil && config.Credentials.GenericHttp != nil},
+		{string(apigen.GetLogStreamingResponseOutputTypeLoki), config.Credentials != nil && config.Credentials.Loki != nil},
+		{string(apigen.GetLogStreamingResponseOutputTypeSplunk), config.Credentials != nil && config.Credentials.Splunk != nil},
+		{string(apigen.GetLogStreamingResponseOutputTypeSumologic), config.Credentials != nil && config.Credentials.Sumologic != nil},
+	}
+
+	// Validate output_type is a supported value and find the matching credential check.
+	var matchFound bool
+	for _, check := range checks {
+		if check.outputType == outputType {
+			matchFound = true
+			if !check.isPresent {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("credentials"),
+					"Missing Credential Configuration",
+					fmt.Sprintf("credentials.%s must be configured when output_type is %q", check.outputType, outputType),
+				)
+				return
+			}
+		} else if check.isPresent {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("credentials"),
+				"Invalid Credential Configuration",
+				fmt.Sprintf("credentials.%s must not be configured when output_type is %q", check.outputType, outputType),
+			)
+			return
+		}
+	}
+
+	if !matchFound {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("output_type"),
+			"Invalid Attribute Configuration",
+			fmt.Sprintf("Unsupported output_type %q. Please read the documentation for supported values.", outputType),
 		)
 		return
 	}
