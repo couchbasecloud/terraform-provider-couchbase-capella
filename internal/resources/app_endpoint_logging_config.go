@@ -100,6 +100,7 @@ func (l *LoggingConfig) Read(ctx context.Context, req resource.ReadRequest, resp
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	IDs, err := state.Validate()
 	if err != nil {
 		tflog.Debug(ctx, "Error validating app endpoint logging config", map[string]interface{}{
@@ -120,6 +121,21 @@ func (l *LoggingConfig) Read(ctx context.Context, req resource.ReadRequest, resp
 		appServiceId    = IDs[providerschema.AppServiceId]
 		appEndpointName = IDs[providerschema.AppEndpointName]
 	)
+
+	logStreamingConfigStatus, err := l.getLogStreamingStatus(ctx, organizationId, projectId, clusterId, appServiceId)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error getting Log Streaming Config Status",
+			"Could not get Capella Log Streaming Config Status for app service with id "+appServiceId,
+		)
+		return
+	}
+
+	if *logStreamingConfigStatus == api.GetLogStreamingResponseConfigStateDisabled || *logStreamingConfigStatus == api.GetLogStreamingResponseConfigStateDisabling {
+		tflog.Info(ctx, "the Log Streaming config status is "+string(*logStreamingConfigStatus)+" in remote server, removing the App Endpoint Log Streaming config from state file")
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	loggingConfig, err := l.getLoggingConfig(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName)
 	if err != nil {
@@ -289,6 +305,41 @@ func (l *LoggingConfig) getLoggingConfig(ctx context.Context, organizationId, pr
 	}
 
 	return getLoggingConfigResp.JSON200, nil
+}
+
+func (l *LoggingConfig) getLogStreamingStatus(ctx context.Context, organizationId, projectId, clusterId, appServiceId string) (*api.GetLogStreamingResponseConfigState, error) {
+
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID := l.mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId)
+
+	getLogStreamingStatusResp, err := l.ClientV2.GetAppServiceLogStreamingWithResponse(
+		ctx,
+		organizationUUID,
+		projectUUID,
+		clusterUUID,
+		appServiceUUID,
+	)
+	if err != nil {
+		tflog.Debug(ctx, "error getting log streaming status", map[string]interface{}{
+			"organizationId": organizationId,
+			"projectId":      projectId,
+			"clusterId":      clusterId,
+			"appServiceId":   appServiceId,
+			"err":            err.Error(),
+		})
+		return nil, err
+	}
+
+	if getLogStreamingStatusResp.JSON200 == nil {
+		tflog.Debug(ctx, "unexpected status getting log streaming status", map[string]interface{}{
+			"organizationId": organizationId,
+			"projectId":      projectId,
+			"clusterId":      clusterId,
+			"appServiceId":   appServiceId,
+		})
+		return nil, errors.ErrUnexpectedStatusGettingLogStreamingConfigStatus
+	}
+
+	return getLogStreamingStatusResp.JSON200.ConfigState, nil
 }
 
 func (l *LoggingConfig) mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId string) (organizationUUID, projectUUID, clusterUUID, appServiceUUID uuid.UUID) {
