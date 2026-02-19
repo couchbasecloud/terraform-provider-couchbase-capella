@@ -136,7 +136,7 @@ new_app_endpoint_log_streaming_config = {
   "app_endpoint_name" = "test_app_endpoint"
   "app_service_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
-  "log_keys" = tolist([
+  "log_keys" = toset([
     "HTTP",
     "Import",
   ])
@@ -304,7 +304,7 @@ new_app_endpoint_log_streaming_config = {
   "app_endpoint_name" = "test_app_endpoint"
   "app_service_id" = "ffffffff-aaaa-1414-eeee-000000000000"
   "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
-  "log_keys" = tolist([
+  "log_keys" = toset([
     "Auth",
   ])
   "log_level" = "warn"

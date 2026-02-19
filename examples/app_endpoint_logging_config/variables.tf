@@ -32,7 +32,7 @@ variable "app_endpoint_log_streaming_config" {
   description = "App endpoint logging config"
   type = object({
     log_level = string
-    log_keys = list(string)
+    log_keys = set(string)
   })
 
   validation {
