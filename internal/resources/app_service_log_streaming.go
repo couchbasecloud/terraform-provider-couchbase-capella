@@ -560,8 +560,8 @@ func (r *AppServiceLogStreaming) waitForLogStreamingState(
 	organizationId, projectId, clusterId, appServiceId string,
 	targetState apigen.GetLogStreamingResponseConfigState,
 ) error {
-	// Log Streaming state transition should usually only take up to a minute when all nodes are healthy, but allow more just incase // TODO: better desc
-	const timeout = time.Minute * 5
+	// Log Streaming state transition should usually only take up to a minute when all nodes are healthy, but allow for extra time in case a node is having transient issues
+	const timeout = time.Minute * 3
 	const sleepDuration = time.Second * 3
 
 	// Parse string IDs to UUIDs for the API client
