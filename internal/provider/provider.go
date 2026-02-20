@@ -293,6 +293,5 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewAppEndpointOidcProvider,
 		resources.NewAppEndpointDefaultOidcProvider,
 		resources.NewSnapshotBackupSchedule,
-		resources.NewAppServiceLogStreaming,
 	}
 }

@@ -590,27 +590,13 @@ func (r *AppServiceLogStreaming) refreshLogStreaming(
 	}
 
 	// Extract values from response
-	var outputType *string
-	if response.JSON200.OutputType != nil {
-		ot := string(*response.JSON200.OutputType)
-		outputType = &ot
-	}
-
-	var configState *string
-	if response.JSON200.ConfigState != nil {
-		cs := string(*response.JSON200.ConfigState)
-		configState = &cs
-	}
-
-	// Create the refreshed state
 	// Note: Credentials are not returned by the API, so we preserve them from the plan/state
 	return providerschema.NewAppServiceLogStreaming(
 		organizationId,
 		projectId,
 		clusterId,
 		appServiceId,
-		outputType,
-		configState,
+		response.JSON200,
 		existingCredentials,
 	), nil
 }

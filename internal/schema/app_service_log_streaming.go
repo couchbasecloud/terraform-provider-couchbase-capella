@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -29,6 +30,9 @@ type AppServiceLogStreaming struct {
 
 	// ConfigState is the current configuration state of log streaming (enabled, enabling, disabled, disabling, paused, pausing, errored).
 	ConfigState types.String `tfsdk:"config_state"`
+
+	// StreamingState indicates if logs are being successfully streamed from the App Service nodes (degraded, healthy, unhealthy, unknown, unsupported).
+	StreamingState types.String `tfsdk:"streaming_state"`
 
 	// Credentials contains the credentials for the configured log collector.
 	Credentials *LogStreamingCredentials `tfsdk:"credentials"`
@@ -149,7 +153,7 @@ func (a *AppServiceLogStreaming) Validate() (map[Attr]string, error) {
 // NewAppServiceLogStreaming creates a new AppServiceLogStreaming from API response data.
 func NewAppServiceLogStreaming(
 	organizationId, projectId, clusterId, appServiceId string,
-	outputType, configState *string,
+	apiResponse *apigen.GetLogStreamingResponse,
 	existingCredentials *LogStreamingCredentials,
 ) *AppServiceLogStreaming {
 	result := &AppServiceLogStreaming{
@@ -161,13 +165,18 @@ func NewAppServiceLogStreaming(
 	}
 
 	result.OutputType = types.StringNull()
-	if outputType != nil {
-		result.OutputType = types.StringValue(*outputType)
+	if apiResponse.OutputType != nil {
+		result.OutputType = types.StringValue(string(*apiResponse.OutputType))
 	}
 
 	result.ConfigState = types.StringNull()
-	if configState != nil {
-		result.ConfigState = types.StringValue(*configState)
+	if apiResponse.ConfigState != nil {
+		result.ConfigState = types.StringValue(string(*apiResponse.ConfigState))
+	}
+
+	result.StreamingState = types.StringNull()
+	if apiResponse.StreamingState != nil {
+		result.StreamingState = types.StringValue(string(*apiResponse.StreamingState))
 	}
 
 	return result

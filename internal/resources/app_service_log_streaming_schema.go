@@ -30,6 +30,7 @@ func AppServiceLogStreamingSchema() schema.Schema {
 
 	// Read-only attributes
 	capellaschema.AddAttr(attrs, "config_state", appServiceLogStreamingBuilder, stringAttribute([]string{computed}), "GetLogStreamingResponse")
+	capellaschema.AddAttr(attrs, "streaming_state", appServiceLogStreamingBuilder, stringAttribute([]string{computed}), "GetLogStreamingResponse")
 
 	return schema.Schema{
 		Attributes: attrs,
