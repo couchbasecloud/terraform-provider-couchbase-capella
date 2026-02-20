@@ -1,8 +1,10 @@
 # Capella App Endpoint Logging Config Example
 
-This example shows how to create and manage a App Endpoint Logging Config in Capella.
+This example shows how to manage an App Endpoint Logging Config for an App Service in Capella. This logging config controls what logs to stream to the log collector set up on the App Service.
 
-This upserts a new logging config in the selected Capella app endpoint. It uses the organization ID, project ID, cluster ID, app service ID, and app endpoint name to do so.
+The logging config can only be managed if the App Service has Log Streaming enabled. See the `app_service_log_streaming` resource for how to manage this through Terraform.
+
+This modifies the logging config for the selected App Endpoint. It uses the organization ID, project ID, cluster ID, App Service ID, and App Endpoint name to do so.
 
 To run, configure your Couchbase Capella provider as described in README in the root of this project.
 
@@ -12,8 +14,8 @@ In this example, we are going to do the following.
 
 1. CREATE: Create a logging config for a Capella app endpoint as stated in the `create_app_endpoint_logging_config.tf` file.
 2. UPDATE: Update the logging config using Terraform.
-3. IMPORT: Import a logging config that exists in Capella but not in the terraform state file.
-4. DELETE: Remove the logging config from the terraform state file.
+3. IMPORT: Import a logging config that exists in Capella but not in the Terraform state file.
+4. DELETE: Remove the logging config from the Terraform state file.
 
 If you wish to use the `terraform.template.tfvars` file - Make sure you copy the file to `terraform.tfvars` and update the values of the variables as per the correct organization access.
 
@@ -24,15 +26,6 @@ Command: `terraform plan`
 
 Sample Output:
 ```
-╷
-│ Warning: Provider development overrides are in effect
-│ 
-│ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/$USER/terraform-provider-couchbase-capella/bin
-│ 
-│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
-╵
-
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   + create
 
@@ -75,15 +68,6 @@ Command: `terraform apply`
 
 Sample Output:
 ```
-╷
-│ Warning: Provider development overrides are in effect
-│ 
-│ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/$USER/terraform-provider-couchbase-capella/bin
-│ 
-│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
-╵
-
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   + create
 
@@ -166,7 +150,7 @@ Sample Output:
 Removed couchbase-capella_app_endpoint_log_streaming_config.new_app_endpoint_log_streaming_config
 Successfully removed 1 resource instance(s).
 ```
-Please note, this command will only remove the resource from the Terraform State file, but in reality, the resource exists in Capella.
+Please note, this command will only remove the resource from the Terraform State file, but in reality, the logging config modifications still exist in Capella.
 
 ### Now, let's import the resource in Terraform
 
@@ -203,14 +187,6 @@ Command: `terraform plan`
 Sample Output:
 
 ``` 
-╷
-│ Warning: Provider development overrides are in effect
-│ 
-│ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/$USER/terraform-provider-couchbase-capella/bin
-│ 
-│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
-╵
 couchbase-capella_app_endpoint_log_streaming_config.new_app_endpoint_log_streaming_config: Refreshing state...
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
@@ -248,14 +224,6 @@ command: `terrafom apply`
 Sample Output:
 
 ```
-╷
-│ Warning: Provider development overrides are in effect
-│ 
-│ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Users/$USER/terraform-provider-couchbase-capella/bin
-│ 
-│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
-╵
 couchbase-capella_app_endpoint_log_streaming_config.new_app_endpoint_log_streaming_config: Refreshing state...
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
@@ -314,6 +282,9 @@ new_app_endpoint_log_streaming_config = {
 ```
 
 ## DESTROY
+
+Note that destroying this resource results in a simple no-op removal of this resource from the state file. The App Endpoint will still retain the logging config modifications that have been made.
+
 ### Finally, destroy the resources created by Terraform
 
 Command: `terraform destroy`
