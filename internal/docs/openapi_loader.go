@@ -236,6 +236,7 @@ func GetOpenAPIDescription(resourceName, tfFieldName string) string {
 		"Update" + capitalizedResource + "Request",
 		capitalizedResource + "Request",
 		capitalizedResource + "Response",
+		resourceName, // Exact match without any modification (e.g. "datadog" for DataDog schema)
 	}
 
 	// Try each schema pattern until we find the field
