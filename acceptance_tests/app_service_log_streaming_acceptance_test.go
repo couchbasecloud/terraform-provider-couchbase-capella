@@ -13,58 +13,82 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 )
 
-// TestAccAppServiceLogStreaming tests the full lifecycle of the app_service_log_streaming resource:
-// Create (generic_http) -> Update (credential change) -> ImportState -> Delete (automatic).
-func TestAccAppServiceLogStreaming(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_log_streaming_")
-	resourceReference := "couchbase-capella_app_service_log_streaming." + resourceName
+// Many Log Streaming tests rely on Log Streaming being enabled for them to function and given we use a single global
+// App Service to perform Log Streaming tasks on, we need to be careful to not have parallel Log Streaming tests that
+// would interfere with each other by trying to change the Log Streaming config state at the same time.
+// logStreamingSequentialTestSteps defines the sequential steps for the Log Streaming acceptance tests,
+func logStreamingSequentialTestSteps() []resource.TestStep {
+	// resourceTestStepFuncs defines the sequential steps for the Log Streaming acceptance tests
+	sequentialTestStepFuncs := []func() []resource.TestStep{
+		appServiceLogStreamingResourceSteps,
+	}
 
+	// Add the steps in order to the final steps slice
+	var steps []resource.TestStep
+	for _, stepFunc := range sequentialTestStepFuncs {
+		steps = append(steps, stepFunc()...)
+	}
+	return steps
+}
+
+// TestAccAppServiceLogStreaming performs acceptance testing based on the steps listed in logStreamingSequentialTestSteps.
+// It also makes sure that the automatic destroy causes Log Streaming to be disabled.
+func TestAccAppServiceLogStreaming(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		CheckDestroy:             testAccCheckAppServiceLogStreamingDestroy,
-		Steps: []resource.TestStep{
-			// Create
-			{
-				Config: testAccAppServiceLogStreamingConfig(
-					resourceName,
-					"https://example.com/logs",
-					"test_user",
-					"test_password",
-				),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
-					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
-					resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
-					resource.TestCheckResourceAttr(resourceReference, "output_type", "generic_http"),
-					resource.TestCheckResourceAttr(resourceReference, "config_state", string(api.GetLogStreamingResponseConfigStateEnabled)),
-					resource.TestCheckResourceAttrSet(resourceReference, "streaming_state"),
-				),
-			},
-			// Update credentials (in-place, same output_type)
-			{
-				Config: testAccAppServiceLogStreamingConfig(
-					resourceName,
-					"https://example.com/logs/updated",
-					"updated_user",
-					"updated_password",
-				),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "output_type", "generic_http"),
-					resource.TestCheckResourceAttr(resourceReference, "config_state", string(api.GetLogStreamingResponseConfigStateEnabled)),
-				),
-			},
-			// ImportState Testing
-			{
-				ResourceName:                         resourceReference,
-				ImportStateIdFunc:                    generateAppServiceLogStreamingImportId(resourceReference),
-				ImportState:                          true,
-				ImportStateVerifyIdentifierAttribute: "app_service_id",
-				ImportStateVerify:                    true,
-				ImportStateVerifyIgnore:              []string{"credentials"},
-			},
-		},
+		Steps:                    logStreamingSequentialTestSteps(),
 	})
+}
+
+// appServiceLogStreamingResourceSteps provides the steps to test the full lifecycle of the app_service_log_streaming
+// resource: Create (generic_http) -> Update (credential change) -> ImportState.
+func appServiceLogStreamingResourceSteps() []resource.TestStep {
+	resourceName := randomStringWithPrefix("tf_acc_log_streaming_")
+	resourceReference := "couchbase-capella_app_service_log_streaming." + resourceName
+
+	return []resource.TestStep{
+		// Create
+		{
+			Config: testAccAppServiceLogStreamingConfig(
+				resourceName,
+				"https://example.com/logs",
+				"test_user",
+				"test_password",
+			),
+			Check: resource.ComposeAggregateTestCheckFunc(
+				resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
+				resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
+				resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
+				resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
+				resource.TestCheckResourceAttr(resourceReference, "output_type", "generic_http"),
+				resource.TestCheckResourceAttr(resourceReference, "config_state", string(api.GetLogStreamingResponseConfigStateEnabled)),
+				resource.TestCheckResourceAttrSet(resourceReference, "streaming_state"),
+			),
+		},
+		// Update credentials (in-place, same output_type)
+		{
+			Config: testAccAppServiceLogStreamingConfig(
+				resourceName,
+				"https://example.com/logs/updated",
+				"updated_user",
+				"updated_password",
+			),
+			Check: resource.ComposeAggregateTestCheckFunc(
+				resource.TestCheckResourceAttr(resourceReference, "output_type", "generic_http"),
+				resource.TestCheckResourceAttr(resourceReference, "config_state", string(api.GetLogStreamingResponseConfigStateEnabled)),
+			),
+		},
+		// ImportState Testing
+		{
+			ResourceName:                         resourceReference,
+			ImportStateIdFunc:                    generateAppServiceLogStreamingImportId(resourceReference),
+			ImportState:                          true,
+			ImportStateVerifyIdentifierAttribute: "app_service_id",
+			ImportStateVerify:                    true,
+			ImportStateVerifyIgnore:              []string{"credentials"},
+		},
+	}
 }
 
 // TestAccAppServiceLogStreamingMismatchedCredentials tests that a validation error is returned
