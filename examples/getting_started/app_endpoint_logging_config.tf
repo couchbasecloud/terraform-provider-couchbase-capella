@@ -8,10 +8,5 @@ resource "couchbase-capella_app_endpoint_log_streaming_config" "new_app_endpoint
   log_level = var.app_endpoint_log_streaming_config.log_level
   log_keys = var.app_endpoint_log_streaming_config.log_keys
 
-  depends_on = [
-    couchbase-capella_project.new_project, 
-    couchbase-capella_cluster.new_cluster, 
-    couchbase-capella_app_service.new_app_service, 
-    couchbase-capella_app_endpoint.endpoint1
-    ]
+  depends_on = [couchbase-capella_app_endpoint.endpoint1]
 }

@@ -282,7 +282,7 @@ variable "app_endpoint_oidc" {
 }
 
 variable "app_endpoint_log_streaming_config" {
-  description = "App endpoint logging config"
+  description = "App Endpoint Logging Config"
   type = object({
     log_level = string
     log_keys = set(string)
