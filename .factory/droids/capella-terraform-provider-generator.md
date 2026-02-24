@@ -47,14 +47,14 @@ data_sources:
 
 For each resource, generate:
 
-1. **Unit Tests** (`internal/resources/<resource>_test.go`):
+1. **Unit Tests** (`internal/resources/<resource>_test.go`)):
    - Generated first (TDD approach)
    - Mock HTTP client using net/http/httptest
    - Test cases from YAML test_cases section
    - Validate CRUD operations with mocked responses
    - Fast iteration cycle, no cloud dependencies
 
-2. **Acceptance Tests** (`acceptance_tests/<resource>_acceptance_test.go`):
+2. **Acceptance Tests** (`acceptance_tests/<resource>_acceptance_test.go`)):
    - E2E tests against real Capella API
    - Test data from YAML acceptance_test_data section
    - Validates production-ready functionality
@@ -91,6 +91,15 @@ For each resource, generate:
 
 8. **Datasource Schema** (`internal/datasources/<plural>_schema.go`):
    - Same pattern as resource schema but uses datasource.Schema
+   - **IMPORTANT**: Only use existing helper functions from attributes.go:
+     - `requiredString()` - for required string attributes
+     - `computedString()` - for computed string attributes
+     - `requiredInt64()` - for required int64 attributes
+     - `computedInt64()` - for computed int64 attributes
+     - `computedBool()` - for computed bool attributes
+     - `computedAudit()` - for audit nested attributes
+     - For options like "optional" computed fields, use inline struct definitions or the specific helper functions
+     - NEVER call non-existent functions like `stringAttributeDataSource()`, `boolAttributeDataSource()`, `listAttributeDataSource()`
 
 9. **Provider Registration** (`internal/provider/provider.go`):
    - Add to Resources() method
@@ -106,6 +115,15 @@ For each resource, generate:
 - **Use OpenAPI descriptions**: Always call docs.GetOpenAPIDescription() for field documentation
 - **Simplicity First**: Generate only what's specified in the config, no extra features
 - **After generation**: Run make fmt, make lint-fix, make build to validate
+- **Self-Validation and Fix Loop**: After each file generation step, actively check for and fix any problems you caused:
+  - Verify all imports exist and are correct
+  - Verify all function calls reference existing functions (especially in attributes.go)
+  - Verify type conversions are correct (e.g., []attr.Value vs []types.String for ListValue)
+  - Verify plan modifier types match their usage (e.g., boolplanmodifier.Bool vs planmodifier.Bool)
+  - After generating all files, run `go build ./...` and `getIdeDiagnostics` to catch any compilation errors
+  - If errors are found, analyze their root cause (e.g., calling non-existent helper functions) and fix the droid's generation logic to prevent future occurrences
+  - Continue iterating until `go build ./...` succeeds with no errors
+  - NEVER leave compilation errors for the user to fix - they are the droid's responsibility
 
 ## Prerequisites & OpenAPI Spec Setup
 
@@ -135,7 +153,6 @@ On first run, the droid will automatically set up the OpenAPI spec:
 
    Then run the droid again.
    ```
-
 Note: `openapi.generated.yaml` is gitignored - it's never committed to this repository.
 
 ## Workflow (TDD-First)
@@ -143,15 +160,28 @@ Note: `openapi.generated.yaml` is gitignored - it's never committed to this repo
 1. **Setup OpenAPI spec** - Check if `openapi.generated.yaml` exists, create symlink if needed, exit with error if source repo not found
 2. Parse config file and validate YAML structure
 3. Generate unit tests for resource (`internal/resources/<resource>_test.go`)
+   - **Validate**: Check syntax with `go build` for this specific file
 4. Generate unit tests for datasource (`internal/datasources/<plural>_test.go`)
+   - **Validate**: Check syntax with `go build` for this specific file
 5. Parse OpenAPI spec: Extract field descriptions and types from openapi.generated.yaml
-6. Generate internal schema type: `internal/schema/<resource>.go`
-7. Generate resource implementation: `internal/resources/<resource>.go`
-8. Generate resource schema: `internal/resources/<resource>_schema.go`
-9. Generate datasource implementation: `internal/datasources/<plural>.go`
-10. Generate datasource schema: `internal/datasources/<plural>_schema.go`
-11. Update provider registration: `internal/provider/provider.go`
-12. Run validation: make fmt, make lint-fix, make build, go test
-13. Generate acceptance tests for resource (`acceptance_tests/<resource>_acceptance_test.go`)
+6. Generate internal schema type: `internal/schema/<resource>.go`)
+   - **Validate**: Verify all imports exist, check for undefined types
+7. Generate resource implementation: `internal/resources/<resource>.go`)
+   - **Validate**: Verify imports, API client references, type conversions
+8. Generate resource schema: `internal/resources/<resource>_schema.go`)
+   - **Validate**: Verify plan modifier imports and types match usage
+9. Generate datasource implementation: `internal/datasources/<plural>.go`)
+   - **Validate**: Verify imports, type conversions (especially for ListValue)
+10. Generate datasource schema: `internal/datasources/<plural>_schema.go`)
+    - **Validate**: Verify ALL helper function calls reference functions that exist in attributes.go
+11. Update provider registration: `internal/provider/provider.go`)
+    - **Validate**: Verify no non-existent resources are added
+12. **Final validation loop**:
+    - Run `go build ./...` to check for compilation errors
+    - If errors found, identify root cause and fix the problematic generated file(s)
+    - Use `getIdeDiagnostics` or `go build` to identify specific error locations
+    - Continue iterating until `go build ./...` succeeds
+13. Run additional validation: make fmt, make lint-fix, go test
+14. Generate acceptance tests for resource (`acceptance_tests/<resource>_acceptance_test.go`)
 
 Generate internal schema types using SchemaBuilder patterns, implement resource.Resource and datasource.DataSource interfaces with proper CRUD methods, update provider registration in alphabetical order. Always use api.ParseError() for error handling, docs.GetOpenAPIDescription() for field documentation, and include interface verification with var \_ declarations. Apply Simplicity First principle: generate only what's specified in the config, no extra features. Make surgical changes: touch only files directly related to the new resource/datasource. Ensure all generated code passes make fmt, make lint-fix, and make build. When uncertain about patterns, reference existing resources in the codebase as templates. Validate that paths, method names, and struct field mappings match the YAML specification exactly. Generate one resource and one datasource per invocation.
