@@ -2,6 +2,7 @@ package acceptance_tests
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -11,55 +12,51 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-func TestAccAppEndpointLoggingConfigResource(t *testing.T) {
+func testAccAppEndpointLoggingConfigResource() []resource.TestStep {
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_log_streaming_config_")
 	resourceReference := "couchbase-capella_app_endpoint_log_streaming_config." + resourceName
 
 	logKeys := "[" + strings.Join([]string{"\"HTTP\"", "\"Import\""}, ",") + "]"
 	updatedLogKeys := "[" + "\"Auth\"" + "]"
 
-	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAppEndpointLoggingConfigResourceConfig(resourceName, "info", logKeys),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExistsAppEndpointLoggingConfigResource(resourceReference),
-					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
-					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
-					resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
-					resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", globalAppEndpointName),
-					resource.TestCheckResourceAttr(resourceReference, "log_level", "info"),
-					resource.TestCheckResourceAttr(resourceReference, "log_keys.0", "HTTP"),
-					resource.TestCheckResourceAttr(resourceReference, "log_keys.1", "Import"),
-				),
-			},
-
-			{
-				ResourceName:      resourceReference,
-				ImportStateIdFunc: generateAppEndpointLoggingConfigImportIdForResource(resourceReference),
-				ImportState:       true,
-			},
-
-			{
-				Config: testAccAppEndpointLoggingConfigResourceConfig(resourceName, "warn", updatedLogKeys),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
-					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
-					resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
-					resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", globalAppEndpointName),
-					resource.TestCheckResourceAttr(resourceReference, "log_level", "warn"),
-					resource.TestCheckResourceAttr(resourceReference, "log_keys.0", "Auth"),
-				),
-			},
+	return []resource.TestStep{
+		{
+			Config: testAccAppEndpointLoggingConfigResourceConfig(resourceName, "info", logKeys),
+			Check: resource.ComposeAggregateTestCheckFunc(
+				testAccExistsAppEndpointLoggingConfigResource(resourceReference),
+				resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
+				resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
+				resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
+				resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
+				resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", globalAppEndpointName),
+				resource.TestCheckResourceAttr(resourceReference, "log_level", "info"),
+				resource.TestCheckResourceAttr(resourceReference, "log_keys.0", "HTTP"),
+				resource.TestCheckResourceAttr(resourceReference, "log_keys.1", "Import"),
+			),
 		},
-	})
+
+		{
+			ResourceName:      resourceReference,
+			ImportStateIdFunc: generateAppEndpointLoggingConfigImportIdForResource(resourceReference),
+			ImportState:       true,
+		},
+
+		{
+			Config: testAccAppEndpointLoggingConfigResourceConfig(resourceName, "warn", updatedLogKeys),
+			Check: resource.ComposeAggregateTestCheckFunc(
+				resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
+				resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
+				resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
+				resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
+				resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", globalAppEndpointName),
+				resource.TestCheckResourceAttr(resourceReference, "log_level", "warn"),
+				resource.TestCheckResourceAttr(resourceReference, "log_keys.0", "Auth"),
+			),
+		},
+	}
 }
 
 func TestAccAppEndpointLoggingConfigResourceInvalidLogLevel(t *testing.T) {
@@ -123,12 +120,9 @@ func testAccExistsAppEndpointLoggingConfigResource(resourceReference string) res
 			}
 		}
 
-		data, err := newTestClientV2()
-		if err != nil {
-			return err
-		}
+		data := newTestClient()
 
-		err = retrieveAppEndpointLoggingConfigFromServer(data, rawState["organization_id"], rawState["project_id"], rawState["cluster_id"], rawState["app_service_id"], rawState["app_endpoint_name"])
+		err := retrieveAppEndpointLoggingConfigFromServer(data, rawState["organization_id"], rawState["project_id"], rawState["cluster_id"], rawState["app_service_id"], rawState["app_endpoint_name"])
 		if err != nil {
 			return err
 		}
@@ -158,7 +152,7 @@ func retrieveAppEndpointLoggingConfigFromServer(data *providerschema.Data, organ
 	}
 
 	if getLoggingConfigResp.JSON200 == nil {
-		return errors.ErrUnexpectedStatusGettingAppEndpointLoggingConfig
+		return errors.New("Unexpected status while getting App Endpoint Logging Config: " + string(getLoggingConfigResp.Body))
 	}
 
 	return nil
