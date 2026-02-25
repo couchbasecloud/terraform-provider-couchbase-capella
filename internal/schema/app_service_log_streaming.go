@@ -11,8 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-// AppServiceLogStreaming defines the Terraform state for the app service log streaming resource.
-type AppServiceLogStreaming struct {
+// AppServiceLogStreamingBase contains the common fields shared by both the resource
+// and datasource models for app service log streaming.
+type AppServiceLogStreamingBase struct {
 	// OrganizationId is the ID of the organization to which the Capella cluster belongs.
 	OrganizationId types.String `tfsdk:"organization_id"`
 
@@ -33,6 +34,11 @@ type AppServiceLogStreaming struct {
 
 	// StreamingState indicates if logs are being successfully streamed from the App Service nodes (degraded, healthy, unhealthy, unknown, unsupported).
 	StreamingState types.String `tfsdk:"streaming_state"`
+}
+
+// AppServiceLogStreaming defines the Terraform state for the app service log streaming resource.
+type AppServiceLogStreaming struct {
+	AppServiceLogStreamingBase
 
 	// Credentials contains the credentials for the configured log collector.
 	Credentials *LogStreamingCredentials `tfsdk:"credentials"`
@@ -132,9 +138,9 @@ type SumologicCredentials struct {
 	Url types.String `tfsdk:"url"`
 }
 
-// Validate validates the AppServiceLogStreaming state and returns parsed IDs.
+// Validate validates the app service log streaming state and returns parsed IDs.
 // It handles both normal reads and terraform import scenarios.
-func (a *AppServiceLogStreaming) Validate() (map[Attr]string, error) {
+func (a *AppServiceLogStreamingBase) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
 		OrganizationId: a.OrganizationId,
 		ProjectId:      a.ProjectId,
@@ -150,6 +156,24 @@ func (a *AppServiceLogStreaming) Validate() (map[Attr]string, error) {
 	return IDs, nil
 }
 
+// setFromAPIResponse populates the computed fields from an API response.
+func (b *AppServiceLogStreamingBase) setFromAPIResponse(apiResponse *apigen.GetLogStreamingResponse) {
+	b.OutputType = types.StringNull()
+	if apiResponse.OutputType != nil {
+		b.OutputType = types.StringValue(string(*apiResponse.OutputType))
+	}
+
+	b.ConfigState = types.StringNull()
+	if apiResponse.ConfigState != nil {
+		b.ConfigState = types.StringValue(string(*apiResponse.ConfigState))
+	}
+
+	b.StreamingState = types.StringNull()
+	if apiResponse.StreamingState != nil {
+		b.StreamingState = types.StringValue(string(*apiResponse.StreamingState))
+	}
+}
+
 // NewAppServiceLogStreaming creates a new AppServiceLogStreaming from API response data.
 func NewAppServiceLogStreaming(
 	organizationId, projectId, clusterId, appServiceId string,
@@ -157,27 +181,43 @@ func NewAppServiceLogStreaming(
 	existingCredentials *LogStreamingCredentials,
 ) *AppServiceLogStreaming {
 	result := &AppServiceLogStreaming{
-		OrganizationId: types.StringValue(organizationId),
-		ProjectId:      types.StringValue(projectId),
-		ClusterId:      types.StringValue(clusterId),
-		AppServiceId:   types.StringValue(appServiceId),
-		Credentials:    existingCredentials, // Preserve credentials from plan/state since API doesn't return them
+		AppServiceLogStreamingBase: AppServiceLogStreamingBase{
+			OrganizationId: types.StringValue(organizationId),
+			ProjectId:      types.StringValue(projectId),
+			ClusterId:      types.StringValue(clusterId),
+			AppServiceId:   types.StringValue(appServiceId),
+		},
+		Credentials: existingCredentials, // Preserve credentials from plan/state since API doesn't return them
 	}
 
-	result.OutputType = types.StringNull()
-	if apiResponse.OutputType != nil {
-		result.OutputType = types.StringValue(string(*apiResponse.OutputType))
+	result.setFromAPIResponse(apiResponse)
+
+	return result
+}
+
+// AppServiceLogStreamingData defines the Terraform state for the app service log streaming datasource.
+// This is separate from AppServiceLogStreaming (the resource model) because the datasource
+// does not include credentials.
+type AppServiceLogStreamingData struct {
+	AppServiceLogStreamingBase
+}
+
+// NewAppServiceLogStreamingData creates a new AppServiceLogStreamingData from API response data.
+// This is the datasource constructor — it omits credentials since the API does not return them.
+func NewAppServiceLogStreamingData(
+	organizationId, projectId, clusterId, appServiceId string,
+	apiResponse *apigen.GetLogStreamingResponse,
+) *AppServiceLogStreamingData {
+	result := &AppServiceLogStreamingData{
+		AppServiceLogStreamingBase: AppServiceLogStreamingBase{
+			OrganizationId: types.StringValue(organizationId),
+			ProjectId:      types.StringValue(projectId),
+			ClusterId:      types.StringValue(clusterId),
+			AppServiceId:   types.StringValue(appServiceId),
+		},
 	}
 
-	result.ConfigState = types.StringNull()
-	if apiResponse.ConfigState != nil {
-		result.ConfigState = types.StringValue(string(*apiResponse.ConfigState))
-	}
-
-	result.StreamingState = types.StringNull()
-	if apiResponse.StreamingState != nil {
-		result.StreamingState = types.StringValue(string(*apiResponse.StreamingState))
-	}
+	result.setFromAPIResponse(apiResponse)
 
 	return result
 }
