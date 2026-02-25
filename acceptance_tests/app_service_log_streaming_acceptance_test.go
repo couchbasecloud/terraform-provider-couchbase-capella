@@ -126,7 +126,7 @@ func TestAccAppServiceLogStreamingMissingCredentials(t *testing.T) {
 // testAccCheckAppServiceLogStreamingDestroy verifies that after Terraform destroys the log streaming resource, the
 // remote config_state has transitioned to "disabled". This is because destroying log streaming does not actually
 // delete a resource, but instead disables log streaming on the app service.
-func testAccCheckAppServiceLogStreamingDestroy(s *terraform.State) error {
+func testAccCheckAppServiceLogStreamingDestroy(_ *terraform.State) error {
 	data := newTestClient()
 
 	orgUUID, err := uuid.Parse(globalOrgId)
