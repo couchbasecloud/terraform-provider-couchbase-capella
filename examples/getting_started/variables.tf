@@ -280,3 +280,11 @@ variable "app_endpoint_oidc" {
         register       = bool
     })
 }
+
+variable "app_endpoint_log_streaming_config" {
+  description = "App Endpoint Logging Config"
+  type = object({
+    log_level = string
+    log_keys = set(string)
+  })
+}
