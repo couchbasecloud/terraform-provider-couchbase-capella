@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
@@ -98,7 +99,7 @@ func (r *AppServiceLogStreaming) Create(ctx context.Context, req resource.Create
 	}
 
 	// Build the API request
-	postReq, err := r.buildPostLogStreamingRequest(plan)
+	postReq, err := r.buildPostLogStreamingRequest(ctx, plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error building Log Streaming request",
@@ -249,7 +250,7 @@ func (r *AppServiceLogStreaming) Update(ctx context.Context, req resource.Update
 	// The API uses the same POST endpoint for both create and update.
 
 	// Build the API request
-	postReq, err := r.buildPostLogStreamingRequest(plan)
+	postReq, err := r.buildPostLogStreamingRequest(ctx, plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error building Log Streaming update request",
@@ -385,7 +386,27 @@ func (r *AppServiceLogStreaming) ValidateConfig(ctx context.Context, req resourc
 		return
 	}
 
+	// If credentials is unknown (e.g. passed via a variable), we can't validate.
+	if config.Credentials.IsUnknown() || config.Credentials.IsNull() {
+		return
+	}
+
+	// If output_type is unknown, we can't validate the match.
+	if config.OutputType.IsUnknown() {
+		return
+	}
+
 	outputType := config.OutputType.ValueString()
+
+	// Extract the LogStreamingCredentials from the types.Object
+	creds, diags := config.AsLogStreamingCredentials(ctx)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if creds == nil {
+		return
+	}
 
 	// Map each output_type to a check for whether its matching credential block is provided.
 	type credentialCheck struct {
@@ -394,13 +415,13 @@ func (r *AppServiceLogStreaming) ValidateConfig(ctx context.Context, req resourc
 	}
 
 	checks := []credentialCheck{
-		{string(apigen.GetLogStreamingResponseOutputTypeDatadog), config.Credentials != nil && config.Credentials.Datadog != nil},
-		{string(apigen.GetLogStreamingResponseOutputTypeDynatrace), config.Credentials != nil && config.Credentials.Dynatrace != nil},
-		{string(apigen.GetLogStreamingResponseOutputTypeElastic), config.Credentials != nil && config.Credentials.Elastic != nil},
-		{string(apigen.GetLogStreamingResponseOutputTypeGenericHttp), config.Credentials != nil && config.Credentials.GenericHttp != nil},
-		{string(apigen.GetLogStreamingResponseOutputTypeLoki), config.Credentials != nil && config.Credentials.Loki != nil},
-		{string(apigen.GetLogStreamingResponseOutputTypeSplunk), config.Credentials != nil && config.Credentials.Splunk != nil},
-		{string(apigen.GetLogStreamingResponseOutputTypeSumologic), config.Credentials != nil && config.Credentials.Sumologic != nil},
+		{string(apigen.GetLogStreamingResponseOutputTypeDatadog), !creds.Datadog.IsNull() && !creds.Datadog.IsUnknown()},
+		{string(apigen.GetLogStreamingResponseOutputTypeDynatrace), !creds.Dynatrace.IsNull() && !creds.Dynatrace.IsUnknown()},
+		{string(apigen.GetLogStreamingResponseOutputTypeElastic), !creds.Elastic.IsNull() && !creds.Elastic.IsUnknown()},
+		{string(apigen.GetLogStreamingResponseOutputTypeGenericHttp), !creds.GenericHttp.IsNull() && !creds.GenericHttp.IsUnknown()},
+		{string(apigen.GetLogStreamingResponseOutputTypeLoki), !creds.Loki.IsNull() && !creds.Loki.IsUnknown()},
+		{string(apigen.GetLogStreamingResponseOutputTypeSplunk), !creds.Splunk.IsNull() && !creds.Splunk.IsUnknown()},
+		{string(apigen.GetLogStreamingResponseOutputTypeSumologic), !creds.Sumologic.IsNull() && !creds.Sumologic.IsUnknown()},
 	}
 
 	// Validate output_type is a supported value and find the matching credential check.
@@ -443,106 +464,142 @@ func (r *AppServiceLogStreaming) ImportState(ctx context.Context, req resource.I
 }
 
 // buildPostLogStreamingRequest builds the API request from the Terraform plan.
-func (r *AppServiceLogStreaming) buildPostLogStreamingRequest(plan providerschema.AppServiceLogStreaming) (apigen.PostLogStreamingRequest, error) {
+func (r *AppServiceLogStreaming) buildPostLogStreamingRequest(ctx context.Context, plan providerschema.AppServiceLogStreaming) (apigen.PostLogStreamingRequest, error) {
 	outputType := apigen.PostLogStreamingRequestOutputType(plan.OutputType.ValueString())
 
-	var credentials apigen.PostLogStreamingRequest_Credentials
+	var apiCredentials apigen.PostLogStreamingRequest_Credentials
 
-	if plan.Credentials == nil {
+	if plan.Credentials.IsNull() || plan.Credentials.IsUnknown() {
+		return apigen.PostLogStreamingRequest{}, fmt.Errorf("credentials are required")
+	}
+
+	creds, diags := plan.AsLogStreamingCredentials(ctx)
+	if diags.HasError() {
+		return apigen.PostLogStreamingRequest{}, fmt.Errorf("failed to extract credentials: %s", diags.Errors())
+	}
+	if creds == nil {
 		return apigen.PostLogStreamingRequest{}, fmt.Errorf("credentials are required")
 	}
 
 	// Set credentials based on which provider is configured
 	switch outputType {
 	case apigen.PostLogStreamingRequestOutputTypeDatadog:
-		if plan.Credentials.Datadog == nil {
+		dd, diags := creds.AsDatadogCredentials(ctx)
+		if diags.HasError() {
+			return apigen.PostLogStreamingRequest{}, fmt.Errorf("failed to extract datadog credentials: %s", diags.Errors())
+		}
+		if dd == nil {
 			return apigen.PostLogStreamingRequest{}, fmt.Errorf("datadog credentials are required when output_type is 'datadog'")
 		}
-		err := credentials.FromDatadog(apigen.Datadog{
-			ApiKey: plan.Credentials.Datadog.ApiKey.ValueString(),
-			Url:    plan.Credentials.Datadog.Url.ValueString(),
+		err := apiCredentials.FromDatadog(apigen.Datadog{
+			Url:    dd.Url.ValueString(),
+			ApiKey: dd.ApiKey.ValueString(),
 		})
 		if err != nil {
 			return apigen.PostLogStreamingRequest{}, fmt.Errorf("failed to set datadog credentials: %w", err)
 		}
 
 	case apigen.PostLogStreamingRequestOutputTypeDynatrace:
-		if plan.Credentials.Dynatrace == nil {
+		dt, diags := creds.AsDynatraceCredentials(ctx)
+		if diags.HasError() {
+			return apigen.PostLogStreamingRequest{}, fmt.Errorf("failed to extract dynatrace credentials: %s", diags.Errors())
+		}
+		if dt == nil {
 			return apigen.PostLogStreamingRequest{}, fmt.Errorf("dynatrace credentials are required when output_type is 'dynatrace'")
 		}
-		err := credentials.FromDynatrace(apigen.Dynatrace{
-			ApiToken: plan.Credentials.Dynatrace.ApiToken.ValueString(),
-			Url:      plan.Credentials.Dynatrace.Url.ValueString(),
+		err := apiCredentials.FromDynatrace(apigen.Dynatrace{
+			Url:      dt.Url.ValueString(),
+			ApiToken: dt.ApiToken.ValueString(),
 		})
 		if err != nil {
 			return apigen.PostLogStreamingRequest{}, fmt.Errorf("failed to set dynatrace credentials: %w", err)
 		}
 
 	case apigen.PostLogStreamingRequestOutputTypeElastic:
-		if plan.Credentials.Elastic == nil {
+		el, diags := creds.AsElasticCredentials(ctx)
+		if diags.HasError() {
+			return apigen.PostLogStreamingRequest{}, fmt.Errorf("failed to extract elastic credentials: %s", diags.Errors())
+		}
+		if el == nil {
 			return apigen.PostLogStreamingRequest{}, fmt.Errorf("elastic credentials are required when output_type is 'elastic'")
 		}
-		err := credentials.FromElastic(apigen.Elastic{
-			User:     plan.Credentials.Elastic.User.ValueString(),
-			Password: plan.Credentials.Elastic.Password.ValueString(),
-			Url:      plan.Credentials.Elastic.Url.ValueString(),
+		err := apiCredentials.FromElastic(apigen.Elastic{
+			Url:      el.Url.ValueString(),
+			User:     el.User.ValueString(),
+			Password: el.Password.ValueString(),
 		})
 		if err != nil {
 			return apigen.PostLogStreamingRequest{}, fmt.Errorf("failed to set elastic credentials: %w", err)
 		}
 
 	case apigen.PostLogStreamingRequestOutputTypeGenericHttp:
-		if plan.Credentials.GenericHttp == nil {
+		gh, diags := creds.AsGenericHttpCredentials(ctx)
+		if diags.HasError() {
+			return apigen.PostLogStreamingRequest{}, fmt.Errorf("failed to extract generic_http credentials: %s", diags.Errors())
+		}
+		if gh == nil {
 			return apigen.PostLogStreamingRequest{}, fmt.Errorf("generic_http credentials are required when output_type is 'generic_http'")
 		}
 		genericHttp := apigen.GenericHttp{
-			Url: plan.Credentials.GenericHttp.Url.ValueString(),
+			Url: gh.Url.ValueString(),
 		}
 		// User and password are optional for generic_http
-		if !plan.Credentials.GenericHttp.User.IsNull() && !plan.Credentials.GenericHttp.User.IsUnknown() {
-			user := plan.Credentials.GenericHttp.User.ValueString()
+		if !gh.User.IsNull() && !gh.User.IsUnknown() {
+			user := gh.User.ValueString()
 			genericHttp.User = &user
 		}
-		if !plan.Credentials.GenericHttp.Password.IsNull() && !plan.Credentials.GenericHttp.Password.IsUnknown() {
-			password := plan.Credentials.GenericHttp.Password.ValueString()
+		if !gh.Password.IsNull() && !gh.Password.IsUnknown() {
+			password := gh.Password.ValueString()
 			genericHttp.Password = &password
 		}
-		err := credentials.FromGenericHttp(genericHttp)
+		err := apiCredentials.FromGenericHttp(genericHttp)
 		if err != nil {
 			return apigen.PostLogStreamingRequest{}, fmt.Errorf("failed to set generic_http credentials: %w", err)
 		}
 
 	case apigen.PostLogStreamingRequestOutputTypeLoki:
-		if plan.Credentials.Loki == nil {
+		lk, diags := creds.AsLokiCredentials(ctx)
+		if diags.HasError() {
+			return apigen.PostLogStreamingRequest{}, fmt.Errorf("failed to extract loki credentials: %s", diags.Errors())
+		}
+		if lk == nil {
 			return apigen.PostLogStreamingRequest{}, fmt.Errorf("loki credentials are required when output_type is 'loki'")
 		}
-		err := credentials.FromLoki(apigen.Loki{
-			User:     plan.Credentials.Loki.User.ValueString(),
-			Password: plan.Credentials.Loki.Password.ValueString(),
-			Url:      plan.Credentials.Loki.Url.ValueString(),
+		err := apiCredentials.FromLoki(apigen.Loki{
+			Url:      lk.Url.ValueString(),
+			User:     lk.User.ValueString(),
+			Password: lk.Password.ValueString(),
 		})
 		if err != nil {
 			return apigen.PostLogStreamingRequest{}, fmt.Errorf("failed to set loki credentials: %w", err)
 		}
 
 	case apigen.PostLogStreamingRequestOutputTypeSplunk:
-		if plan.Credentials.Splunk == nil {
+		sp, diags := creds.AsSplunkCredentials(ctx)
+		if diags.HasError() {
+			return apigen.PostLogStreamingRequest{}, fmt.Errorf("failed to extract splunk credentials: %s", diags.Errors())
+		}
+		if sp == nil {
 			return apigen.PostLogStreamingRequest{}, fmt.Errorf("splunk credentials are required when output_type is 'splunk'")
 		}
-		err := credentials.FromSplunk(apigen.Splunk{
-			SplunkToken: plan.Credentials.Splunk.SplunkToken.ValueString(),
-			Url:         plan.Credentials.Splunk.Url.ValueString(),
+		err := apiCredentials.FromSplunk(apigen.Splunk{
+			Url:         sp.Url.ValueString(),
+			SplunkToken: sp.SplunkToken.ValueString(),
 		})
 		if err != nil {
 			return apigen.PostLogStreamingRequest{}, fmt.Errorf("failed to set splunk credentials: %w", err)
 		}
 
 	case apigen.PostLogStreamingRequestOutputTypeSumologic:
-		if plan.Credentials.Sumologic == nil {
+		sl, diags := creds.AsSumologicCredentials(ctx)
+		if diags.HasError() {
+			return apigen.PostLogStreamingRequest{}, fmt.Errorf("failed to extract sumologic credentials: %s", diags.Errors())
+		}
+		if sl == nil {
 			return apigen.PostLogStreamingRequest{}, fmt.Errorf("sumologic credentials are required when output_type is 'sumologic'")
 		}
-		err := credentials.FromSumologic(apigen.Sumologic{
-			Url: plan.Credentials.Sumologic.Url.ValueString(),
+		err := apiCredentials.FromSumologic(apigen.Sumologic{
+			Url: sl.Url.ValueString(),
 		})
 		if err != nil {
 			return apigen.PostLogStreamingRequest{}, fmt.Errorf("failed to set sumologic credentials: %w", err)
@@ -554,7 +611,7 @@ func (r *AppServiceLogStreaming) buildPostLogStreamingRequest(plan providerschem
 
 	return apigen.PostLogStreamingRequest{
 		OutputType:  outputType,
-		Credentials: credentials,
+		Credentials: apiCredentials,
 	}, nil
 }
 
@@ -562,7 +619,7 @@ func (r *AppServiceLogStreaming) buildPostLogStreamingRequest(plan providerschem
 func (r *AppServiceLogStreaming) refreshLogStreaming(
 	ctx context.Context,
 	organizationId, projectId, clusterId, appServiceId string,
-	existingCredentials *providerschema.LogStreamingCredentials,
+	existingCredentials types.Object,
 ) (*providerschema.AppServiceLogStreaming, error) {
 	// Parse string IDs to UUIDs for the API client
 	orgUUID, projUUID, clusterUUID, appServiceUUID, err := r.parseUUIDs(organizationId, projectId, clusterId, appServiceId)
