@@ -145,6 +145,24 @@ func (s Stats) AttributeTypes() map[string]attr.Type {
 	}
 }
 
+// ClusterStats represents cluster-level statistics for bucket memory allocation.
+type ClusterStats struct {
+	// FreeMemoryInMb is the amount of free memory available in the cluster in MiB.
+	FreeMemoryInMb types.Int64 `tfsdk:"free_memory_in_mb"`
+	// MaxReplicas is the maximum number of replicas that can be configured for buckets.
+	MaxReplicas types.Int64 `tfsdk:"max_replicas"`
+	// TotalMemoryInMb is the total amount of memory available in the cluster in MiB.
+	TotalMemoryInMb types.Int64 `tfsdk:"total_memory_in_mb"`
+}
+
+func (cs ClusterStats) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"free_memory_in_mb":  types.Int64Type,
+		"max_replicas":       types.Int64Type,
+		"total_memory_in_mb": types.Int64Type,
+	}
+}
+
 // Buckets defines attributes for the LIST buckets response received from V4 Capella Public API.
 type Buckets struct {
 	// OrganizationId The organizationId of the capella.
@@ -155,6 +173,9 @@ type Buckets struct {
 
 	// ClusterId is the clusterId of the capella tenant.
 	ClusterId types.String `tfsdk:"cluster_id"`
+
+	// ClusterStats contains cluster-level statistics for bucket memory allocation.
+	ClusterStats *ClusterStats `tfsdk:"cluster_stats"`
 
 	// Data It contains the list of resources.
 	Data []OneBucket `tfsdk:"data"`
