@@ -13,33 +13,40 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 )
 
-// Many Log Streaming tests rely on Log Streaming being enabled for them to function and given we use a single global
-// App Service to perform Log Streaming tasks on, we need to be careful to not have parallel Log Streaming tests that
-// would interfere with each other by trying to change the Log Streaming config state at the same time.
-// logStreamingSequentialTestSteps defines the sequential steps for the Log Streaming acceptance tests,
-func logStreamingSequentialTestSteps() []resource.TestStep {
-	// resourceTestStepFuncs defines the sequential steps for the Log Streaming acceptance tests
-	sequentialTestStepFuncs := []func() []resource.TestStep{
-		appServiceLogStreamingResourceSteps,
-		testAccAppEndpointLoggingConfigResource,
-	}
-
-	// Add the steps in order to the final steps slice
-	var steps []resource.TestStep
-	for _, stepFunc := range sequentialTestStepFuncs {
-		steps = append(steps, stepFunc()...)
-	}
-	return steps
-}
-
-// TestAccAppServiceLogStreaming performs acceptance testing based on the steps listed in logStreamingSequentialTestSteps.
-// It also makes sure that the automatic destroy causes Log Streaming to be disabled.
+// TestAccAppServiceLogStreaming uses sequential subtests to ensure that log streaming tests
+// do not interfere with each other on the shared global App Service.
 func TestAccAppServiceLogStreaming(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		CheckDestroy:             testAccCheckAppServiceLogStreamingDestroy,
-		Steps:                    logStreamingSequentialTestSteps(),
+	// Allow this test to run in parallel with other top-level tests, but ensure that the subtests run sequentially
+	// This is normally set by resource.ParallelTest
+	t.Parallel()
+
+	t.Run("App Service Log Streaming", func(t *testing.T) {
+		resource.Test(t, resource.TestCase{
+			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+			CheckDestroy:             testAccCheckAppServiceLogStreamingDestroy,
+			Steps:                    appServiceLogStreamingResourceSteps(),
+		})
 	})
+
+	t.Run("App Endpoint Logging Config", func(t *testing.T) {
+		resource.Test(t, resource.TestCase{
+			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+			Steps:                    testAccAppEndpointLoggingConfigResource(),
+		})
+	})
+
+	/*t.Run("App Endpoint Logging Config With Invalid Log Level", func(t *testing.T) {
+		resource.Test(t, resource.TestCase{
+			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+			Steps:                    testAccAppEndpointLoggingConfigResourceInvalidLogLevel(),
+		})
+	})
+	t.Run("App Endpoint Logging Config With Invalid Log Keys", func(t *testing.T) {
+		resource.Test(t, resource.TestCase{
+			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+			Steps:                    testAccAppEndpointLoggingConfigResourceInvalidLogKeys(),
+		})
+	})*/
 }
 
 // appServiceLogStreamingResourceSteps provides the steps to test the full lifecycle of the app_service_log_streaming
@@ -175,28 +182,36 @@ func testAccCheckAppServiceLogStreamingDestroy(_ *terraform.State) error {
 	return nil
 }
 
-// testAccAppServiceLogStreamingConfig returns the HCL config for a generic_http log streaming resource.
+// testAccAppServiceLogStreamingConfig returns the HCL config for testing the app_service_log_streaming resource.
 func testAccAppServiceLogStreamingConfig(resourceName, url, user, password string) string {
 	return fmt.Sprintf(`
-%[1]s
+	%[1]s
 
-resource "couchbase-capella_app_service_log_streaming" "%[6]s" {
-  organization_id = "%[2]s"
-  project_id      = "%[3]s"
-  cluster_id      = "%[4]s"
-  app_service_id  = "%[5]s"
+	%[2]s
+`, globalProviderBlock, appServiceLogStreamingConfig(resourceName, url, user, password))
+}
+
+// appServiceLogStreamingConfig returns the HCL config for a generic_http log streaming resource without
+// the global provider block, so that it can be reused in other acceptance tests that need to set up
+// log streaming as a prerequisite.
+func appServiceLogStreamingConfig(resourceName, url, user, password string) string {
+	return fmt.Sprintf(`
+resource "couchbase-capella_app_service_log_streaming" "%[5]s" {
+  organization_id = "%[1]s"
+  project_id      = "%[2]s"
+  cluster_id      = "%[3]s"
+  app_service_id  = "%[4]s"
   output_type     = "generic_http"
 
   credentials = {
     generic_http = {
-      url      = "%[7]s"
-      user     = "%[8]s"
-      password = "%[9]s"
+      url      = "%[6]s"
+      user     = "%[7]s"
+      password = "%[8]s"
     }
   }
 }
 `,
-		globalProviderBlock,
 		globalOrgId,
 		globalProjectId,
 		globalClusterId,

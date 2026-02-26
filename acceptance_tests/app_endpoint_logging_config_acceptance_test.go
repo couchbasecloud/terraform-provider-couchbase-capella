@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"testing"
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -15,16 +14,22 @@ import (
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
+// testAccAppEndpointLoggingConfigResource provides the steps to test the full lifecycle
+// of the app_endpoint_log_streaming_config resource: Create -> Update -> ImportState,
+// and that errors are returned if the log_level or log_keys are invalid
 func testAccAppEndpointLoggingConfigResource() []resource.TestStep {
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_log_streaming_config_")
 	resourceReference := "couchbase-capella_app_endpoint_log_streaming_config." + resourceName
 
 	logKeys := "[" + strings.Join([]string{"\"HTTP\"", "\"Import\""}, ",") + "]"
 	updatedLogKeys := "[" + "\"Auth\"" + "]"
+	invalidLogKeys := "[" + strings.Join([]string{"\"Test\"", "\"Test2\""}, ",") + "]"
+
+	appServiceLogStreamingResourceName := randomStringWithPrefix("tf_app_service_log_streaming_config_")
 
 	return []resource.TestStep{
 		{
-			Config: testAccAppEndpointLoggingConfigResourceConfig(resourceName, "info", logKeys),
+			Config: testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourceName, resourceName, "info", logKeys),
 			Check: resource.ComposeAggregateTestCheckFunc(
 				testAccExistsAppEndpointLoggingConfigResource(resourceReference),
 				resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
@@ -37,15 +42,8 @@ func testAccAppEndpointLoggingConfigResource() []resource.TestStep {
 				resource.TestCheckResourceAttr(resourceReference, "log_keys.1", "Import"),
 			),
 		},
-
 		{
-			ResourceName:      resourceReference,
-			ImportStateIdFunc: generateAppEndpointLoggingConfigImportIdForResource(resourceReference),
-			ImportState:       true,
-		},
-
-		{
-			Config: testAccAppEndpointLoggingConfigResourceConfig(resourceName, "warn", updatedLogKeys),
+			Config: testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourceName, resourceName, "warn", updatedLogKeys),
 			Check: resource.ComposeAggregateTestCheckFunc(
 				resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 				resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
@@ -56,56 +54,68 @@ func testAccAppEndpointLoggingConfigResource() []resource.TestStep {
 				resource.TestCheckResourceAttr(resourceReference, "log_keys.0", "Auth"),
 			),
 		},
+		{
+			ResourceName:      resourceReference,
+			ImportStateIdFunc: generateAppEndpointLoggingConfigImportIdForResource(resourceReference),
+			ImportState:       true,
+		},
+
+		// tests that an error is returned if the log_level is invalid
+		{
+			Config:      testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourceName, resourceName, "test", logKeys),
+			ExpectError: regexp.MustCompile("Error executing upsert app endpoint logging config"),
+		},
+
+		// tests that an error is returned if any of the log_keys are invalid
+		{
+			Config:      testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourceName, resourceName, "info", invalidLogKeys),
+			ExpectError: regexp.MustCompile("Error executing upsert app endpoint logging config"),
+		},
 	}
 }
 
-func TestAccAppEndpointLoggingConfigResourceInvalidLogLevel(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_log_streaming_config_")
+// testAccAppEndpointLoggingConfigResourceConfig returns the HCL config for a app endpoint log streaming config resource
+// and an app service log streaming resource, as app service log streaming is required to be enabled
+func testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourceName, resourceName, logLevel, logKeys string) string {
+	appServiceLogStreamingResource := appServiceLogStreamingConfig(
+		appServiceLogStreamingResourceName,
+		"https://example.com/logs",
+		"test_user",
+		"test_password",
+	)
 
-	logKeys := "[" + strings.Join([]string{"\"HTTP\"", "\"Import\""}, ",") + "]"
-
-	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccAppEndpointLoggingConfigResourceConfig(resourceName, "test", logKeys),
-				ExpectError: regexp.MustCompile("Error executing upsert app endpoint logging config"),
-			},
-		},
-	})
-}
-
-func TestAccAppEndpointLoggingConfigResourceInvalidLogKeys(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_log_streaming_config_")
-
-	logKeys := "[" + strings.Join([]string{"\"Test\"", "\"Test2\""}, ",") + "]"
-
-	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccAppEndpointLoggingConfigResourceConfig(resourceName, "info", logKeys),
-				ExpectError: regexp.MustCompile("Error executing upsert app endpoint logging config"),
-			},
-		},
-	})
-}
-
-func testAccAppEndpointLoggingConfigResourceConfig(resourceName, logLevel, logKeys string) string {
 	return fmt.Sprintf(`
 	%[1]s
 
-	resource "couchbase-capella_app_endpoint_log_streaming_config" "%[2]s" {
-  		organization_id = "%[3]s"
-  		project_id = "%[4]s"
-    	cluster_id = "%[5]s"
-    	app_service_id = "%[6]s"
-  		app_endpoint_name = "%[7]s"
+	%[2]s
 
-  		log_level = "%[8]s"
-  		log_keys = %[9]s
+	resource "couchbase-capella_app_endpoint_log_streaming_config" "%[3]s" {
+		organization_id = "%[4]s"
+		project_id = "%[5]s"
+		cluster_id = "%[6]s"
+		app_service_id = "%[7]s"
+		app_endpoint_name = "%[8]s"
+
+		log_level = "%[9]s"
+		log_keys = %[10]s
+
+		depends_on = [
+			%[11]s
+		]
 	}
-	`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, globalAppServiceId, globalAppEndpointName, logLevel, logKeys)
+	`,
+		globalProviderBlock,
+		appServiceLogStreamingResource,
+		resourceName,
+		globalOrgId,
+		globalProjectId,
+		globalClusterId,
+		globalAppServiceId,
+		globalAppEndpointName,
+		logLevel,
+		logKeys,
+		"couchbase-capella_app_service_log_streaming."+appServiceLogStreamingResourceName,
+	)
 }
 
 func testAccExistsAppEndpointLoggingConfigResource(resourceReference string) resource.TestCheckFunc {
