@@ -214,6 +214,9 @@ var (
 	// ErrRatelimit is returned when the Capella API reaches a rate limit for the same API key.
 	ErrRatelimit = errors.New("api key reached the ratelimit")
 
+	// ErrClientTimeout is returned when the HTTP client times out before receiving headers
+	ErrClientTimeout = errors.New("client timeout exceeded while awaiting response")
+
 	// ErrScopeNameMissing is returned when an expected ScopeName was not found after an import.
 	ErrScopeNameMissing = errors.New("scope Name is missing or was passed incorrectly, please check provider documentation for syntax")
 
