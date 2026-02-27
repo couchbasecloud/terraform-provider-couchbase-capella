@@ -27,7 +27,7 @@ type LoggingConfig struct {
 }
 
 // NewLoggingConfig is a helper function to simplify the provider implementation.
-func NewLoggingConfig() resource.Resource {
+func NewAppEndpointLoggingConfig() resource.Resource {
 	return &LoggingConfig{}
 }
 
