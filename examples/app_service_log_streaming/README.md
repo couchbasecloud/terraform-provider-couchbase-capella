@@ -1,4 +1,4 @@
-# Capella App Service Log Streaming Example
+# Capella App Service Log Streaming Resource Example
 
 This example shows how to setup and manage App Services Log Streaming.
 
