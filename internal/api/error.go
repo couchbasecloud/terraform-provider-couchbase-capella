@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 // Error tracks the error structure received from Capella V4 APIs.
@@ -46,6 +47,34 @@ func ParseError(err error) string {
 	default:
 		return err.Error()
 	}
+}
+
+// HumanReadableError returns the API error as a plain-text, user-friendly string
+// that directly surfaces the message and hint from the Capella API response
+// instead of dumping raw JSON.
+func (e *Error) HumanReadableError() string {
+	var sb strings.Builder
+	sb.WriteString(e.Message)
+
+	if e.Hint != "" {
+		sb.WriteString("\nHint: ")
+		sb.WriteString(e.Hint)
+	}
+
+	sb.WriteString(fmt.Sprintf(" (code: %d, HTTP status: %d)", e.Code, e.HttpStatusCode))
+
+	return sb.String()
+}
+
+// ParseReadableError extracts a human-readable error string from an error.
+// If the error is an api.Error, it returns the message and hint as plain text.
+// Otherwise it falls back to err.Error().
+func ParseReadableError(err error) string {
+	var apiError *Error
+	if errors.As(err, &apiError) {
+		return apiError.HumanReadableError()
+	}
+	return err.Error()
 }
 
 // CheckResourceNotFoundError is used to check if an error is of

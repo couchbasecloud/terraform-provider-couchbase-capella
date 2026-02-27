@@ -131,7 +131,7 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating network peer",
-			errorMessageWhileNetworkPeerCreation+api.ParseError(err),
+			errorMessageWhileNetworkPeerCreation+api.ParseReadableError(err),
 		)
 		return
 	}
