@@ -242,6 +242,7 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewUsers,
 		datasources.NewProjects,
 		datasources.NewClusters,
+		datasources.NewClusterStats,
 		datasources.NewCertificate,
 		datasources.NewAllowLists,
 		datasources.NewBuckets,
