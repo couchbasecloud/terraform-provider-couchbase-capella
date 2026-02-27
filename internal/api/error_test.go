@@ -111,3 +111,119 @@ func Test_CheckResourceNotFound(t *testing.T) {
 		})
 	}
 }
+
+func Test_HumanReadableError(t *testing.T) {
+	type test struct {
+		apiError       Error
+		name           string
+		expectContains []string
+	}
+
+	tests := []test{
+		{
+			name: "Message and hint are shown as plain text",
+			apiError: Error{
+				Code:           422,
+				HttpStatusCode: http.StatusUnprocessableEntity,
+				Message:        "invalid tenantID. You can locate your tenantID by following the instructions listed here: https://learn.microsoft.com/partner-center/find-ids-and-domain-names",
+				Hint:           "Check your Azure Active Directory tenant ID",
+			},
+			expectContains: []string{
+				"invalid tenantID",
+				"https://learn.microsoft.com/partner-center/find-ids-and-domain-names",
+				"Hint: Check your Azure Active Directory tenant ID",
+				"(code: 422, HTTP status: 422)",
+			},
+		},
+		{
+			name: "Message without hint omits hint line",
+			apiError: Error{
+				Code:           500,
+				HttpStatusCode: http.StatusInternalServerError,
+				Message:        "internal server error",
+			},
+			expectContains: []string{
+				"internal server error",
+				"(code: 500, HTTP status: 500)",
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result := test.apiError.HumanReadableError()
+
+			for _, s := range test.expectContains {
+				assert.Contains(t, result, s)
+			}
+			// Should never contain JSON braces
+			assert.NotContains(t, result, `{"code"`)
+		})
+	}
+}
+
+func Test_ParseReadableError(t *testing.T) {
+	type test struct {
+		err            error
+		name           string
+		expectContains []string
+	}
+
+	tests := []test{
+		{
+			name: "API error is returned as human-readable text",
+			err: &Error{
+				Code:           422,
+				HttpStatusCode: http.StatusUnprocessableEntity,
+				Message:        "invalid tenantID. You can locate your tenantID by following the instructions listed here: https://learn.microsoft.com/partner-center/find-ids-and-domain-names",
+			},
+			expectContains: []string{
+				"invalid tenantID",
+				"https://learn.microsoft.com/partner-center/find-ids-and-domain-names",
+				"(code: 422, HTTP status: 422)",
+			},
+		},
+		{
+			name: "API error with hint surfaces both message and hint",
+			err: &Error{
+				Code:           422,
+				HttpStatusCode: http.StatusUnprocessableEntity,
+				Message:        "invalid subscriptionId provided",
+				Hint:           "Please check your Azure subscription ID",
+			},
+			expectContains: []string{
+				"invalid subscriptionId provided",
+				"Hint: Please check your Azure subscription ID",
+			},
+		},
+		{
+			name: "Wrapped API error is still surfaced as readable text",
+			err: fmt.Errorf("received error: %w", &Error{
+				Code:           422,
+				HttpStatusCode: http.StatusUnprocessableEntity,
+				Message:        "invalid tenantID",
+			}),
+			expectContains: []string{
+				"invalid tenantID",
+				"(code: 422, HTTP status: 422)",
+			},
+		},
+		{
+			name: "Non-API error falls back to err.Error()",
+			err:  internalerrors.ErrClusterIdCannotBeEmpty,
+			expectContains: []string{
+				internalerrors.ErrClusterIdCannotBeEmpty.Error(),
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result := ParseReadableError(test.err)
+
+			for _, s := range test.expectContains {
+				assert.Contains(t, result, s)
+			}
+		})
+	}
+}
