@@ -34,19 +34,6 @@ func TestAccAppServiceLogStreaming(t *testing.T) {
 			Steps:                    testAccAppEndpointLoggingConfigResource(),
 		})
 	})
-
-	/*t.Run("App Endpoint Logging Config With Invalid Log Level", func(t *testing.T) {
-		resource.Test(t, resource.TestCase{
-			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-			Steps:                    testAccAppEndpointLoggingConfigResourceInvalidLogLevel(),
-		})
-	})
-	t.Run("App Endpoint Logging Config With Invalid Log Keys", func(t *testing.T) {
-		resource.Test(t, resource.TestCase{
-			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-			Steps:                    testAccAppEndpointLoggingConfigResourceInvalidLogKeys(),
-		})
-	})*/
 }
 
 // appServiceLogStreamingResourceSteps provides the steps to test the full lifecycle of the app_service_log_streaming

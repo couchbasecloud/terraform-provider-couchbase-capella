@@ -54,11 +54,6 @@ func testAccAppEndpointLoggingConfigResource() []resource.TestStep {
 				resource.TestCheckResourceAttr(resourceReference, "log_keys.0", "Auth"),
 			),
 		},
-		{
-			ResourceName:      resourceReference,
-			ImportStateIdFunc: generateAppEndpointLoggingConfigImportIdForResource(resourceReference),
-			ImportState:       true,
-		},
 
 		// tests that an error is returned if the log_level is invalid
 		{
@@ -70,6 +65,11 @@ func testAccAppEndpointLoggingConfigResource() []resource.TestStep {
 		{
 			Config:      testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourceName, resourceName, "info", invalidLogKeys),
 			ExpectError: regexp.MustCompile("Error executing upsert app endpoint logging config"),
+		},
+		{
+			ResourceName:      resourceReference,
+			ImportStateIdFunc: generateAppEndpointLoggingConfigImportIdForResource(resourceReference),
+			ImportState:       true,
 		},
 	}
 }

@@ -21,13 +21,13 @@ var (
 	_ resource.ResourceWithImportState = &LoggingConfig{}
 )
 
-// Logging Config is the App Endpoint Logging Config resource implementation.
+// App Endpoint Logging Config is the App Endpoint Logging Config resource implementation.
 type LoggingConfig struct {
 	*providerschema.Data
 }
 
 // NewLoggingConfig is a helper function to simplify the provider implementation.
-func NewLoggingConfig() resource.Resource {
+func NewAppEndpointLoggingConfig() resource.Resource {
 	return &LoggingConfig{}
 }
 
