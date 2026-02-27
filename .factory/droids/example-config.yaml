@@ -1,0 +1,64 @@
+# Example generator config for terraform-provider-capella
+# This config generates unit tests (for fast TDD development), resources, and datasources
+
+# Resource configuration
+resources:
+  clusters:
+    create:
+      path: v4/organizations/{organizationId}/projects/{projectId}/clusters
+      method: POST
+    read:
+      path: v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}
+      method: GET
+    update:
+      path: v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}
+      method: PUT
+    delete:
+      path: v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}
+      method: DELETE
+    
+# Datasource configuration
+data_sources:
+  clusters:
+    datasource_type: list
+    read:
+      path: /v4/organizations/{organizationId}/projects/{projectId}/clusters
+      method: GET
+      paginate: true
+  clusters:
+    datasource_type: single
+    read:
+      path: /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}
+      method: GET
+
+# - TDD workflow: Generate unit tests first (TDD principle)
+# - Unit tests use mocked responses - fast, no cloud dependencies
+# - Unit tests help guide development by failing first (RED), then passing after implementation (GREEN)
+# - Acceptance tests use real Capella API - E2E validation for production-grade correctness
+# Notes:
+# Unit tests are generated first (TDD) with mocked HTTP client - helps develop code faster
+# Unit tests are in internal/resources/*_test.go and internal/datasources/*_test.go
+# Unit tests use httptest to mock HTTP responses
+# Run with: go test ./internal/resources/.*_test.go
+# Acceptance tests (E2E against real API) are generated as final validation step
+# API client: Uses v2 auto-generated client from internal/generated/api/ (generated via oapi-codegen from openapi.generated.yaml)
+#
+# The droid generates:
+# 1. Unit tests: internal/resources/*_test.go, internal/datasources/*_test.go (TDD workflow)
+# 2. Internal schema types: internal/schema/
+# 3. Resource implementation: internal/resources/
+# 4. Resource schema: internal/resources/*_schema.go
+# 5. Datasource implementation: internal/datasources/
+# 6. Datasource schema: internal/datasources/*_schema.go
+# 7. Provider registration: internal/provider/provider.go
+# 8. Acceptance tests: final E2E validation against real API
+#
+# After generation, the droid runs: make fmt, make lint-fix, make build
+#
+# TDD workflow:
+# 1. Generate unit tests (fail - code doesn't exist yet)
+# 2. Run go test (fail - RED)
+# 3. Generate resources/datasources
+# 4. Run go test (pass - GREEN)
+# 5. Run make fmt, make lint-fix, make build (validate compilation)
+# 6. If build succeeds, generate acceptance tests (E2E against real API)
