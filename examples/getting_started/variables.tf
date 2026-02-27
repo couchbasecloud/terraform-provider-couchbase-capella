@@ -281,6 +281,45 @@ variable "app_endpoint_oidc" {
     })
 }
 
+variable "app_service_log_streaming" {
+  description = "App Service Log Streaming Config"
+  type = object({
+    output_type = string
+    credentials = object({
+      datadog = optional(object({
+        url     = string
+        api_key = string
+      }))
+      dynatrace = optional(object({
+        url       = string
+        api_token = string
+      }))
+      elastic = optional(object({
+        url      = string
+        user     = string
+        password = string
+      }))
+      generic_http = optional(object({
+        url      = string
+        user     = optional(string)
+        password = optional(string)
+      }))
+      loki = optional(object({
+        url      = string
+        user     = string
+        password = string
+      }))
+      splunk = optional(object({
+        url          = string
+        splunk_token = string
+      }))
+      sumologic = optional(object({
+        url = string
+      }))
+    })
+  })
+}
+
 variable "app_endpoint_log_streaming_config" {
   description = "App Endpoint Logging Config"
   type = object({

@@ -1,12 +1,13 @@
 package schema
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -41,32 +42,32 @@ type AppServiceLogStreaming struct {
 	AppServiceLogStreamingBase
 
 	// Credentials contains the credentials for the configured log collector.
-	Credentials *LogStreamingCredentials `tfsdk:"credentials"`
+	Credentials types.Object `tfsdk:"credentials"`
 }
 
 // LogStreamingCredentials contains the credential configuration for log streaming.
 // Only one of the nested credential types should be set based on the output_type.
 type LogStreamingCredentials struct {
 	// Datadog credentials for Datadog log collector.
-	Datadog *DatadogCredentials `tfsdk:"datadog"`
+	Datadog types.Object `tfsdk:"datadog"`
 
 	// Dynatrace credentials for Dynatrace log collector.
-	Dynatrace *DynatraceCredentials `tfsdk:"dynatrace"`
+	Dynatrace types.Object `tfsdk:"dynatrace"`
 
 	// Elastic credentials for Elasticsearch log collector.
-	Elastic *ElasticCredentials `tfsdk:"elastic"`
+	Elastic types.Object `tfsdk:"elastic"`
 
 	// GenericHttp credentials for generic HTTP log collector.
-	GenericHttp *GenericHttpCredentials `tfsdk:"generic_http"`
+	GenericHttp types.Object `tfsdk:"generic_http"`
 
 	// Loki credentials for Grafana Loki log collector.
-	Loki *LokiCredentials `tfsdk:"loki"`
+	Loki types.Object `tfsdk:"loki"`
 
 	// Splunk credentials for Splunk log collector.
-	Splunk *SplunkCredentials `tfsdk:"splunk"`
+	Splunk types.Object `tfsdk:"splunk"`
 
 	// Sumologic credentials for SumoLogic log collector.
-	Sumologic *SumologicCredentials `tfsdk:"sumologic"`
+	Sumologic types.Object `tfsdk:"sumologic"`
 }
 
 // DatadogCredentials contains credentials for Datadog log collector.
@@ -178,7 +179,7 @@ func (b *AppServiceLogStreamingBase) setFromAPIResponse(apiResponse *apigen.GetL
 func NewAppServiceLogStreaming(
 	organizationId, projectId, clusterId, appServiceId string,
 	apiResponse *apigen.GetLogStreamingResponse,
-	existingCredentials *LogStreamingCredentials,
+	existingCredentials types.Object,
 ) *AppServiceLogStreaming {
 	result := &AppServiceLogStreaming{
 		AppServiceLogStreamingBase: AppServiceLogStreamingBase{
@@ -222,73 +223,83 @@ func NewAppServiceLogStreamingData(
 	return result
 }
 
-// AttributeTypes returns the attribute types for LogStreamingCredentials.
-func (c LogStreamingCredentials) AttributeTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"datadog":      types.ObjectType{AttrTypes: DatadogCredentials{}.AttributeTypes()},
-		"dynatrace":    types.ObjectType{AttrTypes: DynatraceCredentials{}.AttributeTypes()},
-		"elastic":      types.ObjectType{AttrTypes: ElasticCredentials{}.AttributeTypes()},
-		"generic_http": types.ObjectType{AttrTypes: GenericHttpCredentials{}.AttributeTypes()},
-		"loki":         types.ObjectType{AttrTypes: LokiCredentials{}.AttributeTypes()},
-		"splunk":       types.ObjectType{AttrTypes: SplunkCredentials{}.AttributeTypes()},
-		"sumologic":    types.ObjectType{AttrTypes: SumologicCredentials{}.AttributeTypes()},
+// AsLogStreamingCredentials converts the Credentials types.Object into a LogStreamingCredentials struct
+// so that the nested credential types can then be accessed. Returns nil and diagnostics if the object is null or unknown.
+func (a *AppServiceLogStreaming) AsLogStreamingCredentials(ctx context.Context) (*LogStreamingCredentials, diag.Diagnostics) {
+	if a.Credentials.IsNull() || a.Credentials.IsUnknown() {
+		return nil, nil
 	}
+	var creds LogStreamingCredentials
+	diags := a.Credentials.As(ctx, &creds, basetypes.ObjectAsOptions{})
+	return &creds, diags
 }
 
-// AttributeTypes returns the attribute types for DatadogCredentials.
-func (c DatadogCredentials) AttributeTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"api_key": types.StringType,
-		"url":     types.StringType,
+// AsDatadogCredentials extracts DatadogCredentials from the LogStreamingCredentials.Datadog types.Object.
+func (c *LogStreamingCredentials) AsDatadogCredentials(ctx context.Context) (*DatadogCredentials, diag.Diagnostics) {
+	if c.Datadog.IsNull() || c.Datadog.IsUnknown() {
+		return nil, nil
 	}
+	var creds DatadogCredentials
+	diags := c.Datadog.As(ctx, &creds, basetypes.ObjectAsOptions{})
+	return &creds, diags
 }
 
-// AttributeTypes returns the attribute types for DynatraceCredentials.
-func (c DynatraceCredentials) AttributeTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"api_token": types.StringType,
-		"url":       types.StringType,
+// AsDynatraceCredentials extracts DynatraceCredentials from the LogStreamingCredentials.Dynatrace types.Object.
+func (c *LogStreamingCredentials) AsDynatraceCredentials(ctx context.Context) (*DynatraceCredentials, diag.Diagnostics) {
+	if c.Dynatrace.IsNull() || c.Dynatrace.IsUnknown() {
+		return nil, nil
 	}
+	var creds DynatraceCredentials
+	diags := c.Dynatrace.As(ctx, &creds, basetypes.ObjectAsOptions{})
+	return &creds, diags
 }
 
-// AttributeTypes returns the attribute types for ElasticCredentials.
-func (c ElasticCredentials) AttributeTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"user":     types.StringType,
-		"password": types.StringType,
-		"url":      types.StringType,
+// AsElasticCredentials extracts ElasticCredentials from the LogStreamingCredentials.Elastic types.Object.
+func (c *LogStreamingCredentials) AsElasticCredentials(ctx context.Context) (*ElasticCredentials, diag.Diagnostics) {
+	if c.Elastic.IsNull() || c.Elastic.IsUnknown() {
+		return nil, nil
 	}
+	var creds ElasticCredentials
+	diags := c.Elastic.As(ctx, &creds, basetypes.ObjectAsOptions{})
+	return &creds, diags
 }
 
-// AttributeTypes returns the attribute types for GenericHttpCredentials.
-func (c GenericHttpCredentials) AttributeTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"user":     types.StringType,
-		"password": types.StringType,
-		"url":      types.StringType,
+// AsGenericHttpCredentials extracts GenericHttpCredentials from the LogStreamingCredentials.GenericHttp types.Object.
+func (c *LogStreamingCredentials) AsGenericHttpCredentials(ctx context.Context) (*GenericHttpCredentials, diag.Diagnostics) {
+	if c.GenericHttp.IsNull() || c.GenericHttp.IsUnknown() {
+		return nil, nil
 	}
+	var creds GenericHttpCredentials
+	diags := c.GenericHttp.As(ctx, &creds, basetypes.ObjectAsOptions{})
+	return &creds, diags
 }
 
-// AttributeTypes returns the attribute types for LokiCredentials.
-func (c LokiCredentials) AttributeTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"user":     types.StringType,
-		"password": types.StringType,
-		"url":      types.StringType,
+// AsLokiCredentials extracts LokiCredentials from the LogStreamingCredentials.Loki types.Object.
+func (c *LogStreamingCredentials) AsLokiCredentials(ctx context.Context) (*LokiCredentials, diag.Diagnostics) {
+	if c.Loki.IsNull() || c.Loki.IsUnknown() {
+		return nil, nil
 	}
+	var creds LokiCredentials
+	diags := c.Loki.As(ctx, &creds, basetypes.ObjectAsOptions{})
+	return &creds, diags
 }
 
-// AttributeTypes returns the attribute types for SplunkCredentials.
-func (c SplunkCredentials) AttributeTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"splunk_token": types.StringType,
-		"url":          types.StringType,
+// AsSplunkCredentials extracts SplunkCredentials from the LogStreamingCredentials.Splunk types.Object.
+func (c *LogStreamingCredentials) AsSplunkCredentials(ctx context.Context) (*SplunkCredentials, diag.Diagnostics) {
+	if c.Splunk.IsNull() || c.Splunk.IsUnknown() {
+		return nil, nil
 	}
+	var creds SplunkCredentials
+	diags := c.Splunk.As(ctx, &creds, basetypes.ObjectAsOptions{})
+	return &creds, diags
 }
 
-// AttributeTypes returns the attribute types for SumologicCredentials.
-func (c SumologicCredentials) AttributeTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"url": types.StringType,
+// AsSumologicCredentials extracts SumologicCredentials from the LogStreamingCredentials.Sumologic types.Object.
+func (c *LogStreamingCredentials) AsSumologicCredentials(ctx context.Context) (*SumologicCredentials, diag.Diagnostics) {
+	if c.Sumologic.IsNull() || c.Sumologic.IsUnknown() {
+		return nil, nil
 	}
+	var creds SumologicCredentials
+	diags := c.Sumologic.As(ctx, &creds, basetypes.ObjectAsOptions{})
+	return &creds, diags
 }
