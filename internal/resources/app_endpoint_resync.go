@@ -231,7 +231,7 @@ func (a *AppEndpointResync) startResync(ctx context.Context, organizationId, pro
 
 	var convertedScopes map[string]api.ResyncScopes
 	for name, scope := range scopes {
-		convertedScopes[name] = api.ResyncScopes(scope)
+		convertedScopes[name] = scope
 	}
 
 	var resyncRequest api.PostAppEndpointResyncJSONRequestBody
