@@ -20,6 +20,8 @@ import (
 func testAccAppEndpointLoggingConfigResource() []resource.TestStep {
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_log_streaming_config_")
 	resourceReference := "couchbase-capella_app_endpoint_log_streaming_config." + resourceName
+	datasourceName := randomStringWithPrefix("tf_acc_app_endpoint_log_streaming_config_")
+	datasourceReference := "data.couchbase-capella_app_endpoint_log_streaming_config." + datasourceName
 
 	logKeys := "[" + strings.Join([]string{"\"HTTP\"", "\"Import\""}, ",") + "]"
 	updatedLogKeys := "[" + "\"Auth\"" + "]"
@@ -29,7 +31,7 @@ func testAccAppEndpointLoggingConfigResource() []resource.TestStep {
 
 	return []resource.TestStep{
 		{
-			Config: testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourceName, resourceName, "info", logKeys),
+			Config: testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourceName, resourceName, resourceReference, datasourceName, "info", logKeys),
 			Check: resource.ComposeAggregateTestCheckFunc(
 				testAccExistsAppEndpointLoggingConfigResource(resourceReference),
 				resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
@@ -40,10 +42,18 @@ func testAccAppEndpointLoggingConfigResource() []resource.TestStep {
 				resource.TestCheckResourceAttr(resourceReference, "log_level", "info"),
 				resource.TestCheckResourceAttr(resourceReference, "log_keys.0", "HTTP"),
 				resource.TestCheckResourceAttr(resourceReference, "log_keys.1", "Import"),
+				resource.TestCheckResourceAttr(datasourceReference, "organization_id", globalOrgId),
+				resource.TestCheckResourceAttr(datasourceReference, "project_id", globalProjectId),
+				resource.TestCheckResourceAttr(datasourceReference, "cluster_id", globalClusterId),
+				resource.TestCheckResourceAttr(datasourceReference, "app_service_id", globalAppServiceId),
+				resource.TestCheckResourceAttr(datasourceReference, "app_endpoint_name", globalAppEndpointName),
+				resource.TestCheckResourceAttr(datasourceReference, "log_level", "info"),
+				resource.TestCheckResourceAttr(datasourceReference, "log_keys.0", "HTTP"),
+				resource.TestCheckResourceAttr(datasourceReference, "log_keys.1", "Import"),
 			),
 		},
 		{
-			Config: testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourceName, resourceName, "warn", updatedLogKeys),
+			Config: testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourceName, resourceName, resourceReference, datasourceName, "warn", updatedLogKeys),
 			Check: resource.ComposeAggregateTestCheckFunc(
 				resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 				resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
@@ -52,18 +62,25 @@ func testAccAppEndpointLoggingConfigResource() []resource.TestStep {
 				resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", globalAppEndpointName),
 				resource.TestCheckResourceAttr(resourceReference, "log_level", "warn"),
 				resource.TestCheckResourceAttr(resourceReference, "log_keys.0", "Auth"),
+				resource.TestCheckResourceAttr(datasourceReference, "organization_id", globalOrgId),
+				resource.TestCheckResourceAttr(datasourceReference, "project_id", globalProjectId),
+				resource.TestCheckResourceAttr(datasourceReference, "cluster_id", globalClusterId),
+				resource.TestCheckResourceAttr(datasourceReference, "app_service_id", globalAppServiceId),
+				resource.TestCheckResourceAttr(datasourceReference, "app_endpoint_name", globalAppEndpointName),
+				resource.TestCheckResourceAttr(datasourceReference, "log_level", "warn"),
+				resource.TestCheckResourceAttr(datasourceReference, "log_keys.0", "Auth"),
 			),
 		},
 
 		// tests that an error is returned if the log_level is invalid
 		{
-			Config:      testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourceName, resourceName, "test", logKeys),
+			Config:      testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourceName, resourceName, resourceReference, datasourceName, "test", logKeys),
 			ExpectError: regexp.MustCompile("Error executing upsert app endpoint logging config"),
 		},
 
 		// tests that an error is returned if any of the log_keys are invalid
 		{
-			Config:      testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourceName, resourceName, "info", invalidLogKeys),
+			Config:      testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourceName, resourceName, resourceReference, datasourceName, "info", invalidLogKeys),
 			ExpectError: regexp.MustCompile("Error executing upsert app endpoint logging config"),
 		},
 		{
@@ -76,7 +93,7 @@ func testAccAppEndpointLoggingConfigResource() []resource.TestStep {
 
 // testAccAppEndpointLoggingConfigResourceConfig returns the HCL config for a app endpoint log streaming config resource
 // and an app service log streaming resource, as app service log streaming is required to be enabled
-func testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourceName, resourceName, logLevel, logKeys string) string {
+func testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourceName, resourceName, resourceReference, datasourceName, logLevel, logKeys string) string {
 	appServiceLogStreamingResource := appServiceLogStreamingConfig(
 		appServiceLogStreamingResourceName,
 		"https://example.com/logs",
@@ -103,6 +120,18 @@ func testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourc
 			%[11]s
 		]
 	}
+	
+	data "couchbase-capella_app_endpoint_log_streaming_config" "%[12]s" {
+		organization_id = "%[4]s"
+		project_id = "%[5]s"
+		cluster_id = "%[6]s"
+		app_service_id = "%[7]s"
+		app_endpoint_name = "%[8]s"
+
+		depends_on = [
+			%[13]s
+		]
+	}
 	`,
 		globalProviderBlock,
 		appServiceLogStreamingResource,
@@ -115,6 +144,8 @@ func testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourc
 		logLevel,
 		logKeys,
 		"couchbase-capella_app_service_log_streaming."+appServiceLogStreamingResourceName,
+		datasourceName,
+		resourceReference,
 	)
 }
 
