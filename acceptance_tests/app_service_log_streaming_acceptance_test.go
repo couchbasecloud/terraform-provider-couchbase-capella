@@ -24,7 +24,7 @@ func TestAccAppServiceLogStreaming(t *testing.T) {
 		resource.Test(t, resource.TestCase{
 			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 			CheckDestroy:             testAccCheckAppServiceLogStreamingDestroy,
-			Steps:                    appServiceLogStreamingResourceSteps(),
+			Steps:                    appServiceLogStreamingSteps(),
 		})
 	})
 
@@ -36,20 +36,29 @@ func TestAccAppServiceLogStreaming(t *testing.T) {
 	})
 }
 
-// appServiceLogStreamingResourceSteps provides the steps to test the full lifecycle of the app_service_log_streaming
-// resource: Create (generic_http) -> Update (credential change) -> ImportState.
-func appServiceLogStreamingResourceSteps() []resource.TestStep {
+// appServiceLogStreamingSteps provides the steps to test the full lifecycle of the app_service_log_streaming
+// resource and datasource: Create (generic_http) -> Update (credential change) -> Datasource Read -> ImportState.
+func appServiceLogStreamingSteps() []resource.TestStep {
 	resourceName := randomStringWithPrefix("tf_acc_log_streaming_")
 	resourceReference := "couchbase-capella_app_service_log_streaming." + resourceName
+
+	dataSourceName := randomStringWithPrefix("tf_acc_log_streaming_ds_")
+	dataSourceReference := "data.couchbase-capella_app_service_log_streaming." + dataSourceName
+
+	const (
+		url      = "https://example.com/logs"
+		user     = "test_user"
+		password = "test_password"
+	)
 
 	return []resource.TestStep{
 		// Create
 		{
-			Config: testAccAppServiceLogStreamingConfig(
+			Config: testAccAppServiceLogStreamingResourceConfig(
 				resourceName,
-				"https://example.com/logs",
-				"test_user",
-				"test_password",
+				"https://example.com/log-collector",
+				"user-22",
+				"password123",
 			),
 			Check: resource.ComposeAggregateTestCheckFunc(
 				resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
@@ -63,15 +72,34 @@ func appServiceLogStreamingResourceSteps() []resource.TestStep {
 		},
 		// Update credentials (in-place, same output_type)
 		{
-			Config: testAccAppServiceLogStreamingConfig(
+			Config: testAccAppServiceLogStreamingResourceConfig(
 				resourceName,
-				"https://example.com/logs/updated",
-				"updated_user",
-				"updated_password",
+				url,
+				user,
+				password,
 			),
 			Check: resource.ComposeAggregateTestCheckFunc(
 				resource.TestCheckResourceAttr(resourceReference, "output_type", "generic_http"),
 				resource.TestCheckResourceAttr(resourceReference, "config_state", string(api.GetLogStreamingResponseConfigStateEnabled)),
+			),
+		},
+		// Read via datasource
+		{
+			Config: testAccAppServiceLogStreamingDatasourceConfig(
+				resourceName,
+				dataSourceName,
+				url,
+				user,
+				password,
+			),
+			Check: resource.ComposeAggregateTestCheckFunc(
+				resource.TestCheckResourceAttr(dataSourceReference, "organization_id", globalOrgId),
+				resource.TestCheckResourceAttr(dataSourceReference, "project_id", globalProjectId),
+				resource.TestCheckResourceAttr(dataSourceReference, "cluster_id", globalClusterId),
+				resource.TestCheckResourceAttr(dataSourceReference, "app_service_id", globalAppServiceId),
+				resource.TestCheckResourceAttr(dataSourceReference, "output_type", "generic_http"),
+				resource.TestCheckResourceAttr(dataSourceReference, "config_state", string(api.GetLogStreamingResponseConfigStateEnabled)),
+				resource.TestCheckResourceAttrSet(dataSourceReference, "streaming_state"),
 			),
 		},
 		// ImportState Testing
@@ -169,13 +197,40 @@ func testAccCheckAppServiceLogStreamingDestroy(_ *terraform.State) error {
 	return nil
 }
 
-// testAccAppServiceLogStreamingConfig returns the HCL config for testing the app_service_log_streaming resource.
-func testAccAppServiceLogStreamingConfig(resourceName, url, user, password string) string {
+// testAccAppServiceLogStreamingResourceConfig returns the HCL config for testing the app_service_log_streaming resource.
+func testAccAppServiceLogStreamingResourceConfig(resourceName, url, user, password string) string {
 	return fmt.Sprintf(`
 	%[1]s
 
 	%[2]s
 `, globalProviderBlock, appServiceLogStreamingConfig(resourceName, url, user, password))
+}
+
+// testAccAppServiceLogStreamingDatasourceConfig returns the HCL config for testing the app_service_log_streaming data source.
+func testAccAppServiceLogStreamingDatasourceConfig(resourceName, datasourceName, url, user, password string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+%[2]s
+
+data "couchbase-capella_app_service_log_streaming" "%[7]s" {
+	organization_id = "%[3]s"
+	project_id      = "%[4]s"
+	cluster_id      = "%[5]s"
+	app_service_id  = "%[6]s"
+
+	depends_on = [couchbase-capella_app_service_log_streaming.%[8]s]
+}
+`,
+		globalProviderBlock,
+		appServiceLogStreamingConfig(resourceName, url, user, password),
+		globalOrgId,
+		globalProjectId,
+		globalClusterId,
+		globalAppServiceId,
+		datasourceName,
+		resourceName,
+	)
 }
 
 // appServiceLogStreamingConfig returns the HCL config for a generic_http log streaming resource without
