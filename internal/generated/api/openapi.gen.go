@@ -10864,6 +10864,9 @@ type ClientInterface interface {
 	// GetSampleBucketById request
 	GetSampleBucketById(ctx context.Context, organizationId OrganizationId, projectId ProjectId, clusterId ClusterId, bucketId BucketId, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetClusterStats request
+	GetClusterStats(ctx context.Context, organizationId OrganizationId, projectId ProjectId, clusterId ClusterId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListDatabaseCredentials request
 	ListDatabaseCredentials(ctx context.Context, organizationId OrganizationId, projectId ProjectId, clusterId ClusterId, params *ListDatabaseCredentialsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -15258,6 +15261,18 @@ func (c *Client) DeleteSampleDataByBucketID(ctx context.Context, organizationId 
 
 func (c *Client) GetSampleBucketById(ctx context.Context, organizationId OrganizationId, projectId ProjectId, clusterId ClusterId, bucketId BucketId, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetSampleBucketByIdRequest(c.Server, organizationId, projectId, clusterId, bucketId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetClusterStats(ctx context.Context, organizationId OrganizationId, projectId ProjectId, clusterId ClusterId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetClusterStatsRequest(c.Server, organizationId, projectId, clusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -33272,6 +33287,54 @@ func NewGetSampleBucketByIdRequest(server string, organizationId OrganizationId,
 	return req, nil
 }
 
+// NewGetClusterStatsRequest generates requests for GetClusterStats
+func NewGetClusterStatsRequest(server string, organizationId OrganizationId, projectId ProjectId, clusterId ClusterId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "organizationId", runtime.ParamLocationPath, organizationId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "projectId", runtime.ParamLocationPath, projectId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithLocation("simple", false, "clusterId", runtime.ParamLocationPath, clusterId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v4/organizations/%s/projects/%s/clusters/%s/stats", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewListDatabaseCredentialsRequest generates requests for ListDatabaseCredentials
 func NewListDatabaseCredentialsRequest(server string, organizationId OrganizationId, projectId ProjectId, clusterId ClusterId, params *ListDatabaseCredentialsParams) (*http.Request, error) {
 	var err error
@@ -35356,6 +35419,9 @@ type ClientWithResponsesInterface interface {
 
 	// GetSampleBucketByIdWithResponse request
 	GetSampleBucketByIdWithResponse(ctx context.Context, organizationId OrganizationId, projectId ProjectId, clusterId ClusterId, bucketId BucketId, reqEditors ...RequestEditorFn) (*GetSampleBucketByIdResp, error)
+
+	// GetClusterStatsWithResponse request
+	GetClusterStatsWithResponse(ctx context.Context, organizationId OrganizationId, projectId ProjectId, clusterId ClusterId, reqEditors ...RequestEditorFn) (*GetClusterStatsResp, error)
 
 	// ListDatabaseCredentialsWithResponse request
 	ListDatabaseCredentialsWithResponse(ctx context.Context, organizationId OrganizationId, projectId ProjectId, clusterId ClusterId, params *ListDatabaseCredentialsParams, reqEditors ...RequestEditorFn) (*ListDatabaseCredentialsResp, error)
@@ -43001,6 +43067,41 @@ func (r GetSampleBucketByIdResp) StatusCode() int {
 	return 0
 }
 
+type GetClusterStatsResp struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// FreeMemoryInMb Available (unallocated) memory in the cluster in megabytes.
+		FreeMemoryInMb int `json:"freeMemoryInMb"`
+
+		// MaxReplicas Maximum supported replica count for buckets in this cluster.
+		MaxReplicas int `json:"maxReplicas"`
+
+		// TotalMemoryInMb Total memory capacity of the cluster in megabytes.
+		TotalMemoryInMb int `json:"totalMemoryInMb"`
+	}
+	JSON403 *AccessForbidden
+	JSON404 *ResourceNotFound
+	JSON429 *RateLimitExceeded
+	JSON500 *InternalServerError
+}
+
+// Status returns HTTPResponse.Status
+func (r GetClusterStatsResp) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetClusterStatsResp) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type ListDatabaseCredentialsResp struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -46520,6 +46621,15 @@ func (c *ClientWithResponses) GetSampleBucketByIdWithResponse(ctx context.Contex
 		return nil, err
 	}
 	return ParseGetSampleBucketByIdResp(rsp)
+}
+
+// GetClusterStatsWithResponse request returning *GetClusterStatsResp
+func (c *ClientWithResponses) GetClusterStatsWithResponse(ctx context.Context, organizationId OrganizationId, projectId ProjectId, clusterId ClusterId, reqEditors ...RequestEditorFn) (*GetClusterStatsResp, error) {
+	rsp, err := c.GetClusterStats(ctx, organizationId, projectId, clusterId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetClusterStatsResp(rsp)
 }
 
 // ListDatabaseCredentialsWithResponse request returning *ListDatabaseCredentialsResp
@@ -63941,6 +64051,69 @@ func ParseGetSampleBucketByIdResp(rsp *http.Response) (*GetSampleBucketByIdResp,
 			return nil, err
 		}
 		response.JSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest RateLimitExceeded
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetClusterStatsResp parses an HTTP response from a GetClusterStatsWithResponse call
+func ParseGetClusterStatsResp(rsp *http.Response) (*GetClusterStatsResp, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetClusterStatsResp{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// FreeMemoryInMb Available (unallocated) memory in the cluster in megabytes.
+			FreeMemoryInMb int `json:"freeMemoryInMb"`
+
+			// MaxReplicas Maximum supported replica count for buckets in this cluster.
+			MaxReplicas int `json:"maxReplicas"`
+
+			// TotalMemoryInMb Total memory capacity of the cluster in megabytes.
+			TotalMemoryInMb int `json:"totalMemoryInMb"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest AccessForbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ResourceNotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
 		var dest RateLimitExceeded
