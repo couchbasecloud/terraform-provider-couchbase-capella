@@ -229,7 +229,7 @@ func (a *AppEndpointResync) startResync(ctx context.Context, organizationId, pro
 
 	organizationUUID, projectUUID, clusterUUID, appServiceUUID := a.mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId)
 
-	var convertedScopes map[string]api.ResyncScopes
+	convertedScopes := make(map[string]api.ResyncScopes)
 	for name, scope := range scopes {
 		convertedScopes[name] = scope
 	}
