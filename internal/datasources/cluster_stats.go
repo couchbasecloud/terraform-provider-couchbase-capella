@@ -2,16 +2,16 @@ package datasources
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
-	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
-
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -49,40 +49,61 @@ func (d *ClusterStats) Read(ctx context.Context, req datasource.ReadRequest, res
 		return
 	}
 
-	var (
-		organizationId = state.OrganizationId.ValueString()
-		projectId      = state.ProjectId.ValueString()
-		clusterId      = state.ClusterId.ValueString()
-	)
+	organizationId := state.OrganizationId.ValueString()
+	projectId := state.ProjectId.ValueString()
+	clusterId := state.ClusterId.ValueString()
 
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/stats", d.HostURL, organizationId, projectId, clusterId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	orgUUID, err := uuid.Parse(organizationId)
+	if err != nil {
+		resp.Diagnostics.AddError("Error parsing organization_id", fmt.Sprintf("Invalid organization_id: %s", err.Error()))
+		return
+	}
+	projUUID, err := uuid.Parse(projectId)
+	if err != nil {
+		resp.Diagnostics.AddError("Error parsing project_id", fmt.Sprintf("Invalid project_id: %s", err.Error()))
+		return
+	}
+	clusterUUID, err := uuid.Parse(clusterId)
+	if err != nil {
+		resp.Diagnostics.AddError("Error parsing cluster_id", fmt.Sprintf("Invalid cluster_id: %s", err.Error()))
+		return
+	}
 
-	response, err := d.ClientV1.ExecuteWithRetry(ctx, cfg, nil, d.Token, nil)
+	response, err := d.ClientV2.GetClusterStatsWithResponse(ctx, orgUUID, projUUID, clusterUUID)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Cluster Stats",
-			fmt.Sprintf(
-				"Could not read cluster stats in organization %s, project %s and cluster %s, unexpected error: %s",
-				organizationId, projectId, clusterId, api.ParseError(err),
-			),
+			fmt.Sprintf("Could not read cluster stats in organization %s, project %s and cluster %s: %s: %s",
+				organizationId, projectId, clusterId, errors.ErrExecutingRequest, err.Error()),
 		)
 		return
 	}
 
-	var statsResponse clusterapi.GetClusterStatsResponse
-	err = json.Unmarshal(response.Body, &statsResponse)
-	if err != nil {
+	if response.StatusCode() != http.StatusOK {
 		resp.Diagnostics.AddError(
-			"Error Unmarshalling Cluster Stats",
-			fmt.Sprintf("Could not parse cluster stats response: %s", err.Error()),
+			"Error Reading Capella Cluster Stats",
+			fmt.Sprintf("Unexpected response while reading cluster stats: %s", string(response.Body)),
 		)
 		return
 	}
 
-	state.FreeMemoryInMb = types.Int64Value(statsResponse.FreeMemoryInMb)
-	state.MaxReplicas = types.Int64Value(statsResponse.MaxReplicas)
-	state.TotalMemoryInMb = types.Int64Value(statsResponse.TotalMemoryInMb)
+	if response.JSON200 == nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Capella Cluster Stats",
+			"API returned an empty response body.",
+		)
+		return
+	}
+
+	tflog.Info(ctx, "read cluster stats", map[string]interface{}{
+		"organization_id": organizationId,
+		"project_id":      projectId,
+		"cluster_id":      clusterId,
+	})
+
+	state.FreeMemoryInMb = types.Int64Value(int64(response.JSON200.FreeMemoryInMb))
+	state.MaxReplicas = types.Int64Value(int64(response.JSON200.MaxReplicas))
+	state.TotalMemoryInMb = types.Int64Value(int64(response.JSON200.TotalMemoryInMb))
 
 	diags = resp.State.Set(ctx, &state)
 
