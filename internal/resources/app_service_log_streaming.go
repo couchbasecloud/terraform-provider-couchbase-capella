@@ -139,7 +139,7 @@ func (r *AppServiceLogStreaming) Create(ctx context.Context, req resource.Create
 	}
 
 	// Wait for the log streaming to be enabled
-	err = r.waitForLogStreamingState(ctx, organizationId, projectId, clusterId, appServiceId, apigen.GetLogStreamingResponseConfigStateEnabled)
+	err = waitForLogStreamingState(ctx, r.ClientV2, orgUUID, projUUID, clusterUUID, appServiceUUID, apigen.GetLogStreamingResponseConfigStateEnabled)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error waiting for Log Streaming to be enabled",
@@ -284,7 +284,7 @@ func (r *AppServiceLogStreaming) Update(ctx context.Context, req resource.Update
 	}
 
 	// Wait for the log streaming to be enabled
-	err = r.waitForLogStreamingState(ctx, organizationId, projectId, clusterId, appServiceId, apigen.GetLogStreamingResponseConfigStateEnabled)
+	err = waitForLogStreamingState(ctx, r.ClientV2, orgUUID, projUUID, clusterUUID, appServiceUUID, apigen.GetLogStreamingResponseConfigStateEnabled)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error waiting for Log Streaming update to complete",
@@ -366,7 +366,7 @@ func (r *AppServiceLogStreaming) Delete(ctx context.Context, req resource.Delete
 	}
 
 	// Wait for the log streaming to be disabled
-	err = r.waitForLogStreamingState(ctx, organizationId, projectId, clusterId, appServiceId, apigen.GetLogStreamingResponseConfigStateDisabled)
+	err = waitForLogStreamingState(ctx, r.ClientV2, orgUUID, projUUID, clusterUUID, appServiceUUID, apigen.GetLogStreamingResponseConfigStateDisabled)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error waiting for Log Streaming deletion to complete",
@@ -601,21 +601,17 @@ func (r *AppServiceLogStreaming) refreshLogStreaming(
 	), nil
 }
 
-// waitForLogStreamingState waits for the log streaming configuration to no longer be transitioning.
-func (r *AppServiceLogStreaming) waitForLogStreamingState(
+// waitForLogStreamingState waits for the log streaming configuration to reach the target state.
+// This is a shared helper used by both the AppServiceLogStreaming and AppServiceLogStreamingActivationStatus resources.
+func waitForLogStreamingState(
 	ctx context.Context,
-	organizationId, projectId, clusterId, appServiceId string,
+	clientV2 *apigen.ClientWithResponses,
+	orgUUID, projUUID, clusterUUID, appServiceUUID uuid.UUID,
 	targetState apigen.GetLogStreamingResponseConfigState,
 ) error {
 	// Log Streaming state transition should usually only take up to a minute when all nodes are healthy, but allow for extra time in case a node is having transient issues
 	const timeout = time.Minute * 3
 	const sleepDuration = time.Second * 3
-
-	// Parse string IDs to UUIDs for the API client
-	orgUUID, projUUID, clusterUUID, appServiceUUID, err := r.parseUUIDs(organizationId, projectId, clusterId, appServiceId)
-	if err != nil {
-		return fmt.Errorf("failed to parse IDs: %w", err)
-	}
 
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
@@ -629,7 +625,7 @@ func (r *AppServiceLogStreaming) waitForLogStreamingState(
 			return fmt.Errorf("timeout waiting for log streaming to reach state '%s'", string(targetState))
 
 		case <-timer.C:
-			response, err := r.ClientV2.GetAppServiceLogStreamingWithResponse(
+			response, err := clientV2.GetAppServiceLogStreamingWithResponse(
 				ctx,
 				orgUUID,
 				projUUID,
