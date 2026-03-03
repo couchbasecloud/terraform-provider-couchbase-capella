@@ -1,11 +1,14 @@
 package acceptance_tests
 
 import (
+	"context"
 	cryptorand "crypto/rand"
 	"fmt"
 	"math/rand"
+	"net/http"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
@@ -51,10 +54,21 @@ func generateRandomCIDR() string {
 }
 
 func newTestClient() *providerschema.Data {
+	retryingHTTP := apigen.NewRetryHTTPClient(context.Background(), timeout, false)
+	clientV2, err := apigen.NewClientWithResponses(globalHost, apigen.WithHTTPClient(retryingHTTP), apigen.WithRequestEditorFn(func(_ context.Context, req *http.Request) error {
+		req.Header.Set("Authorization", "Bearer "+globalToken)
+		return nil
+	}))
+	if err != nil {
+		// Can't proceed with tests if we fail to create a client, so we panic here.
+		panic(fmt.Sprintf("failed to create V2 API client: %v", err))
+	}
+
 	providerData := &providerschema.Data{
 		HostURL:  globalHost,
 		Token:    globalToken,
 		ClientV1: api.NewClient(timeout),
+		ClientV2: clientV2,
 	}
 	return providerData
 }

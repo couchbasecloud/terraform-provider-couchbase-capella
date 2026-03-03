@@ -6,10 +6,21 @@ import (
 	"testing"
 )
 
+// Default OpenAPI spec URL - same as in Makefile
+// The spec is embedded in the Couchbase docs page and extracted automatically
+const defaultOpenAPISpecURL = "https://docs.couchbase.com/cloud/management-api-reference/index.html"
+
 // TestMain sets up the environment for tests
 func TestMain(m *testing.M) {
-	// Set the OpenAPI spec path to the repository root
-	os.Setenv("CAPELLA_OPENAPI_SPEC_PATH", "../../openapi.generated.yaml")
+	// Use OPENAPI_SPEC_URL if already set (e.g., from Makefile export)
+	// Otherwise, use the default URL
+	if os.Getenv("OPENAPI_SPEC_URL") == "" {
+		os.Setenv("OPENAPI_SPEC_URL", defaultOpenAPISpecURL)
+	}
+
+	// Reload the OpenAPI spec now that the env var is set
+	// (init() runs before TestMain, so we need to reload)
+	loadOpenAPISpec()
 
 	// Run tests
 	os.Exit(m.Run())

@@ -2,8 +2,10 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -26,11 +28,12 @@ import (
 var _ provider.Provider = &capellaProvider{}
 
 const (
-	capellaAuthenticationTokenField = "authentication_token"
-	capellaPublicAPIHostField       = "host"
-	apiRequestTimeout               = 60 * time.Second
-	defaultAPIHostURL               = "https://cloudapi.cloud.couchbase.com"
-	providerName                    = "couchbase-capella"
+	capellaAuthenticationTokenField     = "authentication_token"
+	capellaPublicAPIHostField           = "host"
+	capellaGlobalAPIRequestTimeoutField = "global_api_request_timeout"
+	apiRequestTimeout                   = 300 * time.Second
+	defaultAPIHostURL                   = "https://cloudapi.cloud.couchbase.com"
+	providerName                        = "couchbase-capella"
 )
 
 // capellaProvider is the provider implementation.
@@ -59,12 +62,16 @@ func (p *capellaProvider) Schema(_ context.Context, _ provider.SchemaRequest, re
 		Attributes: map[string]schema.Attribute{
 			capellaPublicAPIHostField: schema.StringAttribute{
 				Optional:    true,
-				Description: "Capella Public API HTTPS Host URL",
+				Description: "Capella Public API HTTPS Host URL. May be set via the CAPELLA_HOST environment variable. Defaults to https://cloudapi.cloud.couchbase.com",
 			},
 			capellaAuthenticationTokenField: schema.StringAttribute{
 				Optional:    true,
 				Sensitive:   true,
-				Description: "Capella API Token that serves as an authentication mechanism.",
+				Description: "Capella API Token that serves as an authentication mechanism. May be set via the CAPELLA_AUTHENTICATION_TOKEN environment variable.",
+			},
+			capellaGlobalAPIRequestTimeoutField: schema.Int64Attribute{
+				Optional:    true,
+				Description: "Global API request timeout in seconds. May be set via the CAPELLA_GLOBAL_API_REQUEST_TIMEOUT environment variable. Defaults to 300. Value must be greater than or equal to 300.",
 			},
 		},
 	}
@@ -151,8 +158,33 @@ func (p *capellaProvider) Configure(
 
 	tflog.Debug(ctx, "Creating Capella client")
 
+	// Global HTTP client timeout: config attribute, then env var, then default (300 sec).
+	// Value must be >= default (300 seconds).
+	clientTimeout := apiRequestTimeout
+	if !config.GlobalAPIRequestTimeout.IsNull() && !config.GlobalAPIRequestTimeout.IsUnknown() {
+		clientTimeout = time.Duration(config.GlobalAPIRequestTimeout.ValueInt64()) * time.Second
+	} else if t, found := os.LookupEnv("CAPELLA_GLOBAL_API_REQUEST_TIMEOUT"); found {
+		seconds, err := strconv.Atoi(t)
+		if err == nil {
+			clientTimeout = time.Duration(seconds) * time.Second
+		} else {
+			tflog.Warn(ctx, fmt.Sprintf("Invalid client timeout value: %v", err))
+		}
+	}
+
+	if clientTimeout < apiRequestTimeout {
+		resp.Diagnostics.AddAttributeError(
+			path.Root(capellaGlobalAPIRequestTimeoutField),
+			"Invalid global API request timeout",
+			fmt.Sprintf("global_api_request_timeout must be greater than or equal to %d seconds. Set via the provider config or CAPELLA_GLOBAL_API_REQUEST_TIMEOUT environment variable.", int64(apiRequestTimeout.Seconds())),
+		)
+		return
+	}
+
+	tflog.Debug(ctx, "Using HTTP client timeout", map[string]any{"seconds": int64(clientTimeout.Seconds())})
+
 	// Create clients using the configuration values
-	clientV1 := api.NewClient(apiRequestTimeout)
+	clientV1 := api.NewClient(clientTimeout)
 
 	// Enable debug logging for V2 client based on Terraform logging environment variables
 	// Users can enable this with TF_LOG=DEBUG or TF_LOG=TRACE
@@ -251,6 +283,8 @@ func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.Dat
 		datasources.NewSnapshotRestores,
 		datasources.NewSnapshotRestore,
 		datasources.NewSnapshotBackupSchedule,
+		datasources.NewAppEndpointLoggingConfig,
+		datasources.NewAppServiceLogStreaming,
 	}
 }
 
@@ -294,5 +328,7 @@ func (p *capellaProvider) Resources(_ context.Context) []func() resource.Resourc
 		resources.NewAppEndpointOidcProvider,
 		resources.NewAppEndpointDefaultOidcProvider,
 		resources.NewSnapshotBackupSchedule,
+		resources.NewAppServiceLogStreaming,
+		resources.NewAppEndpointLoggingConfig,
 	}
 }

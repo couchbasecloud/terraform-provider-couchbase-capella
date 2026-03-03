@@ -15,6 +15,13 @@ func BaseStringsToStrings(stringValues []basetypes.StringValue) []string {
 	return result
 }
 
+// BaseStringsToStringsPointer converts a slice of basetypes.StringValue to a slice of strings.
+// It returns a pointer to the slice of strings.
+func BaseStringsToStringsPointer(stringValues []basetypes.StringValue) *[]string {
+	strings := BaseStringsToStrings(stringValues)
+	return &strings
+}
+
 // StringsToBaseStrings converts a slice of strings to a slice of basetypes.StringValue.
 // It wraps each string in a basetypes.StringValue.
 func StringsToBaseStrings(genericStrings []string) []basetypes.StringValue {

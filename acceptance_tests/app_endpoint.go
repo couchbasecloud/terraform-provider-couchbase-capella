@@ -15,6 +15,29 @@ import (
 )
 
 func createAppEndpoint(ctx context.Context, client *api.Client) error {
+	// First, check if app endpoint already exists
+	checkUrl := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
+		globalHost,
+		globalOrgId,
+		globalProjectId,
+		globalClusterId,
+		globalAppServiceId,
+		globalAppEndpointName,
+	)
+	checkCfg := api.EndpointCfg{
+		Url:           checkUrl,
+		Method:        http.MethodGet,
+		SuccessStatus: http.StatusOK,
+	}
+	
+	_, err := client.ExecuteWithRetry(ctx, checkCfg, nil, globalToken, nil)
+	if err == nil {
+		log.Printf("App endpoint '%s' already exists", globalAppEndpointName)
+		return nil
+	}
+
+	// App endpoint doesn't exist, create it
 	appEndpointRequest := app_endpoints.AppEndpointRequest{
 		Name:             globalAppEndpointName,
 		Bucket:           globalBucketName,
@@ -45,7 +68,7 @@ func createAppEndpoint(ctx context.Context, client *api.Client) error {
 		SuccessStatus: http.StatusCreated,
 	}
 
-	_, err := client.ExecuteWithRetry(
+	_, err = client.ExecuteWithRetry(
 		ctx,
 		cfg,
 		appEndpointRequest,

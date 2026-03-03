@@ -1,0 +1,1 @@
+terraform import couchbase-capella_app_endpoint_log_streaming_config.new_app_endpoint_log_streaming_config app_endpoint_name=<app_endpoint_name>,app_service_id=<app_service_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>

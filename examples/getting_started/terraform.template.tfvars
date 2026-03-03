@@ -211,3 +211,19 @@ app_endpoint_oidc = {
     roles_claim            = "roles"
     user_prefix            = "user_"
 }
+
+app_service_log_streaming = {
+  output_type = "generic_http"
+  credentials = {
+    generic_http = {
+      url      = "https://www.example.com"
+      user     = "example_user"
+      password = "example_password"
+    }
+  }
+}
+
+app_endpoint_log_streaming_config = {
+  log_level = "info"
+  log_keys = ["Javascript", "Sync", "SyncMsg"]
+}

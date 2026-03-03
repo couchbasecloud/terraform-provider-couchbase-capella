@@ -1,5 +1,23 @@
 # Changelog
 
+## [v1.7.1](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.7.1) (2026-02-18)
+
+[Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.7.0...v1.7.1)
+
+**Implemented enhancements:**
+
+- \[AV-122956\] Configurable global HTTP timeout [\#483](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/483) ([l0n3star](https://github.com/l0n3star))
+
+**Fixed bugs:**
+
+- \[AV-122821\] Set http request timeout to 5 min [\#480](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/480) ([l0n3star](https://github.com/l0n3star))
+- \[AV-121786\] PE acceptance tests, create sanity list, Skip creation of capella res… [\#471](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/471) ([nimiyajoseph](https://github.com/nimiyajoseph))
+
+**Merged pull requests:**
+
+- \[AV-122556\] Remove the need to manually commit the API spec [\#475](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/475) ([Talina06](https://github.com/Talina06))
+- \[AV-122304\] Update specs and run code generation [\#472](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/472) ([IsaacLambat](https://github.com/IsaacLambat))
+
 ## [v1.7.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.7.0) (2025-12-19)
 
 [Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.6.0...v1.7.0)

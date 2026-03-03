@@ -12,20 +12,22 @@ In this demo, we will perform the following operations:
 8. Add a new allowlist to the cluster.
 9. Create a new bucket in the cluster.
 10. Create a new sample bucket in the cluster.
-11. Create a new app service in the cluster.
-12. Create an app endpoint in the created app service.
-13. Configure an access control function in the app endpoint.
-14. Configure an import filter in the app endpoint.
-15. Configure an OIDC provider on the app endpoint.
-16. Configure a CORS policy on the app endpoint.
-17. Change the app endpoint's activation status.
-18. Create a new scope in the bucket of the cluster.
-19. Create a new collection in the scope of a bucket.
-20. Create a new on/off schedule for the cluster.
-21. Create a new audit log settings.
-22. Enable private endpoint service on the cluster.
-23. Create a new network peer.
-24. Create an non-deferred secondary index.
+11. Create a new App Service in the cluster.
+12. Set up log streaming on the App Service.
+13. Create an app endpoint in the created App Service.
+14. Configure an access control function in the app endpoint.
+15. Configure an import filter in the app endpoint.
+16. Configure an OIDC provider on the app endpoint.
+17. Configure a CORS policy on the app endpoint.
+18. Configure a logging config on the app endpoint.
+19. Change the app endpoint's activation status.
+20. Create a new scope in the bucket of the cluster.
+21. Create a new collection in the scope of a bucket.
+22. Create a new on/off schedule for the cluster.
+23. Create a new audit log settings.
+24. Enable private endpoint service on the cluster.
+25. Create a new network peer.
+26. Create an non-deferred secondary index.
 
 ## Pre-Requisites:
 
@@ -48,8 +50,7 @@ Command: `terraform plan`
 
 Sample Output:
 ```
-terraform plan
-╵
+$ terraform plan
 data.couchbase-capella_events.existing_events: Reading...
 data.couchbase-capella_organization.existing_organization: Reading...
 data.couchbase-capella_organization.existing_organization: Read complete after 1s [name=<org-id>]
@@ -267,6 +268,21 @@ Terraform will perform the following actions:
       + project_id        = (known after apply)
       + scope             = "new_terraform_scope"
     }
+    
+  # couchbase-capella_app_endpoint_log_streaming_config.new_app_endpoint_log_streaming_config will be created
+  + resource "couchbase-capella_app_endpoint_log_streaming_config" "new_app_endpoint_log_streaming_config" {
+      + app_endpoint_name = "app-endpoint-1"
+      + app_service_id    = (known after apply)
+      + cluster_id        = (known after apply)
+      + log_keys          = [
+          + "Javascript",
+          + "Sync",
+          + "SyncMsg",
+        ]
+      + log_level         = "info"
+      + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id        = (known after apply)
+    }
 
   # couchbase-capella_app_endpoint_oidc_provider.oidc1 will be created
   + resource "couchbase-capella_app_endpoint_oidc_provider" "oidc1" {
@@ -304,6 +320,18 @@ Terraform will perform the following actions:
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id      = (known after apply)
       + version         = (known after apply)
+    }
+    
+  # couchbase-capella_app_service_log_streaming.app_service_log_streaming will be created
+  + resource "couchbase-capella_app_service_log_streaming" "app_service_log_streaming" {
+      + app_service_id  = (known after apply)
+      + cluster_id      = (known after apply)
+      + config_state    = (known after apply)
+      + credentials     = (sensitive value)
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + output_type     = "generic_http"
+      + project_id      = (known after apply)
+      + streaming_state = (known after apply)
     }
 
   # couchbase-capella_app_services_cidr.new_allowed_cidr will be created
@@ -1137,15 +1165,7 @@ Command: `terraform apply`
 
 Sample Output:
 ```
-terraform apply
-╷
-│ Warning: Provider development overrides are in effect
-│ 
-│ The following provider development overrides are set in the CLI configuration:
-│  - couchbasecloud/couchbase-capella in /Applications/gh_2.14.6_macOS_amd64/bin/terraform-provider-couchbase-capella/bin
-│ 
-│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with published releases.
-╵
+$ terraform apply
 data.couchbase-capella_events.existing_events: Reading...
 data.couchbase-capella_organization.existing_organization: Reading...
 data.couchbase-capella_organization.existing_organization: Read complete after 1s [name=<org-id>]
@@ -1363,6 +1383,21 @@ Terraform will perform the following actions:
       + project_id        = (known after apply)
       + scope             = "new_terraform_scope"
     }
+    
+  # couchbase-capella_app_endpoint_log_streaming_config.new_app_endpoint_log_streaming_config will be created
+  + resource "couchbase-capella_app_endpoint_log_streaming_config" "new_app_endpoint_log_streaming_config" {
+      + app_endpoint_name = "app-endpoint-1"
+      + app_service_id    = (known after apply)
+      + cluster_id        = (known after apply)
+      + log_keys          = [
+          + "Javascript",
+          + "Sync",
+          + "SyncMsg",
+        ]
+      + log_level         = "info"
+      + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id        = (known after apply)
+    }
 
   # couchbase-capella_app_endpoint_oidc_provider.oidc1 will be created
   + resource "couchbase-capella_app_endpoint_oidc_provider" "oidc1" {
@@ -1400,6 +1435,18 @@ Terraform will perform the following actions:
       + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id      = (known after apply)
       + version         = (known after apply)
+    }
+    
+  # couchbase-capella_app_service_log_streaming.app_service_log_streaming will be created
+  + resource "couchbase-capella_app_service_log_streaming" "app_service_log_streaming" {
+      + app_service_id  = (known after apply)
+      + cluster_id      = (known after apply)
+      + config_state    = (known after apply)
+      + credentials     = (sensitive value)
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + output_type     = "generic_http"
+      + project_id      = (known after apply)
+      + streaming_state = (known after apply)
     }
 
   # couchbase-capella_app_services_cidr.new_allowed_cidr will be created

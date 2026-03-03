@@ -11,6 +11,11 @@ LINKER_FLAGS=-s -w -X 'github.com/couchbasecloud/terraform-provider-couchbase-ca
 
 GOLANGCI_VERSION=v1.64.8
 
+# OpenAPI spec URL - fetched at runtime, never stored in repo
+# The spec is embedded in the Couchbase docs page and extracted automatically
+OPENAPI_SPEC_URL?=https://docs.couchbase.com/cloud/management-api-reference/index.html
+export OPENAPI_SPEC_URL
+
 export PATH := $(shell go env GOPATH)/bin:$(PATH)
 export SHELL := env PATH=$(PATH) /bin/bash
 
@@ -100,14 +105,14 @@ TEST_FLAGS ?= -short -cover -race -coverprofile .testCoverage.txt
 
 .PHONY: test
 test: ## Run unit tests
-	@CAPELLA_OPENAPI_SPEC_PATH=$(PWD)/openapi.generated.yaml go test $(TEST_FILES) $(TEST_FLAGS)
+	@go test $(TEST_FILES) $(TEST_FLAGS)
 
 .PHONY: testacc
 testacc: ## Run acceptance tests (requires TF_VAR_auth_token, TF_VAR_host, TF_VAR_organization_id)
 	@[ "${TF_VAR_auth_token}" ] || ( echo "ERROR: export TF_VAR_auth_token before running acceptance tests"; exit 1 )
 	@[ "${TF_VAR_host}" ] || ( echo "ERROR: export TF_VAR_host before running acceptance tests"; exit 1 )
 	@[ "${TF_VAR_organization_id}" ] || ( echo "ERROR: export TF_VAR_organization_id before running acceptance tests"; exit 1 )
-	@CAPELLA_OPENAPI_SPEC_PATH=$(PWD)/openapi.generated.yaml TF_ACC=1 go test -timeout=120m -v ./acceptance_tests/
+	@TF_ACC=1 go test -timeout=120m -v ./acceptance_tests/
 
 # ============================================================================
 # Documentation
@@ -116,7 +121,7 @@ testacc: ## Run acceptance tests (requires TF_VAR_auth_token, TF_VAR_host, TF_VA
 .PHONY: build-docs
 build-docs: ## Generate provider documentation
 	@go get github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
-	@CAPELLA_OPENAPI_SPEC_PATH="$(shell pwd)/openapi.generated.yaml" go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --examples-dir ./examples
+	@go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --examples-dir ./examples
 
 # ============================================================================
 # Code Generation
