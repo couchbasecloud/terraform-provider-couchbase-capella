@@ -65,7 +65,7 @@ func TestAccAppEndpointResyncResource(t *testing.T) {
 
 }
 
-// testAccAppEndpointResyncConfig returns the HCL config for a app endpoint resync resource
+// testAccAppEndpointResyncConfig returns the HCL config for an app endpoint resync resource
 func testAccAppEndpointResyncConfig(resourceName, scopes string) string {
 	return fmt.Sprintf(`
 	%[1]s
