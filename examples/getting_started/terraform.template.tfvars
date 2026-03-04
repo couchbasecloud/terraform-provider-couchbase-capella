@@ -223,6 +223,10 @@ app_service_log_streaming = {
   }
 }
 
+app_service_log_streaming_activation_status = {
+  state = "enabled"
+}
+
 app_endpoint_log_streaming_config = {
   log_level = "info"
   log_keys = ["Javascript", "Sync", "SyncMsg"]

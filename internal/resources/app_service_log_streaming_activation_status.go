@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
@@ -189,8 +188,14 @@ func (r *AppServiceLogStreamingActivationStatus) Read(ctx context.Context, req r
 		return
 	}
 
-	state.State = types.StringValue(string(currentConfigState))
-	diags = resp.State.Set(ctx, &state)
+	refreshedState := providerschema.NewAppServiceLogStreamingActivationStatus(
+		organizationId,
+		projectId,
+		clusterId,
+		appServiceId,
+		currentConfigState,
+	)
+	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
 }
 
