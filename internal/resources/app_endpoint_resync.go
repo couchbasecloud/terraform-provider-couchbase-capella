@@ -2,17 +2,18 @@ package resources
 
 import (
 	"context"
-	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
@@ -22,9 +23,6 @@ var (
 	_ resource.ResourceWithConfigure   = &AppEndpointResync{}
 	_ resource.ResourceWithImportState = &AppEndpointResync{}
 )
-
-const errorInitiatingAppEndpointResync = "There is an error initiating app endpoint resync. Please check in Capella to see if any hanging resources" +
-	" have been created, unexpected error: "
 
 const errorAfterAppEndpointResyncInitiation = "Encountered an error while checking the current" +
 	" state of the resync. Please run `terraform plan` after 1-2 minutes to know the" +
@@ -43,7 +41,7 @@ func NewAppEndpointResync() resource.Resource {
 
 // Metadata returns the App Endpoint Resync resource type name.
 func (a *AppEndpointResync) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_app_endpoint_resync"
+	resp.TypeName = req.ProviderTypeName + "_app_endpoint_resync_job"
 }
 
 // Schema returns the schema for the App Endpoint Resync resource.
@@ -73,40 +71,11 @@ func (a *AppEndpointResync) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	var resyncRequest *api.CreateResyncRequest
-	if scopes != nil {
-		resyncRequest = &api.CreateResyncRequest{
-			Scopes: scopes,
-		}
-	}
-
-	url := fmt.Sprintf(
-		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/resync",
-		a.HostURL,
-		organizationId,
-		projectId,
-		clusterId,
-		appServiceId,
-		appEndpointName,
-	)
-
-	cfg := api.EndpointCfg{
-		Url:           url,
-		Method:        http.MethodPost,
-		SuccessStatus: http.StatusAccepted,
-	}
-
-	_, err := a.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		resyncRequest,
-		a.Token,
-		nil,
-	)
+	err := a.startResync(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName, scopes)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error initiating app endpoint resync",
-			errorInitiatingAppEndpointResync+api.ParseError(err),
+			"Error starting App Endpoint Resync",
+			err.Error(),
 		)
 		return
 	}
@@ -125,47 +94,16 @@ func (a *AppEndpointResync) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	// Refresh the state by getting the latest data
-	url = fmt.Sprintf(
-		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/resync",
-		a.HostURL,
-		organizationId,
-		projectId,
-		clusterId,
-		appServiceId,
-		appEndpointName,
-	)
-
-	cfg = api.EndpointCfg{
-		Url:           url,
-		Method:        http.MethodGet,
-		SuccessStatus: http.StatusOK,
-	}
-
-	response, err := a.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		a.Token,
-		nil,
-	)
+	resyncResponse, err := a.getResyncStatus(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading app endpoint resync after initiation",
-			errorAfterAppEndpointResyncInitiation+api.ParseError(err),
+			"Error Getting App Endpoint Resync status in Capella",
+			"Could not get Capella App Endpoint Resync status for app endpoint with name "+appEndpointName+": "+err.Error(),
 		)
 		return
 	}
 
-	var resyncResponse api.CreateResyncResponse
-	if err = json.Unmarshal(response.Body, &resyncResponse); err != nil {
-		resp.Diagnostics.AddError(
-			"Error parsing app endpoint resync response",
-			errorAfterAppEndpointResyncInitiation+"error during unmarshalling: "+err.Error(),
-		)
-		return
-	}
-
-	refreshedState, diags := a.mapResponseToState(ctx, &resyncResponse, &plan)
+	refreshedState, diags := a.mapResponseToState(ctx, resyncResponse, &plan, organizationId, projectId, clusterId, appServiceId, appEndpointName)
 	if diags != nil {
 		resp.Diagnostics.Append(diags...)
 		return
@@ -204,53 +142,16 @@ func (a *AppEndpointResync) Read(ctx context.Context, req resource.ReadRequest, 
 		appEndpointName = IDs[providerschema.AppEndpointName]
 	)
 
-	url := fmt.Sprintf(
-		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/resync",
-		a.HostURL,
-		organizationId,
-		projectId,
-		clusterId,
-		appServiceId,
-		appEndpointName,
-	)
-
-	cfg := api.EndpointCfg{
-		Url:           url,
-		Method:        http.MethodGet,
-		SuccessStatus: http.StatusOK,
-	}
-
-	response, err := a.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		a.Token,
-		nil,
-	)
+	resyncResponse, err := a.getResyncStatus(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName)
 	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if resourceNotFound {
-			tflog.Info(ctx, "Resource not found in remote server removing from state file")
-			resp.State.RemoveResource(ctx)
-			return
-		}
 		resp.Diagnostics.AddError(
-			"Error reading app endpoint resync",
-			"Could not read app endpoint resync, unexpected error: "+errString,
+			"Error Getting App Endpoint Resync status in Capella",
+			errorAfterAppEndpointResyncInitiation+err.Error(),
 		)
 		return
 	}
 
-	var resyncResponse api.CreateResyncResponse
-	if err = json.Unmarshal(response.Body, &resyncResponse); err != nil {
-		resp.Diagnostics.AddError(
-			"Error parsing app endpoint resync response",
-			"error during unmarshalling: "+err.Error(),
-		)
-		return
-	}
-
-	refreshedState, diags := a.mapResponseToState(ctx, &resyncResponse, &state)
+	refreshedState, diags := a.mapResponseToState(ctx, resyncResponse, &state, organizationId, projectId, clusterId, appServiceId, appEndpointName)
 	if diags != nil {
 		resp.Diagnostics.Append(diags...)
 		return
@@ -286,39 +187,11 @@ func (a *AppEndpointResync) Delete(ctx context.Context, req resource.DeleteReque
 	appServiceId := state.AppServiceId.ValueString()
 	appEndpointName := state.AppEndpoint.ValueString()
 
-	url := fmt.Sprintf(
-		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/resync",
-		a.HostURL,
-		organizationId,
-		projectId,
-		clusterId,
-		appServiceId,
-		appEndpointName,
-	)
-
-	cfg := api.EndpointCfg{
-		Url:           url,
-		Method:        http.MethodDelete,
-		SuccessStatus: http.StatusAccepted,
-	}
-
-	_, err := a.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		a.Token,
-		nil,
-	)
+	err := a.stopResync(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName)
 	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if resourceNotFound {
-			tflog.Info(ctx, "Resource not found in remote server removing from state file")
-			resp.State.RemoveResource(ctx)
-			return
-		}
 		resp.Diagnostics.AddError(
-			"Error stopping app endpoint resync",
-			"Could not stop app endpoint resync, unexpected error: "+errString,
+			"Error stopping App Endpoint Resync",
+			err.Error(),
 		)
 		return
 	}
@@ -351,25 +224,121 @@ func (a *AppEndpointResync) Configure(
 	a.Data = data
 }
 
+// startResync triggers an App Endpoint Resync
+func (a *AppEndpointResync) startResync(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string, scopes map[string][]string) error {
+
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID := a.mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId)
+
+	convertedScopes := make(map[string]api.ResyncScopes)
+	for name, scope := range scopes {
+		convertedScopes[name] = scope
+	}
+
+	var resyncRequest api.PostAppEndpointResyncJSONRequestBody
+	if scopes != nil {
+		resyncRequest = api.PostAppEndpointResyncJSONRequestBody{
+			Scopes: &convertedScopes,
+		}
+	}
+
+	postResyncResp, err := a.ClientV2.PostAppEndpointResyncWithResponse(ctx, organizationUUID, projectUUID, clusterUUID, appServiceUUID, appEndpointName, resyncRequest)
+	if err != nil {
+		tflog.Debug(ctx, "error starting App Endpoint Resync", map[string]interface{}{
+			"organizationId":             organizationId,
+			"projectId":                  projectId,
+			"clusterId":                  clusterId,
+			"appServiceId":               appServiceId,
+			"appEndpointName":            appEndpointName,
+			"updateLoggingConfigRequest": postResyncResp,
+			"err":                        err.Error(),
+		})
+		return err
+	}
+
+	if postResyncResp.HTTPResponse.StatusCode != http.StatusAccepted {
+		return errors.New("Unexpected status while starting App Endpoint Resync: " + string(postResyncResp.Body))
+	}
+
+	return nil
+}
+
+// getResyncStatus reads the current App Endpoint Resync status
+func (a *AppEndpointResync) getResyncStatus(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string) (*api.ResyncStatus, error) {
+
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID := a.mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId)
+
+	getResyncStatusResp, err := a.ClientV2.GetAppEndpointResyncWithResponse(ctx, organizationUUID, projectUUID, clusterUUID, appServiceUUID, appEndpointName)
+	if err != nil {
+		tflog.Debug(ctx, "error getting App Endpoint Resync status", map[string]interface{}{
+			"organizationId":  organizationId,
+			"projectId":       projectId,
+			"clusterId":       clusterId,
+			"appServiceId":    appServiceId,
+			"appEndpointName": appEndpointName,
+			"err":             err.Error(),
+		})
+		return nil, err
+	}
+
+	if getResyncStatusResp.JSON200 == nil {
+		tflog.Debug(ctx, "unexpected status getting app endpoint logging config", map[string]interface{}{
+			"organizationId":  organizationId,
+			"projectId":       projectId,
+			"clusterId":       clusterId,
+			"appServiceId":    appServiceId,
+			"appEndpointName": appEndpointName,
+		})
+		return nil, errors.New("Unexpected status while getting App Endpoint Logging Config: " + string(getResyncStatusResp.Body))
+	}
+
+	return getResyncStatusResp.JSON200, err
+}
+
+// stopResync stops a running App Endpoint Resync
+func (a *AppEndpointResync) stopResync(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string) error {
+
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID := a.mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId)
+
+	deleteResyncResp, err := a.ClientV2.DeleteAppEndpointResyncWithResponse(ctx, organizationUUID, projectUUID, clusterUUID, appServiceUUID, appEndpointName)
+	if err != nil {
+		tflog.Debug(ctx, "error stopping App Endpoint Resync", map[string]interface{}{
+			"organizationId":             organizationId,
+			"projectId":                  projectId,
+			"clusterId":                  clusterId,
+			"appServiceId":               appServiceId,
+			"appEndpointName":            appEndpointName,
+			"updateLoggingConfigRequest": deleteResyncResp,
+			"err":                        err.Error(),
+		})
+		return err
+	}
+
+	if deleteResyncResp.HTTPResponse.StatusCode != http.StatusAccepted {
+		return errors.New("Unexpected status while starting App Endpoint Resync: " + string(deleteResyncResp.Body))
+	}
+
+	return nil
+}
+
 // mapResponseToState maps the API response to the Terraform state.
 func (a *AppEndpointResync) mapResponseToState(
-	ctx context.Context, response *api.CreateResyncResponse, plan *providerschema.AppEndpointResync,
+	ctx context.Context, response *api.ResyncStatus, plan *providerschema.AppEndpointResync, organizationId, projectId, clusterId, appServiceId, appEndpoint string,
 ) (*providerschema.AppEndpointResync, diag.Diagnostics) {
 	state := &providerschema.AppEndpointResync{
-		OrganizationId: plan.OrganizationId,
-		ProjectId:      plan.ProjectId,
-		ClusterId:      plan.ClusterId,
-		AppServiceId:   plan.AppServiceId,
-		AppEndpoint:    plan.AppEndpoint,
+		OrganizationId: types.StringValue(organizationId),
+		ProjectId:      types.StringValue(projectId),
+		ClusterId:      types.StringValue(clusterId),
+		AppServiceId:   types.StringValue(appServiceId),
+		AppEndpoint:    types.StringValue(appEndpoint),
 		Scopes:         plan.Scopes,
-		DocsChanged:    types.Int64Value(response.DocsChanged),
-		DocsProcessed:  types.Int64Value(response.DocsProcessed),
+		DocsChanged:    types.Int64Value(int64(response.DocsChanged)),
+		DocsProcessed:  types.Int64Value(int64(response.DocsProcessed)),
 		LastError:      types.StringValue(response.LastError),
 		StartTime:      types.StringValue(response.StartTime.Format("2006-01-02T15:04:05Z")),
 		State:          types.StringValue(string(response.State)),
 	}
 
-	if len(response.CollectionsProcessing) > 0 {
+	if len(*response.CollectionsProcessing) > 0 {
 		mapValue, diags := types.MapValueFrom(ctx, types.SetType{ElemType: types.StringType}, response.CollectionsProcessing)
 		if diags.HasError() {
 			return nil, diags
@@ -379,4 +348,13 @@ func (a *AppEndpointResync) mapResponseToState(
 	}
 
 	return state, nil
+}
+
+func (a *AppEndpointResync) mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId string) (organizationUUID, projectUUID, clusterUUID, appServiceUUID uuid.UUID) {
+	organizationUUID, _ = uuid.Parse(organizationId)
+	projectUUID, _ = uuid.Parse(projectId)
+	clusterUUID, _ = uuid.Parse(clusterId)
+	appServiceUUID, _ = uuid.Parse(appServiceId)
+
+	return organizationUUID, projectUUID, clusterUUID, appServiceUUID
 }
