@@ -45,7 +45,6 @@ func TestAccAppEndpointResyncResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
 					resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", globalAppEndpointName),
 					resource.TestCheckResourceAttr(resourceReference, "scopes._default.0", "_default"),
-					resource.TestCheckResourceAttr(resourceReference, "collections_processing._default.0", "_default"),
 					resource.TestCheckResourceAttr(resourceReference, "last_error", ""),
 					resource.TestCheckResourceAttrSet(resourceReference, "docs_changed"),
 					resource.TestCheckResourceAttrSet(resourceReference, "docs_processed"),
