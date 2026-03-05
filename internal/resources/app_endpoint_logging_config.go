@@ -232,10 +232,16 @@ func (l *LoggingConfig) Configure(ctx context.Context, req resource.ConfigureReq
 // upsertLoggingConfig creates or updates a Logging Config for an App Endpoint.
 func (l *LoggingConfig) upsertLoggingConfig(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string, plan providerschema.LoggingConfig) error {
 
-	organizationUUID, projectUUID, clusterUUID, appServiceUUID, err := utils.ParseHierarchyUUIDs(organizationId, projectId, clusterId, appServiceId)
+	uuids, err := utils.ParseUUIDs(
+		utils.IDField{"organization_id", organizationId},
+		utils.IDField{"project_id", projectId},
+		utils.IDField{"cluster_id", clusterId},
+		utils.IDField{"app_service_id", appServiceId},
+	)
 	if err != nil {
 		return err
 	}
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID := uuids[0], uuids[1], uuids[2], uuids[3]
 
 	putLoggingConfigRequest := api.PutAppEndpointLogStreamingConfigJSONRequestBody{
 		LogLevel: plan.LogLevel.ValueStringPointer(),
@@ -274,10 +280,16 @@ func (l *LoggingConfig) upsertLoggingConfig(ctx context.Context, organizationId,
 // getLoggingConfig retrieves the Logging Config for an App Endpoint.
 func (l *LoggingConfig) getLoggingConfig(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string) (*api.ConsoleLoggingConfig, error) {
 
-	organizationUUID, projectUUID, clusterUUID, appServiceUUID, err := utils.ParseHierarchyUUIDs(organizationId, projectId, clusterId, appServiceId)
+	uuids, err := utils.ParseUUIDs(
+		utils.IDField{"organization_id", organizationId},
+		utils.IDField{"project_id", projectId},
+		utils.IDField{"cluster_id", clusterId},
+		utils.IDField{"app_service_id", appServiceId},
+	)
 	if err != nil {
 		return nil, err
 	}
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID := uuids[0], uuids[1], uuids[2], uuids[3]
 
 	getLoggingConfigResp, err := l.ClientV2.GetAppEndpointLogStreamingConfigWithResponse(
 		ctx,
@@ -315,10 +327,16 @@ func (l *LoggingConfig) getLoggingConfig(ctx context.Context, organizationId, pr
 
 func (l *LoggingConfig) getLogStreamingStatus(ctx context.Context, organizationId, projectId, clusterId, appServiceId string) (*api.GetLogStreamingResponseConfigState, error) {
 
-	organizationUUID, projectUUID, clusterUUID, appServiceUUID, err := utils.ParseHierarchyUUIDs(organizationId, projectId, clusterId, appServiceId)
+	uuids, err := utils.ParseUUIDs(
+		utils.IDField{"organization_id", organizationId},
+		utils.IDField{"project_id", projectId},
+		utils.IDField{"cluster_id", clusterId},
+		utils.IDField{"app_service_id", appServiceId},
+	)
 	if err != nil {
 		return nil, err
 	}
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID := uuids[0], uuids[1], uuids[2], uuids[3]
 
 	getLogStreamingStatusResp, err := l.ClientV2.GetAppServiceLogStreamingWithResponse(
 		ctx,

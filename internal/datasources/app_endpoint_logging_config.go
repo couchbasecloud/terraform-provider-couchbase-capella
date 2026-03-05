@@ -54,7 +54,12 @@ func (l *LoggingConfig) Read(ctx context.Context, req datasource.ReadRequest, re
 		appEndpointName = state.AppEndpointName.ValueString()
 	)
 
-	organizationUUID, projectUUID, clusterUUID, appServiceUUID, err := utils.ParseHierarchyUUIDs(organizationId, projectId, clusterId, appServiceId)
+	uuids, err := utils.ParseUUIDs(
+		utils.IDField{"organization_id", organizationId},
+		utils.IDField{"project_id", projectId},
+		utils.IDField{"cluster_id", clusterId},
+		utils.IDField{"app_service_id", appServiceId},
+	)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Parsing IDs",
@@ -62,6 +67,7 @@ func (l *LoggingConfig) Read(ctx context.Context, req datasource.ReadRequest, re
 		)
 		return
 	}
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID := uuids[0], uuids[1], uuids[2], uuids[3]
 
 	getLoggingConfigResp, err := l.ClientV2.GetAppEndpointLogStreamingConfigWithResponse(
 		ctx,

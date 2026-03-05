@@ -152,10 +152,16 @@ func TestAccAppServiceLogStreamingMissingCredentials(t *testing.T) {
 func testAccCheckAppServiceLogStreamingDestroy(_ *terraform.State) error {
 	data := newTestClient()
 
-	orgUUID, projUUID, clusterUUID, appServiceUUID, err := utils.ParseHierarchyUUIDs(globalOrgId, globalProjectId, globalClusterId, globalAppServiceId)
+	uuids, err := utils.ParseUUIDs(
+		utils.IDField{"organization_id", globalOrgId},
+		utils.IDField{"project_id", globalProjectId},
+		utils.IDField{"cluster_id", globalClusterId},
+		utils.IDField{"app_service_id", globalAppServiceId},
+	)
 	if err != nil {
 		return fmt.Errorf("failed to parse resource IDs: %w", err)
 	}
+	orgUUID, projUUID, clusterUUID, appServiceUUID := uuids[0], uuids[1], uuids[2], uuids[3]
 
 	response, err := data.ClientV2.GetAppServiceLogStreamingWithResponse(
 		context.Background(),

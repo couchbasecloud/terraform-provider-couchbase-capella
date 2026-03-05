@@ -49,47 +49,157 @@ func assertInvalidUUID(t *testing.T, fieldName, value string) {
 	}
 }
 
-func TestParseHierarchyUUIDs(t *testing.T) {
+func TestParseUUIDs(t *testing.T) {
 	newID := func() string { return uuid.New().String() }
 
-	t.Run("all valid IDs parse successfully", func(t *testing.T) {
-		orgID, projID, clusterID, appSvcID := newID(), newID(), newID(), newID()
-		orgUUID, projUUID, clusterUUID, appSvcUUID, err := ParseHierarchyUUIDs(orgID, projID, clusterID, appSvcID)
+	t.Run("three IDs (no app_service_id) parse successfully", func(t *testing.T) {
+		orgID, projID, clusterID := newID(), newID(), newID()
+		uuids, err := ParseUUIDs(
+			IDField{"organization_id", orgID},
+			IDField{"project_id", projID},
+			IDField{"cluster_id", clusterID},
+		)
 		if err != nil {
 			t.Fatalf("expected no error, got: %v", err)
 		}
-		if orgUUID.String() != orgID {
-			t.Errorf("organization_id mismatch: want %s, got %s", orgID, orgUUID)
+		if len(uuids) != 3 {
+			t.Fatalf("expected 3 UUIDs, got %d", len(uuids))
 		}
-		if projUUID.String() != projID {
-			t.Errorf("project_id mismatch: want %s, got %s", projID, projUUID)
+		if uuids[0].String() != orgID {
+			t.Errorf("organization_id mismatch: want %s, got %s", orgID, uuids[0])
 		}
-		if clusterUUID.String() != clusterID {
-			t.Errorf("cluster_id mismatch: want %s, got %s", clusterID, clusterUUID)
+		if uuids[1].String() != projID {
+			t.Errorf("project_id mismatch: want %s, got %s", projID, uuids[1])
 		}
-		if appSvcUUID.String() != appSvcID {
-			t.Errorf("app_service_id mismatch: want %s, got %s", appSvcID, appSvcUUID)
+		if uuids[2].String() != clusterID {
+			t.Errorf("cluster_id mismatch: want %s, got %s", clusterID, uuids[2])
+		}
+	})
+
+	t.Run("four IDs (with app_service_id) parse successfully", func(t *testing.T) {
+		orgID, projID, clusterID, appSvcID := newID(), newID(), newID(), newID()
+		uuids, err := ParseUUIDs(
+			IDField{"organization_id", orgID},
+			IDField{"project_id", projID},
+			IDField{"cluster_id", clusterID},
+			IDField{"app_service_id", appSvcID},
+		)
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if len(uuids) != 4 {
+			t.Fatalf("expected 4 UUIDs, got %d", len(uuids))
+		}
+		if uuids[3].String() != appSvcID {
+			t.Errorf("app_service_id mismatch: want %s, got %s", appSvcID, uuids[3])
+		}
+	})
+
+	t.Run("zero fields returns empty slice without error", func(t *testing.T) {
+		uuids, err := ParseUUIDs()
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if len(uuids) != 0 {
+			t.Errorf("expected empty slice, got %v", uuids)
 		}
 	})
 
 	validID := newID()
 	invalidCases := []struct {
 		name           string
-		orgID          string
-		projID         string
-		clusterID      string
-		appSvcID       string
+		fields         []IDField
 		wantFieldInErr string
 	}{
-		{"invalid organization_id", "bad", validID, validID, validID, "organization_id"},
-		{"invalid project_id", validID, "bad", validID, validID, "project_id"},
-		{"invalid cluster_id", validID, validID, "bad", validID, "cluster_id"},
-		{"invalid app_service_id", validID, validID, validID, "bad", "app_service_id"},
+		{
+			"invalid organization_id stops early",
+			[]IDField{{"organization_id", "bad"}, {"project_id", validID}, {"cluster_id", validID}},
+			"organization_id",
+		},
+		{
+			"invalid second field returns correct field name",
+			[]IDField{{"organization_id", validID}, {"project_id", "bad"}, {"cluster_id", validID}},
+			"project_id",
+		},
+		{
+			"invalid last field returns correct field name",
+			[]IDField{{"organization_id", validID}, {"project_id", validID}, {"cluster_id", "bad"}},
+			"cluster_id",
+		},
 	}
 	for _, tc := range invalidCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, err := ParseHierarchyUUIDs(tc.orgID, tc.projID, tc.clusterID, tc.appSvcID)
+			_, err := ParseUUIDs(tc.fields...)
+			if err == nil {
+				t.Fatal("expected an error, got nil")
+			}
+			if !strings.Contains(err.Error(), tc.wantFieldInErr) {
+				t.Errorf("expected error to contain %q, got: %v", tc.wantFieldInErr, err)
+			}
+		})
+	}
+}
+
+func TestParseUUIDs_HierarchyCoverage(t *testing.T) {
+	newID := func() string { return uuid.New().String() }
+
+	t.Run("all valid hierarchy IDs parse successfully", func(t *testing.T) {
+		orgID, projID, clusterID, appSvcID := newID(), newID(), newID(), newID()
+		uuids, err := ParseUUIDs(
+			IDField{"organization_id", orgID},
+			IDField{"project_id", projID},
+			IDField{"cluster_id", clusterID},
+			IDField{"app_service_id", appSvcID},
+		)
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if uuids[0].String() != orgID {
+			t.Errorf("organization_id mismatch: want %s, got %s", orgID, uuids[0])
+		}
+		if uuids[1].String() != projID {
+			t.Errorf("project_id mismatch: want %s, got %s", projID, uuids[1])
+		}
+		if uuids[2].String() != clusterID {
+			t.Errorf("cluster_id mismatch: want %s, got %s", clusterID, uuids[2])
+		}
+		if uuids[3].String() != appSvcID {
+			t.Errorf("app_service_id mismatch: want %s, got %s", appSvcID, uuids[3])
+		}
+	})
+
+	validID := newID()
+	invalidCases := []struct {
+		name           string
+		fields         []IDField
+		wantFieldInErr string
+	}{
+		{
+			"invalid organization_id",
+			[]IDField{{"organization_id", "bad"}, {"project_id", validID}, {"cluster_id", validID}, {"app_service_id", validID}},
+			"organization_id",
+		},
+		{
+			"invalid project_id",
+			[]IDField{{"organization_id", validID}, {"project_id", "bad"}, {"cluster_id", validID}, {"app_service_id", validID}},
+			"project_id",
+		},
+		{
+			"invalid cluster_id",
+			[]IDField{{"organization_id", validID}, {"project_id", validID}, {"cluster_id", "bad"}, {"app_service_id", validID}},
+			"cluster_id",
+		},
+		{
+			"invalid app_service_id",
+			[]IDField{{"organization_id", validID}, {"project_id", validID}, {"cluster_id", validID}, {"app_service_id", "bad"}},
+			"app_service_id",
+		},
+	}
+	for _, tc := range invalidCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := ParseUUIDs(tc.fields...)
 			if err == nil {
 				t.Fatal("expected an error, got nil")
 			}

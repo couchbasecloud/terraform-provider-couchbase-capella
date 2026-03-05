@@ -227,10 +227,16 @@ func (a *AppEndpointResync) Configure(
 // startResync triggers an App Endpoint Resync
 func (a *AppEndpointResync) startResync(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string, scopes map[string][]string) error {
 
-	organizationUUID, projectUUID, clusterUUID, appServiceUUID, err := utils.ParseHierarchyUUIDs(organizationId, projectId, clusterId, appServiceId)
+	uuids, err := utils.ParseUUIDs(
+		utils.IDField{"organization_id", organizationId},
+		utils.IDField{"project_id", projectId},
+		utils.IDField{"cluster_id", clusterId},
+		utils.IDField{"app_service_id", appServiceId},
+	)
 	if err != nil {
 		return err
 	}
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID := uuids[0], uuids[1], uuids[2], uuids[3]
 
 	convertedScopes := make(map[string]api.ResyncScopes)
 	for name, scope := range scopes {
@@ -268,10 +274,16 @@ func (a *AppEndpointResync) startResync(ctx context.Context, organizationId, pro
 // getResyncStatus reads the current App Endpoint Resync status
 func (a *AppEndpointResync) getResyncStatus(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string) (*api.ResyncStatus, error) {
 
-	organizationUUID, projectUUID, clusterUUID, appServiceUUID, err := utils.ParseHierarchyUUIDs(organizationId, projectId, clusterId, appServiceId)
+	uuids, err := utils.ParseUUIDs(
+		utils.IDField{"organization_id", organizationId},
+		utils.IDField{"project_id", projectId},
+		utils.IDField{"cluster_id", clusterId},
+		utils.IDField{"app_service_id", appServiceId},
+	)
 	if err != nil {
 		return nil, err
 	}
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID := uuids[0], uuids[1], uuids[2], uuids[3]
 
 	getResyncStatusResp, err := a.ClientV2.GetAppEndpointResyncWithResponse(ctx, organizationUUID, projectUUID, clusterUUID, appServiceUUID, appEndpointName)
 	if err != nil {
@@ -303,10 +315,16 @@ func (a *AppEndpointResync) getResyncStatus(ctx context.Context, organizationId,
 // stopResync stops a running App Endpoint Resync
 func (a *AppEndpointResync) stopResync(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string) error {
 
-	organizationUUID, projectUUID, clusterUUID, appServiceUUID, err := utils.ParseHierarchyUUIDs(organizationId, projectId, clusterId, appServiceId)
+	uuids, err := utils.ParseUUIDs(
+		utils.IDField{"organization_id", organizationId},
+		utils.IDField{"project_id", projectId},
+		utils.IDField{"cluster_id", clusterId},
+		utils.IDField{"app_service_id", appServiceId},
+	)
 	if err != nil {
 		return err
 	}
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID := uuids[0], uuids[1], uuids[2], uuids[3]
 
 	deleteResyncResp, err := a.ClientV2.DeleteAppEndpointResyncWithResponse(ctx, organizationUUID, projectUUID, clusterUUID, appServiceUUID, appEndpointName)
 	if err != nil {
