@@ -4,7 +4,7 @@ This example shows how to control the activation status of App Services Log Stre
 
 This controls whether Log Streaming is paused or enabled (resume Log Streaming if it is paused) for a Capella App Service. Log Streaming must have already been set up on the App Service for this resource to be used to control the activation status. It uses the organization ID, project ID, cluster ID and App Service ID to do so.
 
-To run, configure your Couchbase Capella provider as described in README in the root of this project.
+To run, configure your Couchbase Capella provider as described in the README in the root of this project.
 
 # Example Walkthrough
 
@@ -18,7 +18,7 @@ In this example, we are going to do the following.
 If you check the `terraform.template.tfvars` file - Make sure you copy the file to `terraform.tfvars` and update the values of the variables as per the correct organization access.
 
 ## CREATE
-This will create the App Service Log Streaming activation status resource in Terraform. If the `state` provided matches the actual state of the log streaming config state in Capella, then there will be no changes to be made and the resource will be added (similar to an import). However, if the `state` provided does not match the state, then Terraform will pause or enable log streaming depend on the `state` provided in Terraform.
+Create the App Service Log Streaming activation status resource in Terraform. If the `state` provided matches the actual state of the log streaming config state in Capella, no changes are needed and the resource will be added (similar to an import). If the `state` provided does not match the actual state, Terraform will pause or enable log streaming depending on the `state` provided in Terraform.
 
 ### View the plan for the resources that Terraform will create
 
