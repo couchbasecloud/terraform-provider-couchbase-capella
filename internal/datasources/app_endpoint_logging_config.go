@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/utils"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -54,7 +55,14 @@ func (l *LoggingConfig) Read(ctx context.Context, req datasource.ReadRequest, re
 		appEndpointName = state.AppEndpointName.ValueString()
 	)
 
-	organizationUUID, projectUUID, clusterUUID, appServiceUUID := l.mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId)
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID, err := l.mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Parsing IDs",
+			fmt.Sprintf("Could not parse resource IDs: %s", err.Error()),
+		)
+		return
+	}
 
 	getLoggingConfigResp, err := l.ClientV2.GetAppEndpointLogStreamingConfigWithResponse(
 		ctx,
@@ -119,11 +127,23 @@ func (l *LoggingConfig) Configure(_ context.Context, req datasource.ConfigureReq
 	l.Data = data
 }
 
-func (l *LoggingConfig) mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId string) (organizationUUID, projectUUID, clusterUUID, appServiceUUID uuid.UUID) {
-	organizationUUID, _ = uuid.Parse(organizationId)
-	projectUUID, _ = uuid.Parse(projectId)
-	clusterUUID, _ = uuid.Parse(clusterId)
-	appServiceUUID, _ = uuid.Parse(appServiceId)
+func (l *LoggingConfig) mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId string) (organizationUUID, projectUUID, clusterUUID, appServiceUUID uuid.UUID, err error) {
+	organizationUUID, err = utils.ParseUUID("organization_id", organizationId)
+	if err != nil {
+		return uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, err
+	}
+	projectUUID, err = utils.ParseUUID("project_id", projectId)
+	if err != nil {
+		return uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, err
+	}
+	clusterUUID, err = utils.ParseUUID("cluster_id", clusterId)
+	if err != nil {
+		return uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, err
+	}
+	appServiceUUID, err = utils.ParseUUID("app_service_id", appServiceId)
+	if err != nil {
+		return uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, err
+	}
 
-	return organizationUUID, projectUUID, clusterUUID, appServiceUUID
+	return organizationUUID, projectUUID, clusterUUID, appServiceUUID, nil
 }
