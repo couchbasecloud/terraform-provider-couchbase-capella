@@ -134,5 +134,14 @@ func (d *AppServiceLogStreaming) Read(ctx context.Context, req datasource.ReadRe
 
 // parseUUIDs parses the string IDs into UUID types for the generated API client.
 func (d *AppServiceLogStreaming) parseUUIDs(organizationId, projectId, clusterId, appServiceId string) (uuid.UUID, uuid.UUID, uuid.UUID, uuid.UUID, error) {
-	return utils.ParseHierarchyUUIDs(organizationId, projectId, clusterId, appServiceId)
+	uuids, err := utils.ParseUUIDs(
+		utils.IDField{"organization_id", organizationId},
+		utils.IDField{"project_id", projectId},
+		utils.IDField{"cluster_id", clusterId},
+		utils.IDField{"app_service_id", appServiceId},
+	)
+	if err != nil {
+		return uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, err
+	}
+	return uuids[0], uuids[1], uuids[2], uuids[3], nil
 }

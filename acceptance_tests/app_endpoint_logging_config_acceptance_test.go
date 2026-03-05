@@ -176,10 +176,16 @@ func retrieveAppEndpointLoggingConfigFromServer(data *providerschema.Data, organ
 
 	ctx := context.Background()
 
-	organizationUUID, projectUUID, clusterUUID, appServiceUUID, err := utils.ParseHierarchyUUIDs(organizationId, projectId, clusterId, appServiceId)
+	uuids, err := utils.ParseUUIDs(
+		utils.IDField{"organization_id", organizationId},
+		utils.IDField{"project_id", projectId},
+		utils.IDField{"cluster_id", clusterId},
+		utils.IDField{"app_service_id", appServiceId},
+	)
 	if err != nil {
 		return fmt.Errorf("failed to parse resource IDs: %w", err)
 	}
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID := uuids[0], uuids[1], uuids[2], uuids[3]
 
 	getLoggingConfigResp, err := data.ClientV2.GetAppEndpointLogStreamingConfigWithResponse(
 		ctx,
