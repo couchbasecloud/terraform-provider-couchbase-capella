@@ -15,6 +15,7 @@ import (
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/utils"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -227,7 +228,10 @@ func (a *AppEndpointResync) Configure(
 // startResync triggers an App Endpoint Resync
 func (a *AppEndpointResync) startResync(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string, scopes map[string][]string) error {
 
-	organizationUUID, projectUUID, clusterUUID, appServiceUUID := a.mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId)
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID, err := a.mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId)
+	if err != nil {
+		return err
+	}
 
 	convertedScopes := make(map[string]api.ResyncScopes)
 	for name, scope := range scopes {
@@ -265,7 +269,10 @@ func (a *AppEndpointResync) startResync(ctx context.Context, organizationId, pro
 // getResyncStatus reads the current App Endpoint Resync status
 func (a *AppEndpointResync) getResyncStatus(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string) (*api.ResyncStatus, error) {
 
-	organizationUUID, projectUUID, clusterUUID, appServiceUUID := a.mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId)
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID, err := a.mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId)
+	if err != nil {
+		return nil, err
+	}
 
 	getResyncStatusResp, err := a.ClientV2.GetAppEndpointResyncWithResponse(ctx, organizationUUID, projectUUID, clusterUUID, appServiceUUID, appEndpointName)
 	if err != nil {
@@ -297,7 +304,10 @@ func (a *AppEndpointResync) getResyncStatus(ctx context.Context, organizationId,
 // stopResync stops a running App Endpoint Resync
 func (a *AppEndpointResync) stopResync(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string) error {
 
-	organizationUUID, projectUUID, clusterUUID, appServiceUUID := a.mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId)
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID, err := a.mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId)
+	if err != nil {
+		return err
+	}
 
 	deleteResyncResp, err := a.ClientV2.DeleteAppEndpointResyncWithResponse(ctx, organizationUUID, projectUUID, clusterUUID, appServiceUUID, appEndpointName)
 	if err != nil {
@@ -354,11 +364,6 @@ func (a *AppEndpointResync) mapResponseToState(
 	return state, nil
 }
 
-func (a *AppEndpointResync) mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId string) (organizationUUID, projectUUID, clusterUUID, appServiceUUID uuid.UUID) {
-	organizationUUID, _ = uuid.Parse(organizationId)
-	projectUUID, _ = uuid.Parse(projectId)
-	clusterUUID, _ = uuid.Parse(clusterId)
-	appServiceUUID, _ = uuid.Parse(appServiceId)
-
-	return organizationUUID, projectUUID, clusterUUID, appServiceUUID
+func (a *AppEndpointResync) mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId string) (organizationUUID, projectUUID, clusterUUID, appServiceUUID uuid.UUID, err error) {
+	return utils.ParseHierarchyUUIDs(organizationId, projectId, clusterId, appServiceId)
 }

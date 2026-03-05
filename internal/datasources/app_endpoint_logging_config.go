@@ -128,22 +128,5 @@ func (l *LoggingConfig) Configure(_ context.Context, req datasource.ConfigureReq
 }
 
 func (l *LoggingConfig) mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId string) (organizationUUID, projectUUID, clusterUUID, appServiceUUID uuid.UUID, err error) {
-	organizationUUID, err = utils.ParseUUID("organization_id", organizationId)
-	if err != nil {
-		return uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, err
-	}
-	projectUUID, err = utils.ParseUUID("project_id", projectId)
-	if err != nil {
-		return uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, err
-	}
-	clusterUUID, err = utils.ParseUUID("cluster_id", clusterId)
-	if err != nil {
-		return uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, err
-	}
-	appServiceUUID, err = utils.ParseUUID("app_service_id", appServiceId)
-	if err != nil {
-		return uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, err
-	}
-
-	return organizationUUID, projectUUID, clusterUUID, appServiceUUID, nil
+	return utils.ParseHierarchyUUIDs(organizationId, projectId, clusterId, appServiceId)
 }

@@ -8,11 +8,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/utils"
 )
 
 // testAccAppEndpointLoggingConfigResource provides the steps to test the full lifecycle
@@ -176,10 +176,10 @@ func retrieveAppEndpointLoggingConfigFromServer(data *providerschema.Data, organ
 
 	ctx := context.Background()
 
-	organizationUUID, _ := uuid.Parse(organizationId)
-	projectUUID, _ := uuid.Parse(projectId)
-	clusterUUID, _ := uuid.Parse(clusterId)
-	appServiceUUID, _ := uuid.Parse(appServiceId)
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID, err := utils.ParseHierarchyUUIDs(organizationId, projectId, clusterId, appServiceId)
+	if err != nil {
+		return fmt.Errorf("failed to parse resource IDs: %w", err)
+	}
 
 	getLoggingConfigResp, err := data.ClientV2.GetAppEndpointLogStreamingConfigWithResponse(
 		ctx,
