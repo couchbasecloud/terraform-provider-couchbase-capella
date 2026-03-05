@@ -14,20 +14,21 @@ In this demo, we will perform the following operations:
 10. Create a new sample bucket in the cluster.
 11. Create a new App Service in the cluster.
 12. Set up log streaming on the App Service.
-13. Create an app endpoint in the created App Service.
-14. Configure an access control function in the app endpoint.
-15. Configure an import filter in the app endpoint.
-16. Configure an OIDC provider on the app endpoint.
-17. Configure a CORS policy on the app endpoint.
-18. Configure a logging config on the app endpoint.
-19. Change the app endpoint's activation status.
-20. Create a new scope in the bucket of the cluster.
-21. Create a new collection in the scope of a bucket.
-22. Create a new on/off schedule for the cluster.
-23. Create a new audit log settings.
-24. Enable private endpoint service on the cluster.
-25. Create a new network peer.
-26. Create an non-deferred secondary index.
+13. Change the activation status for App Service Log Streaming.
+14. Create an app endpoint in the created App Service.
+15. Configure an access control function in the app endpoint.
+16. Configure an import filter in the app endpoint.
+17. Configure an OIDC provider on the app endpoint.
+18. Configure a CORS policy on the app endpoint.
+19. Configure a logging config on the app endpoint.
+20. Change the app endpoint's activation status.
+21. Create a new scope in the bucket of the cluster.
+22. Create a new collection in the scope of a bucket.
+23. Create a new on/off schedule for the cluster.
+24. Create a new audit log settings.
+25. Enable private endpoint service on the cluster.
+26. Create a new network peer.
+27. Create an non-deferred secondary index.
 
 ## Pre-Requisites:
 
@@ -332,6 +333,15 @@ Terraform will perform the following actions:
       + output_type     = "generic_http"
       + project_id      = (known after apply)
       + streaming_state = (known after apply)
+    }
+    
+  # couchbase-capella_app_service_log_streaming_activation_status.app_service_log_streaming_activation_status will be created
+  + resource "couchbase-capella_app_service_log_streaming_activation_status" "app_service_log_streaming_activation_status" {
+      + app_service_id  = (known after apply)
+      + cluster_id      = (known after apply)
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = (known after apply)
+      + state           = "enabled"
     }
 
   # couchbase-capella_app_services_cidr.new_allowed_cidr will be created
@@ -1397,6 +1407,15 @@ Terraform will perform the following actions:
       + log_level         = "info"
       + organization_id   = "ffffffff-aaaa-1414-eeee-000000000000"
       + project_id        = (known after apply)
+    }
+    
+  # couchbase-capella_app_service_log_streaming_activation_status.app_service_log_streaming_activation_status will be created
+  + resource "couchbase-capella_app_service_log_streaming_activation_status" "app_service_log_streaming_activation_status" {
+      + app_service_id  = (known after apply)
+      + cluster_id      = (known after apply)
+      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id      = (known after apply)
+      + state           = "enabled"
     }
 
   # couchbase-capella_app_endpoint_oidc_provider.oidc1 will be created
@@ -3481,6 +3500,15 @@ Terraform will perform the following actions:
       - organization_id = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - project_id      = "ffffffff-aaaa-1414-eeee-000000000000" -> null
       - version         = "3.3.0-1.0.1" -> null
+    }
+    
+  # couchbase-capella_app_service_log_streaming_activation_status.app_service_log_streaming_activation_status will be destroyed
+  - resource "couchbase-capella_app_service_log_streaming_activation_status" "app_service_log_streaming_activation_status" {
+      - app_service_id  = "9a34f4a3-b05e-4e6e-a249-c472f9f915dd" -> null
+      - cluster_id      = "669cb38a-ea74-42df-94fe-bdca9d332e1c" -> null
+      - organization_id = "a16247ef-8356-4a09-9edb-7fd2507a2881" -> null
+      - project_id      = "e5dbe56f-43bb-482b-a161-80bb7430dbbd" -> null
+      - state           = "enabled" -> null
     }
 
   # couchbase-capella_bucket.new_bucket will be destroyed

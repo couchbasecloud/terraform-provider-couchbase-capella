@@ -320,6 +320,13 @@ variable "app_service_log_streaming" {
   })
 }
 
+variable "app_service_log_streaming_activation_status" {
+  description = "App Service Log Streaming Activation Status Config"
+  type = object({
+    state = string
+  })
+}
+
 variable "app_endpoint_log_streaming_config" {
   description = "App Endpoint Logging Config"
   type = object({

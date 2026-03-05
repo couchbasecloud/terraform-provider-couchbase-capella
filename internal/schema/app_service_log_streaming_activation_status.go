@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -26,6 +27,23 @@ type AppServiceLogStreamingActivationStatus struct {
 
 	// State is the activation state of log streaming: "paused" or "enabled".
 	State types.String `tfsdk:"state"`
+}
+
+// NewAppServiceLogStreamingActivationStatus creates a new AppServiceLogStreamingActivationStatus
+// with properly populated ID fields and the given config state. This ensures that after an import,
+// the individual ID fields are correctly set in the Terraform state rather than remaining as the
+// raw composite import string.
+func NewAppServiceLogStreamingActivationStatus(
+	organizationId, projectId, clusterId, appServiceId string,
+	state apigen.GetLogStreamingResponseConfigState,
+) *AppServiceLogStreamingActivationStatus {
+	return &AppServiceLogStreamingActivationStatus{
+		OrganizationId: types.StringValue(organizationId),
+		ProjectId:      types.StringValue(projectId),
+		ClusterId:      types.StringValue(clusterId),
+		AppServiceId:   types.StringValue(appServiceId),
+		State:          types.StringValue(string(state)),
+	}
 }
 
 // Validate validates the resource state and returns parsed IDs.
