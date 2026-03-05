@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -228,7 +227,7 @@ func (a *AppEndpointResync) Configure(
 // startResync triggers an App Endpoint Resync
 func (a *AppEndpointResync) startResync(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string, scopes map[string][]string) error {
 
-	organizationUUID, projectUUID, clusterUUID, appServiceUUID, err := a.mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId)
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID, err := utils.ParseHierarchyUUIDs(organizationId, projectId, clusterId, appServiceId)
 	if err != nil {
 		return err
 	}
@@ -269,7 +268,7 @@ func (a *AppEndpointResync) startResync(ctx context.Context, organizationId, pro
 // getResyncStatus reads the current App Endpoint Resync status
 func (a *AppEndpointResync) getResyncStatus(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string) (*api.ResyncStatus, error) {
 
-	organizationUUID, projectUUID, clusterUUID, appServiceUUID, err := a.mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId)
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID, err := utils.ParseHierarchyUUIDs(organizationId, projectId, clusterId, appServiceId)
 	if err != nil {
 		return nil, err
 	}
@@ -304,7 +303,7 @@ func (a *AppEndpointResync) getResyncStatus(ctx context.Context, organizationId,
 // stopResync stops a running App Endpoint Resync
 func (a *AppEndpointResync) stopResync(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string) error {
 
-	organizationUUID, projectUUID, clusterUUID, appServiceUUID, err := a.mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId)
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID, err := utils.ParseHierarchyUUIDs(organizationId, projectId, clusterId, appServiceId)
 	if err != nil {
 		return err
 	}
@@ -358,8 +357,4 @@ func (a *AppEndpointResync) mapResponseToState(
 	}
 
 	return state, nil
-}
-
-func (a *AppEndpointResync) mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId string) (organizationUUID, projectUUID, clusterUUID, appServiceUUID uuid.UUID, err error) {
-	return utils.ParseHierarchyUUIDs(organizationId, projectId, clusterId, appServiceId)
 }
