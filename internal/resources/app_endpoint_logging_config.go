@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -233,7 +232,7 @@ func (l *LoggingConfig) Configure(ctx context.Context, req resource.ConfigureReq
 // upsertLoggingConfig creates or updates a Logging Config for an App Endpoint.
 func (l *LoggingConfig) upsertLoggingConfig(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string, plan providerschema.LoggingConfig) error {
 
-	organizationUUID, projectUUID, clusterUUID, appServiceUUID, err := l.parseUUIDs(organizationId, projectId, clusterId, appServiceId)
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID, err := utils.ParseHierarchyUUIDs(organizationId, projectId, clusterId, appServiceId)
 	if err != nil {
 		return err
 	}
@@ -275,7 +274,7 @@ func (l *LoggingConfig) upsertLoggingConfig(ctx context.Context, organizationId,
 // getLoggingConfig retrieves the Logging Config for an App Endpoint.
 func (l *LoggingConfig) getLoggingConfig(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string) (*api.ConsoleLoggingConfig, error) {
 
-	organizationUUID, projectUUID, clusterUUID, appServiceUUID, err := l.parseUUIDs(organizationId, projectId, clusterId, appServiceId)
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID, err := utils.ParseHierarchyUUIDs(organizationId, projectId, clusterId, appServiceId)
 	if err != nil {
 		return nil, err
 	}
@@ -316,7 +315,7 @@ func (l *LoggingConfig) getLoggingConfig(ctx context.Context, organizationId, pr
 
 func (l *LoggingConfig) getLogStreamingStatus(ctx context.Context, organizationId, projectId, clusterId, appServiceId string) (*api.GetLogStreamingResponseConfigState, error) {
 
-	organizationUUID, projectUUID, clusterUUID, appServiceUUID, err := l.parseUUIDs(organizationId, projectId, clusterId, appServiceId)
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID, err := utils.ParseHierarchyUUIDs(organizationId, projectId, clusterId, appServiceId)
 	if err != nil {
 		return nil, err
 	}
@@ -350,8 +349,4 @@ func (l *LoggingConfig) getLogStreamingStatus(ctx context.Context, organizationI
 	}
 
 	return getLogStreamingStatusResp.JSON200.ConfigState, nil
-}
-
-func (l *LoggingConfig) parseUUIDs(organizationId, projectId, clusterId, appServiceId string) (organizationUUID, projectUUID, clusterUUID, appServiceUUID uuid.UUID, err error) {
-	return utils.ParseHierarchyUUIDs(organizationId, projectId, clusterId, appServiceId)
 }

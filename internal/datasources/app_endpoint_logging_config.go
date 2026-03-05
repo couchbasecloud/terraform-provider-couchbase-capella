@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -55,7 +54,7 @@ func (l *LoggingConfig) Read(ctx context.Context, req datasource.ReadRequest, re
 		appEndpointName = state.AppEndpointName.ValueString()
 	)
 
-	organizationUUID, projectUUID, clusterUUID, appServiceUUID, err := l.mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId)
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID, err := utils.ParseHierarchyUUIDs(organizationId, projectId, clusterId, appServiceId)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Parsing IDs",
@@ -125,8 +124,4 @@ func (l *LoggingConfig) Configure(_ context.Context, req datasource.ConfigureReq
 		return
 	}
 	l.Data = data
-}
-
-func (l *LoggingConfig) mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId string) (organizationUUID, projectUUID, clusterUUID, appServiceUUID uuid.UUID, err error) {
-	return utils.ParseHierarchyUUIDs(organizationId, projectId, clusterId, appServiceId)
 }

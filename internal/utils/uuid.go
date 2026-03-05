@@ -20,9 +20,7 @@ func ParseUUID(fieldName, value string) (uuid.UUID, error) {
 // ParseHierarchyUUIDs parses the four standard resource-hierarchy ID strings
 // (organization, project, cluster, appService) into UUID values in a single call.
 // It returns the first parse error encountered, with the field name included in
-// the error message, making it a drop-in replacement for the repeated
-// parseUUIDs / mapIDsToUUIDs helper methods that were duplicated across
-// several resources and datasources.
+// the error message for easier debugging.
 func ParseHierarchyUUIDs(organizationId, projectId, clusterId, appServiceId string) (orgUUID, projectUUID, clusterUUID, appServiceUUID uuid.UUID, err error) {
 	if orgUUID, err = ParseUUID("organization_id", organizationId); err != nil {
 		return uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, err
