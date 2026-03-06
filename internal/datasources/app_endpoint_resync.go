@@ -2,14 +2,13 @@ package datasources
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
@@ -19,29 +18,29 @@ var (
 	_ datasource.DataSourceWithConfigure = &AppEndpointResync{}
 )
 
-// Collections is the collections data source implementation.
+// AppEndpointResync is the AppEndpointResync data source implementation.
 type AppEndpointResync struct {
 	*providerschema.Data
 }
 
-// NewCollections is a helper function to simplify the provider implementation.
+// NewAppEndpointResync is a helper function to simplify the provider implementation.
 func NewAppEndpointResync() datasource.DataSource {
 	return &AppEndpointResync{}
 }
 
-// Metadata returns the collection data source type name.
+// Metadata returns the AppEndpointResync data source type name.
 func (a *AppEndpointResync) Metadata(
 	_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse,
 ) {
 	resp.TypeName = req.ProviderTypeName + "_app_endpoint_resync"
 }
 
-// Schema defines the schema for the collection data source.
+// Schema defines the schema for the AppEndpointResync data source.
 func (a *AppEndpointResync) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = AppEndpointResyncSchema()
 }
 
-// Read refreshes the Terraform state with the latest data of collections.
+// Read reads the Resync information for an App Endpoint.
 func (a *AppEndpointResync) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var config providerschema.AppEndpointResyncData
 	diags := req.Config.Get(ctx, &config)
@@ -50,39 +49,45 @@ func (a *AppEndpointResync) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	url := fmt.Sprintf(
-		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s/resync",
-		a.HostURL,
-		config.OrganizationId.ValueString(),
-		config.ProjectId.ValueString(),
-		config.ClusterId.ValueString(),
-		config.AppServiceId.ValueString(),
-		config.AppEndpoint.ValueString(),
+	var (
+		organizationId  = config.OrganizationId.ValueString()
+		projectId       = config.ProjectId.ValueString()
+		clusterId       = config.ClusterId.ValueString()
+		appServiceId    = config.AppServiceId.ValueString()
+		appEndpointName = config.AppEndpoint.ValueString()
 	)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
-	response, err := a.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		a.Token,
-		nil,
-	)
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID := a.mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId)
+
+	getResyncStatusResp, err := a.ClientV2.GetAppEndpointResyncWithResponse(ctx, organizationUUID, projectUUID, clusterUUID, appServiceUUID, appEndpointName)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella App Endpoint Resync",
-			fmt.Sprintf("Could not read resync status of app endpoint %s, unexpected error: %s", config.AppEndpoint.ValueString(), api.ParseError(err)),
+			fmt.Sprintf("Could not read the resync status of app endpoint %s, unexpected error: %s", appEndpointName, err.Error()),
 		)
+		tflog.Debug(ctx, "error getting App Endpoint Resync status", map[string]interface{}{
+			"organizationId":  organizationId,
+			"projectId":       projectId,
+			"clusterId":       clusterId,
+			"appServiceId":    appServiceId,
+			"appEndpointName": appEndpointName,
+			"err":             err.Error(),
+		})
 		return
 	}
 
-	var resyncResponse api.GetResyncResponse
-	if err = json.Unmarshal(response.Body, &resyncResponse); err != nil {
+	if getResyncStatusResp.JSON200 == nil {
 		resp.Diagnostics.AddError(
-			"Error parsing app endpoint resync response",
-			"error during unmarshalling: "+err.Error(),
+			"Unexpected Status Reading App Endpoint Resync",
+			"Could not read the resync status for app endpoint with name "+config.AppEndpoint.String()+", unexpected status: "+string(getResyncStatusResp.Body),
 		)
-		return
+		tflog.Debug(ctx, "unexpected status getting app endpoint resync status", map[string]interface{}{
+			"organizationId":  organizationId,
+			"projectId":       projectId,
+			"clusterId":       clusterId,
+			"appServiceId":    appServiceId,
+			"appEndpointName": appEndpointName,
+		})
 	}
 
 	state := &providerschema.AppEndpointResyncData{
@@ -91,18 +96,18 @@ func (a *AppEndpointResync) Read(ctx context.Context, req datasource.ReadRequest
 		ClusterId:      config.ClusterId,
 		AppServiceId:   config.AppServiceId,
 		AppEndpoint:    config.AppEndpoint,
-		DocsChanged:    types.Int64Value(resyncResponse.DocsChanged),
-		DocsProcessed:  types.Int64Value(resyncResponse.DocsProcessed),
-		LastError:      types.StringValue(resyncResponse.LastError),
-		StartTime:      types.StringValue(resyncResponse.StartTime.Format("2006-01-02T15:04:05Z")),
-		State:          types.StringValue(string(resyncResponse.State)),
+		DocsChanged:    types.Int64Value(int64(getResyncStatusResp.JSON200.DocsChanged)),
+		DocsProcessed:  types.Int64Value(int64(getResyncStatusResp.JSON200.DocsProcessed)),
+		LastError:      types.StringValue(getResyncStatusResp.JSON200.LastError),
+		StartTime:      types.StringValue(getResyncStatusResp.JSON200.StartTime.Format("2006-01-02T15:04:05Z")),
+		State:          types.StringValue(string(getResyncStatusResp.JSON200.State)),
 	}
 
-	if len(resyncResponse.CollectionsProcessing) > 0 {
+	if getResyncStatusResp.JSON200.CollectionsProcessing != nil && len(*getResyncStatusResp.JSON200.CollectionsProcessing) > 0 {
 		mapValue, diags := types.MapValueFrom(
 			ctx,
 			types.SetType{ElemType: types.StringType},
-			resyncResponse.CollectionsProcessing,
+			getResyncStatusResp.JSON200.CollectionsProcessing,
 		)
 		if diags.HasError() {
 			return
@@ -137,4 +142,13 @@ func (a *AppEndpointResync) Configure(
 	}
 
 	a.Data = data
+}
+
+func (a *AppEndpointResync) mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId string) (organizationUUID, projectUUID, clusterUUID, appServiceUUID uuid.UUID) {
+	organizationUUID, _ = uuid.Parse(organizationId)
+	projectUUID, _ = uuid.Parse(projectId)
+	clusterUUID, _ = uuid.Parse(clusterId)
+	appServiceUUID, _ = uuid.Parse(appServiceId)
+
+	return organizationUUID, projectUUID, clusterUUID, appServiceUUID
 }
