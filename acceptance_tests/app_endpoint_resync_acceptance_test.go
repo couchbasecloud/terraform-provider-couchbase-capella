@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
-	"testing"
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -14,9 +13,10 @@ import (
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-// TestAccAppEndpointResyncResource provides the steps to test the full lifecycle
+// testAccAppEndpointResyncResource provides the steps to test the full lifecycle
 // of the app_endpoint_resync_job resource: Create -> ImportState
-func TestAccAppEndpointResyncResource(t *testing.T) {
+// and that an error is returned if the scopes are invalid
+func testAccAppEndpointResyncResource() []resource.TestStep {
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_resync_job_")
 	resourceReference := "couchbase-capella_app_endpoint_resync_job." + resourceName
@@ -24,43 +24,40 @@ func TestAccAppEndpointResyncResource(t *testing.T) {
 	scopes := "{\n_default = [\"_default\"]\n}"
 	invalidScopes := "{\ntest = [\"test\"]\n}"
 
-	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
+	return []resource.TestStep{
 
-			// tests that an error is returned if the scopes are invalid
-			{
-				Config:      testAccAppEndpointResyncConfig(resourceName, invalidScopes),
-				ExpectError: regexp.MustCompile("Unexpected status while starting App Endpoint Resync"),
-			},
-
-			// Create and Read testing
-			{
-				Config: testAccAppEndpointResyncConfig(resourceName, scopes),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExistsAppEndpointResyncResource(resourceReference),
-					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
-					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
-					resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
-					resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", globalAppEndpointName),
-					resource.TestCheckResourceAttr(resourceReference, "scopes._default.0", "_default"),
-					resource.TestCheckResourceAttr(resourceReference, "last_error", ""),
-					resource.TestCheckResourceAttrSet(resourceReference, "docs_changed"),
-					resource.TestCheckResourceAttrSet(resourceReference, "docs_processed"),
-					resource.TestCheckResourceAttrSet(resourceReference, "start_time"),
-					resource.TestCheckResourceAttrSet(resourceReference, "state"),
-				),
-			},
-
-			// ImportState testing
-			{
-				ResourceName:      resourceReference,
-				ImportStateIdFunc: generateAppEndpointResyncImportIdForResource(resourceReference),
-				ImportState:       true,
-			},
+		// tests that an error is returned if the scopes are invalid
+		{
+			Config:      testAccAppEndpointResyncConfig(resourceName, invalidScopes),
+			ExpectError: regexp.MustCompile("Unexpected status while starting App Endpoint Resync"),
 		},
-	})
+
+		// Create and Read testing
+		{
+			Config: testAccAppEndpointResyncConfig(resourceName, scopes),
+			Check: resource.ComposeAggregateTestCheckFunc(
+				testAccExistsAppEndpointResyncResource(resourceReference),
+				resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
+				resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
+				resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
+				resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
+				resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", globalAppEndpointName),
+				resource.TestCheckResourceAttr(resourceReference, "scopes._default.0", "_default"),
+				resource.TestCheckResourceAttr(resourceReference, "last_error", ""),
+				resource.TestCheckResourceAttrSet(resourceReference, "docs_changed"),
+				resource.TestCheckResourceAttrSet(resourceReference, "docs_processed"),
+				resource.TestCheckResourceAttrSet(resourceReference, "start_time"),
+				resource.TestCheckResourceAttrSet(resourceReference, "state"),
+			),
+		},
+
+		// ImportState testing
+		{
+			ResourceName:      resourceReference,
+			ImportStateIdFunc: generateAppEndpointResyncImportIdForResource(resourceReference),
+			ImportState:       true,
+		},
+	}
 
 }
 
