@@ -99,3 +99,22 @@ func computedAudit() *schema.SingleNestedAttribute {
 		Attributes: auditAttrs,
 	}
 }
+
+// computedReplicationAudit returns a simpler audit schema for replication resources
+// that only have created_at and created_by fields.
+func computedReplicationAudit() *schema.SingleNestedAttribute {
+	tempBuilder := capellaschema.NewSchemaBuilder("audit")
+	auditAttrs := make(map[string]schema.Attribute)
+
+	capellaschema.AddAttr(auditAttrs, "created_at", tempBuilder, &schema.StringAttribute{
+		Computed: true,
+	}, "ReplicationAuditData")
+	capellaschema.AddAttr(auditAttrs, "created_by", tempBuilder, &schema.StringAttribute{
+		Computed: true,
+	}, "ReplicationAuditData")
+
+	return &schema.SingleNestedAttribute{
+		Computed:   true,
+		Attributes: auditAttrs,
+	}
+}
