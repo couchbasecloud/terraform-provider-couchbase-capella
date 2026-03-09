@@ -338,13 +338,17 @@ func (a *AppEndpointResync) mapResponseToState(
 		State:          types.StringValue(string(response.State)),
 	}
 
-	if len(*response.CollectionsProcessing) > 0 {
+	if response.CollectionsProcessing != nil && len(*response.CollectionsProcessing) > 0 {
 		mapValue, diags := types.MapValueFrom(ctx, types.SetType{ElemType: types.StringType}, response.CollectionsProcessing)
 		if diags.HasError() {
 			return nil, diags
 		}
 
 		state.CollectionsProcessing = mapValue
+	} else {
+		state.CollectionsProcessing = types.MapNull(types.SetType{
+			ElemType: types.StringType,
+		})
 	}
 
 	return state, nil

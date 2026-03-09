@@ -19,7 +19,7 @@ func AppEndpointResyncSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "app_endpoint_name", appEndpointResyncBuilder, stringAttribute([]string{required, requiresReplace}))
 
 	// Input field from ResyncRequest schema
-	capellaschema.AddAttr(attrs, "scopes", appEndpointResyncBuilder, mapAttribute(types.SetType{ElemType: types.StringType}, []string{optional}...))
+	capellaschema.AddAttr(attrs, "scopes", appEndpointResyncBuilder, mapAttribute(types.SetType{ElemType: types.StringType}, []string{optional, requiresReplace}...))
 
 	// Output fields from ResyncStatus schema
 	capellaschema.AddAttr(attrs, "collections_processing", appEndpointResyncBuilder, mapAttribute(types.SetType{ElemType: types.StringType}, []string{computed}...), "ResyncStatus")

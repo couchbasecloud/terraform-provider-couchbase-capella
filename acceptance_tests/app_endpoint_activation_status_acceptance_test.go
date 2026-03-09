@@ -8,43 +8,62 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
+// TestAccEndpointActivationStatus uses sequential subtests to ensure that resync tests
+// do not occur while the app endpoint is online.
 func TestAccAppEndpointActivationStatus(t *testing.T) {
+	// Allow this test to run in parallel with other top-level tests, but ensure that the subtests run sequentially
+	// This is normally set by resource.ParallelTest
+	t.Parallel()
+
+	t.Run("App Endpoint Activation Status", func(t *testing.T) {
+		resource.Test(t, resource.TestCase{
+			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+			Steps:                    testAccAppEndpointActivationStatus(),
+		})
+	})
+
+	t.Run("App Endpoint Resync", func(t *testing.T) {
+		resource.Test(t, resource.TestCase{
+			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+			Steps:                    testAccAppEndpointResyncResource(),
+		})
+	})
+}
+
+func testAccAppEndpointActivationStatus() []resource.TestStep {
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_activation_")
 	resourceReference := "couchbase-capella_app_endpoint_activation_status." + resourceName
 
 	// Use a stable endpoint name so we can import by name
 	endpointName := globalAppEndpointName
 
-	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			{
-				// Create endpoint and set state Online
-				Config: testAccAppEndpointActivationStatusConfig(resourceName, endpointName, "Online"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
-					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
-					resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
-					resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", endpointName),
-					resource.TestCheckResourceAttr(resourceReference, "state", "Online"),
-				),
-			},
-			{
-				// Update to Offline
-				Config: testAccAppEndpointActivationStatusConfig(resourceName, endpointName, "Offline"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "state", "Offline"),
-				),
-			},
-			{
-				// Import by composite ID (uses endpoint name, not an ID)
-				ResourceName:      resourceReference,
-				ImportStateIdFunc: generateAppEndpointActivationStatusImportId(resourceReference),
-				ImportState:       true,
-			},
+	return []resource.TestStep{
+		{
+			// Create endpoint and set state Online
+			Config: testAccAppEndpointActivationStatusConfig(resourceName, endpointName, "Online"),
+			Check: resource.ComposeAggregateTestCheckFunc(
+				resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
+				resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
+				resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
+				resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
+				resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", endpointName),
+				resource.TestCheckResourceAttr(resourceReference, "state", "Online"),
+			),
 		},
-	})
+		{
+			// Update to Offline
+			Config: testAccAppEndpointActivationStatusConfig(resourceName, endpointName, "Offline"),
+			Check: resource.ComposeAggregateTestCheckFunc(
+				resource.TestCheckResourceAttr(resourceReference, "state", "Offline"),
+			),
+		},
+		{
+			// Import by composite ID (uses endpoint name, not an ID)
+			ResourceName:      resourceReference,
+			ImportStateIdFunc: generateAppEndpointActivationStatusImportId(resourceReference),
+			ImportState:       true,
+		},
+	}
 }
 
 func testAccAppEndpointActivationStatusConfig(resourceName, endpointName, desiredState string) string {
