@@ -13,9 +13,9 @@ var privateEndpointServiceBuilder = capellaschema.NewSchemaBuilder("privateEndpo
 func PrivateEndpointServiceSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
-	capellaschema.AddAttr(attrs, "organization_id", privateEndpointServiceBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "project_id", privateEndpointServiceBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "cluster_id", privateEndpointServiceBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "organization_id", privateEndpointServiceBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "project_id", privateEndpointServiceBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "cluster_id", privateEndpointServiceBuilder, requiredUUIDStringAttribute())
 
 	capellaschema.AddAttr(attrs, "enabled", privateEndpointServiceBuilder, &schema.BoolAttribute{
 		Required:      true,

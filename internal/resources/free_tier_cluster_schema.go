@@ -16,8 +16,8 @@ func FreeTierClusterSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
 	capellaschema.AddAttr(attrs, "id", freeTierClusterBuilder, stringAttribute([]string{computed, useStateForUnknown}))
-	capellaschema.AddAttr(attrs, "organization_id", freeTierClusterBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
-	capellaschema.AddAttr(attrs, "project_id", freeTierClusterBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
+	capellaschema.AddAttr(attrs, "organization_id", freeTierClusterBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "project_id", freeTierClusterBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "name", freeTierClusterBuilder, stringAttribute([]string{required}, validator.String(stringvalidator.LengthAtLeast(1))))
 	capellaschema.AddAttr(attrs, "description", freeTierClusterBuilder, stringAttribute([]string{optional, computed}))
 	capellaschema.AddAttr(attrs, "app_service_id", freeTierClusterBuilder, stringAttribute([]string{computed}))

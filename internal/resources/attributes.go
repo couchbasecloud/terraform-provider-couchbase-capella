@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -72,6 +73,16 @@ func stringDefaultAttribute(defaultValue string, fields ...string) *schema.Strin
 	attribute := stringAttribute(fields)
 	attribute.Default = stringdefault.StaticString(defaultValue)
 	return attribute
+}
+
+// requiredUUIDStringAttribute is intended for adding a required string attribute with requires replace set for hierarchical Capella resource UUIDs
+// such as the org ID, project ID, cluster ID, etc.
+// It returns a Terraform string attribute which:
+// - is required
+// - has requires replace set (since the ID cannot be changed without recreating the resource)
+// - has a validator to ensure the string is at least 1 character long
+func requiredUUIDStringAttribute() *schema.StringAttribute {
+	return stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1)))
 }
 
 // boolAttribute is a variadic function which sets the requested fields

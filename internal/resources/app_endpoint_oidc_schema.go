@@ -13,10 +13,10 @@ var appEndpointOidcBuilder = capellaschema.NewSchemaBuilder("appEndpointOidc", "
 func AppEndpointOidcProviderSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
-	capellaschema.AddAttr(attrs, "organization_id", appEndpointOidcBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
-	capellaschema.AddAttr(attrs, "project_id", appEndpointOidcBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
-	capellaschema.AddAttr(attrs, "cluster_id", appEndpointOidcBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
-	capellaschema.AddAttr(attrs, "app_service_id", appEndpointOidcBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
+	capellaschema.AddAttr(attrs, "organization_id", appEndpointOidcBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "project_id", appEndpointOidcBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "cluster_id", appEndpointOidcBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "app_service_id", appEndpointOidcBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "app_endpoint_name", appEndpointOidcBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
 	capellaschema.AddAttr(attrs, "issuer", appEndpointOidcBuilder, stringAttribute([]string{required}))
 	capellaschema.AddAttr(attrs, "register", appEndpointOidcBuilder, boolAttribute(optional, computed))

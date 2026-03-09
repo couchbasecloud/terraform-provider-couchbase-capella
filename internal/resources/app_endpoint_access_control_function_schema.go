@@ -11,10 +11,10 @@ var accessControlFunctionBuilder = capellaschema.NewSchemaBuilder("accessControl
 func AccessControlFunctionSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
-	capellaschema.AddAttr(attrs, "organization_id", accessControlFunctionBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "project_id", accessControlFunctionBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "cluster_id", accessControlFunctionBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "app_service_id", accessControlFunctionBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "organization_id", accessControlFunctionBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "project_id", accessControlFunctionBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "cluster_id", accessControlFunctionBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "app_service_id", accessControlFunctionBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "app_endpoint_name", accessControlFunctionBuilder, stringAttribute([]string{required, requiresReplace}))
 	capellaschema.AddAttr(attrs, "scope", accessControlFunctionBuilder, stringDefaultAttribute("_default", optional, computed, requiresReplace))
 	capellaschema.AddAttr(attrs, "collection", accessControlFunctionBuilder, stringDefaultAttribute("_default", optional, computed, requiresReplace))

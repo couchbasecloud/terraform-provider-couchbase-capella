@@ -21,9 +21,9 @@ func NetworkPeerSchema() schema.Schema {
 			stringplanmodifier.UseStateForUnknown(),
 		},
 	})
-	capellaschema.AddAttr(attrs, "organization_id", networkPeerBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "project_id", networkPeerBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "cluster_id", networkPeerBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "organization_id", networkPeerBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "project_id", networkPeerBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "cluster_id", networkPeerBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "name", networkPeerBuilder, stringAttribute([]string{required, requiresReplace}))
 	capellaschema.AddAttr(attrs, "provider_type", networkPeerBuilder, stringAttribute([]string{required, requiresReplace}))
 	capellaschema.AddAttr(attrs, "audit", networkPeerBuilder, computedAuditAttribute())

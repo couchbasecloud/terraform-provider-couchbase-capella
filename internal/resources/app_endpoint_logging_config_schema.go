@@ -13,10 +13,10 @@ var loggingConfigBuilder = capellaschema.NewSchemaBuilder("loggingConfig", "cons
 func LoggingConfigSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(attrs, "app_endpoint_name", loggingConfigBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
-	capellaschema.AddAttr(attrs, "app_service_id", loggingConfigBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
-	capellaschema.AddAttr(attrs, "cluster_id", loggingConfigBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
-	capellaschema.AddAttr(attrs, "project_id", loggingConfigBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
-	capellaschema.AddAttr(attrs, "organization_id", loggingConfigBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
+	capellaschema.AddAttr(attrs, "app_service_id", loggingConfigBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "cluster_id", loggingConfigBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "project_id", loggingConfigBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "organization_id", loggingConfigBuilder, requiredUUIDStringAttribute())
 
 	capellaschema.AddAttr(attrs, "log_level", loggingConfigBuilder, stringAttribute([]string{required}, validator.String(stringvalidator.LengthAtLeast(1))))
 	capellaschema.AddAttr(attrs, "log_keys", loggingConfigBuilder, stringSetAttribute(required))

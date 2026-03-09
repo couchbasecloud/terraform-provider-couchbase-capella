@@ -17,10 +17,10 @@ func AppServiceLogStreamingActivationStatusSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
 	// Required hierarchical IDs
-	capellaschema.AddAttr(attrs, "organization_id", appServiceLogStreamingActivationStatusBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
-	capellaschema.AddAttr(attrs, "project_id", appServiceLogStreamingActivationStatusBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
-	capellaschema.AddAttr(attrs, "cluster_id", appServiceLogStreamingActivationStatusBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
-	capellaschema.AddAttr(attrs, "app_service_id", appServiceLogStreamingActivationStatusBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
+	capellaschema.AddAttr(attrs, "organization_id", appServiceLogStreamingActivationStatusBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "project_id", appServiceLogStreamingActivationStatusBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "cluster_id", appServiceLogStreamingActivationStatusBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "app_service_id", appServiceLogStreamingActivationStatusBuilder, requiredUUIDStringAttribute())
 
 	// User-specified desired Log Streaming state
 	capellaschema.AddAttr(attrs, "state", appServiceLogStreamingActivationStatusBuilder, stringAttribute(

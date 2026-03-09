@@ -12,10 +12,10 @@ var appEndpointActivationStatusBuilder = capellaschema.NewSchemaBuilder("appEndp
 func AppEndpointActivationStatusSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
-	capellaschema.AddAttr(attrs, "organization_id", appEndpointActivationStatusBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "project_id", appEndpointActivationStatusBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "cluster_id", appEndpointActivationStatusBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "app_service_id", appEndpointActivationStatusBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "organization_id", appEndpointActivationStatusBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "project_id", appEndpointActivationStatusBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "cluster_id", appEndpointActivationStatusBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "app_service_id", appEndpointActivationStatusBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "app_endpoint_name", appEndpointActivationStatusBuilder, stringAttribute([]string{required, requiresReplace}))
 	capellaschema.AddAttr(attrs, "state", appEndpointActivationStatusBuilder, stringAttribute([]string{required}))
 

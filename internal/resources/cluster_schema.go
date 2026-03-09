@@ -14,8 +14,8 @@ func ClusterSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
 	capellaschema.AddAttr(attrs, "id", clusterBuilder, stringAttribute([]string{computed, useStateForUnknown}))
-	capellaschema.AddAttr(attrs, "organization_id", clusterBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "project_id", clusterBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "organization_id", clusterBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "project_id", clusterBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "name", clusterBuilder, stringAttribute([]string{required}))
 	capellaschema.AddAttr(attrs, "description", clusterBuilder, stringAttribute([]string{optional, computed}))
 	capellaschema.AddAttr(attrs, "zones", clusterBuilder, stringSetAttribute(optional, requiresReplace))

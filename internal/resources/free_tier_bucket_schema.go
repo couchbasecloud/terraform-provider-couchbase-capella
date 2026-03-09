@@ -23,9 +23,9 @@ func FreeTierBucketSchema() schema.Schema {
 		},
 	})
 	capellaschema.AddAttr(attrs, "name", freeTierBucketBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
-	capellaschema.AddAttr(attrs, "organization_id", freeTierBucketBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
-	capellaschema.AddAttr(attrs, "project_id", freeTierBucketBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
-	capellaschema.AddAttr(attrs, "cluster_id", freeTierBucketBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
+	capellaschema.AddAttr(attrs, "organization_id", freeTierBucketBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "project_id", freeTierBucketBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "cluster_id", freeTierBucketBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "type", freeTierBucketBuilder, stringAttribute([]string{computed, useStateForUnknown}))
 	capellaschema.AddAttr(attrs, "storage_backend", freeTierBucketBuilder, stringAttribute([]string{computed, useStateForUnknown}))
 	capellaschema.AddAttr(attrs, "bucket_conflict_resolution", freeTierBucketBuilder, stringAttribute([]string{computed, useStateForUnknown}))

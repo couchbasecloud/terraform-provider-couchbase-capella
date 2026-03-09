@@ -1,12 +1,10 @@
 package resources
 
 import (
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
@@ -17,9 +15,9 @@ func FreeTierAppServiceSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
 	capellaschema.AddAttr(attrs, "id", freeTierAppServiceBuilder, stringAttribute([]string{computed, useStateForUnknown}))
-	capellaschema.AddAttr(attrs, "organization_id", freeTierAppServiceBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
-	capellaschema.AddAttr(attrs, "project_id", freeTierAppServiceBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
-	capellaschema.AddAttr(attrs, "cluster_id", freeTierAppServiceBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
+	capellaschema.AddAttr(attrs, "organization_id", freeTierAppServiceBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "project_id", freeTierAppServiceBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "cluster_id", freeTierAppServiceBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "name", freeTierAppServiceBuilder, stringAttribute([]string{required}))
 	capellaschema.AddAttr(attrs, "nodes", freeTierAppServiceBuilder, int64Attribute(computed, useStateForUnknown))
 	capellaschema.AddAttr(attrs, "cloud_provider", freeTierAppServiceBuilder, stringAttribute([]string{computed, useStateForUnknown}))

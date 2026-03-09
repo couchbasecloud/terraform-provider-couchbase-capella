@@ -20,9 +20,9 @@ func SampleBucketSchema() schema.Schema {
 		},
 	})
 	capellaschema.AddAttr(attrs, "name", sampleBucketBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "organization_id", sampleBucketBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "project_id", sampleBucketBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "cluster_id", sampleBucketBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "organization_id", sampleBucketBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "project_id", sampleBucketBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "cluster_id", sampleBucketBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "type", sampleBucketBuilder, stringAttribute([]string{computed}))
 	capellaschema.AddAttr(attrs, "storage_backend", sampleBucketBuilder, stringAttribute([]string{computed}))
 	capellaschema.AddAttr(attrs, "memory_allocation_in_mb", sampleBucketBuilder, int64Attribute(computed))
