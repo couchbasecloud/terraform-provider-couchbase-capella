@@ -11,9 +11,9 @@ var scopeBuilder = capellaschema.NewSchemaBuilder("scope")
 func ScopeSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
-	capellaschema.AddAttr(attrs, "organization_id", scopeBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "project_id", scopeBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "cluster_id", scopeBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "organization_id", scopeBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "project_id", scopeBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "cluster_id", scopeBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "bucket_id", scopeBuilder, stringAttribute([]string{required, requiresReplace}))
 	capellaschema.AddAttr(attrs, "scope_name", scopeBuilder, stringAttribute([]string{required, requiresReplace}))
 

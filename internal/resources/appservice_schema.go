@@ -19,9 +19,9 @@ func AppServiceSchema() schema.Schema {
 			stringplanmodifier.UseStateForUnknown(),
 		},
 	})
-	capellaschema.AddAttr(attrs, "organization_id", appServiceBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "project_id", appServiceBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "cluster_id", appServiceBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "organization_id", appServiceBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "project_id", appServiceBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "cluster_id", appServiceBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "name", appServiceBuilder, stringAttribute([]string{required, requiresReplace}))
 	capellaschema.AddAttr(attrs, "description", appServiceBuilder, stringDefaultAttribute("", optional, computed, requiresReplace))
 	capellaschema.AddAttr(attrs, "nodes", appServiceBuilder, int64Attribute(optional, computed))

@@ -32,9 +32,9 @@ func GsiSchema() schema.Schema {
 
 	attrs := make(map[string]schema.Attribute)
 
-	capellaschema.AddAttr(attrs, "organization_id", gsiBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "project_id", gsiBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "cluster_id", gsiBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "organization_id", gsiBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "project_id", gsiBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "cluster_id", gsiBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "bucket_name", gsiBuilder, stringAttribute([]string{required, requiresReplace}))
 	capellaschema.AddAttr(attrs, "scope_name", gsiBuilder, stringDefaultAttribute("_default", optional, computed, useStateForUnknown, requiresReplace))
 	capellaschema.AddAttr(attrs, "collection_name", gsiBuilder, stringDefaultAttribute("_default", optional, computed, useStateForUnknown, requiresReplace))

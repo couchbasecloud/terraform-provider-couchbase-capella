@@ -12,10 +12,10 @@ var appEndpointResyncBuilder = capellaschema.NewSchemaBuilder("appEndpointResync
 func AppEndpointResyncSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
-	capellaschema.AddAttr(attrs, "organization_id", appEndpointResyncBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "project_id", appEndpointResyncBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "cluster_id", appEndpointResyncBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "app_service_id", appEndpointResyncBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "organization_id", appEndpointResyncBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "project_id", appEndpointResyncBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "cluster_id", appEndpointResyncBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "app_service_id", appEndpointResyncBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "app_endpoint_name", appEndpointResyncBuilder, stringAttribute([]string{required, requiresReplace}))
 
 	// Input field from ResyncRequest schema

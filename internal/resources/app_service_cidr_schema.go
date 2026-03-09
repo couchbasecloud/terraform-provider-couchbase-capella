@@ -20,10 +20,10 @@ func AllowedCIDRsSchema() schema.Schema {
 			stringplanmodifier.UseStateForUnknown(),
 		},
 	})
-	capellaschema.AddAttr(attrs, "organization_id", appServiceCIDRBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "project_id", appServiceCIDRBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "cluster_id", appServiceCIDRBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "app_service_id", appServiceCIDRBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "organization_id", appServiceCIDRBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "project_id", appServiceCIDRBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "cluster_id", appServiceCIDRBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "app_service_id", appServiceCIDRBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "cidr", appServiceCIDRBuilder, stringAttribute([]string{required, requiresReplace}))
 	capellaschema.AddAttr(attrs, "comment", appServiceCIDRBuilder, stringAttribute([]string{optional, requiresReplace}))
 	capellaschema.AddAttr(attrs, "expires_at", appServiceCIDRBuilder, stringAttribute([]string{optional, requiresReplace}))

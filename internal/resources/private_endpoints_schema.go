@@ -11,9 +11,9 @@ var privateEndpointsBuilder = capellaschema.NewSchemaBuilder("privateEndpoints")
 func PrivateEndpointsSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
-	capellaschema.AddAttr(attrs, "organization_id", privateEndpointsBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "project_id", privateEndpointsBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "cluster_id", privateEndpointsBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "organization_id", privateEndpointsBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "project_id", privateEndpointsBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "cluster_id", privateEndpointsBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "endpoint_id", privateEndpointsBuilder, stringAttribute([]string{required, requiresReplace}))
 	capellaschema.AddAttr(attrs, "status", privateEndpointsBuilder, stringAttribute([]string{computed}))
 	capellaschema.AddAttr(attrs, "service_name", privateEndpointsBuilder, stringAttribute([]string{computed}))

@@ -24,9 +24,9 @@ func DatabaseCredentialSchema() schema.Schema {
 	})
 	capellaschema.AddAttr(attrs, "name", databaseCredentialBuilder, stringAttribute([]string{required, requiresReplace}))
 	capellaschema.AddAttr(attrs, "password", databaseCredentialBuilder, stringAttribute([]string{optional, computed, sensitive, useStateForUnknown}))
-	capellaschema.AddAttr(attrs, "organization_id", databaseCredentialBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "project_id", databaseCredentialBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "cluster_id", databaseCredentialBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "organization_id", databaseCredentialBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "project_id", databaseCredentialBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "cluster_id", databaseCredentialBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "audit", databaseCredentialBuilder, computedAuditAttribute())
 
 	scopeAttrs := make(map[string]schema.Attribute)
