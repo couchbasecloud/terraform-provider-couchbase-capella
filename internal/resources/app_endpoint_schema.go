@@ -6,7 +6,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
@@ -95,6 +94,12 @@ func AppEndpointSchema() schema.Schema {
 		},
 	})
 
+	// Read-only attributes
+	capellaschema.AddAttr(attrs, "state", appEndpointBuilder, stringAttribute([]string{computed}))
+	capellaschema.AddAttr(attrs, "admin_url", appEndpointBuilder, stringAttribute([]string{computed, useStateForUnknown}))
+	capellaschema.AddAttr(attrs, "metrics_url", appEndpointBuilder, stringAttribute([]string{computed, useStateForUnknown}))
+	capellaschema.AddAttr(attrs, "public_url", appEndpointBuilder, stringAttribute([]string{computed, useStateForUnknown}))
+
 	requireResyncItemAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(requireResyncItemAttrs, "items", appEndpointBuilder, &schema.SetAttribute{
 		Computed:    true,
@@ -108,31 +113,6 @@ func AppEndpointSchema() schema.Schema {
 		Computed: true,
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: requireResyncItemAttrs,
-		},
-	})
-
-	capellaschema.AddAttr(attrs, "state", appEndpointBuilder, &schema.StringAttribute{
-		Computed: true,
-		PlanModifiers: []planmodifier.String{
-			stringplanmodifier.UseStateForUnknown(),
-		},
-	})
-	capellaschema.AddAttr(attrs, "admin_url", appEndpointBuilder, &schema.StringAttribute{
-		Computed: true,
-		PlanModifiers: []planmodifier.String{
-			stringplanmodifier.UseStateForUnknown(),
-		},
-	})
-	capellaschema.AddAttr(attrs, "metrics_url", appEndpointBuilder, &schema.StringAttribute{
-		Computed: true,
-		PlanModifiers: []planmodifier.String{
-			stringplanmodifier.UseStateForUnknown(),
-		},
-	})
-	capellaschema.AddAttr(attrs, "public_url", appEndpointBuilder, &schema.StringAttribute{
-		Computed: true,
-		PlanModifiers: []planmodifier.String{
-			stringplanmodifier.UseStateForUnknown(),
 		},
 	})
 
