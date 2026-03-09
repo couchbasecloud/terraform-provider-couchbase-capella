@@ -114,6 +114,10 @@ func (a *AppEndpointResync) Read(ctx context.Context, req datasource.ReadRequest
 		}
 
 		state.CollectionsProcessing = mapValue
+	} else {
+		state.CollectionsProcessing = types.MapNull(types.SetType{
+			ElemType: types.StringType,
+		})
 	}
 
 	diags = resp.State.Set(ctx, &state)
