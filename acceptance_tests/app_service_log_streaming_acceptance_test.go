@@ -23,7 +23,7 @@ func TestAccAppServiceLogStreaming(t *testing.T) {
 	t.Run("App Service Log Streaming", func(t *testing.T) {
 		resource.Test(t, resource.TestCase{
 			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-			CheckDestroy:             testAccCheckAppServiceLogStreamingDestroy,
+			CheckDestroy:             testAccCheckAppServiceLogStreamingDestroy(t),
 			Steps:                    appServiceLogStreamingSteps(),
 		})
 	})
@@ -38,7 +38,7 @@ func TestAccAppServiceLogStreaming(t *testing.T) {
 	t.Run("App Endpoint Logging Config", func(t *testing.T) {
 		resource.Test(t, resource.TestCase{
 			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-			Steps:                    testAccAppEndpointLoggingConfigResource(),
+			Steps:                    testAccAppEndpointLoggingConfigResource(t),
 		})
 	})
 }
@@ -156,52 +156,54 @@ func TestAccAppServiceLogStreamingMissingCredentials(t *testing.T) {
 // testAccCheckAppServiceLogStreamingDestroy verifies that after Terraform destroys the log streaming resource, the
 // remote config_state has transitioned to "disabled". This is because destroying log streaming does not actually
 // delete a resource, but instead disables log streaming on the app service.
-func testAccCheckAppServiceLogStreamingDestroy(_ *terraform.State) error {
-	data := newTestClient()
+func testAccCheckAppServiceLogStreamingDestroy(t *testing.T) resource.TestCheckFunc {
+	return func(_ *terraform.State) error {
+		data := newTestClient(t)
 
-	orgUUID, err := uuid.Parse(globalOrgId)
-	if err != nil {
-		return fmt.Errorf("failed to parse organization_id: %w", err)
-	}
-	projUUID, err := uuid.Parse(globalProjectId)
-	if err != nil {
-		return fmt.Errorf("failed to parse project_id: %w", err)
-	}
-	clusterUUID, err := uuid.Parse(globalClusterId)
-	if err != nil {
-		return fmt.Errorf("failed to parse cluster_id: %w", err)
-	}
-	appServiceUUID, err := uuid.Parse(globalAppServiceId)
-	if err != nil {
-		return fmt.Errorf("failed to parse app_service_id: %w", err)
-	}
-
-	response, err := data.ClientV2.GetAppServiceLogStreamingWithResponse(
-		context.Background(),
-		orgUUID,
-		projUUID,
-		clusterUUID,
-		appServiceUUID,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to get log streaming state after destroy: %w", err)
-	}
-
-	if response.JSON200 == nil {
-		return fmt.Errorf("expected JSON200 response body but got nil, status code: %d", response.StatusCode())
-	}
-
-	configState := response.JSON200.ConfigState
-	if configState == nil || *configState != api.GetLogStreamingResponseConfigStateDisabled {
-		var actual string
-		if configState != nil {
-			actual = string(*configState)
+		orgUUID, err := uuid.Parse(globalOrgId)
+		if err != nil {
+			return fmt.Errorf("failed to parse organization_id: %w", err)
 		}
-		return fmt.Errorf("expected config_state to be %q after destroy, got %q",
-			api.GetLogStreamingResponseConfigStateDisabled, actual)
-	}
+		projUUID, err := uuid.Parse(globalProjectId)
+		if err != nil {
+			return fmt.Errorf("failed to parse project_id: %w", err)
+		}
+		clusterUUID, err := uuid.Parse(globalClusterId)
+		if err != nil {
+			return fmt.Errorf("failed to parse cluster_id: %w", err)
+		}
+		appServiceUUID, err := uuid.Parse(globalAppServiceId)
+		if err != nil {
+			return fmt.Errorf("failed to parse app_service_id: %w", err)
+		}
 
-	return nil
+		response, err := data.ClientV2.GetAppServiceLogStreamingWithResponse(
+			context.Background(),
+			orgUUID,
+			projUUID,
+			clusterUUID,
+			appServiceUUID,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to get log streaming state after destroy: %w", err)
+		}
+
+		if response.JSON200 == nil {
+			return fmt.Errorf("expected JSON200 response body but got nil, status code: %d", response.StatusCode())
+		}
+
+		configState := response.JSON200.ConfigState
+		if configState == nil || *configState != api.GetLogStreamingResponseConfigStateDisabled {
+			var actual string
+			if configState != nil {
+				actual = string(*configState)
+			}
+			return fmt.Errorf("expected config_state to be %q after destroy, got %q",
+				api.GetLogStreamingResponseConfigStateDisabled, actual)
+		}
+
+		return nil
+	}
 }
 
 // testAccAppServiceLogStreamingResourceConfig returns the HCL config for testing the app_service_log_streaming resource.

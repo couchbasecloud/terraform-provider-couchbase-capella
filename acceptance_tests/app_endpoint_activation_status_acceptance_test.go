@@ -25,7 +25,7 @@ func TestAccAppEndpointActivationStatus(t *testing.T) {
 	t.Run("App Endpoint Resync", func(t *testing.T) {
 		resource.Test(t, resource.TestCase{
 			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-			Steps:                    testAccAppEndpointResyncResource(),
+			Steps:                    testAccAppEndpointResyncResource(t),
 		})
 	})
 }
