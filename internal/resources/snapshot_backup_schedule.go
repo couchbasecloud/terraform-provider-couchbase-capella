@@ -365,7 +365,7 @@ func (s *SnapshotBackupSchedule) Configure(ctx context.Context, req resource.Con
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
-			errorMessageConfigure+fmt.Sprintf("%T. Please report this issue to the provider developers.", req.ProviderData),
+			fmt.Sprintf("%T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 		return
 	}
