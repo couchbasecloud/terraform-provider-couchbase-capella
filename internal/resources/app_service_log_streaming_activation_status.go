@@ -341,25 +341,15 @@ func (r *AppServiceLogStreamingActivationStatus) getCurrentConfigState(
 
 // parseUUIDs parses the string IDs into UUID types for the generated API client.
 func (r *AppServiceLogStreamingActivationStatus) parseUUIDs(organizationId, projectId, clusterId, appServiceId string) (uuid.UUID, uuid.UUID, uuid.UUID, uuid.UUID, error) {
-	orgUUID, err := utils.ParseUUID("organization_id", organizationId)
+	uuids, err := utils.ParseUUIDs(
+		utils.IDField{Name: "organization_id", Value: organizationId},
+		utils.IDField{Name: "project_id", Value: projectId},
+		utils.IDField{Name: "cluster_id", Value: clusterId},
+		utils.IDField{Name: "app_service_id", Value: appServiceId},
+	)
 	if err != nil {
 		return uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, err
 	}
 
-	projUUID, err := utils.ParseUUID("project_id", projectId)
-	if err != nil {
-		return uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, err
-	}
-
-	clusterUUID, err := utils.ParseUUID("cluster_id", clusterId)
-	if err != nil {
-		return uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, err
-	}
-
-	appServiceUUID, err := utils.ParseUUID("app_service_id", appServiceId)
-	if err != nil {
-		return uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, err
-	}
-
-	return orgUUID, projUUID, clusterUUID, appServiceUUID, nil
+	return uuids[0], uuids[1], uuids[2], uuids[3], nil
 }
