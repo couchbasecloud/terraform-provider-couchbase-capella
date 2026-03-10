@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,7 +18,7 @@ import (
 // testAccAppEndpointLoggingConfigResource provides the steps to test the full lifecycle
 // of the app_endpoint_log_streaming_config resource: Create -> Update -> ImportState,
 // and that errors are returned if the log_level or log_keys are invalid
-func testAccAppEndpointLoggingConfigResource() []resource.TestStep {
+func testAccAppEndpointLoggingConfigResource(t *testing.T) []resource.TestStep {
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_log_streaming_config_")
 	resourceReference := "couchbase-capella_app_endpoint_log_streaming_config." + resourceName
 	datasourceName := randomStringWithPrefix("tf_acc_app_endpoint_log_streaming_config_")
@@ -33,7 +34,7 @@ func testAccAppEndpointLoggingConfigResource() []resource.TestStep {
 		{
 			Config: testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourceName, resourceName, resourceReference, datasourceName, "info", logKeys),
 			Check: resource.ComposeAggregateTestCheckFunc(
-				testAccExistsAppEndpointLoggingConfigResource(resourceReference),
+				testAccExistsAppEndpointLoggingConfigResource(t, resourceReference),
 				resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 				resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
 				resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
@@ -149,7 +150,7 @@ func testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourc
 	)
 }
 
-func testAccExistsAppEndpointLoggingConfigResource(resourceReference string) resource.TestCheckFunc {
+func testAccExistsAppEndpointLoggingConfigResource(t *testing.T, resourceReference string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// retrieve the resource by name from state
 		var rawState map[string]string
@@ -161,7 +162,7 @@ func testAccExistsAppEndpointLoggingConfigResource(resourceReference string) res
 			}
 		}
 
-		data := newTestClient()
+		data := newTestClient(t)
 
 		err := retrieveAppEndpointLoggingConfigFromServer(data, rawState["organization_id"], rawState["project_id"], rawState["cluster_id"], rawState["app_service_id"], rawState["app_endpoint_name"])
 		if err != nil {

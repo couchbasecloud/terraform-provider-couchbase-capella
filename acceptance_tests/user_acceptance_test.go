@@ -67,7 +67,7 @@ func TestAccUserResourceResourceNotFound(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "email", "terraform_acceptance_test2@couchbase.com"),
 					resource.TestCheckResourceAttr(resourceReference, "organization_roles.0", "organizationOwner"),
 					// Delete the user from the server and wait until deletion is successful
-					testAccDeleteUserResource(resourceReference),
+					testAccDeleteUserResource(t, resourceReference),
 				),
 				ExpectNonEmptyPlan: true,
 				RefreshState:       false,
@@ -93,7 +93,7 @@ func TestAccUserResourceResourceNotFound(t *testing.T) {
 // the resource by name from the Terraform state, initiates the deletion, checks the status of the deletion, and
 // confirms that the resource no longer exists. If the resource is successfully deleted, it returns nil; otherwise,
 // it returns an error.
-func testAccDeleteUserResource(resourceReference string) resource.TestCheckFunc {
+func testAccDeleteUserResource(t *testing.T, resourceReference string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// retrieve the resource by name from state
 		var rawState map[string]string
@@ -105,7 +105,7 @@ func testAccDeleteUserResource(resourceReference string) resource.TestCheckFunc 
 			}
 		}
 
-		data := newTestClient()
+		data := newTestClient(t)
 		err := deleteUserFromServer(data, rawState["organization_id"], rawState["id"])
 		if err != nil {
 			return err
