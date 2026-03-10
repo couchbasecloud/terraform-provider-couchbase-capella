@@ -233,10 +233,10 @@ func (l *LoggingConfig) Configure(ctx context.Context, req resource.ConfigureReq
 func (l *LoggingConfig) upsertLoggingConfig(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string, plan providerschema.LoggingConfig) error {
 
 	uuids, err := utils.ParseUUIDs(
-		utils.IDField{"organization_id", organizationId},
-		utils.IDField{"project_id", projectId},
-		utils.IDField{"cluster_id", clusterId},
-		utils.IDField{"app_service_id", appServiceId},
+		utils.IDField{Name: "organization_id", Value: organizationId},
+		utils.IDField{Name: "project_id", Value: projectId},
+		utils.IDField{Name: "cluster_id", Value: clusterId},
+		utils.IDField{Name: "app_service_id", Value: appServiceId},
 	)
 	if err != nil {
 		return err
@@ -281,10 +281,10 @@ func (l *LoggingConfig) upsertLoggingConfig(ctx context.Context, organizationId,
 func (l *LoggingConfig) getLoggingConfig(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string) (*api.ConsoleLoggingConfig, error) {
 
 	uuids, err := utils.ParseUUIDs(
-		utils.IDField{"organization_id", organizationId},
-		utils.IDField{"project_id", projectId},
-		utils.IDField{"cluster_id", clusterId},
-		utils.IDField{"app_service_id", appServiceId},
+		utils.IDField{Name: "organization_id", Value: organizationId},
+		utils.IDField{Name: "project_id", Value: projectId},
+		utils.IDField{Name: "cluster_id", Value: clusterId},
+		utils.IDField{Name: "app_service_id", Value: appServiceId},
 	)
 	if err != nil {
 		return nil, err
@@ -328,10 +328,10 @@ func (l *LoggingConfig) getLoggingConfig(ctx context.Context, organizationId, pr
 func (l *LoggingConfig) getLogStreamingStatus(ctx context.Context, organizationId, projectId, clusterId, appServiceId string) (*api.GetLogStreamingResponseConfigState, error) {
 
 	uuids, err := utils.ParseUUIDs(
-		utils.IDField{"organization_id", organizationId},
-		utils.IDField{"project_id", projectId},
-		utils.IDField{"cluster_id", clusterId},
-		utils.IDField{"app_service_id", appServiceId},
+		utils.IDField{Name: "organization_id", Value: organizationId},
+		utils.IDField{Name: "project_id", Value: projectId},
+		utils.IDField{Name: "cluster_id", Value: clusterId},
+		utils.IDField{Name: "app_service_id", Value: appServiceId},
 	)
 	if err != nil {
 		return nil, err

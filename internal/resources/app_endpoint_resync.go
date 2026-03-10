@@ -228,10 +228,10 @@ func (a *AppEndpointResync) Configure(
 func (a *AppEndpointResync) startResync(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string, scopes map[string][]string) error {
 
 	uuids, err := utils.ParseUUIDs(
-		utils.IDField{"organization_id", organizationId},
-		utils.IDField{"project_id", projectId},
-		utils.IDField{"cluster_id", clusterId},
-		utils.IDField{"app_service_id", appServiceId},
+		utils.IDField{Name: "organization_id", Value: organizationId},
+		utils.IDField{Name: "project_id", Value: projectId},
+		utils.IDField{Name: "cluster_id", Value: clusterId},
+		utils.IDField{Name: "app_service_id", Value: appServiceId},
 	)
 	if err != nil {
 		return err
@@ -275,10 +275,10 @@ func (a *AppEndpointResync) startResync(ctx context.Context, organizationId, pro
 func (a *AppEndpointResync) getResyncStatus(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string) (*api.ResyncStatus, error) {
 
 	uuids, err := utils.ParseUUIDs(
-		utils.IDField{"organization_id", organizationId},
-		utils.IDField{"project_id", projectId},
-		utils.IDField{"cluster_id", clusterId},
-		utils.IDField{"app_service_id", appServiceId},
+		utils.IDField{Name: "organization_id", Value: organizationId},
+		utils.IDField{Name: "project_id", Value: projectId},
+		utils.IDField{Name: "cluster_id", Value: clusterId},
+		utils.IDField{Name: "app_service_id", Value: appServiceId},
 	)
 	if err != nil {
 		return nil, err
@@ -316,10 +316,10 @@ func (a *AppEndpointResync) getResyncStatus(ctx context.Context, organizationId,
 func (a *AppEndpointResync) stopResync(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string) error {
 
 	uuids, err := utils.ParseUUIDs(
-		utils.IDField{"organization_id", organizationId},
-		utils.IDField{"project_id", projectId},
-		utils.IDField{"cluster_id", clusterId},
-		utils.IDField{"app_service_id", appServiceId},
+		utils.IDField{Name: "organization_id", Value: organizationId},
+		utils.IDField{Name: "project_id", Value: projectId},
+		utils.IDField{Name: "cluster_id", Value: clusterId},
+		utils.IDField{Name: "app_service_id", Value: appServiceId},
 	)
 	if err != nil {
 		return err

@@ -153,10 +153,10 @@ func testAccCheckAppServiceLogStreamingDestroy(_ *terraform.State) error {
 	data := newTestClient()
 
 	uuids, err := utils.ParseUUIDs(
-		utils.IDField{"organization_id", globalOrgId},
-		utils.IDField{"project_id", globalProjectId},
-		utils.IDField{"cluster_id", globalClusterId},
-		utils.IDField{"app_service_id", globalAppServiceId},
+		utils.IDField{Name: "organization_id", Value: globalOrgId},
+		utils.IDField{Name: "project_id", Value: globalProjectId},
+		utils.IDField{Name: "cluster_id", Value: globalClusterId},
+		utils.IDField{Name: "app_service_id", Value: globalAppServiceId},
 	)
 	if err != nil {
 		return fmt.Errorf("failed to parse resource IDs: %w", err)
