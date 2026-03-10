@@ -17,7 +17,7 @@ OPENAPI_SPEC_URL?=https://docs.couchbase.com/cloud/management-api-reference/inde
 export OPENAPI_SPEC_URL
 
 export PATH := $(shell go env GOPATH)/bin:$(PATH)
-export SHELL := env PATH=$(PATH) /bin/bash
+SHELL=/bin/bash
 
 default: build
 
@@ -121,7 +121,7 @@ testacc: ## Run acceptance tests (requires TF_VAR_auth_token, TF_VAR_host, TF_VA
 .PHONY: build-docs
 build-docs: ## Generate provider documentation
 	@go get github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
-	@go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --examples-dir ./examples
+	@go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --examples-dir ./examples --provider-name couchbase-capella --rendered-provider-name couchbase-capella
 
 # ============================================================================
 # Code Generation
