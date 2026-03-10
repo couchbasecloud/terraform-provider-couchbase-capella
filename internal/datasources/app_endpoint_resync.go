@@ -88,6 +88,7 @@ func (a *AppEndpointResync) Read(ctx context.Context, req datasource.ReadRequest
 			"appServiceId":    appServiceId,
 			"appEndpointName": appEndpointName,
 		})
+		return
 	}
 
 	state := &providerschema.AppEndpointResyncData{
