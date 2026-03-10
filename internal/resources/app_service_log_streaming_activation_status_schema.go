@@ -34,7 +34,9 @@ func AppServiceLogStreamingActivationStatusSchema() schema.Schema {
 	))
 
 	return schema.Schema{
-		MarkdownDescription: "Manages the activation state (paused/enabled) of log streaming on an App Service.",
-		Attributes:          attrs,
+		MarkdownDescription: `Manages the activation state of Log Streaming for an App Service.
+This resource allows you to put Log Streaming in either a 'paused' state (meaning logs stop streaming but the log collector config is retained by Capella), or an 'enabled' state.
+Log Streaming must already be set up on the App Service (i.e. it must not be in a 'disabled' state) in order to manage it's activation state.`,
+		Attributes: attrs,
 	}
 }
