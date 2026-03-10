@@ -31,7 +31,7 @@ func TestAccSnapshotBackupResource(t *testing.T) {
 			{
 				Config: testAccSnapshotBackupResourceConfig(resourceName, 168),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExistsSnapshotBackupResource(resourceReference),
+					testAccExistsSnapshotBackupResource(t, resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
@@ -56,7 +56,7 @@ func TestAccSnapshotBackupResource(t *testing.T) {
 			{
 				Config: testAccSnapshotBackupResourceConfig(resourceName, 240),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExistsSnapshotBackupResource(resourceReference),
+					testAccExistsSnapshotBackupResource(t, resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
@@ -144,7 +144,7 @@ func retrieveSnapshotBackupFromServer(data *providerschema.Data, organizationId,
 	return errors.ErrNotFound
 }
 
-func testAccExistsSnapshotBackupResource(resourceReference string) resource.TestCheckFunc {
+func testAccExistsSnapshotBackupResource(t *testing.T, resourceReference string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// retrieve the resource by name from state
 		var rawState map[string]string
@@ -155,7 +155,7 @@ func testAccExistsSnapshotBackupResource(resourceReference string) resource.Test
 				}
 			}
 		}
-		data := newTestClient()
+		data := newTestClient(t)
 		err := retrieveSnapshotBackupFromServer(data, rawState["organization_id"], rawState["project_id"], rawState["cluster_id"], rawState["id"])
 		if err != nil {
 			return err

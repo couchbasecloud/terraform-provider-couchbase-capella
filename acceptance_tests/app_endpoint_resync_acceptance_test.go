@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"testing"
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -16,7 +17,7 @@ import (
 // testAccAppEndpointResyncResource provides the steps to test the full lifecycle
 // of the app_endpoint_resync_job resource: Create -> ImportState
 // and that an error is returned if the scopes are invalid
-func testAccAppEndpointResyncResource() []resource.TestStep {
+func testAccAppEndpointResyncResource(t *testing.T) []resource.TestStep {
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_resync_job_")
 	resourceReference := "couchbase-capella_app_endpoint_resync_job." + resourceName
@@ -36,7 +37,7 @@ func testAccAppEndpointResyncResource() []resource.TestStep {
 		{
 			Config: testAccAppEndpointResyncConfig(resourceName, scopes),
 			Check: resource.ComposeAggregateTestCheckFunc(
-				testAccExistsAppEndpointResyncResource(resourceReference),
+				testAccExistsAppEndpointResyncResource(t, resourceReference),
 				resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 				resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
 				resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
@@ -78,7 +79,7 @@ func testAccAppEndpointResyncConfig(resourceName, scopes string) string {
 	`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, globalAppServiceId, globalAppEndpointName, scopes)
 }
 
-func testAccExistsAppEndpointResyncResource(resourceReference string) resource.TestCheckFunc {
+func testAccExistsAppEndpointResyncResource(t *testing.T, resourceReference string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// retrieve the resource by name from state
 		var rawState map[string]string
@@ -90,7 +91,7 @@ func testAccExistsAppEndpointResyncResource(resourceReference string) resource.T
 			}
 		}
 
-		data := newTestClient()
+		data := newTestClient(t)
 
 		err := retrieveAppEndpointResyncFromServer(data, rawState["organization_id"], rawState["project_id"], rawState["cluster_id"], rawState["app_service_id"], rawState["app_endpoint_name"])
 		if err != nil {

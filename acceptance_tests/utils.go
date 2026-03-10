@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"testing"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
@@ -53,15 +54,16 @@ func generateRandomCIDR() string {
 	return fmt.Sprintf("10.%d.%d.0/23", secondOctet, thirdOctet)
 }
 
-func newTestClient() *providerschema.Data {
+func newTestClient(t *testing.T) *providerschema.Data {
+	t.Helper()
+
 	retryingHTTP := apigen.NewRetryHTTPClient(context.Background(), timeout, false)
 	clientV2, err := apigen.NewClientWithResponses(globalHost, apigen.WithHTTPClient(retryingHTTP), apigen.WithRequestEditorFn(func(_ context.Context, req *http.Request) error {
 		req.Header.Set("Authorization", "Bearer "+globalToken)
 		return nil
 	}))
 	if err != nil {
-		// Can't proceed with tests if we fail to create a client, so we panic here.
-		panic(fmt.Sprintf("failed to create V2 API client: %v", err))
+		t.Fatalf("failed to create testing V2 API client: %v", err)
 	}
 
 	providerData := &providerschema.Data{

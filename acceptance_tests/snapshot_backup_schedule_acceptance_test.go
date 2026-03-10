@@ -33,7 +33,7 @@ func TestAccSnapshotBackupScheduleResource(t *testing.T) {
 			{
 				Config: testAccSnapshotBackupScheduleResourceConfigWithCopyToRegions(resourceName, 12, 240, startTime, copyToRegions),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExistsSnapshotBackupScheduleResource(resourceReference),
+					testAccExistsSnapshotBackupScheduleResource(t, resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
@@ -54,7 +54,7 @@ func TestAccSnapshotBackupScheduleResource(t *testing.T) {
 			{
 				Config: testAccSnapshotBackupScheduleResourceConfigWithCopyToRegions(resourceName, 6, 24, startTime, updatedCopyToRegions),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExistsSnapshotBackupScheduleResource(resourceReference),
+					testAccExistsSnapshotBackupScheduleResource(t, resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
@@ -148,7 +148,7 @@ func testAccSnapshotBackupScheduleResourceConfigWithCopyToRegions(resourceName s
 	`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, interval, retention, startTime, copyToRegions)
 }
 
-func testAccExistsSnapshotBackupScheduleResource(resourceReference string) resource.TestCheckFunc {
+func testAccExistsSnapshotBackupScheduleResource(t *testing.T, resourceReference string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// retrieve the resource by name from state
 		var rawState map[string]string
@@ -159,7 +159,7 @@ func testAccExistsSnapshotBackupScheduleResource(resourceReference string) resou
 				}
 			}
 		}
-		data := newTestClient()
+		data := newTestClient(t)
 		err := retrieveSnapshotBackupScheduleFromServer(data, rawState["organization_id"], rawState["project_id"], rawState["cluster_id"])
 		if err != nil {
 			return err

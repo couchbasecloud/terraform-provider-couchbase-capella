@@ -39,7 +39,7 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 			{
 				Config: testAccClusterResourceConfigWithOnlyReqField(resourceName, cidr),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExistsClusterResource(resourceReference),
+					testAccExistsClusterResource(t, resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
 					resource.TestCheckResourceAttr(resourceReference, "description", ""),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
@@ -74,7 +74,7 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 				Config:             testAccClusterResourceConfigUpdateWhenClusterCreatedWithReqFieldOnlyAndIfMatch(resourceName, cidr),
 				ExpectNonEmptyPlan: true,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExistsClusterResource(resourceReference),
+					testAccExistsClusterResource(t, resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east-1"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
@@ -119,7 +119,7 @@ func TestAccClusterResourceWithOptionalFieldAWS(t *testing.T) {
 			{
 				Config: testAccClusterResourceConfigWithAllField(resourceName, cidr),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExistsClusterResource(resourceReference),
+					testAccExistsClusterResource(t, resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
 					resource.TestCheckResourceAttr(resourceReference, "description", "AWS cluster with all fields"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
@@ -179,7 +179,7 @@ func TestAccClusterResourceGCP(t *testing.T) {
 			{
 				Config: testAccClusterResourceConfigGCP(resourceName, cidr),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExistsClusterResource(resourceReference),
+					testAccExistsClusterResource(t, resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
 					resource.TestCheckResourceAttr(resourceReference, "description", "GCP cluster"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "gcp"),
@@ -210,7 +210,7 @@ func TestAccClusterResourceGCP(t *testing.T) {
 			{
 				Config: testAccClusterResourceConfigGCPUpdateWithHorizontalScaling(resourceName, cidr),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExistsClusterResource(resourceReference),
+					testAccExistsClusterResource(t, resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
 					resource.TestCheckResourceAttr(resourceReference, "description", "GCP update with horizontal scaling"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "gcp"),
@@ -307,7 +307,7 @@ func TestAccClusterResourceWithConfigurationTypeFieldAdded(t *testing.T) {
 			{
 				Config: testAccClusterResourceConfigWithConfigurationTypeFieldAdded(resourceName, cidr),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExistsClusterResource(resourceReference),
+					testAccExistsClusterResource(t, resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
 					resource.TestCheckResourceAttr(resourceReference, "description", ""),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
@@ -359,7 +359,7 @@ func TestAccClusterResourceNotFound(t *testing.T) {
 			{
 				Config: testAccClusterResourceConfigWithOnlyReqField(resourceName, cidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccExistsClusterResource(resourceReference),
+					testAccExistsClusterResource(t, resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
 					resource.TestCheckResourceAttr(resourceReference, "description", ""),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
@@ -383,7 +383,7 @@ func TestAccClusterResourceNotFound(t *testing.T) {
 					//resource.TestCheckResourceAttr(resourceReference, "etag", "Version: 5"),
 
 					//Delete the cluster from the server and wait until the deletion is successful.
-					testAccDeleteClusterResource(resourceReference),
+					testAccDeleteClusterResource(t, resourceReference),
 				),
 				ExpectNonEmptyPlan: true,
 				RefreshState:       false,
@@ -836,7 +836,7 @@ resource "couchbase-capella_cluster"  "%[4]s" {
 // the resource by name from the Terraform state, initiates the deletion, checks the status of the deletion, and
 // confirms that the resource no longer exists. If the resource is successfully deleted, it returns nil; otherwise,
 // it returns an error.
-func testAccDeleteClusterResource(resourceReference string) resource.TestCheckFunc {
+func testAccDeleteClusterResource(t *testing.T, resourceReference string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// retrieve the resource by name from state
 		var rawState map[string]string
@@ -848,7 +848,7 @@ func testAccDeleteClusterResource(resourceReference string) resource.TestCheckFu
 			}
 		}
 
-		data := newTestClient()
+		data := newTestClient(t)
 		err := deleteClusterFromServer(data, rawState["organization_id"], rawState["project_id"], rawState["id"])
 		if err != nil {
 			return err
@@ -968,7 +968,7 @@ func retrieveClusterFromServer(
 // in Terraform acceptance tests, ensures that the specified cluster resource exists in the Terraform state. It retrieves
 // the resource by name from the Terraform state and checks its existence. If the resource exists, it returns nil; otherwise,
 // it returns an error.
-func testAccExistsClusterResource(resourceReference string) resource.TestCheckFunc {
+func testAccExistsClusterResource(t *testing.T, resourceReference string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// retrieve the resource by name from state
 		var rawState map[string]string
@@ -979,7 +979,7 @@ func testAccExistsClusterResource(resourceReference string) resource.TestCheckFu
 				}
 			}
 		}
-		data := newTestClient()
+		data := newTestClient(t)
 		_, err := retrieveClusterFromServer(data, rawState["organization_id"], rawState["project_id"], rawState["id"])
 		if err != nil {
 			return err
