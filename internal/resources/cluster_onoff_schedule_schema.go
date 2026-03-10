@@ -13,9 +13,9 @@ var onOffScheduleBuilder = capellaschema.NewSchemaBuilder("onOffSchedule", "Clus
 func OnOffScheduleSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
-	capellaschema.AddAttr(attrs, "organization_id", onOffScheduleBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "project_id", onOffScheduleBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "cluster_id", onOffScheduleBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "organization_id", onOffScheduleBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "project_id", onOffScheduleBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "cluster_id", onOffScheduleBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "timezone", onOffScheduleBuilder, stringAttribute([]string{required, requiresReplace}))
 
 	timeBoundaryAttrs := make(map[string]schema.Attribute)

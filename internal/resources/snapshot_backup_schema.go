@@ -1,9 +1,7 @@
 package resources
 
 import (
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
@@ -19,9 +17,9 @@ func SnapshotBackupSchema() schema.Schema {
 
 	attrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(attrs, "id", snapshotBackupBuilder, stringAttribute([]string{computed, useStateForUnknown}))
-	capellaschema.AddAttr(attrs, "cluster_id", snapshotBackupBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
-	capellaschema.AddAttr(attrs, "project_id", snapshotBackupBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
-	capellaschema.AddAttr(attrs, "organization_id", snapshotBackupBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
+	capellaschema.AddAttr(attrs, "cluster_id", snapshotBackupBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "project_id", snapshotBackupBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "organization_id", snapshotBackupBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "created_at", snapshotBackupBuilder, stringAttribute([]string{computed, useStateForUnknown}))
 	capellaschema.AddAttr(attrs, "expiration", snapshotBackupBuilder, stringAttribute([]string{computed}))
 	capellaschema.AddAttr(attrs, "retention", snapshotBackupBuilder, int64Attribute(optional, computed))

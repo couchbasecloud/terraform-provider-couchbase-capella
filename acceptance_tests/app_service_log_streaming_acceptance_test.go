@@ -28,6 +28,13 @@ func TestAccAppServiceLogStreaming(t *testing.T) {
 		})
 	})
 
+	t.Run("App Service Log Streaming Activation Status", func(t *testing.T) {
+		resource.Test(t, resource.TestCase{
+			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+			Steps:                    appServiceLogStreamingActivationStatusSteps(),
+		})
+	})
+
 	t.Run("App Endpoint Logging Config", func(t *testing.T) {
 		resource.Test(t, resource.TestCase{
 			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,

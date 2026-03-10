@@ -19,9 +19,9 @@ func AllowlistsSchema() schema.Schema {
 			stringplanmodifier.UseStateForUnknown(),
 		},
 	})
-	capellaschema.AddAttr(attrs, "organization_id", allowlistBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "project_id", allowlistBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "cluster_id", allowlistBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "organization_id", allowlistBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "project_id", allowlistBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "cluster_id", allowlistBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "cidr", allowlistBuilder, stringAttribute([]string{required, requiresReplace}))
 	capellaschema.AddAttr(attrs, "comment", allowlistBuilder, stringAttribute([]string{optional, computed, requiresReplace}))
 	capellaschema.AddAttr(attrs, "expires_at", allowlistBuilder, stringAttribute([]string{optional, requiresReplace}))

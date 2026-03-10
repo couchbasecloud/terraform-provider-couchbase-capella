@@ -15,7 +15,7 @@ func ProjectSchema() schema.Schema {
 
 	// All fields use AddAttr - automatically finds description from OpenAPI or common registry
 	capellaschema.AddAttr(attrs, "id", projectBuilder, stringAttribute([]string{computed, useStateForUnknown}))
-	capellaschema.AddAttr(attrs, "organization_id", projectBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "organization_id", projectBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "name", projectBuilder, stringAttribute([]string{required}))
 	capellaschema.AddAttr(attrs, "description", projectBuilder, stringAttribute([]string{optional, computed}))
 	capellaschema.AddAttr(attrs, "if_match", projectBuilder, stringAttribute([]string{optional}))

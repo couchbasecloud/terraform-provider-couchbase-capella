@@ -19,7 +19,7 @@ func ApiKeySchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
 	capellaschema.AddAttr(attrs, "id", apiKeyBuilder, stringAttribute([]string{computed, useStateForUnknown}))
-	capellaschema.AddAttr(attrs, "organization_id", apiKeyBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "organization_id", apiKeyBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "name", apiKeyBuilder, stringAttribute([]string{required, requiresReplace}))
 	capellaschema.AddAttr(attrs, "description", apiKeyBuilder, stringDefaultAttribute("", optional, computed, requiresReplace, useStateForUnknown))
 	capellaschema.AddAttr(attrs, "expiry", apiKeyBuilder, float64DefaultAttribute(180, optional, computed, requiresReplace, useStateForUnknown))

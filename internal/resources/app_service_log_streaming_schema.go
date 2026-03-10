@@ -15,10 +15,10 @@ func AppServiceLogStreamingSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
 	// Required hierarchical IDs
-	capellaschema.AddAttr(attrs, "organization_id", appServiceLogStreamingBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
-	capellaschema.AddAttr(attrs, "project_id", appServiceLogStreamingBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
-	capellaschema.AddAttr(attrs, "cluster_id", appServiceLogStreamingBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
-	capellaschema.AddAttr(attrs, "app_service_id", appServiceLogStreamingBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
+	capellaschema.AddAttr(attrs, "organization_id", appServiceLogStreamingBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "project_id", appServiceLogStreamingBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "cluster_id", appServiceLogStreamingBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "app_service_id", appServiceLogStreamingBuilder, requiredUUIDStringAttribute())
 
 	// User configured attributes
 	capellaschema.AddAttr(attrs, "output_type", appServiceLogStreamingBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))

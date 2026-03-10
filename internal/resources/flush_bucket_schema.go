@@ -12,9 +12,9 @@ var flushBucketBuilder = capellaschema.NewSchemaBuilder("flushBucket")
 func FlushBucketSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
-	capellaschema.AddAttr(attrs, "organization_id", flushBucketBuilder, stringAttribute([]string{required, requiresReplace}, stringvalidator.LengthAtLeast(1)))
-	capellaschema.AddAttr(attrs, "project_id", flushBucketBuilder, stringAttribute([]string{required, requiresReplace}, stringvalidator.LengthAtLeast(1)))
-	capellaschema.AddAttr(attrs, "cluster_id", flushBucketBuilder, stringAttribute([]string{required, requiresReplace}, stringvalidator.LengthAtLeast(1)))
+	capellaschema.AddAttr(attrs, "organization_id", flushBucketBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "project_id", flushBucketBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "cluster_id", flushBucketBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "bucket_id", flushBucketBuilder, stringAttribute([]string{required, requiresReplace}, stringvalidator.LengthAtLeast(1)))
 
 	return schema.Schema{

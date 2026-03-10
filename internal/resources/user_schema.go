@@ -16,7 +16,7 @@ func UserSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "status", userBuilder, stringAttribute([]string{computed}))
 	capellaschema.AddAttr(attrs, "inactive", userBuilder, boolAttribute(computed))
 	capellaschema.AddAttr(attrs, "email", userBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "organization_id", userBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "organization_id", userBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "organization_roles", userBuilder, stringListAttribute(required))
 	capellaschema.AddAttr(attrs, "last_login", userBuilder, stringAttribute([]string{computed}))
 	capellaschema.AddAttr(attrs, "region", userBuilder, stringAttribute([]string{computed}))

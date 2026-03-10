@@ -12,10 +12,10 @@ var importFilterBuilder = capellaschema.NewSchemaBuilder("importFilter", "import
 func ImportFilterSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
-	capellaschema.AddAttr(attrs, "organization_id", importFilterBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "project_id", importFilterBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "cluster_id", importFilterBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "app_service_id", importFilterBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "organization_id", importFilterBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "project_id", importFilterBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "cluster_id", importFilterBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "app_service_id", importFilterBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "app_endpoint_name", importFilterBuilder, stringAttribute([]string{required, requiresReplace}))
 	capellaschema.AddAttr(attrs, "scope", importFilterBuilder, stringDefaultAttribute("_default", optional, computed, requiresReplace))
 	capellaschema.AddAttr(attrs, "collection", importFilterBuilder, stringDefaultAttribute("_default", optional, computed, requiresReplace))
