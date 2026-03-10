@@ -30,7 +30,7 @@ func AppEndpointResyncSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "state", appEndpointResyncBuilder, stringAttribute([]string{computed}), "ResyncStatus")
 
 	return schema.Schema{
-		MarkdownDescription: "Manages App Endpoint Resync operations. This resource allows you to create and manage resync operations for App Endpoints in Couchbase Capella.",
+		MarkdownDescription: "Manages an App Endpoints resync operations. This resource allows you to create and manage resync operations for an App Endpoint on an App Service in Couchbase Capella.",
 		Attributes:          attrs,
 	}
 }

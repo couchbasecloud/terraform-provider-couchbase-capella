@@ -20,7 +20,7 @@ func LoggingConfigSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "log_keys", loggingConfigBuilder, computedStringSet())
 
 	return schema.Schema{
-		MarkdownDescription: "Retrieves the Logging Config associated with an App Endpoint",
+		MarkdownDescription: "Retrieves the App Endpoint Log Streaming config. This config is used to filter what logs to stream to the log collector that is configured on the App Service.",
 		Attributes:          attrs,
 	}
 }

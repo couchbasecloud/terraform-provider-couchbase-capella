@@ -24,7 +24,7 @@ func AppServiceLogStreamingSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "streaming_state", appServiceLogStreamingBuilder, computedString())
 
 	return schema.Schema{
-		MarkdownDescription: "The data source to retrieve the log streaming configuration and state for an App Service.",
+		MarkdownDescription: "The data source to retrieve the Log Streaming configuration and state for an App Service.",
 		Attributes:          attrs,
 	}
 }

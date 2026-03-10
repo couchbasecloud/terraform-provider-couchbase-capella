@@ -34,6 +34,9 @@ func AppServiceLogStreamingSchema() schema.Schema {
 
 	return schema.Schema{
 		Attributes: attrs,
+		MarkdownDescription: `Manages the Log Streaming configuration for an App Service.
+This resource allows you to set up and enable Log Streaming on an App Service by configuring the log collector credentials and output type.
+Note: Log Streaming will enable on the App Service when this resource is created or a configuration change is made.`,
 	}
 }
 
