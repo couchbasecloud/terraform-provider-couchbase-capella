@@ -17,10 +17,12 @@ import (
 // testAccAppEndpointResyncResource provides the steps to test the full lifecycle
 // of the app_endpoint_resync_job resource: Create -> ImportState
 // and that an error is returned if the scopes are invalid
-func testAccAppEndpointResyncResource(t *testing.T) []resource.TestStep {
+func testAccAppEndpointResync(t *testing.T) []resource.TestStep {
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_resync_job_")
 	resourceReference := "couchbase-capella_app_endpoint_resync_job." + resourceName
+	datasourceName := randomStringWithPrefix("tf_acc_app_endpoint_resync_")
+	datasourceReference := "data.couchbase-capella_app_endpoint_resync." + datasourceName
 
 	scopes := "{\n_default = [\"_default\"]\n}"
 	invalidScopes := "{\ntest = [\"test\"]\n}"
@@ -29,13 +31,13 @@ func testAccAppEndpointResyncResource(t *testing.T) []resource.TestStep {
 
 		// tests that an error is returned if the scopes are invalid
 		{
-			Config:      testAccAppEndpointResyncConfig(resourceName, invalidScopes),
+			Config:      testAccAppEndpointResyncConfig(resourceName, resourceReference, datasourceName, invalidScopes),
 			ExpectError: regexp.MustCompile("Unexpected status while starting App Endpoint Resync"),
 		},
 
 		// Create and Read testing
 		{
-			Config: testAccAppEndpointResyncConfig(resourceName, scopes),
+			Config: testAccAppEndpointResyncConfig(resourceName, resourceReference, datasourceName, scopes),
 			Check: resource.ComposeAggregateTestCheckFunc(
 				testAccExistsAppEndpointResyncResource(t, resourceReference),
 				resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
@@ -49,6 +51,16 @@ func testAccAppEndpointResyncResource(t *testing.T) []resource.TestStep {
 				resource.TestCheckResourceAttrSet(resourceReference, "docs_processed"),
 				resource.TestCheckResourceAttrSet(resourceReference, "start_time"),
 				resource.TestCheckResourceAttrSet(resourceReference, "state"),
+				resource.TestCheckResourceAttr(datasourceReference, "organization_id", globalOrgId),
+				resource.TestCheckResourceAttr(datasourceReference, "project_id", globalProjectId),
+				resource.TestCheckResourceAttr(datasourceReference, "cluster_id", globalClusterId),
+				resource.TestCheckResourceAttr(datasourceReference, "app_service_id", globalAppServiceId),
+				resource.TestCheckResourceAttr(datasourceReference, "app_endpoint_name", globalAppEndpointName),
+				resource.TestCheckResourceAttr(datasourceReference, "last_error", ""),
+				resource.TestCheckResourceAttrSet(datasourceReference, "docs_changed"),
+				resource.TestCheckResourceAttrSet(datasourceReference, "docs_processed"),
+				resource.TestCheckResourceAttrSet(datasourceReference, "start_time"),
+				resource.TestCheckResourceAttrSet(datasourceReference, "state"),
 			),
 		},
 
@@ -63,7 +75,7 @@ func testAccAppEndpointResyncResource(t *testing.T) []resource.TestStep {
 }
 
 // testAccAppEndpointResyncConfig returns the HCL config for an app endpoint resync resource
-func testAccAppEndpointResyncConfig(resourceName, scopes string) string {
+func testAccAppEndpointResyncConfig(resourceName, resourceReference, datasourceName, scopes string) string {
 	return fmt.Sprintf(`
 	%[1]s
 
@@ -76,7 +88,30 @@ func testAccAppEndpointResyncConfig(resourceName, scopes string) string {
 
 		scopes = %[8]s
 	}
-	`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, globalAppServiceId, globalAppEndpointName, scopes)
+
+	data "couchbase-capella_app_endpoint_resync" "%[9]s" {
+		organization_id = "%[3]s"
+		project_id = "%[4]s"
+		cluster_id = "%[5]s"
+		app_service_id = "%[6]s"
+		app_endpoint_name = "%[7]s"
+
+		depends_on = [
+			%[10]s
+		]
+	}
+	`,
+		globalProviderBlock,
+		resourceName,
+		globalOrgId,
+		globalProjectId,
+		globalClusterId,
+		globalAppServiceId,
+		globalAppEndpointName,
+		scopes,
+		datasourceName,
+		resourceReference,
+	)
 }
 
 func testAccExistsAppEndpointResyncResource(t *testing.T, resourceReference string) resource.TestCheckFunc {
