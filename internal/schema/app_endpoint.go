@@ -30,7 +30,7 @@ type AppEndpoints struct {
 	Filters *Filter `tfsdk:"filter"`
 }
 
-// Filter represents a filter block.
+// Filter represents a filter block for App Endpoints.
 type Filter struct {
 	// Name is the attribute to filter by.
 	Name types.String `tfsdk:"name"`
