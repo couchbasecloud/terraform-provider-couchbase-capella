@@ -34,7 +34,7 @@ func ClusterSchema() schema.Schema {
 		},
 	})
 
-	capellaschema.AddAttr(attrs, "configuration_type", clusterBuilder, stringAttribute([]string{optional, computed, requiresReplace, useStateForUnknown, deprecated}))
+	capellaschema.AddAttr(attrs, "configuration_type", clusterBuilder, stringAttribute([]string{optional, computed, deprecated}))
 
 	couchbaseServerAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(couchbaseServerAttrs, "version", clusterBuilder, stringAttribute([]string{optional, computed}))
