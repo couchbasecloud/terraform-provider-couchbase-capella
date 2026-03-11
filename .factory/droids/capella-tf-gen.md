@@ -68,6 +68,11 @@ Create all required files following the checklist in AGENTS.md:
 - [ ] `internal/datasources/<feature>s.go` — Read
 - [ ] `internal/datasources/<feature>s_schema.go` — SchemaBuilder
 - [ ] `internal/provider/provider.go` — register in Resources()/DataSources()
+- [ ] `examples/couchbase-capella_<feature>/<create_resource>/main.tf`
+- [ ] `examples/couchbase-capella_<feature>/<create_resource>/<create_resource>.tf`
+- [ ] `examples/couchbase-capella_<feature>/<create_resource>/README.md`
+- [ ] `examples/couchbase-capella_<feature>/<create_resource>/variables.tf`
+- [ ] `examples/couchbase-capella_<feature>/<create_resource>/terraform.template.tfvars`
 - [ ] `examples/resources/couchbase-capella_<feature>/resource.tf`
 - [ ] `examples/resources/couchbase-capella_<feature>/import.sh`
 - [ ] `examples/data-sources/couchbase-capella_<feature>s/data-source.tf`
