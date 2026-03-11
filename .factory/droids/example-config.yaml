@@ -4,7 +4,7 @@ resources:
     create:
       path: v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/cloudsnapshotbackups
       method: POST
-    create:
+    read:
       path: v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/cloudsnapshotbackups
       method: GET
     update:
