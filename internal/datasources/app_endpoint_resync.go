@@ -104,6 +104,10 @@ func (a *AppEndpointResync) Read(ctx context.Context, req datasource.ReadRequest
 		State:          types.StringValue(string(getResyncStatusResp.JSON200.State)),
 	}
 
+	state.CollectionsProcessing = types.MapNull(types.SetType{
+		ElemType: types.StringType,
+	})
+
 	if getResyncStatusResp.JSON200.CollectionsProcessing != nil && len(*getResyncStatusResp.JSON200.CollectionsProcessing) > 0 {
 		mapValue, diags := types.MapValueFrom(
 			ctx,
@@ -115,10 +119,6 @@ func (a *AppEndpointResync) Read(ctx context.Context, req datasource.ReadRequest
 		}
 
 		state.CollectionsProcessing = mapValue
-	} else {
-		state.CollectionsProcessing = types.MapNull(types.SetType{
-			ElemType: types.StringType,
-		})
 	}
 
 	diags = resp.State.Set(ctx, &state)
