@@ -1,0 +1,24 @@
+# Example generator config
+resources:
+  snapshot_backups:
+    create:
+      path: v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/cloudsnapshotbackups
+      method: POST
+    create:
+      path: v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/cloudsnapshotbackups
+      method: GET
+    update:
+      path: v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/cloudsnapshotbackups/{backupId}
+      method: PUT
+    delete:
+      path: v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/cloudsnapshotbackups/{backupId}
+      method: DELETE
+# Datasource configuration
+data_sources:
+  snapshot_backups:
+    datasource_type: list
+    read:
+      path: v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/cloudsnapshotbackups
+      method: GET
+      paginate: true
+      method: GET
