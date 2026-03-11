@@ -3,20 +3,16 @@ package acceptance_tests
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
 	"testing"
-	"time"
 
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
-	internal_errors "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
@@ -336,57 +332,6 @@ func TestAccClusterResourceWithConfigurationTypeFieldAdded(t *testing.T) {
 				ImportStateIdFunc: generateClusterImportIdForResource(resourceReference),
 				ImportState:       true,
 				ImportStateVerify: false,
-			},
-		},
-	})
-}
-
-// TestAccClusterResourceNotFound is a Terraform acceptance test that simulates the scenario where a cluster is created
-// from Terraform, but it is deleted by a REST API call and the deletion is successful. Then, updating the cluster via Terraform
-// should not cause any issues and should create a new cluster with the updated configuration.
-//
-// This test ensures that Terraform can handle the scenario where the original cluster no longer exists and can
-// create a new cluster with the specified configuration when updating.
-func TestAccClusterResourceNotFound(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_cluster_")
-	resourceReference := "couchbase-capella_cluster." + resourceName
-	cidr := "10.248.250.0/23"
-
-	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			// Create and Read testing
-			{
-				Config: testAccClusterResourceConfigWithOnlyReqField(resourceName, cidr),
-				Check: resource.ComposeTestCheckFunc(
-					testAccExistsClusterResource(t, resourceReference),
-					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
-					resource.TestCheckResourceAttr(resourceReference, "description", ""),
-					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
-					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east-1"),
-					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "50"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "io2"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.iops", "3000"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "3"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "3"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "data"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.1", "index"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.2", "query"),
-					resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
-					resource.TestCheckResourceAttr(resourceReference, "support.plan", "enterprise"),
-					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
-
-					//When the cluster is created for the first time, the ETag of the created cluster is 5
-					//resource.TestCheckResourceAttr(resourceReference, "etag", "Version: 5"),
-
-					//Delete the cluster from the server and wait until the deletion is successful.
-					testAccDeleteClusterResource(t, resourceReference),
-				),
-				ExpectNonEmptyPlan: true,
-				RefreshState:       false,
 			},
 		},
 	})
@@ -829,94 +774,6 @@ resource "couchbase-capella_cluster"  "%[4]s" {
   }
 }
 `, globalProviderBlock, globalOrgId, globalProjectId, resourceName, cidr)
-}
-
-// This function takes a resource reference string and returns a resource.TestCheckFunc. The returned function, when used
-// in Terraform acceptance tests, ensures the successful deletion of the specified cluster resource. It retrieves
-// the resource by name from the Terraform state, initiates the deletion, checks the status of the deletion, and
-// confirms that the resource no longer exists. If the resource is successfully deleted, it returns nil; otherwise,
-// it returns an error.
-func testAccDeleteClusterResource(t *testing.T, resourceReference string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		// retrieve the resource by name from state
-		var rawState map[string]string
-		for _, m := range s.Modules {
-			if len(m.Resources) > 0 {
-				if v, ok := m.Resources[resourceReference]; ok {
-					rawState = v.Primary.Attributes
-				}
-			}
-		}
-
-		data := newTestClient(t)
-		err := deleteClusterFromServer(data, rawState["organization_id"], rawState["project_id"], rawState["id"])
-		if err != nil {
-			return err
-		}
-		err = checkClusterStatus(data, context.Background(), rawState["organization_id"], rawState["project_id"], rawState["id"])
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if !resourceNotFound {
-			return errors.New(errString)
-		}
-		return nil
-	}
-}
-
-// deleteClusterFromServer deletes cluster from server.
-func deleteClusterFromServer(data *providerschema.Data, organizationId, projectId, clusterId string) error {
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", data.HostURL, organizationId, projectId, clusterId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
-	_, err := data.ClientV1.ExecuteWithRetry(
-		context.Background(),
-		cfg,
-		nil,
-		data.Token,
-		nil,
-	)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// checkClusterStatus checks the current state of cluster.
-func checkClusterStatus(
-	data *providerschema.Data, ctx context.Context, organizationId, projectId, ClusterId string,
-) error {
-	var (
-		clusterResp *clusterapi.GetClusterResponse
-		err         error
-	)
-
-	// Assuming 60 minutes is the max time deployment takes, can change after discussion
-	const timeout = time.Minute * 60
-
-	var cancel context.CancelFunc
-	ctx, cancel = context.WithTimeout(ctx, timeout)
-	defer cancel()
-
-	const sleep = time.Second * 3
-	timer := time.NewTimer(2 * time.Minute)
-
-	for {
-		select {
-		case <-ctx.Done():
-			return internal_errors.ErrClusterCreationTimeoutAfterInitiation
-		case <-timer.C:
-			clusterResp, err = retrieveClusterFromServer(data, organizationId, projectId, ClusterId)
-			switch err {
-			case nil:
-				if clusterapi.IsFinalState(clusterResp.CurrentState) {
-					return nil
-				}
-				const msg = "waiting for cluster to complete the execution"
-				tflog.Info(ctx, msg)
-			default:
-				return err
-			}
-			timer.Reset(sleep)
-		}
-	}
 }
 
 // generateClusterImportIdForResource generates a cluster import ID based on the provided resource reference

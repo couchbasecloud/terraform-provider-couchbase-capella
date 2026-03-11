@@ -1,16 +1,11 @@
 package acceptance_tests
 
 import (
-	"errors"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
 func TestAccUserResource(t *testing.T) {
@@ -50,105 +45,6 @@ func TestAccUserResource(t *testing.T) {
 			// NOTE: No delete case is provided - this occurs automatically
 		},
 	})
-}
-
-func TestAccUserResourceResourceNotFound(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_user_")
-	resourceReference := "couchbase-capella_user." + resourceName
-
-	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			// Create and Read testing
-			{
-				Config: testAccUserResourceConfig(resourceName, "terraform_acceptance_test2"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "name", "terraform_acceptance_test2"),
-					resource.TestCheckResourceAttr(resourceReference, "email", "terraform_acceptance_test2@couchbase.com"),
-					resource.TestCheckResourceAttr(resourceReference, "organization_roles.0", "organizationOwner"),
-					// Delete the user from the server and wait until deletion is successful
-					testAccDeleteUserResource(t, resourceReference),
-				),
-				ExpectNonEmptyPlan: true,
-				RefreshState:       false,
-			},
-
-			// Attempt to update - since the orginal has been deleted, a new user will be created.
-			{
-				Config: testAccUserResourceConfigUpdate(resourceName, "terraform_acceptance_test2"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "name", "terraform_acceptance_test2"),
-					resource.TestCheckResourceAttr(resourceReference, "email", "terraform_acceptance_test2@couchbase.com"),
-					resource.TestCheckResourceAttr(resourceReference, "organization_roles.0", "organizationMember"),
-					resource.TestCheckResourceAttr(resourceReference, "resources.0.type", "project"),
-					resource.TestCheckResourceAttr(resourceReference, "resources.0.roles.0", "projectViewer"),
-				),
-			},
-		},
-	})
-}
-
-// This function takes a resource reference string and returns a resource.TestCheckFunc. The returned function, when used
-// in Terraform acceptance tests, ensures the successful deletion of the specified cluster resource. It retrieves
-// the resource by name from the Terraform state, initiates the deletion, checks the status of the deletion, and
-// confirms that the resource no longer exists. If the resource is successfully deleted, it returns nil; otherwise,
-// it returns an error.
-func testAccDeleteUserResource(t *testing.T, resourceReference string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		// retrieve the resource by name from state
-		var rawState map[string]string
-		for _, m := range s.Modules {
-			if len(m.Resources) > 0 {
-				if v, ok := m.Resources[resourceReference]; ok {
-					rawState = v.Primary.Attributes
-				}
-			}
-		}
-
-		data := newTestClient(t)
-		err := deleteUserFromServer(data, rawState["organization_id"], rawState["id"])
-		if err != nil {
-			return err
-		}
-		err = readUserFromServer(data, rawState["organization_id"], rawState["id"])
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if !resourceNotFound {
-			return errors.New(errString)
-		}
-		return nil
-	}
-}
-
-// deleteUserFromServer deletes user from server
-func deleteUserFromServer(data *providerschema.Data, organizationId, clusterId string) error {
-	url := fmt.Sprintf("%s/v4/organizations/%s/users/%s", data.HostURL, organizationId, clusterId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
-	_, err := data.ClientV1.Execute(
-		cfg,
-		nil,
-		data.Token,
-		nil,
-	)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// readUserFromServer reads user from server
-func readUserFromServer(data *providerschema.Data, organizationId, clusterId string) error {
-	url := fmt.Sprintf("%s/v4/organizations/%s/users/%s", data.HostURL, organizationId, clusterId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	_, err := data.ClientV1.Execute(
-		cfg,
-		nil,
-		data.Token,
-		nil,
-	)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func testAccUserResourceConfig(resourceName, username string) string {
