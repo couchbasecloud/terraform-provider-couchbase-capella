@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/utils"
 )
 
 var (
@@ -232,7 +232,16 @@ func (l *LoggingConfig) Configure(ctx context.Context, req resource.ConfigureReq
 // upsertLoggingConfig creates or updates a Logging Config for an App Endpoint.
 func (l *LoggingConfig) upsertLoggingConfig(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string, plan providerschema.LoggingConfig) error {
 
-	organizationUUID, projectUUID, clusterUUID, appServiceUUID := l.mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId)
+	uuids, err := utils.ParseUUIDs(
+		utils.IDField{Name: "organization_id", Value: organizationId},
+		utils.IDField{Name: "project_id", Value: projectId},
+		utils.IDField{Name: "cluster_id", Value: clusterId},
+		utils.IDField{Name: "app_service_id", Value: appServiceId},
+	)
+	if err != nil {
+		return err
+	}
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID := uuids[0], uuids[1], uuids[2], uuids[3]
 
 	putLoggingConfigRequest := api.PutAppEndpointLogStreamingConfigJSONRequestBody{
 		LogLevel: plan.LogLevel.ValueStringPointer(),
@@ -271,7 +280,16 @@ func (l *LoggingConfig) upsertLoggingConfig(ctx context.Context, organizationId,
 // getLoggingConfig retrieves the Logging Config for an App Endpoint.
 func (l *LoggingConfig) getLoggingConfig(ctx context.Context, organizationId, projectId, clusterId, appServiceId, appEndpointName string) (*api.ConsoleLoggingConfig, error) {
 
-	organizationUUID, projectUUID, clusterUUID, appServiceUUID := l.mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId)
+	uuids, err := utils.ParseUUIDs(
+		utils.IDField{Name: "organization_id", Value: organizationId},
+		utils.IDField{Name: "project_id", Value: projectId},
+		utils.IDField{Name: "cluster_id", Value: clusterId},
+		utils.IDField{Name: "app_service_id", Value: appServiceId},
+	)
+	if err != nil {
+		return nil, err
+	}
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID := uuids[0], uuids[1], uuids[2], uuids[3]
 
 	getLoggingConfigResp, err := l.ClientV2.GetAppEndpointLogStreamingConfigWithResponse(
 		ctx,
@@ -309,7 +327,16 @@ func (l *LoggingConfig) getLoggingConfig(ctx context.Context, organizationId, pr
 
 func (l *LoggingConfig) getLogStreamingStatus(ctx context.Context, organizationId, projectId, clusterId, appServiceId string) (*api.GetLogStreamingResponseConfigState, error) {
 
-	organizationUUID, projectUUID, clusterUUID, appServiceUUID := l.mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId)
+	uuids, err := utils.ParseUUIDs(
+		utils.IDField{Name: "organization_id", Value: organizationId},
+		utils.IDField{Name: "project_id", Value: projectId},
+		utils.IDField{Name: "cluster_id", Value: clusterId},
+		utils.IDField{Name: "app_service_id", Value: appServiceId},
+	)
+	if err != nil {
+		return nil, err
+	}
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID := uuids[0], uuids[1], uuids[2], uuids[3]
 
 	getLogStreamingStatusResp, err := l.ClientV2.GetAppServiceLogStreamingWithResponse(
 		ctx,
@@ -340,13 +367,4 @@ func (l *LoggingConfig) getLogStreamingStatus(ctx context.Context, organizationI
 	}
 
 	return getLogStreamingStatusResp.JSON200.ConfigState, nil
-}
-
-func (l *LoggingConfig) mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId string) (organizationUUID, projectUUID, clusterUUID, appServiceUUID uuid.UUID) {
-	organizationUUID, _ = uuid.Parse(organizationId)
-	projectUUID, _ = uuid.Parse(projectId)
-	clusterUUID, _ = uuid.Parse(clusterId)
-	appServiceUUID, _ = uuid.Parse(appServiceId)
-
-	return organizationUUID, projectUUID, clusterUUID, appServiceUUID
 }
