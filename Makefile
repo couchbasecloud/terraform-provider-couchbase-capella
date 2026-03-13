@@ -17,7 +17,7 @@ OPENAPI_SPEC_URL?=https://docs.couchbase.com/cloud/management-api-reference/inde
 export OPENAPI_SPEC_URL
 
 export PATH := $(shell go env GOPATH)/bin:$(PATH)
-export SHELL := env PATH=$(PATH) /bin/bash
+export SHELL := env "PATH=$(PATH)" /bin/bash
 
 default: build
 
