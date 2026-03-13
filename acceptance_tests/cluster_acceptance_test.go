@@ -16,82 +16,81 @@ import (
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-// TODO: AV-96938: generate CIDR dynamically
-
 func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "couchbase-capella_cluster." + resourceName
-	cidr := "10.255.250.0/23"
 
-	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"http": {
-				Source: "hashicorp/http",
+	runTestWithUniqueCIDR(t, true, func(cidr string) resource.TestCase {
+		return resource.TestCase{
+			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+			ExternalProviders: map[string]resource.ExternalProvider{
+				"http": {
+					Source: "hashicorp/http",
+				},
 			},
-		},
-		Steps: []resource.TestStep{
-			// Create and Read testing
-			{
-				Config: testAccClusterResourceConfigWithOnlyReqField(resourceName, cidr),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExistsClusterResource(t, resourceReference),
-					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
-					resource.TestCheckResourceAttr(resourceReference, "description", ""),
-					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
-					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east-1"),
-					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
-					resource.TestCheckResourceAttr(resourceReference, "configuration_type", "multiNode"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "50"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "io2"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.iops", "3000"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "3"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "3"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "data"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.1", "index"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.2", "query"),
-					resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
-					resource.TestCheckResourceAttr(resourceReference, "support.plan", "enterprise"),
-					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
-					resource.TestCheckResourceAttrSet(resourceReference, "etag"),
-				),
+			Steps: []resource.TestStep{
+				// Create and Read testing
+				{
+					Config: testAccClusterResourceConfigWithOnlyReqField(resourceName, cidr),
+					Check: resource.ComposeAggregateTestCheckFunc(
+						testAccExistsClusterResource(t, resourceReference),
+						resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
+						resource.TestCheckResourceAttr(resourceReference, "description", ""),
+						resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
+						resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east-1"),
+						resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
+						resource.TestCheckResourceAttr(resourceReference, "configuration_type", "multiNode"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "50"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "io2"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.iops", "3000"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "3"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "3"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "data"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.1", "index"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.2", "query"),
+						resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
+						resource.TestCheckResourceAttr(resourceReference, "support.plan", "enterprise"),
+						resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
+						resource.TestCheckResourceAttrSet(resourceReference, "etag"),
+					),
+				},
+				// ImportState testing
+				{
+					ResourceName:      resourceReference,
+					ImportStateIdFunc: generateClusterImportIdForResource(resourceReference),
+					ImportState:       true,
+				},
+				// Update number of nodes, compute type, disk size and type, cluster name, support plan, time zone and description from empty string,
+				// and Read testing
+				{
+					Config:             testAccClusterResourceConfigUpdateWhenClusterCreatedWithReqFieldOnlyAndIfMatch(resourceName, cidr),
+					ExpectNonEmptyPlan: true,
+					Check: resource.ComposeAggregateTestCheckFunc(
+						testAccExistsClusterResource(t, resourceReference),
+						resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
+						resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east-1"),
+						resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
+						resource.TestCheckResourceAttr(resourceReference, "configuration_type", "multiNode"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "50"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "io2"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.iops", "3000"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "3"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "3"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "data"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.1", "index"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.2", "query"),
+						resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
+						resource.TestCheckResourceAttr(resourceReference, "support.plan", "enterprise"),
+						resource.TestCheckResourceAttr(resourceReference, "support.timezone", "IST"),
+					),
+				},
+				// Delete testing automatically occurs in TestCase
 			},
-			// ImportState testing
-			{
-				ResourceName:      resourceReference,
-				ImportStateIdFunc: generateClusterImportIdForResource(resourceReference),
-				ImportState:       true,
-			},
-			// Update number of nodes, compute type, disk size and type, cluster name, support plan, time zone and description from empty string,
-			// and Read testing
-			{
-				Config:             testAccClusterResourceConfigUpdateWhenClusterCreatedWithReqFieldOnlyAndIfMatch(resourceName, cidr),
-				ExpectNonEmptyPlan: true,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExistsClusterResource(t, resourceReference),
-					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
-					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east-1"),
-					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
-					resource.TestCheckResourceAttr(resourceReference, "configuration_type", "multiNode"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "50"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "io2"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.iops", "3000"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "3"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "3"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "data"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.1", "index"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.2", "query"),
-					resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
-					resource.TestCheckResourceAttr(resourceReference, "support.plan", "enterprise"),
-					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "IST"),
-				),
-			},
-			// Delete testing automatically occurs in TestCase
-		},
+		}
 	})
 }
 
@@ -106,52 +105,53 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 func TestAccClusterResourceWithOptionalFieldAWS(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "couchbase-capella_cluster." + resourceName
-	cidr := "10.251.250.0/23"
 
-	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			// Create and Read testing
-			{
-				Config: testAccClusterResourceConfigWithAllField(resourceName, cidr),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExistsClusterResource(t, resourceReference),
-					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
-					resource.TestCheckResourceAttr(resourceReference, "description", "AWS cluster with all fields"),
-					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
-					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east-1"),
-					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "50"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "gp3"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.iops", "3000"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "2"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "2"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "index"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.1", "query"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.compute.cpu", "4"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.compute.ram", "16"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.disk.storage", "50"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.disk.type", "gp3"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.disk.iops", "3000"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.num_of_nodes", "3"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.services.#", "1"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.1.services.0", "data"),
-					resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
-					resource.TestCheckResourceAttr(resourceReference, "support.plan", "developer pro"),
-					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
-					resource.TestCheckResourceAttr(resourceReference, "enable_private_dns_resolution", "false"),
-				),
+	runTestWithUniqueCIDR(t, true, func(cidr string) resource.TestCase {
+		return resource.TestCase{
+			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+			Steps: []resource.TestStep{
+				// Create and Read testing
+				{
+					Config: testAccClusterResourceConfigWithAllField(resourceName, cidr),
+					Check: resource.ComposeAggregateTestCheckFunc(
+						testAccExistsClusterResource(t, resourceReference),
+						resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
+						resource.TestCheckResourceAttr(resourceReference, "description", "AWS cluster with all fields"),
+						resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
+						resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east-1"),
+						resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "50"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "gp3"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.iops", "3000"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "2"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "2"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "index"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.1", "query"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.compute.cpu", "4"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.compute.ram", "16"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.disk.storage", "50"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.disk.type", "gp3"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.1.node.disk.iops", "3000"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.1.num_of_nodes", "3"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.1.services.#", "1"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.1.services.0", "data"),
+						resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
+						resource.TestCheckResourceAttr(resourceReference, "support.plan", "developer pro"),
+						resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
+						resource.TestCheckResourceAttr(resourceReference, "enable_private_dns_resolution", "false"),
+					),
+				},
+				// ImportState testing
+				{
+					ResourceName:      resourceReference,
+					ImportStateIdFunc: generateClusterImportIdForResource(resourceReference),
+					ImportState:       true,
+					ImportStateVerify: false,
+				},
 			},
-			// ImportState testing
-			{
-				ResourceName:      resourceReference,
-				ImportStateIdFunc: generateClusterImportIdForResource(resourceReference),
-				ImportState:       true,
-				ImportStateVerify: false,
-			},
-		},
+		}
 	})
 }
 
@@ -166,67 +166,68 @@ func TestAccClusterResourceWithOptionalFieldAWS(t *testing.T) {
 func TestAccClusterResourceGCP(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "couchbase-capella_cluster." + resourceName
-	cidr := "10.252.250.0/23"
 
-	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			// Create and Read testing
-			{
-				Config: testAccClusterResourceConfigGCP(resourceName, cidr),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExistsClusterResource(t, resourceReference),
-					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
-					resource.TestCheckResourceAttr(resourceReference, "description", "GCP cluster"),
-					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "gcp"),
-					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east1"),
-					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "51"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "pd-ssd"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "3"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "3"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "data"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.1", "index"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.2", "query"),
-					resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
-					resource.TestCheckResourceAttr(resourceReference, "support.plan", "enterprise"),
-					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "ET"),
-					resource.TestCheckResourceAttr(resourceReference, "enable_private_dns_resolution", "false"),
-				),
+	runTestWithUniqueCIDR(t, true, func(cidr string) resource.TestCase {
+		return resource.TestCase{
+			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+			Steps: []resource.TestStep{
+				// Create and Read testing
+				{
+					Config: testAccClusterResourceConfigGCP(resourceName, cidr),
+					Check: resource.ComposeAggregateTestCheckFunc(
+						testAccExistsClusterResource(t, resourceReference),
+						resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
+						resource.TestCheckResourceAttr(resourceReference, "description", "GCP cluster"),
+						resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "gcp"),
+						resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east1"),
+						resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "51"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "pd-ssd"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "3"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "3"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "data"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.1", "index"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.2", "query"),
+						resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
+						resource.TestCheckResourceAttr(resourceReference, "support.plan", "enterprise"),
+						resource.TestCheckResourceAttr(resourceReference, "support.timezone", "ET"),
+						resource.TestCheckResourceAttr(resourceReference, "enable_private_dns_resolution", "false"),
+					),
+				},
+				// ImportState testing
+				{
+					ResourceName:      resourceReference,
+					ImportStateIdFunc: generateClusterImportIdForResource(resourceReference),
+					ImportState:       true,
+					ImportStateVerify: true,
+				},
+				{
+					Config: testAccClusterResourceConfigGCPUpdateWithHorizontalScaling(resourceName, cidr),
+					Check: resource.ComposeAggregateTestCheckFunc(
+						testAccExistsClusterResource(t, resourceReference),
+						resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
+						resource.TestCheckResourceAttr(resourceReference, "description", "GCP update with horizontal scaling"),
+						resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "gcp"),
+						resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east1"),
+						resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "51"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "pd-ssd"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "4"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "3"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "data"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.1", "index"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.2", "query"),
+						resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
+						resource.TestCheckResourceAttr(resourceReference, "support.plan", "enterprise"),
+						resource.TestCheckResourceAttr(resourceReference, "support.timezone", "ET"),
+					),
+				},
 			},
-			// ImportState testing
-			{
-				ResourceName:      resourceReference,
-				ImportStateIdFunc: generateClusterImportIdForResource(resourceReference),
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccClusterResourceConfigGCPUpdateWithHorizontalScaling(resourceName, cidr),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExistsClusterResource(t, resourceReference),
-					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
-					resource.TestCheckResourceAttr(resourceReference, "description", "GCP update with horizontal scaling"),
-					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "gcp"),
-					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east1"),
-					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "4"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "16"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "51"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "pd-ssd"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "4"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "3"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "data"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.1", "index"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.2", "query"),
-					resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
-					resource.TestCheckResourceAttr(resourceReference, "support.plan", "enterprise"),
-					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "ET"),
-				),
-			},
-		},
+		}
 	})
 }
 
@@ -237,17 +238,18 @@ func TestAccClusterResourceGCP(t *testing.T) {
 // This scenario is expected to fail with the error message matching the regular expression "The disk type provided, gp2, is not valid".
 func TestAccClusterResourceWithOptionalFieldAWSInvalidScenario(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_")
-	cidr := "10.253.250.0/23"
 
-	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			// Create and Read testing
-			{
-				Config:      testAccClusterResourceConfigWithAllFieldInvalidScenario(resourceName, cidr),
-				ExpectError: regexp.MustCompile("gp2.*invalid"),
+	runTestWithUniqueCIDR(t, true, func(cidr string) resource.TestCase {
+		return resource.TestCase{
+			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+			Steps: []resource.TestStep{
+				// Create and Read testing
+				{
+					Config:      testAccClusterResourceConfigWithAllFieldInvalidScenario(resourceName, cidr),
+					ExpectError: regexp.MustCompile("gp2.*invalid"),
+				},
 			},
-		},
+		}
 	})
 }
 
@@ -256,16 +258,17 @@ func TestAccClusterResourceWithOptionalFieldAWSInvalidScenario(t *testing.T) {
 // The aim of this test is to ensure that the creation of the cluster fails as expected.
 func TestAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenario(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_")
-	cidr := "10.249.250.0/23"
 
-	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenarioConfig(resourceName, cidr),
-				ExpectError: regexp.MustCompile("iops cannot be set for GCP"),
+	runTestWithUniqueCIDR(t, true, func(cidr string) resource.TestCase {
+		return resource.TestCase{
+			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+			Steps: []resource.TestStep{
+				{
+					Config:      testAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenarioConfig(resourceName, cidr),
+					ExpectError: regexp.MustCompile("iops cannot be set for GCP"),
+				},
 			},
-		},
+		}
 	})
 }
 
@@ -273,16 +276,17 @@ func TestAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenario(t *testin
 // for an AWS cluster.
 func TestAccClusterResourceForAwsWithAutoexpansionInvalid(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_")
-	cidr := "10.249.250.0/23"
 
-	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccClusterResourceConfigAwsWithAutoexpansionInvalidConfig(resourceName, cidr),
-				ExpectError: regexp.MustCompile(`(?i)Autoexpansion cannot be set`),
+	runTestWithUniqueCIDR(t, true, func(cidr string) resource.TestCase {
+		return resource.TestCase{
+			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+			Steps: []resource.TestStep{
+				{
+					Config:      testAccClusterResourceConfigAwsWithAutoexpansionInvalidConfig(resourceName, cidr),
+					ExpectError: regexp.MustCompile(`(?i)Autoexpansion cannot be set`),
+				},
 			},
-		},
+		}
 	})
 }
 
@@ -294,46 +298,47 @@ func TestAccClusterResourceForAwsWithAutoexpansionInvalid(t *testing.T) {
 func TestAccClusterResourceWithConfigurationTypeFieldAdded(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "couchbase-capella_cluster." + resourceName
-	cidr := "10.247.250.0/23"
 
-	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			// Create and Read testing
-			{
-				Config: testAccClusterResourceConfigWithConfigurationTypeFieldAdded(resourceName, cidr),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccExistsClusterResource(t, resourceReference),
-					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
-					resource.TestCheckResourceAttr(resourceReference, "description", ""),
-					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
-					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east-1"),
-					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
-					resource.TestCheckResourceAttr(resourceReference, "configuration_type", "singleNode"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "2"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "8"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "50"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "gp3"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.iops", "3000"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "1"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "3"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "data"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.1", "index"),
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.2", "query"),
-					resource.TestCheckResourceAttr(resourceReference, "availability.type", "single"),
-					resource.TestCheckResourceAttr(resourceReference, "support.plan", "developer pro"),
-					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
-					resource.TestCheckResourceAttr(resourceReference, "zones.0", "use1-az1"),
-				),
+	runTestWithUniqueCIDR(t, true, func(cidr string) resource.TestCase {
+		return resource.TestCase{
+			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+			Steps: []resource.TestStep{
+				// Create and Read testing
+				{
+					Config: testAccClusterResourceConfigWithConfigurationTypeFieldAdded(resourceName, cidr),
+					Check: resource.ComposeAggregateTestCheckFunc(
+						testAccExistsClusterResource(t, resourceReference),
+						resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
+						resource.TestCheckResourceAttr(resourceReference, "description", ""),
+						resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
+						resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east-1"),
+						resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
+						resource.TestCheckResourceAttr(resourceReference, "configuration_type", "singleNode"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.cpu", "2"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.compute.ram", "8"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.storage", "50"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.type", "gp3"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.iops", "3000"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "1"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.#", "3"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "data"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.1", "index"),
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.2", "query"),
+						resource.TestCheckResourceAttr(resourceReference, "availability.type", "single"),
+						resource.TestCheckResourceAttr(resourceReference, "support.plan", "developer pro"),
+						resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
+						resource.TestCheckResourceAttr(resourceReference, "zones.0", "use1-az1"),
+					),
+				},
+				// ImportState testing
+				{
+					ResourceName:      resourceReference,
+					ImportStateIdFunc: generateClusterImportIdForResource(resourceReference),
+					ImportState:       true,
+					ImportStateVerify: false,
+				},
 			},
-			// ImportState testing
-			{
-				ResourceName:      resourceReference,
-				ImportStateIdFunc: generateClusterImportIdForResource(resourceReference),
-				ImportState:       true,
-				ImportStateVerify: false,
-			},
-		},
+		}
 	})
 }
 

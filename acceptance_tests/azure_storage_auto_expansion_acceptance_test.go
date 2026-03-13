@@ -11,33 +11,32 @@ func TestAccClusterResourceAzureDiskAutoExpansion(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "couchbase-capella_cluster." + resourceName
 
-	// Generate a random CIDR to avoid conflicts with existing clusters
-	cidr := generateRandomCIDR()
-
-	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfigAzureDiskAutoExpansion(resourceName, cidr),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.autoexpansion", "true"),
-				),
+	runTestWithUniqueCIDR(t, true, func(cidr string) resource.TestCase {
+		return resource.TestCase{
+			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccClusterConfigAzureDiskAutoExpansion(resourceName, cidr),
+					Check: resource.ComposeAggregateTestCheckFunc(
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.autoexpansion", "true"),
+					),
+				},
+				// ImportState testing
+				{
+					ResourceName:      resourceReference,
+					ImportStateIdFunc: generateClusterImportIdForResource(resourceReference),
+					ImportState:       true,
+					ImportStateVerify: true,
+				},
+				// Disable autoexpansion
+				{
+					Config: testAccClusterConfigAzureDiskAutoExpansionOff(resourceName, cidr),
+					Check: resource.ComposeAggregateTestCheckFunc(
+						resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.autoexpansion", "false"),
+					),
+				},
 			},
-			// ImportState testing
-			{
-				ResourceName:      resourceReference,
-				ImportStateIdFunc: generateClusterImportIdForResource(resourceReference),
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			// Disable autoexpansion
-			{
-				Config: testAccClusterConfigAzureDiskAutoExpansionOff(resourceName, cidr),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.node.disk.autoexpansion", "false"),
-				),
-			},
-		},
+		}
 	})
 }
 
