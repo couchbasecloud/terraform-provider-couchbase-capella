@@ -13,30 +13,33 @@ import (
 func TestAppServiceResource(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_app_svc_")
 	resourceReference := "couchbase-capella_app_service." + resourceName
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			// Create and Read testing
-			{
-				Config: testAccAppServiceResourceConfig(resourceName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "compute.cpu", "2"),
-					resource.TestCheckResourceAttr(resourceReference, "compute.ram", "4"),
-				),
+
+	runTestWithUniqueCIDR(t, false, func(cidr string) resource.TestCase {
+		return resource.TestCase{
+			ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+			Steps: []resource.TestStep{
+				// Create and Read testing
+				{
+					Config: testAccAppServiceResourceConfig(resourceName, cidr),
+					Check: resource.ComposeAggregateTestCheckFunc(
+						resource.TestCheckResourceAttr(resourceReference, "compute.cpu", "2"),
+						resource.TestCheckResourceAttr(resourceReference, "compute.ram", "4"),
+					),
+				},
+				// ImportState testing
+				{
+					ResourceName:      resourceReference,
+					ImportStateIdFunc: generateAppServiceImportId(resourceReference),
+					ImportState:       true,
+					ImportStateVerify: true,
+				},
+				// Delete testing automatically occurs in TestCase
 			},
-			// ImportState testing
-			{
-				ResourceName:      resourceReference,
-				ImportStateIdFunc: generateAppServiceImportId(resourceReference),
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			// Delete testing automatically occurs in TestCase
-		},
+		}
 	})
 }
 
-func testAccAppServiceResourceConfig(resourceName string) string {
+func testAccAppServiceResourceConfig(resourceName, cidr string) string {
 	clusterName := randomStringWithPrefix("tf_acc_cluster_")
 	return fmt.Sprintf(`
 %[1]s
@@ -48,7 +51,7 @@ resource "couchbase-capella_cluster" "%[5]s" {
   cloud_provider = {
     type   = "aws"
     region = "us-east-1"
-    cidr   = "10.190.250.0/23"
+    cidr   = "%[6]s"
   }
   service_groups = [
     {
@@ -86,7 +89,7 @@ resource "couchbase-capella_app_service" "%[4]s" {
     ram = 4
   }
 }
-`, globalProviderBlock, globalOrgId, globalProjectId, resourceName, clusterName)
+`, globalProviderBlock, globalOrgId, globalProjectId, resourceName, clusterName, cidr)
 }
 
 func generateAppServiceImportId(resourceReference string) resource.ImportStateIdFunc {

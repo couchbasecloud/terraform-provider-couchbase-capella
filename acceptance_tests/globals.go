@@ -36,6 +36,11 @@ var (
 	globalProtoV6ProviderFactory = map[string]func() (tfprotov6.ProviderServer, error){
 		"couchbase-capella": providerserver.NewProtocol6WithError(provider.New()()),
 	}
+
+	// inUseCIDRs caches the CIDR prefixes currently in use by clusters across
+	// all projects in the global tenant to ensure acceptance tests use unique
+	// CIDR prefixes for cluster creation.
+	inUseCIDRs cidrCache
 )
 
 const (
