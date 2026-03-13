@@ -75,11 +75,63 @@ func GetPaginated[DataSchema ~[]T, T any](
 	cfg EndpointCfg,
 	sortBy sortParameter,
 ) (DataSchema, error) {
+	result, err := getPaginatedInternal[DataSchema, T](ctx, client, token, cfg, sortBy)
+	if err != nil {
+		return nil, err
+	}
+	return result.Data, nil
+}
+
+// PaginatedResponse contains the paginated data along with the raw JSON response
+// from the first page, which can be used to extract additional metadata fields
+// that are not part of the standard pagination structure.
+type PaginatedResponse[DataSchema ~[]T, T any] struct {
+	// Data contains all items from all pages, flattened into a single slice.
+	Data DataSchema
+
+	// RawFirstPage contains the raw JSON response from the first page.
+	// This can be used to unmarshal additional top-level fields like clusterStats.
+	RawFirstPage []byte
+}
+
+// GetPaginatedWithMeta is similar to GetPaginated but also returns the raw response
+// from the first page, allowing callers to extract additional metadata fields
+// that exist alongside the standard "data" and "cursor" fields.
+//
+// Example usage for extracting clusterStats:
+//
+//	result, err := api.GetPaginatedWithMeta[[]bucket.GetBucketResponse](ctx, client, token, cfg, api.SortById)
+//	if err != nil { return err }
+//
+//	var meta struct {
+//	    ClusterStats *bucket.ClusterStats `json:"clusterStats"`
+//	}
+//	json.Unmarshal(result.RawFirstPage, &meta)
+func GetPaginatedWithMeta[DataSchema ~[]T, T any](
+	ctx context.Context,
+	client *Client,
+	token string,
+	cfg EndpointCfg,
+	sortBy sortParameter,
+) (*PaginatedResponse[DataSchema, T], error) {
+	return getPaginatedInternal[DataSchema, T](ctx, client, token, cfg, sortBy)
+}
+
+// getPaginatedInternal is the common implementation for pagination logic.
+// It handles fetching all pages and returns both the combined data and the raw first page response.
+func getPaginatedInternal[DataSchema ~[]T, T any](
+	ctx context.Context,
+	client *Client,
+	token string,
+	cfg EndpointCfg,
+	sortBy sortParameter,
+) (*PaginatedResponse[DataSchema, T], error) {
 	var (
-		responses DataSchema
-		page      = 1
-		perPage   = 25
-		baseUrl   = cfg.Url
+		responses    DataSchema
+		rawFirstPage []byte
+		page         = 1
+		perPage      = 25
+		baseUrl      = cfg.Url
 	)
 
 	for {
@@ -100,6 +152,11 @@ func GetPaginated[DataSchema ~[]T, T any](
 			return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 		}
 
+		// Store the raw response from the first page for metadata extraction
+		if page == 1 {
+			rawFirstPage = response.Body
+		}
+
 		var decoded overlay[DataSchema]
 		err = json.Unmarshal(response.Body, &decoded)
 		if err != nil {
@@ -117,5 +174,8 @@ func GetPaginated[DataSchema ~[]T, T any](
 		page = cursor.Pages.Next
 	}
 
-	return responses, nil
+	return &PaginatedResponse[DataSchema, T]{
+		Data:         responses,
+		RawFirstPage: rawFirstPage,
+	}, nil
 }

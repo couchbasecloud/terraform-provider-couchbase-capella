@@ -35,102 +35,92 @@ $ terraform plan
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
 │ published releases.
 ╵
-data.capella_buckets.existing_buckets: Reading...
-data.capella_buckets.existing_buckets: Read complete after 1s
+data.couchbase-capella_buckets.existing_buckets: Reading...
+data.couchbase-capella_buckets.existing_buckets: Read complete after 1s
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   + create
 
 Terraform will perform the following actions:
 
-  # capella_bucket.new_bucket will be created
-  + resource "capella_bucket" "new_bucket" {
-      + audit                      = {
-          + created_at  = (known after apply)
-          + created_by  = (known after apply)
-          + modified_at = (known after apply)
-          + modified_by = (known after apply)
-          + version     = (known after apply)
-        }
+  # couchbase-capella_bucket.new_bucket will be created
+  + resource "couchbase-capella_bucket" "new_bucket" {
       + bucket_conflict_resolution = "seqno"
-      + cluster_id                 = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+      + cluster_id                 = "aaaabbbb-cccc-dddd-eeee-ffffaaaabbbb"
       + durability_level           = "none"
       + eviction_policy            = "fullEviction"
       + flush                      = false
       + id                         = (known after apply)
       + memory_allocation_in_mb    = 100
       + name                       = "new_terraform_bucket"
-      + organization_id            = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      + project_id                 = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
-      + replicas                   = 1
-      + stats                      = {
-          + disk_used_in_mib   = (known after apply)
-          + item_count         = (known after apply)
-          + memory_used_in_mib = (known after apply)
-          + ops_per_second     = (known after apply)
-        }
-      + storage_backend            = "couchstore"
-      + time_to_live_in_seconds    = 0
-      + type                       = "couchbase"
-    }
-
-Plan: 1 to add, 0 to change, 0 to destroy.
-
-Changes to Outputs:
-  + buckets_list = {
-      + cluster_id      = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
-      + data            = [
-          + {
-              + audit                      = {
-                  + created_at  = "0001-01-01 00:00:00 +0000 UTC"
-                  + created_by  = ""
-                  + modified_at = "0001-01-01 00:00:00 +0000 UTC"
-                  + modified_by = ""
-                  + version     = 0
-                }
-              + bucket_conflict_resolution = "seqno"
-              + cluster_id                 = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
-              + durability_level           = "none"
-              + eviction_policy            = "valueOnly"
-              + flush                      = false
-              + id                         = "dHJhdmVsLXNhbXBsZQ=="
-              + memory_allocation_in_mb    = 200
-              + name                       = "travel-sample"
-              + organization_id            = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-              + project_id                 = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
-              + replicas                   = 1
-              + stats                      = {
-                  + disk_used_in_mib   = 11
-                  + item_count         = 0
-                  + memory_used_in_mib = 39
-                  + ops_per_second     = 0
-                }
-              + storage_backend            = "couchstore"
-              + time_to_live_in_seconds    = 0
-              + type                       = "couchbase"
-            },
-        ]
-      + organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      + project_id      = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
-    }
-  + new_bucket   = {
-      + audit                      = (known after apply)
-      + bucket_conflict_resolution = "seqno"
-      + cluster_id                 = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
-      + durability_level           = "none"
-      + eviction_policy            = "fullEviction"
-      + flush                      = false
-      + id                         = (known after apply)
-      + memory_allocation_in_mb    = 100
-      + name                       = "new_terraform_bucket"
-      + organization_id            = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      + project_id                 = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+      + organization_id            = "ccaabbbb-cccc-dddd-eeee-ffffaaaabbbb"
+      + project_id                 = "aaaabbbb-ffff-dddd-eeee-ffffaaaabbbb"
       + replicas                   = 1
       + stats                      = (known after apply)
       + storage_backend            = "couchstore"
       + time_to_live_in_seconds    = 0
       + type                       = "couchbase"
+      + vbuckets                   = (known after apply)
     }
+
+Plan: 1 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + bucket_id    = (known after apply)
+  + buckets_list = {
+      + cluster_id      = "aaaabbbb-cccc-dddd-eeee-ffffaaaabbbb"
+      + cluster_stats   = {
+          + free_memory_in_mb  = 839
+          + max_replicas       = 2
+          + total_memory_in_mb = 1039
+        }
+      + data            = [
+          + {
+              + bucket_conflict_resolution = "seqno"
+              + cluster_id                 = "aaaabbbb-cccc-dddd-eeee-ffffaaaabbbb"
+              + durability_level           = "none"
+              + eviction_policy            = "fullEviction"
+              + flush                      = false
+              + id                         = "dHJhdmVsLXNhbXBsZQ=="
+              + memory_allocation_in_mb    = 200
+              + name                       = "travel-sample"
+              + organization_id            = "ccaabbbb-cccc-dddd-eeee-ffffaaaabbbb"
+              + project_id                 = "aaaabbbb-ffff-dddd-eeee-ffffaaaabbbb"
+              + replicas                   = 1
+              + stats                      = {
+                  + disk_used_in_mib   = 97
+                  + item_count         = 63306
+                  + memory_used_in_mib = 130
+                  + ops_per_second     = 0
+                }
+              + storage_backend            = "magma"
+              + time_to_live_in_seconds    = 0
+              + type                       = "couchbase"
+              + vbuckets                   = 128
+            },
+        ]
+      + organization_id = "ccaabbbb-cccc-dddd-eeee-ffffaaaabbbb"
+      + project_id      = "aaaabbbb-ffff-dddd-eeee-ffffaaaabbbb"
+    }
+  + new_bucket   = {
+      + bucket_conflict_resolution = "seqno"
+      + cluster_id                 = "aaaabbbb-cccc-dddd-eeee-ffffaaaabbbb"
+      + durability_level           = "none"
+      + eviction_policy            = "fullEviction"
+      + flush                      = false
+      + id                         = (known after apply)
+      + memory_allocation_in_mb    = 100
+      + name                       = "new_terraform_bucket"
+      + organization_id            = "ccaabbbb-cccc-dddd-eeee-ffffaaaabbbb"
+      + project_id                 = "aaaabbbb-ffff-dddd-eeee-ffffaaaabbbb"
+      + replicas                   = 1
+      + stats                      = (known after apply)
+      + storage_backend            = "couchstore"
+      + time_to_live_in_seconds    = 0
+      + type                       = "couchbase"
+      + vbuckets                   = (known after apply)
+    }
+
 
 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -153,101 +143,90 @@ $ terraform apply
 │ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
 │ published releases.
 ╵
-data.capella_buckets.existing_buckets: Reading...
-data.capella_buckets.existing_buckets: Read complete after 1s
+data.couchbase-capella_buckets.existing_buckets: Reading...
+data.couchbase-capella_buckets.existing_buckets: Read complete after 3s
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   + create
 
 Terraform will perform the following actions:
 
-  # capella_bucket.new_bucket will be created
-  + resource "capella_bucket" "new_bucket" {
-      + audit                      = {
-          + created_at  = (known after apply)
-          + created_by  = (known after apply)
-          + modified_at = (known after apply)
-          + modified_by = (known after apply)
-          + version     = (known after apply)
-        }
+  # couchbase-capella_bucket.new_bucket will be created
+  + resource "couchbase-capella_bucket" "new_bucket" {
       + bucket_conflict_resolution = "seqno"
-      + cluster_id                 = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+      + cluster_id                 = "aaaabbbb-cccc-dddd-eeee-ffffaaaabbbb"
       + durability_level           = "none"
       + eviction_policy            = "fullEviction"
       + flush                      = false
       + id                         = (known after apply)
       + memory_allocation_in_mb    = 100
       + name                       = "new_terraform_bucket"
-      + organization_id            = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      + project_id                 = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
-      + replicas                   = 1
-      + stats                      = {
-          + disk_used_in_mib   = (known after apply)
-          + item_count         = (known after apply)
-          + memory_used_in_mib = (known after apply)
-          + ops_per_second     = (known after apply)
-        }
-      + storage_backend            = "couchstore"
-      + time_to_live_in_seconds    = 0
-      + type                       = "couchbase"
-    }
-
-Plan: 1 to add, 0 to change, 0 to destroy.
-
-Changes to Outputs:
-  + buckets_list = {
-      + cluster_id      = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
-      + data            = [
-          + {
-              + audit                      = {
-                  + created_at  = "0001-01-01 00:00:00 +0000 UTC"
-                  + created_by  = ""
-                  + modified_at = "0001-01-01 00:00:00 +0000 UTC"
-                  + modified_by = ""
-                  + version     = 0
-                }
-              + bucket_conflict_resolution = "seqno"
-              + cluster_id                 = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
-              + durability_level           = "none"
-              + eviction_policy            = "valueOnly"
-              + flush                      = false
-              + id                         = "dHJhdmVsLXNhbXBsZQ=="
-              + memory_allocation_in_mb    = 200
-              + name                       = "travel-sample"
-              + organization_id            = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-              + project_id                 = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
-              + replicas                   = 1
-              + stats                      = {
-                  + disk_used_in_mib   = 134
-                  + item_count         = 63288
-                  + memory_used_in_mib = 165
-                  + ops_per_second     = 0
-                }
-              + storage_backend            = "couchstore"
-              + time_to_live_in_seconds    = 0
-              + type                       = "couchbase"
-            },
-        ]
-      + organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      + project_id      = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
-    }
-  + new_bucket   = {
-      + audit                      = (known after apply)
-      + bucket_conflict_resolution = "seqno"
-      + cluster_id                 = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
-      + durability_level           = "none"
-      + eviction_policy            = "fullEviction"
-      + flush                      = false
-      + id                         = (known after apply)
-      + memory_allocation_in_mb    = 100
-      + name                       = "new_terraform_bucket"
-      + organization_id            = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      + project_id                 = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+      + organization_id            = "ccaabbbb-cccc-dddd-eeee-ffffaaaabbbb"
+      + project_id                 = "aaaabbbb-ffff-dddd-eeee-ffffaaaabbbb"
       + replicas                   = 1
       + stats                      = (known after apply)
       + storage_backend            = "couchstore"
       + time_to_live_in_seconds    = 0
       + type                       = "couchbase"
+      + vbuckets                   = (known after apply)
+    }
+
+Plan: 1 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + bucket_id    = (known after apply)
+  + buckets_list = {
+      + cluster_id      = "aaaabbbb-cccc-dddd-eeee-ffffaaaabbbb"
+      + cluster_stats   = {
+          + free_memory_in_mb  = 839
+          + max_replicas       = 2
+          + total_memory_in_mb = 1039
+        }
+      + data            = [
+          + {
+              + bucket_conflict_resolution = "seqno"
+              + cluster_id                 = "aaaabbbb-cccc-dddd-eeee-ffffaaaabbbb"
+              + durability_level           = "none"
+              + eviction_policy            = "fullEviction"
+              + flush                      = false
+              + id                         = "dHJhdmVsLXNhbXBsZQ=="
+              + memory_allocation_in_mb    = 200
+              + name                       = "travel-sample"
+              + organization_id            = "ccaabbbb-cccc-dddd-eeee-ffffaaaabbbb"
+              + project_id                 = "aaaabbbb-ffff-dddd-eeee-ffffaaaabbbb"
+              + replicas                   = 1
+              + stats                      = {
+                  + disk_used_in_mib   = 97
+                  + item_count         = 63306
+                  + memory_used_in_mib = 130
+                  + ops_per_second     = 0
+                }
+              + storage_backend            = "magma"
+              + time_to_live_in_seconds    = 0
+              + type                       = "couchbase"
+              + vbuckets                   = 128
+            },
+        ]
+      + organization_id = "ccaabbbb-cccc-dddd-eeee-ffffaaaabbbb"
+      + project_id      = "aaaabbbb-ffff-dddd-eeee-ffffaaaabbbb"
+    }
+  + new_bucket   = {
+      + bucket_conflict_resolution = "seqno"
+      + cluster_id                 = "aaaabbbb-cccc-dddd-eeee-ffffaaaabbbb"
+      + durability_level           = "none"
+      + eviction_policy            = "fullEviction"
+      + flush                      = false
+      + id                         = (known after apply)
+      + memory_allocation_in_mb    = 100
+      + name                       = "new_terraform_bucket"
+      + organization_id            = "ccaabbbb-cccc-dddd-eeee-ffffaaaabbbb"
+      + project_id                 = "aaaabbbb-ffff-dddd-eeee-ffffaaaabbbb"
+      + replicas                   = 1
+      + stats                      = (known after apply)
+      + storage_backend            = "couchstore"
+      + time_to_live_in_seconds    = 0
+      + type                       = "couchbase"
+      + vbuckets                   = (known after apply)
     }
 
 Do you want to perform these actions?
@@ -256,77 +235,71 @@ Do you want to perform these actions?
 
   Enter a value: yes
 
-capella_bucket.new_bucket: Creating...
-capella_bucket.new_bucket: Creation complete after 8s [id=bmV3X3RlcnJhZm9ybV9idWNrZXQ=]
+couchbase-capella_bucket.new_bucket: Creating...
+couchbase-capella_bucket.new_bucket: Creation complete after 3s [id=bmV3X3RlcnJhZm9ybV9idWNrZXQ=]
 
 Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
 
 Outputs:
 
+bucket_id = "bmV3X3RlcnJhZm9ybV9idWNrZXQ="
 buckets_list = {
-  "cluster_id" = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+  "cluster_id" = "aaaabbbb-cccc-dddd-eeee-ffffaaaabbbb"
+  "cluster_stats" = {
+    "free_memory_in_mb" = 839
+    "max_replicas" = 2
+    "total_memory_in_mb" = 1039
+  }
   "data" = tolist([
     {
-      "audit" = {
-        "created_at" = "0001-01-01 00:00:00 +0000 UTC"
-        "created_by" = ""
-        "modified_at" = "0001-01-01 00:00:00 +0000 UTC"
-        "modified_by" = ""
-        "version" = 0
-      }
       "bucket_conflict_resolution" = "seqno"
-      "cluster_id" = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+      "cluster_id" = "aaaabbbb-cccc-dddd-eeee-ffffaaaabbbb"
       "durability_level" = "none"
-      "eviction_policy" = "valueOnly"
+      "eviction_policy" = "fullEviction"
       "flush" = false
       "id" = "dHJhdmVsLXNhbXBsZQ=="
       "memory_allocation_in_mb" = 200
       "name" = "travel-sample"
-      "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-      "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+      "organization_id" = "ccaabbbb-cccc-dddd-eeee-ffffaaaabbbb"
+      "project_id" = "aaaabbbb-ffff-dddd-eeee-ffffaaaabbbb"
       "replicas" = 1
       "stats" = {
-        "disk_used_in_mib" = 134
-        "item_count" = 63288
-        "memory_used_in_mib" = 165
+        "disk_used_in_mib" = 97
+        "item_count" = 63306
+        "memory_used_in_mib" = 130
         "ops_per_second" = 0
       }
-      "storage_backend" = "couchstore"
+      "storage_backend" = "magma"
       "time_to_live_in_seconds" = 0
       "type" = "couchbase"
+      "vbuckets" = 128
     },
   ])
-  "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-  "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+  "organization_id" = "ccaabbbb-cccc-dddd-eeee-ffffaaaabbbb"
+  "project_id" = "aaaabbbb-ffff-dddd-eeee-ffffaaaabbbb"
 }
 new_bucket = {
-  "audit" = {
-    "created_at" = "0001-01-01 00:00:00 +0000 UTC"
-    "created_by" = ""
-    "modified_at" = "0001-01-01 00:00:00 +0000 UTC"
-    "modified_by" = ""
-    "version" = 0
-  }
   "bucket_conflict_resolution" = "seqno"
-  "cluster_id" = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+  "cluster_id" = "aaaabbbb-cccc-dddd-eeee-ffffaaaabbbb"
   "durability_level" = "none"
   "eviction_policy" = "fullEviction"
   "flush" = false
   "id" = "bmV3X3RlcnJhZm9ybV9idWNrZXQ="
   "memory_allocation_in_mb" = 100
   "name" = "new_terraform_bucket"
-  "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-  "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+  "organization_id" = "ccaabbbb-cccc-dddd-eeee-ffffaaaabbbb"
+  "project_id" = "aaaabbbb-ffff-dddd-eeee-ffffaaaabbbb"
   "replicas" = 1
   "stats" = {
-    "disk_used_in_mib" = 1
+    "disk_used_in_mib" = 0
     "item_count" = 0
-    "memory_used_in_mib" = 38
+    "memory_used_in_mib" = 0
     "ops_per_second" = 0
   }
   "storage_backend" = "couchstore"
   "time_to_live_in_seconds" = 0
   "type" = "couchbase"
+  "vbuckets" = 1024
 }
 ```
 
@@ -337,33 +310,27 @@ Sample Output:
 ```
 $ terraform output new_bucket
 {
-  "audit" = {
-    "created_at" = "0001-01-01 00:00:00 +0000 UTC"
-    "created_by" = ""
-    "modified_at" = "0001-01-01 00:00:00 +0000 UTC"
-    "modified_by" = ""
-    "version" = 0
-  }
   "bucket_conflict_resolution" = "seqno"
-  "cluster_id" = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+  "cluster_id" = "aaaabbbb-cccc-dddd-eeee-ffffaaaabbbb"
   "durability_level" = "none"
   "eviction_policy" = "fullEviction"
   "flush" = false
   "id" = "bmV3X3RlcnJhZm9ybV9idWNrZXQ="
   "memory_allocation_in_mb" = 100
   "name" = "new_terraform_bucket"
-  "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
-  "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+  "organization_id" = "ccaabbbb-cccc-dddd-eeee-ffffaaaabbbb"
+  "project_id" = "aaaabbbb-ffff-dddd-eeee-ffffaaaabbbb"
   "replicas" = 1
   "stats" = {
-    "disk_used_in_mib" = 1
+    "disk_used_in_mib" = 0
     "item_count" = 0
-    "memory_used_in_mib" = 38
+    "memory_used_in_mib" = 0
     "ops_per_second" = 0
   }
   "storage_backend" = "couchstore"
   "time_to_live_in_seconds" = 0
   "type" = "couchbase"
+  "vbuckets" = 1024
 }
 ```
 

@@ -206,3 +206,15 @@ type PutBucketRequest struct {
 	// Flush determines whether flushing is enabled on the bucket.
 	Flush bool `json:"flush"`
 }
+
+// ClusterStats represents cluster-level statistics for bucket memory allocation.
+type ClusterStats struct {
+	// FreeMemoryInMb is the amount of free memory available in the cluster in MiB.
+	FreeMemoryInMb int64 `json:"freeMemoryInMb"`
+
+	// MaxReplicas is the maximum number of replicas that can be configured for buckets in this cluster.
+	MaxReplicas int64 `json:"maxReplicas"`
+
+	// TotalMemoryInMb is the total amount of memory available in the cluster in MiB.
+	TotalMemoryInMb int64 `json:"totalMemoryInMb"`
+}
