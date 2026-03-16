@@ -1,7 +1,10 @@
 # Code Review
 
 
-1.  run git diff main --name-only -- '*.go'
+1.  git diff main --name-only -- '*.go' ':!internal/generated/api/openapi.gen.go'
+
+    do not read the openapi.gen.go file as it will consume many tokens
+
 2.  for each go file, look at git diff of the file compared to the one in main
 3.  all functions, structs and global var/const must have a comment
 4.  run goimports -w -local github.com/couchbasecloud/terraform-provider-couchbase-capella on the file
