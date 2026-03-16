@@ -2,19 +2,21 @@
 
 
 1.  run git diff main --name-only -- '*.go'
-2.  for each go file, look at git diff of the file compared to the one in main.
-3.  all functions, structs and global var/const must have a comment.
+2.  for each go file, look at git diff of the file compared to the one in main
+3.  all functions, structs and global var/const must have a comment
 4.  run goimports -w -local github.com/couchbasecloud/terraform-provider-couchbase-capella on the file
 5.  run gofmt -w on the file
 6.  run go vet on the file and fix any errors
-7.  build the binary
+7.  build the binary as follows
+
+get the latest git tag and assign to VERSION:
+
+VERSION=$(git describe --tags --abbrev=0)
+
+then build:
+
+go build -ldflags "-s -w -X 'github.com/couchbasecloud/terraform-provider-couchbase-capella/version.ProviderVersion=$VERSION'" -o ./bin/terraform-provider-couchbase-capella
+
+fix any errors.
+
 8.  repeat steps 4-7 until there are no errors.  retry up to 5 times.  if errors persist report them.
-
-
-get the latest git tag with git describe --tags --abbrev=0 and use that in $version variable below.
-
-
-go build -ldflags "-s -w -X 'github.com/couchbasecloud/terraform-provider-couchbase-capella/version.ProviderVersion=$version'" -o ./bin/terraform-provider-couchbase-capella
-
-
-and fix any errors.
