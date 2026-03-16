@@ -74,7 +74,9 @@ description: generate terraform datasources based on openapi spec.
     }
 
 9.  generate necessary structs to handle API response.  put structs in internal/api/
-    use ClientV1 struct to make API calls.
+    use ClientV1 struct to make API calls with retry logic.  for example:
+
+    response, err := s.ClientV1.ExecuteWithRetry
 
 10.  register the datasource in internal/provider/provider.go in func (p *capellaProvider) DataSources
 
