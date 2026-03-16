@@ -13,12 +13,25 @@
 #
 #  this will run droid in spec mode using claude opus 4.6, and implement the code using gemini 3 flash.
 #  feel free to change these to your preferred models.
-#  it reads a prompt from ~/prompt.  change this to point to your prompt file.
+#  it will prompt you for the path to your prompt file.
 #
 #  stream-json lets you see the agents execution in real time on the terminal.  you can also review agent.log file
 #  after the run for debugging.
 
 set -euo pipefail
+
+while true; do
+    read -rp "Enter the path to the prompt file: " PROMPT_FILE
+    if [[ -z "$PROMPT_FILE" ]]; then
+        echo "Error: no path entered. Please try again."
+    elif [[ ! -f "$PROMPT_FILE" ]]; then
+        echo "Error: file not found: $PROMPT_FILE. Please try again."
+    elif [[ ! -r "$PROMPT_FILE" ]]; then
+        echo "Error: no read permission: $PROMPT_FILE. Please try again."
+    else
+        break
+    fi
+done
 
 source .env
 
@@ -32,4 +45,4 @@ droid exec \
     --reasoning-effort high \
     --auto high \
     --cwd "$PARENT_DIR" \
-    --file ~/prompt | tee agent.log
+    --file "$PROMPT_FILE" | tee agent.log
