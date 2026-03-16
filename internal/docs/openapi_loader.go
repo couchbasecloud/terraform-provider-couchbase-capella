@@ -230,48 +230,102 @@ func GetOpenAPIDescription(resourceName, tfFieldName string) string {
 
 	// Try common schema name patterns
 	schemaPatterns := []string{
-		capitalizedResource, // Exact match (e.g., CORSConfig, AccessFunction)
+		capitalizedResource,
 		"Create" + capitalizedResource + "Request",
 		"Get" + capitalizedResource + "Response",
 		"Update" + capitalizedResource + "Request",
 		capitalizedResource + "Request",
 		capitalizedResource + "Response",
-		resourceName, // Exact match without any modification (e.g. "datadog" for DataDog schema)
+		resourceName,
 	}
 
-	// Try each schema pattern until we find the field
+	// Try each schema pattern, searching recursively through nested properties
 	for _, schemaName := range schemaPatterns {
 		schemaRef := openAPIDoc.Components.Schemas[schemaName]
 		if schemaRef == nil || schemaRef.Value == nil {
 			continue
 		}
 
-		propRef := schemaRef.Value.Properties[camelFieldName]
-		if propRef != nil && propRef.Value != nil {
-			return buildEnhancedDescription(propRef.Value, openAPIDoc)
+		if prop := findNestedProperty(schemaRef.Value, camelFieldName, nil); prop != nil {
+			return buildEnhancedDescription(prop, openAPIDoc)
 		}
 	}
 
-	// If not found in main schema, try common nested schemas
-	// This handles fields like "type", "roles" that are inside nested Resource objects
-	nestedSchemas := []string{
-		"Resource",                       // For user resources, API key resources
-		"ResourceBucket",                 // For bucket-specific resources
-		capitalizedResource + "Resource", // e.g., UserResource if it exists
+	return ""
+}
+
+// findNestedProperty recursively searches through an OpenAPI schema to find a
+// property by name, following $ref links into nested schemas.
+// Uses strings.EqualFold for case-insensitive matching to handle acronym differences
+// (e.g. "enablePrivateDnsResolution" matches "enablePrivateDNSResolution").
+func findNestedProperty(schema *openapi3.Schema, fieldName string, visited map[string]bool) *openapi3.Schema {
+	if schema == nil {
+		return nil
+	}
+	if visited == nil {
+		visited = make(map[string]bool)
 	}
 
-	for _, schemaName := range nestedSchemas {
-		schemaRef := openAPIDoc.Components.Schemas[schemaName]
-		if schemaRef == nil || schemaRef.Value == nil {
-			continue
-		}
-
-		propRef := schemaRef.Value.Properties[camelFieldName]
-		if propRef != nil && propRef.Value != nil {
-			return buildEnhancedDescription(propRef.Value, openAPIDoc)
+	// Check direct properties (case-insensitive)
+	for propName, propRef := range schema.Properties {
+		if strings.EqualFold(propName, fieldName) && propRef != nil && propRef.Value != nil {
+			return propRef.Value
 		}
 	}
 
+	// Recurse into each property's referenced or inline schema
+	for _, propRef := range schema.Properties {
+		if found := searchSchemaRef(propRef, fieldName, visited); found != nil {
+			return found
+		}
+	}
+
+	// Recurse into allOf/anyOf/oneOf
+	for _, list := range [][]*openapi3.SchemaRef{schema.AllOf, schema.AnyOf, schema.OneOf} {
+		for _, ref := range list {
+			if found := searchSchemaRef(ref, fieldName, visited); found != nil {
+				return found
+			}
+		}
+	}
+
+	// Recurse into array items
+	if found := searchSchemaRef(schema.Items, fieldName, visited); found != nil {
+		return found
+	}
+
+	return nil
+}
+
+// searchSchemaRef resolves a SchemaRef and continues searching for the given
+// field name. Named $ref targets are tracked in visited to prevent infinite
+// recursion from circular references.
+func searchSchemaRef(ref *openapi3.SchemaRef, fieldName string, visited map[string]bool) *openapi3.Schema {
+	if ref == nil {
+		return nil
+	}
+
+	// Track named schemas to prevent cycles
+	if name := extractSchemaName(ref.Ref); name != "" {
+		if visited[name] {
+			return nil
+		}
+		visited[name] = true
+	}
+
+	if ref.Value != nil {
+		return findNestedProperty(ref.Value, fieldName, visited)
+	}
+
+	return nil
+}
+
+// extractSchemaName extracts the schema name from a $ref string like "#/components/schemas/Foo".
+func extractSchemaName(ref string) string {
+	const prefix = "#/components/schemas/"
+	if strings.HasPrefix(ref, prefix) {
+		return ref[len(prefix):]
+	}
 	return ""
 }
 

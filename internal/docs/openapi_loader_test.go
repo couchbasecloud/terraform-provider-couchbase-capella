@@ -4,6 +4,8 @@ import (
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/getkin/kin-openapi/openapi3"
 )
 
 // Default OpenAPI spec URL - same as in Makefile
@@ -281,7 +283,7 @@ func TestGetOpenAPIDescription_ValidValuesFormat(t *testing.T) {
 }
 
 func TestGetOpenAPIDescription_NestedSchemaFields(t *testing.T) {
-	// Test that nested fields (like those in Resource schema) are found
+	// Test that fields nested inside referenced schemas are found via recursive search
 	tests := []struct {
 		name           string
 		resourceName   string
@@ -858,6 +860,126 @@ func TestAppendTextBuffer(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestExtractSchemaName(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{"valid ref", "#/components/schemas/Foo", "Foo"},
+		{"wrong prefix", "#/components/parameters/Foo", ""},
+		{"empty string", "", ""},
+		{"no prefix", "Foo", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := extractSchemaName(tt.input)
+			if result != tt.expected {
+				t.Errorf("extractSchemaName(%q) = %q, want %q", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestFindNestedProperty(t *testing.T) {
+	// Helper to build a schema with properties
+	makeSchema := func(props map[string]*openapi3.SchemaRef) *openapi3.Schema {
+		return &openapi3.Schema{Properties: props}
+	}
+
+	// Helper to build a SchemaRef with a $ref string and resolved value
+	makeRef := func(refName string, schema *openapi3.Schema) *openapi3.SchemaRef {
+		return &openapi3.SchemaRef{
+			Ref:   "#/components/schemas/" + refName,
+			Value: schema,
+		}
+	}
+
+	t.Run("top-level property", func(t *testing.T) {
+		schema := makeSchema(map[string]*openapi3.SchemaRef{
+			"name": {Value: &openapi3.Schema{Description: "the name"}},
+		})
+		result := findNestedProperty(schema, "name", nil)
+		if result == nil || result.Description != "the name" {
+			t.Error("expected to find top-level property")
+		}
+	})
+
+	t.Run("case-insensitive match", func(t *testing.T) {
+		schema := makeSchema(map[string]*openapi3.SchemaRef{
+			"enablePrivateDNSResolution": {Value: &openapi3.Schema{Description: "dns field"}},
+		})
+		result := findNestedProperty(schema, "enablePrivateDnsResolution", nil)
+		if result == nil || result.Description != "dns field" {
+			t.Error("expected case-insensitive match")
+		}
+	})
+
+	t.Run("nested via ref", func(t *testing.T) {
+		inner := makeSchema(map[string]*openapi3.SchemaRef{
+			"cpu": {Value: &openapi3.Schema{Description: "cpu count"}},
+		})
+		outer := makeSchema(map[string]*openapi3.SchemaRef{
+			"compute": makeRef("Compute", inner),
+		})
+		result := findNestedProperty(outer, "cpu", nil)
+		if result == nil || result.Description != "cpu count" {
+			t.Error("expected to find property nested via $ref")
+		}
+	})
+
+	t.Run("array items traversal", func(t *testing.T) {
+		itemSchema := makeSchema(map[string]*openapi3.SchemaRef{
+			"numOfNodes": {Value: &openapi3.Schema{Description: "node count"}},
+		})
+		schema := &openapi3.Schema{
+			Type:  &openapi3.Types{"array"},
+			Items: makeRef("ServiceGroup", itemSchema),
+		}
+		wrapper := makeSchema(map[string]*openapi3.SchemaRef{
+			"serviceGroups": {Value: schema},
+		})
+		result := findNestedProperty(wrapper, "numOfNodes", nil)
+		if result == nil || result.Description != "node count" {
+			t.Error("expected to find property inside array items")
+		}
+	})
+
+	t.Run("circular ref returns nil", func(t *testing.T) {
+		// A and B reference each other
+		a := &openapi3.Schema{}
+		b := &openapi3.Schema{}
+		a.Properties = map[string]*openapi3.SchemaRef{
+			"toB": makeRef("B", b),
+		}
+		b.Properties = map[string]*openapi3.SchemaRef{
+			"toA": makeRef("A", a),
+		}
+		result := findNestedProperty(a, "nonexistent", nil)
+		if result != nil {
+			t.Error("expected nil for circular reference")
+		}
+	})
+
+	t.Run("not found returns nil", func(t *testing.T) {
+		schema := makeSchema(map[string]*openapi3.SchemaRef{
+			"name": {Value: &openapi3.Schema{Description: "a name"}},
+		})
+		result := findNestedProperty(schema, "doesNotExist", nil)
+		if result != nil {
+			t.Error("expected nil for missing property")
+		}
+	})
+
+	t.Run("nil schema returns nil", func(t *testing.T) {
+		result := findNestedProperty(nil, "anything", nil)
+		if result != nil {
+			t.Error("expected nil for nil schema")
+		}
+	})
 }
 
 // Helper function to compare string slices
