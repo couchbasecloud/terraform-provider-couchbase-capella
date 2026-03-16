@@ -80,9 +80,9 @@ description: generate terraform datasources based on openapi spec.
 
     for example with buckets need datasources.NewBuckets,
 
-10.  create acceptance tests for both datasources in acceptance_tests/ with format <feature>_test.go.
+11.  create acceptance tests for both datasources in acceptance_tests/ with format <feature>_test.go.
      for example if feature is Buckets then need buckets_test.go
 
-11.  acceptance tests should run in parallel.  that is use resource.ParallelTest()
+12.  acceptance tests should run in parallel.  that is use resource.ParallelTest()
 
 
