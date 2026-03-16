@@ -8,6 +8,7 @@
 5.  run gofmt -w on the file
 6.  run go vet on the file and fix any errors
 7.  build the binary
+8.  repeat steps 4-7 until there are no errors.  retry up to 5 times.  if errors persist report them.
 
 
 get the latest git tag with git describe --tags --abbrev=0 and use that in $version variable below.
