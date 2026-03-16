@@ -230,13 +230,13 @@ func GetOpenAPIDescription(resourceName, tfFieldName string) string {
 
 	// Try common schema name patterns
 	schemaPatterns := []string{
-		capitalizedResource,
+		capitalizedResource, // Exact match (e.g., CORSConfig, AccessFunction)
 		"Create" + capitalizedResource + "Request",
 		"Get" + capitalizedResource + "Response",
 		"Update" + capitalizedResource + "Request",
 		capitalizedResource + "Request",
 		capitalizedResource + "Response",
-		resourceName,
+		resourceName, // Exact match without any modification (e.g. "datadog" for DataDog schema)
 	}
 
 	// Try each schema pattern, searching recursively through nested properties
