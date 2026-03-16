@@ -7,7 +7,7 @@ description: generate terraform datasources based on openapi spec.
 
 ## Instructions
 
-1.  datasource code should be in ~/GolandProjects/terraform-provider-couchbase-capella/internal/datasources/
+1.  datasource code should be in internal/datasources/
 2.  schema for datasource should be in its own file with format <feature>_schema.go
 
     add validation for organization_id, project_id and cluster_id if present.  for example with organization_id
@@ -73,14 +73,14 @@ description: generate terraform datasources based on openapi spec.
     	d.Data = data
     }
 
-9.  generate necessary structs to handle API response.  put structs in ~/GolandProjects/terraform-provider-couchbase-capella/internal/api/
+9.  generate necessary structs to handle API response.  put structs in internal/api/
     use ClientV1 struct to make API calls.
 
 10.  register the datasource in internal/provider/provider.go in func (p *capellaProvider) DataSources
 
     for example with buckets need datasources.NewBuckets,
 
-10.  create acceptance tests for both datasources in ~/GolandProjects/terraform-provider-couchbase-capella/acceptance_tests/ with format <feature>_test.go.
+10.  create acceptance tests for both datasources in acceptance_tests/ with format <feature>_test.go.
      for example if feature is Buckets then need buckets_test.go
 
 11.  acceptance tests should run in parallel.  that is use resource.ParallelTest()
