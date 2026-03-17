@@ -219,6 +219,7 @@ func GetOpenAPIDescription(resourceName, tfFieldName string) string {
 	}
 
 	if openAPIDoc.Components.Schemas == nil {
+		fmt.Fprintf(os.Stderr, "Warning: Could not find OpenAPI description for field %q in resource %q (no schemas in spec)\n", tfFieldName, resourceName)
 		return ""
 	}
 
@@ -250,6 +251,10 @@ func GetOpenAPIDescription(resourceName, tfFieldName string) string {
 			return buildEnhancedDescription(prop, openAPIDoc)
 		}
 	}
+
+	fmt.Fprintf(os.Stderr, "Warning: Could not find OpenAPI description for field %q in resource %q\n", tfFieldName, resourceName)
+	fmt.Fprintf(os.Stderr, "If this is a nested field, you may need to provide the specific schema name as an override in AddAttr().\n")
+	fmt.Fprintf(os.Stderr, "Example: capellaschema.AddAttr(attrs, %q, builder, attr, \"CloudProvider\")\n", tfFieldName)
 
 	return ""
 }
