@@ -46,5 +46,11 @@ droid exec \
     --reasoning-effort medium \
     --auto medium \
     --cwd "$PARENT_DIR" \
-    --file "$PROMPT_FILE" | tee agent.log
+    --file "$PROMPT_FILE" > agent.log
 
+echo "Agent execution completed. See agent.log for details.
+Please review the acceptance tests in accetance_tests/ and add any additional tests as needed.
+Run the acceptance tests.
+
+Please manually verify the new resource by creating a terraform script file.
+"
