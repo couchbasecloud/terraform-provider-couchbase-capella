@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"fmt"
 	"reflect"
 
 	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -82,6 +83,10 @@ func WithOpenAPIDescription[T SchemaAttribute](b *SchemaBuilder, attr T, fieldNa
 		description = docs.GetOpenAPIDescription(b.openAPISchemaName, fieldName)
 	}
 
+	if description == "" {
+		panic(fmt.Sprintf("No description found for field %s in schema %s or alternate schemas %v", fieldName, b.openAPISchemaName, alternateSchemas))
+	}
+
 	setMarkdownDescription(attr, description)
 	return attr
 }
@@ -123,6 +128,10 @@ func AddAttr[M SchemaAttributeMap, T SchemaAttribute](
 	// Fall back to the builder's default schema
 	if description == "" {
 		description = docs.GetOpenAPIDescription(builder.openAPISchemaName, fieldName)
+	}
+
+	if description == "" {
+		panic(fmt.Sprintf("No description found for field %s in schema %s or alternate schemas %v", fieldName, builder.openAPISchemaName, alternateSchemas))
 	}
 
 	setMarkdownDescription(attr, description)
