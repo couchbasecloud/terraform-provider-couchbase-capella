@@ -4,8 +4,12 @@ import (
 	"context"
 	"testing"
 
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -92,4 +96,31 @@ func TestCapellaProvider_Resources(t *testing.T) {
 
 	require.NotNil(t, resources)
 	assert.NotEmpty(t, resources, "provider should expose resources")
+}
+
+// TestValidateOpenAPIDescriptions iterates through all resources and data sources
+// to ensure every field has a description from either OpenAPI or a manual override.
+// This is used by 'make build-docs' to provide clean, summarized feedback.
+func TestValidateOpenAPIDescriptions(t *testing.T) {
+	providerschema.EnableStrictDocValidation()
+
+	p := &capellaProvider{name: providerName}
+	ctx := context.Background()
+
+	// Check Resources
+	for _, factory := range p.Resources(ctx) {
+		r := factory()
+		var resp resource.SchemaResponse
+		r.Schema(ctx, resource.SchemaRequest{}, &resp)
+	}
+
+	// Check DataSources
+	for _, factory := range p.DataSources(ctx) {
+		ds := factory()
+		var resp datasource.SchemaResponse
+		ds.Schema(ctx, datasource.SchemaRequest{}, &resp)
+	}
+
+	// This will print a nice summary and exit with 1 if there are any errors.
+	providerschema.CheckDocValidationErrors()
 }
