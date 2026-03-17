@@ -84,7 +84,12 @@ func WithOpenAPIDescription[T SchemaAttribute](b *SchemaBuilder, attr T, fieldNa
 	}
 
 	if description == "" {
-		panic(fmt.Sprintf("No description found for field %s in schema %s or alternate schemas %v", fieldName, b.openAPISchemaName, alternateSchemas))
+		panic(fmt.Sprintf(
+			"No description found for field '%s' in schema '%s' or alternate schemas %v.\n"+
+				"To fix: Add a manual override for this field in your schema builder, e.g.:\n"+
+				"capellaschema.AddAttr(attrs, \"%s\", builder, attr, /* description override here */)\n"+
+				"Or set the MarkdownDescription property directly.\n",
+			fieldName, b.openAPISchemaName, alternateSchemas, fieldName))
 	}
 
 	setMarkdownDescription(attr, description)
@@ -131,7 +136,12 @@ func AddAttr[M SchemaAttributeMap, T SchemaAttribute](
 	}
 
 	if description == "" {
-		panic(fmt.Sprintf("No description found for field %s in schema %s or alternate schemas %v", fieldName, builder.openAPISchemaName, alternateSchemas))
+		panic(fmt.Sprintf(
+			"No description found for field '%s' in schema '%s' or alternate schemas %v.\n"+
+				"To fix: Add a manual override for this field in your schema builder, e.g.:\n"+
+				"capellaschema.AddAttr(attrs, \"%s\", builder, attr, /* description override here */)\n"+
+				"Or set the MarkdownDescription property directly.\n",
+			fieldName, builder.openAPISchemaName, alternateSchemas, fieldName))
 	}
 
 	setMarkdownDescription(attr, description)
