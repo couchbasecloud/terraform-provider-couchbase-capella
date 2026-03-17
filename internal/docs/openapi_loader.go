@@ -218,37 +218,34 @@ func GetOpenAPIDescription(resourceName, tfFieldName string) string {
 		}
 	}
 
-	if openAPIDoc.Components.Schemas == nil {
-		fmt.Fprintf(os.Stderr, "Warning: Could not find OpenAPI description for field %q in resource %q (no schemas in spec)\n", tfFieldName, resourceName)
-		return ""
-	}
+	if openAPIDoc.Components.Schemas != nil {
+		// Convert snake_case to camelCase for schema property lookup
+		camelFieldName := snakeToCamel(tfFieldName)
 
-	// Convert snake_case to camelCase for schema property lookup
-	camelFieldName := snakeToCamel(tfFieldName)
+		// Capitalize resource name for schema patterns
+		capitalizedResource := capitalize(resourceName)
 
-	// Capitalize resource name for schema patterns
-	capitalizedResource := capitalize(resourceName)
-
-	// Try common schema name patterns
-	schemaPatterns := []string{
-		capitalizedResource, // Exact match (e.g., CORSConfig, AccessFunction)
-		"Create" + capitalizedResource + "Request",
-		"Get" + capitalizedResource + "Response",
-		"Update" + capitalizedResource + "Request",
-		capitalizedResource + "Request",
-		capitalizedResource + "Response",
-		resourceName, // Exact match without any modification (e.g. "datadog" for DataDog schema)
-	}
-
-	// Try each schema pattern, searching recursively through nested properties
-	for _, schemaName := range schemaPatterns {
-		schemaRef := openAPIDoc.Components.Schemas[schemaName]
-		if schemaRef == nil || schemaRef.Value == nil {
-			continue
+		// Try common schema name patterns
+		schemaPatterns := []string{
+			capitalizedResource, // Exact match (e.g., CORSConfig, AccessFunction)
+			"Create" + capitalizedResource + "Request",
+			"Get" + capitalizedResource + "Response",
+			"Update" + capitalizedResource + "Request",
+			capitalizedResource + "Request",
+			capitalizedResource + "Response",
+			resourceName, // Exact match without any modification (e.g. "datadog" for DataDog schema)
 		}
 
-		if prop := findNestedProperty(schemaRef.Value, camelFieldName, nil); prop != nil {
-			return buildEnhancedDescription(prop, openAPIDoc)
+		// Try each schema pattern, searching recursively through nested properties
+		for _, schemaName := range schemaPatterns {
+			schemaRef := openAPIDoc.Components.Schemas[schemaName]
+			if schemaRef == nil || schemaRef.Value == nil {
+				continue
+			}
+
+			if prop := findNestedProperty(schemaRef.Value, camelFieldName, nil); prop != nil {
+				return buildEnhancedDescription(prop, openAPIDoc)
+			}
 		}
 	}
 
