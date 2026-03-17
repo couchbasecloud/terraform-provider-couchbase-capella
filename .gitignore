@@ -18,13 +18,19 @@ terraform.tfvars
 # Ignore binary build folder
 bin
 
+# Ignore env var file
+.env
+
+# Ignore agent log file
+agent.log
+
 # Ignore terraform hidden folder
-/.terraform
+.terraform
 
 # General
 .DS_STORE
-/.idea
-/.vscode
+.idea
+.vscode
 
 # OpenAPI spec (fetched at runtime, should never be committed)
 openapi.generated.yaml
