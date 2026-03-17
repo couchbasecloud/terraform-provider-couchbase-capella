@@ -1,7 +1,6 @@
 package schema
 
 import (
-	"fmt"
 	"reflect"
 
 	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -83,20 +82,7 @@ func WithOpenAPIDescription[T SchemaAttribute](b *SchemaBuilder, attr T, fieldNa
 		description = docs.GetOpenAPIDescription(b.openAPISchemaName, fieldName)
 	}
 
-	if !setMarkdownDescription(attr, description) {
-		panic(fmt.Sprintf(
-			"No OpenAPI description found for field '%[1]s' in resource '%[2]s'.\n\n"+
-				"To fix this, either:\n"+
-				"1. Add the property to the OpenAPI schema '%[3]s' (or any of these alternate schemas: %[4]v)\n"+
-				"2. If it's a nested property, pass the sub-schema name as an alternate schema. Example:\n\n"+
-				"   // Current (fails — looks for \"region\" in CreateClusterRequest top-level):\n"+
-				"   capellaschema.AddAttr(cloudProviderAttrs, \"region\", clusterBuilder, stringAttribute([]string{required}))\n\n"+
-				"   // Fixed (succeeds — looks for \"region\" in CloudProvider sub-schema):\n"+
-				"   capellaschema.AddAttr(cloudProviderAttrs, \"region\", clusterBuilder, stringAttribute([]string{required}), \"CloudProvider\")\n\n"+
-				"3. Manually set MarkdownDescription in the attribute definition as an override if the field is not in OpenAPI.",
-			fieldName, b.resourceName, b.openAPISchemaName, alternateSchemas,
-		))
-	}
+	setMarkdownDescription(attr, description)
 	return attr
 }
 
@@ -139,16 +125,7 @@ func AddAttr[M SchemaAttributeMap, T SchemaAttribute](
 		description = docs.GetOpenAPIDescription(builder.openAPISchemaName, fieldName)
 	}
 
-	if !setMarkdownDescription(attr, description) {
-		panic(fmt.Sprintf(
-			"No description found for field '%[1]s' in resource '%[2]s'.\n"+
-				"To fix this, either:\n"+
-				"1. Add the property to the OpenAPI schema '%[3]s' (or any of these alternate schemas: %[4]v)\n"+
-				"2. If it's a nested property, pass the sub-schema name as an alternate schema to AddAttr/WithOpenAPIDescription\n"+
-				"3. Manually set MarkdownDescription in the attribute definition as an override",
-			fieldName, builder.resourceName, builder.openAPISchemaName, alternateSchemas,
-		))
-	}
+	setMarkdownDescription(attr, description)
 
 	// Add to map based on map type
 	switch m := any(&attrs).(type) {
@@ -169,29 +146,17 @@ func AddAttr[M SchemaAttributeMap, T SchemaAttribute](
 	}
 }
 
-// setMarkdownDescription uses reflection to set the MarkdownDescription field on any attribute type.
-// It returns true if a description was successfully set or if an override already existed.
-// It returns false if no description was provided and no override exists.
-func setMarkdownDescription(attr any, description string) bool {
+// setMarkdownDescription uses reflection to set the MarkdownDescription field on any attribute type
+func setMarkdownDescription(attr any, description string) {
 	v := reflect.ValueOf(attr)
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
 	}
 	if v.Kind() != reflect.Struct {
-		return false
+		return
 	}
 	field := v.FieldByName("MarkdownDescription")
 	if field.IsValid() && field.CanSet() && field.Kind() == reflect.String {
-		// If description is empty, check if we already have an override
-		if description == "" {
-			return field.String() != ""
-		}
-
-		// Only set if not already set (respect override)
-		if field.String() == "" {
-			field.SetString(description)
-		}
-		return true
+		field.SetString(description)
 	}
-	return false
 }
