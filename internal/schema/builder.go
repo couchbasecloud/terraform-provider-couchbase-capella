@@ -2,82 +2,13 @@ package schema
 
 import (
 	"fmt"
-	"os"
 	"reflect"
-	"sync"
 
 	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	resourceschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/docs"
 )
-
-var (
-	// docValidationErrors collects all missing description errors to report them at once
-	docValidationErrors  []string
-	docValidationErrorMu sync.Mutex
-	strictDocValidation  bool
-)
-
-// EnableStrictDocValidation enables error collection for missing descriptions.
-// When enabled, AddAttr and WithOpenAPIDescription will collect errors instead of panicking.
-func EnableStrictDocValidation() {
-	docValidationErrorMu.Lock()
-	defer docValidationErrorMu.Unlock()
-	strictDocValidation = true
-	docValidationErrors = nil
-}
-
-// GetDocValidationErrors returns all collected documentation errors.
-func GetDocValidationErrors() []string {
-	docValidationErrorMu.Lock()
-	defer docValidationErrorMu.Unlock()
-	return docValidationErrors
-}
-
-// CheckDocValidationErrors checks if any errors were collected and, if so, prints a nice summary and exits.
-func CheckDocValidationErrors() {
-	docValidationErrorMu.Lock()
-	errors := docValidationErrors
-	docValidationErrorMu.Unlock()
-
-	if len(errors) == 0 {
-		return
-	}
-
-	fmt.Fprintln(os.Stderr, "\n[ERROR] Documentation Validation Failed")
-	fmt.Fprintln(os.Stderr, "========================================")
-	fmt.Fprintf(os.Stderr, "Found %d field(s) with missing OpenAPI descriptions.\n\n", len(errors))
-
-	for _, err := range errors {
-		fmt.Fprintln(os.Stderr, err)
-	}
-
-	fmt.Fprintln(os.Stderr, "========================================")
-	fmt.Fprintln(os.Stderr, "To fix these issues, either:")
-	fmt.Fprintln(os.Stderr, "1. Add the missing properties to the OpenAPI specification.")
-	fmt.Fprintln(os.Stderr, "2. For nested properties, pass the sub-schema name as an alternate schema. Example:")
-	fmt.Fprintln(os.Stderr, "   capellaschema.AddAttr(attrs, \"region\", builder, attr, \"CloudProvider\")")
-	fmt.Fprintln(os.Stderr, "3. Manually set MarkdownDescription in the attribute definition as an override.")
-	fmt.Fprintln(os.Stderr, "========================================\n")
-
-	os.Exit(1)
-}
-
-func reportMissingDoc(resourceName, fieldName, openAPISchemaName string, alternateSchemas []string) {
-	msg := fmt.Sprintf("- Resource '%s': Field '%s' (OpenAPI Schema: '%s', Alternates: %v)",
-		resourceName, fieldName, openAPISchemaName, alternateSchemas)
-
-	docValidationErrorMu.Lock()
-	defer docValidationErrorMu.Unlock()
-	docValidationErrors = append(docValidationErrors, msg)
-
-	// If not in strict mode (e.g. normal provider run), we can just log/panic or ignore.
-	// But for nice output, we want the test to handle it.
-	if !strictDocValidation {
-		fmt.Fprintf(os.Stderr, "WARNING: Missing description for %s\n", msg)
-	}
-}
 
 // SchemaAttribute is a type constraint for supported attribute types across resources and datasources
 type SchemaAttribute interface {
@@ -153,7 +84,18 @@ func WithOpenAPIDescription[T SchemaAttribute](b *SchemaBuilder, attr T, fieldNa
 	}
 
 	if !setMarkdownDescription(attr, description) {
-		reportMissingDoc(b.resourceName, fieldName, b.openAPISchemaName, alternateSchemas)
+		panic(fmt.Sprintf(
+			"No OpenAPI description found for field '%[1]s' in resource '%[2]s'.\n\n"+
+				"To fix this, either:\n"+
+				"1. Add the property to the OpenAPI schema '%[3]s' (or any of these alternate schemas: %[4]v)\n"+
+				"2. If it's a nested property, pass the sub-schema name as an alternate schema. Example:\n\n"+
+				"   // Current (fails — looks for \"region\" in CreateClusterRequest top-level):\n"+
+				"   capellaschema.AddAttr(cloudProviderAttrs, \"region\", clusterBuilder, stringAttribute([]string{required}))\n\n"+
+				"   // Fixed (succeeds — looks for \"region\" in CloudProvider sub-schema):\n"+
+				"   capellaschema.AddAttr(cloudProviderAttrs, \"region\", clusterBuilder, stringAttribute([]string{required}), \"CloudProvider\")\n\n"+
+				"3. Manually set MarkdownDescription in the attribute definition as an override if the field is not in OpenAPI.",
+			fieldName, b.resourceName, b.openAPISchemaName, alternateSchemas,
+		))
 	}
 	return attr
 }
@@ -198,7 +140,14 @@ func AddAttr[M SchemaAttributeMap, T SchemaAttribute](
 	}
 
 	if !setMarkdownDescription(attr, description) {
-		reportMissingDoc(builder.resourceName, fieldName, builder.openAPISchemaName, alternateSchemas)
+		panic(fmt.Sprintf(
+			"No description found for field '%[1]s' in resource '%[2]s'.\n"+
+				"To fix this, either:\n"+
+				"1. Add the property to the OpenAPI schema '%[3]s' (or any of these alternate schemas: %[4]v)\n"+
+				"2. If it's a nested property, pass the sub-schema name as an alternate schema to AddAttr/WithOpenAPIDescription\n"+
+				"3. Manually set MarkdownDescription in the attribute definition as an override",
+			fieldName, builder.resourceName, builder.openAPISchemaName, alternateSchemas,
+		))
 	}
 
 	// Add to map based on map type

@@ -120,9 +120,6 @@ testacc: ## Run acceptance tests (requires TF_VAR_auth_token, TF_VAR_host, TF_VA
 
 .PHONY: build-docs
 build-docs: ## Generate provider documentation
-	@echo "==> Validating OpenAPI descriptions..."
-	@go test -v ./internal/provider -run TestValidateOpenAPIDescriptions
-	@echo "==> Generating documentation..."
 	@go get github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 	@go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --examples-dir ./examples
 
