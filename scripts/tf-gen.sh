@@ -41,8 +41,10 @@ droid exec \
     --output-format stream-json \
     --use-spec \
     --spec-model claude-opus-4-6 \
+    --spec-reasoning-effort high \
     --model gemini-3-flash-preview \
-    --reasoning-effort high \
-    --auto high \
+    --reasoning-effort medium \
+    --auto medium \
     --cwd "$PARENT_DIR" \
     --file "$PROMPT_FILE" | tee agent.log
+
