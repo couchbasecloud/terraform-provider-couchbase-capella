@@ -30,15 +30,13 @@ For resource acceptance tests, flag if any of the following lifecycle operations
 - **Delete** (handled automatically but flag if `CheckDestroy` is needed and missing)
 - **ImportState** (if the resource supports import)
 
----
-
 For datasource acceptance tests, flag if any of the following operations or assertions are missing:
 
-Read (ensure all required and computed attributes are asserted with TestCheckResourceAttr or TestCheckResourceAttrSet)
-Read with optional arguments (if the datasource supports optional arguments, test with and without them)
-Read with invalid arguments (if applicable, verify proper error handling)
-Multiple datasources (if relevant, test multiple instances in a single config)
-ImportState (if the datasource supports import, verify import functionality)
+- **Read** (ensure all required and computed attributes are asserted with `TestCheckResourceAttr` or `TestCheckResourceAttrSet`)
+- **Read with optional arguments** (if the datasource supports optional arguments, test with and without them)
+- **Read with invalid arguments** (if applicable, verify proper error handling)
+- **Multiple datasources** (if relevant, test multiple instances in a single config)
+- **ImportState** (if the datasource supports import, verify import functionality)
 
 ---
 
