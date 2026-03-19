@@ -23,10 +23,10 @@ description: generate terraform datasources based on openapi spec.
 
 3.  implement one or two datasources depending on the spec provided.
 
-    the first is to get a specific resource.  use the get endpoint.  if there is no get endpoint then skip this implementation.
+    - the first is to get a specific resource.  use the get endpoint.  if there is no get endpoint then skip this implementation.
     for example if the feature is Buckets then need bucket.go to get a specific bucket.
 
-    the second datasource is to list all resources.  use the list endpoint. if there is no list endpoint then skip this implementation.
+    - the second datasource is to list all resources.  use the list endpoint. if there is no list endpoint then skip this implementation.
     the file name should have a plural resource name.
     for example if the feature is Buckets then need buckets.go to list all buckets.
 
