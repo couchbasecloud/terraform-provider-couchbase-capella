@@ -32,7 +32,22 @@ examples/
 
 - All Terraform configuration files should be syntactically correct and follow best practices for Terraform code.
 - Variable names should be descriptive and consistent across examples.
-- The `main.tf` file should contain a complete example that can be applied end-to-end, while the CRUD files should focus on demonstrating specific operations.
+- The `main.tf` file should just contain the terraform and provider blocks as below:
+
+```hcl
+terraform {
+  required_providers {
+    couchbase-capella = {
+      source = "couchbasecloud/couchbase-capella"
+    }
+  }
+}
+
+provider "couchbase-capella" {
+  authentication_token = var.auth_token
+}
+```
+
 - The `terraform.template.tfvars` file should include all necessary variables with placeholder values.
 
 ## README.md
