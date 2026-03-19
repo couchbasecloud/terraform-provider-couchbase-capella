@@ -104,13 +104,16 @@ Read-Only:
 - `cross_region_copies` (Attributes Set) (see [below for nested schema](#nestedatt--data--most_recent_snapshot--cross_region_copies))
 - `database_size` (Number)
 - `expiration` (String) - **Format**: Date-time in RFC3339 format
-- `id` (String)
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
 - `organization_id` (String) The GUID4 ID of the organization.
 - `progress` (Attributes) (see [below for nested schema](#nestedatt--data--most_recent_snapshot--progress))
 - `project_id` (String) The GUID4 ID of the project.
 - `retention` (Number)
 - `server` (Attributes) (see [below for nested schema](#nestedatt--data--most_recent_snapshot--server))
-- `type` (String)
+- `type` (String) - Type of the resource.
+ - **Valid Values**: `project`
+ - **Default**: `project`
 
 <a id="nestedatt--data--most_recent_snapshot--cmek"></a>
 ### Nested Schema for `data.most_recent_snapshot.cmek`
@@ -162,13 +165,16 @@ Read-Only:
 - `cross_region_copies` (Attributes Set) (see [below for nested schema](#nestedatt--data--oldest_snapshot--cross_region_copies))
 - `database_size` (Number)
 - `expiration` (String) - **Format**: Date-time in RFC3339 format
-- `id` (String)
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
 - `organization_id` (String) The GUID4 ID of the organization.
 - `progress` (Attributes) (see [below for nested schema](#nestedatt--data--oldest_snapshot--progress))
 - `project_id` (String) The GUID4 ID of the project.
 - `retention` (Number)
 - `server` (Attributes) (see [below for nested schema](#nestedatt--data--oldest_snapshot--server))
-- `type` (String)
+- `type` (String) - Type of the resource.
+ - **Valid Values**: `project`
+ - **Default**: `project`
 
 <a id="nestedatt--data--oldest_snapshot--cmek"></a>
 ### Nested Schema for `data.oldest_snapshot.cmek`

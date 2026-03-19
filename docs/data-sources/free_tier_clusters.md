@@ -74,9 +74,8 @@ Read-Only:
 
 Read-Only:
 
-- `type` (String) - Type of the resource.
- - **Valid Values**: `project`
- - **Default**: `project`
+- `type` (String) - Availability zone type, either 'single' or 'multi'. Availability zone type allowed for singleNode cluster is only 'single'.
+ - **Valid Values**: `single`, `multi`
 
 
 <a id="nestedatt--data--cloud_provider"></a>
@@ -84,11 +83,11 @@ Read-Only:
 
 Read-Only:
 
-- `cidr` (String)
-- `region` (String)
-- `type` (String) - Type of the resource.
- - **Valid Values**: `project`
- - **Default**: `project`
+- `cidr` (String) - CIDR block for Cloud Provider.
+ - **Constraints**: Pattern: `^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}$`
+- `region` (String) - Cloud provider region, for example `us-west-2`.
+- `type` (String) - Availability zone type, either 'single' or 'multi'. Availability zone type allowed for singleNode cluster is only 'single'.
+ - **Valid Values**: `single`, `multi`
 
 
 <a id="nestedatt--data--couchbase_server"></a>
@@ -96,7 +95,7 @@ Read-Only:
 
 Read-Only:
 
-- `version` (String)
+- `version` (String) - Version of the Couchbase Server to be installed in the cluster. Refer to documentation [here](https://docs.couchbase.com/cloud/clusters/upgrade-database.html#server-version-maintenance-support) for list of supported versions. The latest Couchbase Server version will be deployed by default.
 
 
 <a id="nestedatt--data--service_groups"></a>
@@ -133,9 +132,8 @@ Read-Only:
 - `autoexpansion` (Boolean)
 - `iops` (Number)
 - `storage` (Number)
-- `type` (String) - Type of the resource.
- - **Valid Values**: `project`
- - **Default**: `project`
+- `type` (String) - Availability zone type, either 'single' or 'multi'. Availability zone type allowed for singleNode cluster is only 'single'.
+ - **Valid Values**: `single`, `multi`
 
 
 
@@ -145,5 +143,7 @@ Read-Only:
 
 Read-Only:
 
-- `plan` (String)
-- `timezone` (String)
+- `plan` (String) - Plan type, either 'Basic', 'Developer Pro', or 'Enterprise'. Plan type allowed for singleNode cluster is either 'Basic', or 'Developer Pro'. In case of 'Basic' plan timezone field value is ignored.
+ - **Valid Values**: `basic`, `developer pro`, `enterprise`
+- `timezone` (String) - The standard timezone for the cluster. Should be the TZ identifier.
+ - **Valid Values**: `ET`, `GMT`, `IST`, `PT`

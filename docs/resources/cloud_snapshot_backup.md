@@ -34,11 +34,14 @@ Manages snapshot backup resource associated with a Capella cluster.
 - `created_at` (String) - **Format**: Date-time in RFC3339 format
 - `cross_region_copies` (Attributes Set) (see [below for nested schema](#nestedatt--cross_region_copies))
 - `expiration` (String) - **Format**: Date-time in RFC3339 format
-- `id` (String) The ID of this resource.
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
 - `progress` (Attributes) (see [below for nested schema](#nestedatt--progress))
 - `server` (Attributes) (see [below for nested schema](#nestedatt--server))
 - `size` (Number)
-- `type` (String)
+- `type` (String) - Type of the resource.
+ - **Valid Values**: `project`
+ - **Default**: `project`
 
 <a id="nestedatt--cmek"></a>
 ### Nested Schema for `cmek`

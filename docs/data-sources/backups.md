@@ -68,14 +68,14 @@ Read-Only:
 
 Read-Only:
 
-- `cbas` (Number)
-- `event` (Number)
-- `fts` (Number)
-- `gsi` (Number)
-- `items` (Number)
-- `mutations` (Number)
-- `size_in_mb` (Number)
-- `tombstones` (Number)
+- `cbas` (Number) - The number of analytics entities saved during the backup.
+- `event` (Number) - The number of event entities saved during the backup.
+- `fts` (Number) - The number of full text search entities saved during the backup.
+- `gsi` (Number) - The number of global secondary indexes saved during the backup.
+- `items` (Number) - The number of items saved during the backup.
+- `mutations` (Number) - The number of mutations saved during the backup.
+- `size_in_mb` (Number) - Backup size in megabytes.
+- `tombstones` (Number) - The number of tombstones saved during the backup.
 
 
 <a id="nestedatt--data--schedule_info"></a>
@@ -83,7 +83,7 @@ Read-Only:
 
 Read-Only:
 
-- `backup_time` (String)
-- `backup_type` (String)
-- `increment` (Number)
-- `retention` (String)
+- `backup_time` (String) - The timestamp indicating the backup created time.
+- `backup_type` (String) - Represents whether the backup is a Weekly or Daily backup.
+- `increment` (Number) - Represents interval in hours for incremental backup.
+- `retention` (String) - Represents retention time in days.

@@ -49,7 +49,7 @@ resource "couchbase-capella_app_service" "new_app_service" {
 
 ### Optional
 
-- `cloud_provider` (String)
+- `cloud_provider` (String) - Provider is the cloud service provider for the App Service.
 - `description` (String) - A short description of the App Service.
 - `if_match` (String) A precondition header that specifies the entity tag of a resource.
 - `nodes` (Number) - Number of nodes configured for the App Service. Number of nodes configured for the App Service. The number of nodes can range from 2 to 12.
@@ -57,7 +57,7 @@ resource "couchbase-capella_app_service" "new_app_service" {
 ### Read-Only
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
-- `current_state` (String)
+- `current_state` (String) - **Valid Values**: `pending`, `deploying`, `deploymentFailed`, `destroying`, `destroyFailed`, `healthy`, `degraded`, `scaling`, `scaleFailed`, `upgrading`, `upgradeFailed`, `turnedOff`, `turningOff`, `turnOffFailed`, `turningOn`, `turnOnFailed`
 - `etag` (String) Entity tag for the resource, used for caching and conditional requests.
 - `id` (String) - Id of the project.
  - **Format**: UUID (GUID4)
@@ -68,8 +68,8 @@ resource "couchbase-capella_app_service" "new_app_service" {
 
 Required:
 
-- `cpu` (Number)
-- `ram` (Number)
+- `cpu` (Number) - CPU units (cores).
+- `ram` (Number) - RAM units (GB).
 
 
 <a id="nestedatt--audit"></a>

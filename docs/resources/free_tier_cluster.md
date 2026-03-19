@@ -63,11 +63,11 @@ resource "couchbase-capella_free_tier_cluster" "new_free_tier_cluster" {
 
 Required:
 
-- `cidr` (String)
-- `region` (String)
-- `type` (String) - Type of the resource.
- - **Valid Values**: `project`
- - **Default**: `project`
+- `cidr` (String) - CIDR block for Cloud Provider.
+ - **Constraints**: Pattern: `^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}$`
+- `region` (String) - Cloud provider region, for example `us-west-2`.
+- `type` (String) - Cloud provider type. Note: For singleNode cluster, only AWS type cloud provider is allowed. `aws`: Amazon Web Services `gcp`: Google Cloud Platform `azure`: Microsoft Azure
+ - **Valid Values**: `aws`, `gcp`, `azure`
 
 
 <a id="nestedatt--audit"></a>
@@ -89,9 +89,8 @@ Read-Only:
 
 Read-Only:
 
-- `type` (String) - Type of the resource.
- - **Valid Values**: `project`
- - **Default**: `project`
+- `type` (String) - Cloud provider type. Note: For singleNode cluster, only AWS type cloud provider is allowed. `aws`: Amazon Web Services `gcp`: Google Cloud Platform `azure`: Microsoft Azure
+ - **Valid Values**: `aws`, `gcp`, `azure`
 
 
 <a id="nestedatt--couchbase_server"></a>
@@ -136,9 +135,8 @@ Read-Only:
 - `autoexpansion` (Boolean)
 - `iops` (Number)
 - `storage` (Number)
-- `type` (String) - Type of the resource.
- - **Valid Values**: `project`
- - **Default**: `project`
+- `type` (String) - Cloud provider type. Note: For singleNode cluster, only AWS type cloud provider is allowed. `aws`: Amazon Web Services `gcp`: Google Cloud Platform `azure`: Microsoft Azure
+ - **Valid Values**: `aws`, `gcp`, `azure`
 
 
 

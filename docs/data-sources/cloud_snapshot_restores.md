@@ -52,7 +52,8 @@ Optional:
 Read-Only:
 
 - `created_at` (String) - **Format**: Date-time in RFC3339 format
-- `id` (String)
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
 - `restore_to` (String)
 - `snapshot` (String) - **Format**: Date-time in RFC3339 format
 - `status` (String)

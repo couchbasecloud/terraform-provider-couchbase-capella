@@ -51,4 +51,5 @@ Read-Only:
 
 Read-Only:
 
-- `session_duration` (Number)
+- `session_duration` (Number) - Maximum allowed time in seconds inside the organization for a user.
+ - **Default**: `7200`

@@ -18,13 +18,14 @@ The data source to retrieve all snapshot restore information for a cluster.
 ### Required
 
 - `cluster_id` (String) The GUID4 ID of the cluster.
+- `id` (String) - Id of the project.
+ - **Format**: UUID (GUID4)
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
 ### Read-Only
 
 - `created_at` (String) - **Format**: Date-time in RFC3339 format
-- `id` (String) The ID of this resource.
 - `restore_to` (String)
 - `snapshot` (String) - **Format**: Date-time in RFC3339 format
 - `status` (String)

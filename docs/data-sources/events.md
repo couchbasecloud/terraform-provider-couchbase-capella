@@ -57,10 +57,13 @@ Read-Only:
 
 Read-Only:
 
-- `first` (String)
-- `last` (String)
-- `next` (String)
-- `previous` (String)
+- `first` (String) - The base URL, endpoint, and path parameters required to fetch the first page of results.
+ - **Format**: URI
+- `last` (String) - The base URL, endpoint, and path parameters required to fetch the last page of results.
+ - **Format**: URI
+- `next` (String) - The base URL, endpoint, and path parameters required to fetch the next page of results. Empty if there is no next page.
+ - **Format**: URI
+- `previous` (String) - Number of the previous page of results. Not set on the first page.
 
 
 <a id="nestedatt--cursor--pages"></a>
@@ -68,12 +71,15 @@ Read-Only:
 
 Read-Only:
 
-- `last` (Number)
-- `next` (Number)
+- `last` (Number) - The base URL, endpoint, and path parameters required to fetch the last page of results.
+ - **Format**: URI
+- `next` (Number) - The base URL, endpoint, and path parameters required to fetch the next page of results. Empty if there is no next page.
+ - **Format**: URI
 - `page` (Number) Sets the page you would like to view.
 - `per_page` (Number) Sets the number of results you would like to have on each page.
-- `previous` (Number)
-- `total_items` (Number)
+- `previous` (Number) - The base URL, endpoint, and path parameters required to fetch the previous page of results. Empty if there is no previous page.
+ - **Format**: URI
+- `total_items` (Number) - Total items found by the given query.
 
 
 

@@ -80,10 +80,10 @@ resource "couchbase-capella_bucket" "new_bucket" {
 
 Read-Only:
 
-- `disk_used_in_mib` (Number)
-- `item_count` (Number)
-- `memory_used_in_mib` (Number)
-- `ops_per_second` (Number)
+- `disk_used_in_mib` (Number) - The amount of disk used (in MiB).
+- `item_count` (Number) - Number of documents in the bucket.
+- `memory_used_in_mib` (Number) - The amount of memory used (in MiB).
+- `ops_per_second` (Number) - Number of operations per second.
 
 ## Import
 
