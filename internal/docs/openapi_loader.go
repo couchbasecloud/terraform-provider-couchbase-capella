@@ -228,27 +228,40 @@ func GetOpenAPIDescription(resourceName, tfFieldName string) string {
 	// Capitalize resource name for schema patterns
 	capitalizedResource := capitalize(resourceName)
 
+	// Extract base resource name from schema names like "GetBucketResponse" -> "Bucket"
+	baseResourceName := extractBaseResourceName(resourceName)
+	capitalizedBase := capitalize(baseResourceName)
+
 	// Try common schema name patterns
+	// Prefer Create*Request schemas first since they typically have more detailed descriptions
+	// (they document what users need to know when creating resources)
 	schemaPatterns := []string{
-		capitalizedResource, // Exact match (e.g., CORSConfig, AccessFunction)
+		"Create" + capitalizedBase + "Request",    // Try base resource name patterns first
 		"Create" + capitalizedResource + "Request",
-		"Get" + capitalizedResource + "Response",
+		"Update" + capitalizedBase + "Request",
 		"Update" + capitalizedResource + "Request",
+		capitalizedBase + "Request",
 		capitalizedResource + "Request",
+		capitalizedResource, // Exact match (e.g., CORSConfig, AccessFunction)
+		capitalizedBase,     // Base resource name
+		"Get" + capitalizedBase + "Response",
+		"Get" + capitalizedResource + "Response",
+		capitalizedBase + "Response",
 		capitalizedResource + "Response",
 		resourceName, // Exact match without any modification (e.g. "datadog" for DataDog schema)
+		baseResourceName,
 	}
 
 	// Try each schema pattern until we find the field
+	// Use bounded recursive search that only follows $ref links within the schema tree
 	for _, schemaName := range schemaPatterns {
 		schemaRef := openAPIDoc.Components.Schemas[schemaName]
 		if schemaRef == nil || schemaRef.Value == nil {
 			continue
 		}
 
-		propRef := schemaRef.Value.Properties[camelFieldName]
-		if propRef != nil && propRef.Value != nil {
-			return buildEnhancedDescription(propRef.Value, openAPIDoc)
+		if prop := findPropertyInSchema(schemaRef.Value, camelFieldName, make(map[string]bool)); prop != nil {
+			return buildEnhancedDescription(prop, openAPIDoc)
 		}
 	}
 
@@ -266,13 +279,132 @@ func GetOpenAPIDescription(resourceName, tfFieldName string) string {
 			continue
 		}
 
-		propRef := schemaRef.Value.Properties[camelFieldName]
-		if propRef != nil && propRef.Value != nil {
-			return buildEnhancedDescription(propRef.Value, openAPIDoc)
+		if prop := findPropertyInSchema(schemaRef.Value, camelFieldName, make(map[string]bool)); prop != nil {
+			return buildEnhancedDescription(prop, openAPIDoc)
 		}
 	}
 
 	return ""
+}
+
+// findPropertyInSchema searches for a property within a schema, following $ref links
+// only within the same schema tree. This provides bounded recursion - we follow
+// references to find nested properties, but we don't jump to unrelated schemas.
+//
+// For example, if searching for "state" in GetNetworkPeeringRecordResponse:
+// - It will find status.state by following the $ref to PeeringStatus
+// - It will NOT find "state" from an unrelated ClusterState schema
+//
+// The visited map prevents infinite loops from circular references.
+func findPropertyInSchema(schema *openapi3.Schema, fieldName string, visited map[string]bool) *openapi3.Schema {
+	if schema == nil {
+		return nil
+	}
+
+	// Check direct properties first (case-insensitive)
+	for propName, propRef := range schema.Properties {
+		if strings.EqualFold(propName, fieldName) && propRef != nil && propRef.Value != nil {
+			return propRef.Value
+		}
+	}
+
+	// Recursively search in nested object properties (following $ref links)
+	for _, propRef := range schema.Properties {
+		if propRef == nil {
+			continue
+		}
+
+		// If this property has a $ref, follow it
+		if propRef.Ref != "" {
+			refName := extractSchemaName(propRef.Ref)
+			if refName != "" && !visited[refName] {
+				visited[refName] = true
+				if refSchema := openAPIDoc.Components.Schemas[refName]; refSchema != nil && refSchema.Value != nil {
+					if found := findPropertyInSchema(refSchema.Value, fieldName, visited); found != nil {
+						return found
+					}
+				}
+			}
+		}
+
+		// If this property is an inline object, search within it
+		if propRef.Value != nil && propRef.Value.Type != nil && propRef.Value.Type.Is("object") {
+			if found := findPropertyInSchema(propRef.Value, fieldName, visited); found != nil {
+				return found
+			}
+		}
+	}
+
+	// Check allOf/anyOf/oneOf compositions
+	for _, list := range [][]*openapi3.SchemaRef{schema.AllOf, schema.AnyOf, schema.OneOf} {
+		for _, ref := range list {
+			if ref == nil {
+				continue
+			}
+
+			// Follow $ref in composition
+			if ref.Ref != "" {
+				refName := extractSchemaName(ref.Ref)
+				if refName != "" && !visited[refName] {
+					visited[refName] = true
+					if refSchema := openAPIDoc.Components.Schemas[refName]; refSchema != nil && refSchema.Value != nil {
+						if found := findPropertyInSchema(refSchema.Value, fieldName, visited); found != nil {
+							return found
+						}
+					}
+				}
+			}
+
+			// Search inline schema
+			if ref.Value != nil {
+				if found := findPropertyInSchema(ref.Value, fieldName, visited); found != nil {
+					return found
+				}
+			}
+		}
+	}
+
+	// NOTE: We intentionally do NOT search into array items here.
+	// Array items represent a different entity (e.g., resources[] contains Resource objects)
+	// and searching into them causes false positives where we match fields from
+	// unrelated nested objects.
+
+	return nil
+}
+
+// extractSchemaName extracts the schema name from a $ref string like "#/components/schemas/Foo".
+func extractSchemaName(ref string) string {
+	const prefix = "#/components/schemas/"
+	if strings.HasPrefix(ref, prefix) {
+		return ref[len(prefix):]
+	}
+	return ""
+}
+
+// extractBaseResourceName extracts the base resource name from schema names.
+// Examples:
+//   - "GetBucketResponse" -> "Bucket"
+//   - "CreateClusterRequest" -> "Cluster"
+//   - "bucket" -> "bucket"
+//   - "Cluster" -> "Cluster"
+func extractBaseResourceName(schemaName string) string {
+	// Remove common prefixes
+	for _, prefix := range []string{"Get", "Create", "Update", "Delete"} {
+		if strings.HasPrefix(schemaName, prefix) {
+			schemaName = schemaName[len(prefix):]
+			break
+		}
+	}
+
+	// Remove common suffixes
+	for _, suffix := range []string{"Response", "Request"} {
+		if strings.HasSuffix(schemaName, suffix) {
+			schemaName = schemaName[:len(schemaName)-len(suffix)]
+			break
+		}
+	}
+
+	return schemaName
 }
 
 // snakeToCamel converts snake_case to camelCase

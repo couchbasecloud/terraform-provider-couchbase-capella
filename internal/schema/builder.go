@@ -125,6 +125,12 @@ func AddAttr[M SchemaAttributeMap, T SchemaAttribute](
 		description = docs.GetOpenAPIDescription(builder.openAPISchemaName, fieldName)
 	}
 
+	// If still not found and resourceName differs from openAPISchemaName, try resourceName
+	// This allows pattern-based lookups like Create{Resource}Request to work
+	if description == "" && builder.resourceName != builder.openAPISchemaName {
+		description = docs.GetOpenAPIDescription(builder.resourceName, fieldName)
+	}
+
 	setMarkdownDescription(attr, description)
 
 	// Add to map based on map type
