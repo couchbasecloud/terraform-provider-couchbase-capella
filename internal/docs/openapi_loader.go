@@ -228,7 +228,8 @@ func GetOpenAPIDescription(resourceName, tfFieldName string) string {
 	// Capitalize resource name for schema patterns
 	capitalizedResource := capitalize(resourceName)
 
-	// Try common schema name patterns
+	// Try common schema name patterns, then fall back to generic nested schemas
+	// for fields like "type", "roles" that live inside shared Resource objects.
 	schemaPatterns := []string{
 		capitalizedResource, // Exact match (e.g., CORSConfig, AccessFunction)
 		"Create" + capitalizedResource + "Request",
@@ -236,36 +237,21 @@ func GetOpenAPIDescription(resourceName, tfFieldName string) string {
 		"Update" + capitalizedResource + "Request",
 		capitalizedResource + "Request",
 		capitalizedResource + "Response",
-		resourceName, // Exact match without any modification (e.g. "datadog" for DataDog schema)
-	}
-
-	// Try each schema pattern until we find the field
-	for _, schemaName := range schemaPatterns {
-		schemaRef := openAPIDoc.Components.Schemas[schemaName]
-		if schemaRef == nil || schemaRef.Value == nil {
-			continue
-		}
-
-		if prop := findPropertyInSchema(schemaRef.Value, camelFieldName, make(map[string]bool)); prop != nil {
-			return buildEnhancedDescription(prop, openAPIDoc)
-		}
-	}
-
-	// If not found in main schema, try common nested schemas
-	// This handles fields like "type", "roles" that are inside nested Resource objects
-	nestedSchemas := []string{
+		resourceName,                     // Exact match without any modification (e.g. "datadog" for DataDog schema)
 		"Resource",                       // For user resources, API key resources
 		"ResourceBucket",                 // For bucket-specific resources
 		capitalizedResource + "Resource", // e.g., UserResource if it exists
 	}
 
-	for _, schemaName := range nestedSchemas {
+	for _, schemaName := range schemaPatterns {
+		// Find the schema the property belongs to
 		schemaRef := openAPIDoc.Components.Schemas[schemaName]
 		if schemaRef == nil || schemaRef.Value == nil {
 			continue
 		}
 
-		if prop := findPropertyInSchema(schemaRef.Value, camelFieldName, make(map[string]bool)); prop != nil {
+		// Retrieve the property description from the schema
+		if prop := getPropertyFromSchema(schemaRef.Value, camelFieldName, make(map[string]bool)); prop != nil {
 			return buildEnhancedDescription(prop, openAPIDoc)
 		}
 	}
@@ -273,16 +259,12 @@ func GetOpenAPIDescription(resourceName, tfFieldName string) string {
 	return ""
 }
 
-// findPropertyInSchema searches for a property within a schema, following $ref links
-// only within the same schema tree. This provides bounded recursion - we follow
-// references to find nested properties, but we don't jump to unrelated schemas.
+// getPropertyFromSchema searches for a property within a schema, following $ref links
+// only within the same schema tree. The visited map prevents infinite loops from
+// circular references.
 //
-// For example, if searching for "state" in GetNetworkPeeringRecordResponse:
-// - It will find status.state by following the $ref to PeeringStatus
-// - It will NOT find "state" from an unrelated ClusterState schema
-//
-// The visited map prevents infinite loops from circular references.
-func findPropertyInSchema(schema *openapi3.Schema, fieldName string, visited map[string]bool) *openapi3.Schema {
+// It does NOT search into array items to avoid false positives from unrelated nested objects.
+func getPropertyFromSchema(schema *openapi3.Schema, fieldName string, visited map[string]bool) *openapi3.Schema {
 	if schema == nil {
 		return nil
 	}
@@ -292,66 +274,50 @@ func findPropertyInSchema(schema *openapi3.Schema, fieldName string, visited map
 		return propRef.Value
 	}
 
-	// Recursively search in nested object properties (following $ref links)
+	// Search nested object properties (following $ref links)
 	for _, propRef := range schema.Properties {
-		if propRef == nil {
-			continue
+		if found := searchSchemaRef(propRef, fieldName, visited); found != nil {
+			return found
 		}
+	}
 
-		// If this property has a $ref, follow it
-		if propRef.Ref != "" {
-			refName := extractSchemaName(propRef.Ref)
-			if refName != "" && !visited[refName] {
-				visited[refName] = true
-				if refSchema := openAPIDoc.Components.Schemas[refName]; refSchema != nil && refSchema.Value != nil {
-					if found := findPropertyInSchema(refSchema.Value, fieldName, visited); found != nil {
-						return found
-					}
-				}
-			}
-		}
-
-		// If this property is an inline object, search within it
-		if propRef.Value != nil && propRef.Value.Type != nil && propRef.Value.Type.Is("object") {
-			if found := findPropertyInSchema(propRef.Value, fieldName, visited); found != nil {
+	// Search allOf/anyOf/oneOf compositions
+	for _, list := range [][]*openapi3.SchemaRef{schema.AllOf, schema.AnyOf, schema.OneOf} {
+		for _, ref := range list {
+			if found := searchSchemaRef(ref, fieldName, visited); found != nil {
 				return found
 			}
 		}
 	}
 
-	// Check allOf/anyOf/oneOf compositions
-	for _, list := range [][]*openapi3.SchemaRef{schema.AllOf, schema.AnyOf, schema.OneOf} {
-		for _, ref := range list {
-			if ref == nil {
-				continue
-			}
+	return nil
+}
 
-			// Follow $ref in composition
-			if ref.Ref != "" {
-				refName := extractSchemaName(ref.Ref)
-				if refName != "" && !visited[refName] {
-					visited[refName] = true
-					if refSchema := openAPIDoc.Components.Schemas[refName]; refSchema != nil && refSchema.Value != nil {
-						if found := findPropertyInSchema(refSchema.Value, fieldName, visited); found != nil {
-							return found
-						}
-					}
-				}
-			}
-
-			// Search inline schema
-			if ref.Value != nil {
-				if found := findPropertyInSchema(ref.Value, fieldName, visited); found != nil {
-					return found
-				}
-			}
-		}
+// searchSchemaRef resolves a schema reference and recursively searches for a property.
+// Handles both $ref pointers and inline object schemas.
+func searchSchemaRef(ref *openapi3.SchemaRef, fieldName string, visited map[string]bool) *openapi3.Schema {
+	if ref == nil {
+		return nil
 	}
 
-	// NOTE: We intentionally do NOT search into array items here.
-	// Array items represent a different entity (e.g., resources[] contains Resource objects)
-	// and searching into them causes false positives where we match fields from
-	// unrelated nested objects.
+	// Follow $ref to a named schema
+	if ref.Ref != "" {
+		refName := extractSchemaName(ref.Ref)
+		if refName == "" || visited[refName] {
+			return nil
+		}
+		visited[refName] = true
+		refSchema := openAPIDoc.Components.Schemas[refName]
+		if refSchema == nil || refSchema.Value == nil {
+			return nil
+		}
+		return getPropertyFromSchema(refSchema.Value, fieldName, visited)
+	}
+
+	// Search inline object schemas
+	if ref.Value != nil && ref.Value.Type != nil && ref.Value.Type.Is("object") {
+		return getPropertyFromSchema(ref.Value, fieldName, visited)
+	}
 
 	return nil
 }
