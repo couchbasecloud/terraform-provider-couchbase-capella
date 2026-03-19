@@ -228,32 +228,18 @@ func GetOpenAPIDescription(resourceName, tfFieldName string) string {
 	// Capitalize resource name for schema patterns
 	capitalizedResource := capitalize(resourceName)
 
-	// Extract base resource name from schema names like "GetBucketResponse" -> "Bucket"
-	baseResourceName := extractBaseResourceName(resourceName)
-	capitalizedBase := capitalize(baseResourceName)
-
 	// Try common schema name patterns
-	// Prefer Create*Request schemas first since they typically have more detailed descriptions
-	// (they document what users need to know when creating resources)
 	schemaPatterns := []string{
-		"Create" + capitalizedBase + "Request",    // Try base resource name patterns first
-		"Create" + capitalizedResource + "Request",
-		"Update" + capitalizedBase + "Request",
-		"Update" + capitalizedResource + "Request",
-		capitalizedBase + "Request",
-		capitalizedResource + "Request",
 		capitalizedResource, // Exact match (e.g., CORSConfig, AccessFunction)
-		capitalizedBase,     // Base resource name
-		"Get" + capitalizedBase + "Response",
+		"Create" + capitalizedResource + "Request",
 		"Get" + capitalizedResource + "Response",
-		capitalizedBase + "Response",
+		"Update" + capitalizedResource + "Request",
+		capitalizedResource + "Request",
 		capitalizedResource + "Response",
 		resourceName, // Exact match without any modification (e.g. "datadog" for DataDog schema)
-		baseResourceName,
 	}
 
 	// Try each schema pattern until we find the field
-	// Use bounded recursive search that only follows $ref links within the schema tree
 	for _, schemaName := range schemaPatterns {
 		schemaRef := openAPIDoc.Components.Schemas[schemaName]
 		if schemaRef == nil || schemaRef.Value == nil {
@@ -301,11 +287,9 @@ func findPropertyInSchema(schema *openapi3.Schema, fieldName string, visited map
 		return nil
 	}
 
-	// Check direct properties first (case-insensitive)
-	for propName, propRef := range schema.Properties {
-		if strings.EqualFold(propName, fieldName) && propRef != nil && propRef.Value != nil {
-			return propRef.Value
-		}
+	// Check direct properties first (exact case match)
+	if propRef, ok := schema.Properties[fieldName]; ok && propRef != nil && propRef.Value != nil {
+		return propRef.Value
 	}
 
 	// Recursively search in nested object properties (following $ref links)
@@ -379,32 +363,6 @@ func extractSchemaName(ref string) string {
 		return ref[len(prefix):]
 	}
 	return ""
-}
-
-// extractBaseResourceName extracts the base resource name from schema names.
-// Examples:
-//   - "GetBucketResponse" -> "Bucket"
-//   - "CreateClusterRequest" -> "Cluster"
-//   - "bucket" -> "bucket"
-//   - "Cluster" -> "Cluster"
-func extractBaseResourceName(schemaName string) string {
-	// Remove common prefixes
-	for _, prefix := range []string{"Get", "Create", "Update", "Delete"} {
-		if strings.HasPrefix(schemaName, prefix) {
-			schemaName = schemaName[len(prefix):]
-			break
-		}
-	}
-
-	// Remove common suffixes
-	for _, suffix := range []string{"Response", "Request"} {
-		if strings.HasSuffix(schemaName, suffix) {
-			schemaName = schemaName[:len(schemaName)-len(suffix)]
-			break
-		}
-	}
-
-	return schemaName
 }
 
 // snakeToCamel converts snake_case to camelCase
