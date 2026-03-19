@@ -27,7 +27,10 @@ When reviewing code, prefer identifying bugs and regressions over stylistic conc
 
 ## Resources
 
-- Must contain compile time-interface checks e.g. `var _ resource.Resource = &Type{}`
+- Must contain at least these three compile time interface checks:
+  - `var _ resource.Resource = &Type{}`
+  - `var _ resource.ResourceWithImportState = &Type{}`
+  - `var _ resource.ResourceWithConfigure = &Type{}`
 - Schema should be define in a separate `*_schema.go` file
 - Blank methods included to satisfy interfaces should have a comment referencing the v4 documentation for the resource.
 
@@ -35,7 +38,9 @@ When reviewing code, prefer identifying bugs and regressions over stylistic conc
 
 ## Datasources
 
-- Must contain compile time-interface checks e.g. `var _ datasource.DataSource = &Type{}`
+- Must contain both of these compile time interface checks:
+  - `var _ datasource.DataSource = &Type{}`
+  - `var _ datasource.DataSourceWithConfigure = &Type{}`
 - List-style datasources should use api.GetPaginated instead of
   implemeting manual pagination logic.
 
