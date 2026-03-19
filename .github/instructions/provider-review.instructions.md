@@ -1,5 +1,5 @@
 ---
-applyTo: internal
+applyTo: "internal/**"
 ---
 
 # Provider Code Review Instructions
