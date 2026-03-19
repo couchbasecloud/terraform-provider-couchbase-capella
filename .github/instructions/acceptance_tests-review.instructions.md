@@ -32,6 +32,16 @@ For resource acceptance tests, flag if any of the following lifecycle operations
 
 ---
 
+For datasource acceptance tests, flag if any of the following operations or assertions are missing:
+
+Read (ensure all required and computed attributes are asserted with TestCheckResourceAttr or TestCheckResourceAttrSet)
+Read with optional arguments (if the datasource supports optional arguments, test with and without them)
+Read with invalid arguments (if applicable, verify proper error handling)
+Multiple datasources (if relevant, test multiple instances in a single config)
+ImportState (if the datasource supports import, verify import functionality)
+
+---
+
 ## Test Case Quality
 
 - Flag tests that only assert on input values (e.g. `name`) without also checking computed/server-set attributes (`id`, `etag`, `audit` fields).
