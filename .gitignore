@@ -21,9 +21,6 @@ bin
 # Ignore env var file
 .env
 
-# Ignore agent log file
-agent.log
-
 # Ignore terraform hidden folder
 .terraform
 
