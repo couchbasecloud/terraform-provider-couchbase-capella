@@ -17,7 +17,7 @@ Each examples directory should be organisated as such:
 ```
 examples/
   └── resource_name/
-      ├── <crud>_<resource_name>.tf (optional, but must have at least one CRUD example)
+      ├── create_<resource_name>.tf
       ├── list_<resource_name>.tf (optional, but at least one of get or list)
       ├── get_<resource_name>.tf (optional, but at least one of get or list)
       ├── main.tf
@@ -25,8 +25,6 @@ examples/
       ├── variables.tf
       └── README.md
 ```
-
-Where `<crud>` is one of `create`, `read`, `update`, or `delete`.
 
 ---
 
