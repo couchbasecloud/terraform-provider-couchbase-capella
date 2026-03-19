@@ -15,6 +15,7 @@
 #  it will prompt you for the path to your prompt file.
 #
 #  you can also review the session logs in ~/.factory/sessions/ to see the agent execution and for debugging.
+#  the session log is a jsonl file.
 
 set -euo pipefail
 
@@ -64,6 +65,7 @@ echo "
 Starting agent execution with droid...
 
 See the session logs in ~/.factory/sessions/ to monitor the agent execution and for debugging.
+The session log is a jsonl file.
 "
 
 droid exec \
