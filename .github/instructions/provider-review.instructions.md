@@ -49,7 +49,7 @@ When reviewing code, prefer identifying bugs and regressions over stylistic conc
 
 ## Code Quality Issues to Flag
 
-- Incorrect or missing error handling. Discourage use of `panic`.
+- Incorrect or missing error handling. Report any uses of `panic`.
 - Functions over 100 lines or deeply nested (>3 levels)
 - Commented-out code or unjustified `interface{}`
 - Hardcoded IDs or tokens
