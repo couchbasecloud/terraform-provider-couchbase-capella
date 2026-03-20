@@ -48,7 +48,7 @@ provider "couchbase-capella" {
 }
 ```
 
-- The `terraform.template.tfvars` file should include all necessary variables with placeholder values.
+- The `terraform.template.tfvars` file should include all necessary variables with placeholder values (these can be inferred from the schema).
 
 ## README.md
 
