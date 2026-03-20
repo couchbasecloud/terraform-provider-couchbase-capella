@@ -54,9 +54,6 @@ When reviewing code, prefer identifying bugs and regressions over stylistic conc
 
 ## Code Quality Issues to Flag
 
-- Incorrect or missing error handling. Report any uses of `panic`.
-- Functions over 100 lines or deeply nested (>3 levels)
 - Commented-out code or unjustified `interface{}`
 - Hardcoded IDs or tokens
 - Manual retry logic instead of using `ExecuteWithRetry`
-- Raw error strings instead of `fmt.Errorf` or wrapped errors with `%w`
