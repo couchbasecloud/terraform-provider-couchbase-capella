@@ -2,15 +2,24 @@ linters:
   enable:
     - durationcheck
     - errcheck
+    - errorlint
     - forcetypeassert
     - gosec
     - ineffassign
     - makezero
     - misspell
+    - nakedret
     - nilerr
+    - nestif
     - predeclared
     - staticcheck
     - unconvert
     - unparam
     - unused
     - govet
+
+linters-settings:
+  errorlint:
+    errorf: true
+    asserts: true
+    comparison: true
