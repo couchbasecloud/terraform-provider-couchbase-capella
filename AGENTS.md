@@ -1,7 +1,7 @@
 # Code Review
 
-
-1.  git diff main --name-only -- '*.go' ':!internal/generated/api/openapi.gen.go'
+0.  for each new or modified file, run git add <file>
+1.  run git diff --cached main --name-only -- '*.go' ':!internal/generated/api/openapi.gen.go'
 
     do not read the openapi.gen.go file as it will consume many tokens and fill up the context window.
 
