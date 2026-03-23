@@ -67,7 +67,9 @@ validator.String(stringvalidator.LengthAtLeast(1))))
 10. Implement CRUD methods (Create, Read, Update, Delete):
  - Create: use create endpoint, unmarshal response, call get to populate refreshed state, set state.
  - Read: use get endpoint.  validate IDs from state, call get endpoint, morph response to terraform state, handle ErrNotFound by removing resource from state.
- - Update: use update endpoint.  if there is no update endpoint then update handler has empty function body.
+ - Update: use update endpoint.  if there is no update endpoint, update handler should have empty function body.
+   leave a comment explaining that the resource does not support in-place updates, so an empty update handler will cause
+   the framework to recreate the resource.
  - Delete: use delete endpoint, handle resource-not-found gracefully (just return without error).  if there is no delete endpoint then delete handler has empty function body.
 
 11. Generate necessary API request/response structs in `internal/api/<feature>/`. Use `ClientV1` to make API calls with retry logic:
