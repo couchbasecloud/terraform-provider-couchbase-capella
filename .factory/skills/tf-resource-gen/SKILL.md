@@ -1,88 +1,106 @@
 ---
 name: tf-resource-gen
-description: generate terraform resources based on openapi spec.
+description: generate terraform resrouce from an openapi yaml spec.
 ---
 
 # Terraform Resource Generator
 
 ## Instructions
 
-1.  Resource code should be in `internal/resources/`.
+-   before implementation check the terraform codebase if the resource for the feature already exists.
+    search in internal/resources and see if there is any git worktree that has the feature already implemented.
 
-2.  Schema for the resource should be in its own file with format `<feature>_schema.go` in `internal/resources/`.
+    if the feature exists then do not generate code.  do not verify if it's a full implementation.
+    if any part of the code exists, like provider registration, api, schema or resource implementation
+    do not find or fix any gaps.
 
- Add validation for organization_id, project_id and cluster_id if present. For example with organization_id:
+-   create a new git worktree as follows:
 
- capellaschema.AddAttr(attrs, "organization_id", builder, stringAttribute([]string{required, requiresReplace},
-validator.String(stringvalidator.LengthAtLeast(1))))
+    git worktree add ~/resource_<feature> -b resource_<feature>
 
-3.  Create a struct with the feature name that embeds the Data struct. For example if the feature is SnapshotBackup:
+    then cd into the worktree directory ~/resource_<feature>/
 
- type SnapshotBackup struct {
-     *providerschema.Data
- }
+    do not remove the worktree
 
-4.  Need a New function. For example:
+-   use internal/resources/snapshot_backup.go as a reference.
+    this includes api, terraform schema, and resource implementation itself.
 
- func NewSnapshotBackup() resource.Resource {
+-   Resource code should be in `internal/resources/`
+
+-   Schema for the resource should be in its own file with format `<feature>_schema.go` in `internal/resources/`.
+
+    Add validation for organization_id, project_id and cluster_id if present. For example with organization_id:
+
+    capellaschema.AddAttr(attrs, "organization_id", builder, stringAttribute([]string{required, requiresReplace},validator.String(stringvalidator.LengthAtLeast(1))))
+
+-   Create a struct with the feature name that embeds the Data struct. For example if the feature is SnapshotBackup:
+
+    type SnapshotBackup struct {
+        *providerschema.Data
+    }
+
+-  Need a New function. For example:
+
+    func NewSnapshotBackup() resource.Resource {
      return &SnapshotBackup{}
- }
+    }
 
-5.  Type should implement interfaces `resource.Resource`, `resource.ResourceWithConfigure`, and `resource.ResourceWithImportState`.
- Must use type conversion of nil to assert that the type implements the interfaces:
+-.  Type should implement interfaces `resource.Resource`, `resource.ResourceWithConfigure`, and `resource.ResourceWithImportState`.
+    Must use type conversion of nil to assert that the type implements the interfaces:
 
- var (
-     _ resource.Resource                = (*SnapshotBackup)(nil)
-     _ resource.ResourceWithConfigure   = (*SnapshotBackup)(nil)
-     _ resource.ResourceWithImportState = (*SnapshotBackup)(nil)
- )
+    var (
+        _ resource.Resource                = (*SnapshotBackup)(nil)
+        _ resource.ResourceWithConfigure   = (*SnapshotBackup)(nil)
+        _ resource.ResourceWithImportState = (*SnapshotBackup)(nil)
+    )
 
-6.  Need Metadata function that sets `resp.TypeName = req.ProviderTypeName + "_<resource_name>"`.
+-  Need Metadata function that sets `resp.TypeName = req.ProviderTypeName + "_<resource_name>"`.
 
-7.  Need Schema function that calls the schema function from the schema file:
+-  Need Schema function that calls the schema function from the schema file:
 
- func (s *SnapshotBackup) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+    func (s *SnapshotBackup) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
      resp.Schema = SnapshotBackupSchema()
- }
+    }
 
-8.  Need Configure function following this pattern:
+-  Need Configure function following this pattern:
 
- func (s *SnapshotBackup) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-     if req.ProviderData == nil {
-         return
+     func (s *SnapshotBackup) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+         if req.ProviderData == nil {
+             return
+         }
+         data, ok := req.ProviderData.(*providerschema.Data)
+         if !ok {
+             resp.Diagnostics.AddError(
+                 "Unexpected Resource Configure Type",
+                 fmt.Sprintf("Expected *ProviderSourceData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+             )
+             return
+         }
+         s.Data = data
      }
-     data, ok := req.ProviderData.(*providerschema.Data)
-     if !ok {
-         resp.Diagnostics.AddError(
-             "Unexpected Resource Configure Type",
-             fmt.Sprintf("Expected *ProviderSourceData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-         )
-         return
-     }
-     s.Data = data
- }
 
-9.  Need ImportState function using `resource.ImportStatePassthroughID`.
+-  Need ImportState function using `resource.ImportStatePassthroughID`.
 
-10. Implement CRUD methods (Create, Read, Update, Delete):
- - Create: use create endpoint, unmarshal response, call get to populate refreshed state, set state.
- - Read: use get endpoint.  validate IDs from state, call get endpoint, morph response to terraform state, handle ErrNotFound by removing resource from state.
- - Update: use update endpoint.  if there is no update endpoint then update handler has empty function body.
- - Delete: use delete endpoint, handle resource-not-found gracefully (just return without error).  if there is no delete endpoint then delete handler has empty function body.
+- Implement CRUD methods (Create, Read, Update, Delete):
+    - Create: use create endpoint, unmarshal response, call get to populate refreshed state, set state.
+    - Read: use get endpoint.  validate IDs from state, call get endpoint, morph response to terraform state, handle ErrNotFound by removing resource from state.
+    - Update: use update endpoint.  if there is no update endpoint then update handler has empty function body.
+    - Delete: use delete endpoint, handle resource-not-found gracefully (just return without error).  if there is no delete endpoint then delete handler has empty function body.
 
-11. Generate necessary API request/response structs in `internal/api/<feature>/`. Use `ClientV1` to make API calls with retry logic:
+-   Generate necessary API request/response structs in `internal/api/<feature>/`. Use `ClientV1` to make API calls with retry logic:
 
- response, err := s.ClientV1.ExecuteWithRetry(ctx, cfg, requestBody, s.Token, nil)
+    response, err := s.ClientV1.ExecuteWithRetry(ctx, cfg, requestBody, s.Token, nil)
 
- Use `api.EndpointCfg` with appropriate URL, Method, and SuccessStatus.
+    Use `api.EndpointCfg` with appropriate URL, Method, and SuccessStatus.
 
-12. Create a morph function to convert API response structs to terraform schema structs. Place terraform schema structs in `internal/schema/`.
+-   Create a morph function to convert API response structs to terraform schema structs. Place terraform schema structs in `internal/schema/`.
 
-13. Register the resource in `internal/provider/provider.go` in `func (p *capellaProvider) Resources`.
+-   Register the resource in `internal/provider/provider.go` in `func (p *capellaProvider) Resources`.
 
-14. Create acceptance tests in `acceptance_tests/` with format `<feature>_acceptance_test.go`.
- - Tests should run in parallel using `resource.ParallelTest()`.
- - Include test steps for: Create+Read, ImportState, Update, and Delete (implicit).
- - Use `globalProtoV6ProviderFactory` for provider factories.
- - Use helper functions like `randomStringWithPrefix` for resource names.
- - Verify key attributes with `resource.TestCheckResourceAttr` and `resource.TestCheckResourceAttrSet`.
+-   Create acceptance tests in `acceptance_tests/` with format `<feature>_acceptance_test.go`.
+    - Tests should run in parallel using `resource.ParallelTest()`.
+    - Include test steps for: Create+Read, ImportState, Update.
+    - Use `globalProtoV6ProviderFactory` for provider factories.
+    - Use helper functions like `randomStringWithPrefix` for resource names.
+    - Verify key attributes with `resource.TestCheckResourceAttr` and `resource.TestCheckResourceAttrSet`.
+    - do not run acceptance tests
