@@ -15,11 +15,15 @@
 
 get the latest git tag and assign to VERSION:
 
+```
 VERSION=$(git describe --tags --abbrev=0)
+```
 
 then build:
 
+```
 go build -ldflags "-s -w -X 'github.com/couchbasecloud/terraform-provider-couchbase-capella/version.ProviderVersion=$VERSION'" -o ./bin/terraform-provider-couchbase-capella
+```
 
 fix any errors.
 

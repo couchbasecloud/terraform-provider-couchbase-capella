@@ -12,6 +12,7 @@ description: generate terraform datasources based on openapi spec.
 
     add validation for organization_id, project_id and cluster_id if present.  for example with organization_id
 
+    ```
     capellaschema.AddAttr(attrs, "organization_id", snapshotBackupBuilder, requiredStringWithValidator())
 
     func requiredStringWithValidator() *schema.StringAttribute {
@@ -20,6 +21,7 @@ description: generate terraform datasources based on openapi spec.
     		Validators: []validator.String{stringvalidator.LengthAtLeast(1)},
     	}
     }
+    ```
 
 3.  implement one or two datasources depending on the spec provided.
 
@@ -32,32 +34,41 @@ description: generate terraform datasources based on openapi spec.
 
 4.  create struct with feature name that embeds Data struct.  for example if the feature is Buckets then need this struct
 
+    ```
     type Buckets struct {
     	*providerschema.Data
     }
+    ```
 5.  need New function.  for example if feature is Buckets then need this function
 
+    ```
     func NewBuckets() datasource.DataSource {
     	return &Buckets{}
     }
+    ```
 
 6.  type should implement interfaces datasource.DataSource and datasource.DataSourceWithConfigure.
     must use type conversion of nil to assert that the type implements the interfaces.
 
     for example for Buckets
 
+    ```
     var (
     	_ datasource.DataSource              = (*Buckets)(nil)
     	_ datasource.DataSourceWithConfigure = (*Buckets)(nil)
     )
+    ```
 7.  need Metadata function.  for example with Buckets
 
+    ```
     func (d *Buckets) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
     	resp.TypeName = req.ProviderTypeName + "_buckets"
     }
+    ```
 
 8.  need Configure function.  for example with Buckets
 
+    ```
     func (d *Buckets) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
     	if req.ProviderData == nil {
     		return
@@ -75,15 +86,18 @@ description: generate terraform datasources based on openapi spec.
 
     	d.Data = data
     }
+    ```
 
 9.  generate necessary structs to handle API response.  put structs in internal/api/
     use ClientV1 struct to make API calls with retry logic.  for example:
 
+    ```
     response, err := s.ClientV1.ExecuteWithRetry
+    ```
 
-10.  register the datasource in internal/provider/provider.go in func (p *capellaProvider) DataSources
+10.  register the datasource in `internal/provider/provider.go` in func `(p *capellaProvider) DataSources`
 
-    for example with buckets need datasources.NewBuckets,
+     for example with buckets need `datasources.NewBuckets,`
 
 11.  create acceptance tests for both datasources in acceptance_tests/ with format <feature>_test.go.
      for example if feature is Buckets then need buckets_test.go

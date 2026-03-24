@@ -13,40 +13,51 @@ description: generate terraform resources based on openapi spec.
 
  Add validation for organization_id, project_id and cluster_id if present. For example with organization_id:
 
+```
  capellaschema.AddAttr(attrs, "organization_id", builder, stringAttribute([]string{required, requiresReplace},
 validator.String(stringvalidator.LengthAtLeast(1))))
+```
 
 3.  Create a struct with the feature name that embeds the Data struct. For example if the feature is SnapshotBackup:
 
+```
  type SnapshotBackup struct {
      *providerschema.Data
  }
+```
 
 4.  Need a New function. For example:
 
+```
  func NewSnapshotBackup() resource.Resource {
      return &SnapshotBackup{}
  }
+```
 
 5.  Type should implement interfaces `resource.Resource`, `resource.ResourceWithConfigure`, and `resource.ResourceWithImportState`.
  Must use type conversion of nil to assert that the type implements the interfaces:
 
+```
  var (
      _ resource.Resource                = (*SnapshotBackup)(nil)
      _ resource.ResourceWithConfigure   = (*SnapshotBackup)(nil)
      _ resource.ResourceWithImportState = (*SnapshotBackup)(nil)
  )
+ ```
 
 6.  Need Metadata function that sets `resp.TypeName = req.ProviderTypeName + "_<resource_name>"`.
 
 7.  Need Schema function that calls the schema function from the schema file:
 
+```
  func (s *SnapshotBackup) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
      resp.Schema = SnapshotBackupSchema()
  }
+```
 
 8.  Need Configure function following this pattern:
 
+```
  func (s *SnapshotBackup) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
      if req.ProviderData == nil {
          return
@@ -61,6 +72,7 @@ validator.String(stringvalidator.LengthAtLeast(1))))
      }
      s.Data = data
  }
+```
 
 9.  Need ImportState function using `resource.ImportStatePassthroughID`.
 
@@ -74,7 +86,9 @@ validator.String(stringvalidator.LengthAtLeast(1))))
 
 11. Generate necessary API request/response structs in `internal/api/<feature>/`. Use `ClientV1` to make API calls with retry logic:
 
+```
  response, err := s.ClientV1.ExecuteWithRetry(ctx, cfg, requestBody, s.Token, nil)
+```
 
  Use `api.EndpointCfg` with appropriate URL, Method, and SuccessStatus.
 
