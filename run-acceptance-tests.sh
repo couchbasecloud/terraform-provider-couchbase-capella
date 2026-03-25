@@ -4,6 +4,42 @@ set -e
 # Print timestamped status messages
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting acceptance test script..."
 
+# Ensure provider dev override is set
+DEV_RC="$HOME/dev.terraformrc"
+if [ ! -f "$DEV_RC" ]; then
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] Creating $DEV_RC with provider dev_overrides..."
+  cat > "$DEV_RC" <<EOF
+provider_installation {
+  dev_overrides {
+    \"couchbasecloud/couchbase-capella\" = \"$HOME/terraform-provider-couchbase-capella/bin\"
+  }
+  direct {}
+}
+EOF
+fi
+
+# Check if dev_overrides is present and correct
+if ! grep -q 'couchbasecloud/couchbase-capella' "$DEV_RC"; then
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] Adding provider dev_overrides to $DEV_RC..."
+  cat >> "$DEV_RC" <<EOF
+provider_installation {
+  dev_overrides {
+    \"couchbasecloud/couchbase-capella\" = \"$HOME/terraform-provider-couchbase-capella/bin\"
+  }
+  direct {}
+}
+EOF
+fi
+
+export TF_CLI_CONFIG_FILE="$DEV_RC"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Set TF_CLI_CONFIG_FILE to $DEV_RC"
+
+# Rebuild the provider binary to ensure local changes are used
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Rebuilding provider binary..."
+make build
+
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Build complete."
+
 # Load variables from terraform.tfvars
 if [ ! -f terraform.tfvars ]; then
   echo "terraform.tfvars not found! Please create it in the project root."
@@ -38,8 +74,8 @@ fi
 
 # Run tests with progress output
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] make testacc GO_TEST_ARGS=\"$TEST_ARGS\""
-TF_ACC=1 go test -timeout=120m -v ./acceptance_tests/ $TEST_ARGS | tee acceptance-test.log
+TF_ACC=1 go test -timeout=120m -v ./acceptance_tests/ $TEST_ARGS
 
 EXIT_CODE=${PIPESTATUS[0]}
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Acceptance tests finished with exit code $EXIT_CODE. Log saved to acceptance-test.log."
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Acceptance tests finished with exit code $EXIT_CODE."
 exit $EXIT_CODE
