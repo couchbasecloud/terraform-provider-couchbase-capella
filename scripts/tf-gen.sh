@@ -148,5 +148,5 @@ All agent executions completed.
 
 Please manually verify the new resources by creating terraform script files and run them against a live environment.
 
-Please review and run the acceptance tests in acceptance_tests/ , and add any additional tests.
+Please review and run the acceptance tests in acceptance_tests/, and add any additional tests.
 "
