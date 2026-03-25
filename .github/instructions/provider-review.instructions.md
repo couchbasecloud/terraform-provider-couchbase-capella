@@ -57,3 +57,4 @@ When reviewing code, prefer identifying bugs and regressions over stylistic conc
 - Commented-out code or unjustified `interface{}`
 - Hardcoded IDs or tokens
 - Manual retry logic instead of using `ExecuteWithRetry`
+- Any sensitive information like secrets or credentials are logged
