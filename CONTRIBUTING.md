@@ -13,7 +13,7 @@ Thank you for your interest in contributing to the Couchbase Capella Terraform P
 - Fork the repository.
 - Clone your fork. Use `git clone` to create a local copy on your machine.
 - We use Go Modules to manage dependencies, so you can develop outside your `$GOPATH`.
-- We use [golangci-lint](https://github.com/golangci/golangci-lint) to lint our code, you can install it locally via `make setup`.
+- We use [golangci-lint](https://github.com/golangci-lint/golangci-lint) to lint our code, you can install it locally via `make setup`.
 
 ## Local Development Setup
 
@@ -28,7 +28,7 @@ Quickly set up and run Terraform Provider Couchbase Capella locally with these s
 
 #### Enter the Provider Directory:
 
-Navigate to the directory containing the provider's source code. For example: 
+Navigate to the directory containing the provider's source code. For example:
 
 ```bash
 cd $HOME/terraform-provider-couchbase-capella
@@ -59,7 +59,7 @@ Terraform will download your providers from either the provider registry or a lo
 development, we want to test using a a local development build of the provider. The development build will not
 have an associated version number or an official set of checksums listed in a provider registry.
 
-After successfully building the local provider binary for Couchbase Capella, the  next step is to instruct
+After successfully building the local provider binary for Couchbase Capella, the next step is to instruct
 Terraform to use local provider builds by setting a dev_overrides block in a configuration file
 with ext .terraformrc or .tfrc. This block overrides all other configured installation methods.
 When Terraform runs, it searches for any .terraformrc or .tfrc file in your home directory and applies any
@@ -90,7 +90,8 @@ the following contents:
   # the dev_overrides block, and so no other providers will be available.
   direct {}
 }
-  ```
+```
+
 **WINDOWS SPECIFIC STEPS:**
 
 Step 1: Find your %APPDATA% path from powershell
@@ -111,14 +112,15 @@ Step 2: Create a terraform.rc file in the path above
   direct {}
 }
 
-  ```
+```
+
 **NOTE: Please make sure you are escaping the backslashes in the path.**
 
 #### Define the env var `TF_CLI_CONFIG_FILE` in your console session
 
-  ```bash
-  export TF_CLI_CONFIG_FILE=$HOME/dev.terraformrc
-  ```
+```bash
+export TF_CLI_CONFIG_FILE=$HOME/dev.terraformrc
+```
 
 #### Change to an example directory
 
@@ -202,15 +204,18 @@ the below commands.
 #### Terraform Init
 
 Ordinarily, terraform will download the requested providers on running the command:
+
 ```bash
 $ terraform init
 ```
+
 If you are working with a local install of `Terraform-Provider-Couchbase-Capella` provider, this step is not needed and considered optional.
 However, if you plan to use any other providers at the same time it may need to be run.
 
 **1\. Review the Terraform plan**
 
 Execute the following command to automatically review and update the formatting of .tf files.
+
 ```bash
 $ terraform fmt
 ```
@@ -245,6 +250,7 @@ To destroy specific resource
 ```bash
 $ terraform destroy -target=RESOURCE_ADDRESS
 ```
+
 Example
 
 ```bash
@@ -266,6 +272,7 @@ $ terraform import RESOURCE_TYPE.NAME RESOURCE_IDENTIFIER
 ### Running the acceptance test
 
 ~> **Notice:** Acceptance tests create real resources, and often cost money to run. Please note in any PRs made if you are unable to pay to run acceptance tests for your contribution. We will accept "best effort" implementations of acceptance tests in this case and run them for you on our side. This may delay the contribution but we do not want your contribution blocked by funding.
+
 - Run `make testacc`
 
 ## Appendix B - Creating your own environment variables
@@ -279,6 +286,7 @@ organization_id = "<organization-uuid>"
 ```
 
 A variables.tf should also be added to define the variables for terraform.
+
 ```terraform
 variable "organization_id" {
   description = "Capella Organization ID"
@@ -290,6 +298,7 @@ variable "auth_token" {
 ```
 
 Set the environment variables by using the following notation:
+
 ```terraform
 resource "capella_project" "example" {
   organization_id = var.organization_id
@@ -301,17 +310,45 @@ resource "capella_project" "example" {
 Alternatively, if you would like to set environment variables locally on your system (as opposed to using terraform.tfvars),
 preface them with `TF_VAR_`. Terraform will then apply them your .terraformrc file on running
 `terraform apply`. For example:
+
 ```bash
 export TF_VAR_auth_token=<v4_api_secret_key>
 export TF_VAR_organization_id=<organization_id>
 ```
 
 ## Appendix C - Authentication
+
 ```
 In order to set up authentication with the Couchbase Capella provider a V4 API key must be generated.
 
 To find out how to generate a V4 API Key, please see the following document:
 https://docs.couchbase.com/cloud/management-api-guide/management-api-start.html
 
-Once you have generated your api key token, it must be set as an environment variable. 
+Once you have generated your api key token, it must be set as an environment variable.
 ```
+
+## Running Acceptance Tests Locally
+
+To run acceptance tests against your local or development environment, follow the below steps. Note
+that acceptance tests create real resources and may incur costs.
+
+1. **Create a `terraform.tfvars` file in the project root.**
+   - This file is gitignored and should contain your credentials and endpoints.
+   - Example format:
+     ```hcl
+     host = "http://localhost:8084"            # Your local/dev API endpoint
+     auth_token = "your-local-dev-token"        # Your local/dev API token
+     organization_id = "your-local-org-id"      # Your local/dev organization ID
+     ```
+
+2. **Use the provided script to run acceptance tests:**
+   - Run the following command from the project root:
+     ```sh
+     bash run-acceptance-tests.sh
+     ```
+   - This script will:
+     - Read your `terraform.tfvars` file
+     - Export the necessary `TF_VAR_*` environment variables
+     - Run `make testacc` to execute the acceptance tests
+
+See `run-acceptance-tests.sh` in the project root for more details.
