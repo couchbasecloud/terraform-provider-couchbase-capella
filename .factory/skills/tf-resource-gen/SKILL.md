@@ -81,7 +81,7 @@ validator.String(stringvalidator.LengthAtLeast(1))))
  - Read: use get endpoint.  validate IDs from state, call get endpoint, morph response to terraform state, handle ErrNotFound by removing resource from state.
  - Update: use update endpoint.  if there is no update endpoint, update handler should have empty function body.
    leave a comment explaining that the resource does not support in-place updates, so an empty update handler will cause
-   the framework to recreate the resource.
+   the framework to recreate the resource.  mark all user-configurable attributes that can change with the `RequiresReplace` plan modifier so that any change forces recreation.
  - Delete: use delete endpoint, handle resource-not-found gracefully (just return without error).  if there is no delete endpoint then delete handler has empty function body.
 
 11. Generate necessary API request/response structs in `internal/api/<feature>/`. Use `ClientV1` to make API calls with retry logic:
