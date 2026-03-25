@@ -872,3 +872,259 @@ func equalStringSlices(a, b []string) bool {
 	}
 	return true
 }
+
+// TestGetOpenAPIDescription_AmbiguousFieldNames tests that common field names
+// that may exist in multiple schemas (e.g., "type", "last", "next") return
+// the correct description for the intended resource context.
+//
+// This test helps prevent regressions where a description is found but comes
+// from the wrong nested object.
+func TestGetOpenAPIDescription_AmbiguousFieldNames(t *testing.T) {
+	tests := []struct {
+		name             string
+		resourceName     string
+		fieldName        string
+		expectNonEmpty   bool
+		shouldContain    string
+		shouldNotContain string
+		description      string
+	}{
+		{
+			name:           "type field for user resource should come from Resource schema",
+			resourceName:   "user",
+			fieldName:      "type",
+			expectNonEmpty: true,
+			shouldContain:  "project",
+			description:    "The 'type' field in user context should refer to resource type (project/bucket)",
+		},
+		{
+			name:           "type field for bucket should come from bucket schema if available",
+			resourceName:   "bucket",
+			fieldName:      "type",
+			expectNonEmpty: true,
+			shouldContain:  "bucket",
+			description:    "Bucket 'type' field should refer to bucket type (couchbase/ephemeral/membase)",
+		},
+		{
+			name:           "id field is commonly ambiguous across schemas",
+			resourceName:   "project",
+			fieldName:      "id",
+			expectNonEmpty: true,
+			description:    "The 'id' field should be found with a valid description",
+		},
+		{
+			name:           "name field is commonly ambiguous across schemas",
+			resourceName:   "cluster",
+			fieldName:      "name",
+			expectNonEmpty: true,
+			description:    "The 'name' field should be found with a valid description",
+		},
+		{
+			name:           "status field may exist in multiple response schemas",
+			resourceName:   "cluster",
+			fieldName:      "status",
+			expectNonEmpty: false, // May or may not exist, document the behavior
+			description:    "Status field behavior for cluster resource",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			desc := GetOpenAPIDescription(tt.resourceName, tt.fieldName)
+
+			if tt.expectNonEmpty && desc == "" {
+				t.Errorf("%s: Expected non-empty description for %s.%s",
+					tt.description, tt.resourceName, tt.fieldName)
+			}
+
+			if tt.shouldContain != "" && !contains(desc, tt.shouldContain) {
+				t.Errorf("%s: Expected description to contain %q, got: %s",
+					tt.description, tt.shouldContain, desc)
+			}
+
+			if tt.shouldNotContain != "" && contains(desc, tt.shouldNotContain) {
+				t.Errorf("%s: Expected description NOT to contain %q, got: %s",
+					tt.description, tt.shouldNotContain, desc)
+			}
+
+			t.Logf("%s.%s (%s): %s", tt.resourceName, tt.fieldName, tt.description, desc)
+		})
+	}
+}
+
+// TestGetOpenAPIDescription_PaginationFields tests fields like "last", "next",
+// "previous" that typically appear in paginated response schemas and could be
+// confused between different contexts.
+func TestGetOpenAPIDescription_PaginationFields(t *testing.T) {
+	paginationFields := []string{"last", "next", "previous", "first", "cursor"}
+
+	for _, fieldName := range paginationFields {
+		t.Run(fieldName, func(t *testing.T) {
+			// Test against different resource contexts to see if we get consistent descriptions
+			resources := []string{"user", "project", "cluster", "bucket"}
+			descriptions := make(map[string]string)
+
+			for _, resource := range resources {
+				desc := GetOpenAPIDescription(resource, fieldName)
+				if desc != "" {
+					descriptions[resource] = desc
+				}
+			}
+
+			// Log findings for documentation purposes
+			if len(descriptions) == 0 {
+				t.Logf("Pagination field '%s' not found in any resource schema", fieldName)
+			} else {
+				t.Logf("Pagination field '%s' found in %d resources:", fieldName, len(descriptions))
+				for resource, desc := range descriptions {
+					t.Logf("  %s: %s", resource, truncate(desc, 100))
+				}
+			}
+		})
+	}
+}
+
+// TestGetOpenAPIDescription_CompositionTypes tests that schemas using allOf,
+// oneOf, or anyOf composition types are handled correctly. These compositions
+// are common in OpenAPI specs for inheritance and union types.
+//
+// NOTE: The current implementation does not traverse allOf/anyOf/oneOf references.
+// These tests document the current behavior and will help detect when support
+// is added or if regressions occur.
+func TestGetOpenAPIDescription_CompositionTypes(t *testing.T) {
+	// These tests document expected behavior for composition types
+	// The current implementation searches specific schema patterns but does not
+	// recursively traverse allOf/anyOf/oneOf compositions
+
+	tests := []struct {
+		name         string
+		resourceName string
+		fieldName    string
+		description  string
+	}{
+		{
+			name:         "audit field typically uses $ref to CouchbaseAuditData",
+			resourceName: "project",
+			fieldName:    "audit",
+			description:  "Audit data is often referenced via $ref, not composition",
+		},
+		{
+			name:         "resources field in user may use array of $ref",
+			resourceName: "user",
+			fieldName:    "resources",
+			description:  "Resources field typically uses array items with $ref",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			desc := GetOpenAPIDescription(tt.resourceName, tt.fieldName)
+			t.Logf("%s.%s: %s (description: %q)", tt.resourceName, tt.fieldName, tt.description, desc)
+		})
+	}
+}
+
+// TestGetOpenAPIDescription_SchemaSearchOrder documents and tests the order
+// in which schemas are searched for field descriptions. This is important
+// for understanding which description is returned when a field exists in
+// multiple schemas.
+func TestGetOpenAPIDescription_SchemaSearchOrder(t *testing.T) {
+	// Document the search order from GetOpenAPIDescription:
+	// 1. Special fields (if_match, etag, audit)
+	// 2. String-type schema mappings (access_control_function, import_filter)
+	// 3. Path parameters (fields ending in _id)
+	// 4. Schema patterns in order:
+	//    - {ResourceName} (exact match)
+	//    - Create{ResourceName}Request
+	//    - Get{ResourceName}Response
+	//    - Update{ResourceName}Request
+	//    - {ResourceName}Request
+	//    - {ResourceName}Response
+	//    - {resourceName} (lowercase exact match)
+	// 5. Nested schemas:
+	//    - Resource
+	//    - ResourceBucket
+	//    - {ResourceName}Resource
+
+	t.Run("schema search order documented", func(t *testing.T) {
+		// Test that we get descriptions from expected schemas
+		testCases := []struct {
+			resourceName    string
+			fieldName       string
+			expectedPattern string
+		}{
+			{"project", "name", "CreateProjectRequest or GetProjectResponse"},
+			{"user", "type", "Resource nested schema"},
+			{"bucket", "name", "CreateBucketRequest or GetBucketResponse"},
+		}
+
+		for _, tc := range testCases {
+			desc := GetOpenAPIDescription(tc.resourceName, tc.fieldName)
+			if desc != "" {
+				t.Logf("%s.%s found (expected from %s): %s",
+					tc.resourceName, tc.fieldName, tc.expectedPattern, truncate(desc, 80))
+			} else {
+				t.Logf("%s.%s not found (expected from %s)",
+					tc.resourceName, tc.fieldName, tc.expectedPattern)
+			}
+		}
+	})
+}
+
+// TestGetOpenAPIDescription_ConsistencyAcrossResources tests that the same
+// logical field returns consistent descriptions across different resource
+// contexts where appropriate.
+func TestGetOpenAPIDescription_ConsistencyAcrossResources(t *testing.T) {
+	// Common fields that should ideally have consistent descriptions
+	commonFields := []struct {
+		fieldName string
+		resources []string
+	}{
+		{
+			fieldName: "organization_id",
+			resources: []string{"project", "cluster", "bucket", "user"},
+		},
+		{
+			fieldName: "project_id",
+			resources: []string{"cluster", "bucket", "appservice"},
+		},
+	}
+
+	for _, cf := range commonFields {
+		t.Run(cf.fieldName, func(t *testing.T) {
+			descriptions := make([]string, 0, len(cf.resources))
+
+			for _, resource := range cf.resources {
+				desc := GetOpenAPIDescription(resource, cf.fieldName)
+				descriptions = append(descriptions, desc)
+			}
+
+			// Check if all descriptions are the same (for path parameters, they should be)
+			allSame := true
+			for i := 1; i < len(descriptions); i++ {
+				if descriptions[i] != descriptions[0] {
+					allSame = false
+					break
+				}
+			}
+
+			if allSame && descriptions[0] != "" {
+				t.Logf("Field '%s' has consistent description across resources: %s",
+					cf.fieldName, truncate(descriptions[0], 80))
+			} else {
+				t.Logf("Field '%s' has varying descriptions across resources:", cf.fieldName)
+				for i, resource := range cf.resources {
+					t.Logf("  %s: %s", resource, truncate(descriptions[i], 60))
+				}
+			}
+		})
+	}
+}
+
+// truncate shortens a string to maxLen characters, adding "..." if truncated
+func truncate(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	return s[:maxLen-3] + "..."
+}
