@@ -47,19 +47,19 @@ func ClusterSchema() schema.Schema {
 	})
 
 	cloudProviderAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(cloudProviderAttrs, "type", clusterBuilder, computedString())
-	capellaschema.AddAttr(cloudProviderAttrs, "region", clusterBuilder, computedString())
-	capellaschema.AddAttr(cloudProviderAttrs, "cidr", clusterBuilder, computedString())
+	capellaschema.AddAttr(cloudProviderAttrs, "type", clusterBuilder, computedString(), "CloudProvider")
+	capellaschema.AddAttr(cloudProviderAttrs, "region", clusterBuilder, computedString(), "CloudProvider")
+	capellaschema.AddAttr(cloudProviderAttrs, "cidr", clusterBuilder, computedString(), "CloudProvider")
 
 	couchbaseServerAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(couchbaseServerAttrs, "version", clusterBuilder, computedString())
 
 	availabilityAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(availabilityAttrs, "type", clusterBuilder, computedString())
+	capellaschema.AddAttr(availabilityAttrs, "type", clusterBuilder, computedString(), "Availability")
 
 	supportAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(supportAttrs, "plan", clusterBuilder, computedString())
-	capellaschema.AddAttr(supportAttrs, "timezone", clusterBuilder, computedString())
+	capellaschema.AddAttr(supportAttrs, "plan", clusterBuilder, computedString(), "Support")
+	capellaschema.AddAttr(supportAttrs, "timezone", clusterBuilder, computedString(), "Support")
 
 	dataAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(dataAttrs, "id", clusterBuilder, computedString())

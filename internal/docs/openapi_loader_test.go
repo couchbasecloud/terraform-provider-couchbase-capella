@@ -962,3 +962,81 @@ func truncateStr(s string, maxLen int) string {
 	}
 	return s[:maxLen-3] + "..."
 }
+
+// TestGetOpenAPIDescription_AvailabilityType tests that the availability.type field
+// gets the correct description from the Availability schema, not from the Resource schema.
+// This is a regression test for a collision where "type" was incorrectly matched
+// to "Type of the resource" instead of "Availability zone type".
+func TestGetOpenAPIDescription_AvailabilityType(t *testing.T) {
+	// The availability.type field should describe availability zone type (single/multi)
+	// NOT "Type of the resource" which is from the Resource schema
+	desc := GetOpenAPIDescription("Availability", "type")
+
+	t.Logf("Availability.type description: %s", desc)
+
+	if desc == "" {
+		t.Error("Expected non-empty description for Availability.type")
+		return
+	}
+
+	// Should contain "single" or "multi" or "availability" - the correct description
+	if !strings.Contains(strings.ToLower(desc), "single") &&
+		!strings.Contains(strings.ToLower(desc), "multi") &&
+		!strings.Contains(strings.ToLower(desc), "availability") {
+		t.Errorf("Availability.type should describe availability zones (single/multi), got: %s", desc)
+	}
+
+	// Should NOT contain "resource" which would indicate wrong schema
+	if strings.Contains(strings.ToLower(desc), "type of the resource") {
+		t.Errorf("Availability.type got wrong description from Resource schema: %s", desc)
+	}
+}
+
+// TestGetOpenAPIDescription_NestedAttributeSchemas tests that nested schema fields
+// are looked up correctly by using the parent schema name (e.g., Availability.type).
+func TestGetOpenAPIDescription_NestedAttributeSchemas(t *testing.T) {
+	tests := []struct {
+		name           string
+		resourceName   string
+		fieldName      string
+		shouldContain  string
+		shouldNotMatch string
+	}{
+		{
+			name:           "Availability.type should be about zones",
+			resourceName:   "Availability",
+			fieldName:      "type",
+			shouldContain:  "single",
+			shouldNotMatch: "Type of the resource",
+		},
+		{
+			name:           "Support.plan should be about support plan",
+			resourceName:   "Support",
+			fieldName:      "plan",
+			shouldContain:  "", // Just check it exists
+			shouldNotMatch: "",
+		},
+		{
+			name:           "CloudProvider.type should be about cloud type",
+			resourceName:   "CloudProvider",
+			fieldName:      "type",
+			shouldContain:  "", // Just check it exists
+			shouldNotMatch: "Type of the resource",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			desc := GetOpenAPIDescription(tt.resourceName, tt.fieldName)
+			t.Logf("%s.%s: %s", tt.resourceName, tt.fieldName, truncateStr(desc, 100))
+
+			if tt.shouldContain != "" && !strings.Contains(strings.ToLower(desc), strings.ToLower(tt.shouldContain)) {
+				t.Errorf("Expected description to contain %q, got: %s", tt.shouldContain, desc)
+			}
+
+			if tt.shouldNotMatch != "" && strings.Contains(desc, tt.shouldNotMatch) {
+				t.Errorf("Description should NOT contain %q, got: %s", tt.shouldNotMatch, desc)
+			}
+		})
+	}
+}

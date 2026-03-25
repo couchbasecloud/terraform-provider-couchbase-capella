@@ -29,8 +29,8 @@ func FreeTierClusterSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "audit", freeTierClusterBuilder, computedAuditAttribute())
 
 	supportAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(supportAttrs, "plan", freeTierClusterBuilder, stringAttribute([]string{computed}))
-	capellaschema.AddAttr(supportAttrs, "timezone", freeTierClusterBuilder, stringAttribute([]string{computed}))
+	capellaschema.AddAttr(supportAttrs, "plan", freeTierClusterBuilder, stringAttribute([]string{computed}), "Support")
+	capellaschema.AddAttr(supportAttrs, "timezone", freeTierClusterBuilder, stringAttribute([]string{computed}), "Support")
 
 	capellaschema.AddAttr(attrs, "support", freeTierClusterBuilder, &schema.SingleNestedAttribute{
 		Computed:   true,
@@ -38,9 +38,9 @@ func FreeTierClusterSchema() schema.Schema {
 	})
 
 	cloudProviderAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(cloudProviderAttrs, "type", freeTierClusterBuilder, stringAttribute([]string{required}))
-	capellaschema.AddAttr(cloudProviderAttrs, "region", freeTierClusterBuilder, stringAttribute([]string{required}))
-	capellaschema.AddAttr(cloudProviderAttrs, "cidr", freeTierClusterBuilder, stringAttribute([]string{required}))
+	capellaschema.AddAttr(cloudProviderAttrs, "type", freeTierClusterBuilder, stringAttribute([]string{required}), "CloudProvider")
+	capellaschema.AddAttr(cloudProviderAttrs, "region", freeTierClusterBuilder, stringAttribute([]string{required}), "CloudProvider")
+	capellaschema.AddAttr(cloudProviderAttrs, "cidr", freeTierClusterBuilder, stringAttribute([]string{required}), "CloudProvider")
 
 	capellaschema.AddAttr(attrs, "cloud_provider", freeTierClusterBuilder, &schema.SingleNestedAttribute{
 		Required:   true,
@@ -98,7 +98,7 @@ func FreeTierClusterSchema() schema.Schema {
 	})
 
 	availabilityAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(availabilityAttrs, "type", freeTierClusterBuilder, stringAttribute([]string{computed}))
+	capellaschema.AddAttr(availabilityAttrs, "type", freeTierClusterBuilder, stringAttribute([]string{computed}), "Availability")
 
 	capellaschema.AddAttr(attrs, "availability", freeTierClusterBuilder, &schema.SingleNestedAttribute{
 		Computed:   true,

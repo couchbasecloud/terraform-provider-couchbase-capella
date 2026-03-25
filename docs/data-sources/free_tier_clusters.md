@@ -86,8 +86,8 @@ Read-Only:
 - `cidr` (String) - CIDR block for Cloud Provider.
  - **Constraints**: Pattern: `^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}$`
 - `region` (String) - Cloud provider region, for example `us-west-2`.
-- `type` (String) - Availability zone type, either 'single' or 'multi'. Availability zone type allowed for singleNode cluster is only 'single'.
- - **Valid Values**: `single`, `multi`
+- `type` (String) - Cloud provider type. Note: For singleNode cluster, only AWS type cloud provider is allowed. `aws`: Amazon Web Services `gcp`: Google Cloud Platform `azure`: Microsoft Azure
+ - **Valid Values**: `aws`, `gcp`, `azure`
 
 
 <a id="nestedatt--data--couchbase_server"></a>
@@ -132,8 +132,9 @@ Read-Only:
 - `autoexpansion` (Boolean)
 - `iops` (Number)
 - `storage` (Number)
-- `type` (String) - Availability zone type, either 'single' or 'multi'. Availability zone type allowed for singleNode cluster is only 'single'.
- - **Valid Values**: `single`, `multi`
+- `type` (String) - Type of the resource.
+ - **Valid Values**: `project`
+ - **Default**: `project`
 
 
 

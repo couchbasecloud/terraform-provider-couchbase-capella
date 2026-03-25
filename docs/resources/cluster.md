@@ -95,8 +95,8 @@ resource "couchbase-capella_cluster" "new_cluster" {
 
 Required:
 
-- `type` (String) - Cloud provider type. Note: For singleNode cluster, only AWS type cloud provider is allowed. `aws`: Amazon Web Services `gcp`: Google Cloud Platform `azure`: Microsoft Azure
- - **Valid Values**: `aws`, `gcp`, `azure`
+- `type` (String) - Availability zone type, either 'single' or 'multi'. Availability zone type allowed for singleNode cluster is only 'single'.
+ - **Valid Values**: `single`, `multi`
 
 
 <a id="nestedatt--cloud_provider"></a>
@@ -142,8 +142,9 @@ Required:
 
 Required:
 
-- `type` (String) - Availability zone type, either 'single' or 'multi'. Availability zone type allowed for singleNode cluster is only 'single'.
- - **Valid Values**: `single`, `multi`
+- `type` (String) - Type of the resource.
+ - **Valid Values**: `project`
+ - **Default**: `project`
 
 Optional:
 

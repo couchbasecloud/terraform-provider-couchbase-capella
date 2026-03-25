@@ -89,8 +89,8 @@ Read-Only:
 
 Read-Only:
 
-- `type` (String) - Cloud provider type. Note: For singleNode cluster, only AWS type cloud provider is allowed. `aws`: Amazon Web Services `gcp`: Google Cloud Platform `azure`: Microsoft Azure
- - **Valid Values**: `aws`, `gcp`, `azure`
+- `type` (String) - Availability zone type, either 'single' or 'multi'. Availability zone type allowed for singleNode cluster is only 'single'.
+ - **Valid Values**: `single`, `multi`
 
 
 <a id="nestedatt--couchbase_server"></a>
@@ -146,8 +146,10 @@ Read-Only:
 
 Read-Only:
 
-- `plan` (String)
-- `timezone` (String)
+- `plan` (String) - Plan type, either 'Basic', 'Developer Pro', or 'Enterprise'. Plan type allowed for singleNode cluster is either 'Basic', or 'Developer Pro'. In case of 'Basic' plan timezone field value is ignored.
+ - **Valid Values**: `basic`, `developer pro`, `enterprise`
+- `timezone` (String) - The standard timezone for the cluster. Should be the TZ identifier.
+ - **Valid Values**: `ET`, `GMT`, `IST`, `PT`
 
 ## Import
 
