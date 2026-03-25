@@ -1,6 +1,6 @@
 ---
 name: tf-resource-gen
-description: generate terraform resrouce from an openapi yaml spec.
+description: generate terraform resource from an openapi yaml spec.
 ---
 
 # Terraform Resource Generator
