@@ -263,21 +263,29 @@ func GetOpenAPIDescription(resourceName, tfFieldName string) string {
 // only within the same schema tree. The visited map prevents infinite loops from
 // circular references.
 //
+// To avoid nondeterministic behavior from Go map iteration, this function collects
+// all matches and only returns a result when exactly one unique match is found.
+// If multiple different schemas match the same field name, it returns nil to avoid
+// attaching the wrong description to a Terraform attribute.
+//
 // It does NOT search into array items to avoid false positives from unrelated nested objects.
 func getPropertyFromSchema(schema *openapi3.Schema, fieldName string, visited map[string]bool) *openapi3.Schema {
 	if schema == nil {
 		return nil
 	}
 
-	// Check direct properties first (exact case match)
+	// Check direct properties first (exact case match) - this is deterministic
 	if propRef, ok := schema.Properties[fieldName]; ok && propRef != nil && propRef.Value != nil {
 		return propRef.Value
 	}
 
+	// Collect all matches from nested searches to handle ambiguous field names
+	var matches []*openapi3.Schema
+
 	// Search nested object properties (following $ref links)
 	for _, propRef := range schema.Properties {
 		if found := searchSchemaRef(propRef, fieldName, visited); found != nil {
-			return found
+			matches = append(matches, found)
 		}
 	}
 
@@ -285,8 +293,31 @@ func getPropertyFromSchema(schema *openapi3.Schema, fieldName string, visited ma
 	for _, list := range [][]*openapi3.SchemaRef{schema.AllOf, schema.AnyOf, schema.OneOf} {
 		for _, ref := range list {
 			if found := searchSchemaRef(ref, fieldName, visited); found != nil {
-				return found
+				matches = append(matches, found)
 			}
+		}
+	}
+
+	// Only return a result if exactly one unique match was found
+	// This prevents nondeterministic behavior when the same field name exists
+	// in multiple nested schemas (e.g., "type", "last", "next")
+	if len(matches) == 1 {
+		return matches[0]
+	}
+
+	// If multiple matches, check if they're all the same schema (pointer equality)
+	// This can happen when the same schema is referenced multiple times
+	if len(matches) > 1 {
+		first := matches[0]
+		allSame := true
+		for _, m := range matches[1:] {
+			if m != first {
+				allSame = false
+				break
+			}
+		}
+		if allSame {
+			return first
 		}
 	}
 
