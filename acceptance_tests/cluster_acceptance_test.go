@@ -16,12 +16,10 @@ import (
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-// TODO: AV-96938: generate CIDR dynamically
-
 func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "couchbase-capella_cluster." + resourceName
-	cidr := "10.255.250.0/23"
+	cidr := generateRandomCIDR()
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -106,7 +104,7 @@ func TestAccClusterResourceWithOnlyReqFieldAWS(t *testing.T) {
 func TestAccClusterResourceWithOptionalFieldAWS(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "couchbase-capella_cluster." + resourceName
-	cidr := "10.251.250.0/23"
+	cidr := generateRandomCIDR()
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -166,7 +164,7 @@ func TestAccClusterResourceWithOptionalFieldAWS(t *testing.T) {
 func TestAccClusterResourceGCP(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "couchbase-capella_cluster." + resourceName
-	cidr := "10.252.250.0/23"
+	cidr := generateRandomCIDR()
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -237,7 +235,7 @@ func TestAccClusterResourceGCP(t *testing.T) {
 // This scenario is expected to fail with the error message matching the regular expression "The disk type provided, gp2, is not valid".
 func TestAccClusterResourceWithOptionalFieldAWSInvalidScenario(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_")
-	cidr := "10.253.250.0/23"
+	cidr := generateRandomCIDR()
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -256,7 +254,7 @@ func TestAccClusterResourceWithOptionalFieldAWSInvalidScenario(t *testing.T) {
 // The aim of this test is to ensure that the creation of the cluster fails as expected.
 func TestAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenario(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_")
-	cidr := "10.249.250.0/23"
+	cidr := generateRandomCIDR()
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -273,7 +271,7 @@ func TestAccClusterResourceForGCPWithIOPSFieldPopulatedInvalidScenario(t *testin
 // for an AWS cluster.
 func TestAccClusterResourceForAwsWithAutoexpansionInvalid(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_")
-	cidr := "10.249.250.0/23"
+	cidr := generateRandomCIDR()
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -294,7 +292,7 @@ func TestAccClusterResourceForAwsWithAutoexpansionInvalid(t *testing.T) {
 func TestAccClusterResourceWithConfigurationTypeFieldAdded(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "couchbase-capella_cluster." + resourceName
-	cidr := "10.247.250.0/23"
+	cidr := generateRandomCIDR()
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
