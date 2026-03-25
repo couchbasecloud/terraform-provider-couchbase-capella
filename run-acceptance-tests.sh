@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Print timestamped status messages
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting acceptance test script..."
+
 # Load variables from terraform.tfvars
 if [ ! -f terraform.tfvars ]; then
   echo "terraform.tfvars not found! Please create it in the project root."
@@ -21,8 +24,22 @@ while IFS='=' read -r key value; do
   fi
 done < <(grep -v '^#' terraform.tfvars | grep '=')
 
-echo "Exported variables:"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Exported variables:"
 env | grep TF_VAR_
 
-echo "Running acceptance tests..."
-make testacc
+# Accept test name(s) as arguments
+if [ $# -gt 0 ]; then
+  TEST_ARGS="-run $*"
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running acceptance tests matching: $*"
+else
+  TEST_ARGS=""
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running all acceptance tests..."
+fi
+
+# Run tests with progress output
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] make testacc GO_TEST_ARGS=\"$TEST_ARGS\""
+TF_ACC=1 go test -timeout=120m -v ./acceptance_tests/ $TEST_ARGS | tee acceptance-test.log
+
+EXIT_CODE=${PIPESTATUS[0]}
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Acceptance tests finished with exit code $EXIT_CODE. Log saved to acceptance-test.log."
+exit $EXIT_CODE
