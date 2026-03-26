@@ -49,18 +49,62 @@ The droid will follow the instructions in `.factory/skills/tf-datasource-gen/SKI
 | Provider registration | `internal/provider/provider.go` | Wires up the data source |
 | Acceptance tests | `acceptance_tests/` | End-to-end tests |
 
-### 3. Review the Generated Code
+### 3. Implementation Steps (What the Droid Generates)
 
-After the droid finishes, verify the output matches project conventions. Key things to check:
+The droid follows the steps defined in `.factory/skills/tf-datasource-gen/SKILL.md`. Below is the full breakdown of each implementation step so you can verify — or manually replicate — the output.
 
-#### Struct Pattern
+#### Step 1 — Create Data Source Files
+
+Place data source code in `internal/datasources/`. Two files are created depending on available endpoints:
+
+| Endpoint available | File to create | Purpose |
+|---|---|---|
+| GET (single resource) | `feature.go` (e.g., `bucket.go`) | Fetch one resource by ID |
+| LIST (all resources) | `features.go` (e.g., `buckets.go`) | Fetch all resources |
+
+If only one endpoint exists in the spec, only that file is created.
+
+#### Step 2 — Create Schema Files
+
+Each data source gets its own schema file using the naming pattern `<feature>_schema.go` / `<features>_schema.go`.
+
+**Add validation** for `organization_id`, `project_id`, and `cluster_id` (if present) using `requiredStringWithValidator()`:
+
+```go
+capellaschema.AddAttr(attrs, "organization_id", snapshotBackupBuilder, requiredStringWithValidator())
+
+func requiredStringWithValidator() *schema.StringAttribute {
+    return &schema.StringAttribute{
+        Required:   true,
+        Validators: []validator.String{stringvalidator.LengthAtLeast(1)},
+    }
+}
+```
+
+#### Step 3 — Define the Data Source Struct
+
+Create a struct named after the feature that embeds the shared `Data` struct:
+
 ```go
 type Buckets struct {
     *providerschema.Data
 }
 ```
 
-#### Interface Compliance
+#### Step 4 — Add the `New` Constructor Function
+
+Every data source needs a `New` function that returns a `datasource.DataSource`:
+
+```go
+func NewBuckets() datasource.DataSource {
+    return &Buckets{}
+}
+```
+
+#### Step 5 — Assert Interface Compliance
+
+Use compile-time nil assertions to guarantee the struct implements the required interfaces:
+
 ```go
 var (
     _ datasource.DataSource              = (*Buckets)(nil)
@@ -68,31 +112,99 @@ var (
 )
 ```
 
-#### API Client — Must Use `ClientV1`
+#### Step 6 — Implement `Metadata`
+
+Return the Terraform type name (provider name + feature suffix):
+
+```go
+func (d *Buckets) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+    resp.TypeName = req.ProviderTypeName + "_buckets"
+}
+```
+
+#### Step 7 — Implement `Configure`
+
+Extract the shared provider data and store it on the struct:
+
+```go
+func (d *Buckets) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+    if req.ProviderData == nil {
+        return
+    }
+
+    data, ok := req.ProviderData.(*providerschema.Data)
+    if !ok {
+        resp.Diagnostics.AddError(
+            "Unexpected Data Source Configure Type",
+            fmt.Sprintf("Expected *ProviderSourceData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+        )
+
+        return
+    }
+
+    d.Data = data
+}
+```
+
+#### Step 8 — Generate API Structs
+
+Create request/response structs in `internal/api/` to model the JSON payloads returned by the Capella API. Derive field names and types from the OpenAPI spec.
+
+#### Step 9 — Use `ClientV1` for API Calls
+
+All new data sources **must** use `ClientV1` with retry logic:
+
 ```go
 response, err := s.ClientV1.ExecuteWithRetry(...)
 ```
-> **Important:** All new data sources must use `ClientV1`. If the droid generates code using an older client, update it.
 
-#### Schema Validators
-Organization, project, and cluster IDs must have validators:
-```go
-capellaschema.AddAttr(attrs, "organization_id", builder, requiredStringWithValidator())
-```
+> **Important:** If the droid generates code using an older client, update it to `ClientV1`.
 
-#### Provider Registration
-Confirm the new data source appears in `internal/provider/provider.go`:
+#### Step 10 — Register in the Provider
+
+Add the new `New` function(s) to `internal/provider/provider.go`:
+
 ```go
 func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.DataSource {
     return []func() datasource.DataSource{
         // ...existing data sources...
-        datasources.NewYourFeature,
-        datasources.NewYourFeatures,
+        datasources.NewBucket,
+        datasources.NewBuckets,
     }
 }
 ```
 
-### 4. Run the Code Review Checklist
+#### Step 11 — Create Acceptance Tests
+
+Add acceptance tests in `acceptance_tests/` with the naming pattern `<feature>_acceptance_test.go` (e.g., `buckets_acceptance_test.go`).
+
+#### Step 12 — Use Parallel Tests
+
+All acceptance tests must use `resource.ParallelTest()` for parallel execution:
+
+```go
+func TestAccBucketsDataSource(t *testing.T) {
+    resource.ParallelTest(t, resource.TestCase{
+        // ...
+    })
+}
+```
+
+### 4. Review the Generated Code
+
+After the droid finishes, verify the output matches the steps above and project conventions. Key things to check:
+
+- [ ] **Struct** embeds `*providerschema.Data`
+- [ ] **Interface assertions** exist for `datasource.DataSource` and `datasource.DataSourceWithConfigure`
+- [ ] **`Metadata`** returns `req.ProviderTypeName + "_feature"`
+- [ ] **`Configure`** extracts `*providerschema.Data` with proper error handling
+- [ ] **Schema validators** are present for `organization_id`, `project_id`, `cluster_id`
+- [ ] **API structs** in `internal/api/` match the OpenAPI spec
+- [ ] **`ClientV1`** is used for all API calls (not an older client)
+- [ ] **Provider registration** in `provider.go` includes both `New` functions
+- [ ] **Acceptance tests** exist and use `resource.ParallelTest()`
+
+### 5. Run the Code Review Checklist
 
 Follow `AGENTS.md` to validate the generated code:
 
@@ -113,7 +225,7 @@ go build -ldflags "-s -w -X 'github.com/couchbasecloud/terraform-provider-couchb
 
 Repeat steps 2–4 until clean. If errors persist after 5 retries, report them.
 
-### 5. Run Acceptance Tests
+### 6. Run Acceptance Tests
 
 > ⚠️ **Acceptance tests create real resources and may cost money.**
 
