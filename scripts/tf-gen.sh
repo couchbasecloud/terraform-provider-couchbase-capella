@@ -20,9 +20,11 @@
 #  you can also review the session logs in ~/.factory/sessions/ to see the agent execution and for debugging.
 #  the session log is a jsonl file.
 
-set -euo pipefail
+set -eo pipefail
 
-source .env
+if [[ -f .env ]]; then
+  source .env
+fi
 
 if [[ -z "${FACTORY_API_KEY}" ]]; then
   echo "Error: FACTORY_API_KEY is not set. Please set it in the shell or in the .env file."
