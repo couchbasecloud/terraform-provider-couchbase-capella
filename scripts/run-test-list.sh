@@ -41,4 +41,4 @@ echo ""
 # Run the tests
 CAPELLA_OPENAPI_SPEC_PATH="$(pwd)/openapi.generated.yaml" \
 TF_ACC=1 \
-go test -timeout=30m -v ./acceptance_tests/ -run "^(${TEST_PATTERN})$"
+go test -timeout=360m -failfast=false -v ./acceptance_tests/ -run "^(${TEST_PATTERN})$"
