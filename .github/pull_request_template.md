@@ -38,11 +38,4 @@ Please include a summary of the fix/feature/change, including any relevant motiv
   <!-- Provide your testing proof within this collapsible segment-->
 </details>
 
-## Required Checklist:
-
-- [ ] I have checked that this change does not generate any credentials and that **they are NOT accidentally logged anywhere**.
-- [ ] I have added tests that prove my fix is effective or that my feature works per HashiCorp requirements
-- [ ] I have added any necessary documentation (if required)
-- [ ] I have run make fmt and formatted my code
-- [ ] I have made sure that no schema field is marked with both requiresReplace and computed
 ## Further comments
