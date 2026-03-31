@@ -165,6 +165,150 @@ For more information about development overrides see [Development Overrides for 
 Most of the new features of the provider are using [capella-public-apis](https://docs.couchbase.com/cloud/management-api-guide/management-api-intro.html)
 Public APIs are updated automatically, tracking all new Capella features.
 
+#### Commands
+
+**1\. Review the Terraform plan**
+
+Ordinarily, terraform will download the requested providers on running the command:
+
+```bash
+$ terraform init
+```
+
+If you are working with a local install of `Terraform-Provider-Couchbase-Capella` provider, this step is not needed and considered optional.
+However, if you plan to use any other providers at the same time it may need to be run.
+
+**2\. Review the Terraform plan**
+
+Execute the following command to automatically review and update the formatting of .tf files.
+
+```bash
+$ terraform fmt
+```
+
+The terraform.template.tfvars defines a template on how the variable values should be added.
+Copy this file as `terraform.tfvars` in the same directory and add the value for each variable.
+
+Execute the following command to review the resources that will be deployed.
+
+```bash
+$ terraform plan
+```
+
+**3\. Execute the Terraform apply**
+
+Execute the plan to deploy the Couchbase Capella resources.
+
+```bash
+$ terraform apply
+```
+
+**4\. Destroy the resources**
+
+Execute the following command to destroy all the resources.
+
+```bash
+$ terraform destroy
+```
+
+To destroy specific resource
+
+```bash
+$ terraform destroy -target=RESOURCE_ADDRESS
+```
+
+Example
+
+```bash
+$ terraform destroy -target=capella_project.example
+```
+
+**5\. To refresh the state file to sync with the remote**
+
+```bash
+$ terraform apply --refresh-only
+```
+
+**6\. To import remote resource**
+
+```bash
+$ terraform import RESOURCE_TYPE.NAME RESOURCE_IDENTIFIER
+```
+
+## Running Acceptance Tests Locally
+
+#### Supported Environment Variables
+
+The following environment variables are used by the acceptance tests:
+
+- `TF_VAR_host` (required): The Capella API endpoint (e.g., http://localhost:8084)
+- `TF_VAR_auth_token` (required): The API authentication token
+- `TF_VAR_organization_id` (required): The Capella organization ID
+- `TF_VAR_project_id` (optional): Use an existing project instead of creating a new one
+- `TF_VAR_cluster_id` (optional): Use an existing cluster instead of creating a new one
+- `TF_VAR_app_service_id` (optional): Use an existing App Service instead of creating a new one
+- `TF_VAR_bucket_id` (optional): Use an existing bucket instead of creating a new one
+
+You can see the authoritative and most up-to-date list in [acceptance_tests/envVars.go](acceptance_tests/envVars.go).
+
+~> **Notice:** Acceptance tests create real resources, and often cost money to run. Please note in any PRs made if you are unable to pay to run acceptance tests for your contribution. We will accept "best effort" implementations of acceptance tests in this case and run them for you on our side. This may delay the contribution but we do not want your contribution blocked by funding.
+
+To run acceptance tests against your local or development environment, you have two options. Note that acceptance tests create real resources and may incur costs.
+
+### Option 1: Using the Script
+
+1. **Create a `terraform.tfvars` file in the project root.**
+
+- This file is gitignored and should contain your credentials and endpoints.
+- Example format:
+  ```hcl
+  host = "http://localhost:8084"            # Your local/dev API endpoint
+  auth_token = "your-local-dev-token"        # Your local/dev API token
+  organization_id = "your-local-org-id"      # Your local/dev organization ID
+  ```
+
+2. **Run the script:**
+
+- From the project root, run:
+  ```sh
+  bash run-acceptance-tests.sh
+  ```
+- This script will:
+  - Set up the provider dev override
+  - Export variables from `terraform.tfvars`
+  - Build the provider binary
+  - Run all acceptance tests (or a subset if you pass test names as arguments)
+
+See `run-acceptance-tests.sh` in the project root for more details.
+
+### Option 2: Manually with `make testacc`
+
+1. **Export the required environment variables:**
+
+```sh
+export TF_VAR_host="http://localhost:8084"
+export TF_VAR_auth_token="your-local-dev-token"
+export TF_VAR_organization_id="your-local-org-id"
+```
+
+2. **Build the provider binary:**
+
+```sh
+make build
+```
+
+3. **Run the tests:**
+
+```sh
+`make testacc`
+```
+
+To run a specific test:
+
+```sh
+`make testacc GO_TEST_ARGS='-run TestName'`
+```
+
 ## Appendix A - Examples
 
 Note: You will need to provide both the url of the capella host as well as your V4 API secret for authentication.
@@ -198,76 +342,6 @@ output "example_project" {
 This repository contains a number of example directories containing examples of Hashicorp Configuration Language (HCL) code
 being used to create and manage Capella resources. To try these examples out for yourself, change into one of them and run
 the below commands.
-
-#### Commands
-
-#### Terraform Init
-
-Ordinarily, terraform will download the requested providers on running the command:
-
-```bash
-$ terraform init
-```
-
-If you are working with a local install of `Terraform-Provider-Couchbase-Capella` provider, this step is not needed and considered optional.
-However, if you plan to use any other providers at the same time it may need to be run.
-
-**1\. Review the Terraform plan**
-
-Execute the following command to automatically review and update the formatting of .tf files.
-
-```bash
-$ terraform fmt
-```
-
-The terraform.template.tfvars defines a template on how the variable values should be added.
-Copy this file as `terraform.tfvars` in the same directory and add the value for each variable.
-
-Execute the following command to review the resources that will be deployed.
-
-```bash
-$ terraform plan
-```
-
-**2\. Execute the Terraform apply**
-
-Execute the plan to deploy the Couchbase Capella resources.
-
-```bash
-$ terraform apply
-```
-
-**3\. Destroy the resources**
-
-Execute the following command to destroy all the resources.
-
-```bash
-$ terraform destroy
-```
-
-To destroy specific resource
-
-```bash
-$ terraform destroy -target=RESOURCE_ADDRESS
-```
-
-Example
-
-```bash
-$ terraform destroy -target=capella_project.example
-```
-
-**4\. To refresh the state file to sync with the remote**
-
-```bash
-$ terraform apply --refresh-only
-```
-
-**5\. To import remote resource**
-
-```bash
-$ terraform import RESOURCE_TYPE.NAME RESOURCE_IDENTIFIER
-```
 
 ## Appendix B - Creating your own environment variables
 
@@ -319,64 +393,4 @@ To find out how to generate a V4 API Key, please see the following document:
 https://docs.couchbase.com/cloud/management-api-guide/management-api-start.html
 
 Once you have generated your api key token, it must be set as an environment variable.
-```
-
-## Running Acceptance Tests Locally
-
-~> **Notice:** Acceptance tests create real resources, and often cost money to run. Please note in any PRs made if you are unable to pay to run acceptance tests for your contribution. We will accept "best effort" implementations of acceptance tests in this case and run them for you on our side. This may delay the contribution but we do not want your contribution blocked by funding.
-
-To run acceptance tests against your local or development environment, you have two options. Note that acceptance tests create real resources and may incur costs.
-
-### Option 1: Using the Script
-
-1. **Create a `terraform.tfvars` file in the project root.**
-
-- This file is gitignored and should contain your credentials and endpoints.
-- Example format:
-  ```hcl
-  host = "http://localhost:8084"            # Your local/dev API endpoint
-  auth_token = "your-local-dev-token"        # Your local/dev API token
-  organization_id = "your-local-org-id"      # Your local/dev organization ID
-  ```
-
-2. **Run the script:**
-
-- From the project root, run:
-  ```sh
-  bash run-acceptance-tests.sh
-  ```
-- This script will:
-  - Set up the provider dev override
-  - Export variables from `terraform.tfvars`
-  - Build the provider binary
-  - Run all acceptance tests (or a subset if you pass test names as arguments)
-
-See `run-acceptance-tests.sh` in the project root for more details.
-
-### Option 2: Manually with `go test`
-
-1. **Export the required environment variables:**
-
-```sh
-export TF_VAR_host="http://localhost:8084"
-export TF_VAR_auth_token="your-local-dev-token"
-export TF_VAR_organization_id="your-local-org-id"
-```
-
-2. **Build the provider binary:**
-
-```sh
-make build
-```
-
-3. **Run the tests:**
-
-```sh
-`make testacc`
-```
-
-To run a specific test:
-
-```sh
-`make testacc GO_TEST_ARGS='-run TestName'`
 ```
