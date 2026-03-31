@@ -1,7 +1,7 @@
 # Code Review
 
-
-1.  git diff main --name-only -- '*.go' ':!internal/generated/api/openapi.gen.go'
+0.  stage all relevant changes (including deletions and renames), run `git add FILEPATH`
+1.  run git diff --cached main --name-only -- '*.go' ':!internal/generated/api/openapi.gen.go'
 
     do not read the openapi.gen.go file as it will consume many tokens and fill up the context window.
 
@@ -15,11 +15,15 @@
 
 get the latest git tag and assign to VERSION:
 
+```
 VERSION=$(git describe --tags --abbrev=0)
+```
 
 then build:
 
+```
 go build -ldflags "-s -w -X 'github.com/couchbasecloud/terraform-provider-couchbase-capella/version.ProviderVersion=$VERSION'" -o ./bin/terraform-provider-couchbase-capella
+```
 
 fix any errors.
 

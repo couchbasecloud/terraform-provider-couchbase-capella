@@ -38,6 +38,7 @@ func TestAppServiceResource(t *testing.T) {
 
 func testAccAppServiceResourceConfig(resourceName string) string {
 	clusterName := randomStringWithPrefix("tf_acc_cluster_")
+	cidr := generateRandomCIDR()
 	return fmt.Sprintf(`
 %[1]s
 
@@ -48,7 +49,7 @@ resource "couchbase-capella_cluster" "%[5]s" {
   cloud_provider = {
     type   = "aws"
     region = "us-east-1"
-    cidr   = "10.190.250.0/23"
+    cidr   = "%[6]s"
   }
   service_groups = [
     {
@@ -86,7 +87,7 @@ resource "couchbase-capella_app_service" "%[4]s" {
     ram = 4
   }
 }
-`, globalProviderBlock, globalOrgId, globalProjectId, resourceName, clusterName)
+`, globalProviderBlock, globalOrgId, globalProjectId, resourceName, clusterName, cidr)
 }
 
 func generateAppServiceImportId(resourceReference string) resource.ImportStateIdFunc {
