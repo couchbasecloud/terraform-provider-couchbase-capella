@@ -269,12 +269,6 @@ $ terraform apply --refresh-only
 $ terraform import RESOURCE_TYPE.NAME RESOURCE_IDENTIFIER
 ```
 
-### Running the acceptance test
-
-~> **Notice:** Acceptance tests create real resources, and often cost money to run. Please note in any PRs made if you are unable to pay to run acceptance tests for your contribution. We will accept "best effort" implementations of acceptance tests in this case and run them for you on our side. This may delay the contribution but we do not want your contribution blocked by funding.
-
-- Run `make testacc`
-
 ## Appendix B - Creating your own environment variables
 
 Environment variables can be set by terraform by creating and adding a terraform.tfvars to your
@@ -329,26 +323,60 @@ Once you have generated your api key token, it must be set as an environment var
 
 ## Running Acceptance Tests Locally
 
-To run acceptance tests against your local or development environment, follow the below steps. Note
-that acceptance tests create real resources and may incur costs.
+~> **Notice:** Acceptance tests create real resources, and often cost money to run. Please note in any PRs made if you are unable to pay to run acceptance tests for your contribution. We will accept "best effort" implementations of acceptance tests in this case and run them for you on our side. This may delay the contribution but we do not want your contribution blocked by funding.
+
+To run acceptance tests against your local or development environment, you have two options. Note that acceptance tests create real resources and may incur costs.
+
+### Option 1: Using the Script
 
 1. **Create a `terraform.tfvars` file in the project root.**
-   - This file is gitignored and should contain your credentials and endpoints.
-   - Example format:
-     ```hcl
-     host = "http://localhost:8084"            # Your local/dev API endpoint
-     auth_token = "your-local-dev-token"        # Your local/dev API token
-     organization_id = "your-local-org-id"      # Your local/dev organization ID
-     ```
 
-2. **Use the provided script to run acceptance tests:**
-   - Run the following command from the project root:
-     ```sh
-     bash run-acceptance-tests.sh
-     ```
-   - This script will:
-     - Read your `terraform.tfvars` file
-     - Export the necessary `TF_VAR_*` environment variables
-     - Run `make testacc` to execute the acceptance tests
+- This file is gitignored and should contain your credentials and endpoints.
+- Example format:
+  ```hcl
+  host = "http://localhost:8084"            # Your local/dev API endpoint
+  auth_token = "your-local-dev-token"        # Your local/dev API token
+  organization_id = "your-local-org-id"      # Your local/dev organization ID
+  ```
+
+2. **Run the script:**
+
+- From the project root, run:
+  ```sh
+  bash run-acceptance-tests.sh
+  ```
+- This script will:
+  - Set up the provider dev override
+  - Export variables from `terraform.tfvars`
+  - Build the provider binary
+  - Run all acceptance tests (or a subset if you pass test names as arguments)
 
 See `run-acceptance-tests.sh` in the project root for more details.
+
+### Option 2: Manually with `go test`
+
+1. **Export the required environment variables:**
+
+```sh
+export TF_VAR_host="http://localhost:8084"
+export TF_VAR_auth_token="your-local-dev-token"
+export TF_VAR_organization_id="your-local-org-id"
+```
+
+2. **Build the provider binary:**
+
+```sh
+make build
+```
+
+3. **Run the tests:**
+
+```sh
+`make testacc`
+```
+
+To run a specific test:
+
+```sh
+`make testacc GO_TEST_ARGS='-run TestName'`
+```
