@@ -13,7 +13,7 @@ Thank you for your interest in contributing to the Couchbase Capella Terraform P
 - Fork the repository.
 - Clone your fork. Use `git clone` to create a local copy on your machine.
 - We use Go Modules to manage dependencies, so you can develop outside your `$GOPATH`.
-- We use [golangci-lint](https://github.com/golangci-lint/golangci-lint) to lint our code, you can install it locally via `make setup`.
+- We use [golangci-lint](https://github.com/golangci/golangci-lint) to lint our code, you can install it locally via `make setup`.
 
 ## Local Development Setup
 
