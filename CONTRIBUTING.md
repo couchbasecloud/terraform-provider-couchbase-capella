@@ -167,7 +167,7 @@ Public APIs are updated automatically, tracking all new Capella features.
 
 #### Commands
 
-**1\. Review the Terraform plan**
+**1\. Terraform Init (Optional)**
 
 Ordinarily, terraform will download the requested providers on running the command:
 
