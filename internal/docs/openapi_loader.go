@@ -228,9 +228,7 @@ func GetOpenAPIDescription(resourceName, tfFieldName string) string {
 	// Capitalize resource name for schema patterns
 	capitalizedResource := capitalize(resourceName)
 
-	// Only resource-specific schemas are searched.Callers that need
-	// generic schemas should pass them explicitly via the alternateSchemas
-	// parameter in AddAttr.
+	// Try each schema pattern until we find the field
 	schemaPatterns := []string{
 		capitalizedResource, // Exact match (e.g., CORSConfig, AccessFunction)
 		"Create" + capitalizedResource + "Request",
