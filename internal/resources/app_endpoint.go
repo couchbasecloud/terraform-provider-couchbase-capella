@@ -103,6 +103,12 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
+	diags = resp.State.Set(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	diags = initComputedAttributesToNullBeforeRefresh(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -182,7 +188,7 @@ func initComputedAttributesToNullBeforeRefresh(ctx context.Context, plan *provid
 
 				collectionsMapValue, d := types.MapValueFrom(ctx, types.ObjectType{
 					AttrTypes: providerschema.
-						AppEndpointCollection{}.
+					AppEndpointCollection{}.
 						AttributeTypes(),
 				}, collectionsMap)
 				diags.Append(d...)
@@ -199,7 +205,7 @@ func initComputedAttributesToNullBeforeRefresh(ctx context.Context, plan *provid
 				"collections": types.MapType{
 					ElemType: types.ObjectType{
 						AttrTypes: providerschema.
-							AppEndpointCollection{}.
+						AppEndpointCollection{}.
 							AttributeTypes(),
 					},
 				},
@@ -552,7 +558,7 @@ func (a *AppEndpoint) refreshAppEndpoint(
 				ctx,
 				types.ObjectType{
 					AttrTypes: providerschema.
-						AppEndpointCollection{}.
+					AppEndpointCollection{}.
 						AttributeTypes(),
 				},
 				collectionsMapElements,
@@ -586,7 +592,7 @@ func (a *AppEndpoint) refreshAppEndpoint(
 			ctx,
 			types.ObjectType{
 				AttrTypes: providerschema.
-					AppEndpointScope{}.
+				AppEndpointScope{}.
 					AttributeTypes(),
 			},
 			scopesMapElements,
