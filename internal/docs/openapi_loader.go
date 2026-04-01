@@ -228,8 +228,9 @@ func GetOpenAPIDescription(resourceName, tfFieldName string) string {
 	// Capitalize resource name for schema patterns
 	capitalizedResource := capitalize(resourceName)
 
-	// Try common schema name patterns, then fall back to generic nested schemas
-	// for fields like "type", "roles" that live inside shared Resource objects.
+	// Only resource-specific schemas are searched.Callers that need
+	// generic schemas should pass them explicitly via the alternateSchemas
+	// parameter in AddAttr.
 	schemaPatterns := []string{
 		capitalizedResource, // Exact match (e.g., CORSConfig, AccessFunction)
 		"Create" + capitalizedResource + "Request",
@@ -237,20 +238,15 @@ func GetOpenAPIDescription(resourceName, tfFieldName string) string {
 		"Update" + capitalizedResource + "Request",
 		capitalizedResource + "Request",
 		capitalizedResource + "Response",
-		resourceName,                     // Exact match without any modification (e.g. "datadog" for DataDog schema)
-		capitalizedResource + "Resource", // e.g., UserResource if it exists
-		"Resource",                       // For user resources, API key resources
-		"ResourceBucket",                 // For bucket-specific resources
+		resourceName, // Exact match without any modification (e.g. "datadog" for DataDog schema)
 	}
 
 	for _, schemaName := range schemaPatterns {
-		// Find the schema the property belongs to
 		schemaRef := openAPIDoc.Components.Schemas[schemaName]
 		if schemaRef == nil || schemaRef.Value == nil {
 			continue
 		}
 
-		// Retrieve the property description from the schema
 		if prop := getPropertyFromSchema(schemaRef.Value, camelFieldName, make(map[string]bool)); prop != nil {
 			return buildEnhancedDescription(prop, openAPIDoc)
 		}

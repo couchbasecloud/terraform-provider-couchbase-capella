@@ -281,7 +281,9 @@ func TestGetOpenAPIDescription_ValidValuesFormat(t *testing.T) {
 }
 
 func TestGetOpenAPIDescription_NestedSchemaFields(t *testing.T) {
-	// Test that nested fields (like those in Resource schema) are found
+	// Test that fields in generic schemas like "Resource" are found when passed
+	// explicitly as the resourceName (matching how AddAttr passes them via
+	// alternateSchemas). Generic schemas are no longer used as implicit fallbacks.
 	tests := []struct {
 		name           string
 		resourceName   string
@@ -290,29 +292,29 @@ func TestGetOpenAPIDescription_NestedSchemaFields(t *testing.T) {
 		shouldContain  string
 	}{
 		{
-			name:           "type field from Resource schema",
-			resourceName:   "user",
+			name:           "type field via explicit Resource schema",
+			resourceName:   "Resource",
 			fieldName:      "type",
 			expectNonEmpty: true,
 			shouldContain:  "Type of the resource",
 		},
 		{
-			name:           "roles field from Resource schema",
-			resourceName:   "user",
+			name:           "roles field via explicit Resource schema",
+			resourceName:   "Resource",
 			fieldName:      "roles",
 			expectNonEmpty: true,
 			shouldContain:  "Project Roles",
 		},
 		{
-			name:           "type has enum values",
-			resourceName:   "user",
+			name:           "type has enum values via explicit Resource schema",
+			resourceName:   "Resource",
 			fieldName:      "type",
 			expectNonEmpty: true,
 			shouldContain:  "`project`",
 		},
 		{
-			name:           "roles has multiple enum values",
-			resourceName:   "user",
+			name:           "roles has multiple enum values via explicit Resource schema",
+			resourceName:   "Resource",
 			fieldName:      "roles",
 			expectNonEmpty: true,
 			shouldContain:  "`projectOwner`",
@@ -886,8 +888,8 @@ func TestGetPropertyFromSchema_DeterministicBehavior(t *testing.T) {
 		resourceName string
 		fieldName    string
 	}{
-		{"type field is common across schemas", "user", "type"},
-		{"roles field is common across schemas", "user", "roles"},
+		{"type field via explicit Resource schema", "Resource", "type"},
+		{"roles field via explicit Resource schema", "Resource", "roles"},
 		{"name field is common across schemas", "project", "name"},
 		{"id field is common across schemas", "cluster", "id"},
 	}
@@ -923,8 +925,9 @@ func TestGetPropertyFromSchema_DeterministicBehavior(t *testing.T) {
 // in multiple unrelated nested schemas, the function returns empty rather than
 // a potentially incorrect match.
 func TestGetPropertyFromSchema_AmbiguousMatches(t *testing.T) {
-	// Document the expected behavior for ambiguous field names
-	// Fields that exist in multiple schemas should be handled safely
+	// Generic schemas (Resource, ResourceBucket) are no longer used as implicit
+	// fallbacks. Fields like "type" and "status" will only match resource-specific
+	// schemas. Callers pass generic schemas explicitly via alternateSchemas.
 	ambiguousFields := []struct {
 		name        string
 		fieldName   string
