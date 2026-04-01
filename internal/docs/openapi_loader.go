@@ -242,11 +242,13 @@ func GetOpenAPIDescription(resourceName, tfFieldName string) string {
 	}
 
 	for _, schemaName := range schemaPatterns {
+		// Find the schema the property belongs to
 		schemaRef := openAPIDoc.Components.Schemas[schemaName]
 		if schemaRef == nil || schemaRef.Value == nil {
 			continue
 		}
 
+		// Retrieve the property description from the schema
 		if prop := getPropertyFromSchema(schemaRef.Value, camelFieldName, make(map[string]bool)); prop != nil {
 			return buildEnhancedDescription(prop, openAPIDoc)
 		}
