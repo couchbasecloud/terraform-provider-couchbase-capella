@@ -53,8 +53,7 @@ resource "couchbase-capella_free_tier_cluster" "new_free_tier_cluster" {
 - `current_state` (String)
 - `enable_private_dns_resolution` (Boolean)
 - `etag` (String) Entity tag for the resource, used for caching and conditional requests.
-- `id` (String) - Id of the project.
- - **Format**: UUID (GUID4)
+- `id` (String) The ID of this resource.
 - `service_groups` (Attributes Set) (see [below for nested schema](#nestedatt--service_groups))
 - `support` (Attributes) (see [below for nested schema](#nestedatt--support))
 

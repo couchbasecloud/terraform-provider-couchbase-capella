@@ -81,7 +81,7 @@ Required:
 
 Optional:
 
-- `scopes` (Attributes Set) - The scopes under a bucket. (see [below for nested schema](#nestedatt--access--resources--buckets--scopes))
+- `scopes` (Attributes Set) (see [below for nested schema](#nestedatt--access--resources--buckets--scopes))
 
 <a id="nestedatt--access--resources--buckets--scopes"></a>
 ### Nested Schema for `access.resources.buckets.scopes`

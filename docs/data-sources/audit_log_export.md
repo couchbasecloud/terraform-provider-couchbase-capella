@@ -48,7 +48,6 @@ Read-Only:
 - `created_at` (String)
 - `end` (String)
 - `expiration` (String)
-- `id` (String) - Id of the project.
- - **Format**: UUID (GUID4)
+- `id` (String)
 - `start` (String)
 - `status` (String)

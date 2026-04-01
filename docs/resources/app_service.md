@@ -59,7 +59,7 @@ resource "couchbase-capella_app_service" "new_app_service" {
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
 - `current_state` (String) - **Valid Values**: `pending`, `deploying`, `deploymentFailed`, `destroying`, `destroyFailed`, `healthy`, `degraded`, `scaling`, `scaleFailed`, `upgrading`, `upgradeFailed`, `turnedOff`, `turningOff`, `turnOffFailed`, `turningOn`, `turnOnFailed`
 - `etag` (String) Entity tag for the resource, used for caching and conditional requests.
-- `id` (String) - Id of the project.
+- `id` (String) - The ID of the App Service created.
  - **Format**: UUID (GUID4)
 - `version` (String) - The version of the App Service server. If left empty, it will be defaulted to the latest available version.
 

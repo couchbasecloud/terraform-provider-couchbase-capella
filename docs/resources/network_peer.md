@@ -84,8 +84,7 @@ resource "couchbase-capella_network_peer" "new_network_peer" {
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
 - `commands` (Set of String)
-- `id` (String) - Id of the project.
- - **Format**: UUID (GUID4)
+- `id` (String) The ID of this resource.
 - `status` (Attributes) (see [below for nested schema](#nestedatt--status))
 
 <a id="nestedatt--provider_config"></a>

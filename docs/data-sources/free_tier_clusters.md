@@ -132,9 +132,7 @@ Read-Only:
 - `autoexpansion` (Boolean)
 - `iops` (Number)
 - `storage` (Number)
-- `type` (String) - Type of the resource.
- - **Valid Values**: `project`
- - **Default**: `project`
+- `type` (String)
 
 
 

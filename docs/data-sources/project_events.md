@@ -88,8 +88,7 @@ Read-Only:
 - `app_service_name` (String)
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `cluster_name` (String)
-- `id` (String) - Id of the project.
- - **Format**: UUID (GUID4)
+- `id` (String)
 - `image_url` (String)
 - `incident_ids` (Set of String)
 - `key` (String)

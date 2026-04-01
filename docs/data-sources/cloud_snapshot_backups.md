@@ -55,15 +55,12 @@ Read-Only:
 - `created_at` (String) - **Format**: Date-time in RFC3339 format
 - `cross_region_copies` (Attributes Set) (see [below for nested schema](#nestedatt--data--cross_region_copies))
 - `expiration` (String) - **Format**: Date-time in RFC3339 format
-- `id` (String) - Id of the project.
- - **Format**: UUID (GUID4)
+- `id` (String)
 - `progress` (Attributes) (see [below for nested schema](#nestedatt--data--progress))
 - `retention` (Number)
 - `server` (Attributes) (see [below for nested schema](#nestedatt--data--server))
 - `size` (Number)
-- `type` (String) - Type of the resource.
- - **Valid Values**: `project`
- - **Default**: `project`
+- `type` (String)
 
 <a id="nestedatt--data--cmek"></a>
 ### Nested Schema for `data.cmek`

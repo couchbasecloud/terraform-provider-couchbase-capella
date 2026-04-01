@@ -45,8 +45,7 @@ resource "couchbase-capella_free_tier_app_service" "new_free_tier_app_service" {
 - `compute` (Attributes) (see [below for nested schema](#nestedatt--compute))
 - `current_state` (String)
 - `etag` (String) Entity tag for the resource, used for caching and conditional requests.
-- `id` (String) - Id of the project.
- - **Format**: UUID (GUID4)
+- `id` (String) The ID of this resource.
 - `nodes` (Number)
 - `plan` (String)
 - `version` (String)

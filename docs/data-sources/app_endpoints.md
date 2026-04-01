@@ -49,11 +49,11 @@ Read-Only:
 - `cors` (Attributes) (see [below for nested schema](#nestedatt--app_endpoints--cors))
 - `delta_sync_enabled` (Boolean)
 - `metrics_url` (String)
-- `name` (String) - The name of the bucket.
+- `name` (String)
 - `oidc` (Attributes List) (see [below for nested schema](#nestedatt--app_endpoints--oidc))
 - `public_url` (String)
 - `require_resync` (Attributes Map) (see [below for nested schema](#nestedatt--app_endpoints--require_resync))
-- `scopes` (Attributes Map) - The scopes under a bucket. (see [below for nested schema](#nestedatt--app_endpoints--scopes))
+- `scopes` (Attributes Map) (see [below for nested schema](#nestedatt--app_endpoints--scopes))
 - `state` (String)
 - `user_xattr_key` (String)
 

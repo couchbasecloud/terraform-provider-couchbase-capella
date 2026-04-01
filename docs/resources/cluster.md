@@ -142,9 +142,7 @@ Required:
 
 Required:
 
-- `type` (String) - Type of the resource.
- - **Valid Values**: `project`
- - **Default**: `project`
+- `type` (String)
 
 Optional:
 

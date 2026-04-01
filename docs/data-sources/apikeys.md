@@ -32,9 +32,8 @@ Read-Only:
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--data--audit))
 - `description` (String)
 - `expiry` (Number)
-- `id` (String) - Id of the project.
- - **Format**: UUID (GUID4)
-- `name` (String) - The name of the bucket.
+- `id` (String)
+- `name` (String)
 - `organization_id` (String) The GUID4 ID of the organization.
 - `organization_roles` (List of String)
 - `resources` (Attributes List) (see [below for nested schema](#nestedatt--data--resources))

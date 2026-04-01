@@ -42,8 +42,7 @@ resource "couchbase-capella_audit_log_export" "new_auditlogexport" {
  - **Format**: Date-time in RFC3339 format
 - `expiration` (String) - The timestamp when the download link expires.
  - **Format**: Date-time in RFC3339 format
-- `id` (String) - Id of the project.
- - **Format**: UUID (GUID4)
+- `id` (String) The ID of this resource.
 - `status` (String) - Indicates status of audit log creation. When status is complete, the compressed file can be manually downloaded.
  - **Valid Values**: `In Progress`, `Completed`, `Queued`, `Failed`
 

@@ -39,7 +39,6 @@ data "couchbase-capella_audit_log_event_ids" "existing_auditlogeventids" {
 Read-Only:
 
 - `description` (String)
-- `id` (Number) - Id of the project.
- - **Format**: UUID (GUID4)
+- `id` (Number)
 - `module` (String)
-- `name` (String) - The name of the bucket.
+- `name` (String)

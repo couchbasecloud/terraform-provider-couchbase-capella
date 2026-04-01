@@ -25,7 +25,7 @@ Manages an App Endpoints resync operations. This resource allows you to create a
 
 ### Optional
 
-- `scopes` (Map of Set of String) - The scopes under a bucket.
+- `scopes` (Map of Set of String)
 
 ### Read-Only
 
