@@ -49,8 +49,7 @@ resource "couchbase-capella_apikey" "new_apikey" {
 ### Read-Only
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--audit))
-- `id` (String) - Id of the project.
- - **Format**: UUID (GUID4)
+- `id` (String) The ID of this resource.
 - `token` (String, Sensitive) - The Token is a confidential piece of information that is used to authorize requests made to v4 endpoints.
 
 <a id="nestedatt--resources"></a>

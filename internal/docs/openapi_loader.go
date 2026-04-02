@@ -228,7 +228,7 @@ func GetOpenAPIDescription(resourceName, tfFieldName string) string {
 	// Capitalize resource name for schema patterns
 	capitalizedResource := capitalize(resourceName)
 
-	// Try common schema name patterns
+	// Try each schema pattern until we find the field
 	schemaPatterns := []string{
 		capitalizedResource, // Exact match (e.g., CORSConfig, AccessFunction)
 		"Create" + capitalizedResource + "Request",
@@ -239,39 +239,122 @@ func GetOpenAPIDescription(resourceName, tfFieldName string) string {
 		resourceName, // Exact match without any modification (e.g. "datadog" for DataDog schema)
 	}
 
-	// Try each schema pattern until we find the field
 	for _, schemaName := range schemaPatterns {
+		// Find the schema the property belongs to
 		schemaRef := openAPIDoc.Components.Schemas[schemaName]
 		if schemaRef == nil || schemaRef.Value == nil {
 			continue
 		}
 
-		propRef := schemaRef.Value.Properties[camelFieldName]
-		if propRef != nil && propRef.Value != nil {
-			return buildEnhancedDescription(propRef.Value, openAPIDoc)
+		// Retrieve the property description from the schema
+		if prop := getPropertyFromSchema(schemaRef.Value, camelFieldName, make(map[string]bool)); prop != nil {
+			return buildEnhancedDescription(prop, openAPIDoc)
 		}
 	}
 
-	// If not found in main schema, try common nested schemas
-	// This handles fields like "type", "roles" that are inside nested Resource objects
-	nestedSchemas := []string{
-		"Resource",                       // For user resources, API key resources
-		"ResourceBucket",                 // For bucket-specific resources
-		capitalizedResource + "Resource", // e.g., UserResource if it exists
+	return ""
+}
+
+// getPropertyFromSchema searches for a property within a schema, following $ref links
+// only within the same schema tree. The visited map prevents infinite loops from
+// circular references.
+//
+// To avoid nondeterministic behavior from Go map iteration, this function collects
+// all matches and only returns a result when exactly one unique match is found.
+// If multiple different schemas match the same field name, it returns nil to avoid
+// attaching the wrong description to a Terraform attribute.
+//
+// It does NOT search into array items to avoid false positives from unrelated nested objects.
+func getPropertyFromSchema(schema *openapi3.Schema, fieldName string, visited map[string]bool) *openapi3.Schema {
+	if schema == nil {
+		return nil
 	}
 
-	for _, schemaName := range nestedSchemas {
-		schemaRef := openAPIDoc.Components.Schemas[schemaName]
-		if schemaRef == nil || schemaRef.Value == nil {
-			continue
-		}
+	// Check direct properties first (exact case match) - this is deterministic
+	if propRef, ok := schema.Properties[fieldName]; ok && propRef != nil && propRef.Value != nil {
+		return propRef.Value
+	}
 
-		propRef := schemaRef.Value.Properties[camelFieldName]
-		if propRef != nil && propRef.Value != nil {
-			return buildEnhancedDescription(propRef.Value, openAPIDoc)
+	// Collect all matches from nested searches to handle ambiguous field names
+	var matches []*openapi3.Schema
+
+	// Search nested object properties (following $ref links)
+	for _, propRef := range schema.Properties {
+		if found := searchSchemaRef(propRef, fieldName, visited); found != nil {
+			matches = append(matches, found)
 		}
 	}
 
+	// Search allOf/anyOf/oneOf compositions
+	for _, list := range [][]*openapi3.SchemaRef{schema.AllOf, schema.AnyOf, schema.OneOf} {
+		for _, ref := range list {
+			if found := searchSchemaRef(ref, fieldName, visited); found != nil {
+				matches = append(matches, found)
+			}
+		}
+	}
+
+	// Only return a result if exactly one unique match was found
+	// This prevents nondeterministic behavior when the same field name exists
+	// in multiple nested schemas (e.g., "type", "last", "next")
+	if len(matches) == 1 {
+		return matches[0]
+	}
+
+	// If multiple matches, check if they're all the same schema (pointer equality)
+	// This can happen when the same schema is referenced multiple times
+	if len(matches) > 1 {
+		first := matches[0]
+		allSame := true
+		for _, m := range matches[1:] {
+			if m != first {
+				allSame = false
+				break
+			}
+		}
+		if allSame {
+			return first
+		}
+	}
+
+	return nil
+}
+
+// searchSchemaRef resolves a schema reference and recursively searches for a property.
+// Handles both $ref pointers and inline object schemas.
+func searchSchemaRef(ref *openapi3.SchemaRef, fieldName string, visited map[string]bool) *openapi3.Schema {
+	if ref == nil {
+		return nil
+	}
+
+	// Follow $ref to a named schema
+	if ref.Ref != "" {
+		refName := extractSchemaName(ref.Ref)
+		if refName == "" || visited[refName] {
+			return nil
+		}
+		visited[refName] = true
+		refSchema := openAPIDoc.Components.Schemas[refName]
+		if refSchema == nil || refSchema.Value == nil {
+			return nil
+		}
+		return getPropertyFromSchema(refSchema.Value, fieldName, visited)
+	}
+
+	// Search inline object schemas
+	if ref.Value != nil && ref.Value.Type != nil && ref.Value.Type.Is("object") {
+		return getPropertyFromSchema(ref.Value, fieldName, visited)
+	}
+
+	return nil
+}
+
+// extractSchemaName extracts the schema name from a $ref string like "#/components/schemas/Foo".
+func extractSchemaName(ref string) string {
+	const prefix = "#/components/schemas/"
+	if strings.HasPrefix(ref, prefix) {
+		return ref[len(prefix):]
+	}
 	return ""
 }
 

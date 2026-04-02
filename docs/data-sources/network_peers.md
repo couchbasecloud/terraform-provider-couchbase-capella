@@ -40,9 +40,8 @@ Read-Only:
 
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--data--audit))
 - `commands` (Attributes) (see [below for nested schema](#nestedatt--data--commands))
-- `id` (String) - Id of the project.
- - **Format**: UUID (GUID4)
-- `name` (String) - The name of the bucket.
+- `id` (String)
+- `name` (String)
 - `provider_config` (String)
 - `provider_type` (String) Type of provider to filter on. By default all providers are returned.
 - `status` (Attributes) (see [below for nested schema](#nestedatt--data--status))

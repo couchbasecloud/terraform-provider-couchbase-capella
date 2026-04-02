@@ -22,9 +22,9 @@ func ClusterSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "enable_private_dns_resolution", clusterBuilder, boolDefaultAttribute(false, optional, computed, requiresReplace))
 
 	cloudProviderAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(cloudProviderAttrs, "type", clusterBuilder, stringAttribute([]string{required}))
-	capellaschema.AddAttr(cloudProviderAttrs, "region", clusterBuilder, stringAttribute([]string{required}))
-	capellaschema.AddAttr(cloudProviderAttrs, "cidr", clusterBuilder, stringAttribute([]string{required}))
+	capellaschema.AddAttr(cloudProviderAttrs, "type", clusterBuilder, stringAttribute([]string{required}), "CloudProvider")
+	capellaschema.AddAttr(cloudProviderAttrs, "region", clusterBuilder, stringAttribute([]string{required}), "CloudProvider")
+	capellaschema.AddAttr(cloudProviderAttrs, "cidr", clusterBuilder, stringAttribute([]string{required}), "CloudProvider")
 
 	capellaschema.AddAttr(attrs, "cloud_provider", clusterBuilder, &schema.SingleNestedAttribute{
 		Required:   true,
@@ -85,7 +85,7 @@ func ClusterSchema() schema.Schema {
 	})
 
 	availabilityAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(availabilityAttrs, "type", clusterBuilder, stringAttribute([]string{required}))
+	capellaschema.AddAttr(availabilityAttrs, "type", clusterBuilder, stringAttribute([]string{required}), "Availability")
 
 	capellaschema.AddAttr(attrs, "availability", clusterBuilder, &schema.SingleNestedAttribute{
 		Required:   true,
@@ -96,8 +96,8 @@ func ClusterSchema() schema.Schema {
 	})
 
 	supportAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(supportAttrs, "plan", clusterBuilder, stringAttribute([]string{required}))
-	capellaschema.AddAttr(supportAttrs, "timezone", clusterBuilder, stringAttribute([]string{computed, optional}))
+	capellaschema.AddAttr(supportAttrs, "plan", clusterBuilder, stringAttribute([]string{required}), "Support")
+	capellaschema.AddAttr(supportAttrs, "timezone", clusterBuilder, stringAttribute([]string{computed, optional}), "Support")
 
 	capellaschema.AddAttr(attrs, "support", clusterBuilder, &schema.SingleNestedAttribute{
 		Required:   true,

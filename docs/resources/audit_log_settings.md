@@ -44,7 +44,7 @@ resource "couchbase-capella_audit_log_settings" "new_auditlogsettings" {
 Required:
 
 - `domain` (String)
-- `name` (String) - The name of the bucket.
+- `name` (String)
 
 ## Import
 

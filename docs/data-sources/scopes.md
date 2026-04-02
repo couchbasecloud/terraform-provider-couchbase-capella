@@ -49,4 +49,4 @@ Read-Only:
 Read-Only:
 
 - `max_ttl` (Number)
-- `name` (String) - The name of the bucket.
+- `name` (String)

@@ -40,8 +40,7 @@ Read-Only:
 
 - `cloud_provider` (String)
 - `cluster_id` (String) The GUID4 ID of the cluster.
-- `id` (String) - Id of the project.
- - **Format**: UUID (GUID4)
+- `id` (String)
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 - `status` (String)

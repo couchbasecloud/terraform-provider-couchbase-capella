@@ -53,8 +53,7 @@ resource "couchbase-capella_free_tier_cluster" "new_free_tier_cluster" {
 - `current_state` (String)
 - `enable_private_dns_resolution` (Boolean)
 - `etag` (String) Entity tag for the resource, used for caching and conditional requests.
-- `id` (String) - Id of the project.
- - **Format**: UUID (GUID4)
+- `id` (String) The ID of this resource.
 - `service_groups` (Attributes Set) (see [below for nested schema](#nestedatt--service_groups))
 - `support` (Attributes) (see [below for nested schema](#nestedatt--support))
 
@@ -63,11 +62,11 @@ resource "couchbase-capella_free_tier_cluster" "new_free_tier_cluster" {
 
 Required:
 
-- `cidr` (String)
-- `region` (String)
-- `type` (String) - Type of the resource.
- - **Valid Values**: `project`
- - **Default**: `project`
+- `cidr` (String) - CIDR block for Cloud Provider.
+ - **Constraints**: Pattern: `^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}$`
+- `region` (String) - Cloud provider region, for example `us-west-2`.
+- `type` (String) - Cloud provider type. Note: For singleNode cluster, only AWS type cloud provider is allowed. `aws`: Amazon Web Services `gcp`: Google Cloud Platform `azure`: Microsoft Azure
+ - **Valid Values**: `aws`, `gcp`, `azure`
 
 
 <a id="nestedatt--audit"></a>
@@ -89,9 +88,8 @@ Read-Only:
 
 Read-Only:
 
-- `type` (String) - Type of the resource.
- - **Valid Values**: `project`
- - **Default**: `project`
+- `type` (String) - Availability zone type, either 'single' or 'multi'. Availability zone type allowed for singleNode cluster is only 'single'.
+ - **Valid Values**: `single`, `multi`
 
 
 <a id="nestedatt--couchbase_server"></a>
@@ -136,9 +134,8 @@ Read-Only:
 - `autoexpansion` (Boolean)
 - `iops` (Number)
 - `storage` (Number)
-- `type` (String) - Type of the resource.
- - **Valid Values**: `project`
- - **Default**: `project`
+- `type` (String) - Cloud provider type. Note: For singleNode cluster, only AWS type cloud provider is allowed. `aws`: Amazon Web Services `gcp`: Google Cloud Platform `azure`: Microsoft Azure
+ - **Valid Values**: `aws`, `gcp`, `azure`
 
 
 
@@ -148,8 +145,10 @@ Read-Only:
 
 Read-Only:
 
-- `plan` (String)
-- `timezone` (String)
+- `plan` (String) - Plan type, either 'Basic', 'Developer Pro', or 'Enterprise'. Plan type allowed for singleNode cluster is either 'Basic', or 'Developer Pro'. In case of 'Basic' plan timezone field value is ignored.
+ - **Valid Values**: `basic`, `developer pro`, `enterprise`
+- `timezone` (String) - The standard timezone for the cluster. Should be the TZ identifier.
+ - **Valid Values**: `ET`, `GMT`, `IST`, `PT`
 
 ## Import
 

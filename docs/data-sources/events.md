@@ -57,7 +57,8 @@ Read-Only:
 
 Read-Only:
 
-- `first` (String)
+- `first` (String) - The base URL, endpoint, and path parameters required to fetch the first page of results.
+ - **Format**: URI
 - `last` (String)
 - `next` (String)
 - `previous` (String)
@@ -73,7 +74,7 @@ Read-Only:
 - `page` (Number) Sets the page you would like to view.
 - `per_page` (Number) Sets the number of results you would like to have on each page.
 - `previous` (Number)
-- `total_items` (Number)
+- `total_items` (Number) - Total items found by the given query.
 
 
 
@@ -87,8 +88,7 @@ Read-Only:
 - `app_service_name` (String)
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `cluster_name` (String)
-- `id` (String) - Id of the project.
- - **Format**: UUID (GUID4)
+- `id` (String)
 - `image_url` (String)
 - `incident_ids` (Set of String)
 - `key` (String)

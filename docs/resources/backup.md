@@ -34,22 +34,28 @@ resource "couchbase-capella_backup" "new_backup" {
 ### Optional
 
 - `restore` (Attributes) (see [below for nested schema](#nestedatt--restore))
-- `restore_before` (String)
+- `restore_before` (String) - The RFC3339 timestamp representing the time at which backup will expire.
+ - **Format**: Date-time in RFC3339 format
 - `restore_times` (Number)
 
 ### Read-Only
 
 - `backup_stats` (Attributes) (see [below for nested schema](#nestedatt--backup_stats))
-- `bucket_name` (String)
+- `bucket_name` (String) - The name of the bucket for which the backup belongs to.
 - `cloud_provider` (String)
 - `cycle_id` (String) The GUID4 ID of the cycle.
-- `date` (String)
-- `elapsed_time_in_seconds` (Number)
-- `id` (String) The ID of this resource.
-- `method` (String)
-- `schedule_info` (Attributes) (see [below for nested schema](#nestedatt--schedule_info))
-- `source` (String)
-- `status` (String)
+- `date` (String) - The RFC3339 timestamp representing the time at which backup was created.
+ - **Format**: Date-time in RFC3339 format
+- `elapsed_time_in_seconds` (Number) - The amount of seconds that have elapsed between the creation and completion of the backup.
+- `id` (String) - The ID of the backup created.
+ - **Format**: UUID (GUID4)
+- `method` (String) - The mechanism of the backup. Incremental backups include the data that has changed since the last scheduled backup. Full backup includes all bucket data from the time the backup was created.
+ - **Valid Values**: `incremental`, `full`
+- `schedule_info` (Attributes) - Represents the schedule information of the backup. (see [below for nested schema](#nestedatt--schedule_info))
+- `source` (String) - The way a backup job was initiated. Manual represents a manually triggered backup job or on-demand. Scheduled represents a backup job created from a schedule.
+ - **Valid Values**: `manual`, `scheduled`
+- `status` (String) - The status of the backup.
+ - **Valid Values**: `pending`, `ready`, `failed`
 
 <a id="nestedatt--restore"></a>
 ### Nested Schema for `restore`
@@ -74,7 +80,8 @@ Optional:
 
 Read-Only:
 
-- `status` (String)
+- `status` (String) - The status of the backup.
+ - **Valid Values**: `pending`, `ready`, `failed`
 
 
 <a id="nestedatt--backup_stats"></a>
@@ -82,14 +89,14 @@ Read-Only:
 
 Read-Only:
 
-- `cbas` (Number)
-- `event` (Number)
-- `fts` (Number)
-- `gsi` (Number)
-- `items` (Number)
-- `mutations` (Number)
-- `size_in_mb` (Number)
-- `tombstones` (Number)
+- `cbas` (Number) - The number of analytics entities saved during the backup.
+- `event` (Number) - The number of event entities saved during the backup.
+- `fts` (Number) - The number of full text search entities saved during the backup.
+- `gsi` (Number) - The number of global secondary indexes saved during the backup.
+- `items` (Number) - The number of items saved during the backup.
+- `mutations` (Number) - The number of mutations saved during the backup.
+- `size_in_mb` (Number) - Backup size in megabytes.
+- `tombstones` (Number) - The number of tombstones saved during the backup.
 
 
 <a id="nestedatt--schedule_info"></a>
@@ -97,9 +104,9 @@ Read-Only:
 
 Read-Only:
 
-- `backup_time` (String)
-- `backup_type` (String)
-- `increment` (Number)
+- `backup_time` (String) - The timestamp indicating the backup created time.
+- `backup_type` (String) - Represents whether the backup is a Weekly or Daily backup.
+- `increment` (Number) - Represents interval in hours for incremental backup.
 - `retention` (String) - Represents interval in hours to retain the backup.
 
 ## Import

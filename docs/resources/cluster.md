@@ -95,9 +95,8 @@ resource "couchbase-capella_cluster" "new_cluster" {
 
 Required:
 
-- `type` (String) - Type of the resource.
- - **Valid Values**: `project`
- - **Default**: `project`
+- `type` (String) - Availability zone type, either 'single' or 'multi'. Availability zone type allowed for singleNode cluster is only 'single'.
+ - **Valid Values**: `single`, `multi`
 
 
 <a id="nestedatt--cloud_provider"></a>
@@ -105,11 +104,11 @@ Required:
 
 Required:
 
-- `cidr` (String)
-- `region` (String)
-- `type` (String) - Type of the resource.
- - **Valid Values**: `project`
- - **Default**: `project`
+- `cidr` (String) - CIDR block for Cloud Provider.
+ - **Constraints**: Pattern: `^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}$`
+- `region` (String) - Cloud provider region, for example `us-west-2`.
+- `type` (String) - Cloud provider type. Note: For singleNode cluster, only AWS type cloud provider is allowed. `aws`: Amazon Web Services `gcp`: Google Cloud Platform `azure`: Microsoft Azure
+ - **Valid Values**: `aws`, `gcp`, `azure`
 
 
 <a id="nestedatt--service_groups"></a>
@@ -143,9 +142,7 @@ Required:
 
 Required:
 
-- `type` (String) - Type of the resource.
- - **Valid Values**: `project`
- - **Default**: `project`
+- `type` (String)
 
 Optional:
 
@@ -161,11 +158,13 @@ Optional:
 
 Required:
 
-- `plan` (String)
+- `plan` (String) - Plan type, either 'Basic', 'Developer Pro', or 'Enterprise'. Plan type allowed for singleNode cluster is either 'Basic', or 'Developer Pro'. In case of 'Basic' plan timezone field value is ignored.
+ - **Valid Values**: `basic`, `developer pro`, `enterprise`
 
 Optional:
 
-- `timezone` (String)
+- `timezone` (String) - The standard timezone for the cluster. Should be the TZ identifier.
+ - **Valid Values**: `ET`, `GMT`, `IST`, `PT`
 
 
 <a id="nestedatt--couchbase_server"></a>
@@ -173,7 +172,7 @@ Optional:
 
 Optional:
 
-- `version` (String)
+- `version` (String) - Version of the Couchbase Server to be installed in the cluster. Refer to documentation [here](https://docs.couchbase.com/cloud/clusters/upgrade-database.html#server-version-maintenance-support) for list of supported versions. The latest Couchbase Server version will be deployed by default.
 
 
 <a id="nestedatt--audit"></a>

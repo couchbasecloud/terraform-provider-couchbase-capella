@@ -43,8 +43,7 @@ Read-Only:
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `comment` (String)
 - `expires_at` (String)
-- `id` (String) - Id of the project.
- - **Format**: UUID (GUID4)
+- `id` (String)
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 

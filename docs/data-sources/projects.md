@@ -31,10 +31,9 @@ Read-Only:
 - `audit` (Attributes) Couchbase audit data. (see [below for nested schema](#nestedatt--data--audit))
 - `description` (String)
 - `etag` (String) Entity tag for the resource, used for caching and conditional requests.
-- `id` (String) - Id of the project.
- - **Format**: UUID (GUID4)
+- `id` (String)
 - `if_match` (String) A precondition header that specifies the entity tag of a resource.
-- `name` (String) - The name of the bucket.
+- `name` (String)
 - `organization_id` (String) The GUID4 ID of the organization.
 
 <a id="nestedatt--data--audit"></a>

@@ -32,11 +32,10 @@ Read-Only:
 - `email` (String)
 - `enable_notifications` (Boolean)
 - `expires_at` (String)
-- `id` (String) - Id of the project.
- - **Format**: UUID (GUID4)
+- `id` (String)
 - `inactive` (Boolean)
 - `last_login` (String)
-- `name` (String) - The name of the bucket.
+- `name` (String)
 - `organization_id` (String) The GUID4 ID of the organization.
 - `organization_roles` (List of String)
 - `region` (String)

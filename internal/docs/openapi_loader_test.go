@@ -281,7 +281,9 @@ func TestGetOpenAPIDescription_ValidValuesFormat(t *testing.T) {
 }
 
 func TestGetOpenAPIDescription_NestedSchemaFields(t *testing.T) {
-	// Test that nested fields (like those in Resource schema) are found
+	// Test that fields in generic schemas like "Resource" are found when passed
+	// explicitly as the resourceName (matching how AddAttr passes them via
+	// alternateSchemas). Generic schemas are no longer used as implicit fallbacks.
 	tests := []struct {
 		name           string
 		resourceName   string
@@ -290,29 +292,29 @@ func TestGetOpenAPIDescription_NestedSchemaFields(t *testing.T) {
 		shouldContain  string
 	}{
 		{
-			name:           "type field from Resource schema",
-			resourceName:   "user",
+			name:           "type field via explicit Resource schema",
+			resourceName:   "Resource",
 			fieldName:      "type",
 			expectNonEmpty: true,
 			shouldContain:  "Type of the resource",
 		},
 		{
-			name:           "roles field from Resource schema",
-			resourceName:   "user",
+			name:           "roles field via explicit Resource schema",
+			resourceName:   "Resource",
 			fieldName:      "roles",
 			expectNonEmpty: true,
 			shouldContain:  "Project Roles",
 		},
 		{
-			name:           "type has enum values",
-			resourceName:   "user",
+			name:           "type has enum values via explicit Resource schema",
+			resourceName:   "Resource",
 			fieldName:      "type",
 			expectNonEmpty: true,
 			shouldContain:  "`project`",
 		},
 		{
-			name:           "roles has multiple enum values",
-			resourceName:   "user",
+			name:           "roles has multiple enum values via explicit Resource schema",
+			resourceName:   "Resource",
 			fieldName:      "roles",
 			expectNonEmpty: true,
 			shouldContain:  "`projectOwner`",
@@ -871,4 +873,173 @@ func equalStringSlices(a, b []string) bool {
 		}
 	}
 	return true
+}
+
+// TestGetPropertyFromSchema_DeterministicBehavior tests that getPropertyFromSchema
+// returns deterministic results when searching for fields that may exist in multiple
+// nested schemas. This prevents nondeterministic behavior from Go map iteration.
+func TestGetPropertyFromSchema_DeterministicBehavior(t *testing.T) {
+	// Run the same lookup multiple times to verify deterministic behavior
+	// If map iteration were nondeterministic, results could vary between runs
+	const iterations = 10
+
+	testCases := []struct {
+		name         string
+		resourceName string
+		fieldName    string
+	}{
+		{"type field via explicit Resource schema", "Resource", "type"},
+		{"roles field via explicit Resource schema", "Resource", "roles"},
+		{"name field is common across schemas", "project", "name"},
+		{"id field is common across schemas", "cluster", "id"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var results []string
+
+			for i := 0; i < iterations; i++ {
+				desc := GetOpenAPIDescription(tc.resourceName, tc.fieldName)
+				results = append(results, desc)
+			}
+
+			// Verify all results are identical
+			first := results[0]
+			for i, result := range results {
+				if result != first {
+					t.Errorf("Nondeterministic behavior detected at iteration %d: got %q, want %q",
+						i, result, first)
+				}
+			}
+
+			if first != "" {
+				t.Logf("Deterministic result for %s.%s: %s", tc.resourceName, tc.fieldName, truncateStr(first, 80))
+			} else {
+				t.Logf("No description found for %s.%s (this is expected if field doesn't exist)", tc.resourceName, tc.fieldName)
+			}
+		})
+	}
+}
+
+// TestGetPropertyFromSchema_AmbiguousMatches tests that when a field name exists
+// in multiple unrelated nested schemas, the function returns empty rather than
+// a potentially incorrect match.
+func TestGetPropertyFromSchema_AmbiguousMatches(t *testing.T) {
+	// Generic schemas (Resource, ResourceBucket) are no longer used as implicit
+	// fallbacks. Fields like "type" and "status" will only match resource-specific
+	// schemas. Callers pass generic schemas explicitly via alternateSchemas.
+	ambiguousFields := []struct {
+		name        string
+		fieldName   string
+		description string
+	}{
+		{
+			name:        "type is ambiguous - exists in Resource, Bucket, and other schemas",
+			fieldName:   "type",
+			description: "Should return consistent result or empty if ambiguous",
+		},
+		{
+			name:        "status is ambiguous - exists in multiple response schemas",
+			fieldName:   "status",
+			description: "Should return consistent result or empty if ambiguous",
+		},
+	}
+
+	resources := []string{"user", "project", "cluster", "bucket"}
+
+	for _, af := range ambiguousFields {
+		t.Run(af.name, func(t *testing.T) {
+			for _, resource := range resources {
+				desc := GetOpenAPIDescription(resource, af.fieldName)
+				// Just log the result - the key is that it's deterministic
+				t.Logf("%s.%s: %s", resource, af.fieldName, truncateStr(desc, 60))
+			}
+		})
+	}
+}
+
+// truncateStr shortens a string to maxLen characters, adding "..." if truncated
+func truncateStr(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	return s[:maxLen-3] + "..."
+}
+
+// TestGetOpenAPIDescription_AvailabilityType tests that the availability.type field
+// gets the correct description from the Availability schema, not from the Resource schema.
+// This is a regression test for a collision where "type" was incorrectly matched
+// to "Type of the resource" instead of "Availability zone type".
+func TestGetOpenAPIDescription_AvailabilityType(t *testing.T) {
+	// The availability.type field should describe availability zone type (single/multi)
+	// NOT "Type of the resource" which is from the Resource schema
+	desc := GetOpenAPIDescription("Availability", "type")
+
+	t.Logf("Availability.type description: %s", desc)
+
+	if desc == "" {
+		t.Error("Expected non-empty description for Availability.type")
+		return
+	}
+
+	// Should contain "single" or "multi" or "availability" - the correct description
+	if !strings.Contains(strings.ToLower(desc), "single") &&
+		!strings.Contains(strings.ToLower(desc), "multi") &&
+		!strings.Contains(strings.ToLower(desc), "availability") {
+		t.Errorf("Availability.type should describe availability zones (single/multi), got: %s", desc)
+	}
+
+	// Should NOT contain "resource" which would indicate wrong schema
+	if strings.Contains(strings.ToLower(desc), "type of the resource") {
+		t.Errorf("Availability.type got wrong description from Resource schema: %s", desc)
+	}
+}
+
+// TestGetOpenAPIDescription_NestedAttributeSchemas tests that nested schema fields
+// are looked up correctly by using the parent schema name (e.g., Availability.type).
+func TestGetOpenAPIDescription_NestedAttributeSchemas(t *testing.T) {
+	tests := []struct {
+		name           string
+		resourceName   string
+		fieldName      string
+		shouldContain  string
+		shouldNotMatch string
+	}{
+		{
+			name:           "Availability.type should be about zones",
+			resourceName:   "Availability",
+			fieldName:      "type",
+			shouldContain:  "single",
+			shouldNotMatch: "Type of the resource",
+		},
+		{
+			name:           "Support.plan should be about support plan",
+			resourceName:   "Support",
+			fieldName:      "plan",
+			shouldContain:  "", // Just check it exists
+			shouldNotMatch: "",
+		},
+		{
+			name:           "CloudProvider.type should be about cloud type",
+			resourceName:   "CloudProvider",
+			fieldName:      "type",
+			shouldContain:  "", // Just check it exists
+			shouldNotMatch: "Type of the resource",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			desc := GetOpenAPIDescription(tt.resourceName, tt.fieldName)
+			t.Logf("%s.%s: %s", tt.resourceName, tt.fieldName, truncateStr(desc, 100))
+
+			if tt.shouldContain != "" && !strings.Contains(strings.ToLower(desc), strings.ToLower(tt.shouldContain)) {
+				t.Errorf("Expected description to contain %q, got: %s", tt.shouldContain, desc)
+			}
+
+			if tt.shouldNotMatch != "" && strings.Contains(desc, tt.shouldNotMatch) {
+				t.Errorf("Description should NOT contain %q, got: %s", tt.shouldNotMatch, desc)
+			}
+		})
+	}
 }

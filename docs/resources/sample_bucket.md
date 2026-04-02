@@ -38,16 +38,13 @@ resource "couchbase-capella_sample_bucket" "new_sample_bucket" {
 - `durability_level` (String)
 - `eviction_policy` (String)
 - `flush` (Boolean)
-- `id` (String) - Id of the project.
- - **Format**: UUID (GUID4)
+- `id` (String) The ID of this resource.
 - `memory_allocation_in_mb` (Number)
 - `replicas` (Number)
 - `stats` (Attributes) (see [below for nested schema](#nestedatt--stats))
 - `storage_backend` (String)
 - `time_to_live_in_seconds` (Number)
-- `type` (String) - Type of the resource.
- - **Valid Values**: `project`
- - **Default**: `project`
+- `type` (String)
 
 <a id="nestedatt--stats"></a>
 ### Nested Schema for `stats`
