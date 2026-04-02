@@ -3,12 +3,12 @@
 page_title: "couchbase-capella_app_endpoint_log_streaming_config Data Source - terraform-provider-couchbase-capella"
 subcategory: ""
 description: |-
-  Retrieves the Logging Config associated with an App Endpoint
+  Retrieves the App Endpoint Log Streaming config. This config is used to filter what logs to stream to the log collector that is configured on the App Service.
 ---
 
 # couchbase-capella_app_endpoint_log_streaming_config (Data Source)
 
-Retrieves the Logging Config associated with an App Endpoint
+Retrieves the App Endpoint Log Streaming config. This config is used to filter what logs to stream to the log collector that is configured on the App Service.
 
 ## Example Usage
 
