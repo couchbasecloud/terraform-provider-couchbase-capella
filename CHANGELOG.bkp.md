@@ -6,13 +6,91 @@
 
 **Implemented enhancements:**
 
+- \[AV-121437\] Create App Endpoint Resync Data Source Acceptance Tests [\#512](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/512) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-121438\] App Endpoint Resync Data Source Implementation [\#508](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/508) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-121312\] Create App Endpoint Resync Acceptance Tests [\#502](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/502) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-121922\] Implement App Service Log Streaming Activation Status resource [\#500](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/500) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-121314\] Implement App Endpoint Resync Resource [\#499](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/499) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-121844\] Add App Service Log Streaming Data source acceptance test and hook up to provider.go [\#498](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/498) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-121850\] Create App Endpoint Logging Config Datasource Acceptance Tests [\#497](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/497) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-121842\] Implement App Service Log Streaming Datasource [\#491](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/491) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-121841\] App Service Log Streaming resource acceptance testing and provider.go [\#489](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/489) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-121848\] App Endpoint Logging Config Datasource Implementation [\#488](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/488) ([SophieWegmann](https://github.com/SophieWegmann))
 - \[AV-122844\] Added support for cluster-stats datasource [\#481](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/481) ([aniket-Kumar-c](https://github.com/aniket-Kumar-c))
+- \[AV-121839\] Implement resource for App Service Log Streaming configuration [\#479](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/479) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-121847\] App Endpoint Logging Config Acceptance Tests [\#477](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/477) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-122779\] Add AGENTS.md and datasource skill [\#476](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/476) ([l0n3star](https://github.com/l0n3star))
+- \[AV-121845\] App Endpoint Logging Config Resource Implementation [\#473](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/473) ([SophieWegmann](https://github.com/SophieWegmann))
 
 **Fixed bugs:**
 
+- \[AV-125366\]  Agent improvements [\#523](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/523) ([l0n3star](https://github.com/l0n3star))
+- AV-124949 Add quotes to path invocation [\#520](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/520) ([matty271828](https://github.com/matty271828))
 - \[AV-124292\] Fix error after single to multi [\#517](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/517) ([Lagher0](https://github.com/Lagher0))
-- \[CBSE-22092\] Improve error message when terraform fail to create VNet peering
-- \[CBSE-22217\] Marriott: Terraform - Switching from single to multi node cluster config is triggering a cluster destroy
+- \[AV-123835\] App Endpoint state field should not have useStateForUnknown set [\#513](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/513) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-123824\] Add string attribute function intended for hirarchical IDs [\#511](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/511) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-121923\] Add documentation for App Service Log Streaming Activation Status resource [\#505](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/505) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-123608\] Use types.Object for Log Streaming TF config credentials [\#494](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/494) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-121840\] Documentation for App Service Log Streaming resource [\#482](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/482) ([IsaacLambat](https://github.com/IsaacLambat))
+
+**Merged pull requests:**
+
+- \[AV-124603\] Remove unneeded tests [\#516](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/516) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-124657\] Improve App Service TF Phase 2 schema documentation [\#515](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/515) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-124391\] Create terraform.template.tfvars for App Endpoint Logging Config Data Source [\#514](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/514) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-122764\] Fail test if test v2 API client setup returns error [\#510](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/510) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-121439\] Create App Endpoint Resync Data Source Documentation [\#509](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/509) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-1219240\] Add App Service Log Streaming Activation Status acceptance test [\#507](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/507) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-121434\] App Endpoint Resync Resource Documentation [\#501](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/501) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-121843\] Add App Service Log Streaming Data source Documentation [\#496](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/496) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-121849\] App Endpoint Logging Config Datasource Documentation [\#490](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/490) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-121846\] App Endpoint Logging Config Resource Documentation [\#474](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/474) ([SophieWegmann](https://github.com/SophieWegmann))
+
+## [v1.7.2](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.7.2) (2026-03-20)
+
+[Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.7.1...v1.7.2)
+
+**Implemented enhancements:**
+
+- \[AV-121437\] Create App Endpoint Resync Data Source Acceptance Tests [\#512](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/512) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-121438\] App Endpoint Resync Data Source Implementation [\#508](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/508) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-121312\] Create App Endpoint Resync Acceptance Tests [\#502](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/502) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-121922\] Implement App Service Log Streaming Activation Status resource [\#500](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/500) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-121314\] Implement App Endpoint Resync Resource [\#499](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/499) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-121844\] Add App Service Log Streaming Data source acceptance test and hook up to provider.go [\#498](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/498) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-121850\] Create App Endpoint Logging Config Datasource Acceptance Tests [\#497](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/497) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-121842\] Implement App Service Log Streaming Datasource [\#491](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/491) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-121841\] App Service Log Streaming resource acceptance testing and provider.go [\#489](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/489) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-121848\] App Endpoint Logging Config Datasource Implementation [\#488](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/488) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-122844\] Added support for cluster-stats datasource [\#481](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/481) ([aniket-Kumar-c](https://github.com/aniket-Kumar-c))
+- \[AV-121839\] Implement resource for App Service Log Streaming configuration [\#479](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/479) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-121847\] App Endpoint Logging Config Acceptance Tests [\#477](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/477) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-122779\] Add AGENTS.md and datasource skill [\#476](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/476) ([l0n3star](https://github.com/l0n3star))
+- \[AV-121845\] App Endpoint Logging Config Resource Implementation [\#473](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/473) ([SophieWegmann](https://github.com/SophieWegmann))
+
+**Fixed bugs:**
+
+- \[AV-125366\]  Agent improvements [\#523](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/523) ([l0n3star](https://github.com/l0n3star))
+- AV-124949 Add quotes to path invocation [\#520](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/520) ([matty271828](https://github.com/matty271828))
+- \[AV-124292\] Fix error after single to multi [\#517](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/517) ([Lagher0](https://github.com/Lagher0))
+- \[AV-123835\] App Endpoint state field should not have useStateForUnknown set [\#513](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/513) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-123824\] Add string attribute function intended for hirarchical IDs [\#511](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/511) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-121923\] Add documentation for App Service Log Streaming Activation Status resource [\#505](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/505) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-123608\] Use types.Object for Log Streaming TF config credentials [\#494](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/494) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-121840\] Documentation for App Service Log Streaming resource [\#482](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/482) ([IsaacLambat](https://github.com/IsaacLambat))
+
+**Merged pull requests:**
+
+- \[AV-124603\] Remove unneeded tests [\#516](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/516) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-124657\] Improve App Service TF Phase 2 schema documentation [\#515](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/515) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-124391\] Create terraform.template.tfvars for App Endpoint Logging Config Data Source [\#514](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/514) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-122764\] Fail test if test v2 API client setup returns error [\#510](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/510) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-121439\] Create App Endpoint Resync Data Source Documentation [\#509](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/509) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-1219240\] Add App Service Log Streaming Activation Status acceptance test [\#507](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/507) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-121434\] App Endpoint Resync Resource Documentation [\#501](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/501) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-121843\] Add App Service Log Streaming Data source Documentation [\#496](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/496) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-121849\] App Endpoint Logging Config Datasource Documentation [\#490](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/490) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-121846\] App Endpoint Logging Config Resource Documentation [\#474](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/474) ([SophieWegmann](https://github.com/SophieWegmann))
 
 ## [v1.7.1](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.7.1) (2026-02-18)
 
