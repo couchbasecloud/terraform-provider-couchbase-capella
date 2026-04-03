@@ -103,7 +103,7 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	diags = initComputedAttributesToNullBeforeRefresh(ctx, &plan)
+	diags = setAppEndpointComputedAttributesToNull(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -122,7 +122,6 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 			"Error refreshing App Endpoint",
 			errorAppEndpointRefresh+api.ParseError(err),
 		)
-		return
 	}
 
 	diags = resp.State.Set(ctx, refreshedState)
@@ -130,8 +129,9 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 
 }
 
-// initComputedAttributesToNullBeforeRefresh inits computed attributes to null before refreshing App Endpoint.
-func initComputedAttributesToNullBeforeRefresh(ctx context.Context, plan *providerschema.AppEndpoint) diag.Diagnostics {
+// setAppEndpointComputedAttributesToNull sets computed attributes for an AppEndpoint to null for use when refreshing
+// or setting state after creation (if refresh fails).
+func setAppEndpointComputedAttributesToNull(ctx context.Context, plan *providerschema.AppEndpoint) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	plan.AdminURL = types.StringNull()
@@ -182,7 +182,7 @@ func initComputedAttributesToNullBeforeRefresh(ctx context.Context, plan *provid
 
 				collectionsMapValue, d := types.MapValueFrom(ctx, types.ObjectType{
 					AttrTypes: providerschema.
-						AppEndpointCollection{}.
+					AppEndpointCollection{}.
 						AttributeTypes(),
 				}, collectionsMap)
 				diags.Append(d...)
@@ -199,7 +199,7 @@ func initComputedAttributesToNullBeforeRefresh(ctx context.Context, plan *provid
 				"collections": types.MapType{
 					ElemType: types.ObjectType{
 						AttrTypes: providerschema.
-							AppEndpointCollection{}.
+						AppEndpointCollection{}.
 							AttributeTypes(),
 					},
 				},
@@ -552,7 +552,7 @@ func (a *AppEndpoint) refreshAppEndpoint(
 				ctx,
 				types.ObjectType{
 					AttrTypes: providerschema.
-						AppEndpointCollection{}.
+					AppEndpointCollection{}.
 						AttributeTypes(),
 				},
 				collectionsMapElements,
@@ -586,7 +586,7 @@ func (a *AppEndpoint) refreshAppEndpoint(
 			ctx,
 			types.ObjectType{
 				AttrTypes: providerschema.
-					AppEndpointScope{}.
+				AppEndpointScope{}.
 					AttributeTypes(),
 			},
 			scopesMapElements,
