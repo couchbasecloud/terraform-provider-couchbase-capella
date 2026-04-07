@@ -26,3 +26,17 @@ The data source retrieves the statistics of a Couchbase Capella cluster.
 - `free_memory_in_mb` (Number)
 - `max_replicas` (Number)
 - `total_memory_in_mb` (Number)
+
+## Example Usage
+
+```terraform
+data "couchbase-capella_cluster_stats" "existing_cluster_stats" {
+        organization_id = "aaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+        project_id      = "aaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+        cluster_id      = "aaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+}
+
+output "cluster_stats" {
+        value = data.couchbase-capella_cluster_stats.existing_cluster_stats
+}
+```
