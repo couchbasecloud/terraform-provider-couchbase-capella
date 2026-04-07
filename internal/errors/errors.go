@@ -273,4 +273,7 @@ var (
 		" the state from remote, unexpected error: ")
 
 	ErrCannotSetIopsForGcp = errors.New("iops cannot be set for GCP clusters.")
+
+	// ErrPrivateEndpointTimeout is returned when private endpoint does not reach linked status or DNS is not populated.
+	ErrPrivateEndpointTimeout = errors.New("private endpoint linking timed out: status not linked or DNS not populated")
 )
