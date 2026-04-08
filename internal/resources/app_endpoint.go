@@ -109,7 +109,7 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	refreshedState, err := a.refreshAppEndpoint(
+	state, err := a.refreshAppEndpoint(
 		ctx,
 		organizationId,
 		projectId,
@@ -122,9 +122,11 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 			"Error refreshing App Endpoint",
 			errorAppEndpointRefresh+api.ParseError(err),
 		)
+		// Fall back to the using the plan as the state
+		state = &plan
 	}
 
-	diags = resp.State.Set(ctx, refreshedState)
+	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
 
 }
@@ -220,32 +222,32 @@ func setAppEndpointComputedAttributesToNull(ctx context.Context, plan *providers
 			plan.Cors.Disabled = types.BoolNull()
 		}
 	}
-	oidcList := make([]providerschema.AppEndpointOidc, len(plan.Oidc))
-	if len(plan.Oidc) > 0 {
-		for i := range plan.Oidc {
-			oidcList[i].ProviderId = types.StringNull()
-			oidcList[i].IsDefault = types.BoolNull()
-			if plan.Oidc[i].Register.IsNull() || plan.Oidc[i].Register.IsUnknown() {
-				oidcList[i].Register = types.BoolNull()
-			}
-			if plan.Oidc[i].DiscoveryUrl.IsNull() || plan.Oidc[i].DiscoveryUrl.IsUnknown() {
-				oidcList[i].DiscoveryUrl = types.StringNull()
-			}
-			if plan.Oidc[i].UsernameClaim.IsNull() || plan.Oidc[i].UsernameClaim.IsUnknown() {
-				oidcList[i].UsernameClaim = types.StringNull()
-			}
-			if plan.Oidc[i].RolesClaim.IsNull() || plan.Oidc[i].RolesClaim.IsUnknown() {
-				oidcList[i].RolesClaim = types.StringNull()
-			}
-			if plan.Oidc[i].UserPrefix.IsNull() || plan.Oidc[i].UserPrefix.IsUnknown() {
-				oidcList[i].UserPrefix = types.StringNull()
-			}
-		}
-	} else {
-		plan.Oidc = []providerschema.AppEndpointOidc{}
-	}
 
+	// Make sure we keep all required fields (i.e. client ID and issuer)
+	oidcList := make([]providerschema.AppEndpointOidc, len(plan.Oidc))
+	copy(oidcList, plan.Oidc)
+
+	for i := range oidcList {
+		oidcList[i].ProviderId = types.StringNull()
+		oidcList[i].IsDefault = types.BoolNull()
+		if plan.Oidc[i].Register.IsNull() || plan.Oidc[i].Register.IsUnknown() {
+			oidcList[i].Register = types.BoolNull()
+		}
+		if plan.Oidc[i].DiscoveryUrl.IsNull() || plan.Oidc[i].DiscoveryUrl.IsUnknown() {
+			oidcList[i].DiscoveryUrl = types.StringNull()
+		}
+		if plan.Oidc[i].UsernameClaim.IsNull() || plan.Oidc[i].UsernameClaim.IsUnknown() {
+			oidcList[i].UsernameClaim = types.StringNull()
+		}
+		if plan.Oidc[i].RolesClaim.IsNull() || plan.Oidc[i].RolesClaim.IsUnknown() {
+			oidcList[i].RolesClaim = types.StringNull()
+		}
+		if plan.Oidc[i].UserPrefix.IsNull() || plan.Oidc[i].UserPrefix.IsUnknown() {
+			oidcList[i].UserPrefix = types.StringNull()
+		}
+	}
 	plan.Oidc = oidcList
+
 	return diags
 }
 
