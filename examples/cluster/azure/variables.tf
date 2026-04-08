@@ -20,6 +20,14 @@ variable "cloud_provider" {
   })
 }
 
+variable "couchbase_server" {
+  description = "Couchbase Server version configuration"
+
+  type = object({
+    version = string
+  })
+}
+
 variable "cluster" {
   description = "Cluster configuration details useful for creation"
 
