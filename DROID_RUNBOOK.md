@@ -1,6 +1,6 @@
 # Droid Runbook: Generating Terraform Data Sources
 
-A practical guide for using AI droids (coding agents) to generate Terraform data sources for the Couchbase Capella provider.
+A practical guide for using AI droids (coding agents) to generate Terraform datasources and resources for the Couchbase Capella provider.
 
 ## Overview
 
@@ -24,8 +24,6 @@ Before starting, confirm your coding agent / AI droid is available and can acces
 # Check that the skill file exists
 ls .factory/skills/tf-datasource-gen/SKILL.md
 
-# Check that the OpenAPI spec is present
-ls openapi.generated.yaml
 
 # Check that Go is installed
 go version
