@@ -58,21 +58,17 @@ If only one endpoint exists, only that data source will be generated.
 
 ### 2. Invoke the Droid
 
-Point the droid at the skill file and provide the feature context:
+To invoke the droid and generate code:
 
-> "Generate Terraform data sources for **[Feature Name]** using the `tf-datasource-gen` skill and the OpenAPI spec."
-
-The droid will follow the instructions in `.factory/skills/tf-datasource-gen/SKILL.md` to generate:
-
-| Artifact | Location | Purpose |
-|---|---|---|
-| `feature.go` | `internal/datasources/` | Single-resource data source (Read) |
-| `features.go` | `internal/datasources/` | List data source (Read) |
-| `feature_schema.go` | `internal/datasources/` | Schema definition |
-| `features_schema.go` | `internal/datasources/` | Schema definition (list) |
-| API structs | `internal/api/` | Request/response types |
-| Provider registration | `internal/provider/provider.go` | Wires up the data source |
-| Acceptance tests | `acceptance_tests/` | End-to-end tests |
+1. Run `droid` in your terminal.
+2. Type `/settings` to configure the droid. We suggest the following settings:
+   - **Spec mode model:** Claude Opus 4.6
+   - **Default mode model:** Gemini 3 Flash
+   - **Reasoning effort:** High
+   - **Autonomy:** Medium
+3. Switch to **spec mode** by pressing `Shift + Tab`.
+4. Enter your prompt (see examples below).
+5. Review, edit, and approve the generated plan.
 
 ---
 
@@ -92,65 +88,14 @@ Generate Terraform data sources for Snapshot Backups using the tf-datasource-gen
 Feature  : Snapshot Backups
 GET path : GET /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/buckets/{bucketId}/backups/{backupId}
 LIST path: GET /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/buckets/{bucketId}/backups
-
-Expected output files:
-  internal/datasources/snapshot_backup.go
-  internal/datasources/snapshot_backups.go
-  internal/datasources/snapshot_backup_schema.go
-  internal/datasources/snapshot_backups_schema.go
-  internal/api/snapshot_backup/  (API structs)
-  acceptance_tests/snapshot_backup_acceptance_test.go
+Spec path: openapi.generated.yaml (see paths starting with /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/buckets/{bucketId}/backups)
 ```
-
-**What the droid will do:**
-
-1. Read the OpenAPI spec for the two endpoints above.
-2. Create `snapshot_backup.go` (single GET) and `snapshot_backups.go` (LIST).
-3. Create matching `_schema.go` files with validators on `organization_id`, `project_id`, `cluster_id`.
-4. Generate API structs in `internal/api/snapshot_backup/`.
-5. Register `datasources.NewSnapshotBackup` and `datasources.NewSnapshotBackups` in `provider.go`.
-6. Create `acceptance_tests/snapshot_backup_acceptance_test.go` using `resource.ParallelTest()`.
-7. Run `goimports`, `go vet`, and build.
 
 </details>
 
-<!-- Example 2 — Buckets (GET + LIST) -->
+<!-- Example 2 — Clusters (LIST only) -->
 <details>
-<summary>▶️ <strong>Example 2 — Buckets</strong> (GET single bucket + LIST all buckets)</summary>
-
-**Droid prompt — paste this directly:**
-
-```text
-Generate Terraform data sources for Buckets using the tf-datasource-gen skill and the OpenAPI spec.
-
-Feature  : Buckets
-GET path : GET /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/buckets/{bucketId}
-LIST path: GET /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/buckets
-
-Expected output files:
-  internal/datasources/bucket.go
-  internal/datasources/buckets.go
-  internal/datasources/bucket_schema.go
-  internal/datasources/buckets_schema.go
-  internal/api/bucket/  (API structs)
-  acceptance_tests/bucket_acceptance_test.go
-```
-
-**What the droid will do:**
-
-1. Read the OpenAPI spec for the two endpoints above.
-2. Create `bucket.go` (single GET) and `buckets.go` (LIST).
-3. Create matching `_schema.go` files with validators on `organization_id`, `project_id`, `cluster_id`.
-4. Generate API structs in `internal/api/bucket/`.
-5. Register `datasources.NewBucket` and `datasources.NewBuckets` in `provider.go`.
-6. Create `acceptance_tests/bucket_acceptance_test.go` using `resource.ParallelTest()`.
-7. Run `goimports`, `go vet`, and build.
-
-</details>
-
-<!-- Example 3 — Clusters (LIST only) -->
-<details>
-<summary>▶️ <strong>Example 3 — Clusters</strong> (LIST only — no single-resource GET)</summary>
+<summary>▶️ <strong>Example 2 — Clusters</strong> (LIST only — no single-resource GET)</summary>
 
 **Droid prompt — paste this directly:**
 
@@ -159,31 +104,16 @@ Generate Terraform data sources for Clusters using the tf-datasource-gen skill a
 
 Feature  : Clusters
 LIST path: GET /v4/organizations/{organizationId}/projects/{projectId}/clusters
+Spec path: openapi.generated.yaml (see paths starting with /v4/organizations/{organizationId}/projects/{projectId}/clusters)
 
 There is no single-resource GET endpoint — only generate the list data source.
-
-Expected output files:
-  internal/datasources/clusters.go
-  internal/datasources/clusters_schema.go
-  internal/api/cluster/  (API structs)
-  acceptance_tests/cluster_acceptance_test.go
 ```
-
-**What the droid will do:**
-
-1. Read the OpenAPI spec for the LIST endpoint.
-2. Create `clusters.go` (LIST only — skip single-resource GET).
-3. Create `clusters_schema.go` with validators on `organization_id`, `project_id`.
-4. Generate API structs in `internal/api/cluster/`.
-5. Register `datasources.NewClusters` in `provider.go`.
-6. Create `acceptance_tests/cluster_acceptance_test.go` using `resource.ParallelTest()`.
-7. Run `goimports`, `go vet`, and build.
 
 </details>
 
-<!-- Example 4 — App Endpoints (GET + LIST) -->
+<!-- Example 3 — App Endpoints (GET + LIST) -->
 <details>
-<summary>▶️ <strong>Example 4 — App Endpoints</strong> (GET single endpoint + LIST all endpoints)</summary>
+<summary>▶️ <strong>Example 3 — App Endpoints</strong> (GET single endpoint + LIST all endpoints)</summary>
 
 **Droid prompt — paste this directly:**
 
@@ -193,51 +123,27 @@ Generate Terraform data sources for App Endpoints using the tf-datasource-gen sk
 Feature  : App Endpoints
 GET path : GET /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/appservices/{appServiceId}/endpoints/{endpointId}
 LIST path: GET /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/appservices/{appServiceId}/endpoints
-
-Expected output files:
-  internal/datasources/app_endpoint.go
-  internal/datasources/app_endpoints.go
-  internal/datasources/app_endpoint_schema.go
-  internal/datasources/app_endpoints_schema.go
-  internal/api/app_endpoint/  (API structs)
-  acceptance_tests/app_endpoint_acceptance_test.go
+Spec path: openapi.generated.yaml (see paths starting with /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/appservices/{appServiceId}/endpoints)
 ```
-
-**What the droid will do:**
-
-1. Read the OpenAPI spec for the two endpoints above.
-2. Create `app_endpoint.go` (single GET) and `app_endpoints.go` (LIST).
-3. Create matching `_schema.go` files with validators on `organization_id`, `project_id`, `cluster_id`.
-4. Generate API structs in `internal/api/app_endpoint/`.
-5. Register `datasources.NewAppEndpoint` and `datasources.NewAppEndpoints` in `provider.go`.
-6. Create `acceptance_tests/app_endpoint_acceptance_test.go` using `resource.ParallelTest()`.
-7. Run `goimports`, `go vet`, and build.
 
 </details>
 
-<!-- Example 5 — Custom / bring-your-own feature -->
+<!-- Example 4 — Bucket Resource (CRUD) -->
 <details>
-<summary>▶️ <strong>Example 5 — Custom Feature</strong> (template — fill in your own)</summary>
+<summary>▶️ <strong>Example 4 — Bucket Resource</strong> (full CRUD resource, not just a data source)</summary>
 
-**Droid prompt — copy, fill in the blanks, and paste:**
+**Droid prompt — paste this directly:**
 
 ```text
-Generate Terraform data sources for <FEATURE_NAME> using the tf-datasource-gen skill and the OpenAPI spec.
+Generate a Terraform resource for Buckets using the tf-resource-gen skill and the OpenAPI spec.
 
-Feature  : <FEATURE_NAME>
-GET path : <GET_ENDPOINT_OR_"none">
-LIST path: <LIST_ENDPOINT_OR_"none">
-
-Expected output files:
-  internal/datasources/<feature>.go
-  internal/datasources/<features>.go
-  internal/datasources/<feature>_schema.go
-  internal/datasources/<features>_schema.go
-  internal/api/<feature>/  (API structs)
-  acceptance_tests/<feature>_acceptance_test.go
+Feature    : Bucket
+CREATE path: POST /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/buckets
+GET path   : GET /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/buckets/{bucketId}
+UPDATE path: PUT /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/buckets/{bucketId}
+DELETE path: DELETE /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/buckets/{bucketId}
+Spec path  : openapi.generated.yaml (see paths starting with /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/buckets)
 ```
-
-Replace `<FEATURE_NAME>`, `<GET_ENDPOINT>`, `<LIST_ENDPOINT>`, `<feature>`, and `<features>` with your values. Remove the GET or LIST line if the endpoint doesn't exist.
 
 </details>
 
@@ -245,180 +151,11 @@ Replace `<FEATURE_NAME>`, `<GET_ENDPOINT>`, `<LIST_ENDPOINT>`, `<feature>`, and 
 
 ### 3. Implementation Steps (What the Droid Generates)
 
-The droid follows the steps defined in `.factory/skills/tf-datasource-gen/SKILL.md`. Below is the full breakdown of each implementation step so you can verify — or manually replicate — the output.
+The droid follows the steps defined in `.factory/skills/tf-datasource-gen/SKILL.md`. For full details on what gets generated and how, read the skill file directly:
 
-<details>
-<summary><strong>Step 1 — Create Data Source Files</strong></summary>
-
-Place data source code in `internal/datasources/`. Two files are created depending on available endpoints:
-
-| Endpoint available | File to create | Purpose |
-|---|---|---|
-| GET (single resource) | `feature.go` (e.g., `bucket.go`) | Fetch one resource by ID |
-| LIST (all resources) | `features.go` (e.g., `buckets.go`) | Fetch all resources |
-
-If only one endpoint exists in the spec, only that file is created.
-
-</details>
-
-<details>
-<summary><strong>Step 2 — Create Schema Files</strong></summary>
-
-Each data source gets its own schema file using the naming pattern `<feature>_schema.go` / `<features>_schema.go`.
-
-**Add validation** for `organization_id`, `project_id`, and `cluster_id` (if present) using `requiredStringWithValidator()`:
-
-```go
-capellaschema.AddAttr(attrs, "organization_id", snapshotBackupBuilder, requiredStringWithValidator())
-
-func requiredStringWithValidator() *schema.StringAttribute {
-    return &schema.StringAttribute{
-        Required:   true,
-        Validators: []validator.String{stringvalidator.LengthAtLeast(1)},
-    }
-}
+```bash
+cat .factory/skills/tf-datasource-gen/SKILL.md
 ```
-
-</details>
-
-<details>
-<summary><strong>Step 3 — Define the Data Source Struct</strong></summary>
-
-Create a struct named after the feature that embeds the shared `Data` struct:
-
-```go
-type Buckets struct {
-    *providerschema.Data
-}
-```
-
-</details>
-
-<details>
-<summary><strong>Step 4 — Add the <code>New</code> Constructor Function</strong></summary>
-
-Every data source needs a `New` function that returns a `datasource.DataSource`:
-
-```go
-func NewBuckets() datasource.DataSource {
-    return &Buckets{}
-}
-```
-
-</details>
-
-<details>
-<summary><strong>Step 5 — Assert Interface Compliance</strong></summary>
-
-Use compile-time nil assertions to guarantee the struct implements the required interfaces:
-
-```go
-var (
-    _ datasource.DataSource              = (*Buckets)(nil)
-    _ datasource.DataSourceWithConfigure = (*Buckets)(nil)
-)
-```
-
-</details>
-
-<details>
-<summary><strong>Step 6 — Implement <code>Metadata</code></strong></summary>
-
-Return the Terraform type name (provider name + feature suffix):
-
-```go
-func (d *Buckets) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-    resp.TypeName = req.ProviderTypeName + "_buckets"
-}
-```
-
-</details>
-
-<details>
-<summary><strong>Step 7 — Implement <code>Configure</code></strong></summary>
-
-Extract the shared provider data and store it on the struct:
-
-```go
-func (d *Buckets) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-    if req.ProviderData == nil {
-        return
-    }
-
-    data, ok := req.ProviderData.(*providerschema.Data)
-    if !ok {
-        resp.Diagnostics.AddError(
-            "Unexpected Data Source Configure Type",
-            fmt.Sprintf("Expected *ProviderSourceData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-        )
-
-        return
-    }
-
-    d.Data = data
-}
-```
-
-</details>
-
-<details>
-<summary><strong>Step 8 — Generate API Structs</strong></summary>
-
-Create request/response structs in `internal/api/` to model the JSON payloads returned by the Capella API. Derive field names and types from the OpenAPI spec.
-
-</details>
-
-<details>
-<summary><strong>Step 9 — Use <code>ClientV1</code> for API Calls</strong></summary>
-
-All new data sources **must** use `ClientV1` with retry logic:
-
-```go
-response, err := s.ClientV1.ExecuteWithRetry(...)
-```
-
-> **Important:** If the droid generates code using an older client, update it to `ClientV1`.
-
-</details>
-
-<details>
-<summary><strong>Step 10 — Register in the Provider</strong></summary>
-
-Add the new `New` function(s) to `internal/provider/provider.go`:
-
-```go
-func (p *capellaProvider) DataSources(_ context.Context) []func() datasource.DataSource {
-    return []func() datasource.DataSource{
-        // ...existing data sources...
-        datasources.NewBucket,
-        datasources.NewBuckets,
-    }
-}
-```
-
-</details>
-
-<details>
-<summary><strong>Step 11 — Create Acceptance Tests</strong></summary>
-
-Add acceptance tests in `acceptance_tests/` with the naming pattern `<feature>_acceptance_test.go` (e.g., `buckets_acceptance_test.go`).
-
-</details>
-
-<details>
-<summary><strong>Step 12 — Use Parallel Tests</strong></summary>
-
-All acceptance tests must use `resource.ParallelTest()` for parallel execution:
-
-```go
-func TestAccBucketsDataSource(t *testing.T) {
-    resource.ParallelTest(t, resource.TestCase{
-        // ...
-    })
-}
-```
-
-</details>
 
 ### 4. Review the Generated Code
 
@@ -434,33 +171,20 @@ After the droid finishes, verify the output matches the steps above and project 
 - [ ] **Provider registration** in `provider.go` includes both `New` functions
 - [ ] **Acceptance tests** exist and use `resource.ParallelTest()`
 
-### 5. Run the Code Review Checklist
-
-Follow `AGENTS.md` to validate the generated code:
-
-```bash
-# Step 1 — Check changed files
-git diff main --name-only -- '*.go' ':!internal/generated/api/openapi.gen.go'
-
-# Step 2 — Format imports
-goimports -w -local github.com/couchbasecloud/terraform-provider-couchbase-capella internal/datasources/your_feature.go
-
-# Step 3 — Vet
-go vet ./internal/datasources/...
-
-# Step 4 — Build
-VERSION=$(git describe --tags --abbrev=0)
-go build -ldflags "-s -w -X 'github.com/couchbasecloud/terraform-provider-couchbase-capella/version.ProviderVersion=$VERSION'" -o ./bin/terraform-provider-couchbase-capella
-```
-
-Repeat steps 2–4 until clean. If errors persist after 5 retries, report them.
-
-### 6. Run Acceptance Tests
+### 5. Run Acceptance Tests
 
 > ⚠️ **Acceptance tests create real resources and may cost money.**
 
+Run acceptance tests only for the newly generated feature instead of the full suite:
+
 ```bash
-make testacc
+TF_ACC=1 go test -timeout=120m -v ./acceptance_tests/ -run <regex>
+```
+
+For example, to run only snapshot backup tests:
+
+```bash
+TF_ACC=1 go test -timeout=120m -v ./acceptance_tests/ -run TestAccSnapshotBackup
 ```
 
 Tests should use `resource.ParallelTest()` for parallel execution.
@@ -498,15 +222,17 @@ acceptance_tests/         # Acceptance tests for all resources & data sources
 
 | Problem | Solution |
 |---|---|
+| Skills not available | Type `/skills` in the droid. You should see 2 skills: `tf-datasource-gen` and `tf-resource-gen` |
 | Droid uses old API client | Tell it to use `ClientV1` explicitly |
 | Missing schema validators | Add `requiredStringWithValidator()` for org/project/cluster IDs |
 | Build fails after generation | Run `goimports` then `go vet`, fix, repeat up to 5 times |
 | Data source not appearing in Terraform | Check it's registered in `provider.go` `DataSources()` |
 | `openapi.gen.go` consuming context | Never read that file — it's excluded per `AGENTS.md` |
+| Debugging the agent | Review the log file in `~/.factory/sessions/`. Look for a `.jsonl` file for the current session |
 
 ## Tips
 
-- **One feature at a time.** Don't ask the droid to generate multiple unrelated data sources in one pass.
+- **One feature at a time.** Don't ask the droid to generate multiple unrelated data sources in one pass. Implementing multiple features with multiple agents in parallel is in progress.
 - **Provide the endpoint paths.** The more specific you are about which OpenAPI endpoints to use, the better the output.
 - **Check the diff.** Always review `git diff` before committing generated code.
 - **Iterate.** If the first pass isn't perfect, point the droid at the specific issue and ask it to fix just that.
