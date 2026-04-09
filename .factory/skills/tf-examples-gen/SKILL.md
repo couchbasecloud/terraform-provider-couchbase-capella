@@ -8,8 +8,9 @@ description: Generate terraform HCL examples for a feature.
 ## Instructions
 
 - HCL must be in examples/.  For example if the feature is buckets create folder examples/buckets/
-- Create main.tf
+- main.tf
 
+Create this file which should have the terraform block and provider block.
 ```
 terraform {
   required_providers {
@@ -24,13 +25,13 @@ provider "couchbase-capella" {
 }
 ```
 
-If main.tf exists and terraform and provider blocks, skip this step.
+If main.tf exists and has terraform and provider blocks, skip this step.
 
-- Create variables.tf
+- variables.tf
 
-  This should have variables needed for the resource and datasource.
-
-  All examples must have these variables
+Create a file to store the variables needed for the resource and datasource.
+All examples must have the two variables organization_id and auth_token as shown
+below.
 
 ```
 variable "organization_id" {
@@ -45,18 +46,18 @@ variable "auth_token" {
 
 If variables.tf exists and has the necessary variables, skip this step.
 
-- Create terraform.template.tfvars file
+- terraform.template.tfvars
 
-  This should have placeholder values for the variables. For variables like
-  organization_id use "<organization_id>".  For auth_token use "<v4-api-key-secret>"
+Create a file which has placeholder values for the variables. For variables like
+organization_id use "<organization_id>".  For auth_token use "<v4-api-key-secret>"
 
-  For other variables use values in ../couchbase-cloud/cmd/cp-open-api/specs/examples
+For other variables use values in ../couchbase-cloud/cmd/cp-open-api/specs/examples
 
 If terraform.template.tfvars exists and has the necessary variables, skip this step.
 
-- Create a create_<feature>.tf file
+- create_<feature>.tf
 
-  This creates a resource for example
+Need a file named create_<feature>.tf. This file defines a resource for the specified feature.
 
 ```
 
@@ -65,8 +66,8 @@ resource "couchbase-capella_<feature>" "new_<feature>" {
 }
 ```
 
-  The resource should have required and optional arguments derived from the
-  schema in internal/resources/<feature>_schema.go
+The resource should have required and optional arguments derived from the
+schema in internal/resources/<feature>_schema.go
 
 If create_<feature>.tf exists and has the resource block, skip this step.
 
