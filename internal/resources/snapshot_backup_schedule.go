@@ -70,7 +70,16 @@ func (s *SnapshotBackupSchedule) Create(ctx context.Context, req resource.Create
 		clusterId      = plan.ClusterID.ValueString()
 	)
 
-	err := s.upsertSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId, plan)
+	var copyToRegions []string
+	if !plan.CopyToRegions.IsUnknown() {
+		diags = plan.CopyToRegions.ElementsAs(ctx, &copyToRegions, false)
+		if diags.HasError() {
+			resp.Diagnostics.Append(diags...)
+			return
+		}
+	}
+
+	err := s.upsertSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId, plan, copyToRegions)
 	if err != nil {
 		tflog.Debug(ctx, "Error upserting snapshot backup schedule", map[string]interface{}{
 			"organizationId": organizationId,
@@ -99,10 +108,16 @@ func (s *SnapshotBackupSchedule) Create(ctx context.Context, req resource.Create
 			"Could not get Capella Snapshot Backup Schedule for cluster with ID "+plan.ClusterID.String()+": "+err.Error(),
 		)
 		refreshedState = &providerschema.SnapshotBackupSchedule{}
-		refreshedState.CopyToRegions = []types.String{}
+		refreshedState.CopyToRegions = types.SetNull(types.StringType)
 	} else {
-		newSnapshotBackupSchedule := providerschema.NewSnapshotBackupSchedule(*snapshotBackupSchedule, organizationId, projectId, clusterId)
-		refreshedState = &newSnapshotBackupSchedule
+		refreshedState, err = s.morphToTerraformCloudSnapshotBackupSchedule(ctx, snapshotBackupSchedule, organizationId, projectId, clusterId)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error Refreshing State",
+				"Could not refresh the state of Snapshot Backup Schedule resource for cluster with ID "+plan.ClusterID.String()+": "+err.Error(),
+			)
+			return
+		}
 	}
 
 	// Sets state to fully populated data.
@@ -146,7 +161,15 @@ func (s *SnapshotBackupSchedule) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	refreshedState := providerschema.NewSnapshotBackupSchedule(*snapshotBackupSchedule, organizationId, projectId, clusterId)
+	refreshedState, err := s.morphToTerraformCloudSnapshotBackupSchedule(ctx, snapshotBackupSchedule, organizationId, projectId, clusterId)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Refreshing State",
+			"Could not refresh the state of Snapshot Backup Schedule resource for cluster with ID "+state.ClusterID.String()+": "+err.Error(),
+		)
+		return
+	}
+
 	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
 }
@@ -171,7 +194,14 @@ func (s *SnapshotBackupSchedule) Update(ctx context.Context, req resource.Update
 		clusterId      = plan.ClusterID.ValueString()
 	)
 
-	err := s.upsertSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId, plan)
+	var copyToRegions []string
+	diags = plan.CopyToRegions.ElementsAs(ctx, &copyToRegions, false)
+	if diags.HasError() {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	err := s.upsertSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId, plan, copyToRegions)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Upserting Snapshot Backup Schedule in Capella",
@@ -179,6 +209,7 @@ func (s *SnapshotBackupSchedule) Update(ctx context.Context, req resource.Update
 		)
 		return
 	}
+
 	snapshotBackupSchedule, err := s.getSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId, plan.StartTime.ValueString())
 	if err != nil {
 		tflog.Debug(ctx, "Error getting snapshot backup schedule after upsert", map[string]interface{}{
@@ -191,9 +222,17 @@ func (s *SnapshotBackupSchedule) Update(ctx context.Context, req resource.Update
 			"Error Getting Snapshot Backup Schedule in Capella",
 			"Could not get Capella Snapshot Backup Schedule for cluster with ID "+plan.ClusterID.String()+": "+err.Error(),
 		)
+		return
 	}
 
-	refreshedState := providerschema.NewSnapshotBackupSchedule(*snapshotBackupSchedule, organizationId, projectId, clusterId)
+	refreshedState, err := s.morphToTerraformCloudSnapshotBackupSchedule(ctx, snapshotBackupSchedule, organizationId, projectId, clusterId)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Refreshing State",
+			"Could not refresh the state of Snapshot Backup Schedule resource for cluster with ID "+plan.ClusterID.String()+": "+err.Error(),
+		)
+		return
+	}
 
 	// Sets state to fully populated data.
 	diags = resp.State.Set(ctx, refreshedState)
@@ -255,13 +294,13 @@ func (s *SnapshotBackupSchedule) Delete(ctx context.Context, req resource.Delete
 }
 
 // upsertSnapshotBackupSchedule creates or updates the snapshot backup schedule.
-func (s *SnapshotBackupSchedule) upsertSnapshotBackupSchedule(ctx context.Context, organizationId, projectId, clusterId string, plan providerschema.SnapshotBackupSchedule) error {
+func (s *SnapshotBackupSchedule) upsertSnapshotBackupSchedule(ctx context.Context, organizationId, projectId, clusterId string, plan providerschema.SnapshotBackupSchedule, copyToRegions []string) error {
 
 	createSnapshotBackupScheduleRequest := snapshot_backup_schedule.SnapshotBackupSchedule{
 		Interval:      plan.Interval.ValueInt64(),
 		Retention:     plan.Retention.ValueInt64(),
 		StartTime:     plan.StartTime.ValueString(),
-		CopyToRegions: providerschema.BaseStringsToStrings(plan.CopyToRegions),
+		CopyToRegions: copyToRegions,
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackupschedule", s.HostURL, organizationId, projectId, clusterId)
@@ -288,7 +327,7 @@ func (s *SnapshotBackupSchedule) upsertSnapshotBackupSchedule(ctx context.Contex
 }
 
 // getSnapshotBackupSchedule retrieves the snapshot backup schedule for a cluster.
-func (s *SnapshotBackupSchedule) getSnapshotBackupSchedule(ctx context.Context, organizationId, projectId, clusterId string, stateTimeString string) (*snapshot_backup_schedule.SnapshotBackupSchedule, error) {
+func (s *SnapshotBackupSchedule) getSnapshotBackupSchedule(ctx context.Context, organizationId, projectId, clusterId string, startTimeString string) (*snapshot_backup_schedule.SnapshotBackupSchedule, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackupschedule", s.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	backupScheduleResp, err := s.ClientV1.ExecuteWithRetry(
@@ -319,7 +358,7 @@ func (s *SnapshotBackupSchedule) getSnapshotBackupSchedule(ctx context.Context, 
 		return nil, err
 	}
 
-	snapshotBackupSchedule.StartTime, err = s.getStartTime(ctx, stateTimeString, &snapshotBackupSchedule)
+	snapshotBackupSchedule.StartTime, err = s.getStartTime(ctx, startTimeString, &snapshotBackupSchedule)
 	if err != nil {
 		return nil, err
 	}
@@ -353,6 +392,17 @@ func (s *SnapshotBackupSchedule) getStartTime(ctx context.Context, currentStartT
 		return currentStartTimeString, nil
 	}
 	return newStartTime.Format(time.RFC3339), nil
+}
+
+// morphToTerraformCloudSnapshotBackupSchedule creates a snapshot backup schedule from a snapshot backup schedule response.
+func (s *SnapshotBackupSchedule) morphToTerraformCloudSnapshotBackupSchedule(ctx context.Context, scheduleResp *snapshot_backup_schedule.SnapshotBackupSchedule, organizationId, projectId, clusterId string) (*providerschema.SnapshotBackupSchedule, error) {
+	copyToRegions, diags := types.SetValueFrom(ctx, types.StringType, scheduleResp.CopyToRegions)
+	if diags.HasError() {
+		return nil, fmt.Errorf("copyToRegions set error")
+	}
+
+	snapshotBackupSchedule := providerschema.NewSnapshotBackupSchedule(*scheduleResp, organizationId, projectId, clusterId, copyToRegions)
+	return &snapshotBackupSchedule, nil
 }
 
 // Configure adds the provider configured api to the snapshot backup schedule resource.

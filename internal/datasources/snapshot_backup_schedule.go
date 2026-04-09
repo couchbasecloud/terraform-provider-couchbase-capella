@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -83,7 +84,12 @@ func (d *SnapshotBackupSchedule) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	state = providerschema.NewSnapshotBackupSchedule(snapshotBackupSchedule, organizationId, projectId, clusterId)
+	copyToRegions, diags := types.SetValueFrom(ctx, types.StringType, snapshotBackupSchedule.CopyToRegions)
+	if diags.HasError() {
+		return
+	}
+
+	state = providerschema.NewSnapshotBackupSchedule(snapshotBackupSchedule, organizationId, projectId, clusterId, copyToRegions)
 
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
