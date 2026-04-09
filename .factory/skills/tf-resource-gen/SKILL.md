@@ -7,12 +7,12 @@ description: generate terraform resources based on openapi spec.
 
 ## Instructions
 
-0.  First inspect the repo for existing datasource code, schema files, api structs, provider registrations, and acceptance tests for the feature.
-    For each step 1 through 12 if the datasource already satisfies the user request, skip the step completely, make no edits and proceed to the next step.
-    Do not make any minor edits or fixes to existing code if the datasource already satisfies the user request.  
+0.  First inspect the repo for existing resource code, schema files, api structs, provider registrations, and acceptance tests for the feature.
+    For each step 1 through 12 if the resource already satisfies the user request, skip the step completely, make no edits and proceed to the next step.
+    Do not make any minor edits or fixes to existing code if the resource already satisfies the user request.  
     For example:
     - If api structs exist, skip creating them and use/update the existing structs
-    - If a datasource already exists, skip recreating it and add the missing schema, registration, or test coverage
+    - If a resource already exists, skip recreating it and add the missing schema, registration, or test coverage
     - If an acceptance test already exists, skip creating a duplicate and extend coverage only if needed
 
 1.  Resource code should be in `internal/resources/`.
