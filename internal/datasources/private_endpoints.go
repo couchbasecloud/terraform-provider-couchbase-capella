@@ -91,6 +91,8 @@ func (p *PrivateEndpoints) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
+	state.PrivateEndpointDNS = types.StringValue(privateEndpointsResp.PrivateEndpointDNS)
+
 	for _, e := range privateEndpointsResp.Endpoints {
 		endpointData := providerschema.PrivateEndpointData{}
 		endpointData.Id = types.StringValue(e.Id)

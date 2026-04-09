@@ -32,10 +32,11 @@ type PrivateEndpoint struct {
 
 // PrivateEndpoints defines a structure used by the LIST endpoint for private endpoints.
 type PrivateEndpoints struct {
-	ClusterId      types.String          `tfsdk:"cluster_id"`
-	ProjectId      types.String          `tfsdk:"project_id"`
-	OrganizationId types.String          `tfsdk:"organization_id"`
-	Data           []PrivateEndpointData `tfsdk:"data"`
+	ClusterId          types.String          `tfsdk:"cluster_id"`
+	ProjectId          types.String          `tfsdk:"project_id"`
+	OrganizationId     types.String          `tfsdk:"organization_id"`
+	PrivateEndpointDNS types.String          `tfsdk:"private_endpoint_dns"`
+	Data               []PrivateEndpointData `tfsdk:"data"`
 }
 
 // PrivateEndpointData defines a single private endpoint.
