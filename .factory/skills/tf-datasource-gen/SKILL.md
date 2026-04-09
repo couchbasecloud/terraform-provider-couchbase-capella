@@ -7,14 +7,13 @@ description: generate terraform datasources based on openapi spec.
 
 ## Instructions
 
-0.  first inspect the repo for existing datasource code, schema files, api structs, provider registrations, and acceptance tests for the feature.
-    treat each step below as conditional: if the artifact already exists, reuse or update it and noop the create step.
-    do not skip the overall task just because the datasource already exists.
-    if the datasource already satisfies the user request and referenced OpenAPI spec, noop.
-    for example:
-    - if api structs exist, skip creating them and use/update the existing structs
-    - if a datasource already exists, skip recreating it and add the missing schema, registration, or test coverage
-    - if an acceptance test already exists, skip creating a duplicate and extend coverage only if needed
+0.  First inspect the repo for existing datasource code, schema files, api structs, provider registrations, and acceptance tests for the feature.
+    For each step 1 through 12 if the datasource already satisfies the user request skip the step completely, make no edits and proceed to the next step. 
+    Do not make any minor edits or fixes to existing code if the datasource already satisfies the user request.
+    For example:
+    - If api structs exist, skip creating them and use/update the existing structs
+    - If a datasource already exists, skip recreating it and add the missing schema, registration, or test coverage
+    - If an acceptance test already exists, skip creating a duplicate and extend coverage only if needed
 
 1.  datasource code should be in internal/datasources/
 2.  schema for datasource should be in its own file with format <feature>_schema.go
