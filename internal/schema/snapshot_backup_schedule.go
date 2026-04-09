@@ -11,14 +11,27 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 )
 
+// StringsToSetValue converts a slice of strings to a types.Set of string elements.
+func StringsToSetValue(strs []string) (basetypes.SetValue, error) {
+	elems := make([]attr.Value, len(strs))
+	for i, s := range strs {
+		elems[i] = types.StringValue(s)
+	}
+	set, diags := types.SetValue(types.StringType, elems)
+	if diags.HasError() {
+		return types.SetUnknown(types.StringType), fmt.Errorf("error converting strings to set")
+	}
+	return set, nil
+}
+
 type SnapshotBackupSchedule struct {
-	OrganizationID types.String   `tfsdk:"organization_id"`
-	ProjectID      types.String   `tfsdk:"project_id"`
-	ClusterID      types.String   `tfsdk:"cluster_id"`
-	Interval       types.Int64    `tfsdk:"interval"`
-	Retention      types.Int64    `tfsdk:"retention"`
-	StartTime      types.String   `tfsdk:"start_time"`
-	CopyToRegions  []types.String `tfsdk:"copy_to_regions"`
+	OrganizationID types.String `tfsdk:"organization_id"`
+	ProjectID      types.String `tfsdk:"project_id"`
+	ClusterID      types.String `tfsdk:"cluster_id"`
+	Interval       types.Int64  `tfsdk:"interval"`
+	Retention      types.Int64  `tfsdk:"retention"`
+	StartTime      types.String `tfsdk:"start_time"`
+	CopyToRegions  types.Set    `tfsdk:"copy_to_regions"`
 }
 
 func (s SnapshotBackupSchedule) AttributeTypes() map[string]attr.Type {
@@ -34,6 +47,7 @@ func (s SnapshotBackupSchedule) AttributeTypes() map[string]attr.Type {
 }
 
 func NewSnapshotBackupSchedule(snapshotBackupSchedule snapshot_backup_schedule.SnapshotBackupSchedule, organizationID, projectID, clusterID string) SnapshotBackupSchedule {
+	copyToRegions, _ := StringsToSetValue(snapshotBackupSchedule.CopyToRegions)
 	return SnapshotBackupSchedule{
 		OrganizationID: types.StringValue(organizationID),
 		ProjectID:      types.StringValue(projectID),
@@ -41,7 +55,7 @@ func NewSnapshotBackupSchedule(snapshotBackupSchedule snapshot_backup_schedule.S
 		Interval:       types.Int64Value(snapshotBackupSchedule.Interval),
 		Retention:      types.Int64Value(snapshotBackupSchedule.Retention),
 		StartTime:      types.StringValue(snapshotBackupSchedule.StartTime),
-		CopyToRegions:  StringsToBaseStrings(snapshotBackupSchedule.CopyToRegions),
+		CopyToRegions:  copyToRegions,
 	}
 }
 

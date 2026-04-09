@@ -132,6 +132,46 @@ func TestAccSnapshotBackupScheduleResourceInvalidCopyToRegions(t *testing.T) {
 	})
 }
 
+func TestAccSnapshotBackupScheduleResourceWithoutCopyToRegions(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cloud_snapshot_backup_schedule_")
+	resourceReference := "couchbase-capella_cloud_snapshot_backup_schedule." + resourceName
+
+	startTime := time.Now().Add(24 * time.Hour).Truncate(time.Hour).Format(time.RFC3339)
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnapshotBackupScheduleResourceConfigWithoutCopyToRegions(resourceName, 12, 240, startTime),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccExistsSnapshotBackupScheduleResource(t, resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
+					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(resourceReference, "interval", "12"),
+					resource.TestCheckResourceAttr(resourceReference, "retention", "240"),
+					resource.TestCheckResourceAttr(resourceReference, "start_time", startTime),
+				),
+			},
+		},
+	})
+}
+
+func testAccSnapshotBackupScheduleResourceConfigWithoutCopyToRegions(resourceName string, interval, retention int, startTime string) string {
+	return fmt.Sprintf(`
+	%[1]s
+
+	resource "couchbase-capella_cloud_snapshot_backup_schedule" "%[2]s" {
+		organization_id = "%[3]s"
+		project_id = "%[4]s"
+		cluster_id = "%[5]s"
+		interval = %[6]d
+		retention = %[7]d
+		start_time = "%[8]s"
+	}
+	`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, interval, retention, startTime)
+}
+
 func testAccSnapshotBackupScheduleResourceConfigWithCopyToRegions(resourceName string, interval, retention int, startTime, copyToRegions string) string {
 	return fmt.Sprintf(`
 	%[1]s
