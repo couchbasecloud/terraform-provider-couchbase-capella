@@ -10,6 +10,7 @@ description: generate terraform resources based on openapi spec.
 0.  First inspect the repo for existing resource code, schema files, API structs, provider registrations, and acceptance tests for the feature.
     Treat each step below as conditional: if the artifact already exists, reuse or update it and noop the create step.
     Do not skip the overall task just because the resource already exists.
+    If the resource already satisfies the user request and referenced OpenAPI spec, noop.
     For example:
     - if API structs exist, skip creating them and use/update the existing structs
     - if the resource already exists, skip recreating it and add the missing schema, registration, or test coverage
@@ -85,7 +86,6 @@ validator.String(stringvalidator.LengthAtLeast(1))))
 9.  Need ImportState function using `resource.ImportStatePassthroughID`.
 
 10. Implement CRUD methods (Create, Read, Update, Delete):
- - if the resource already exists, review the existing CRUD handlers and only add or fix missing behavior.
  - Create: use create endpoint, unmarshal response, call get to populate refreshed state, set state.
  - Read: use get endpoint.  validate IDs from state, call get endpoint, morph response to terraform state, handle ErrNotFound by removing resource from state.
  - Update: use update endpoint.  if there is no update endpoint, update handler should have empty function body.
@@ -94,7 +94,6 @@ validator.String(stringvalidator.LengthAtLeast(1))))
  - Delete: use delete endpoint, handle resource-not-found gracefully (just return without error).  if there is no delete endpoint then delete handler has empty function body.
 
 11. Generate necessary API request/response structs in `internal/api/<feature>/`. Use `ClientV1` to make API calls with retry logic:
- - if the structs already exist, reuse or extend them instead of creating duplicates.
 
 ```
  response, err := s.ClientV1.ExecuteWithRetry(ctx, cfg, requestBody, s.Token, nil)
@@ -105,11 +104,8 @@ validator.String(stringvalidator.LengthAtLeast(1))))
 12. Create a morph function to convert API response structs to terraform schema structs. Place terraform schema structs in `internal/schema/`.
 
 13. Register the resource in `internal/provider/provider.go` in `func (p *capellaProvider) Resources`.
- - if it is already registered then do not add a duplicate entry.
 
 14. Create acceptance tests in `acceptance_tests/` with format `<feature>_acceptance_test.go`.
- - this applies to existing resources too. if the resource already exists but acceptance tests do not, add the missing tests without regenerating the resource.
- - if the acceptance test already exists, do not duplicate it; update it only when coverage is missing.
  - Tests should run in parallel using `resource.ParallelTest()`.
  - Include test steps for: Create+Read, ImportState, Update, and Delete (implicit).
  - Use `globalProtoV6ProviderFactory` for provider factories.
