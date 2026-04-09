@@ -195,10 +195,12 @@ func (s *SnapshotBackupSchedule) Update(ctx context.Context, req resource.Update
 	)
 
 	var copyToRegions []string
-	diags = plan.CopyToRegions.ElementsAs(ctx, &copyToRegions, false)
-	if diags.HasError() {
-		resp.Diagnostics.Append(diags...)
-		return
+	if !plan.CopyToRegions.IsUnknown() {
+		diags = plan.CopyToRegions.ElementsAs(ctx, &copyToRegions, false)
+		if diags.HasError() {
+			resp.Diagnostics.Append(diags...)
+			return
+		}
 	}
 
 	err := s.upsertSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId, plan, copyToRegions)
