@@ -7,6 +7,14 @@ description: generate terraform datasources based on openapi spec.
 
 ## Instructions
 
+0.  first inspect the repo for existing datasource code, schema files, api structs, provider registrations, and acceptance tests for the feature.
+    treat each step below as conditional: if the artifact already exists, reuse or update it and noop the create step.
+    do not skip the overall task just because the datasource already exists.
+    for example:
+    - if api structs exist, skip creating them and use/update the existing structs
+    - if a datasource already exists, skip recreating it and add the missing schema, registration, or test coverage
+    - if an acceptance test already exists, skip creating a duplicate and extend coverage only if needed
+
 1.  datasource code should be in internal/datasources/
 2.  schema for datasource should be in its own file with format <feature>_schema.go
 
@@ -24,6 +32,7 @@ func requiredStringWithValidator() *schema.StringAttribute {
 ```
 
 3.  implement one or two datasources depending on the spec provided.
+    if a datasource already exists, review it and only add or update what is missing.
 
     - the first is to get a specific resource.  use the get endpoint.  if there is no get endpoint then skip this implementation.
     for example if the feature is Buckets then need bucket.go to get a specific bucket.
@@ -91,6 +100,7 @@ func (d *Buckets) Configure(_ context.Context, req datasource.ConfigureRequest, 
 ```
 
 9.  generate necessary structs to handle API response.  put structs in internal/api/
+    if the structs already exist, reuse or extend them instead of creating duplicates.
     use ClientV1 struct to make API calls with retry logic.  for example:
 
 ```
@@ -98,10 +108,13 @@ response, err := s.ClientV1.ExecuteWithRetry
 ```
 
 10.  register the datasource in `internal/provider/provider.go` in func `(p *capellaProvider) DataSources`
+     if it is already registered then do not add a duplicate entry.
 
      for example with buckets need `datasources.NewBuckets,`
 
 11.  create acceptance tests for both datasources in acceptance_tests/ with format <feature>_test.go.
+     this applies to existing datasources too.  if the datasource already exists but acceptance tests do not, add the missing tests without regenerating the datasource.
+     if the acceptance test already exists, do not duplicate it; update it only when coverage is missing.
      for example if feature is Buckets then need buckets_test.go
 
 12.  acceptance tests should run in parallel.  that is use resource.ParallelTest()
