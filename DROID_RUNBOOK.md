@@ -133,11 +133,14 @@ Spec path: openapi.generated.yaml (see paths starting with /v4/organizations/{or
 **Droid prompt — paste this directly:**
 
 ```text
-Update Terraform resource for private endpoint dns using the tf-resource-gen skill and the OpenAPI spec. This is a new field in the existing LIST private endpoints API. 
+Generate a Terraform resource for Buckets using the tf-resource-gen skill and the OpenAPI spec.
 
-Feature  : Private Endpoints
-GET path: GET /v4/organizations/{organizationId}/projects/{projectId}/clusters/privateEndpointService/endpoints
-Spec path: openapi.generated.yaml (see paths starting with /v4/organizations/{organizationId}/projects/{projectId}/clusters/privateEndpointService)
+Feature    : Bucket
+CREATE path: POST /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/buckets
+GET path   : GET /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/buckets/{bucketId}
+UPDATE path: PUT /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/buckets/{bucketId}
+DELETE path: DELETE /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/buckets/{bucketId}
+Spec path  : openapi.generated.yaml (see paths starting with /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/buckets)
 ```
 
 </details>
