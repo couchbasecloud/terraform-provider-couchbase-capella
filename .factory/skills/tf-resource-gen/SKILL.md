@@ -9,7 +9,7 @@ description: generate terraform resources based on openapi spec.
 
 0.  First inspect the repo for existing resource code, schema files, api structs, 
     provider registrations, and acceptance tests for the feature. For each step 1 through 
-    12 if the resource already satisfies the user request skip the step 
+    14 if the resource already satisfies the user request skip the step 
     completely, make no edits and proceed to the next step. Do not make any minor edits or fixes 
     to existing code if the resource already satisfies the user request. 
     
