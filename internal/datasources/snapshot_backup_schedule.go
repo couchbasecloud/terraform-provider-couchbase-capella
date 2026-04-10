@@ -86,6 +86,7 @@ func (d *SnapshotBackupSchedule) Read(ctx context.Context, req datasource.ReadRe
 
 	copyToRegions, diags := types.SetValueFrom(ctx, types.StringType, snapshotBackupSchedule.CopyToRegions)
 	if diags.HasError() {
+		resp.Diagnostics.Append(diags...)
 		return
 	}
 
