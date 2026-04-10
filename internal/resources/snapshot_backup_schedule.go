@@ -107,8 +107,12 @@ func (s *SnapshotBackupSchedule) Create(ctx context.Context, req resource.Create
 			"Error Getting Snapshot Backup Schedule in Capella",
 			"Could not get Capella Snapshot Backup Schedule for cluster with ID "+plan.ClusterID.String()+": "+err.Error(),
 		)
-		refreshedState = &providerschema.SnapshotBackupSchedule{}
-		refreshedState.CopyToRegions = types.SetNull(types.StringType)
+		refreshedState = &providerschema.SnapshotBackupSchedule{
+			OrganizationID: types.StringValue(organizationId),
+			ProjectID:      types.StringValue(projectId),
+			ClusterID:      types.StringValue(clusterId),
+			CopyToRegions:  types.SetNull(types.StringType),
+		}
 	} else {
 		refreshedState, err = s.morphToTerraformCloudSnapshotBackupSchedule(ctx, snapshotBackupSchedule, organizationId, projectId, clusterId)
 		if err != nil {
