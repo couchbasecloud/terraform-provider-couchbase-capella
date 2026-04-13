@@ -1,15 +1,17 @@
 ---
 name: tf-examples-gen
-description: generate terraform HCL examples for a feature.
+description: Generate terraform HCL examples for a feature.
 ---
 
 # Terraform Examples Generator
 
 ## Instructions
 
-- HCL must be in examples/.  for example if the feature is buckets create folder examples/buckets/
-- create main.tf
+- HCL must be in examples/.  For example if the feature is buckets create folder examples/buckets/
 
+### main.tf
+
+Create this file which should have the terraform block and provider block.
 ```
 terraform {
   required_providers {
@@ -24,11 +26,13 @@ provider "couchbase-capella" {
 }
 ```
 
-- create variables.tf
+If main.tf exists and has terraform and provider blocks, skip this step.
 
-  this should have variables needed for the resource and datasource.
+### variables.tf
 
-  all examples must have these variables
+Create a file to store the variables needed for the resource and datasource.
+All examples must have the two variables organization_id and auth_token as shown
+below.
 
 ```
 variable "organization_id" {
@@ -41,17 +45,20 @@ variable "auth_token" {
 }
 ```
 
-- create terraform.template.tfvars file
+If variables.tf exists and has the necessary variables, skip this step.
 
-  this should have placeholder values for the variables. for variables like
-  organization_id use "<organization_id>".  for auth_token use "<v4-api-key-secret>"
+### terraform.template.tfvars
 
-  for other variables use values in ../couchbase-cloud/cmd/cp-open-api/specs/examples
+Create a file which has placeholder values for the variables. For variables like
+organization_id use "<organization_id>".  For auth_token use "<v4-api-key-secret>"
 
+For other variables use values in ../couchbase-cloud/cmd/cp-open-api/specs/examples
 
-- create a create_<feature>.tf file
+If terraform.template.tfvars exists and has the necessary variables, skip this step.
 
-  this creates a resource for example
+- create_<feature>.tf
+
+Need a file named create_<feature>.tf. This file defines a resource for the specified feature.
 
 ```
 
@@ -60,15 +67,19 @@ resource "couchbase-capella_<feature>" "new_<feature>" {
 }
 ```
 
-  the resource should have required and optional arguments derived from the
-  schema in internal/resources/<feature>_schema.go
+The resource should have required and optional arguments derived from the
+schema in internal/resources/<feature>_schema.go
 
-- determine if the feature has a datasource to list resources.  look for a file
-  in internal/datasources/ with the plural name of the feature.
-  for example if the feature is Buckets then look for buckets.go in internal/datasources/.
+If create_<feature>.tf exists and has the resource block, skip this step.
 
-  if there is a datasource to list resources then create a list_<feature>.tf file
-  it should look like this:
+### Determine if the feature has a datasource to list resources.
+
+Look for a file
+in internal/datasources/ with the plural name of the feature.
+For example if the feature is Buckets then look for buckets.go in internal/datasources/.
+
+If there is a datasource to list resources then create a list_<feature>.tf file
+it should look like this:
 
 ```
 data "couchbase-capella_<feature_plural>" "list_<feature_plural>" {
@@ -76,16 +87,18 @@ data "couchbase-capella_<feature_plural>" "list_<feature_plural>" {
 }
 ```
 
- the required and optional arguments should be derived from the schema in internal/datasources/<feature_plural>_schema.go
+ The required and optional arguments should be derived from the schema in internal/datasources/<feature_plural>_schema.go
 
- if there is no datasource to list resources then skip this step.
+ If there is no datasource to list resources then skip this step.
 
- look for a datasource to get a specific resource.
- look for a file in internal/datasources/ with the singular name of the feature.
- for example if the feature is Buckets then look for bucket.go in internal/datasources/
 
- if there is a datasource to get a specific resource then create a get_<feature>.tf file
- it should look like this:
+### Look for a datasource to get a specific resource.
+
+Look for a file in internal/datasources/ with the singular name of the feature.
+For example if the feature is Buckets then look for bucket.go in internal/datasources/
+
+If there is a datasource to get a specific resource then create a get_<feature>.tf file
+it should look like this:
 
 ```
 data "couchbase-capella_<feature>" "get_<feature>" {
@@ -93,11 +106,12 @@ data "couchbase-capella_<feature>" "get_<feature>" {
 }
 ```
 
- the required and optional arguments should be derived from the schema in internal/datasources/<feature>_schema.go
+The required and optional arguments should be derived from the schema in internal/datasources/<feature>_schema.go
 
- if there is no datasource to get a specific resource then skip this step.
+If there is no datasource to get a specific resource then skip this step.
 
-- run terraform validate to ensure the examples are valid terraform code.
-  fix errors until terraform validate passes.
+### Run terraform validate to ensure the examples are valid terraform code.
 
-  do not run terraform init
+Fix errors until terraform validate passes.
+
+Do not run terraform init as tests will run against a dev build.
