@@ -273,4 +273,6 @@ var (
 		" the state from remote, unexpected error: ")
 
 	ErrCannotSetIopsForGcp = errors.New("iops cannot be set for GCP clusters.")
+
+	ErrDataAPIStatusTimeout = errors.New("Data API status transition timed out after initiation")
 )
