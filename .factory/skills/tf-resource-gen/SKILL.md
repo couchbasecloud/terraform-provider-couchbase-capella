@@ -89,11 +89,21 @@ validator.String(stringvalidator.LengthAtLeast(1))))
 
 10. Implement CRUD methods (Create, Read, Update, Delete):
  - Create: use create endpoint, unmarshal response, call get to populate refreshed state, set state.
+
+   Check if the the create endpoint is async.  In the spec look for 202 response code.  If async follow steps in
+   Polling Resources section.
+
  - Read: use get endpoint.  validate IDs from state, call get endpoint, morph response to terraform state, handle ErrNotFound by removing resource from state.
  - Update: use update endpoint.  if there is no update endpoint, update handler should have empty function body.
    leave a comment explaining that the resource does not support in-place updates, so an empty update handler will cause
    the framework to recreate the resource.  mark all user-configurable attributes that can change with the `RequiresReplace` plan modifier so that any change forces recreation.
- - Delete: use delete endpoint, handle resource-not-found gracefully (just return without error).  if there is no delete endpoint then delete handler has empty function body.
+
+   If the create endpoint is async, follow the steps in Polling Resources section for the update endpoint as well.
+ - Delete: use delete endpoint, handle resource-not-found gracefully (just return without error).
+
+   If there is no delete endpoint then delete handler has empty function body.
+
+   If the create endpoint is async, follow the steps in Polling Resources section for the delete endpoint as well.
 
 11. Generate necessary API request/response structs in `internal/api/<feature>/`. Use `ClientV1` to make API calls with retry logic:
 
@@ -113,3 +123,95 @@ validator.String(stringvalidator.LengthAtLeast(1))))
  - Use `globalProtoV6ProviderFactory` for provider factories.
  - Use helper functions like `randomStringWithPrefix` for resource names.
  - Verify key attributes with `resource.TestCheckResourceAttr` and `resource.TestCheckResourceAttrSet`.
+
+
+
+## Polling Resources
+
+After calling the create, update or endpoint poll the resource until it reaches a final state.  The function should be
+called checkFeatureStatus.  For example if feature is Cluster then function is checkClusterStatus.
+Return the refreshed terraform state.
+
+The pattern is:
+
+```
+func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+
+// get plan
+
+// call create endpoint
+
+refreshedState, err = c.checkClusterStatus(ctx, organizationId, projectId, clusterResponse.Id.String())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating cluster",
+			errorMessageAfterClusterCreationInitiation+api.ParseError(err),
+		)
+		return
+	}
+
+// set state
+
+diags = resp.State.Set(ctx, refreshedState)
+	resp.Diagnostics.Append(diags...)
+
+}
+```
+
+Do not call checkClusterStatus and getClusterStatus as this is redundant.
+Use this pattern for Update and Delete handlers.
+
+
+Here is an example on how to poll a resource.  It must return a terraform object that can be set to state.
+It should use a timer to poll every 1 second and a context timeout of 60 minutes.  If the context times out return an error.
+
+If the resource reaches a final state return the refreshed state.  If there is an error calling getCluster just try again.
+```
+func (c *Cluster) checkClusterStatus(ctx context.Context, organizationId, projectId, ClusterId string) (*providerschema.Cluster, error) {
+	var (
+		clusterResp *clusterapi.GetClusterResponse
+		err         error
+	)
+
+	// Assuming 60 minutes is the max time deployment takes, can change after discussion
+	const timeout = time.Minute * 60
+
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	const sleep = 1 * time.Second
+
+	timer := time.NewTimer(1 * time.Minute)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, fmt.Errorf("cluster creation status transition timed out after initiation, unexpected error: %w", err)
+		case <-timer.C:
+			clusterResp, err = c.getCluster(ctx, organizationId, projectId, ClusterId)
+			switch err {
+			case nil:
+				if clusterapi.IsFinalState(clusterResp.CurrentState) {
+					audit := providerschema.NewCouchbaseAuditData(clusterResp.Audit)
+					auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
+					if diags.HasError() {
+						return nil, fmt.Errorf("%s: %w", errors.ErrUnableToConvertAuditData, err)
+					}
+					refreshedState, err := providerschema.NewCluster(ctx, clusterResp, organizationId, projectId, auditObj)
+					if err != nil {
+						return nil, fmt.Errorf("%s: %w", errors.ErrRefreshingState, err)
+					}
+					return refreshedState, nil
+				}
+				const msg = "waiting for cluster to complete the execution"
+				tflog.Info(ctx, msg)
+			default:
+				continue
+			}
+
+			timer.Reset(sleep)
+		}
+	}
+}
+```
