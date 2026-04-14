@@ -15,14 +15,15 @@ func PrivateEndpointsSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "organization_id", privateEndpointsBuilder, requiredString())
 	capellaschema.AddAttr(attrs, "project_id", privateEndpointsBuilder, requiredString())
 	capellaschema.AddAttr(attrs, "cluster_id", privateEndpointsBuilder, requiredString())
+	capellaschema.AddAttr(attrs, "private_endpoint_dns", privateEndpointsBuilder, computedString())
 
 	dataAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(dataAttrs, "id", privateEndpointsBuilder, computedString())
 	capellaschema.AddAttr(dataAttrs, "organization_id", privateEndpointsBuilder, computedString())
 	capellaschema.AddAttr(dataAttrs, "project_id", privateEndpointsBuilder, computedString())
 	capellaschema.AddAttr(dataAttrs, "cluster_id", privateEndpointsBuilder, computedString())
-	capellaschema.AddAttr(dataAttrs, "cloud_provider", privateEndpointsBuilder, computedString())
 	capellaschema.AddAttr(dataAttrs, "status", privateEndpointsBuilder, computedString())
+	capellaschema.AddAttr(dataAttrs, "service_name", privateEndpointsBuilder, computedString())
 
 	capellaschema.AddAttr(attrs, "data", privateEndpointsBuilder, &schema.ListNestedAttribute{
 		Computed: true,
