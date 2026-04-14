@@ -70,16 +70,16 @@ func (s *SnapshotBackupSchedule) Create(ctx context.Context, req resource.Create
 		clusterId      = plan.ClusterID.ValueString()
 	)
 
-	var copyToRegions []string
-	if !plan.CopyToRegions.IsUnknown() {
-		diags = plan.CopyToRegions.ElementsAs(ctx, &copyToRegions, false)
-		if diags.HasError() {
-			resp.Diagnostics.Append(diags...)
-			return
-		}
+	copyToRegions, err := s.convertCopyToRegions(ctx, plan.CopyToRegions)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Extracting CopyToRegions Elements",
+			err.Error(),
+		)
+		return
 	}
 
-	err := s.upsertSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId, plan, copyToRegions)
+	err = s.upsertSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId, plan, copyToRegions)
 	if err != nil {
 		tflog.Debug(ctx, "Error upserting snapshot backup schedule", map[string]interface{}{
 			"organizationId": organizationId,
@@ -112,7 +112,7 @@ func (s *SnapshotBackupSchedule) Create(ctx context.Context, req resource.Create
 			refreshedState.CopyToRegions = types.SetNull(types.StringType)
 		}
 	} else {
-		refreshedState, err = s.morphToTerraformCloudSnapshotBackupSchedule(ctx, snapshotBackupSchedule, organizationId, projectId, clusterId)
+		refreshedState, err = providerschema.NewSnapshotBackupSchedule(ctx, *snapshotBackupSchedule, organizationId, projectId, clusterId)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error Refreshing State",
@@ -163,7 +163,7 @@ func (s *SnapshotBackupSchedule) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	refreshedState, err := s.morphToTerraformCloudSnapshotBackupSchedule(ctx, snapshotBackupSchedule, organizationId, projectId, clusterId)
+	refreshedState, err := providerschema.NewSnapshotBackupSchedule(ctx, *snapshotBackupSchedule, organizationId, projectId, clusterId)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Refreshing State",
@@ -196,16 +196,16 @@ func (s *SnapshotBackupSchedule) Update(ctx context.Context, req resource.Update
 		clusterId      = plan.ClusterID.ValueString()
 	)
 
-	var copyToRegions []string
-	if !plan.CopyToRegions.IsUnknown() {
-		diags = plan.CopyToRegions.ElementsAs(ctx, &copyToRegions, false)
-		if diags.HasError() {
-			resp.Diagnostics.Append(diags...)
-			return
-		}
+	copyToRegions, err := s.convertCopyToRegions(ctx, plan.CopyToRegions)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Extracting CopyToRegions Elements",
+			err.Error(),
+		)
+		return
 	}
 
-	err := s.upsertSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId, plan, copyToRegions)
+	err = s.upsertSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId, plan, copyToRegions)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Upserting Snapshot Backup Schedule in Capella",
@@ -229,7 +229,7 @@ func (s *SnapshotBackupSchedule) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	refreshedState, err := s.morphToTerraformCloudSnapshotBackupSchedule(ctx, snapshotBackupSchedule, organizationId, projectId, clusterId)
+	refreshedState, err := providerschema.NewSnapshotBackupSchedule(ctx, *snapshotBackupSchedule, organizationId, projectId, clusterId)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Refreshing State",
@@ -398,15 +398,15 @@ func (s *SnapshotBackupSchedule) getStartTime(ctx context.Context, currentStartT
 	return newStartTime.Format(time.RFC3339), nil
 }
 
-// morphToTerraformCloudSnapshotBackupSchedule creates a snapshot backup schedule from a snapshot backup schedule response.
-func (s *SnapshotBackupSchedule) morphToTerraformCloudSnapshotBackupSchedule(ctx context.Context, scheduleResp *snapshot_backup_schedule.SnapshotBackupSchedule, organizationId, projectId, clusterId string) (*providerschema.SnapshotBackupSchedule, error) {
-	copyToRegions, diags := types.SetValueFrom(ctx, types.StringType, scheduleResp.CopyToRegions)
-	if diags.HasError() {
-		return nil, fmt.Errorf("copyToRegions set error")
+func (s *SnapshotBackupSchedule) convertCopyToRegions(ctx context.Context, copyToRegionsSet types.Set) ([]string, error) {
+	var copyToRegions []string
+	if !copyToRegionsSet.IsUnknown() {
+		diags := copyToRegionsSet.ElementsAs(ctx, &copyToRegions, false)
+		if diags.HasError() {
+			return nil, fmt.Errorf("error while extracting copyToRegions elements")
+		}
 	}
-
-	snapshotBackupSchedule := providerschema.NewSnapshotBackupSchedule(*scheduleResp, organizationId, projectId, clusterId, copyToRegions)
-	return &snapshotBackupSchedule, nil
+	return copyToRegions, nil
 }
 
 // Configure adds the provider configured api to the snapshot backup schedule resource.

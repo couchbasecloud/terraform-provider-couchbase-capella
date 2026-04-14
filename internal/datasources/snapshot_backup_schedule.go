@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -84,15 +83,16 @@ func (d *SnapshotBackupSchedule) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	copyToRegions, diags := types.SetValueFrom(ctx, types.StringType, snapshotBackupSchedule.CopyToRegions)
-	if diags.HasError() {
-		resp.Diagnostics.Append(diags...)
+	refreshedState, err := providerschema.NewSnapshotBackupSchedule(ctx, snapshotBackupSchedule, organizationId, projectId, clusterId)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Refreshing State",
+			"Could not refresh the state of Snapshot Backup Schedule data source for cluster with ID "+state.ClusterID.String()+": "+err.Error(),
+		)
 		return
 	}
 
-	state = providerschema.NewSnapshotBackupSchedule(snapshotBackupSchedule, organizationId, projectId, clusterId, copyToRegions)
-
-	diags = resp.State.Set(ctx, state)
+	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
 }
 

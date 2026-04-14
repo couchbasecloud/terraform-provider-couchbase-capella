@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -33,16 +34,22 @@ func (s SnapshotBackupSchedule) AttributeTypes() map[string]attr.Type {
 	}
 }
 
-func NewSnapshotBackupSchedule(snapshotBackupSchedule snapshot_backup_schedule.SnapshotBackupSchedule, organizationID, projectID, clusterID string, copyToRegions basetypes.SetValue) SnapshotBackupSchedule {
-	return SnapshotBackupSchedule{
+func NewSnapshotBackupSchedule(ctx context.Context, scheduleResp snapshot_backup_schedule.SnapshotBackupSchedule, organizationID, projectID, clusterID string) (*SnapshotBackupSchedule, error) {
+	copyToRegions, diags := types.SetValueFrom(ctx, types.StringType, scheduleResp.CopyToRegions)
+	if diags.HasError() {
+		return nil, fmt.Errorf("copyToRegions set error")
+	}
+
+	snapshotBackupSchedule := SnapshotBackupSchedule{
 		OrganizationID: types.StringValue(organizationID),
 		ProjectID:      types.StringValue(projectID),
 		ClusterID:      types.StringValue(clusterID),
-		Interval:       types.Int64Value(snapshotBackupSchedule.Interval),
-		Retention:      types.Int64Value(snapshotBackupSchedule.Retention),
-		StartTime:      types.StringValue(snapshotBackupSchedule.StartTime),
+		Interval:       types.Int64Value(scheduleResp.Interval),
+		Retention:      types.Int64Value(scheduleResp.Retention),
+		StartTime:      types.StringValue(scheduleResp.StartTime),
 		CopyToRegions:  copyToRegions,
 	}
+	return &snapshotBackupSchedule, nil
 }
 
 // Validate is used to verify that IDs have been properly imported.
