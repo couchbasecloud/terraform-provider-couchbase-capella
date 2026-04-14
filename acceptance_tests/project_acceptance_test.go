@@ -137,6 +137,42 @@ func TestAccProjectInvalidResource(t *testing.T) {
 	})
 }
 
+func TestAccProject_AV_125169(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_project_")
+	resourceReference := "couchbase-capella_project." + resourceName
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectResourceConfig(resourceName),
+			},
+			{
+				ResourceName:      resourceReference,
+				ImportStateIdFunc: generateMalformedProjectImportIdForResource(resourceReference),
+				ImportState:       true,
+				ExpectError:       regexp.MustCompile("terraform import parameters did not match those expected for the resource"),
+			},
+		},
+	})
+}
+
+// generateMalformedProjectImportIdForResource generates a malformed project import ID
+// where the 'id=' prefix is missing for the project ID.
+func generateMalformedProjectImportIdForResource(resourceName string) resource.ImportStateIdFunc {
+	return func(state *terraform.State) (string, error) {
+		var rawState map[string]string
+		for _, m := range state.Modules {
+			if len(m.Resources) > 0 {
+				if v, ok := m.Resources[resourceName]; ok {
+					rawState = v.Primary.Attributes
+				}
+			}
+		}
+		// Malformed: missing "id=" prefix for the first part
+		return fmt.Sprintf("%s,organization_id=%s", rawState["id"], rawState["organization_id"]), nil
+	}
+}
+
 // testAccProjectResourceConfig generates a Terraform configuration string for creating a Capella project resource.
 func testAccProjectResourceConfig(resourceName string) string {
 	return fmt.Sprintf(`
