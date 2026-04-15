@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -12,13 +13,13 @@ import (
 )
 
 type SnapshotBackupSchedule struct {
-	OrganizationID types.String   `tfsdk:"organization_id"`
-	ProjectID      types.String   `tfsdk:"project_id"`
-	ClusterID      types.String   `tfsdk:"cluster_id"`
-	Interval       types.Int64    `tfsdk:"interval"`
-	Retention      types.Int64    `tfsdk:"retention"`
-	StartTime      types.String   `tfsdk:"start_time"`
-	CopyToRegions  []types.String `tfsdk:"copy_to_regions"`
+	OrganizationID types.String `tfsdk:"organization_id"`
+	ProjectID      types.String `tfsdk:"project_id"`
+	ClusterID      types.String `tfsdk:"cluster_id"`
+	Interval       types.Int64  `tfsdk:"interval"`
+	Retention      types.Int64  `tfsdk:"retention"`
+	StartTime      types.String `tfsdk:"start_time"`
+	CopyToRegions  types.Set    `tfsdk:"copy_to_regions"`
 }
 
 func (s SnapshotBackupSchedule) AttributeTypes() map[string]attr.Type {
@@ -33,16 +34,22 @@ func (s SnapshotBackupSchedule) AttributeTypes() map[string]attr.Type {
 	}
 }
 
-func NewSnapshotBackupSchedule(snapshotBackupSchedule snapshot_backup_schedule.SnapshotBackupSchedule, organizationID, projectID, clusterID string) SnapshotBackupSchedule {
-	return SnapshotBackupSchedule{
+func NewSnapshotBackupSchedule(ctx context.Context, scheduleResp snapshot_backup_schedule.SnapshotBackupSchedule, organizationID, projectID, clusterID string) (*SnapshotBackupSchedule, error) {
+	copyToRegions, diags := types.SetValueFrom(ctx, types.StringType, scheduleResp.CopyToRegions)
+	if diags.HasError() {
+		return nil, fmt.Errorf("copyToRegions set error")
+	}
+
+	snapshotBackupSchedule := SnapshotBackupSchedule{
 		OrganizationID: types.StringValue(organizationID),
 		ProjectID:      types.StringValue(projectID),
 		ClusterID:      types.StringValue(clusterID),
-		Interval:       types.Int64Value(snapshotBackupSchedule.Interval),
-		Retention:      types.Int64Value(snapshotBackupSchedule.Retention),
-		StartTime:      types.StringValue(snapshotBackupSchedule.StartTime),
-		CopyToRegions:  StringsToBaseStrings(snapshotBackupSchedule.CopyToRegions),
+		Interval:       types.Int64Value(scheduleResp.Interval),
+		Retention:      types.Int64Value(scheduleResp.Retention),
+		StartTime:      types.StringValue(scheduleResp.StartTime),
+		CopyToRegions:  copyToRegions,
 	}
+	return &snapshotBackupSchedule, nil
 }
 
 // Validate is used to verify that IDs have been properly imported.

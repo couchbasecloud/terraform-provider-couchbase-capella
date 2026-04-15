@@ -31,6 +31,20 @@ func TestAccSnapshotBackupScheduleResource(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccSnapshotBackupScheduleResourceConfigWithCopyToRegions(resourceName, 12, 240, startTime, "null"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccExistsSnapshotBackupScheduleResource(t, resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
+					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(resourceReference, "interval", "12"),
+					resource.TestCheckResourceAttr(resourceReference, "retention", "240"),
+					resource.TestCheckResourceAttr(resourceReference, "start_time", startTime),
+					resource.TestCheckNoResourceAttr(resourceReference, "copy_to_regions"),
+				),
+			},
+
+			{
 				Config: testAccSnapshotBackupScheduleResourceConfigWithCopyToRegions(resourceName, 12, 240, startTime, copyToRegions),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsSnapshotBackupScheduleResource(t, resourceReference),
