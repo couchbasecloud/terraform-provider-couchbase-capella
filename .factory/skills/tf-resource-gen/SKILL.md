@@ -90,13 +90,13 @@ validator.String(stringvalidator.LengthAtLeast(1))))
 10. Implement CRUD methods (Create, Read, Update, Delete):
  - Create: use create endpoint, unmarshal response, call get to populate refreshed state, set state.
 
-   Check if the the create endpoint is async.  In the spec look for 202 response code.  If async follow steps in
+   Check if the create endpoint is async. In the spec look for 202 response code. If async follow steps in
    Polling Resources section.
 
- - Read: use get endpoint.  validate IDs from state, call get endpoint, morph response to terraform state, handle ErrNotFound by removing resource from state.
- - Update: use update endpoint.  if there is no update endpoint, update handler should have empty function body.
+ - Read: use get endpoint. validate IDs from state, call get endpoint, morph response to terraform state, handle ErrNotFound by removing resource from state.
+ - Update: use update endpoint. if there is no update endpoint, update handler should have empty function body.
    leave a comment explaining that the resource does not support in-place updates, so an empty update handler will cause
-   the framework to recreate the resource.  mark all user-configurable attributes that can change with the `RequiresReplace` plan modifier so that any change forces recreation.
+   the framework to recreate the resource. mark all user-configurable attributes that can change with the `RequiresReplace` plan modifier so that any change forces recreation.
 
    If the create endpoint is async, follow the steps in Polling Resources section for the update endpoint as well.
 
@@ -129,8 +129,8 @@ validator.String(stringvalidator.LengthAtLeast(1))))
 
 ## Polling Resources
 
-After calling the create, update or endpoint poll the resource until it reaches a final state.  The function should be
-called checkFeatureStatus.  For example if feature is Cluster then function is checkClusterStatus.
+After calling the create, update or delete endpoint poll the resource until it reaches a final state. The function should be
+called checkFeatureStatus. For example if the feature is Cluster then the function is checkClusterStatus.
 Return the refreshed terraform state.
 
 The pattern is:
@@ -159,14 +159,14 @@ diags = resp.State.Set(ctx, refreshedState)
 }
 ```
 
-Do not call checkClusterStatus and getClusterStatus as this is redundant.
+Do not call checkClusterStatus and getCluster/retrieveCluster back-to-back as this is redundant.
 Use this pattern for Update and Delete handlers.
 
 
-Here is an example on how to poll a resource.  It must return a terraform object that can be set to state.
-It should use a ticker to poll every 1 minute and a context timeout of 60 minutes.  If the context times out return an error.
+Here is an example on how to poll a resource. It must return a terraform object that can be set to state.
+It should use a ticker to poll every 1 minute and a context timeout of 60 minutes. If the context times out return an error.
 
-If the resource reaches a final state return the refreshed state.  If there is an error calling getCluster just try again.
+If the resource reaches a final state return the refreshed state. If there is an error calling getCluster just try again.
 ```
 func (c *Cluster) checkClusterStatus(ctx context.Context, organizationId, projectId, ClusterId string) (*providerschema.Cluster, error) {
 	const timeout = time.Minute * 60
