@@ -99,7 +99,7 @@ validator.String(stringvalidator.LengthAtLeast(1))))
    the framework to recreate the resource.  mark all user-configurable attributes that can change with the `RequiresReplace` plan modifier so that any change forces recreation.
 
    If the create endpoint is async, follow the steps in Polling Resources section for the update endpoint as well.
-   
+
  - Delete: use delete endpoint, handle resource-not-found gracefully (just return without error).
 
    If there is no delete endpoint then delete handler has empty function body.
@@ -164,54 +164,45 @@ Use this pattern for Update and Delete handlers.
 
 
 Here is an example on how to poll a resource.  It must return a terraform object that can be set to state.
-It should use a timer to poll every 1 second and a context timeout of 60 minutes.  If the context times out return an error.
+It should use a ticker to poll every 1 minute and a context timeout of 60 minutes.  If the context times out return an error.
 
 If the resource reaches a final state return the refreshed state.  If there is an error calling getCluster just try again.
 ```
 func (c *Cluster) checkClusterStatus(ctx context.Context, organizationId, projectId, ClusterId string) (*providerschema.Cluster, error) {
-	var (
-		clusterResp *clusterapi.GetClusterResponse
-		err         error
-	)
-
-	// Assuming 60 minutes is the max time deployment takes, can change after discussion
 	const timeout = time.Minute * 60
 
 	var cancel context.CancelFunc
 	ctx, cancel = context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	const sleep = 1 * time.Second
-
-	timer := time.NewTimer(1 * time.Minute)
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
 
 	for {
 		select {
 		case <-ctx.Done():
-			return nil, fmt.Errorf("cluster creation status transition timed out after initiation, unexpected error: %w", err)
-		case <-timer.C:
-			clusterResp, err = c.getCluster(ctx, organizationId, projectId, ClusterId)
-			switch err {
-			case nil:
-				if clusterapi.IsFinalState(clusterResp.CurrentState) {
-					audit := providerschema.NewCouchbaseAuditData(clusterResp.Audit)
-					auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
-					if diags.HasError() {
-						return nil, fmt.Errorf("%s: %w", errors.ErrUnableToConvertAuditData, err)
-					}
-					refreshedState, err := providerschema.NewCluster(ctx, clusterResp, organizationId, projectId, auditObj)
-					if err != nil {
-						return nil, fmt.Errorf("%s: %w", errors.ErrRefreshingState, err)
-					}
-					return refreshedState, nil
-				}
-				const msg = "waiting for cluster to complete the execution"
-				tflog.Info(ctx, msg)
-			default:
+			return nil, fmt.Errorf("cluster creation status transition timed out after initiation: %w", ctx.Err())
+		case <-ticker.C:
+			clusterResp, err := c.getCluster(ctx, organizationId, projectId, ClusterId)
+			if err != nil {
+				tflog.Info(ctx, "retrying after error polling cluster status", map[string]interface{}{"error": err.Error()})
 				continue
 			}
 
-			timer.Reset(sleep)
+			if clusterapi.IsFinalState(clusterResp.CurrentState) {
+				audit := providerschema.NewCouchbaseAuditData(clusterResp.Audit)
+				auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
+				if diags.HasError() {
+					return nil, fmt.Errorf("%s: %s", errors.ErrUnableToConvertAuditData, diags.Errors())
+				}
+				refreshedState, err := providerschema.NewCluster(ctx, clusterResp, organizationId, projectId, auditObj)
+				if err != nil {
+					return nil, fmt.Errorf("%s: %w", errors.ErrRefreshingState, err)
+				}
+				return refreshedState, nil
+			}
+
+			tflog.Info(ctx, "waiting for cluster to complete the execution")
 		}
 	}
 }
