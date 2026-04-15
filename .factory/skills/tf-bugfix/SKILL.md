@@ -27,6 +27,6 @@ description: Diagnose and fix bugs in the Terraform Capella provider with accept
      `globalProtoV6ProviderFactory`, and helper functions like
      `randomStringWithPrefix`.
    - Name the test in this format `TestAcc<Feature>_AV_XXXXX` e.g. `TestAccProject_AV_12345`
-   - Ensure to add test cases which test actual implementation and not just step through the business logic as written
+   - Ensure you add test cases that validate the actual implementation (not just mirror the current control flow).
 
 5. Do not run the acceptance test.
