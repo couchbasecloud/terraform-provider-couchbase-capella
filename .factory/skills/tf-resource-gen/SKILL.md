@@ -99,6 +99,7 @@ validator.String(stringvalidator.LengthAtLeast(1))))
    the framework to recreate the resource.  mark all user-configurable attributes that can change with the `RequiresReplace` plan modifier so that any change forces recreation.
 
    If the create endpoint is async, follow the steps in Polling Resources section for the update endpoint as well.
+   
  - Delete: use delete endpoint, handle resource-not-found gracefully (just return without error).
 
    If there is no delete endpoint then delete handler has empty function body.
