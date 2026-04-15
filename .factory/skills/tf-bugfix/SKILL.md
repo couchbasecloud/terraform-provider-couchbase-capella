@@ -26,6 +26,6 @@ description: Diagnose and fix bugs in the Terraform Capella provider with accept
    - Follow existing patterns: use `resource.ParallelTest()`,
      `globalProtoV6ProviderFactory`, and helper functions like
      `randomStringWithPrefix`.
-   - Name the test in this format `TestAcc<Feature>_AV-XXXXX` e.g. `TestAccProject_AV-12345`.
+   - Name the test in this format `TestAcc<Feature>_AV_XXXXX` e.g. `TestAccProject_AV_12345`.
 
 5. Do not run the acceptance test.
