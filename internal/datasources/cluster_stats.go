@@ -53,21 +53,16 @@ func (d *ClusterStats) Read(ctx context.Context, req datasource.ReadRequest, res
 	projectId := state.ProjectId.ValueString()
 	clusterId := state.ClusterId.ValueString()
 
-	orgUUID, err := utils.ParseUUID("organization_id", organizationId)
+	uuids, err := utils.ParseUUIDs(
+		utils.IDField{Name: "organization_id", Value: organizationId},
+		utils.IDField{Name: "project_id", Value: projectId},
+		utils.IDField{Name: "cluster_id", Value: clusterId},
+	)
 	if err != nil {
-		resp.Diagnostics.AddError("Error parsing organization_id", err.Error())
+		resp.Diagnostics.AddError("Error parsing IDs", err.Error())
 		return
 	}
-	projUUID, err := utils.ParseUUID("project_id", projectId)
-	if err != nil {
-		resp.Diagnostics.AddError("Error parsing project_id", err.Error())
-		return
-	}
-	clusterUUID, err := utils.ParseUUID("cluster_id", clusterId)
-	if err != nil {
-		resp.Diagnostics.AddError("Error parsing cluster_id", err.Error())
-		return
-	}
+	orgUUID, projUUID, clusterUUID := uuids[0], uuids[1], uuids[2]
 
 	response, err := d.ClientV2.GetClusterStatsWithResponse(ctx, orgUUID, projUUID, clusterUUID)
 	if err != nil {
