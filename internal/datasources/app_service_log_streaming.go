@@ -85,12 +85,14 @@ func (d *AppServiceLogStreaming) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
+	orgUUID, projUUID, clusterUUID, appServiceUUID := uuids[0], uuids[1], uuids[2], uuids[3]
+
 	response, err := d.ClientV2.GetAppServiceLogStreamingWithResponse(
 		ctx,
-		uuids[0],
-		uuids[1],
-		uuids[2],
-		uuids[3],
+		orgUUID,
+		projUUID,
+		clusterUUID,
+		appServiceUUID,
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
