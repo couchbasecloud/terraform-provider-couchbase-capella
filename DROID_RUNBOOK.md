@@ -244,6 +244,20 @@ acceptance_tests/         # Acceptance tests for all resources & data sources
 | `openapi.gen.go` consuming context | Never read that file — it's excluded per `AGENTS.md` |
 | Debugging the agent | Review the log file in `~/.factory/sessions/`. Look for a `.jsonl` file for the current session |
 
+## Jira MCP Integration
+
+To enable the agent to read Jira tickets, we recommend adding the Jira MCP server:
+
+1. Launch Droid.
+2. Type `/mcp`.
+3. Select the option to manually add an MCP server.
+4. Provide a name, e.g., `jira`.
+5. Select option **1** for HTTP (streamable).
+6. Enter the URL: `https://mcp.atlassian.com/v1/mcp`
+7. Proceed with authentication.
+
+Once configured, the droid can fetch ticket details directly from Jira when you reference them in prompts.
+
 ## Tips
 
 - **One feature at a time.** Don't ask the droid to generate multiple unrelated data sources in one pass. Implementing multiple features with multiple agents in parallel is in progress.
