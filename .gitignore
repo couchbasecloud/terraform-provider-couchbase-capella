@@ -36,3 +36,4 @@ openapi.generated.yaml
 .claude/settings.local.json
 CLAUDE.local.md
 .claude/todos/
+.claude/worktrees/
