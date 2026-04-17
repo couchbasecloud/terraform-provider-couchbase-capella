@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/utils"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -71,7 +71,12 @@ func (d *AppServiceLogStreaming) Read(ctx context.Context, req datasource.ReadRe
 	appServiceId := config.AppServiceId.ValueString()
 
 	// Parse string IDs to UUIDs for the API client
-	orgUUID, projUUID, clusterUUID, appServiceUUID, err := d.parseUUIDs(organizationId, projectId, clusterId, appServiceId)
+	uuids, err := utils.ParseUUIDs(
+		utils.IDField{Name: "organization_id", Value: organizationId},
+		utils.IDField{Name: "project_id", Value: projectId},
+		utils.IDField{Name: "cluster_id", Value: clusterId},
+		utils.IDField{Name: "app_service_id", Value: appServiceId},
+	)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error parsing IDs",
@@ -79,6 +84,8 @@ func (d *AppServiceLogStreaming) Read(ctx context.Context, req datasource.ReadRe
 		)
 		return
 	}
+
+	orgUUID, projUUID, clusterUUID, appServiceUUID := uuids[0], uuids[1], uuids[2], uuids[3]
 
 	response, err := d.ClientV2.GetAppServiceLogStreamingWithResponse(
 		ctx,
@@ -129,29 +136,4 @@ func (d *AppServiceLogStreaming) Read(ctx context.Context, req datasource.ReadRe
 
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
-}
-
-// parseUUIDs parses the string IDs into UUID types for the generated API client.
-func (d *AppServiceLogStreaming) parseUUIDs(organizationId, projectId, clusterId, appServiceId string) (uuid.UUID, uuid.UUID, uuid.UUID, uuid.UUID, error) {
-	orgUUID, err := uuid.Parse(organizationId)
-	if err != nil {
-		return uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, fmt.Errorf("invalid organization_id: %w", err)
-	}
-
-	projUUID, err := uuid.Parse(projectId)
-	if err != nil {
-		return uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, fmt.Errorf("invalid project_id: %w", err)
-	}
-
-	clusterUUID, err := uuid.Parse(clusterId)
-	if err != nil {
-		return uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, fmt.Errorf("invalid cluster_id: %w", err)
-	}
-
-	appServiceUUID, err := uuid.Parse(appServiceId)
-	if err != nil {
-		return uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, fmt.Errorf("invalid app_service_id: %w", err)
-	}
-
-	return orgUUID, projUUID, clusterUUID, appServiceUUID, nil
 }

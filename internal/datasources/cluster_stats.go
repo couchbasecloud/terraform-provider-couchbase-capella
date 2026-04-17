@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/utils"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -53,21 +53,16 @@ func (d *ClusterStats) Read(ctx context.Context, req datasource.ReadRequest, res
 	projectId := state.ProjectId.ValueString()
 	clusterId := state.ClusterId.ValueString()
 
-	orgUUID, err := uuid.Parse(organizationId)
+	uuids, err := utils.ParseUUIDs(
+		utils.IDField{Name: "organization_id", Value: organizationId},
+		utils.IDField{Name: "project_id", Value: projectId},
+		utils.IDField{Name: "cluster_id", Value: clusterId},
+	)
 	if err != nil {
-		resp.Diagnostics.AddError("Error parsing organization_id", fmt.Sprintf("Invalid organization_id: %s", err.Error()))
+		resp.Diagnostics.AddError("Error parsing IDs", err.Error())
 		return
 	}
-	projUUID, err := uuid.Parse(projectId)
-	if err != nil {
-		resp.Diagnostics.AddError("Error parsing project_id", fmt.Sprintf("Invalid project_id: %s", err.Error()))
-		return
-	}
-	clusterUUID, err := uuid.Parse(clusterId)
-	if err != nil {
-		resp.Diagnostics.AddError("Error parsing cluster_id", fmt.Sprintf("Invalid cluster_id: %s", err.Error()))
-		return
-	}
+	orgUUID, projUUID, clusterUUID := uuids[0], uuids[1], uuids[2]
 
 	response, err := d.ClientV2.GetClusterStatsWithResponse(ctx, orgUUID, projUUID, clusterUUID)
 	if err != nil {

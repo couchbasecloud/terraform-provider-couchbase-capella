@@ -6,11 +6,11 @@ import (
 	re "regexp"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/utils"
 )
 
 // TestAccAppServiceLogStreaming uses sequential subtests to ensure that log streaming tests
@@ -160,22 +160,16 @@ func testAccCheckAppServiceLogStreamingDestroy(t *testing.T) resource.TestCheckF
 	return func(_ *terraform.State) error {
 		data := newTestClient(t)
 
-		orgUUID, err := uuid.Parse(globalOrgId)
+		uuids, err := utils.ParseUUIDs(
+			utils.IDField{Name: "organization_id", Value: globalOrgId},
+			utils.IDField{Name: "project_id", Value: globalProjectId},
+			utils.IDField{Name: "cluster_id", Value: globalClusterId},
+			utils.IDField{Name: "app_service_id", Value: globalAppServiceId},
+		)
 		if err != nil {
-			return fmt.Errorf("failed to parse organization_id: %w", err)
+			return fmt.Errorf("failed to parse resource IDs: %w", err)
 		}
-		projUUID, err := uuid.Parse(globalProjectId)
-		if err != nil {
-			return fmt.Errorf("failed to parse project_id: %w", err)
-		}
-		clusterUUID, err := uuid.Parse(globalClusterId)
-		if err != nil {
-			return fmt.Errorf("failed to parse cluster_id: %w", err)
-		}
-		appServiceUUID, err := uuid.Parse(globalAppServiceId)
-		if err != nil {
-			return fmt.Errorf("failed to parse app_service_id: %w", err)
-		}
+		orgUUID, projUUID, clusterUUID, appServiceUUID := uuids[0], uuids[1], uuids[2], uuids[3]
 
 		response, err := data.ClientV2.GetAppServiceLogStreamingWithResponse(
 			context.Background(),

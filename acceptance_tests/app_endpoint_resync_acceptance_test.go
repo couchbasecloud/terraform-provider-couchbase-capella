@@ -7,11 +7,11 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/utils"
 )
 
 // testAccAppEndpointResyncResource provides the steps to test the full lifecycle
@@ -140,10 +140,16 @@ func retrieveAppEndpointResyncFromServer(data *providerschema.Data, organization
 
 	ctx := context.Background()
 
-	organizationUUID, _ := uuid.Parse(organizationId)
-	projectUUID, _ := uuid.Parse(projectId)
-	clusterUUID, _ := uuid.Parse(clusterId)
-	appServiceUUID, _ := uuid.Parse(appServiceId)
+	uuids, err := utils.ParseUUIDs(
+		utils.IDField{Name: "organization_id", Value: organizationId},
+		utils.IDField{Name: "project_id", Value: projectId},
+		utils.IDField{Name: "cluster_id", Value: clusterId},
+		utils.IDField{Name: "app_service_id", Value: appServiceId},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to parse resource IDs: %w", err)
+	}
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID := uuids[0], uuids[1], uuids[2], uuids[3]
 
 	getResyncStatusResp, err := data.ClientV2.GetAppEndpointResyncWithResponse(ctx, organizationUUID, projectUUID, clusterUUID, appServiceUUID, appEndpointName)
 	if err != nil {

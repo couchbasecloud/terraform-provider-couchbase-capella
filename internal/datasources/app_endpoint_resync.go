@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/utils"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -57,7 +57,20 @@ func (a *AppEndpointResync) Read(ctx context.Context, req datasource.ReadRequest
 		appEndpointName = config.AppEndpoint.ValueString()
 	)
 
-	organizationUUID, projectUUID, clusterUUID, appServiceUUID := a.mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId)
+	uuids, err := utils.ParseUUIDs(
+		utils.IDField{Name: "organization_id", Value: organizationId},
+		utils.IDField{Name: "project_id", Value: projectId},
+		utils.IDField{Name: "cluster_id", Value: clusterId},
+		utils.IDField{Name: "app_service_id", Value: appServiceId},
+	)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Parsing IDs",
+			fmt.Sprintf("Could not parse resource IDs: %s", err.Error()),
+		)
+		return
+	}
+	organizationUUID, projectUUID, clusterUUID, appServiceUUID := uuids[0], uuids[1], uuids[2], uuids[3]
 
 	getResyncStatusResp, err := a.ClientV2.GetAppEndpointResyncWithResponse(ctx, organizationUUID, projectUUID, clusterUUID, appServiceUUID, appEndpointName)
 	if err != nil {
@@ -147,13 +160,4 @@ func (a *AppEndpointResync) Configure(
 	}
 
 	a.Data = data
-}
-
-func (a *AppEndpointResync) mapIDsToUUIDs(organizationId, projectId, clusterId, appServiceId string) (organizationUUID, projectUUID, clusterUUID, appServiceUUID uuid.UUID) {
-	organizationUUID, _ = uuid.Parse(organizationId)
-	projectUUID, _ = uuid.Parse(projectId)
-	clusterUUID, _ = uuid.Parse(clusterId)
-	appServiceUUID, _ = uuid.Parse(appServiceId)
-
-	return organizationUUID, projectUUID, clusterUUID, appServiceUUID
 }

@@ -11,8 +11,8 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	internalerrors "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/utils"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -474,14 +474,14 @@ func (a *ApiKey) convertOrganizationRoles(organizationRoles []basetypes.StringVa
 	return convertedRoles
 }
 
-// convertResource is used to convert a resource object containing nested fields
+// convertResources is used to convert a resource object containing nested fields
 // of type basetypes.StringValue to a resource object containing nested fields of go defined type.
 func (a *ApiKey) convertResources(resources []providerschema.ApiKeyResourcesItems) ([]api.ResourcesItems, error) {
 	var convertedResources []api.ResourcesItems
 	for _, resource := range resources {
-		id, err := uuid.Parse(resource.Id.ValueString())
+		id, err := utils.ParseUUID("resource_id", resource.Id.ValueString())
 		if err != nil {
-			return nil, fmt.Errorf("resource id is not valid uuid")
+			return nil, err
 		}
 		convertedResource := api.ResourcesItems{
 			Id: id,
