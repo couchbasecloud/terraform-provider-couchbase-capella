@@ -317,6 +317,7 @@ func (p *PrivateEndpoint) waitUntilLinked(ctx context.Context, plan *providersch
 	defer cancel()
 
 	timer := time.NewTimer(time.Second * 1)
+	defer timer.Stop()
 
 	for {
 		select {
