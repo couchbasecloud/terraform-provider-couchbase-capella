@@ -280,27 +280,40 @@ Implementation file: internal/resources/bucket.go
 
 ### Prerequisites
 
+Set the three required environment variables:
+
 ```bash
-export TF_VAR_auth_token="<your-capella-api-key>"
-export TF_VAR_organization_id="<your-org-id>"
 export TF_VAR_host="https://cloudapi.cloud.couchbase.com"
+export TF_VAR_auth_token="<your Capella API key>"
+export TF_VAR_organization_id="<your organization ID>"
+```
 
-# Run a specific test
-TF_ACC=1 go test -timeout=120m -v ./acceptance_tests/ -run TestAcc<Feature>
+Run the full suite:
 
-# Run the full suite
+```bash
 make testacc
 ```
 
-> ⚠️ Acceptance tests create **real resources** in Couchbase Capella and cost money. Always use `-run` during development.
-
-You can skip expensive setup by pointing at an existing cluster:
+Run only the tests for a specific resource during development:
 
 ```bash
-export TF_VAR_project_id="<existing-project-id>"
-export TF_VAR_cluster_id="<existing-cluster-id>"
-export TF_VAR_bucket_id="<existing-bucket-id>"
+TF_ACC=1 go test -timeout=120m -v ./acceptance_tests/ -run TestAcc<Feature>
 ```
+
+> ⚠️ Acceptance tests create **real resources** in Couchbase Capella and cost money.
+
+### Skipping expensive cluster setup
+
+By default the suite creates a project, cluster, bucket, and app service (~15 min). Point it at existing resources to skip that:
+
+```bash
+export TF_VAR_project_id="<existing project ID>"
+export TF_VAR_cluster_id="<existing cluster ID>"
+export TF_VAR_bucket_id="<existing bucket ID>"
+export TF_VAR_app_service_id="<existing app service ID>"
+```
+
+Anything unset will be created by setup and torn down when the suite finishes.
 
 ---
 
