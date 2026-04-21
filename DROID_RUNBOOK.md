@@ -155,25 +155,41 @@ Spec path  : openapi.generated.yaml (see paths starting with /v4/organizations/{
 
 </details>
 
-<!-- Example 5 — Acceptance Tests -->
+<!-- Example 5 — Private Endpoint DNS - Updating An Existing Resource -->
 <details>
-<summary>▶️ <strong>Example 5 — Acceptance Tests</strong> (generate acceptance tests for an existing resource or data source)</summary>
+<summary>▶️ <strong>Example 4 — Private Endpoint DNS</strong> (Single field addition to existing API)</summary>
 
 **Droid prompt — paste this directly:**
 
 ```text
+Update Terraform resource for private endpoint dns using the tf-resource-gen skill and the OpenAPI spec. This is a new field in the existing LIST private endpoints API. 
+
+Feature  : Private Endpoints
+GET path: GET /v4/organizations/{organizationId}/projects/{projectId}/clusters/privateEndpointService/endpoints
+Spec path: openapi.generated.yaml (see paths starting with /v4/organizations/{organizationId}/projects/{projectId}/clusters/privateEndpointService)
+```
+
+</details>
+
+<!-- Example 6 — Acceptance Tests -->
+<details>
+<summary>▶️ <strong>Example 6 — Acceptance Tests</strong> (generate acceptance tests for an existing resource or data source)</summary>
+
+**Droid prompt — paste this directly:**
+
 Use the tf-acceptance-test-gen skill to generate acceptance tests for the Bucket resource.
 
-Resource type name : couchbase-capella_bucket
-Feature            : Bucket
-Implementation file: internal/resources/bucket.go
+```text
+Update Terraform resource for private endpoint dns using the tf-resource-gen skill and the OpenAPI spec. This is a new field in the existing LIST private endpoints API. 
+
+Feature  : Private Endpoints
+GET path: GET /v4/organizations/{organizationId}/projects/{projectId}/clusters/privateEndpointService/endpoints
+Spec path: openapi.generated.yaml (see paths starting with /v4/organizations/{organizationId}/projects/{projectId}/clusters/privateEndpointService)
 ```
 
 Adjust `Resource type name`, `Feature`, and `Implementation file` for your target. For a data source, use the data source type name (e.g. `couchbase-capella_cloud_snapshot_backup`) and point at the file in `internal/datasources/`.
 
 </details>
-
----
 
 ### 3. Implementation Steps (What the Droid Generates)
 

@@ -13,6 +13,7 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	apigen "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/utils"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -340,25 +341,15 @@ func (r *AppServiceLogStreamingActivationStatus) getCurrentConfigState(
 
 // parseUUIDs parses the string IDs into UUID types for the generated API client.
 func (r *AppServiceLogStreamingActivationStatus) parseUUIDs(organizationId, projectId, clusterId, appServiceId string) (uuid.UUID, uuid.UUID, uuid.UUID, uuid.UUID, error) {
-	orgUUID, err := uuid.Parse(organizationId)
+	uuids, err := utils.ParseUUIDs(
+		utils.IDField{Name: "organization_id", Value: organizationId},
+		utils.IDField{Name: "project_id", Value: projectId},
+		utils.IDField{Name: "cluster_id", Value: clusterId},
+		utils.IDField{Name: "app_service_id", Value: appServiceId},
+	)
 	if err != nil {
-		return uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, fmt.Errorf("invalid organization_id: %w", err)
+		return uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, err
 	}
 
-	projUUID, err := uuid.Parse(projectId)
-	if err != nil {
-		return uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, fmt.Errorf("invalid project_id: %w", err)
-	}
-
-	clusterUUID, err := uuid.Parse(clusterId)
-	if err != nil {
-		return uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, fmt.Errorf("invalid cluster_id: %w", err)
-	}
-
-	appServiceUUID, err := uuid.Parse(appServiceId)
-	if err != nil {
-		return uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, uuid.UUID{}, fmt.Errorf("invalid app_service_id: %w", err)
-	}
-
-	return orgUUID, projUUID, clusterUUID, appServiceUUID, nil
+	return uuids[0], uuids[1], uuids[2], uuids[3], nil
 }

@@ -83,9 +83,16 @@ func (d *SnapshotBackupSchedule) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	state = providerschema.NewSnapshotBackupSchedule(snapshotBackupSchedule, organizationId, projectId, clusterId)
+	refreshedState, err := providerschema.NewSnapshotBackupSchedule(ctx, snapshotBackupSchedule, organizationId, projectId, clusterId)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Refreshing State",
+			"Could not refresh the state of Snapshot Backup Schedule data source for cluster with ID "+state.ClusterID.String()+": "+err.Error(),
+		)
+		return
+	}
 
-	diags = resp.State.Set(ctx, state)
+	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
 }
 
