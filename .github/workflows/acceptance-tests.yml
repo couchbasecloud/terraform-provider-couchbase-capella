@@ -39,3 +39,17 @@ jobs:
           key: cache-${{ github.run_id }}
       - name: Run acceptance tests
         run: make testacc
+
+  build-success:
+    name: Build Success
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [build]
+    steps:
+      - name: Check build result
+        run: |
+          if [[ "${{ needs.build.result }}" == "failure" || "${{ needs.build.result }}" == "cancelled" ]]; then
+            echo "Build failed or was cancelled"
+            exit 1
+          fi
+          echo "Build succeeded or was skipped"
