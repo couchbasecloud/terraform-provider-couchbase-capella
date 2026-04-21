@@ -33,5 +33,27 @@
     "dscl",
     "sysctl -w",
     "pmset"
-  ]
+  ],
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$FACTORY_PROJECT_DIR/.factory/hooks/check-test-env.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$FACTORY_PROJECT_DIR/.factory/hooks/check-test-env.sh"
+          }
+        ]
+      }
+    ]
+  }
 }
