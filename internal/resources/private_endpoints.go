@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
@@ -21,6 +22,10 @@ var (
 	_ resource.Resource                = &PrivateEndpoint{}
 	_ resource.ResourceWithConfigure   = &PrivateEndpoint{}
 	_ resource.ResourceWithImportState = &PrivateEndpoint{}
+)
+
+const (
+	privateEndpointLinkedStatus = "linked"
 )
 
 // PrivateEndpoint is the private endpoint resource implementation.
@@ -336,12 +341,18 @@ func (p *PrivateEndpoint) waitUntilLinked(ctx context.Context, plan *providersch
 				return err
 			}
 
-			if status == "linked" && dns != "" {
+			if status == privateEndpointLinkedStatus {
+				if dns == "" {
+					tflog.Info(ctx, "Private endpoint is linked but DNS is not populated.")
+					timer.Reset(time.Minute * 1)
+					continue
+				}
 				plan.ServiceName = types.StringValue(serviceName)
 				plan.Status = types.StringValue(status)
 				plan.PrivateEndpointDNS = types.StringValue(dns)
 				return nil
 			}
+			tflog.Info(ctx, "Private endpoint is not linked.")
 			timer.Reset(time.Minute * 1)
 		}
 	}
