@@ -180,11 +180,11 @@ Spec path: openapi.generated.yaml (see paths starting with /v4/organizations/{or
 Use the tf-acceptance-test-gen skill to generate acceptance tests for the Bucket resource.
 
 ```text
-Update Terraform resource for private endpoint dns using the tf-resource-gen skill and the OpenAPI spec. This is a new field in the existing LIST private endpoints API. 
+Use the tf-acceptance-test-gen skill to generate acceptance tests for the Bucket resource.
 
-Feature  : Private Endpoints
-GET path: GET /v4/organizations/{organizationId}/projects/{projectId}/clusters/privateEndpointService/endpoints
-Spec path: openapi.generated.yaml (see paths starting with /v4/organizations/{organizationId}/projects/{projectId}/clusters/privateEndpointService)
+Resource type name : couchbase-capella_bucket
+Feature            : Bucket
+Implementation file: internal/resources/bucket.go
 ```
 
 Adjust `Resource type name`, `Feature`, and `Implementation file` for your target. For a data source, use the data source type name (e.g. `couchbase-capella_cloud_snapshot_backup`) and point at the file in `internal/datasources/`.
