@@ -1,12 +1,16 @@
 package acceptance_tests
 
 import (
+	"context"
 	"fmt"
 	re "regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/stretchr/testify/require"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 )
 
 func TestAccAppEndpoint(t *testing.T) {
@@ -42,6 +46,31 @@ func TestAccAppEndpoint(t *testing.T) {
 				ResourceName:      resourceReference,
 				ImportStateIdFunc: generateAppEndpointImportId(resourceReference),
 				ImportState:       true,
+			},
+			// Simulate external deletion of the app endpoint to verify that the provider will remove it from state and recreate the resource on apply
+			{
+				PreConfig: func() {
+					ctx := context.Background()
+					client := api.NewClient(timeout)
+					if err := deleteAppEndpointByName(ctx, client, epName); err != nil {
+						require.NoError(t, err)
+					}
+				},
+				RefreshState:       true,
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccAppEndpointResourceConfig(resourceName, epName, bucket, "new_xattr", false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
+					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
+					resource.TestCheckResourceAttr(resourceReference, "bucket", bucket),
+					resource.TestCheckResourceAttr(resourceReference, "name", epName),
+					resource.TestCheckResourceAttr(resourceReference, "delta_sync_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceReference, "user_xattr_key", "new_xattr"),
+				),
 			},
 		},
 	})
