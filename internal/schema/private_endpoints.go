@@ -28,24 +28,28 @@ type PrivateEndpoint struct {
 
 	// ServiceName is the name of the private endpoint service.
 	ServiceName types.String `tfsdk:"service_name"`
+
+	// PrivateEndpointDNS is the DNS of the private endpoint.
+	PrivateEndpointDNS types.String `tfsdk:"private_endpoint_dns"`
 }
 
 // PrivateEndpoints defines a structure used by the LIST endpoint for private endpoints.
 type PrivateEndpoints struct {
-	ClusterId      types.String          `tfsdk:"cluster_id"`
-	ProjectId      types.String          `tfsdk:"project_id"`
-	OrganizationId types.String          `tfsdk:"organization_id"`
-	Data           []PrivateEndpointData `tfsdk:"data"`
+	ClusterId          types.String          `tfsdk:"cluster_id"`
+	ProjectId          types.String          `tfsdk:"project_id"`
+	OrganizationId     types.String          `tfsdk:"organization_id"`
+	PrivateEndpointDNS types.String          `tfsdk:"private_endpoint_dns"`
+	Data               []PrivateEndpointData `tfsdk:"data"`
 }
 
 // PrivateEndpointData defines a single private endpoint.
 type PrivateEndpointData struct {
-	// Id is the endpoint id.
-	Id types.String `tfsdk:"id"`
-	// Status is the endpoint status.  Possible values are failed, linked, pending, pendingAcceptance, rejected and unrecognized.
-	Status types.String `tfsdk:"status"`
-	// ServiceName is the name of the endpoint service.
-	ServiceName types.String `tfsdk:"service_name"`
+	Id             types.String `tfsdk:"id"`
+	OrganizationId types.String `tfsdk:"organization_id"`
+	ProjectId      types.String `tfsdk:"project_id"`
+	ClusterId      types.String `tfsdk:"cluster_id"`
+	Status         types.String `tfsdk:"status"`
+	ServiceName    types.String `tfsdk:"service_name"`
 }
 
 // Validate is used to verify that IDs have been properly imported.
