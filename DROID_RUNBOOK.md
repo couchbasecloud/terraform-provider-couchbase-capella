@@ -155,6 +155,24 @@ Spec path  : openapi.generated.yaml (see paths starting with /v4/organizations/{
 
 </details>
 
+<!-- Example 5 — Acceptance Tests -->
+<details>
+<summary>▶️ <strong>Example 5 — Acceptance Tests</strong> (generate acceptance tests for an existing resource or data source)</summary>
+
+**Droid prompt — paste this directly:**
+
+```text
+Use the tf-acceptance-test-gen skill to generate acceptance tests for the Bucket resource.
+
+Resource type name : couchbase-capella_bucket
+Feature            : Bucket
+Implementation file: internal/resources/bucket.go
+```
+
+Adjust `Resource type name`, `Feature`, and `Implementation file` for your target. For a data source, use the data source type name (e.g. `couchbase-capella_cloud_snapshot_backup`) and point at the file in `internal/datasources/`.
+
+</details>
+
 ---
 
 ### 3. Implementation Steps (What the Droid Generates)
@@ -234,10 +252,14 @@ acceptance_tests/         # Acceptance tests for all resources & data sources
 
 ## Writing Acceptance Tests
 
-Use the `tf-acceptance-test-gen` skill. Example prompt:
+Use the `tf-acceptance-test-gen` skill. See [Example 5](#run-the-droid-examples) above for a ready-to-paste prompt. Minimal form:
 
 ```text
-Use the tf-acceptance-test-gen skill to generate acceptance tests for the Bucket resource (couchbase-capella_bucket).
+Use the tf-acceptance-test-gen skill to generate acceptance tests for the Bucket resource.
+
+Resource type name : couchbase-capella_bucket
+Feature            : Bucket
+Implementation file: internal/resources/bucket.go
 ```
 
 ### Prerequisites
