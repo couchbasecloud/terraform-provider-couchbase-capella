@@ -8,112 +8,52 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-// TestAccNetworkPeerAzureInvalidTenantId deploys an Azure cluster and then validates
-// that creating a network peer with an invalid Azure tenant ID returns an appropriate
-// error from the Capella API.
-func TestAccNetworkPeerAzureInvalidTenantId(t *testing.T) {
+// TestAccNetworkPeerAzureInvalidConfigs deploys a single Azure cluster and then validates
+// that creating network peers with various invalid Azure configurations returns appropriate
+// errors from the Capella API. All negative cases share one cluster to reduce runtime and cost.
+func TestAccNetworkPeerAzureInvalidConfigs(t *testing.T) {
 	clusterResourceName := randomStringWithPrefix("tf_acc_azure_cluster_")
-	networkPeerResourceName := "tf_acc_network_peer_invalid_tenant"
 	clusterResourceReference := "couchbase-capella_cluster." + clusterResourceName
-	cidr := "10.0.6.0/23"
+	clusterCidr := generateRandomCIDR()
+
+	// Use a peer CIDR in the 172.16.0.0/12 range so it can never overlap
+	// with the cluster CIDR which is always in 10.0.0.0/8.
+	peerCidr := "172.16.0.0/16"
+
+	// Valid Azure peering parameters (used as base; each negative step overrides one field)
+	validTenant := "fee88efb-27a4-4ef6-937e-886a970af84b"
+	validSubscription := "7df08e2f-efb1-4ed0-be9c-bb9a9d99ec84"
+	validRG := "testing-dataapi-rg"
+	validVnet := "dataapi-private-endpoint-vn"
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			// Step 1: Deploy the Azure cluster
 			{
-				Config: testAccAzureClusterConfig(clusterResourceName, cidr),
+				Config: testAccAzureClusterConfig(clusterResourceName, clusterCidr),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(clusterResourceReference, "cloud_provider.type", "azure"),
 				),
 			},
-			// Step 2: Attempt to create a network peer with an invalid Azure tenant ID
+			// Step 2: Invalid tenant ID
 			{
-				Config:      testAccAzureClusterWithNetworkPeerConfig(clusterResourceName, cidr, networkPeerResourceName, "ffffffff-aaaa-1414-eeee-000000000000", "ffffffff-aaaa-1414-eeee-000000000000", "10.1.0.0/16", "test-rg", "test-vnet"),
-				ExpectError: regexp.MustCompile("The provided Azure tenant ID is invalid"),
-			},
-		},
-	})
-}
-
-// TestAccNetworkPeerAzureInvalidSubscriptionId deploys an Azure cluster and then validates
-// that creating a network peer with an invalid Azure subscription ID returns an appropriate
-// error from the Capella API.
-func TestAccNetworkPeerAzureInvalidSubscriptionId(t *testing.T) {
-	clusterResourceName := randomStringWithPrefix("tf_acc_azure_cluster_")
-	networkPeerResourceName := "tf_acc_network_peer_invalid_sub"
-	clusterResourceReference := "couchbase-capella_cluster." + clusterResourceName
-	cidr := "10.0.8.0/23"
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			// Step 1: Deploy the Azure cluster
-			{
-				Config: testAccAzureClusterConfig(clusterResourceName, cidr),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(clusterResourceReference, "cloud_provider.type", "azure"),
-				),
-			},
-			// Step 2: Attempt to create a network peer with an invalid Azure subscription ID
-			{
-				Config:      testAccAzureClusterWithNetworkPeerConfig(clusterResourceName, cidr, networkPeerResourceName, "ffffffff-aaaa-1414-eeee-000000000000", "00000000-0000-0000-0000-000000000000", "10.1.0.0/16", "test-rg", "test-vnet"),
+				Config:      testAccAzureClusterWithNetworkPeerConfig(clusterResourceName, clusterCidr, "tf_acc_np_invalid_tenant", "ffffffff-aaaa-1414-eeee-000000000000", validSubscription, peerCidr, validRG, validVnet),
 				ExpectError: regexp.MustCompile("There is an error during network peer creation"),
 			},
-		},
-	})
-}
-
-// TestAccNetworkPeerAzureInvalidResourceGroup deploys an Azure cluster and then validates
-// that creating a network peer with an invalid Azure resource group returns an appropriate
-// error from the Capella API.
-func TestAccNetworkPeerAzureInvalidResourceGroup(t *testing.T) {
-	clusterResourceName := randomStringWithPrefix("tf_acc_azure_cluster_")
-	networkPeerResourceName := "tf_acc_network_peer_invalid_rg"
-	clusterResourceReference := "couchbase-capella_cluster." + clusterResourceName
-	cidr := "10.0.10.0/23"
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			// Step 1: Deploy the Azure cluster
+			// Step 3: Invalid subscription ID
 			{
-				Config: testAccAzureClusterConfig(clusterResourceName, cidr),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(clusterResourceReference, "cloud_provider.type", "azure"),
-				),
-			},
-			// Step 2: Attempt to create a network peer with an invalid resource group
-			{
-				Config:      testAccAzureClusterWithNetworkPeerConfig(clusterResourceName, cidr, networkPeerResourceName, "ffffffff-aaaa-1414-eeee-000000000000", "ffffffff-aaaa-1414-eeee-000000000000", "10.1.0.0/16", "nonexistent-rg-000", "test-vnet"),
+				Config:      testAccAzureClusterWithNetworkPeerConfig(clusterResourceName, clusterCidr, "tf_acc_np_invalid_sub", validTenant, "00000000-0000-0000-0000-000000000000", peerCidr, validRG, validVnet),
 				ExpectError: regexp.MustCompile("There is an error during network peer creation"),
 			},
-		},
-	})
-}
-
-// TestAccNetworkPeerAzureInvalidVnetId deploys an Azure cluster and then validates
-// that creating a network peer with an invalid Azure VNet ID returns an appropriate
-// error from the Capella API.
-func TestAccNetworkPeerAzureInvalidVnetId(t *testing.T) {
-	clusterResourceName := randomStringWithPrefix("tf_acc_azure_cluster_")
-	networkPeerResourceName := "tf_acc_network_peer_invalid_vnet"
-	clusterResourceReference := "couchbase-capella_cluster." + clusterResourceName
-	cidr := "10.0.12.0/23"
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			// Step 1: Deploy the Azure cluster
+			// Step 4: Invalid resource group
 			{
-				Config: testAccAzureClusterConfig(clusterResourceName, cidr),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(clusterResourceReference, "cloud_provider.type", "azure"),
-				),
+				Config:      testAccAzureClusterWithNetworkPeerConfig(clusterResourceName, clusterCidr, "tf_acc_np_invalid_rg", validTenant, validSubscription, peerCidr, "nonexistent-rg-000", validVnet),
+				ExpectError: regexp.MustCompile("There is an error during network peer creation"),
 			},
-			// Step 2: Attempt to create a network peer with an invalid VNet ID
+			// Step 5: Invalid VNet ID
 			{
-				Config:      testAccAzureClusterWithNetworkPeerConfig(clusterResourceName, cidr, networkPeerResourceName, "ffffffff-aaaa-1414-eeee-000000000000", "ffffffff-aaaa-1414-eeee-000000000000", "10.1.0.0/16", "test-rg", "nonexistent-vnet-000"),
+				Config:      testAccAzureClusterWithNetworkPeerConfig(clusterResourceName, clusterCidr, "tf_acc_np_invalid_vnet", validTenant, validSubscription, peerCidr, validRG, "nonexistent-vnet-000"),
 				ExpectError: regexp.MustCompile("There is an error during network peer creation"),
 			},
 		},

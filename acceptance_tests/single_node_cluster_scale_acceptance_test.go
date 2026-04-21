@@ -23,6 +23,10 @@ func TestAccSingleNodeClusterScaleWithTravelSample(t *testing.T) {
 
 	cidr := generateRandomCIDR()
 
+	// clusterID is captured after the cluster is created and verified unchanged
+	// after the scale step to prove scaling is an in-place update (no destroy+create).
+	var clusterID string
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
@@ -46,6 +50,11 @@ func TestAccSingleNodeClusterScaleWithTravelSample(t *testing.T) {
 					resource.TestCheckResourceAttr(clusterResourceRef, "availability.type", "single"),
 					resource.TestCheckResourceAttr(clusterResourceRef, "support.plan", "basic"),
 					resource.TestCheckResourceAttr(clusterResourceRef, "support.timezone", "PT"),
+					// Capture the cluster ID for later comparison
+					resource.TestCheckResourceAttrWith(clusterResourceRef, "id", func(value string) error {
+						clusterID = value
+						return nil
+					}),
 				),
 			},
 			// Step 2: Import travel-sample into the cluster
@@ -73,6 +82,13 @@ func TestAccSingleNodeClusterScaleWithTravelSample(t *testing.T) {
 					resource.TestCheckResourceAttr(clusterResourceRef, "availability.type", "single"),
 					resource.TestCheckResourceAttr(clusterResourceRef, "support.plan", "basic"),
 					resource.TestCheckResourceAttr(clusterResourceRef, "support.timezone", "PT"),
+					// Verify the cluster ID is unchanged, proving in-place update (no destroy+create)
+					resource.TestCheckResourceAttrWith(clusterResourceRef, "id", func(value string) error {
+						if value != clusterID {
+							return fmt.Errorf("cluster was recreated: ID changed from %s to %s", clusterID, value)
+						}
+						return nil
+					}),
 					// travel-sample bucket still exists
 					resource.TestCheckResourceAttr(sampleBucketResourceRef, "name", "travel-sample"),
 					resource.TestCheckResourceAttrSet(sampleBucketResourceRef, "id"),
@@ -196,7 +212,7 @@ resource "couchbase-capella_cluster" "%[4]s" {
   organization_id = "%[2]s"
   project_id      = "%[3]s"
   name            = "%[4]s"
-  description     = "Scaled three-node acceptance test cluster"
+  description     = "Single node acceptance test cluster"
 
   cloud_provider = {
     type   = "aws"
