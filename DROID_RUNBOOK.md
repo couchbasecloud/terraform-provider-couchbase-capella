@@ -12,7 +12,7 @@ This provider uses a **skill-based droid system** (located in `.factory/skills/`
 - [Go](https://golang.org/doc/install) >= 1.21
 - [Terraform](https://www.terraform.io/downloads.html) >= 1.5.2
 - A coding agent / AI droid with access to the workspace
-- The OpenAPI spec (`openapi.generated.yaml`) at the project root
+- The OpenAPI spec in the `couchbase-cloud` repo (`openapi.yaml` and endpoint-specific files under `cmd/cp-open-api/specs/resources/`)
 
 ## Quick Start
 
@@ -45,7 +45,7 @@ Determine which Capella API resource you want to expose as a Terraform data sour
 
 ```bash
 # Search for your feature in the spec
-grep -i "your-feature" openapi.generated.yaml
+grep -i "your-feature" openapi.yaml
 ```
 
 You need to identify:
@@ -86,7 +86,7 @@ Generate Terraform data sources for Snapshot Backups using the tf-datasource-gen
 Feature  : Snapshot Backups
 GET path : GET /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/buckets/{bucketId}/backups/{backupId}
 LIST path: GET /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/buckets/{bucketId}/backups
-Spec path: openapi.generated.yaml (see paths starting with /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/buckets/{bucketId}/backups)
+Spec path: cmd/cp-open-api/specs/resources/Backup.yaml (GET) and cmd/cp-open-api/specs/resources/BucketBackups.yaml (LIST)
 ```
 
 </details>
@@ -102,7 +102,7 @@ Generate Terraform data sources for Clusters using the tf-datasource-gen skill a
 
 Feature  : Clusters
 LIST path: GET /v4/organizations/{organizationId}/projects/{projectId}/clusters
-Spec path: openapi.generated.yaml (see paths starting with /v4/organizations/{organizationId}/projects/{projectId}/clusters)
+Spec path: cmd/cp-open-api/specs/resources/Clusters.yaml
 
 There is no single-resource GET endpoint — only generate the list data source.
 ```
@@ -121,7 +121,7 @@ Generate Terraform data sources for App Endpoints using the tf-datasource-gen sk
 Feature  : App Endpoints
 GET path : GET /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/appservices/{appServiceId}/endpoints/{endpointId}
 LIST path: GET /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/appservices/{appServiceId}/endpoints
-Spec path: openapi.generated.yaml (see paths starting with /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/appservices/{appServiceId}/endpoints)
+Spec path: cmd/cp-open-api/specs/resources/AppEndpoint.yaml (GET) and cmd/cp-open-api/specs/resources/AppEndpoints.yaml (LIST)
 ```
 
 </details>
@@ -140,7 +140,7 @@ CREATE path: POST /v4/organizations/{organizationId}/projects/{projectId}/cluste
 GET path   : GET /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/buckets/{bucketId}
 UPDATE path: PUT /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/buckets/{bucketId}
 DELETE path: DELETE /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/buckets/{bucketId}
-Spec path  : openapi.generated.yaml (see paths starting with /v4/organizations/{organizationId}/projects/{projectId}/clusters/{clusterId}/buckets)
+Spec path  : cmd/cp-open-api/specs/resources/Buckets.yaml (CREATE) and cmd/cp-open-api/specs/resources/Bucket.yaml (GET/UPDATE/DELETE)
 ```
 
 </details>
