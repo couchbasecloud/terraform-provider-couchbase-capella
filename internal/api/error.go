@@ -65,3 +65,18 @@ func CheckResourceNotFoundError(err error) (bool, string) {
 		return false, err.Error()
 	}
 }
+
+// CheckResourceForbiddenError is used to check if an error is of
+// type api.Error and whether the error is a 403 Forbidden response.
+func CheckResourceForbiddenError(err error) (bool, string) {
+	var apiError *Error
+	switch {
+	case errors.As(err, &apiError):
+		if apiError.HttpStatusCode != http.StatusForbidden {
+			return false, apiError.CompleteError()
+		}
+		return true, apiError.CompleteError()
+	default:
+		return false, err.Error()
+	}
+}

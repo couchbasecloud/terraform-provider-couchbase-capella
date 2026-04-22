@@ -82,6 +82,25 @@ func createAppEndpoint(ctx context.Context, client *api.Client) error {
 	return nil
 }
 
+func deleteAppEndpointByName(ctx context.Context, client *api.Client, name string) error {
+	url := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
+		globalHost,
+		globalOrgId,
+		globalProjectId,
+		globalClusterId,
+		globalAppServiceId,
+		name,
+	)
+	cfg := api.EndpointCfg{
+		Url:           url,
+		Method:        http.MethodDelete,
+		SuccessStatus: http.StatusAccepted,
+	}
+	_, err := client.ExecuteWithRetry(ctx, cfg, nil, globalToken, nil)
+	return err
+}
+
 func appEndpointWait(ctx context.Context, client *api.Client) error {
 	const maxWaitTime = 10 * time.Minute
 	const checkInterval = 1 * time.Minute

@@ -111,3 +111,68 @@ func Test_CheckResourceNotFound(t *testing.T) {
 		})
 	}
 }
+
+func Test_CheckResourceForbiddenError(t *testing.T) {
+	var (
+		errMessage = "Access Denied."
+		err403     = Error{
+			HttpStatusCode: http.StatusForbidden,
+			Message:        errMessage,
+		}
+		err500 = Error{
+			HttpStatusCode: http.StatusInternalServerError,
+			Message:        errMessage,
+		}
+		err404 = Error{
+			HttpStatusCode: http.StatusNotFound,
+			Message:        errMessage,
+		}
+	)
+
+	tests := []struct {
+		name      string
+		err       error
+		expOutput string
+		expBool   bool
+	}{
+		{
+			name:      "403 Forbidden error",
+			err:       &err403,
+			expOutput: err403.CompleteError(),
+			expBool:   true,
+		},
+		{
+			name:      "500 error is not forbidden",
+			err:       &err500,
+			expOutput: err500.CompleteError(),
+			expBool:   false,
+		},
+		{
+			name:      "404 error is not forbidden",
+			err:       &err404,
+			expOutput: err404.CompleteError(),
+			expBool:   false,
+		},
+		{
+			name:      "Wrapped 403 error",
+			err:       fmt.Errorf("received error: %w", &err403),
+			expOutput: err403.CompleteError(),
+			expBool:   true,
+		},
+		{
+			name:      "Non-API error is not forbidden",
+			err:       assert.AnError,
+			expOutput: assert.AnError.Error(),
+			expBool:   false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			isForbidden, errString := CheckResourceForbiddenError(test.err)
+
+			assert.Equal(t, test.expOutput, errString)
+			assert.Equal(t, test.expBool, isForbidden)
+		})
+	}
+}

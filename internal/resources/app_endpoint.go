@@ -184,7 +184,7 @@ func setAppEndpointComputedAttributesToNull(ctx context.Context, plan *providers
 
 				collectionsMapValue, d := types.MapValueFrom(ctx, types.ObjectType{
 					AttrTypes: providerschema.
-					AppEndpointCollection{}.
+						AppEndpointCollection{}.
 						AttributeTypes(),
 				}, collectionsMap)
 				diags.Append(d...)
@@ -201,7 +201,7 @@ func setAppEndpointComputedAttributesToNull(ctx context.Context, plan *providers
 				"collections": types.MapType{
 					ElemType: types.ObjectType{
 						AttrTypes: providerschema.
-						AppEndpointCollection{}.
+							AppEndpointCollection{}.
 							AttributeTypes(),
 					},
 				},
@@ -286,20 +286,105 @@ func (a *AppEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *
 		endpointName,
 	)
 	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			resp.State.RemoveResource(ctx)
+		forbidden, errString := api.CheckResourceForbiddenError(err)
+		if !forbidden {
+			resp.Diagnostics.AddError(
+				"Error refreshing App Endpoint",
+				fmt.Sprintf("Could not refresh App Endpoint %s: %s", endpointName, errString),
+			)
 			return
 		}
+		a.handleForbiddenRead(ctx, organizationId, projectId, clusterId, appServiceId, endpointName, errString, resp)
+		return
+	}
+
+	diags = resp.State.Set(ctx, newstate)
+	resp.Diagnostics.Append(diags...)
+}
+
+// handleForbiddenRead disambiguates a 403 on GET by listing App Endpoints and deciding
+// whether the resource is genuinely gone, the user has a permissions problem, or the
+// 403 was transient. It updates the diagnostics or state accordingly.
+func (a *AppEndpoint) handleForbiddenRead(
+	ctx context.Context,
+	orgId, projId, clusterId, appSvcId, endpointName, getErrString string,
+	resp *resource.ReadResponse,
+) {
+	list, listErr := a.listAppEndpoints(ctx, orgId, projId, clusterId, appSvcId)
+	if listErr != nil {
+		listForbidden, listErrString := api.CheckResourceForbiddenError(listErr)
+		if listForbidden {
+			// Keep list operation opaque to user as we know it's a definite 403
+			resp.Diagnostics.AddError(
+				"Permission denied reading App Endpoint",
+				fmt.Sprintf(
+					"Received 403 Forbidden on Get App Endpoint %s. "+
+						"This indicates there may be a potential permissions (RBAC) issue. The Terraform state has "+
+						"not been modified. Check API permissions and try again. Error: %s",
+					endpointName,
+					getErrString,
+				),
+			)
+			return
+		}
+
 		resp.Diagnostics.AddError(
 			"Error refreshing App Endpoint",
-			fmt.Sprintf("Could not refresh App Endpoint %s: %s", endpointName, errString),
+			fmt.Sprintf(
+				"Received a 403 when getting App Endpoint %s, and failed to List App Endpoints: %s",
+				endpointName,
+				listErrString,
+			),
 		)
 		return
 	}
-	diags = resp.State.Set(ctx, newstate)
-	resp.Diagnostics.Append(diags...)
+
+	if appEndpointInList(list, endpointName) {
+		resp.Diagnostics.AddError(
+			"Transient permission error reading App Endpoint",
+			fmt.Sprintf(
+				"Received a 403 when getting App Endpoint %s, but listing App Endpoints confirms the endpoint still "+
+					"exists. The Terraform state has not been modified. Please retry the current operation. "+
+					"Original error: %s",
+				endpointName,
+				getErrString,
+			),
+		)
+		return
+	}
+
+	tflog.Info(ctx, "App Endpoint no longer exists, removing from state")
+	resp.State.RemoveResource(ctx)
+}
+
+// listAppEndpoints fetches all App Endpoints for an App Service.
+func (a *AppEndpoint) listAppEndpoints(
+	ctx context.Context, orgId, projId, clusterId, appSvcId string,
+) ([]app_endpoints.GetAppEndpointResponse, error) {
+	url := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints",
+		a.HostURL,
+		orgId,
+		projId,
+		clusterId,
+		appSvcId,
+	)
+	cfg := api.EndpointCfg{
+		Url:           url,
+		Method:        http.MethodGet,
+		SuccessStatus: http.StatusOK,
+	}
+	return api.GetPaginated[[]app_endpoints.GetAppEndpointResponse](ctx, a.ClientV1, a.Token, cfg, api.SortByName)
+}
+
+// appEndpointInList reports whether an endpoint with the given name appears in the List App Endpoint response.
+func appEndpointInList(list []app_endpoints.GetAppEndpointResponse, name string) bool {
+	for _, endpoint := range list {
+		if endpoint.Name == name {
+			return true
+		}
+	}
+	return false
 }
 
 // Update updates an existing App Endpoint.
@@ -407,14 +492,9 @@ func (a *AppEndpoint) Delete(ctx context.Context, req resource.DeleteRequest, re
 		nil,
 	)
 	if err != nil {
-		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
-		if resourceNotFound {
-			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			return
-		}
 		resp.Diagnostics.AddError(
 			"Error deleting App Endpoint",
-			fmt.Sprintf("Could not delete App Endpoint %s: %s", endpointName, errString),
+			fmt.Sprintf("Could not delete App Endpoint %s: %s", endpointName, err.Error()),
 		)
 		return
 	}
@@ -554,7 +634,7 @@ func (a *AppEndpoint) refreshAppEndpoint(
 				ctx,
 				types.ObjectType{
 					AttrTypes: providerschema.
-					AppEndpointCollection{}.
+						AppEndpointCollection{}.
 						AttributeTypes(),
 				},
 				collectionsMapElements,
@@ -588,7 +668,7 @@ func (a *AppEndpoint) refreshAppEndpoint(
 			ctx,
 			types.ObjectType{
 				AttrTypes: providerschema.
-				AppEndpointScope{}.
+					AppEndpointScope{}.
 					AttributeTypes(),
 			},
 			scopesMapElements,
