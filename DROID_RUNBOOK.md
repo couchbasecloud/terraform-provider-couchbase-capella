@@ -220,16 +220,53 @@ After the droid finishes, verify the output matches the steps above and project 
 Run acceptance tests only for the newly generated feature instead of the full suite:
 
 ```bash
-TF_ACC=1 go test -timeout=120m -v ./acceptance_tests/ -run <regex>
+TF_ACC=1 go test -timeout=60m -v ./acceptance_tests/ -run <regex>
 ```
 
 For example, to run only snapshot backup tests:
 
 ```bash
-TF_ACC=1 go test -timeout=120m -v ./acceptance_tests/ -run TestAccSnapshotBackup
+TF_ACC=1 go test -timeout=60m -v ./acceptance_tests/ -run TestAccSnapshotBackup
 ```
 
 Tests should use `resource.ParallelTest()` for parallel execution.
+
+#### Prerequisites
+
+Set the three required environment variables:
+
+```bash
+export TF_VAR_host="https://cloudapi.cloud.couchbase.com"
+export TF_VAR_auth_token="<your Capella API key>"
+export TF_VAR_organization_id="<your organization ID>"
+```
+
+#### Skipping expensive cluster setup
+
+By default the suite creates a project, cluster, bucket, and app service (~15 min). Point it at existing resources to skip that:
+
+```bash
+export TF_VAR_project_id="<existing project ID>"
+export TF_VAR_cluster_id="<existing cluster ID>"
+export TF_VAR_bucket_id="<existing bucket ID>"
+export TF_VAR_app_service_id="<existing app service ID>"
+```
+
+Anything unset will be created by setup and torn down when the suite finishes.
+
+#### Writing Acceptance Tests
+
+Use the `tf-acceptance-test-gen` skill. See [Example 6](#run-the-droid-examples) above for a ready-to-paste prompt. Minimal form:
+
+```text
+Use the tf-acceptance-test-gen skill to generate acceptance tests for the Bucket resource.
+
+Resource type name : couchbase-capella_bucket
+Feature            : Bucket
+Implementation file: internal/resources/bucket.go
+```
+---
+
 
 ## File Naming Conventions
 
@@ -263,57 +300,6 @@ acceptance_tests/         # Acceptance tests for all resources & data sources
     └── tf-acceptance-test-gen/
         └── SKILL.md
 ```
-
----
-
-## Writing Acceptance Tests
-
-Use the `tf-acceptance-test-gen` skill. See [Example 6](#run-the-droid-examples) above for a ready-to-paste prompt. Minimal form:
-
-```text
-Use the tf-acceptance-test-gen skill to generate acceptance tests for the Bucket resource.
-
-Resource type name : couchbase-capella_bucket
-Feature            : Bucket
-Implementation file: internal/resources/bucket.go
-```
-
-### Prerequisites
-
-Set the three required environment variables:
-
-```bash
-export TF_VAR_host="https://cloudapi.cloud.couchbase.com"
-export TF_VAR_auth_token="<your Capella API key>"
-export TF_VAR_organization_id="<your organization ID>"
-```
-
-Run the full suite:
-
-```bash
-make testacc
-```
-
-Run only the tests for a specific resource during development:
-
-```bash
-TF_ACC=1 go test -timeout=120m -v ./acceptance_tests/ -run TestAcc<Feature>
-```
-
-> ⚠️ Acceptance tests create **real resources** in Couchbase Capella and cost money.
-
-### Skipping expensive cluster setup
-
-By default the suite creates a project, cluster, bucket, and app service (~15 min). Point it at existing resources to skip that:
-
-```bash
-export TF_VAR_project_id="<existing project ID>"
-export TF_VAR_cluster_id="<existing cluster ID>"
-export TF_VAR_bucket_id="<existing bucket ID>"
-export TF_VAR_app_service_id="<existing app service ID>"
-```
-
-Anything unset will be created by setup and torn down when the suite finishes.
 
 ---
 
