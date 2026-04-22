@@ -19,7 +19,7 @@ echo ""
 
 if [ "$MISSING" -eq 1 ]; then
   echo "Acceptance tests CANNOT be run this session — required credentials are missing."
-  echo "Verification is limited to: go build ./acceptance_tests/"
+  echo "Verification is limited to: go test -c ./acceptance_tests/"
   echo "Do not attempt to run tests or use make testacc."
 else
   echo "Acceptance tests CAN be run this session."

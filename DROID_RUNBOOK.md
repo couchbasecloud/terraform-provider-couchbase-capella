@@ -4,7 +4,7 @@ A practical guide for using AI droids (coding agents) to generate Terraform data
 
 ## Overview
 
-This provider uses a **skill-based droid system** (located in `.factory/skills/`) to automate the creation of Terraform data sources from the OpenAPI spec. Instead of hand-writing boilerplate, you describe what you need and the droid generates the data source code, schema, tests, and provider registration.
+This provider uses a **skill-based droid system** (located in `.factory/skills/`) to automate the creation of Terraform data sources, resources, and acceptance tests from the OpenAPI spec. Instead of hand-writing boilerplate, you describe what you need and the droid generates the relevant code, schema, tests, and provider registration.
 
 Available skills:
 
@@ -268,7 +268,7 @@ acceptance_tests/         # Acceptance tests for all resources & data sources
 
 ## Writing Acceptance Tests
 
-Use the `tf-acceptance-test-gen` skill. See [Example 5](#run-the-droid-examples) above for a ready-to-paste prompt. Minimal form:
+Use the `tf-acceptance-test-gen` skill. See [Example 6](#run-the-droid-examples) above for a ready-to-paste prompt. Minimal form:
 
 ```text
 Use the tf-acceptance-test-gen skill to generate acceptance tests for the Bucket resource.

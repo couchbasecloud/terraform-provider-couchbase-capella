@@ -139,7 +139,7 @@ Use a `data` block instead of `resource`, reference as `data.couchbase-capella_<
 When credentials are not available the tests cannot be executed. The only verification possible is that the file compiles:
 
 ```bash
-go test ./acceptance_tests/
+go test -c ./acceptance_tests
 ```
 
 ### With credentials — running the tests
