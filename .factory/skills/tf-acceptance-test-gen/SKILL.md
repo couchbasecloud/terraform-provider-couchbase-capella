@@ -154,32 +154,11 @@ export TF_VAR_auth_token="<your Capella API key>"
 export TF_VAR_organization_id="<your organization ID>"
 ```
 
-Run the full suite:
-
-```bash
-make testacc
-```
-
 Run only the tests for the resource you just wrote (do this during development to avoid running the full suite):
 
 ```bash
 TF_ACC=1 go test -timeout=60m -v ./acceptance_tests/ -run TestAcc<Feature>
 ```
-
-> ⚠️ Acceptance tests create real resources in Couchbase Capella and cost money to run.
-
-### Skipping expensive setup
-
-By default `TestMain` creates a project, cluster, bucket, and app service before any test runs — cluster creation alone takes ~15 minutes. Point at existing resources to skip that:
-
-```bash
-export TF_VAR_project_id="<existing project ID>"
-export TF_VAR_cluster_id="<existing cluster ID>"
-export TF_VAR_bucket_id="<existing bucket ID>"
-export TF_VAR_app_service_id="<existing app service ID>"
-```
-
-Any variable that is unset causes that resource to be created by setup and destroyed when the suite finishes.
 
 ## Reference examples
 
