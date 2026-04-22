@@ -163,7 +163,7 @@ make testacc
 Run only the tests for the resource you just wrote (do this during development to avoid running the full suite):
 
 ```bash
-TF_ACC=1 go test -timeout=120m -v ./acceptance_tests/ -run TestAcc<Feature>
+TF_ACC=1 go test -timeout=60m -v ./acceptance_tests/ -run TestAcc<Feature>
 ```
 
 > ⚠️ Acceptance tests create real resources in Couchbase Capella and cost money to run.
