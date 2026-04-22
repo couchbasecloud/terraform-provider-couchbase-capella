@@ -44,6 +44,7 @@ func TestAcc<Feature>Resource(t *testing.T) {
                 ),
             },
         },
+            // Delete testing automatically occurs in TestCase
     })
 }
 ```
@@ -130,7 +131,8 @@ func TestAcc<Feature>ResourceInvalid<Field>(t *testing.T) {
 
 ## Data source tests
 
-Use a `data` block instead of `resource`, reference as `data.couchbase-capella_<type_name>.<name>`, and omit the ImportState and Update steps.
+- Test function names for datasources should use the pattern `TestAccDatasource<Feature>`. 
+  For example: `func TestAccDatasourceCluster(t *testing.T)`
 
 ## Verifying and running the tests
 
