@@ -267,7 +267,6 @@ Implementation file: internal/resources/bucket.go
 ```
 ---
 
-
 ## File Naming Conventions
 
 | Type | Naming Pattern | Example |
