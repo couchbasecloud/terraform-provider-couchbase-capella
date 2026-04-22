@@ -111,29 +111,6 @@ func generate<Feature>ImportIdForResource(resourceReference string) resource.Imp
 }
 ```
 
-## API existence check
-
-Verifies the resource exists on the API, not just in Terraform state:
-
-```go
-func testAccExists<Feature>Resource(t *testing.T, resourceReference string) resource.TestCheckFunc {
-    return func(s *terraform.State) error {
-        var rawState map[string]string
-        for _, m := range s.Modules {
-            if len(m.Resources) > 0 {
-                if v, ok := m.Resources[resourceReference]; ok {
-                    rawState = v.Primary.Attributes
-                }
-            }
-        }
-        data := newTestClient(t)
-        return retrieve<Feature>FromServer(data, rawState["organization_id"], rawState["project_id"], rawState["id"])
-    }
-}
-```
-
-Use `data.ClientV1.ExecuteWithRetry` for the API call. See `snapshot_backup_acceptance_test.go` for a full example.
-
 ## Error-case test
 
 ```go
