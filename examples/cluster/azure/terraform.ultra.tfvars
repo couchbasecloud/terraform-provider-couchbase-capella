@@ -6,6 +6,11 @@ cloud_provider = {
   name   = "azure",
   region = "eastus"
 }
+
+couchbase_server = {
+  version = "8.0"
+}
+
 cluster = {
   name               = "TF Azure Ultra"
   cidr               = "10.10.0.0/23"
@@ -21,7 +26,7 @@ compute = {
 
 disk = {
   type          = "Ultra"
-  size          = 128
+  size          = 64
   iops          = 5000
   autoexpansion = true
 }

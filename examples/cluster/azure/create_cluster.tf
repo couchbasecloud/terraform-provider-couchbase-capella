@@ -24,7 +24,9 @@ resource "couchbase-capella_cluster" "new_cluster" {
           ram = var.compute.ram
         }
         disk = {
+          storage       = var.disk.size
           type          = var.disk.type
+          iops          = var.disk.iops
           autoexpansion = var.disk.autoexpansion
         }
       }
@@ -38,6 +40,9 @@ resource "couchbase-capella_cluster" "new_cluster" {
   support = {
     plan     = var.support.plan
     timezone = var.support.timezone
+  }
+  couchbase_server = {
+    version = var.couchbase_server.version
   }
 }
 

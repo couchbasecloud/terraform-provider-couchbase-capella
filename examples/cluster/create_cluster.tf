@@ -42,5 +42,8 @@ resource "couchbase-capella_cluster" "new_cluster" {
     plan     = var.support.plan
     timezone = var.support.timezone
   }
+  couchbase_server = {
+    version = var.couchbase_server.version
+  }
 }
 
