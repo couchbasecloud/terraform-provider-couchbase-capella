@@ -6,7 +6,7 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_ValidateSchemaState(t *testing.T) {
@@ -89,6 +89,31 @@ func Test_ValidateSchemaState(t *testing.T) {
 			assert.Equal(t, test.expectedClusterId, IDs[ClusterId])
 			assert.Equal(t, test.expectedProjectId, IDs[ProjectId])
 			assert.Equal(t, test.expectedOrganizationId, IDs[OrganizationId])
+		})
+	}
+}
+
+func TestSplitImportStringError(t *testing.T) {
+	type test struct {
+		importString string
+		keys         []Attr
+		shouldError  bool
+	}
+
+	tests := []test{
+		{"id=123,org=456", []Attr{"id", "org"}, false},
+		{"id=123,org=456", []Attr{"id", "org", "project"}, true},
+		{"id,org=456", []Attr{"id", "org"}, true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.importString, func(t *testing.T) {
+			_, err := splitImportString(test.importString, test.keys)
+			if test.shouldError {
+				assert.ErrorIs(t, err, errors.ErrInvalidImport)
+			} else {
+				assert.NoError(t, err)
+			}
 		})
 	}
 }
