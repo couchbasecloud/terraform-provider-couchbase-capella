@@ -37,16 +37,7 @@
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "startup",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$FACTORY_PROJECT_DIR/.factory/hooks/check-test-env.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "resume",
+        "matcher": "startup|resume",
         "hooks": [
           {
             "type": "command",
