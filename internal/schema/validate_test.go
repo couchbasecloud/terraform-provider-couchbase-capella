@@ -101,9 +101,9 @@ func TestSplitImportStringError(t *testing.T) {
 	}
 
 	tests := []test{
-		{"id=123,org=456", []Attr{"id", "org"}, false},
-		{"id=123,org=456", []Attr{"id", "org", "project"}, true},
-		{"id,org=456", []Attr{"id", "org"}, true},
+		{"id=123,organization_id=456", []Attr{Id, OrganizationId}, false},
+		{"id=123,organization_id=456", []Attr{Id, OrganizationId, ProjectId}, true},
+		{"id,organization_id=456", []Attr{Id, OrganizationId}, true},
 	}
 
 	for _, test := range tests {
