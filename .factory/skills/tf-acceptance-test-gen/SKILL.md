@@ -64,8 +64,6 @@ The goal of each assertion is to guard a specific behaviour, not to confirm the 
 
 **Error tests must be specific.** The `ExpectError` regex must match a substring of the real error message for that specific invalid input, not a generic pattern like `"error"` or `"invalid"`. Read the resource's `Create` implementation and `internal/errors/` to find the actual message. A test that accepts any error is not guarding the right behaviour.
 
-**The API existence check must verify values, not just existence.** The `retrieve*FromServer` function should unmarshal the response and assert that the key field values on the API match what is in Terraform state. A resource that creates successfully but stores wrong values will pass an existence-only check.
-
 **Optional fields need their own test.** If a resource has optional fields that change API behaviour (not just metadata), write a dedicated test that sets those fields and asserts the resulting state. Don't rely on the happy-path test covering them incidentally.
 
 **Default values must be verified.** If a field has a default, write a test that omits it and asserts the default value appears in state. This confirms the provider applies and reads back the default correctly.
@@ -133,6 +131,7 @@ func TestAcc<Feature>ResourceInvalid<Field>(t *testing.T) {
 
 - Test function names for datasources should use the pattern `TestAccDatasource<Feature>`. 
   For example: `func TestAccDatasourceCluster(t *testing.T)`
+- Omit the ImportState and Update steps.
 
 ## Verifying and running the tests
 
@@ -143,6 +142,8 @@ When credentials are not available the tests cannot be executed. The only verifi
 ```bash
 go test -c ./acceptance_tests
 ```
+
+If compile errors are found fix and recompile to verify no errors. 
 
 ### With credentials — running the tests
 
