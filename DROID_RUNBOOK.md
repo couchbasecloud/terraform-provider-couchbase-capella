@@ -233,19 +233,29 @@ Tests should use `resource.ParallelTest()` for parallel execution.
 
 #### Prerequisites
 
-Set the three required environment variables:
+Store credentials in a `.env` file at the repo root (this file is gitignored — never commit it):
 
 ```bash
+# .env
 export TF_VAR_host="https://cloudapi.cloud.couchbase.com"
 export TF_VAR_auth_token="<your Capella API key>"
 export TF_VAR_organization_id="<your organization ID>"
 ```
 
-#### Skipping expensive cluster setup
-
-By default the suite creates a project, cluster, bucket, and app service (~15 min). Point it at existing resources to skip that:
+Source it before starting the droid:
 
 ```bash
+source .env
+```
+
+The droid checks these variables at session start and tells you whether tests can be run.
+
+#### Skipping expensive cluster setup
+
+By default the suite creates a project, cluster, bucket, and app service (~15 min). Add existing resource IDs to your `.env` to skip that:
+
+```bash
+# .env (append)
 export TF_VAR_project_id="<existing project ID>"
 export TF_VAR_cluster_id="<existing cluster ID>"
 export TF_VAR_bucket_id="<existing bucket ID>"

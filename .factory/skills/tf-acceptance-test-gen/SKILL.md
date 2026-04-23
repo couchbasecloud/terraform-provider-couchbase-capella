@@ -135,7 +135,11 @@ func TestAcc<Feature>ResourceInvalid<Field>(t *testing.T) {
 
 ## Verifying and running the tests
 
-### Without credentials — compile check only
+At session start the environment check reports which variables are set. If all three required variables (`TF_VAR_host`, `TF_VAR_auth_token`, `TF_VAR_organization_id`) are present, run only the tests for the resource you just wrote:
+
+```bash
+TF_ACC=1 go test -timeout=60m -v ./acceptance_tests/ -run TestAcc<Feature>
+```
 
 When credentials are not available the tests cannot be executed. The only verification possible is that the file compiles:
 
@@ -144,22 +148,6 @@ go test -c ./acceptance_tests
 ```
 
 If compile errors are found fix and recompile to verify no errors. 
-
-### With credentials — running the tests
-
-Set the three required environment variables. The Makefile validates these and exits with a clear error if any are missing:
-
-```bash
-export TF_VAR_host="https://cloudapi.cloud.couchbase.com"
-export TF_VAR_auth_token="<your Capella API key>"
-export TF_VAR_organization_id="<your organization ID>"
-```
-
-Run only the tests for the resource you just wrote (do this during development to avoid running the full suite):
-
-```bash
-TF_ACC=1 go test -timeout=60m -v ./acceptance_tests/ -run TestAcc<Feature>
-```
 
 ## Reference examples
 
