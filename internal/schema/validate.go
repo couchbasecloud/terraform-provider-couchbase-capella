@@ -90,7 +90,7 @@ func splitImportString(importString string, keyParams []Attr) (map[Attr]string, 
 
 	pairs := strings.Split(importString, idDelimiter)
 	if len(pairs) != len(keyParams) {
-		return nil, fmt.Errorf("error parsing terraform import: %s", errors.ErrInvalidImport)
+		return nil, fmt.Errorf("error parsing terraform import: %w", errors.ErrInvalidImport)
 	}
 
 	// Use the equals delimiter to further split each pair and
@@ -101,7 +101,14 @@ func splitImportString(importString string, keyParams []Attr) (map[Attr]string, 
 	IDs := make(map[Attr]string)
 	for _, pair := range pairs {
 		keyValue := strings.SplitN(pair, equalsDelimiter, 2)
-		IDs[importIds[keyValue[0]]] = keyValue[1]
+		if len(keyValue) < 2 {
+			return nil, fmt.Errorf("error parsing terraform import: %w", errors.ErrInvalidImport)
+		}
+		attr, ok := importIds[keyValue[0]]
+		if !ok {
+			return nil, fmt.Errorf("error parsing terraform import: %w", errors.ErrInvalidImport)
+		}
+		IDs[attr] = keyValue[1]
 	}
 
 	return IDs, nil
