@@ -1,10 +1,20 @@
-# Droid Runbook: Generating Terraform Data Sources
+# Droid Runbook: Generating Terraform Data Sources and Acceptance Tests
 
-A practical guide for using AI droids (coding agents) to generate Terraform datasources and resources for the Couchbase Capella provider.
+A practical guide for using AI droids (coding agents) to generate Terraform datasources, resources, and acceptance tests for the Couchbase Capella provider.
 
 ## Overview
 
-This provider uses a **skill-based droid system** (located in `.factory/skills/`) to automate the creation of Terraform data sources from the OpenAPI spec. Instead of hand-writing boilerplate, you describe what you need and the droid generates the data source code, schema, tests, and provider registration.
+This provider uses a **skill-based droid system** (located in `.factory/skills/`) to automate the creation of Terraform data sources, resources, and acceptance tests from the OpenAPI spec. Instead of hand-writing boilerplate, you describe what you need and the droid generates the relevant code, schema, tests, and provider registration.
+
+Available skills:
+
+| Skill | Purpose |
+|---|---|
+| `tf-datasource-gen` | Generate a Terraform data source from an OpenAPI spec endpoint |
+| `tf-resource-gen` | Generate a Terraform resource from an OpenAPI spec endpoint |
+| `tf-acceptance-test-gen` | Generate acceptance tests for a named resource or data source |
+
+> **QE engineers:** If you are here to write acceptance tests, go straight to [Writing Acceptance Tests](#writing-acceptance-tests).
 
 ## Requirements
 
@@ -161,7 +171,25 @@ Spec path: openapi.generated.yaml (see paths starting with /v4/organizations/{or
 
 </details>
 
----
+<!-- Example 6 — Acceptance Tests -->
+<details>
+<summary>▶️ <strong>Example 6 — Acceptance Tests</strong> (generate acceptance tests for an existing resource or data source)</summary>
+
+**Droid prompt — paste this directly:**
+
+Use the tf-acceptance-test-gen skill to generate acceptance tests for the Bucket resource.
+
+```text
+Use the tf-acceptance-test-gen skill to generate acceptance tests for the Bucket resource.
+
+Resource type name : couchbase-capella_bucket
+Feature            : Bucket
+Implementation file: internal/resources/bucket.go
+```
+
+Adjust `Resource type name`, `Feature`, and `Implementation file` for your target. For a data source, use the data source type name (e.g. `couchbase-capella_cloud_snapshot_backup`) and point at the file in `internal/datasources/`.
+
+</details>
 
 ### 3. Implementation Steps (What the Droid Generates)
 
@@ -192,16 +220,62 @@ After the droid finishes, verify the output matches the steps above and project 
 Run acceptance tests only for the newly generated feature instead of the full suite:
 
 ```bash
-TF_ACC=1 go test -timeout=120m -v ./acceptance_tests/ -run <regex>
+TF_ACC=1 go test -timeout=60m -v ./acceptance_tests/ -run <regex>
 ```
 
 For example, to run only snapshot backup tests:
 
 ```bash
-TF_ACC=1 go test -timeout=120m -v ./acceptance_tests/ -run TestAccSnapshotBackup
+TF_ACC=1 go test -timeout=60m -v ./acceptance_tests/ -run TestAccSnapshotBackup
 ```
 
 Tests should use `resource.ParallelTest()` for parallel execution.
+
+#### Prerequisites
+
+Store credentials in a `.env` file at the repo root (this file is gitignored — never commit it):
+
+```bash
+# .env
+export TF_VAR_host="https://cloudapi.cloud.couchbase.com"
+export TF_VAR_auth_token="<your Capella API key>"
+export TF_VAR_organization_id="<your organization ID>"
+```
+
+Source it before starting the droid:
+
+```bash
+source .env
+```
+
+The droid checks these variables at session start and tells you whether tests can be run.
+
+#### Skipping expensive cluster setup
+
+By default the suite creates a project, cluster, bucket, and app service (~15 min). Add existing resource IDs to your `.env` to skip that:
+
+```bash
+# .env (append)
+export TF_VAR_project_id="<existing project ID>"
+export TF_VAR_cluster_id="<existing cluster ID>"
+export TF_VAR_bucket_id="<existing bucket ID>"
+export TF_VAR_app_service_id="<existing app service ID>"
+```
+
+Anything unset will be created by setup and torn down when the suite finishes.
+
+#### Writing Acceptance Tests
+
+Use the `tf-acceptance-test-gen` skill. See [Example 6](#run-the-droid-examples) above for a ready-to-paste prompt. Minimal form:
+
+```text
+Use the tf-acceptance-test-gen skill to generate acceptance tests for the Bucket resource.
+
+Resource type name : couchbase-capella_bucket
+Feature            : Bucket
+Implementation file: internal/resources/bucket.go
+```
+---
 
 ## File Naming Conventions
 
@@ -228,15 +302,21 @@ acceptance_tests/         # Acceptance tests for all resources & data sources
 .factory/
 ├── droids/               # Droid configurations
 └── skills/
-    └── tf-datasource-gen/
-        └── SKILL.md      # The skill definition the droid follows
+    ├── tf-datasource-gen/
+    │   └── SKILL.md
+    ├── tf-resource-gen/
+    │   └── SKILL.md
+    └── tf-acceptance-test-gen/
+        └── SKILL.md
 ```
+
+---
 
 ## Troubleshooting
 
 | Problem | Solution |
 |---|---|
-| Skills not available | Type `/skills` in the droid. You should see 2 skills: `tf-datasource-gen` and `tf-resource-gen` |
+| Skills not available | Type `/skills` in the droid. You should see 3 skills: `tf-datasource-gen`, `tf-resource-gen`, `tf-acceptance-test-gen` |
 | Droid uses old API client | Tell it to use `ClientV1` explicitly |
 | Missing schema validators | Add `requiredStringWithValidator()` for org/project/cluster IDs |
 | Build fails after generation | Run `goimports` then `go vet`, fix, repeat up to 5 times |
