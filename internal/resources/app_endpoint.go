@@ -615,35 +615,9 @@ func (a *AppEndpoint) refreshAppEndpoint(
 		state.Cors.Disabled = types.BoolValue(appEndpoint.Cors.Disabled)
 		state.Cors.MaxAge = types.Int64Value(appEndpoint.Cors.MaxAge)
 
-		originSet, diags := types.SetValueFrom(
-			ctx,
-			types.StringType,
-			appEndpoint.Cors.Origin,
-		)
-		if diags.HasError() {
-			return nil, fmt.Errorf("error converting CORS origins: %v", diags.Errors())
-		}
-		state.Cors.Origin = originSet
-
-		loginOriginSet, diags := types.SetValueFrom(
-			ctx,
-			types.StringType,
-			appEndpoint.Cors.LoginOrigin,
-		)
-		if diags.HasError() {
-			return nil, fmt.Errorf("error converting CORS login origins: %v", diags.Errors())
-		}
-		state.Cors.LoginOrigin = loginOriginSet
-
-		headersSet, diags := types.SetValueFrom(
-			ctx,
-			types.StringType,
-			appEndpoint.Cors.Headers,
-		)
-		if diags.HasError() {
-			return nil, fmt.Errorf("error converting CORS headers: %v", diags.Errors())
-		}
-		state.Cors.Headers = headersSet
+		state.Cors.Origin = stringSliceToSetValue(ctx, appEndpoint.Cors.Origin)
+		state.Cors.LoginOrigin = stringSliceToSetValue(ctx, appEndpoint.Cors.LoginOrigin)
+		state.Cors.Headers = stringSliceToSetValue(ctx, appEndpoint.Cors.Headers)
 	}
 
 	if len(appEndpoint.Oidc) > 0 {
@@ -665,6 +639,20 @@ func (a *AppEndpoint) refreshAppEndpoint(
 	}
 
 	return state, nil
+}
+
+// stringSliceToSetValue converts a string slice to a Terraform set value.
+// Returns a null set if the slice is nil or empty.
+func stringSliceToSetValue(_ context.Context, values []string) types.Set {
+	if len(values) == 0 {
+		return types.SetNull(types.StringType)
+	}
+	elems := make([]attr.Value, len(values))
+	for i, v := range values {
+		elems[i] = types.StringValue(v)
+	}
+	set, _ := types.SetValue(types.StringType, elems)
+	return set
 }
 
 // morphToAppEndpointRequest converts the Terraform plan to the request format expected by the Capella API for creating/updating an App Endpoint.
@@ -713,12 +701,15 @@ func morphToAppEndpointRequest(
 	}
 
 	if plan.Cors != nil {
-		corsRequest := &app_endpoints.AppEndpointCors{
-			MaxAge:   plan.Cors.MaxAge.ValueInt64(),
-			Disabled: plan.Cors.Disabled.ValueBool(),
+		corsRequest := &app_endpoints.AppEndpointCors{}
+		if !plan.Cors.MaxAge.IsNull() && !plan.Cors.MaxAge.IsUnknown() {
+			corsRequest.MaxAge = plan.Cors.MaxAge.ValueInt64()
+		}
+		if !plan.Cors.Disabled.IsNull() && !plan.Cors.Disabled.IsUnknown() {
+			corsRequest.Disabled = plan.Cors.Disabled.ValueBool()
 		}
 
-		if !plan.Cors.Origin.IsNull() {
+		if !plan.Cors.Origin.IsNull() && !plan.Cors.Origin.IsUnknown() {
 			origins := []string{}
 			if diags := plan.Cors.Origin.ElementsAs(ctx, &origins, false); diags.HasError() {
 				return nil, diags
@@ -727,7 +718,7 @@ func morphToAppEndpointRequest(
 			corsRequest.Origin = origins
 		}
 
-		if !plan.Cors.LoginOrigin.IsNull() {
+		if !plan.Cors.LoginOrigin.IsNull() && !plan.Cors.LoginOrigin.IsUnknown() {
 			loginOrigins := []string{}
 			if diags := plan.Cors.LoginOrigin.ElementsAs(ctx, &loginOrigins, false); diags.HasError() {
 				return nil, diags
@@ -736,7 +727,7 @@ func morphToAppEndpointRequest(
 			corsRequest.LoginOrigin = loginOrigins
 		}
 
-		if !plan.Cors.Headers.IsNull() {
+		if !plan.Cors.Headers.IsNull() && !plan.Cors.Headers.IsUnknown() {
 			headers := []string{}
 			if diags := plan.Cors.Headers.ElementsAs(ctx, &headers, false); diags.HasError() {
 				return nil, diags
