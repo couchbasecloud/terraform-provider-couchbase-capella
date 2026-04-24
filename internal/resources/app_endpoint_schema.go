@@ -3,7 +3,6 @@ package resources
 import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -49,26 +48,11 @@ func AppEndpointSchema() schema.Schema {
 
 	// CORS attributes - use CORSConfig schema
 	corsAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(corsAttrs, "origin", appEndpointBuilder, &schema.SetAttribute{
-		Optional:    true,
-		ElementType: types.StringType,
-	}, "CORSConfig")
-	capellaschema.AddAttr(corsAttrs, "login_origin", appEndpointBuilder, &schema.SetAttribute{
-		Optional:    true,
-		ElementType: types.StringType,
-	}, "CORSConfig")
-	capellaschema.AddAttr(corsAttrs, "headers", appEndpointBuilder, &schema.SetAttribute{
-		Optional:    true,
-		ElementType: types.StringType,
-	}, "CORSConfig")
+	capellaschema.AddAttr(corsAttrs, "origin", appEndpointBuilder, stringSetAttribute(optional, computed, useStateForUnknown), "CORSConfig")
+	capellaschema.AddAttr(corsAttrs, "login_origin", appEndpointBuilder, stringSetAttribute(optional, computed, useStateForUnknown), "CORSConfig")
+	capellaschema.AddAttr(corsAttrs, "headers", appEndpointBuilder, stringSetAttribute(optional, computed, useStateForUnknown), "CORSConfig")
 	capellaschema.AddAttr(corsAttrs, "max_age", appEndpointBuilder, int64Attribute(optional, computed, useStateForUnknown), "CORSConfig")
-	capellaschema.AddAttr(corsAttrs, "disabled", appEndpointBuilder, &schema.BoolAttribute{
-		Optional: true,
-		Computed: true,
-		PlanModifiers: []planmodifier.Bool{
-			boolplanmodifier.UseStateForUnknown(),
-		},
-	}, "CORSConfig")
+	capellaschema.AddAttr(corsAttrs, "disabled", appEndpointBuilder, boolAttribute(optional, computed), "CORSConfig")
 
 	capellaschema.AddAttr(attrs, "cors", appEndpointBuilder, &schema.SingleNestedAttribute{
 		Optional:   true,

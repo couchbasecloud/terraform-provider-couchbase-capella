@@ -184,7 +184,7 @@ func setAppEndpointComputedAttributesToNull(ctx context.Context, plan *providers
 
 				collectionsMapValue, d := types.MapValueFrom(ctx, types.ObjectType{
 					AttrTypes: providerschema.
-					AppEndpointCollection{}.
+						AppEndpointCollection{}.
 						AttributeTypes(),
 				}, collectionsMap)
 				diags.Append(d...)
@@ -201,7 +201,7 @@ func setAppEndpointComputedAttributesToNull(ctx context.Context, plan *providers
 				"collections": types.MapType{
 					ElemType: types.ObjectType{
 						AttrTypes: providerschema.
-						AppEndpointCollection{}.
+							AppEndpointCollection{}.
 							AttributeTypes(),
 					},
 				},
@@ -218,8 +218,15 @@ func setAppEndpointComputedAttributesToNull(ctx context.Context, plan *providers
 		if plan.Cors.MaxAge.IsNull() || plan.Cors.MaxAge.IsUnknown() {
 			plan.Cors.MaxAge = types.Int64Null()
 		}
-		if plan.Cors.Disabled.IsNull() || plan.Cors.Disabled.IsUnknown() {
-			plan.Cors.Disabled = types.BoolNull()
+		plan.Cors.Disabled = types.BoolNull()
+		if plan.Cors.Origin.IsNull() || plan.Cors.Origin.IsUnknown() {
+			plan.Cors.Origin = types.SetNull(types.StringType)
+		}
+		if plan.Cors.LoginOrigin.IsNull() || plan.Cors.LoginOrigin.IsUnknown() {
+			plan.Cors.LoginOrigin = types.SetNull(types.StringType)
+		}
+		if plan.Cors.Headers.IsNull() || plan.Cors.Headers.IsUnknown() {
+			plan.Cors.Headers = types.SetNull(types.StringType)
 		}
 	}
 
@@ -554,7 +561,7 @@ func (a *AppEndpoint) refreshAppEndpoint(
 				ctx,
 				types.ObjectType{
 					AttrTypes: providerschema.
-					AppEndpointCollection{}.
+						AppEndpointCollection{}.
 						AttributeTypes(),
 				},
 				collectionsMapElements,
@@ -588,7 +595,7 @@ func (a *AppEndpoint) refreshAppEndpoint(
 			ctx,
 			types.ObjectType{
 				AttrTypes: providerschema.
-				AppEndpointScope{}.
+					AppEndpointScope{}.
 					AttributeTypes(),
 			},
 			scopesMapElements,
@@ -604,35 +611,9 @@ func (a *AppEndpoint) refreshAppEndpoint(
 		state.Cors.Disabled = types.BoolValue(appEndpoint.Cors.Disabled)
 		state.Cors.MaxAge = types.Int64Value(appEndpoint.Cors.MaxAge)
 
-		originSet, diags := types.SetValueFrom(
-			ctx,
-			types.StringType,
-			appEndpoint.Cors.Origin,
-		)
-		if diags.HasError() {
-			return nil, fmt.Errorf("error converting CORS origins: %v", diags.Errors())
-		}
-		state.Cors.Origin = originSet
-
-		loginOriginSet, diags := types.SetValueFrom(
-			ctx,
-			types.StringType,
-			appEndpoint.Cors.LoginOrigin,
-		)
-		if diags.HasError() {
-			return nil, fmt.Errorf("error converting CORS login origins: %v", diags.Errors())
-		}
-		state.Cors.LoginOrigin = loginOriginSet
-
-		headersSet, diags := types.SetValueFrom(
-			ctx,
-			types.StringType,
-			appEndpoint.Cors.Headers,
-		)
-		if diags.HasError() {
-			return nil, fmt.Errorf("error converting CORS headers: %v", diags.Errors())
-		}
-		state.Cors.Headers = headersSet
+		state.Cors.Origin = stringSliceToSetValue(ctx, appEndpoint.Cors.Origin)
+		state.Cors.LoginOrigin = stringSliceToSetValue(ctx, appEndpoint.Cors.LoginOrigin)
+		state.Cors.Headers = stringSliceToSetValue(ctx, appEndpoint.Cors.Headers)
 	}
 
 	if len(appEndpoint.Oidc) > 0 {
@@ -654,6 +635,20 @@ func (a *AppEndpoint) refreshAppEndpoint(
 	}
 
 	return state, nil
+}
+
+// stringSliceToSetValue converts a string slice to a Terraform set value.
+// Returns a null set if the slice is nil or empty.
+func stringSliceToSetValue(_ context.Context, values []string) types.Set {
+	if len(values) == 0 {
+		return types.SetNull(types.StringType)
+	}
+	elems := make([]attr.Value, len(values))
+	for i, v := range values {
+		elems[i] = types.StringValue(v)
+	}
+	set, _ := types.SetValue(types.StringType, elems)
+	return set
 }
 
 // morphToAppEndpointRequest converts the Terraform plan to the request format expected by the Capella API for creating/updating an App Endpoint.
