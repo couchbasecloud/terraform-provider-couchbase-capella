@@ -126,6 +126,12 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		state = &plan
 	}
 
+	// If the plan did not include CORS, keep it null in state to avoid
+	// Terraform detecting an unexpected new value.
+	if plan.Cors == nil {
+		state.Cors = nil
+	}
+
 	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
 
@@ -184,7 +190,7 @@ func setAppEndpointComputedAttributesToNull(ctx context.Context, plan *providers
 
 				collectionsMapValue, d := types.MapValueFrom(ctx, types.ObjectType{
 					AttrTypes: providerschema.
-					AppEndpointCollection{}.
+						AppEndpointCollection{}.
 						AttributeTypes(),
 				}, collectionsMap)
 				diags.Append(d...)
@@ -201,7 +207,7 @@ func setAppEndpointComputedAttributesToNull(ctx context.Context, plan *providers
 				"collections": types.MapType{
 					ElemType: types.ObjectType{
 						AttrTypes: providerschema.
-						AppEndpointCollection{}.
+							AppEndpointCollection{}.
 							AttributeTypes(),
 					},
 				},
@@ -365,6 +371,11 @@ func (a *AppEndpoint) Update(ctx context.Context, req resource.UpdateRequest, re
 			fmt.Sprintf("Could not refresh App Endpoint %s: %s", endpointName, err.Error()),
 		)
 		return
+	}
+
+	// If the plan did not include CORS, keep it null in state.
+	if plan.Cors == nil {
+		refreshedState.Cors = nil
 	}
 
 	diags = resp.State.Set(ctx, refreshedState)
@@ -554,7 +565,7 @@ func (a *AppEndpoint) refreshAppEndpoint(
 				ctx,
 				types.ObjectType{
 					AttrTypes: providerschema.
-					AppEndpointCollection{}.
+						AppEndpointCollection{}.
 						AttributeTypes(),
 				},
 				collectionsMapElements,
@@ -588,7 +599,7 @@ func (a *AppEndpoint) refreshAppEndpoint(
 			ctx,
 			types.ObjectType{
 				AttrTypes: providerschema.
-				AppEndpointScope{}.
+					AppEndpointScope{}.
 					AttributeTypes(),
 			},
 			scopesMapElements,
