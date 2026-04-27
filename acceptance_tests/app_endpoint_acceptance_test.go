@@ -150,6 +150,75 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	)
 }
 
+// TestAccAppEndpointNoCors verifies that creating an app endpoint without a
+// cors block does not produce perpetual state drift on subsequent plans.
+func TestAccAppEndpointNoCors(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_ep_nocors_")
+	resourceReference := "couchbase-capella_app_endpoint." + resourceName
+	epName := randomStringWithPrefix("tf_acc_ep_nocors_")
+	bucket := randomStringWithPrefix("tf_acc_ep_nocors_bkt_")
+
+	cfg := testAccAppEndpointNoCorsConfig(resourceName, epName, bucket)
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: cfg,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceReference, "name", epName),
+					resource.TestCheckNoResourceAttr(resourceReference, "cors"),
+				),
+			},
+			// Re-apply the same config; expect no changes (no perpetual drift).
+			{
+				Config:             cfg,
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
+func testAccAppEndpointNoCorsConfig(resourceName, endpointName, bucketName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_bucket" "%[2]s_bucket" {
+	organization_id = "%[3]s"
+	project_id      = "%[4]s"
+	cluster_id      = "%[5]s"
+	name           = "%[7]s"
+}
+
+resource "couchbase-capella_app_endpoint" "%[2]s" {
+	organization_id = "%[3]s"
+	project_id      = "%[4]s"
+	cluster_id      = "%[5]s"
+	app_service_id  = "%[6]s"
+	bucket          = "%[7]s"
+	name            = "%[8]s"
+	scopes = {
+		"_default" = {
+		  collections = {
+			"_default" = {}
+		  }
+		}
+	}
+	depends_on = [couchbase-capella_bucket.%[2]s_bucket]
+}
+`,
+		globalProviderBlock,
+		resourceName,
+		globalOrgId,
+		globalProjectId,
+		globalClusterId,
+		globalAppServiceId,
+		bucketName,
+		endpointName,
+	)
+}
+
 func generateAppEndpointImportId(resourceReference string) resource.ImportStateIdFunc {
 	return func(state *terraform.State) (string, error) {
 		var rawState map[string]string
