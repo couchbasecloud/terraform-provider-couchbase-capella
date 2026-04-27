@@ -283,10 +283,6 @@ func (a *AppEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *
 		endpointName   = IDs[providerschema.AppEndpointName]
 	)
 
-	// Preserve whether cors was previously set in state so we can avoid
-	// injecting API defaults that would cause perpetual drift.
-	priorCorsIsNil := state.Cors == nil
-
 	newstate, err := a.refreshAppEndpoint(
 		ctx,
 		organizationId,
@@ -311,7 +307,7 @@ func (a *AppEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 	// If cors was never configured (nil in prior state), keep it nil to
 	// prevent the API's default cors object from causing perpetual drift.
-	if priorCorsIsNil {
+	if state.Cors == nil {
 		newstate.Cors = nil
 	}
 
