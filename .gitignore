@@ -34,3 +34,9 @@ bin
 
 # OpenAPI spec (fetched at runtime, should never be committed)
 openapi.generated.yaml
+
+# Claude Code
+.claude/settings.local.json
+CLAUDE.local.md
+.claude/todos/
+.claude/worktrees/
