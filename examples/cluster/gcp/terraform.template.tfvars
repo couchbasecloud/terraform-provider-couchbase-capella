@@ -6,6 +6,10 @@ cloud_provider = {
   region = "us-east1"
 }
 
+couchbase_server = {
+  version = "8.0"
+}
+
 cluster = {
   name               = "New Terraform Cluster"
   cidr               = "192.168.0.0/20"

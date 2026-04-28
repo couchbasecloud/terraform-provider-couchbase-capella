@@ -7,6 +7,10 @@ cloud_provider = {
   region = "eastus"
 }
 
+couchbase_server = {
+  version = "8.0"
+}
+
 cluster = {
   name               = "New Terraform Azure Cluster 6"
   cidr               = "10.0.6.0/23"
