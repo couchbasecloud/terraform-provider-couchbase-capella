@@ -304,6 +304,13 @@ func (a *AppEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *
 		)
 		return
 	}
+
+	// If cors was never configured (nil in prior state), keep it nil to
+	// prevent the API's default cors object from causing perpetual drift.
+	if state.Cors == nil {
+		newstate.Cors = nil
+	}
+
 	diags = resp.State.Set(ctx, newstate)
 	resp.Diagnostics.Append(diags...)
 }
