@@ -37,5 +37,9 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: cache-${{ github.run_id }}
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: 1.14.9
+          terraform_wrapper: false
       - name: Run acceptance tests
         run: make testacc
