@@ -60,3 +60,7 @@ variable "support" {
     timezone = string
   })
 }
+
+variable "cluster_id" {
+  description = "Cluster ID"
+}
