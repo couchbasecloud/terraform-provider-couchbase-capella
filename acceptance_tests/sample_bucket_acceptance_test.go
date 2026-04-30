@@ -21,10 +21,10 @@ func TestAccSampleBucket(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceReference, "id"),
 				),
 			},
-			//Invalid Sample Data input
+			// Rejected: invalid sample bucket name triggers plan-time validator error
 			{
 				Config:      testAccWithInvalidSampleInputConfig(resourceName),
-				ExpectError: regexp.MustCompile("Could not load sample bucket"),
+				ExpectError: regexp.MustCompile("value must be one of:"),
 			},
 		},
 	})

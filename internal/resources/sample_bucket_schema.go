@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -19,7 +20,9 @@ func SampleBucketSchema() schema.Schema {
 			stringplanmodifier.UseStateForUnknown(),
 		},
 	})
-	capellaschema.AddAttr(attrs, "name", sampleBucketBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "name", sampleBucketBuilder, stringAttribute([]string{required, requiresReplace},
+		stringvalidator.OneOf("travel-sample", "gamesim-sample", "beer-sample"),
+	))
 	capellaschema.AddAttr(attrs, "organization_id", sampleBucketBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "project_id", sampleBucketBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "cluster_id", sampleBucketBuilder, requiredUUIDStringAttribute())
