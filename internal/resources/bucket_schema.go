@@ -2,9 +2,12 @@ package resources
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
@@ -20,8 +23,12 @@ func BucketSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "organization_id", bucketBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "project_id", bucketBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "cluster_id", bucketBuilder, requiredUUIDStringAttribute())
-	capellaschema.AddAttr(attrs, "type", bucketBuilder, stringAttribute([]string{computed, optional, requiresReplace, useStateForUnknown}))
-	capellaschema.AddAttr(attrs, "storage_backend", bucketBuilder, stringAttribute([]string{computed, optional, requiresReplace, useStateForUnknown}))
+	capellaschema.AddAttr(attrs, "type", bucketBuilder, stringAttribute([]string{computed, optional, requiresReplace, useStateForUnknown},
+		stringvalidator.OneOf("couchbase", "ephemeral"),
+	))
+	capellaschema.AddAttr(attrs, "storage_backend", bucketBuilder, stringAttribute([]string{computed, optional, requiresReplace, useStateForUnknown},
+		stringvalidator.OneOf("couchstore", "magma"),
+	))
 	capellaschema.AddAttr(attrs, "memory_allocation_in_mb", bucketBuilder, int64Attribute(optional, computed))
 	capellaschema.AddAttr(attrs, "vbuckets", bucketBuilder, &schema.Int64Attribute{
 		Optional: true,
@@ -34,12 +41,33 @@ func BucketSchema() schema.Schema {
 			int64validator.AtLeast(1),
 		},
 	})
-	capellaschema.AddAttr(attrs, "bucket_conflict_resolution", bucketBuilder, stringDefaultAttribute("seqno", computed, optional, requiresReplace, useStateForUnknown))
-	capellaschema.AddAttr(attrs, "durability_level", bucketBuilder, stringAttribute([]string{computed, optional}))
-	capellaschema.AddAttr(attrs, "replicas", bucketBuilder, int64Attribute(optional, computed))
+	capellaschema.AddAttr(attrs, "bucket_conflict_resolution", bucketBuilder, &schema.StringAttribute{
+		Computed: true,
+		Optional: true,
+		Default:  stringdefault.StaticString("seqno"),
+		PlanModifiers: []planmodifier.String{
+			stringplanmodifier.RequiresReplace(),
+			stringplanmodifier.UseStateForUnknown(),
+		},
+		Validators: []validator.String{
+			stringvalidator.OneOf("seqno", "lww"),
+		},
+	})
+	capellaschema.AddAttr(attrs, "durability_level", bucketBuilder, stringAttribute([]string{computed, optional},
+		stringvalidator.OneOf("none", "majority", "majorityAndPersistActive", "persistToMajority"),
+	))
+	capellaschema.AddAttr(attrs, "replicas", bucketBuilder, &schema.Int64Attribute{
+		Optional: true,
+		Computed: true,
+		Validators: []validator.Int64{
+			int64validator.OneOf(1, 2, 3),
+		},
+	})
 	capellaschema.AddAttr(attrs, "flush", bucketBuilder, boolDefaultAttribute(false, optional, computed))
 	capellaschema.AddAttr(attrs, "time_to_live_in_seconds", bucketBuilder, int64Attribute(optional, computed))
-	capellaschema.AddAttr(attrs, "eviction_policy", bucketBuilder, stringAttribute([]string{computed, optional, requiresReplace, useStateForUnknown}))
+	capellaschema.AddAttr(attrs, "eviction_policy", bucketBuilder, stringAttribute([]string{computed, optional, requiresReplace, useStateForUnknown},
+		stringvalidator.OneOf("fullEviction", "noEviction", "nruEviction"),
+	))
 
 	statsAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(statsAttrs, "item_count", bucketBuilder, int64Attribute(computed))
