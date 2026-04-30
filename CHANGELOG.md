@@ -6,10 +6,6 @@
 
 **Implemented enhancements:**
 
-- \[AV-128107\] Add acceptance test skill [\#557](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/557) ([matty271828](https://github.com/matty271828))
-- \[AV-127574\] Add bugfix skill [\#554](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/554) ([l0n3star](https://github.com/l0n3star))
-- \[AV-127442\] Update resource skill to poll async API [\#553](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/553) ([l0n3star](https://github.com/l0n3star))
-- \[AV-126968\] Add examples skill [\#547](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/547) ([l0n3star](https://github.com/l0n3star))
 - \[AV-126800\] Allow to filter on cluster or project [\#543](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/543) ([l0n3star](https://github.com/l0n3star))
 - \[AV-123821\] Implement a UUID parsing helper function [\#506](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/506) ([stanleefdz](https://github.com/stanleefdz))
 
@@ -19,22 +15,13 @@
 - \[AV-125170\] Fix app endpoint creation without CORS [\#565](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/565) ([stanleefdz](https://github.com/stanleefdz))
 - \[AV-125169\] Fix import crash [\#559](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/559) ([l0n3star](https://github.com/l0n3star))
 - \[AV-127117\] Make CopyToRegions a Set [\#548](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/548) ([SophieWegmann](https://github.com/SophieWegmann))
-- \[AV-127187\] Update skills for existing resources [\#546](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/546) ([matty271828](https://github.com/matty271828))
-- \[AV-125341\] Add private endpoint DNS  [\#544](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/544) ([l0n3star](https://github.com/l0n3star))
 - \[AV-125172\] Set state straight after successful App Endpoint creation [\#540](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/540) ([IsaacLambat](https://github.com/IsaacLambat))
-- \[AV-126077\] Add id token write permissions to review droid [\#537](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/537) ([matty271828](https://github.com/matty271828))
 
 **Closed issues:**
 
 - endpoint creation - lost state? [\#469](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues/469)
 
 **Merged pull requests:**
-
-- \[AV-129295\] Revert \[AV-125341\] Add private endpoint DNS [\#568](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/568) ([toshikagarwal](https://github.com/toshikagarwal))
-- \[AV-128910\] Pre-install Terraform CLI in CI [\#567](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/567) ([IsaacLambat](https://github.com/IsaacLambat))
-- \[AV-127905\] Add Claude Code entries to .gitignore [\#556](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/556) ([IsaacLambat](https://github.com/IsaacLambat))
-- \[AV-127291\] Add Jira MCP integration details in the runbook [\#555](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/555) ([stanleefdz](https://github.com/stanleefdz))
-- \[AV-125037\] Add runbook for droid [\#538](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/538) ([stanleefdz](https://github.com/stanleefdz))
 
 ## [v1.8.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.8.0) (2026-04-02)
 
