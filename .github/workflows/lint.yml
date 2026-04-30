@@ -23,7 +23,7 @@ jobs:
           path: ~/go/pkg/mod
           key: cache-${{ github.run_id }}
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v7
         with:
           version: v2.11.4
           only-new-issues: true
