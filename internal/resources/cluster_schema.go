@@ -1,9 +1,13 @@
 package resources
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
@@ -75,7 +79,15 @@ func ClusterSchema() schema.Schema {
 		Attributes: nodeAttrs,
 	})
 	capellaschema.AddAttr(serviceGroupAttrs, "num_of_nodes", clusterBuilder, int64Attribute(required))
-	capellaschema.AddAttr(serviceGroupAttrs, "services", clusterBuilder, stringSetAttribute(required))
+	capellaschema.AddAttr(serviceGroupAttrs, "services", clusterBuilder, &schema.SetAttribute{
+		Required:    true,
+		ElementType: types.StringType,
+		Validators: []validator.Set{
+			setvalidator.ValueStringsAre(
+				stringvalidator.OneOf("data", "query", "index", "search", "analytics", "eventing"),
+			),
+		},
+	})
 
 	capellaschema.AddAttr(attrs, "service_groups", clusterBuilder, &schema.SetNestedAttribute{
 		Required: true,
@@ -85,7 +97,9 @@ func ClusterSchema() schema.Schema {
 	})
 
 	availabilityAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(availabilityAttrs, "type", clusterBuilder, stringAttribute([]string{required}), "Availability")
+	capellaschema.AddAttr(availabilityAttrs, "type", clusterBuilder, stringAttribute([]string{required},
+		stringvalidator.OneOf("single", "multi"),
+	), "Availability")
 
 	capellaschema.AddAttr(attrs, "availability", clusterBuilder, &schema.SingleNestedAttribute{
 		Required:   true,
@@ -96,8 +110,12 @@ func ClusterSchema() schema.Schema {
 	})
 
 	supportAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(supportAttrs, "plan", clusterBuilder, stringAttribute([]string{required}), "Support")
-	capellaschema.AddAttr(supportAttrs, "timezone", clusterBuilder, stringAttribute([]string{computed, optional}), "Support")
+	capellaschema.AddAttr(supportAttrs, "plan", clusterBuilder, stringAttribute([]string{required},
+		stringvalidator.OneOf("basic", "developer pro", "enterprise"),
+	), "Support")
+	capellaschema.AddAttr(supportAttrs, "timezone", clusterBuilder, stringAttribute([]string{computed, optional},
+		stringvalidator.OneOf("ET", "GMT", "IST", "PT"),
+	), "Support")
 
 	capellaschema.AddAttr(attrs, "support", clusterBuilder, &schema.SingleNestedAttribute{
 		Required:   true,
