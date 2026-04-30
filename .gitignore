@@ -27,6 +27,9 @@ bin
 # Ignore terraform hidden folder
 .terraform
 
+# Ignore Claude local settings
+.claude/settings.local.json
+
 # General
 .DS_STORE
 .idea
