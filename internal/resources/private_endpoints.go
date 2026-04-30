@@ -5,12 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
@@ -22,10 +20,6 @@ var (
 	_ resource.Resource                = &PrivateEndpoint{}
 	_ resource.ResourceWithConfigure   = &PrivateEndpoint{}
 	_ resource.ResourceWithImportState = &PrivateEndpoint{}
-)
-
-const (
-	privateEndpointLinkedStatus = "linked"
 )
 
 // PrivateEndpoint is the private endpoint resource implementation.
@@ -98,28 +92,27 @@ func (p *PrivateEndpoint) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	plan.Status = types.StringNull()
-	plan.ServiceName = types.StringNull()
-	plan.PrivateEndpointDNS = types.StringNull()
-
-	diags = resp.State.Set(ctx, plan)
+	diags = resp.State.Set(ctx, initializePrivateEndpointPlan(plan))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	err = p.waitUntilLinked(ctx, &plan)
+	refreshedState, err := p.getPrivateEndpointState(ctx, organizationId, projectId, clusterId, endpointId)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error waiting for private endpoint to be linked",
-			"Error waiting for private endpoint to be linked, unexpected error: "+err.Error(),
+			"Error reading private endpoint service status",
+			"Error reading private endpoint service status, unexpected error: "+err.Error(),
 		)
 
 		return
 	}
 
-	diags = resp.State.Set(ctx, plan)
+	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Read reads the private endpoint status.
@@ -264,21 +257,29 @@ func validateAcceptPrivateEndpoint(plan providerschema.PrivateEndpoint) error {
 	return nil
 }
 
+// initializePrivateEndpointPlan initializes an instance of providerschema.PrivateEndpoint
+// with the specified plan. It marks all computed fields as null.
+func initializePrivateEndpointPlan(plan providerschema.PrivateEndpoint) providerschema.PrivateEndpoint {
+	if plan.Status.IsNull() || plan.Status.IsUnknown() {
+		plan.Status = types.StringNull()
+	}
+	return plan
+}
+
 // getPrivateEndpointState morphs private endpoint status to terraform schema.
 func (p *PrivateEndpoint) getPrivateEndpointState(ctx context.Context, organizationId, projectId, clusterId, endpointId string) (*providerschema.PrivateEndpoint, error) {
-	status, serviceName, dns, err := p.getPrivateEndpointStatus(ctx, organizationId, projectId, clusterId, endpointId)
+	status, serviceName, err := p.getPrivateEndpointStatus(ctx, organizationId, projectId, clusterId, endpointId)
 	if err != nil {
 		return nil, err
 	}
 
 	state := providerschema.PrivateEndpoint{
-		EndpointId:         types.StringValue(endpointId),
-		Status:             types.StringValue(status),
-		ClusterId:          types.StringValue(clusterId),
-		ProjectId:          types.StringValue(projectId),
-		OrganizationId:     types.StringValue(organizationId),
-		ServiceName:        types.StringValue(serviceName),
-		PrivateEndpointDNS: types.StringValue(dns),
+		EndpointId:     types.StringValue(endpointId),
+		Status:         types.StringValue(status),
+		ClusterId:      types.StringValue(clusterId),
+		ProjectId:      types.StringValue(projectId),
+		OrganizationId: types.StringValue(organizationId),
+		ServiceName:    types.StringValue(serviceName),
 	}
 
 	return &state, nil
@@ -286,7 +287,7 @@ func (p *PrivateEndpoint) getPrivateEndpointState(ctx context.Context, organizat
 
 // There is currently no V4 endpoint to get a single private endpoint.  We have to loop through the entire list to find
 // the desired private endpoint.
-func (p *PrivateEndpoint) getPrivateEndpointStatus(ctx context.Context, organizationId, projectId, clusterId, endpointId string) (string, string, string, error) {
+func (p *PrivateEndpoint) getPrivateEndpointStatus(ctx context.Context, organizationId, projectId, clusterId, endpointId string) (string, string, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/privateEndpointService/endpoints", p.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := p.ClientV1.ExecuteWithRetry(
@@ -297,63 +298,20 @@ func (p *PrivateEndpoint) getPrivateEndpointStatus(ctx context.Context, organiza
 		nil,
 	)
 	if err != nil {
-		return "", "", "", err
+		return "", "", err
 	}
 
 	privateEndpointsResp := api.GetPrivateEndpointsResponse{}
 	err = json.Unmarshal(response.Body, &privateEndpointsResp)
 	if err != nil {
-		return "", "", "", err
+		return "", "", err
 	}
 
 	for _, e := range privateEndpointsResp.Endpoints {
 		if e.Id == endpointId {
-			return e.Status, e.ServiceName, privateEndpointsResp.PrivateEndpointDNS, nil
+			return e.Status, e.ServiceName, nil
 		}
 	}
 
-	return "", "", "", errors.ErrNotFound
-}
-
-// waitUntilLinked polls the private endpoint until it reaches linked status and DNS is populated.
-func (p *PrivateEndpoint) waitUntilLinked(ctx context.Context, plan *providerschema.PrivateEndpoint) error {
-	var cancel context.CancelFunc
-	ctx, cancel = context.WithTimeout(ctx, time.Minute*5)
-	defer cancel()
-
-	timer := time.NewTimer(time.Second * 1)
-	defer timer.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return errors.ErrPrivateEndpointTimeout
-
-		case <-timer.C:
-			status, serviceName, dns, err := p.getPrivateEndpointStatus(
-				ctx,
-				plan.OrganizationId.ValueString(),
-				plan.ProjectId.ValueString(),
-				plan.ClusterId.ValueString(),
-				plan.EndpointId.ValueString(),
-			)
-			if err != nil {
-				return err
-			}
-
-			if status == privateEndpointLinkedStatus {
-				if dns == "" {
-					tflog.Info(ctx, "Private endpoint is linked but DNS is not populated.")
-					timer.Reset(time.Minute * 1)
-					continue
-				}
-				plan.ServiceName = types.StringValue(serviceName)
-				plan.Status = types.StringValue(status)
-				plan.PrivateEndpointDNS = types.StringValue(dns)
-				return nil
-			}
-			tflog.Info(ctx, "Private endpoint is not linked.")
-			timer.Reset(time.Minute * 1)
-		}
-	}
+	return "", "", errors.ErrNotFound
 }

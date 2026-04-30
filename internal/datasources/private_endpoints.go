@@ -91,17 +91,11 @@ func (p *PrivateEndpoints) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	state.PrivateEndpointDNS = types.StringValue(privateEndpointsResp.PrivateEndpointDNS)
-
 	for _, e := range privateEndpointsResp.Endpoints {
-		endpointData := providerschema.PrivateEndpointData{
-			Id:             types.StringValue(e.Id),
-			OrganizationId: types.StringValue(organizationId),
-			ProjectId:      types.StringValue(projectId),
-			ClusterId:      types.StringValue(clusterId),
-			Status:         types.StringValue(e.Status),
-			ServiceName:    types.StringValue(e.ServiceName),
-		}
+		endpointData := providerschema.PrivateEndpointData{}
+		endpointData.Id = types.StringValue(e.Id)
+		endpointData.Status = types.StringValue(e.Status)
+		endpointData.ServiceName = types.StringValue(e.ServiceName)
 		state.Data = append(state.Data, endpointData)
 	}
 
