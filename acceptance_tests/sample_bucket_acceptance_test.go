@@ -26,6 +26,13 @@ func TestAccSampleBucket(t *testing.T) {
 				Config:      testAccWithInvalidSampleInputConfig(resourceName),
 				ExpectError: regexp.MustCompile(`value must be one of:`),
 			},
+			// Restore valid config so post-test destroy can plan without validator errors
+			{
+				Config: testAccSampleBucketWithTravelSampleConfig(resourceName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceReference, "name", "travel-sample"),
+				),
+			},
 		},
 	})
 }
