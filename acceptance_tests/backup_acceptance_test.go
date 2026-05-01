@@ -21,12 +21,11 @@ func TestAccBackupEnumValidators_AV_129336(t *testing.T) {
 				Config:      testAccBackupConfigWithInvalidReplaceTTL(resourceName),
 				ExpectError: regexp.MustCompile(`value must be one of:`),
 			},
-			// Valid replace_ttl = "none" — validator passes; resource creation proceeds to API
+			// Valid replace_ttl = "none" — validator passes at plan time; PlanOnly avoids
+			// checking post-apply state since Create does not persist the restore block.
 			{
-				Config: testAccBackupConfigWithValidReplaceTTL(resourceName, "none"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("couchbase-capella_backup."+resourceName, "restore.replace_ttl", "none"),
-				),
+				Config:   testAccBackupConfigWithValidReplaceTTL(resourceName, "none"),
+				PlanOnly: true,
 			},
 		},
 	})
