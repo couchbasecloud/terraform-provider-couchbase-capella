@@ -21,7 +21,9 @@ func AppServiceLogStreamingSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "app_service_id", appServiceLogStreamingBuilder, requiredUUIDStringAttribute())
 
 	// User configured attributes
-	capellaschema.AddAttr(attrs, "output_type", appServiceLogStreamingBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
+	capellaschema.AddAttr(attrs, "output_type", appServiceLogStreamingBuilder, stringAttribute([]string{required, requiresReplace},
+		validator.String(stringvalidator.LengthAtLeast(1)),
+		stringvalidator.OneOf("datadog", "generic_http", "sumologic", "loki", "elastic", "splunk", "dynatrace")))
 	capellaschema.AddAttr(attrs, "credentials", appServiceLogStreamingBuilder, &schema.SingleNestedAttribute{
 		Required:   true,
 		Sensitive:  true,
