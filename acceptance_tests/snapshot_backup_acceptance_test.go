@@ -74,6 +74,36 @@ func TestAccSnapshotBackupResource(t *testing.T) {
 	})
 }
 
+// TestAccSnapshotBackupRetentionUpdate validates that updating a
+// snapshot backup's retention does not produce an inconsistent state error.
+// Root cause: the API is eventually consistent, so reading back retention
+// immediately after PUT may return the old value. The fix uses the plan's
+// retention value in state instead of the stale GET response.
+func TestAccSnapshotBackupRetentionUpdate(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cloud_snapshot_backup_")
+	resourceReference := "couchbase-capella_cloud_snapshot_backup." + resourceName
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnapshotBackupResourceConfig(resourceName, 168),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccExistsSnapshotBackupResource(t, resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "retention", "168"),
+				),
+			},
+			{
+				Config: testAccSnapshotBackupResourceConfig(resourceName, 240),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccExistsSnapshotBackupResource(t, resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "retention", "240"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSnapshotBackupResourceInvalidRetention(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cloud_snapshot_backup_")
 
