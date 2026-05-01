@@ -1,4 +1,7 @@
+version: "2"
+
 linters:
+  default: none
   enable:
     - durationcheck
     - errcheck
@@ -17,9 +20,8 @@ linters:
     - unparam
     - unused
     - govet
-
-linters-settings:
-  errorlint:
-    errorf: true
-    asserts: true
-    comparison: true
+  settings:
+    errorlint:
+      errorf: true
+      asserts: true
+      comparison: true
