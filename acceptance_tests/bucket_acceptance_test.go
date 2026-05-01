@@ -24,31 +24,37 @@ func TestAccBucketEnumValidators(t *testing.T) {
 			{
 				Config:      testAccBucketConfigWithInvalidType(resourceName),
 				ExpectError: bucketEnumValidatorErr,
+				PlanOnly:    true,
 			},
 			// Invalid storage_backend
 			{
 				Config:      testAccBucketConfigWithInvalidStorageBackend(resourceName),
 				ExpectError: bucketEnumValidatorErr,
+				PlanOnly:    true,
 			},
 			// Invalid bucket_conflict_resolution
 			{
 				Config:      testAccBucketConfigWithInvalidConflictResolution(resourceName),
 				ExpectError: bucketEnumValidatorErr,
+				PlanOnly:    true,
 			},
 			// Invalid durability_level
 			{
 				Config:      testAccBucketConfigWithInvalidDurabilityLevel(resourceName),
 				ExpectError: bucketEnumValidatorErr,
+				PlanOnly:    true,
 			},
 			// Invalid replicas
 			{
 				Config:      testAccBucketConfigWithInvalidReplicas(resourceName),
 				ExpectError: bucketEnumValidatorErr,
+				PlanOnly:    true,
 			},
 			// Invalid eviction_policy
 			{
 				Config:      testAccBucketConfigWithInvalidEvictionPolicy(resourceName),
 				ExpectError: bucketEnumValidatorErr,
+				PlanOnly:    true,
 			},
 			// Valid configuration — accepted values for every enum field
 			{
