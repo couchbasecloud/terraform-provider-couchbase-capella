@@ -8,10 +8,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-// TestAccBucketEnumValidators_AV_129333 verifies that schema-level enum validators
+// TestAccBucketEnumValidators verifies that schema-level enum validators
 // reject out-of-range values at plan time for the bucket resource fields:
 // type, storage_backend, bucket_conflict_resolution, durability_level, replicas, eviction_policy.
-func TestAccBucketEnumValidators_AV_129333(t *testing.T) {
+// Jira: AV-129333.
+func TestAccBucketEnumValidators(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_bucket_validators_")
 
 	resource.ParallelTest(t, resource.TestCase{
