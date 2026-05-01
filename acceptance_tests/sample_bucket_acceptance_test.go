@@ -21,10 +21,17 @@ func TestAccSampleBucket(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceReference, "id"),
 				),
 			},
-			//Invalid Sample Data input
+			// Invalid name — rejected by schema validator before reaching the API
 			{
 				Config:      testAccWithInvalidSampleInputConfig(resourceName),
-				ExpectError: regexp.MustCompile("Could not load sample bucket"),
+				ExpectError: regexp.MustCompile(`value must be one of:`),
+			},
+			// Restore valid config so post-test destroy can plan without validator errors
+			{
+				Config: testAccSampleBucketWithTravelSampleConfig(resourceName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceReference, "name", "travel-sample"),
+				),
 			},
 		},
 	})
