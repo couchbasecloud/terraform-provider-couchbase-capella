@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 var bucketEnumValidatorErr = regexp.MustCompile(`value must be one of:`)
@@ -60,6 +61,7 @@ func TestAccBucketEnumValidators(t *testing.T) {
 			{
 				Config: testAccBucketConfigWithValidEnumFields(resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("couchbase-capella_bucket."+resourceName, "id"),
 					resource.TestCheckResourceAttr("couchbase-capella_bucket."+resourceName, "type", "couchbase"),
 					resource.TestCheckResourceAttr("couchbase-capella_bucket."+resourceName, "storage_backend", "couchstore"),
 					resource.TestCheckResourceAttr("couchbase-capella_bucket."+resourceName, "bucket_conflict_resolution", "seqno"),
@@ -67,6 +69,12 @@ func TestAccBucketEnumValidators(t *testing.T) {
 					resource.TestCheckResourceAttr("couchbase-capella_bucket."+resourceName, "replicas", "1"),
 					resource.TestCheckResourceAttr("couchbase-capella_bucket."+resourceName, "eviction_policy", "fullEviction"),
 				),
+			},
+			{
+				ResourceName:      "couchbase-capella_bucket." + resourceName,
+				ImportStateIdFunc: generateBucketImportIdForResource("couchbase-capella_bucket." + resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -166,4 +174,18 @@ resource "couchbase-capella_bucket" "%[2]s" {
   eviction_policy            = "fullEviction"
 }
 `, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId)
+}
+
+func generateBucketImportIdForResource(resourceReference string) resource.ImportStateIdFunc {
+	return func(state *terraform.State) (string, error) {
+		var rawState map[string]string
+		for _, m := range state.Modules {
+			if len(m.Resources) > 0 {
+				if v, ok := m.Resources[resourceReference]; ok {
+					rawState = v.Primary.Attributes
+				}
+			}
+		}
+		return fmt.Sprintf("id=%s,cluster_id=%s,project_id=%s,organization_id=%s", rawState["id"], rawState["cluster_id"], rawState["project_id"], rawState["organization_id"]), nil
+	}
 }
