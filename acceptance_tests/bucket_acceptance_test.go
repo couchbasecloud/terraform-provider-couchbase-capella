@@ -8,6 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
+var bucketEnumValidatorErr = regexp.MustCompile(`value must be one of:`)
+
 // TestAccBucketEnumValidators verifies that schema-level enum validators
 // reject out-of-range values at plan time for the bucket resource fields:
 // type, storage_backend, bucket_conflict_resolution, durability_level, replicas, eviction_policy.
@@ -21,32 +23,32 @@ func TestAccBucketEnumValidators(t *testing.T) {
 			// Invalid type
 			{
 				Config:      testAccBucketConfigWithInvalidType(resourceName),
-				ExpectError: regexp.MustCompile(`value must be one of:`),
+				ExpectError: bucketEnumValidatorErr,
 			},
 			// Invalid storage_backend
 			{
 				Config:      testAccBucketConfigWithInvalidStorageBackend(resourceName),
-				ExpectError: regexp.MustCompile(`value must be one of:`),
+				ExpectError: bucketEnumValidatorErr,
 			},
 			// Invalid bucket_conflict_resolution
 			{
 				Config:      testAccBucketConfigWithInvalidConflictResolution(resourceName),
-				ExpectError: regexp.MustCompile(`value must be one of:`),
+				ExpectError: bucketEnumValidatorErr,
 			},
 			// Invalid durability_level
 			{
 				Config:      testAccBucketConfigWithInvalidDurabilityLevel(resourceName),
-				ExpectError: regexp.MustCompile(`value must be one of:`),
+				ExpectError: bucketEnumValidatorErr,
 			},
 			// Invalid replicas
 			{
 				Config:      testAccBucketConfigWithInvalidReplicas(resourceName),
-				ExpectError: regexp.MustCompile(`value must be one of:`),
+				ExpectError: bucketEnumValidatorErr,
 			},
 			// Invalid eviction_policy
 			{
 				Config:      testAccBucketConfigWithInvalidEvictionPolicy(resourceName),
-				ExpectError: regexp.MustCompile(`value must be one of:`),
+				ExpectError: bucketEnumValidatorErr,
 			},
 			// Valid configuration — accepted values for every enum field
 			{
