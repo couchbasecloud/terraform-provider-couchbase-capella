@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-// TestAccBackupEnumValidators_AV_129336 verifies that the schema-level enum validator
+// TestAccBackupEnumValidators verifies that the schema-level enum validator
 // rejects out-of-range values at plan time for the backup resource's restore.replace_ttl field.
-func TestAccBackupEnumValidators_AV_129336(t *testing.T) {
+func TestAccBackupEnumValidators(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_backup_validators_")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -23,9 +23,12 @@ func TestAccBackupEnumValidators_AV_129336(t *testing.T) {
 			},
 			// Valid replace_ttl = "none" — validator passes at plan time; PlanOnly avoids
 			// checking post-apply state since Create does not persist the restore block.
+			// ExpectNonEmptyPlan because step 1 errored (no state written), so the plan
+			// will always show a create; we only care that no validation error fires.
 			{
-				Config:   testAccBackupConfigWithValidReplaceTTL(resourceName, "none"),
-				PlanOnly: true,
+				Config:             testAccBackupConfigWithValidReplaceTTL(resourceName, "none"),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
