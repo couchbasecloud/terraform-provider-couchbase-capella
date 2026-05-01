@@ -324,6 +324,66 @@ resource "couchbase-capella_app_service_log_streaming" "%[6]s" {
 	)
 }
 
+// TestAccAppServiceLogStreamingInvalidOutputType_AV_129338 verifies that the output_type
+// enum validator rejects values not in the allowed set at plan time.
+func TestAccAppServiceLogStreamingInvalidOutputType_AV_129338(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_log_streaming_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			// Invalid output_type — rejected by schema validator before reaching the API
+			{
+				Config:      testAccAppServiceLogStreamingInvalidOutputTypeConfig(resourceName),
+				ExpectError: re.MustCompile(`value must be one of:`),
+			},
+			// Valid output_type — validator passes; existing lifecycle tests cover the full apply path
+			{
+				Config: testAccAppServiceLogStreamingResourceConfig(
+					resourceName,
+					"https://example.com/logs",
+					"test_user",
+					"test_password",
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("couchbase-capella_app_service_log_streaming."+resourceName, "output_type", "generic_http"),
+				),
+			},
+		},
+	})
+}
+
+// testAccAppServiceLogStreamingInvalidOutputTypeConfig returns an HCL config where
+// output_type is not one of the accepted enum values.
+func testAccAppServiceLogStreamingInvalidOutputTypeConfig(resourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_app_service_log_streaming" "%[6]s" {
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  cluster_id      = "%[4]s"
+  app_service_id  = "%[5]s"
+  output_type     = "invalid_output"
+
+  credentials = {
+    generic_http = {
+      url      = "https://example.com/logs"
+      user     = "test_user"
+      password = "test_password"
+    }
+  }
+}
+`,
+		globalProviderBlock,
+		globalOrgId,
+		globalProjectId,
+		globalClusterId,
+		globalAppServiceId,
+		resourceName,
+	)
+}
+
 // generateAppServiceLogStreamingImportId generates the import ID string
 // from the Terraform state for the app_service_log_streaming resource.
 func generateAppServiceLogStreamingImportId(resourceReference string) resource.ImportStateIdFunc {
