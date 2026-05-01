@@ -11,3 +11,7 @@ variable "project_name" {
   default     = "terraform-couchbasecapella-project"
   description = "Project Name for Project Created via Terraform"
 }
+
+variable "project_id" {
+  description = "Project ID"
+}

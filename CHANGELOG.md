@@ -1,5 +1,28 @@
 # Changelog
 
+## [v1.8.1](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.8.1) (2026-04-30)
+
+[Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.8.0...v1.8.1)
+
+**Implemented enhancements:**
+
+- \[AV-126800\] Allow to filter on cluster or project [\#543](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/543) ([l0n3star](https://github.com/l0n3star))
+- \[AV-123821\] Implement a UUID parsing helper function [\#506](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/506) ([stanleefdz](https://github.com/stanleefdz))
+
+**Fixed bugs:**
+
+- \[AV-128730\] Prevent perpetual state drift by preserving nil CORS configuration [\#566](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/566) ([stanleefdz](https://github.com/stanleefdz))
+- \[AV-125170\] Fix app endpoint creation without CORS [\#565](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/565) ([stanleefdz](https://github.com/stanleefdz))
+- \[AV-125169\] Fix import crash [\#559](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/559) ([l0n3star](https://github.com/l0n3star))
+- \[AV-127117\] Make CopyToRegions a Set [\#548](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/548) ([SophieWegmann](https://github.com/SophieWegmann))
+- \[AV-125172\] Set state straight after successful App Endpoint creation [\#540](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/540) ([IsaacLambat](https://github.com/IsaacLambat))
+
+**Closed issues:**
+
+- endpoint creation - lost state? [\#469](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/issues/469)
+
+**Merged pull requests:**
+
 ## [v1.8.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.8.0) (2026-04-02)
 
 [Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.7.1...v1.8.0)
