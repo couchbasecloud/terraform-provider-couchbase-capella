@@ -21,10 +21,10 @@ func TestAccSampleBucket(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceReference, "id"),
 				),
 			},
-			//Invalid Sample Data input
+			// Invalid name — rejected by schema validator before reaching the API
 			{
 				Config:      testAccWithInvalidSampleInputConfig(resourceName),
-				ExpectError: regexp.MustCompile("Could not load sample bucket"),
+				ExpectError: regexp.MustCompile(`value must be one of:`),
 			},
 		},
 	})
