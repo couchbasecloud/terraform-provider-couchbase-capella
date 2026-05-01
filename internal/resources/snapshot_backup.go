@@ -322,7 +322,7 @@ func (s *SnapshotBackup) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	state.Retention = types.Int64Value(refreshedState.Retention)
+	state.Retention = plan.Retention
 	state.Expiration = types.StringValue(refreshedState.Expiration)
 	state.RegionsToCopy = plan.RegionsToCopy
 	state.RestoreTimes = plan.RestoreTimes

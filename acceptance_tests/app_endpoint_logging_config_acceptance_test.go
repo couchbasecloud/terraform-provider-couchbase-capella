@@ -73,10 +73,10 @@ func testAccAppEndpointLoggingConfigResource(t *testing.T) []resource.TestStep {
 			),
 		},
 
-		// tests that an error is returned if the log_level is invalid
+		// tests that an error is returned if the log_level is not one of the accepted enum values
 		{
 			Config:      testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourceName, resourceName, resourceReference, datasourceName, "test", logKeys),
-			ExpectError: regexp.MustCompile("Error executing upsert app endpoint logging config"),
+			ExpectError: regexp.MustCompile(`value must be one of:`),
 		},
 
 		// tests that an error is returned if any of the log_keys are invalid
