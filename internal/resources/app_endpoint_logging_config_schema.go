@@ -18,7 +18,9 @@ func LoggingConfigSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "project_id", loggingConfigBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "organization_id", loggingConfigBuilder, requiredUUIDStringAttribute())
 
-	capellaschema.AddAttr(attrs, "log_level", loggingConfigBuilder, stringAttribute([]string{required}, validator.String(stringvalidator.LengthAtLeast(1))))
+	capellaschema.AddAttr(attrs, "log_level", loggingConfigBuilder, stringAttribute([]string{required},
+		validator.String(stringvalidator.LengthAtLeast(1)),
+		stringvalidator.OneOf("info", "warn", "error")))
 	capellaschema.AddAttr(attrs, "log_keys", loggingConfigBuilder, stringSetAttribute(required))
 
 	return schema.Schema{
