@@ -53,8 +53,10 @@ func TestAccAppEndpointImportFilter(t *testing.T) {
 				ResourceName:      resourceReference,
 				ImportStateIdFunc: generateImportFilterImportId(resourceReference),
 				ImportState:       true,
-				// ImportStateVerify omitted: composite import IDs are not
-				// compatible with the default state verifier.
+				// ImportStateVerify cannot be used here: ImportStatePassthroughID
+				// stores the full composite ID in app_endpoint_name, but Read
+				// normalises it to just the endpoint name. The verifier then
+				// fails to locate the resource by the original composite value.
 			},
 		},
 	})

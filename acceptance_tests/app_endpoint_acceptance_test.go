@@ -274,6 +274,11 @@ func TestAccAppEndpointCorsFullConfig(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceReference, "cors.origin.*", "*"),
 					resource.TestCheckResourceAttr(resourceReference, "cors.login_origin.#", "1"),
 					resource.TestCheckResourceAttr(resourceReference, "cors.headers.#", "2"),
+					// Computed/server-set fields — validate Read path.
+					resource.TestCheckResourceAttrSet(resourceReference, "state"),
+					resource.TestCheckResourceAttrSet(resourceReference, "admin_url"),
+					resource.TestCheckResourceAttrSet(resourceReference, "public_url"),
+					resource.TestCheckResourceAttrSet(resourceReference, "metrics_url"),
 				),
 			},
 			{

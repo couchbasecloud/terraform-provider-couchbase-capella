@@ -3,6 +3,7 @@ package acceptance_tests
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -116,10 +117,20 @@ func appEndpointWait(ctx context.Context, client *api.Client) error {
 			if resourceNotFound, errMsg := api.CheckResourceNotFoundError(err); resourceNotFound {
 				return fmt.Errorf("app endpoint not found: %s", errMsg)
 			}
-			// Transient errors (e.g. 500s) should not fall through to
-			// json.Unmarshal on a nil response body, which would panic.
-			// Log and retry instead.
-			log.Printf("error fetching app endpoint, retrying: %v", err)
+
+			// Only retry on clearly transient errors (5xx, 429).
+			// Return immediately on permanent failures (4xx) to avoid
+			// masking issues like bad tokens (401/403).
+			var apiErr *api.Error
+			if errors.As(err, &apiErr) {
+				if apiErr.HttpStatusCode != 0 &&
+					apiErr.HttpStatusCode != http.StatusTooManyRequests &&
+					apiErr.HttpStatusCode < 500 {
+					return fmt.Errorf("permanent API error (HTTP %d): %s", apiErr.HttpStatusCode, apiErr.CompleteError())
+				}
+			}
+
+			log.Printf("transient error fetching app endpoint, retrying: %v", err)
 			select {
 			case <-ctx.Done():
 				return fmt.Errorf("context done while waiting to retry: %w", ctx.Err())
