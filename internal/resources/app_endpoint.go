@@ -450,6 +450,10 @@ func (a *AppEndpoint) Delete(ctx context.Context, req resource.DeleteRequest, re
 			fmt.Sprintf("Timed out waiting for App Endpoint %s to be fully removed: %s", endpointName, err.Error()),
 		)
 	}
+
+	// Explicitly remove the resource from state after a successful delete
+	// request, regardless of whether the deletion-wait timed out.
+	resp.State.RemoveResource(ctx)
 }
 
 // waitForEndpointDeletion polls the API until the endpoint returns 404 or the
@@ -481,6 +485,8 @@ func (a *AppEndpoint) waitForEndpointDeletion(
 				return nil // endpoint is gone
 			}
 			lastErr = err
+		} else {
+			lastErr = nil // clear stale error when GET succeeds
 		}
 
 		select {

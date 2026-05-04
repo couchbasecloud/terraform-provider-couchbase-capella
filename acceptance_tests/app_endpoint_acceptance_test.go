@@ -86,7 +86,7 @@ func TestAccAppEndpointInexistentCollection(t *testing.T) {
 		bucket,
 		epName)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
@@ -243,7 +243,7 @@ func TestAccAppEndpointCorsDisabledFalseNoOrigin(t *testing.T) {
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 	bucket := randomStringWithPrefix("tf_acc_bucket_")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
@@ -296,7 +296,7 @@ func TestAccAppEndpointMultipleOIDC(t *testing.T) {
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 	bucket := randomStringWithPrefix("tf_acc_bucket_")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
@@ -442,7 +442,7 @@ func TestAccAppEndpointUpdateRemoveCors(t *testing.T) {
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 	bucket := randomStringWithPrefix("tf_acc_bucket_")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
@@ -620,7 +620,7 @@ func TestAccAppEndpointUpdateCorsMaxAgeFromZero(t *testing.T) {
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 	bucket := randomStringWithPrefix("tf_acc_bucket_")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
