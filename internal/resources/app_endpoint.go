@@ -3,11 +3,8 @@ package resources
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -310,10 +307,7 @@ func (a *AppEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 	// If cors was never configured (nil in prior state), keep it nil to
 	// prevent the API's default cors object from causing perpetual drift.
-	// However, during import the prior state is empty so we must not
-	// suppress cors — the user expects all remote attributes to appear.
-	isImport := state.OrganizationId.IsNull()
-	if state.Cors == nil && !isImport {
+	if state.Cors == nil {
 		newstate.Cors = nil
 	}
 
@@ -434,7 +428,6 @@ func (a *AppEndpoint) Delete(ctx context.Context, req resource.DeleteRequest, re
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
 			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
-			resp.State.RemoveResource(ctx)
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -442,76 +435,6 @@ func (a *AppEndpoint) Delete(ctx context.Context, req resource.DeleteRequest, re
 			fmt.Sprintf("Could not delete App Endpoint %s: %s", endpointName, errString),
 		)
 		return
-	}
-
-	// Wait for the endpoint to be fully removed so that dependent resources
-	// (e.g. the backing bucket) are not deleted while still in use.
-	if err := a.waitForEndpointDeletion(ctx, organizationId, projectId, clusterId, appServiceId, endpointName); err != nil {
-		resp.Diagnostics.AddWarning(
-			"App Endpoint deletion may still be in progress",
-			fmt.Sprintf("Error while waiting for App Endpoint %s to be fully removed: %s", endpointName, err.Error()),
-		)
-	}
-
-	// Explicitly remove the resource from state after a successful delete
-	// request, regardless of whether the deletion-wait timed out.
-	resp.State.RemoveResource(ctx)
-}
-
-// waitForEndpointDeletion polls the API until the endpoint returns 404 or the
-// timeout is reached. It respects context cancellation and surfaces the last
-// non-404 error encountered instead of silently timing out.
-func (a *AppEndpoint) waitForEndpointDeletion(
-	ctx context.Context, orgId, projId, clusterId, appServiceId, endpointName string,
-) error {
-	const maxWait = 5 * time.Minute
-	const interval = 10 * time.Second
-
-	ctx, cancel := context.WithTimeout(ctx, maxWait)
-	defer cancel()
-
-	ticker := time.NewTicker(interval)
-	defer ticker.Stop()
-
-	var lastErr error
-	for {
-		endpointURL := fmt.Sprintf(
-			"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
-			a.HostURL, orgId, projId, clusterId, appServiceId, url.PathEscape(endpointName),
-		)
-		cfg := api.EndpointCfg{Url: endpointURL, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-
-		_, err := a.ClientV1.ExecuteWithRetry(ctx, cfg, nil, a.Token, nil)
-		if err != nil {
-			if resourceNotFound, _ := api.CheckResourceNotFoundError(err); resourceNotFound {
-				return nil // endpoint is gone
-			}
-			lastErr = err
-		} else {
-			lastErr = nil // clear stale error when GET succeeds
-		}
-
-		select {
-		case <-ctx.Done():
-			switch ctx.Err() {
-			case context.Canceled:
-				if lastErr != nil {
-					return fmt.Errorf("deletion wait canceled, last error: %w", lastErr)
-				}
-				return fmt.Errorf("deletion wait canceled: %w", ctx.Err())
-			case context.DeadlineExceeded:
-				if lastErr != nil {
-					return fmt.Errorf("timeout after %s, last error: %w", maxWait, lastErr)
-				}
-				return fmt.Errorf("timeout after %s", maxWait)
-			default:
-				if lastErr != nil {
-					return fmt.Errorf("deletion wait stopped: %w", errors.Join(ctx.Err(), lastErr))
-				}
-				return fmt.Errorf("deletion wait stopped: %w", ctx.Err())
-			}
-		case <-ticker.C:
-		}
 	}
 }
 
