@@ -120,7 +120,11 @@ func appEndpointWait(ctx context.Context, client *api.Client) error {
 			// json.Unmarshal on a nil response body, which would panic.
 			// Log and retry instead.
 			log.Printf("error fetching app endpoint, retrying: %v", err)
-			time.Sleep(checkInterval)
+			select {
+			case <-ctx.Done():
+				return fmt.Errorf("context done while waiting to retry: %w", ctx.Err())
+			case <-time.After(checkInterval):
+			}
 			continue
 		}
 
@@ -134,7 +138,11 @@ func appEndpointWait(ctx context.Context, client *api.Client) error {
 			return nil
 		}
 
-		time.Sleep(checkInterval)
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("context done while waiting for app endpoint: %w", ctx.Err())
+		case <-time.After(checkInterval):
+		}
 	}
 
 	return fmt.Errorf("timeout waiting for app endpoint to be created or destroyed")

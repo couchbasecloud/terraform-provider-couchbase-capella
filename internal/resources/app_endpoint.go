@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -475,7 +476,7 @@ func (a *AppEndpoint) waitForEndpointDeletion(
 	for {
 		url := fmt.Sprintf(
 			"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
-			a.HostURL, orgId, projId, clusterId, appServiceId, endpointName,
+			a.HostURL, orgId, projId, clusterId, appServiceId, url.PathEscape(endpointName),
 		)
 		cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
@@ -491,10 +492,23 @@ func (a *AppEndpoint) waitForEndpointDeletion(
 
 		select {
 		case <-ctx.Done():
-			if lastErr != nil {
-				return fmt.Errorf("timeout after %s, last error: %w", maxWait, lastErr)
+			switch ctx.Err() {
+			case context.Canceled:
+				if lastErr != nil {
+					return fmt.Errorf("deletion wait canceled, last error: %w", lastErr)
+				}
+				return fmt.Errorf("deletion wait canceled: %w", ctx.Err())
+			case context.DeadlineExceeded:
+				if lastErr != nil {
+					return fmt.Errorf("timeout after %s, last error: %w", maxWait, lastErr)
+				}
+				return fmt.Errorf("timeout after %s", maxWait)
+			default:
+				if lastErr != nil {
+					return fmt.Errorf("deletion wait stopped: %v, last error: %w", ctx.Err(), lastErr)
+				}
+				return fmt.Errorf("deletion wait stopped: %w", ctx.Err())
 			}
-			return fmt.Errorf("timeout after %s", maxWait)
 		case <-ticker.C:
 		}
 	}
