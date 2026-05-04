@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -505,7 +506,7 @@ func (a *AppEndpoint) waitForEndpointDeletion(
 				return fmt.Errorf("timeout after %s", maxWait)
 			default:
 				if lastErr != nil {
-					return fmt.Errorf("deletion wait stopped (%v): %w", ctx.Err(), lastErr)
+					return fmt.Errorf("deletion wait stopped: %w", errors.Join(ctx.Err(), lastErr))
 				}
 				return fmt.Errorf("deletion wait stopped: %w", ctx.Err())
 			}
