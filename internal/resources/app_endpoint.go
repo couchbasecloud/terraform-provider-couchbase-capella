@@ -505,7 +505,7 @@ func (a *AppEndpoint) waitForEndpointDeletion(
 				return fmt.Errorf("timeout after %s", maxWait)
 			default:
 				if lastErr != nil {
-					return fmt.Errorf("deletion wait stopped: %v, last error: %w", ctx.Err(), lastErr)
+					return fmt.Errorf("deletion wait stopped: %w, last error: %v", ctx.Err(), lastErr)
 				}
 				return fmt.Errorf("deletion wait stopped: %w", ctx.Err())
 			}
