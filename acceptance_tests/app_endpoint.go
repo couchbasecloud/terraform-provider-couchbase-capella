@@ -30,7 +30,7 @@ func createAppEndpoint(ctx context.Context, client *api.Client) error {
 		Method:        http.MethodGet,
 		SuccessStatus: http.StatusOK,
 	}
-	
+
 	_, err := client.ExecuteWithRetry(ctx, checkCfg, nil, globalToken, nil)
 	if err == nil {
 		log.Printf("App endpoint '%s' already exists", globalAppEndpointName)
@@ -116,6 +116,12 @@ func appEndpointWait(ctx context.Context, client *api.Client) error {
 			if resourceNotFound, errMsg := api.CheckResourceNotFoundError(err); resourceNotFound {
 				return fmt.Errorf("app endpoint not found: %s", errMsg)
 			}
+			// Transient errors (e.g. 500s) should not fall through to
+			// json.Unmarshal on a nil response body, which would panic.
+			// Log and retry instead.
+			log.Printf("error fetching app endpoint, retrying: %v", err)
+			time.Sleep(checkInterval)
+			continue
 		}
 
 		var appEndpointResponse app_endpoints.GetAppEndpointResponse

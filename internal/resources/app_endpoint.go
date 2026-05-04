@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -307,7 +308,10 @@ func (a *AppEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 	// If cors was never configured (nil in prior state), keep it nil to
 	// prevent the API's default cors object from causing perpetual drift.
-	if state.Cors == nil {
+	// However, during import the prior state is empty so we must not
+	// suppress cors — the user expects all remote attributes to appear.
+	isImport := state.OrganizationId.IsNull()
+	if state.Cors == nil && !isImport {
 		newstate.Cors = nil
 	}
 
@@ -436,6 +440,42 @@ func (a *AppEndpoint) Delete(ctx context.Context, req resource.DeleteRequest, re
 		)
 		return
 	}
+
+	// Wait for the endpoint to be fully removed so that dependent resources
+	// (e.g. the backing bucket) are not deleted while still in use.
+	if err := a.waitForEndpointDeletion(ctx, organizationId, projectId, clusterId, appServiceId, endpointName); err != nil {
+		resp.Diagnostics.AddWarning(
+			"App Endpoint deletion may still be in progress",
+			fmt.Sprintf("Timed out waiting for App Endpoint %s to be fully removed: %s", endpointName, err.Error()),
+		)
+	}
+}
+
+// waitForEndpointDeletion polls the API until the endpoint returns 404 or the
+// timeout is reached.
+func (a *AppEndpoint) waitForEndpointDeletion(
+	ctx context.Context, orgId, projId, clusterId, appServiceId, endpointName string,
+) error {
+	const maxWait = 5 * time.Minute
+	const interval = 10 * time.Second
+
+	deadline := time.Now().Add(maxWait)
+	for time.Now().Before(deadline) {
+		url := fmt.Sprintf(
+			"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
+			a.HostURL, orgId, projId, clusterId, appServiceId, endpointName,
+		)
+		cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+
+		_, err := a.ClientV1.ExecuteWithRetry(ctx, cfg, nil, a.Token, nil)
+		if err != nil {
+			if resourceNotFound, _ := api.CheckResourceNotFoundError(err); resourceNotFound {
+				return nil // endpoint is gone
+			}
+		}
+		time.Sleep(interval)
+	}
+	return fmt.Errorf("timeout after %s", maxWait)
 }
 
 // ImportState imports a remote App Endpoint that was not created by Terraform.
