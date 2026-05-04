@@ -448,7 +448,7 @@ func (a *AppEndpoint) Delete(ctx context.Context, req resource.DeleteRequest, re
 	if err := a.waitForEndpointDeletion(ctx, organizationId, projectId, clusterId, appServiceId, endpointName); err != nil {
 		resp.Diagnostics.AddWarning(
 			"App Endpoint deletion may still be in progress",
-			fmt.Sprintf("Timed out waiting for App Endpoint %s to be fully removed: %s", endpointName, err.Error()),
+			fmt.Sprintf("Error while waiting for App Endpoint %s to be fully removed: %s", endpointName, err.Error()),
 		)
 	}
 
