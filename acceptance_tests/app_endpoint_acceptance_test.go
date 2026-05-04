@@ -160,7 +160,7 @@ func TestAccAppEndpointNoCors(t *testing.T) {
 
 	cfg := testAccAppEndpointNoCorsConfig(resourceName, epName, bucket)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
@@ -223,13 +223,14 @@ func generateAppEndpointImportId(resourceReference string) resource.ImportStateI
 	return func(state *terraform.State) (string, error) {
 		var rawState map[string]string
 		for _, m := range state.Modules {
-			if len(m.Resources) > 0 {
-				if v, ok := m.Resources[resourceReference]; ok {
-					rawState = v.Primary.Attributes
-				}
+			if v, ok := m.Resources[resourceReference]; ok {
+				rawState = v.Primary.Attributes
+				break
 			}
 		}
-		// Import uses the endpoint name
+		if rawState == nil {
+			return "", fmt.Errorf("resource %s not found in state", resourceReference)
+		}
 		return fmt.Sprintf("app_endpoint_name=%s,app_service_id=%s,cluster_id=%s,project_id=%s,organization_id=%s", rawState["name"], rawState["app_service_id"], rawState["cluster_id"], rawState["project_id"], rawState["organization_id"]), nil
 	}
 }
@@ -247,7 +248,7 @@ func TestAccAppEndpointCorsDisabledFalseNoOrigin(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAppEndpointCorsDisabledFalseResourceConfig(resourceName, epName, bucket),
-				ExpectError: re.MustCompile("CORS Origin is empty"), 
+				ExpectError: re.MustCompile("CORS Origin is empty"),
 				// Remove when the bug is fixed, as the config will be valid and should apply successfully. https://jira.issues.couchbase.com/browse/AV-128217
 			},
 		},
@@ -301,7 +302,7 @@ func TestAccAppEndpointMultipleOIDC(t *testing.T) {
 			{
 				Config:      testAccAppEndpointMultipleOIDCResourceConfig(resourceName, epName, bucket),
 				ExpectError: re.MustCompile("500"),
-				// Remove when the bug is fixed https://jira.issues.couchbase.com/browse/AV-128222 
+				// Remove when the bug is fixed https://jira.issues.couchbase.com/browse/AV-128222
 			},
 		},
 	})

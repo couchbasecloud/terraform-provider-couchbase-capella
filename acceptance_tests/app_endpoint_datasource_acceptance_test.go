@@ -86,7 +86,7 @@ func TestAccAppEndpointsDataSourceFiltered(t *testing.T) {
 	dataSourceName := randomStringWithPrefix("tf_acc_ds_app_endpoints_filtered_")
 	dataSourceReference := "data.couchbase-capella_app_endpoints." + dataSourceName
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{

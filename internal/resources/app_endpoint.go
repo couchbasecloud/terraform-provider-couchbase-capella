@@ -432,6 +432,7 @@ func (a *AppEndpoint) Delete(ctx context.Context, req resource.DeleteRequest, re
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
 			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -452,15 +453,22 @@ func (a *AppEndpoint) Delete(ctx context.Context, req resource.DeleteRequest, re
 }
 
 // waitForEndpointDeletion polls the API until the endpoint returns 404 or the
-// timeout is reached.
+// timeout is reached. It respects context cancellation and surfaces the last
+// non-404 error encountered instead of silently timing out.
 func (a *AppEndpoint) waitForEndpointDeletion(
 	ctx context.Context, orgId, projId, clusterId, appServiceId, endpointName string,
 ) error {
 	const maxWait = 5 * time.Minute
 	const interval = 10 * time.Second
 
-	deadline := time.Now().Add(maxWait)
-	for time.Now().Before(deadline) {
+	ctx, cancel := context.WithTimeout(ctx, maxWait)
+	defer cancel()
+
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	var lastErr error
+	for {
 		url := fmt.Sprintf(
 			"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
 			a.HostURL, orgId, projId, clusterId, appServiceId, endpointName,
@@ -472,10 +480,18 @@ func (a *AppEndpoint) waitForEndpointDeletion(
 			if resourceNotFound, _ := api.CheckResourceNotFoundError(err); resourceNotFound {
 				return nil // endpoint is gone
 			}
+			lastErr = err
 		}
-		time.Sleep(interval)
+
+		select {
+		case <-ctx.Done():
+			if lastErr != nil {
+				return fmt.Errorf("timeout after %s, last error: %w", maxWait, lastErr)
+			}
+			return fmt.Errorf("timeout after %s", maxWait)
+		case <-ticker.C:
+		}
 	}
-	return fmt.Errorf("timeout after %s", maxWait)
 }
 
 // ImportState imports a remote App Endpoint that was not created by Terraform.

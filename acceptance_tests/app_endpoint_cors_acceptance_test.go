@@ -138,11 +138,13 @@ func generateCorsResourceImportId(resourceReference string) resource.ImportState
 	return func(state *terraform.State) (string, error) {
 		var rawState map[string]string
 		for _, m := range state.Modules {
-			if len(m.Resources) > 0 {
-				if v, ok := m.Resources[resourceReference]; ok {
-					rawState = v.Primary.Attributes
-				}
+			if v, ok := m.Resources[resourceReference]; ok {
+				rawState = v.Primary.Attributes
+				break
 			}
+		}
+		if rawState == nil {
+			return "", fmt.Errorf("resource %s not found in state", resourceReference)
 		}
 		return fmt.Sprintf(
 			"organization_id=%s,project_id=%s,cluster_id=%s,app_service_id=%s,app_endpoint_name=%s",
