@@ -474,11 +474,11 @@ func (a *AppEndpoint) waitForEndpointDeletion(
 
 	var lastErr error
 	for {
-		url := fmt.Sprintf(
+		endpointURL := fmt.Sprintf(
 			"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
 			a.HostURL, orgId, projId, clusterId, appServiceId, url.PathEscape(endpointName),
 		)
-		cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+		cfg := api.EndpointCfg{Url: endpointURL, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
 		_, err := a.ClientV1.ExecuteWithRetry(ctx, cfg, nil, a.Token, nil)
 		if err != nil {
