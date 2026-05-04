@@ -50,11 +50,11 @@ func TestAccAppEndpointAccessControlFunction(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceReference,
-				ImportStateIdFunc: generateACFImportId(resourceReference),
-				ImportState:       true,
-				// ImportStateVerify omitted: resource has no "id" attribute;
-				// composite IDs are not compatible with the default verifier.
+				ResourceName:                         resourceReference,
+				ImportStateIdFunc:                    generateACFImportId(resourceReference),
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "app_endpoint_name",
 			},
 		},
 	})

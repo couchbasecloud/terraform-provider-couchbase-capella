@@ -45,10 +45,11 @@ func TestAccAppEndpointCorsResource(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceReference,
-				ImportStateIdFunc: generateCorsResourceImportId(resourceReference),
-				ImportState:       true,
-				// ImportStateVerify omitted: resource has no "id" attribute.
+				ResourceName:                         resourceReference,
+				ImportStateIdFunc:                    generateCorsResourceImportId(resourceReference),
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "app_endpoint_name",
 			},
 		},
 	})
