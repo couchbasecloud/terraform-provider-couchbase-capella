@@ -8,10 +8,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-// TestAccClusterEnumValidators_AV_129334 verifies that schema-level enum validators
+var enumValidatorError = regexp.MustCompile(`value must be one of:`)
+
+// TestAccClusterEnumValidators verifies that schema-level enum validators
 // reject out-of-range values at plan time for the cluster resource fields:
 // availability.type, support.plan, support.timezone, service_groups[].services elements.
-func TestAccClusterEnumValidators_AV_129334(t *testing.T) {
+func TestAccClusterEnumValidators(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_validators_")
 	cidr := generateRandomCIDR()
 
@@ -21,22 +23,22 @@ func TestAccClusterEnumValidators_AV_129334(t *testing.T) {
 			// Invalid availability.type
 			{
 				Config:      testAccClusterConfigWithInvalidAvailabilityType(resourceName, cidr),
-				ExpectError: regexp.MustCompile(`value must be one of:`),
+				ExpectError: enumValidatorError,
 			},
 			// Invalid support.plan
 			{
 				Config:      testAccClusterConfigWithInvalidSupportPlan(resourceName, cidr),
-				ExpectError: regexp.MustCompile(`value must be one of:`),
+				ExpectError: enumValidatorError,
 			},
 			// Invalid support.timezone
 			{
 				Config:      testAccClusterConfigWithInvalidSupportTimezone(resourceName, cidr),
-				ExpectError: regexp.MustCompile(`value must be one of:`),
+				ExpectError: enumValidatorError,
 			},
 			// Invalid service in services set
 			{
 				Config:      testAccClusterConfigWithInvalidService(resourceName, cidr),
-				ExpectError: regexp.MustCompile(`value must be one of:`),
+				ExpectError: enumValidatorError,
 			},
 			// Valid configuration — accepted values for every enum field
 			{
