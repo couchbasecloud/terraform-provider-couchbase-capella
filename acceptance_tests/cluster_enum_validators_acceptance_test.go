@@ -44,6 +44,8 @@ func TestAccClusterEnumValidators(t *testing.T) {
 			{
 				Config: testAccClusterConfigWithValidEnumFields(resourceName, cidr),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("couchbase-capella_cluster."+resourceName, "id"),
+					resource.TestCheckResourceAttrSet("couchbase-capella_cluster."+resourceName, "etag"),
 					resource.TestCheckResourceAttr("couchbase-capella_cluster."+resourceName, "availability.type", "multi"),
 					resource.TestCheckResourceAttr("couchbase-capella_cluster."+resourceName, "support.plan", "enterprise"),
 					resource.TestCheckResourceAttr("couchbase-capella_cluster."+resourceName, "support.timezone", "PT"),
