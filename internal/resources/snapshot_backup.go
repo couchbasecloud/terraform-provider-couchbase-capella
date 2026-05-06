@@ -139,7 +139,7 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 		if lookupErr == nil {
 			break
 		}
-		if lookupErr != errors.ErrNotFound {
+		if !stderrors.Is(lookupErr, errors.ErrNotFound) {
 			break
 		}
 		select {
