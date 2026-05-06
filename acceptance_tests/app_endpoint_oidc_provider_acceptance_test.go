@@ -11,32 +11,32 @@ import (
 // TestAccAppEndpointOidcProvider exercises CRUD and import for the
 // couchbase-capella_app_endpoint_oidc_provider resource.
 //
-// Creates its own bucket and app endpoint so it can run in parallel with other
-// tests without competing for the shared common endpoint's OIDC state.
+// Uses a pre-created, dedicated endpoint (ensureOIDCEndpoint) so it can run in
+// parallel with other tests without competing for creation slots.
 func TestAccAppEndpointOidcProvider(t *testing.T) {
+	ensureOIDCEndpoint(t)
+
 	resourceName := randomStringWithPrefix("tf_acc_oidc_")
 	resourceReference := "couchbase-capella_app_endpoint_oidc_provider." + resourceName
-	bucketName := randomStringWithPrefix("tf_acc_oidc_bkt_")
-	epName := randomStringWithPrefix("tf_acc_oidc_ep_")
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOidcProviderConfig(resourceName, bucketName, epName, "https://accounts.google.com", "example-client-id"),
+				Config: testAccOidcProviderConfig(resourceName, globalOIDCEndpointName, "https://accounts.google.com", "example-client-id"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
 					resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
-					resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", epName),
+					resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", globalOIDCEndpointName),
 					resource.TestCheckResourceAttr(resourceReference, "issuer", "https://accounts.google.com"),
 					resource.TestCheckResourceAttr(resourceReference, "client_id", "example-client-id"),
 					resource.TestCheckResourceAttrSet(resourceReference, "provider_id"),
 				),
 			},
 			{
-				Config: testAccOidcProviderFullConfig(resourceName, bucketName, epName),
+				Config: testAccOidcProviderFullConfig(resourceName, globalOIDCEndpointName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "register", "true"),
 					resource.TestCheckResourceAttr(resourceReference, "user_prefix", "google_"),
@@ -62,26 +62,26 @@ func TestAccAppEndpointOidcProvider(t *testing.T) {
 // It creates an OIDC provider first (via couchbase-capella_app_endpoint_oidc_provider)
 // to obtain a provider_id, then marks it as default.
 //
-// Creates its own bucket and app endpoint so it can run in parallel with
-// TestAccAppEndpointOidcProvider without competing for the same endpoint.
+// Uses its own pre-created endpoint (ensureDefaultOIDCEndpoint) so it can run
+// in parallel with TestAccAppEndpointOidcProvider without state conflicts.
 func TestAccAppEndpointDefaultOidcProvider(t *testing.T) {
+	ensureDefaultOIDCEndpoint(t)
+
 	oidcResourceName := randomStringWithPrefix("tf_acc_oidc_")
 	defaultResourceName := randomStringWithPrefix("tf_acc_default_oidc_")
 	defaultResourceReference := "couchbase-capella_app_endpoint_default_oidc_provider." + defaultResourceName
-	bucketName := randomStringWithPrefix("tf_acc_doidc_bkt_")
-	epName := randomStringWithPrefix("tf_acc_doidc_ep_")
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultOidcProviderConfig(oidcResourceName, defaultResourceName, bucketName, epName),
+				Config: testAccDefaultOidcProviderConfig(oidcResourceName, defaultResourceName, globalDefaultOIDCEndpointName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(defaultResourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(defaultResourceReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(defaultResourceReference, "cluster_id", globalClusterId),
 					resource.TestCheckResourceAttr(defaultResourceReference, "app_service_id", globalAppServiceId),
-					resource.TestCheckResourceAttr(defaultResourceReference, "app_endpoint_name", epName),
+					resource.TestCheckResourceAttr(defaultResourceReference, "app_endpoint_name", globalDefaultOIDCEndpointName),
 					resource.TestCheckResourceAttrSet(defaultResourceReference, "provider_id"),
 				),
 			},
@@ -102,43 +102,18 @@ func TestAccAppEndpointDefaultOidcProvider(t *testing.T) {
 // Config helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-func testAccOidcProviderConfig(resourceName, bucketName, epName, issuer, clientId string) string {
+func testAccOidcProviderConfig(resourceName, epName, issuer, clientId string) string {
 	return fmt.Sprintf(`
 %[1]s
-
-resource "couchbase-capella_bucket" "%[2]s_bucket" {
-	organization_id = "%[3]s"
-	project_id      = "%[4]s"
-	cluster_id      = "%[5]s"
-	name            = "%[6]s"
-}
-
-resource "couchbase-capella_app_endpoint" "%[2]s_ep" {
-	organization_id = "%[3]s"
-	project_id      = "%[4]s"
-	cluster_id      = "%[5]s"
-	app_service_id  = "%[7]s"
-	bucket          = "%[6]s"
-	name            = "%[8]s"
-	scopes = {
-		"_default" = {
-			collections = {
-				"_default" = {}
-			}
-		}
-	}
-	depends_on = [couchbase-capella_bucket.%[2]s_bucket]
-}
 
 resource "couchbase-capella_app_endpoint_oidc_provider" "%[2]s" {
 	organization_id   = "%[3]s"
 	project_id        = "%[4]s"
 	cluster_id        = "%[5]s"
-	app_service_id    = "%[7]s"
-	app_endpoint_name = "%[8]s"
-	issuer            = "%[9]s"
-	client_id         = "%[10]s"
-	depends_on        = [couchbase-capella_app_endpoint.%[2]s_ep]
+	app_service_id    = "%[6]s"
+	app_endpoint_name = "%[7]s"
+	issuer            = "%[8]s"
+	client_id         = "%[9]s"
 }
 `,
 		globalProviderBlock,
@@ -146,7 +121,6 @@ resource "couchbase-capella_app_endpoint_oidc_provider" "%[2]s" {
 		globalOrgId,
 		globalProjectId,
 		globalClusterId,
-		bucketName,
 		globalAppServiceId,
 		epName,
 		issuer,
@@ -154,47 +128,22 @@ resource "couchbase-capella_app_endpoint_oidc_provider" "%[2]s" {
 	)
 }
 
-func testAccOidcProviderFullConfig(resourceName, bucketName, epName string) string {
+func testAccOidcProviderFullConfig(resourceName, epName string) string {
 	return fmt.Sprintf(`
 %[1]s
-
-resource "couchbase-capella_bucket" "%[2]s_bucket" {
-	organization_id = "%[3]s"
-	project_id      = "%[4]s"
-	cluster_id      = "%[5]s"
-	name            = "%[6]s"
-}
-
-resource "couchbase-capella_app_endpoint" "%[2]s_ep" {
-	organization_id = "%[3]s"
-	project_id      = "%[4]s"
-	cluster_id      = "%[5]s"
-	app_service_id  = "%[7]s"
-	bucket          = "%[6]s"
-	name            = "%[8]s"
-	scopes = {
-		"_default" = {
-			collections = {
-				"_default" = {}
-			}
-		}
-	}
-	depends_on = [couchbase-capella_bucket.%[2]s_bucket]
-}
 
 resource "couchbase-capella_app_endpoint_oidc_provider" "%[2]s" {
 	organization_id   = "%[3]s"
 	project_id        = "%[4]s"
 	cluster_id        = "%[5]s"
-	app_service_id    = "%[7]s"
-	app_endpoint_name = "%[8]s"
+	app_service_id    = "%[6]s"
+	app_endpoint_name = "%[7]s"
 	issuer            = "https://accounts.google.com"
 	client_id         = "example-client-id"
 	register          = true
 	user_prefix       = "google_"
 	username_claim    = "email"
 	roles_claim       = "roles"
-	depends_on        = [couchbase-capella_app_endpoint.%[2]s_ep]
 }
 `,
 		globalProviderBlock,
@@ -202,57 +151,31 @@ resource "couchbase-capella_app_endpoint_oidc_provider" "%[2]s" {
 		globalOrgId,
 		globalProjectId,
 		globalClusterId,
-		bucketName,
 		globalAppServiceId,
 		epName,
 	)
 }
 
-func testAccDefaultOidcProviderConfig(oidcResourceName, defaultResourceName, bucketName, epName string) string {
+func testAccDefaultOidcProviderConfig(oidcResourceName, defaultResourceName, epName string) string {
 	return fmt.Sprintf(`
 %[1]s
-
-resource "couchbase-capella_bucket" "%[2]s_bucket" {
-	organization_id = "%[3]s"
-	project_id      = "%[4]s"
-	cluster_id      = "%[5]s"
-	name            = "%[6]s"
-}
-
-resource "couchbase-capella_app_endpoint" "%[2]s_ep" {
-	organization_id = "%[3]s"
-	project_id      = "%[4]s"
-	cluster_id      = "%[5]s"
-	app_service_id  = "%[7]s"
-	bucket          = "%[6]s"
-	name            = "%[8]s"
-	scopes = {
-		"_default" = {
-			collections = {
-				"_default" = {}
-			}
-		}
-	}
-	depends_on = [couchbase-capella_bucket.%[2]s_bucket]
-}
 
 resource "couchbase-capella_app_endpoint_oidc_provider" "%[2]s" {
 	organization_id   = "%[3]s"
 	project_id        = "%[4]s"
 	cluster_id        = "%[5]s"
-	app_service_id    = "%[7]s"
-	app_endpoint_name = "%[8]s"
+	app_service_id    = "%[6]s"
+	app_endpoint_name = "%[7]s"
 	issuer            = "https://accounts.google.com"
 	client_id         = "example-client-id"
-	depends_on        = [couchbase-capella_app_endpoint.%[2]s_ep]
 }
 
-resource "couchbase-capella_app_endpoint_default_oidc_provider" "%[9]s" {
+resource "couchbase-capella_app_endpoint_default_oidc_provider" "%[8]s" {
 	organization_id   = "%[3]s"
 	project_id        = "%[4]s"
 	cluster_id        = "%[5]s"
-	app_service_id    = "%[7]s"
-	app_endpoint_name = "%[8]s"
+	app_service_id    = "%[6]s"
+	app_endpoint_name = "%[7]s"
 	provider_id       = couchbase-capella_app_endpoint_oidc_provider.%[2]s.provider_id
 	depends_on        = [couchbase-capella_app_endpoint_oidc_provider.%[2]s]
 }
@@ -262,7 +185,6 @@ resource "couchbase-capella_app_endpoint_default_oidc_provider" "%[9]s" {
 		globalOrgId,
 		globalProjectId,
 		globalClusterId,
-		bucketName,
 		globalAppServiceId,
 		epName,
 		defaultResourceName,

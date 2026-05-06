@@ -6,10 +6,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/provider"
 )
 
 var (
+	// globalClient is initialised in TestMain and used by lazy endpoint setup.
+	globalClient *api.Client
 
 	// these global variables are set by env vars.
 	globalHost  string
@@ -25,6 +28,45 @@ var (
 	globalBucketId        string
 	globalAppServiceId    string
 	globalAppEndpointName = "tf_acc_test_app_endpoint_common"
+
+	// Pre-created endpoints for sub-resource tests. One dedicated endpoint per
+	// test prevents write conflicts without concurrent creation 500s — they are
+	// created lazily and sequentially on first use via ensureXxxEndpoint().
+	// Each endpoint uses its own bucket because Capella only allows one endpoint
+	// per bucket/scope/collection combination.
+	globalACFEndpointName            = "tf_acc_test_acf_endpoint"
+	globalACFBucketName              = "tf_acc_acf_bkt"
+	globalIFEndpointName             = "tf_acc_test_if_endpoint"
+	globalIFBucketName               = "tf_acc_if_bkt"
+	globalCORSEndpointName           = "tf_acc_test_cors_endpoint"
+	globalCORSBucketName             = "tf_acc_cors_bkt"
+	globalCORSOriginOnlyEndpointName = "tf_acc_test_cors_ori_endpoint"
+	globalCORSOriginOnlyBucketName   = "tf_acc_cors_ori_bkt"
+	globalOIDCEndpointName           = "tf_acc_test_oidc_endpoint"
+	globalOIDCBucketName             = "tf_acc_oidc_bkt"
+	globalDefaultOIDCEndpointName    = "tf_acc_test_doidc_endpoint"
+	globalDefaultOIDCBucketName      = "tf_acc_doidc_bkt"
+
+	// Pre-created buckets for app_endpoint resource tests. Each test gets its
+	// own bucket because Capella only permits one endpoint per bucket/scope/collection.
+	// Buckets are created lazily via ensureFixtureBucketByName and are not owned
+	// by Terraform, so they are never created/deleted during test runs.
+	globalEPBucketName                   = "tf_acc_ep_bkt"
+	globalNoCorsEPBucketName             = "tf_acc_ep_nocors_bkt"
+	globalCorsFullEPBucketName           = "tf_acc_ep_cors_full_bkt"
+	globalCorsSpecificEPBucketName       = "tf_acc_ep_cors_spec_bkt"
+	globalCorsMaxAge0EPBucketName        = "tf_acc_ep_cors_ma0_bkt"
+	globalOIDCFullEPBucketName           = "tf_acc_ep_oidc_full_bkt"
+	globalOIDCDiscEPBucketName           = "tf_acc_ep_oidc_disc_bkt"
+	globalCorsExpandEPBucketName         = "tf_acc_ep_cors_exp_bkt"
+	globalCorsWildEPBucketName           = "tf_acc_ep_cors_wld_bkt"
+	globalAddOIDCEPBucketName            = "tf_acc_ep_add_oidc_bkt"
+	globalACFUpdateEPBucketName          = "tf_acc_ep_acf_bkt"
+	globalCorsMaxAgeZeroEPBucketName     = "tf_acc_ep_maz_bkt"
+	globalCorsMaxAgeFromZeroEPBucketName = "tf_acc_ep_mafz_bkt"
+	// TestAccAppEndpointInexistentCollection reuses globalBucketName: it tries
+	// _default/INVALID_COLLLECTION which does not conflict with the common
+	// endpoint on _default/_default, so no dedicated bucket is needed.
 
 	// this global variable is set in TestMain.
 	globalProviderBlock string

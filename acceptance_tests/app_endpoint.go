@@ -15,8 +15,10 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/app_endpoints"
 )
 
-func createAppEndpoint(ctx context.Context, client *api.Client) error {
-	// First, check if app endpoint already exists
+func createAppEndpoint(ctx context.Context, client *api.Client, name, bucket string) error {
+	const maxWait = 5 * time.Minute
+	const retryInterval = 30 * time.Second
+
 	checkUrl := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
 		globalHost,
@@ -24,7 +26,7 @@ func createAppEndpoint(ctx context.Context, client *api.Client) error {
 		globalProjectId,
 		globalClusterId,
 		globalAppServiceId,
-		globalAppEndpointName,
+		name,
 	)
 	checkCfg := api.EndpointCfg{
 		Url:           checkUrl,
@@ -34,14 +36,13 @@ func createAppEndpoint(ctx context.Context, client *api.Client) error {
 
 	_, err := client.ExecuteWithRetry(ctx, checkCfg, nil, globalToken, nil)
 	if err == nil {
-		log.Printf("App endpoint '%s' already exists", globalAppEndpointName)
+		log.Printf("App endpoint '%s' already exists", name)
 		return nil
 	}
 
-	// App endpoint doesn't exist, create it
 	appEndpointRequest := app_endpoints.AppEndpointRequest{
-		Name:             globalAppEndpointName,
-		Bucket:           globalBucketName,
+		Name:             name,
+		Bucket:           bucket,
 		DeltaSyncEnabled: true,
 		Scopes: app_endpoints.Scopes{
 			"_default": app_endpoints.Scope{
@@ -55,7 +56,7 @@ func createAppEndpoint(ctx context.Context, client *api.Client) error {
 		},
 	}
 
-	url := fmt.Sprintf(
+	postUrl := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints",
 		globalHost,
 		globalOrgId,
@@ -63,24 +64,31 @@ func createAppEndpoint(ctx context.Context, client *api.Client) error {
 		globalClusterId,
 		globalAppServiceId,
 	)
-	cfg := api.EndpointCfg{
-		Url:           url,
+	postCfg := api.EndpointCfg{
+		Url:           postUrl,
 		Method:        http.MethodPost,
 		SuccessStatus: http.StatusCreated,
 	}
 
-	_, err = client.ExecuteWithRetry(
-		ctx,
-		cfg,
-		appEndpointRequest,
-		globalToken,
-		nil,
-	)
-	if err != nil {
-		return err
+	deadline := time.Now().Add(maxWait)
+	for {
+		_, err = client.ExecuteWithRetry(ctx, postCfg, appEndpointRequest, globalToken, nil)
+		if err == nil {
+			return nil
+		}
+		if permErr := permanentAPIError(err); permErr != nil {
+			return permErr
+		}
+		if time.Now().After(deadline) {
+			return fmt.Errorf("timeout creating app endpoint %s: %w", name, err)
+		}
+		log.Printf("transient error creating app endpoint %s, retrying in %s: %v", name, retryInterval, err)
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("context done while creating app endpoint: %w", ctx.Err())
+		case <-time.After(retryInterval):
+		}
 	}
-
-	return nil
 }
 
 // permanentAPIError returns a non-nil error if err is a permanent 4xx API
@@ -98,7 +106,7 @@ func permanentAPIError(err error) error {
 	return nil
 }
 
-func appEndpointWait(ctx context.Context, client *api.Client) error {
+func appEndpointWait(ctx context.Context, client *api.Client, name string) error {
 	const maxWaitTime = 10 * time.Minute
 	const checkInterval = 1 * time.Minute
 
@@ -112,7 +120,7 @@ func appEndpointWait(ctx context.Context, client *api.Client) error {
 			globalProjectId,
 			globalClusterId,
 			globalAppServiceId,
-			globalAppEndpointName,
+			name,
 		)
 
 		cfg := api.EndpointCfg{

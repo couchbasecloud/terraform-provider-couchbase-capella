@@ -38,6 +38,7 @@ provider "couchbase-capella" {
 	var code int
 	ctx := context.Background()
 	client := api.NewClient(timeout)
+	globalClient = client
 
 	err := setup(ctx, client)
 	if err != nil {
@@ -101,10 +102,10 @@ func setup(ctx context.Context, client *api.Client) error {
 		log.Printf("Using existing app service: %s", globalAppServiceId)
 	}
 
-	if err := createAppEndpoint(ctx, client); err != nil {
+	if err := createAppEndpoint(ctx, client, globalAppEndpointName, globalBucketName); err != nil {
 		return err
 	}
-	if err := appEndpointWait(ctx, client); err != nil {
+	if err := appEndpointWait(ctx, client, globalAppEndpointName); err != nil {
 		return err
 	}
 

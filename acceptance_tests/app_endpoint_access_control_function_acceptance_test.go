@@ -11,16 +11,16 @@ import (
 // TestAccAppEndpointAccessControlFunction exercises CRUD and import for the
 // couchbase-capella_app_endpoint_access_control_function resource.
 //
-// Creates its own bucket and app endpoint so it can run in parallel with other
-// tests without competing for the shared common endpoint's collection state.
+// Uses a pre-created, dedicated endpoint (ensureACFEndpoint) so it can run in
+// parallel with other tests without competing for creation slots.
 //
 // Step 1 also verifies that scope and collection default to "_default" when
 // omitted from configuration.
 func TestAccAppEndpointAccessControlFunction(t *testing.T) {
+	ensureACFEndpoint(t)
+
 	resourceName := randomStringWithPrefix("tf_acc_acf_")
 	resourceReference := "couchbase-capella_app_endpoint_access_control_function." + resourceName
-	bucketName := randomStringWithPrefix("tf_acc_acf_bkt_")
-	epName := randomStringWithPrefix("tf_acc_acf_ep_")
 
 	initialFn := "function(doc, oldDoc, meta) { channel(doc.channels); }"
 	updatedFn := "function(doc, oldDoc, meta) { channel(doc.type); }"
@@ -30,20 +30,20 @@ func TestAccAppEndpointAccessControlFunction(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// scope and collection omitted — verify they default to "_default"
-				Config: testAccACFConfigNoScope(resourceName, bucketName, epName, initialFn),
+				Config: testAccACFConfigNoScope(resourceName, globalACFEndpointName, initialFn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
 					resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
-					resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", epName),
+					resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", globalACFEndpointName),
 					resource.TestCheckResourceAttr(resourceReference, "scope", "_default"),
 					resource.TestCheckResourceAttr(resourceReference, "collection", "_default"),
 					resource.TestCheckResourceAttr(resourceReference, "access_control_function", initialFn),
 				),
 			},
 			{
-				Config: testAccACFConfig(resourceName, bucketName, epName, "_default", "_default", updatedFn),
+				Config: testAccACFConfig(resourceName, globalACFEndpointName, "_default", "_default", updatedFn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "access_control_function", updatedFn),
 				),
@@ -63,44 +63,19 @@ func TestAccAppEndpointAccessControlFunction(t *testing.T) {
 // Config helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-func testAccACFConfig(resourceName, bucketName, epName, scope, collection, acfBody string) string {
+func testAccACFConfig(resourceName, epName, scope, collection, acfBody string) string {
 	return fmt.Sprintf(`
 %[1]s
-
-resource "couchbase-capella_bucket" "%[2]s_bucket" {
-	organization_id = "%[3]s"
-	project_id      = "%[4]s"
-	cluster_id      = "%[5]s"
-	name            = "%[6]s"
-}
-
-resource "couchbase-capella_app_endpoint" "%[2]s_ep" {
-	organization_id = "%[3]s"
-	project_id      = "%[4]s"
-	cluster_id      = "%[5]s"
-	app_service_id  = "%[7]s"
-	bucket          = "%[6]s"
-	name            = "%[8]s"
-	scopes = {
-		"_default" = {
-			collections = {
-				"_default" = {}
-			}
-		}
-	}
-	depends_on = [couchbase-capella_bucket.%[2]s_bucket]
-}
 
 resource "couchbase-capella_app_endpoint_access_control_function" "%[2]s" {
 	organization_id         = "%[3]s"
 	project_id              = "%[4]s"
 	cluster_id              = "%[5]s"
-	app_service_id          = "%[7]s"
-	app_endpoint_name       = "%[8]s"
-	scope                   = "%[9]s"
-	collection              = "%[10]s"
-	access_control_function = "%[11]s"
-	depends_on              = [couchbase-capella_app_endpoint.%[2]s_ep]
+	app_service_id          = "%[6]s"
+	app_endpoint_name       = "%[7]s"
+	scope                   = "%[8]s"
+	collection              = "%[9]s"
+	access_control_function = "%[10]s"
 }
 `,
 		globalProviderBlock,
@@ -108,7 +83,6 @@ resource "couchbase-capella_app_endpoint_access_control_function" "%[2]s" {
 		globalOrgId,
 		globalProjectId,
 		globalClusterId,
-		bucketName,
 		globalAppServiceId,
 		epName,
 		scope,
@@ -117,42 +91,17 @@ resource "couchbase-capella_app_endpoint_access_control_function" "%[2]s" {
 	)
 }
 
-func testAccACFConfigNoScope(resourceName, bucketName, epName, acfBody string) string {
+func testAccACFConfigNoScope(resourceName, epName, acfBody string) string {
 	return fmt.Sprintf(`
 %[1]s
-
-resource "couchbase-capella_bucket" "%[2]s_bucket" {
-	organization_id = "%[3]s"
-	project_id      = "%[4]s"
-	cluster_id      = "%[5]s"
-	name            = "%[6]s"
-}
-
-resource "couchbase-capella_app_endpoint" "%[2]s_ep" {
-	organization_id = "%[3]s"
-	project_id      = "%[4]s"
-	cluster_id      = "%[5]s"
-	app_service_id  = "%[7]s"
-	bucket          = "%[6]s"
-	name            = "%[8]s"
-	scopes = {
-		"_default" = {
-			collections = {
-				"_default" = {}
-			}
-		}
-	}
-	depends_on = [couchbase-capella_bucket.%[2]s_bucket]
-}
 
 resource "couchbase-capella_app_endpoint_access_control_function" "%[2]s" {
 	organization_id         = "%[3]s"
 	project_id              = "%[4]s"
 	cluster_id              = "%[5]s"
-	app_service_id          = "%[7]s"
-	app_endpoint_name       = "%[8]s"
-	access_control_function = "%[9]s"
-	depends_on              = [couchbase-capella_app_endpoint.%[2]s_ep]
+	app_service_id          = "%[6]s"
+	app_endpoint_name       = "%[7]s"
+	access_control_function = "%[8]s"
 }
 `,
 		globalProviderBlock,
@@ -160,7 +109,6 @@ resource "couchbase-capella_app_endpoint_access_control_function" "%[2]s" {
 		globalOrgId,
 		globalProjectId,
 		globalClusterId,
-		bucketName,
 		globalAppServiceId,
 		epName,
 		acfBody,
