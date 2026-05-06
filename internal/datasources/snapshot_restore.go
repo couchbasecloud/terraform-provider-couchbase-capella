@@ -65,7 +65,7 @@ func (d *SnapshotRestore) Read(ctx context.Context, req datasource.ReadRequest, 
 
 	for i := range snapshotRestores.Data {
 		if snapshotRestores.Data[i].ID == restoreId {
-			newSnapshotRestore := providerschema.NewSnapshotRestore(snapshotRestores.Data[i], organizationId, projectId, clusterId)
+			newSnapshotRestore := providerschema.NewSnapshotRestore(snapshotRestores.Data[i], clusterId, projectId, organizationId)
 			diags = resp.State.Set(ctx, &newSnapshotRestore)
 			resp.Diagnostics.Append(diags...)
 			return
