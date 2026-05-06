@@ -208,7 +208,10 @@ func NewNetworkPeer(ctx context.Context, networkPeer *network_peer_api.GetNetwor
 
 	if networkPeer.Status.State != nil {
 		state := *networkPeer.Status.State
-		reasoning := *networkPeer.Status.Reasoning
+		var reasoning string
+		if networkPeer.Status.Reasoning != nil {
+			reasoning = *networkPeer.Status.Reasoning
+		}
 		status := PeeringStatus{
 			State:     types.StringValue(state),
 			Reasoning: types.StringValue(reasoning),
@@ -231,8 +234,14 @@ func NewNetworkPeer(ctx context.Context, networkPeer *network_peer_api.GetNetwor
 }
 
 // morphToProviderConfig is used to convert ProviderConfig from json.RawMessage format to ProviderConfig type.
+// Returns an empty ProviderConfig with no error when the providerConfig field is null or empty
+// (which occurs for network peers in a failed state).
 func morphToProviderConfig(networkPeer *network_peer_api.GetNetworkPeeringRecordResponse) (ProviderConfig, error) {
 	var newProviderConfig ProviderConfig
+
+	if len(networkPeer.ProviderConfig) == 0 || string(networkPeer.ProviderConfig) == "null" {
+		return newProviderConfig, nil
+	}
 
 	aws, err := networkPeer.AsAWS()
 	if err != nil {
@@ -279,7 +288,7 @@ func morphToProviderConfig(networkPeer *network_peer_api.GetNetworkPeeringRecord
 		}
 		return newProviderConfig, nil
 	default:
-		return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingProviderConfig, err)
+		return newProviderConfig, nil
 	}
 
 }

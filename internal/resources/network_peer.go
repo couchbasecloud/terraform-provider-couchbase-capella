@@ -7,15 +7,15 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	network_peer_api "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/network_peer"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
-	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
-
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	network_peer_api "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/network_peer"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -129,10 +129,28 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 		nil,
 	)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating network peer",
-			errorMessageWhileNetworkPeerCreation+api.ParseError(err),
-		)
+		// The API may persist a failed peering record even when returning a non-success status.
+		// Attempt to find the resource so we can save it to state for lifecycle management.
+		peerID := n.findNetworkPeerByName(ctx, organizationId, projectId, clusterId, plan.Name.ValueString())
+		if peerID == "" {
+			resp.Diagnostics.AddError(
+				"Error creating network peer",
+				errorMessageWhileNetworkPeerCreation+api.ParseError(err),
+			)
+			return
+		}
+
+		tflog.Info(ctx, "network peer was persisted despite creation error, saving to state", map[string]interface{}{
+			"peer_id": peerID,
+		})
+
+		diags = resp.State.Set(ctx, initializeNetworkPeerPlanId(plan, peerID))
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		n.setRefreshedStateOrWarn(ctx, resp, organizationId, projectId, clusterId, peerID, plan.ProviderType.ValueString(), err)
 		return
 	}
 
@@ -141,7 +159,7 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating network peer",
-			errorMessageWhileNetworkPeerCreation+"error during unmarshalling:"+err.Error(),
+			errorMessageWhileNetworkPeerCreation+"error during unmarshalling: "+err.Error(),
 		)
 		return
 	}
@@ -152,21 +170,28 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	refreshedState, err := n.retrieveNetworkPeer(ctx, organizationId, projectId, clusterId, networkPeerResponse.Id.String(), plan.ProviderType.ValueString())
+	n.setRefreshedStateOrWarn(ctx, resp, organizationId, projectId, clusterId, networkPeerResponse.Id.String(), plan.ProviderType.ValueString(), nil)
+}
+
+// setRefreshedStateOrWarn attempts to read the full peer state and set it on the response.
+// If the read fails (e.g. peer is in failed state with incomplete providerConfig), a warning
+// is emitted instead of an error so that the partial state (containing the ID) is preserved.
+func (n *NetworkPeer) setRefreshedStateOrWarn(ctx context.Context, resp *resource.CreateResponse, organizationId, projectId, clusterId, peerID, providerType string, originalErr error) {
+	refreshedState, err := n.retrieveNetworkPeer(ctx, organizationId, projectId, clusterId, peerID, providerType)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error reading network peering service status",
-			"Error reading network peering service status, unexpected error: "+err.Error(),
+		detail := "The network peer was created but its current status could not be fully read: " + err.Error()
+		if originalErr != nil {
+			detail += ". Original creation error: " + api.ParseError(originalErr)
+		}
+		resp.Diagnostics.AddWarning(
+			"Network peer created with incomplete state",
+			detail,
 		)
-
 		return
 	}
 
-	diags = resp.State.Set(ctx, refreshedState)
+	diags := resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 }
 
 // createAWSProviderConfig is the function to handle AWS configuration.
@@ -420,15 +445,19 @@ func (n *NetworkPeer) retrieveNetworkPeer(
 		return nil, fmt.Errorf("%s: %w", errors.ErrNotFound, err)
 	}
 
+	// Use the known provider type when the response doesn't include it
+	// (common for failed peers with empty providerConfig).
+	if networkPeerResp.ProviderType == "" {
+		networkPeerResp.ProviderType = providerType
+	} else if validateProviderTypeIsSameInPlanAndState(providerType, networkPeerResp.ProviderType) {
+		networkPeerResp.ProviderType = providerType
+	}
+
 	audit := providerschema.NewCouchbaseAuditData(networkPeerResp.Audit)
 
 	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
 	if diags.HasError() {
 		return nil, fmt.Errorf("%s: %w", errors.ErrUnableToConvertAuditData, err)
-	}
-
-	if validateProviderTypeIsSameInPlanAndState(providerType, networkPeerResp.ProviderType) {
-		networkPeerResp.ProviderType = providerType
 	}
 
 	refreshedState, err := providerschema.NewNetworkPeer(ctx, networkPeerResp, organizationId, projectId, clusterId, auditObj)
@@ -441,8 +470,8 @@ func (n *NetworkPeer) retrieveNetworkPeer(
 	return refreshedState, nil
 }
 
-// getNetworkPeer retrieves cluster information from the specified organization and project
-// using the provided cluster ID by open-api call.
+// getNetworkPeer retrieves network peer information from the specified organization and project
+// using the provided cluster ID and peer ID by open-api call.
 func (n *NetworkPeer) getNetworkPeer(
 	ctx context.Context, organizationId, projectId, clusterId, peerId string,
 ) (*network_peer_api.GetNetworkPeeringRecordResponse, error) {
@@ -465,16 +494,21 @@ func (n *NetworkPeer) getNetworkPeer(
 		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
 
-	if err := defineProviderForResponse(networkResp); err != nil {
-		return nil, err
-	}
+	// Best-effort provider type detection from response config fields.
+	// For failed peers, providerConfig may be empty so this detection is not fatal.
+	_ = defineProviderForResponse(&networkResp)
 
 	return &networkResp, nil
 }
 
-// defineProviderForResponse sets the provider type in the retrieved network peer as per the fields populated in the provider config.
-// If the provider type is not set through terraform separately in this manner, it will throw error as v4 get doesn't return it, but it's a field in resources.
-func defineProviderForResponse(networkResp network_peer_api.GetNetworkPeeringRecordResponse) error {
+// defineProviderForResponse sets the provider type on the response based on populated
+// provider config fields. Returns an error if provider type cannot be determined (e.g.
+// when a failed peer has an empty providerConfig), but callers may choose to ignore it.
+func defineProviderForResponse(networkResp *network_peer_api.GetNetworkPeeringRecordResponse) error {
+	if len(networkResp.ProviderConfig) == 0 || string(networkResp.ProviderConfig) == "null" {
+		return fmt.Errorf("%s: providerConfig is empty", errors.ErrReadingProviderConfig)
+	}
+
 	azure, err := networkResp.AsAZURE()
 	if err != nil {
 		return fmt.Errorf("%s: %w", errors.ErrReadingAzureConfig, err)
@@ -490,7 +524,6 @@ func defineProviderForResponse(networkResp network_peer_api.GetNetworkPeeringRec
 		return fmt.Errorf("%s: %w", errors.ErrReadingAWSConfig, err)
 	}
 
-	// if there is no error, set the provider type for the provider config as per the populated fields in the get response.
 	switch {
 	case azure.AzureConfigData.AzureTenantId != "":
 		networkResp.ProviderType = "azure"
@@ -499,10 +532,32 @@ func defineProviderForResponse(networkResp network_peer_api.GetNetworkPeeringRec
 	case aws.AWSConfigData.VpcId != "":
 		networkResp.ProviderType = "aws"
 	default:
-		return fmt.Errorf("%s: %w", errors.ErrReadingProviderConfig, err)
+		return fmt.Errorf("%s: unable to determine provider type from config fields", errors.ErrReadingProviderConfig)
 	}
 
 	return nil
+}
+
+// findNetworkPeerByName lists all network peers for a cluster and returns the ID
+// of the peer whose name matches. Returns empty string if not found.
+func (n *NetworkPeer) findNetworkPeerByName(ctx context.Context, organizationId, projectId, clusterId, name string) string {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/networkPeers", n.HostURL, organizationId, projectId, clusterId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+
+	peers, err := api.GetPaginated[[]network_peer_api.GetNetworkPeeringRecordResponse](ctx, n.ClientV1, n.Token, cfg, api.SortById)
+	if err != nil {
+		tflog.Warn(ctx, "failed to list network peers while searching for persisted record", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return ""
+	}
+
+	for i := range peers {
+		if peers[i].Name == name {
+			return peers[i].Id.String()
+		}
+	}
+	return ""
 }
 
 func validateProviderTypeIsSameInPlanAndState(planProviderType, stateProviderType string) bool {
