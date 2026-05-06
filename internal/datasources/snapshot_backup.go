@@ -2,7 +2,6 @@ package datasources
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -57,13 +56,7 @@ func (d *SnapshotBackup) Read(ctx context.Context, req datasource.ReadRequest, r
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups", d.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	backupResps, err := d.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		d.Token,
-		nil,
-	)
+	all, err := api.GetPaginated[[]snapshot_backup.SnapshotBackup](ctx, d.ClientV1, d.Token, cfg, "")
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Snapshot Backups",
@@ -71,20 +64,7 @@ func (d *SnapshotBackup) Read(ctx context.Context, req datasource.ReadRequest, r
 		)
 		return
 	}
-
-	var snapshotBackups snapshot_backup.ListSnapshotBackupsResponse
-	err = json.Unmarshal(backupResps.Body, &snapshotBackups)
-	if err != nil {
-		diags.AddError(
-			"Error Unmarshalling Capella Snapshot Backups",
-			fmt.Sprintf("Could not unmarshal snapshot backups in cluster %s, unexpected error: %s", clusterId, api.ParseError(err)),
-		)
-		tflog.Debug(ctx, "error unmarshalling snapshot backups", map[string]interface{}{
-			"backupResps.Body": backupResps.Body,
-			"err":              err,
-		})
-		return
-	}
+	snapshotBackups := snapshot_backup.ListSnapshotBackupsResponse{Data: all}
 
 	for i := range snapshotBackups.Data {
 
