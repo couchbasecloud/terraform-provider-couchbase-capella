@@ -28,8 +28,8 @@ func generate(sites []enumSite) ([]byte, error) {
 		fmt.Fprintf(&b, "// Source: %s\nvar %s = %s\n\n", s.SourcePath, name, decl)
 	}
 
-	b.WriteString("// Lookup maps enum values by (OpenAPI schemaName, camelFieldName).\n")
-	b.WriteString("var Lookup = map[string]map[string][]string{\n")
+	b.WriteString("// Table maps enum values by (OpenAPI schemaName, camelFieldName).\n")
+	b.WriteString("var Table = map[string]map[string][]string{\n")
 
 	lookup := buildLookup(sites)
 	for _, schemaName := range sortedKeys(lookup) {

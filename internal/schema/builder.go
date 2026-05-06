@@ -2,11 +2,15 @@ package schema
 
 import (
 	"reflect"
+	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	resourceschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/docs"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schemawalk"
 )
 
 // SchemaAttribute is a type constraint for supported attribute types across resources and datasources
@@ -133,6 +137,10 @@ func AddAttr[M SchemaAttributeMap, T SchemaAttribute](
 
 	setMarkdownDescription(attr, description)
 
+	if values := schemawalk.EnumValues(builder.openAPISchemaName, builder.resourceName, alternateSchemas, fieldName); len(values) > 0 {
+		appendOneOfValidator(attr, values)
+	}
+
 	// Add to map based on map type
 	switch m := any(&attrs).(type) {
 	case *map[string]resourceschema.Attribute:
@@ -150,6 +158,53 @@ func AddAttr[M SchemaAttributeMap, T SchemaAttribute](
 	default:
 		panic("unsupported attribute map type")
 	}
+}
+
+// appendOneOfValidator attaches a OneOf validator to string and int64 attributes.
+// If the attribute already has a OneOf validator (call-site override), it is left unchanged.
+func appendOneOfValidator(attr any, values []string) {
+	switch a := attr.(type) {
+	case *resourceschema.StringAttribute:
+		if !hasOneOfValidator(a.Validators) {
+			a.Validators = append(a.Validators, stringvalidator.OneOf(values...))
+		}
+	case *datasourceschema.StringAttribute:
+		if !hasOneOfValidator(a.Validators) {
+			a.Validators = append(a.Validators, stringvalidator.OneOf(values...))
+		}
+	case *resourceschema.Int64Attribute:
+		if int64vals, ok := parseInt64Slice(values); ok && !hasOneOfValidator(a.Validators) {
+			a.Validators = append(a.Validators, int64validator.OneOf(int64vals...))
+		}
+	case *datasourceschema.Int64Attribute:
+		if int64vals, ok := parseInt64Slice(values); ok && !hasOneOfValidator(a.Validators) {
+			a.Validators = append(a.Validators, int64validator.OneOf(int64vals...))
+		}
+	}
+}
+
+// hasOneOfValidator reports whether any validator in the slice is a OneOf validator.
+func hasOneOfValidator[T any](validators []T) bool {
+	for _, v := range validators {
+		if reflect.TypeOf(v).Name() == "oneOfValidator" {
+			return true
+		}
+	}
+	return false
+}
+
+// parseInt64Slice converts a slice of string values to int64.
+// Returns false if any value cannot be parsed.
+func parseInt64Slice(values []string) ([]int64, bool) {
+	result := make([]int64, len(values))
+	for i, v := range values {
+		n, err := strconv.ParseInt(v, 10, 64)
+		if err != nil {
+			return nil, false
+		}
+		result[i] = n
+	}
+	return result, true
 }
 
 // setMarkdownDescription uses reflection to set the MarkdownDescription field on any attribute type

@@ -377,8 +377,8 @@ var ReplicationSummary_Status = []string{"pending", "pausing", "failed", "paused
 // Source: components.schemas.replicationTarget.properties.type
 var ReplicationTarget_Type = []string{"capella", "external"}
 
-// Lookup maps enum values by (OpenAPI schemaName, camelFieldName).
-var Lookup = map[string]map[string][]string{
+// Table maps enum values by (OpenAPI schemaName, camelFieldName).
+var Table = map[string]map[string][]string{
 	"APIKeyResourcesItems": {
 		"roles": {"projectOwner", "projectManager", "projectViewer", "projectDataReaderWriter", "projectDataReader"},
 	},

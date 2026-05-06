@@ -4,6 +4,8 @@ import (
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schemawalk"
 )
 
 // Default OpenAPI spec URL - same as in Makefile
@@ -75,30 +77,7 @@ func TestGetOpenAPIDescription(t *testing.T) {
 	}
 }
 
-func TestSnakeToCamel(t *testing.T) {
-	tests := []struct {
-		input    string
-		expected string
-	}{
-		{"name", "name"},
-		{"description", "description"},
-		{"memory_allocation_in_mb", "memoryAllocationInMb"},
-		{"storage_backend", "storageBackend"},
-		{"bucket_conflict_resolution", "bucketConflictResolution"},
-		{"time_to_live_in_seconds", "timeToLiveInSeconds"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.input, func(t *testing.T) {
-			result := snakeToCamel(tt.input)
-			if result != tt.expected {
-				t.Errorf("snakeToCamel(%s) = %s, want %s", tt.input, result, tt.expected)
-			}
-		})
-	}
-}
-
-func TestSnakeToCapitalizedCamel(t *testing.T) {
+func TestSnakeToPascal(t *testing.T) {
 	tests := []struct {
 		input    string
 		expected string
@@ -112,9 +91,9 @@ func TestSnakeToCapitalizedCamel(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			result := snakeToCapitalizedCamel(tt.input)
+			result := schemawalk.SnakeToPascal(tt.input)
 			if result != tt.expected {
-				t.Errorf("snakeToCapitalizedCamel(%s) = %s, want %s", tt.input, result, tt.expected)
+				t.Errorf("SnakeToPascal(%s) = %s, want %s", tt.input, result, tt.expected)
 			}
 		})
 	}

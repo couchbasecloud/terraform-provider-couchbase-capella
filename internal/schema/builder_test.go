@@ -3,8 +3,10 @@ package schema
 import (
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	resourceschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
 func TestSchemaBuilder(t *testing.T) {
@@ -257,5 +259,69 @@ func TestSetMarkdownDescriptionReflection(t *testing.T) {
 		// Should not panic on non-struct
 		str := "test"
 		setMarkdownDescription(&str, "test")
+	})
+}
+
+func TestAppendOneOfValidator(t *testing.T) {
+	values := []string{"foo", "bar"}
+
+	t.Run("adds validator to resource string attribute", func(t *testing.T) {
+		attr := &resourceschema.StringAttribute{}
+		appendOneOfValidator(attr, values)
+		if len(attr.Validators) != 1 {
+			t.Fatalf("expected 1 validator, got %d", len(attr.Validators))
+		}
+	})
+
+	t.Run("adds validator to datasource string attribute", func(t *testing.T) {
+		attr := &datasourceschema.StringAttribute{}
+		appendOneOfValidator(attr, values)
+		if len(attr.Validators) != 1 {
+			t.Fatalf("expected 1 validator, got %d", len(attr.Validators))
+		}
+	})
+
+	t.Run("skips when OneOf already present", func(t *testing.T) {
+		attr := &resourceschema.StringAttribute{
+			Validators: []validator.String{stringvalidator.OneOf("existing")},
+		}
+		appendOneOfValidator(attr, values)
+		// Should remain at 1, not add a second OneOf
+		if len(attr.Validators) != 1 {
+			t.Fatalf("expected 1 validator (no duplicate), got %d", len(attr.Validators))
+		}
+	})
+
+	t.Run("does not add to non-string/int64 attributes", func(t *testing.T) {
+		attr := &resourceschema.BoolAttribute{}
+		appendOneOfValidator(attr, values)
+		// Bool attributes don't have a Validators field we check — just ensure no panic
+	})
+
+	t.Run("does not add to nested attributes", func(t *testing.T) {
+		attr := &resourceschema.SingleNestedAttribute{}
+		appendOneOfValidator(attr, values)
+	})
+}
+
+func TestHasOneOfValidator(t *testing.T) {
+	t.Run("returns false for empty slice", func(t *testing.T) {
+		if hasOneOfValidator([]validator.String{}) {
+			t.Error("expected false for empty validators")
+		}
+	})
+
+	t.Run("returns true when OneOf present", func(t *testing.T) {
+		validators := []validator.String{stringvalidator.OneOf("a", "b")}
+		if !hasOneOfValidator(validators) {
+			t.Error("expected true when OneOf validator is present")
+		}
+	})
+
+	t.Run("returns false for non-OneOf validators", func(t *testing.T) {
+		validators := []validator.String{stringvalidator.LengthAtLeast(1)}
+		if hasOneOfValidator(validators) {
+			t.Error("expected false for non-OneOf validator")
+		}
 	})
 }

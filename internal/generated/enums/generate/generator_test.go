@@ -217,8 +217,8 @@ func TestGenerate(t *testing.T) {
 	})
 
 	t.Run("contains lookup map", func(t *testing.T) {
-		if !strings.Contains(out, "var Lookup") {
-			t.Error("output missing Lookup map")
+		if !strings.Contains(out, "var Table") {
+			t.Error("output missing Table map")
 		}
 	})
 
