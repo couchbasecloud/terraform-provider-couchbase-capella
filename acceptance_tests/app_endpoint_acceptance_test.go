@@ -239,6 +239,8 @@ func generateAppEndpointImportId(resourceReference string) resource.ImportStateI
 // Provider schema marks origin as Optional but the API requires it when a cors
 // block is present and disabled=false.
 func TestAccAppEndpointCorsDisabledFalseNoOrigin(t *testing.T) {
+	t.Skip("AV-128217: cors.disabled=false without origin should be valid once the bug is fixed")
+
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 	bucket := randomStringWithPrefix("tf_acc_bucket_")
@@ -247,9 +249,7 @@ func TestAccAppEndpointCorsDisabledFalseNoOrigin(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAppEndpointCorsDisabledFalseResourceConfig(resourceName, epName, bucket),
-				ExpectError: re.MustCompile("CORS Origin is empty"),
-				// Remove when the bug is fixed, as the config will be valid and should apply successfully. https://jira.issues.couchbase.com/browse/AV-128217
+				Config: testAccAppEndpointCorsDisabledFalseResourceConfig(resourceName, epName, bucket),
 			},
 		},
 	})
@@ -297,6 +297,8 @@ func TestAccAppEndpointCorsFullConfig(t *testing.T) {
 // Server-side "OIDC discovery config validation failed" when ≥2 providers are
 // supplied. Single-provider creation (S17/S18) works correctly.
 func TestAccAppEndpointMultipleOIDC(t *testing.T) {
+	t.Skip("AV-128222: multiple OIDC providers cause a 500 Internal Server Error; unskip once the bug is fixed")
+
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 	bucket := randomStringWithPrefix("tf_acc_bucket_")
@@ -305,9 +307,7 @@ func TestAccAppEndpointMultipleOIDC(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAppEndpointMultipleOIDCResourceConfig(resourceName, epName, bucket),
-				ExpectError: re.MustCompile("500"),
-				// Remove when the bug is fixed https://jira.issues.couchbase.com/browse/AV-128222
+				Config: testAccAppEndpointMultipleOIDCResourceConfig(resourceName, epName, bucket),
 			},
 		},
 	})
@@ -443,6 +443,8 @@ func TestAccAppEndpointUpdateCorsExpand(t *testing.T) {
 // Once cors is set, the API rejects any PUT that omits the cors body entirely.
 // cors is effectively write-once via Terraform.
 func TestAccAppEndpointUpdateRemoveCors(t *testing.T) {
+	t.Skip("AV-128229 / AV-128217: removing the cors block after it is set should succeed once the bugs are fixed")
+
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 	bucket := randomStringWithPrefix("tf_acc_bucket_")
@@ -454,9 +456,7 @@ func TestAccAppEndpointUpdateRemoveCors(t *testing.T) {
 				Config: testAccAppEndpointCorsAllFieldsResourceConfig(resourceName, epName, bucket),
 			},
 			{
-				Config:      testAccAppEndpointNoCorsResourceConfig(resourceName, epName, bucket),
-				ExpectError: re.MustCompile("CORS Origin is empty"),
-				// Remove once the bug is fixed https://jira.issues.couchbase.com/browse/AV-128229, https://jira.issues.couchbase.com/browse/AV-128217
+				Config: testAccAppEndpointNoCorsResourceConfig(resourceName, epName, bucket),
 			},
 		},
 	})
@@ -465,6 +465,8 @@ func TestAccAppEndpointUpdateRemoveCors(t *testing.T) {
 // ── U3: cors.disabled false → true — API 409 "CORS cannot be disabled, config not empty" ──
 // The API rejects disabling CORS when other cors fields (origin etc.) are also set.
 func TestAccAppEndpointUpdateCorsDisableToggle(t *testing.T) {
+	t.Skip("AV-128229: toggling cors.disabled=true while other CORS fields are set should succeed once the bug is fixed")
+
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 	bucket := randomStringWithPrefix("tf_acc_bucket_")
@@ -476,9 +478,7 @@ func TestAccAppEndpointUpdateCorsDisableToggle(t *testing.T) {
 				Config: testAccAppEndpointCorsOriginOnlyResourceConfig(resourceName, epName, bucket),
 			},
 			{
-				Config:      testAccAppEndpointCorsDisabledTrueResourceConfig(resourceName, epName, bucket),
-				ExpectError: re.MustCompile("CORS cannot be disabled"),
-				// Remove once the bug is fixed https://jira.issues.couchbase.com/browse/AV-128229
+				Config: testAccAppEndpointCorsDisabledTrueResourceConfig(resourceName, epName, bucket),
 			},
 		},
 	})
@@ -543,6 +543,8 @@ func TestAccAppEndpointUpdateAddOIDC(t *testing.T) {
 // API does not remove the OIDC provider. refreshAppEndpoint re-populates state.Oidc
 // from the GET response, and Terraform detects the plan/state mismatch.
 func TestAccAppEndpointUpdateRemoveOIDC(t *testing.T) {
+	t.Skip("AV-128167: removing the oidc block should succeed once the bug is fixed")
+
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 	bucket := randomStringWithPrefix("tf_acc_bucket_")
@@ -554,9 +556,7 @@ func TestAccAppEndpointUpdateRemoveOIDC(t *testing.T) {
 				Config: testAccAppEndpointWithOIDCResourceConfig(resourceName, epName, bucket),
 			},
 			{
-				Config:      testAccAppEndpointCorsOriginOnlyResourceConfig(resourceName, epName, bucket),
-				ExpectError: re.MustCompile("Provider produced inconsistent result after apply"),
-				// Remove once the bug is fixed https://jira.issues.couchbase.com/browse/AV-128167
+				Config: testAccAppEndpointCorsOriginOnlyResourceConfig(resourceName, epName, bucket),
 			},
 		},
 	})
