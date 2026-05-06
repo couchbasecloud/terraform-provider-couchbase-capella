@@ -278,6 +278,13 @@ func (s *SnapshotBackup) Update(ctx context.Context, req resource.UpdateRequest,
 	)
 
 	if state.Retention.ValueInt64() != plan.Retention.ValueInt64() {
+		if err = s.waitForSnapshotComplete(ctx, organizationId, projectId, clusterId, Id); err != nil {
+			resp.Diagnostics.AddError(
+				"Error updating snapshot backup retention",
+				"Could not update snapshot backup id "+state.ID.String()+": snapshot did not reach complete state: "+err.Error(),
+			)
+			return
+		}
 		err = s.updateRetention(ctx, organizationId, projectId, clusterId, Id, plan.Retention.ValueInt64())
 		if err != nil {
 			resp.Diagnostics.AddError(
