@@ -11,40 +11,39 @@ import (
 // TestAccAppEndpointImportFilter exercises CRUD and import for the
 // couchbase-capella_app_endpoint_import_filter resource.
 //
-// Runs sequentially (resource.Test, not ParallelTest) because all steps write
-// to the same _default._default collection on the common endpoint.  Running
-// this in parallel with TestAccAppEndpointAccessControlFunction would cause
-// a race condition where a concurrent test overwrites the function body and
-// the post-apply refresh plan becomes non-empty.
+// Creates its own bucket and app endpoint so it can run in parallel with other
+// tests without competing for the shared common endpoint's collection state.
 //
 // Step 1 also verifies that scope and collection default to "_default" when
 // omitted from configuration.
 func TestAccAppEndpointImportFilter(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_if_")
 	resourceReference := "couchbase-capella_app_endpoint_import_filter." + resourceName
+	bucketName := randomStringWithPrefix("tf_acc_if_bkt_")
+	epName := randomStringWithPrefix("tf_acc_if_ep_")
 
 	initialFilter := "function(doc) { return true; }"
 	updatedFilter := "function(doc) { return doc.type === 'user'; }"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
 				// scope and collection omitted — verify they default to "_default"
-				Config: testAccImportFilterConfigNoScope(resourceName, globalAppEndpointName, initialFilter),
+				Config: testAccImportFilterConfigNoScope(resourceName, bucketName, epName, initialFilter),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
 					resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
-					resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", globalAppEndpointName),
+					resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", epName),
 					resource.TestCheckResourceAttr(resourceReference, "scope", "_default"),
 					resource.TestCheckResourceAttr(resourceReference, "collection", "_default"),
 					resource.TestCheckResourceAttr(resourceReference, "import_filter", initialFilter),
 				),
 			},
 			{
-				Config: testAccImportFilterConfig(resourceName, globalAppEndpointName, "_default", "_default", updatedFilter),
+				Config: testAccImportFilterConfig(resourceName, bucketName, epName, "_default", "_default", updatedFilter),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "import_filter", updatedFilter),
 				),
@@ -66,19 +65,44 @@ func TestAccAppEndpointImportFilter(t *testing.T) {
 // Config helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-func testAccImportFilterConfig(resourceName, endpointName, scope, collection, filterBody string) string {
+func testAccImportFilterConfig(resourceName, bucketName, epName, scope, collection, filterBody string) string {
 	return fmt.Sprintf(`
 %[1]s
 
+resource "couchbase-capella_bucket" "%[2]s_bucket" {
+	organization_id = "%[3]s"
+	project_id      = "%[4]s"
+	cluster_id      = "%[5]s"
+	name            = "%[6]s"
+}
+
+resource "couchbase-capella_app_endpoint" "%[2]s_ep" {
+	organization_id = "%[3]s"
+	project_id      = "%[4]s"
+	cluster_id      = "%[5]s"
+	app_service_id  = "%[7]s"
+	bucket          = "%[6]s"
+	name            = "%[8]s"
+	scopes = {
+		"_default" = {
+			collections = {
+				"_default" = {}
+			}
+		}
+	}
+	depends_on = [couchbase-capella_bucket.%[2]s_bucket]
+}
+
 resource "couchbase-capella_app_endpoint_import_filter" "%[2]s" {
-  organization_id   = "%[3]s"
-  project_id        = "%[4]s"
-  cluster_id        = "%[5]s"
-  app_service_id    = "%[6]s"
-  app_endpoint_name = "%[7]s"
-  scope             = "%[8]s"
-  collection        = "%[9]s"
-  import_filter     = "%[10]s"
+	organization_id   = "%[3]s"
+	project_id        = "%[4]s"
+	cluster_id        = "%[5]s"
+	app_service_id    = "%[7]s"
+	app_endpoint_name = "%[8]s"
+	scope             = "%[9]s"
+	collection        = "%[10]s"
+	import_filter     = "%[11]s"
+	depends_on        = [couchbase-capella_app_endpoint.%[2]s_ep]
 }
 `,
 		globalProviderBlock,
@@ -86,25 +110,51 @@ resource "couchbase-capella_app_endpoint_import_filter" "%[2]s" {
 		globalOrgId,
 		globalProjectId,
 		globalClusterId,
+		bucketName,
 		globalAppServiceId,
-		endpointName,
+		epName,
 		scope,
 		collection,
 		filterBody,
 	)
 }
 
-func testAccImportFilterConfigNoScope(resourceName, endpointName, filterBody string) string {
+func testAccImportFilterConfigNoScope(resourceName, bucketName, epName, filterBody string) string {
 	return fmt.Sprintf(`
 %[1]s
 
+resource "couchbase-capella_bucket" "%[2]s_bucket" {
+	organization_id = "%[3]s"
+	project_id      = "%[4]s"
+	cluster_id      = "%[5]s"
+	name            = "%[6]s"
+}
+
+resource "couchbase-capella_app_endpoint" "%[2]s_ep" {
+	organization_id = "%[3]s"
+	project_id      = "%[4]s"
+	cluster_id      = "%[5]s"
+	app_service_id  = "%[7]s"
+	bucket          = "%[6]s"
+	name            = "%[8]s"
+	scopes = {
+		"_default" = {
+			collections = {
+				"_default" = {}
+			}
+		}
+	}
+	depends_on = [couchbase-capella_bucket.%[2]s_bucket]
+}
+
 resource "couchbase-capella_app_endpoint_import_filter" "%[2]s" {
-  organization_id   = "%[3]s"
-  project_id        = "%[4]s"
-  cluster_id        = "%[5]s"
-  app_service_id    = "%[6]s"
-  app_endpoint_name = "%[7]s"
-  import_filter     = "%[8]s"
+	organization_id   = "%[3]s"
+	project_id        = "%[4]s"
+	cluster_id        = "%[5]s"
+	app_service_id    = "%[7]s"
+	app_endpoint_name = "%[8]s"
+	import_filter     = "%[9]s"
+	depends_on        = [couchbase-capella_app_endpoint.%[2]s_ep]
 }
 `,
 		globalProviderBlock,
@@ -112,8 +162,9 @@ resource "couchbase-capella_app_endpoint_import_filter" "%[2]s" {
 		globalOrgId,
 		globalProjectId,
 		globalClusterId,
+		bucketName,
 		globalAppServiceId,
-		endpointName,
+		epName,
 		filterBody,
 	)
 }

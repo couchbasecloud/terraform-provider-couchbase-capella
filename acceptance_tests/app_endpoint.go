@@ -83,6 +83,21 @@ func createAppEndpoint(ctx context.Context, client *api.Client) error {
 	return nil
 }
 
+// permanentAPIError returns a non-nil error if err is a permanent 4xx API
+// failure (excluding 429 Too Many Requests). Returns nil for transient errors
+// so callers can continue retrying.
+func permanentAPIError(err error) error {
+	var apiErr *api.Error
+	if errors.As(err, &apiErr) {
+		if apiErr.HttpStatusCode != 0 &&
+			apiErr.HttpStatusCode != http.StatusTooManyRequests &&
+			apiErr.HttpStatusCode < 500 {
+			return fmt.Errorf("permanent API error (HTTP %d): %s", apiErr.HttpStatusCode, apiErr.CompleteError())
+		}
+	}
+	return nil
+}
+
 func appEndpointWait(ctx context.Context, client *api.Client) error {
 	const maxWaitTime = 10 * time.Minute
 	const checkInterval = 1 * time.Minute
@@ -114,20 +129,8 @@ func appEndpointWait(ctx context.Context, client *api.Client) error {
 			nil,
 		)
 		if err != nil {
-			if resourceNotFound, errMsg := api.CheckResourceNotFoundError(err); resourceNotFound {
-				return fmt.Errorf("app endpoint not found: %s", errMsg)
-			}
-
-			// Only retry on clearly transient errors (5xx, 429).
-			// Return immediately on permanent failures (4xx) to avoid
-			// masking issues like bad tokens (401/403).
-			var apiErr *api.Error
-			if errors.As(err, &apiErr) {
-				if apiErr.HttpStatusCode != 0 &&
-					apiErr.HttpStatusCode != http.StatusTooManyRequests &&
-					apiErr.HttpStatusCode < 500 {
-					return fmt.Errorf("permanent API error (HTTP %d): %s", apiErr.HttpStatusCode, apiErr.CompleteError())
-				}
+			if permErr := permanentAPIError(err); permErr != nil {
+				return permErr
 			}
 
 			log.Printf("transient error fetching app endpoint, retrying: %v", err)
@@ -141,11 +144,11 @@ func appEndpointWait(ctx context.Context, client *api.Client) error {
 
 		var appEndpointResponse app_endpoints.GetAppEndpointResponse
 		if err = json.Unmarshal(response.Body, &appEndpointResponse); err != nil {
-			return fmt.Errorf("Error unmarshalling app endpoint response: %v", err)
+			return fmt.Errorf("error unmarshalling app endpoint response: %w", err)
 		}
 
 		if appEndpointResponse.State == resources.AppEndpointStateOnline || appEndpointResponse.State == resources.AppEndpointStateOffline {
-			log.Print(fmt.Sprintf("app endpoint state %s", appEndpointResponse.State))
+			log.Printf("app endpoint state %s", appEndpointResponse.State)
 			return nil
 		}
 

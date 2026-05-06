@@ -458,9 +458,10 @@ func (a *AppEndpoint) Delete(ctx context.Context, req resource.DeleteRequest, re
 	resp.State.RemoveResource(ctx)
 }
 
-// waitForEndpointDeletion polls the API until the endpoint returns 404 or the
-// timeout is reached. It respects context cancellation and surfaces the last
-// non-404 error encountered instead of silently timing out.
+// waitForEndpointDeletion polls the API until the endpoint returns 403 or 404
+// (both indicate the endpoint is gone) or the timeout is reached. It respects
+// context cancellation and surfaces the last error encountered instead of
+// silently timing out.
 func (a *AppEndpoint) waitForEndpointDeletion(
 	ctx context.Context, orgId, projId, clusterId, appServiceId, endpointName string,
 ) error {
@@ -483,8 +484,10 @@ func (a *AppEndpoint) waitForEndpointDeletion(
 
 		_, err := a.ClientV1.ExecuteWithRetry(ctx, cfg, nil, a.Token, nil)
 		if err != nil {
-			if resourceNotFound, _ := api.CheckResourceNotFoundError(err); resourceNotFound {
-				return nil // endpoint is gone
+			var apiErr *api.Error
+			if errors.As(err, &apiErr) &&
+				(apiErr.HttpStatusCode == http.StatusNotFound || apiErr.HttpStatusCode == http.StatusForbidden) {
+				return nil // endpoint is gone; API returns 403 (not 404) for deleted endpoints
 			}
 			lastErr = err
 		} else {
