@@ -506,7 +506,7 @@ func (n *NetworkPeer) getNetworkPeer(
 // when a failed peer has an empty providerConfig), but callers may choose to ignore it.
 func defineProviderForResponse(networkResp *network_peer_api.GetNetworkPeeringRecordResponse) error {
 	if len(networkResp.ProviderConfig) == 0 || string(networkResp.ProviderConfig) == "null" {
-		return fmt.Errorf("%s: providerConfig is empty", errors.ErrReadingProviderConfig)
+		return fmt.Errorf("%w: providerConfig is empty", errors.ErrReadingProviderConfig)
 	}
 
 	azure, err := networkResp.AsAZURE()
