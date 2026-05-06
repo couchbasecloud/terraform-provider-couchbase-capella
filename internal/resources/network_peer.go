@@ -532,7 +532,7 @@ func defineProviderForResponse(networkResp *network_peer_api.GetNetworkPeeringRe
 	case aws.AWSConfigData.VpcId != "":
 		networkResp.ProviderType = "aws"
 	default:
-		return fmt.Errorf("%s: unable to determine provider type from config fields", errors.ErrReadingProviderConfig)
+		return fmt.Errorf("%w: unable to determine provider type from config fields", errors.ErrReadingProviderConfig)
 	}
 
 	return nil
