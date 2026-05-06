@@ -380,6 +380,12 @@ func (n *NetworkPeer) validateCreateNetworkPeer(plan providerschema.NetworkPeer)
 		return errors.ErrClusterIdMissing
 	}
 
+	if plan.ProviderConfig != nil && plan.ProviderConfig.AzureConfig != nil {
+		if plan.ProviderConfig.AzureConfig.AzureTenantId.IsNull() || plan.ProviderConfig.AzureConfig.AzureTenantId.ValueString() == "" {
+			return fmt.Errorf("azure_config.tenant_id must be set when azure_config is provided")
+		}
+	}
+
 	return n.validateNetworkPeerAttributesTrimmed(plan)
 }
 
