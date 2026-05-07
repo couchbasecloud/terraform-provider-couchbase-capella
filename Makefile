@@ -133,6 +133,12 @@ gen-api: ## Generate OpenAPI client code
 	@PATH="$(shell go env GOPATH)/bin:$(PATH)" go generate ./internal/generated/api
 	@echo "==> Done"
 
+.PHONY: gen-enums
+gen-enums: ## Generate enum validator constants from OpenAPI spec
+	@echo "==> Generating enum constants (internal/generated/enums)"
+	@go run ./internal/generated/enums/generate/ > ./internal/generated/enums/enums.gen.go
+	@echo "==> Done"
+
 # ============================================================================
 # Release Management
 # ============================================================================
