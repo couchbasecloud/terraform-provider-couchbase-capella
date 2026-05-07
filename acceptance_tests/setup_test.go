@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 	"testing"
-	"time"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 )
@@ -36,8 +34,6 @@ provider "couchbase-capella" {
   authentication_token = var.auth_token
 }
 `)
-
-	configureDedicatedAppEndpointCluster()
 
 	var code int
 	ctx := context.Background()
@@ -126,42 +122,11 @@ func setup(ctx context.Context, client *api.Client) error {
 	return nil
 }
 
-func configureDedicatedAppEndpointCluster() {
-	if !useDedicatedAppEndpointCluster() {
-		return
-	}
-
-	suffix := time.Now().UTC().Format("20060102150405")
-	globalClusterName = "tf_acc_app_endpoint_cluster_" + suffix
-	globalAppServiceName = "tf_acc_app_endpoint_app_service_" + suffix
-	globalClusterId = ""
-	globalAppServiceId = ""
-	globalBucketId = ""
-	globalBucketName = "default"
-	log.Printf("Using dedicated app endpoint acceptance test cluster: %s", globalClusterName)
-}
-
-func useDedicatedAppEndpointCluster() bool {
-	switch strings.ToLower(os.Getenv("TF_ACC_APP_ENDPOINT_DEDICATED_CLUSTER")) {
-	case "1", "true", "yes", "y":
-		return true
-	case "0", "false", "no", "n":
-		return false
-	}
-
-	for i, arg := range os.Args {
-		if strings.HasPrefix(arg, "-test.run=") {
-			return strings.Contains(strings.TrimPrefix(arg, "-test.run="), "TestAccAppEndpoint")
-		}
-		if arg == "-test.run" && i+1 < len(os.Args) {
-			return strings.Contains(os.Args[i+1], "TestAccAppEndpoint")
-		}
-	}
-
-	return false
-}
-
 func cleanup(ctx context.Context, client *api.Client) error {
+	if err := cleanupAppEndpointTestEnvironment(ctx, client); err != nil {
+		return err
+	}
+
 	if globalAppEndpointCreated {
 		if err := deleteFixtureEndpoint(ctx, client, globalAppEndpointName); err != nil {
 			return err

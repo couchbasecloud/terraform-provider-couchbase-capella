@@ -35,6 +35,18 @@ var (
 	globalClusterCreated     bool
 	globalAppServiceCreated  bool
 
+	appEndpointClusterId          string
+	appEndpointClusterName        string
+	appEndpointBucketId           string
+	appEndpointBucketName         = "default"
+	appEndpointAppServiceId       string
+	appEndpointAppServiceName     string
+	appEndpointCommonEndpointName = "tf_acc_test_app_endpoint_common"
+	appEndpointClusterCreated     bool
+	appEndpointBucketCreated      bool
+	appEndpointAppServiceCreated  bool
+	appEndpointCreated            bool
+
 	// Pre-created endpoints for sub-resource tests. One dedicated endpoint per
 	// test prevents write conflicts without concurrent creation 500s — they are
 	// created lazily and sequentially on first use via ensureXxxEndpoint().

@@ -32,6 +32,7 @@ var (
 // process. Safe to call from parallel tests.
 func ensureFixtureBucketByName(t *testing.T, name string) {
 	t.Helper()
+	ensureAppEndpointTestEnvironment(t)
 	fixtBucketMu.Lock()
 	state, ok := fixtBucketStates[name]
 	if !ok {
@@ -53,7 +54,7 @@ func ensureFixtureBucketByName(t *testing.T, name string) {
 
 	if state.created {
 		t.Cleanup(func() {
-			if err := deleteFixtureBucket(context.Background(), globalClient, name); err != nil {
+			if err := deleteAppEndpointFixtureBucket(context.Background(), globalClient, globalProjectId, appEndpointClusterId, name); err != nil {
 				t.Logf("warning: failed to delete fixture bucket %q: %v", name, err)
 			}
 		})
@@ -77,6 +78,7 @@ var (
 // per test process. Safe to call from parallel tests.
 func ensureFixtureEndpoint(t *testing.T, endpointName, bucketName, description string) {
 	t.Helper()
+	ensureAppEndpointTestEnvironment(t)
 	fixtEndpointMu.Lock()
 	state, ok := fixtEndpointStates[endpointName]
 	if !ok {
@@ -93,25 +95,25 @@ func ensureFixtureEndpoint(t *testing.T, endpointName, bucketName, description s
 			return
 		}
 		state.bucketCreated = bucketCreated
-		endpointCreated, err := createAppEndpoint(ctx, globalClient, endpointName, bucketName)
+		endpointCreated, err := createAppEndpointForAppService(ctx, globalClient, globalProjectId, appEndpointClusterId, appEndpointAppServiceId, endpointName, bucketName)
 		if err != nil {
 			state.err = err
 			return
 		}
 		state.endpointCreated = endpointCreated
-		state.err = appEndpointWait(ctx, globalClient, endpointName)
+		state.err = appEndpointWaitForAppService(ctx, globalClient, globalProjectId, appEndpointClusterId, appEndpointAppServiceId, endpointName)
 	})
 
 	if state.bucketCreated {
 		t.Cleanup(func() {
-			if err := deleteFixtureBucket(context.Background(), globalClient, bucketName); err != nil {
+			if err := deleteAppEndpointFixtureBucket(context.Background(), globalClient, globalProjectId, appEndpointClusterId, bucketName); err != nil {
 				t.Logf("warning: failed to delete %s fixture bucket %q: %v", description, bucketName, err)
 			}
 		})
 	}
 	if state.endpointCreated {
 		t.Cleanup(func() {
-			if err := deleteFixtureEndpoint(context.Background(), globalClient, endpointName); err != nil {
+			if err := deleteAppEndpointFixtureEndpoint(context.Background(), globalClient, globalProjectId, appEndpointClusterId, appEndpointAppServiceId, endpointName); err != nil {
 				t.Logf("warning: failed to delete %s fixture endpoint %q: %v", description, endpointName, err)
 			}
 		})
@@ -126,7 +128,7 @@ func ensureFixtureEndpoint(t *testing.T, endpointName, bucketName, description s
 // newly created by this call, false if it already existed.
 func createFixtureBucket(ctx context.Context, client *api.Client, name string) (bool, error) {
 	listUrl := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets",
-		globalHost, globalOrgId, globalProjectId, globalClusterId)
+		globalHost, globalOrgId, globalProjectId, appEndpointClusterId)
 	listCfg := api.EndpointCfg{Url: listUrl, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
 	buckets, err := api.GetPaginated[[]bucketapi.GetBucketResponse](ctx, client, globalToken, listCfg, api.SortById)
@@ -141,7 +143,7 @@ func createFixtureBucket(ctx context.Context, client *api.Client, name string) (
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets",
-		globalHost, globalOrgId, globalProjectId, globalClusterId)
+		globalHost, globalOrgId, globalProjectId, appEndpointClusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
 	response, err := client.ExecuteWithRetry(ctx, cfg, bucketapi.CreateBucketRequest{Name: name}, globalToken, nil)
 	if err != nil {
@@ -187,8 +189,12 @@ func deleteBucketWithRetry(ctx context.Context, client *api.Client, cfg api.Endp
 // deleteFixtureBucket looks up the named bucket by name and deletes it. It is a
 // no-op if the bucket does not exist.
 func deleteFixtureBucket(ctx context.Context, client *api.Client, name string) error {
+	return deleteAppEndpointFixtureBucket(ctx, client, globalProjectId, globalClusterId, name)
+}
+
+func deleteAppEndpointFixtureBucket(ctx context.Context, client *api.Client, projectID, clusterID, name string) error {
 	listUrl := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets",
-		globalHost, globalOrgId, globalProjectId, globalClusterId)
+		globalHost, globalOrgId, projectID, clusterID)
 	listCfg := api.EndpointCfg{Url: listUrl, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
 	buckets, err := api.GetPaginated[[]bucketapi.GetBucketResponse](ctx, client, globalToken, listCfg, api.SortById)
@@ -199,7 +205,7 @@ func deleteFixtureBucket(ctx context.Context, client *api.Client, name string) e
 	for _, b := range buckets {
 		if b.Name == name {
 			url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s",
-				globalHost, globalOrgId, globalProjectId, globalClusterId, b.Id)
+				globalHost, globalOrgId, projectID, clusterID, b.Id)
 			cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
 			if err = deleteBucketWithRetry(ctx, client, cfg, name); err != nil {
 				return err
@@ -214,6 +220,10 @@ func deleteFixtureBucket(ctx context.Context, client *api.Client, name string) e
 }
 
 func waitForFixtureEndpointDeletion(ctx context.Context, client *api.Client, name string) error {
+	return waitForAppEndpointFixtureEndpointDeletion(ctx, client, globalProjectId, globalClusterId, globalAppServiceId, name)
+}
+
+func waitForAppEndpointFixtureEndpointDeletion(ctx context.Context, client *api.Client, projectID, clusterID, appServiceID, name string) error {
 	const maxWait = 5 * time.Minute
 	const retryInterval = 10 * time.Second
 	deadline := time.Now().Add(maxWait)
@@ -223,9 +233,9 @@ func waitForFixtureEndpointDeletion(ctx context.Context, client *api.Client, nam
 			"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
 			globalHost,
 			globalOrgId,
-			globalProjectId,
-			globalClusterId,
-			globalAppServiceId,
+			projectID,
+			clusterID,
+			appServiceID,
 			url.PathEscape(name),
 		)
 		cfg := api.EndpointCfg{Url: endpointURL, Method: http.MethodGet, SuccessStatus: http.StatusOK}
@@ -252,13 +262,17 @@ func waitForFixtureEndpointDeletion(ctx context.Context, client *api.Client, nam
 // deleteFixtureEndpoint deletes the named app endpoint and waits until the API
 // reports it as gone. It is a no-op if the endpoint does not exist.
 func deleteFixtureEndpoint(ctx context.Context, client *api.Client, name string) error {
+	return deleteAppEndpointFixtureEndpoint(ctx, client, globalProjectId, globalClusterId, globalAppServiceId, name)
+}
+
+func deleteAppEndpointFixtureEndpoint(ctx context.Context, client *api.Client, projectID, clusterID, appServiceID, name string) error {
 	endpointURL := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
 		globalHost,
 		globalOrgId,
-		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
+		projectID,
+		clusterID,
+		appServiceID,
 		url.PathEscape(name),
 	)
 	cfg := api.EndpointCfg{Url: endpointURL, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
@@ -274,7 +288,7 @@ func deleteFixtureEndpoint(ctx context.Context, client *api.Client, name string)
 		return fmt.Errorf("deleting fixture endpoint %q: %w", name, err)
 	}
 
-	if err = waitForFixtureEndpointDeletion(ctx, client, name); err != nil {
+	if err = waitForAppEndpointFixtureEndpointDeletion(ctx, client, projectID, clusterID, appServiceID, name); err != nil {
 		return err
 	}
 	log.Printf("deleted fixture endpoint %q", name)
@@ -287,7 +301,7 @@ func waitForFixtureBucket(ctx context.Context, client *api.Client, bucketID stri
 
 	for time.Now().Before(deadline) {
 		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s",
-			globalHost, globalOrgId, globalProjectId, globalClusterId, bucketID)
+			globalHost, globalOrgId, globalProjectId, appEndpointClusterId, bucketID)
 		cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 		_, err := client.ExecuteWithRetry(ctx, cfg, nil, globalToken, nil)
 		if err == nil {

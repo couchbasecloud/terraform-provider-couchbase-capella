@@ -16,6 +16,10 @@ import (
 )
 
 func createAppEndpoint(ctx context.Context, client *api.Client, name, bucket string) (bool, error) {
+	return createAppEndpointForAppService(ctx, client, globalProjectId, globalClusterId, globalAppServiceId, name, bucket)
+}
+
+func createAppEndpointForAppService(ctx context.Context, client *api.Client, projectID, clusterID, appServiceID, name, bucket string) (bool, error) {
 	const maxWait = 5 * time.Minute
 	const retryInterval = 30 * time.Second
 
@@ -23,9 +27,9 @@ func createAppEndpoint(ctx context.Context, client *api.Client, name, bucket str
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
 		globalHost,
 		globalOrgId,
-		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
+		projectID,
+		clusterID,
+		appServiceID,
 		name,
 	)
 	checkCfg := api.EndpointCfg{
@@ -85,9 +89,9 @@ func createAppEndpoint(ctx context.Context, client *api.Client, name, bucket str
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints",
 		globalHost,
 		globalOrgId,
-		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
+		projectID,
+		clusterID,
+		appServiceID,
 	)
 	postCfg := api.EndpointCfg{
 		Url:           postUrl,
@@ -132,6 +136,10 @@ func permanentAPIError(err error) error {
 }
 
 func appEndpointWait(ctx context.Context, client *api.Client, name string) error {
+	return appEndpointWaitForAppService(ctx, client, globalProjectId, globalClusterId, globalAppServiceId, name)
+}
+
+func appEndpointWaitForAppService(ctx context.Context, client *api.Client, projectID, clusterID, appServiceID, name string) error {
 	const maxWaitTime = 10 * time.Minute
 	const checkInterval = 1 * time.Minute
 
@@ -142,9 +150,9 @@ func appEndpointWait(ctx context.Context, client *api.Client, name string) error
 			"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
 			globalHost,
 			globalOrgId,
-			globalProjectId,
-			globalClusterId,
-			globalAppServiceId,
+			projectID,
+			clusterID,
+			appServiceID,
 			name,
 		)
 

@@ -27,8 +27,8 @@ func TestAccAppEndpointCorsResource(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
-					resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
+					resource.TestCheckResourceAttr(resourceReference, "cluster_id", appEndpointClusterId),
+					resource.TestCheckResourceAttr(resourceReference, "app_service_id", appEndpointAppServiceId),
 					resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", globalCORSEndpointName),
 					resource.TestCheckResourceAttr(resourceReference, "origin.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceReference, "origin.*", "*"),
@@ -105,8 +105,8 @@ resource "couchbase-capella_app_endpoint_cors" "%[2]s" {
 		resourceName,
 		globalOrgId,
 		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
 		epName,
 		origin,
 		loginOrigin,
@@ -133,8 +133,8 @@ resource "couchbase-capella_app_endpoint_cors" "%[2]s" {
 		resourceName,
 		globalOrgId,
 		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
 		epName,
 	)
 }

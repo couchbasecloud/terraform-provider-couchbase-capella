@@ -10,6 +10,8 @@ import (
 // TestAccAppEndpointDataSource verifies the couchbase-capella_app_endpoint data
 // source (single endpoint read) against the common pre-created endpoint.
 func TestAccAppEndpointDataSource(t *testing.T) {
+	ensureAppEndpointTestEnvironment(t)
+
 	dataSourceName := randomStringWithPrefix("tf_acc_ds_app_endpoint_")
 	dataSourceReference := "data.couchbase-capella_app_endpoint." + dataSourceName
 
@@ -17,13 +19,13 @@ func TestAccAppEndpointDataSource(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppEndpointDataSourceConfig(dataSourceName, globalAppEndpointName),
+				Config: testAccAppEndpointDataSourceConfig(dataSourceName, appEndpointCommonEndpointName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dataSourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(dataSourceReference, "cluster_id", globalClusterId),
-					resource.TestCheckResourceAttr(dataSourceReference, "app_service_id", globalAppServiceId),
-					resource.TestCheckResourceAttr(dataSourceReference, "name", globalAppEndpointName),
+					resource.TestCheckResourceAttr(dataSourceReference, "cluster_id", appEndpointClusterId),
+					resource.TestCheckResourceAttr(dataSourceReference, "app_service_id", appEndpointAppServiceId),
+					resource.TestCheckResourceAttr(dataSourceReference, "name", appEndpointCommonEndpointName),
 					resource.TestCheckResourceAttrSet(dataSourceReference, "bucket"),
 					resource.TestCheckResourceAttrSet(dataSourceReference, "state"),
 					resource.TestCheckResourceAttrSet(dataSourceReference, "delta_sync_enabled"),
@@ -38,6 +40,8 @@ func TestAccAppEndpointDataSource(t *testing.T) {
 // couchbase-capella_app_endpoint_activation_status data source returns the
 // endpoint state for the common pre-created endpoint.
 func TestAccAppEndpointActivationStatusDataSource(t *testing.T) {
+	ensureAppEndpointTestEnvironment(t)
+
 	dataSourceName := randomStringWithPrefix("tf_acc_ds_activation_status_")
 	dataSourceReference := "data.couchbase-capella_app_endpoint_activation_status." + dataSourceName
 
@@ -45,13 +49,13 @@ func TestAccAppEndpointActivationStatusDataSource(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppEndpointActivationStatusDataSourceConfig(dataSourceName, globalAppEndpointName),
+				Config: testAccAppEndpointActivationStatusDataSourceConfig(dataSourceName, appEndpointCommonEndpointName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dataSourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(dataSourceReference, "cluster_id", globalClusterId),
-					resource.TestCheckResourceAttr(dataSourceReference, "app_service_id", globalAppServiceId),
-					resource.TestCheckResourceAttr(dataSourceReference, "app_endpoint_name", globalAppEndpointName),
+					resource.TestCheckResourceAttr(dataSourceReference, "cluster_id", appEndpointClusterId),
+					resource.TestCheckResourceAttr(dataSourceReference, "app_service_id", appEndpointAppServiceId),
+					resource.TestCheckResourceAttr(dataSourceReference, "app_endpoint_name", appEndpointCommonEndpointName),
 					resource.TestCheckResourceAttrSet(dataSourceReference, "state"),
 				),
 			},
@@ -79,8 +83,8 @@ func TestAccAppEndpointsDataSource(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dataSourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(dataSourceReference, "cluster_id", globalClusterId),
-					resource.TestCheckResourceAttr(dataSourceReference, "app_service_id", globalAppServiceId),
+					resource.TestCheckResourceAttr(dataSourceReference, "cluster_id", appEndpointClusterId),
+					resource.TestCheckResourceAttr(dataSourceReference, "app_service_id", appEndpointAppServiceId),
 					resource.TestCheckResourceAttrSet(dataSourceReference, "app_endpoints.#"),
 				),
 			},
@@ -91,6 +95,8 @@ func TestAccAppEndpointsDataSource(t *testing.T) {
 // TestAccAppEndpointsDataSourceFiltered verifies that the filter block on the
 // couchbase-capella_app_endpoints data source returns only the named endpoint.
 func TestAccAppEndpointsDataSourceFiltered(t *testing.T) {
+	ensureAppEndpointTestEnvironment(t)
+
 	dataSourceName := randomStringWithPrefix("tf_acc_ds_app_endpoints_filtered_")
 	dataSourceReference := "data.couchbase-capella_app_endpoints." + dataSourceName
 
@@ -98,16 +104,16 @@ func TestAccAppEndpointsDataSourceFiltered(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppEndpointsDataSourceFilteredConfig(dataSourceName, globalAppEndpointName),
+				Config: testAccAppEndpointsDataSourceFilteredConfig(dataSourceName, appEndpointCommonEndpointName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dataSourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(dataSourceReference, "cluster_id", globalClusterId),
-					resource.TestCheckResourceAttr(dataSourceReference, "app_service_id", globalAppServiceId),
+					resource.TestCheckResourceAttr(dataSourceReference, "cluster_id", appEndpointClusterId),
+					resource.TestCheckResourceAttr(dataSourceReference, "app_service_id", appEndpointAppServiceId),
 					resource.TestCheckResourceAttr(dataSourceReference, "app_endpoints.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceReference, "app_endpoints.*", map[string]string{
-						"bucket":             globalBucketName,
-						"name":               globalAppEndpointName,
+						"bucket":             appEndpointBucketName,
+						"name":               appEndpointCommonEndpointName,
 						"delta_sync_enabled": "true",
 					}),
 				),
@@ -136,8 +142,8 @@ data "couchbase-capella_app_endpoint" "%[2]s" {
 		dataSourceName,
 		globalOrgId,
 		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
 		endpointName,
 	)
 }
@@ -158,8 +164,8 @@ data "couchbase-capella_app_endpoint_activation_status" "%[2]s" {
 		dataSourceName,
 		globalOrgId,
 		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
 		endpointName,
 	)
 }
@@ -179,8 +185,8 @@ data "couchbase-capella_app_endpoints" "%[2]s" {
 		dataSourceName,
 		globalOrgId,
 		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
 	)
 }
 
@@ -204,8 +210,8 @@ data "couchbase-capella_app_endpoints" "%[2]s" {
 		dataSourceName,
 		globalOrgId,
 		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
 		endpointName,
 	)
 }

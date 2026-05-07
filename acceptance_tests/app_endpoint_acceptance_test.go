@@ -25,8 +25,8 @@ func TestAccAppEndpoint(t *testing.T) {
 					testAccAppEndpointComputedAttrs(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
-					resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
+					resource.TestCheckResourceAttr(resourceReference, "cluster_id", appEndpointClusterId),
+					resource.TestCheckResourceAttr(resourceReference, "app_service_id", appEndpointAppServiceId),
 					resource.TestCheckResourceAttr(resourceReference, "bucket", globalEPBucketName),
 					resource.TestCheckResourceAttr(resourceReference, "name", epName),
 					resource.TestCheckResourceAttr(resourceReference, "delta_sync_enabled", "true"),
@@ -51,6 +51,8 @@ func TestAccAppEndpoint(t *testing.T) {
 }
 
 func TestAccAppEndpointInexistentCollection(t *testing.T) {
+	ensureAppEndpointTestEnvironment(t)
+
 	resourceName := randomStringWithPrefix("tf_acc_endpoint_")
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 	cfg := fmt.Sprintf(`
@@ -75,9 +77,9 @@ func TestAccAppEndpointInexistentCollection(t *testing.T) {
 		resourceName,
 		globalOrgId,
 		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
-		globalBucketName,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
+		appEndpointBucketName,
 		epName)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -127,8 +129,8 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		resourceName,
 		globalOrgId,
 		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
 		bucketName,
 		endpointName,
 		userXattr,
@@ -192,8 +194,8 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		resourceName,
 		globalOrgId,
 		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
 		bucketName,
 		endpointName,
 	)
@@ -422,8 +424,8 @@ func TestAccAppEndpointUpdateCorsExpand(t *testing.T) {
 					testAccAppEndpointComputedAttrs(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
-					resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
+					resource.TestCheckResourceAttr(resourceReference, "cluster_id", appEndpointClusterId),
+					resource.TestCheckResourceAttr(resourceReference, "app_service_id", appEndpointAppServiceId),
 					resource.TestCheckResourceAttr(resourceReference, "bucket", globalCorsExpandEPBucketName),
 					resource.TestCheckResourceAttr(resourceReference, "name", epName),
 					resource.TestCheckTypeSetElemAttr(resourceReference, "cors.origin.*", "*"),
@@ -689,8 +691,8 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		resourceName,
 		globalOrgId,
 		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
 		bucketName,
 		endpointName,
 	)
@@ -727,8 +729,8 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		resourceName,
 		globalOrgId,
 		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
 		bucketName,
 		endpointName,
 	)
@@ -768,8 +770,8 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		resourceName,
 		globalOrgId,
 		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
 		bucketName,
 		endpointName,
 	)
@@ -818,8 +820,8 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		resourceName,
 		globalOrgId,
 		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
 		bucketName,
 		endpointName,
 	)
@@ -861,8 +863,8 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		resourceName,
 		globalOrgId,
 		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
 		bucketName,
 		endpointName,
 	)
@@ -904,8 +906,8 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		resourceName,
 		globalOrgId,
 		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
 		bucketName,
 		endpointName,
 	)
@@ -953,8 +955,8 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		resourceName,
 		globalOrgId,
 		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
 		bucketName,
 		endpointName,
 	)
@@ -999,8 +1001,8 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		resourceName,
 		globalOrgId,
 		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
 		bucketName,
 		endpointName,
 	)
@@ -1040,8 +1042,8 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		resourceName,
 		globalOrgId,
 		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
 		bucketName,
 		endpointName,
 	)
@@ -1079,8 +1081,8 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		resourceName,
 		globalOrgId,
 		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
 		bucketName,
 		endpointName,
 	)
@@ -1119,8 +1121,8 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		resourceName,
 		globalOrgId,
 		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
 		bucketName,
 		endpointName,
 		maxAge,
@@ -1166,8 +1168,8 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		resourceName,
 		globalOrgId,
 		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
 		bucketName,
 		endpointName,
 	)
@@ -1206,8 +1208,8 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		resourceName,
 		globalOrgId,
 		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
 		bucketName,
 		endpointName,
 		acfBody,
