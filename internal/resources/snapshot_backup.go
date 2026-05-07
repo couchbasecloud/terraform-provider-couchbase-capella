@@ -718,25 +718,39 @@ func (s *SnapshotBackup) restoreSnapshotBackup(ctx context.Context, organization
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups/%s/restore", s.HostURL, organizationId, projectId, clusterId, Id)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
 
+	var requestBody interface{}
 	if len(crossRegionRestorePreference) > 0 {
-		restoreSnapshotBackupRequest := snapshot_backup.RestoreSnapshotBackupRequest{
+		requestBody = snapshot_backup.RestoreSnapshotBackupRequest{
 			CrossRegionRestorePreference: crossRegionRestorePreference,
 		}
-		resp, err = s.ClientV1.ExecuteWithRetry(
-			ctx,
-			cfg,
-			restoreSnapshotBackupRequest,
-			s.Token,
-			nil,
-		)
-	} else {
-		resp, err = s.ClientV1.ExecuteWithRetry(
-			ctx,
-			cfg,
-			nil,
-			s.Token,
-			nil,
-		)
+	}
+
+	const (
+		maxConflictWait     = 30 * time.Minute
+		conflictPollEvery   = 30 * time.Second
+	)
+	deadline := time.Now().Add(maxConflictWait)
+	for {
+		resp, err = s.ClientV1.ExecuteWithRetry(ctx, cfg, requestBody, s.Token, nil)
+		if err == nil {
+			break
+		}
+		var apiErr *api.Error
+		if !stderrors.As(err, &apiErr) || apiErr.HttpStatusCode != http.StatusConflict {
+			break
+		}
+		if time.Now().After(deadline) {
+			tflog.Debug(ctx, "timed out waiting for in-progress restore to clear", map[string]interface{}{"err": err})
+			break
+		}
+		tflog.Debug(ctx, "another restore in progress on cluster; waiting before retrying", map[string]interface{}{
+			"clusterID": clusterId,
+		})
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(conflictPollEvery):
+		}
 	}
 	if err != nil {
 		tflog.Debug(ctx, "error executing restore snapshot backup", map[string]interface{}{
