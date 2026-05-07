@@ -1,0 +1,154 @@
+package acceptance_tests
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"log"
+	"net/http"
+	"sync"
+	"time"
+
+	"github.com/couchbase/tools-common/types/ptr"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
+)
+
+var (
+	snapshotClusterOnce sync.Once
+	snapshotClusterID   string
+	snapshotClusterErr  error
+)
+
+// ensureSnapshotCluster lazily provisions a dedicated cluster used by the
+// cloud_snapshot_* acceptance tests so that the long-running snapshot/restore
+// operations don't disrupt the primary cluster shared by other tests. The
+// cluster is built on first call (typically from the first snapshot test that
+// runs) and reused by subsequent calls. cleanup() destroys it via
+// destroySnapshotClusterIfCreated.
+func ensureSnapshotCluster() (string, error) {
+	snapshotClusterOnce.Do(func() {
+		ctx := context.Background()
+		client := api.NewClient(timeout)
+		id, err := createSnapshotClusterAndWait(ctx, client)
+		if err != nil {
+			snapshotClusterErr = err
+			return
+		}
+		snapshotClusterID = id
+		log.Printf("snapshot cluster ready: %s", id)
+	})
+	return snapshotClusterID, snapshotClusterErr
+}
+
+func createSnapshotClusterAndWait(ctx context.Context, client *api.Client) (string, error) {
+	node := clusterapi.Node{}
+	diskAws := clusterapi.DiskAWS{
+		Type:    clusterapi.DiskAWSType("gp3"),
+		Storage: 50,
+		Iops:    3000,
+	}
+	_ = node.FromDiskAWS(diskAws)
+
+	req := clusterapi.CreateClusterRequest{
+		Name:         "tf_acc_test_cluster_snapshot",
+		Availability: clusterapi.Availability{Type: "multi"},
+		CloudProvider: clusterapi.CloudProvider{
+			Region: "us-east-1",
+			Type:   "aws",
+		},
+		ServiceGroups: []clusterapi.ServiceGroup{
+			{
+				Node: &clusterapi.Node{
+					Compute: clusterapi.Compute{Cpu: 4, Ram: 16},
+					Disk:    node.Disk,
+				},
+				Services: &[]clusterapi.Service{
+					clusterapi.Service("data"),
+					clusterapi.Service("index"),
+					clusterapi.Service("query"),
+				},
+				NumOfNodes: ptr.To(3),
+			},
+		},
+		Support: clusterapi.Support{Plan: "enterprise", Timezone: "PT"},
+	}
+
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", globalHost, globalOrgId, globalProjectId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
+	resp, err := client.ExecuteWithRetry(ctx, cfg, req, globalToken, nil)
+	if err != nil {
+		return "", fmt.Errorf("create snapshot cluster: %w", err)
+	}
+
+	var created clusterapi.GetClusterResponse
+	if err = json.Unmarshal(resp.Body, &created); err != nil {
+		return "", fmt.Errorf("decode snapshot cluster response: %w", err)
+	}
+
+	id := created.Id.String()
+	if err := waitForClusterHealthy(ctx, client, id); err != nil {
+		return id, fmt.Errorf("wait snapshot cluster healthy: %w", err)
+	}
+	return id, nil
+}
+
+// destroySnapshotClusterIfCreated tears down the snapshot cluster if
+// ensureSnapshotCluster successfully created one. Safe to call when no
+// snapshot cluster was provisioned (e.g. no snapshot tests ran).
+func destroySnapshotClusterIfCreated(ctx context.Context, client *api.Client) error {
+	if snapshotClusterID == "" {
+		return nil
+	}
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", globalHost, globalOrgId, globalProjectId, snapshotClusterID)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
+	if _, err := client.ExecuteWithRetry(ctx, cfg, nil, globalToken, nil); err != nil {
+		return fmt.Errorf("destroy snapshot cluster: %w", err)
+	}
+	if err := pollSnapshotCluster(ctx, client, snapshotClusterID, true); err != nil {
+		return fmt.Errorf("wait snapshot cluster destroyed: %w", err)
+	}
+	return nil
+}
+
+func waitForClusterHealthy(ctx context.Context, client *api.Client, clusterID string) error {
+	return pollSnapshotCluster(ctx, client, clusterID, false)
+}
+
+func pollSnapshotCluster(ctx context.Context, client *api.Client, clusterID string, destroy bool) error {
+	const maxWaitTime = 30 * time.Minute
+	const checkInterval = 1 * time.Minute
+
+	deadline := time.Now().Add(maxWaitTime)
+	for time.Now().Before(deadline) {
+		url := fmt.Sprintf(
+			"%s/v4/organizations/%s/projects/%s/clusters/%s",
+			globalHost, globalOrgId, globalProjectId, clusterID,
+		)
+		cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+		resp, err := client.ExecuteWithRetry(ctx, cfg, nil, globalToken, nil)
+		if err != nil {
+			notFound, msg := api.CheckResourceNotFoundError(err)
+			if destroy && notFound {
+				return nil
+			}
+			if destroy && !notFound {
+				return errors.New(msg)
+			}
+			return err
+		}
+		if !destroy {
+			var got clusterapi.GetClusterResponse
+			if err := json.Unmarshal(resp.Body, &got); err != nil {
+				return err
+			}
+			if got.CurrentState == clusterapi.Healthy {
+				return nil
+			}
+		}
+		time.Sleep(checkInterval)
+	}
+	return fmt.Errorf("timeout waiting for snapshot cluster %s (destroy=%v)", clusterID, destroy)
+}

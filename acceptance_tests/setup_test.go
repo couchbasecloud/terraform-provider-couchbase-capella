@@ -65,13 +65,16 @@ func setup(ctx context.Context, client *api.Client) error {
 		log.Printf("Using existing project: %s", globalProjectId)
 	}
 
-	// Create primary + snapshot clusters concurrently so the extra ~10 min
-	// provisioning latency is overlapped. Each is skipped when its env var is
-	// set (TF_VAR_cluster_id / TF_VAR_snapshot_cluster_id). The snapshot
-	// cluster isolates the cloud_snapshot_* tests' long restore windows from
-	// the rest of the suite.
-	if err := createClustersConcurrently(ctx, client); err != nil {
-		return err
+	// Create cluster only if not provided via env var
+	if globalClusterId == "" {
+		if err := createCluster(ctx, client); err != nil {
+			return err
+		}
+		if err := clusterWait(ctx, client, false); err != nil {
+			return err
+		}
+	} else {
+		log.Printf("Using existing cluster: %s", globalClusterId)
 	}
 
 	// Create bucket only if not provided via env var
@@ -120,9 +123,19 @@ func cleanup(ctx context.Context, client *api.Client) error {
 		}
 	}
 
-	// Destroy primary + snapshot clusters concurrently. Each is skipped when
-	// its env var was provided (i.e. it pre-existed and we only borrowed it).
-	if err := destroyClustersConcurrently(ctx, client); err != nil {
+	// Only destroy cluster if it was created by setup (not provided via env var)
+	if globalClusterId != "" && os.Getenv("TF_VAR_cluster_id") == "" {
+		if err := destroyCluster(ctx, client); err != nil {
+			return err
+		}
+
+		if err := clusterWait(ctx, client, true); err != nil {
+			return err
+		}
+	}
+
+	// Destroy snapshot cluster only if ensureSnapshotCluster() created one.
+	if err := destroySnapshotClusterIfCreated(ctx, client); err != nil {
 		return err
 	}
 
