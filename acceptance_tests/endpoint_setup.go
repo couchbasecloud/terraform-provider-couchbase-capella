@@ -17,8 +17,9 @@ import (
 
 // fixtBucketState holds a once-and-error pair for a single pre-created bucket.
 type fixtBucketState struct {
-	once sync.Once
-	err  error
+	once    sync.Once
+	err     error
+	created bool // true only if this test process created the bucket
 }
 
 var (
@@ -43,17 +44,19 @@ func ensureFixtureBucketByName(t *testing.T, name string) {
 
 	state.once.Do(func() {
 		ctx := context.Background()
-		state.err = createFixtureBucket(ctx, globalClient, name)
+		state.created, state.err = createFixtureBucket(ctx, globalClient, name)
 	})
 	if state.err != nil {
 		t.Fatalf("failed to provision test bucket %s: %v", name, state.err)
 	}
 
-	t.Cleanup(func() {
-		if err := deleteFixtureBucket(context.Background(), globalClient, name); err != nil {
-			t.Logf("warning: failed to delete fixture bucket %q: %v", name, err)
-		}
-	})
+	if state.created {
+		t.Cleanup(func() {
+			if err := deleteFixtureBucket(context.Background(), globalClient, name); err != nil {
+				t.Logf("warning: failed to delete fixture bucket %q: %v", name, err)
+			}
+		})
+	}
 }
 
 // fixtEndpointState holds a once-and-error pair for a single pre-created endpoint.
@@ -81,7 +84,7 @@ func ensureFixtureEndpoint(t *testing.T, endpointName, bucketName, description s
 
 	state.once.Do(func() {
 		ctx := context.Background()
-		if err := createFixtureBucket(ctx, globalClient, bucketName); err != nil {
+		if _, err := createFixtureBucket(ctx, globalClient, bucketName); err != nil {
 			state.err = err
 			return
 		}
@@ -97,21 +100,21 @@ func ensureFixtureEndpoint(t *testing.T, endpointName, bucketName, description s
 }
 
 // createFixtureBucket creates the named bucket if it does not already exist,
-// then waits until the bucket is available. Each fixture endpoint needs its own
-// bucket because Capella only permits one endpoint per bucket/scope/collection.
-func createFixtureBucket(ctx context.Context, client *api.Client, name string) error {
+// then waits until the bucket is available. Returns true if the bucket was
+// newly created by this call, false if it already existed.
+func createFixtureBucket(ctx context.Context, client *api.Client, name string) (bool, error) {
 	listUrl := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets",
 		globalHost, globalOrgId, globalProjectId, globalClusterId)
 	listCfg := api.EndpointCfg{Url: listUrl, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
 	buckets, err := api.GetPaginated[[]bucketapi.GetBucketResponse](ctx, client, globalToken, listCfg, api.SortById)
 	if err != nil {
-		return err
+		return false, err
 	}
 	for _, b := range buckets {
 		if b.Name == name {
 			log.Printf("fixture bucket %q already exists", name)
-			return waitForFixtureBucket(ctx, client, b.Id)
+			return false, waitForFixtureBucket(ctx, client, b.Id)
 		}
 	}
 
@@ -120,15 +123,15 @@ func createFixtureBucket(ctx context.Context, client *api.Client, name string) e
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
 	response, err := client.ExecuteWithRetry(ctx, cfg, bucketapi.CreateBucketRequest{Name: name}, globalToken, nil)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	var bucketResp bucketapi.GetBucketResponse
 	if err = json.Unmarshal(response.Body, &bucketResp); err != nil {
-		return err
+		return false, err
 	}
 
-	return waitForFixtureBucket(ctx, client, bucketResp.Id)
+	return true, waitForFixtureBucket(ctx, client, bucketResp.Id)
 }
 
 // deleteBucketWithRetry retries the bucket DELETE on 412 (App Service not yet

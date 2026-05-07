@@ -52,7 +52,7 @@ func createAppEndpoint(ctx context.Context, client *api.Client, name, bucket str
 		} else if errors.As(err, &apiErr) && apiErr.HttpStatusCode == http.StatusForbidden {
 			break
 		} else if permErr := permanentAPIError(err); permErr != nil {
-			return fmt.Errorf("failed to check whether app endpoint %s exists: %w", name, err)
+			return fmt.Errorf("failed to check whether app endpoint %s exists: %w", name, permErr)
 		}
 		if time.Now().After(checkDeadline) {
 			return fmt.Errorf("timeout waiting for app endpoint check for %s: %w", name, err)
@@ -162,11 +162,17 @@ func appEndpointWait(ctx context.Context, client *api.Client, name string) error
 			nil,
 		)
 		if err != nil {
-			if permErr := permanentAPIError(err); permErr != nil {
+			// 403 and 404 are transient right after endpoint creation (API warms
+			// up after the app service is deployed); retry them like 5xx.
+			var apiErr *api.Error
+			if errors.As(err, &apiErr) &&
+				(apiErr.HttpStatusCode == http.StatusForbidden || apiErr.HttpStatusCode == http.StatusNotFound) {
+				log.Printf("transient error fetching app endpoint (HTTP %d), retrying: %v", apiErr.HttpStatusCode, err)
+			} else if permErr := permanentAPIError(err); permErr != nil {
 				return permErr
+			} else {
+				log.Printf("transient error fetching app endpoint, retrying: %v", err)
 			}
-
-			log.Printf("transient error fetching app endpoint, retrying: %v", err)
 			select {
 			case <-ctx.Done():
 				return fmt.Errorf("context done while waiting to retry: %w", ctx.Err())

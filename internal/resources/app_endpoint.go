@@ -351,7 +351,7 @@ func (a *AppEndpoint) Update(ctx context.Context, req resource.UpdateRequest, re
 		projectId,
 		clusterId,
 		appServiceId,
-		endpointName,
+		url.PathEscape(endpointName),
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
 	_, err := a.ClientV1.ExecuteWithRetry(
@@ -419,7 +419,7 @@ func (a *AppEndpoint) Delete(ctx context.Context, req resource.DeleteRequest, re
 		projectId,
 		clusterId,
 		appServiceId,
-		endpointName,
+		url.PathEscape(endpointName),
 	)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
 
@@ -557,7 +557,7 @@ func (a *AppEndpoint) refreshAppEndpoint(
 		projId,
 		clusterId,
 		appServiceId,
-		endpointName,
+		url.PathEscape(endpointName),
 	)
 
 	cfg := api.EndpointCfg{

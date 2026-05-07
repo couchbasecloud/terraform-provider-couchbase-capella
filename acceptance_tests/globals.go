@@ -47,10 +47,10 @@ var (
 	globalDefaultOIDCEndpointName    = "tf_acc_test_doidc_endpoint"
 	globalDefaultOIDCBucketName      = "tf_acc_doidc_bkt"
 
-	// Pre-created buckets for app_endpoint resource tests. Each test gets its
+	// Fixture buckets for app_endpoint resource tests. Each test gets its
 	// own bucket because Capella only permits one endpoint per bucket/scope/collection.
-	// Buckets are created lazily via ensureFixtureBucketByName and are not owned
-	// by Terraform, so they are never created/deleted during test runs.
+	// by Terraform; instead, test helpers manage their lifecycle through the API
+	// during test runs, including cleanup when needed.
 	globalEPBucketName                   = "tf_acc_ep_bkt"
 	globalNoCorsEPBucketName             = "tf_acc_ep_nocors_bkt"
 	globalCorsFullEPBucketName           = "tf_acc_ep_cors_full_bkt"
