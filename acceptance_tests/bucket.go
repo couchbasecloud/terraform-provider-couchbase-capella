@@ -3,6 +3,7 @@ package acceptance_tests
 import (
 	"context"
 	"encoding/json"
+	stderrors "errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -19,7 +20,8 @@ func bucketExists(ctx context.Context, client *api.Client, bucketId string) (boo
 	if err == nil {
 		return true, nil
 	}
-	if apiErr, ok := err.(*api.Error); ok && apiErr.HttpStatusCode == http.StatusNotFound {
+	var apiErr *api.Error
+	if stderrors.As(err, &apiErr) && apiErr.HttpStatusCode == http.StatusNotFound {
 		return false, nil
 	}
 	return false, err
@@ -76,12 +78,48 @@ func destroyBucket(ctx context.Context, client *api.Client) error {
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
 	_, err := client.ExecuteWithRetry(ctx, cfg, nil, globalToken, nil)
 	if err != nil {
-		if apiErr, ok := err.(*api.Error); ok && apiErr.HttpStatusCode == http.StatusNotFound {
+		var apiErr *api.Error
+		if stderrors.As(err, &apiErr) && apiErr.HttpStatusCode == http.StatusNotFound {
 			return nil
 		}
 		return err
 	}
 	log.Printf("bucket destroyed: %s", globalBucketId)
+	return nil
+}
+
+func resolveBucket(ctx context.Context, client *api.Client) error {
+	if globalBucketId != "" {
+		exists, err := bucketExists(ctx, client, globalBucketId)
+		if err != nil {
+			return err
+		}
+		if exists {
+			log.Printf("Using existing bucket: %s", globalBucketId)
+			return nil
+		}
+		log.Printf("TF_VAR_bucket_id=%s does not exist on cluster; discovering or creating one", globalBucketId)
+		globalBucketId = ""
+	}
+
+	discoveredId, discoveredName, err := discoverFirstBucket(ctx, client)
+	if err != nil {
+		return err
+	}
+	if discoveredId != "" {
+		globalBucketId = discoveredId
+		globalBucketName = discoveredName
+		log.Printf("Discovered existing bucket: %s (%s)", discoveredName, discoveredId)
+		return nil
+	}
+
+	if err := createBucket(ctx, client); err != nil {
+		return err
+	}
+	if err := bucketWait(ctx, client); err != nil {
+		return err
+	}
+	log.Printf("Created bucket: %s (%s)", globalBucketName, globalBucketId)
 	return nil
 }
 

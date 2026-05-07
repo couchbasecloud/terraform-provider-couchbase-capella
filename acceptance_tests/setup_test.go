@@ -77,37 +77,8 @@ func setup(ctx context.Context, client *api.Client) error {
 		log.Printf("Using existing cluster: %s", globalClusterId)
 	}
 
-	// Resolve bucket: validate env var, else discover, else create.
-	if globalBucketId != "" {
-		exists, err := bucketExists(ctx, client, globalBucketId)
-		if err != nil {
-			return err
-		}
-		if exists {
-			log.Printf("Using existing bucket: %s", globalBucketId)
-		} else {
-			log.Printf("TF_VAR_bucket_id=%s does not exist on cluster; discovering or creating one", globalBucketId)
-			globalBucketId = ""
-		}
-	}
-	if globalBucketId == "" {
-		discoveredId, discoveredName, err := discoverFirstBucket(ctx, client)
-		if err != nil {
-			return err
-		}
-		if discoveredId != "" {
-			globalBucketId = discoveredId
-			globalBucketName = discoveredName
-			log.Printf("Discovered existing bucket: %s (%s)", discoveredName, discoveredId)
-		} else {
-			if err := createBucket(ctx, client); err != nil {
-				return err
-			}
-			if err := bucketWait(ctx, client); err != nil {
-				return err
-			}
-			log.Printf("Created bucket: %s (%s)", globalBucketName, globalBucketId)
-		}
+	if err := resolveBucket(ctx, client); err != nil {
+		return err
 	}
 
 	// Create app service only if not provided via env var
