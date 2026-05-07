@@ -24,7 +24,7 @@ func TestAccSampleBucket(t *testing.T) {
 			//Invalid Sample Data input
 			{
 				Config:      testAccWithInvalidSampleInputConfig(resourceName),
-				ExpectError: regexp.MustCompile("Could not load sample bucket"),
+				ExpectError: regexp.MustCompile(`Attribute name value must be one of`),
 			},
 		},
 	})
