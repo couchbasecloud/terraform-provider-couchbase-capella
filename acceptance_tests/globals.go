@@ -23,6 +23,7 @@ var (
 	globalScopeName       = "_default"
 	globalCollectionName  = "_default"
 	globalBucketId        string
+	globalBucketCreated   bool
 	globalAppServiceId    string
 	globalAppEndpointName = "tf_acc_test_app_endpoint_common"
 

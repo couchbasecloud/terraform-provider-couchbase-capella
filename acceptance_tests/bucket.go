@@ -12,25 +12,38 @@ import (
 	bucketapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/bucket"
 )
 
-func createBucket(ctx context.Context, client *api.Client) error {
-	// First, check if bucket already exists
+func bucketExists(ctx context.Context, client *api.Client, bucketId string) (bool, error) {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", globalHost, globalOrgId, globalProjectId, globalClusterId, bucketId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	_, err := client.ExecuteWithRetry(ctx, cfg, nil, globalToken, nil)
+	if err == nil {
+		return true, nil
+	}
+	if apiErr, ok := err.(*api.Error); ok && apiErr.HttpStatusCode == http.StatusNotFound {
+		return false, nil
+	}
+	return false, err
+}
+
+func discoverFirstBucket(ctx context.Context, client *api.Client) (string, string, error) {
 	listUrl := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets", globalHost, globalOrgId, globalProjectId, globalClusterId)
 	listCfg := api.EndpointCfg{Url: listUrl, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	
-	// Use the paginated API to get all buckets
 	buckets, err := api.GetPaginated[[]bucketapi.GetBucketResponse](ctx, client, globalToken, listCfg, api.SortById)
-	if err == nil {
-		// Check if bucket with globalBucketName already exists
-		for _, bucket := range buckets {
-			if bucket.Name == globalBucketName {
-				globalBucketId = bucket.Id
-				log.Printf("Bucket '%s' already exists with ID: %s", globalBucketName, globalBucketId)
-				return nil
-			}
+	if err != nil {
+		return "", "", err
+	}
+	for _, bucket := range buckets {
+		if bucket.Name == globalBucketName {
+			return bucket.Id, bucket.Name, nil
 		}
 	}
+	if len(buckets) > 0 {
+		return buckets[0].Id, buckets[0].Name, nil
+	}
+	return "", "", nil
+}
 
-	// Bucket doesn't exist, create it
+func createBucket(ctx context.Context, client *api.Client) error {
 	bucketRequest := bucketapi.CreateBucketRequest{
 		Name: globalBucketName,
 	}
@@ -54,6 +67,21 @@ func createBucket(ctx context.Context, client *api.Client) error {
 	}
 
 	globalBucketId = bucketResponse.Id
+	globalBucketCreated = true
+	return nil
+}
+
+func destroyBucket(ctx context.Context, client *api.Client) error {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", globalHost, globalOrgId, globalProjectId, globalClusterId, globalBucketId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
+	_, err := client.ExecuteWithRetry(ctx, cfg, nil, globalToken, nil)
+	if err != nil {
+		if apiErr, ok := err.(*api.Error); ok && apiErr.HttpStatusCode == http.StatusNotFound {
+			return nil
+		}
+		return err
+	}
+	log.Printf("bucket destroyed: %s", globalBucketId)
 	return nil
 }
 
