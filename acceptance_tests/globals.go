@@ -64,8 +64,15 @@ var (
 	globalACFUpdateEPBucketName          = "tf_acc_ep_acf_bkt"
 	globalCorsMaxAgeZeroEPBucketName     = "tf_acc_ep_maz_bkt"
 	globalCorsMaxAgeFromZeroEPBucketName = "tf_acc_ep_mafz_bkt"
+	// Buckets for currently-skipped tests — not provisioned while skipped, but
+	// named so the tests are ready to run once the underlying bugs are fixed.
+	globalCorsDisabledFalseEPBucketName = "tf_acc_ep_cors_df_bkt"
+	globalMultipleOIDCEPBucketName      = "tf_acc_ep_moidc_bkt"
+	globalRemoveCorsEPBucketName        = "tf_acc_ep_rmcors_bkt"
+	globalCorsDisableToggleEPBucketName = "tf_acc_ep_cdtgl_bkt"
+	globalRemoveOIDCEPBucketName        = "tf_acc_ep_rmoidc_bkt"
 	// TestAccAppEndpointInexistentCollection reuses globalBucketName: it tries
-	// _default/INVALID_COLLLECTION which does not conflict with the common
+	// _default/INVALID_COLLECTION which does not conflict with the common
 	// endpoint on _default/_default, so no dedicated bucket is needed.
 
 	// this global variable is set in TestMain.

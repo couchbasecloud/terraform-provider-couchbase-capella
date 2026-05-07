@@ -66,7 +66,7 @@ func TestAccAppEndpointActivationStatusDataSource(t *testing.T) {
 // TestAccAppEndpointsDataSourceFiltered for coverage until the App Service list
 // API is stable under concurrent load.
 func TestAccAppEndpointsDataSource(t *testing.T) {
-	t.Skip("AV-128XXX: unfiltered app_endpoints list returns 500 when other endpoints are mid-creation; use TestAccAppEndpointsDataSourceFiltered for coverage")
+	t.Skip("AV-130079: unfiltered app_endpoints list returns 500 when other endpoints are mid-creation; use TestAccAppEndpointsDataSourceFiltered for coverage")
 
 	dataSourceName := randomStringWithPrefix("tf_acc_ds_app_endpoints_")
 	dataSourceReference := "data.couchbase-capella_app_endpoints." + dataSourceName

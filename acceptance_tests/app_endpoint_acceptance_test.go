@@ -217,16 +217,16 @@ func generateAppEndpointImportId(resourceReference string) resource.ImportStateI
 // block is present and disabled=false.
 func TestAccAppEndpointCorsDisabledFalseNoOrigin(t *testing.T) {
 	t.Skip("AV-128217: cors.disabled=false without origin should be valid once the bug is fixed")
+	ensureFixtureBucketByName(t, globalCorsDisabledFalseEPBucketName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
-	bucket := randomStringWithPrefix("tf_acc_bucket_")
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppEndpointCorsDisabledFalseResourceConfig(resourceName, epName, bucket),
+				Config: testAccAppEndpointCorsDisabledFalseResourceConfig(resourceName, epName, globalCorsDisabledFalseEPBucketName),
 			},
 		},
 	})
@@ -276,16 +276,16 @@ func TestAccAppEndpointCorsFullConfig(t *testing.T) {
 // supplied. Single-provider creation (S17/S18) works correctly.
 func TestAccAppEndpointMultipleOIDC(t *testing.T) {
 	t.Skip("AV-128222: multiple OIDC providers cause a 500 Internal Server Error; unskip once the bug is fixed")
+	ensureFixtureBucketByName(t, globalMultipleOIDCEPBucketName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
-	bucket := randomStringWithPrefix("tf_acc_bucket_")
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppEndpointMultipleOIDCResourceConfig(resourceName, epName, bucket),
+				Config: testAccAppEndpointMultipleOIDCResourceConfig(resourceName, epName, globalMultipleOIDCEPBucketName),
 			},
 		},
 	})
@@ -427,19 +427,19 @@ func TestAccAppEndpointUpdateCorsExpand(t *testing.T) {
 // cors is effectively write-once via Terraform.
 func TestAccAppEndpointUpdateRemoveCors(t *testing.T) {
 	t.Skip("AV-128229 / AV-128217: removing the cors block after it is set should succeed once the bugs are fixed")
+	ensureFixtureBucketByName(t, globalRemoveCorsEPBucketName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
-	bucket := randomStringWithPrefix("tf_acc_bucket_")
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppEndpointCorsAllFieldsResourceConfig(resourceName, epName, bucket),
+				Config: testAccAppEndpointCorsAllFieldsResourceConfig(resourceName, epName, globalRemoveCorsEPBucketName),
 			},
 			{
-				Config: testAccAppEndpointNoCorsResourceConfig(resourceName, epName, bucket),
+				Config: testAccAppEndpointNoCorsResourceConfig(resourceName, epName, globalRemoveCorsEPBucketName),
 			},
 		},
 	})
@@ -449,19 +449,19 @@ func TestAccAppEndpointUpdateRemoveCors(t *testing.T) {
 // The API rejects disabling CORS when other cors fields (origin etc.) are also set.
 func TestAccAppEndpointUpdateCorsDisableToggle(t *testing.T) {
 	t.Skip("AV-128229: toggling cors.disabled=true while other CORS fields are set should succeed once the bug is fixed")
+	ensureFixtureBucketByName(t, globalCorsDisableToggleEPBucketName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
-	bucket := randomStringWithPrefix("tf_acc_bucket_")
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppEndpointCorsOriginOnlyResourceConfig(resourceName, epName, bucket),
+				Config: testAccAppEndpointCorsOriginOnlyResourceConfig(resourceName, epName, globalCorsDisableToggleEPBucketName),
 			},
 			{
-				Config: testAccAppEndpointCorsDisabledTrueResourceConfig(resourceName, epName, bucket),
+				Config: testAccAppEndpointCorsDisabledTrueResourceConfig(resourceName, epName, globalCorsDisableToggleEPBucketName),
 			},
 		},
 	})
@@ -529,19 +529,19 @@ func TestAccAppEndpointUpdateAddOIDC(t *testing.T) {
 // from the GET response, and Terraform detects the plan/state mismatch.
 func TestAccAppEndpointUpdateRemoveOIDC(t *testing.T) {
 	t.Skip("AV-128167: removing the oidc block should succeed once the bug is fixed")
+	ensureFixtureBucketByName(t, globalRemoveOIDCEPBucketName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
-	bucket := randomStringWithPrefix("tf_acc_bucket_")
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppEndpointWithOIDCResourceConfig(resourceName, epName, bucket),
+				Config: testAccAppEndpointWithOIDCResourceConfig(resourceName, epName, globalRemoveOIDCEPBucketName),
 			},
 			{
-				Config: testAccAppEndpointCorsOriginOnlyResourceConfig(resourceName, epName, bucket),
+				Config: testAccAppEndpointCorsOriginOnlyResourceConfig(resourceName, epName, globalRemoveOIDCEPBucketName),
 			},
 		},
 	})

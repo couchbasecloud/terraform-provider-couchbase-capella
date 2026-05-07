@@ -34,10 +34,35 @@ func createAppEndpoint(ctx context.Context, client *api.Client, name, bucket str
 		SuccessStatus: http.StatusOK,
 	}
 
-	_, err := client.ExecuteWithRetry(ctx, checkCfg, nil, globalToken, nil)
-	if err == nil {
-		log.Printf("App endpoint '%s' already exists", name)
-		return nil
+	// Retry the existence check: 403 and 5xx are transient right after app
+	// service creation (the endpoint API warms up after the service is deployed).
+	var err error
+	checkDeadline := time.Now().Add(maxWait)
+	for {
+		_, err = client.ExecuteWithRetry(ctx, checkCfg, nil, globalToken, nil)
+		if err == nil {
+			log.Printf("App endpoint '%s' already exists", name)
+			return nil
+		}
+		// The app endpoint API returns 403 (instead of 404) when the endpoint
+		// does not exist yet, so treat it the same as Not Found.
+		var apiErr *api.Error
+		if notFound, _ := api.CheckResourceNotFoundError(err); notFound {
+			break
+		} else if errors.As(err, &apiErr) && apiErr.HttpStatusCode == http.StatusForbidden {
+			break
+		} else if permErr := permanentAPIError(err); permErr != nil {
+			return fmt.Errorf("failed to check whether app endpoint %s exists: %w", name, err)
+		}
+		if time.Now().After(checkDeadline) {
+			return fmt.Errorf("timeout waiting for app endpoint check for %s: %w", name, err)
+		}
+		log.Printf("transient error checking app endpoint %s, retrying in %s: %v", name, retryInterval, err)
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("context done while checking app endpoint: %w", ctx.Err())
+		case <-time.After(retryInterval):
+		}
 	}
 
 	appEndpointRequest := app_endpoints.AppEndpointRequest{
