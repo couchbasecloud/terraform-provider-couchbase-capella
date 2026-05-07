@@ -20,14 +20,20 @@ var (
 	globalOrgId string
 
 	// these global variables are set by setup().
-	globalProjectId       string
-	globalClusterId       string
-	globalBucketName      = "default"
-	globalScopeName       = "_default"
-	globalCollectionName  = "_default"
-	globalBucketId        string
-	globalAppServiceId    string
-	globalAppEndpointName = "tf_acc_test_app_endpoint_common"
+	globalProjectId          string
+	globalClusterId          string
+	globalClusterName        = "tf_acc_test_cluster_common"
+	globalBucketName         = "default"
+	globalScopeName          = "_default"
+	globalCollectionName     = "_default"
+	globalBucketId           string
+	globalAppServiceId       string
+	globalAppServiceName     = "tf_acc_test_app_service_common"
+	globalAppEndpointName    = "tf_acc_test_app_endpoint_common"
+	globalAppEndpointCreated bool
+	globalProjectCreated     bool
+	globalClusterCreated     bool
+	globalAppServiceCreated  bool
 
 	// Pre-created endpoints for sub-resource tests. One dedicated endpoint per
 	// test prevents write conflicts without concurrent creation 500s — they are

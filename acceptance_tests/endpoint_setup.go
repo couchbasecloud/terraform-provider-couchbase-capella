@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"sync"
 	"testing"
 	"time"
@@ -61,8 +62,10 @@ func ensureFixtureBucketByName(t *testing.T, name string) {
 
 // fixtEndpointState holds a once-and-error pair for a single pre-created endpoint.
 type fixtEndpointState struct {
-	once sync.Once
-	err  error
+	once            sync.Once
+	err             error
+	bucketCreated   bool
+	endpointCreated bool
 }
 
 var (
@@ -84,16 +87,35 @@ func ensureFixtureEndpoint(t *testing.T, endpointName, bucketName, description s
 
 	state.once.Do(func() {
 		ctx := context.Background()
-		if _, err := createFixtureBucket(ctx, globalClient, bucketName); err != nil {
+		bucketCreated, err := createFixtureBucket(ctx, globalClient, bucketName)
+		if err != nil {
 			state.err = err
 			return
 		}
-		if err := createAppEndpoint(ctx, globalClient, endpointName, bucketName); err != nil {
+		state.bucketCreated = bucketCreated
+		endpointCreated, err := createAppEndpoint(ctx, globalClient, endpointName, bucketName)
+		if err != nil {
 			state.err = err
 			return
 		}
+		state.endpointCreated = endpointCreated
 		state.err = appEndpointWait(ctx, globalClient, endpointName)
 	})
+
+	if state.bucketCreated {
+		t.Cleanup(func() {
+			if err := deleteFixtureBucket(context.Background(), globalClient, bucketName); err != nil {
+				t.Logf("warning: failed to delete %s fixture bucket %q: %v", description, bucketName, err)
+			}
+		})
+	}
+	if state.endpointCreated {
+		t.Cleanup(func() {
+			if err := deleteFixtureEndpoint(context.Background(), globalClient, endpointName); err != nil {
+				t.Logf("warning: failed to delete %s fixture endpoint %q: %v", description, endpointName, err)
+			}
+		})
+	}
 	if state.err != nil {
 		t.Fatalf("failed to provision %s test endpoint: %v", description, state.err)
 	}
@@ -188,6 +210,74 @@ func deleteFixtureBucket(ctx context.Context, client *api.Client, name string) e
 	}
 
 	log.Printf("fixture bucket %q not found, skipping deletion", name)
+	return nil
+}
+
+func waitForFixtureEndpointDeletion(ctx context.Context, client *api.Client, name string) error {
+	const maxWait = 5 * time.Minute
+	const retryInterval = 10 * time.Second
+	deadline := time.Now().Add(maxWait)
+
+	for {
+		endpointURL := fmt.Sprintf(
+			"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
+			globalHost,
+			globalOrgId,
+			globalProjectId,
+			globalClusterId,
+			globalAppServiceId,
+			url.PathEscape(name),
+		)
+		cfg := api.EndpointCfg{Url: endpointURL, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+
+		_, err := client.ExecuteWithRetry(ctx, cfg, nil, globalToken, nil)
+		if err != nil {
+			var apiErr *api.Error
+			if errors.As(err, &apiErr) &&
+				(apiErr.HttpStatusCode == http.StatusNotFound || apiErr.HttpStatusCode == http.StatusForbidden) {
+				return nil
+			}
+		}
+		if time.Now().After(deadline) {
+			return fmt.Errorf("timeout waiting for fixture endpoint %q deletion", name)
+		}
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("context done waiting for fixture endpoint %q deletion: %w", name, ctx.Err())
+		case <-time.After(retryInterval):
+		}
+	}
+}
+
+// deleteFixtureEndpoint deletes the named app endpoint and waits until the API
+// reports it as gone. It is a no-op if the endpoint does not exist.
+func deleteFixtureEndpoint(ctx context.Context, client *api.Client, name string) error {
+	endpointURL := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
+		globalHost,
+		globalOrgId,
+		globalProjectId,
+		globalClusterId,
+		globalAppServiceId,
+		url.PathEscape(name),
+	)
+	cfg := api.EndpointCfg{Url: endpointURL, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
+
+	_, err := client.ExecuteWithRetry(ctx, cfg, nil, globalToken, nil)
+	if err != nil {
+		var apiErr *api.Error
+		if errors.As(err, &apiErr) &&
+			(apiErr.HttpStatusCode == http.StatusNotFound || apiErr.HttpStatusCode == http.StatusForbidden) {
+			log.Printf("fixture endpoint %q not found, skipping deletion", name)
+			return nil
+		}
+		return fmt.Errorf("deleting fixture endpoint %q: %w", name, err)
+	}
+
+	if err = waitForFixtureEndpointDeletion(ctx, client, name); err != nil {
+		return err
+	}
+	log.Printf("deleted fixture endpoint %q", name)
 	return nil
 }
 

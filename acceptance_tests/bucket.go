@@ -57,6 +57,23 @@ func createBucket(ctx context.Context, client *api.Client) error {
 	return nil
 }
 
+func resolveBucketNameById(ctx context.Context, client *api.Client, bucketID string) (string, error) {
+	listUrl := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets", globalHost, globalOrgId, globalProjectId, globalClusterId)
+	listCfg := api.EndpointCfg{Url: listUrl, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+
+	buckets, err := api.GetPaginated[[]bucketapi.GetBucketResponse](ctx, client, globalToken, listCfg, api.SortById)
+	if err != nil {
+		return "", err
+	}
+	for _, bucket := range buckets {
+		if bucket.Id == bucketID {
+			return bucket.Name, nil
+		}
+	}
+
+	return "", fmt.Errorf("bucket with ID %s not found", bucketID)
+}
+
 func bucketWait(ctx context.Context, client *api.Client) error {
 	const maxWaitTime = 5 * time.Minute
 

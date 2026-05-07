@@ -16,7 +16,7 @@ import (
 func createAppService(ctx context.Context, client *api.Client) error {
 	var n int64 = 2
 	appServiceRequest := appservice.CreateAppServiceRequest{
-		Name: "tf_acc_test_app_service_common",
+		Name: globalAppServiceName,
 		Compute: appservice.AppServiceCompute{
 			Cpu: 2,
 			Ram: 4,

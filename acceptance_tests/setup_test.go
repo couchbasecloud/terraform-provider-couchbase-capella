@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 )
@@ -35,6 +37,8 @@ provider "couchbase-capella" {
 }
 `)
 
+	configureDedicatedAppEndpointCluster()
+
 	var code int
 	ctx := context.Background()
 	client := api.NewClient(timeout)
@@ -62,6 +66,7 @@ func setup(ctx context.Context, client *api.Client) error {
 		if err := createProject(ctx, client); err != nil {
 			return err
 		}
+		globalProjectCreated = true
 	} else {
 		log.Printf("Using existing project: %s", globalProjectId)
 	}
@@ -71,6 +76,7 @@ func setup(ctx context.Context, client *api.Client) error {
 		if err := createCluster(ctx, client); err != nil {
 			return err
 		}
+		globalClusterCreated = true
 		if err := clusterWait(ctx, client, false); err != nil {
 			return err
 		}
@@ -87,7 +93,12 @@ func setup(ctx context.Context, client *api.Client) error {
 			return err
 		}
 	} else {
-		log.Printf("Using existing bucket: %s", globalBucketId)
+		bucketName, err := resolveBucketNameById(ctx, client, globalBucketId)
+		if err != nil {
+			return err
+		}
+		globalBucketName = bucketName
+		log.Printf("Using existing bucket: %s (%s)", globalBucketName, globalBucketId)
 	}
 
 	// Create app service only if not provided via env var
@@ -95,6 +106,7 @@ func setup(ctx context.Context, client *api.Client) error {
 		if err := createAppService(ctx, client); err != nil {
 			return err
 		}
+		globalAppServiceCreated = true
 		if err := appServiceWait(ctx, client, false); err != nil {
 			return err
 		}
@@ -102,9 +114,11 @@ func setup(ctx context.Context, client *api.Client) error {
 		log.Printf("Using existing app service: %s", globalAppServiceId)
 	}
 
-	if err := createAppEndpoint(ctx, client, globalAppEndpointName, globalBucketName); err != nil {
+	appEndpointCreated, err := createAppEndpoint(ctx, client, globalAppEndpointName, globalBucketName)
+	if err != nil {
 		return err
 	}
+	globalAppEndpointCreated = appEndpointCreated
 	if err := appEndpointWait(ctx, client, globalAppEndpointName); err != nil {
 		return err
 	}
@@ -112,9 +126,49 @@ func setup(ctx context.Context, client *api.Client) error {
 	return nil
 }
 
+func configureDedicatedAppEndpointCluster() {
+	if !useDedicatedAppEndpointCluster() {
+		return
+	}
+
+	suffix := time.Now().UTC().Format("20060102150405")
+	globalClusterName = "tf_acc_app_endpoint_cluster_" + suffix
+	globalAppServiceName = "tf_acc_app_endpoint_app_service_" + suffix
+	globalClusterId = ""
+	globalAppServiceId = ""
+	globalBucketId = ""
+	globalBucketName = "default"
+	log.Printf("Using dedicated app endpoint acceptance test cluster: %s", globalClusterName)
+}
+
+func useDedicatedAppEndpointCluster() bool {
+	switch strings.ToLower(os.Getenv("TF_ACC_APP_ENDPOINT_DEDICATED_CLUSTER")) {
+	case "1", "true", "yes", "y":
+		return true
+	case "0", "false", "no", "n":
+		return false
+	}
+
+	for i, arg := range os.Args {
+		if strings.HasPrefix(arg, "-test.run=") {
+			return strings.Contains(strings.TrimPrefix(arg, "-test.run="), "TestAccAppEndpoint")
+		}
+		if arg == "-test.run" && i+1 < len(os.Args) {
+			return strings.Contains(os.Args[i+1], "TestAccAppEndpoint")
+		}
+	}
+
+	return false
+}
+
 func cleanup(ctx context.Context, client *api.Client) error {
-	// Only destroy app service if it was created by setup (not provided via env var)
-	if globalAppServiceId != "" && os.Getenv("TF_VAR_app_service_id") == "" {
+	if globalAppEndpointCreated {
+		if err := deleteFixtureEndpoint(ctx, client, globalAppEndpointName); err != nil {
+			return err
+		}
+	}
+
+	if globalAppServiceCreated {
 		if err := destroyAppService(ctx, client); err != nil {
 			return err
 		}
@@ -124,8 +178,7 @@ func cleanup(ctx context.Context, client *api.Client) error {
 		}
 	}
 
-	// Only destroy cluster if it was created by setup (not provided via env var)
-	if globalClusterId != "" && os.Getenv("TF_VAR_cluster_id") == "" {
+	if globalClusterCreated {
 		if err := destroyCluster(ctx, client); err != nil {
 			return err
 		}
@@ -135,8 +188,7 @@ func cleanup(ctx context.Context, client *api.Client) error {
 		}
 	}
 
-	// Only destroy project if it was created by setup (not provided via env var)
-	if globalProjectId != "" && os.Getenv("TF_VAR_project_id") == "" {
+	if globalProjectCreated {
 		if err := destroyProject(ctx, client); err != nil {
 			return err
 		}

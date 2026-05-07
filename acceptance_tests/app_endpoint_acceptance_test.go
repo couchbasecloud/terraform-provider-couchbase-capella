@@ -22,6 +22,7 @@ func TestAccAppEndpoint(t *testing.T) {
 			{
 				Config: testAccAppEndpointResourceConfig(resourceName, epName, globalEPBucketName, "syncFnXattr", true),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAppEndpointComputedAttrs(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
@@ -35,6 +36,7 @@ func TestAccAppEndpoint(t *testing.T) {
 			{
 				Config: testAccAppEndpointResourceConfig(resourceName, epName, globalEPBucketName, "new_xattr", false),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAppEndpointComputedAttrs(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "delta_sync_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceReference, "user_xattr_key", "new_xattr"),
 				),
@@ -151,6 +153,7 @@ func TestAccAppEndpointNoCors(t *testing.T) {
 			{
 				Config: cfg,
 				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAppEndpointComputedAttrs(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", epName),
 					resource.TestCheckNoResourceAttr(resourceReference, "cors"),
 				),
@@ -212,6 +215,15 @@ func generateAppEndpointImportId(resourceReference string) resource.ImportStateI
 	}
 }
 
+func testAccAppEndpointComputedAttrs(resourceReference string) resource.TestCheckFunc {
+	return resource.ComposeAggregateTestCheckFunc(
+		resource.TestCheckResourceAttrSet(resourceReference, "state"),
+		resource.TestCheckResourceAttrSet(resourceReference, "admin_url"),
+		resource.TestCheckResourceAttrSet(resourceReference, "public_url"),
+		resource.TestCheckResourceAttrSet(resourceReference, "metrics_url"),
+	)
+}
+
 // ── S4: cors.disabled=false without origin — API 422 "App Endpoint CORS Origin is empty" ──
 // Provider schema marks origin as Optional but the API requires it when a cors
 // block is present and disabled=false.
@@ -246,17 +258,13 @@ func TestAccAppEndpointCorsFullConfig(t *testing.T) {
 			{
 				Config: testAccAppEndpointCorsAllFieldsResourceConfig(resourceName, epName, globalCorsFullEPBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAppEndpointComputedAttrs(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "cors.disabled", "false"),
 					resource.TestCheckResourceAttr(resourceReference, "cors.max_age", "3600"),
 					resource.TestCheckResourceAttr(resourceReference, "cors.origin.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceReference, "cors.origin.*", "*"),
 					resource.TestCheckResourceAttr(resourceReference, "cors.login_origin.#", "1"),
 					resource.TestCheckResourceAttr(resourceReference, "cors.headers.#", "2"),
-					// Computed/server-set fields — validate Read path.
-					resource.TestCheckResourceAttrSet(resourceReference, "state"),
-					resource.TestCheckResourceAttrSet(resourceReference, "admin_url"),
-					resource.TestCheckResourceAttrSet(resourceReference, "public_url"),
-					resource.TestCheckResourceAttrSet(resourceReference, "metrics_url"),
 				),
 			},
 			{
@@ -305,6 +313,7 @@ func TestAccAppEndpointCorsSpecificOrigins(t *testing.T) {
 			{
 				Config: testAccAppEndpointCorsSpecificOriginsResourceConfig(resourceName, epName, globalCorsSpecificEPBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAppEndpointComputedAttrs(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "cors.origin.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceReference, "cors.origin.*", "https://app.example.com"),
 					resource.TestCheckTypeSetElemAttr(resourceReference, "cors.origin.*", "https://admin.example.com"),
@@ -355,6 +364,7 @@ func TestAccAppEndpointOIDCFullFields(t *testing.T) {
 			{
 				Config: testAccAppEndpointOIDCAllFieldsResourceConfig(resourceName, epName, globalOIDCFullEPBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAppEndpointComputedAttrs(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "oidc.#", "1"),
 					resource.TestCheckResourceAttr(resourceReference, "oidc.0.issuer", "https://accounts.google.com"),
 					resource.TestCheckResourceAttr(resourceReference, "oidc.0.client_id", "example-client-id"),
@@ -362,6 +372,8 @@ func TestAccAppEndpointOIDCFullFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "oidc.0.user_prefix", "google_"),
 					resource.TestCheckResourceAttr(resourceReference, "oidc.0.username_claim", "email"),
 					resource.TestCheckResourceAttr(resourceReference, "oidc.0.roles_claim", "roles"),
+					resource.TestCheckResourceAttrSet(resourceReference, "oidc.0.provider_id"),
+					resource.TestCheckResourceAttrSet(resourceReference, "oidc.0.is_default"),
 				),
 			},
 		},
@@ -382,9 +394,11 @@ func TestAccAppEndpointOIDCDiscoveryURL(t *testing.T) {
 			{
 				Config: testAccAppEndpointOIDCDiscoveryURLResourceConfig(resourceName, epName, globalOIDCDiscEPBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAppEndpointComputedAttrs(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "oidc.#", "1"),
 					resource.TestCheckResourceAttr(resourceReference, "oidc.0.issuer", "https://accounts.google.com"),
 					resource.TestCheckResourceAttr(resourceReference, "oidc.0.discovery_url", "https://accounts.google.com/.well-known/openid-configuration"),
+					resource.TestCheckResourceAttrSet(resourceReference, "oidc.0.provider_id"),
 				),
 			},
 		},
@@ -405,13 +419,20 @@ func TestAccAppEndpointUpdateCorsExpand(t *testing.T) {
 			{
 				Config: testAccAppEndpointCorsOriginOnlyResourceConfig(resourceName, epName, globalCorsExpandEPBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "cors.origin.#", "1"),
+					testAccAppEndpointComputedAttrs(resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
+					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
+					resource.TestCheckResourceAttr(resourceReference, "bucket", globalCorsExpandEPBucketName),
+					resource.TestCheckResourceAttr(resourceReference, "name", epName),
 					resource.TestCheckTypeSetElemAttr(resourceReference, "cors.origin.*", "*"),
 				),
 			},
 			{
 				Config: testAccAppEndpointCorsAllFieldsResourceConfig(resourceName, epName, globalCorsExpandEPBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAppEndpointComputedAttrs(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "cors.disabled", "false"),
 					resource.TestCheckResourceAttr(resourceReference, "cors.max_age", "3600"),
 					resource.TestCheckResourceAttr(resourceReference, "cors.login_origin.#", "1"),

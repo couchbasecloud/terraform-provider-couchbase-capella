@@ -100,9 +100,15 @@ func TestAccAppEndpointsDataSourceFiltered(t *testing.T) {
 			{
 				Config: testAccAppEndpointsDataSourceFilteredConfig(dataSourceName, globalAppEndpointName),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceReference, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(dataSourceReference, "project_id", globalProjectId),
+					resource.TestCheckResourceAttr(dataSourceReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(dataSourceReference, "app_service_id", globalAppServiceId),
 					resource.TestCheckResourceAttr(dataSourceReference, "app_endpoints.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceReference, "app_endpoints.*", map[string]string{
-						"name": globalAppEndpointName,
+						"bucket":             globalBucketName,
+						"name":               globalAppEndpointName,
+						"delta_sync_enabled": "true",
 					}),
 				),
 			},
