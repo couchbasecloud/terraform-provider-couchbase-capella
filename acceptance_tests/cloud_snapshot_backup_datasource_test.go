@@ -21,7 +21,7 @@ func TestAccDatasourceCloudSnapshotBackup(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dsReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(dsReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(dsReference, "cluster_id", snapshotClusterId()),
 					resource.TestCheckResourceAttrSet(dsReference, "id"),
 					resource.TestCheckResourceAttrSet(dsReference, "created_at"),
 					resource.TestCheckResourceAttrSet(dsReference, "expiration"),
@@ -48,7 +48,7 @@ func TestAccDatasourceCloudSnapshotBackups(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dsReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(dsReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(dsReference, "cluster_id", snapshotClusterId()),
 					resource.TestCheckResourceAttrSet(dsReference, "data.0.id"),
 					resource.TestCheckResourceAttrSet(dsReference, "data.0.created_at"),
 					resource.TestCheckResourceAttrSet(dsReference, "data.0.retention"),
@@ -94,7 +94,7 @@ data "couchbase-capella_cloud_snapshot_backup" "%[2]s" {
   cluster_id      = "%[5]s"
   id              = "00000000-0000-0000-0000-000000000000"
 }
-`, globalProviderBlock, dsName, globalOrgId, globalProjectId, globalClusterId),
+`, globalProviderBlock, dsName, globalOrgId, globalProjectId, snapshotClusterId()),
 				ExpectError: regexp.MustCompile("Snapshot Backup Not Found|Error Reading Capella Snapshot"),
 			},
 		},
@@ -141,7 +141,7 @@ data "couchbase-capella_cloud_snapshot_backups" "%[2]s" {
     name = "status"
   }
 }
-`, globalProviderBlock, dsName, globalOrgId, globalProjectId, globalClusterId),
+`, globalProviderBlock, dsName, globalOrgId, globalProjectId, snapshotClusterId()),
 				ExpectError: regexp.MustCompile("Invalid Filters Configuration|Both 'name' and 'values'"),
 			},
 		},
@@ -186,7 +186,7 @@ data "couchbase-capella_cloud_snapshot_backup" "%[6]s" {
   cluster_id      = "%[5]s"
   id              = couchbase-capella_cloud_snapshot_backup.%[2]s.id
 }
-`, globalProviderBlock, backupResourceName, globalOrgId, globalProjectId, globalClusterId, dsName)
+`, globalProviderBlock, backupResourceName, globalOrgId, globalProjectId, snapshotClusterId(), dsName)
 }
 
 func testAccCloudSnapshotBackupsListDatasourceConfig(backupResourceName, dsName string) string {
@@ -206,7 +206,7 @@ data "couchbase-capella_cloud_snapshot_backups" "%[6]s" {
   cluster_id      = "%[5]s"
   depends_on      = [couchbase-capella_cloud_snapshot_backup.%[2]s]
 }
-`, globalProviderBlock, backupResourceName, globalOrgId, globalProjectId, globalClusterId, dsName)
+`, globalProviderBlock, backupResourceName, globalOrgId, globalProjectId, snapshotClusterId(), dsName)
 }
 
 func testAccCloudProjectSnapshotBackupsDatasourceConfig(backupResourceName, dsName string) string {
@@ -225,5 +225,5 @@ data "couchbase-capella_cloud_project_snapshot_backups" "%[6]s" {
   project_id      = "%[4]s"
   depends_on      = [couchbase-capella_cloud_snapshot_backup.%[2]s]
 }
-`, globalProviderBlock, backupResourceName, globalOrgId, globalProjectId, globalClusterId, dsName)
+`, globalProviderBlock, backupResourceName, globalOrgId, globalProjectId, snapshotClusterId(), dsName)
 }
