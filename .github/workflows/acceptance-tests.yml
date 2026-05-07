@@ -22,12 +22,11 @@ jobs:
       TF_VAR_auth_token: ${{ secrets.CAPELLA_AUTH_TOKEN }}
       TF_VAR_organization_id: ${{ secrets.CAPELLA_ORGANIZATION_ID }}
       TF_VAR_host: ${{ secrets.CAPELLA_HOST }}
-      # Optional dedicated cluster + bucket used by the cloud_snapshot_*
-      # acceptance tests so long-running restore operations don't disrupt
-      # tests sharing the primary cluster. Falls back to the primary
-      # cluster/bucket when these secrets are not configured.
+      # Optional dedicated cluster used by the cloud_snapshot_* acceptance
+      # tests so long-running restore operations don't disrupt tests sharing
+      # the primary cluster. Falls back to the primary cluster when this
+      # secret is not configured.
       TF_VAR_snapshot_cluster_id: ${{ secrets.CAPELLA_SNAPSHOT_CLUSTER_ID }}
-      TF_VAR_snapshot_bucket_id: ${{ secrets.CAPELLA_SNAPSHOT_BUCKET_ID }}
       CAPELLA_OPENAPI_SPEC_PATH: ${{ github.workspace }}/openapi.generated.yaml
 
     steps:

@@ -29,9 +29,8 @@ func getEnvVars() error {
 
 	// Optional dedicated cluster for snapshot/restore tests so that long
 	// restore windows don't interfere with the shared cluster used by other
-	// tests. Falls back to the primary cluster/bucket when unset.
+	// tests. Falls back to the primary cluster when unset.
 	globalSnapshotClusterId = os.Getenv("TF_VAR_snapshot_cluster_id")
-	globalSnapshotBucketId = os.Getenv("TF_VAR_snapshot_bucket_id")
 
 	return nil
 }
@@ -41,11 +40,4 @@ func snapshotClusterId() string {
 		return globalSnapshotClusterId
 	}
 	return globalClusterId
-}
-
-func snapshotBucketId() string {
-	if globalSnapshotBucketId != "" {
-		return globalSnapshotBucketId
-	}
-	return globalBucketId
 }
