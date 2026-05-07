@@ -17,13 +17,18 @@ import (
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-// TODO: legacy bucket backup endpoint returns 404 "Unable to find the specified
-// bucket" for a bucket that the bucket endpoint resolves successfully. Track via
-// the bug filed for couchbase-capella_backup / _backup_schedule before relaxing
-// this test.
+// TestAccBackupResource creates a backup, verifies its attributes, then
+// layers the couchbase-capella_backups data source on top to confirm the
+// backups list returns the just-created backup. The data source step
+// intentionally reuses the same backup resource (no new backup is created)
+// because Capella's legacy bucket backup endpoint serialises manual
+// backups per bucket and a back-to-back second backup gets stuck in a
+// non-terminal state until the per-bucket spacing window elapses.
 func TestAccBackupResource(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_backup_")
 	resourceReference := "couchbase-capella_backup." + resourceName
+	dsName := randomStringWithPrefix("tf_acc_backups_ds_")
+	dsReference := "data.couchbase-capella_backups." + dsName
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -44,6 +49,18 @@ func TestAccBackupResource(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceReference, "bucket_name"),
 					resource.TestCheckResourceAttrSet(resourceReference, "source"),
 					resource.TestCheckResourceAttrSet(resourceReference, "cloud_provider"),
+				),
+			},
+			{
+				Config: testAccBackupWithDatasourceConfig(resourceName, dsName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(dsReference, "project_id", globalProjectId),
+					resource.TestCheckResourceAttr(dsReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(dsReference, "bucket_id", globalBucketId),
+					resource.TestCheckResourceAttrSet(dsReference, "data.0.id"),
+					resource.TestCheckResourceAttrSet(dsReference, "data.0.cycle_id"),
+					resource.TestCheckResourceAttrSet(dsReference, "data.0.status"),
 				),
 			},
 			{
@@ -116,34 +133,6 @@ resource "couchbase-capella_backup" "%[2]s" {
 	})
 }
 
-// TestAccDatasourceBackups reads the backups list for the shared bucket. It
-// intentionally does not create a fresh backup resource because Capella's
-// legacy bucket backup endpoint serialises backups per bucket — creating a
-// second backup right after TestAccBackupResource runs frequently leaves the
-// new backup record stuck in a non-terminal state, so the resource times out
-// at the 60 minute budget. Reading the existing backup created by
-// TestAccBackupResource avoids that race and still exercises the data source
-// schema and decoding path.
-func TestAccDatasourceBackups(t *testing.T) {
-	dsName := randomStringWithPrefix("tf_acc_backups_ds_")
-	dsReference := "data.couchbase-capella_backups." + dsName
-
-	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccBackupsDatasourceReadOnlyConfig(dsName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
-					resource.TestCheckResourceAttr(dsReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(dsReference, "cluster_id", globalClusterId),
-					resource.TestCheckResourceAttr(dsReference, "bucket_id", globalBucketId),
-				),
-			},
-		},
-	})
-}
-
 func testAccBackupResourceConfig(resourceName string) string {
 	return testAccBackupResourceConfigWithBucketID(resourceName, globalBucketId)
 }
@@ -161,17 +150,25 @@ resource "couchbase-capella_backup" "%[2]s" {
 `, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, bucketID)
 }
 
-func testAccBackupsDatasourceReadOnlyConfig(dsName string) string {
+func testAccBackupWithDatasourceConfig(resourceName, dsName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-data "couchbase-capella_backups" "%[2]s" {
+resource "couchbase-capella_backup" "%[2]s" {
   organization_id = "%[3]s"
   project_id      = "%[4]s"
   cluster_id      = "%[5]s"
   bucket_id       = "%[6]s"
 }
-`, globalProviderBlock, dsName, globalOrgId, globalProjectId, globalClusterId, globalBucketId)
+
+data "couchbase-capella_backups" "%[7]s" {
+  organization_id = "%[3]s"
+  project_id      = "%[4]s"
+  cluster_id      = "%[5]s"
+  bucket_id       = "%[6]s"
+  depends_on      = [couchbase-capella_backup.%[2]s]
+}
+`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, globalBucketId, dsName)
 }
 
 func generateBackupImportIdForResource(resourceReference string) resource.ImportStateIdFunc {
