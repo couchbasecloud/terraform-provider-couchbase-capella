@@ -426,8 +426,8 @@ func (c *ClusterOnOffSchedule) retrieveClusterOnOffSchedule(ctx context.Context,
 
 func (c *ClusterOnOffSchedule) createScheduleWithRetry(ctx context.Context, cfg api.EndpointCfg, scheduleRequest api.CreateClusterOnOffScheduleRequest) error {
 	const (
-		maxRetryWindow = 5 * time.Minute
-		retryInterval  = 15 * time.Second
+		maxRetryWindow = 90 * time.Second
+		retryInterval  = 10 * time.Second
 	)
 	deadline := time.Now().Add(maxRetryWindow)
 	var lastErr error

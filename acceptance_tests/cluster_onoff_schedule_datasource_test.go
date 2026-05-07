@@ -64,13 +64,18 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
   cluster_id      = "%[6]s"
   timezone        = "US/Pacific"
   days = [
-    { day = "monday",    state = "on" },
+    {
+      day   = "monday"
+      state = "custom"
+      from  = { hour = 12, minute = 30 }
+      to    = { hour = 14, minute = 30 }
+    },
     { day = "tuesday",   state = "on" },
     { day = "wednesday", state = "on" },
     { day = "thursday",  state = "on" },
     { day = "friday",    state = "on" },
     { day = "saturday",  state = "on" },
-    { day = "sunday",    state = "on" },
+    { day = "sunday",    state = "off" },
   ]
 }
 
