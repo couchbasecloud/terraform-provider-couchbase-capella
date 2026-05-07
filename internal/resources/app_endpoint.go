@@ -78,7 +78,7 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	url := fmt.Sprintf(
+	endpointURL := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints",
 		a.HostURL,
 		organizationId,
@@ -87,7 +87,7 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		appServiceId,
 	)
 	cfg := api.EndpointCfg{
-		Url:           url,
+		Url:           endpointURL,
 		Method:        http.MethodPost,
 		SuccessStatus: http.StatusCreated,
 	}
@@ -344,7 +344,7 @@ func (a *AppEndpoint) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	url := fmt.Sprintf(
+	endpointURL := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
 		a.HostURL,
 		organizationId,
@@ -353,7 +353,7 @@ func (a *AppEndpoint) Update(ctx context.Context, req resource.UpdateRequest, re
 		appServiceId,
 		url.PathEscape(endpointName),
 	)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
+	cfg := api.EndpointCfg{Url: endpointURL, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
 	_, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
@@ -412,7 +412,7 @@ func (a *AppEndpoint) Delete(ctx context.Context, req resource.DeleteRequest, re
 		endpointName   = state.Name.ValueString()
 	)
 
-	url := fmt.Sprintf(
+	endpointURL := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
 		a.HostURL,
 		organizationId,
@@ -421,7 +421,7 @@ func (a *AppEndpoint) Delete(ctx context.Context, req resource.DeleteRequest, re
 		appServiceId,
 		url.PathEscape(endpointName),
 	)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
+	cfg := api.EndpointCfg{Url: endpointURL, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
 
 	_, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
@@ -447,21 +447,19 @@ func (a *AppEndpoint) Delete(ctx context.Context, req resource.DeleteRequest, re
 	// Wait for the endpoint to be fully removed so that dependent resources
 	// (e.g. the backing bucket) are not deleted while still in use.
 	if err := a.waitForEndpointDeletion(ctx, organizationId, projectId, clusterId, appServiceId, endpointName); err != nil {
-		resp.Diagnostics.AddWarning(
-			"App Endpoint deletion may still be in progress",
+		resp.Diagnostics.AddError(
+			"Error waiting for App Endpoint deletion",
 			fmt.Sprintf("Error while waiting for App Endpoint %s to be fully removed: %s", endpointName, err.Error()),
 		)
+		return
 	}
 
-	// Explicitly remove the resource from state after a successful delete
-	// request, regardless of whether the deletion-wait timed out.
 	resp.State.RemoveResource(ctx)
 }
 
-// waitForEndpointDeletion polls the API until the endpoint returns 403 or 404
-// (both indicate the endpoint is gone) or the timeout is reached. It respects
-// context cancellation and surfaces the last error encountered instead of
-// silently timing out.
+// waitForEndpointDeletion polls the API until the endpoint is confirmed gone or
+// the timeout is reached. After an accepted DELETE, the App Endpoint API returns
+// 403 instead of 404 when the deleted endpoint is fetched.
 func (a *AppEndpoint) waitForEndpointDeletion(
 	ctx context.Context, orgId, projId, clusterId, appServiceId, endpointName string,
 ) error {
@@ -550,7 +548,7 @@ func (a *AppEndpoint) refreshAppEndpoint(
 	ctx context.Context, orgId, projId, clusterId, appServiceId, endpointName string,
 ) (*providerschema.AppEndpoint, error) {
 
-	url := fmt.Sprintf(
+	endpointURL := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
 		a.HostURL,
 		orgId,
@@ -561,7 +559,7 @@ func (a *AppEndpoint) refreshAppEndpoint(
 	)
 
 	cfg := api.EndpointCfg{
-		Url:           url,
+		Url:           endpointURL,
 		Method:        http.MethodGet,
 		SuccessStatus: http.StatusOK,
 	}
