@@ -49,8 +49,9 @@ var (
 
 	// Fixture buckets for app_endpoint resource tests. Each test gets its
 	// own bucket because Capella only permits one endpoint per bucket/scope/collection.
-	// by Terraform; instead, test helpers manage their lifecycle through the API
-	// during test runs, including cleanup when needed.
+	// These buckets are not created or managed by Terraform; instead, test helpers
+	// manage their lifecycle through the API during test runs, including cleanup
+	// when needed.
 	globalEPBucketName                   = "tf_acc_ep_bkt"
 	globalNoCorsEPBucketName             = "tf_acc_ep_nocors_bkt"
 	globalCorsFullEPBucketName           = "tf_acc_ep_cors_full_bkt"
