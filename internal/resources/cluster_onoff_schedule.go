@@ -3,8 +3,10 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	stderrors "errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -106,13 +108,7 @@ func (c *ClusterOnOffSchedule) Create(ctx context.Context, req resource.CreateRe
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/onOffSchedule", c.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusNoContent}
-	_, err = c.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		scheduleRequest,
-		c.Token,
-		nil,
-	)
+	err = c.createScheduleWithRetry(ctx, cfg, scheduleRequest)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error executing request",
@@ -426,4 +422,34 @@ func (c *ClusterOnOffSchedule) retrieveClusterOnOffSchedule(ctx context.Context,
 
 	refreshedState := providerschema.NewClusterOnOffSchedule(&onOffScheduleResp, organizationId, projectId, clusterId)
 	return refreshedState, nil
+}
+
+func (c *ClusterOnOffSchedule) createScheduleWithRetry(ctx context.Context, cfg api.EndpointCfg, scheduleRequest api.CreateClusterOnOffScheduleRequest) error {
+	const (
+		maxRetryWindow = 5 * time.Minute
+		retryInterval  = 15 * time.Second
+	)
+	deadline := time.Now().Add(maxRetryWindow)
+	var lastErr error
+	for {
+		_, err := c.ClientV1.ExecuteWithRetry(ctx, cfg, scheduleRequest, c.Token, nil)
+		if err == nil {
+			return nil
+		}
+		var apiErr *api.Error
+		if !stderrors.As(err, &apiErr) || apiErr.HttpStatusCode != http.StatusInternalServerError {
+			return err
+		}
+		lastErr = err
+		if time.Now().After(deadline) {
+			tflog.Debug(ctx, "timed out retrying schedule create on HTTP 500", map[string]interface{}{"err": err})
+			return lastErr
+		}
+		tflog.Debug(ctx, "schedule create returned 500; retrying", map[string]interface{}{"err": err})
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(retryInterval):
+		}
+	}
 }
