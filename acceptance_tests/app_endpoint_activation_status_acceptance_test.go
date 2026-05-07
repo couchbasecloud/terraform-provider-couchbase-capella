@@ -11,7 +11,7 @@ import (
 // TestAccEndpointActivationStatus uses sequential subtests to ensure that resync tests
 // do not occur while the app endpoint is online.
 func TestAccAppEndpointActivationStatus(t *testing.T) {
-	ensureAppEndpointTestEnvironment(t)
+	ensureActivationEndpoint(t)
 
 	// Allow this test to run in parallel with other top-level tests, but ensure that the subtests run sequentially
 	// This is normally set by resource.ParallelTest
@@ -36,8 +36,8 @@ func testAccAppEndpointActivationStatus() []resource.TestStep {
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_activation_")
 	resourceReference := "couchbase-capella_app_endpoint_activation_status." + resourceName
 
-	// Use a stable endpoint name so we can import by name
-	endpointName := appEndpointCommonEndpointName
+	// Use a stable endpoint name so we can import by name.
+	endpointName := appEndpointActivationEndpointName
 
 	return []resource.TestStep{
 		{

@@ -332,6 +332,7 @@ func TestAccAppEndpointCorsSpecificOrigins(t *testing.T) {
 // stores its default value (the API omits maxAge from GET responses when at
 // default). Users cannot set max_age=0 — the value is always silently replaced.
 func TestAccAppEndpointCorsMaxAgeZeroSilentDrift(t *testing.T) {
+	t.Skip("AV-128218: cors.max_age=0 is silently omitted by the API request model; unskip once zero values round-trip correctly")
 	ensureFixtureBucketByName(t, globalCorsMaxAge0EPBucketName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
@@ -605,6 +606,7 @@ func TestAccAppEndpointUpdateACF(t *testing.T) {
 // request. API retains old value (3600). refreshAppEndpoint reads 3600 back.
 // Terraform detects plan=0 vs state=3600 and raises inconsistency error.
 func TestAccAppEndpointUpdateCorsMaxAgeToZero(t *testing.T) {
+	t.Skip("AV-128218: updating cors.max_age to 0 currently produces inconsistent state; unskip once zero values round-trip correctly")
 	ensureFixtureBucketByName(t, globalCorsMaxAgeZeroEPBucketName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/resources"
@@ -30,7 +31,7 @@ func createAppEndpointForAppService(ctx context.Context, client *api.Client, pro
 		projectID,
 		clusterID,
 		appServiceID,
-		name,
+		url.PathEscape(name),
 	)
 	checkCfg := api.EndpointCfg{
 		Url:           checkUrl,
@@ -153,7 +154,7 @@ func appEndpointWaitForAppService(ctx context.Context, client *api.Client, proje
 			projectID,
 			clusterID,
 			appServiceID,
-			name,
+			url.PathEscape(name),
 		)
 
 		cfg := api.EndpointCfg{

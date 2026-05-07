@@ -3,6 +3,7 @@ package acceptance_tests
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -103,12 +104,11 @@ func bucketWait(ctx context.Context, client *api.Client) error {
 				return nil
 			}
 
-			apiError, ok := err.(*api.Error)
-			if ok {
-				if apiError.HttpStatusCode != http.StatusNotFound {
-					return err
-				}
-			} else {
+			var apiError *api.Error
+			if !errors.As(err, &apiError) {
+				return err
+			}
+			if apiError.HttpStatusCode != http.StatusNotFound {
 				return err
 			}
 		}

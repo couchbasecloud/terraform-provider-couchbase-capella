@@ -779,7 +779,7 @@ func morphToAppEndpointRequest(
 		Scopes: apiScopes,
 	}
 
-	if !plan.DeltaSyncEnabled.IsNull() || !plan.DeltaSyncEnabled.IsUnknown() {
+	if !plan.DeltaSyncEnabled.IsNull() && !plan.DeltaSyncEnabled.IsUnknown() {
 		appEndpointRequest.DeltaSyncEnabled = plan.DeltaSyncEnabled.ValueBool()
 	}
 

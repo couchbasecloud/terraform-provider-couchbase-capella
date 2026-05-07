@@ -19,7 +19,7 @@ import (
 // of the app_endpoint_log_streaming_config resource: Create -> Update -> ImportState,
 // and that errors are returned if the log_level or log_keys are invalid
 func testAccAppEndpointLoggingConfigResource(t *testing.T) []resource.TestStep {
-	ensureAppEndpointTestEnvironment(t)
+	ensureLoggingEndpoint(t)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_log_streaming_config_")
 	resourceReference := "couchbase-capella_app_endpoint_log_streaming_config." + resourceName
@@ -41,7 +41,7 @@ func testAccAppEndpointLoggingConfigResource(t *testing.T) []resource.TestStep {
 				resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
 				resource.TestCheckResourceAttr(resourceReference, "cluster_id", appEndpointClusterId),
 				resource.TestCheckResourceAttr(resourceReference, "app_service_id", appEndpointAppServiceId),
-				resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", appEndpointCommonEndpointName),
+				resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", appEndpointLoggingEndpointName),
 				resource.TestCheckResourceAttr(resourceReference, "log_level", "info"),
 				resource.TestCheckResourceAttr(resourceReference, "log_keys.0", "HTTP"),
 				resource.TestCheckResourceAttr(resourceReference, "log_keys.1", "Import"),
@@ -49,7 +49,7 @@ func testAccAppEndpointLoggingConfigResource(t *testing.T) []resource.TestStep {
 				resource.TestCheckResourceAttr(datasourceReference, "project_id", globalProjectId),
 				resource.TestCheckResourceAttr(datasourceReference, "cluster_id", appEndpointClusterId),
 				resource.TestCheckResourceAttr(datasourceReference, "app_service_id", appEndpointAppServiceId),
-				resource.TestCheckResourceAttr(datasourceReference, "app_endpoint_name", appEndpointCommonEndpointName),
+				resource.TestCheckResourceAttr(datasourceReference, "app_endpoint_name", appEndpointLoggingEndpointName),
 				resource.TestCheckResourceAttr(datasourceReference, "log_level", "info"),
 				resource.TestCheckResourceAttr(datasourceReference, "log_keys.0", "HTTP"),
 				resource.TestCheckResourceAttr(datasourceReference, "log_keys.1", "Import"),
@@ -62,14 +62,14 @@ func testAccAppEndpointLoggingConfigResource(t *testing.T) []resource.TestStep {
 				resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
 				resource.TestCheckResourceAttr(resourceReference, "cluster_id", appEndpointClusterId),
 				resource.TestCheckResourceAttr(resourceReference, "app_service_id", appEndpointAppServiceId),
-				resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", appEndpointCommonEndpointName),
+				resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", appEndpointLoggingEndpointName),
 				resource.TestCheckResourceAttr(resourceReference, "log_level", "warn"),
 				resource.TestCheckResourceAttr(resourceReference, "log_keys.0", "Auth"),
 				resource.TestCheckResourceAttr(datasourceReference, "organization_id", globalOrgId),
 				resource.TestCheckResourceAttr(datasourceReference, "project_id", globalProjectId),
 				resource.TestCheckResourceAttr(datasourceReference, "cluster_id", appEndpointClusterId),
 				resource.TestCheckResourceAttr(datasourceReference, "app_service_id", appEndpointAppServiceId),
-				resource.TestCheckResourceAttr(datasourceReference, "app_endpoint_name", appEndpointCommonEndpointName),
+				resource.TestCheckResourceAttr(datasourceReference, "app_endpoint_name", appEndpointLoggingEndpointName),
 				resource.TestCheckResourceAttr(datasourceReference, "log_level", "warn"),
 				resource.TestCheckResourceAttr(datasourceReference, "log_keys.0", "Auth"),
 			),
@@ -143,7 +143,7 @@ func testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourc
 		globalProjectId,
 		appEndpointClusterId,
 		appEndpointAppServiceId,
-		appEndpointCommonEndpointName,
+		appEndpointLoggingEndpointName,
 		logLevel,
 		logKeys,
 		"couchbase-capella_app_service_log_streaming."+appServiceLogStreamingResourceName,

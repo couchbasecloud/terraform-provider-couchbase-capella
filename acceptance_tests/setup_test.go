@@ -2,7 +2,6 @@ package acceptance_tests
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -19,7 +18,7 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
-	globalProviderBlock = fmt.Sprint(`
+	globalProviderBlock = `
 variable "host" {
   description = "The globalHost URL of Couchbase Cloud."
 }
@@ -33,7 +32,7 @@ provider "couchbase-capella" {
   host                 = var.host
   authentication_token = var.auth_token
 }
-`)
+`
 
 	var code int
 	ctx := context.Background()

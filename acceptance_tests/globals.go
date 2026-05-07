@@ -52,18 +52,22 @@ var (
 	// created lazily and sequentially on first use via ensureXxxEndpoint().
 	// Each endpoint uses its own bucket because Capella only allows one endpoint
 	// per bucket/scope/collection combination.
-	globalACFEndpointName            = "tf_acc_test_acf_endpoint"
-	globalACFBucketName              = "tf_acc_acf_bkt"
-	globalIFEndpointName             = "tf_acc_test_if_endpoint"
-	globalIFBucketName               = "tf_acc_if_bkt"
-	globalCORSEndpointName           = "tf_acc_test_cors_endpoint"
-	globalCORSBucketName             = "tf_acc_cors_bkt"
-	globalCORSOriginOnlyEndpointName = "tf_acc_test_cors_ori_endpoint"
-	globalCORSOriginOnlyBucketName   = "tf_acc_cors_ori_bkt"
-	globalOIDCEndpointName           = "tf_acc_test_oidc_endpoint"
-	globalOIDCBucketName             = "tf_acc_oidc_bkt"
-	globalDefaultOIDCEndpointName    = "tf_acc_test_doidc_endpoint"
-	globalDefaultOIDCBucketName      = "tf_acc_doidc_bkt"
+	globalACFEndpointName             = "tf_acc_test_acf_endpoint"
+	globalACFBucketName               = "tf_acc_acf_bkt"
+	globalIFEndpointName              = "tf_acc_test_if_endpoint"
+	globalIFBucketName                = "tf_acc_if_bkt"
+	globalCORSEndpointName            = "tf_acc_test_cors_endpoint"
+	globalCORSBucketName              = "tf_acc_cors_bkt"
+	globalCORSOriginOnlyEndpointName  = "tf_acc_test_cors_ori_endpoint"
+	globalCORSOriginOnlyBucketName    = "tf_acc_cors_ori_bkt"
+	globalOIDCEndpointName            = "tf_acc_test_oidc_endpoint"
+	globalOIDCBucketName              = "tf_acc_oidc_bkt"
+	globalDefaultOIDCEndpointName     = "tf_acc_test_doidc_endpoint"
+	globalDefaultOIDCBucketName       = "tf_acc_doidc_bkt"
+	appEndpointActivationEndpointName = "tf_acc_test_activation_endpoint"
+	appEndpointActivationBucketName   = "tf_acc_activation_bkt"
+	appEndpointLoggingEndpointName    = "tf_acc_test_logging_endpoint"
+	appEndpointLoggingBucketName      = "tf_acc_logging_bkt"
 
 	// Fixture buckets for app_endpoint resource tests. Each test gets its
 	// own bucket because Capella only permits one endpoint per bucket/scope/collection.

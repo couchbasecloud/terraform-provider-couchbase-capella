@@ -186,12 +186,6 @@ func deleteBucketWithRetry(ctx context.Context, client *api.Client, cfg api.Endp
 	}
 }
 
-// deleteFixtureBucket looks up the named bucket by name and deletes it. It is a
-// no-op if the bucket does not exist.
-func deleteFixtureBucket(ctx context.Context, client *api.Client, name string) error {
-	return deleteAppEndpointFixtureBucket(ctx, client, globalProjectId, globalClusterId, name)
-}
-
 func deleteAppEndpointFixtureBucket(ctx context.Context, client *api.Client, projectID, clusterID, name string) error {
 	listUrl := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets",
 		globalHost, globalOrgId, projectID, clusterID)
@@ -217,10 +211,6 @@ func deleteAppEndpointFixtureBucket(ctx context.Context, client *api.Client, pro
 
 	log.Printf("fixture bucket %q not found, skipping deletion", name)
 	return nil
-}
-
-func waitForFixtureEndpointDeletion(ctx context.Context, client *api.Client, name string) error {
-	return waitForAppEndpointFixtureEndpointDeletion(ctx, client, globalProjectId, globalClusterId, globalAppServiceId, name)
 }
 
 func waitForAppEndpointFixtureEndpointDeletion(ctx context.Context, client *api.Client, projectID, clusterID, appServiceID, name string) error {
@@ -345,4 +335,14 @@ func ensureOIDCEndpoint(t *testing.T) {
 func ensureDefaultOIDCEndpoint(t *testing.T) {
 	t.Helper()
 	ensureFixtureEndpoint(t, globalDefaultOIDCEndpointName, globalDefaultOIDCBucketName, "default OIDC")
+}
+
+func ensureActivationEndpoint(t *testing.T) {
+	t.Helper()
+	ensureFixtureEndpoint(t, appEndpointActivationEndpointName, appEndpointActivationBucketName, "activation status")
+}
+
+func ensureLoggingEndpoint(t *testing.T) {
+	t.Helper()
+	ensureFixtureEndpoint(t, appEndpointLoggingEndpointName, appEndpointLoggingBucketName, "logging config")
 }

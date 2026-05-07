@@ -316,7 +316,7 @@ func waitForAppEndpointTestAppService(ctx context.Context, client *api.Client, d
 		if !destroy {
 			var appServiceResponse appservice.GetAppServiceResponse
 			if err = json.Unmarshal(response.Body, &appServiceResponse); err != nil {
-				return fmt.Errorf("Error unmarshalling app service response: %v", err)
+				return fmt.Errorf("error unmarshalling app service response: %w", err)
 			}
 			if appServiceResponse.CurrentState == appservice.Healthy {
 				log.Print("app endpoint test app service created")
