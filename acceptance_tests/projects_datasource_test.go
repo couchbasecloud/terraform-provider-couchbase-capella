@@ -92,7 +92,7 @@ func testAccProjectsDataSourceContains(dsReference, projectId string) resource.T
 		attrs := rs.Primary.Attributes
 		count, err := strconv.Atoi(attrs["data.#"])
 		if err != nil {
-			return fmt.Errorf("invalid data.# on %q: %v", dsReference, err)
+			return fmt.Errorf("invalid data.# on %q: %w", dsReference, err)
 		}
 		for i := 0; i < count; i++ {
 			if attrs[fmt.Sprintf("data.%d.id", i)] == projectId {
