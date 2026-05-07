@@ -44,6 +44,12 @@ func ensureFixtureBucketByName(t *testing.T, name string) {
 	if state.err != nil {
 		t.Fatalf("failed to provision test bucket %s: %v", name, state.err)
 	}
+
+	t.Cleanup(func() {
+		if err := deleteFixtureBucket(context.Background(), globalClient, name); err != nil {
+			t.Logf("warning: failed to delete fixture bucket %q: %v", name, err)
+		}
+	})
 }
 
 var (
@@ -98,6 +104,68 @@ func createFixtureBucket(ctx context.Context, client *api.Client, name string) e
 	}
 
 	return waitForFixtureBucket(ctx, client, bucketResp.Id)
+}
+
+// deleteFixtureBucket looks up the named bucket by name and deletes it. It is a
+// no-op if the bucket does not exist.
+func deleteFixtureBucket(ctx context.Context, client *api.Client, name string) error {
+	listUrl := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets",
+		globalHost, globalOrgId, globalProjectId, globalClusterId)
+	listCfg := api.EndpointCfg{Url: listUrl, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+
+	buckets, err := api.GetPaginated[[]bucketapi.GetBucketResponse](ctx, client, globalToken, listCfg, api.SortById)
+	if err != nil {
+		return fmt.Errorf("listing buckets for deletion of %q: %w", name, err)
+	}
+
+	for _, b := range buckets {
+		if b.Name == name {
+			url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s",
+				globalHost, globalOrgId, globalProjectId, globalClusterId, b.Id)
+			cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
+			if _, err = client.ExecuteWithRetry(ctx, cfg, nil, globalToken, nil); err != nil {
+				return fmt.Errorf("deleting fixture bucket %q: %w", name, err)
+			}
+			log.Printf("deleted fixture bucket %q", name)
+			return nil
+		}
+	}
+
+	log.Printf("fixture bucket %q not found, skipping deletion", name)
+	return nil
+}
+
+// cleanupFixtureBuckets deletes all pre-created fixture buckets. Called from
+// TestMain cleanup after all tests have run.
+func cleanupFixtureBuckets(ctx context.Context, client *api.Client) error {
+	names := []string{
+		globalACFBucketName,
+		globalIFBucketName,
+		globalCORSBucketName,
+		globalCORSOriginOnlyBucketName,
+		globalOIDCBucketName,
+		globalDefaultOIDCBucketName,
+		globalEPBucketName,
+		globalNoCorsEPBucketName,
+		globalCorsFullEPBucketName,
+		globalCorsSpecificEPBucketName,
+		globalCorsMaxAge0EPBucketName,
+		globalOIDCFullEPBucketName,
+		globalOIDCDiscEPBucketName,
+		globalCorsExpandEPBucketName,
+		globalCorsWildEPBucketName,
+		globalAddOIDCEPBucketName,
+		globalACFUpdateEPBucketName,
+		globalCorsMaxAgeZeroEPBucketName,
+		globalCorsMaxAgeFromZeroEPBucketName,
+	}
+
+	for _, name := range names {
+		if err := deleteFixtureBucket(ctx, client, name); err != nil {
+			log.Printf("warning: %v", err)
+		}
+	}
+	return nil
 }
 
 func waitForFixtureBucket(ctx context.Context, client *api.Client, bucketID string) error {
