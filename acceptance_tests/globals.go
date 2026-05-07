@@ -24,7 +24,14 @@ var (
 	globalCollectionName  = "_default"
 	globalBucketId        string
 	globalBucketCreated   bool
-	globalAppServiceId    string
+	// globalSnapshotClusterId / globalSnapshotBucketId are optional and, when
+	// provided via TF_VAR_snapshot_cluster_id / TF_VAR_snapshot_bucket_id, are
+	// used by the cloud_snapshot_* acceptance tests so that long-running
+	// restore operations don't disrupt other tests sharing the primary
+	// cluster. They fall back to globalClusterId / globalBucketId when unset.
+	globalSnapshotClusterId string
+	globalSnapshotBucketId  string
+	globalAppServiceId      string
 	globalAppEndpointName = "tf_acc_test_app_endpoint_common"
 
 	// this global variable is set in TestMain.
