@@ -135,39 +135,6 @@ func deleteFixtureBucket(ctx context.Context, client *api.Client, name string) e
 	return nil
 }
 
-// cleanupFixtureBuckets deletes all pre-created fixture buckets. Called from
-// TestMain cleanup after all tests have run.
-func cleanupFixtureBuckets(ctx context.Context, client *api.Client) error {
-	names := []string{
-		globalACFBucketName,
-		globalIFBucketName,
-		globalCORSBucketName,
-		globalCORSOriginOnlyBucketName,
-		globalOIDCBucketName,
-		globalDefaultOIDCBucketName,
-		globalEPBucketName,
-		globalNoCorsEPBucketName,
-		globalCorsFullEPBucketName,
-		globalCorsSpecificEPBucketName,
-		globalCorsMaxAge0EPBucketName,
-		globalOIDCFullEPBucketName,
-		globalOIDCDiscEPBucketName,
-		globalCorsExpandEPBucketName,
-		globalCorsWildEPBucketName,
-		globalAddOIDCEPBucketName,
-		globalACFUpdateEPBucketName,
-		globalCorsMaxAgeZeroEPBucketName,
-		globalCorsMaxAgeFromZeroEPBucketName,
-	}
-
-	for _, name := range names {
-		if err := deleteFixtureBucket(ctx, client, name); err != nil {
-			log.Printf("warning: %v", err)
-		}
-	}
-	return nil
-}
-
 func waitForFixtureBucket(ctx context.Context, client *api.Client, bucketID string) error {
 	const maxWait = 5 * time.Minute
 	deadline := time.Now().Add(maxWait)
