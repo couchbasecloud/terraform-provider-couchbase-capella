@@ -17,19 +17,22 @@ var (
 	globalOrgId string
 
 	// these global variables are set by setup().
-	globalProjectId       string
-	globalClusterId       string
-	globalBucketName      = "default"
-	globalScopeName       = "_default"
-	globalCollectionName  = "_default"
-	globalBucketId        string
-	// globalSnapshotClusterId is optional and, when provided via
-	// TF_VAR_snapshot_cluster_id, is used by the cloud_snapshot_* acceptance
-	// tests so that long-running restore operations don't disrupt other tests
-	// sharing the primary cluster. Falls back to globalClusterId when unset.
-	globalSnapshotClusterId string
-	globalAppServiceId      string
-	globalAppEndpointName = "tf_acc_test_app_endpoint_common"
+	globalProjectId      string
+	globalClusterId      string
+	globalBucketName     = "default"
+	globalScopeName      = "_default"
+	globalCollectionName = "_default"
+	globalBucketId       string
+	// globalSnapshotClusterId is the cluster id used by the cloud_snapshot_*
+	// acceptance tests. It is populated from TF_VAR_snapshot_cluster_id when
+	// provided; otherwise setup() provisions a dedicated cluster so that
+	// long-running restore operations don't disrupt other tests sharing the
+	// primary cluster. globalSnapshotClusterCreated tracks whether cleanup()
+	// must destroy it.
+	globalSnapshotClusterId      string
+	globalSnapshotClusterCreated bool
+	globalAppServiceId           string
+	globalAppEndpointName        = "tf_acc_test_app_endpoint_common"
 
 	// this global variable is set in TestMain.
 	globalProviderBlock string
