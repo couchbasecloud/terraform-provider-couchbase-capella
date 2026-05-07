@@ -2,6 +2,15 @@
 
 package enums
 
+// EnumDef describes one enum-constrained property. Type is the OpenAPI
+// scalar type ("string" or "integer"). IsArray is true when the property
+// itself is an array; values constrain each element.
+type EnumDef struct {
+	Type    string
+	Values  []string
+	IsArray bool
+}
+
 var enumTable = map[string]map[string]EnumDef{
 	"APIKeyResourcesItems": {
 		"roles": {Type: "string", IsArray: true, Values: []string{"projectOwner", "projectManager", "projectViewer", "projectDataReaderWriter", "projectDataReader"}},
