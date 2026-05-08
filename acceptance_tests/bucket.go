@@ -13,18 +13,24 @@ import (
 	bucketapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/bucket"
 )
 
-func bucketExists(ctx context.Context, client *api.Client, bucketId string) (bool, error) {
+// fetchBucket returns the bucket name for the given ID, or ("", notFound) if
+// the bucket does not exist.
+func fetchBucket(ctx context.Context, client *api.Client, bucketId string) (name string, found bool, err error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", globalHost, globalOrgId, globalProjectId, globalClusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	_, err := client.ExecuteWithRetry(ctx, cfg, nil, globalToken, nil)
-	if err == nil {
-		return true, nil
+	response, apiErr := client.ExecuteWithRetry(ctx, cfg, nil, globalToken, nil)
+	if apiErr != nil {
+		var apiErrTyped *api.Error
+		if stderrors.As(apiErr, &apiErrTyped) && apiErrTyped.HttpStatusCode == http.StatusNotFound {
+			return "", false, nil
+		}
+		return "", false, apiErr
 	}
-	var apiErr *api.Error
-	if stderrors.As(err, &apiErr) && apiErr.HttpStatusCode == http.StatusNotFound {
-		return false, nil
+	var bucket bucketapi.GetBucketResponse
+	if err = json.Unmarshal(response.Body, &bucket); err != nil {
+		return "", false, err
 	}
-	return false, err
+	return bucket.Name, true, nil
 }
 
 func discoverFirstBucket(ctx context.Context, client *api.Client) (string, string, error) {
@@ -90,12 +96,13 @@ func destroyBucket(ctx context.Context, client *api.Client) error {
 
 func resolveBucket(ctx context.Context, client *api.Client) error {
 	if globalBucketId != "" {
-		exists, err := bucketExists(ctx, client, globalBucketId)
+		name, found, err := fetchBucket(ctx, client, globalBucketId)
 		if err != nil {
 			return err
 		}
-		if exists {
-			log.Printf("Using existing bucket: %s", globalBucketId)
+		if found {
+			globalBucketName = name
+			log.Printf("Using existing bucket: %s (%s)", name, globalBucketId)
 			return nil
 		}
 		log.Printf("TF_VAR_bucket_id=%s does not exist on cluster; discovering or creating one", globalBucketId)

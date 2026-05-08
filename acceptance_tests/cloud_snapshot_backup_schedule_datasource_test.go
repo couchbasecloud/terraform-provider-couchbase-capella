@@ -16,7 +16,7 @@ func TestAccDatasourceCloudSnapshotBackupSchedule(t *testing.T) {
 
 	startTime := time.Now().Add(24 * time.Hour).Truncate(time.Hour).Format(time.RFC3339)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
@@ -37,7 +37,7 @@ func TestAccDatasourceCloudSnapshotBackupSchedule(t *testing.T) {
 func TestAccDatasourceCloudSnapshotBackupScheduleInvalidCluster(t *testing.T) {
 	dsName := randomStringWithPrefix("tf_acc_cloud_snapshot_backup_schedule_ds_invalid_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{

@@ -24,7 +24,7 @@ func TestAccBackupScheduleResource(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_backup_schedule_")
 	resourceReference := "couchbase-capella_backup_schedule." + resourceName
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
@@ -71,7 +71,7 @@ func TestAccBackupScheduleResource(t *testing.T) {
 func TestAccBackupScheduleResourceInvalidDayOfWeek(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_backup_schedule_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
@@ -85,7 +85,7 @@ func TestAccBackupScheduleResourceInvalidDayOfWeek(t *testing.T) {
 func TestAccBackupScheduleResourceInvalidRetention(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_backup_schedule_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
@@ -99,7 +99,7 @@ func TestAccBackupScheduleResourceInvalidRetention(t *testing.T) {
 func TestAccBackupScheduleResourceInvalidType(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_backup_schedule_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
@@ -113,7 +113,7 @@ func TestAccBackupScheduleResourceInvalidType(t *testing.T) {
 func TestAccBackupScheduleResourceInvalidStartAt(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_backup_schedule_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
@@ -127,7 +127,7 @@ func TestAccBackupScheduleResourceInvalidStartAt(t *testing.T) {
 func TestAccBackupScheduleResourceInvalidBucket(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_backup_schedule_invalid_bkt_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
