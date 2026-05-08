@@ -774,10 +774,11 @@ resource "couchbase-capella_cluster"  "%[4]s" {
 `, globalProviderBlock, globalOrgId, globalProjectId, resourceName, cidr)
 }
 
-// TestAccCluster_CBSE_19405 validates that a cluster can be created with three
-// separate service groups (data, index+query, search) without hitting the
-// "anyNoData1 is invalid for the service groups template 'custom'" error.
-func TestAccCluster_CBSE_19405(t *testing.T) {
+// TestAccClusterResourceWithThreeServiceGroupsAWS validates that a cluster can
+// be created with three separate service groups (data, index+query, search)
+// without hitting the "anyNoData1 is invalid for the service groups template
+// 'custom'" error.
+func TestAccClusterResourceWithThreeServiceGroupsAWS(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_")
 	resourceReference := "couchbase-capella_cluster." + resourceName
 	cidr := generateRandomCIDR()
@@ -793,6 +794,7 @@ func TestAccCluster_CBSE_19405(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east-1"),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
+					resource.TestCheckResourceAttr(resourceReference, "configuration_type", "multiNode"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.#", "3"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.num_of_nodes", "3"),
 					resource.TestCheckResourceAttr(resourceReference, "service_groups.0.services.0", "data"),
@@ -804,6 +806,7 @@ func TestAccCluster_CBSE_19405(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
 					resource.TestCheckResourceAttr(resourceReference, "support.plan", "enterprise"),
 					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
+					resource.TestCheckResourceAttrSet(resourceReference, "etag"),
 				),
 			},
 		},
