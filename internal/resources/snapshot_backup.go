@@ -149,6 +149,16 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 		}
 	}
 	if lookupErr != nil {
+		// The POST succeeded so the backup exists remotely. Persist the known ID
+		// and planned fields so a re-apply issues an Update rather than a second
+		// Create, preventing orphaned duplicate backups.
+		partial := setNullValues(&providerschema.SnapshotBackup{}, clusterId, projectId, organizationId, createSnapshotBackupResponse.ID)
+		partial.Retention = plan.Retention
+		partial.RegionsToCopy = plan.RegionsToCopy
+		partial.CrossRegionRestorePreference = plan.CrossRegionRestorePreference
+		partial.RestoreTimes = plan.RestoreTimes
+		diags = resp.State.Set(ctx, partial)
+		resp.Diagnostics.Append(diags...)
 		resp.Diagnostics.AddError(
 			"Error while checking latest snapshot backup status",
 			errorMessageWhileSnapshotBackupCreation+api.ParseError(lookupErr),
