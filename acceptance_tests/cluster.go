@@ -80,6 +80,23 @@ func createCluster(ctx context.Context, client *api.Client) error {
 	return nil
 }
 
+// findClusterByName lists clusters in the current project and returns the ID of
+// the first cluster matching name, or "" if none is found.
+func findClusterByName(ctx context.Context, client *api.Client, name string) (string, error) {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", globalHost, globalOrgId, globalProjectId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	clusters, err := api.GetPaginated[[]clusterapi.GetClusterResponse](ctx, client, globalToken, cfg, api.SortById)
+	if err != nil {
+		return "", err
+	}
+	for _, c := range clusters {
+		if c.Name == name {
+			return c.Id.String(), nil
+		}
+	}
+	return "", nil
+}
+
 func destroyCluster(ctx context.Context, client *api.Client) error {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", globalHost, globalOrgId, globalProjectId, globalClusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}

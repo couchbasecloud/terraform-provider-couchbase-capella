@@ -30,7 +30,7 @@ func TestAccBackupResource(t *testing.T) {
 	dsName := randomStringWithPrefix("tf_acc_backups_ds_")
 	dsReference := "data.couchbase-capella_backups." + dsName
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
@@ -75,7 +75,7 @@ func TestAccBackupResource(t *testing.T) {
 func TestAccBackupResourceInvalidBucket(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_backup_invalid_")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
@@ -89,7 +89,7 @@ func TestAccBackupResourceInvalidBucket(t *testing.T) {
 func TestAccBackupResourceInvalidProject(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_backup_invalid_proj_")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
@@ -112,7 +112,7 @@ resource "couchbase-capella_backup" "%[2]s" {
 func TestAccBackupResourceRestoreTimesOnCreate(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_backup_invalid_rt_")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{

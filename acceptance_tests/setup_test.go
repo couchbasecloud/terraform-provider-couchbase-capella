@@ -68,7 +68,14 @@ func setup(ctx context.Context, client *api.Client) error {
 	// Create cluster only if not provided via env var
 	if globalClusterId == "" {
 		if err := createCluster(ctx, client); err != nil {
-			return err
+			// The backend sometimes returns 500 while still creating the cluster
+			// (AV-129960). Check by name so we can adopt it and clean up properly.
+			id, findErr := findClusterByName(ctx, client, "tf_acc_test_cluster_common")
+			if findErr != nil || id == "" {
+				return err
+			}
+			log.Printf("createCluster returned error but cluster was found; adopting %s", id)
+			globalClusterId = id
 		}
 		if err := clusterWait(ctx, client, false); err != nil {
 			return err
