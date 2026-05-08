@@ -21,6 +21,11 @@ func createAppEndpoint(ctx context.Context, client *api.Client, name, bucket str
 }
 
 func createAppEndpointForAppService(ctx context.Context, client *api.Client, projectID, clusterID, appServiceID, name, bucket string) (bool, error) {
+	// App endpoint APIs can be temporarily unavailable immediately after an app
+	// service is created, so retry transient failures instead of failing the
+	// acceptance setup on eventual consistency. The timeout keeps deterministic
+	// bugs visible: permanent 4xx errors return immediately, and persistent
+	// transient failures still fail with the last API error after maxWait.
 	const maxWait = 5 * time.Minute
 	const retryInterval = 30 * time.Second
 
