@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccClusterOnOffScheduleResource(t *testing.T) {
@@ -33,8 +34,33 @@ func TestAccClusterOnOffScheduleResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "days.0.state", "on"),
 				),
 			},
+			{
+				ResourceName:      resourceReference,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: generateClusterOnOffScheduleImportId(resourceReference),
+			},
 		},
 	})
+}
+
+func generateClusterOnOffScheduleImportId(resourceReference string) resource.ImportStateIdFunc {
+	return func(state *terraform.State) (string, error) {
+		var rawState map[string]string
+		for _, m := range state.Modules {
+			if len(m.Resources) > 0 {
+				if v, ok := m.Resources[resourceReference]; ok {
+					rawState = v.Primary.Attributes
+				}
+			}
+		}
+		return fmt.Sprintf(
+			"organization_id=%s,project_id=%s,cluster_id=%s",
+			rawState["organization_id"],
+			rawState["project_id"],
+			rawState["cluster_id"],
+		), nil
+	}
 }
 
 func TestAccClusterOnOffScheduleResourceInvalidTimezone(t *testing.T) {
