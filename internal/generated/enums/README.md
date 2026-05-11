@@ -1,70 +1,61 @@
 # Enums Package
 
-This package provides generated enum constants and a lookup map derived from the OpenAPI spec.
+Generated enum constants derived from the OpenAPI spec, indexed by
+schema name and field path.
 
 ## Files
 
 | File | Purpose |
 |------|---------|
-| `gen/main.go` | Generator entry point (`package main`). |
-| `gen/discover.go` | Walks the OpenAPI document and collects enum sites. |
-| `gen/generator.go` | Renders discovered sites as Go source. |
-| `gen/*_test.go` | Unit tests for the generator. |
-| `enums.gen.go` | Generated output — one typed `var` per enum site and a `Lookup` map. **Do not edit by hand.** |
+| `generate/main.go` | Generator entry point (`package main`). |
+| `generate/discover.go` | Walks the OpenAPI document and collects enum sites. |
+| `generate/generator.go` | Renders discovered sites as Go source. |
+| `enums.gen.go` | Generated output. **Do not edit by hand.** |
 
 ## Regenerating
-
-Run whenever `openapi.generated.yaml` changes:
 
 ```bash
 make gen-enums
 ```
 
-To run the generator unit tests:
-
-```bash
-go test ./internal/generated/enums/gen/
-```
+`make gen-enums` refetches the OpenAPI spec from `OPENAPI_SPEC_URL` to
+`openapi.generated.yaml` every run, then regenerates `enums.gen.go`.
 
 Commit the updated `enums.gen.go`.
 
-## Contents of the generated file
+## Generated contents
 
-### Per-site variables
-
-One variable per discovered enum site, named after its location in the spec:
-
-```go
-// Source: components.schemas.BucketConflictResolution
-var BucketConflictResolution = []string{"seqno", "lww"}
-
-// Source: components.schemas.CreateScheduledBackupRequest.properties.weeklySchedule.properties.dayOfWeek
-var CreateScheduledBackupRequest_WeeklySchedule_DayOfWeek = []string{"sunday", "monday", ...}
-```
-
-Integer enums use `[]int64`:
+The generated file declares an `EnumDef` type and a package-private
+`enumTable` indexed by `(schemaName, fieldPath)`:
 
 ```go
-// Source: components.schemas.CreateBucketRequest.properties.vbuckets
-var CreateBucketRequest_Vbuckets = []int64{128, 1024}
+type EnumDef struct {
+    Type    string   // "string" or "integer"
+    Values  []string // integer values are stringified
+    IsArray bool     // true when the property is an array; values constrain each element
+}
+
+var enumTable = map[string]map[string]EnumDef{
+    "AllowedCidr": {
+        "status": {Type: "string", Values: []string{"active", "expired"}},
+        "type":   {Type: "string", Values: []string{"temporary", "permanent"}},
+    },
+    "APIKeyResourcesItems": {
+        "roles": {Type: "string", IsArray: true, Values: []string{"projectOwner", ...}},
+    },
+    "CreateBucketRequest": {
+        "vbuckets": {Type: "integer", Values: []string{"128", "1024"}},
+    },
+    ...
+}
 ```
 
-### Lookup map
+Field paths are dot-joined from the schema root; array element paths
+drop the trailing `[]` (e.g. `roles`, not `roles.[]`) and set
+`IsArray: true`.
 
-`Lookup` indexes string enum values by `(OpenAPI schemaName, dotPath)`. The path is
-the dot-joined property chain from the schema root to the enum site, so nested
-fields keep their full path:
+Excluded from the table:
 
-```go
-vals := enums.Lookup["AllowedCidr"]["status"]
-// ["active", "expired"]
-
-vals := enums.Lookup["CreateScheduledBackupRequest"]["weeklySchedule.dayOfWeek"]
-// ["sunday", "monday", "tuesday", ...]
-```
-
-Array element paths use the property name only — the trailing `[]` is stripped
-(e.g. `roles`, not `roles.[]`).
-
-Top-level enum schemas (no parent property), parameter enums, and integer enums
-are not included in `Lookup` — reference their named `var` directly.
+- Top-level enum schemas (no parent property).
+- Parameter enums (path/query parameter scope).
+- Non-string, non-integer enums.
