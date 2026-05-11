@@ -27,7 +27,7 @@ func createCluster(ctx context.Context, client *api.Client) error {
 	_ = node.FromDiskAWS(diskAws)
 
 	clusterRequest := clusterapi.CreateClusterRequest{
-		Name: "tf_acc_test_cluster_common",
+		Name: globalClusterName,
 		Availability: clusterapi.Availability{
 			Type: "multi",
 		},
