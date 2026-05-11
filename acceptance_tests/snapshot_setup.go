@@ -36,12 +36,16 @@ func ensureSnapshotCluster() (string, error) {
 		defer cancel()
 		client := api.NewClient(timeout)
 		id, created, err := createSnapshotClusterAndWait(ctx, client)
+		// Capture id/created even on error: if the cluster was created but
+		// waitForClusterHealthy timed out, cleanup must still destroy it.
+		if id != "" {
+			snapshotClusterID = id
+			snapshotClusterCreated = created
+		}
 		if err != nil {
 			snapshotClusterErr = err
 			return
 		}
-		snapshotClusterID = id
-		snapshotClusterCreated = created
 		log.Printf("snapshot cluster ready: %s (created=%v)", id, created)
 	})
 	return snapshotClusterID, snapshotClusterErr
@@ -126,7 +130,9 @@ func createSnapshotClusterAndWait(ctx context.Context, client *api.Client) (stri
 
 	id := clusterResp.Id.String()
 	if err := waitForClusterHealthy(ctx, client, id); err != nil {
-		return id, false, fmt.Errorf("wait snapshot cluster healthy: %w", err)
+		// Return created=true so ensureSnapshotCluster records the ID and
+		// destroySnapshotClusterIfCreated can clean up even on a wait timeout.
+		return id, true, fmt.Errorf("wait snapshot cluster healthy: %w", err)
 	}
 	return id, true, nil
 }

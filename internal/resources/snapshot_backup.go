@@ -159,7 +159,7 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 		partial.RestoreTimes = plan.RestoreTimes
 		diags = resp.State.Set(ctx, partial)
 		resp.Diagnostics.Append(diags...)
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"Error while checking latest snapshot backup status",
 			errorMessageWhileSnapshotBackupCreation+api.ParseError(lookupErr),
 		)
