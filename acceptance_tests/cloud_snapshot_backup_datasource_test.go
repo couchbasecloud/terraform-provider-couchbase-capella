@@ -84,6 +84,9 @@ func TestAccCloudProjectSnapshotBackupsDatasource(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dsReference, "project_id", globalProjectId),
+					resource.TestCheckResourceAttrSet(dsReference, "data.0.id"),
+					resource.TestCheckResourceAttrSet(dsReference, "data.0.cluster_id"),
+					resource.TestCheckResourceAttrSet(dsReference, "data.0.created_at"),
 				),
 			},
 		},

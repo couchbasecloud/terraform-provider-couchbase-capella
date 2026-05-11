@@ -190,7 +190,11 @@ func pollSnapshotCluster(ctx context.Context, client *api.Client, clusterID stri
 				return nil
 			}
 		}
-		time.Sleep(checkInterval)
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(checkInterval):
+		}
 	}
 	return fmt.Errorf("timeout waiting for snapshot cluster %s (destroy=%v)", clusterID, destroy)
 }
