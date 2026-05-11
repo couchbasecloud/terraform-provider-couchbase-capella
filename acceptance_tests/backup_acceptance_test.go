@@ -58,7 +58,7 @@ func TestAccBackupResource(t *testing.T) {
 					resource.TestCheckResourceAttr(dsReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(dsReference, "cluster_id", globalClusterId),
 					resource.TestCheckResourceAttr(dsReference, "bucket_id", globalBucketId),
-					resource.TestCheckResourceAttrSet(dsReference, "data.0.id"),
+					resource.TestCheckResourceAttrPair(dsReference, "data.0.id", resourceReference, "id"),
 					resource.TestCheckResourceAttrSet(dsReference, "data.0.cycle_id"),
 					resource.TestCheckResourceAttrSet(dsReference, "data.0.status"),
 				),
