@@ -14,11 +14,12 @@ schema name and field path.
 
 ## Regenerating
 
-Run whenever `openapi.generated.yaml` changes:
-
 ```bash
 make gen-enums
 ```
+
+`make gen-enums` refetches the OpenAPI spec from `OPENAPI_SPEC_URL` to
+`openapi.generated.yaml` every run, then regenerates `enums.gen.go`.
 
 Commit the updated `enums.gen.go`.
 

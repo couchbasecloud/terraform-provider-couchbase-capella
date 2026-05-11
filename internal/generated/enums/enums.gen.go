@@ -142,9 +142,6 @@ var enumTable = map[string]map[string]EnumDef{
 		"outputType":     {Type: "string", Values: []string{"datadog", "generic_http", "sumologic", "loki", "elastic", "splunk", "dynatrace"}},
 		"streamingState": {Type: "string", Values: []string{"unknown", "unsupported", "healthy", "degraded", "unhealthy"}},
 	},
-	"GetMtlsConfigurationResponse": {
-		"state": {Type: "string", Values: []string{"disable", "hybrid", "mandatory"}},
-	},
 	"GetPrivateEndpointServiceConnectionResponse": {
 		"status": {Type: "string", Values: []string{"pending", "pendingAcceptance", "linked", "rejected", "failed", "unrecognized"}},
 	},
@@ -184,12 +181,6 @@ var enumTable = map[string]map[string]EnumDef{
 	"ItemizedBillingFilters": {
 		"categories": {Type: "string", IsArray: true, Values: []string{"operationalComputeAndStorage", "operationalBucketBackup", "operationalClusterBackup", "dataApiStandard", "dataTransferStandard", "privateEndpointsStandard"}},
 	},
-	"MtlsCertificate": {
-		"status": {Type: "string", Values: []string{"pending", "loaded", "load_failed", "awaiting_update", "update_failed", "awaiting_removal", "removal_failed"}},
-	},
-	"MtlsPrefix": {
-		"path": {Type: "string", Values: []string{"subject.cn", "san.dns", "san.email", "san.uri"}},
-	},
 	"PatchAuditLogStreamingRequest": {
 		"op": {Type: "string", Values: []string{"update"}},
 	},
@@ -220,9 +211,6 @@ var enumTable = map[string]map[string]EnumDef{
 	"UpdateBucketRequest": {
 		"durabilityLevel": {Type: "string", Values: []string{"none", "majority", "majorityAndPersistActive", "persistToMajority"}},
 		"replicas":        {Type: "integer", Values: []string{"1", "2", "3"}},
-	},
-	"UpdateMtlsConfigRequest": {
-		"state": {Type: "string", Values: []string{"disable", "hybrid", "mandatory"}},
 	},
 	"UpdateReplicationRequest": {
 		"priority": {Type: "string", Values: []string{"low", "medium", "high"}},
