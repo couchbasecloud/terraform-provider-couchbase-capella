@@ -1,8 +1,8 @@
-// Fetches the OpenAPI spec from OPENAPI_SPEC_URL and writes it to disk.
-// The spec is embedded as JSON in a <script> tag on the Couchbase docs page;
-// we parse the HTML, extract the JSON object, and write it as-is. JSON is a
-// strict subset of YAML, so kin-openapi (used by gen-api and gen-enums) loads
-// the result without conversion.
+// Fetches the OpenAPI spec from the Couchbase docs page and writes it to disk.
+// The spec is embedded as JSON in a <script> tag; we parse the HTML, extract
+// the JSON object, and write it as-is. JSON is a strict subset of YAML, so
+// kin-openapi (used by gen-api and gen-enums) loads the result without
+// conversion.
 //
 // Fetch logic is kept in sync with internal/docs/openapi_loader.go.
 package main
@@ -10,7 +10,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -22,32 +21,32 @@ import (
 	"golang.org/x/net/html"
 )
 
-const defaultURL = "https://docs.couchbase.com/cloud/management-api-reference/index.html"
+const specURL = "https://docs.couchbase.com/cloud/management-api-reference/index.html"
 
 func main() {
-	out := flag.String("o", "openapi.generated.yaml", "output path")
-	flag.Parse()
-
-	url := os.Getenv("OPENAPI_SPEC_URL")
-	if url == "" {
-		url = defaultURL
-	}
-
-	data, err := fetch(url)
+	data, err := fetch()
 	if err != nil {
 		log.Fatalf("fetch failed: %v", err)
 	}
 
-	if err := os.WriteFile(*out, data, 0o600); err != nil {
+	f, err := os.OpenFile("openapi.generated.yaml", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
+	if err != nil {
+		log.Fatalf("open failed: %v", err)
+	}
+	n, err := f.Write(data)
+	if cerr := f.Close(); cerr != nil && err == nil {
+		err = cerr
+	}
+	if err != nil {
 		log.Fatalf("write failed: %v", err)
 	}
 
-	fmt.Fprintf(os.Stderr, "wrote %d bytes to %s\n", len(data), *out)
+	fmt.Fprintf(os.Stderr, "wrote %d bytes to openapi.generated.yaml\n", n)
 }
 
-func fetch(url string) ([]byte, error) {
+func fetch() ([]byte, error) {
 	client := &http.Client{Timeout: 60 * time.Second}
-	resp, err := client.Get(url) //nolint:gosec // build-time tool: URL is operator-supplied via OPENAPI_SPEC_URL
+	resp, err := client.Get(specURL)
 	if err != nil {
 		return nil, err
 	}
