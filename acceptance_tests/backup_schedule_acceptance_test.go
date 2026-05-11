@@ -24,7 +24,7 @@ func TestAccBackupScheduleResource(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_backup_schedule_")
 	resourceReference := "couchbase-capella_backup_schedule." + resourceName
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -237,8 +238,7 @@ func testAccCheckDataSourceContainsBackup(dsReference, resourceReference string)
 			return fmt.Errorf("resource %s not found in state", resourceReference)
 		}
 		expectedID := res.Primary.Attributes["id"]
-		count := 0
-		fmt.Sscanf(ds.Primary.Attributes["data.#"], "%d", &count)
+		count, _ := strconv.Atoi(ds.Primary.Attributes["data.#"])
 		for i := 0; i < count; i++ {
 			if ds.Primary.Attributes[fmt.Sprintf("data.%d.id", i)] == expectedID {
 				return nil
