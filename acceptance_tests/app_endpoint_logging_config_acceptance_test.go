@@ -19,6 +19,8 @@ import (
 // of the app_endpoint_log_streaming_config resource: Create -> Update -> ImportState,
 // and that errors are returned if the log_level or log_keys are invalid
 func testAccAppEndpointLoggingConfigResource(t *testing.T) []resource.TestStep {
+	ensureLoggingEndpoint(t)
+
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_log_streaming_config_")
 	resourceReference := "couchbase-capella_app_endpoint_log_streaming_config." + resourceName
 	datasourceName := randomStringWithPrefix("tf_acc_app_endpoint_log_streaming_config_")
@@ -37,17 +39,17 @@ func testAccAppEndpointLoggingConfigResource(t *testing.T) []resource.TestStep {
 				testAccExistsAppEndpointLoggingConfigResource(t, resourceReference),
 				resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 				resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
-				resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
-				resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
-				resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", globalAppEndpointName),
+				resource.TestCheckResourceAttr(resourceReference, "cluster_id", appEndpointClusterId),
+				resource.TestCheckResourceAttr(resourceReference, "app_service_id", appEndpointAppServiceId),
+				resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", appEndpointLoggingEndpointName),
 				resource.TestCheckResourceAttr(resourceReference, "log_level", "info"),
 				resource.TestCheckResourceAttr(resourceReference, "log_keys.0", "HTTP"),
 				resource.TestCheckResourceAttr(resourceReference, "log_keys.1", "Import"),
 				resource.TestCheckResourceAttr(datasourceReference, "organization_id", globalOrgId),
 				resource.TestCheckResourceAttr(datasourceReference, "project_id", globalProjectId),
-				resource.TestCheckResourceAttr(datasourceReference, "cluster_id", globalClusterId),
-				resource.TestCheckResourceAttr(datasourceReference, "app_service_id", globalAppServiceId),
-				resource.TestCheckResourceAttr(datasourceReference, "app_endpoint_name", globalAppEndpointName),
+				resource.TestCheckResourceAttr(datasourceReference, "cluster_id", appEndpointClusterId),
+				resource.TestCheckResourceAttr(datasourceReference, "app_service_id", appEndpointAppServiceId),
+				resource.TestCheckResourceAttr(datasourceReference, "app_endpoint_name", appEndpointLoggingEndpointName),
 				resource.TestCheckResourceAttr(datasourceReference, "log_level", "info"),
 				resource.TestCheckResourceAttr(datasourceReference, "log_keys.0", "HTTP"),
 				resource.TestCheckResourceAttr(datasourceReference, "log_keys.1", "Import"),
@@ -58,16 +60,16 @@ func testAccAppEndpointLoggingConfigResource(t *testing.T) []resource.TestStep {
 			Check: resource.ComposeAggregateTestCheckFunc(
 				resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 				resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
-				resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
-				resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
-				resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", globalAppEndpointName),
+				resource.TestCheckResourceAttr(resourceReference, "cluster_id", appEndpointClusterId),
+				resource.TestCheckResourceAttr(resourceReference, "app_service_id", appEndpointAppServiceId),
+				resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", appEndpointLoggingEndpointName),
 				resource.TestCheckResourceAttr(resourceReference, "log_level", "warn"),
 				resource.TestCheckResourceAttr(resourceReference, "log_keys.0", "Auth"),
 				resource.TestCheckResourceAttr(datasourceReference, "organization_id", globalOrgId),
 				resource.TestCheckResourceAttr(datasourceReference, "project_id", globalProjectId),
-				resource.TestCheckResourceAttr(datasourceReference, "cluster_id", globalClusterId),
-				resource.TestCheckResourceAttr(datasourceReference, "app_service_id", globalAppServiceId),
-				resource.TestCheckResourceAttr(datasourceReference, "app_endpoint_name", globalAppEndpointName),
+				resource.TestCheckResourceAttr(datasourceReference, "cluster_id", appEndpointClusterId),
+				resource.TestCheckResourceAttr(datasourceReference, "app_service_id", appEndpointAppServiceId),
+				resource.TestCheckResourceAttr(datasourceReference, "app_endpoint_name", appEndpointLoggingEndpointName),
 				resource.TestCheckResourceAttr(datasourceReference, "log_level", "warn"),
 				resource.TestCheckResourceAttr(datasourceReference, "log_keys.0", "Auth"),
 			),
@@ -95,7 +97,7 @@ func testAccAppEndpointLoggingConfigResource(t *testing.T) []resource.TestStep {
 // testAccAppEndpointLoggingConfigResourceConfig returns the HCL config for a app endpoint log streaming config resource
 // and an app service log streaming resource, as app service log streaming is required to be enabled
 func testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourceName, resourceName, resourceReference, datasourceName, logLevel, logKeys string) string {
-	appServiceLogStreamingResource := appServiceLogStreamingConfig(
+	appServiceLogStreamingResource := appEndpointAppServiceLogStreamingConfig(
 		appServiceLogStreamingResourceName,
 		"https://example.com/logs",
 		"test_user",
@@ -139,14 +141,43 @@ func testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourc
 		resourceName,
 		globalOrgId,
 		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
-		globalAppEndpointName,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
+		appEndpointLoggingEndpointName,
 		logLevel,
 		logKeys,
 		"couchbase-capella_app_service_log_streaming."+appServiceLogStreamingResourceName,
 		datasourceName,
 		resourceReference,
+	)
+}
+
+func appEndpointAppServiceLogStreamingConfig(resourceName, url, user, password string) string {
+	return fmt.Sprintf(`
+resource "couchbase-capella_app_service_log_streaming" "%[5]s" {
+	organization_id = "%[1]s"
+	project_id      = "%[2]s"
+	cluster_id      = "%[3]s"
+	app_service_id  = "%[4]s"
+	output_type     = "generic_http"
+
+	credentials = {
+		generic_http = {
+			url      = "%[6]s"
+			user     = "%[7]s"
+			password = "%[8]s"
+		}
+	}
+}
+`,
+		globalOrgId,
+		globalProjectId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
+		resourceName,
+		url,
+		user,
+		password,
 	)
 }
 

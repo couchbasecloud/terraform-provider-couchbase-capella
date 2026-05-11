@@ -3,6 +3,7 @@ package acceptance_tests
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -16,7 +17,7 @@ func createBucket(ctx context.Context, client *api.Client) error {
 	// First, check if bucket already exists
 	listUrl := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets", globalHost, globalOrgId, globalProjectId, globalClusterId)
 	listCfg := api.EndpointCfg{Url: listUrl, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	
+
 	// Use the paginated API to get all buckets
 	buckets, err := api.GetPaginated[[]bucketapi.GetBucketResponse](ctx, client, globalToken, listCfg, api.SortById)
 	if err == nil {
@@ -57,6 +58,23 @@ func createBucket(ctx context.Context, client *api.Client) error {
 	return nil
 }
 
+func resolveBucketNameById(ctx context.Context, client *api.Client, bucketID string) (string, error) {
+	listUrl := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets", globalHost, globalOrgId, globalProjectId, globalClusterId)
+	listCfg := api.EndpointCfg{Url: listUrl, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+
+	buckets, err := api.GetPaginated[[]bucketapi.GetBucketResponse](ctx, client, globalToken, listCfg, api.SortById)
+	if err != nil {
+		return "", err
+	}
+	for _, bucket := range buckets {
+		if bucket.Id == bucketID {
+			return bucket.Name, nil
+		}
+	}
+
+	return "", fmt.Errorf("bucket with ID %s not found", bucketID)
+}
+
 func bucketWait(ctx context.Context, client *api.Client) error {
 	const maxWaitTime = 5 * time.Minute
 
@@ -86,12 +104,11 @@ func bucketWait(ctx context.Context, client *api.Client) error {
 				return nil
 			}
 
-			apiError, ok := err.(*api.Error)
-			if ok {
-				if apiError.HttpStatusCode != http.StatusNotFound {
-					return err
-				}
-			} else {
+			var apiError *api.Error
+			if !errors.As(err, &apiError) {
+				return err
+			}
+			if apiError.HttpStatusCode != http.StatusNotFound {
 				return err
 			}
 		}
