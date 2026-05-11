@@ -275,7 +275,7 @@ func (c *ClusterOnOffOnDemand) Read(ctx context.Context, req resource.ReadReques
 		clusterId      = IDs[providerschema.ClusterId]
 	)
 
-	refreshedState, err := c.retrieveClusterOnOff(ctx, organizationId, projectId, clusterId, state.State.String(), state.TurnOnLinkedAppService.ValueBool())
+	refreshedState, err := c.retrieveClusterOnOff(ctx, organizationId, projectId, clusterId, state.State.ValueString(), state.TurnOnLinkedAppService.ValueBool())
 	if err != nil {
 		resourceNotFound, _ := cluster_onoff_api.CheckResourceNotFoundError(err)
 		if resourceNotFound {

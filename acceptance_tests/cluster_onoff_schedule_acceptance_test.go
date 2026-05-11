@@ -182,7 +182,7 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
       day   = "monday"
       state = "custom"
       from  = { hour = 0, minute = 0 }
-      to    = { hour = 23, minute = 59 }
+      to    = { hour = 23, minute = 30 }
     },
     { day = "tuesday",   state = "on" },
     { day = "wednesday", state = "on" },
