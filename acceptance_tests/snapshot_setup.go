@@ -17,9 +17,10 @@ import (
 )
 
 var (
-	snapshotClusterOnce sync.Once
-	snapshotClusterID   string
-	snapshotClusterErr  error
+	snapshotClusterOnce    sync.Once
+	snapshotClusterID      string
+	snapshotClusterCreated bool
+	snapshotClusterErr     error
 )
 
 // ensureSnapshotCluster lazily provisions a dedicated cluster used by the
@@ -34,13 +35,14 @@ func ensureSnapshotCluster() (string, error) {
 		ctx, cancel := context.WithTimeout(context.Background(), 45*time.Minute)
 		defer cancel()
 		client := api.NewClient(timeout)
-		id, err := createSnapshotClusterAndWait(ctx, client)
+		id, created, err := createSnapshotClusterAndWait(ctx, client)
 		if err != nil {
 			snapshotClusterErr = err
 			return
 		}
 		snapshotClusterID = id
-		log.Printf("snapshot cluster ready: %s", id)
+		snapshotClusterCreated = created
+		log.Printf("snapshot cluster ready: %s (created=%v)", id, created)
 	})
 	return snapshotClusterID, snapshotClusterErr
 }
@@ -62,18 +64,18 @@ func findSnapshotClusterByName(ctx context.Context, client *api.Client, name str
 	return "", nil
 }
 
-func createSnapshotClusterAndWait(ctx context.Context, client *api.Client) (string, error) {
+func createSnapshotClusterAndWait(ctx context.Context, client *api.Client) (string, bool, error) {
 	const clusterName = "tf_acc_test_cluster_snapshot"
 
 	// Reuse an existing cluster with this name to avoid duplicates from leaked runs.
 	if existing, err := findSnapshotClusterByName(ctx, client, clusterName); err != nil {
-		return "", fmt.Errorf("find existing snapshot cluster: %w", err)
+		return "", false, fmt.Errorf("find existing snapshot cluster: %w", err)
 	} else if existing != "" {
 		log.Printf("reusing existing snapshot cluster: %s", existing)
 		if err := waitForClusterHealthy(ctx, client, existing); err != nil {
-			return "", fmt.Errorf("wait for existing snapshot cluster: %w", err)
+			return "", false, fmt.Errorf("wait for existing snapshot cluster: %w", err)
 		}
-		return existing, nil
+		return existing, false, nil
 	}
 
 	node := clusterapi.Node{}
@@ -83,7 +85,7 @@ func createSnapshotClusterAndWait(ctx context.Context, client *api.Client) (stri
 		Iops:    3000,
 	}
 	if err := node.FromDiskAWS(diskAws); err != nil {
-		return "", fmt.Errorf("node.FromDiskAWS: %w", err)
+		return "", false, fmt.Errorf("node.FromDiskAWS: %w", err)
 	}
 
 	req := clusterapi.CreateClusterRequest{
@@ -114,26 +116,26 @@ func createSnapshotClusterAndWait(ctx context.Context, client *api.Client) (stri
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
 	resp, err := client.ExecuteWithRetry(ctx, cfg, req, globalToken, nil)
 	if err != nil {
-		return "", fmt.Errorf("create snapshot cluster: %w", err)
+		return "", false, fmt.Errorf("create snapshot cluster: %w", err)
 	}
 
-	var created clusterapi.GetClusterResponse
-	if err = json.Unmarshal(resp.Body, &created); err != nil {
-		return "", fmt.Errorf("decode snapshot cluster response: %w", err)
+	var clusterResp clusterapi.GetClusterResponse
+	if err = json.Unmarshal(resp.Body, &clusterResp); err != nil {
+		return "", false, fmt.Errorf("decode snapshot cluster response: %w", err)
 	}
 
-	id := created.Id.String()
+	id := clusterResp.Id.String()
 	if err := waitForClusterHealthy(ctx, client, id); err != nil {
-		return id, fmt.Errorf("wait snapshot cluster healthy: %w", err)
+		return id, false, fmt.Errorf("wait snapshot cluster healthy: %w", err)
 	}
-	return id, nil
+	return id, true, nil
 }
 
 // destroySnapshotClusterIfCreated tears down the snapshot cluster if
 // ensureSnapshotCluster successfully created one. Safe to call when no
 // snapshot cluster was provisioned (e.g. no snapshot tests ran).
 func destroySnapshotClusterIfCreated(ctx context.Context, client *api.Client) error {
-	if snapshotClusterID == "" {
+	if !snapshotClusterCreated || snapshotClusterID == "" {
 		return nil
 	}
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s", globalHost, globalOrgId, globalProjectId, snapshotClusterID)
