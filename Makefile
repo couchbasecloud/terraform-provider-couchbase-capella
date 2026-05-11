@@ -135,6 +135,8 @@ gen-api: ## Generate OpenAPI client code
 
 .PHONY: gen-enums
 gen-enums: ## Generate enum validator constants from OpenAPI spec
+	@echo "==> Fetching OpenAPI spec from $(OPENAPI_SPEC_URL)"
+	@go run ./internal/generated/spec/fetch -o ./openapi.generated.yaml
 	@echo "==> Generating enum constants (internal/generated/enums)"
 	@go run ./internal/generated/enums/generate/ > ./internal/generated/enums/enums.gen.go
 	@echo "==> Done"
