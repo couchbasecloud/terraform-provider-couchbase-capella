@@ -443,7 +443,7 @@ func (c *ClusterOnOffSchedule) createScheduleWithRetry(ctx context.Context, cfg 
 		// If our deadline fired (or the parent context was cancelled), stop.
 		if ctx.Err() != nil {
 			if lastErr != nil {
-				return fmt.Errorf("retry window (%s) exhausted for schedule create: %w", maxRetryWindow, lastErr)
+				return fmt.Errorf("retry window (%v) exhausted for schedule create: %w", maxRetryWindow, lastErr)
 			}
 			return ctx.Err()
 		}
@@ -455,7 +455,7 @@ func (c *ClusterOnOffSchedule) createScheduleWithRetry(ctx context.Context, cfg 
 		tflog.Debug(ctx, "schedule create returned 500; retrying", map[string]interface{}{"err": err})
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("retry window (%s) exhausted for schedule create: %w", maxRetryWindow, lastErr)
+			return fmt.Errorf("retry window (%v) exhausted for schedule create: %w", maxRetryWindow, lastErr)
 		case <-time.After(retryInterval):
 		}
 	}
