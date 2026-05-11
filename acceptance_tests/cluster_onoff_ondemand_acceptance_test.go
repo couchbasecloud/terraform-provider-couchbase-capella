@@ -8,6 +8,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
+func TestAccClusterOnOffOnDemandResource(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_onoff_ondemand_")
+	resourceReference := "couchbase-capella_cluster_onoff_ondemand." + resourceName
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterOnOffOnDemandResourceConfig(resourceName, globalClusterId, "on"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
+					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(resourceReference, "state", "on"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccClusterOnOffOnDemandResourceInvalidState(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_onoff_ondemand_invalid_state_")
 
