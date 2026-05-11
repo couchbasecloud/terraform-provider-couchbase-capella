@@ -121,8 +121,6 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 		})
 		select {
 		case <-ctx.Done():
-			err = ctx.Err()
-			break
 		case <-time.After(restoringPollEvery):
 		}
 	}
