@@ -226,11 +226,10 @@ func testAccAppEndpointComputedAttrs(resourceReference string) resource.TestChec
 	)
 }
 
-// ── S4: cors.disabled=false without origin — API 422 "App Endpoint CORS Origin is empty" ──
-// Provider schema marks origin as Optional but the API requires it when a cors
-// block is present and disabled=false.
+// ── AV-128217: cors.disabled=false without origin must fail provider validation ──
+// The API rejects empty/missing origin when a cors block is present.
+// Provider schema must reject this before issuing the API request.
 func TestAccAppEndpointCorsDisabledFalseNoOrigin(t *testing.T) {
-	t.Skip("AV-128217: cors.disabled=false without origin should be valid once the bug is fixed")
 	ensureFixtureBucketByName(t, globalCorsDisabledFalseEPBucketName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
@@ -240,7 +239,8 @@ func TestAccAppEndpointCorsDisabledFalseNoOrigin(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppEndpointCorsDisabledFalseResourceConfig(resourceName, epName, globalCorsDisabledFalseEPBucketName),
+				Config:      testAccAppEndpointCorsDisabledFalseResourceConfig(resourceName, epName, globalCorsDisabledFalseEPBucketName),
+				ExpectError: re.MustCompile(`(?s).*origin.*required.*`),
 			},
 		},
 	})
@@ -701,7 +701,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 }
 
 // testAccAppEndpointCorsDisabledFalseResourceConfig creates an endpoint with
-// cors { disabled=false } and no origin field. Used by: TestAccAppEndpointCorsDisabledFalseNoOrigin (S4, skipped).
+// cors { disabled=false } and no origin field. Used by: TestAccAppEndpoint_AV_128217.
 func testAccAppEndpointCorsDisabledFalseResourceConfig(resourceName, endpointName, bucketName string) string {
 	return fmt.Sprintf(`
 %[1]s

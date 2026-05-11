@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -50,8 +51,11 @@ func AppEndpointSchema() schema.Schema {
 	// CORS attributes - use CORSConfig schema
 	corsAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(corsAttrs, "origin", appEndpointBuilder, &schema.SetAttribute{
-		Optional:    true,
+		Required:    true,
 		ElementType: types.StringType,
+		Validators: []validator.Set{
+			setvalidator.SizeAtLeast(1),
+		},
 	}, "CORSConfig")
 	capellaschema.AddAttr(corsAttrs, "login_origin", appEndpointBuilder, &schema.SetAttribute{
 		Optional:    true,
