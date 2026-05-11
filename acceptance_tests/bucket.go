@@ -110,7 +110,23 @@ func resolveBucket(ctx context.Context, client *api.Client) error {
 	if err := bucketWait(ctx, client); err != nil {
 		return err
 	}
+	globalBucketCreated = true
 	log.Printf("Created bucket: %s (%s)", globalBucketName, globalBucketId)
+	return nil
+}
+
+func destroyBucket(ctx context.Context, client *api.Client) error {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", globalHost, globalOrgId, globalProjectId, globalClusterId, globalBucketId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
+	_, err := client.ExecuteWithRetry(ctx, cfg, nil, globalToken, nil)
+	if err != nil {
+		var apiErr *api.Error
+		if errors.As(err, &apiErr) && apiErr.HttpStatusCode == http.StatusNotFound {
+			return nil
+		}
+		return err
+	}
+	log.Printf("bucket destroyed: %s", globalBucketId)
 	return nil
 }
 

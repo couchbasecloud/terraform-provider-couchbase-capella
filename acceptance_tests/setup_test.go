@@ -2,6 +2,7 @@ package acceptance_tests
 
 import (
 	"context"
+	"errors"
 	"log"
 	"os"
 	"testing"
@@ -69,13 +70,17 @@ func setup(ctx context.Context, client *api.Client) error {
 	// Create cluster only if not provided via env var
 	if globalClusterId == "" {
 		if err := createCluster(ctx, client); err != nil {
-			// The backend sometimes returns 500 while still creating the cluster
-			// (AV-129960). Check by name so we can adopt it and clean up properly.
+			// Only fall back to findClusterByName on 5xx (AV-129960): the backend
+			// sometimes returns 500 while still creating the cluster.
+			var apiErr *api.Error
+			if !errors.As(err, &apiErr) || apiErr.HttpStatusCode < 500 {
+				return err
+			}
 			id, findErr := findClusterByName(ctx, client, globalClusterName)
 			if findErr != nil || id == "" {
 				return err
 			}
-			log.Printf("createCluster returned error but cluster was found; adopting %s", id)
+			log.Printf("createCluster returned 5xx but cluster was found; adopting %s", id)
 			globalClusterId = id
 		}
 		globalClusterCreated = true
@@ -132,6 +137,12 @@ func cleanup(ctx context.Context, client *api.Client) error {
 		}
 
 		if err := appServiceWait(ctx, client, true); err != nil {
+			return err
+		}
+	}
+
+	if globalBucketCreated {
+		if err := destroyBucket(ctx, client); err != nil {
 			return err
 		}
 	}
