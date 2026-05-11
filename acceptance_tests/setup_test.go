@@ -58,9 +58,11 @@ provider "couchbase-capella" {
 func setup(ctx context.Context, client *api.Client) error {
 	// Create project only if not provided via env var
 	if globalProjectId == "" {
-		if err := createProject(ctx, client); err != nil {
+		created, err := createProject(ctx, client)
+		if err != nil {
 			return err
 		}
+		globalProjectCreated = created
 	} else {
 		log.Printf("Using existing project: %s", globalProjectId)
 	}
@@ -134,8 +136,7 @@ func cleanup(ctx context.Context, client *api.Client) error {
 		}
 	}
 
-	// Only destroy project if it was created by setup (not provided via env var)
-	if globalProjectId != "" && os.Getenv("TF_VAR_project_id") == "" {
+	if globalProjectCreated {
 		if err := destroyProject(ctx, client); err != nil {
 			return err
 		}

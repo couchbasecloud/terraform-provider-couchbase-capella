@@ -18,6 +18,7 @@ var (
 
 	// these global variables are set by setup().
 	globalProjectId       string
+	globalProjectCreated  bool
 	globalClusterId       string
 	globalBucketName      = "default"
 	globalScopeName       = "_default"
