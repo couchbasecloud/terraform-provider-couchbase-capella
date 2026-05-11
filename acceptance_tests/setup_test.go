@@ -82,8 +82,9 @@ func setup(ctx context.Context, client *api.Client) error {
 			}
 			log.Printf("createCluster returned 5xx but cluster was found; adopting %s", id)
 			globalClusterId = id
+		} else {
+			globalClusterCreated = true
 		}
-		globalClusterCreated = true
 		if err := clusterWait(ctx, client, false); err != nil {
 			return err
 		}
