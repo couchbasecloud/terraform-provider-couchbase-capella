@@ -59,10 +59,11 @@ provider "couchbase-capella" {
 func setup(ctx context.Context, client *api.Client) error {
 	// Create project only if not provided via env var
 	if globalProjectId == "" {
-		if err := createProject(ctx, client); err != nil {
+		created, err := createProject(ctx, client)
+		if err != nil {
 			return err
 		}
-		globalProjectCreated = true
+		globalProjectCreated = created
 	} else {
 		log.Printf("Using existing project: %s", globalProjectId)
 	}
