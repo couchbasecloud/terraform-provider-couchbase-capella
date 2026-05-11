@@ -6,6 +6,7 @@ import (
 	stderrors "errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -99,13 +100,32 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups", s.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
-	createResp, err := s.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		createSnapshotBackupRequest,
-		s.Token,
-		nil,
+
+	const (
+		maxRestoringWait   = 20 * time.Minute
+		restoringPollEvery = 30 * time.Second
 	)
+	restoreDeadline := time.Now().Add(maxRestoringWait)
+
+	var (
+		createResp *api.Response
+		err        error
+	)
+	for {
+		createResp, err = s.ClientV1.ExecuteWithRetry(ctx, cfg, createSnapshotBackupRequest, s.Token, nil)
+		if err == nil || !isRestoringError(err) || time.Now().After(restoreDeadline) {
+			break
+		}
+		tflog.Debug(ctx, "cluster is temporarily unavailable (restoring); waiting before retrying backup create", map[string]interface{}{
+			"clusterId": clusterId,
+		})
+		select {
+		case <-ctx.Done():
+			err = ctx.Err()
+			break
+		case <-time.After(restoringPollEvery):
+		}
+	}
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -717,6 +737,15 @@ func (s *SnapshotBackup) waitForSnapshotComplete(ctx context.Context, organizati
 		}
 	}
 	return fmt.Errorf("snapshot backup %s did not reach complete state within %s", Id, time.Duration(maxAttempts)*pollInterval)
+}
+
+// isRestoringError reports whether err is the Capella 422 indicating the
+// cluster is temporarily unavailable because a restore is in progress.
+func isRestoringError(err error) bool {
+	var apiErr *api.Error
+	return stderrors.As(err, &apiErr) &&
+		apiErr.HttpStatusCode == http.StatusUnprocessableEntity &&
+		strings.Contains(apiErr.Message, "Restoring state")
 }
 
 func (s *SnapshotBackup) restoreSnapshotBackup(ctx context.Context, organizationId, projectId, clusterId, Id string, crossRegionRestorePreference []string) error {
