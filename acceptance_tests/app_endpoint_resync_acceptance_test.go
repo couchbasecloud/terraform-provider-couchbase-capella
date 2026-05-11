@@ -18,6 +18,7 @@ import (
 // of the app_endpoint_resync_job resource: Create -> ImportState
 // and that an error is returned if the scopes are invalid
 func testAccAppEndpointResync(t *testing.T) []resource.TestStep {
+	ensureActivationEndpoint(t)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_resync_job_")
 	resourceReference := "couchbase-capella_app_endpoint_resync_job." + resourceName
@@ -42,9 +43,9 @@ func testAccAppEndpointResync(t *testing.T) []resource.TestStep {
 				testAccExistsAppEndpointResyncResource(t, resourceReference),
 				resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 				resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
-				resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
-				resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
-				resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", globalAppEndpointName),
+				resource.TestCheckResourceAttr(resourceReference, "cluster_id", appEndpointClusterId),
+				resource.TestCheckResourceAttr(resourceReference, "app_service_id", appEndpointAppServiceId),
+				resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", appEndpointActivationEndpointName),
 				resource.TestCheckResourceAttr(resourceReference, "scopes._default.0", "_default"),
 				resource.TestCheckResourceAttr(resourceReference, "last_error", ""),
 				resource.TestCheckResourceAttrSet(resourceReference, "docs_changed"),
@@ -53,9 +54,9 @@ func testAccAppEndpointResync(t *testing.T) []resource.TestStep {
 				resource.TestCheckResourceAttrSet(resourceReference, "state"),
 				resource.TestCheckResourceAttr(datasourceReference, "organization_id", globalOrgId),
 				resource.TestCheckResourceAttr(datasourceReference, "project_id", globalProjectId),
-				resource.TestCheckResourceAttr(datasourceReference, "cluster_id", globalClusterId),
-				resource.TestCheckResourceAttr(datasourceReference, "app_service_id", globalAppServiceId),
-				resource.TestCheckResourceAttr(datasourceReference, "app_endpoint_name", globalAppEndpointName),
+				resource.TestCheckResourceAttr(datasourceReference, "cluster_id", appEndpointClusterId),
+				resource.TestCheckResourceAttr(datasourceReference, "app_service_id", appEndpointAppServiceId),
+				resource.TestCheckResourceAttr(datasourceReference, "app_endpoint_name", appEndpointActivationEndpointName),
 				resource.TestCheckResourceAttr(datasourceReference, "last_error", ""),
 				resource.TestCheckResourceAttrSet(datasourceReference, "docs_changed"),
 				resource.TestCheckResourceAttrSet(datasourceReference, "docs_processed"),
@@ -105,9 +106,9 @@ func testAccAppEndpointResyncConfig(resourceName, resourceReference, datasourceN
 		resourceName,
 		globalOrgId,
 		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
-		globalAppEndpointName,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
+		appEndpointActivationEndpointName,
 		scopes,
 		datasourceName,
 		resourceReference,
