@@ -437,24 +437,30 @@ func (c *ClusterOnOffSchedule) createScheduleWithRetry(ctx context.Context, cfg 
 			return nil
 		}
 		if ctx.Err() != nil {
-			if lastErr != nil {
-				return fmt.Errorf("retry window (%v) exhausted for schedule create: %w", maxRetryWindow, lastErr)
+			cause := lastErr
+			if cause == nil {
+				cause = err
 			}
-			return ctx.Err()
+			return fmt.Errorf("retry window (%v) exhausted for schedule create: %w", maxRetryWindow, cause)
 		}
 		var apiErr *api.Error
 		if !stderrors.As(err, &apiErr) || apiErr.HttpStatusCode != http.StatusInternalServerError {
 			return err
 		}
 		lastErr = err
-		if time.Now().After(deadline) {
+		remaining := time.Until(deadline)
+		if remaining <= 0 {
 			return fmt.Errorf("retry window (%v) exhausted for schedule create: %w", maxRetryWindow, lastErr)
 		}
 		tflog.Debug(ctx, "schedule create returned 500; retrying", map[string]interface{}{"err": err})
+		sleep := retryInterval
+		if sleep > remaining {
+			sleep = remaining
+		}
 		select {
 		case <-ctx.Done():
 			return fmt.Errorf("retry window (%v) exhausted for schedule create: %w", maxRetryWindow, lastErr)
-		case <-time.After(retryInterval):
+		case <-time.After(sleep):
 		}
 	}
 }

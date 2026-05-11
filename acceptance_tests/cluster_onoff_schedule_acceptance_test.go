@@ -26,9 +26,11 @@ func TestAccClusterOnOffScheduleResource(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterOnOffScheduleResourceConfig(resourceName, "US/Eastern"),
+				Config: testAccClusterOnOffScheduleResourceUpdateConfig(resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "timezone", "US/Eastern"),
+					resource.TestCheckResourceAttr(resourceReference, "timezone", "US/Pacific"),
+					resource.TestCheckResourceAttr(resourceReference, "days.#", "7"),
+					resource.TestCheckResourceAttr(resourceReference, "days.0.state", "on"),
 				),
 			},
 		},
@@ -153,8 +155,8 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
     {
       day   = "monday"
       state = "custom"
-      from  = { hour = 12, minute = 30 }
-      to    = { hour = 14, minute = 30 }
+      from  = { hour = 0, minute = 0 }
+      to    = { hour = 23, minute = 59 }
     },
     { day = "tuesday",   state = "on" },
     { day = "wednesday", state = "on" },
@@ -165,4 +167,29 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
   ]
 }
 `, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, timezone)
+}
+
+// testAccClusterOnOffScheduleResourceUpdateConfig uses all-on days to exercise
+// the Update (PUT) path — distinct from testAccClusterOnOffScheduleResourceConfig
+// which uses a custom Monday to test from/to fields on create.
+func testAccClusterOnOffScheduleResourceUpdateConfig(resourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
+  organization_id = "%[3]s"
+  project_id      = "%[4]s"
+  cluster_id      = "%[5]s"
+  timezone        = "US/Pacific"
+  days = [
+    { day = "monday",    state = "on" },
+    { day = "tuesday",   state = "on" },
+    { day = "wednesday", state = "on" },
+    { day = "thursday",  state = "on" },
+    { day = "friday",    state = "on" },
+    { day = "saturday",  state = "on" },
+    { day = "sunday",    state = "on" },
+  ]
+}
+`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId)
 }
