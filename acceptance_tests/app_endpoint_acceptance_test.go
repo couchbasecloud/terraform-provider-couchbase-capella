@@ -701,7 +701,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 }
 
 // testAccAppEndpointCorsDisabledFalseResourceConfig creates an endpoint with
-// cors { disabled=false } and no origin field. Used by: TestAccAppEndpoint_AV_128217.
+// cors { disabled=false } and no origin field. Used by: TestAccAppEndpointCorsDisabledFalseNoOrigin.
 func testAccAppEndpointCorsDisabledFalseResourceConfig(resourceName, endpointName, bucketName string) string {
 	return fmt.Sprintf(`
 %[1]s
