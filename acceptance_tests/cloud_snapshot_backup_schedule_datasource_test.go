@@ -16,7 +16,7 @@ func TestAccDatasourceCloudSnapshotBackupSchedule(t *testing.T) {
 
 	startTime := time.Now().Add(24 * time.Hour).Truncate(time.Hour).Format(time.RFC3339)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
@@ -28,6 +28,7 @@ func TestAccDatasourceCloudSnapshotBackupSchedule(t *testing.T) {
 					resource.TestCheckResourceAttr(dsReference, "interval", "12"),
 					resource.TestCheckResourceAttr(dsReference, "retention", "240"),
 					resource.TestCheckResourceAttr(dsReference, "start_time", startTime),
+					resource.TestCheckResourceAttr(dsReference, "copy_to_regions.#", "0"),
 				),
 			},
 		},
