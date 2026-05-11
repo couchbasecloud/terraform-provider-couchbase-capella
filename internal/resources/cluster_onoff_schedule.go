@@ -429,26 +429,33 @@ func (c *ClusterOnOffSchedule) createScheduleWithRetry(ctx context.Context, cfg 
 		maxRetryWindow = 90 * time.Second
 		retryInterval  = 10 * time.Second
 	)
-	deadline := time.Now().Add(maxRetryWindow)
+	// Bound the context so ExecuteWithRetry's internal retries (429/504) cannot
+	// exceed the intended 90s window.
+	ctx, cancel := context.WithTimeout(ctx, maxRetryWindow)
+	defer cancel()
+
 	var lastErr error
 	for {
 		_, err := c.ClientV1.ExecuteWithRetry(ctx, cfg, scheduleRequest, c.Token, nil)
 		if err == nil {
 			return nil
 		}
+		// If our deadline fired (or the parent context was cancelled), stop.
+		if ctx.Err() != nil {
+			if lastErr != nil {
+				return fmt.Errorf("retry window (%s) exhausted for schedule create: %w", maxRetryWindow, lastErr)
+			}
+			return ctx.Err()
+		}
 		var apiErr *api.Error
 		if !stderrors.As(err, &apiErr) || apiErr.HttpStatusCode != http.StatusInternalServerError {
 			return err
 		}
 		lastErr = err
-		if time.Now().After(deadline) {
-			tflog.Debug(ctx, "timed out retrying schedule create on HTTP 500", map[string]interface{}{"err": err})
-			return lastErr
-		}
 		tflog.Debug(ctx, "schedule create returned 500; retrying", map[string]interface{}{"err": err})
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return fmt.Errorf("retry window (%s) exhausted for schedule create: %w", maxRetryWindow, lastErr)
 		case <-time.After(retryInterval):
 		}
 	}

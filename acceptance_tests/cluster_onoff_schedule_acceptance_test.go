@@ -161,7 +161,7 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
     { day = "thursday",  state = "on" },
     { day = "friday",    state = "on" },
     { day = "saturday",  state = "on" },
-    { day = "sunday",    state = "off" },
+    { day = "sunday",    state = "on" },
   ]
 }
 `, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, timezone)

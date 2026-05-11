@@ -22,7 +22,7 @@ func TestAccDatasourceClusterOnOffSchedule(t *testing.T) {
 					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dsReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(dsReference, "cluster_id", globalClusterId),
-					resource.TestCheckResourceAttrSet(dsReference, "timezone"),
+					resource.TestCheckResourceAttr(dsReference, "timezone", "US/Pacific"),
 					resource.TestCheckResourceAttr(dsReference, "days.#", "7"),
 					resource.TestCheckResourceAttrSet(dsReference, "days.0.day"),
 					resource.TestCheckResourceAttrSet(dsReference, "days.0.state"),
@@ -75,7 +75,7 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
     { day = "thursday",  state = "on" },
     { day = "friday",    state = "on" },
     { day = "saturday",  state = "on" },
-    { day = "sunday",    state = "off" },
+    { day = "sunday",    state = "on" },
   ]
 }
 
