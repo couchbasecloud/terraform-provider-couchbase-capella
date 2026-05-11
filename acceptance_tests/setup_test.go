@@ -2,7 +2,6 @@ package acceptance_tests
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -19,7 +18,7 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
-	globalProviderBlock = fmt.Sprint(`
+	globalProviderBlock = `
 variable "host" {
   description = "The globalHost URL of Couchbase Cloud."
 }
@@ -33,11 +32,12 @@ provider "couchbase-capella" {
   host                 = var.host
   authentication_token = var.auth_token
 }
-`)
+`
 
 	var code int
 	ctx := context.Background()
 	client := api.NewClient(timeout)
+	globalClient = client
 
 	err := setup(ctx, client)
 	if err != nil {
@@ -72,6 +72,7 @@ func setup(ctx context.Context, client *api.Client) error {
 		if err := createCluster(ctx, client); err != nil {
 			return err
 		}
+		globalClusterCreated = true
 		if err := clusterWait(ctx, client, false); err != nil {
 			return err
 		}
@@ -88,7 +89,12 @@ func setup(ctx context.Context, client *api.Client) error {
 			return err
 		}
 	} else {
-		log.Printf("Using existing bucket: %s", globalBucketId)
+		bucketName, err := resolveBucketNameById(ctx, client, globalBucketId)
+		if err != nil {
+			return err
+		}
+		globalBucketName = bucketName
+		log.Printf("Using existing bucket: %s (%s)", globalBucketName, globalBucketId)
 	}
 
 	// Create app service only if not provided via env var
@@ -96,6 +102,7 @@ func setup(ctx context.Context, client *api.Client) error {
 		if err := createAppService(ctx, client); err != nil {
 			return err
 		}
+		globalAppServiceCreated = true
 		if err := appServiceWait(ctx, client, false); err != nil {
 			return err
 		}
@@ -103,10 +110,12 @@ func setup(ctx context.Context, client *api.Client) error {
 		log.Printf("Using existing app service: %s", globalAppServiceId)
 	}
 
-	if err := createAppEndpoint(ctx, client); err != nil {
+	appEndpointCreated, err := createAppEndpoint(ctx, client, globalAppEndpointName, globalBucketName)
+	if err != nil {
 		return err
 	}
-	if err := appEndpointWait(ctx, client); err != nil {
+	globalAppEndpointCreated = appEndpointCreated
+	if err := appEndpointWait(ctx, client, globalAppEndpointName); err != nil {
 		return err
 	}
 
@@ -114,8 +123,17 @@ func setup(ctx context.Context, client *api.Client) error {
 }
 
 func cleanup(ctx context.Context, client *api.Client) error {
-	// Only destroy app service if it was created by setup (not provided via env var)
-	if globalAppServiceId != "" && os.Getenv("TF_VAR_app_service_id") == "" {
+	if err := cleanupAppEndpointTestEnvironment(ctx, client); err != nil {
+		return err
+	}
+
+	if globalAppEndpointCreated {
+		if err := deleteFixtureEndpoint(ctx, client, globalAppEndpointName); err != nil {
+			return err
+		}
+	}
+
+	if globalAppServiceCreated {
 		if err := destroyAppService(ctx, client); err != nil {
 			return err
 		}
@@ -125,8 +143,7 @@ func cleanup(ctx context.Context, client *api.Client) error {
 		}
 	}
 
-	// Only destroy cluster if it was created by setup (not provided via env var)
-	if globalClusterId != "" && os.Getenv("TF_VAR_cluster_id") == "" {
+	if globalClusterCreated {
 		if err := destroyCluster(ctx, client); err != nil {
 			return err
 		}

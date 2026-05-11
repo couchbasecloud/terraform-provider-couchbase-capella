@@ -11,6 +11,8 @@ import (
 // TestAccEndpointActivationStatus uses sequential subtests to ensure that resync tests
 // do not occur while the app endpoint is online.
 func TestAccAppEndpointActivationStatus(t *testing.T) {
+	ensureActivationEndpoint(t)
+
 	// Allow this test to run in parallel with other top-level tests, but ensure that the subtests run sequentially
 	// This is normally set by resource.ParallelTest
 	t.Parallel()
@@ -34,8 +36,8 @@ func testAccAppEndpointActivationStatus() []resource.TestStep {
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_activation_")
 	resourceReference := "couchbase-capella_app_endpoint_activation_status." + resourceName
 
-	// Use a stable endpoint name so we can import by name
-	endpointName := globalAppEndpointName
+	// Use a stable endpoint name so we can import by name.
+	endpointName := appEndpointActivationEndpointName
 
 	return []resource.TestStep{
 		{
@@ -44,8 +46,8 @@ func testAccAppEndpointActivationStatus() []resource.TestStep {
 			Check: resource.ComposeAggregateTestCheckFunc(
 				resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 				resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
-				resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
-				resource.TestCheckResourceAttr(resourceReference, "app_service_id", globalAppServiceId),
+				resource.TestCheckResourceAttr(resourceReference, "cluster_id", appEndpointClusterId),
+				resource.TestCheckResourceAttr(resourceReference, "app_service_id", appEndpointAppServiceId),
 				resource.TestCheckResourceAttr(resourceReference, "app_endpoint_name", endpointName),
 				resource.TestCheckResourceAttr(resourceReference, "state", "Online"),
 			),
@@ -83,8 +85,8 @@ func testAccAppEndpointActivationStatusConfig(resourceName, endpointName, desire
 		globalProviderBlock,
 		globalOrgId,
 		globalProjectId,
-		globalClusterId,
-		globalAppServiceId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
 		endpointName,
 		desiredState,
 		resourceName,
