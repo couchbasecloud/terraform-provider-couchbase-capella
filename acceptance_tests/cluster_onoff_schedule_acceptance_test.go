@@ -150,12 +150,7 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
   cluster_id      = "%[5]s"
   timezone        = "%[6]s"
   days = [
-    {
-      day   = "monday"
-      state = "custom"
-      from  = { hour = 12, minute = 30 }
-      to    = { hour = 14, minute = 30 }
-    },
+    { day = "monday",    state = "on" },
     { day = "tuesday",   state = "on" },
     { day = "wednesday", state = "on" },
     { day = "thursday",  state = "on" },

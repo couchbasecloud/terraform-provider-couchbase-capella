@@ -445,7 +445,7 @@ func (c *ClusterOnOffSchedule) createScheduleWithRetry(ctx context.Context, cfg 
 			if lastErr != nil {
 				return fmt.Errorf("retry window (%v) exhausted for schedule create: %w", maxRetryWindow, lastErr)
 			}
-			return ctx.Err()
+			return fmt.Errorf("retry window (%v) exhausted for schedule create: %w", maxRetryWindow, err)
 		}
 		var apiErr *api.Error
 		if !stderrors.As(err, &apiErr) || apiErr.HttpStatusCode != http.StatusInternalServerError {
