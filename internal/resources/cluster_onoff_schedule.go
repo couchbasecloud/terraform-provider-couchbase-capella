@@ -112,7 +112,7 @@ func (c *ClusterOnOffSchedule) Create(ctx context.Context, req resource.CreateRe
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error executing request",
-			errorMessageWhileOnOffScheduleCreation+api.ParseError(err),
+			errorMessageWhileOnOffScheduleCreation+err.Error(),
 		)
 		return
 	}

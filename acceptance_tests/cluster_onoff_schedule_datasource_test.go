@@ -25,7 +25,7 @@ func TestAccDatasourceClusterOnOffSchedule(t *testing.T) {
 					resource.TestCheckResourceAttr(dsReference, "timezone", "US/Pacific"),
 					resource.TestCheckResourceAttr(dsReference, "days.#", "7"),
 					resource.TestCheckResourceAttrSet(dsReference, "days.0.day"),
-					resource.TestCheckResourceAttrSet(dsReference, "days.0.state"),
+					resource.TestCheckResourceAttr(dsReference, "days.0.state", "on"),
 				),
 			},
 		},
