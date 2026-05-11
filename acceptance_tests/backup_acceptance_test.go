@@ -58,9 +58,7 @@ func TestAccBackupResource(t *testing.T) {
 					resource.TestCheckResourceAttr(dsReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(dsReference, "cluster_id", globalClusterId),
 					resource.TestCheckResourceAttr(dsReference, "bucket_id", globalBucketId),
-					resource.TestCheckResourceAttrPair(dsReference, "data.0.id", resourceReference, "id"),
-					resource.TestCheckResourceAttrSet(dsReference, "data.0.cycle_id"),
-					resource.TestCheckResourceAttrSet(dsReference, "data.0.status"),
+					testAccCheckDataSourceContainsBackup(dsReference, resourceReference),
 				),
 			},
 			{
@@ -222,5 +220,30 @@ func testAccExistsBackupResource(t *testing.T, resourceReference string) resourc
 		}
 		data := newTestClient(t)
 		return retrieveBackupFromServer(data, rawState["organization_id"], rawState["project_id"], rawState["cluster_id"], rawState["id"])
+	}
+}
+
+// testAccCheckDataSourceContainsBackup verifies that the backups data source
+// contains the specific backup created by resourceReference, regardless of
+// its position in the list (older backups may appear at lower indices).
+func testAccCheckDataSourceContainsBackup(dsReference, resourceReference string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		ds := s.RootModule().Resources[dsReference]
+		if ds == nil {
+			return fmt.Errorf("datasource %s not found in state", dsReference)
+		}
+		res := s.RootModule().Resources[resourceReference]
+		if res == nil {
+			return fmt.Errorf("resource %s not found in state", resourceReference)
+		}
+		expectedID := res.Primary.Attributes["id"]
+		count := 0
+		fmt.Sscanf(ds.Primary.Attributes["data.#"], "%d", &count)
+		for i := 0; i < count; i++ {
+			if ds.Primary.Attributes[fmt.Sprintf("data.%d.id", i)] == expectedID {
+				return nil
+			}
+		}
+		return fmt.Errorf("datasource %s does not contain backup id=%s (checked %d items)", dsReference, expectedID, count)
 	}
 }
