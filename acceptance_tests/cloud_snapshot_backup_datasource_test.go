@@ -29,7 +29,7 @@ func TestAccCloudSnapshotBackupDatasource(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dsReference, "id"),
 					resource.TestCheckResourceAttrSet(dsReference, "created_at"),
 					resource.TestCheckResourceAttrSet(dsReference, "expiration"),
-					resource.TestCheckResourceAttrSet(dsReference, "retention"),
+					resource.TestCheckResourceAttr(dsReference, "retention", "168"),
 					resource.TestCheckResourceAttrSet(dsReference, "size"),
 					resource.TestCheckResourceAttrSet(dsReference, "type"),
 					resource.TestCheckResourceAttrSet(dsReference, "progress.status"),
