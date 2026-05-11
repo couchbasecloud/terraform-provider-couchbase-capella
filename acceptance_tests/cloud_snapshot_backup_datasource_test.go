@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAccDatasourceCloudSnapshotBackup(t *testing.T) {
+func TestAccCloudSnapshotBackupDatasource(t *testing.T) {
 	clusterID, err := ensureSnapshotCluster()
 	if err != nil {
 		t.Fatalf("ensureSnapshotCluster: %v", err)
@@ -39,7 +39,7 @@ func TestAccDatasourceCloudSnapshotBackup(t *testing.T) {
 	})
 }
 
-func TestAccDatasourceCloudSnapshotBackups(t *testing.T) {
+func TestAccCloudSnapshotBackupsDatasource(t *testing.T) {
 	clusterID, err := ensureSnapshotCluster()
 	if err != nil {
 		t.Fatalf("ensureSnapshotCluster: %v", err)
@@ -67,7 +67,7 @@ func TestAccDatasourceCloudSnapshotBackups(t *testing.T) {
 	})
 }
 
-func TestAccDatasourceCloudProjectSnapshotBackups(t *testing.T) {
+func TestAccCloudProjectSnapshotBackupsDatasource(t *testing.T) {
 	clusterID, err := ensureSnapshotCluster()
 	if err != nil {
 		t.Fatalf("ensureSnapshotCluster: %v", err)
@@ -90,7 +90,7 @@ func TestAccDatasourceCloudProjectSnapshotBackups(t *testing.T) {
 	})
 }
 
-func TestAccDatasourceCloudSnapshotBackupInvalidID(t *testing.T) {
+func TestAccCloudSnapshotBackupDatasourceInvalidID(t *testing.T) {
 	dsName := randomStringWithPrefix("tf_acc_cloud_snapshot_backup_ds_invalid_")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -113,7 +113,7 @@ data "couchbase-capella_cloud_snapshot_backup" "%[2]s" {
 	})
 }
 
-func TestAccDatasourceCloudSnapshotBackupsInvalidCluster(t *testing.T) {
+func TestAccCloudSnapshotBackupsDatasourceInvalidCluster(t *testing.T) {
 	dsName := randomStringWithPrefix("tf_acc_cloud_snapshot_backups_ds_invalid_")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -135,7 +135,7 @@ data "couchbase-capella_cloud_snapshot_backups" "%[2]s" {
 	})
 }
 
-func TestAccDatasourceCloudSnapshotBackupsInvalidFilter(t *testing.T) {
+func TestAccCloudSnapshotBackupsDatasourceInvalidFilter(t *testing.T) {
 	dsName := randomStringWithPrefix("tf_acc_cloud_snapshot_backups_ds_filter_")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -160,7 +160,7 @@ data "couchbase-capella_cloud_snapshot_backups" "%[2]s" {
 	})
 }
 
-func TestAccDatasourceCloudProjectSnapshotBackupsInvalidProject(t *testing.T) {
+func TestAccCloudProjectSnapshotBackupsDatasourceInvalidProject(t *testing.T) {
 	dsName := randomStringWithPrefix("tf_acc_cloud_project_snapshot_backups_invalid_")
 
 	resource.ParallelTest(t, resource.TestCase{

@@ -30,7 +30,9 @@ var (
 // destroySnapshotClusterIfCreated.
 func ensureSnapshotCluster() (string, error) {
 	snapshotClusterOnce.Do(func() {
-		ctx := context.Background()
+		// 45-minute timeout covers cluster creation (up to 30 min) plus a safety margin.
+		ctx, cancel := context.WithTimeout(context.Background(), 45*time.Minute)
+		defer cancel()
 		client := api.NewClient(timeout)
 		id, err := createSnapshotClusterAndWait(ctx, client)
 		if err != nil {
@@ -43,17 +45,49 @@ func ensureSnapshotCluster() (string, error) {
 	return snapshotClusterID, snapshotClusterErr
 }
 
+// findSnapshotClusterByName returns the ID of the first cluster in the current
+// project whose name matches, or "" if none is found.
+func findSnapshotClusterByName(ctx context.Context, client *api.Client, name string) (string, error) {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters", globalHost, globalOrgId, globalProjectId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	clusters, err := api.GetPaginated[[]clusterapi.GetClusterResponse](ctx, client, globalToken, cfg, api.SortById)
+	if err != nil {
+		return "", err
+	}
+	for _, c := range clusters {
+		if c.Name == name {
+			return c.Id.String(), nil
+		}
+	}
+	return "", nil
+}
+
 func createSnapshotClusterAndWait(ctx context.Context, client *api.Client) (string, error) {
+	const clusterName = "tf_acc_test_cluster_snapshot"
+
+	// Reuse an existing cluster with this name to avoid duplicates from leaked runs.
+	if existing, err := findSnapshotClusterByName(ctx, client, clusterName); err != nil {
+		return "", fmt.Errorf("find existing snapshot cluster: %w", err)
+	} else if existing != "" {
+		log.Printf("reusing existing snapshot cluster: %s", existing)
+		if err := waitForClusterHealthy(ctx, client, existing); err != nil {
+			return "", fmt.Errorf("wait for existing snapshot cluster: %w", err)
+		}
+		return existing, nil
+	}
+
 	node := clusterapi.Node{}
 	diskAws := clusterapi.DiskAWS{
 		Type:    clusterapi.DiskAWSType("gp3"),
 		Storage: 50,
 		Iops:    3000,
 	}
-	_ = node.FromDiskAWS(diskAws)
+	if err := node.FromDiskAWS(diskAws); err != nil {
+		return "", fmt.Errorf("node.FromDiskAWS: %w", err)
+	}
 
 	req := clusterapi.CreateClusterRequest{
-		Name:         "tf_acc_test_cluster_snapshot",
+		Name:         clusterName,
 		Availability: clusterapi.Availability{Type: "multi"},
 		CloudProvider: clusterapi.CloudProvider{
 			Region: "us-east-1",
