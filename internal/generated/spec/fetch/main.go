@@ -35,11 +35,11 @@ func main() {
 
 	data, err := fetch(url)
 	if err != nil {
-		log.Fatalf("fetch %s: %v", url, err)
+		log.Fatalf("fetch failed: %v", err)
 	}
 
-	if err := os.WriteFile(*out, data, 0o644); err != nil {
-		log.Fatalf("write %s: %v", *out, err)
+	if err := os.WriteFile(*out, data, 0o600); err != nil {
+		log.Fatalf("write failed: %v", err)
 	}
 
 	fmt.Fprintf(os.Stderr, "wrote %d bytes to %s\n", len(data), *out)
@@ -47,11 +47,11 @@ func main() {
 
 func fetch(url string) ([]byte, error) {
 	client := &http.Client{Timeout: 60 * time.Second}
-	resp, err := client.Get(url)
+	resp, err := client.Get(url) //nolint:gosec // build-time tool: URL is operator-supplied via OPENAPI_SPEC_URL
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status %d", resp.StatusCode)
