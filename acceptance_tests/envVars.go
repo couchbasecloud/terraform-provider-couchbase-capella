@@ -23,6 +23,9 @@ func getEnvVars() error {
 	globalClusterId = os.Getenv("TF_VAR_cluster_id")
 	globalAppServiceId = os.Getenv("TF_VAR_app_service_id")
 	globalBucketId = os.Getenv("TF_VAR_bucket_id")
+	if bucketName := os.Getenv("TF_VAR_bucket_name"); bucketName != "" {
+		globalBucketName = bucketName
+	}
 
 	return nil
 }
