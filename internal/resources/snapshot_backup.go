@@ -443,13 +443,21 @@ func (s *SnapshotBackup) Delete(ctx context.Context, req resource.DeleteRequest,
 			break
 		}
 		var apiErr *api.Error
-		if !stderrors.As(err, &apiErr) || apiErr.HttpStatusCode != http.StatusInternalServerError {
+		if !stderrors.As(err, &apiErr) {
 			break
 		}
-		tflog.Debug(ctx, "snapshot backup delete returned 500, retrying", map[string]interface{}{
-			"attempt": attempt,
-			"err":     apiErr.CompleteError(),
-			"id":      Id,
+		// Retry on transient backend states:
+		// - HTTP 500: post-restore lock window after a restore reports complete.
+		// - HTTP 409 "currently being restored": restore status flipped to final
+		//   but the backend hasn't released the snapshot lock yet.
+		if apiErr.HttpStatusCode != http.StatusInternalServerError && apiErr.HttpStatusCode != http.StatusConflict {
+			break
+		}
+		tflog.Debug(ctx, "snapshot backup delete returned transient error, retrying", map[string]interface{}{
+			"attempt":        attempt,
+			"httpStatusCode": apiErr.HttpStatusCode,
+			"err":            apiErr.CompleteError(),
+			"id":             Id,
 		})
 		select {
 		case <-ctx.Done():
