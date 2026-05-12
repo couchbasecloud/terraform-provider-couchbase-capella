@@ -436,8 +436,13 @@ func (c *ClusterOnOffSchedule) scheduleRequestWithRetry(ctx context.Context, cfg
 			}
 			return fmt.Errorf("retry window (%v) exhausted for schedule create: %w", maxRetryWindow, cause)
 		}
+		// Only retry the specific Capella transient backend error (code 10000:
+		// "Something went wrong on our end. We are actively investigating the issue.").
+		// This 500 appears for ~minutes after a previous schedule write while the
+		// backend propagates state. Other 500s likely indicate real failures and
+		// should surface immediately rather than burn the retry window.
 		var apiErr *api.Error
-		if !stderrors.As(err, &apiErr) || apiErr.HttpStatusCode != http.StatusInternalServerError {
+		if !stderrors.As(err, &apiErr) || apiErr.HttpStatusCode != http.StatusInternalServerError || apiErr.Code != 10000 {
 			return err
 		}
 		lastErr = err
