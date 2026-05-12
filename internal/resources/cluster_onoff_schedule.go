@@ -108,7 +108,7 @@ func (c *ClusterOnOffSchedule) Create(ctx context.Context, req resource.CreateRe
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/onOffSchedule", c.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusNoContent}
-	err = c.createScheduleWithRetry(ctx, cfg, scheduleRequest)
+	err = c.scheduleRequestWithRetry(ctx, cfg, scheduleRequest)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error executing request",
@@ -267,14 +267,7 @@ func (c *ClusterOnOffSchedule) Update(ctx context.Context, req resource.UpdateRe
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/onOffSchedule", c.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err = c.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		BackupScheduleRequest,
-		c.Token,
-		nil,
-	)
-	if err != nil {
+	if err = c.scheduleRequestWithRetry(ctx, cfg, BackupScheduleRequest); err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating cluster on/off schedule",
 			"Could not update on/off schedule for cluster with id "+plan.ClusterId.String()+": "+api.ParseError(err),
@@ -424,7 +417,7 @@ func (c *ClusterOnOffSchedule) retrieveClusterOnOffSchedule(ctx context.Context,
 	return refreshedState, nil
 }
 
-func (c *ClusterOnOffSchedule) createScheduleWithRetry(ctx context.Context, cfg api.EndpointCfg, scheduleRequest api.CreateClusterOnOffScheduleRequest) error {
+func (c *ClusterOnOffSchedule) scheduleRequestWithRetry(ctx context.Context, cfg api.EndpointCfg, scheduleRequest any) error {
 	const (
 		maxRetryWindow = 90 * time.Second
 		retryInterval  = 10 * time.Second
