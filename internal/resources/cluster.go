@@ -133,7 +133,8 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	}
 
 	if !plan.ConfigurationType.IsNull() && !plan.ConfigurationType.IsUnknown() {
-		clusterRequest.ConfigurationType = clusterapi.ConfigurationType(plan.ConfigurationType.ValueString())
+		ct := clusterapi.ConfigurationType(plan.ConfigurationType.ValueString())
+		clusterRequest.ConfigurationType = &ct
 	}
 
 	//check disk values provided for Azure, if Premium type disks, then do not allow setting storage, iops.

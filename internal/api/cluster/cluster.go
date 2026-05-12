@@ -81,8 +81,9 @@ type CreateClusterRequest struct {
 	// Enum: "single" "multi"
 	Availability Availability `json:"availability"`
 
-	// ConfigurationType defines model for ConfigurationType, either 'multiNode' or 'singleNode'
-	ConfigurationType ConfigurationType `json:"configurationType"`
+	// ConfigurationType defines model for ConfigurationType, either 'multiNode' or 'singleNode'.
+	// Omitted when not set so the API applies its default ("multiNode").
+	ConfigurationType *ConfigurationType `json:"configurationType,omitempty"`
 
 	// Name is the name of the cluster (up to 256 characters).
 	Name string `json:"name"`
