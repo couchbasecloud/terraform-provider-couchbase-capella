@@ -185,7 +185,7 @@ func TestGenerate_ProducesValidGo(t *testing.T) {
 	idxAPI := strings.Index(got, `"APIKey"`)
 	idxAllowed := strings.Index(got, `"AllowedCidr"`)
 	idxCloud := strings.Index(got, `"CloudConfig"`)
-	if !(idxAPI < idxAllowed && idxAllowed < idxCloud) {
+	if idxAPI >= idxAllowed || idxAllowed >= idxCloud {
 		t.Errorf("schema keys not sorted: APIKey=%d AllowedCidr=%d CloudConfig=%d", idxAPI, idxAllowed, idxCloud)
 	}
 }
