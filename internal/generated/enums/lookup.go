@@ -24,19 +24,20 @@ type SchemaBuilder interface {
 // associated.
 func Lookup(b SchemaBuilder, alternateSchemas []string, tfFieldName string) *EnumDef {
 	field := snakeToCamel(tfFieldName)
-	resourceCap := capitalize(b.GetResourceName())
 
 	patterns := append([]string(nil), alternateSchemas...)
-	patterns = append(patterns,
-		b.GetOpenAPISchemaName(),
-		resourceCap,
-		"Create"+resourceCap+"Request",
-		"Get"+resourceCap+"Response",
-		"Update"+resourceCap+"Request",
-		resourceCap+"Request",
-		resourceCap+"Response",
-		b.GetResourceName(),
-	)
+
+	// Patterns from the OpenAPI schema name. Capitalize the seed (same as
+	// docs.GetOpenAPIDescription) so builders that pass lower-camel names
+	// like "allowedCidr" still resolve to PascalCase enumTable keys.
+	patterns = append(patterns, schemaPatterns(b.GetOpenAPISchemaName())...)
+
+	// Patterns from the Terraform resource name, in case it differs from the
+	// OpenAPI schema name (e.g. NewSchemaBuilder("allowlist", "allowedCidr")
+	// where the enum lives under "Allowlist" rather than "AllowedCidr").
+	if b.GetResourceName() != b.GetOpenAPISchemaName() {
+		patterns = append(patterns, schemaPatterns(b.GetResourceName())...)
+	}
 
 	for _, p := range patterns {
 		if p == "" {
@@ -48,6 +49,22 @@ func Lookup(b SchemaBuilder, alternateSchemas []string, tfFieldName string) *Enu
 		}
 	}
 	return nil
+}
+
+func schemaPatterns(name string) []string {
+	if name == "" {
+		return nil
+	}
+	capName := capitalize(name)
+	return []string{
+		capName,
+		"Create" + capName + "Request",
+		"Get" + capName + "Response",
+		"Update" + capName + "Request",
+		capName + "Request",
+		capName + "Response",
+		name,
+	}
 }
 
 func snakeToCamel(s string) string {
