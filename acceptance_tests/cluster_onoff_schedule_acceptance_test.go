@@ -39,10 +39,16 @@ func TestAccClusterOnOffScheduleResource(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceReference,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: generateClusterOnOffScheduleImportId(resourceReference),
+				// The schedule resource has no simple "id" attribute; it's keyed
+				// by compound organization_id+project_id+cluster_id, with
+				// cluster_id as the natural primary key (one schedule per
+				// cluster). Tell the framework to verify import using
+				// cluster_id instead of the default "id".
+				ResourceName:                         resourceReference,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    generateClusterOnOffScheduleImportId(resourceReference),
+				ImportStateVerifyIdentifierAttribute: "cluster_id",
 			},
 		},
 	})
