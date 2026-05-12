@@ -774,6 +774,115 @@ resource "couchbase-capella_cluster"  "%[4]s" {
 `, globalProviderBlock, globalOrgId, globalProjectId, resourceName, cidr)
 }
 
+// TestAccClusterResourceWithThreeServiceGroupsAWS validates that a cluster can
+// be created with three separate service groups (data, index+query, search)
+// without hitting the "anyNoData1 is invalid for the service groups template
+// 'custom'" error.
+func TestAccClusterResourceWithThreeServiceGroupsAWS(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_")
+	resourceReference := "couchbase-capella_cluster." + resourceName
+	cidr := generateRandomCIDR()
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterResourceConfigThreeServiceGroups(resourceName, cidr),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccExistsClusterResource(t, resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
+					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.type", "aws"),
+					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.region", "us-east-1"),
+					resource.TestCheckResourceAttr(resourceReference, "cloud_provider.cidr", cidr),
+					resource.TestCheckResourceAttr(resourceReference, "configuration_type", "multiNode"),
+					resource.TestCheckResourceAttr(resourceReference, "service_groups.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceReference, "service_groups.*", map[string]string{
+						"num_of_nodes": "3",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceReference, "service_groups.*", map[string]string{
+						"num_of_nodes": "2",
+					}),
+					resource.TestCheckResourceAttr(resourceReference, "availability.type", "multi"),
+					resource.TestCheckResourceAttr(resourceReference, "support.plan", "enterprise"),
+					resource.TestCheckResourceAttr(resourceReference, "support.timezone", "PT"),
+					resource.TestCheckResourceAttrSet(resourceReference, "etag"),
+				),
+			},
+		},
+	})
+}
+
+func testAccClusterResourceConfigThreeServiceGroups(resourceName, cidr string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_cluster" "%[4]s" {
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  name            = "%[4]s"
+  cloud_provider = {
+    type   = "aws"
+    region = "us-east-1"
+    cidr   = "%[5]s"
+  }
+  service_groups = [
+    {
+      node = {
+        compute = {
+          cpu = 4
+          ram = 16
+        }
+        disk = {
+          storage = 50
+          type    = "gp3"
+          iops    = 3000
+        }
+      }
+      num_of_nodes = 3
+      services     = ["data"]
+    },
+    {
+      node = {
+        compute = {
+          cpu = 4
+          ram = 16
+        }
+        disk = {
+          storage = 50
+          type    = "gp3"
+          iops    = 3000
+        }
+      }
+      num_of_nodes = 2
+      services     = ["index", "query"]
+    },
+    {
+      node = {
+        compute = {
+          cpu = 4
+          ram = 16
+        }
+        disk = {
+          storage = 50
+          type    = "gp3"
+          iops    = 3000
+        }
+      }
+      num_of_nodes = 2
+      services     = ["search"]
+    }
+  ]
+  availability = {
+    "type" : "multi"
+  }
+  support = {
+    plan     = "enterprise"
+    timezone = "PT"
+  }
+}
+`, globalProviderBlock, globalOrgId, globalProjectId, resourceName, cidr)
+}
+
 // generateClusterImportIdForResource generates a cluster import ID based on the provided resource reference
 // and the attributes in the Terraform state.
 //
