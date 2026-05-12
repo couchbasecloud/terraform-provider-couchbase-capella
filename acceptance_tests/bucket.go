@@ -107,10 +107,14 @@ func resolveBucket(ctx context.Context, client *api.Client) error {
 	if err := createBucket(ctx, client); err != nil {
 		return err
 	}
+	// Mark the bucket as created BEFORE waiting for it to become healthy. The
+	// POST has already succeeded so the bucket exists remotely; if bucketWait
+	// times out, cleanup must still delete it to avoid leaking the bucket
+	// across flaky runs.
+	globalBucketCreated = true
 	if err := bucketWait(ctx, client); err != nil {
 		return err
 	}
-	globalBucketCreated = true
 	log.Printf("Created bucket: %s (%s)", globalBucketName, globalBucketId)
 	return nil
 }
