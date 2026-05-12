@@ -35,8 +35,10 @@ func TestAccReadProject_InvalidID(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccProjectDataSourceConfigWithID(resourceName, "00000000-0000-0000-0000-000000000000"),
-				ExpectError: regexp.MustCompile("Error Reading Capella Project|Could not read project"),
+				Config: testAccProjectDataSourceConfigWithID(resourceName, "00000000-0000-0000-0000-000000000000"),
+				// Match the provider's specific summary AND a 404 from the API,
+				// so the test cannot pass on unrelated auth/transport failures.
+				ExpectError: regexp.MustCompile(`(?s)Error Reading Capella Project.*"httpStatusCode":404`),
 			},
 		},
 	})
