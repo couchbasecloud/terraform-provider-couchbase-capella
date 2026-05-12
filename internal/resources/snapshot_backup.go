@@ -771,8 +771,8 @@ func (s *SnapshotBackup) restoreSnapshotBackup(ctx context.Context, organization
 	}
 
 	const (
-		maxConflictWait     = 30 * time.Minute
-		conflictPollEvery   = 30 * time.Second
+		maxConflictWait   = 30 * time.Minute
+		conflictPollEvery = 30 * time.Second
 	)
 	deadline := time.Now().Add(maxConflictWait)
 	for {
@@ -816,6 +816,9 @@ func (s *SnapshotBackup) restoreSnapshotBackup(ctx context.Context, organization
 			"err":  err,
 		})
 		return err
+	}
+	if restoreResp.ID == "" {
+		return fmt.Errorf("restore POST succeeded but response did not include a restoreId")
 	}
 
 	// Wait for the restore to be visible in the LIST endpoint before returning.
