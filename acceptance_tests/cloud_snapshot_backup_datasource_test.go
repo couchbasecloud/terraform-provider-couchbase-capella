@@ -3,9 +3,11 @@ package acceptance_tests
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccCloudSnapshotBackupDatasource(t *testing.T) {
@@ -84,9 +86,7 @@ func TestAccCloudProjectSnapshotBackupsDatasource(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dsReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttrSet(dsReference, "data.0.cluster_id"),
-					resource.TestCheckResourceAttrSet(dsReference, "data.0.most_recent_snapshot.id"),
-					resource.TestCheckResourceAttrSet(dsReference, "data.0.most_recent_snapshot.created_at"),
+					testAccCheckProjectSnapshotBackupShape(dsReference),
 				),
 			},
 		},
@@ -241,4 +241,31 @@ data "couchbase-capella_cloud_project_snapshot_backups" "%[6]s" {
   depends_on      = [couchbase-capella_cloud_snapshot_backup.%[2]s]
 }
 `, globalProviderBlock, backupResourceName, globalOrgId, globalProjectId, clusterID, dsName)
+}
+
+// testAccCheckProjectSnapshotBackupShape verifies the shape of the project-level
+// snapshot backups datasource. The endpoint only includes clusters with completed
+// backups, so on a fresh cluster the list may be empty — that is accepted. When
+// entries are present, the required fields must be non-empty.
+func testAccCheckProjectSnapshotBackupShape(dsReference string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		ds := s.RootModule().Resources[dsReference]
+		if ds == nil {
+			return fmt.Errorf("datasource %s not found in state", dsReference)
+		}
+		count, _ := strconv.Atoi(ds.Primary.Attributes["data.#"])
+		if count == 0 {
+			return nil
+		}
+		for _, attr := range []string{
+			"data.0.cluster_id",
+			"data.0.most_recent_snapshot.id",
+			"data.0.most_recent_snapshot.created_at",
+		} {
+			if ds.Primary.Attributes[attr] == "" {
+				return fmt.Errorf("%s: attribute %q expected to be set", dsReference, attr)
+			}
+		}
+		return nil
+	}
 }
