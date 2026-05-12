@@ -233,6 +233,7 @@ func TestAccAppEndpointCorsDisabledFalseNoOrigin(t *testing.T) {
 	ensureFixtureBucketByName(t, globalCorsDisabledFalseEPBucketName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
+	resourceReference := "couchbase-capella_app_endpoint." + resourceName
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -240,11 +241,18 @@ func TestAccAppEndpointCorsDisabledFalseNoOrigin(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAppEndpointCorsDisabledFalseResourceConfig(resourceName, epName, globalCorsDisabledFalseEPBucketName),
-				ExpectError: re.MustCompile(`(?s).*origin.*required.*`),
+				ExpectError: re.MustCompile(`(?s).*cors\.origin.*at least 1 value.*`),
 			},
 			{
 				Config:      testAccAppEndpointCorsEmptyOriginResourceConfig(resourceName, epName, globalCorsDisabledFalseEPBucketName),
-				ExpectError: re.MustCompile(`(?s).*origin.*at least 1.*`),
+				ExpectError: re.MustCompile(`(?s).*cors\.origin.*at least 1 value.*`),
+			},
+			{
+				Config: testAccAppEndpointCorsDisabledTrueNoOriginResourceConfig(resourceName, epName, globalCorsDisabledFalseEPBucketName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAppEndpointComputedAttrs(resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "cors.disabled", "true"),
+				),
 			},
 		},
 	})
@@ -720,6 +728,44 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 
 	cors = {
 		disabled = false
+	}
+
+	scopes = {
+		"_default" = {
+			collections = {
+				"_default" = {}
+			}
+		}
+	}
+}
+`,
+		globalProviderBlock,
+		resourceName,
+		globalOrgId,
+		globalProjectId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
+		bucketName,
+		endpointName,
+	)
+}
+
+// testAccAppEndpointCorsDisabledTrueNoOriginResourceConfig creates an endpoint with
+// cors { disabled=true } and no origin field. Used by: TestAccAppEndpointCorsDisabledFalseNoOrigin.
+func testAccAppEndpointCorsDisabledTrueNoOriginResourceConfig(resourceName, endpointName, bucketName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_app_endpoint" "%[2]s" {
+	organization_id = "%[3]s"
+	project_id      = "%[4]s"
+	cluster_id      = "%[5]s"
+	app_service_id  = "%[6]s"
+	bucket          = "%[7]s"
+	name            = "%[8]s"
+
+	cors = {
+		disabled = true
 	}
 
 	scopes = {
