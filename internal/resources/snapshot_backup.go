@@ -818,5 +818,49 @@ func (s *SnapshotBackup) restoreSnapshotBackup(ctx context.Context, organization
 		return err
 	}
 
+	// Wait for the restore to be visible in the LIST endpoint before returning.
+	// POST /restore returns 202 Accepted but the new restore is not always
+	// immediately readable via GET /restores (no read-your-writes consistency).
+	// Without this wait, a subsequent waitForRestoresComplete call can see zero
+	// pending restores on its first poll and return a false-positive, causing
+	// Delete to fire while the restore is still running server-side.
+	if err = s.waitForRestoreVisible(ctx, organizationId, projectId, clusterId, restoreResp.ID); err != nil {
+		tflog.Debug(ctx, "restore submitted but did not become visible in list", map[string]interface{}{
+			"restoreId": restoreResp.ID,
+			"err":       err,
+		})
+		return err
+	}
+
 	return nil
+}
+
+// waitForRestoreVisible polls GET /restores until the restore identified by
+// restoreId is present in the list. Capella's POST /restore returns 202 before
+// the restore object is queryable on the read path; this closes that window so
+// downstream pollers don't see a false-positive empty list.
+func (s *SnapshotBackup) waitForRestoreVisible(ctx context.Context, organizationId, projectId, clusterId, restoreId string) error {
+	const (
+		pollInterval = 2 * time.Second
+		maxAttempts  = 30
+	)
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups/restores", s.HostURL, organizationId, projectId, clusterId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		restores, err := api.GetPaginated[[]snapshot_backup.SnapshotRestore](ctx, s.ClientV1, s.Token, cfg, "")
+		if err != nil {
+			return err
+		}
+		for _, r := range restores {
+			if r.ID == restoreId {
+				return nil
+			}
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(pollInterval):
+		}
+	}
+	return fmt.Errorf("restore %s did not appear in restores list within %s", restoreId, time.Duration(maxAttempts)*pollInterval)
 }
