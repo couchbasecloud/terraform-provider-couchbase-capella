@@ -20,10 +20,6 @@ func AppServicesCidrSchema() schema.Schema {
 	// Build data attributes
 	dataAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(dataAttrs, "id", appServicesCidrBuilder, computedString())
-	capellaschema.AddAttr(dataAttrs, "organization_id", appServicesCidrBuilder, computedString())
-	capellaschema.AddAttr(dataAttrs, "project_id", appServicesCidrBuilder, computedString())
-	capellaschema.AddAttr(dataAttrs, "cluster_id", appServicesCidrBuilder, computedString())
-	capellaschema.AddAttr(dataAttrs, "app_service_id", appServicesCidrBuilder, computedString())
 	capellaschema.AddAttr(dataAttrs, "cidr", appServicesCidrBuilder, computedString())
 	capellaschema.AddAttr(dataAttrs, "comment", appServicesCidrBuilder, computedString())
 	capellaschema.AddAttr(dataAttrs, "expires_at", appServicesCidrBuilder, computedString())
