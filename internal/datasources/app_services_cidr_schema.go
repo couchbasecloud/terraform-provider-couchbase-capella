@@ -12,6 +12,11 @@ var appServicesCidrBuilder = capellaschema.NewSchemaBuilder("appServicesCidr")
 func AppServicesCidrSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
+	capellaschema.AddAttr(attrs, "organization_id", appServicesCidrBuilder, requiredString())
+	capellaschema.AddAttr(attrs, "project_id", appServicesCidrBuilder, requiredString())
+	capellaschema.AddAttr(attrs, "cluster_id", appServicesCidrBuilder, requiredString())
+	capellaschema.AddAttr(attrs, "app_service_id", appServicesCidrBuilder, requiredString())
+
 	// Build data attributes
 	dataAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(dataAttrs, "id", appServicesCidrBuilder, computedString())
