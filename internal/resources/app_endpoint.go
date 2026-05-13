@@ -23,9 +23,10 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource                = &AppEndpoint{}
-	_ resource.ResourceWithConfigure   = &AppEndpoint{}
-	_ resource.ResourceWithImportState = &AppEndpoint{}
+	_ resource.Resource                   = &AppEndpoint{}
+	_ resource.ResourceWithConfigure      = &AppEndpoint{}
+	_ resource.ResourceWithImportState    = &AppEndpoint{}
+	_ resource.ResourceWithValidateConfig = &AppEndpoint{}
 )
 
 const errorAppEndpointCreation = "There is an error during App Endpoint creation. unexpected error: "
@@ -53,6 +54,41 @@ func (a *AppEndpoint) Metadata(_ context.Context, req resource.MetadataRequest, 
 // Schema defines the schema for AppEndpoint.
 func (a *AppEndpoint) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = AppEndpointSchema()
+}
+
+// ValidateConfig enforces that CORS origins are configured unless CORS is explicitly disabled.
+func (a *AppEndpoint) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var config providerschema.AppEndpoint
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if config.Cors == nil {
+		return
+	}
+
+	// Defer validation until Terraform resolves expressions that determine whether CORS is disabled.
+	if config.Cors.Disabled.IsUnknown() {
+		return
+	}
+
+	if !config.Cors.Disabled.IsNull() && !config.Cors.Disabled.IsUnknown() && config.Cors.Disabled.ValueBool() {
+		return
+	}
+
+	// Origin may be populated by an expression that is unknown during config validation.
+	if config.Cors.Origin.IsUnknown() {
+		return
+	}
+
+	if config.Cors.Origin.IsNull() || len(config.Cors.Origin.Elements()) == 0 {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("cors").AtName("origin"),
+			"Missing Attribute Configuration",
+			"Expected cors.origin to be configured with at least 1 value when cors.disabled is not true.",
+		)
+	}
 }
 
 // Create creates a new App Endpoint.
@@ -133,6 +169,8 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 	// Terraform detecting an unexpected new value.
 	if plan.Cors == nil {
 		state.Cors = nil
+	} else {
+		preserveDisabledCorsOrigin(&plan, state)
 	}
 
 	diags = resp.State.Set(ctx, state)
@@ -315,6 +353,8 @@ func (a *AppEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *
 	isImport := state.OrganizationId.IsNull()
 	if state.Cors == nil && !isImport {
 		newstate.Cors = nil
+	} else if !isImport {
+		preserveDisabledCorsOrigin(&state, newstate)
 	}
 
 	diags = resp.State.Set(ctx, newstate)
@@ -389,10 +429,26 @@ func (a *AppEndpoint) Update(ctx context.Context, req resource.UpdateRequest, re
 	// If the plan did not include CORS, keep it null in state.
 	if plan.Cors == nil {
 		refreshedState.Cors = nil
+	} else {
+		preserveDisabledCorsOrigin(&plan, refreshedState)
 	}
-
 	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
+}
+
+// preserveDisabledCorsOrigin keeps omitted origin absent from state when CORS is disabled.
+func preserveDisabledCorsOrigin(config *providerschema.AppEndpoint, state *providerschema.AppEndpoint) {
+	if config.Cors == nil || state.Cors == nil {
+		return
+	}
+
+	if config.Cors.Disabled.IsNull() || config.Cors.Disabled.IsUnknown() || !config.Cors.Disabled.ValueBool() {
+		return
+	}
+
+	if config.Cors.Origin.IsNull() {
+		state.Cors.Origin = types.SetNull(types.StringType)
+	}
 }
 
 // Delete deletes an existing App Endpoint.
