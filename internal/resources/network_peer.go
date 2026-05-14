@@ -144,6 +144,16 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 			"peer_id": peerID,
 		})
 
+		resp.Diagnostics.AddWarning(
+			"Network peer created with errors",
+			fmt.Sprintf(
+				"The API returned an error during creation (%s) but the network peer %q was persisted. "+
+					"The resource has been saved to state for lifecycle management. "+
+					"Review the peer status in Capella and, if necessary, run terraform destroy to clean up.",
+				api.ParseError(err), peerID,
+			),
+		)
+
 		diags = resp.State.Set(ctx, initializeNetworkPeerPlanId(plan, peerID))
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
