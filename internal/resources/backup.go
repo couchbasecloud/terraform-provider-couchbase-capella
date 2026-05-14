@@ -412,16 +412,21 @@ func (b *Backup) checkLatestBackupStatus(ctx context.Context, organizationId, pr
 		err        error
 	)
 
-	// Assuming 60 minutes is the max time backup completion takes, can change after discussion
-	const timeout = time.Minute * 60
+	// Capella legacy bucket backup completion can take well over an hour under
+	// load. 90 minutes gives realistic headroom; previous 60-minute limit was
+	// being exhausted on busy clusters.
+	const timeout = 90 * time.Minute
 
 	var cancel context.CancelFunc
 	ctx, cancel = context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	const sleep = time.Second * 1
+	// Poll every 30 seconds instead of every 1 second. The previous 1-second
+	// cadence issued ~3600 GETs per backup wait and could itself contribute to
+	// backend pressure; 30 s still detects completion promptly.
+	const sleep = 30 * time.Second
 
-	timer := time.NewTimer(1 * time.Second)
+	timer := time.NewTimer(sleep)
 
 	for {
 		select {

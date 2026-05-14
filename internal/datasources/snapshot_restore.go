@@ -2,12 +2,10 @@ package datasources
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/snapshot_backup"
@@ -55,13 +53,7 @@ func (d *SnapshotRestore) Read(ctx context.Context, req datasource.ReadRequest, 
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups/restores", d.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	restoreResps, err := d.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		d.Token,
-		nil,
-	)
+	all, err := api.GetPaginated[[]snapshot_backup.SnapshotRestore](ctx, d.ClientV1, d.Token, cfg, "")
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Snapshot Restores",
@@ -69,24 +61,11 @@ func (d *SnapshotRestore) Read(ctx context.Context, req datasource.ReadRequest, 
 		)
 		return
 	}
-
-	var snapshotRestores snapshot_backup.ListSnapshotRestoresResponse
-	err = json.Unmarshal(restoreResps.Body, &snapshotRestores)
-	if err != nil {
-		diags.AddError(
-			"Error Unmarshalling Capella Snapshot Restores",
-			fmt.Sprintf("Could not unmarshal snapshot restores in cluster %s, unexpected error: %s", clusterId, api.ParseError(err)),
-		)
-		tflog.Debug(ctx, "error unmarshalling snapshot restores", map[string]interface{}{
-			"snapshotRestoresResps.Body": restoreResps.Body,
-			"err":                        err,
-		})
-		return
-	}
+	snapshotRestores := snapshot_backup.ListSnapshotRestoresResponse{Data: all}
 
 	for i := range snapshotRestores.Data {
 		if snapshotRestores.Data[i].ID == restoreId {
-			newSnapshotRestore := providerschema.NewSnapshotRestore(snapshotRestores.Data[i], organizationId, projectId, clusterId)
+			newSnapshotRestore := providerschema.NewSnapshotRestore(snapshotRestores.Data[i], clusterId, projectId, organizationId)
 			diags = resp.State.Set(ctx, &newSnapshotRestore)
 			resp.Diagnostics.Append(diags...)
 			return

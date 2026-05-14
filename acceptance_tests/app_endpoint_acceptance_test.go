@@ -226,21 +226,33 @@ func testAccAppEndpointComputedAttrs(resourceReference string) resource.TestChec
 	)
 }
 
-// ── S4: cors.disabled=false without origin — API 422 "App Endpoint CORS Origin is empty" ──
-// Provider schema marks origin as Optional but the API requires it when a cors
-// block is present and disabled=false.
+// ── AV-128217: cors.disabled=false without origin must fail provider validation ──
+// The API rejects empty/missing origin when a cors block is present.
+// Provider schema must reject this before issuing the API request.
 func TestAccAppEndpointCorsDisabledFalseNoOrigin(t *testing.T) {
-	t.Skip("AV-128217: cors.disabled=false without origin should be valid once the bug is fixed")
 	ensureFixtureBucketByName(t, globalCorsDisabledFalseEPBucketName)
 
 	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_")
+	resourceReference := "couchbase-capella_app_endpoint." + resourceName
 	epName := randomStringWithPrefix("tf_acc_endpoint_")
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppEndpointCorsDisabledFalseResourceConfig(resourceName, epName, globalCorsDisabledFalseEPBucketName),
+				Config:      testAccAppEndpointCorsDisabledFalseResourceConfig(resourceName, epName, globalCorsDisabledFalseEPBucketName),
+				ExpectError: re.MustCompile(`(?s).*cors\.origin.*at least 1 value.*`),
+			},
+			{
+				Config:      testAccAppEndpointCorsEmptyOriginResourceConfig(resourceName, epName, globalCorsDisabledFalseEPBucketName),
+				ExpectError: re.MustCompile(`(?s).*cors\.origin.*at least 1 value.*`),
+			},
+			{
+				Config: testAccAppEndpointCorsDisabledTrueNoOriginResourceConfig(resourceName, epName, globalCorsDisabledFalseEPBucketName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAppEndpointComputedAttrs(resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "cors.disabled", "true"),
+				),
 			},
 		},
 	})
@@ -701,7 +713,7 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 }
 
 // testAccAppEndpointCorsDisabledFalseResourceConfig creates an endpoint with
-// cors { disabled=false } and no origin field. Used by: TestAccAppEndpointCorsDisabledFalseNoOrigin (S4, skipped).
+// cors { disabled=false } and no origin field. Used by: TestAccAppEndpointCorsDisabledFalseNoOrigin.
 func testAccAppEndpointCorsDisabledFalseResourceConfig(resourceName, endpointName, bucketName string) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -716,6 +728,83 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 
 	cors = {
 		disabled = false
+	}
+
+	scopes = {
+		"_default" = {
+			collections = {
+				"_default" = {}
+			}
+		}
+	}
+}
+`,
+		globalProviderBlock,
+		resourceName,
+		globalOrgId,
+		globalProjectId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
+		bucketName,
+		endpointName,
+	)
+}
+
+// testAccAppEndpointCorsDisabledTrueNoOriginResourceConfig creates an endpoint with
+// cors { disabled=true } and no origin field. Used by: TestAccAppEndpointCorsDisabledFalseNoOrigin.
+func testAccAppEndpointCorsDisabledTrueNoOriginResourceConfig(resourceName, endpointName, bucketName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_app_endpoint" "%[2]s" {
+	organization_id = "%[3]s"
+	project_id      = "%[4]s"
+	cluster_id      = "%[5]s"
+	app_service_id  = "%[6]s"
+	bucket          = "%[7]s"
+	name            = "%[8]s"
+
+	cors = {
+		disabled = true
+	}
+
+	scopes = {
+		"_default" = {
+			collections = {
+				"_default" = {}
+			}
+		}
+	}
+}
+`,
+		globalProviderBlock,
+		resourceName,
+		globalOrgId,
+		globalProjectId,
+		appEndpointClusterId,
+		appEndpointAppServiceId,
+		bucketName,
+		endpointName,
+	)
+}
+
+// testAccAppEndpointCorsEmptyOriginResourceConfig creates an endpoint with
+// cors { disabled=false, origin=[] }. Used by: TestAccAppEndpointCorsDisabledFalseNoOrigin.
+func testAccAppEndpointCorsEmptyOriginResourceConfig(resourceName, endpointName, bucketName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_app_endpoint" "%[2]s" {
+	organization_id = "%[3]s"
+	project_id      = "%[4]s"
+	cluster_id      = "%[5]s"
+	app_service_id  = "%[6]s"
+	bucket          = "%[7]s"
+	name            = "%[8]s"
+
+	cors = {
+		disabled = false
+		origin   = []
 	}
 
 	scopes = {
