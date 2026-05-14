@@ -2,6 +2,7 @@ package acceptance_tests
 
 import (
 	"context"
+	"errors"
 	"log"
 	"os"
 	"testing"
@@ -70,9 +71,21 @@ func setup(ctx context.Context, client *api.Client) error {
 	// Create cluster only if not provided via env var
 	if globalClusterId == "" {
 		if err := createCluster(ctx, client); err != nil {
-			return err
+			// Only fall back to findClusterByName on 5xx (AV-129960): the backend
+			// sometimes returns 500 while still creating the cluster.
+			var apiErr *api.Error
+			if !errors.As(err, &apiErr) || apiErr.HttpStatusCode < 500 {
+				return err
+			}
+			id, findErr := findClusterByName(ctx, client, globalClusterName)
+			if findErr != nil || id == "" {
+				return err
+			}
+			log.Printf("createCluster returned 5xx but cluster was found; adopting %s", id)
+			globalClusterId = id
+		} else {
+			globalClusterCreated = true
 		}
-		globalClusterCreated = true
 		if err := clusterWait(ctx, client, false); err != nil {
 			return err
 		}
@@ -80,21 +93,8 @@ func setup(ctx context.Context, client *api.Client) error {
 		log.Printf("Using existing cluster: %s", globalClusterId)
 	}
 
-	// Create bucket only if not provided via env var
-	if globalBucketId == "" {
-		if err := createBucket(ctx, client); err != nil {
-			return err
-		}
-		if err := bucketWait(ctx, client); err != nil {
-			return err
-		}
-	} else {
-		bucketName, err := resolveBucketNameById(ctx, client, globalBucketId)
-		if err != nil {
-			return err
-		}
-		globalBucketName = bucketName
-		log.Printf("Using existing bucket: %s (%s)", globalBucketName, globalBucketId)
+	if err := resolveBucket(ctx, client); err != nil {
+		return err
 	}
 
 	// Create app service only if not provided via env var
@@ -139,6 +139,12 @@ func cleanup(ctx context.Context, client *api.Client) error {
 		}
 
 		if err := appServiceWait(ctx, client, true); err != nil {
+			return err
+		}
+	}
+
+	if globalBucketCreated {
+		if err := destroyBucket(ctx, client); err != nil {
 			return err
 		}
 	}
