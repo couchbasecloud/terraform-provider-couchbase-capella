@@ -157,6 +157,12 @@ func (p *PrivateEndpoint) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
+	if refreshedState.Status.ValueString() == "rejected" {
+		tflog.Info(ctx, "private endpoint association is rejected; removing from state to force re-association")
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	diags = resp.State.Set(ctx, &refreshedState)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
