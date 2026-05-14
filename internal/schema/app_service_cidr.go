@@ -67,7 +67,7 @@ type AppServiceCIDRs struct {
 
 // Validate is used to verify that all the fields in the datasource
 // have been populated.
-func (a *AppServiceCIDRs) Validate() (clusterId, projectId, organizationId, appserviceId string, err error) {
+func (a *AppServiceCIDRs) Validate() (organizationId, projectId, clusterId, appserviceId string, err error) {
 	if a.OrganizationId.IsNull() {
 		return "", "", "", "", errors.ErrOrganizationIdMissing
 	}
@@ -80,7 +80,7 @@ func (a *AppServiceCIDRs) Validate() (clusterId, projectId, organizationId, apps
 	if a.AppServiceId.IsNull() {
 		return "", "", "", "", errors.ErrAppServiceIdMissing
 	}
-	return a.ClusterId.ValueString(), a.ProjectId.ValueString(), a.OrganizationId.ValueString(), a.AppServiceId.ValueString(), nil
+	return a.OrganizationId.ValueString(), a.ProjectId.ValueString(), a.ClusterId.ValueString(), a.AppServiceId.ValueString(), nil
 }
 
 // Validate is used to verify that all the fields in the datasource
