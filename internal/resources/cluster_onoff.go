@@ -169,6 +169,15 @@ func (c *ClusterOnOffOnDemand) manageClusterActivation(ctx context.Context, stat
 		nil,
 	)
 	if err != nil {
+		// Treat "already in desired state" as idempotent success:
+		// code 7010 = cluster must be off to be turned on (already on)
+		// code 7011 = cluster must be on to be turned off (already off)
+		var apiErr *cluster_onoff_api.Error
+		if errors.As(err, &apiErr) {
+			if (state == "on" && apiErr.Code == 7010) || (state == "off" && apiErr.Code == 7011) {
+				return nil
+			}
+		}
 		return errors.New(errorMessageWhileClusterOnOffCreation + cluster_onoff_api.ParseError(err))
 	}
 	return nil
@@ -266,7 +275,7 @@ func (c *ClusterOnOffOnDemand) Read(ctx context.Context, req resource.ReadReques
 		clusterId      = IDs[providerschema.ClusterId]
 	)
 
-	refreshedState, err := c.retrieveClusterOnOff(ctx, organizationId, projectId, clusterId, state.State.String(), state.TurnOnLinkedAppService.ValueBool())
+	refreshedState, err := c.retrieveClusterOnOff(ctx, organizationId, projectId, clusterId, state.State.ValueString(), state.TurnOnLinkedAppService.ValueBool())
 	if err != nil {
 		resourceNotFound, _ := cluster_onoff_api.CheckResourceNotFoundError(err)
 		if resourceNotFound {

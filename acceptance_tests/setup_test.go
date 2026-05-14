@@ -96,6 +96,13 @@ func setup(ctx context.Context, client *api.Client) error {
 	if err := resolveBucket(ctx, client); err != nil {
 		return err
 	}
+	// Bucket creation triggers a cluster rebalance; wait for the cluster to
+	// return to Healthy before creating dependent resources, otherwise
+	// createAppService races and fails with 412 "cluster is rebalancing".
+	// No-op when the bucket was pre-existing (cluster already Healthy).
+	if err := clusterWait(ctx, client, false); err != nil {
+		return err
+	}
 
 	// Create app service only if not provided via env var
 	if globalAppServiceId == "" {

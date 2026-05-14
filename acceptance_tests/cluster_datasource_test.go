@@ -2,6 +2,7 @@ package acceptance_tests
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -31,7 +32,24 @@ func TestAccReadClusterDatasource(t *testing.T) {
 	})
 }
 
+func TestAccReadClusterDatasource_InvalidID(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_ds_invalid_")
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterDatasourceConfigWithID(resourceName, "00000000-0000-0000-0000-000000000000"),
+				ExpectError: regexp.MustCompile("Error Reading Capella Cluster|Could not read cluster"),
+			},
+		},
+	})
+}
+
 func testAccClusterDatasourceConfig(resourceName string) string {
+	return testAccClusterDatasourceConfigWithID(resourceName, globalClusterId)
+}
+
+func testAccClusterDatasourceConfigWithID(resourceName, clusterID string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -40,5 +58,5 @@ data "couchbase-capella_cluster" "%[5]s" {
   project_id      = "%[3]s"
   id              = "%[4]s"
 }
-`, globalProviderBlock, globalOrgId, globalProjectId, globalClusterId, resourceName)
+`, globalProviderBlock, globalOrgId, globalProjectId, clusterID, resourceName)
 }

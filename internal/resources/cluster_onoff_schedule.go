@@ -3,8 +3,10 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	stderrors "errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -106,17 +108,11 @@ func (c *ClusterOnOffSchedule) Create(ctx context.Context, req resource.CreateRe
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/onOffSchedule", c.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusNoContent}
-	_, err = c.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		scheduleRequest,
-		c.Token,
-		nil,
-	)
+	err = c.scheduleRequestWithRetry(ctx, cfg, scheduleRequest)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error executing request",
-			errorMessageWhileOnOffScheduleCreation+api.ParseError(err),
+			errorMessageWhileOnOffScheduleCreation+err.Error(),
 		)
 		return
 	}
@@ -271,14 +267,7 @@ func (c *ClusterOnOffSchedule) Update(ctx context.Context, req resource.UpdateRe
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/onOffSchedule", c.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err = c.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		BackupScheduleRequest,
-		c.Token,
-		nil,
-	)
-	if err != nil {
+	if err = c.scheduleRequestWithRetry(ctx, cfg, BackupScheduleRequest); err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating cluster on/off schedule",
 			"Could not update on/off schedule for cluster with id "+plan.ClusterId.String()+": "+api.ParseError(err),
@@ -426,4 +415,50 @@ func (c *ClusterOnOffSchedule) retrieveClusterOnOffSchedule(ctx context.Context,
 
 	refreshedState := providerschema.NewClusterOnOffSchedule(&onOffScheduleResp, organizationId, projectId, clusterId)
 	return refreshedState, nil
+}
+
+func (c *ClusterOnOffSchedule) scheduleRequestWithRetry(ctx context.Context, cfg api.EndpointCfg, scheduleRequest any) error {
+	const (
+		maxRetryWindow = 5 * time.Minute
+		retryInterval  = 15 * time.Second
+	)
+	deadline := time.Now().Add(maxRetryWindow)
+	var lastErr error
+	for {
+		_, err := c.ClientV1.ExecuteWithRetry(ctx, cfg, scheduleRequest, c.Token, nil)
+		if err == nil {
+			return nil
+		}
+		if ctx.Err() != nil {
+			cause := lastErr
+			if cause == nil {
+				cause = err
+			}
+			return fmt.Errorf("retry window (%v) exhausted for schedule create: %w", maxRetryWindow, cause)
+		}
+		// Only retry the specific Capella transient backend error (code 10000:
+		// "Something went wrong on our end. We are actively investigating the issue.").
+		// This 500 appears for ~minutes after a previous schedule write while the
+		// backend propagates state. Other 500s likely indicate real failures and
+		// should surface immediately rather than burn the retry window.
+		var apiErr *api.Error
+		if !stderrors.As(err, &apiErr) || apiErr.HttpStatusCode != http.StatusInternalServerError || apiErr.Code != 10000 {
+			return err
+		}
+		lastErr = err
+		remaining := time.Until(deadline)
+		if remaining <= 0 {
+			return fmt.Errorf("retry window (%v) exhausted for schedule create: %w", maxRetryWindow, lastErr)
+		}
+		tflog.Debug(ctx, "schedule create returned 500; retrying", map[string]interface{}{"err": err})
+		sleep := retryInterval
+		if sleep > remaining {
+			sleep = remaining
+		}
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("retry window (%v) exhausted for schedule create: %w", maxRetryWindow, lastErr)
+		case <-time.After(sleep):
+		}
+	}
 }

@@ -60,6 +60,12 @@ func setupAppEndpointTestEnvironment(ctx context.Context, client *api.Client) er
 	if err = waitForAppEndpointTestBucket(ctx, client, appEndpointBucketId); err != nil {
 		return err
 	}
+	// Bucket creation triggers a cluster rebalance; wait for the cluster
+	// to return to Healthy before creating the app service, otherwise the
+	// POST races and fails with 412 "cluster is rebalancing".
+	if err = waitForAppEndpointTestCluster(ctx, client, false); err != nil {
+		return err
+	}
 
 	appServiceID, err := createAppEndpointTestAppService(ctx, client)
 	if err != nil {
