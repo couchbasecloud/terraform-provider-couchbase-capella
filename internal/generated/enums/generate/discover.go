@@ -236,23 +236,30 @@ func (w *walker) composition(id string, refs openapi3.SchemaRefs, schemaName, fi
 	}
 }
 
-// recordComposition records a composition site when the branches are $ref-only.
-// Only schema-scope compositions are recorded. The extracted schema names from
-// $refs become the Branches slice.
+// recordComposition records a composition site only when ALL branches are $refs
+// to named schemas. Mixed compositions (some inline, some $ref) are skipped
+// entirely to avoid incomplete branch metadata.
 func (w *walker) recordComposition(refs openapi3.SchemaRefs, schemaName, fieldPath, sourcePath string, kind compositionKind) {
 	if len(refs) == 0 {
 		return
 	}
 
-	var branches []string
+	branches := make([]string, 0, len(refs))
 	for _, ref := range refs {
-		if ref == nil || ref.Ref == "" {
+		// Skip nil refs
+		if ref == nil {
 			continue
 		}
-		name := extractSchemaName(ref.Ref)
-		if name != "" {
-			branches = append(branches, name)
+		// If any branch is not a $ref (inline schema), skip the entire composition
+		if ref.Ref == "" {
+			return
 		}
+		name := extractSchemaName(ref.Ref)
+		// If $ref doesn't point to a component schema, skip the entire composition
+		if name == "" {
+			return
+		}
+		branches = append(branches, name)
 	}
 
 	if len(branches) == 0 {

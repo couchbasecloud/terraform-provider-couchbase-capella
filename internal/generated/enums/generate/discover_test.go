@@ -664,6 +664,37 @@ func TestWalker_InlineSchemaSkipsComposition(t *testing.T) {
 	}
 }
 
+func TestWalker_MixedCompositionSkipped(t *testing.T) {
+	// Mixed compositions (some $ref, some inline) should be skipped entirely
+	// to avoid incomplete branch metadata.
+	doc := &openapi3.T{
+		Components: &openapi3.Components{
+			Schemas: openapi3.Schemas{
+				"AWSConfig": refOf(&openapi3.Schema{Type: &openapi3.Types{"object"}}),
+				"MixedUnion": refOf(&openapi3.Schema{
+					Type: &openapi3.Types{"object"},
+					Properties: openapi3.Schemas{
+						"config": refOf(&openapi3.Schema{
+							OneOf: openapi3.SchemaRefs{
+								{Ref: "#/components/schemas/AWSConfig"},
+								refOf(&openapi3.Schema{Type: &openapi3.Types{"object"}}), // inline
+							},
+						}),
+					},
+				}),
+			},
+		},
+	}
+
+	w := &walker{doc: doc}
+	w.run()
+
+	if len(w.compositionSites) != 0 {
+		t.Errorf("want 0 composition sites for mixed $ref/inline branches, got %d: %v",
+			len(w.compositionSites), w.compositionSites)
+	}
+}
+
 func TestWalker_TopLevelCompositionSkipped(t *testing.T) {
 	// Top-level oneOf (empty FieldPath) is skipped when building the table
 	doc := &openapi3.T{

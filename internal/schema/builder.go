@@ -354,15 +354,15 @@ func camelToSnake(s string) string {
 	if s == "" {
 		return s
 	}
-	var result []byte
+	var result []rune
 	for i, r := range s {
 		if r >= 'A' && r <= 'Z' {
 			if i > 0 {
 				result = append(result, '_')
 			}
-			result = append(result, byte(r-'A'+'a'))
+			result = append(result, r-'A'+'a')
 		} else {
-			result = append(result, byte(r))
+			result = append(result, r)
 		}
 	}
 	return string(result)
