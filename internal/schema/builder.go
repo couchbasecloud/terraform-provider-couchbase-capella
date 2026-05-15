@@ -146,12 +146,6 @@ func AddAttr[M SchemaAttributeMap, T SchemaAttribute](
 		appendOneOfValidator(attr, def)
 	}
 
-	// Note: Composition validators (ExactlyOneOf/AtLeastOneOf) are not auto-attached.
-	// Unlike enums where values match directly, composition branches are OpenAPI schema
-	// names (e.g., "AWSConfigData") that don't map reliably to Terraform attribute names
-	// (e.g., "aws_config"). Use CompositionLookup() for reference and add validators
-	// manually where needed.
-
 	// Add to map based on map type
 	switch m := any(&attrs).(type) {
 	case *map[string]resourceschema.Attribute:
