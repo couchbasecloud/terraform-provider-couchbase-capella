@@ -210,9 +210,12 @@ func (w *walker) schema(id string, s *openapi3.Schema, schemaName, fieldPath, so
 	w.composition(id, s.AllOf, schemaName, fieldPath, sourcePath, sc, "allOf")
 	w.composition(id, s.OneOf, schemaName, fieldPath, sourcePath, sc, "oneOf")
 	w.composition(id, s.AnyOf, schemaName, fieldPath, sourcePath, sc, "anyOf")
-	w.recordComposition(s.OneOf, schemaName, fieldPath, sourcePath, kindOneOf)
-	w.recordComposition(s.AnyOf, schemaName, fieldPath, sourcePath, kindAnyOf)
-	w.recordComposition(s.AllOf, schemaName, fieldPath, sourcePath, kindAllOf)
+	// Only record composition sites for schema-scope (not parameters)
+	if sc == scopeSchema {
+		w.recordComposition(s.OneOf, schemaName, fieldPath, sourcePath, kindOneOf)
+		w.recordComposition(s.AnyOf, schemaName, fieldPath, sourcePath, kindAnyOf)
+		w.recordComposition(s.AllOf, schemaName, fieldPath, sourcePath, kindAllOf)
+	}
 	for fieldName, propRef := range s.Properties {
 		if propRef == nil || propRef.Ref != "" || propRef.Value == nil {
 			continue
