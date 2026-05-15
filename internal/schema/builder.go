@@ -2,11 +2,20 @@ package schema
 
 import (
 	"reflect"
+	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	resourceschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/docs"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/enums"
 )
 
 // SchemaAttribute is a type constraint for supported attribute types across resources and datasources
@@ -133,6 +142,10 @@ func AddAttr[M SchemaAttributeMap, T SchemaAttribute](
 
 	setMarkdownDescription(attr, description)
 
+	if def := enums.Lookup(builder, alternateSchemas, fieldName); def != nil {
+		appendOneOfValidator(attr, def)
+	}
+
 	// Add to map based on map type
 	switch m := any(&attrs).(type) {
 	case *map[string]resourceschema.Attribute:
@@ -165,4 +178,117 @@ func setMarkdownDescription(attr any, description string) {
 	if field.IsValid() && field.CanSet() && field.Kind() == reflect.String {
 		field.SetString(description)
 	}
+}
+
+// appendOneOfValidator attaches a OneOf validator derived from def to the
+// attribute. Skips when the call site has already attached any validator
+// — that's the override discipline: a hand-coded OneOf (or any other
+// validator) at the call site wins. Only the four shapes the spec
+// produces are handled: scalar string, scalar int64, list/set of
+// strings, list/set of ints. Nested attributes get validators on their
+// inner fields via separate AddAttr calls.
+func appendOneOfValidator(a any, def *enums.EnumDef) {
+	switch x := a.(type) {
+
+	case *resourceschema.StringAttribute:
+		if def.IsArray || def.Type != "string" || len(x.Validators) > 0 {
+			return
+		}
+		x.Validators = append(x.Validators, stringvalidator.OneOf(def.Values...))
+	case *datasourceschema.StringAttribute:
+		if def.IsArray || def.Type != "string" || len(x.Validators) > 0 {
+			return
+		}
+		x.Validators = append(x.Validators, stringvalidator.OneOf(def.Values...))
+
+	case *resourceschema.Int64Attribute:
+		ints, ok := parseEnumInt64s(def)
+		if !ok || len(x.Validators) > 0 {
+			return
+		}
+		x.Validators = append(x.Validators, int64validator.OneOf(ints...))
+	case *datasourceschema.Int64Attribute:
+		ints, ok := parseEnumInt64s(def)
+		if !ok || len(x.Validators) > 0 {
+			return
+		}
+		x.Validators = append(x.Validators, int64validator.OneOf(ints...))
+
+	case *resourceschema.ListAttribute:
+		if !def.IsArray || len(x.Validators) > 0 {
+			return
+		}
+		if v := elementOneOfList(x.ElementType, def); v != nil {
+			x.Validators = append(x.Validators, v)
+		}
+	case *datasourceschema.ListAttribute:
+		if !def.IsArray || len(x.Validators) > 0 {
+			return
+		}
+		if v := elementOneOfList(x.ElementType, def); v != nil {
+			x.Validators = append(x.Validators, v)
+		}
+
+	case *resourceschema.SetAttribute:
+		if !def.IsArray || len(x.Validators) > 0 {
+			return
+		}
+		if v := elementOneOfSet(x.ElementType, def); v != nil {
+			x.Validators = append(x.Validators, v)
+		}
+	case *datasourceschema.SetAttribute:
+		if !def.IsArray || len(x.Validators) > 0 {
+			return
+		}
+		if v := elementOneOfSet(x.ElementType, def); v != nil {
+			x.Validators = append(x.Validators, v)
+		}
+	}
+}
+
+func parseEnumInt64s(def *enums.EnumDef) ([]int64, bool) {
+	if def.IsArray || def.Type != "integer" {
+		return nil, false
+	}
+	return parseInt64Slice(def.Values)
+}
+
+func parseInt64Slice(values []string) ([]int64, bool) {
+	out := make([]int64, 0, len(values))
+	for _, v := range values {
+		n, err := strconv.ParseInt(v, 10, 64)
+		if err != nil {
+			return nil, false
+		}
+		out = append(out, n)
+	}
+	return out, true
+}
+
+func elementOneOfList(elem attr.Type, def *enums.EnumDef) validator.List {
+	switch {
+	case elem == types.StringType && def.Type == "string":
+		return listvalidator.ValueStringsAre(stringvalidator.OneOf(def.Values...))
+	case elem == types.Int64Type && def.Type == "integer":
+		ints, ok := parseInt64Slice(def.Values)
+		if !ok {
+			return nil
+		}
+		return listvalidator.ValueInt64sAre(int64validator.OneOf(ints...))
+	}
+	return nil
+}
+
+func elementOneOfSet(elem attr.Type, def *enums.EnumDef) validator.Set {
+	switch {
+	case elem == types.StringType && def.Type == "string":
+		return setvalidator.ValueStringsAre(stringvalidator.OneOf(def.Values...))
+	case elem == types.Int64Type && def.Type == "integer":
+		ints, ok := parseInt64Slice(def.Values)
+		if !ok {
+			return nil
+		}
+		return setvalidator.ValueInt64sAre(int64validator.OneOf(ints...))
+	}
+	return nil
 }

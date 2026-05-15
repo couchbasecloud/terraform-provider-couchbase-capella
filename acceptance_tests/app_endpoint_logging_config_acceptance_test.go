@@ -81,10 +81,11 @@ func testAccAppEndpointLoggingConfigResource(t *testing.T) []resource.TestStep {
 			ExpectError: regexp.MustCompile("Error executing upsert app endpoint logging config"),
 		},
 
-		// tests that an error is returned if any of the log_keys are invalid
+		// tests that an error is returned if any of the log_keys are invalid.
+		// The generated OneOf validator rejects unknown values at plan time, before any API call.
 		{
 			Config:      testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourceName, resourceName, resourceReference, datasourceName, "info", invalidLogKeys),
-			ExpectError: regexp.MustCompile("Error executing upsert app endpoint logging config"),
+			ExpectError: regexp.MustCompile(`Attribute log_keys\[Value\("Test"\)\] value must be one of`),
 		},
 		{
 			ResourceName:      resourceReference,
