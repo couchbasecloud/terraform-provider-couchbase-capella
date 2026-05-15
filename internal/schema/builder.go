@@ -6,10 +6,12 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	resourceschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -144,6 +146,10 @@ func AddAttr[M SchemaAttributeMap, T SchemaAttribute](
 
 	if def := enums.Lookup(builder, alternateSchemas, fieldName); def != nil {
 		appendOneOfValidator(attr, def)
+	}
+
+	if compDef := enums.CompositionLookup(builder, alternateSchemas, fieldName); compDef != nil {
+		appendCompositionValidator(attr, compDef)
 	}
 
 	// Add to map based on map type
@@ -291,4 +297,73 @@ func elementOneOfSet(elem attr.Type, def *enums.EnumDef) validator.Set {
 		return setvalidator.ValueInt64sAre(int64validator.OneOf(ints...))
 	}
 	return nil
+}
+
+// appendCompositionValidator attaches ExactlyOneOf or AtLeastOneOf validators
+// derived from the composition definition to a SingleNestedAttribute.
+// The composition branches are converted to sibling attribute paths.
+// Skips when the call site has already attached any validator — that's the
+// override discipline: a hand-coded validator at the call site wins.
+// Only handles SingleNestedAttribute since oneOf/anyOf in the OpenAPI spec
+// typically map to nested objects with mutually exclusive or at-least-one
+// child attributes.
+func appendCompositionValidator(a any, def *enums.CompositionDef) {
+	// Only allOf doesn't need a validator (it's just merged constraints)
+	if def.Kind == "allOf" {
+		return
+	}
+
+	// Build paths from branch names (convert to snake_case for Terraform attribute names)
+	paths := make([]path.Expression, 0, len(def.Branches))
+	for _, branch := range def.Branches {
+		// Convert branch schema name to likely Terraform attribute name
+		// e.g., "AWSConfig" -> "aws_config", "GCPConfigData" -> "gcp_config_data"
+		attrName := camelToSnake(branch)
+		paths = append(paths, path.MatchRelative().AtParent().AtName(attrName))
+	}
+
+	if len(paths) < 2 {
+		return
+	}
+
+	switch x := a.(type) {
+	case *resourceschema.SingleNestedAttribute:
+		if len(x.Validators) > 0 {
+			return
+		}
+		switch def.Kind {
+		case "oneOf":
+			x.Validators = append(x.Validators, objectvalidator.ExactlyOneOf(paths...))
+		case "anyOf":
+			x.Validators = append(x.Validators, objectvalidator.AtLeastOneOf(paths...))
+		}
+	case *datasourceschema.SingleNestedAttribute:
+		if len(x.Validators) > 0 {
+			return
+		}
+		switch def.Kind {
+		case "oneOf":
+			x.Validators = append(x.Validators, objectvalidator.ExactlyOneOf(paths...))
+		case "anyOf":
+			x.Validators = append(x.Validators, objectvalidator.AtLeastOneOf(paths...))
+		}
+	}
+}
+
+func camelToSnake(s string) string {
+	if s == "" {
+		return s
+	}
+	var result []byte
+	for i, r := range s {
+		if r >= 'A' && r <= 'Z' {
+			if i > 0 {
+				result = append(result, '_')
+			}
+			result = append(result, byte(r-'A'+'a'))
+		} else {
+			result = append(result, byte(r))
+		}
+	}
+	return string(result)
 }
