@@ -204,4 +204,3 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
 }
 `, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, timezone)
 }
-

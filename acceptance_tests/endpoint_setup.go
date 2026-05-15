@@ -26,10 +26,16 @@ type fixtBucketState struct {
 var (
 	fixtBucketMu     sync.Mutex
 	fixtBucketStates = map[string]*fixtBucketState{}
+
+	// fixtBucketCreateMu serialises all bucket creation operations across
+	// different bucket names. Concurrent bucket creates on the same cluster
+	// cause 500 errors due to rebalancing conflicts on the server side.
+	fixtBucketCreateMu sync.Mutex
 )
 
 // ensureFixtureBucketByName creates the named bucket exactly once per test
-// process. Safe to call from parallel tests.
+// process. Safe to call from parallel tests. Bucket creation is globally
+// serialised to avoid concurrent rebalance conflicts on the cluster.
 func ensureFixtureBucketByName(t *testing.T, name string) {
 	t.Helper()
 	ensureAppEndpointTestEnvironment(t)
@@ -39,12 +45,14 @@ func ensureFixtureBucketByName(t *testing.T, name string) {
 		state = &fixtBucketState{}
 		fixtBucketStates[name] = state
 	}
-	// Unlock immediately — the mutex only guards the map. Bucket creation is
-	// serialised per-name by state.once (sync.Once), so parallel tests for
-	// different buckets are not blocked behind each other.
 	fixtBucketMu.Unlock()
 
 	state.once.Do(func() {
+		// Acquire the global creation mutex so only one bucket is created at a
+		// time, preventing concurrent rebalance-related 500 errors.
+		fixtBucketCreateMu.Lock()
+		defer fixtBucketCreateMu.Unlock()
+
 		ctx := context.Background()
 		state.created, state.err = createFixtureBucket(ctx, globalClient, name)
 	})
@@ -88,8 +96,11 @@ func ensureFixtureEndpoint(t *testing.T, endpointName, bucketName, description s
 	fixtEndpointMu.Unlock()
 
 	state.once.Do(func() {
+		// Acquire the global bucket creation mutex to avoid concurrent rebalance errors.
+		fixtBucketCreateMu.Lock()
 		ctx := context.Background()
 		bucketCreated, err := createFixtureBucket(ctx, globalClient, bucketName)
+		fixtBucketCreateMu.Unlock()
 		if err != nil {
 			state.err = err
 			return
@@ -155,7 +166,18 @@ func createFixtureBucket(ctx context.Context, client *api.Client, name string) (
 		return false, err
 	}
 
-	return true, waitForFixtureBucket(ctx, client, bucketResp.Id)
+	if err = waitForFixtureBucket(ctx, client, bucketResp.Id); err != nil {
+		return true, err
+	}
+
+	// Bucket creation triggers a cluster rebalance. Wait for the cluster to
+	// return to healthy before returning, so any subsequent bucket create
+	// (serialised by fixtBucketCreateMu) does not race with rebalancing.
+	if err = waitForAppEndpointTestCluster(ctx, client, false); err != nil {
+		return true, fmt.Errorf("waiting for cluster health after bucket %q creation: %w", name, err)
+	}
+
+	return true, nil
 }
 
 // deleteBucketWithRetry retries the bucket DELETE on 412 (App Service not yet
