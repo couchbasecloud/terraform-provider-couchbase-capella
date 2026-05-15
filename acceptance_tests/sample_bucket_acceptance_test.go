@@ -15,16 +15,15 @@ func TestAccSampleBucket(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
+				Config:      testAccWithInvalidSampleInputConfig(resourceName),
+				ExpectError: regexp.MustCompile(`Attribute name value must be one of`),
+			},
+			{
 				Config: testAccSampleBucketWithTravelSampleConfig(resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", "travel-sample"),
 					resource.TestCheckResourceAttrSet(resourceReference, "id"),
 				),
-			},
-			//Invalid Sample Data input
-			{
-				Config:      testAccWithInvalidSampleInputConfig(resourceName),
-				ExpectError: regexp.MustCompile("Could not load sample bucket"),
 			},
 		},
 	})
