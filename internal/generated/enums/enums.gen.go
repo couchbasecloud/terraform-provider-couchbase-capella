@@ -255,9 +255,6 @@ var compositionTable = map[string]map[string]CompositionDef{
 	"CreateWorkflowRequest": {
 		"configuration": {Kind: "oneOf", Branches: []string{"CreateStructuredWorkflowRequest", "CreateUnstructuredWorkflowRequest", "CreateVectorizationWorkflowRequest"}},
 	},
-	"EnableAwsPrivateEndpointServiceRequest": {
-		"routes": {Kind: "allOf", Branches: []string{"PrivateEndpointRoutes"}},
-	},
 	"GetCMEKHistoryMetadataResponse": {
 		"config": {Kind: "oneOf", Branches: []string{"AWSConfig", "GCPConfig"}},
 	},
@@ -284,9 +281,6 @@ var compositionTable = map[string]map[string]CompositionDef{
 	},
 	"Node": {
 		"disk": {Kind: "oneOf", Branches: []string{"DiskAWS", "DiskAzure", "DiskGCP"}},
-	},
-	"PatchEntry": {
-		"value": {Kind: "oneOf", Branches: []string{"Resource"}},
 	},
 	"PostLogStreamingRequest": {
 		"credentials": {Kind: "oneOf", Branches: []string{"datadog", "sumologic", "generic_http", "elastic", "loki", "splunk", "dynatrace"}},
