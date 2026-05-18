@@ -156,43 +156,56 @@ func (v *atLeastOneOfNestedValidator) countSpecifiedAttributes(_ context.Context
 
 // isAttributeSpecified checks if an attribute value is actually specified by the user.
 // For nested objects, this checks if the object is non-null AND has at least one
-// non-null attribute inside it (to handle Terraform's empty object initialization).
+// configured (non-null or unknown) attribute inside it.
+// Unknown values are treated as "specified" because they represent user-configured
+// values that reference computed attributes (e.g., account_id = other_resource.id).
 func isAttributeSpecified(attrValue attr.Value) bool {
 	if attrValue.IsNull() {
 		return false
 	}
 
-	// For unknown values, we can't determine if specified - treat as not specified
-	// to avoid false positives during planning
+	// If the entire object is unknown, treat it as specified
+	// (user configured it, but values aren't resolved yet)
 	if attrValue.IsUnknown() {
-		return false
+		return true
 	}
 
-	// For object types, check if any child attribute is non-null
+	// For object types, check if any child attribute is configured (non-null or unknown)
 	if objVal, ok := attrValue.(types.Object); ok {
-		return hasNonNullAttribute(objVal)
+		return hasConfiguredAttribute(objVal)
 	}
 
 	// For other types (string, int, etc.), non-null means specified
 	return true
 }
 
-// hasNonNullAttribute checks if an object has at least one non-null, non-unknown attribute.
-func hasNonNullAttribute(obj types.Object) bool {
+// hasConfiguredAttribute checks if an object has at least one configured attribute.
+// A configured attribute is one that is either:
+// - non-null and known (user provided a literal value), OR
+// - unknown (user provided a reference to a computed value)
+// This distinguishes between empty objects initialized by Terraform and objects
+// where the user actually specified values (even if those values are computed).
+func hasConfiguredAttribute(obj types.Object) bool {
 	for _, v := range obj.Attributes() {
-		if v.IsNull() || v.IsUnknown() {
+		// Null means not configured
+		if v.IsNull() {
 			continue
+		}
+
+		// Unknown means configured (e.g., references a computed value)
+		if v.IsUnknown() {
+			return true
 		}
 
 		// For nested objects, recurse
 		if nestedObj, ok := v.(types.Object); ok {
-			if hasNonNullAttribute(nestedObj) {
+			if hasConfiguredAttribute(nestedObj) {
 				return true
 			}
 			continue
 		}
 
-		// Non-null, non-unknown, non-object value found
+		// Non-null, known, non-object value found
 		return true
 	}
 	return false

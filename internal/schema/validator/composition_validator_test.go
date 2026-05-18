@@ -269,3 +269,83 @@ func TestDescription(t *testing.T) {
 	t.Logf("ExactlyOneOfNested description: %s", exactlyOneDesc)
 	t.Logf("AtLeastOneOfNested description: %s", atLeastOneDesc)
 }
+
+func TestExactlyOneOfNested_UnknownValuesAreSpecified(t *testing.T) {
+	// Test that objects with unknown values (e.g., from computed attributes)
+	// are correctly treated as "specified" during plan phase
+	v := ExactlyOneOfNested("a", "b", "c")
+
+	// Object "a" has an unknown value (e.g., account_id = other_resource.id)
+	objA, _ := types.ObjectValue(
+		map[string]attr.Type{"field": types.StringType},
+		map[string]attr.Value{"field": types.StringUnknown()},
+	)
+
+	// Object "b" is an empty object (not specified by user)
+	objB, _ := types.ObjectValue(
+		map[string]attr.Type{"field": types.StringType},
+		map[string]attr.Value{"field": types.StringNull()},
+	)
+
+	// Object "c" is null
+	objC := types.ObjectNull(map[string]attr.Type{"field": types.StringType})
+
+	objValue, _ := types.ObjectValue(
+		map[string]attr.Type{
+			"a": objA.Type(context.Background()),
+			"b": objB.Type(context.Background()),
+			"c": objC.Type(context.Background()),
+		},
+		map[string]attr.Value{
+			"a": objA,
+			"b": objB,
+			"c": objC,
+		},
+	)
+
+	req := validator.ObjectRequest{
+		ConfigValue: objValue,
+	}
+	resp := &validator.ObjectResponse{}
+
+	v.ValidateObject(context.Background(), req, resp)
+
+	// Should not have errors - "a" is specified (even with unknown values)
+	if resp.Diagnostics.HasError() {
+		t.Errorf("Expected no errors, got: %v", resp.Diagnostics)
+	}
+}
+
+func TestExactlyOneOfNested_EntireObjectUnknown(t *testing.T) {
+	// Test that an entirely unknown object is treated as "specified"
+	v := ExactlyOneOfNested("a", "b")
+
+	// Object "a" is entirely unknown
+	objA := types.ObjectUnknown(map[string]attr.Type{"field": types.StringType})
+
+	// Object "b" is null
+	objB := types.ObjectNull(map[string]attr.Type{"field": types.StringType})
+
+	objValue, _ := types.ObjectValue(
+		map[string]attr.Type{
+			"a": objA.Type(context.Background()),
+			"b": objB.Type(context.Background()),
+		},
+		map[string]attr.Value{
+			"a": objA,
+			"b": objB,
+		},
+	)
+
+	req := validator.ObjectRequest{
+		ConfigValue: objValue,
+	}
+	resp := &validator.ObjectResponse{}
+
+	v.ValidateObject(context.Background(), req, resp)
+
+	// Should not have errors - "a" is specified (entire object is unknown)
+	if resp.Diagnostics.HasError() {
+		t.Errorf("Expected no errors, got: %v", resp.Diagnostics)
+	}
+}
