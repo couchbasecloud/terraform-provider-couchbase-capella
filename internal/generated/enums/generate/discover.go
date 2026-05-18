@@ -41,18 +41,24 @@ type compositionSite struct {
 	SourcePath string
 }
 
+type requiredSite struct {
+	SchemaName string
+	FieldPath  string
+	SourcePath string
+}
+
 func discover(specPath string) ([]enumSite, error) {
-	enums, _, err := discoverAll(specPath)
+	enums, _, _, err := discoverAll(specPath)
 	return enums, err
 }
 
-func discoverAll(specPath string) ([]enumSite, []compositionSite, error) {
+func discoverAll(specPath string) ([]enumSite, []compositionSite, []requiredSite, error) {
 	loader := openapi3.NewLoader()
 	loader.IsExternalRefsAllowed = true
 
 	doc, err := loader.LoadFromFile(specPath)
 	if err != nil {
-		return nil, nil, fmt.Errorf("load spec: %w", err)
+		return nil, nil, nil, fmt.Errorf("load spec: %w", err)
 	}
 
 	w := &walker{doc: doc}
@@ -60,7 +66,7 @@ func discoverAll(specPath string) ([]enumSite, []compositionSite, error) {
 
 	sites, err := dedupByID(w.sites)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	sort.Slice(sites, func(i, j int) bool {
@@ -83,7 +89,16 @@ func discoverAll(specPath string) ([]enumSite, []compositionSite, error) {
 		return a.FieldPath < b.FieldPath
 	})
 
-	return sites, compSites, nil
+	reqSites := dedupRequired(w.requiredSites)
+	sort.Slice(reqSites, func(i, j int) bool {
+		a, b := reqSites[i], reqSites[j]
+		if a.SchemaName != b.SchemaName {
+			return a.SchemaName < b.SchemaName
+		}
+		return a.FieldPath < b.FieldPath
+	})
+
+	return sites, compSites, reqSites, nil
 }
 
 func dedupComposition(sites []compositionSite) []compositionSite {
@@ -117,6 +132,23 @@ func mergeBranches(a, b []string) []string {
 			seen[v] = struct{}{}
 			out = append(out, v)
 		}
+	}
+	return out
+}
+
+func dedupRequired(sites []requiredSite) []requiredSite {
+	type key struct {
+		schema, field string
+	}
+	seen := make(map[key]bool, len(sites))
+	out := make([]requiredSite, 0, len(sites))
+	for _, s := range sites {
+		k := key{s.SchemaName, s.FieldPath}
+		if seen[k] {
+			continue
+		}
+		seen[k] = true
+		out = append(out, s)
 	}
 	return out
 }
@@ -164,6 +196,7 @@ type walker struct {
 	doc              *openapi3.T
 	sites            []enumSite
 	compositionSites []compositionSite
+	requiredSites    []requiredSite
 }
 
 func (w *walker) run() {
@@ -216,6 +249,10 @@ func (w *walker) schema(id string, s *openapi3.Schema, schemaName, fieldPath, so
 		w.recordComposition(s.OneOf, schemaName, fieldPath, sourcePath, kindOneOf)
 		w.recordComposition(s.AnyOf, schemaName, fieldPath, sourcePath, kindAnyOf)
 		w.recordComposition(s.AllOf, schemaName, fieldPath, sourcePath, kindAllOf)
+	}
+	// Record required fields from the schema's required array
+	if sc == scopeSchema && len(s.Required) > 0 {
+		w.recordRequired(s.Required, schemaName, fieldPath, sourcePath)
 	}
 	for fieldName, propRef := range s.Properties {
 		if propRef == nil || propRef.Ref != "" || propRef.Value == nil {
@@ -285,6 +322,18 @@ func extractSchemaName(ref string) string {
 		return ""
 	}
 	return strings.TrimPrefix(ref, prefix)
+}
+
+// recordRequired captures required field names from a schema's required array.
+// Each required field is stored as a requiredSite for later code generation.
+func (w *walker) recordRequired(required []string, schemaName, parentFieldPath, sourcePath string) {
+	for _, fieldName := range required {
+		w.requiredSites = append(w.requiredSites, requiredSite{
+			SchemaName: schemaName,
+			FieldPath:  joinPath(parentFieldPath, fieldName),
+			SourcePath: sourcePath + ".required[" + fieldName + "]",
+		})
+	}
 }
 
 func (w *walker) items(id string, s *openapi3.Schema, schemaName, fieldPath, sourcePath string, sc scope) {

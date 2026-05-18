@@ -242,7 +242,7 @@ func TestGenerateAll_ProducesValidGo(t *testing.T) {
 		{SchemaName: "MergedSchema", FieldPath: "settings", Kind: "allOf", Branches: []string{"Base", "Extended"}},
 	}
 
-	src, err := generateAll(enumSites, compSites)
+	src, err := generateAll(enumSites, compSites, nil)
 	if err != nil {
 		t.Fatalf("generateAll: %v", err)
 	}
@@ -285,7 +285,7 @@ func TestGenerateAll_EmptyComposition(t *testing.T) {
 		{Scope: scopeSchema, SchemaName: "Status", FieldPath: "state", Type: "string", Values: []string{"on"}},
 	}
 
-	src, err := generateAll(enumSites, nil)
+	src, err := generateAll(enumSites, nil, nil)
 	if err != nil {
 		t.Fatalf("generateAll: %v", err)
 	}
@@ -295,5 +295,31 @@ func TestGenerateAll_EmptyComposition(t *testing.T) {
 	got := string(src)
 	if !strings.Contains(got, "var compositionTable = map[string]map[string]CompositionDef{") {
 		t.Errorf("output missing compositionTable declaration:\n%s", got)
+	}
+	if !strings.Contains(got, "var requiredTable = map[string]map[string]RequiredDef{") {
+		t.Errorf("output missing requiredTable declaration:\n%s", got)
+	}
+}
+
+func TestGenerateAll_RequiredFields(t *testing.T) {
+	reqSites := []requiredSite{
+		{SchemaName: "CreateProjectRequest", FieldPath: "name"},
+		{SchemaName: "CreateProjectRequest", FieldPath: "description"},
+		{SchemaName: "AWSConfigData", FieldPath: "accountId"},
+	}
+
+	src, err := generateAll(nil, nil, reqSites)
+	if err != nil {
+		t.Fatalf("generateAll: %v", err)
+	}
+	if _, err := parser.ParseFile(token.NewFileSet(), "enums.gen.go", src, parser.AllErrors); err != nil {
+		t.Fatalf("generated source does not parse: %v\n%s", err, src)
+	}
+	got := string(src)
+	if !strings.Contains(got, `"CreateProjectRequest"`) {
+		t.Errorf("output missing CreateProjectRequest schema:\n%s", got)
+	}
+	if !strings.Contains(got, `"name": {}`) {
+		t.Errorf("output missing name field:\n%s", got)
 	}
 }

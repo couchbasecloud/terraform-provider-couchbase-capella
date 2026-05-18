@@ -8,12 +8,12 @@ import (
 const specPath = "openapi.generated.yaml"
 
 func main() {
-	enumSites, compSites, err := discoverAll(specPath)
+	enumSites, compSites, reqSites, err := discoverAll(specPath)
 	if err != nil {
 		log.Fatalf("error: %v", err)
 	}
 
-	src, err := generateAll(enumSites, compSites)
+	src, err := generateAll(enumSites, compSites, reqSites)
 	if err != nil {
 		log.Fatalf("error generating: %v", err)
 	}
