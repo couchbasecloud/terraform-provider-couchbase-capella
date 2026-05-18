@@ -89,11 +89,12 @@ func discoverAll(specPath string) ([]enumSite, []compositionSite, error) {
 func dedupComposition(sites []compositionSite) []compositionSite {
 	type key struct {
 		schema, field string
+		kind          compositionKind
 	}
 	seen := make(map[key]int, len(sites))
 	out := make([]compositionSite, 0, len(sites))
 	for _, s := range sites {
-		k := key{s.SchemaName, s.FieldPath}
+		k := key{s.SchemaName, s.FieldPath, s.Kind}
 		if idx, ok := seen[k]; ok {
 			existing := &out[idx]
 			existing.Branches = mergeBranches(existing.Branches, s.Branches)

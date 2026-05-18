@@ -731,15 +731,33 @@ func TestWalker_TopLevelCompositionSkipped(t *testing.T) {
 }
 
 func TestDedupComposition(t *testing.T) {
-	sites := []compositionSite{
-		{SchemaName: "A", FieldPath: "config", Kind: kindOneOf, Branches: []string{"X", "Y"}},
-		{SchemaName: "A", FieldPath: "config", Kind: kindOneOf, Branches: []string{"Y", "Z"}},
-	}
-	got := dedupComposition(sites)
-	if len(got) != 1 {
-		t.Fatalf("want 1 site after dedup, got %d", len(got))
-	}
-	if !equalStrings(got[0].Branches, []string{"X", "Y", "Z"}) {
-		t.Errorf("Branches = %v, want [X Y Z]", got[0].Branches)
-	}
+	t.Run("merges same kind", func(t *testing.T) {
+		sites := []compositionSite{
+			{SchemaName: "A", FieldPath: "config", Kind: kindOneOf, Branches: []string{"X", "Y"}},
+			{SchemaName: "A", FieldPath: "config", Kind: kindOneOf, Branches: []string{"Y", "Z"}},
+		}
+		got := dedupComposition(sites)
+		if len(got) != 1 {
+			t.Fatalf("want 1 site after dedup, got %d", len(got))
+		}
+		if !equalStrings(got[0].Branches, []string{"X", "Y", "Z"}) {
+			t.Errorf("Branches = %v, want [X Y Z]", got[0].Branches)
+		}
+	})
+
+	t.Run("keeps different kinds separate", func(t *testing.T) {
+		sites := []compositionSite{
+			{SchemaName: "A", FieldPath: "config", Kind: kindOneOf, Branches: []string{"X", "Y"}},
+			{SchemaName: "A", FieldPath: "config", Kind: kindAnyOf, Branches: []string{"Y", "Z"}},
+		}
+		got := dedupComposition(sites)
+		if len(got) != 2 {
+			t.Fatalf("want 2 sites (different kinds), got %d", len(got))
+		}
+		// Should have both oneOf and anyOf
+		kinds := []compositionKind{got[0].Kind, got[1].Kind}
+		if (kinds[0] != kindOneOf || kinds[1] != kindAnyOf) && (kinds[0] != kindAnyOf || kinds[1] != kindOneOf) {
+			t.Errorf("expected oneOf and anyOf, got %v", kinds)
+		}
+	})
 }

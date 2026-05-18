@@ -118,13 +118,16 @@ type CompositionDef struct {
 func buildCompositionTable(sites []compositionSite) map[string]map[string]CompositionDef {
 	table := make(map[string]map[string]CompositionDef)
 	for _, s := range sites {
-		if s.FieldPath == "" {
+		// Normalize key the same way as enumTable: strip trailing [] and .[]
+		key := strings.TrimSuffix(s.FieldPath, ".[]")
+		key = strings.TrimSuffix(key, "[]")
+		if key == "" {
 			continue
 		}
 		if table[s.SchemaName] == nil {
 			table[s.SchemaName] = make(map[string]CompositionDef)
 		}
-		table[s.SchemaName][s.FieldPath] = CompositionDef{
+		table[s.SchemaName][key] = CompositionDef{
 			Kind:     string(s.Kind),
 			Branches: s.Branches,
 		}
