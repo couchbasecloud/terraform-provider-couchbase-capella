@@ -34,7 +34,10 @@ func TestCompositionValidatorIntegration_OneOf(t *testing.T) {
 		Attributes: providerConfigAttrs,
 	})
 
-	providerConfig := attrs["provider_config"].(*resourceschema.SingleNestedAttribute)
+	providerConfig, ok := attrs["provider_config"].(*resourceschema.SingleNestedAttribute)
+	if !ok {
+		t.Fatal("Expected provider_config to be SingleNestedAttribute")
+	}
 
 	// Verify validator was auto-attached
 	if len(providerConfig.Validators) != 1 {
@@ -75,7 +78,10 @@ func TestCompositionValidatorIntegration_AnyOf(t *testing.T) {
 		Attributes: configAttrs,
 	})
 
-	config := attrs["config"].(*resourceschema.SingleNestedAttribute)
+	config, ok := attrs["config"].(*resourceschema.SingleNestedAttribute)
+	if !ok {
+		t.Fatal("Expected config to be SingleNestedAttribute")
+	}
 
 	// Verify validator was auto-attached
 	if len(config.Validators) != 1 {
@@ -114,7 +120,10 @@ func TestCompositionValidatorIntegration_CallSiteOverride(t *testing.T) {
 
 	AddAttr(attrs, "provider_config", builder, customAttr)
 
-	providerConfig := attrs["provider_config"].(*resourceschema.SingleNestedAttribute)
+	providerConfig, ok := attrs["provider_config"].(*resourceschema.SingleNestedAttribute)
+	if !ok {
+		t.Fatal("Expected provider_config to be SingleNestedAttribute")
+	}
 
 	// Should still have only 1 validator (the original one, not auto-attached)
 	if len(providerConfig.Validators) != 1 {

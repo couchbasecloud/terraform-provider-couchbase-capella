@@ -84,7 +84,7 @@ func (v *exactlyOneOfNestedValidator) ValidateObject(ctx context.Context, req va
 	}
 }
 
-func (v *exactlyOneOfNestedValidator) countSpecifiedAttributes(ctx context.Context, obj types.Object) []string {
+func (v *exactlyOneOfNestedValidator) countSpecifiedAttributes(_ context.Context, obj types.Object) []string {
 	var specified []string
 
 	attrs := obj.Attributes()
@@ -136,7 +136,7 @@ func (v *atLeastOneOfNestedValidator) ValidateObject(ctx context.Context, req va
 	}
 }
 
-func (v *atLeastOneOfNestedValidator) countSpecifiedAttributes(ctx context.Context, obj types.Object) []string {
+func (v *atLeastOneOfNestedValidator) countSpecifiedAttributes(_ context.Context, obj types.Object) []string {
 	var specified []string
 
 	attrs := obj.Attributes()
