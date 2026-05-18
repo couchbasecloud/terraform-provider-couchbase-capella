@@ -489,6 +489,75 @@ func TestExtractChildPaths(t *testing.T) {
 	}
 }
 
+func TestExtractChildPaths_ExcludesComputedOnly(t *testing.T) {
+	attrs := map[string]resourceschema.Attribute{
+		"aws_config": &resourceschema.SingleNestedAttribute{
+			Optional:   true,
+			Attributes: map[string]resourceschema.Attribute{},
+		},
+		"gcp_config": &resourceschema.SingleNestedAttribute{
+			Optional:   true,
+			Attributes: map[string]resourceschema.Attribute{},
+		},
+		"computed_only": &resourceschema.SingleNestedAttribute{
+			Computed:   true, // Computed-only, user cannot set this
+			Attributes: map[string]resourceschema.Attribute{},
+		},
+		"optional_computed": &resourceschema.SingleNestedAttribute{
+			Optional:   true,
+			Computed:   true, // Optional+Computed, user CAN set this
+			Attributes: map[string]resourceschema.Attribute{},
+		},
+	}
+
+	paths := extractChildPaths(attrs)
+
+	// Should have 3 paths: aws_config, gcp_config, optional_computed
+	// computed_only should be excluded (user can't set it)
+	if len(paths) != 3 {
+		t.Fatalf("Expected 3 paths (excluding computed-only), got %d", len(paths))
+	}
+
+	// Verify computed_only is not included
+	for _, p := range paths {
+		if p.String() == "computed_only" {
+			t.Error("computed_only should be excluded from paths")
+		}
+	}
+}
+
+func TestAppendCompositionValidator_IgnoresComputedOnlyChildren(t *testing.T) {
+	def := &enums.CompositionDef{
+		Kind:     "oneOf",
+		Branches: []string{"A", "B", "C"},
+	}
+
+	attr := &resourceschema.SingleNestedAttribute{
+		Optional: true,
+		Attributes: map[string]resourceschema.Attribute{
+			"a": &resourceschema.SingleNestedAttribute{
+				Optional:   true,
+				Attributes: map[string]resourceschema.Attribute{},
+			},
+			"b": &resourceschema.SingleNestedAttribute{
+				Computed:   true, // Computed-only, not a valid composition branch
+				Attributes: map[string]resourceschema.Attribute{},
+			},
+			"c": &resourceschema.SingleNestedAttribute{
+				Computed:   true, // Computed-only, not a valid composition branch
+				Attributes: map[string]resourceschema.Attribute{},
+			},
+		},
+	}
+
+	appendCompositionValidator(attr, def)
+
+	// Should not add validator when only 1 optional nested child (computed-only excluded)
+	if len(attr.Validators) != 0 {
+		t.Fatalf("Expected 0 validators (only 1 optional child after excluding computed-only), got %d", len(attr.Validators))
+	}
+}
+
 func TestAppendCompositionValidator_AllOfSkipped(t *testing.T) {
 	// allOf is for schema composition/inheritance, not mutual exclusion
 	// We don't attach validators for allOf

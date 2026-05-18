@@ -343,6 +343,8 @@ func appendCompositionValidator(a any, def *enums.CompositionDef) {
 // extractChildPaths introspects a resource schema's Attributes map and returns
 // path expressions for all optional SingleNestedAttribute children. These are
 // the composition branch candidates for ExactlyOneOf/AtLeastOneOf validators.
+// Only includes children that are truly Optional (user-settable), excluding
+// Required and Computed-only attributes.
 func extractChildPaths(attrs map[string]resourceschema.Attribute) []path.Expression {
 	var paths []path.Expression
 	var names []string
@@ -352,7 +354,9 @@ func extractChildPaths(attrs map[string]resourceschema.Attribute) []path.Express
 		if !ok {
 			continue
 		}
-		if nested.Required {
+		// Only include truly optional attributes that users can set.
+		// Exclude Required (must be set) and Computed-only (can't be set).
+		if !nested.Optional {
 			continue
 		}
 		names = append(names, name)
@@ -366,6 +370,8 @@ func extractChildPaths(attrs map[string]resourceschema.Attribute) []path.Express
 }
 
 // extractChildPathsDS is the datasource equivalent of extractChildPaths.
+// Only includes children that are truly Optional (user-settable), excluding
+// Required and Computed-only attributes.
 func extractChildPathsDS(attrs map[string]datasourceschema.Attribute) []path.Expression {
 	var paths []path.Expression
 	var names []string
@@ -375,7 +381,9 @@ func extractChildPathsDS(attrs map[string]datasourceschema.Attribute) []path.Exp
 		if !ok {
 			continue
 		}
-		if nested.Required {
+		// Only include truly optional attributes that users can set.
+		// Exclude Required (must be set) and Computed-only (can't be set).
+		if !nested.Optional {
 			continue
 		}
 		names = append(names, name)
