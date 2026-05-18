@@ -57,6 +57,12 @@ type EndpointCfg struct {
 // defaultWaitAttempt re-attempt http request after 2 seconds.
 const defaultWaitAttempt = time.Second * 2
 
+// maxRetryAttempts caps the number of times ExecuteWithRetry will resend a request
+// on 429/504. Combined with the 10-minute outer envelope below, this stops a
+// pathological flap from silently burning the test-binary timeout budget. Picked
+// so the worst case stays under ~2 min even when each attempt completes quickly.
+const maxRetryAttempts = 10
+
 // Execute is used to construct and execute a HTTP request.
 // It then returns the response.
 func (c *Client) Execute(
@@ -218,11 +224,13 @@ func exec(
 	ctx context.Context, fn func() (response *Response, dur time.Duration, err error), waitOnReattempt time.Duration,
 ) (*Response, error) {
 	timer := time.NewTimer(time.Millisecond)
+	defer timer.Stop()
 
 	var (
 		err      error
 		backOff  time.Duration
 		response *Response
+		attempts int
 	)
 
 	const timeout = time.Minute * 10
@@ -234,15 +242,20 @@ func exec(
 	for {
 		select {
 		case <-ctx.Done():
-			return nil, fmt.Errorf("timed out executing request against api: %w", err)
+			return nil, fmt.Errorf("timed out executing request against api after %d attempts: %w", attempts, err)
 		case <-timer.C:
 			response, backOff, err = fn()
+			attempts++
 			switch {
 			case err == nil:
 				return response, nil
 			case goer.Is(err, errors.ErrRatelimit):
 			case !goer.Is(err, errors.ErrGatewayTimeout):
 				return response, err
+			}
+
+			if attempts >= maxRetryAttempts {
+				return nil, fmt.Errorf("exhausted %d retry attempts: %w", attempts, err)
 			}
 
 			if backOff > 0 {
