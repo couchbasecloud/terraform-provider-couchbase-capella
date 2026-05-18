@@ -75,9 +75,28 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	var clusterId = plan.ClusterId.ValueString()
 	var bucketId = plan.BucketId.ValueString()
 
+	// Capture the bucket's current latest backup BEFORE the POST so we can detect
+	// when the new record appears. getLatestBackup correctly walks all pages and
+	// sorts client-side by date; the only thing it cannot do is identify "our"
+	// record at POST time (Capella's backup POST returns 202 with an empty body,
+	// unlike cluster/appservice POSTs which echo the new id).
+	latestBackup, err := b.getLatestBackup(ctx, organizationId, projectId, clusterId, bucketId)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error getting latest bucket backup in a cluster",
+			"Could not get the latest bucket backup : unexpected error "+api.ParseError(err),
+		)
+		return
+	}
+
+	var backupFound bool
+	if latestBackup != nil {
+		backupFound = true
+	}
+
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/backups", b.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
-	postResp, err := b.ClientV1.ExecuteWithRetry(
+	_, err = b.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		BackupRequest,
@@ -92,24 +111,11 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 		return
 	}
 
-	// Capella's POST returns 202 with the new backup's id in the body. Polling
-	// that exact id (rather than scanning the list endpoint for "is there a new
-	// latest") avoids racing the API's undefined default sort order and the
-	// per-bucket serialization window.
-	var created backupapi.CreateBackupResponse
-	if err := json.Unmarshal(postResp.Body, &created); err != nil || created.Id == "" {
-		resp.Diagnostics.AddError(
-			"Error parsing create backup response",
-			fmt.Sprintf("POST returned %d but no backup id in body: %s; please check in Capella for hanging resources", postResp.Response.StatusCode, string(postResp.Body)),
-		)
-		return
-	}
-
-	backupResponse, err := b.waitForBackup(ctx, organizationId, projectId, clusterId, created.Id)
+	backupResponse, err := b.checkLatestBackupStatus(ctx, organizationId, projectId, clusterId, bucketId, backupFound, latestBackup)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error while waiting for backup to reach a final state",
-			"Could not confirm backup id "+created.Id+" reached a final state."+
+			"Error while checking latest backup status",
+			"Could not read check latest backup status."+
 				"Please check in Capella to see if any hanging resources have "+
 				"been created, unexpected error: "+api.ParseError(err),
 		)
@@ -401,17 +407,20 @@ func (a *Backup) validateCreateBackupRequest(plan providerschema.Backup) error {
 	return nil
 }
 
-// waitForBackup polls the specific backup record (looked up by its server-assigned
-// id from the POST 202 response) until it reaches a final state (ready/failed) or
-// the timeout expires. Polling by id avoids the previous design's race against the
-// list endpoint's undefined default ordering and the per-bucket serialization
-// window: we know exactly which record we're waiting on.
+// checkLatestBackupStatus polls the cluster's backup list until a new record
+// appears for the target bucket and reaches a final state (ready/failed).
 //
-// 30 min is a deliberately tighter cap than the prior 90-min ceiling — under the
-// 120m Go test budget, the suite can absorb several stuck backups instead of a
-// single one consuming the entire run. Users with very large buckets that need
-// longer should override this via a per-resource timeouts block (follow-up).
-func (b *Backup) waitForBackup(ctx context.Context, organizationId, projectId, clusterId, backupId string) (*backupapi.GetBackupResponse, error) {
+// We poll the list because Capella's bucket-backup POST returns 202 with an
+// empty body — there is no per-id endpoint we can poll from a known id.
+// getLatestBackup is fixed to walk every page, filter to our bucket, and sort
+// client-side by date desc so "latest" is actually the latest regardless of
+// the API's default ordering or how many records the cluster has accumulated.
+//
+// Timeout is 30 minutes (down from the prior 90-minute ceiling): one stuck
+// backup can no longer consume more than a quarter of the 120-minute Go test-
+// binary budget. Users with very large buckets that legitimately need longer
+// should override this via a per-resource timeouts block (follow-up).
+func (b *Backup) checkLatestBackupStatus(ctx context.Context, organizationId, projectId, clusterId, bucketId string, backupFound bool, latestBackup *backupapi.GetBackupResponse) (*backupapi.GetBackupResponse, error) {
 	const (
 		timeout = 30 * time.Minute
 		sleep   = 30 * time.Second
@@ -419,10 +428,6 @@ func (b *Backup) waitForBackup(ctx context.Context, organizationId, projectId, c
 
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
-
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/backups/%s",
-		b.HostURL, organizationId, projectId, clusterId, backupId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
 	timer := time.NewTimer(sleep)
 	defer timer.Stop()
@@ -433,28 +438,20 @@ func (b *Backup) waitForBackup(ctx context.Context, organizationId, projectId, c
 			return nil, internal_errors.ErrBucketCreationStatusTimeout
 
 		case <-timer.C:
-			response, err := b.ClientV1.ExecuteWithRetry(ctx, cfg, nil, b.Token, nil)
+			backupResp, err := b.getLatestBackup(ctx, organizationId, projectId, clusterId, bucketId)
 			if err != nil {
-				// Right after POST the new record may not yet be visible to GET;
-				// treat 404 as transient and keep waiting (bounded by the outer timeout).
-				if notFound, _ := api.CheckResourceNotFoundError(err); notFound {
-					tflog.Info(ctx, "backup not yet visible in API, retrying", map[string]any{"backupID": backupId})
-					timer.Reset(sleep)
-					continue
+				return nil, err
+			}
+			// If no prior backup existed for this bucket, any backup in a
+			// final state is ours. If a prior one existed, wait for a record
+			// with a different id (the one our POST just kicked off) AND in
+			// a final state.
+			if backupResp != nil && backupapi.IsFinalState(backupResp.Status) {
+				if !backupFound || latestBackup.Id != backupResp.Id {
+					return backupResp, nil
 				}
-				return nil, err
 			}
-			var backupResp backupapi.GetBackupResponse
-			if err := json.Unmarshal(response.Body, &backupResp); err != nil {
-				return nil, err
-			}
-			if backupapi.IsFinalState(backupResp.Status) {
-				return &backupResp, nil
-			}
-			tflog.Info(ctx, "waiting for backup to reach final state", map[string]any{
-				"backupID": backupId,
-				"status":   backupResp.Status,
-			})
+			tflog.Info(ctx, "waiting for backup to complete the execution")
 			timer.Reset(sleep)
 		}
 	}
@@ -496,4 +493,38 @@ func (b *Backup) retrieveBackup(ctx context.Context, organizationId, projectId, 
 
 	refreshedState := providerschema.NewBackup(&backupResp, organizationId, projectId, bStatsObj, sInfoObj)
 	return refreshedState, nil
+}
+
+// getLatestBackup returns the most-recent backup record for the given bucket
+// in a cluster, or (nil, nil) if the bucket has no backups yet.
+//
+// The prior implementation called the cluster-scoped list endpoint without
+// sortBy or pagination and returned the first record on page 1 whose bucketID
+// matched — which on busy clusters surfaced an arbitrary stale record because
+// the API's default ordering is unspecified and our bucket's actual latest
+// could sit on page 2+. This implementation:
+//
+//   - walks every page via api.GetPaginated (no records dropped),
+//   - filters to the target bucket client-side (cluster list mixes buckets),
+//   - sorts the per-bucket records by Date desc client-side (independent of
+//     whatever default order the API happens to return today).
+func (b *Backup) getLatestBackup(ctx context.Context, organizationId, projectId, clusterId, bucketId string) (*backupapi.GetBackupResponse, error) {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/backups", b.HostURL, organizationId, projectId, clusterId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+
+	all, err := api.GetPaginated[[]backupapi.GetBackupResponse](ctx, b.ClientV1, b.Token, cfg, api.SortById)
+	if err != nil {
+		return nil, err
+	}
+
+	var latest *backupapi.GetBackupResponse
+	for i := range all {
+		if all[i].BucketId != bucketId {
+			continue
+		}
+		if latest == nil || all[i].Date > latest.Date {
+			latest = &all[i]
+		}
+	}
+	return latest, nil
 }

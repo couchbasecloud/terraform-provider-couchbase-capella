@@ -81,13 +81,6 @@ type GetBackupResponse struct {
 // To learn more, see https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html
 type CreateBackupRequest struct{}
 
-// CreateBackupResponse is the 202 body returned by POST /buckets/{id}/backups.
-// Capella's V4 async-create endpoints return the new resource's GUID in the body
-// so callers can poll that specific record rather than racing the list endpoint.
-type CreateBackupResponse struct {
-	Id string `json:"id"`
-}
-
 // GetCycleResponse is the response received from the Capella V4 Public API when asked to fetch details of an existing cycle.
 //
 // To learn more about backup and restore, see https://docs.couchbase.com/cloud/clusters/backup-restore.html
