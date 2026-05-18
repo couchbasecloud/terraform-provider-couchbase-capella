@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	resourceschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 
@@ -452,80 +451,6 @@ func TestAppendCompositionValidator_Datasource(t *testing.T) {
 	}
 }
 
-func TestExtractChildPaths(t *testing.T) {
-	attrs := map[string]resourceschema.Attribute{
-		"aws_config": &resourceschema.SingleNestedAttribute{
-			Optional:   true,
-			Attributes: map[string]resourceschema.Attribute{},
-		},
-		"gcp_config": &resourceschema.SingleNestedAttribute{
-			Optional:   true,
-			Attributes: map[string]resourceschema.Attribute{},
-		},
-		"required_field": &resourceschema.SingleNestedAttribute{
-			Required:   true,
-			Attributes: map[string]resourceschema.Attribute{},
-		},
-		"string_field": &resourceschema.StringAttribute{Optional: true},
-	}
-
-	paths := extractChildPaths(attrs)
-
-	// Should have 2 paths (aws_config, gcp_config) - required and non-nested excluded
-	if len(paths) != 2 {
-		t.Fatalf("Expected 2 paths, got %d", len(paths))
-	}
-
-	// Paths should be sorted alphabetically
-	expected := []path.Expression{
-		path.MatchRelative().AtName("aws_config"),
-		path.MatchRelative().AtName("gcp_config"),
-	}
-
-	for i, p := range paths {
-		if p.String() != expected[i].String() {
-			t.Errorf("Path %d: expected %s, got %s", i, expected[i].String(), p.String())
-		}
-	}
-}
-
-func TestExtractChildPaths_ExcludesComputedOnly(t *testing.T) {
-	attrs := map[string]resourceschema.Attribute{
-		"aws_config": &resourceschema.SingleNestedAttribute{
-			Optional:   true,
-			Attributes: map[string]resourceschema.Attribute{},
-		},
-		"gcp_config": &resourceschema.SingleNestedAttribute{
-			Optional:   true,
-			Attributes: map[string]resourceschema.Attribute{},
-		},
-		"computed_only": &resourceschema.SingleNestedAttribute{
-			Computed:   true, // Computed-only, user cannot set this
-			Attributes: map[string]resourceschema.Attribute{},
-		},
-		"optional_computed": &resourceschema.SingleNestedAttribute{
-			Optional:   true,
-			Computed:   true, // Optional+Computed, user CAN set this
-			Attributes: map[string]resourceschema.Attribute{},
-		},
-	}
-
-	paths := extractChildPaths(attrs)
-
-	// Should have 3 paths: aws_config, gcp_config, optional_computed
-	// computed_only should be excluded (user can't set it)
-	if len(paths) != 3 {
-		t.Fatalf("Expected 3 paths (excluding computed-only), got %d", len(paths))
-	}
-
-	// Verify computed_only is not included
-	for _, p := range paths {
-		if p.String() == "computed_only" {
-			t.Error("computed_only should be excluded from paths")
-		}
-	}
-}
-
 func TestAppendCompositionValidator_IgnoresComputedOnlyChildren(t *testing.T) {
 	def := &enums.CompositionDef{
 		Kind:     "oneOf",
@@ -585,6 +510,79 @@ func TestAppendCompositionValidator_AllOfSkipped(t *testing.T) {
 	// allOf should not add any validator
 	if len(attr.Validators) != 0 {
 		t.Fatalf("Expected 0 validators for allOf, got %d", len(attr.Validators))
+	}
+}
+
+func TestAppendCompositionValidator_WorksWithComputedInnerFields(t *testing.T) {
+	// Custom ExactlyOneOfNested/AtLeastOneOfNested validators correctly handle
+	// nested attributes with computed fields by checking for actual user-provided values.
+	def := &enums.CompositionDef{
+		Kind:     "oneOf",
+		Branches: []string{"AWS", "GCP", "Azure"},
+	}
+
+	attr := &resourceschema.SingleNestedAttribute{
+		Optional: true,
+		Attributes: map[string]resourceschema.Attribute{
+			"aws_config": &resourceschema.SingleNestedAttribute{
+				Optional: true,
+				Attributes: map[string]resourceschema.Attribute{
+					"account_id":  &resourceschema.StringAttribute{Optional: true},
+					"provider_id": &resourceschema.StringAttribute{Computed: true}, // Computed field inside
+				},
+			},
+			"gcp_config": &resourceschema.SingleNestedAttribute{
+				Optional: true,
+				Attributes: map[string]resourceschema.Attribute{
+					"project_id":  &resourceschema.StringAttribute{Optional: true},
+					"provider_id": &resourceschema.StringAttribute{Computed: true}, // Computed field inside
+				},
+			},
+			"azure_config": &resourceschema.SingleNestedAttribute{
+				Optional: true,
+				Attributes: map[string]resourceschema.Attribute{
+					"tenant_id":   &resourceschema.StringAttribute{Optional: true},
+					"provider_id": &resourceschema.StringAttribute{Computed: true}, // Computed field inside
+				},
+			},
+		},
+	}
+
+	appendCompositionValidator(attr, def)
+
+	// Custom validator SHOULD be added - it handles computed fields correctly
+	if len(attr.Validators) != 1 {
+		t.Fatalf("Expected 1 validator (custom validator handles computed fields), got %d", len(attr.Validators))
+	}
+}
+
+func TestExtractChildNames_IncludesAllOptionalNested(t *testing.T) {
+	attrs := map[string]resourceschema.Attribute{
+		"pure_optional": &resourceschema.SingleNestedAttribute{
+			Optional: true,
+			Attributes: map[string]resourceschema.Attribute{
+				"name": &resourceschema.StringAttribute{Optional: true},
+			},
+		},
+		"has_computed_inside": &resourceschema.SingleNestedAttribute{
+			Optional: true,
+			Attributes: map[string]resourceschema.Attribute{
+				"name":        &resourceschema.StringAttribute{Optional: true},
+				"provider_id": &resourceschema.StringAttribute{Computed: true},
+			},
+		},
+		"required_field": &resourceschema.SingleNestedAttribute{
+			Required:   true,
+			Attributes: map[string]resourceschema.Attribute{},
+		},
+	}
+
+	names := extractChildNames(attrs)
+
+	// Should have 2 names: pure_optional and has_computed_inside
+	// (required_field excluded, but computed inner fields are OK now)
+	if len(names) != 2 {
+		t.Fatalf("Expected 2 names (all optional nested), got %d", len(names))
 	}
 }
 
