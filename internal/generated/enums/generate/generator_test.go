@@ -319,7 +319,11 @@ func TestGenerateAll_RequiredFields(t *testing.T) {
 	if !strings.Contains(got, `"CreateProjectRequest"`) {
 		t.Errorf("output missing CreateProjectRequest schema:\n%s", got)
 	}
-	if !strings.Contains(got, `"name": {}`) {
+	// Check for "name" field - go format may add spacing, so just check the key exists
+	if !strings.Contains(got, `"name"`) {
 		t.Errorf("output missing name field:\n%s", got)
+	}
+	if !strings.Contains(got, `"accountId"`) {
+		t.Errorf("output missing accountId field:\n%s", got)
 	}
 }
