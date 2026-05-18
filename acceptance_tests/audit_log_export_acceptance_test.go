@@ -1,0 +1,176 @@
+package acceptance_tests
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"regexp"
+	"testing"
+	"time"
+
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
+	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+)
+
+// auditLogExportWindow returns a (start, end) RFC3339 pair within the last
+// 30 days (the Capella retention window for audit log exports). Using a
+// fixed past window keeps the test deterministic across reruns.
+func auditLogExportWindow() (string, string) {
+	end := time.Now().UTC().Add(-1 * time.Hour).Truncate(time.Second)
+	start := end.Add(-4 * time.Hour)
+	return start.Format(time.RFC3339), end.Format(time.RFC3339)
+}
+
+func TestAccAuditLogExportResource(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_audit_log_export_")
+	resourceReference := "couchbase-capella_audit_log_export." + resourceName
+
+	start, end := auditLogExportWindow()
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			// Create and Read testing.
+			{
+				Config: testAccAuditLogExportResourceConfig(resourceName, start, end),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccExistsAuditLogExportResource(t, resourceReference),
+					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
+					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(resourceReference, "start", start),
+					resource.TestCheckResourceAttr(resourceReference, "end", end),
+					resource.TestCheckResourceAttrSet(resourceReference, "id"),
+					resource.TestCheckResourceAttrSet(resourceReference, "created_at"),
+				),
+			},
+			// ImportState testing. audit_log_export does not support Update
+			// (the resource's Update method returns an error), so we exercise
+			// Create / Read / Import / Delete only.
+			{
+				ResourceName:      resourceReference,
+				ImportStateIdFunc: generateAuditLogExportImportIdForResource(resourceReference),
+				ImportState:       true,
+			},
+		},
+	})
+}
+
+// TestAccAuditLogExportResourceInvalidStart asserts the provider surfaces a
+// parse error when the start timestamp is not a valid RFC3339 string. The
+// Create implementation uses time.Parse(time.RFC3339, ...) and wraps the
+// parse error in a "Could not parse start time" diagnostic.
+func TestAccAuditLogExportResourceInvalidStart(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_audit_log_export_bad_start_")
+	_, end := auditLogExportWindow()
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAuditLogExportResourceConfig(resourceName, "not-a-timestamp", end),
+				ExpectError: regexp.MustCompile(`(?s)Could not parse start time`),
+			},
+		},
+	})
+}
+
+// TestAccAuditLogExportResourceInvalidCluster asserts that pointing the
+// resource at a non-existent cluster surfaces a server-side error.
+func TestAccAuditLogExportResourceInvalidCluster(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_audit_log_export_bad_cluster_")
+	start, end := auditLogExportWindow()
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_audit_log_export" "%[2]s" {
+  organization_id = "%[3]s"
+  project_id      = "%[4]s"
+  cluster_id      = "00000000-0000-0000-0000-000000000000"
+  start           = "%[5]s"
+  end             = "%[6]s"
+}
+`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, start, end),
+				ExpectError: regexp.MustCompile(`(?s)error during audit log export creating|cluster.*not found|access to the requested resource is denied|Not Found`),
+			},
+		},
+	})
+}
+
+func testAccAuditLogExportResourceConfig(resourceName, start, end string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_audit_log_export" "%[2]s" {
+  organization_id = "%[3]s"
+  project_id      = "%[4]s"
+  cluster_id      = "%[5]s"
+  start           = "%[6]s"
+  end             = "%[7]s"
+}
+`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, start, end)
+}
+
+func generateAuditLogExportImportIdForResource(resourceReference string) resource.ImportStateIdFunc {
+	return func(state *terraform.State) (string, error) {
+		var rawState map[string]string
+		for _, m := range state.Modules {
+			if len(m.Resources) > 0 {
+				if v, ok := m.Resources[resourceReference]; ok {
+					rawState = v.Primary.Attributes
+				}
+			}
+		}
+		return fmt.Sprintf(
+			"id=%s,cluster_id=%s,project_id=%s,organization_id=%s",
+			rawState["id"], rawState["cluster_id"], rawState["project_id"], rawState["organization_id"],
+		), nil
+	}
+}
+
+func retrieveAuditLogExportFromServer(data *providerschema.Data, organizationId, projectId, clusterId, id string) error {
+	url := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/auditLogExports/%s",
+		data.HostURL, organizationId, projectId, clusterId, id,
+	)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	response, err := data.ClientV1.ExecuteWithRetry(context.Background(), cfg, nil, data.Token, nil)
+	if err != nil {
+		return err
+	}
+	exportResp := api.GetClusterAuditLogExportResponse{}
+	if err := json.Unmarshal(response.Body, &exportResp); err != nil {
+		return err
+	}
+	if exportResp.AuditLogExportId != id {
+		return errors.ErrNotFound
+	}
+	return nil
+}
+
+func testAccExistsAuditLogExportResource(t *testing.T, resourceReference string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		var rawState map[string]string
+		for _, m := range s.Modules {
+			if len(m.Resources) > 0 {
+				if v, ok := m.Resources[resourceReference]; ok {
+					rawState = v.Primary.Attributes
+				}
+			}
+		}
+		data := newTestClient(t)
+		return retrieveAuditLogExportFromServer(
+			data, rawState["organization_id"], rawState["project_id"], rawState["cluster_id"], rawState["id"],
+		)
+	}
+}
