@@ -1,10 +1,15 @@
 package schema
 
 import (
+	"context"
 	"testing"
 
 	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	resourceschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/enums"
 )
 
 func TestSchemaBuilder(t *testing.T) {
@@ -258,4 +263,266 @@ func TestSetMarkdownDescriptionReflection(t *testing.T) {
 		str := "test"
 		setMarkdownDescription(&str, "test")
 	})
+}
+
+// Composition validator tests
+
+func TestAppendCompositionValidator_OneOf(t *testing.T) {
+	def := &enums.CompositionDef{
+		Kind:     "oneOf",
+		Branches: []string{"AWSConfig", "GCPConfig", "AzureConfig"},
+	}
+
+	attr := &resourceschema.SingleNestedAttribute{
+		Optional: true,
+		Attributes: map[string]resourceschema.Attribute{
+			"aws_config": &resourceschema.SingleNestedAttribute{
+				Optional:   true,
+				Attributes: map[string]resourceschema.Attribute{},
+			},
+			"gcp_config": &resourceschema.SingleNestedAttribute{
+				Optional:   true,
+				Attributes: map[string]resourceschema.Attribute{},
+			},
+			"azure_config": &resourceschema.SingleNestedAttribute{
+				Optional:   true,
+				Attributes: map[string]resourceschema.Attribute{},
+			},
+		},
+	}
+
+	appendCompositionValidator(attr, def)
+
+	if len(attr.Validators) != 1 {
+		t.Fatalf("Expected 1 validator, got %d", len(attr.Validators))
+	}
+}
+
+func TestAppendCompositionValidator_AnyOf(t *testing.T) {
+	def := &enums.CompositionDef{
+		Kind:     "anyOf",
+		Branches: []string{"AWS", "GCP"},
+	}
+
+	attr := &resourceschema.SingleNestedAttribute{
+		Optional: true,
+		Attributes: map[string]resourceschema.Attribute{
+			"aws": &resourceschema.SingleNestedAttribute{
+				Optional:   true,
+				Attributes: map[string]resourceschema.Attribute{},
+			},
+			"gcp": &resourceschema.SingleNestedAttribute{
+				Optional:   true,
+				Attributes: map[string]resourceschema.Attribute{},
+			},
+		},
+	}
+
+	appendCompositionValidator(attr, def)
+
+	if len(attr.Validators) != 1 {
+		t.Fatalf("Expected 1 validator, got %d", len(attr.Validators))
+	}
+}
+
+func TestAppendCompositionValidator_SkipsWithExistingValidators(t *testing.T) {
+	def := &enums.CompositionDef{
+		Kind:     "oneOf",
+		Branches: []string{"A", "B"},
+	}
+
+	// Pre-populate with a validator (simulating call-site override)
+	attr := &resourceschema.SingleNestedAttribute{
+		Optional: true,
+		Validators: []validator.Object{
+			mockObjectValidator{},
+		},
+		Attributes: map[string]resourceschema.Attribute{
+			"a": &resourceschema.SingleNestedAttribute{Optional: true},
+			"b": &resourceschema.SingleNestedAttribute{Optional: true},
+		},
+	}
+
+	appendCompositionValidator(attr, def)
+
+	// Should still have only 1 validator (the original one)
+	if len(attr.Validators) != 1 {
+		t.Fatalf("Expected 1 validator (existing), got %d", len(attr.Validators))
+	}
+}
+
+func TestAppendCompositionValidator_SkipsWithLessThan2Children(t *testing.T) {
+	def := &enums.CompositionDef{
+		Kind:     "oneOf",
+		Branches: []string{"OnlyOne"},
+	}
+
+	attr := &resourceschema.SingleNestedAttribute{
+		Optional: true,
+		Attributes: map[string]resourceschema.Attribute{
+			"only_one": &resourceschema.SingleNestedAttribute{
+				Optional:   true,
+				Attributes: map[string]resourceschema.Attribute{},
+			},
+		},
+	}
+
+	appendCompositionValidator(attr, def)
+
+	// Should not add validator when < 2 optional nested children
+	if len(attr.Validators) != 0 {
+		t.Fatalf("Expected 0 validators for single child, got %d", len(attr.Validators))
+	}
+}
+
+func TestAppendCompositionValidator_IgnoresRequiredChildren(t *testing.T) {
+	def := &enums.CompositionDef{
+		Kind:     "oneOf",
+		Branches: []string{"A", "B"},
+	}
+
+	attr := &resourceschema.SingleNestedAttribute{
+		Optional: true,
+		Attributes: map[string]resourceschema.Attribute{
+			"a": &resourceschema.SingleNestedAttribute{
+				Required:   true, // Required, not a composition branch
+				Attributes: map[string]resourceschema.Attribute{},
+			},
+			"b": &resourceschema.SingleNestedAttribute{
+				Optional:   true,
+				Attributes: map[string]resourceschema.Attribute{},
+			},
+		},
+	}
+
+	appendCompositionValidator(attr, def)
+
+	// Should not add validator when only 1 optional nested child
+	if len(attr.Validators) != 0 {
+		t.Fatalf("Expected 0 validators (only 1 optional child), got %d", len(attr.Validators))
+	}
+}
+
+func TestAppendCompositionValidator_IgnoresNonNestedAttributes(t *testing.T) {
+	def := &enums.CompositionDef{
+		Kind:     "oneOf",
+		Branches: []string{"A", "B"},
+	}
+
+	attr := &resourceschema.SingleNestedAttribute{
+		Optional: true,
+		Attributes: map[string]resourceschema.Attribute{
+			"a": &resourceschema.StringAttribute{Optional: true}, // String, not nested
+			"b": &resourceschema.StringAttribute{Optional: true}, // String, not nested
+		},
+	}
+
+	appendCompositionValidator(attr, def)
+
+	// Should not add validator when no optional nested children
+	if len(attr.Validators) != 0 {
+		t.Fatalf("Expected 0 validators (no nested children), got %d", len(attr.Validators))
+	}
+}
+
+func TestAppendCompositionValidator_Datasource(t *testing.T) {
+	def := &enums.CompositionDef{
+		Kind:     "oneOf",
+		Branches: []string{"AWS", "GCP"},
+	}
+
+	attr := &datasourceschema.SingleNestedAttribute{
+		Optional: true,
+		Attributes: map[string]datasourceschema.Attribute{
+			"aws": &datasourceschema.SingleNestedAttribute{
+				Optional:   true,
+				Attributes: map[string]datasourceschema.Attribute{},
+			},
+			"gcp": &datasourceschema.SingleNestedAttribute{
+				Optional:   true,
+				Attributes: map[string]datasourceschema.Attribute{},
+			},
+		},
+	}
+
+	appendCompositionValidator(attr, def)
+
+	if len(attr.Validators) != 1 {
+		t.Fatalf("Expected 1 validator for datasource, got %d", len(attr.Validators))
+	}
+}
+
+func TestExtractChildPaths(t *testing.T) {
+	attrs := map[string]resourceschema.Attribute{
+		"aws_config": &resourceschema.SingleNestedAttribute{
+			Optional:   true,
+			Attributes: map[string]resourceschema.Attribute{},
+		},
+		"gcp_config": &resourceschema.SingleNestedAttribute{
+			Optional:   true,
+			Attributes: map[string]resourceschema.Attribute{},
+		},
+		"required_field": &resourceschema.SingleNestedAttribute{
+			Required:   true,
+			Attributes: map[string]resourceschema.Attribute{},
+		},
+		"string_field": &resourceschema.StringAttribute{Optional: true},
+	}
+
+	paths := extractChildPaths(attrs)
+
+	// Should have 2 paths (aws_config, gcp_config) - required and non-nested excluded
+	if len(paths) != 2 {
+		t.Fatalf("Expected 2 paths, got %d", len(paths))
+	}
+
+	// Paths should be sorted alphabetically
+	expected := []path.Expression{
+		path.MatchRelative().AtName("aws_config"),
+		path.MatchRelative().AtName("gcp_config"),
+	}
+
+	for i, p := range paths {
+		if p.String() != expected[i].String() {
+			t.Errorf("Path %d: expected %s, got %s", i, expected[i].String(), p.String())
+		}
+	}
+}
+
+func TestAppendCompositionValidator_AllOfSkipped(t *testing.T) {
+	// allOf is for schema composition/inheritance, not mutual exclusion
+	// We don't attach validators for allOf
+	def := &enums.CompositionDef{
+		Kind:     "allOf",
+		Branches: []string{"Base", "Extended"},
+	}
+
+	attr := &resourceschema.SingleNestedAttribute{
+		Optional: true,
+		Attributes: map[string]resourceschema.Attribute{
+			"base": &resourceschema.SingleNestedAttribute{
+				Optional:   true,
+				Attributes: map[string]resourceschema.Attribute{},
+			},
+			"extended": &resourceschema.SingleNestedAttribute{
+				Optional:   true,
+				Attributes: map[string]resourceschema.Attribute{},
+			},
+		},
+	}
+
+	appendCompositionValidator(attr, def)
+
+	// allOf should not add any validator
+	if len(attr.Validators) != 0 {
+		t.Fatalf("Expected 0 validators for allOf, got %d", len(attr.Validators))
+	}
+}
+
+// mockObjectValidator implements validator.Object for testing
+type mockObjectValidator struct{}
+
+func (m mockObjectValidator) Description(_ context.Context) string         { return "mock" }
+func (m mockObjectValidator) MarkdownDescription(_ context.Context) string { return "mock" }
+func (m mockObjectValidator) ValidateObject(_ context.Context, _ validator.ObjectRequest, _ *validator.ObjectResponse) {
 }

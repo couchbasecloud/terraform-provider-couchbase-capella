@@ -2,14 +2,17 @@ package schema
 
 import (
 	"reflect"
+	"sort"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	resourceschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -144,6 +147,11 @@ func AddAttr[M SchemaAttributeMap, T SchemaAttribute](
 
 	if def := enums.Lookup(builder, alternateSchemas, fieldName); def != nil {
 		appendOneOfValidator(attr, def)
+	}
+
+	// Check for composition validators (oneOf/anyOf) for SingleNestedAttribute
+	if compDef := enums.CompositionLookup(builder, alternateSchemas, fieldName); compDef != nil {
+		appendCompositionValidator(attr, compDef)
 	}
 
 	// Add to map based on map type
@@ -291,4 +299,91 @@ func elementOneOfSet(elem attr.Type, def *enums.EnumDef) validator.Set {
 		return setvalidator.ValueInt64sAre(int64validator.OneOf(ints...))
 	}
 	return nil
+}
+
+// appendCompositionValidator attaches ExactlyOneOf (for oneOf) or AtLeastOneOf
+// (for anyOf) validators to SingleNestedAttribute based on composition metadata.
+// Uses schema introspection to discover child attribute names rather than relying
+// on OpenAPI branch schema names which don't reliably map to TF attribute names.
+// Skips if validators are already attached (call-site override wins).
+func appendCompositionValidator(a any, def *enums.CompositionDef) {
+	switch x := a.(type) {
+	case *resourceschema.SingleNestedAttribute:
+		if len(x.Validators) > 0 {
+			return
+		}
+		paths := extractChildPaths(x.Attributes)
+		if len(paths) < 2 {
+			return
+		}
+		switch def.Kind {
+		case "oneOf":
+			x.Validators = append(x.Validators, objectvalidator.ExactlyOneOf(paths...))
+		case "anyOf":
+			x.Validators = append(x.Validators, objectvalidator.AtLeastOneOf(paths...))
+		}
+
+	case *datasourceschema.SingleNestedAttribute:
+		if len(x.Validators) > 0 {
+			return
+		}
+		paths := extractChildPathsDS(x.Attributes)
+		if len(paths) < 2 {
+			return
+		}
+		switch def.Kind {
+		case "oneOf":
+			x.Validators = append(x.Validators, objectvalidator.ExactlyOneOf(paths...))
+		case "anyOf":
+			x.Validators = append(x.Validators, objectvalidator.AtLeastOneOf(paths...))
+		}
+	}
+}
+
+// extractChildPaths introspects a resource schema's Attributes map and returns
+// path expressions for all optional SingleNestedAttribute children. These are
+// the composition branch candidates for ExactlyOneOf/AtLeastOneOf validators.
+func extractChildPaths(attrs map[string]resourceschema.Attribute) []path.Expression {
+	var paths []path.Expression
+	var names []string
+
+	for name, attr := range attrs {
+		nested, ok := attr.(*resourceschema.SingleNestedAttribute)
+		if !ok {
+			continue
+		}
+		if nested.Required {
+			continue
+		}
+		names = append(names, name)
+	}
+
+	sort.Strings(names)
+	for _, name := range names {
+		paths = append(paths, path.MatchRelative().AtName(name))
+	}
+	return paths
+}
+
+// extractChildPathsDS is the datasource equivalent of extractChildPaths.
+func extractChildPathsDS(attrs map[string]datasourceschema.Attribute) []path.Expression {
+	var paths []path.Expression
+	var names []string
+
+	for name, attr := range attrs {
+		nested, ok := attr.(*datasourceschema.SingleNestedAttribute)
+		if !ok {
+			continue
+		}
+		if nested.Required {
+			continue
+		}
+		names = append(names, name)
+	}
+
+	sort.Strings(names)
+	for _, name := range names {
+		paths = append(paths, path.MatchRelative().AtName(name))
+	}
+	return paths
 }
