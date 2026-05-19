@@ -470,3 +470,294 @@ func idsOf(sites []enumSite) []string {
 	}
 	return out
 }
+
+// Composition discovery tests
+
+func TestExtractSchemaName(t *testing.T) {
+	cases := []struct {
+		ref, want string
+	}{
+		{"#/components/schemas/AWS", "AWS"},
+		{"#/components/schemas/GCPConfig", "GCPConfig"},
+		{"#/components/schemas/AzureConfigData", "AzureConfigData"},
+		{"#/components/parameters/foo", ""},
+		{"", ""},
+		{"AWS", ""},
+	}
+	for _, tc := range cases {
+		t.Run(tc.ref, func(t *testing.T) {
+			got := extractSchemaName(tc.ref)
+			if got != tc.want {
+				t.Errorf("extractSchemaName(%q) = %q, want %q", tc.ref, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestMergeBranches(t *testing.T) {
+	cases := []struct {
+		name string
+		a    []string
+		b    []string
+		want []string
+	}{
+		{"no overlap", []string{"A", "B"}, []string{"C", "D"}, []string{"A", "B", "C", "D"}},
+		{"full overlap", []string{"A", "B"}, []string{"A", "B"}, []string{"A", "B"}},
+		{"partial overlap", []string{"A", "B"}, []string{"B", "C"}, []string{"A", "B", "C"}},
+		{"empty a", []string{}, []string{"X"}, []string{"X"}},
+		{"empty b", []string{"X"}, []string{}, []string{"X"}},
+		{"both empty", []string{}, []string{}, []string{}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := mergeBranches(tc.a, tc.b)
+			if !equalStrings(got, tc.want) {
+				t.Errorf("mergeBranches(%v, %v) = %v, want %v", tc.a, tc.b, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestWalker_OneOfComposition(t *testing.T) {
+	doc := &openapi3.T{
+		Components: &openapi3.Components{
+			Schemas: openapi3.Schemas{
+				"AWSConfig": refOf(&openapi3.Schema{
+					Type: &openapi3.Types{"object"},
+				}),
+				"GCPConfig": refOf(&openapi3.Schema{
+					Type: &openapi3.Types{"object"},
+				}),
+				"CMEKRequest": refOf(&openapi3.Schema{
+					Type: &openapi3.Types{"object"},
+					Properties: openapi3.Schemas{
+						"config": refOf(&openapi3.Schema{
+							OneOf: openapi3.SchemaRefs{
+								{Ref: "#/components/schemas/AWSConfig"},
+								{Ref: "#/components/schemas/GCPConfig"},
+							},
+						}),
+					},
+				}),
+			},
+		},
+	}
+
+	w := &walker{doc: doc}
+	w.run()
+
+	if len(w.compositionSites) != 1 {
+		t.Fatalf("want 1 composition site, got %d: %v", len(w.compositionSites), w.compositionSites)
+	}
+	got := w.compositionSites[0]
+	if got.SchemaName != "CMEKRequest" {
+		t.Errorf("SchemaName = %q, want CMEKRequest", got.SchemaName)
+	}
+	if got.FieldPath != "config" {
+		t.Errorf("FieldPath = %q, want config", got.FieldPath)
+	}
+	if got.Kind != kindOneOf {
+		t.Errorf("Kind = %q, want %q", got.Kind, kindOneOf)
+	}
+	if !equalStrings(got.Branches, []string{"AWSConfig", "GCPConfig"}) {
+		t.Errorf("Branches = %v, want [AWSConfig GCPConfig]", got.Branches)
+	}
+}
+
+func TestWalker_AnyOfComposition(t *testing.T) {
+	doc := &openapi3.T{
+		Components: &openapi3.Components{
+			Schemas: openapi3.Schemas{
+				"AWS":   refOf(&openapi3.Schema{Type: &openapi3.Types{"object"}}),
+				"GCP":   refOf(&openapi3.Schema{Type: &openapi3.Types{"object"}}),
+				"Azure": refOf(&openapi3.Schema{Type: &openapi3.Types{"object"}}),
+				"NetworkPeer": refOf(&openapi3.Schema{
+					Type: &openapi3.Types{"object"},
+					Properties: openapi3.Schemas{
+						"providerConfig": refOf(&openapi3.Schema{
+							AnyOf: openapi3.SchemaRefs{
+								{Ref: "#/components/schemas/AWS"},
+								{Ref: "#/components/schemas/GCP"},
+								{Ref: "#/components/schemas/Azure"},
+							},
+						}),
+					},
+				}),
+			},
+		},
+	}
+
+	w := &walker{doc: doc}
+	w.run()
+
+	if len(w.compositionSites) != 1 {
+		t.Fatalf("want 1 composition site, got %d", len(w.compositionSites))
+	}
+	got := w.compositionSites[0]
+	if got.Kind != kindAnyOf {
+		t.Errorf("Kind = %q, want %q", got.Kind, kindAnyOf)
+	}
+	if !equalStrings(got.Branches, []string{"AWS", "GCP", "Azure"}) {
+		t.Errorf("Branches = %v, want [AWS GCP Azure]", got.Branches)
+	}
+}
+
+func TestWalker_AllOfComposition(t *testing.T) {
+	doc := &openapi3.T{
+		Components: &openapi3.Components{
+			Schemas: openapi3.Schemas{
+				"BaseConfig":     refOf(&openapi3.Schema{Type: &openapi3.Types{"object"}}),
+				"ExtendedConfig": refOf(&openapi3.Schema{Type: &openapi3.Types{"object"}}),
+				"MergedConfig": refOf(&openapi3.Schema{
+					Type: &openapi3.Types{"object"},
+					Properties: openapi3.Schemas{
+						"settings": refOf(&openapi3.Schema{
+							AllOf: openapi3.SchemaRefs{
+								{Ref: "#/components/schemas/BaseConfig"},
+								{Ref: "#/components/schemas/ExtendedConfig"},
+							},
+						}),
+					},
+				}),
+			},
+		},
+	}
+
+	w := &walker{doc: doc}
+	w.run()
+
+	if len(w.compositionSites) != 1 {
+		t.Fatalf("want 1 composition site, got %d", len(w.compositionSites))
+	}
+	got := w.compositionSites[0]
+	if got.Kind != kindAllOf {
+		t.Errorf("Kind = %q, want %q", got.Kind, kindAllOf)
+	}
+}
+
+func TestWalker_InlineSchemaSkipsComposition(t *testing.T) {
+	// When composition branches are inline (not $ref), no composition site is recorded.
+	doc := &openapi3.T{
+		Components: &openapi3.Components{
+			Schemas: openapi3.Schemas{
+				"InlineUnion": refOf(&openapi3.Schema{
+					Type: &openapi3.Types{"object"},
+					Properties: openapi3.Schemas{
+						"value": refOf(&openapi3.Schema{
+							OneOf: openapi3.SchemaRefs{
+								refOf(&openapi3.Schema{Type: &openapi3.Types{"string"}}),
+								refOf(&openapi3.Schema{Type: &openapi3.Types{"integer"}}),
+							},
+						}),
+					},
+				}),
+			},
+		},
+	}
+
+	w := &walker{doc: doc}
+	w.run()
+
+	if len(w.compositionSites) != 0 {
+		t.Errorf("want 0 composition sites for inline branches, got %d: %v",
+			len(w.compositionSites), w.compositionSites)
+	}
+}
+
+func TestWalker_MixedCompositionSkipped(t *testing.T) {
+	// Mixed compositions (some $ref, some inline) should be skipped entirely
+	// to avoid incomplete branch metadata.
+	doc := &openapi3.T{
+		Components: &openapi3.Components{
+			Schemas: openapi3.Schemas{
+				"AWSConfig": refOf(&openapi3.Schema{Type: &openapi3.Types{"object"}}),
+				"MixedUnion": refOf(&openapi3.Schema{
+					Type: &openapi3.Types{"object"},
+					Properties: openapi3.Schemas{
+						"config": refOf(&openapi3.Schema{
+							OneOf: openapi3.SchemaRefs{
+								{Ref: "#/components/schemas/AWSConfig"},
+								refOf(&openapi3.Schema{Type: &openapi3.Types{"object"}}), // inline
+							},
+						}),
+					},
+				}),
+			},
+		},
+	}
+
+	w := &walker{doc: doc}
+	w.run()
+
+	if len(w.compositionSites) != 0 {
+		t.Errorf("want 0 composition sites for mixed $ref/inline branches, got %d: %v",
+			len(w.compositionSites), w.compositionSites)
+	}
+}
+
+func TestWalker_TopLevelCompositionSkipped(t *testing.T) {
+	// Top-level oneOf (empty FieldPath) is skipped when building the table
+	doc := &openapi3.T{
+		Components: &openapi3.Components{
+			Schemas: openapi3.Schemas{
+				"A": refOf(&openapi3.Schema{Type: &openapi3.Types{"object"}}),
+				"B": refOf(&openapi3.Schema{Type: &openapi3.Types{"object"}}),
+				"TopLevelOneOf": refOf(&openapi3.Schema{
+					OneOf: openapi3.SchemaRefs{
+						{Ref: "#/components/schemas/A"},
+						{Ref: "#/components/schemas/B"},
+					},
+				}),
+			},
+		},
+	}
+
+	w := &walker{doc: doc}
+	w.run()
+
+	// The site is recorded but has empty FieldPath
+	if len(w.compositionSites) != 1 {
+		t.Fatalf("want 1 composition site, got %d", len(w.compositionSites))
+	}
+	if w.compositionSites[0].FieldPath != "" {
+		t.Errorf("FieldPath should be empty for top-level composition")
+	}
+
+	// buildCompositionTable should exclude it
+	table := buildCompositionTable(w.compositionSites)
+	if len(table) != 0 {
+		t.Errorf("top-level composition should be excluded from table, got %v", table)
+	}
+}
+
+func TestDedupComposition(t *testing.T) {
+	t.Run("merges same kind", func(t *testing.T) {
+		sites := []compositionSite{
+			{SchemaName: "A", FieldPath: "config", Kind: kindOneOf, Branches: []string{"X", "Y"}},
+			{SchemaName: "A", FieldPath: "config", Kind: kindOneOf, Branches: []string{"Y", "Z"}},
+		}
+		got := dedupComposition(sites)
+		if len(got) != 1 {
+			t.Fatalf("want 1 site after dedup, got %d", len(got))
+		}
+		if !equalStrings(got[0].Branches, []string{"X", "Y", "Z"}) {
+			t.Errorf("Branches = %v, want [X Y Z]", got[0].Branches)
+		}
+	})
+
+	t.Run("keeps different kinds separate", func(t *testing.T) {
+		sites := []compositionSite{
+			{SchemaName: "A", FieldPath: "config", Kind: kindOneOf, Branches: []string{"X", "Y"}},
+			{SchemaName: "A", FieldPath: "config", Kind: kindAnyOf, Branches: []string{"Y", "Z"}},
+		}
+		got := dedupComposition(sites)
+		if len(got) != 2 {
+			t.Fatalf("want 2 sites (different kinds), got %d", len(got))
+		}
+		// Should have both oneOf and anyOf
+		kinds := []compositionKind{got[0].Kind, got[1].Kind}
+		if (kinds[0] != kindOneOf || kinds[1] != kindAnyOf) && (kinds[0] != kindAnyOf || kinds[1] != kindOneOf) {
+			t.Errorf("expected oneOf and anyOf, got %v", kinds)
+		}
+	})
+}

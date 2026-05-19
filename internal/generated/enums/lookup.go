@@ -85,3 +85,32 @@ func capitalize(s string) string {
 	}
 	return strings.ToUpper(s[:1]) + s[1:]
 }
+
+// CompositionLookup returns the composition definition (oneOf/anyOf/allOf)
+// associated with a Terraform attribute on the given builder, walking the
+// same schema-name pattern list used by Lookup and docs.GetOpenAPIDescription.
+// Returns nil when no composition is associated with the attribute.
+func CompositionLookup(b SchemaBuilder, alternateSchemas []string, tfFieldName string) *CompositionDef {
+	field := snakeToCamel(tfFieldName)
+
+	patterns := append([]string(nil), alternateSchemas...)
+
+	// Patterns from the OpenAPI schema name
+	patterns = append(patterns, schemaPatterns(b.GetOpenAPISchemaName())...)
+
+	// Patterns from the Terraform resource name, in case it differs
+	if b.GetResourceName() != b.GetOpenAPISchemaName() {
+		patterns = append(patterns, schemaPatterns(b.GetResourceName())...)
+	}
+
+	for _, p := range patterns {
+		if p == "" {
+			continue
+		}
+		if def, ok := compositionTable[p][field]; ok {
+			out := def
+			return &out
+		}
+	}
+	return nil
+}

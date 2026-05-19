@@ -230,3 +230,74 @@ var enumTable = map[string]map[string]EnumDef{
 		"type": {Type: "string", Values: []string{"capella", "external"}},
 	},
 }
+
+// CompositionDef describes a oneOf/anyOf/allOf composition site.
+// Kind is the OpenAPI composition keyword. Branches are the schema names
+// from the $ref targets in the composition.
+type CompositionDef struct {
+	Kind     string
+	Branches []string
+}
+
+var compositionTable = map[string]map[string]CompositionDef{
+	"CreateAppServiceAdminUserRequest": {
+		"access": {Kind: "oneOf", Branches: []string{"UpdateAppServiceAdminUserAllEndpointsRequest", "UpdateAppServiceAdminUserEndpointList"}},
+	},
+	"CreateCMEKMetadata": {
+		"config": {Kind: "oneOf", Branches: []string{"AWSConfig", "GCPConfig", "AzureConfig"}},
+	},
+	"CreateNetworkPeeringRequest": {
+		"providerConfig": {Kind: "oneOf", Branches: []string{"AWSConfigData", "GCPConfigData", "AzureConfigData"}},
+	},
+	"CreateProviderRequest": {
+		"configuration": {Kind: "oneOf", Branches: []string{"CreateS3ConfigurationRequest", "CreateOpenAIConfigurationRequest", "CreateBedrockConfigurationRequest"}},
+	},
+	"CreateWorkflowRequest": {
+		"configuration": {Kind: "oneOf", Branches: []string{"CreateStructuredWorkflowRequest", "CreateUnstructuredWorkflowRequest", "CreateVectorizationWorkflowRequest"}},
+	},
+	"GetCMEKHistoryMetadataResponse": {
+		"config": {Kind: "oneOf", Branches: []string{"AWSConfig", "GCPConfig"}},
+	},
+	"GetCMEKMetadata": {
+		"config": {Kind: "anyOf", Branches: []string{"AWSConfig", "GCPConfig", "AzureConfig"}},
+	},
+	"GetNetworkPeeringRecordResponse": {
+		"providerConfig": {Kind: "anyOf", Branches: []string{"AWS", "GCP", "AZURE"}},
+	},
+	"GetPrivateEndpointServiceStatusResponse": {
+		"routes": {Kind: "allOf", Branches: []string{"PrivateEndpointRoutes"}},
+	},
+	"GetProviderResponse": {
+		"configuration": {Kind: "oneOf", Branches: []string{"GetS3ConfigurationResponse", "GetEmptyConfigurationResponse"}},
+	},
+	"GetWorkflowResponse": {
+		"configuration": {Kind: "oneOf", Branches: []string{"GetStructuredWorkflowResponse", "GetUnstructuredWorkflowResponse", "GetVectorizationWorkflowResponse"}},
+	},
+	"ListProvidersResponse": {
+		"data.[].configuration": {Kind: "oneOf", Branches: []string{"GetS3ConfigurationResponse", "GetEmptyConfigurationResponse"}},
+	},
+	"ListSingleNetworkPeeringRecord": {
+		"providerConfig": {Kind: "anyOf", Branches: []string{"AWS", "GCP", "AZURE"}},
+	},
+	"Node": {
+		"disk": {Kind: "oneOf", Branches: []string{"DiskAWS", "DiskAzure", "DiskGCP"}},
+	},
+	"PostLogStreamingRequest": {
+		"credentials": {Kind: "oneOf", Branches: []string{"datadog", "sumologic", "generic_http", "elastic", "loki", "splunk", "dynatrace"}},
+	},
+	"PutAuditLogStreamingRequest": {
+		"credentials": {Kind: "oneOf", Branches: []string{"datadog", "sumologic", "generic_http", "elastic", "loki", "splunk", "dynatrace"}},
+	},
+	"RotateCMEKKey": {
+		"config": {Kind: "oneOf", Branches: []string{"AWSConfig", "GCPConfig", "AzureConfig"}},
+	},
+	"UpdateAwsPrivateEndpointServiceRequest": {
+		"routes": {Kind: "allOf", Branches: []string{"PrivateEndpointRoutes"}},
+	},
+	"UpdateProviderRequest": {
+		"configuration": {Kind: "oneOf", Branches: []string{"UpdateS3ConfigurationRequest", "UpdateOpenAIConfigurationRequest", "UpdateBedrockConfigurationRequest"}},
+	},
+	"VectorizationConfig": {
+		"embeddingModel": {Kind: "oneOf", Branches: []string{"ExternalModel", "CapellaHostedModel"}},
+	},
+}

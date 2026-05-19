@@ -202,3 +202,98 @@ func TestGenerate_EmptyInput(t *testing.T) {
 		t.Errorf("empty output missing enumTable declaration:\n%s", src)
 	}
 }
+
+func TestBuildCompositionTable(t *testing.T) {
+	t.Run("indexes by schema and field", func(t *testing.T) {
+		sites := []compositionSite{
+			{SchemaName: "CMEKRequest", FieldPath: "config", Kind: "oneOf", Branches: []string{"AWSConfig", "GCPConfig"}},
+			{SchemaName: "NetworkPeer", FieldPath: "providerConfig", Kind: "anyOf", Branches: []string{"AWS", "GCP", "Azure"}},
+		}
+		got := buildCompositionTable(sites)
+		if len(got) != 2 {
+			t.Fatalf("want 2 schemas, got %d", len(got))
+		}
+		if def := got["CMEKRequest"]["config"]; def.Kind != "oneOf" || len(def.Branches) != 2 {
+			t.Errorf("CMEKRequest.config = %+v", def)
+		}
+		if def := got["NetworkPeer"]["providerConfig"]; def.Kind != "anyOf" || len(def.Branches) != 3 {
+			t.Errorf("NetworkPeer.providerConfig = %+v", def)
+		}
+	})
+
+	t.Run("excludes empty FieldPath", func(t *testing.T) {
+		sites := []compositionSite{
+			{SchemaName: "TopLevel", FieldPath: "", Kind: "oneOf", Branches: []string{"A", "B"}},
+		}
+		got := buildCompositionTable(sites)
+		if len(got) != 0 {
+			t.Errorf("top-level sites should be excluded, got %v", got)
+		}
+	})
+}
+
+func TestGenerateAll_ProducesValidGo(t *testing.T) {
+	enumSites := []enumSite{
+		{Scope: scopeSchema, SchemaName: "AllowedCidr", FieldPath: "status", Type: "string", Values: []string{"active", "expired"}},
+	}
+	compSites := []compositionSite{
+		{SchemaName: "CMEKRequest", FieldPath: "config", Kind: "oneOf", Branches: []string{"AWSConfig", "GCPConfig"}},
+		{SchemaName: "NetworkPeer", FieldPath: "providerConfig", Kind: "anyOf", Branches: []string{"AWS", "GCP", "Azure"}},
+		{SchemaName: "MergedSchema", FieldPath: "settings", Kind: "allOf", Branches: []string{"Base", "Extended"}},
+	}
+
+	src, err := generateAll(enumSites, compSites)
+	if err != nil {
+		t.Fatalf("generateAll: %v", err)
+	}
+
+	// Output must parse as Go.
+	if _, err := parser.ParseFile(token.NewFileSet(), "enums.gen.go", src, parser.AllErrors); err != nil {
+		t.Fatalf("generated source does not parse: %v\n--- src ---\n%s", err, src)
+	}
+
+	got := string(src)
+	checks := []string{
+		"type EnumDef struct {",
+		"var enumTable = map[string]map[string]EnumDef{",
+		"type CompositionDef struct {",
+		"var compositionTable = map[string]map[string]CompositionDef{",
+		`"CMEKRequest"`,
+		`"config": {Kind: "oneOf", Branches: []string{"AWSConfig", "GCPConfig"}}`,
+		`"NetworkPeer"`,
+		`"providerConfig": {Kind: "anyOf", Branches: []string{"AWS", "GCP", "Azure"}}`,
+		`"MergedSchema"`,
+		`"settings": {Kind: "allOf", Branches: []string{"Base", "Extended"}}`,
+	}
+	for _, want := range checks {
+		if !strings.Contains(got, want) {
+			t.Errorf("generated output missing %q\n--- src ---\n%s", want, got)
+		}
+	}
+
+	// Schema-name keys must be sorted alphabetically.
+	idxCMEK := strings.Index(got, `"CMEKRequest"`)
+	idxMerged := strings.Index(got, `"MergedSchema"`)
+	idxNetwork := strings.Index(got, `"NetworkPeer"`)
+	if idxCMEK >= idxMerged || idxMerged >= idxNetwork {
+		t.Errorf("composition schema keys not sorted: CMEK=%d Merged=%d Network=%d", idxCMEK, idxMerged, idxNetwork)
+	}
+}
+
+func TestGenerateAll_EmptyComposition(t *testing.T) {
+	enumSites := []enumSite{
+		{Scope: scopeSchema, SchemaName: "Status", FieldPath: "state", Type: "string", Values: []string{"on"}},
+	}
+
+	src, err := generateAll(enumSites, nil)
+	if err != nil {
+		t.Fatalf("generateAll: %v", err)
+	}
+	if _, err := parser.ParseFile(token.NewFileSet(), "enums.gen.go", src, parser.AllErrors); err != nil {
+		t.Fatalf("generated source does not parse: %v\n%s", err, src)
+	}
+	got := string(src)
+	if !strings.Contains(got, "var compositionTable = map[string]map[string]CompositionDef{") {
+		t.Errorf("output missing compositionTable declaration:\n%s", got)
+	}
+}

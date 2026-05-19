@@ -25,13 +25,34 @@ type enumSite struct {
 	SourcePath string
 }
 
+type compositionKind string
+
+const (
+	kindOneOf compositionKind = "oneOf"
+	kindAnyOf compositionKind = "anyOf"
+	kindAllOf compositionKind = "allOf"
+)
+
+type compositionSite struct {
+	SchemaName string
+	FieldPath  string
+	Kind       compositionKind
+	Branches   []string
+	SourcePath string
+}
+
 func discover(specPath string) ([]enumSite, error) {
+	enums, _, err := discoverAll(specPath)
+	return enums, err
+}
+
+func discoverAll(specPath string) ([]enumSite, []compositionSite, error) {
 	loader := openapi3.NewLoader()
 	loader.IsExternalRefsAllowed = true
 
 	doc, err := loader.LoadFromFile(specPath)
 	if err != nil {
-		return nil, fmt.Errorf("load spec: %w", err)
+		return nil, nil, fmt.Errorf("load spec: %w", err)
 	}
 
 	w := &walker{doc: doc}
@@ -39,7 +60,7 @@ func discover(specPath string) ([]enumSite, error) {
 
 	sites, err := dedupByID(w.sites)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	sort.Slice(sites, func(i, j int) bool {
@@ -53,7 +74,51 @@ func discover(specPath string) ([]enumSite, error) {
 		return a.FieldPath < b.FieldPath
 	})
 
-	return sites, nil
+	compSites := dedupComposition(w.compositionSites)
+	sort.Slice(compSites, func(i, j int) bool {
+		a, b := compSites[i], compSites[j]
+		if a.SchemaName != b.SchemaName {
+			return a.SchemaName < b.SchemaName
+		}
+		return a.FieldPath < b.FieldPath
+	})
+
+	return sites, compSites, nil
+}
+
+func dedupComposition(sites []compositionSite) []compositionSite {
+	type key struct {
+		schema, field string
+		kind          compositionKind
+	}
+	seen := make(map[key]int, len(sites))
+	out := make([]compositionSite, 0, len(sites))
+	for _, s := range sites {
+		k := key{s.SchemaName, s.FieldPath, s.Kind}
+		if idx, ok := seen[k]; ok {
+			existing := &out[idx]
+			existing.Branches = mergeBranches(existing.Branches, s.Branches)
+			continue
+		}
+		seen[k] = len(out)
+		out = append(out, s)
+	}
+	return out
+}
+
+func mergeBranches(a, b []string) []string {
+	seen := make(map[string]struct{}, len(a))
+	for _, v := range a {
+		seen[v] = struct{}{}
+	}
+	out := append([]string(nil), a...)
+	for _, v := range b {
+		if _, ok := seen[v]; !ok {
+			seen[v] = struct{}{}
+			out = append(out, v)
+		}
+	}
+	return out
 }
 
 // dedupByID merges sites that share an ID — emitted by composition keyword
@@ -96,8 +161,9 @@ func mergeValues(a, b []string) []string {
 }
 
 type walker struct {
-	doc   *openapi3.T
-	sites []enumSite
+	doc              *openapi3.T
+	sites            []enumSite
+	compositionSites []compositionSite
 }
 
 func (w *walker) run() {
@@ -145,6 +211,12 @@ func (w *walker) schema(id string, s *openapi3.Schema, schemaName, fieldPath, so
 	w.composition(id, s.AllOf, schemaName, fieldPath, sourcePath, sc, "allOf")
 	w.composition(id, s.OneOf, schemaName, fieldPath, sourcePath, sc, "oneOf")
 	w.composition(id, s.AnyOf, schemaName, fieldPath, sourcePath, sc, "anyOf")
+	// Only record composition sites for schema-scope (not parameters)
+	if sc == scopeSchema {
+		w.recordComposition(s.OneOf, schemaName, fieldPath, sourcePath, kindOneOf)
+		w.recordComposition(s.AnyOf, schemaName, fieldPath, sourcePath, kindAnyOf)
+		w.recordComposition(s.AllOf, schemaName, fieldPath, sourcePath, kindAllOf)
+	}
 	for fieldName, propRef := range s.Properties {
 		if propRef == nil || propRef.Ref != "" || propRef.Value == nil {
 			continue
@@ -166,6 +238,53 @@ func (w *walker) composition(id string, refs openapi3.SchemaRefs, schemaName, fi
 		w.schema(id, ref.Value, schemaName, fieldPath,
 			fmt.Sprintf("%s.%s[%d]", sourcePath, kw, i), sc)
 	}
+}
+
+// recordComposition records a composition site only when ALL branches are $refs
+// to named schemas. Mixed compositions (some inline, some $ref) are skipped
+// entirely to avoid incomplete branch metadata.
+func (w *walker) recordComposition(refs openapi3.SchemaRefs, schemaName, fieldPath, sourcePath string, kind compositionKind) {
+	if len(refs) == 0 {
+		return
+	}
+
+	branches := make([]string, 0, len(refs))
+	for _, ref := range refs {
+		// Skip nil refs
+		if ref == nil {
+			continue
+		}
+		// If any branch is not a $ref (inline schema), skip the entire composition
+		if ref.Ref == "" {
+			return
+		}
+		name := extractSchemaName(ref.Ref)
+		// If $ref doesn't point to a component schema, skip the entire composition
+		if name == "" {
+			return
+		}
+		branches = append(branches, name)
+	}
+
+	if len(branches) == 0 {
+		return
+	}
+
+	w.compositionSites = append(w.compositionSites, compositionSite{
+		SchemaName: schemaName,
+		FieldPath:  fieldPath,
+		Kind:       kind,
+		Branches:   branches,
+		SourcePath: sourcePath + "." + string(kind),
+	})
+}
+
+func extractSchemaName(ref string) string {
+	const prefix = "#/components/schemas/"
+	if !strings.HasPrefix(ref, prefix) {
+		return ""
+	}
+	return strings.TrimPrefix(ref, prefix)
 }
 
 func (w *walker) items(id string, s *openapi3.Schema, schemaName, fieldPath, sourcePath string, sc scope) {
