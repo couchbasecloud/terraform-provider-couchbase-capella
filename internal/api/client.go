@@ -61,8 +61,9 @@ const defaultWaitAttempt = time.Second * 2
 // on 429/504, including the initial request. With a value of 10, the client
 // will make up to 9 retries after the first failed attempt. Combined with the
 // 10-minute outer envelope below, this stops a pathological flap from silently
-// burning the test-binary timeout budget. Picked so the worst case stays under
-// ~2 min even when each attempt completes quickly.
+// burning the test-binary timeout budget. The wall-clock bound is governed by
+// the 10-minute outer timeout — a 429 response honors the server's Retry-After
+// header, which can itself be large.
 const maxRetryAttempts = 10
 
 // Execute is used to construct and execute a HTTP request.

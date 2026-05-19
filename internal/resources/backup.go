@@ -417,9 +417,10 @@ func (a *Backup) validateCreateBackupRequest(plan providerschema.Backup) error {
 // the API's default ordering or how many records the cluster has accumulated.
 //
 // Timeout is 30 minutes (down from the prior 90-minute ceiling): one stuck
-// backup can no longer consume more than a quarter of the 120-minute Go test-
-// binary budget. Users with very large buckets that legitimately need longer
-// should override this via a per-resource timeouts block (follow-up).
+// backup can no longer consume more than a quarter of the 120-minute Go
+// test-binary budget. Real-cluster backups of very large buckets that need
+// longer than 30 minutes will require widening this constant — the resource
+// schema does not currently expose a per-resource timeouts block.
 func (b *Backup) checkLatestBackupStatus(ctx context.Context, organizationId, projectId, clusterId, bucketId string, backupFound bool, latestBackup *backupapi.GetBackupResponse) (*backupapi.GetBackupResponse, error) {
 	const (
 		timeout = 30 * time.Minute
