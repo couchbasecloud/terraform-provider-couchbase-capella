@@ -17,13 +17,21 @@ import (
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-// auditLogExportWindow returns a (start, end) RFC3339 pair within the last
-// 30 days (the Capella retention window for audit log exports). Using a
-// fixed past window keeps the test deterministic across reruns.
+// auditLogExportLayout matches the layout the audit_log_export resource's
+// refresh code uses when normalising start/end timestamps in state
+// (internal/resources/audit_log_export.go formats UTC as "...+00:00", not
+// time.RFC3339's "...Z"). The test must produce expected values in the same
+// layout or TestCheckResourceAttr comparisons against the refreshed state
+// will fail on the trailing offset alone.
+const auditLogExportLayout = "2006-01-02T15:04:05-07:00"
+
+// auditLogExportWindow returns a (start, end) pair within the last 30 days
+// (the Capella retention window for audit log exports), formatted using the
+// same layout the provider's refresh writes back to state.
 func auditLogExportWindow() (string, string) {
 	end := time.Now().UTC().Add(-1 * time.Hour).Truncate(time.Second)
 	start := end.Add(-4 * time.Hour)
-	return start.Format(time.RFC3339), end.Format(time.RFC3339)
+	return start.Format(auditLogExportLayout), end.Format(auditLogExportLayout)
 }
 
 func TestAccAuditLogExportResource(t *testing.T) {

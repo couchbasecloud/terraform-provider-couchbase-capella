@@ -3,9 +3,11 @@ package acceptance_tests
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccDatasourceAuditLogEventIDs(t *testing.T) {
@@ -21,16 +23,37 @@ func TestAccDatasourceAuditLogEventIDs(t *testing.T) {
 					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dsReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(dsReference, "cluster_id", globalClusterId),
-					// The catalog of audit event ids is fixed and non-empty
-					// for any supported cluster, so the first element must
-					// expose the documented attributes.
-					resource.TestCheckResourceAttrSet(dsReference, "data.0.id"),
-					resource.TestCheckResourceAttrSet(dsReference, "data.0.name"),
-					resource.TestCheckResourceAttrSet(dsReference, "data.0.module"),
+					// `data` is a SetNestedAttribute — elements aren't
+					// addressable by stable numeric indices, so we scan all
+					// elements and require at least one with id/name/module
+					// populated rather than asserting on data.0.*.
+					testAccCheckAuditLogEventIDsNonEmpty(dsReference),
 				),
 			},
 		},
 	})
+}
+
+func testAccCheckAuditLogEventIDsNonEmpty(dsReference string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		ds := s.RootModule().Resources[dsReference]
+		if ds == nil {
+			return fmt.Errorf("datasource %s not found in state", dsReference)
+		}
+		count, _ := strconv.Atoi(ds.Primary.Attributes["data.#"])
+		if count == 0 {
+			return fmt.Errorf("datasource %s returned no audit log event ids", dsReference)
+		}
+		for i := 0; i < count; i++ {
+			id := ds.Primary.Attributes[fmt.Sprintf("data.%d.id", i)]
+			name := ds.Primary.Attributes[fmt.Sprintf("data.%d.name", i)]
+			module := ds.Primary.Attributes[fmt.Sprintf("data.%d.module", i)]
+			if id != "" && name != "" && module != "" {
+				return nil
+			}
+		}
+		return fmt.Errorf("datasource %s has %d elements but none had id/name/module all set", dsReference, count)
+	}
 }
 
 func TestAccDatasourceAuditLogEventIDsInvalidCluster(t *testing.T) {

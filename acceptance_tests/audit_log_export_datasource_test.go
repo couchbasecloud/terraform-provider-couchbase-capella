@@ -4,46 +4,42 @@ import (
 	"fmt"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 // TestAccDatasourceAuditLogExport drives both the audit_log_export resource
 // and its datasource in the same plan: the resource creates an export job,
-// the datasource lists exports and must contain at least one entry. We
-// don't try to match by id because the datasource returns the full list;
-// the count assertion `data.#` >= 1 plus the cluster/project/org IDs are
-// enough to guard the datasource behaviour.
+// the datasource lists exports and must contain at least one entry. The
+// datasource's `data` attribute is a SetNestedAttribute, so elements aren't
+// addressable by stable numeric indices; assertions use the `data.*`
+// set-aware checks and confirm membership of our just-created export.
 func TestAccDatasourceAuditLogExport(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_audit_log_export_for_ds_")
 	dsName := randomStringWithPrefix("tf_acc_audit_log_export_ds_")
 	dsReference := "data.couchbase-capella_audit_log_export." + dsName
 
-	end := time.Now().UTC().Add(-1 * time.Hour).Truncate(time.Second)
-	start := end.Add(-4 * time.Hour)
-	startStr := start.Format(time.RFC3339)
-	endStr := end.Format(time.RFC3339)
+	start, end := auditLogExportWindow()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAuditLogExportResourceAndDatasourceConfig(resourceName, dsName, startStr, endStr),
+				Config: testAccAuditLogExportResourceAndDatasourceConfig(resourceName, dsName, start, end),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dsReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(dsReference, "cluster_id", globalClusterId),
 					// At least one export exists because the resource block
-					// in this step just created one.
-					resource.TestCheckResourceAttrSet(dsReference, "data.0.id"),
-					resource.TestCheckResourceAttrSet(dsReference, "data.0.start"),
-					resource.TestCheckResourceAttrSet(dsReference, "data.0.end"),
-					resource.TestCheckResourceAttrSet(dsReference, "data.0.created_at"),
-					resource.TestCheckResourceAttrSet(dsReference, "data.0.status"),
-					resource.TestCheckResourceAttr(dsReference, "data.0.organization_id", globalOrgId),
-					resource.TestCheckResourceAttr(dsReference, "data.0.project_id", globalProjectId),
-					resource.TestCheckResourceAttr(dsReference, "data.0.cluster_id", globalClusterId),
+					// in this step just created one. Use set-aware membership
+					// assertion to find an element whose ids match ours.
+					resource.TestCheckTypeSetElemNestedAttrs(dsReference, "data.*", map[string]string{
+						"organization_id": globalOrgId,
+						"project_id":      globalProjectId,
+						"cluster_id":      globalClusterId,
+						"start":           start,
+						"end":             end,
+					}),
 				),
 			},
 		},
