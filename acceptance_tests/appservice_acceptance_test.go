@@ -2,6 +2,8 @@ package acceptance_tests
 
 import (
 	"fmt"
+	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -32,6 +34,43 @@ func TestAppServiceResource(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			// Delete testing automatically occurs in TestCase
+		},
+	})
+}
+
+func TestAccDatasourceAppServices(t *testing.T) {
+	dataSourceName := randomStringWithPrefix("tf_acc_app_svcs_ds_")
+	dataSourceReference := "data.couchbase-capella_app_services." + dataSourceName
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppServicesDataSourceConfig(dataSourceName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceReference, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttrSet(dataSourceReference, "data.#"),
+					testAccCheckAppServicesDataSourceContainsGlobalAppService(dataSourceReference),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDatasourceAppServicesMissingOrganization(t *testing.T) {
+	dataSourceName := randomStringWithPrefix("tf_acc_app_svcs_ds_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+%[1]s
+
+data "couchbase-capella_app_services" "%[2]s" {}
+`, globalProviderBlock, dataSourceName),
+				ExpectError: regexp.MustCompile(`The argument "organization_id" is required`),
+			},
 		},
 	})
 }
@@ -88,6 +127,85 @@ resource "couchbase-capella_app_service" "%[4]s" {
   }
 }
 `, globalProviderBlock, globalOrgId, globalProjectId, resourceName, clusterName, cidr)
+}
+
+func testAccAppServicesDataSourceConfig(dataSourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "couchbase-capella_app_services" "%[3]s" {
+  organization_id = "%[2]s"
+}
+`, globalProviderBlock, globalOrgId, dataSourceName)
+}
+
+func testAccCheckAppServicesDataSourceContainsGlobalAppService(dataSourceReference string) resource.TestCheckFunc {
+	return func(state *terraform.State) error {
+		dataSource, ok := state.RootModule().Resources[dataSourceReference]
+		if !ok {
+			return fmt.Errorf("data source %q not found in state", dataSourceReference)
+		}
+
+		attrs := dataSource.Primary.Attributes
+		count, err := strconv.Atoi(attrs["data.#"])
+		if err != nil {
+			return fmt.Errorf("invalid data.# on %q: %w", dataSourceReference, err)
+		}
+
+		for i := 0; i < count; i++ {
+			if attrs[fmt.Sprintf("data.%d.id", i)] != globalAppServiceId {
+				continue
+			}
+
+			expectedAttrs := map[string]string{
+				"organization_id": globalOrgId,
+			}
+			if globalAppServiceCreated {
+				expectedAttrs["cluster_id"] = globalClusterId
+				expectedAttrs["name"] = globalAppServiceName
+				expectedAttrs["nodes"] = "2"
+				expectedAttrs["compute.cpu"] = "2"
+				expectedAttrs["compute.ram"] = "4"
+			}
+
+			for suffix, want := range expectedAttrs {
+				if err := assertAppServicesDataSourceAttr(attrs, i, suffix, want); err != nil {
+					return err
+				}
+			}
+
+			for _, suffix := range []string{
+				"cluster_id",
+				"name",
+				"nodes",
+				"cloud_provider",
+				"current_state",
+				"version",
+				"compute.cpu",
+				"compute.ram",
+				"audit.created_at",
+				"audit.modified_at",
+				"audit.version",
+			} {
+				key := fmt.Sprintf("data.%d.%s", i, suffix)
+				if attrs[key] == "" {
+					return fmt.Errorf("attribute %q expected to be set on matched app service %s", key, globalAppServiceId)
+				}
+			}
+
+			return nil
+		}
+
+		return fmt.Errorf("expected app service %q in %s.data, not found across %d entries", globalAppServiceId, dataSourceReference, count)
+	}
+}
+
+func assertAppServicesDataSourceAttr(attrs map[string]string, index int, suffix, want string) error {
+	key := fmt.Sprintf("data.%d.%s", index, suffix)
+	if got := attrs[key]; got != want {
+		return fmt.Errorf("%s = %q, want %q", key, got, want)
+	}
+	return nil
 }
 
 func generateAppServiceImportId(resourceReference string) resource.ImportStateIdFunc {
