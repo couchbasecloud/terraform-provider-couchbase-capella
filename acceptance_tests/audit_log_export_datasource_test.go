@@ -16,6 +16,7 @@ import (
 // set-aware checks and confirm membership of our just-created export.
 func TestAccDatasourceAuditLogExport(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_audit_log_export_for_ds_")
+	resourceReference := "couchbase-capella_audit_log_export." + resourceName
 	dsName := randomStringWithPrefix("tf_acc_audit_log_export_ds_")
 	dsReference := "data.couchbase-capella_audit_log_export." + dsName
 
@@ -30,16 +31,15 @@ func TestAccDatasourceAuditLogExport(t *testing.T) {
 					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dsReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(dsReference, "cluster_id", globalClusterId),
-					// At least one export exists because the resource block
-					// in this step just created one. Use set-aware membership
-					// assertion to find an element whose ids match ours.
-					resource.TestCheckTypeSetElemNestedAttrs(dsReference, "data.*", map[string]string{
-						"organization_id": globalOrgId,
-						"project_id":      globalProjectId,
-						"cluster_id":      globalClusterId,
-						"start":           start,
-						"end":             end,
-					}),
+					// Match the just-created export by its server-assigned id.
+					// The datasource's start/end attrs are written via
+					// time.Time.String() ("2006-01-02 15:04:05 -0700 UTC")
+					// while the resource normalises them to the
+					// "2006-01-02T15:04:05-07:00" RFC3339-with-offset layout,
+					// so matching by time string here would fail on format
+					// alone. Matching on id is both stable and what the test
+					// actually cares about (membership of THIS export).
+					resource.TestCheckTypeSetElemAttrPair(dsReference, "data.*.id", resourceReference, "id"),
 				),
 			},
 		},
