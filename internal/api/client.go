@@ -244,7 +244,7 @@ func exec(
 	for {
 		select {
 		case <-ctx.Done():
-			return nil, fmt.Errorf("timed out executing request against api after %d attempts: %w", attempts, err)
+			return nil, fmt.Errorf("timed out executing request against api after %d attempts: %w", attempts, ctx.Err())
 		case <-timer.C:
 			response, backOff, err = fn()
 			attempts++
