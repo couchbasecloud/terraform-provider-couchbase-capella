@@ -170,13 +170,6 @@ func createFixtureBucket(ctx context.Context, client *api.Client, name string) (
 		return true, err
 	}
 
-	// Bucket creation triggers a cluster rebalance. Wait for the cluster to
-	// return to healthy before returning, so any subsequent bucket create
-	// (serialised by fixtBucketCreateMu) does not race with rebalancing.
-	if err = waitForAppEndpointTestCluster(ctx, client, false); err != nil {
-		return true, fmt.Errorf("waiting for cluster health after bucket %q creation: %w", name, err)
-	}
-
 	return true, nil
 }
 
