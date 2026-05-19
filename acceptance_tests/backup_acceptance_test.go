@@ -26,6 +26,14 @@ import (
 // backups per bucket and a back-to-back second backup gets stuck in a
 // non-terminal state until the per-bucket spacing window elapses.
 func TestAccBackupResource(t *testing.T) {
+	// Run on a fresh bucket created per test run rather than the shared
+	// globalBucketId. Capella's legacy bucket-backup endpoint serialises
+	// manual backups per bucket; on the shared CI tenant a leaked pending
+	// backup from a previously-killed run can queue this test's POST
+	// indefinitely. A dedicated bucket guarantees zero accumulated state.
+	bucketResourceName := randomStringWithPrefix("tf_acc_backup_bucket_")
+	bucketResourceReference := "couchbase-capella_bucket." + bucketResourceName
+
 	resourceName := randomStringWithPrefix("tf_acc_backup_")
 	resourceReference := "couchbase-capella_backup." + resourceName
 	dsName := randomStringWithPrefix("tf_acc_backups_ds_")
@@ -35,13 +43,13 @@ func TestAccBackupResource(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupResourceConfig(resourceName),
+				Config: testAccBackupOnIsolatedBucketConfig(bucketResourceName, resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsBackupResource(t, resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
-					resource.TestCheckResourceAttr(resourceReference, "bucket_id", globalBucketId),
+					resource.TestCheckResourceAttrPair(resourceReference, "bucket_id", bucketResourceReference, "id"),
 					resource.TestCheckResourceAttrSet(resourceReference, "id"),
 					resource.TestCheckResourceAttrSet(resourceReference, "cycle_id"),
 					resource.TestCheckResourceAttrSet(resourceReference, "date"),
@@ -53,12 +61,12 @@ func TestAccBackupResource(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBackupWithDatasourceConfig(resourceName, dsName),
+				Config: testAccBackupOnIsolatedBucketWithDatasourceConfig(bucketResourceName, resourceName, dsName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dsReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(dsReference, "cluster_id", globalClusterId),
-					resource.TestCheckResourceAttr(dsReference, "bucket_id", globalBucketId),
+					resource.TestCheckResourceAttrPair(dsReference, "bucket_id", bucketResourceReference, "id"),
 					testAccCheckDataSourceContainsBackup(dsReference, resourceReference),
 				),
 			},
@@ -132,10 +140,9 @@ resource "couchbase-capella_backup" "%[2]s" {
 	})
 }
 
-func testAccBackupResourceConfig(resourceName string) string {
-	return testAccBackupResourceConfigWithBucketID(resourceName, globalBucketId)
-}
-
+// testAccBackupResourceConfigWithBucketID is used by the invalid-input tests,
+// which short-circuit before any backup is actually created and therefore have
+// no per-bucket-queue dependency — they continue to point at the shared bucket.
 func testAccBackupResourceConfigWithBucketID(resourceName, bucketID string) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -149,25 +156,55 @@ resource "couchbase-capella_backup" "%[2]s" {
 `, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, bucketID)
 }
 
-func testAccBackupWithDatasourceConfig(resourceName, dsName string) string {
+// testAccBackupOnIsolatedBucketConfig declares a fresh bucket alongside the
+// backup resource so the backup runs on a bucket with zero accumulated state.
+// Terraform's destroy step cleans up both at end of test.
+func testAccBackupOnIsolatedBucketConfig(bucketName, backupName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "couchbase-capella_backup" "%[2]s" {
-  organization_id = "%[3]s"
-  project_id      = "%[4]s"
-  cluster_id      = "%[5]s"
-  bucket_id       = "%[6]s"
+resource "couchbase-capella_bucket" "%[5]s" {
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  cluster_id      = "%[4]s"
+  name            = "%[5]s"
+}
+
+resource "couchbase-capella_backup" "%[6]s" {
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  cluster_id      = "%[4]s"
+  bucket_id       = couchbase-capella_bucket.%[5]s.id
+}
+`, globalProviderBlock, globalOrgId, globalProjectId, globalClusterId, bucketName, backupName)
+}
+
+func testAccBackupOnIsolatedBucketWithDatasourceConfig(bucketName, backupName, dsName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_bucket" "%[5]s" {
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  cluster_id      = "%[4]s"
+  name            = "%[5]s"
+}
+
+resource "couchbase-capella_backup" "%[6]s" {
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  cluster_id      = "%[4]s"
+  bucket_id       = couchbase-capella_bucket.%[5]s.id
 }
 
 data "couchbase-capella_backups" "%[7]s" {
-  organization_id = "%[3]s"
-  project_id      = "%[4]s"
-  cluster_id      = "%[5]s"
-  bucket_id       = "%[6]s"
-  depends_on      = [couchbase-capella_backup.%[2]s]
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  cluster_id      = "%[4]s"
+  bucket_id       = couchbase-capella_bucket.%[5]s.id
+  depends_on      = [couchbase-capella_backup.%[6]s]
 }
-`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, globalBucketId, dsName)
+`, globalProviderBlock, globalOrgId, globalProjectId, globalClusterId, bucketName, backupName, dsName)
 }
 
 func generateBackupImportIdForResource(resourceReference string) resource.ImportStateIdFunc {

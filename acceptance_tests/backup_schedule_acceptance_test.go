@@ -103,8 +103,13 @@ func TestAccBackupScheduleResourceInvalidType(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccBackupScheduleResourceConfig(resourceName, "yearly", "sunday", 10, 4, "30days", false),
-				ExpectError: regexp.MustCompile("There is an error during backup schedule creation"),
+				Config: testAccBackupScheduleResourceConfig(resourceName, "yearly", "sunday", 10, 4, "30days", false),
+				// The schema validator now rejects type values outside the
+				// allowed enum at plan time, so the test no longer reaches
+				// the API. Match the validator's diagnostic instead of the
+				// previous server-side "error during backup schedule
+				// creation" message.
+				ExpectError: regexp.MustCompile(`Attribute type value must be one of: \["weekly"\]`),
 			},
 		},
 	})
