@@ -2,6 +2,7 @@ package schema
 
 import (
 	"reflect"
+	"sort"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
@@ -16,6 +17,7 @@ import (
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/docs"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/enums"
+	customvalidator "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema/validator"
 )
 
 // SchemaAttribute is a type constraint for supported attribute types across resources and datasources
@@ -144,6 +146,13 @@ func AddAttr[M SchemaAttributeMap, T SchemaAttribute](
 
 	if def := enums.Lookup(builder, alternateSchemas, fieldName); def != nil {
 		appendOneOfValidator(attr, def)
+	}
+
+	// Check for composition validators (oneOf/anyOf) for SingleNestedAttribute
+	// Uses custom validators that correctly handle nested attributes by checking
+	// if child objects actually have user-provided values.
+	if compDef := enums.CompositionLookup(builder, alternateSchemas, fieldName); compDef != nil {
+		appendCompositionValidator(attr, compDef)
 	}
 
 	// Add to map based on map type
@@ -291,4 +300,91 @@ func elementOneOfSet(elem attr.Type, def *enums.EnumDef) validator.Set {
 		return setvalidator.ValueInt64sAre(int64validator.OneOf(ints...))
 	}
 	return nil
+}
+
+// appendCompositionValidator attaches ExactlyOneOfNested (for oneOf) or AtLeastOneOfNested
+// (for anyOf) validators to SingleNestedAttribute based on composition metadata.
+// Uses custom validators that correctly handle nested attributes by checking if child
+// objects actually have user-provided values (not just empty/unknown from Terraform init).
+// Uses schema introspection to discover child attribute names rather than relying
+// on OpenAPI branch schema names which don't reliably map to TF attribute names.
+// Skips if validators are already attached (call-site override wins).
+func appendCompositionValidator(a any, def *enums.CompositionDef) {
+	switch x := a.(type) {
+	case *resourceschema.SingleNestedAttribute:
+		if len(x.Validators) > 0 {
+			return
+		}
+		names := extractChildNames(x.Attributes)
+		if len(names) < 2 {
+			return
+		}
+		switch def.Kind {
+		case "oneOf":
+			x.Validators = append(x.Validators, customvalidator.ExactlyOneOfNested(names...))
+		case "anyOf":
+			x.Validators = append(x.Validators, customvalidator.AtLeastOneOfNested(names...))
+		}
+
+	case *datasourceschema.SingleNestedAttribute:
+		if len(x.Validators) > 0 {
+			return
+		}
+		names := extractChildNamesDS(x.Attributes)
+		if len(names) < 2 {
+			return
+		}
+		switch def.Kind {
+		case "oneOf":
+			x.Validators = append(x.Validators, customvalidator.ExactlyOneOfNested(names...))
+		case "anyOf":
+			x.Validators = append(x.Validators, customvalidator.AtLeastOneOfNested(names...))
+		}
+	}
+}
+
+// extractChildNames introspects a resource schema's Attributes map and returns
+// names of all optional SingleNestedAttribute children. These are the composition
+// branch candidates for ExactlyOneOfNested/AtLeastOneOfNested validators.
+// Only includes children that are truly Optional (user-settable), excluding
+// Required and Computed-only attributes.
+// Does not filter out nested attributes with computed fields because the custom
+// validators correctly handle them by checking for actual user-provided values.
+func extractChildNames(attrs map[string]resourceschema.Attribute) []string {
+	var names []string
+
+	for name, attr := range attrs {
+		nested, ok := attr.(*resourceschema.SingleNestedAttribute)
+		if !ok {
+			continue
+		}
+		// Only include truly optional attributes that users can set.
+		// Exclude Required (must be set) and Computed-only (can't be set).
+		if !nested.Optional {
+			continue
+		}
+		names = append(names, name)
+	}
+
+	sort.Strings(names)
+	return names
+}
+
+// extractChildNamesDS is the datasource equivalent of extractChildNames.
+func extractChildNamesDS(attrs map[string]datasourceschema.Attribute) []string {
+	var names []string
+
+	for name, attr := range attrs {
+		nested, ok := attr.(*datasourceschema.SingleNestedAttribute)
+		if !ok {
+			continue
+		}
+		if !nested.Optional {
+			continue
+		}
+		names = append(names, name)
+	}
+
+	sort.Strings(names)
+	return names
 }
