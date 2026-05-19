@@ -392,19 +392,14 @@ var requiredTable = map[string]map[string]RequiredDef{
 		"origin": {},
 	},
 	"CapellaHostedModel": {
-		"capellaHostedModel":           {},
-		"capellaHostedModel.id":        {},
-		"capellaHostedModel.modelName": {},
+		"capellaHostedModel": {},
 	},
 	"CategorizedBillingRequest": {
 		"endDate":   {},
 		"startDate": {},
 	},
 	"CategorizedBillingResponse": {
-		"data":                 {},
-		"data.billingCurrency": {},
-		"data.periods":         {},
-		"data.total":           {},
+		"data": {},
 	},
 	"CloudAccounts": {
 		"aws-capella-account":        {},
@@ -412,11 +407,9 @@ var requiredTable = map[string]map[string]RequiredDef{
 		"gcp-capella-project":        {},
 	},
 	"CloudConfig": {
-		"compute":           {},
-		"compute.cpu":       {},
-		"compute.gpuMemory": {},
-		"provider":          {},
-		"region":            {},
+		"compute":  {},
+		"provider": {},
+		"region":   {},
 	},
 	"CloudProvider": {
 		"region": {},
@@ -658,10 +651,8 @@ var requiredTable = map[string]map[string]RequiredDef{
 		"replicationId": {},
 	},
 	"CreateReplicationRequest": {
-		"sourceBucket":   {},
-		"target":         {},
-		"target.bucket":  {},
-		"target.cluster": {},
+		"sourceBucket": {},
+		"target":       {},
 	},
 	"CreateReplicationResponseAsync": {
 		"jobId": {},
@@ -672,31 +663,20 @@ var requiredTable = map[string]map[string]RequiredDef{
 		"bucket":          {},
 		"secretAccessKey": {},
 	},
-	"CreateScheduledBackupRequest": {
-		"weeklySchedule.costOptimizedRetention": {},
-		"weeklySchedule.dayOfWeek":              {},
-		"weeklySchedule.incrementalEvery":       {},
-		"weeklySchedule.retentionTime":          {},
-		"weeklySchedule.startAt":                {},
-	},
 	"CreateScopeRequest": {
 		"name": {},
 	},
 	"CreateStructuredWorkflowRequest": {
-		"source":                                  {},
-		"source.providerId":                       {},
-		"structuredDataProcessingConfig":          {},
-		"structuredDataProcessingConfig.jsonType": {},
-		"targetCouchbaseKeyspace":                 {},
-		"vectorizationConfig":                     {},
+		"source":                         {},
+		"structuredDataProcessingConfig": {},
+		"targetCouchbaseKeyspace":        {},
+		"vectorizationConfig":            {},
 	},
 	"CreateUnstructuredWorkflowRequest": {
 		"source":                           {},
-		"source.providerId":                {},
 		"targetCouchbaseKeyspace":          {},
 		"unstructuredDataProcessingConfig": {},
-		"unstructuredDataProcessingConfig.chunkingStrategy": {},
-		"vectorizationConfig":                               {},
+		"vectorizationConfig":              {},
 	},
 	"CreateUserRequest": {
 		"email":             {},
@@ -772,9 +752,7 @@ var requiredTable = map[string]map[string]RequiredDef{
 		"message":        {},
 	},
 	"ExternalModel": {
-		"external":                   {},
-		"external.modelName":         {},
-		"external.openAiIntegration": {},
+		"external": {},
 	},
 	"GCPConfig": {
 		"resourceName": {},
@@ -1029,10 +1007,6 @@ var requiredTable = map[string]map[string]RequiredDef{
 		"cursor": {},
 		"data":   {},
 	},
-	"GetLanguageModelAPIKeyResponse": {
-		"allowedModels.[].id":   {},
-		"allowedModels.[].name": {},
-	},
 	"GetLanguageModelsResponse": {
 		"cursor": {},
 		"data":   {},
@@ -1108,16 +1082,14 @@ var requiredTable = map[string]map[string]RequiredDef{
 	"GetStructuredWorkflowResponse": {
 		"source":                         {},
 		"structuredDataProcessingConfig": {},
-		"structuredDataProcessingConfig.jsonType": {},
-		"targetCouchbaseKeyspace":                 {},
-		"vectorizationConfig":                     {},
+		"targetCouchbaseKeyspace":        {},
+		"vectorizationConfig":            {},
 	},
 	"GetUnstructuredWorkflowResponse": {
 		"source":                           {},
 		"targetCouchbaseKeyspace":          {},
 		"unstructuredDataProcessingConfig": {},
-		"unstructuredDataProcessingConfig.chunkingStrategy": {},
-		"vectorizationConfig":                               {},
+		"vectorizationConfig":              {},
 	},
 	"GetUserResponse": {
 		"audit":             {},
@@ -1170,9 +1142,6 @@ var requiredTable = map[string]map[string]RequiredDef{
 	"IndexDDLRequest": {
 		"definition": {},
 	},
-	"IndexDDLResponse": {
-		"errors.[].msg": {},
-	},
 	"IndexDefinitionsResponse": {
 		"definition": {},
 		"indexName":  {},
@@ -1198,12 +1167,7 @@ var requiredTable = map[string]map[string]RequiredDef{
 		"startDate": {},
 	},
 	"ItemizedBillingResponse": {
-		"data":                 {},
-		"data.billingCurrency": {},
-		"data.clusterName":     {},
-		"data.periods":         {},
-		"data.supportPlan":     {},
-		"data.total":           {},
+		"data": {},
 	},
 	"ListAdminUsersResponse": {
 		"cursor": {},
@@ -1314,10 +1278,7 @@ var requiredTable = map[string]map[string]RequiredDef{
 		"total":     {},
 	},
 	"PayAsYouGoResponse": {
-		"data":                 {},
-		"data.billingCurrency": {},
-		"data.periods":         {},
-		"data.total":           {},
+		"data": {},
 	},
 	"PayAsYouGoTotal": {
 		"cost":      {},
@@ -1511,17 +1472,7 @@ var requiredTable = map[string]map[string]RequiredDef{
 		"embeddingModel":         {},
 	},
 	"VectorizationConfigCreation": {
-		"embeddingModel":                                           {},
-		"embeddingModel.capellaHostedModel":                        {},
-		"embeddingModel.capellaHostedModel.apiKeyId":               {},
-		"embeddingModel.capellaHostedModel.apiKeyToken":            {},
-		"embeddingModel.capellaHostedModel.id":                     {},
-		"embeddingModel.capellaHostedModel.modelName":              {},
-		"embeddingModel.capellaHostedModel.privateEndpointEnabled": {},
-		"embeddingModel.external":                                  {},
-		"embeddingModel.external.modelName":                        {},
-		"embeddingModel.external.openAiIntegration":                {},
-		"embeddingModel.external.openAiIntegration.providerId":     {},
+		"embeddingModel": {},
 	},
 	"WeeklySchedule": {
 		"costOptimizedRetention": {},
@@ -1551,23 +1502,10 @@ var requiredTable = map[string]map[string]RequiredDef{
 		"url":      {},
 		"user":     {},
 	},
-	"mappings": {
-		"[].collections.[].sourceCollection": {},
-		"[].collections.[].targetCollection": {},
-		"[].sourceScope":                     {},
-		"[].targetScope":                     {},
-	},
 	"replicationSource": {
-		"bucket":                        {},
-		"bucket.conflictResolutionType": {},
-		"bucket.id":                     {},
-		"bucket.name":                   {},
-		"cluster":                       {},
-		"cluster.id":                    {},
-		"cluster.name":                  {},
-		"project":                       {},
-		"project.id":                    {},
-		"project.name":                  {},
+		"bucket":  {},
+		"cluster": {},
+		"project": {},
 	},
 	"replicationSummary": {
 		"audit":         {},
@@ -1577,13 +1515,9 @@ var requiredTable = map[string]map[string]RequiredDef{
 		"targetCluster": {},
 	},
 	"replicationTarget": {
-		"bucket":       {},
-		"bucket.id":    {},
-		"bucket.name":  {},
-		"cluster":      {},
-		"cluster.id":   {},
-		"cluster.name": {},
-		"type":         {},
+		"bucket":  {},
+		"cluster": {},
+		"type":    {},
 	},
 	"splunk": {
 		"splunkToken": {},

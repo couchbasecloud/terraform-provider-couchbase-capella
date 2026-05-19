@@ -326,11 +326,18 @@ func extractSchemaName(ref string) string {
 
 // recordRequired captures required field names from a schema's required array.
 // Each required field is stored as a requiredSite for later code generation.
+// Only top-level required fields are recorded (parentFieldPath must be empty)
+// because RequiredLookup matches by single field name, not dot-paths.
 func (w *walker) recordRequired(required []string, schemaName, parentFieldPath, sourcePath string) {
+	// Skip nested required fields - they can't be matched by RequiredLookup
+	// which only looks up single Terraform field keys.
+	if parentFieldPath != "" {
+		return
+	}
 	for _, fieldName := range required {
 		w.requiredSites = append(w.requiredSites, requiredSite{
 			SchemaName: schemaName,
-			FieldPath:  joinPath(parentFieldPath, fieldName),
+			FieldPath:  fieldName,
 			SourcePath: sourcePath + ".required[" + fieldName + "]",
 		})
 	}
