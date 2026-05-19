@@ -242,7 +242,7 @@ func TestGenerateAll_ProducesValidGo(t *testing.T) {
 		{SchemaName: "MergedSchema", FieldPath: "settings", Kind: "allOf", Branches: []string{"Base", "Extended"}},
 	}
 
-	src, err := generateAll(enumSites, compSites, nil)
+	src, err := generateAll(enumSites, compSites, nil, nil)
 	if err != nil {
 		t.Fatalf("generateAll: %v", err)
 	}
@@ -285,7 +285,7 @@ func TestGenerateAll_EmptyComposition(t *testing.T) {
 		{Scope: scopeSchema, SchemaName: "Status", FieldPath: "state", Type: "string", Values: []string{"on"}},
 	}
 
-	src, err := generateAll(enumSites, nil, nil)
+	src, err := generateAll(enumSites, nil, nil, nil)
 	if err != nil {
 		t.Fatalf("generateAll: %v", err)
 	}
@@ -308,7 +308,7 @@ func TestGenerateAll_RequiredFields(t *testing.T) {
 		{SchemaName: "AWSConfigData", FieldPath: "accountId"},
 	}
 
-	src, err := generateAll(nil, nil, reqSites)
+	src, err := generateAll(nil, nil, reqSites, nil)
 	if err != nil {
 		t.Fatalf("generateAll: %v", err)
 	}
@@ -326,4 +326,78 @@ func TestGenerateAll_RequiredFields(t *testing.T) {
 	if !strings.Contains(got, `"accountId"`) {
 		t.Errorf("output missing accountId field:\n%s", got)
 	}
+}
+
+func TestGenerateAll_ConstraintFields(t *testing.T) {
+	min := 1.0
+	max := 100.0
+	minLen := int64(2)
+	maxLen := int64(256)
+	minItems := int64(1)
+	maxItems := int64(30)
+
+	constrSites := []constraintSite{
+		{SchemaName: "CreateClusterRequest", FieldPath: "name", MinLength: &minLen, MaxLength: &maxLen},
+		{SchemaName: "CreateClusterRequest", FieldPath: "nodes", Minimum: &min, Maximum: &max},
+		{SchemaName: "ServiceGroups", FieldPath: "items", MinItems: &minItems, MaxItems: &maxItems},
+	}
+
+	src, err := generateAll(nil, nil, nil, constrSites)
+	if err != nil {
+		t.Fatalf("generateAll: %v", err)
+	}
+	if _, err := parser.ParseFile(token.NewFileSet(), "enums.gen.go", src, parser.AllErrors); err != nil {
+		t.Fatalf("generated source does not parse: %v\n%s", err, src)
+	}
+	got := string(src)
+
+	checks := []string{
+		"type ConstraintDef struct {",
+		"var constraintTable = map[string]map[string]ConstraintDef{",
+		`"CreateClusterRequest"`,
+		"ptrInt64(2)",   // MinLength
+		"ptrInt64(256)", // MaxLength
+		"ptrFloat64(1)", // Minimum
+		"ptrFloat64(100)", // Maximum
+		`"ServiceGroups"`,
+		"MinItems: ptrInt64(1)",
+		"MaxItems: ptrInt64(30)",
+	}
+	for _, want := range checks {
+		if !strings.Contains(got, want) {
+			t.Errorf("generated output missing %q\n--- src ---\n%s", want, got)
+		}
+	}
+}
+
+func TestBuildConstraintTable(t *testing.T) {
+	t.Run("indexes by schema and field", func(t *testing.T) {
+		min := 50.0
+		maxLen := int64(256)
+		sites := []constraintSite{
+			{SchemaName: "CreateClusterRequest", FieldPath: "name", MaxLength: &maxLen},
+			{SchemaName: "DiskAWS", FieldPath: "storage", Minimum: &min},
+		}
+		got := buildConstraintTable(sites)
+		if len(got) != 2 {
+			t.Fatalf("want 2 schemas, got %d", len(got))
+		}
+		if def := got["CreateClusterRequest"]["name"]; def.MaxLength == nil || *def.MaxLength != 256 {
+			t.Errorf("CreateClusterRequest.name = %+v", def)
+		}
+		if def := got["DiskAWS"]["storage"]; def.Minimum == nil || *def.Minimum != 50 {
+			t.Errorf("DiskAWS.storage = %+v", def)
+		}
+	})
+
+	t.Run("excludes empty FieldPath", func(t *testing.T) {
+		min := 1.0
+		sites := []constraintSite{
+			{SchemaName: "TopLevel", FieldPath: "", Minimum: &min},
+		}
+		got := buildConstraintTable(sites)
+		if len(got) != 0 {
+			t.Errorf("top-level sites should be excluded, got %v", got)
+		}
+	})
 }

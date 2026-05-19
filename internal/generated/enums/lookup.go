@@ -141,3 +141,32 @@ func RequiredLookup(b SchemaBuilder, alternateSchemas []string, tfFieldName stri
 	}
 	return false
 }
+
+// ConstraintLookup returns the constraint definition (min/max values, lengths,
+// item counts) associated with a Terraform attribute on the given builder,
+// walking the same schema-name pattern list used by Lookup.
+// Returns nil when no constraints are associated with the attribute.
+func ConstraintLookup(b SchemaBuilder, alternateSchemas []string, tfFieldName string) *ConstraintDef {
+	field := snakeToCamel(tfFieldName)
+
+	patterns := append([]string(nil), alternateSchemas...)
+
+	// Patterns from the OpenAPI schema name
+	patterns = append(patterns, schemaPatterns(b.GetOpenAPISchemaName())...)
+
+	// Patterns from the Terraform resource name, in case it differs
+	if b.GetResourceName() != b.GetOpenAPISchemaName() {
+		patterns = append(patterns, schemaPatterns(b.GetResourceName())...)
+	}
+
+	for _, p := range patterns {
+		if p == "" {
+			continue
+		}
+		if def, ok := constraintTable[p][field]; ok {
+			out := def
+			return &out
+		}
+	}
+	return nil
+}

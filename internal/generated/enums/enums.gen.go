@@ -2,6 +2,9 @@
 
 package enums
 
+func ptrFloat64(v float64) *float64 { return &v }
+func ptrInt64(v int64) *int64       { return &v }
+
 // EnumDef describes one enum-constrained property. Type is the OpenAPI
 // scalar type ("string" or "integer"). IsArray is true when the property
 // itself is an array; values constrain each element.
@@ -1525,5 +1528,174 @@ var requiredTable = map[string]map[string]RequiredDef{
 	},
 	"sumologic": {
 		"url": {},
+	},
+}
+
+// ConstraintDef describes min/max constraints for a property.
+// Pointer fields are nil when the constraint is not specified.
+type ConstraintDef struct {
+	Minimum   *float64
+	Maximum   *float64
+	MinLength *int64
+	MaxLength *int64
+	MinItems  *int64
+	MaxItems  *int64
+}
+
+var constraintTable = map[string]map[string]ConstraintDef{
+	"BasicAuth": {
+		"password": {MaxLength: ptrInt64(1024)},
+		"user":     {MaxLength: ptrInt64(1024)},
+	},
+	"CreateAlertRequest": {
+		"name": {MaxLength: ptrInt64(1024)},
+	},
+	"CreateAppServicerRequest": {
+		"name": {MaxLength: ptrInt64(256)},
+	},
+	"CreateAzurePrivateEndpointCommandRequest": {
+		"resourceGroupName": {MinLength: ptrInt64(1), MaxLength: ptrInt64(90)},
+		"virtualNetwork":    {MinLength: ptrInt64(2), MaxLength: ptrInt64(64)},
+	},
+	"CreateBucketRequest": {
+		"name": {MaxLength: ptrInt64(100)},
+	},
+	"CreateCMEKAzureMetadata": {
+		"description": {MaxLength: ptrInt64(1024)},
+		"name":        {MaxLength: ptrInt64(256)},
+	},
+	"CreateCMEKMetadata": {
+		"description": {MaxLength: ptrInt64(512)},
+		"name":        {MaxLength: ptrInt64(128)},
+	},
+	"CreateCloudSnapshotCloneRequest": {
+		"description": {MaxLength: ptrInt64(1024)},
+		"name":        {MaxLength: ptrInt64(256)},
+	},
+	"CreateClusterRequest": {
+		"description":   {MaxLength: ptrInt64(1024)},
+		"name":          {MaxLength: ptrInt64(256)},
+		"serviceGroups": {MinItems: ptrInt64(1)},
+	},
+	"CreateColumnarAnalyticsClusterRequest": {
+		"description": {MaxLength: ptrInt64(1024)},
+		"name":        {MaxLength: ptrInt64(256)},
+		"nodes":       {Minimum: ptrFloat64(1), Maximum: ptrFloat64(32)},
+	},
+	"CreateDatabaseCredentialRequest": {
+		"name":     {MinLength: ptrInt64(2), MaxLength: ptrInt64(128)},
+		"password": {MinLength: ptrInt64(8)},
+	},
+	"CreateFreeTierAppServiceRequest": {
+		"description": {MaxLength: ptrInt64(256)},
+		"name":        {MaxLength: ptrInt64(256)},
+	},
+	"CreateFreeTierBucketRequest": {
+		"name": {MaxLength: ptrInt64(100)},
+	},
+	"CreateFreeTierClusterRequest": {
+		"description": {MaxLength: ptrInt64(1024)},
+		"name":        {MaxLength: ptrInt64(256)},
+	},
+	"CreateGCPPrivateEndpointCommandRequest": {
+		"vpcNetworkID": {MinLength: ptrInt64(12), MaxLength: ptrInt64(21)},
+	},
+	"CreateLanguageModelAPIKeyRequest": {
+		"description": {MaxLength: ptrInt64(250)},
+		"name":        {MaxLength: ptrInt64(128)},
+	},
+	"CreatePrivateEndpointServiceCommandRequest": {
+		"vpcID": {MinLength: ptrInt64(12), MaxLength: ptrInt64(21)},
+	},
+	"CreateProjectRequest": {
+		"description": {MaxLength: ptrInt64(256)},
+		"name":        {MaxLength: ptrInt64(128)},
+	},
+	"CreateProviderRequest": {
+		"name": {MaxLength: ptrInt64(50)},
+	},
+	"CreateUserRequest": {
+		"name": {MaxLength: ptrInt64(128)},
+	},
+	"CreateVPCEndpointCommandRequest": {
+		"vpcID": {MinLength: ptrInt64(12), MaxLength: ptrInt64(21)},
+	},
+	"DisabledUserRole": {
+		"name": {MaxLength: ptrInt64(256)},
+	},
+	"DiskAWS": {
+		"storage": {Minimum: ptrFloat64(50)},
+	},
+	"DiskGCP": {
+		"storage": {Minimum: ptrFloat64(50)},
+	},
+	"GetAlertResponse": {
+		"name": {MaxLength: ptrInt64(1024)},
+	},
+	"GetAppServiceResponse": {
+		"description": {MaxLength: ptrInt64(1024)},
+		"name":        {MaxLength: ptrInt64(256)},
+	},
+	"GetCMEKAzureMetadataResponse": {
+		"description": {MaxLength: ptrInt64(1024)},
+		"name":        {MaxLength: ptrInt64(256)},
+	},
+	"GetCMEKMetadata": {
+		"description": {MaxLength: ptrInt64(1024)},
+		"name":        {MaxLength: ptrInt64(256)},
+	},
+	"GetClusterResponse": {
+		"description": {MaxLength: ptrInt64(1024)},
+		"name":        {MaxLength: ptrInt64(256)},
+	},
+	"GetColumnarAnalyticsClusterResponse": {
+		"description": {MaxLength: ptrInt64(1024)},
+		"name":        {MaxLength: ptrInt64(256)},
+		"nodes":       {Minimum: ptrFloat64(1), Maximum: ptrFloat64(32)},
+	},
+	"GetDatabaseCredentialResponse": {
+		"name": {MaxLength: ptrInt64(256)},
+	},
+	"GetOrganizationResponse": {
+		"subdomain": {MaxLength: ptrInt64(30)},
+	},
+	"GetUserResponse": {
+		"name": {MaxLength: ptrInt64(128)},
+	},
+	"ServiceGroup": {
+		"services": {MinItems: ptrInt64(1)},
+	},
+	"UpdateAlertRequest": {
+		"name": {MaxLength: ptrInt64(1024)},
+	},
+	"UpdateBucketStorageBackendRequest": {
+		"buckets": {MaxItems: ptrInt64(30)},
+	},
+	"UpdateClusterRequest": {
+		"description": {MaxLength: ptrInt64(1024)},
+		"name":        {MaxLength: ptrInt64(256)},
+	},
+	"UpdateClusterResponse": {
+		"description": {MaxLength: ptrInt64(1024)},
+		"name":        {MaxLength: ptrInt64(256)},
+	},
+	"UpdateColumnarAnalyticsClusterRequest": {
+		"description": {MaxLength: ptrInt64(1024)},
+		"name":        {MaxLength: ptrInt64(256)},
+		"nodes":       {Minimum: ptrFloat64(1), Maximum: ptrFloat64(32)},
+	},
+	"UpdateFreeTierAppServiceRequest": {
+		"name": {MaxLength: ptrInt64(256)},
+	},
+	"UpdateFreeTierClusterRequest": {
+		"description": {MaxLength: ptrInt64(1024)},
+		"name":        {MaxLength: ptrInt64(256)},
+	},
+	"UpdateOrganizationConfigurationRequest": {
+		"subdomain": {MaxLength: ptrInt64(30)},
+	},
+	"UpdateProjectRequest": {
+		"description": {MaxLength: ptrInt64(256)},
+		"name":        {MaxLength: ptrInt64(128)},
 	},
 }

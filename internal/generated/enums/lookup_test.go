@@ -148,3 +148,65 @@ func TestRequiredLookup_AlternateSchemaWins(t *testing.T) {
 		t.Error("expected cidr to be required via alternate schema")
 	}
 }
+
+// Constraint lookup tests
+
+func TestConstraintLookup_Found(t *testing.T) {
+	// CreateClusterRequest.name has maxLength constraint
+	b := stubBuilder{resource: "cluster", schema: "CreateClusterRequest"}
+
+	def := ConstraintLookup(b, nil, "name")
+	if def == nil {
+		t.Fatal("expected constraint for name, got nil")
+	}
+	if def.MaxLength == nil {
+		t.Error("expected MaxLength to be set")
+	}
+	if def.MaxLength != nil && *def.MaxLength != 256 {
+		t.Errorf("expected MaxLength=256, got %d", *def.MaxLength)
+	}
+}
+
+func TestConstraintLookup_MinMax(t *testing.T) {
+	// DiskAWS.storage has minimum constraint
+	b := stubBuilder{resource: "diskAWS", schema: "DiskAWS"}
+
+	def := ConstraintLookup(b, nil, "storage")
+	if def == nil {
+		t.Fatal("expected constraint for storage, got nil")
+	}
+	if def.Minimum == nil {
+		t.Error("expected Minimum to be set")
+	}
+	if def.Minimum != nil && *def.Minimum != 50 {
+		t.Errorf("expected Minimum=50, got %f", *def.Minimum)
+	}
+}
+
+func TestConstraintLookup_PatternMatching(t *testing.T) {
+	// Should find via Create{Resource}Request pattern
+	b := stubBuilder{resource: "cluster", schema: "cluster"}
+
+	def := ConstraintLookup(b, nil, "name")
+	if def == nil {
+		t.Fatal("expected constraint via CreateClusterRequest pattern, got nil")
+	}
+}
+
+func TestConstraintLookup_AlternateSchemaWins(t *testing.T) {
+	b := stubBuilder{resource: "unknown", schema: "unknown"}
+
+	def := ConstraintLookup(b, []string{"CreateClusterRequest"}, "name")
+	if def == nil {
+		t.Fatal("expected constraint via alternate schema, got nil")
+	}
+}
+
+func TestConstraintLookup_NotFound(t *testing.T) {
+	b := stubBuilder{resource: "unknown", schema: "unknown"}
+
+	def := ConstraintLookup(b, nil, "non_existent_field")
+	if def != nil {
+		t.Errorf("expected nil for unknown field, got %+v", def)
+	}
+}

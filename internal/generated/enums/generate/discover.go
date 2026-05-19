@@ -47,18 +47,30 @@ type requiredSite struct {
 	SourcePath string
 }
 
+type constraintSite struct {
+	SchemaName string
+	FieldPath  string
+	Minimum    *float64
+	Maximum    *float64
+	MinLength  *int64
+	MaxLength  *int64
+	MinItems   *int64
+	MaxItems   *int64
+	SourcePath string
+}
+
 func discover(specPath string) ([]enumSite, error) {
-	enums, _, _, err := discoverAll(specPath)
+	enums, _, _, _, err := discoverAll(specPath)
 	return enums, err
 }
 
-func discoverAll(specPath string) ([]enumSite, []compositionSite, []requiredSite, error) {
+func discoverAll(specPath string) ([]enumSite, []compositionSite, []requiredSite, []constraintSite, error) {
 	loader := openapi3.NewLoader()
 	loader.IsExternalRefsAllowed = true
 
 	doc, err := loader.LoadFromFile(specPath)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("load spec: %w", err)
+		return nil, nil, nil, nil, fmt.Errorf("load spec: %w", err)
 	}
 
 	w := &walker{doc: doc}
@@ -66,7 +78,7 @@ func discoverAll(specPath string) ([]enumSite, []compositionSite, []requiredSite
 
 	sites, err := dedupByID(w.sites)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
 	sort.Slice(sites, func(i, j int) bool {
@@ -98,7 +110,16 @@ func discoverAll(specPath string) ([]enumSite, []compositionSite, []requiredSite
 		return a.FieldPath < b.FieldPath
 	})
 
-	return sites, compSites, reqSites, nil
+	constrSites := dedupConstraints(w.constraintSites)
+	sort.Slice(constrSites, func(i, j int) bool {
+		a, b := constrSites[i], constrSites[j]
+		if a.SchemaName != b.SchemaName {
+			return a.SchemaName < b.SchemaName
+		}
+		return a.FieldPath < b.FieldPath
+	})
+
+	return sites, compSites, reqSites, constrSites, nil
 }
 
 func dedupComposition(sites []compositionSite) []compositionSite {
@@ -153,6 +174,43 @@ func dedupRequired(sites []requiredSite) []requiredSite {
 	return out
 }
 
+func dedupConstraints(sites []constraintSite) []constraintSite {
+	type key struct {
+		schema, field string
+	}
+	seen := make(map[key]int, len(sites))
+	out := make([]constraintSite, 0, len(sites))
+	for _, s := range sites {
+		k := key{s.SchemaName, s.FieldPath}
+		if idx, ok := seen[k]; ok {
+			// Merge constraints: take non-nil values from either site
+			existing := &out[idx]
+			if existing.Minimum == nil && s.Minimum != nil {
+				existing.Minimum = s.Minimum
+			}
+			if existing.Maximum == nil && s.Maximum != nil {
+				existing.Maximum = s.Maximum
+			}
+			if existing.MinLength == nil && s.MinLength != nil {
+				existing.MinLength = s.MinLength
+			}
+			if existing.MaxLength == nil && s.MaxLength != nil {
+				existing.MaxLength = s.MaxLength
+			}
+			if existing.MinItems == nil && s.MinItems != nil {
+				existing.MinItems = s.MinItems
+			}
+			if existing.MaxItems == nil && s.MaxItems != nil {
+				existing.MaxItems = s.MaxItems
+			}
+			continue
+		}
+		seen[k] = len(out)
+		out = append(out, s)
+	}
+	return out
+}
+
 // dedupByID merges sites that share an ID — emitted by composition keyword
 // branches (allOf/oneOf/anyOf) that converge on the same logical field. Values
 // are unioned in first-seen order. Conflicting Types are a spec error.
@@ -197,6 +255,7 @@ type walker struct {
 	sites            []enumSite
 	compositionSites []compositionSite
 	requiredSites    []requiredSite
+	constraintSites  []constraintSite
 }
 
 func (w *walker) run() {
@@ -253,6 +312,10 @@ func (w *walker) schema(id string, s *openapi3.Schema, schemaName, fieldPath, so
 	// Record required fields from the schema's required array
 	if sc == scopeSchema && len(s.Required) > 0 {
 		w.recordRequired(s.Required, schemaName, fieldPath, sourcePath)
+	}
+	// Record min/max constraints for this schema node
+	if sc == scopeSchema {
+		w.recordConstraints(s, schemaName, fieldPath, sourcePath)
 	}
 	for fieldName, propRef := range s.Properties {
 		if propRef == nil || propRef.Ref != "" || propRef.Value == nil {
@@ -341,6 +404,49 @@ func (w *walker) recordRequired(required []string, schemaName, parentFieldPath, 
 			SourcePath: sourcePath + ".required[" + fieldName + "]",
 		})
 	}
+}
+
+// recordConstraints captures min/max constraints (minimum, maximum, minLength,
+// maxLength, minItems, maxItems) from a schema node. Only records when at least
+// one constraint is present and fieldPath is not empty (top-level schema-only
+// constraints are skipped since they apply to the schema itself, not a field).
+func (w *walker) recordConstraints(s *openapi3.Schema, schemaName, fieldPath, sourcePath string) {
+	// Skip top-level schemas - constraints only make sense for fields
+	if fieldPath == "" {
+		return
+	}
+	// Only record if at least one constraint is present
+	if s.Min == nil && s.Max == nil && s.MinLength == 0 && s.MaxLength == nil && s.MinItems == 0 && s.MaxItems == nil {
+		return
+	}
+	site := constraintSite{
+		SchemaName: schemaName,
+		FieldPath:  fieldPath,
+		SourcePath: sourcePath,
+	}
+	if s.Min != nil {
+		site.Minimum = s.Min
+	}
+	if s.Max != nil {
+		site.Maximum = s.Max
+	}
+	if s.MinLength > 0 {
+		v := int64(s.MinLength)
+		site.MinLength = &v
+	}
+	if s.MaxLength != nil {
+		v := int64(*s.MaxLength)
+		site.MaxLength = &v
+	}
+	if s.MinItems > 0 {
+		v := int64(s.MinItems)
+		site.MinItems = &v
+	}
+	if s.MaxItems != nil {
+		v := int64(*s.MaxItems)
+		site.MaxItems = &v
+	}
+	w.constraintSites = append(w.constraintSites, site)
 }
 
 func (w *walker) items(id string, s *openapi3.Schema, schemaName, fieldPath, sourcePath string, sc scope) {
