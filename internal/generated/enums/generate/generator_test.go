@@ -329,8 +329,8 @@ func TestGenerateAll_RequiredFields(t *testing.T) {
 }
 
 func TestGenerateAll_ConstraintFields(t *testing.T) {
-	min := 1.0
-	max := 100.0
+	minVal := 1.0
+	maxVal := 100.0
 	minLen := int64(2)
 	maxLen := int64(256)
 	minItems := int64(1)
@@ -338,7 +338,7 @@ func TestGenerateAll_ConstraintFields(t *testing.T) {
 
 	constrSites := []constraintSite{
 		{SchemaName: "CreateClusterRequest", FieldPath: "name", MinLength: &minLen, MaxLength: &maxLen},
-		{SchemaName: "CreateClusterRequest", FieldPath: "nodes", Minimum: &min, Maximum: &max},
+		{SchemaName: "CreateClusterRequest", FieldPath: "nodes", Minimum: &minVal, Maximum: &maxVal},
 		{SchemaName: "ServiceGroups", FieldPath: "items", MinItems: &minItems, MaxItems: &maxItems},
 	}
 
@@ -355,9 +355,9 @@ func TestGenerateAll_ConstraintFields(t *testing.T) {
 		"type ConstraintDef struct {",
 		"var constraintTable = map[string]map[string]ConstraintDef{",
 		`"CreateClusterRequest"`,
-		"ptrInt64(2)",   // MinLength
-		"ptrInt64(256)", // MaxLength
-		"ptrFloat64(1)", // Minimum
+		"ptrInt64(2)",     // MinLength
+		"ptrInt64(256)",   // MaxLength
+		"ptrFloat64(1)",   // Minimum
 		"ptrFloat64(100)", // Maximum
 		`"ServiceGroups"`,
 		"MinItems: ptrInt64(1)",
@@ -372,11 +372,11 @@ func TestGenerateAll_ConstraintFields(t *testing.T) {
 
 func TestBuildConstraintTable(t *testing.T) {
 	t.Run("indexes by schema and field", func(t *testing.T) {
-		min := 50.0
+		minVal := 50.0
 		maxLen := int64(256)
 		sites := []constraintSite{
 			{SchemaName: "CreateClusterRequest", FieldPath: "name", MaxLength: &maxLen},
-			{SchemaName: "DiskAWS", FieldPath: "storage", Minimum: &min},
+			{SchemaName: "DiskAWS", FieldPath: "storage", Minimum: &minVal},
 		}
 		got := buildConstraintTable(sites)
 		if len(got) != 2 {
@@ -391,9 +391,9 @@ func TestBuildConstraintTable(t *testing.T) {
 	})
 
 	t.Run("excludes empty FieldPath", func(t *testing.T) {
-		min := 1.0
+		minVal := 1.0
 		sites := []constraintSite{
-			{SchemaName: "TopLevel", FieldPath: "", Minimum: &min},
+			{SchemaName: "TopLevel", FieldPath: "", Minimum: &minVal},
 		}
 		got := buildConstraintTable(sites)
 		if len(got) != 0 {

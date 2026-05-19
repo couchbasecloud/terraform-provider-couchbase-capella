@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"sort"
 	"strings"
 
@@ -182,33 +183,39 @@ func dedupConstraints(sites []constraintSite) []constraintSite {
 	out := make([]constraintSite, 0, len(sites))
 	for _, s := range sites {
 		k := key{s.SchemaName, s.FieldPath}
-		if idx, ok := seen[k]; ok {
-			// Merge constraints: take non-nil values from either site
-			existing := &out[idx]
-			if existing.Minimum == nil && s.Minimum != nil {
-				existing.Minimum = s.Minimum
-			}
-			if existing.Maximum == nil && s.Maximum != nil {
-				existing.Maximum = s.Maximum
-			}
-			if existing.MinLength == nil && s.MinLength != nil {
-				existing.MinLength = s.MinLength
-			}
-			if existing.MaxLength == nil && s.MaxLength != nil {
-				existing.MaxLength = s.MaxLength
-			}
-			if existing.MinItems == nil && s.MinItems != nil {
-				existing.MinItems = s.MinItems
-			}
-			if existing.MaxItems == nil && s.MaxItems != nil {
-				existing.MaxItems = s.MaxItems
-			}
+		idx, ok := seen[k]
+		if !ok {
+			seen[k] = len(out)
+			out = append(out, s)
 			continue
 		}
-		seen[k] = len(out)
-		out = append(out, s)
+		mergeConstraintSite(&out[idx], s)
 	}
 	return out
+}
+
+// mergeConstraintSite copies non-nil constraint fields from src onto dst,
+// preserving any value dst already has. Used to combine multiple discoveries
+// of the same (schema, field) pair into a single site.
+func mergeConstraintSite(dst *constraintSite, src constraintSite) {
+	if dst.Minimum == nil {
+		dst.Minimum = src.Minimum
+	}
+	if dst.Maximum == nil {
+		dst.Maximum = src.Maximum
+	}
+	if dst.MinLength == nil {
+		dst.MinLength = src.MinLength
+	}
+	if dst.MaxLength == nil {
+		dst.MaxLength = src.MaxLength
+	}
+	if dst.MinItems == nil {
+		dst.MinItems = src.MinItems
+	}
+	if dst.MaxItems == nil {
+		dst.MaxItems = src.MaxItems
+	}
 }
 
 // dedupByID merges sites that share an ID — emitted by composition keyword
@@ -430,19 +437,19 @@ func (w *walker) recordConstraints(s *openapi3.Schema, schemaName, fieldPath, so
 	if s.Max != nil {
 		site.Maximum = s.Max
 	}
-	if s.MinLength > 0 {
+	if s.MinLength > 0 && s.MinLength <= math.MaxInt64 {
 		v := int64(s.MinLength)
 		site.MinLength = &v
 	}
-	if s.MaxLength != nil {
+	if s.MaxLength != nil && *s.MaxLength <= math.MaxInt64 {
 		v := int64(*s.MaxLength)
 		site.MaxLength = &v
 	}
-	if s.MinItems > 0 {
+	if s.MinItems > 0 && s.MinItems <= math.MaxInt64 {
 		v := int64(s.MinItems)
 		site.MinItems = &v
 	}
-	if s.MaxItems != nil {
+	if s.MaxItems != nil && *s.MaxItems <= math.MaxInt64 {
 		v := int64(*s.MaxItems)
 		site.MaxItems = &v
 	}
