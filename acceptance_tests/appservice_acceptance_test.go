@@ -157,23 +157,32 @@ func testAccCheckAppServicesDataSourceContainsGlobalAppService(dataSourceReferen
 				continue
 			}
 
-			for suffix, want := range map[string]string{
+			expectedAttrs := map[string]string{
 				"organization_id": globalOrgId,
-				"cluster_id":      globalClusterId,
-				"name":            globalAppServiceName,
-				"nodes":           "2",
-				"compute.cpu":     "2",
-				"compute.ram":     "4",
-			} {
+			}
+			if globalAppServiceCreated {
+				expectedAttrs["cluster_id"] = globalClusterId
+				expectedAttrs["name"] = globalAppServiceName
+				expectedAttrs["nodes"] = "2"
+				expectedAttrs["compute.cpu"] = "2"
+				expectedAttrs["compute.ram"] = "4"
+			}
+
+			for suffix, want := range expectedAttrs {
 				if err := assertAppServicesDataSourceAttr(attrs, i, suffix, want); err != nil {
 					return err
 				}
 			}
 
 			for _, suffix := range []string{
+				"cluster_id",
+				"name",
+				"nodes",
 				"cloud_provider",
 				"current_state",
 				"version",
+				"compute.cpu",
+				"compute.ram",
 				"audit.created_at",
 				"audit.modified_at",
 				"audit.version",
