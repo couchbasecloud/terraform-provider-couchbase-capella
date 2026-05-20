@@ -99,10 +99,13 @@ func testAccAppEndpointLoggingConfigResource(t *testing.T) []resource.TestStep {
 		// Final step with valid config so the destroy phase has a valid
 		// configuration to clean up. Without this, the previous step's
 		// invalid log_keys would cause destroy-time plan validation to fail.
+		// Assertions verify the apply actually wrote the intended values.
 		{
 			Config: testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourceName, resourceName, resourceReference, datasourceName, "info", logKeys),
 			Check: resource.ComposeAggregateTestCheckFunc(
 				resource.TestCheckResourceAttr(resourceReference, "log_level", "info"),
+				resource.TestCheckResourceAttr(resourceReference, "log_keys.0", "HTTP"),
+				resource.TestCheckResourceAttr(resourceReference, "log_keys.1", "Import"),
 			),
 		},
 	}
