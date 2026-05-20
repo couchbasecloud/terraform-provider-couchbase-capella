@@ -155,6 +155,13 @@ func AddAttr[M SchemaAttributeMap, T SchemaAttribute](
 		appendCompositionValidator(attr, compDef)
 	}
 
+	// Auto-set Required based on OpenAPI spec if not already explicitly set.
+	// This respects the override mechanism: if the call site has already set
+	// Required, Optional, or Computed, we don't change it.
+	if enums.RequiredLookup(builder, alternateSchemas, fieldName) {
+		setRequiredIfUnset(attr)
+	}
+
 	// Add to map based on map type
 	switch m := any(&attrs).(type) {
 	case *map[string]resourceschema.Attribute:
@@ -186,6 +193,39 @@ func setMarkdownDescription(attr any, description string) {
 	field := v.FieldByName("MarkdownDescription")
 	if field.IsValid() && field.CanSet() && field.Kind() == reflect.String {
 		field.SetString(description)
+	}
+}
+
+// setRequiredIfUnset sets Required: true on an attribute only if none of
+// Required, Optional, or Computed are already set. This respects the override
+// mechanism: explicit call-site settings take precedence over auto-detection.
+func setRequiredIfUnset(attr any) {
+	v := reflect.ValueOf(attr)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	if v.Kind() != reflect.Struct {
+		return
+	}
+
+	required := v.FieldByName("Required")
+	optional := v.FieldByName("Optional")
+	computed := v.FieldByName("Computed")
+
+	// Check if any of the flags are already set
+	if required.IsValid() && required.Kind() == reflect.Bool && required.Bool() {
+		return // Already required
+	}
+	if optional.IsValid() && optional.Kind() == reflect.Bool && optional.Bool() {
+		return // Explicitly optional
+	}
+	if computed.IsValid() && computed.Kind() == reflect.Bool && computed.Bool() {
+		return // Computed attribute
+	}
+
+	// Set Required: true
+	if required.IsValid() && required.CanSet() && required.Kind() == reflect.Bool {
+		required.SetBool(true)
 	}
 }
 

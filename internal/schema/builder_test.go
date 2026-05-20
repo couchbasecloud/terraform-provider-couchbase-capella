@@ -2,6 +2,7 @@ package schema
 
 import (
 	"context"
+	"reflect"
 	"testing"
 
 	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -592,4 +593,78 @@ type mockObjectValidator struct{}
 func (m mockObjectValidator) Description(_ context.Context) string         { return "mock" }
 func (m mockObjectValidator) MarkdownDescription(_ context.Context) string { return "mock" }
 func (m mockObjectValidator) ValidateObject(_ context.Context, _ validator.ObjectRequest, _ *validator.ObjectResponse) {
+}
+
+func TestSetRequiredIfUnset_SetsRequired(t *testing.T) {
+	// Attribute with no flags set - should set Required: true
+	attr := &resourceschema.StringAttribute{}
+
+	setRequiredIfUnset(attr)
+
+	if !attr.Required {
+		t.Error("Expected Required to be set to true")
+	}
+}
+
+func TestSetRequiredIfUnset_RespectsExistingRequired(t *testing.T) {
+	// Attribute already has Required: true - should not change
+	attr := &resourceschema.StringAttribute{Required: true}
+
+	setRequiredIfUnset(attr)
+
+	if !attr.Required {
+		t.Error("Expected Required to remain true")
+	}
+}
+
+func TestSetRequiredIfUnset_RespectsExistingOptional(t *testing.T) {
+	// Attribute has Optional: true - should not set Required
+	attr := &resourceschema.StringAttribute{Optional: true}
+
+	setRequiredIfUnset(attr)
+
+	if attr.Required {
+		t.Error("Expected Required to remain false when Optional is set")
+	}
+	if !attr.Optional {
+		t.Error("Expected Optional to remain true")
+	}
+}
+
+func TestSetRequiredIfUnset_RespectsExistingComputed(t *testing.T) {
+	// Attribute has Computed: true - should not set Required
+	attr := &resourceschema.StringAttribute{Computed: true}
+
+	setRequiredIfUnset(attr)
+
+	if attr.Required {
+		t.Error("Expected Required to remain false when Computed is set")
+	}
+	if !attr.Computed {
+		t.Error("Expected Computed to remain true")
+	}
+}
+
+func TestSetRequiredIfUnset_WorksWithDifferentAttributeTypes(t *testing.T) {
+	tests := []struct {
+		name string
+		attr any
+	}{
+		{"Int64Attribute", &resourceschema.Int64Attribute{}},
+		{"BoolAttribute", &resourceschema.BoolAttribute{}},
+		{"SingleNestedAttribute", &resourceschema.SingleNestedAttribute{Attributes: map[string]resourceschema.Attribute{}}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			setRequiredIfUnset(tt.attr)
+
+			// Use reflection to check Required field
+			v := reflect.ValueOf(tt.attr).Elem()
+			required := v.FieldByName("Required")
+			if !required.Bool() {
+				t.Errorf("Expected Required to be set to true for %s", tt.name)
+			}
+		})
+	}
 }

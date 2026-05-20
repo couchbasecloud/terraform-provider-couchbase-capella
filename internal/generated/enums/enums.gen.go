@@ -301,3 +301,1229 @@ var compositionTable = map[string]map[string]CompositionDef{
 		"embeddingModel": {Kind: "oneOf", Branches: []string{"ExternalModel", "CapellaHostedModel"}},
 	},
 }
+
+// RequiredDef marks a field as required per the OpenAPI spec.
+type RequiredDef struct{}
+
+var requiredTable = map[string]map[string]RequiredDef{
+	"APIKeyResourcesItems": {
+		"id":    {},
+		"roles": {},
+	},
+	"AWSConfig": {
+		"arn": {},
+	},
+	"AWSConfigData": {
+		"accountId": {},
+		"cidr":      {},
+		"region":    {},
+		"vpcId":     {},
+	},
+	"Access": {
+		"privileges": {},
+	},
+	"AllowedCidr": {
+		"audit":  {},
+		"cidr":   {},
+		"id":     {},
+		"status": {},
+		"type":   {},
+	},
+	"AppServiceAllowedCidr": {
+		"audit":  {},
+		"cidr":   {},
+		"id":     {},
+		"status": {},
+		"type":   {},
+	},
+	"AppServiceCompute": {
+		"cpu": {},
+		"ram": {},
+	},
+	"AuditFilterableEvent": {
+		"description": {},
+		"id":          {},
+		"module":      {},
+		"name":        {},
+	},
+	"Availability": {
+		"type": {},
+	},
+	"AzureConfig": {
+		"keyLocation": {},
+		"region":      {},
+	},
+	"AzureConfigData": {
+		"azureTenantId":  {},
+		"cidr":           {},
+		"resourceGroup":  {},
+		"subscriptionId": {},
+		"vnetId":         {},
+	},
+	"BackupStats": {
+		"cbas":       {},
+		"event":      {},
+		"fts":        {},
+		"gsi":        {},
+		"items":      {},
+		"mutations":  {},
+		"sizeInMb":   {},
+		"tombstones": {},
+	},
+	"BasicAuth": {
+		"password": {},
+		"user":     {},
+	},
+	"BillingCategoryBreakdown": {
+		"category":            {},
+		"contributionPercent": {},
+	},
+	"BillingPeriod": {
+		"categories": {},
+		"endDate":    {},
+		"startDate":  {},
+	},
+	"BillingPeriodTotal": {
+		"categories": {},
+		"endDate":    {},
+		"startDate":  {},
+	},
+	"CORSConfig": {
+		"origin": {},
+	},
+	"CapellaHostedModel": {
+		"capellaHostedModel": {},
+	},
+	"CategorizedBillingRequest": {
+		"endDate":   {},
+		"startDate": {},
+	},
+	"CategorizedBillingResponse": {
+		"data": {},
+	},
+	"CloudAccounts": {
+		"aws-capella-account":        {},
+		"azure-capella-subscription": {},
+		"gcp-capella-project":        {},
+	},
+	"CloudConfig": {
+		"compute":  {},
+		"provider": {},
+		"region":   {},
+	},
+	"CloudProvider": {
+		"region": {},
+		"type":   {},
+	},
+	"CloudSnapshotGeographicRegions": {
+		"items": {},
+	},
+	"ClusterCMEKConfig": {
+		"id": {},
+	},
+	"ClusterOnOffSchedule": {
+		"days":     {},
+		"timezone": {},
+	},
+	"ClusterStats": {
+		"freeMemoryInMb":  {},
+		"maxReplicas":     {},
+		"totalMemoryInMb": {},
+	},
+	"ColumnarAnalyticsOnOffSchedule": {
+		"days":     {},
+		"timezone": {},
+	},
+	"ColumnarSupport": {
+		"plan":     {},
+		"timezone": {},
+	},
+	"Compute": {
+		"cpu": {},
+		"ram": {},
+	},
+	"ConsoleLoggingConfig": {
+		"logKeys":  {},
+		"logLevel": {},
+	},
+	"CouchbaseAuditData": {
+		"createdAt":  {},
+		"createdBy":  {},
+		"modifiedAt": {},
+		"modifiedBy": {},
+		"version":    {},
+	},
+	"CouchbaseKeyspace": {
+		"bucket":     {},
+		"collection": {},
+		"scope":      {},
+	},
+	"CreateAPIKeyRequest": {
+		"name":              {},
+		"organizationRoles": {},
+	},
+	"CreateAPIKeyResponse": {
+		"id":    {},
+		"token": {},
+	},
+	"CreateAlertRequest": {
+		"config": {},
+		"kind":   {},
+		"name":   {},
+	},
+	"CreateAlertResponse": {
+		"id": {},
+	},
+	"CreateAllowedCidrRequest": {
+		"cidr": {},
+	},
+	"CreateAllowedCidrResponse": {
+		"id": {},
+	},
+	"CreateAppEndpointRequest": {
+		"bucket": {},
+		"name":   {},
+	},
+	"CreateAppServiceAdminUserRequest": {
+		"access":   {},
+		"name":     {},
+		"password": {},
+	},
+	"CreateAppServiceAuditLogRequest": {
+		"auditEnabled": {},
+	},
+	"CreateAppServicerRequest": {
+		"clusterId": {},
+		"name":      {},
+	},
+	"CreateAppServicesResponse": {
+		"id": {},
+	},
+	"CreateAzurePrivateEndpointCommandRequest": {
+		"resourceGroupName": {},
+		"virtualNetwork":    {},
+	},
+	"CreateBedrockConfigurationRequest": {
+		"accessKeyId":     {},
+		"secretAccessKey": {},
+	},
+	"CreateBucketRequest": {
+		"name": {},
+	},
+	"CreateBucketResponse": {
+		"id": {},
+	},
+	"CreateCMEKAzureMetadata": {
+		"config": {},
+		"name":   {},
+	},
+	"CreateCMEKMetadata": {
+		"config": {},
+		"name":   {},
+	},
+	"CreateCMEKMetadataResponse": {
+		"id": {},
+	},
+	"CreateCloudSnapshotCloneRequest": {
+		"availability":  {},
+		"cloudProvider": {},
+		"name":          {},
+		"support":       {},
+	},
+	"CreateClusterAuditLogExportRequest": {
+		"end":   {},
+		"start": {},
+	},
+	"CreateClusterAuditLogExportResponse": {
+		"exportId": {},
+	},
+	"CreateClusterAuditSettingsRequest": {
+		"auditEnabled":    {},
+		"disabledUsers":   {},
+		"enabledEventIDs": {},
+	},
+	"CreateClusterRequest": {
+		"availability":  {},
+		"cloudProvider": {},
+		"name":          {},
+		"serviceGroups": {},
+		"support":       {},
+	},
+	"CreateClusterResponse": {
+		"id": {},
+	},
+	"CreateCollectionRequest": {
+		"name": {},
+	},
+	"CreateColumnarAnalyticsClusterRequest": {
+		"availability":  {},
+		"cloudProvider": {},
+		"compute":       {},
+		"name":          {},
+		"nodes":         {},
+		"region":        {},
+		"support":       {},
+	},
+	"CreateColumnarAnalyticsClusterResponse": {
+		"id": {},
+	},
+	"CreateDatabaseCredentialRequest": {
+		"access": {},
+		"name":   {},
+	},
+	"CreateDatabaseCredentialResponse": {
+		"id":       {},
+		"password": {},
+	},
+	"CreateFreeTierAppServiceRequest": {
+		"name": {},
+	},
+	"CreateFreeTierBucketRequest": {
+		"name": {},
+	},
+	"CreateFreeTierClusterRequest": {
+		"cloudProvider": {},
+		"name":          {},
+	},
+	"CreateGCPPrivateEndpointCommandRequest": {
+		"subnetIDs":    {},
+		"vpcNetworkID": {},
+	},
+	"CreateLanguageModelAPIKeyRequest": {
+		"allowedCIDRs": {},
+		"expiry":       {},
+		"name":         {},
+		"region":       {},
+	},
+	"CreateNetworkPeeringRequest": {
+		"name":           {},
+		"providerConfig": {},
+		"providerType":   {},
+	},
+	"CreateNetworkPeeringResponse": {
+		"id": {},
+	},
+	"CreateOIDCProviderRequest": {
+		"clientId": {},
+		"issuer":   {},
+	},
+	"CreateOnDemandRestoreRequest": {
+		"backupID":        {},
+		"services":        {},
+		"sourceClusterID": {},
+		"targetClusterID": {},
+	},
+	"CreateOpenAIConfigurationRequest": {
+		"apiKey": {},
+	},
+	"CreatePrivateEndpointCommandResponse": {
+		"command": {},
+	},
+	"CreatePrivateEndpointResponse": {
+		"id":     {},
+		"status": {},
+	},
+	"CreatePrivateEndpointServiceCommandRequest": {
+		"subnetIDs": {},
+		"vpcID":     {},
+	},
+	"CreatePrivateEndpointServiceCommandResponse": {
+		"command": {},
+	},
+	"CreatePrivateEndpointServiceConnectionRequest": {
+		"endpointID": {},
+	},
+	"CreateProjectRequest": {
+		"name": {},
+	},
+	"CreateProjectResponse": {
+		"id": {},
+	},
+	"CreateProviderRequest": {
+		"configuration": {},
+		"name":          {},
+		"type":          {},
+	},
+	"CreateProviderResponse": {
+		"id": {},
+	},
+	"CreateReplicationJSONResponse": {
+		"replicationId": {},
+	},
+	"CreateReplicationRequest": {
+		"sourceBucket": {},
+		"target":       {},
+	},
+	"CreateReplicationResponseAsync": {
+		"jobId": {},
+	},
+	"CreateS3ConfigurationRequest": {
+		"accessKeyId":     {},
+		"awsRegion":       {},
+		"bucket":          {},
+		"secretAccessKey": {},
+	},
+	"CreateScopeRequest": {
+		"name": {},
+	},
+	"CreateStructuredWorkflowRequest": {
+		"source":                         {},
+		"structuredDataProcessingConfig": {},
+		"targetCouchbaseKeyspace":        {},
+		"vectorizationConfig":            {},
+	},
+	"CreateUnstructuredWorkflowRequest": {
+		"source":                           {},
+		"targetCouchbaseKeyspace":          {},
+		"unstructuredDataProcessingConfig": {},
+		"vectorizationConfig":              {},
+	},
+	"CreateUserRequest": {
+		"email":             {},
+		"organizationRoles": {},
+	},
+	"CreateVPCEndpointCommandRequest": {
+		"subnetIDs": {},
+		"vpcID":     {},
+	},
+	"CreateVPCEndpointRequest": {
+		"vpcID": {},
+	},
+	"CreateVectorizationWorkflowRequest": {
+		"targetCouchbaseKeyspace": {},
+		"vectorizationConfig":     {},
+	},
+	"CreateWorkflowRequest": {
+		"configuration": {},
+		"name":          {},
+		"type":          {},
+	},
+	"CreateWorkflowResponse": {
+		"id": {},
+	},
+	"CreateWorkflowRunResponse": {
+		"id": {},
+	},
+	"Credit": {
+		"creditName":       {},
+		"expirationDate":   {},
+		"id":               {},
+		"remaining":        {},
+		"remainingPercent": {},
+		"startDate":        {},
+		"supportPlan":      {},
+		"total":            {},
+		"used":             {},
+	},
+	"Cursor": {
+		"hrefs": {},
+		"pages": {},
+	},
+	"Days": {
+		"day":   {},
+		"state": {},
+	},
+	"DisabledUserRole": {
+		"domain": {},
+		"name":   {},
+	},
+	"DiskAWS": {
+		"iops":    {},
+		"storage": {},
+		"type":    {},
+	},
+	"DiskAzure": {
+		"type": {},
+	},
+	"DiskGCP": {
+		"storage": {},
+		"type":    {},
+	},
+	"EditColumnarAnalyticsBackupRetentionRequest": {
+		"retention": {},
+	},
+	"EnableCMEKAzureRequest": {
+		"cloudProvider": {},
+	},
+	"Error": {
+		"code":           {},
+		"hint":           {},
+		"httpStatusCode": {},
+		"message":        {},
+	},
+	"ExternalModel": {
+		"external": {},
+	},
+	"GCPConfig": {
+		"resourceName": {},
+	},
+	"GCPConfigData": {
+		"cidr":           {},
+		"networkName":    {},
+		"projectId":      {},
+		"serviceAccount": {},
+	},
+	"GetAPIKey": {
+		"allowedCIDRs":      {},
+		"audit":             {},
+		"description":       {},
+		"expiry":            {},
+		"id":                {},
+		"name":              {},
+		"organizationRoles": {},
+		"resources":         {},
+	},
+	"GetAPIKeys": {
+		"cursor": {},
+		"data":   {},
+	},
+	"GetAlertResponse": {
+		"audit":     {},
+		"config":    {},
+		"configKey": {},
+		"enabled":   {},
+		"id":        {},
+		"kind":      {},
+		"name":      {},
+		"status":    {},
+		"tenantId":  {},
+	},
+	"GetAlertsResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"GetAllowedCidrsResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"GetAppEndpointResponse": {
+		"bucket": {},
+		"name":   {},
+	},
+	"GetAppServiceAllowedCidrsResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"GetAppServiceResponse": {
+		"audit":         {},
+		"cloudProvider": {},
+		"clusterId":     {},
+		"compute":       {},
+		"currentState":  {},
+		"description":   {},
+		"id":            {},
+		"name":          {},
+		"nodes":         {},
+		"plan":          {},
+		"version":       {},
+	},
+	"GetAppServicesResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"GetAuditLogEventsResponse": {
+		"events": {},
+	},
+	"GetAzureCMEKApplicationResponse": {
+		"id": {},
+	},
+	"GetAzureVNetPeeringCommandRequest": {
+		"resourceGroup":               {},
+		"subscriptionId":              {},
+		"tenantId":                    {},
+		"vnetId":                      {},
+		"vnetPeeringServicePrincipal": {},
+	},
+	"GetAzureVNetPeeringCommandResponse": {
+		"command": {},
+	},
+	"GetBackupByIDResponse": {
+		"bucketID":             {},
+		"bucketName":           {},
+		"clusterID":            {},
+		"cycleID":              {},
+		"elapsedTimeInSeconds": {},
+		"id":                   {},
+		"method":               {},
+		"projectID":            {},
+		"provider":             {},
+		"scheduleInfo":         {},
+		"source":               {},
+		"stats":                {},
+		"status":               {},
+		"tenantID":             {},
+	},
+	"GetBackupResponse": {
+		"bucketID":             {},
+		"bucketName":           {},
+		"clusterID":            {},
+		"cycleID":              {},
+		"elapsedTimeInSeconds": {},
+		"id":                   {},
+		"method":               {},
+		"projectID":            {},
+		"provider":             {},
+		"scheduleInfo":         {},
+		"source":               {},
+		"stats":                {},
+		"status":               {},
+		"tenantID":             {},
+	},
+	"GetBackupsResponse": {
+		"data": {},
+	},
+	"GetBucketResponse": {
+		"bucketConflictResolution":     {},
+		"durabilityLevel":              {},
+		"enableCrossClusterVersioning": {},
+		"evictionPolicy":               {},
+		"id":                           {},
+		"memoryAllocationInMb":         {},
+		"name":                         {},
+		"replicas":                     {},
+		"stats":                        {},
+		"storageBackend":               {},
+		"timeToLiveInSeconds":          {},
+		"type":                         {},
+	},
+	"GetBucketsResponse": {
+		"data": {},
+	},
+	"GetCMEKAzureMetadataListResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"GetCMEKAzureMetadataResponse": {
+		"audit":       {},
+		"config":      {},
+		"description": {},
+		"id":          {},
+		"name":        {},
+	},
+	"GetCMEKHistoryMetadataListResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"GetCMEKMetadata": {
+		"audit":       {},
+		"config":      {},
+		"description": {},
+		"id":          {},
+		"name":        {},
+	},
+	"GetCMEKMetadataListResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"GetCertificateResponse": {
+		"certificate": {},
+	},
+	"GetClusterAuditLogExportResponse": {
+		"auditLogExportId": {},
+		"createdAt":        {},
+		"end":              {},
+		"start":            {},
+		"status":           {},
+	},
+	"GetClusterAuditLogExportsResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"GetClusterAuditSettingsResponse": {
+		"auditEnabled":    {},
+		"disabledUsers":   {},
+		"enabledEventIDs": {},
+	},
+	"GetClusterOnOffScheduleResponse": {
+		"activationStatus": {},
+		"days":             {},
+		"timezone":         {},
+	},
+	"GetClusterResponse": {
+		"audit":             {},
+		"availability":      {},
+		"cloudProvider":     {},
+		"configurationType": {},
+		"connectionString":  {},
+		"couchbaseServer":   {},
+		"currentState":      {},
+		"description":       {},
+		"id":                {},
+		"name":              {},
+		"serviceGroups":     {},
+		"support":           {},
+	},
+	"GetClusterSupport": {
+		"plan":     {},
+		"timezone": {},
+	},
+	"GetClustersResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"GetCollectionsResponse": {
+		"data": {},
+	},
+	"GetColumnarAnalyticsClusterResponse": {
+		"availability":  {},
+		"cloudProvider": {},
+		"compute":       {},
+		"currentState":  {},
+		"id":            {},
+		"name":          {},
+		"nodes":         {},
+		"region":        {},
+		"support":       {},
+	},
+	"GetColumnarAnalyticsClustersResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"GetCycleResponse": {
+		"createdAt": {},
+		"cycleID":   {},
+	},
+	"GetCyclesResponse": {
+		"data": {},
+	},
+	"GetDatabaseCredentialResponse": {
+		"access": {},
+		"audit":  {},
+		"id":     {},
+		"name":   {},
+	},
+	"GetDatabaseCredentialsResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"GetEventResponse": {
+		"id":        {},
+		"key":       {},
+		"severity":  {},
+		"source":    {},
+		"timestamp": {},
+	},
+	"GetEventsResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"GetLanguageModelsResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"GetNetworkPeeringRecordResponse": {
+		"audit":          {},
+		"commands":       {},
+		"id":             {},
+		"name":           {},
+		"providerConfig": {},
+		"status":         {},
+	},
+	"GetOrganizationResponse": {
+		"audit":       {},
+		"description": {},
+		"id":          {},
+		"name":        {},
+		"preferences": {},
+	},
+	"GetOrganizationsResponse": {
+		"data": {},
+	},
+	"GetPrivateEndpointServiceConnectionResponse": {
+		"endpointId": {},
+		"status":     {},
+	},
+	"GetPrivateEndpointServiceResponse": {
+		"enabled":     {},
+		"privateDns":  {},
+		"serviceName": {},
+		"status":      {},
+	},
+	"GetPrivateEndpointServiceStatusResponse": {
+		"enabled": {},
+	},
+	"GetPrivateEndpointsResponse": {
+		"endpoints":          {},
+		"privateEndpointDNS": {},
+	},
+	"GetProjectResponse": {
+		"audit":       {},
+		"description": {},
+		"id":          {},
+		"name":        {},
+	},
+	"GetProjectsResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"GetReplicationJobResponse": {
+		"jobId":                {},
+		"lastUpdatedTimestamp": {},
+		"state":                {},
+	},
+	"GetReplicationResponse": {
+		"audit":       {},
+		"changesLeft": {},
+		"direction":   {},
+		"id":          {},
+		"source":      {},
+		"status":      {},
+		"target":      {},
+	},
+	"GetScheduledBackupResponse": {
+		"bucketId":       {},
+		"clusterID":      {},
+		"type":           {},
+		"weeklySchedule": {},
+	},
+	"GetScopesResponse": {
+		"scopes": {},
+	},
+	"GetStructuredWorkflowResponse": {
+		"source":                         {},
+		"structuredDataProcessingConfig": {},
+		"targetCouchbaseKeyspace":        {},
+		"vectorizationConfig":            {},
+	},
+	"GetUnstructuredWorkflowResponse": {
+		"source":                           {},
+		"targetCouchbaseKeyspace":          {},
+		"unstructuredDataProcessingConfig": {},
+		"vectorizationConfig":              {},
+	},
+	"GetUserResponse": {
+		"audit":             {},
+		"email":             {},
+		"id":                {},
+		"inactive":          {},
+		"name":              {},
+		"organizationId":    {},
+		"organizationRoles": {},
+		"status":            {},
+	},
+	"GetUsersResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"GetVectorizationWorkflowResponse": {
+		"targetCouchbaseKeyspace": {},
+		"vectorizationConfig":     {},
+	},
+	"GetWorkflowResponse": {
+		"audit":         {},
+		"configuration": {},
+		"id":            {},
+		"name":          {},
+		"type":          {},
+	},
+	"GetWorkflowRunProcessedFilesResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"GetWorkflowRunResponse": {
+		"createdAt":       {},
+		"createdByUserID": {},
+		"id":              {},
+		"status":          {},
+	},
+	"GetWorkflowRunsResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"Hrefs": {
+		"first":    {},
+		"last":     {},
+		"next":     {},
+		"previous": {},
+	},
+	"IndexBuildStatusResponse": {
+		"status": {},
+	},
+	"IndexDDLRequest": {
+		"definition": {},
+	},
+	"IndexDefinitionsResponse": {
+		"definition": {},
+		"indexName":  {},
+	},
+	"IndexPropertiesResponse": {
+		"bucket":     {},
+		"collection": {},
+		"defnId":     {},
+		"indexName":  {},
+		"isPrimary":  {},
+		"numReplica": {},
+		"scope":      {},
+		"secExprs":   {},
+		"status":     {},
+		"where":      {},
+	},
+	"IntegrationConfig": {
+		"name":       {},
+		"providerId": {},
+	},
+	"ItemizedBillingRequest": {
+		"endDate":   {},
+		"startDate": {},
+	},
+	"ItemizedBillingResponse": {
+		"data": {},
+	},
+	"ListAdminUsersResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"ListAppEndpointsResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"ListBackupsResponse": {
+		"data": {},
+	},
+	"ListCloudSnapshotBackupsResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"ListCloudSnapshotRestoresResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"ListClusterReplicationsResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"ListColumnarAnalyticsBackupsResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"ListColumnarAnalyticsRestoresResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"ListIndexDefinitionsResponse": {
+		"definitions": {},
+	},
+	"ListLanguageModelAPIKeysResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"ListNetworkPeeringRecordsResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"ListOIDCProvidersResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"ListPrivateEndpointServiceConnectionsResponse": {
+		"endpoints": {},
+	},
+	"ListProjectLevelCloudSnapshotResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"ListProjectReplicationsResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"ListSingleNetworkPeeringRecord": {
+		"audit":          {},
+		"id":             {},
+		"name":           {},
+		"providerConfig": {},
+		"status":         {},
+	},
+	"ListWorkflowsResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"Node": {
+		"compute": {},
+		"disk":    {},
+	},
+	"OIDCProvider": {
+		"clientId": {},
+		"issuer":   {},
+	},
+	"OIDCProviderID": {
+		"providerId": {},
+	},
+	"OIDCProviderIDOnly": {
+		"providerId": {},
+	},
+	"Pages": {
+		"last":       {},
+		"page":       {},
+		"perPage":    {},
+		"totalItems": {},
+	},
+	"PatchAuditLogStreamingRequest": {
+		"op":    {},
+		"path":  {},
+		"value": {},
+	},
+	"PatchEntry": {
+		"op":   {},
+		"path": {},
+	},
+	"PayAsYouGoCost": {
+		"basic":      {},
+		"devPro":     {},
+		"enterprise": {},
+	},
+	"PayAsYouGoPeriod": {
+		"cost":      {},
+		"endDate":   {},
+		"startDate": {},
+		"total":     {},
+	},
+	"PayAsYouGoResponse": {
+		"data": {},
+	},
+	"PayAsYouGoTotal": {
+		"cost":      {},
+		"endDate":   {},
+		"startDate": {},
+		"total":     {},
+	},
+	"PostLogStreamingRequest": {
+		"credentials": {},
+		"outputType":  {},
+	},
+	"PostSampleBucket": {
+		"name": {},
+	},
+	"PostSampleBucketResponse": {
+		"bucketId": {},
+		"name":     {},
+	},
+	"PrepaidCreditsResponse": {
+		"cursor": {},
+		"data":   {},
+	},
+	"PrivateEndpoint": {
+		"id":     {},
+		"status": {},
+	},
+	"PrivateEndpointRoutes": {
+		"metrics": {},
+		"xdcr":    {},
+	},
+	"PutAuditLogStreamingRequest": {
+		"streamingEnabled": {},
+	},
+	"ReplicationAuditData": {
+		"createdAt": {},
+		"createdBy": {},
+	},
+	"RequestConfig": {
+		"webhook": {},
+	},
+	"RequestWebhook": {
+		"method": {},
+		"url":    {},
+	},
+	"Resource": {
+		"id":    {},
+		"roles": {},
+	},
+	"ResourceBucket": {
+		"name": {},
+	},
+	"ResourceScope": {
+		"name": {},
+	},
+	"ResponseConfig": {
+		"webhook": {},
+	},
+	"ResponseWebhook": {
+		"method": {},
+		"url":    {},
+	},
+	"ResyncStatus": {
+		"docsChanged":   {},
+		"docsProcessed": {},
+		"lastError":     {},
+		"startTime":     {},
+		"state":         {},
+	},
+	"RotateAPIKeyResponse": {
+		"secretKey": {},
+		"token":     {},
+	},
+	"RotateAzureKey": {
+		"config": {},
+	},
+	"RotateCMEKKey": {
+		"config": {},
+	},
+	"ScheduleInfo": {
+		"backupTime": {},
+		"backupType": {},
+		"increment":  {},
+		"retention":  {},
+	},
+	"Scope": {
+		"collections": {},
+	},
+	"ScopeConfig": {
+		"collections": {},
+	},
+	"Stats": {
+		"diskUsedInMib":   {},
+		"itemCount":       {},
+		"memoryUsedInMib": {},
+		"opsPerSecond":    {},
+	},
+	"Support": {
+		"plan": {},
+	},
+	"UpdateAlertRequest": {
+		"config": {},
+	},
+	"UpdateAppEndpointRequest": {
+		"bucket":               {},
+		"cors":                 {},
+		"deltaSyncEnabled":     {},
+		"disablePublicAllDocs": {},
+		"name":                 {},
+		"oidc":                 {},
+		"scopes":               {},
+		"userXattrKey":         {},
+	},
+	"UpdateAppServiceAdminUserAllEndpointsRequest": {
+		"accessAllEndpoints": {},
+	},
+	"UpdateAppServiceAdminUserEndpointList": {
+		"endpoints": {},
+	},
+	"UpdateAppServiceRequest": {
+		"compute": {},
+		"nodes":   {},
+	},
+	"UpdateAwsPrivateEndpointServiceRequest": {
+		"routes": {},
+	},
+	"UpdateBucketRequest": {
+		"durabilityLevel":      {},
+		"memoryAllocationInMb": {},
+		"replicas":             {},
+		"timeToLiveInSeconds":  {},
+	},
+	"UpdateBucketStorageBackendRequest": {
+		"buckets": {},
+	},
+	"UpdateClusterRequest": {
+		"description":   {},
+		"name":          {},
+		"serviceGroups": {},
+		"support":       {},
+	},
+	"UpdateClusterResponse": {
+		"audit":           {},
+		"availability":    {},
+		"cloudProvider":   {},
+		"couchbaseServer": {},
+		"currentState":    {},
+		"description":     {},
+		"id":              {},
+		"name":            {},
+		"serviceGroups":   {},
+		"support":         {},
+	},
+	"UpdateCollectionRequest": {
+		"maxTTL": {},
+	},
+	"UpdateColumnarAnalyticsClusterRequest": {
+		"description": {},
+		"name":        {},
+		"nodes":       {},
+		"support":     {},
+	},
+	"UpdateFreeTierBucketRequest": {
+		"memoryAllocationInMb": {},
+	},
+	"UpdateFreeTierClusterRequest": {
+		"description": {},
+		"name":        {},
+	},
+	"UpdateOrganizationConfigurationRequest": {
+		"subdomain": {},
+	},
+	"UpdateProjectRequest": {
+		"name": {},
+	},
+	"UpdateProjectResponse": {
+		"audit":       {},
+		"description": {},
+		"id":          {},
+		"name":        {},
+	},
+	"UpdateProviderRequest": {
+		"configuration": {},
+	},
+	"UpsertColumnarAnalyticsBackupScheduleRequest": {
+		"interval":  {},
+		"retention": {},
+		"startTime": {},
+	},
+	"VectorizationConfig": {
+		"embeddingFieldMappings": {},
+		"embeddingModel":         {},
+	},
+	"VectorizationConfigCreation": {
+		"embeddingModel": {},
+	},
+	"WeeklySchedule": {
+		"costOptimizedRetention": {},
+		"dayOfWeek":              {},
+		"incrementalEvery":       {},
+		"retentionTime":          {},
+		"startAt":                {},
+	},
+	"datadog": {
+		"apiKey": {},
+		"url":    {},
+	},
+	"dynatrace": {
+		"apiToken": {},
+		"url":      {},
+	},
+	"elastic": {
+		"password": {},
+		"url":      {},
+		"user":     {},
+	},
+	"generic_http": {
+		"url": {},
+	},
+	"loki": {
+		"password": {},
+		"url":      {},
+		"user":     {},
+	},
+	"replicationSource": {
+		"bucket":  {},
+		"cluster": {},
+		"project": {},
+	},
+	"replicationSummary": {
+		"audit":         {},
+		"id":            {},
+		"sourceCluster": {},
+		"status":        {},
+		"targetCluster": {},
+	},
+	"replicationTarget": {
+		"bucket":  {},
+		"cluster": {},
+		"type":    {},
+	},
+	"splunk": {
+		"splunkToken": {},
+		"url":         {},
+	},
+	"sumologic": {
+		"url": {},
+	},
+}
