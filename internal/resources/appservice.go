@@ -151,7 +151,6 @@ func (a *AppService) Create(ctx context.Context, req resource.CreateRequest, res
 		)
 		return
 	}
-	preserveConfiguredAppServiceCloudProvider(&refreshedState.CloudProvider, plan.CloudProvider)
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
@@ -205,7 +204,6 @@ func (a *AppService) Read(ctx context.Context, req resource.ReadRequest, resp *r
 	if !state.IfMatch.IsUnknown() && !state.IfMatch.IsNull() {
 		refreshedState.IfMatch = state.IfMatch
 	}
-	preserveConfiguredAppServiceCloudProvider(&refreshedState.CloudProvider, state.CloudProvider)
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &refreshedState)
@@ -313,7 +311,6 @@ func (a *AppService) Update(ctx context.Context, req resource.UpdateRequest, res
 	if !plan.IfMatch.IsUnknown() && !plan.IfMatch.IsNull() {
 		currentState.IfMatch = plan.IfMatch
 	}
-	preserveConfiguredAppServiceCloudProvider(&currentState.CloudProvider, plan.CloudProvider)
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, currentState)
@@ -555,13 +552,6 @@ func (a *AppService) validateAppServiceAttributesTrimmed(plan providerschema.App
 		return fmt.Errorf("description %s", errors.ErrNotTrimmed)
 	}
 	return nil
-}
-
-func preserveConfiguredAppServiceCloudProvider(target *types.String, configured types.String) {
-	if configured.IsNull() || configured.IsUnknown() {
-		return
-	}
-	*target = types.StringValue(strings.ToLower(configured.ValueString()))
 }
 
 func normalizeAppServiceCloudProvider(target *types.String) {

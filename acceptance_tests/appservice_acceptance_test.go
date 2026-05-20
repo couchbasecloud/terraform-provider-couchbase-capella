@@ -46,7 +46,7 @@ func TestAccAppServiceResourceOptionalFieldsAndScale(t *testing.T) {
 	appServiceName := randomStringWithPrefix("tf_acc_app_svc_")
 	description := "terraform app service optional fields acceptance test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
