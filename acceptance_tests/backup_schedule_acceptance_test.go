@@ -104,7 +104,7 @@ func TestAccBackupScheduleResourceInvalidType(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBackupScheduleResourceConfig(resourceName, "yearly", "sunday", 10, 4, "30days", false),
-				ExpectError: regexp.MustCompile("There is an error during backup schedule creation"),
+				ExpectError: regexp.MustCompile(`Attribute type value must be one of`),
 			},
 		},
 	})

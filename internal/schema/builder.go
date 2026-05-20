@@ -5,8 +5,10 @@ import (
 	"sort"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/float64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -160,6 +162,12 @@ func AddAttr[M SchemaAttributeMap, T SchemaAttribute](
 	// Required, Optional, or Computed, we don't change it.
 	if enums.RequiredLookup(builder, alternateSchemas, fieldName) {
 		setRequiredIfUnset(attr)
+	}
+
+	// Auto-attach min/max validators based on OpenAPI spec constraints.
+	// Skips if validators are already attached (call-site override wins).
+	if constrDef := enums.ConstraintLookup(builder, alternateSchemas, fieldName); constrDef != nil {
+		appendConstraintValidator(attr, constrDef)
 	}
 
 	// Add to map based on map type
@@ -427,4 +435,172 @@ func extractChildNamesDS(attrs map[string]datasourceschema.Attribute) []string {
 
 	sort.Strings(names)
 	return names
+}
+
+// appendConstraintValidator attaches min/max validators derived from def to the
+// attribute. Skips when the call site has already attached any validator —
+// matching the override discipline used by appendOneOfValidator: a hand-coded
+// validator at the call site wins.
+//
+// Mapping of OpenAPI constraints to attribute kinds:
+//   - StringAttribute  : MinLength / MaxLength → stringvalidator.Length*
+//   - Int64Attribute   : Minimum / Maximum    → int64validator.{AtLeast,AtMost,Between}
+//   - Float64Attribute : Minimum / Maximum    → float64validator.{AtLeast,AtMost,Between}
+//   - List/Set/Map (incl. *NestedAttribute) : MinItems / MaxItems → *validator.Size*
+//
+// NumberAttribute is intentionally unsupported because the numbervalidator
+// package does not provide range validators.
+func appendConstraintValidator(a any, def *enums.ConstraintDef) {
+	switch x := a.(type) {
+
+	case *resourceschema.StringAttribute:
+		if v := stringLengthValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+	case *datasourceschema.StringAttribute:
+		if v := stringLengthValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+
+	case *resourceschema.Int64Attribute:
+		if v := int64RangeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+	case *datasourceschema.Int64Attribute:
+		if v := int64RangeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+
+	case *resourceschema.Float64Attribute:
+		if v := float64RangeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+	case *datasourceschema.Float64Attribute:
+		if v := float64RangeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+
+	case *resourceschema.ListAttribute:
+		if v := listSizeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+	case *datasourceschema.ListAttribute:
+		if v := listSizeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+	case *resourceschema.ListNestedAttribute:
+		if v := listSizeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+	case *datasourceschema.ListNestedAttribute:
+		if v := listSizeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+
+	case *resourceschema.SetAttribute:
+		if v := setSizeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+	case *datasourceschema.SetAttribute:
+		if v := setSizeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+	case *resourceschema.SetNestedAttribute:
+		if v := setSizeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+	case *datasourceschema.SetNestedAttribute:
+		if v := setSizeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+
+	case *resourceschema.MapAttribute:
+		if v := mapSizeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+	case *datasourceschema.MapAttribute:
+		if v := mapSizeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+	case *resourceschema.MapNestedAttribute:
+		if v := mapSizeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+	case *datasourceschema.MapNestedAttribute:
+		if v := mapSizeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+	}
+}
+
+func stringLengthValidator(def *enums.ConstraintDef) validator.String {
+	switch {
+	case def.MinLength != nil && def.MaxLength != nil:
+		return stringvalidator.LengthBetween(int(*def.MinLength), int(*def.MaxLength))
+	case def.MinLength != nil:
+		return stringvalidator.LengthAtLeast(int(*def.MinLength))
+	case def.MaxLength != nil:
+		return stringvalidator.LengthAtMost(int(*def.MaxLength))
+	}
+	return nil
+}
+
+func int64RangeValidator(def *enums.ConstraintDef) validator.Int64 {
+	switch {
+	case def.Minimum != nil && def.Maximum != nil:
+		return int64validator.Between(int64(*def.Minimum), int64(*def.Maximum))
+	case def.Minimum != nil:
+		return int64validator.AtLeast(int64(*def.Minimum))
+	case def.Maximum != nil:
+		return int64validator.AtMost(int64(*def.Maximum))
+	}
+	return nil
+}
+
+func float64RangeValidator(def *enums.ConstraintDef) validator.Float64 {
+	switch {
+	case def.Minimum != nil && def.Maximum != nil:
+		return float64validator.Between(*def.Minimum, *def.Maximum)
+	case def.Minimum != nil:
+		return float64validator.AtLeast(*def.Minimum)
+	case def.Maximum != nil:
+		return float64validator.AtMost(*def.Maximum)
+	}
+	return nil
+}
+
+func listSizeValidator(def *enums.ConstraintDef) validator.List {
+	switch {
+	case def.MinItems != nil && def.MaxItems != nil:
+		return listvalidator.SizeBetween(int(*def.MinItems), int(*def.MaxItems))
+	case def.MinItems != nil:
+		return listvalidator.SizeAtLeast(int(*def.MinItems))
+	case def.MaxItems != nil:
+		return listvalidator.SizeAtMost(int(*def.MaxItems))
+	}
+	return nil
+}
+
+func setSizeValidator(def *enums.ConstraintDef) validator.Set {
+	switch {
+	case def.MinItems != nil && def.MaxItems != nil:
+		return setvalidator.SizeBetween(int(*def.MinItems), int(*def.MaxItems))
+	case def.MinItems != nil:
+		return setvalidator.SizeAtLeast(int(*def.MinItems))
+	case def.MaxItems != nil:
+		return setvalidator.SizeAtMost(int(*def.MaxItems))
+	}
+	return nil
+}
+
+func mapSizeValidator(def *enums.ConstraintDef) validator.Map {
+	switch {
+	case def.MinItems != nil && def.MaxItems != nil:
+		return mapvalidator.SizeBetween(int(*def.MinItems), int(*def.MaxItems))
+	case def.MinItems != nil:
+		return mapvalidator.SizeAtLeast(int(*def.MinItems))
+	case def.MaxItems != nil:
+		return mapvalidator.SizeAtMost(int(*def.MaxItems))
+	}
+	return nil
 }
