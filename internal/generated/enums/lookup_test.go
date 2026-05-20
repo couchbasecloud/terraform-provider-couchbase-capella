@@ -110,3 +110,41 @@ func TestCompositionLookup_NotFound(t *testing.T) {
 		t.Errorf("expected nil for unknown field, got %+v", def)
 	}
 }
+
+// Required lookup tests
+
+func TestRequiredLookup_Found(t *testing.T) {
+	// AWSConfigData.accountId is required per OpenAPI spec
+	b := stubBuilder{resource: "awsConfigData", schema: "AWSConfigData"}
+
+	if !RequiredLookup(b, nil, "account_id") {
+		t.Error("expected account_id to be required")
+	}
+}
+
+func TestRequiredLookup_NotFound(t *testing.T) {
+	b := stubBuilder{resource: "unknown", schema: "unknown"}
+
+	if RequiredLookup(b, nil, "non_existent_field") {
+		t.Error("expected non_existent_field to not be required")
+	}
+}
+
+func TestRequiredLookup_PatternMatching(t *testing.T) {
+	// Should find via pattern matching (e.g., CreateProjectRequest)
+	b := stubBuilder{resource: "project", schema: "project"}
+
+	// Check a field that's required in CreateProjectRequest
+	if !RequiredLookup(b, nil, "name") {
+		t.Error("expected name to be required via CreateProjectRequest pattern")
+	}
+}
+
+func TestRequiredLookup_AlternateSchemaWins(t *testing.T) {
+	b := stubBuilder{resource: "unknown", schema: "unknown"}
+
+	// AWSConfigData.cidr is required
+	if !RequiredLookup(b, []string{"AWSConfigData"}, "cidr") {
+		t.Error("expected cidr to be required via alternate schema")
+	}
+}
