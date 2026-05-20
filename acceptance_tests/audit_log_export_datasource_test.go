@@ -15,6 +15,19 @@ import (
 // addressable by stable numeric indices; assertions use the `data.*`
 // set-aware checks and confirm membership of our just-created export.
 func TestAccDatasourceAuditLogExport(t *testing.T) {
+	// Skipped for the same reason as TestAccAuditLogExportResource: this
+	// test creates a couchbase-capella_audit_log_export resource inline
+	// (so the datasource has something to list). The CI cluster does not
+	// have audit logging configured, so GET /auditLogExports/{id}
+	// returns 404 "No audit log files exist within the requested time
+	// frame." right after create. refreshAuditLogExport classifies that
+	// 404 as ResourceNotFound, the framework removes the resource from
+	// state, and the post-apply refresh plan shows the resource as a
+	// new create — failing the step with "the refresh plan was not
+	// empty". Re-enable once AV-128951's infra work seeds audit log data
+	// on the CI cluster.
+	t.Skip("requires audit log data on globalClusterId; see comment above")
+
 	resourceName := randomStringWithPrefix("tf_acc_audit_log_export_for_ds_")
 	resourceReference := "couchbase-capella_audit_log_export." + resourceName
 	dsName := randomStringWithPrefix("tf_acc_audit_log_export_ds_")
