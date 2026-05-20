@@ -210,3 +210,46 @@ func TestConstraintLookup_NotFound(t *testing.T) {
 		t.Errorf("expected nil for unknown field, got %+v", def)
 	}
 }
+
+func TestConstraintLookup_AcronymField(t *testing.T) {
+	// vpc_network_id (TF) maps to vpcNetworkID (spec, uppercase ID).
+	// snakeToCamel deterministically produces vpcNetworkId (lowercase d),
+	// so the lookup must try both variants to match the spec field.
+	b := stubBuilder{resource: "GCPPrivateEndpoint", schema: "CreateGCPPrivateEndpointCommandRequest"}
+	def := ConstraintLookup(b, nil, "vpc_network_id")
+	if def == nil {
+		t.Fatal("expected constraint for vpc_network_id (vpcNetworkID in spec)")
+	}
+	if def.MinLength == nil || *def.MinLength != 12 {
+		t.Errorf("MinLength = %v, want 12", def.MinLength)
+	}
+	if def.MaxLength == nil || *def.MaxLength != 21 {
+		t.Errorf("MaxLength = %v, want 21", def.MaxLength)
+	}
+}
+
+func TestFieldCandidates(t *testing.T) {
+	tests := []struct {
+		input string
+		want  []string
+	}{
+		{"name", []string{"name"}},
+		{"account_id", []string{"accountId", "accountID"}},
+		{"vpc_network_id", []string{"vpcNetworkId", "vpcNetworkID"}},
+		{"subnet_ids", []string{"subnetIds", "subnetIDs"}},
+		{"foo_bar", []string{"fooBar"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			got := fieldCandidates(tt.input)
+			if len(got) != len(tt.want) {
+				t.Fatalf("fieldCandidates(%q) = %v, want %v", tt.input, got, tt.want)
+			}
+			for i, g := range got {
+				if g != tt.want[i] {
+					t.Errorf("[%d] = %q, want %q", i, g, tt.want[i])
+				}
+			}
+		})
+	}
+}
