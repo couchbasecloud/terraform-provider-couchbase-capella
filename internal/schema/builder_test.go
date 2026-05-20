@@ -668,3 +668,156 @@ func TestSetRequiredIfUnset_WorksWithDifferentAttributeTypes(t *testing.T) {
 		})
 	}
 }
+
+func f64(v float64) *float64 { return &v }
+func i64(v int64) *int64     { return &v }
+
+func TestAppendConstraintValidator_StringLength(t *testing.T) {
+	tests := []struct {
+		name string
+		def  *enums.ConstraintDef
+	}{
+		{"min only", &enums.ConstraintDef{MinLength: i64(2)}},
+		{"max only", &enums.ConstraintDef{MaxLength: i64(64)}},
+		{"min and max", &enums.ConstraintDef{MinLength: i64(2), MaxLength: i64(64)}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			attr := &resourceschema.StringAttribute{}
+			appendConstraintValidator(attr, tt.def)
+			if len(attr.Validators) != 1 {
+				t.Fatalf("expected 1 validator, got %d", len(attr.Validators))
+			}
+		})
+	}
+}
+
+func TestAppendConstraintValidator_Int64Range(t *testing.T) {
+	tests := []struct {
+		name string
+		def  *enums.ConstraintDef
+	}{
+		{"min only", &enums.ConstraintDef{Minimum: f64(1)}},
+		{"max only", &enums.ConstraintDef{Maximum: f64(32)}},
+		{"min and max", &enums.ConstraintDef{Minimum: f64(1), Maximum: f64(32)}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			attr := &resourceschema.Int64Attribute{}
+			appendConstraintValidator(attr, tt.def)
+			if len(attr.Validators) != 1 {
+				t.Fatalf("expected 1 validator, got %d", len(attr.Validators))
+			}
+		})
+	}
+}
+
+func TestAppendConstraintValidator_Float64Range(t *testing.T) {
+	attr := &resourceschema.Float64Attribute{}
+	appendConstraintValidator(attr, &enums.ConstraintDef{Minimum: f64(0.5), Maximum: f64(99.5)})
+	if len(attr.Validators) != 1 {
+		t.Fatalf("expected 1 validator, got %d", len(attr.Validators))
+	}
+}
+
+func TestAppendConstraintValidator_ListSize(t *testing.T) {
+	attr := &resourceschema.ListAttribute{}
+	appendConstraintValidator(attr, &enums.ConstraintDef{MinItems: i64(1), MaxItems: i64(10)})
+	if len(attr.Validators) != 1 {
+		t.Fatalf("expected 1 validator, got %d", len(attr.Validators))
+	}
+}
+
+func TestAppendConstraintValidator_SetSize(t *testing.T) {
+	attr := &resourceschema.SetAttribute{}
+	appendConstraintValidator(attr, &enums.ConstraintDef{MinItems: i64(1)})
+	if len(attr.Validators) != 1 {
+		t.Fatalf("expected 1 validator, got %d", len(attr.Validators))
+	}
+}
+
+func TestAppendConstraintValidator_MapSize(t *testing.T) {
+	attr := &resourceschema.MapAttribute{}
+	appendConstraintValidator(attr, &enums.ConstraintDef{MaxItems: i64(5)})
+	if len(attr.Validators) != 1 {
+		t.Fatalf("expected 1 validator, got %d", len(attr.Validators))
+	}
+}
+
+func TestAppendConstraintValidator_ListNestedSize(t *testing.T) {
+	attr := &resourceschema.ListNestedAttribute{}
+	appendConstraintValidator(attr, &enums.ConstraintDef{MinItems: i64(1), MaxItems: i64(3)})
+	if len(attr.Validators) != 1 {
+		t.Fatalf("expected 1 validator, got %d", len(attr.Validators))
+	}
+}
+
+func TestAppendConstraintValidator_SetNestedSize(t *testing.T) {
+	attr := &resourceschema.SetNestedAttribute{}
+	appendConstraintValidator(attr, &enums.ConstraintDef{MaxItems: i64(8)})
+	if len(attr.Validators) != 1 {
+		t.Fatalf("expected 1 validator, got %d", len(attr.Validators))
+	}
+}
+
+func TestAppendConstraintValidator_SkipsWithExistingValidators(t *testing.T) {
+	attr := &resourceschema.StringAttribute{
+		Validators: []validator.String{mockStringValidator{}},
+	}
+	appendConstraintValidator(attr, &enums.ConstraintDef{MinLength: i64(2), MaxLength: i64(64)})
+	if len(attr.Validators) != 1 {
+		t.Fatalf("expected validator count to remain 1 (call-site wins), got %d", len(attr.Validators))
+	}
+	if _, ok := attr.Validators[0].(mockStringValidator); !ok {
+		t.Error("expected pre-existing mock validator to be retained")
+	}
+}
+
+func TestAppendConstraintValidator_NoApplicableConstraints(t *testing.T) {
+	// String attribute given numeric constraints — nothing applicable, nothing attached.
+	attr := &resourceschema.StringAttribute{}
+	appendConstraintValidator(attr, &enums.ConstraintDef{Minimum: f64(1), Maximum: f64(10)})
+	if len(attr.Validators) != 0 {
+		t.Fatalf("expected 0 validators when constraints don't apply, got %d", len(attr.Validators))
+	}
+}
+
+func TestAppendConstraintValidator_Datasource(t *testing.T) {
+	// Cover datasource variants for the four core attribute kinds.
+	t.Run("StringAttribute", func(t *testing.T) {
+		attr := &datasourceschema.StringAttribute{}
+		appendConstraintValidator(attr, &enums.ConstraintDef{MaxLength: i64(128)})
+		if len(attr.Validators) != 1 {
+			t.Fatalf("expected 1 validator, got %d", len(attr.Validators))
+		}
+	})
+	t.Run("Int64Attribute", func(t *testing.T) {
+		attr := &datasourceschema.Int64Attribute{}
+		appendConstraintValidator(attr, &enums.ConstraintDef{Minimum: f64(1)})
+		if len(attr.Validators) != 1 {
+			t.Fatalf("expected 1 validator, got %d", len(attr.Validators))
+		}
+	})
+	t.Run("ListAttribute", func(t *testing.T) {
+		attr := &datasourceschema.ListAttribute{}
+		appendConstraintValidator(attr, &enums.ConstraintDef{MinItems: i64(1)})
+		if len(attr.Validators) != 1 {
+			t.Fatalf("expected 1 validator, got %d", len(attr.Validators))
+		}
+	})
+	t.Run("SetAttribute", func(t *testing.T) {
+		attr := &datasourceschema.SetAttribute{}
+		appendConstraintValidator(attr, &enums.ConstraintDef{MaxItems: i64(10)})
+		if len(attr.Validators) != 1 {
+			t.Fatalf("expected 1 validator, got %d", len(attr.Validators))
+		}
+	})
+}
+
+// mockStringValidator implements validator.String for override-discipline tests.
+type mockStringValidator struct{}
+
+func (m mockStringValidator) Description(_ context.Context) string         { return "mock" }
+func (m mockStringValidator) MarkdownDescription(_ context.Context) string { return "mock" }
+func (m mockStringValidator) ValidateString(_ context.Context, _ validator.StringRequest, _ *validator.StringResponse) {
+}

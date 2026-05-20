@@ -23,7 +23,7 @@ type SchemaBuilder interface {
 // list used by docs.GetOpenAPIDescription. Returns nil when no enum is
 // associated.
 func Lookup(b SchemaBuilder, alternateSchemas []string, tfFieldName string) *EnumDef {
-	field := snakeToCamel(tfFieldName)
+	candidates := fieldCandidates(tfFieldName)
 
 	patterns := append([]string(nil), alternateSchemas...)
 
@@ -43,9 +43,11 @@ func Lookup(b SchemaBuilder, alternateSchemas []string, tfFieldName string) *Enu
 		if p == "" {
 			continue
 		}
-		if def, ok := enumTable[p][field]; ok {
-			out := def
-			return &out
+		for _, field := range candidates {
+			if def, ok := enumTable[p][field]; ok {
+				out := def
+				return &out
+			}
 		}
 	}
 	return nil
@@ -56,7 +58,9 @@ func schemaPatterns(name string) []string {
 		return nil
 	}
 	capName := capitalize(name)
-	return []string{
+	acroName := capitalizeAcronym(name)
+
+	patterns := []string{
 		capName,
 		"Create" + capName + "Request",
 		"Get" + capName + "Response",
@@ -65,6 +69,17 @@ func schemaPatterns(name string) []string {
 		capName + "Response",
 		name,
 	}
+	if acroName != capName {
+		patterns = append(patterns,
+			acroName,
+			"Create"+acroName+"Request",
+			"Get"+acroName+"Response",
+			"Update"+acroName+"Request",
+			acroName+"Request",
+			acroName+"Response",
+		)
+	}
+	return patterns
 }
 
 func snakeToCamel(s string) string {
@@ -79,6 +94,85 @@ func snakeToCamel(s string) string {
 	return out
 }
 
+// snakeToCamelAcronym is like snakeToCamel but uppercases segments that match
+// known acronyms (id → ID, url → URL, etc.). The OpenAPI spec uses both styles
+// inconsistently (e.g. `accountId` vs `vpcNetworkID`), so callers should try
+// both this and snakeToCamel when looking a field up.
+func snakeToCamelAcronym(s string) string {
+	parts := strings.Split(s, "_")
+	if len(parts) == 0 {
+		return s
+	}
+	out := parts[0]
+	for _, p := range parts[1:] {
+		if upper, ok := acronyms[p]; ok {
+			out += upper
+		} else {
+			out += capitalize(p)
+		}
+	}
+	return out
+}
+
+// acronyms maps lowercase segments to the uppercase form the OpenAPI spec
+// uses when that segment is treated as an acronym. Used both for field names
+// (e.g. `vpc_network_id` → `vpcNetworkID`) and for the leading word of schema
+// builder names (e.g. `gcpPrivateEndpointCommand` → `GCPPrivateEndpointCommand`).
+var acronyms = map[string]string{
+	"api":  "API",
+	"arn":  "ARN",
+	"aws":  "AWS",
+	"cidr": "CIDR",
+	"cmek": "CMEK",
+	"cors": "CORS",
+	"gcp":  "GCP",
+	"guid": "GUID",
+	"id":   "ID",
+	"ids":  "IDs",
+	"ip":   "IP",
+	"ips":  "IPs",
+	"json": "JSON",
+	"oidc": "OIDC",
+	"sso":  "SSO",
+	"tls":  "TLS",
+	"uri":  "URI",
+	"url":  "URL",
+	"uuid": "UUID",
+	"vpc":  "VPC",
+}
+
+// capitalizeAcronym returns name with its leading lowercase prefix uppercased
+// when that prefix matches a known acronym. Falls back to capitalize() otherwise.
+// Example: "gcpPrivateEndpointCommand" → "GCPPrivateEndpointCommand";
+// "projectFoo" → "ProjectFoo".
+func capitalizeAcronym(name string) string {
+	if name == "" {
+		return name
+	}
+	i := 0
+	for i < len(name) && name[i] >= 'a' && name[i] <= 'z' {
+		i++
+	}
+	if i > 0 {
+		if upper, ok := acronyms[name[:i]]; ok {
+			return upper + name[i:]
+		}
+	}
+	return capitalize(name)
+}
+
+// fieldCandidates returns possible camelCase variants of a snake_case TF field
+// name. The first is the canonical snakeToCamel result; the second (only when
+// it differs) is a variant where trailing acronym segments are uppercased.
+func fieldCandidates(tfFieldName string) []string {
+	base := snakeToCamel(tfFieldName)
+	upper := snakeToCamelAcronym(tfFieldName)
+	if upper == base {
+		return []string{base}
+	}
+	return []string{base, upper}
+}
+
 func capitalize(s string) string {
 	if s == "" {
 		return s
@@ -91,7 +185,7 @@ func capitalize(s string) string {
 // same schema-name pattern list used by Lookup and docs.GetOpenAPIDescription.
 // Returns nil when no composition is associated with the attribute.
 func CompositionLookup(b SchemaBuilder, alternateSchemas []string, tfFieldName string) *CompositionDef {
-	field := snakeToCamel(tfFieldName)
+	candidates := fieldCandidates(tfFieldName)
 
 	patterns := append([]string(nil), alternateSchemas...)
 
@@ -107,9 +201,11 @@ func CompositionLookup(b SchemaBuilder, alternateSchemas []string, tfFieldName s
 		if p == "" {
 			continue
 		}
-		if def, ok := compositionTable[p][field]; ok {
-			out := def
-			return &out
+		for _, field := range candidates {
+			if def, ok := compositionTable[p][field]; ok {
+				out := def
+				return &out
+			}
 		}
 	}
 	return nil
@@ -119,7 +215,7 @@ func CompositionLookup(b SchemaBuilder, alternateSchemas []string, tfFieldName s
 // as required in the OpenAPI spec, walking the same schema-name pattern
 // list used by Lookup and docs.GetOpenAPIDescription.
 func RequiredLookup(b SchemaBuilder, alternateSchemas []string, tfFieldName string) bool {
-	field := snakeToCamel(tfFieldName)
+	candidates := fieldCandidates(tfFieldName)
 
 	patterns := append([]string(nil), alternateSchemas...)
 
@@ -135,9 +231,42 @@ func RequiredLookup(b SchemaBuilder, alternateSchemas []string, tfFieldName stri
 		if p == "" {
 			continue
 		}
-		if _, ok := requiredTable[p][field]; ok {
-			return true
+		for _, field := range candidates {
+			if _, ok := requiredTable[p][field]; ok {
+				return true
+			}
 		}
 	}
 	return false
+}
+
+// ConstraintLookup returns the constraint definition (min/max values, lengths,
+// item counts) associated with a Terraform attribute on the given builder,
+// walking the same schema-name pattern list used by Lookup.
+// Returns nil when no constraints are associated with the attribute.
+func ConstraintLookup(b SchemaBuilder, alternateSchemas []string, tfFieldName string) *ConstraintDef {
+	candidates := fieldCandidates(tfFieldName)
+
+	patterns := append([]string(nil), alternateSchemas...)
+
+	// Patterns from the OpenAPI schema name
+	patterns = append(patterns, schemaPatterns(b.GetOpenAPISchemaName())...)
+
+	// Patterns from the Terraform resource name, in case it differs
+	if b.GetResourceName() != b.GetOpenAPISchemaName() {
+		patterns = append(patterns, schemaPatterns(b.GetResourceName())...)
+	}
+
+	for _, p := range patterns {
+		if p == "" {
+			continue
+		}
+		for _, field := range candidates {
+			if def, ok := constraintTable[p][field]; ok {
+				out := def
+				return &out
+			}
+		}
+	}
+	return nil
 }
