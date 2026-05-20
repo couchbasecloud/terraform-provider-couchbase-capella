@@ -270,3 +270,30 @@ func ConstraintLookup(b SchemaBuilder, alternateSchemas []string, tfFieldName st
 	}
 	return nil
 }
+
+// RequiredLookup returns true if the given Terraform attribute is marked
+// as required in the OpenAPI spec, walking the same schema-name pattern
+// list used by Lookup and docs.GetOpenAPIDescription.
+func RequiredLookup(b SchemaBuilder, alternateSchemas []string, tfFieldName string) bool {
+	field := snakeToCamel(tfFieldName)
+
+	patterns := append([]string(nil), alternateSchemas...)
+
+	// Patterns from the OpenAPI schema name
+	patterns = append(patterns, schemaPatterns(b.GetOpenAPISchemaName())...)
+
+	// Patterns from the Terraform resource name, in case it differs
+	if b.GetResourceName() != b.GetOpenAPISchemaName() {
+		patterns = append(patterns, schemaPatterns(b.GetResourceName())...)
+	}
+
+	for _, p := range patterns {
+		if p == "" {
+			continue
+		}
+		if _, ok := requiredTable[p][field]; ok {
+			return true
+		}
+	}
+	return false
+}
