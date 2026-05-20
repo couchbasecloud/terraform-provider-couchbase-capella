@@ -194,27 +194,72 @@ func dedupConstraints(sites []constraintSite) []constraintSite {
 	return out
 }
 
-// mergeConstraintSite copies non-nil constraint fields from src onto dst,
-// preserving any value dst already has. Used to combine multiple discoveries
-// of the same (schema, field) pair into a single site.
+// mergeConstraintSite intersects src's constraints into dst, applying OpenAPI
+// allOf semantics: when the same (schema, field) is discovered more than once
+// (e.g. across allOf branches or repeated $ref resolutions), the merged value
+// must satisfy every contributing constraint. That means taking the *max* of
+// lower bounds (Minimum, MinLength, MinItems) and the *min* of upper bounds
+// (Maximum, MaxLength, MaxItems) — i.e. the most restrictive of each pair.
+// A nil pointer on either side is treated as "no constraint contributed", so
+// the other side wins.
 func mergeConstraintSite(dst *constraintSite, src constraintSite) {
-	if dst.Minimum == nil {
-		dst.Minimum = src.Minimum
+	dst.Minimum = maxPtrFloat(dst.Minimum, src.Minimum)
+	dst.Maximum = minPtrFloat(dst.Maximum, src.Maximum)
+	dst.MinLength = maxPtrInt(dst.MinLength, src.MinLength)
+	dst.MaxLength = minPtrInt(dst.MaxLength, src.MaxLength)
+	dst.MinItems = maxPtrInt(dst.MinItems, src.MinItems)
+	dst.MaxItems = minPtrInt(dst.MaxItems, src.MaxItems)
+}
+
+func maxPtrFloat(a, b *float64) *float64 {
+	switch {
+	case a == nil:
+		return b
+	case b == nil:
+		return a
+	case *b > *a:
+		return b
+	default:
+		return a
 	}
-	if dst.Maximum == nil {
-		dst.Maximum = src.Maximum
+}
+
+func minPtrFloat(a, b *float64) *float64 {
+	switch {
+	case a == nil:
+		return b
+	case b == nil:
+		return a
+	case *b < *a:
+		return b
+	default:
+		return a
 	}
-	if dst.MinLength == nil {
-		dst.MinLength = src.MinLength
+}
+
+func maxPtrInt(a, b *int64) *int64 {
+	switch {
+	case a == nil:
+		return b
+	case b == nil:
+		return a
+	case *b > *a:
+		return b
+	default:
+		return a
 	}
-	if dst.MaxLength == nil {
-		dst.MaxLength = src.MaxLength
-	}
-	if dst.MinItems == nil {
-		dst.MinItems = src.MinItems
-	}
-	if dst.MaxItems == nil {
-		dst.MaxItems = src.MaxItems
+}
+
+func minPtrInt(a, b *int64) *int64 {
+	switch {
+	case a == nil:
+		return b
+	case b == nil:
+		return a
+	case *b < *a:
+		return b
+	default:
+		return a
 	}
 }
 

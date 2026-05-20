@@ -761,3 +761,93 @@ func TestDedupComposition(t *testing.T) {
 		}
 	})
 }
+
+func TestDedupConstraints_IntersectsBounds(t *testing.T) {
+	// When the same (schema, field) is discovered twice with different bounds,
+	// the merge must take the most restrictive of each pair (allOf semantics):
+	// max of lower bounds, min of upper bounds.
+	t.Run("integer bounds intersect", func(t *testing.T) {
+		min2 := int64(2)
+		min10 := int64(10)
+		max100 := int64(100)
+		max50 := int64(50)
+		sites := []constraintSite{
+			{SchemaName: "S", FieldPath: "f", MinLength: &min2, MaxLength: &max100},
+			{SchemaName: "S", FieldPath: "f", MinLength: &min10, MaxLength: &max50},
+		}
+		got := dedupConstraints(sites)
+		if len(got) != 1 {
+			t.Fatalf("want 1 merged site, got %d", len(got))
+		}
+		if got[0].MinLength == nil || *got[0].MinLength != 10 {
+			t.Errorf("MinLength = %v, want 10 (max of 2, 10)", got[0].MinLength)
+		}
+		if got[0].MaxLength == nil || *got[0].MaxLength != 50 {
+			t.Errorf("MaxLength = %v, want 50 (min of 100, 50)", got[0].MaxLength)
+		}
+	})
+
+	t.Run("float bounds intersect", func(t *testing.T) {
+		min1 := 1.0
+		min5 := 5.0
+		max32 := 32.0
+		max16 := 16.0
+		sites := []constraintSite{
+			{SchemaName: "S", FieldPath: "n", Minimum: &min1, Maximum: &max32},
+			{SchemaName: "S", FieldPath: "n", Minimum: &min5, Maximum: &max16},
+		}
+		got := dedupConstraints(sites)
+		if got[0].Minimum == nil || *got[0].Minimum != 5 {
+			t.Errorf("Minimum = %v, want 5 (max of 1, 5)", got[0].Minimum)
+		}
+		if got[0].Maximum == nil || *got[0].Maximum != 16 {
+			t.Errorf("Maximum = %v, want 16 (min of 32, 16)", got[0].Maximum)
+		}
+	})
+
+	t.Run("nil bounds take the other side", func(t *testing.T) {
+		min10 := int64(10)
+		max100 := int64(100)
+		sites := []constraintSite{
+			{SchemaName: "S", FieldPath: "f", MinLength: &min10},  // MaxLength nil
+			{SchemaName: "S", FieldPath: "f", MaxLength: &max100}, // MinLength nil
+		}
+		got := dedupConstraints(sites)
+		if got[0].MinLength == nil || *got[0].MinLength != 10 {
+			t.Errorf("MinLength = %v, want 10 (only one side set)", got[0].MinLength)
+		}
+		if got[0].MaxLength == nil || *got[0].MaxLength != 100 {
+			t.Errorf("MaxLength = %v, want 100 (only one side set)", got[0].MaxLength)
+		}
+	})
+
+	t.Run("item-count bounds intersect", func(t *testing.T) {
+		min1 := int64(1)
+		min3 := int64(3)
+		max30 := int64(30)
+		max10 := int64(10)
+		sites := []constraintSite{
+			{SchemaName: "S", FieldPath: "list", MinItems: &min1, MaxItems: &max30},
+			{SchemaName: "S", FieldPath: "list", MinItems: &min3, MaxItems: &max10},
+		}
+		got := dedupConstraints(sites)
+		if got[0].MinItems == nil || *got[0].MinItems != 3 {
+			t.Errorf("MinItems = %v, want 3", got[0].MinItems)
+		}
+		if got[0].MaxItems == nil || *got[0].MaxItems != 10 {
+			t.Errorf("MaxItems = %v, want 10", got[0].MaxItems)
+		}
+	})
+
+	t.Run("keeps different fields separate", func(t *testing.T) {
+		min1 := int64(1)
+		sites := []constraintSite{
+			{SchemaName: "S", FieldPath: "a", MinLength: &min1},
+			{SchemaName: "S", FieldPath: "b", MinLength: &min1},
+		}
+		got := dedupConstraints(sites)
+		if len(got) != 2 {
+			t.Errorf("want 2 sites (different fields), got %d", len(got))
+		}
+	})
+}
