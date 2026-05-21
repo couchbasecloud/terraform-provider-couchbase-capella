@@ -78,9 +78,29 @@ type Resource struct {
 }
 
 // Users defines the attributes for a list of users in Capella.
+//
+// Page / PerPage / SortBy / SortDirection are optional pagination knobs
+// that map to the underlying GET /v4/organizations/{org}/users query
+// parameters. When any of them is set the datasource fetches a single
+// page (matching the pattern used by the cloud_project_snapshot_backups
+// datasource); when none are set the datasource walks all pages, which
+// preserves the original behaviour for callers that didn't opt in.
 type Users struct {
 	// OrganizationId is the organizationId of the capella.
 	OrganizationId types.String `tfsdk:"organization_id"`
+
+	// Page selects a specific page of the paginated results
+	// (1-indexed). Optional.
+	Page types.Int64 `tfsdk:"page"`
+
+	// PerPage caps the number of users returned per page. Optional.
+	PerPage types.Int64 `tfsdk:"per_page"`
+
+	// SortBy is the field name to sort the results by. Optional.
+	SortBy types.String `tfsdk:"sort_by"`
+
+	// SortDirection is "asc" or "desc". Optional.
+	SortDirection types.String `tfsdk:"sort_direction"`
 
 	// Data contains the list of resources.
 	Data []User `tfsdk:"data"`

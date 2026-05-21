@@ -171,7 +171,7 @@ func TestAccDatasourceUsersFullFieldContent(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUsersDataSourceConfig(resourceName, dsName, username, email),
+				Config: testAccUsersDataSourceConfig(resourceName, dsName, username, email, usersDatasourcePerPage),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", username),
 					resource.TestCheckResourceAttr(resourceReference, "email", email),
