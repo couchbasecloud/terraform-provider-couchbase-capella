@@ -68,6 +68,7 @@ func ClusterSchema() schema.Schema {
 	capellaschema.AddAttr(dataAttrs, "name", clusterBuilder, computedString())
 	capellaschema.AddAttr(dataAttrs, "description", clusterBuilder, computedString())
 	capellaschema.AddAttr(dataAttrs, "enable_private_dns_resolution", clusterBuilder, computedBool())
+	capellaschema.AddAttr(dataAttrs, "deletion_protection", clusterBuilder, computedBool())
 	capellaschema.AddAttr(dataAttrs, "connection_string", clusterBuilder, computedString())
 	capellaschema.AddAttr(dataAttrs, "cloud_provider", clusterBuilder, &schema.SingleNestedAttribute{
 		Computed:   true,

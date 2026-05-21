@@ -345,6 +345,7 @@ type ClusterData struct {
 	Audit                      types.Object     `tfsdk:"audit"`
 	Description                types.String     `tfsdk:"description"`
 	EnablePrivateDNSResolution types.Bool       `tfsdk:"enable_private_dns_resolution"`
+	DeletionProtection         types.Bool       `tfsdk:"deletion_protection"`
 	Name                       types.String     `tfsdk:"name"`
 	AppServiceId               types.String     `tfsdk:"app_service_id"`
 	ConnectionString           types.String     `tfsdk:"connection_string"`
@@ -361,6 +362,7 @@ func NewClusterData(cluster *clusterapi.GetClusterResponse, organizationId, proj
 		Name:                       types.StringValue(cluster.Name),
 		Description:                types.StringValue(cluster.Description),
 		EnablePrivateDNSResolution: types.BoolValue(cluster.EnablePrivateDNSResolution),
+		DeletionProtection:         types.BoolValue(cluster.DeletionProtection),
 		Availability: &Availability{
 			Type: types.StringValue(string(cluster.Availability.Type)),
 		},
