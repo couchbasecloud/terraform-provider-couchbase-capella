@@ -164,7 +164,7 @@ func TestAccDatasourceUsersFullFieldContent(t *testing.T) {
 	resourceReference := "couchbase-capella_user." + resourceName
 	dsReference := "data.couchbase-capella_users." + dsName
 
-	username := "terraform_acceptance_test_field_content"
+	username := resourceName
 	email := username + "@couchbase.com"
 
 	resource.ParallelTest(t, resource.TestCase{

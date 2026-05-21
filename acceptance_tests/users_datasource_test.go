@@ -25,11 +25,9 @@ func TestAccDatasourceUsers(t *testing.T) {
 	resourceReference := "couchbase-capella_user." + resourceName
 	dsReference := "data.couchbase-capella_users." + dsName
 
-	// Match the pattern in user_acceptance_test.go — the username/email pair is
-	// a fixture in the test tenant and the invite flow needs a deterministic
-	// value. The resource handle uses a randomised name so parallel tests do
-	// not collide on terraform state.
-	username := "terraform_acceptance_test_ds"
+	// Random per-run email — avoids 422 (code 8010) "email already registered"
+	// when a previous panicked run leaves the invited user undeleted in the org.
+	username := resourceName
 	email := username + "@couchbase.com"
 
 	resource.ParallelTest(t, resource.TestCase{
