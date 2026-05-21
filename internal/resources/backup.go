@@ -412,18 +412,9 @@ func (a *Backup) validateCreateBackupRequest(plan providerschema.Backup) error {
 //
 // We poll the list because Capella's bucket-backup POST returns 202 with an
 // empty body — there is no per-id endpoint we can poll from a known id.
-// getLatestBackup is fixed to walk every page, filter to our bucket, and sort
-// client-side by date desc so "latest" is actually the latest regardless of
-// the API's default ordering or how many records the cluster has accumulated.
-//
-// Timeout is 30 minutes (down from the prior 90-minute ceiling): one stuck
-// backup can no longer consume more than a quarter of the 120-minute Go
-// test-binary budget. Real-cluster backups of very large buckets that need
-// longer than 30 minutes will require widening this constant — the resource
-// schema does not currently expose a per-resource timeouts block.
 func (b *Backup) checkLatestBackupStatus(ctx context.Context, organizationId, projectId, clusterId, bucketId string, backupFound bool, latestBackup *backupapi.GetBackupResponse) (*backupapi.GetBackupResponse, error) {
 	const (
-		timeout = 30 * time.Minute
+		timeout = 90 * time.Minute
 		sleep   = 30 * time.Second
 	)
 
@@ -498,17 +489,7 @@ func (b *Backup) retrieveBackup(ctx context.Context, organizationId, projectId, 
 
 // getLatestBackup returns the most-recent backup record for the given bucket
 // in a cluster, or (nil, nil) if the bucket has no backups yet.
-//
-// The prior implementation called the cluster-scoped list endpoint without
-// sortBy or pagination and returned the first record on page 1 whose bucketID
-// matched — which on busy clusters surfaced an arbitrary stale record because
-// the API's default ordering is unspecified and our bucket's actual latest
-// could sit on page 2+. This implementation:
-//
-//   - walks every page via api.GetPaginated (no records dropped),
-//   - filters to the target bucket client-side (cluster list mixes buckets),
-//   - sorts the per-bucket records by Date desc client-side (independent of
-//     whatever default order the API happens to return today).
+// It walks all pages, filters to the target bucket, and sorts by Date desc.
 func (b *Backup) getLatestBackup(ctx context.Context, organizationId, projectId, clusterId, bucketId string) (*backupapi.GetBackupResponse, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/backups", b.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}

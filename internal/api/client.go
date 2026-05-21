@@ -57,13 +57,8 @@ type EndpointCfg struct {
 // defaultWaitAttempt re-attempt http request after 2 seconds.
 const defaultWaitAttempt = time.Second * 2
 
-// maxRetryAttempts caps the total number of attempts made by ExecuteWithRetry
-// on 429/504, including the initial request. With a value of 10, the client
-// will make up to 9 retries after the first failed attempt. Combined with the
-// 10-minute outer envelope below, this stops a pathological flap from silently
-// burning the test-binary timeout budget. The wall-clock bound is governed by
-// the 10-minute outer timeout — a 429 response honors the server's Retry-After
-// header, which can itself be large.
+// maxRetryAttempts caps 429/504 retries independently of the 10-minute wall-clock
+// timeout, so a rapid flap with small backoffs cannot exhaust the full window.
 const maxRetryAttempts = 10
 
 // Execute is used to construct and execute a HTTP request.
