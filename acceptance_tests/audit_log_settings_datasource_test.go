@@ -8,26 +8,27 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-// TestAccDatasourceAuditLogSettings provisions an audit_log_settings
-// resource and reads it back through the datasource in the same plan.
-// audit_log_settings is a per-cluster singleton, so the datasource is
-// guaranteed to return the values we just wrote.
 func TestAccDatasourceAuditLogSettings(t *testing.T) {
+	clusterResourceName := randomStringWithPrefix("tf_acc_audit_cluster_for_ds_")
 	resourceName := randomStringWithPrefix("tf_acc_audit_log_settings_for_ds_")
 	dsName := randomStringWithPrefix("tf_acc_audit_log_settings_ds_")
+	cidr := generateRandomCIDR()
+	clusterReference := "couchbase-capella_cluster." + clusterResourceName
 	dsReference := "data.couchbase-capella_audit_log_settings." + dsName
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAuditLogSettingsResourceAndDatasourceConfig(resourceName, dsName, true, []int{20488, 20489}),
+				Config: testAccAuditLogSettingsResourceAndDatasourceConfigWithEnterpriseCluster(clusterResourceName, resourceName, dsName, cidr, true, []int{20488, 20489}),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dsReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(dsReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttrPair(dsReference, "cluster_id", clusterReference, "id"),
 					resource.TestCheckResourceAttr(dsReference, "audit_enabled", "true"),
 					resource.TestCheckResourceAttr(dsReference, "enabled_event_ids.#", "2"),
+					resource.TestCheckTypeSetElemAttr(dsReference, "enabled_event_ids.*", "20488"),
+					resource.TestCheckTypeSetElemAttr(dsReference, "enabled_event_ids.*", "20489"),
 					resource.TestCheckResourceAttr(dsReference, "disabled_users.#", "0"),
 				),
 			},
@@ -78,7 +79,7 @@ data "couchbase-capella_audit_log_settings" "%[2]s" {
 	})
 }
 
-func testAccAuditLogSettingsResourceAndDatasourceConfig(resourceName, dsName string, auditEnabled bool, enabledEventIDs []int) string {
+func testAccAuditLogSettingsResourceAndDatasourceConfigWithEnterpriseCluster(clusterResourceName, auditSettingsResourceName, dsName, cidr string, auditEnabled bool, enabledEventIDs []int) string {
 	ids := "["
 	for i, id := range enabledEventIDs {
 		if i > 0 {
@@ -91,21 +92,60 @@ func testAccAuditLogSettingsResourceAndDatasourceConfig(resourceName, dsName str
 	return fmt.Sprintf(`
 %[1]s
 
-resource "couchbase-capella_audit_log_settings" "%[2]s" {
-  organization_id   = "%[4]s"
-  project_id        = "%[5]s"
-  cluster_id        = "%[6]s"
-  audit_enabled     = %[7]t
-  enabled_event_ids = %[8]s
+resource "couchbase-capella_cluster" "%[2]s" {
+	organization_id = "%[5]s"
+	project_id      = "%[6]s"
+	name            = "%[2]s"
+
+	cloud_provider = {
+		type   = "aws"
+		region = "us-east-1"
+		cidr   = "%[4]s"
+	}
+
+	service_groups = [
+		{
+			node = {
+				compute = {
+					cpu = 4
+					ram = 16
+				}
+				disk = {
+					storage = 50
+					type    = "io2"
+					iops    = 3000
+				}
+			}
+			num_of_nodes = 3
+			services     = ["data", "index", "query"]
+		}
+	]
+
+	availability = {
+		type = "multi"
+	}
+
+	support = {
+		plan     = "enterprise"
+		timezone = "PT"
+	}
+}
+
+resource "couchbase-capella_audit_log_settings" "%[3]s" {
+	organization_id   = "%[5]s"
+	project_id        = "%[6]s"
+	cluster_id        = couchbase-capella_cluster.%[2]s.id
+	audit_enabled     = %[7]t
+	enabled_event_ids = %[8]s
   disabled_users    = []
 }
 
-data "couchbase-capella_audit_log_settings" "%[3]s" {
-  organization_id = "%[4]s"
-  project_id      = "%[5]s"
-  cluster_id      = "%[6]s"
+data "couchbase-capella_audit_log_settings" "%[9]s" {
+	organization_id = "%[5]s"
+	project_id      = "%[6]s"
+	cluster_id      = couchbase-capella_cluster.%[2]s.id
 
-  depends_on = [couchbase-capella_audit_log_settings.%[2]s]
+	depends_on = [couchbase-capella_audit_log_settings.%[3]s]
 }
-`, globalProviderBlock, resourceName, dsName, globalOrgId, globalProjectId, globalClusterId, auditEnabled, ids)
+`, globalProviderBlock, clusterResourceName, auditSettingsResourceName, cidr, globalOrgId, globalProjectId, auditEnabled, ids, dsName)
 }
