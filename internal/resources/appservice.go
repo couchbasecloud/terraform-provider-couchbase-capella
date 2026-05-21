@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/appservice"
@@ -471,7 +470,6 @@ func (a *AppService) refreshAppService(ctx context.Context, organizationId, proj
 		projectId,
 		auditObj,
 	)
-	normalizeAppServiceCloudProvider(&refreshedState.CloudProvider)
 	return refreshedState, nil
 }
 
@@ -552,13 +550,6 @@ func (a *AppService) validateAppServiceAttributesTrimmed(plan providerschema.App
 		return fmt.Errorf("description %s", errors.ErrNotTrimmed)
 	}
 	return nil
-}
-
-func normalizeAppServiceCloudProvider(target *types.String) {
-	if target.IsNull() || target.IsUnknown() {
-		return
-	}
-	*target = types.StringValue(strings.ToLower(target.ValueString()))
 }
 
 // initializePendingAppServiceWithPlanAndId initializes an instance of providerschema.AppService

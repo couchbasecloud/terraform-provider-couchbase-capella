@@ -57,7 +57,7 @@ func TestAccAppServiceResourceOptionalFieldsAndScale(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "name", appServiceName),
 					resource.TestCheckResourceAttr(resourceReference, "description", description),
 					resource.TestCheckResourceAttr(resourceReference, "nodes", "2"),
-					resource.TestCheckResourceAttr(resourceReference, "cloud_provider", "aws"),
+					resource.TestCheckResourceAttr(resourceReference, "cloud_provider", "AWS"),
 					resource.TestCheckResourceAttr(resourceReference, "compute.cpu", "2"),
 					resource.TestCheckResourceAttr(resourceReference, "compute.ram", "4"),
 					resource.TestCheckResourceAttrSet(resourceReference, "id"),
@@ -84,7 +84,7 @@ func TestAccAppServiceResourceOptionalFieldsAndScale(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "name", appServiceName),
 					resource.TestCheckResourceAttr(resourceReference, "description", description),
 					resource.TestCheckResourceAttr(resourceReference, "nodes", "3"),
-					resource.TestCheckResourceAttr(resourceReference, "cloud_provider", "aws"),
+					resource.TestCheckResourceAttr(resourceReference, "cloud_provider", "AWS"),
 					resource.TestCheckResourceAttr(resourceReference, "compute.cpu", "4"),
 					resource.TestCheckResourceAttr(resourceReference, "compute.ram", "8"),
 					resource.TestCheckResourceAttrSet(resourceReference, "id"),
@@ -238,7 +238,6 @@ resource "couchbase-capella_app_service" "%[4]s" {
 	name            = "%[7]s"
 	description     = "%[8]s"
 	nodes           = %[9]d
-	cloud_provider  = "aws"
 	compute = {
 		cpu = %[10]d
 		ram = %[11]d
