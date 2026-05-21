@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -19,7 +20,31 @@ import (
 // usersDatasourcePerPage bounds the datasource read to one HTTP call.
 const usersDatasourcePerPage = 100
 
+// usersProbeBudget is how long a single GET /users?page=1&perPage=1 may take
+// before we conclude the tenant's /users endpoint is too slow for this test
+// (tracked by AV-131649).
+const usersProbeBudget = 30 * time.Second
+
+// probeUsersEndpoint times one /users?page=1&perPage=1 call. Returns the
+// elapsed time on success; on transport/HTTP error returns the error.
+func probeUsersEndpoint(ctx context.Context) (time.Duration, error) {
+	url := fmt.Sprintf("%s/v4/organizations/%s/users?page=1&perPage=1", globalHost, globalOrgId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	start := time.Now()
+	_, err := api.NewClient(timeout).ExecuteWithRetry(ctx, cfg, nil, globalToken, nil)
+	return time.Since(start), err
+}
+
 func TestAccDatasourceUsers(t *testing.T) {
+	// AV-131649: on tenants where /users is unreasonably slow, the apply step
+	// will exhaust the provider's 5-min HTTP client timeout. Skip cleanly with
+	// a clear message rather than burning the full test budget.
+	if elapsed, err := probeUsersEndpoint(context.Background()); err != nil {
+		t.Skipf("skipping: /users probe failed (%v) — see AV-131649", err)
+	} else if elapsed > usersProbeBudget {
+		t.Skipf("skipping: /users probe took %s (> %s budget) — slow backend, see AV-131649", elapsed, usersProbeBudget)
+	}
+
 	resourceName := randomStringWithPrefix("tf_acc_users_")
 	dsName := randomStringWithPrefix("tf_acc_users_ds_")
 	resourceReference := "couchbase-capella_user." + resourceName
