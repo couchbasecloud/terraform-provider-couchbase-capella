@@ -31,3 +31,5 @@ support = {
   timezone = "PT"
 }
 
+deletion_protection = true
+

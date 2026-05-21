@@ -60,3 +60,8 @@ variable "support" {
   })
 }
 
+variable "deletion_protection" {
+  description = "Whether deletion protection is enabled for the cluster"
+  type        = bool
+  default     = true
+}

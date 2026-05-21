@@ -11,7 +11,7 @@ resource "couchbase-capella_cluster" "protected_cluster" {
   project_id          = var.project_id
   name                = var.cluster.name
   description         = "Cluster with deletion protection enabled."
-  deletion_protection = true
+  deletion_protection = var.deletion_protection
 
   cloud_provider = {
     type   = var.cloud_provider.name
