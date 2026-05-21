@@ -55,10 +55,7 @@ data "couchbase-capella_database_credentials" "%[2]s" {
   cluster_id      = "00000000-0000-0000-0000-000000000000"
 }
 `, globalProviderBlock, dsName, globalOrgId, globalProjectId),
-				// Read() wraps API failures with "Error Reading Capella Database
-				// Credentials"; a bogus cluster UUID returns 403/404 from the v4
-				// /clusters/{id}/users (database credentials) endpoint. Match both
-				// so the test fails only for that specific path.
+				// a bogus cluster UUID returns 403/404 from the database credentials endpoint.
 				ExpectError: regexp.MustCompile(`(?s)Error Reading Capella Database Credentials.*"httpStatusCode":(403|404)`),
 			},
 		},

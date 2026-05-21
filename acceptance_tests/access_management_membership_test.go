@@ -9,15 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-// testAccDatasourceAttrAbsentOnAllElements asserts that the given attribute
-// is empty (or missing) on every element of the named list/set attribute on
-// the datasource. Used as a P0 tripwire for sensitive fields like `token`
-// or `password` that resource Create may legitimately return once, but
-// must NEVER appear in the list datasource response.
-//
-// Empty string is treated as "absent" — Terraform's state flattening writes
-// "" for nested attributes that are present in the schema but unset on the
-// element, which is the desired behaviour for these sensitive fields.
 func testAccDatasourceAttrAbsentOnAllElements(dsReference, listAttr, sensitiveField string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		ds := s.RootModule().Resources[dsReference]
@@ -36,34 +27,9 @@ func testAccDatasourceAttrAbsentOnAllElements(dsReference, listAttr, sensitiveFi
 	}
 }
 
-// The tests in this file target bug classes the existing per-datasource
-// happy-path tests cannot catch:
-//
-//   - Pagination/single-element drops: every happy-path test creates ONE
-//     parent resource, so a datasource that silently returns only page 1
-//     (or only the first match) would still pass. Each test below creates
-//     three parent resources with distinct identifying fields and requires
-//     all three to be present in `data.*`.
-//
-//   - Field mapping: the happy-path assertions check only `organization_id`,
-//     `project_id`, `cluster_id` on the matched set element. A provider
-//     that silently drops or scrambles `cidr`/`comment`/`name`/`description`
-//     etc. would not be caught. Each test below asserts the full set of
-//     identifying + descriptive fields.
-//
-//   - Sensitive-field leakage: the apikey and database_credential resources
-//     have sensitive fields (`token`, `password`). If the list datasource
-//     ever surfaces them, that is a P0 security regression. The apikey and
-//     database_credential tests below assert those fields are absent from
-//     the datasource shape.
-//
-// Generated under AV-128950 as follow-up depth coverage on top of the
-// scope-required tests in PR #601.
+// Tests in this file cover pagination completeness, full field mapping, and
+// sensitive field absence (token, password) across the list datasources.
 
-// TestAccDatasourceAllowlistsMembership creates three allowlists with
-// distinct CIDRs and comments, then asserts each one appears in the
-// `couchbase-capella_allowlists` datasource response with all four
-// identifying/descriptive fields matching what we wrote.
 func TestAccDatasourceAllowlistsMembership(t *testing.T) {
 	a := randomStringWithPrefix("tf_acc_allowlist_mem_a_")
 	b := randomStringWithPrefix("tf_acc_allowlist_mem_b_")
@@ -71,8 +37,6 @@ func TestAccDatasourceAllowlistsMembership(t *testing.T) {
 	dsName := randomStringWithPrefix("tf_acc_allowlists_mem_ds_")
 	dsReference := "data.couchbase-capella_allowlists." + dsName
 
-	// RFC 5737 documentation block — guaranteed not in real use, so the
-	// /32 CIDRs are stable across runs and harmless on the test cluster.
 	cidrA, commentA := "198.51.100.11/32", "membership-a "+a
 	cidrB, commentB := "198.51.100.12/32", "membership-b "+b
 	cidrC, commentC := "198.51.100.13/32", "membership-c "+c
@@ -86,8 +50,6 @@ func TestAccDatasourceAllowlistsMembership(t *testing.T) {
 					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dsReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(dsReference, "cluster_id", globalClusterId),
-					// Every one of the three must appear with BOTH cidr and
-					// comment matching — proves pagination AND field mapping.
 					resource.TestCheckTypeSetElemNestedAttrs(dsReference, "data.*", map[string]string{
 						"cidr":            cidrA,
 						"comment":         commentA,
@@ -115,11 +77,6 @@ func TestAccDatasourceAllowlistsMembership(t *testing.T) {
 	})
 }
 
-// TestAccDatasourceApiKeysMembership creates three apikeys with distinct
-// names and descriptions, asserts each appears with full field content in
-// `data.*`, and also asserts the sensitive `token` field is absent from
-// every element of the datasource response — catching a leak of the
-// secret that would otherwise be a P0 security regression.
 func TestAccDatasourceApiKeysMembership(t *testing.T) {
 	a := randomStringWithPrefix("tf_acc_apikey_mem_a_")
 	b := randomStringWithPrefix("tf_acc_apikey_mem_b_")
@@ -153,10 +110,6 @@ func TestAccDatasourceApiKeysMembership(t *testing.T) {
 						"description":     descC,
 						"organization_id": globalOrgId,
 					}),
-					// SECURITY: the datasource must not surface the secret
-					// `token` field that the resource exposes once on create.
-					// If any element has a non-empty `token`, we have a P0
-					// leak — this assertion is a tripwire.
 					testAccDatasourceAttrAbsentOnAllElements(dsReference, "data", "token"),
 				),
 			},
@@ -164,10 +117,6 @@ func TestAccDatasourceApiKeysMembership(t *testing.T) {
 	})
 }
 
-// TestAccDatasourceDatabaseCredentialsMembership creates three database
-// credentials and asserts each appears in the datasource with matching
-// name + scope ids, AND that the sensitive `password` field is absent
-// from every datasource element (P0 tripwire).
 func TestAccDatasourceDatabaseCredentialsMembership(t *testing.T) {
 	a := randomStringWithPrefix("tf_acc_dbc_mem_a_")
 	b := randomStringWithPrefix("tf_acc_dbc_mem_b_")
@@ -202,8 +151,6 @@ func TestAccDatasourceDatabaseCredentialsMembership(t *testing.T) {
 						"project_id":      globalProjectId,
 						"cluster_id":      globalClusterId,
 					}),
-					// SECURITY: `password` is sensitive on the resource and must
-					// not appear in the list datasource. P0 leak tripwire.
 					testAccDatasourceAttrAbsentOnAllElements(dsReference, "data", "password"),
 				),
 			},
@@ -211,19 +158,12 @@ func TestAccDatasourceDatabaseCredentialsMembership(t *testing.T) {
 	})
 }
 
-// TestAccDatasourceUsersFullFieldContent extends the existing single-user
-// happy-path test with full field-content verification instead of relying
-// only on TestCheckTypeSetElemNestedAttrs on id/name/email/org_id. Email
-// uniqueness on the tenant precludes the multi-element pattern used for
-// the other three datasources, so this test instead drills into ALL
-// documented fields on the one user we create.
 func TestAccDatasourceUsersFullFieldContent(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_users_fc_")
 	dsName := randomStringWithPrefix("tf_acc_users_fc_ds_")
 	resourceReference := "couchbase-capella_user." + resourceName
 	dsReference := "data.couchbase-capella_users." + dsName
 
-	// Stable tenant fixture — matches the pattern other user tests use.
 	username := "terraform_acceptance_test_field_content"
 	email := username + "@couchbase.com"
 
@@ -250,8 +190,6 @@ func TestAccDatasourceUsersFullFieldContent(t *testing.T) {
 		},
 	})
 }
-
-// --- config builders for the membership tests -------------------------------
 
 func testAccAllowlistsMembershipConfig(a, b, c, dsName, cidrA, commentA, cidrB, commentB, cidrC, commentC string) string {
 	return fmt.Sprintf(`

@@ -8,19 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-// NOTE: the happy-path TestAccDatasourceUsers — which exercises the
-// `couchbase-capella_users` datasource against the just-created user — is
-// not in this PR. The datasource currently has no pagination or filtering
-// knob, so on a tenant with many users the test paginates the entire org and
-// exceeds Terraform's test budget. The provider gap and the matching
-// happy-path test live together on the AV-131648 branch so they ship as one
-// reviewable unit. See AV-131648 for the follow-up.
-//
-// This file keeps:
-//   - TestAccDatasourceUsersInvalidOrganization — negative path, does not
-//     depend on user count
-//   - testAccUsersDataSourceConfig — helper reused by
-//     access_management_membership_test.go
+// The happy-path users datasource test is not included here because the datasource
+// has no pagination or filtering, so it scans the entire org and exceeds the test budget
+// on tenants with many users.
 
 func TestAccDatasourceUsersInvalidOrganization(t *testing.T) {
 	dsName := randomStringWithPrefix("tf_acc_users_ds_invalid_")
