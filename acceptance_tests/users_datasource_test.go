@@ -45,14 +45,19 @@ func TestAccDatasourceUsers(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceReference, "id"),
 
 					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
-					resource.TestCheckResourceAttrSet(dsReference, "data.#"),
+					// data.# is set even when the list is empty (Terraform
+					// stores the count "0"), so TestCheckResourceAttrSet would
+					// pass on an empty response. Assert at least one element
+					// is present via data.0.id to actually prove the datasource
+					// returned users.
+					resource.TestCheckResourceAttrSet(dsReference, "data.0.id"),
 					// Confirm the just-created user is present somewhere in the
 					// org. The datasource itself returns at most per_page users
 					// (the just-created one may sit on a later page) — so the
 					// custom check walks /users directly looking for our id.
 					// Bounded by maxUserLookupPages so a runaway loop can't
 					// blow the test budget.
-					testAccUserListContains(t, resourceReference),
+					testAccUserListContains(resourceReference),
 				),
 			},
 		},
@@ -83,7 +88,17 @@ data "couchbase-capella_users" "%[2]s" {
 	})
 }
 
+// testAccUsersDataSourceConfig emits HCL for the user resource + users
+// datasource. A perPage of 0 (or negative) means "do not constrain the
+// datasource" — callers that need every page to find the just-created user
+// via data.* membership assertions (e.g. the membership test) should pass 0.
+// Callers that bound the datasource read to a single page (and verify
+// membership via a separate paginated lookup) should pass a positive value.
 func testAccUsersDataSourceConfig(resourceName, dsName, username, email string, perPage int) string {
+	perPageLine := ""
+	if perPage > 0 {
+		perPageLine = fmt.Sprintf("  per_page        = %d\n", perPage)
+	}
 	return fmt.Sprintf(`
 %[1]s
 
@@ -100,11 +115,10 @@ resource "couchbase-capella_user" "%[3]s" {
 
 data "couchbase-capella_users" "%[4]s" {
   organization_id = "%[2]s"
-  per_page        = %[7]d
-
+%[7]s
   depends_on = [couchbase-capella_user.%[3]s]
 }
-`, globalProviderBlock, globalOrgId, resourceName, dsName, username, email, perPage)
+`, globalProviderBlock, globalOrgId, resourceName, dsName, username, email, perPageLine)
 }
 
 // maxUserLookupPages caps how many pages testAccUserListContains will scan
@@ -118,7 +132,7 @@ const maxUserLookupPages = 100
 // the only way to assert "our user is in the org" without relying on
 // server-side email/name filtering on the /users endpoint (filed as a
 // follow-up against AV-131648).
-func testAccUserListContains(t *testing.T, resourceReference string) resource.TestCheckFunc {
+func testAccUserListContains(resourceReference string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceReference]
 		if !ok {

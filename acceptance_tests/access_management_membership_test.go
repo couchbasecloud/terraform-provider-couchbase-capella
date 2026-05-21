@@ -171,7 +171,12 @@ func TestAccDatasourceUsersFullFieldContent(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUsersDataSourceConfig(resourceName, dsName, username, email, usersDatasourcePerPage),
+				// perPage = 0 means "don't set per_page on the datasource" —
+				// the datasource walks every page so the just-created user is
+				// reliably found by the data.* membership check below,
+				// regardless of which page it lands on. See
+				// testAccUsersDataSourceConfig.
+				Config: testAccUsersDataSourceConfig(resourceName, dsName, username, email, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", username),
 					resource.TestCheckResourceAttr(resourceReference, "email", email),
