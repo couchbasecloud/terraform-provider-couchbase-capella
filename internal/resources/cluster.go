@@ -671,6 +671,20 @@ func (c *Cluster) checkClusterStatus(ctx context.Context, organizationId, projec
 	}
 }
 
+// updateDeletionProtection toggles deletion protection on a cluster via the dedicated endpoint.
+func (c *Cluster) updateDeletionProtection(ctx context.Context, organizationId, projectId, clusterId string, enabled bool) error {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/deletionProtection", c.HostURL, organizationId, projectId, clusterId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
+	_, err := c.ClientV1.ExecuteWithRetry(
+		ctx,
+		cfg,
+		clusterapi.UpdateDeletionProtectionRequest{DeletionProtection: enabled},
+		c.Token,
+		nil,
+	)
+	return err
+}
+
 // morphToApiServiceGroups converts a provider cluster serviceGroups to an API-compatible list of service groups.
 func (c *Cluster) morphToApiServiceGroups(plan providerschema.Cluster) ([]clusterapi.ServiceGroup, error) {
 	var newServiceGroups []clusterapi.ServiceGroup
