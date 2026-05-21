@@ -120,12 +120,12 @@ Read-Only:
 Required:
 
 - `cidr` (String)
+- `tenant_id` (String)
 
 Optional:
 
 - `resource_group` (String)
 - `subscription_id` (String)
-- `tenant_id` (String)
 - `vnet_id` (String)
 
 Read-Only:

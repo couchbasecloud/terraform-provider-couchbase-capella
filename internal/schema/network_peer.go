@@ -136,6 +136,14 @@ type AzureConfig struct {
 	ProviderId types.String `tfsdk:"provider_id"`
 }
 
+// Validate checks that required Azure config fields are set.
+func (a *AzureConfig) Validate() error {
+	if a.AzureTenantId.IsNull() || a.AzureTenantId.ValueString() == "" {
+		return fmt.Errorf("azure_config.tenant_id must be set when azure_config is provided")
+	}
+	return nil
+}
+
 // NetworkPeers defines structure based on the response received from V4 Capella Public API when asked to list network peers.
 type NetworkPeers struct {
 	// OrganizationId is the organizationId of the capella.
