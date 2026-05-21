@@ -164,14 +164,15 @@ func TestAccDatasourceUsersFullFieldContent(t *testing.T) {
 	resourceReference := "couchbase-capella_user." + resourceName
 	dsReference := "data.couchbase-capella_users." + dsName
 
-	username := "terraform_acceptance_test_field_content"
+	username := resourceName
 	email := username + "@couchbase.com"
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUsersDataSourceConfig(resourceName, dsName, username, email),
+				// perPage=0: walk all pages so the new user is found in data.*.
+				Config: testAccUsersDataSourceConfig(resourceName, dsName, username, email, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "name", username),
 					resource.TestCheckResourceAttr(resourceReference, "email", email),

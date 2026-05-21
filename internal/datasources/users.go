@@ -2,8 +2,10 @@ package datasources
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
@@ -59,18 +61,43 @@ func (d *Users) Read(ctx context.Context, req datasource.ReadRequest, resp *data
 	}
 
 	organizationId := state.OrganizationId.ValueString()
+	baseURL := fmt.Sprintf("%s/v4/organizations/%s/users", d.HostURL, organizationId)
 
-	// Make request to list Users
-	url := fmt.Sprintf("%s/v4/organizations/%s/users", d.HostURL, organizationId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-
-	response, err := api.GetPaginated[[]api.GetUserResponse](ctx, d.ClientV1, d.Token, cfg, api.SortById)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Reading Capella Users",
-			"Could not read users in organization "+state.OrganizationId.String()+": "+api.ParseError(err),
-		)
-		return
+	// Any opt-in knob → single page; otherwise walk all pages.
+	queryParam := buildUsersQueryParams(&state)
+	var response []api.GetUserResponse
+	if len(queryParam) > 0 {
+		cfg := api.EndpointCfg{Url: baseURL + BuildQueryParams(queryParam), Method: http.MethodGet, SuccessStatus: http.StatusOK}
+		apiResp, err := d.ClientV1.ExecuteWithRetry(ctx, cfg, nil, d.Token, nil)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error Reading Capella Users",
+				"Could not read users in organization "+state.OrganizationId.String()+": "+api.ParseError(err),
+			)
+			return
+		}
+		var page struct {
+			Data []api.GetUserResponse `json:"data"`
+		}
+		if err := json.Unmarshal(apiResp.Body, &page); err != nil {
+			resp.Diagnostics.AddError(
+				"Error Reading Capella Users",
+				"Could not unmarshal users response in organization "+state.OrganizationId.String()+": "+err.Error(),
+			)
+			return
+		}
+		response = page.Data
+	} else {
+		cfg := api.EndpointCfg{Url: baseURL, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+		var err error
+		response, err = api.GetPaginated[[]api.GetUserResponse](ctx, d.ClientV1, d.Token, cfg, api.SortById)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error Reading Capella Users",
+				"Could not read users in organization "+state.OrganizationId.String()+": "+api.ParseError(err),
+			)
+			return
+		}
 	}
 
 	state, err = d.mapResponseBody(ctx, response, &state)
@@ -90,6 +117,25 @@ func (d *Users) Read(ctx context.Context, req datasource.ReadRequest, resp *data
 		return
 	}
 
+}
+
+// buildUsersQueryParams returns the GET /users query params for the set knobs,
+// or an empty map if none are set.
+func buildUsersQueryParams(state *providerschema.Users) map[string][]string {
+	queryParam := make(map[string][]string)
+	if !state.Page.IsNull() && !state.Page.IsUnknown() {
+		queryParam["page"] = []string{strconv.Itoa(int(state.Page.ValueInt64()))}
+	}
+	if !state.PerPage.IsNull() && !state.PerPage.IsUnknown() {
+		queryParam["perPage"] = []string{strconv.Itoa(int(state.PerPage.ValueInt64()))}
+	}
+	if !state.SortBy.IsNull() && !state.SortBy.IsUnknown() {
+		queryParam["sortBy"] = []string{state.SortBy.ValueString()}
+	}
+	if !state.SortDirection.IsNull() && !state.SortDirection.IsUnknown() {
+		queryParam["sortDirection"] = []string{state.SortDirection.ValueString()}
+	}
+	return queryParam
 }
 
 // Configure adds the provider configured client to the User data source.
