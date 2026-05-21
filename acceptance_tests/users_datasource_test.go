@@ -8,41 +8,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAccDatasourceUsers(t *testing.T) {
-	resourceName := randomStringWithPrefix("tf_acc_users_")
-	dsName := randomStringWithPrefix("tf_acc_users_ds_")
-	resourceReference := "couchbase-capella_user." + resourceName
-	dsReference := "data.couchbase-capella_users." + dsName
-
-	// Match the pattern in user_acceptance_test.go — the username/email pair is
-	// a fixture in the test tenant and the invite flow needs a deterministic
-	// value. The resource handle uses a randomised name so parallel tests do
-	// not collide on terraform state.
-	username := "terraform_acceptance_test_ds"
-	email := username + "@couchbase.com"
-
-	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccUsersDataSourceConfig(resourceName, dsName, username, email),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "name", username),
-					resource.TestCheckResourceAttr(resourceReference, "email", email),
-					resource.TestCheckResourceAttrSet(resourceReference, "id"),
-
-					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
-					resource.TestCheckResourceAttrSet(dsReference, "data.#"),
-					resource.TestCheckTypeSetElemNestedAttrs(dsReference, "data.*", map[string]string{
-						"name":            username,
-						"email":           email,
-						"organization_id": globalOrgId,
-					}),
-				),
-			},
-		},
-	})
-}
+// NOTE: the happy-path TestAccDatasourceUsers — which exercises the
+// `couchbase-capella_users` datasource against the just-created user — is
+// not in this PR. The datasource currently has no pagination or filtering
+// knob, so on a tenant with many users the test paginates the entire org and
+// exceeds Terraform's test budget. The provider gap and the matching
+// happy-path test live together on the AV-131648 branch so they ship as one
+// reviewable unit. See AV-131648 for the follow-up.
+//
+// This file keeps:
+//   - TestAccDatasourceUsersInvalidOrganization — negative path, does not
+//     depend on user count
+//   - testAccUsersDataSourceConfig — helper reused by
+//     access_management_membership_test.go
 
 func TestAccDatasourceUsersInvalidOrganization(t *testing.T) {
 	dsName := randomStringWithPrefix("tf_acc_users_ds_invalid_")
