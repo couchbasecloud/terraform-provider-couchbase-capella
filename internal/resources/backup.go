@@ -75,11 +75,6 @@ func (b *Backup) Create(ctx context.Context, req resource.CreateRequest, resp *r
 	var clusterId = plan.ClusterId.ValueString()
 	var bucketId = plan.BucketId.ValueString()
 
-	// Capture the bucket's current latest backup BEFORE the POST so we can detect
-	// when the new record appears. getLatestBackup correctly walks all pages and
-	// sorts client-side by date; the only thing it cannot do is identify "our"
-	// record at POST time (Capella's backup POST returns 202 with an empty body,
-	// unlike cluster/appservice POSTs which echo the new id).
 	latestBackup, err := b.getLatestBackup(ctx, organizationId, projectId, clusterId, bucketId)
 	if err != nil {
 		resp.Diagnostics.AddError(
