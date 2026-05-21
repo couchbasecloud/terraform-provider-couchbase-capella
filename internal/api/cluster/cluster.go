@@ -96,6 +96,9 @@ type CreateClusterRequest struct {
 	// This exists to support the use case of customers connecting from their own data centers where it is not possible to make use of a cloud service provider DNS zone.
 	EnablePrivateDNSResolution *bool `json:"enablePrivateDNSResolution,omitempty"`
 
+	// DeletionProtection prevents accidental cluster deletion when enabled.
+	DeletionProtection *bool `json:"deletionProtection,omitempty"`
+
 	// Zones is the cloud services provider availability zones for the cluster. Currently Supported only for single AZ clusters so only 1 zone is allowed in list.
 	Zones []string `json:"zones"`
 }
@@ -159,6 +162,9 @@ type GetClusterResponse struct {
 	// EnablePrivateDNSResolution signals that the cluster should have hostnames that are hosted in a public DNS zone that resolve to a private DNS address.
 	// This exists to support the use case of customers connecting from their own data centers where it is not possible to make use of a cloud service provider DNS zone.
 	EnablePrivateDNSResolution bool `json:"enablePrivateDNSResolution"`
+
+	// DeletionProtection prevents accidental cluster deletion when enabled.
+	DeletionProtection bool `json:"deletionProtection"`
 
 	// Name is the name of the cluster (up to 256 characters).
 	Name string `json:"name"`
