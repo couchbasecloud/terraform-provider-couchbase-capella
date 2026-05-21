@@ -57,10 +57,6 @@ type EndpointCfg struct {
 // defaultWaitAttempt re-attempt http request after 2 seconds.
 const defaultWaitAttempt = time.Second * 2
 
-// maxAttempts caps total 429/504 attempts independently of the 10-minute wall-clock timeout.
-const maxAttempts = 10
-
-
 // ExecuteWithRetry is used to construct and execute a HTTP request with retry.
 // It then returns the response.
 func (c *Client) ExecuteWithRetry(
@@ -174,7 +170,6 @@ func exec(
 		err      error
 		backOff  time.Duration
 		response *Response
-		attempts int
 	)
 
 	const timeout = time.Minute * 10
@@ -186,20 +181,15 @@ func exec(
 	for {
 		select {
 		case <-ctx.Done():
-			return nil, fmt.Errorf("timed out executing request against api after %d attempts: %w", attempts, ctx.Err())
+			return nil, fmt.Errorf("timed out executing request against api: %w", ctx.Err())
 		case <-timer.C:
 			response, backOff, err = fn()
-			attempts++
 			switch {
 			case err == nil:
 				return response, nil
 			case goer.Is(err, errors.ErrRatelimit):
 			case !goer.Is(err, errors.ErrGatewayTimeout):
 				return response, err
-			}
-
-			if attempts >= maxAttempts {
-				return nil, fmt.Errorf("exhausted %d attempts: %w", attempts, err)
 			}
 
 			if backOff > 0 {
