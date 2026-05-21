@@ -57,9 +57,8 @@ type EndpointCfg struct {
 // defaultWaitAttempt re-attempt http request after 2 seconds.
 const defaultWaitAttempt = time.Second * 2
 
-// maxRetryAttempts caps 429/504 retries independently of the 10-minute wall-clock
-// timeout, so a rapid flap with small backoffs cannot exhaust the full window.
-const maxRetryAttempts = 10
+// maxAttempts caps total 429/504 attempts independently of the 10-minute wall-clock timeout.
+const maxAttempts = 10
 
 
 // ExecuteWithRetry is used to construct and execute a HTTP request with retry.
@@ -199,8 +198,8 @@ func exec(
 				return response, err
 			}
 
-			if attempts >= maxRetryAttempts {
-				return nil, fmt.Errorf("exhausted %d retry attempts: %w", attempts, err)
+			if attempts >= maxAttempts {
+				return nil, fmt.Errorf("exhausted %d attempts: %w", attempts, err)
 			}
 
 			if backOff > 0 {
