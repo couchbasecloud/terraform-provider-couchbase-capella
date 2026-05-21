@@ -61,13 +61,9 @@ func (d *Users) Read(ctx context.Context, req datasource.ReadRequest, resp *data
 	}
 
 	organizationId := state.OrganizationId.ValueString()
-
-	// Make request to list Users
 	baseURL := fmt.Sprintf("%s/v4/organizations/%s/users", d.HostURL, organizationId)
 
-	// If the caller set any of page / per_page / sort_by / sort_direction, fetch
-	// a single page with those query params. Otherwise walk all pages — this
-	// preserves the original behaviour for callers that don't opt in.
+	// Any opt-in knob → single page; otherwise walk all pages.
 	queryParam := buildUsersQueryParams(&state)
 	var response []api.GetUserResponse
 	if len(queryParam) > 0 {
@@ -123,10 +119,8 @@ func (d *Users) Read(ctx context.Context, req datasource.ReadRequest, resp *data
 
 }
 
-// buildUsersQueryParams converts the optional pagination/sort schema attributes
-// into URL query parameters for GET /v4/organizations/{org}/users. Returns an
-// empty map when none of the knobs are set; the caller then falls back to
-// walking all pages via api.GetPaginated.
+// buildUsersQueryParams returns the GET /users query params for the set knobs,
+// or an empty map if none are set.
 func buildUsersQueryParams(state *providerschema.Users) map[string][]string {
 	queryParam := make(map[string][]string)
 	if !state.Page.IsNull() && !state.Page.IsUnknown() {

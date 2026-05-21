@@ -15,9 +15,6 @@ func UsersSchema() schema.Schema {
 
 	capellaschema.AddAttr(attrs, "organization_id", usersBuilder, requiredString())
 
-	// Pagination / sort knobs. Map to GET /v4/organizations/{org}/users query
-	// params when any of them is set; otherwise the datasource walks all pages
-	// (preserving original behaviour for callers that don't opt in).
 	capellaschema.AddAttr(attrs, "page", usersBuilder, optionalInt64())
 	capellaschema.AddAttr(attrs, "per_page", usersBuilder, optionalInt64())
 	capellaschema.AddAttr(attrs, "sort_by", usersBuilder, optionalString())
