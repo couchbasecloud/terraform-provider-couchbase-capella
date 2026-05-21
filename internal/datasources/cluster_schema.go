@@ -19,6 +19,7 @@ func OneClusterSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "name", oneClusterBuilder, computedString())
 	capellaschema.AddAttr(attrs, "description", oneClusterBuilder, computedString())
 	capellaschema.AddAttr(attrs, "enable_private_dns_resolution", oneClusterBuilder, computedBool())
+	capellaschema.AddAttr(attrs, "deletion_protection", oneClusterBuilder, computedBool())
 	capellaschema.AddAttr(attrs, "connection_string", oneClusterBuilder, computedString())
 	capellaschema.AddAttr(attrs, "configuration_type", oneClusterBuilder, computedString())
 	capellaschema.AddAttr(attrs, "current_state", oneClusterBuilder, computedString())
