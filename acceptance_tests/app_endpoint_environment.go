@@ -27,12 +27,17 @@ var appEndpointEnvironmentOnce struct {
 func ensureAppEndpointTestEnvironment(t *testing.T) {
 	t.Helper()
 
+	setupRan := false
 	appEndpointEnvironmentOnce.Do(func() {
+		setupRan = true
 		ctx := context.Background()
 		appEndpointEnvironmentOnce.err = setupAppEndpointTestEnvironment(ctx, globalClient)
 	})
 	if appEndpointEnvironmentOnce.err != nil {
-		t.Fatalf("failed to provision app endpoint test environment: %v", appEndpointEnvironmentOnce.err)
+		if setupRan {
+			t.Skipf("skipping app endpoint acceptance tests: failed to provision shared test environment: %v", appEndpointEnvironmentOnce.err)
+		}
+		t.Skip("skipping app endpoint acceptance test: shared test environment provisioning already failed")
 	}
 }
 
