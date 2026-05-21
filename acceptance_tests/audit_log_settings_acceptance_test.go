@@ -15,12 +15,8 @@ import (
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-// audit_log_settings is a per-cluster singleton: there's no real
-// create/destroy lifecycle on the server side. The provider's Create
-// method PUTs the settings, Update PUTs the new settings, and Delete is a
-// no-op. The Terraform test framework still runs a Destroy at the end,
-// which only removes the resource from state — the server-side singleton
-// is unchanged. We exercise: Create -> Read -> Import -> Update.
+// audit_log_settings is a per-cluster singleton — Create/Update both PUT,
+// Delete is a no-op. We exercise: Create -> Read -> Import -> Update.
 
 func TestAccAuditLogSettingsResource(t *testing.T) {
 	clusterResourceName := randomStringWithPrefix("tf_acc_audit_cluster_")
@@ -29,10 +25,9 @@ func TestAccAuditLogSettingsResource(t *testing.T) {
 	clusterReference := "couchbase-capella_cluster." + clusterResourceName
 	resourceReference := "couchbase-capella_audit_log_settings." + resourceName
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
-			// Create and Read testing.
 			{
 				Config: testAccAuditLogSettingsResourceConfigWithEnterpriseCluster(clusterResourceName, resourceName, cidr, true, []int{20488, 20490, 20491}),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -42,22 +37,18 @@ func TestAccAuditLogSettingsResource(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceReference, "cluster_id", clusterReference, "id"),
 					resource.TestCheckResourceAttr(resourceReference, "audit_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceReference, "enabled_event_ids.#", "3"),
+					resource.TestCheckTypeSetElemAttr(resourceReference, "enabled_event_ids.*", "20488"),
+					resource.TestCheckTypeSetElemAttr(resourceReference, "enabled_event_ids.*", "20490"),
+					resource.TestCheckTypeSetElemAttr(resourceReference, "enabled_event_ids.*", "20491"),
 					resource.TestCheckResourceAttr(resourceReference, "disabled_users.#", "0"),
 				),
 			},
-			// ImportState testing. The resource has no `id` attribute; the
-			// natural primary key is cluster_id (one settings record per
-			// cluster). The import string keys map through importIds, so
-			// `id` here is matched to ClusterId via the schema's Validate.
 			{
 				ResourceName:                         resourceReference,
 				ImportState:                          true,
 				ImportStateIdFunc:                    generateAuditLogSettingsImportIdForResource(resourceReference),
 				ImportStateVerifyIdentifierAttribute: "cluster_id",
 			},
-			// Update: shrink the enabled event id list and assert ALL
-			// fields to catch reset-to-default regressions per the
-			// acceptance test skill guidance.
 			{
 				Config: testAccAuditLogSettingsResourceConfigWithEnterpriseCluster(clusterResourceName, resourceName, cidr, true, []int{20488}),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -67,10 +58,10 @@ func TestAccAuditLogSettingsResource(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceReference, "cluster_id", clusterReference, "id"),
 					resource.TestCheckResourceAttr(resourceReference, "audit_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceReference, "enabled_event_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceReference, "enabled_event_ids.*", "20488"),
 					resource.TestCheckResourceAttr(resourceReference, "disabled_users.#", "0"),
 				),
 			},
-			// Update audit_enabled to false. Assert ALL fields again.
 			{
 				Config: testAccAuditLogSettingsResourceConfigWithEnterpriseCluster(clusterResourceName, resourceName, cidr, false, []int{20488}),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -80,14 +71,13 @@ func TestAccAuditLogSettingsResource(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceReference, "cluster_id", clusterReference, "id"),
 					resource.TestCheckResourceAttr(resourceReference, "audit_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceReference, "enabled_event_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceReference, "enabled_event_ids.*", "20488"),
 				),
 			},
 		},
 	})
 }
 
-// TestAccAuditLogSettingsResourceInvalidCluster asserts that pointing at a
-// non-existent cluster yields the expected create-time error.
 func TestAccAuditLogSettingsResourceInvalidCluster(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_audit_log_settings_bad_cluster_")
 
@@ -113,15 +103,13 @@ resource "couchbase-capella_audit_log_settings" "%[2]s" {
 	})
 }
 
-// TestAccAuditLogSettingsResourcePlanUpgrade verifies that audit log settings
-// are rejected on a developer pro cluster and succeed after upgrading to enterprise.
 func TestAccAuditLogSettingsResourcePlanUpgrade(t *testing.T) {
 	clusterResourceName := randomStringWithPrefix("tf_acc_audit_cluster_upgrade_")
 	resourceName := randomStringWithPrefix("tf_acc_audit_log_settings_upgrade_")
 	cidr := generateRandomCIDR()
 	resourceReference := "couchbase-capella_audit_log_settings." + resourceName
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
@@ -133,6 +121,7 @@ func TestAccAuditLogSettingsResourcePlanUpgrade(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "audit_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceReference, "enabled_event_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceReference, "enabled_event_ids.*", "20488"),
 				),
 			},
 		},
@@ -265,30 +254,6 @@ resource "couchbase-capella_audit_log_settings" "%[6]s" {
 `, globalProviderBlock, clusterResourceName, globalOrgId, globalProjectId, cidr, auditSettingsResourceName, auditEnabled, ids)
 }
 
-func testAccAuditLogSettingsResourceConfig(resourceName string, auditEnabled bool, enabledEventIDs []int) string {
-	ids := "["
-	for i, id := range enabledEventIDs {
-		if i > 0 {
-			ids += ", "
-		}
-		ids += fmt.Sprintf("%d", id)
-	}
-	ids += "]"
-
-	return fmt.Sprintf(`
-%[1]s
-
-resource "couchbase-capella_audit_log_settings" "%[2]s" {
-  organization_id   = "%[3]s"
-  project_id        = "%[4]s"
-  cluster_id        = "%[5]s"
-  audit_enabled     = %[6]t
-  enabled_event_ids = %[7]s
-  disabled_users    = []
-}
-`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, auditEnabled, ids)
-}
-
 func generateAuditLogSettingsImportIdForResource(resourceReference string) resource.ImportStateIdFunc {
 	return func(state *terraform.State) (string, error) {
 		var rawState map[string]string
@@ -299,10 +264,6 @@ func generateAuditLogSettingsImportIdForResource(resourceReference string) resou
 				}
 			}
 		}
-		// The resource's schema Validate maps cluster_id to the Id key; the
-		// import string parser uses the importIds lookup table where
-		// "id" -> Id. The provider's ImportState passes the import string
-		// through to the cluster_id attribute, then Validate splits it.
 		return fmt.Sprintf(
 			"id=%s,project_id=%s,organization_id=%s",
 			rawState["cluster_id"], rawState["project_id"], rawState["organization_id"],

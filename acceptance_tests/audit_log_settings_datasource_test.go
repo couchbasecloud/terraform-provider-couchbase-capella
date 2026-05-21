@@ -8,10 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-// TestAccDatasourceAuditLogSettings provisions an audit_log_settings
-// resource and reads it back through the datasource in the same plan.
-// audit_log_settings is a per-cluster singleton, so the datasource is
-// guaranteed to return the values we just wrote.
 func TestAccDatasourceAuditLogSettings(t *testing.T) {
 	clusterResourceName := randomStringWithPrefix("tf_acc_audit_cluster_for_ds_")
 	resourceName := randomStringWithPrefix("tf_acc_audit_log_settings_for_ds_")
@@ -20,7 +16,7 @@ func TestAccDatasourceAuditLogSettings(t *testing.T) {
 	clusterReference := "couchbase-capella_cluster." + clusterResourceName
 	dsReference := "data.couchbase-capella_audit_log_settings." + dsName
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
@@ -31,6 +27,8 @@ func TestAccDatasourceAuditLogSettings(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dsReference, "cluster_id", clusterReference, "id"),
 					resource.TestCheckResourceAttr(dsReference, "audit_enabled", "true"),
 					resource.TestCheckResourceAttr(dsReference, "enabled_event_ids.#", "2"),
+					resource.TestCheckTypeSetElemAttr(dsReference, "enabled_event_ids.*", "20488"),
+					resource.TestCheckTypeSetElemAttr(dsReference, "enabled_event_ids.*", "20489"),
 					resource.TestCheckResourceAttr(dsReference, "disabled_users.#", "0"),
 				),
 			},
