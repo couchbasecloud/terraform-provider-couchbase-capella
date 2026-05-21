@@ -372,6 +372,16 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		return
 	}
 
+	if !plan.DeletionProtection.Equal(state.DeletionProtection) {
+		if err := c.updateDeletionProtection(ctx, organizationId, projectId, clusterId, plan.DeletionProtection.ValueBool()); err != nil {
+			resp.Diagnostics.AddError(
+				"Error updating cluster deletion protection",
+				"Could not update deletion protection for cluster id "+state.Id.String()+": "+api.ParseError(err),
+			)
+			return
+		}
+	}
+
 	ClusterRequest := clusterapi.UpdateClusterRequest{
 		Description: plan.Description.ValueString(),
 		Name:        plan.Name.ValueString(),
@@ -492,6 +502,14 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if state.DeletionProtection.ValueBool() {
+		resp.Diagnostics.AddError(
+			"Error Deleting Capella Cluster",
+			"Cluster deletion protection is enabled. Set deletion_protection = false before destroying.",
+		)
 		return
 	}
 
