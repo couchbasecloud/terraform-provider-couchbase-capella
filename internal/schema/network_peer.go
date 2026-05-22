@@ -320,13 +320,21 @@ func MorphCommands(commands []string) (basetypes.SetValue, error) {
 
 // NewNetworkPeerData create new network peer data object.
 func NewNetworkPeerData(networkPeer *network_peer_api.GetNetworkPeeringRecordResponse, organizationId, projectId, clusterId string, auditObject basetypes.ObjectValue) (*NetworkPeerData, error) {
+	var state, reasoning string
+	if networkPeer.Status.State != nil {
+		state = *networkPeer.Status.State
+	}
+	if networkPeer.Status.Reasoning != nil {
+		reasoning = *networkPeer.Status.Reasoning
+	}
+
 	newNetworkPeerData := NetworkPeerData{
 		Id:    types.StringValue(networkPeer.Id.String()),
 		Name:  types.StringValue(networkPeer.Name),
 		Audit: auditObject,
 		Status: PeeringStatus{
-			State:     types.StringValue(*networkPeer.Status.State),
-			Reasoning: types.StringValue(*networkPeer.Status.Reasoning),
+			State:     types.StringValue(state),
+			Reasoning: types.StringValue(reasoning),
 		},
 	}
 
