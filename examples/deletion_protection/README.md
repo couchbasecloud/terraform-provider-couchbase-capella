@@ -2,7 +2,6 @@
 
 This example shows how to manage deletion protection on an existing Couchbase Capella cluster using the `couchbase-capella_cluster_deletion_protection` resource.
 
-> **Note:** Do not set `deletion_protection` on the `couchbase-capella_cluster` resource when using this resource. The cluster resource treats `deletion_protection` as read-only (computed). This resource is the sole owner of that field.
 
 ## Example Walkthrough
 
