@@ -210,13 +210,16 @@ func NewNetworkPeer(ctx context.Context, networkPeer *network_peer_api.GetNetwor
 
 	newProviderConfig, err := morphToProviderConfig(networkPeer)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrConvertingProviderConfig, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrConvertingProviderConfig, err)
 	}
 	newNetworkPeer.ProviderConfig = &newProviderConfig
 
 	if networkPeer.Status.State != nil {
 		state := *networkPeer.Status.State
-		reasoning := *networkPeer.Status.Reasoning
+		var reasoning string
+		if networkPeer.Status.Reasoning != nil {
+			reasoning = *networkPeer.Status.Reasoning
+		}
 		status := PeeringStatus{
 			State:     types.StringValue(state),
 			Reasoning: types.StringValue(reasoning),
@@ -230,7 +233,7 @@ func NewNetworkPeer(ctx context.Context, networkPeer *network_peer_api.GetNetwor
 
 	newCommands, err := MorphCommands(networkPeer.Commands)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrConvertingCidr, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrConvertingCidr, err)
 	}
 
 	newNetworkPeer.Commands = newCommands
@@ -239,22 +242,28 @@ func NewNetworkPeer(ctx context.Context, networkPeer *network_peer_api.GetNetwor
 }
 
 // morphToProviderConfig is used to convert ProviderConfig from json.RawMessage format to ProviderConfig type.
+// Returns an empty ProviderConfig with no error when the providerConfig field is null or empty
+// (which occurs for network peers in a failed state).
 func morphToProviderConfig(networkPeer *network_peer_api.GetNetworkPeeringRecordResponse) (ProviderConfig, error) {
 	var newProviderConfig ProviderConfig
 
+	if len(networkPeer.ProviderConfig) == 0 || string(networkPeer.ProviderConfig) == "null" {
+		return newProviderConfig, nil
+	}
+
 	aws, err := networkPeer.AsAWS()
 	if err != nil {
-		return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingAWSConfig, err)
+		return ProviderConfig{}, fmt.Errorf("%w: %w", errors.ErrReadingAWSConfig, err)
 	}
 
 	gcp, err := networkPeer.AsGCP()
 	if err != nil {
-		return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingGCPConfig, err)
+		return ProviderConfig{}, fmt.Errorf("%w: %w", errors.ErrReadingGCPConfig, err)
 	}
 
 	azure, err := networkPeer.AsAZURE()
 	if err != nil {
-		return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingAzureConfig, err)
+		return ProviderConfig{}, fmt.Errorf("%w: %w", errors.ErrReadingAzureConfig, err)
 	}
 
 	switch {
@@ -287,7 +296,7 @@ func morphToProviderConfig(networkPeer *network_peer_api.GetNetworkPeeringRecord
 		}
 		return newProviderConfig, nil
 	default:
-		return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingProviderConfig, err)
+		return newProviderConfig, nil
 	}
 
 }
@@ -319,19 +328,27 @@ func MorphCommands(commands []string) (basetypes.SetValue, error) {
 
 // NewNetworkPeerData create new network peer data object.
 func NewNetworkPeerData(networkPeer *network_peer_api.GetNetworkPeeringRecordResponse, organizationId, projectId, clusterId string, auditObject basetypes.ObjectValue) (*NetworkPeerData, error) {
+	var state, reasoning string
+	if networkPeer.Status.State != nil {
+		state = *networkPeer.Status.State
+	}
+	if networkPeer.Status.Reasoning != nil {
+		reasoning = *networkPeer.Status.Reasoning
+	}
+
 	newNetworkPeerData := NetworkPeerData{
 		Id:    types.StringValue(networkPeer.Id.String()),
 		Name:  types.StringValue(networkPeer.Name),
 		Audit: auditObject,
 		Status: PeeringStatus{
-			State:     types.StringValue(*networkPeer.Status.State),
-			Reasoning: types.StringValue(*networkPeer.Status.Reasoning),
+			State:     types.StringValue(state),
+			Reasoning: types.StringValue(reasoning),
 		},
 	}
 
 	newProviderConfig, err := morphToProviderConfig(networkPeer)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrConvertingProviderConfig, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrConvertingProviderConfig, err)
 	}
 	newNetworkPeerData.ProviderConfig = newProviderConfig
 
