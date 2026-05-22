@@ -1,21 +1,20 @@
 # Deletion Protection Example
 
-This example shows how to read and verify the deletion protection status of an existing Couchbase Capella cluster.
+This example shows how to manage deletion protection on an existing Couchbase Capella cluster using the dedicated `couchbase-capella_cluster_deletion_protection` resource.
 
-The cluster datasource fetches all attributes including `deletion_protection`. A `check` block asserts the current value matches the expected value from `terraform.tfvars`.
-
-To update deletion protection, set `deletion_protection` on a managed `couchbase-capella_cluster` resource — the provider calls the dedicated `PUT /v4/.../deletionProtection` endpoint automatically.
+The resource calls `PUT /v4/.../deletionProtection` to set the desired state, then reads the cluster to confirm the value.
 
 # Example Walkthrough
 
 In this example, we are going to do the following.
 
-1. READ: Fetch the cluster and output the current deletion protection status.
-2. VERIFY: Assert the value matches the expected configuration.
+1. CREATE: Enable deletion protection on an existing cluster.
+2. UPDATE: Toggle deletion protection off.
+3. DESTROY: Remove the resource from state (does not alter the cluster).
 
 If you check the `terraform.template.tfvars` file — copy it to `terraform.tfvars` and update the values with your organization credentials.
 
-## READ
+## CREATE
 ### View the plan for the resources that Terraform will create
 
 Command: `terraform plan`
@@ -24,10 +23,17 @@ Sample Output:
 ```
 $ terraform plan
 
-No changes. Your infrastructure matches the configuration.
+Terraform will perform the following actions:
 
-Changes to Outputs:
-  + deletion_protection = true
+  # couchbase-capella_cluster_deletion_protection.cluster will be created
+  + resource "couchbase-capella_cluster_deletion_protection" "cluster" {
+      + organization_id     = "ffffffff-aaaa-1414-eeee-000000000000"
+      + project_id          = "ffffffff-aaaa-1414-eeee-000000000000"
+      + cluster_id          = "ffffffff-aaaa-1414-eeee-000000000000"
+      + deletion_protection = true
+    }
+
+Plan: 1 to add, 0 to change, 0 to destroy.
 ```
 
 ### Apply the Plan
@@ -38,23 +44,32 @@ Sample Output:
 ```
 $ terraform apply
 
-Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
+Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
 
 Outputs:
 
 deletion_protection = true
 ```
 
-### Verification failure
+## UPDATE — Disable protection
 
-If the cluster's deletion protection does not match the expected value:
+Set `deletion_protection = false` in `terraform.tfvars`, then apply:
 
+Command: `terraform apply`
+
+Sample Output:
 ```
-│ Warning: Check block assertion failed
-│
-│   on deletion_protection.tf line 13, in check "deletion_protection_matches":
-│   13:     condition     = data.couchbase-capella_cluster.existing_cluster.deletion_protection == var.deletion_protection
-│
-│ Cluster deletion_protection is false, expected true.
+$ terraform apply
+
+  # couchbase-capella_cluster_deletion_protection.cluster will be updated in-place
+  ~ resource "couchbase-capella_cluster_deletion_protection" "cluster" {
+      ~ deletion_protection = true -> false
+    }
+
+Apply complete! Resources: 0 added, 1 changed, 0 destroyed.
+
+Outputs:
+
+deletion_protection = false
 ```
 
