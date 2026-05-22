@@ -8,5 +8,6 @@ terraform {
 
 provider "couchbase-capella" {
   authentication_token = var.auth_token
+  host     = "https://cloudapi.dev.nonprod-project-avengers.com"
 }
 
