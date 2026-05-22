@@ -38,6 +38,69 @@ func TestAppServiceResource(t *testing.T) {
 	})
 }
 
+func TestAccAppServiceResourceOptionalFieldsAndScale(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_app_svc_")
+	resourceReference := "couchbase-capella_app_service." + resourceName
+	clusterName := randomStringWithPrefix("tf_acc_cluster_")
+	cidr := generateRandomCIDR()
+	appServiceName := randomStringWithPrefix("tf_acc_app_svc_")
+	description := "terraform app service optional fields acceptance test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppServiceResourceOptionalFieldsConfig(resourceName, clusterName, cidr, appServiceName, description, 2, 2, 4),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
+					resource.TestCheckResourceAttr(resourceReference, "name", appServiceName),
+					resource.TestCheckResourceAttr(resourceReference, "description", description),
+					resource.TestCheckResourceAttr(resourceReference, "nodes", "2"),
+					resource.TestCheckResourceAttr(resourceReference, "cloud_provider", "AWS"),
+					resource.TestCheckResourceAttr(resourceReference, "compute.cpu", "2"),
+					resource.TestCheckResourceAttr(resourceReference, "compute.ram", "4"),
+					resource.TestCheckResourceAttrSet(resourceReference, "id"),
+					resource.TestCheckResourceAttrSet(resourceReference, "cluster_id"),
+					resource.TestCheckResourceAttrSet(resourceReference, "current_state"),
+					resource.TestCheckResourceAttrSet(resourceReference, "version"),
+					resource.TestCheckResourceAttrSet(resourceReference, "etag"),
+					resource.TestCheckResourceAttrSet(resourceReference, "audit.created_at"),
+					resource.TestCheckResourceAttrSet(resourceReference, "audit.modified_at"),
+					resource.TestCheckResourceAttrSet(resourceReference, "audit.version"),
+				),
+			},
+			{
+				ResourceName:      resourceReference,
+				ImportStateIdFunc: generateAppServiceImportId(resourceReference),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAppServiceResourceOptionalFieldsConfig(resourceName, clusterName, cidr, appServiceName, description, 3, 4, 8),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
+					resource.TestCheckResourceAttr(resourceReference, "name", appServiceName),
+					resource.TestCheckResourceAttr(resourceReference, "description", description),
+					resource.TestCheckResourceAttr(resourceReference, "nodes", "3"),
+					resource.TestCheckResourceAttr(resourceReference, "cloud_provider", "AWS"),
+					resource.TestCheckResourceAttr(resourceReference, "compute.cpu", "4"),
+					resource.TestCheckResourceAttr(resourceReference, "compute.ram", "8"),
+					resource.TestCheckResourceAttrSet(resourceReference, "id"),
+					resource.TestCheckResourceAttrSet(resourceReference, "cluster_id"),
+					resource.TestCheckResourceAttrSet(resourceReference, "current_state"),
+					resource.TestCheckResourceAttrSet(resourceReference, "version"),
+					resource.TestCheckResourceAttrSet(resourceReference, "etag"),
+					resource.TestCheckResourceAttrSet(resourceReference, "audit.created_at"),
+					resource.TestCheckResourceAttrSet(resourceReference, "audit.modified_at"),
+					resource.TestCheckResourceAttrSet(resourceReference, "audit.version"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDatasourceAppServices(t *testing.T) {
 	dataSourceName := randomStringWithPrefix("tf_acc_app_svcs_ds_")
 	dataSourceReference := "data.couchbase-capella_app_services." + dataSourceName
@@ -127,6 +190,60 @@ resource "couchbase-capella_app_service" "%[4]s" {
   }
 }
 `, globalProviderBlock, globalOrgId, globalProjectId, resourceName, clusterName, cidr)
+}
+
+func testAccAppServiceResourceOptionalFieldsConfig(resourceName, clusterName, cidr, appServiceName, description string, nodes, cpu, ram int) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_cluster" "%[5]s" {
+	organization_id = "%[2]s"
+	project_id      = "%[3]s"
+	name            = "%[5]s"
+	cloud_provider = {
+		type   = "aws"
+		region = "us-east-1"
+		cidr   = "%[6]s"
+	}
+	service_groups = [
+		{
+			node = {
+				compute = {
+					cpu = 4
+					ram = 16
+				}
+				disk = {
+					storage = 50
+					type    = "gp3"
+					iops    = 3000
+				}
+			}
+			num_of_nodes = 3
+			services     = ["data", "index", "query"]
+		}
+	]
+	availability = {
+		"type" : "multi"
+	}
+	support = {
+		plan     = "enterprise"
+		timezone = "PT"
+	}
+}
+
+resource "couchbase-capella_app_service" "%[4]s" {
+	organization_id = "%[2]s"
+	project_id      = "%[3]s"
+	cluster_id      = couchbase-capella_cluster.%[5]s.id
+	name            = "%[7]s"
+	description     = "%[8]s"
+	nodes           = %[9]d
+	compute = {
+		cpu = %[10]d
+		ram = %[11]d
+	}
+}
+`, globalProviderBlock, globalOrgId, globalProjectId, resourceName, clusterName, cidr, appServiceName, description, nodes, cpu, ram)
 }
 
 func testAccAppServicesDataSourceConfig(dataSourceName string) string {
