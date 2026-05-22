@@ -380,6 +380,12 @@ func (n *NetworkPeer) validateCreateNetworkPeer(plan providerschema.NetworkPeer)
 		return errors.ErrClusterIdMissing
 	}
 
+	if plan.ProviderConfig != nil && plan.ProviderConfig.AzureConfig != nil {
+		if err := plan.ProviderConfig.AzureConfig.Validate(); err != nil {
+			return err
+		}
+	}
+
 	return n.validateNetworkPeerAttributesTrimmed(plan)
 }
 

@@ -47,7 +47,7 @@ func NetworkPeerSchema() schema.Schema {
 	capellaschema.AddAttr(gcpConfigAttrs, "provider_id", networkPeerBuilder, stringAttribute([]string{computed}))
 
 	azureConfigAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(azureConfigAttrs, "tenant_id", networkPeerBuilder, stringAttribute([]string{optional}))
+	capellaschema.AddAttr(azureConfigAttrs, "tenant_id", networkPeerBuilder, stringAttribute([]string{required}))
 	capellaschema.AddAttr(azureConfigAttrs, "cidr", networkPeerBuilder, stringAttribute([]string{required}))
 	capellaschema.AddAttr(azureConfigAttrs, "resource_group", networkPeerBuilder, stringAttribute([]string{optional}))
 	capellaschema.AddAttr(azureConfigAttrs, "subscription_id", networkPeerBuilder, stringAttribute([]string{optional}))

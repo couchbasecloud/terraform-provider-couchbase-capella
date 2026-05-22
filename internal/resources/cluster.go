@@ -109,6 +109,10 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 		clusterRequest.EnablePrivateDNSResolution = plan.EnablePrivateDNSResolution.ValueBoolPointer()
 	}
 
+	if !plan.DeletionProtection.IsNull() && !plan.DeletionProtection.IsUnknown() {
+		clusterRequest.DeletionProtection = plan.DeletionProtection.ValueBoolPointer()
+	}
+
 	if plan.Zones != nil && (plan.CloudProvider.Type.ValueString() != string(clusterapi.Aws) || plan.Availability.Type.ValueString() != "single") {
 		resp.Diagnostics.AddError(
 			"Error creating cluster",

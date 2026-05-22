@@ -15,6 +15,11 @@ func UsersSchema() schema.Schema {
 
 	capellaschema.AddAttr(attrs, "organization_id", usersBuilder, requiredString())
 
+	capellaschema.AddAttr(attrs, "page", usersBuilder, optionalInt64())
+	capellaschema.AddAttr(attrs, "per_page", usersBuilder, optionalInt64())
+	capellaschema.AddAttr(attrs, "sort_by", usersBuilder, optionalString())
+	capellaschema.AddAttr(attrs, "sort_direction", usersBuilder, optionalString())
+
 	// Build data attributes
 	dataAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(dataAttrs, "id", usersBuilder, computedString())
