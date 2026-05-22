@@ -202,7 +202,7 @@ func NewNetworkPeer(ctx context.Context, networkPeer *network_peer_api.GetNetwor
 
 	newProviderConfig, err := morphToProviderConfig(networkPeer)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrConvertingProviderConfig, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrConvertingProviderConfig, err)
 	}
 	newNetworkPeer.ProviderConfig = &newProviderConfig
 
@@ -225,7 +225,7 @@ func NewNetworkPeer(ctx context.Context, networkPeer *network_peer_api.GetNetwor
 
 	newCommands, err := MorphCommands(networkPeer.Commands)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrConvertingCidr, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrConvertingCidr, err)
 	}
 
 	newNetworkPeer.Commands = newCommands
@@ -245,17 +245,17 @@ func morphToProviderConfig(networkPeer *network_peer_api.GetNetworkPeeringRecord
 
 	aws, err := networkPeer.AsAWS()
 	if err != nil {
-		return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingAWSConfig, err)
+		return ProviderConfig{}, fmt.Errorf("%w: %w", errors.ErrReadingAWSConfig, err)
 	}
 
 	gcp, err := networkPeer.AsGCP()
 	if err != nil {
-		return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingGCPConfig, err)
+		return ProviderConfig{}, fmt.Errorf("%w: %w", errors.ErrReadingGCPConfig, err)
 	}
 
 	azure, err := networkPeer.AsAZURE()
 	if err != nil {
-		return ProviderConfig{}, fmt.Errorf("%s: %w", errors.ErrReadingAzureConfig, err)
+		return ProviderConfig{}, fmt.Errorf("%w: %w", errors.ErrReadingAzureConfig, err)
 	}
 
 	switch {
@@ -340,7 +340,7 @@ func NewNetworkPeerData(networkPeer *network_peer_api.GetNetworkPeeringRecordRes
 
 	newProviderConfig, err := morphToProviderConfig(networkPeer)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrConvertingProviderConfig, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrConvertingProviderConfig, err)
 	}
 	newNetworkPeerData.ProviderConfig = newProviderConfig
 
