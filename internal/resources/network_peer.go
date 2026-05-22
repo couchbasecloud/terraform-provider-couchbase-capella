@@ -452,7 +452,7 @@ func (n *NetworkPeer) retrieveNetworkPeer(
 ) (*providerschema.NetworkPeer, error) {
 	networkPeerResp, err := n.getNetworkPeer(ctx, organizationId, projectId, clusterId, peerId)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrNotFound, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrNotFound, err)
 	}
 
 	// Use the known provider type when the response doesn't include it
