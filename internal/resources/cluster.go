@@ -368,7 +368,7 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		return
 	}
 
-	if !plan.DeletionProtection.Equal(state.DeletionProtection) {
+	if !plan.DeletionProtection.IsUnknown() && !plan.DeletionProtection.IsNull() && !plan.DeletionProtection.Equal(state.DeletionProtection) {
 		if err := c.updateDeletionProtection(ctx, organizationId, projectId, clusterId, plan.DeletionProtection.ValueBool()); err != nil {
 			resp.Diagnostics.AddError(
 				"Error updating cluster deletion protection",
