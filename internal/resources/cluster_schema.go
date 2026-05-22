@@ -20,7 +20,7 @@ func ClusterSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "description", clusterBuilder, stringAttribute([]string{optional, computed}))
 	capellaschema.AddAttr(attrs, "zones", clusterBuilder, stringSetAttribute(optional, requiresReplace))
 	capellaschema.AddAttr(attrs, "enable_private_dns_resolution", clusterBuilder, boolDefaultAttribute(false, optional, computed, requiresReplace))
-	capellaschema.AddAttr(attrs, "deletion_protection", clusterBuilder, boolAttribute(optional, computed))
+	capellaschema.AddAttr(attrs, "deletion_protection", clusterBuilder, boolAttribute(optional, computed, useStateForUnknown))
 
 	cloudProviderAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(cloudProviderAttrs, "type", clusterBuilder, stringAttribute([]string{required}), "CloudProvider")
