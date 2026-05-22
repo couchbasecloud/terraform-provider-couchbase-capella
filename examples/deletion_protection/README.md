@@ -1,21 +1,20 @@
-# Deletion Protection Example
+# Cluster Deletion Protection Example
 
-This example shows how to manage deletion protection on an existing Couchbase Capella cluster using the dedicated `couchbase-capella_cluster_deletion_protection` resource.
+This example shows how to manage deletion protection on an existing Couchbase Capella cluster using the `couchbase-capella_cluster_deletion_protection` resource.
 
-The resource calls `PUT /v4/.../deletionProtection` to set the desired state, then reads the cluster to confirm the value.
+> **Note:** Do not set `deletion_protection` on the `couchbase-capella_cluster` resource when using this resource. The cluster resource treats `deletion_protection` as read-only (computed). This resource is the sole owner of that field.
 
-# Example Walkthrough
+## Example Walkthrough
 
-In this example, we are going to do the following.
+1. **CREATE** — Enable deletion protection on an existing cluster.
+2. **UPDATE** — Toggle deletion protection off.
+3. **DESTROY** — Remove the resource from state (does not alter the cluster).
 
-1. CREATE: Enable deletion protection on an existing cluster.
-2. UPDATE: Toggle deletion protection off.
-3. DESTROY: Remove the resource from state (does not alter the cluster).
-
-If you check the `terraform.template.tfvars` file — copy it to `terraform.tfvars` and update the values with your organization credentials.
+Copy `terraform.template.tfvars` to `terraform.tfvars` and update the values with your credentials.
 
 ## CREATE
-### View the plan for the resources that Terraform will create
+
+### View the plan
 
 Command: `terraform plan`
 
@@ -36,7 +35,7 @@ Terraform will perform the following actions:
 Plan: 1 to add, 0 to change, 0 to destroy.
 ```
 
-### Apply the Plan
+### Apply the plan
 
 Command: `terraform apply`
 
@@ -73,3 +72,19 @@ Outputs:
 deletion_protection = false
 ```
 
+## DESTROY
+
+Removing this resource from state does **not** disable deletion protection on the cluster. This is intentional — protection remains enabled as a safety measure.
+
+Command: `terraform destroy`
+
+Sample Output:
+```
+$ terraform destroy
+
+  # couchbase-capella_cluster_deletion_protection.cluster will be destroyed (state only)
+
+Destroy complete! Resources: 1 destroyed.
+```
+
+If you need to delete the cluster afterwards, first set `deletion_protection = false` and apply, then destroy.
