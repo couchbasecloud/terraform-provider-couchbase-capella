@@ -463,9 +463,9 @@ func (n *NetworkPeer) retrieveNetworkPeer(
 
 	// Use the known provider type when the response doesn't include it
 	// (common for failed peers with empty providerConfig).
-	if networkPeerResp.ProviderType == "" {
+	if networkPeerResp.ProviderType == "" && providerType != "" {
 		networkPeerResp.ProviderType = providerType
-	} else if validateProviderTypeIsSameInPlanAndState(providerType, networkPeerResp.ProviderType) {
+	} else if providerType != "" && validateProviderTypeIsSameInPlanAndState(providerType, networkPeerResp.ProviderType) {
 		networkPeerResp.ProviderType = providerType
 	}
 
@@ -481,7 +481,9 @@ func (n *NetworkPeer) retrieveNetworkPeer(
 		return nil, fmt.Errorf("%s: %w", errors.ErrRefreshingState, err)
 	}
 
-	refreshedState.ProviderType = types.StringValue(providerType)
+	if providerType != "" {
+		refreshedState.ProviderType = types.StringValue(providerType)
+	}
 
 	return refreshedState, nil
 }
