@@ -72,13 +72,6 @@ func (a *ApiKey) ValidateConfig(ctx context.Context, req resource.ValidateConfig
 		)
 	}
 
-	if !config.Rotate.IsNull() && !config.Rotate.IsUnknown() && config.Secret.IsNull() {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("rotate"),
-			"Invalid API Key Configuration",
-			"rotate value should not be set during create. Configure rotate together with secret when rotating an existing API key.",
-		)
-	}
 }
 
 // ModifyPlan rejects create-time rotation while still allowing rotation updates with existing state.

@@ -80,7 +80,7 @@ func TestAccApiKeyResourceWithOnlyReqField(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceReference, "organization_roles.*", "organizationMember"),
 					resource.TestCheckTypeSetElemAttr(resourceReference, "organization_roles.*", "organizationOwner"),
 					resource.TestCheckResourceAttr(resourceReference, "rotate", "1"),
-					resource.TestCheckResourceAttr(resourceReference, "secret", "abc"),
+					resource.TestCheckResourceAttrSet(resourceReference, "secret"),
 					resource.TestCheckResourceAttrSet(resourceReference, "token"),
 				),
 			},
@@ -478,7 +478,6 @@ resource "couchbase-capella_apikey" "%[2]s" {
   name               = "%[2]s"
   organization_roles = ["organizationOwner", "organizationMember"]
   rotate             = 1
-  secret             = "abc"
 }
 `, globalProviderBlock, resourceName, globalOrgId)
 }
