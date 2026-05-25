@@ -1,12 +1,16 @@
 package resources
 
 import (
+	"regexp"
+
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
@@ -14,6 +18,8 @@ import (
 )
 
 var apiKeyBuilder = capellaschema.NewSchemaBuilder("apiKey", "APIKey")
+
+var apiKeyResourceIDPattern = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
 
 func ApiKeySchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
@@ -44,12 +50,48 @@ func ApiKeySchema() schema.Schema {
 		},
 		Default: setdefault.StaticValue(types.SetValueMust(types.StringType, []attr.Value{types.StringValue("0.0.0.0/0")})),
 	})
-	capellaschema.AddAttr(attrs, "organization_roles", apiKeyBuilder, stringSetAttribute(required, requiresReplace))
+	capellaschema.AddAttr(attrs, "organization_roles", apiKeyBuilder, &schema.SetAttribute{
+		Required:    true,
+		ElementType: types.StringType,
+		PlanModifiers: []planmodifier.Set{
+			setplanmodifier.RequiresReplace(),
+		},
+		Validators: []validator.Set{
+			setvalidator.SizeAtLeast(1),
+			setvalidator.ValueStringsAre(stringvalidator.OneOf(
+				"organizationMember",
+				"organizationOwner",
+				"projectCreator",
+			)),
+		},
+	})
 
 	resourceAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(resourceAttrs, "id", apiKeyBuilder, stringAttribute([]string{required}), "Resource")
-	capellaschema.AddAttr(resourceAttrs, "roles", apiKeyBuilder, stringSetAttribute(required), "Resource")
-	capellaschema.AddAttr(resourceAttrs, "type", apiKeyBuilder, stringDefaultAttribute("project", optional, computed), "Resource")
+	capellaschema.AddAttr(resourceAttrs, "id", apiKeyBuilder, stringAttribute(
+		[]string{required},
+		validator.String(stringvalidator.LengthAtLeast(1)),
+		validator.String(stringvalidator.RegexMatches(apiKeyResourceIDPattern, "resources.id must be a valid UUID")),
+	), "Resource")
+	capellaschema.AddAttr(resourceAttrs, "roles", apiKeyBuilder, &schema.SetAttribute{
+		Required:    true,
+		ElementType: types.StringType,
+		Validators: []validator.Set{
+			setvalidator.SizeAtLeast(1),
+			setvalidator.ValueStringsAre(stringvalidator.OneOf(
+				"projectOwner",
+				"projectManager",
+				"projectViewer",
+				"projectDataReaderWriter",
+				"projectDataReader",
+			)),
+		},
+	}, "Resource")
+	capellaschema.AddAttr(resourceAttrs, "type", apiKeyBuilder, &schema.StringAttribute{
+		Optional:   true,
+		Computed:   true,
+		Default:    stringdefault.StaticString("project"),
+		Validators: []validator.String{stringvalidator.OneOf("project")},
+	}, "Resource")
 
 	capellaschema.AddAttr(attrs, "resources", apiKeyBuilder, &schema.SetNestedAttribute{
 		Optional: true,

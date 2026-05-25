@@ -21,9 +21,11 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource                = &ApiKey{}
-	_ resource.ResourceWithConfigure   = &ApiKey{}
-	_ resource.ResourceWithImportState = &ApiKey{}
+	_ resource.Resource                   = &ApiKey{}
+	_ resource.ResourceWithConfigure      = &ApiKey{}
+	_ resource.ResourceWithImportState    = &ApiKey{}
+	_ resource.ResourceWithModifyPlan     = &ApiKey{}
+	_ resource.ResourceWithValidateConfig = &ApiKey{}
 )
 
 const errorMessageAfterApiKeyCreation = "Api Key creation is successful, but encountered an error while checking the current" +
@@ -51,6 +53,54 @@ func (r *ApiKey) Metadata(_ context.Context, req resource.MetadataRequest, resp 
 // Schema defines the schema for the apiKey resource.
 func (r *ApiKey) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = ApiKeySchema()
+}
+
+// ValidateConfig validates API key configuration before plan/apply reaches Create.
+func (a *ApiKey) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var config providerschema.ApiKey
+	diags := req.Config.Get(ctx, &config)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !config.Secret.IsNull() && !config.Secret.IsUnknown() && config.Rotate.IsNull() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("secret"),
+			"Invalid API Key Configuration",
+			"secret can only be configured together with rotate when rotating an existing API key.",
+		)
+	}
+
+	if !config.Rotate.IsNull() && !config.Rotate.IsUnknown() && config.Secret.IsNull() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("rotate"),
+			"Invalid API Key Configuration",
+			"rotate value should not be set during create. Configure rotate together with secret when rotating an existing API key.",
+		)
+	}
+}
+
+// ModifyPlan rejects create-time rotation while still allowing rotation updates with existing state.
+func (a *ApiKey) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if req.Plan.Raw.IsNull() || !req.State.Raw.IsNull() {
+		return
+	}
+
+	var plan providerschema.ApiKey
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !plan.Rotate.IsNull() && !plan.Rotate.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("rotate"),
+			"Invalid API Key Configuration",
+			"rotate value should not be set during create.",
+		)
+	}
 }
 
 // Configure adds the provider configured client to the apiKey resource.
@@ -283,7 +333,7 @@ func (a *ApiKey) Update(ctx context.Context, req resource.UpdateRequest, resp *r
 	}
 
 	var rotateApiRequest api.RotateApiKeyRequest
-	if !plan.Secret.IsNull() || !plan.Secret.IsUnknown() {
+	if !plan.Secret.IsNull() && !plan.Secret.IsUnknown() {
 		rotateApiRequest = api.RotateApiKeyRequest{
 			Secret: plan.Secret.ValueStringPointer(),
 		}
