@@ -333,6 +333,7 @@ variable "app_endpoint_log_streaming_config" {
     log_level = string
     log_keys = set(string)
   })
+
 }variable "deletion_protection" {
   description = "Whether deletion protection is enabled for the cluster"
   type        = bool
