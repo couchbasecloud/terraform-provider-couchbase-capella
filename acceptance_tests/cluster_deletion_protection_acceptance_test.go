@@ -1,17 +1,23 @@
 package acceptance_tests
 
 import (
+	"context"
 	"fmt"
+	"net/http"
 	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	clusterapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/cluster"
 )
 
 // TestAccClusterDeletionProtectionResource tests the full lifecycle:
 // create with protection disabled → update to enabled → import state.
 func TestAccClusterDeletionProtectionResource(t *testing.T) {
+	disableDeletionProtectionOnCleanup(t)
 	resourceName := randomStringWithPrefix("tf_acc_del_prot_")
 	resourceReference := "couchbase-capella_cluster_deletion_protection." + resourceName
 
@@ -60,6 +66,7 @@ func TestAccClusterDeletionProtectionResource(t *testing.T) {
 // TestAccClusterDeletionProtectionToggle verifies that deletion protection
 // can be toggled back and forth and the state is correctly reflected.
 func TestAccClusterDeletionProtectionToggle(t *testing.T) {
+	disableDeletionProtectionOnCleanup(t)
 	resourceName := randomStringWithPrefix("tf_acc_del_prot_toggle_")
 	resourceReference := "couchbase-capella_cluster_deletion_protection." + resourceName
 
@@ -107,7 +114,7 @@ func TestAccClusterDeletionProtectionInvalidCluster(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccClusterDeletionProtectionConfig(resourceName, "00000000-0000-0000-0000-000000000000", true),
-				ExpectError: regexp.MustCompile(`(?s)Error.*cluster|not found|access.*denied`),
+				ExpectError: regexp.MustCompile(`(?s)Error.*cluster.*(not be found|not found|access.*denied)`),
 			},
 		},
 	})
@@ -148,4 +155,27 @@ func generateDeletionProtectionImportId(resourceReference string) resource.Impor
 			rawState["cluster_id"], rawState["project_id"], rawState["organization_id"],
 		), nil
 	}
+}
+
+// disableDeletionProtectionOnCleanup registers a t.Cleanup hook that
+// unconditionally disables deletion protection on globalClusterId so that
+// TestMain teardown can delete the cluster even if the test fails mid-run.
+func disableDeletionProtectionOnCleanup(t *testing.T) {
+	t.Helper()
+	t.Cleanup(func() {
+		ctx := context.Background()
+		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/deletionProtection",
+			globalHost, globalOrgId, globalProjectId, globalClusterId)
+		cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
+		_, err := globalClient.ExecuteWithRetry(
+			ctx,
+			cfg,
+			clusterapi.UpdateDeletionProtectionRequest{DeletionProtection: false},
+			globalToken,
+			nil,
+		)
+		if err != nil {
+			t.Logf("WARNING: failed to disable deletion protection on cleanup: %v", err)
+		}
+	})
 }
