@@ -53,7 +53,6 @@ func (c *FlushBucket) Create(ctx context.Context, req resource.CreateRequest, re
 	var clusterId = plan.ClusterId.ValueString()
 	var bucketId = plan.BucketId.ValueString()
 
-	// Execute flush bucket. Nothing gets returned for it.
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/flush", c.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusOK}
 	_, err := c.ClientV1.ExecuteWithRetry(
@@ -95,10 +94,13 @@ func (c *FlushBucket) Configure(_ context.Context, req resource.ConfigureRequest
 }
 
 func (c *FlushBucket) Read(_ context.Context, _ resource.ReadRequest, _ *resource.ReadResponse) {
+	// Couchbase Capella's v4 does not support a READ operation for flush endpoint.
 }
 
 func (r *FlushBucket) Delete(_ context.Context, _ resource.DeleteRequest, _ *resource.DeleteResponse) {
+	// Flush endpoint does not support delete as there is nothing on Capella to delete for this resource.
 }
 
-func (c *FlushBucket) Update(_ context.Context, _ resource.UpdateRequest, _ *resource.UpdateResponse) {
+func (c *FlushBucket) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// Flush endpoint does not update the resource at any time other than the create.
 }
