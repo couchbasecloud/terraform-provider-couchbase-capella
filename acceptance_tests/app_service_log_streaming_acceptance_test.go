@@ -185,6 +185,65 @@ func TestAccAppServiceLogStreamingMultipleCredentials(t *testing.T) {
 	})
 }
 
+func TestAccAppServiceLogStreamingDatasourceInvalidUUIDs(t *testing.T) {
+	tests := []struct {
+		name           string
+		organizationID string
+		projectID      string
+		clusterID      string
+		appServiceID   string
+	}{
+		{
+			name:           "organization_id",
+			organizationID: "not-a-uuid",
+			projectID:      "11111111-1111-1111-1111-111111111111",
+			clusterID:      "22222222-2222-2222-2222-222222222222",
+			appServiceID:   "33333333-3333-3333-3333-333333333333",
+		},
+		{
+			name:           "project_id",
+			organizationID: "00000000-0000-0000-0000-000000000000",
+			projectID:      "not-a-uuid",
+			clusterID:      "22222222-2222-2222-2222-222222222222",
+			appServiceID:   "33333333-3333-3333-3333-333333333333",
+		},
+		{
+			name:           "cluster_id",
+			organizationID: "00000000-0000-0000-0000-000000000000",
+			projectID:      "11111111-1111-1111-1111-111111111111",
+			clusterID:      "not-a-uuid",
+			appServiceID:   "33333333-3333-3333-3333-333333333333",
+		},
+		{
+			name:           "app_service_id",
+			organizationID: "00000000-0000-0000-0000-000000000000",
+			projectID:      "11111111-1111-1111-1111-111111111111",
+			clusterID:      "22222222-2222-2222-2222-222222222222",
+			appServiceID:   "not-a-uuid",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			resource.ParallelTest(t, resource.TestCase{
+				ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+				Steps: []resource.TestStep{
+					{
+						Config: testAccAppServiceLogStreamingDatasourceInvalidUUIDConfig(
+							test.organizationID,
+							test.projectID,
+							test.clusterID,
+							test.appServiceID,
+						),
+						ExpectError: re.MustCompile(`(?s)Invalid Attribute Value Match.*` + test.name + `.*must be a valid UUID`),
+					},
+				},
+			})
+		})
+	}
+}
+
 // testAccCheckAppServiceLogStreamingDestroy verifies that after Terraform destroys the log streaming resource, the
 // remote config_state has transitioned to "disabled". This is because destroying log streaming does not actually
 // delete a resource, but instead disables log streaming on the app service.
@@ -265,6 +324,25 @@ data "couchbase-capella_app_service_log_streaming" "%[7]s" {
 		globalAppServiceId,
 		datasourceName,
 		resourceName,
+	)
+}
+
+func testAccAppServiceLogStreamingDatasourceInvalidUUIDConfig(organizationID, projectID, clusterID, appServiceID string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "couchbase-capella_app_service_log_streaming" "test" {
+	organization_id = "%[2]s"
+	project_id      = "%[3]s"
+	cluster_id      = "%[4]s"
+	app_service_id  = "%[5]s"
+}
+`,
+		globalProviderBlock,
+		organizationID,
+		projectID,
+		clusterID,
+		appServiceID,
 	)
 }
 

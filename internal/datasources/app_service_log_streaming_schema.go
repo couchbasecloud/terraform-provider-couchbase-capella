@@ -13,10 +13,10 @@ func AppServiceLogStreamingSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
 	// Required hierarchical IDs
-	capellaschema.AddAttr(attrs, "organization_id", appServiceLogStreamingBuilder, requiredStringWithValidator())
-	capellaschema.AddAttr(attrs, "project_id", appServiceLogStreamingBuilder, requiredStringWithValidator())
-	capellaschema.AddAttr(attrs, "cluster_id", appServiceLogStreamingBuilder, requiredStringWithValidator())
-	capellaschema.AddAttr(attrs, "app_service_id", appServiceLogStreamingBuilder, requiredStringWithValidator())
+	capellaschema.AddAttr(attrs, "organization_id", appServiceLogStreamingBuilder, requiredUUIDString())
+	capellaschema.AddAttr(attrs, "project_id", appServiceLogStreamingBuilder, requiredUUIDString())
+	capellaschema.AddAttr(attrs, "cluster_id", appServiceLogStreamingBuilder, requiredUUIDString())
+	capellaschema.AddAttr(attrs, "app_service_id", appServiceLogStreamingBuilder, requiredUUIDString())
 
 	// Computed attributes returned by the API
 	capellaschema.AddAttr(attrs, "output_type", appServiceLogStreamingBuilder, computedString())
