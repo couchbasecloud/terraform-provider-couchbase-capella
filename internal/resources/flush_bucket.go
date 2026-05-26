@@ -17,8 +17,7 @@ var (
 	_ resource.ResourceWithConfigure = &FlushBucket{}
 )
 
-const errorMessageFlushingBucket = "There is an error during execution of bucket flush. Please check in Capella to see if the documents for" +
-	" have been deleted, unexpected error: "
+const errorMessageFlushingBucket = "There is an error during execution of bucket flush, unexpected error: "
 
 // FlushBucket is the bucket resource implementation.
 type FlushBucket struct {
