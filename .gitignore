@@ -43,3 +43,5 @@ openapi.generated.yaml
 CLAUDE.local.md
 .claude/todos/
 .claude/worktrees/
+.claude/skills/jira-bug-report/
+.claude/skills/pr-create/
