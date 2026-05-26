@@ -153,6 +153,38 @@ func TestAccAppServiceLogStreamingMissingCredentials(t *testing.T) {
 	})
 }
 
+// TestAccAppServiceLogStreamingInvalidOutputType tests that output_type is rejected
+// when it is not one of the supported log streaming providers.
+func TestAccAppServiceLogStreamingInvalidOutputType(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_log_streaming_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAppServiceLogStreamingInvalidOutputTypeConfig(resourceName),
+				ExpectError: re.MustCompile(`(?s)Attribute output_type value must be one of.*generic_http.*newrelic`),
+			},
+		},
+	})
+}
+
+// TestAccAppServiceLogStreamingMultipleCredentials tests that a validation error is returned
+// when more than one credentials block is configured.
+func TestAccAppServiceLogStreamingMultipleCredentials(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_log_streaming_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAppServiceLogStreamingMultipleCredentialsConfig(resourceName),
+				ExpectError: re.MustCompile(`(?s)Exactly one of.*generic_http.*sumologic`),
+			},
+		},
+	})
+}
+
 // testAccCheckAppServiceLogStreamingDestroy verifies that after Terraform destroys the log streaming resource, the
 // remote config_state has transitioned to "disabled". This is because destroying log streaming does not actually
 // delete a resource, but instead disables log streaming on the app service.
@@ -313,6 +345,69 @@ resource "couchbase-capella_app_service_log_streaming" "%[6]s" {
   output_type     = "generic_http"
 
   credentials = {}
+}
+`,
+		globalProviderBlock,
+		globalOrgId,
+		globalProjectId,
+		globalClusterId,
+		globalAppServiceId,
+		resourceName,
+	)
+}
+
+// testAccAppServiceLogStreamingInvalidOutputTypeConfig returns an HCL config where
+// output_type is not a supported log streaming provider.
+func testAccAppServiceLogStreamingInvalidOutputTypeConfig(resourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_app_service_log_streaming" "%[6]s" {
+	organization_id = "%[2]s"
+	project_id      = "%[3]s"
+	cluster_id      = "%[4]s"
+	app_service_id  = "%[5]s"
+	output_type     = "newrelic"
+
+	credentials = {
+		generic_http = {
+			url      = "https://logs.example.com"
+			user     = "log-user"
+			password = "log-password"
+		}
+	}
+}
+`,
+		globalProviderBlock,
+		globalOrgId,
+		globalProjectId,
+		globalClusterId,
+		globalAppServiceId,
+		resourceName,
+	)
+}
+
+// testAccAppServiceLogStreamingMultipleCredentialsConfig returns an HCL config where
+// output_type is "generic_http" but two credentials blocks are configured.
+func testAccAppServiceLogStreamingMultipleCredentialsConfig(resourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_app_service_log_streaming" "%[6]s" {
+	organization_id = "%[2]s"
+	project_id      = "%[3]s"
+	cluster_id      = "%[4]s"
+	app_service_id  = "%[5]s"
+	output_type     = "generic_http"
+
+	credentials = {
+		generic_http = {
+			url = "https://logs.example.com"
+		}
+		sumologic = {
+			url = "https://sumologic.example.com"
+		}
+	}
 }
 `,
 		globalProviderBlock,

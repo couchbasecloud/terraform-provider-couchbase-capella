@@ -1,9 +1,7 @@
 package resources
 
 import (
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
@@ -21,7 +19,7 @@ func AppServiceLogStreamingSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "app_service_id", appServiceLogStreamingBuilder, requiredUUIDStringAttribute())
 
 	// User configured attributes
-	capellaschema.AddAttr(attrs, "output_type", appServiceLogStreamingBuilder, stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1))))
+	capellaschema.AddAttr(attrs, "output_type", appServiceLogStreamingBuilder, stringAttribute([]string{required, requiresReplace}))
 	capellaschema.AddAttr(attrs, "credentials", appServiceLogStreamingBuilder, &schema.SingleNestedAttribute{
 		Required:   true,
 		Sensitive:  true,

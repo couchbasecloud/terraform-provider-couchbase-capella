@@ -2,6 +2,7 @@ package acceptance_tests
 
 import (
 	"fmt"
+	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -47,6 +48,18 @@ func appServiceLogStreamingActivationStatusSteps() []resource.TestStep {
 			ImportState:                          true,
 			ImportStateVerifyIdentifierAttribute: "app_service_id",
 			ImportStateVerify:                    true,
+		},
+		// Invalid state should fail provider validation before any API call.
+		{
+			Config:      testAccAppServiceLogStreamingActivationStatusConfig(logStreamingResourceName, resourceName, "disabled"),
+			ExpectError: regexp.MustCompile(`(?s)Attribute state value must be one of.*paused.*enabled.*disabled`),
+		},
+		// Restore a valid config before destroy.
+		{
+			Config: testAccAppServiceLogStreamingActivationStatusConfig(logStreamingResourceName, resourceName, string(api.GetLogStreamingResponseConfigStatePaused)),
+			Check: resource.ComposeAggregateTestCheckFunc(
+				resource.TestCheckResourceAttr(resourceReference, "state", string(api.GetLogStreamingResponseConfigStatePaused)),
+			),
 		},
 	}
 }

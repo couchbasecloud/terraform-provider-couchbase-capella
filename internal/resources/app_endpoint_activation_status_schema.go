@@ -1,7 +1,9 @@
 package resources
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
@@ -17,7 +19,10 @@ func AppEndpointActivationStatusSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "cluster_id", appEndpointActivationStatusBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "app_service_id", appEndpointActivationStatusBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "app_endpoint_name", appEndpointActivationStatusBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "state", appEndpointActivationStatusBuilder, stringAttribute([]string{required}))
+	capellaschema.AddAttr(attrs, "state", appEndpointActivationStatusBuilder, stringAttribute(
+		[]string{required},
+		validator.String(stringvalidator.OneOf(AppEndpointStateOnline, AppEndpointStateOffline)),
+	))
 
 	return schema.Schema{
 		MarkdownDescription: "Manages the activation status of an App Endpoint. This resource is used to activate or deactivate an App Endpoint on-demand.",

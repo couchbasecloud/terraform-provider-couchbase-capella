@@ -2,6 +2,7 @@ package acceptance_tests
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -75,6 +76,20 @@ func TestAccAppEndpointCorsResourceOriginOnly(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "origin.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceReference, "origin.*", "*"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAppEndpointCorsResourceEmptyOrigin(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cors_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCorsResourceConfig(resourceName, "qe-endpoint", `[]`, `["https://login.example.com"]`, `["Authorization", "Content-Type"]`, 3600, false),
+				ExpectError: regexp.MustCompile(`(?s)Invalid Attribute Value.*Attribute origin set must contain at least 1 elements, got: 0`),
 			},
 		},
 	})

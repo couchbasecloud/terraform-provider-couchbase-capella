@@ -2,6 +2,7 @@ package acceptance_tests
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -66,6 +67,20 @@ func testAccAppEndpointActivationStatus() []resource.TestStep {
 			ImportState:       true,
 		},
 	}
+}
+
+func TestAccAppEndpointActivationStatusInvalidState(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_activation_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAppEndpointActivationStatusConfig(resourceName, "qe-endpoint", "Archived"),
+				ExpectError: regexp.MustCompile(`(?s)Invalid Attribute Value Match.*Archived.*Online.*Offline`),
+			},
+		},
+	})
 }
 
 func testAccAppEndpointActivationStatusConfig(resourceName, endpointName, desiredState string) string {

@@ -83,10 +83,11 @@ func testAccAppEndpointLoggingConfigResource(t *testing.T) []resource.TestStep {
 			ImportState:       true,
 		},
 
-		// tests that an error is returned if the log_level is invalid
+		// tests that an error is returned if the log_level is invalid.
+		// The generated OneOf validator rejects unknown values at plan time, before any API call.
 		{
-			Config:      testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourceName, resourceName, resourceReference, datasourceName, "test", logKeys),
-			ExpectError: regexp.MustCompile("Error executing upsert app endpoint logging config"),
+			Config:      testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourceName, resourceName, resourceReference, datasourceName, "debug", logKeys),
+			ExpectError: regexp.MustCompile(`(?s)Attribute log_level value must be one of.*info.*warn.*error.*debug`),
 		},
 
 		// tests that an error is returned if any of the log_keys are invalid.
