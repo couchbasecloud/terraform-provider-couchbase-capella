@@ -491,6 +491,14 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 		return
 	}
 
+	if state.DeletionProtection.ValueBool() {
+		resp.Diagnostics.AddError(
+			"Error Deleting Capella Cluster",
+			"Cluster deletion protection is enabled. Set deletion_protection = false before destroying.",
+		)
+		return
+	}
+
 	resourceIDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
