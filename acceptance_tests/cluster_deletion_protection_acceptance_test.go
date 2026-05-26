@@ -21,7 +21,7 @@ func TestAccClusterDeletionProtectionResource(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_del_prot_")
 	resourceReference := "couchbase-capella_cluster_deletion_protection." + resourceName
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			// Step 1: Create with deletion_protection = false
