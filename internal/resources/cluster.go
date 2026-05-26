@@ -368,16 +368,6 @@ func (c *Cluster) Update(ctx context.Context, req resource.UpdateRequest, resp *
 		return
 	}
 
-	if !plan.DeletionProtection.Equal(state.DeletionProtection) {
-		if err := c.updateDeletionProtection(ctx, organizationId, projectId, clusterId, plan.DeletionProtection.ValueBool()); err != nil {
-			resp.Diagnostics.AddError(
-				"Error updating cluster deletion protection",
-				"Could not update deletion protection for cluster id "+state.Id.String()+": "+api.ParseError(err),
-			)
-			return
-		}
-	}
-
 	ClusterRequest := clusterapi.UpdateClusterRequest{
 		Description: plan.Description.ValueString(),
 		Name:        plan.Name.ValueString(),
@@ -498,14 +488,6 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if state.DeletionProtection.ValueBool() {
-		resp.Diagnostics.AddError(
-			"Error Deleting Capella Cluster",
-			"Cluster deletion protection is enabled. Set deletion_protection = false before destroying.",
-		)
 		return
 	}
 
@@ -683,20 +665,6 @@ func (c *Cluster) checkClusterStatus(ctx context.Context, organizationId, projec
 			timer.Reset(sleep)
 		}
 	}
-}
-
-// updateDeletionProtection toggles deletion protection on a cluster via the dedicated endpoint.
-func (c *Cluster) updateDeletionProtection(ctx context.Context, organizationId, projectId, clusterId string, enabled bool) error {
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/deletionProtection", c.HostURL, organizationId, projectId, clusterId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-	_, err := c.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		clusterapi.UpdateDeletionProtectionRequest{DeletionProtection: enabled},
-		c.Token,
-		nil,
-	)
-	return err
 }
 
 // morphToApiServiceGroups converts a provider cluster serviceGroups to an API-compatible list of service groups.
@@ -929,10 +897,6 @@ func initializePendingClusterWithPlanAndId(plan providerschema.Cluster, id strin
 
 	if plan.EnablePrivateDNSResolution.IsNull() || plan.EnablePrivateDNSResolution.IsUnknown() {
 		plan.EnablePrivateDNSResolution = types.BoolNull()
-	}
-
-	if plan.DeletionProtection.IsNull() || plan.DeletionProtection.IsUnknown() {
-		plan.DeletionProtection = types.BoolNull()
 	}
 
 	if plan.CouchbaseServer.IsNull() || plan.CouchbaseServer.IsUnknown() {
