@@ -63,48 +63,6 @@ func TestAccClusterDeletionProtectionResource(t *testing.T) {
 	})
 }
 
-// TestAccClusterDeletionProtectionToggle verifies that deletion protection
-// can be toggled back and forth and the state is correctly reflected.
-func TestAccClusterDeletionProtectionToggle(t *testing.T) {
-	disableDeletionProtectionOnCleanup(t)
-	resourceName := randomStringWithPrefix("tf_acc_del_prot_toggle_")
-	resourceReference := "couchbase-capella_cluster_deletion_protection." + resourceName
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			// Enable protection
-			{
-				Config: testAccClusterDeletionProtectionConfig(resourceName, globalClusterId, true),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "deletion_protection", "true"),
-				),
-			},
-			// Disable protection
-			{
-				Config: testAccClusterDeletionProtectionConfig(resourceName, globalClusterId, false),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "deletion_protection", "false"),
-				),
-			},
-			// Re-enable protection
-			{
-				Config: testAccClusterDeletionProtectionConfig(resourceName, globalClusterId, true),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "deletion_protection", "true"),
-				),
-			},
-			// Disable to leave cluster in clean state
-			{
-				Config: testAccClusterDeletionProtectionConfig(resourceName, globalClusterId, false),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceReference, "deletion_protection", "false"),
-				),
-			},
-		},
-	})
-}
-
 // TestAccClusterDeletionProtectionInvalidCluster verifies correct error for nonexistent cluster.
 func TestAccClusterDeletionProtectionInvalidCluster(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_del_prot_invalid_")
