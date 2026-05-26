@@ -268,7 +268,7 @@ func TestAccApiKeyResourceInvalidScenarioResourceIdEmpty(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccApiKeyResourceConfigWithResourceId(resourceName, ""),
-				ExpectError: regexp.MustCompile(`(?s)Invalid Attribute Value.*Attribute resources.*id.*string length must be at least 1, got: 0`),
+				ExpectError: regexp.MustCompile(`(?s)Invalid Attribute Value Length.*Attribute\s+resources.*\.id\s+string length must be at least 1, got: 0`),
 			},
 		},
 	})
