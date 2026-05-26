@@ -9,8 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-// ── Bucket resource ──────────────────────────────────────────────────────────
-
 func TestAccBucketResourceRequiredOnly(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_bkt_req_")
 	resourceReference := "couchbase-capella_bucket." + resourceName
@@ -102,7 +100,6 @@ func TestAccBucketResourceUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "durability_level", "majority"),
 					resource.TestCheckResourceAttr(resourceReference, "replicas", "2"),
 					resource.TestCheckResourceAttr(resourceReference, "time_to_live_in_seconds", "3600"),
-					// non-updated fields must remain unchanged
 					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
@@ -226,8 +223,6 @@ resource "couchbase-capella_bucket" "%[2]s" {
 	})
 }
 
-// ── Scope resource ───────────────────────────────────────────────────────────
-
 func TestAccScopeResource(t *testing.T) {
 	bucketName := randomStringWithPrefix("tf_acc_scope_bkt_")
 	scopeName := randomStringWithPrefix("tf_acc_scope_")
@@ -305,8 +300,6 @@ resource "couchbase-capella_scope" "%[2]s" {
 		},
 	})
 }
-
-// ── Collection resource ──────────────────────────────────────────────────────
 
 func TestAccCollectionResourceNoTTL(t *testing.T) {
 	bucketName := randomStringWithPrefix("tf_acc_coll_bkt_nottl_")
@@ -404,13 +397,7 @@ resource "couchbase-capella_collection" "%[2]s" {
 	})
 }
 
-// TestAccCollectionResourceNegativeTTL verifies behaviour when max_ttl is set
-// to a negative value.
-//
-// BUG (backend): The API accepts max_ttl = -1 without returning a validation
-// error. Expected behaviour is a 4xx rejection. This test documents the actual
-// (broken) behaviour so the issue is visible in CI until the backend is fixed.
-// Restore ExpectError once AV-132307 is resolved.
+// AV-132307: API accepts negative max_ttl; restore ExpectError once fixed.
 func TestAccCollectionResourceNegativeTTL(t *testing.T) {
 	bucketName := randomStringWithPrefix("tf_acc_coll_neg_ttl_bkt_")
 	scopeName := randomStringWithPrefix("tf_acc_coll_neg_ttl_scope_")
@@ -421,8 +408,6 @@ func TestAccCollectionResourceNegativeTTL(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				// BUG: API silently accepts negative max_ttl instead of rejecting it.
-				// When fixed, this step should use ExpectError with a validation pattern.
 				Config: testAccCollectionResourceConfigWithTTL(bucketName, scopeName, collName, -1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(collReference, "collection_name", collName),
@@ -432,8 +417,6 @@ func TestAccCollectionResourceNegativeTTL(t *testing.T) {
 		},
 	})
 }
-
-// ── Flush resource ───────────────────────────────────────────────────────────
 
 func TestAccFlushBucketResource(t *testing.T) {
 	bucketName := randomStringWithPrefix("tf_acc_flush_bkt_")
@@ -495,15 +478,7 @@ resource "couchbase-capella_flush" "%[2]s" {
 	})
 }
 
-// ── Buckets datasource ───────────────────────────────────────────────────────
-
-// TestAccDatasourceBuckets reads the buckets datasource for the global cluster.
-//
-// BUG (provider): The datasource crashes with a "Value Conversion Error" because
-// schema.OneBucket has a vbuckets field (tfsdk tag) that is absent from
-// BucketsSchema(). Fix: add vbuckets to BucketsSchema() — see AV-132308.
-// Expected: datasource lists buckets without error.
-// Restore the Check block and remove ExpectError once AV-132308 is resolved.
+// AV-132308: datasource crashes due to missing vbuckets in schema; restore Check block once fixed.
 func TestAccDatasourceBuckets(t *testing.T) {
 	dsName := randomStringWithPrefix("tf_acc_ds_buckets_")
 
@@ -511,7 +486,6 @@ func TestAccDatasourceBuckets(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				// BUG AV-132308: crashes due to vbuckets struct/schema mismatch.
 				Config:      testAccBucketsDatasourceConfig(dsName),
 				ExpectError: regexp.MustCompile(`(?s)Value Conversion Error|vbuckets|Mismatch between struct and object`),
 			},
@@ -540,8 +514,6 @@ data "couchbase-capella_buckets" "%[2]s" {
 		},
 	})
 }
-
-// ── Scopes datasource ────────────────────────────────────────────────────────
 
 func TestAccDatasourceScopes(t *testing.T) {
 	dsName := randomStringWithPrefix("tf_acc_ds_scopes_")
@@ -586,8 +558,6 @@ data "couchbase-capella_scopes" "%[2]s" {
 		},
 	})
 }
-
-// ── Collections datasource ───────────────────────────────────────────────────
 
 func TestAccDatasourceCollections(t *testing.T) {
 	dsName := randomStringWithPrefix("tf_acc_ds_collections_")
@@ -659,8 +629,6 @@ data "couchbase-capella_collections" "%[2]s" {
 	})
 }
 
-// ── Sample buckets datasource ────────────────────────────────────────────────
-
 func TestAccDatasourceSampleBuckets(t *testing.T) {
 	dsName := randomStringWithPrefix("tf_acc_ds_sample_buckets_")
 	dsReference := "data.couchbase-capella_sample_buckets." + dsName
@@ -674,8 +642,6 @@ func TestAccDatasourceSampleBuckets(t *testing.T) {
 					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dsReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(dsReference, "cluster_id", globalClusterId),
-					// data.# may be "0" when no sample buckets are installed; the
-					// important check is that the read succeeds without error.
 					testAccCheckSampleBucketsReadable(dsReference),
 				),
 			},
@@ -704,8 +670,6 @@ data "couchbase-capella_sample_buckets" "%[2]s" {
 		},
 	})
 }
-
-// ── Config builders ──────────────────────────────────────────────────────────
 
 func testAccBucketResourceConfigRequiredOnly(resourceName string) string {
 	return fmt.Sprintf(`
@@ -975,8 +939,6 @@ data "couchbase-capella_sample_buckets" "%[2]s" {
 `, globalProviderBlock, dsName, globalOrgId, globalProjectId, globalClusterId)
 }
 
-// ── Import ID generators ─────────────────────────────────────────────────────
-
 func generateBucketImportIdForResource(resourceReference string) resource.ImportStateIdFunc {
 	return func(state *terraform.State) (string, error) {
 		var rawState map[string]string
@@ -1029,8 +991,6 @@ func generateCollectionImportIdForResource(resourceReference string) resource.Im
 	}
 }
 
-// ── State check helpers ──────────────────────────────────────────────────────
-
 func testAccCheckBucketsNonEmpty(dsReference string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		ds := s.RootModule().Resources[dsReference]
@@ -1073,9 +1033,6 @@ func testAccCheckCollectionsNonEmpty(dsReference string) resource.TestCheckFunc 
 	}
 }
 
-// testAccCheckSampleBucketsReadable verifies the datasource exists in state.
-// data.# may legitimately be "0" when no sample buckets are installed on the
-// cluster, so we only confirm the resource is present rather than non-empty.
 func testAccCheckSampleBucketsReadable(dsReference string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if s.RootModule().Resources[dsReference] == nil {
