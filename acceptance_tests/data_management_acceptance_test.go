@@ -478,16 +478,21 @@ resource "couchbase-capella_flush" "%[2]s" {
 	})
 }
 
-// AV-132308: datasource crashes due to missing vbuckets in schema; restore Check block once fixed.
 func TestAccDatasourceBuckets(t *testing.T) {
 	dsName := randomStringWithPrefix("tf_acc_ds_buckets_")
+	dsReference := "data.couchbase-capella_buckets." + dsName
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccBucketsDatasourceConfig(dsName),
-				ExpectError: regexp.MustCompile(`(?s)Value Conversion Error|vbuckets|Mismatch between struct and object`),
+				Config: testAccBucketsDatasourceConfig(dsName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(dsReference, "project_id", globalProjectId),
+					resource.TestCheckResourceAttr(dsReference, "cluster_id", globalClusterId),
+					testAccCheckBucketsNonEmpty(dsReference),
+				),
 			},
 		},
 	})
