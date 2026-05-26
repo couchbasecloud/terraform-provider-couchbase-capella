@@ -13,8 +13,6 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 )
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 type listEventsResponse struct {
 	Data []struct {
 		Id string `json:"id"`
@@ -52,8 +50,6 @@ func fetchFirstProjectEventId(t *testing.T) string {
 	}
 	return body.Data[0].Id
 }
-
-// ── couchbase-capella_events datasource ──────────────────────────────────────
 
 func TestAccDatasourceEvents(t *testing.T) {
 	dsName := randomStringWithPrefix("tf_acc_events_")
@@ -261,8 +257,6 @@ func TestAccDatasourceEventsInvalidSortDirection(t *testing.T) {
 	})
 }
 
-// ── couchbase-capella_event datasource ───────────────────────────────────────
-
 func TestAccDatasourceEvent(t *testing.T) {
 	eventId := fetchFirstEventId(t)
 	if eventId == "" {
@@ -344,8 +338,6 @@ data "couchbase-capella_event" "%[2]s" {
 		},
 	})
 }
-
-// ── couchbase-capella_project_events datasource ───────────────────────────────
 
 func TestAccDatasourceProjectEvents(t *testing.T) {
 	dsName := randomStringWithPrefix("tf_acc_prj_events_")
@@ -484,8 +476,6 @@ func TestAccDatasourceProjectEventsInvalidSortDirection(t *testing.T) {
 	})
 }
 
-// ── couchbase-capella_project_event datasource ────────────────────────────────
-
 func TestAccDatasourceProjectEvent(t *testing.T) {
 	eventId := fetchFirstProjectEventId(t)
 	if eventId == "" {
@@ -595,8 +585,6 @@ data "couchbase-capella_project_event" "%[2]s" {
 		},
 	})
 }
-
-// ── Config builders ───────────────────────────────────────────────────────────
 
 func testAccEventsListConfig(dsName string) string {
 	return fmt.Sprintf(`
