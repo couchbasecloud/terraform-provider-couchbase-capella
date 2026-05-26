@@ -88,7 +88,7 @@ func TestAccAppEndpointCorsResourceEmptyOrigin(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccCorsResourceConfig(resourceName, "qe-endpoint", `[]`, `["https://login.example.com"]`, `["Authorization", "Content-Type"]`, 3600, false),
+				Config:      testAccCorsResourceEmptyOriginConfig(resourceName),
 				ExpectError: regexp.MustCompile(`(?s)Invalid Attribute Value.*Attribute origin set must contain at least 1 elements, got: 0`),
 			},
 		},
@@ -128,6 +128,28 @@ resource "couchbase-capella_app_endpoint_cors" "%[2]s" {
 		headers,
 		maxAge,
 		disabled,
+	)
+}
+
+func testAccCorsResourceEmptyOriginConfig(resourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_app_endpoint_cors" "%[2]s" {
+	organization_id   = "00000000-0000-0000-0000-000000000000"
+	project_id        = "11111111-1111-1111-1111-111111111111"
+	cluster_id        = "22222222-2222-2222-2222-222222222222"
+	app_service_id    = "33333333-3333-3333-3333-333333333333"
+	app_endpoint_name = "qe-endpoint"
+	origin            = []
+	login_origin      = ["https://login.example.com"]
+	headers           = ["Authorization", "Content-Type"]
+	max_age           = 3600
+	disabled          = false
+}
+`,
+		globalProviderBlock,
+		resourceName,
 	)
 }
 
