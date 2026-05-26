@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
@@ -142,11 +143,23 @@ func (p *PrivateEndpoint) Read(ctx context.Context, req resource.ReadRequest, re
 
 	refreshedState, err := p.getPrivateEndpointState(ctx, organizationId, projectId, clusterId, endpointId)
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			resp.State.RemoveResource(ctx)
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error reading private endpoint status",
-			"Error reading private endpoint status, unexpected error: "+err.Error(),
+			"Error reading private endpoint status, unexpected error: "+errString,
 		)
 
+		return
+	}
+
+	if refreshedState.Status.ValueString() == "rejected" {
+		tflog.Info(ctx, "private endpoint association is rejected; removing from state to force re-association")
+		resp.State.RemoveResource(ctx)
 		return
 	}
 

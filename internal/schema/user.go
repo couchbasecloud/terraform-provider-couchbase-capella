@@ -78,12 +78,15 @@ type Resource struct {
 }
 
 // Users defines the attributes for a list of users in Capella.
+// Setting any of Page/PerPage/SortBy/SortDirection fetches a single page;
+// otherwise the datasource walks all pages.
 type Users struct {
-	// OrganizationId is the organizationId of the capella.
 	OrganizationId types.String `tfsdk:"organization_id"`
-
-	// Data contains the list of resources.
-	Data []User `tfsdk:"data"`
+	Page           types.Int64  `tfsdk:"page"`
+	PerPage        types.Int64  `tfsdk:"per_page"`
+	SortBy         types.String `tfsdk:"sort_by"`
+	SortDirection  types.String `tfsdk:"sort_direction"`
+	Data           []User       `tfsdk:"data"`
 }
 
 // Validate is used to verify that IDs have been properly imported.

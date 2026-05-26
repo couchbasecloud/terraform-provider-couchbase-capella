@@ -231,3 +231,4 @@ app_endpoint_log_streaming_config = {
   log_level = "info"
   log_keys = ["Javascript", "Sync", "SyncMsg"]
 }
+deletion_protection = true

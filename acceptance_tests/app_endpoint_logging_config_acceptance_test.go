@@ -75,6 +75,14 @@ func testAccAppEndpointLoggingConfigResource(t *testing.T) []resource.TestStep {
 			),
 		},
 
+		// ImportState testing runs before the error-expecting steps to ensure
+		// the resource is in a valid state when imported.
+		{
+			ResourceName:      resourceReference,
+			ImportStateIdFunc: generateAppEndpointLoggingConfigImportIdForResource(resourceReference),
+			ImportState:       true,
+		},
+
 		// tests that an error is returned if the log_level is invalid
 		{
 			Config:      testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourceName, resourceName, resourceReference, datasourceName, "test", logKeys),
@@ -87,10 +95,18 @@ func testAccAppEndpointLoggingConfigResource(t *testing.T) []resource.TestStep {
 			Config:      testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourceName, resourceName, resourceReference, datasourceName, "info", invalidLogKeys),
 			ExpectError: regexp.MustCompile(`Attribute log_keys\[Value\("Test"\)\] value must be one of`),
 		},
+
+		// Final step with valid config so the destroy phase has a valid
+		// configuration to clean up. Without this, the previous step's
+		// invalid log_keys would cause destroy-time plan validation to fail.
+		// Assertions verify the apply actually wrote the intended values.
 		{
-			ResourceName:      resourceReference,
-			ImportStateIdFunc: generateAppEndpointLoggingConfigImportIdForResource(resourceReference),
-			ImportState:       true,
+			Config: testAccAppEndpointLoggingConfigResourceConfig(appServiceLogStreamingResourceName, resourceName, resourceReference, datasourceName, "info", logKeys),
+			Check: resource.ComposeAggregateTestCheckFunc(
+				resource.TestCheckResourceAttr(resourceReference, "log_level", "info"),
+				resource.TestCheckResourceAttr(resourceReference, "log_keys.0", "HTTP"),
+				resource.TestCheckResourceAttr(resourceReference, "log_keys.1", "Import"),
+			),
 		},
 	}
 }

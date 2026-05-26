@@ -57,7 +57,7 @@ resource "couchbase-capella_network_peer" "new_network_peer" {
   name            = "VPCPeerTFTestAzure"
   provider_type   = "azure"
   provider_config = {
-    aws_config = {
+    azure_config = {
       cidr            = "10.6.0.0/16"
       resource_group  = "test-rg"
       subscription_id = "ffffffff-aaaa-1414-eeee-00000000000"
@@ -120,12 +120,12 @@ Read-Only:
 Required:
 
 - `cidr` (String)
+- `tenant_id` (String)
 
 Optional:
 
 - `resource_group` (String)
 - `subscription_id` (String)
-- `tenant_id` (String)
 - `vnet_id` (String)
 
 Read-Only:
