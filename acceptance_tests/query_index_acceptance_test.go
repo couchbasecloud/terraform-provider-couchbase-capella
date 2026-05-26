@@ -8,8 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-// ── query_indexes datasource ─────────────────────────────────────────────────
-
 func TestAccDatasourceQueryIndexes(t *testing.T) {
 	idxName := randomStringWithPrefix("tf_acc_qi_ds_idx_")
 	dsName := randomStringWithPrefix("tf_acc_qi_ds_")
@@ -178,11 +176,6 @@ data "couchbase-capella_query_indexes" "%[2]s" {
 	})
 }
 
-// ── query_index_monitor datasource ───────────────────────────────────────────
-
-// TestAccDatasourceQueryIndexMonitorReady creates a non-deferred index and
-// monitors it. Non-deferred indexes are immediately in "Ready" state so the
-// monitor should complete without warnings.
 func TestAccDatasourceQueryIndexMonitorReady(t *testing.T) {
 	idxName := randomStringWithPrefix("tf_acc_qm_idx_")
 	monitorName := randomStringWithPrefix("tf_acc_qm_ds_")
@@ -207,8 +200,6 @@ func TestAccDatasourceQueryIndexMonitorReady(t *testing.T) {
 	})
 }
 
-// TestAccDatasourceQueryIndexMonitorMultipleIndexes monitors multiple
-// non-deferred indexes that are all immediately ready.
 func TestAccDatasourceQueryIndexMonitorMultipleIndexes(t *testing.T) {
 	idx1Name := randomStringWithPrefix("tf_acc_qm_multi_idx1_")
 	idx2Name := randomStringWithPrefix("tf_acc_qm_multi_idx2_")
@@ -229,9 +220,6 @@ func TestAccDatasourceQueryIndexMonitorMultipleIndexes(t *testing.T) {
 	})
 }
 
-// TestAccDatasourceQueryIndexMonitorDeferred creates a deferred index and
-// monitors it. Deferred indexes are not built automatically so the monitor
-// should produce a warning (not error) that indexes are not ready.
 func TestAccDatasourceQueryIndexMonitorDeferred(t *testing.T) {
 	idxName := randomStringWithPrefix("tf_acc_qm_defer_idx_")
 	monitorName := randomStringWithPrefix("tf_acc_qm_defer_ds_")
@@ -241,16 +229,11 @@ func TestAccDatasourceQueryIndexMonitorDeferred(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueryIndexMonitorDeferredConfig(idxName, monitorName),
-				// deferred index never reaches Ready without explicit BUILD INDEX;
-				// the provider should emit a warning (not error) and not fail apply.
 			},
 		},
 	})
 }
 
-// TestAccDatasourceQueryIndexMonitorNonexistentIndex monitors an index name
-// that does not exist — the monitor should produce a warning since the index
-// is never found in "Ready" state.
 func TestAccDatasourceQueryIndexMonitorNonexistentIndex(t *testing.T) {
 	monitorName := randomStringWithPrefix("tf_acc_qm_noexist_ds_")
 
@@ -272,7 +255,6 @@ data "couchbase-capella_query_index_monitor" "%[2]s" {
 }
 `, globalProviderBlock, monitorName, globalOrgId, globalProjectId, globalClusterId,
 					globalBucketName, globalScopeName, globalCollectionName),
-				// Nonexistent index is never Ready: provider emits a warning, not an error.
 			},
 		},
 	})
@@ -299,7 +281,6 @@ data "couchbase-capella_query_index_monitor" "%[2]s" {
 }
 `, globalProviderBlock, monitorName, globalOrgId, globalProjectId,
 					globalBucketName, globalScopeName, globalCollectionName),
-				// Invalid cluster: the watch will fail or warn on every poll attempt.
 			},
 		},
 	})
@@ -331,8 +312,6 @@ data "couchbase-capella_query_index_monitor" "%[2]s" {
 		},
 	})
 }
-
-// ── Config builders ──────────────────────────────────────────────────────────
 
 func testAccQueryIndexesDatasourceConfig(idxName, dsName string) string {
 	return fmt.Sprintf(`
