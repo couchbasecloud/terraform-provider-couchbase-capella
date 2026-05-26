@@ -3,6 +3,7 @@ package acceptance_tests
 import (
 	"fmt"
 	"regexp"
+	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -64,6 +65,67 @@ func appServiceLogStreamingActivationStatusSteps() []resource.TestStep {
 	}
 }
 
+func TestAccAppServiceLogStreamingActivationStatusInvalidUUIDs(t *testing.T) {
+	tests := []struct {
+		name           string
+		organizationID string
+		projectID      string
+		clusterID      string
+		appServiceID   string
+	}{
+		{
+			name:           "organization_id",
+			organizationID: "not-a-uuid",
+			projectID:      "11111111-1111-1111-1111-111111111111",
+			clusterID:      "22222222-2222-2222-2222-222222222222",
+			appServiceID:   "33333333-3333-3333-3333-333333333333",
+		},
+		{
+			name:           "project_id",
+			organizationID: "00000000-0000-0000-0000-000000000000",
+			projectID:      "not-a-uuid",
+			clusterID:      "22222222-2222-2222-2222-222222222222",
+			appServiceID:   "33333333-3333-3333-3333-333333333333",
+		},
+		{
+			name:           "cluster_id",
+			organizationID: "00000000-0000-0000-0000-000000000000",
+			projectID:      "11111111-1111-1111-1111-111111111111",
+			clusterID:      "not-a-uuid",
+			appServiceID:   "33333333-3333-3333-3333-333333333333",
+		},
+		{
+			name:           "app_service_id",
+			organizationID: "00000000-0000-0000-0000-000000000000",
+			projectID:      "11111111-1111-1111-1111-111111111111",
+			clusterID:      "22222222-2222-2222-2222-222222222222",
+			appServiceID:   "not-a-uuid",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			resourceName := randomStringWithPrefix("tf_acc_log_streaming_activation_")
+			resource.ParallelTest(t, resource.TestCase{
+				ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+				Steps: []resource.TestStep{
+					{
+						Config: testAccAppServiceLogStreamingActivationStatusInvalidUUIDConfig(
+							resourceName,
+							test.organizationID,
+							test.projectID,
+							test.clusterID,
+							test.appServiceID,
+						),
+						ExpectError: regexp.MustCompile(`(?s)Invalid Attribute Value Match.*` + test.name + `.*must be a valid UUID`),
+					},
+				},
+			})
+		})
+	}
+}
+
 // testAccAppServiceLogStreamingActivationStatusConfig returns the HCL config for testing the
 // app_service_log_streaming_activation_status resource. It includes a log streaming resource
 // as a dependency since log streaming must be enabled for activation status management to work.
@@ -99,6 +161,27 @@ func testAccAppServiceLogStreamingActivationStatusConfig(logStreamingResourceNam
 		globalAppServiceId,
 		state,
 		logStreamingResourceName,
+	)
+}
+
+func testAccAppServiceLogStreamingActivationStatusInvalidUUIDConfig(resourceName, organizationID, projectID, clusterID, appServiceID string) string {
+	return fmt.Sprintf(`
+	%[1]s
+
+	resource "couchbase-capella_app_service_log_streaming_activation_status" "%[2]s" {
+	  organization_id = "%[3]s"
+	  project_id      = "%[4]s"
+	  cluster_id      = "%[5]s"
+	  app_service_id  = "%[6]s"
+	  state           = "enabled"
+	}
+	`,
+		globalProviderBlock,
+		resourceName,
+		organizationID,
+		projectID,
+		clusterID,
+		appServiceID,
 	)
 }
 
