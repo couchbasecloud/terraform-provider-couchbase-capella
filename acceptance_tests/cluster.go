@@ -114,6 +114,28 @@ func destroyCluster(ctx context.Context, client *api.Client) error {
 	return nil
 }
 
+func setupDMCluster(ctx context.Context, client *api.Client) error {
+	if dmClusterId != "" {
+		log.Printf("Using existing DM cluster: %s", dmClusterId)
+		return nil
+	}
+	if err := createDMCluster(ctx, client); err != nil {
+		var apiErr *api.Error
+		if !errors.As(err, &apiErr) || apiErr.HttpStatusCode < 500 {
+			return err
+		}
+		id, findErr := findClusterByName(ctx, client, dmClusterName)
+		if findErr != nil || id == "" {
+			return err
+		}
+		log.Printf("createDMCluster returned 5xx but cluster was found; adopting %s", id)
+		dmClusterId = id
+	} else {
+		dmClusterCreated = true
+	}
+	return dmClusterWait(ctx, client, false)
+}
+
 func createDMCluster(ctx context.Context, client *api.Client) error {
 	node := clusterapi.Node{}
 	diskAws := clusterapi.DiskAWS{

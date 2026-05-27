@@ -104,26 +104,8 @@ func setup(ctx context.Context, client *api.Client) error {
 		return err
 	}
 
-	if dmClusterId == "" {
-		if err := createDMCluster(ctx, client); err != nil {
-			var apiErr *api.Error
-			if !errors.As(err, &apiErr) || apiErr.HttpStatusCode < 500 {
-				return err
-			}
-			id, findErr := findClusterByName(ctx, client, dmClusterName)
-			if findErr != nil || id == "" {
-				return err
-			}
-			log.Printf("createDMCluster returned 5xx but cluster was found; adopting %s", id)
-			dmClusterId = id
-		} else {
-			dmClusterCreated = true
-		}
-		if err := dmClusterWait(ctx, client, false); err != nil {
-			return err
-		}
-	} else {
-		log.Printf("Using existing DM cluster: %s", dmClusterId)
+	if err := setupDMCluster(ctx, client); err != nil {
+		return err
 	}
 
 	if err := resolveDMBucket(ctx, client); err != nil {
