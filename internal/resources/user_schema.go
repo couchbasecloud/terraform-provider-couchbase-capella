@@ -5,6 +5,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
@@ -27,11 +28,7 @@ func UserSchema() schema.Schema {
 		ElementType: types.StringType,
 		Validators: []validator.List{
 			listvalidator.SizeAtLeast(1),
-			listvalidator.ValueStringsAre(stringvalidator.OneOf(
-				"organizationMember",
-				"organizationOwner",
-				"projectCreator",
-			)),
+			listvalidator.ValueStringsAre(stringvalidator.OneOf(validOrganizationRoles...)),
 		},
 	})
 	capellaschema.AddAttr(attrs, "last_login", userBuilder, stringAttribute([]string{computed}))
@@ -42,7 +39,12 @@ func UserSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "audit", userBuilder, computedAuditAttribute())
 
 	resourceAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(resourceAttrs, "type", userBuilder, stringDefaultAttribute("project", optional, computed), "Resource")
+	capellaschema.AddAttr(resourceAttrs, "type", userBuilder, &schema.StringAttribute{
+		Optional:   true,
+		Computed:   true,
+		Default:    stringdefault.StaticString(resourceTypeProject),
+		Validators: []validator.String{stringvalidator.OneOf(resourceTypeProject)},
+	}, "Resource")
 	capellaschema.AddAttr(resourceAttrs, "id", userBuilder, stringAttribute(
 		[]string{required},
 		validator.String(stringvalidator.LengthAtLeast(1)),
@@ -53,13 +55,7 @@ func UserSchema() schema.Schema {
 		ElementType: types.StringType,
 		Validators: []validator.Set{
 			setvalidator.SizeAtLeast(1),
-			setvalidator.ValueStringsAre(stringvalidator.OneOf(
-				"projectOwner",
-				"projectManager",
-				"projectViewer",
-				"projectDataReaderWriter",
-				"projectDataReader",
-			)),
+			setvalidator.ValueStringsAre(stringvalidator.OneOf(validProjectRoles...)),
 		},
 	}, "Resource")
 

@@ -76,6 +76,7 @@ func (a *ApiKey) ValidateConfig(ctx context.Context, req resource.ValidateConfig
 
 // ModifyPlan rejects create-time rotation while still allowing rotation updates with existing state.
 func (a *ApiKey) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// Only validate create plans; updates have prior state and may use rotate to request a new key.
 	if req.Plan.Raw.IsNull() || !req.State.Raw.IsNull() {
 		return
 	}
@@ -554,7 +555,7 @@ func (a *ApiKey) convertAllowedCidrs(ctx context.Context, allowedCidrs types.Set
 func (a *ApiKey) retainResourcesIfOrgOwner(apiKeyReq, apiKeyRes *providerschema.ApiKey) *providerschema.ApiKey {
 	isOrgOwner := false
 	for _, role := range apiKeyRes.OrganizationRoles {
-		if role.ValueString() == "organizationOwner" {
+		if role.ValueString() == organizationRoleOwner {
 			isOrgOwner = true
 		}
 	}

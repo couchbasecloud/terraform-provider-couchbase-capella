@@ -58,11 +58,7 @@ func ApiKeySchema() schema.Schema {
 		},
 		Validators: []validator.Set{
 			setvalidator.SizeAtLeast(1),
-			setvalidator.ValueStringsAre(stringvalidator.OneOf(
-				"organizationMember",
-				"organizationOwner",
-				"projectCreator",
-			)),
+			setvalidator.ValueStringsAre(stringvalidator.OneOf(validOrganizationRoles...)),
 		},
 	})
 
@@ -77,20 +73,14 @@ func ApiKeySchema() schema.Schema {
 		ElementType: types.StringType,
 		Validators: []validator.Set{
 			setvalidator.SizeAtLeast(1),
-			setvalidator.ValueStringsAre(stringvalidator.OneOf(
-				"projectOwner",
-				"projectManager",
-				"projectViewer",
-				"projectDataReaderWriter",
-				"projectDataReader",
-			)),
+			setvalidator.ValueStringsAre(stringvalidator.OneOf(validProjectRoles...)),
 		},
 	}, "Resource")
 	capellaschema.AddAttr(resourceAttrs, "type", apiKeyBuilder, &schema.StringAttribute{
 		Optional:   true,
 		Computed:   true,
-		Default:    stringdefault.StaticString("project"),
-		Validators: []validator.String{stringvalidator.OneOf("project")},
+		Default:    stringdefault.StaticString(resourceTypeProject),
+		Validators: []validator.String{stringvalidator.OneOf(resourceTypeProject)},
 	}, "Resource")
 
 	capellaschema.AddAttr(attrs, "resources", apiKeyBuilder, &schema.SetNestedAttribute{
