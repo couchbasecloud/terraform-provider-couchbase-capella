@@ -2,6 +2,7 @@ package acceptance_tests
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -11,7 +12,7 @@ import (
 func TestAccPrivateEndpointServiceEnableDisable(t *testing.T) {
 	resourceName := "disable_private_endpoint_service"
 	resourceReference := "couchbase-capella_private_endpoint_service." + resourceName
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			// First enable the service
@@ -38,6 +39,33 @@ func TestAccPrivateEndpointServiceEnableDisable(t *testing.T) {
 	})
 }
 
+func TestAccDatasourcePrivateEndpointsServiceEnabledNoEndpointAdded(t *testing.T) {
+	serviceResourceName := randomStringWithPrefix("tf_acc_private_endpoint_service_")
+	dataSourceName := randomStringWithPrefix("tf_acc_private_endpoints_ds_")
+	serviceResourceReference := "couchbase-capella_private_endpoint_service." + serviceResourceName
+	dataSourceReference := "data.couchbase-capella_private_endpoints." + dataSourceName
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPrivateEndpointsDataSourceNoEndpointConfig(serviceResourceName, dataSourceName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(serviceResourceReference, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(serviceResourceReference, "project_id", globalProjectId),
+					resource.TestCheckResourceAttr(serviceResourceReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(serviceResourceReference, "enabled", "true"),
+					resource.TestCheckResourceAttr(dataSourceReference, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(dataSourceReference, "project_id", globalProjectId),
+					resource.TestCheckResourceAttr(dataSourceReference, "cluster_id", globalClusterId),
+					resource.TestMatchResourceAttr(dataSourceReference, "private_endpoint_dns", regexp.MustCompile(`^private-endpoint\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$`)),
+					resource.TestCheckResourceAttr(dataSourceReference, "data.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 // testAccPrivateEndpointServiceEnableConfig returns terraform config for enabling/disabling private endpoint service
 func testAccPrivateEndpointServiceEnableConfig(resourceName string, enabled bool) string {
 	return fmt.Sprintf(
@@ -51,4 +79,25 @@ func testAccPrivateEndpointServiceEnableConfig(resourceName string, enabled bool
 			enabled         = %[6]t
 		}
 		`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, enabled)
+}
+
+func testAccPrivateEndpointsDataSourceNoEndpointConfig(serviceResourceName, dataSourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_private_endpoint_service" "%[2]s" {
+  organization_id = "%[4]s"
+  project_id      = "%[5]s"
+  cluster_id      = "%[6]s"
+  enabled         = true
+}
+
+data "couchbase-capella_private_endpoints" "%[3]s" {
+  organization_id = "%[4]s"
+  project_id      = "%[5]s"
+  cluster_id      = "%[6]s"
+
+  depends_on = [couchbase-capella_private_endpoint_service.%[2]s]
+}
+`, globalProviderBlock, serviceResourceName, dataSourceName, globalOrgId, globalProjectId, globalClusterId)
 }
