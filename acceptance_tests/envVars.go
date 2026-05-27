@@ -26,6 +26,7 @@ func getEnvVars() error {
 	if bucketName := os.Getenv("TF_VAR_bucket_name"); bucketName != "" {
 		globalBucketName = bucketName
 	}
+	dmClusterId = os.Getenv("TF_VAR_dm_cluster_id")
 
 	return nil
 }

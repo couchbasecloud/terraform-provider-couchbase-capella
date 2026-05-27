@@ -21,7 +21,7 @@ func TestAccBucketResourceRequiredOnly(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(resourceReference, "cluster_id", dmClusterId),
 					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
 					resource.TestCheckResourceAttrSet(resourceReference, "id"),
 					resource.TestCheckResourceAttrSet(resourceReference, "type"),
@@ -59,7 +59,7 @@ func TestAccBucketResourceAllOptionalFields(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(resourceReference, "cluster_id", dmClusterId),
 					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
 					resource.TestCheckResourceAttr(resourceReference, "type", "couchbase"),
 					resource.TestCheckResourceAttr(resourceReference, "storage_backend", "couchstore"),
@@ -103,7 +103,7 @@ func TestAccBucketResourceUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(resourceReference, "cluster_id", dmClusterId),
 				),
 			},
 		},
@@ -168,7 +168,7 @@ resource "couchbase-capella_bucket" "%[2]s" {
   cluster_id      = "%[4]s"
   name            = "%[2]s"
 }
-`, globalProviderBlock, resourceName, globalOrgId, globalClusterId),
+`, globalProviderBlock, resourceName, globalOrgId, dmClusterId),
 				ExpectError: regexp.MustCompile(`(?s)Error creating bucket|project.*not found|access to the requested resource is denied|Not Found`),
 			},
 		},
@@ -192,7 +192,7 @@ resource "couchbase-capella_bucket" "%[2]s" {
   name             = "%[2]s"
   durability_level = "invalidLevel"
 }
-`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId),
+`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, dmClusterId),
 				ExpectError: regexp.MustCompile(`(?s)Error creating bucket|durability|invalid|unrecognized`),
 			},
 		},
@@ -216,7 +216,7 @@ resource "couchbase-capella_bucket" "%[2]s" {
   name            = "%[2]s"
   replicas        = 4
 }
-`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId),
+`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, dmClusterId),
 				ExpectError: regexp.MustCompile(`(?s)Error creating bucket|replica|invalid|exceeds`),
 			},
 		},
@@ -237,7 +237,7 @@ func TestAccScopeResource(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(scopeReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(scopeReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(scopeReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(scopeReference, "cluster_id", dmClusterId),
 					resource.TestCheckResourceAttrPair(scopeReference, "bucket_id", bucketReference, "id"),
 					resource.TestCheckResourceAttr(scopeReference, "scope_name", scopeName),
 					resource.TestCheckResourceAttrSet(scopeReference, "collections.#"),
@@ -270,7 +270,7 @@ resource "couchbase-capella_scope" "%[2]s" {
   bucket_id       = "nonexistent-bucket-id"
   scope_name      = "%[2]s"
 }
-`, globalProviderBlock, scopeName, globalOrgId, globalProjectId, globalClusterId),
+`, globalProviderBlock, scopeName, globalOrgId, globalProjectId, dmClusterId),
 				ExpectError: regexp.MustCompile(`(?s)Error.*scope|bucket.*not found|access to the requested resource is denied|Not Found`),
 			},
 		},
@@ -294,7 +294,7 @@ resource "couchbase-capella_scope" "%[2]s" {
   bucket_id       = "%[5]s"
   scope_name      = "%[2]s"
 }
-`, globalProviderBlock, scopeName, globalOrgId, globalProjectId, globalBucketId),
+`, globalProviderBlock, scopeName, globalOrgId, globalProjectId, dmBucketId),
 				ExpectError: regexp.MustCompile(`(?s)Error.*scope|cluster.*not found|access to the requested resource is denied|Not Found`),
 			},
 		},
@@ -315,7 +315,7 @@ func TestAccCollectionResourceNoTTL(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(collReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(collReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(collReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(collReference, "cluster_id", dmClusterId),
 					resource.TestCheckResourceAttr(collReference, "scope_name", scopeName),
 					resource.TestCheckResourceAttr(collReference, "collection_name", collName),
 					resource.TestCheckResourceAttrSet(collReference, "bucket_id"),
@@ -346,7 +346,7 @@ func TestAccCollectionResourceWithTTL(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(collReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(collReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(collReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(collReference, "cluster_id", dmClusterId),
 					resource.TestCheckResourceAttr(collReference, "scope_name", scopeName),
 					resource.TestCheckResourceAttr(collReference, "collection_name", collName),
 					resource.TestCheckResourceAttr(collReference, "max_ttl", "3600"),
@@ -358,7 +358,7 @@ func TestAccCollectionResourceWithTTL(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(collReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(collReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(collReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(collReference, "cluster_id", dmClusterId),
 					resource.TestCheckResourceAttr(collReference, "scope_name", scopeName),
 					resource.TestCheckResourceAttr(collReference, "collection_name", collName),
 					resource.TestCheckResourceAttr(collReference, "max_ttl", "7200"),
@@ -402,7 +402,7 @@ resource "couchbase-capella_collection" "%[2]s" {
   scope_name      = "_default"
   collection_name = "%[2]s"
 }
-`, globalProviderBlock, collName, globalOrgId, globalProjectId, globalClusterId),
+`, globalProviderBlock, collName, globalOrgId, globalProjectId, dmClusterId),
 				ExpectError: regexp.MustCompile(`(?s)Error.*collection|bucket.*not found|access to the requested resource is denied|Not Found`),
 			},
 		},
@@ -444,7 +444,7 @@ func TestAccFlushBucketResource(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(flushReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(flushReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(flushReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(flushReference, "cluster_id", dmClusterId),
 					resource.TestCheckResourceAttrPair(flushReference, "bucket_id", bucketReference, "id"),
 				),
 			},
@@ -483,7 +483,7 @@ resource "couchbase-capella_flush" "%[2]s" {
   cluster_id      = "%[5]s"
   bucket_id       = "nonexistent-bucket-id"
 }
-`, globalProviderBlock, flushName, globalOrgId, globalProjectId, globalClusterId),
+`, globalProviderBlock, flushName, globalOrgId, globalProjectId, dmClusterId),
 				ExpectError: regexp.MustCompile(`(?s)Error flushing the bucket|bucket.*not found|Not Found`),
 			},
 		},
@@ -502,7 +502,7 @@ func TestAccDatasourceBuckets(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dsReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(dsReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(dsReference, "cluster_id", dmClusterId),
 					testAccCheckBucketsNonEmpty(dsReference),
 					resource.TestCheckResourceAttrSet(dsReference, "data.0.id"),
 					resource.TestCheckResourceAttrSet(dsReference, "data.0.name"),
@@ -547,8 +547,8 @@ func TestAccDatasourceScopes(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dsReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(dsReference, "cluster_id", globalClusterId),
-					resource.TestCheckResourceAttr(dsReference, "bucket_id", globalBucketId),
+					resource.TestCheckResourceAttr(dsReference, "cluster_id", dmClusterId),
+					resource.TestCheckResourceAttr(dsReference, "bucket_id", dmBucketId),
 					testAccCheckScopesNonEmpty(dsReference),
 					resource.TestCheckResourceAttrSet(dsReference, "scopes.0.scope_name"),
 				),
@@ -573,7 +573,7 @@ data "couchbase-capella_scopes" "%[2]s" {
   cluster_id      = "%[5]s"
   bucket_id       = "nonexistent-bucket-id"
 }
-`, globalProviderBlock, dsName, globalOrgId, globalProjectId, globalClusterId),
+`, globalProviderBlock, dsName, globalOrgId, globalProjectId, dmClusterId),
 				ExpectError: regexp.MustCompile(`(?s)Error Reading Capella Scopes|bucket.*not found|access to the requested resource is denied|Not Found`),
 			},
 		},
@@ -592,8 +592,8 @@ func TestAccDatasourceCollections(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dsReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(dsReference, "cluster_id", globalClusterId),
-					resource.TestCheckResourceAttr(dsReference, "bucket_id", globalBucketId),
+					resource.TestCheckResourceAttr(dsReference, "cluster_id", dmClusterId),
+					resource.TestCheckResourceAttr(dsReference, "bucket_id", dmBucketId),
 					resource.TestCheckResourceAttr(dsReference, "scope_name", globalScopeName),
 					testAccCheckCollectionsNonEmpty(dsReference),
 					resource.TestCheckResourceAttrSet(dsReference, "data.0.collection_name"),
@@ -621,7 +621,7 @@ data "couchbase-capella_collections" "%[2]s" {
   bucket_id       = "%[6]s"
   scope_name      = "nonexistent-scope"
 }
-`, globalProviderBlock, dsName, globalOrgId, globalProjectId, globalClusterId, globalBucketId),
+`, globalProviderBlock, dsName, globalOrgId, globalProjectId, dmClusterId, dmBucketId),
 				ExpectError: regexp.MustCompile(`(?s)Error Reading Capella Collections|scope.*not found|access to the requested resource is denied|Not Found`),
 			},
 		},
@@ -645,7 +645,7 @@ data "couchbase-capella_collections" "%[2]s" {
   bucket_id       = "nonexistent-bucket-id"
   scope_name      = "_default"
 }
-`, globalProviderBlock, dsName, globalOrgId, globalProjectId, globalClusterId),
+`, globalProviderBlock, dsName, globalOrgId, globalProjectId, dmClusterId),
 				ExpectError: regexp.MustCompile(`(?s)Error Reading Capella Collections|bucket.*not found|access to the requested resource is denied|Not Found`),
 			},
 		},
@@ -664,7 +664,7 @@ func TestAccDatasourceSampleBuckets(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dsReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(dsReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(dsReference, "cluster_id", dmClusterId),
 					testAccCheckSampleBucketsReadable(dsReference),
 				),
 			},
@@ -704,7 +704,7 @@ resource "couchbase-capella_bucket" "%[2]s" {
   cluster_id      = "%[5]s"
   name            = "%[2]s"
 }
-`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId)
+`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, dmClusterId)
 }
 
 func testAccBucketResourceConfigAllOptional(resourceName string) string {
@@ -726,7 +726,7 @@ resource "couchbase-capella_bucket" "%[2]s" {
   time_to_live_in_seconds    = 0
   eviction_policy            = "fullEviction"
 }
-`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId)
+`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, dmClusterId)
 }
 
 func testAccBucketResourceConfigUpdatable(resourceName string, memMB int, durability string, replicas int, ttl int) string {
@@ -743,7 +743,7 @@ resource "couchbase-capella_bucket" "%[2]s" {
   replicas                = %[8]d
   time_to_live_in_seconds = %[9]d
 }
-`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, memMB, durability, replicas, ttl)
+`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, dmClusterId, memMB, durability, replicas, ttl)
 }
 
 func testAccBucketResourceConfigEphemeral(resourceName string) string {
@@ -758,7 +758,7 @@ resource "couchbase-capella_bucket" "%[2]s" {
   type            = "ephemeral"
   eviction_policy = "nruEviction"
 }
-`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId)
+`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, dmClusterId)
 }
 
 func testAccScopeResourceConfig(bucketName, scopeName string) string {
@@ -779,7 +779,7 @@ resource "couchbase-capella_scope" "%[6]s" {
   bucket_id       = couchbase-capella_bucket.%[2]s.id
   scope_name      = "%[6]s"
 }
-`, globalProviderBlock, bucketName, globalOrgId, globalProjectId, globalClusterId, scopeName)
+`, globalProviderBlock, bucketName, globalOrgId, globalProjectId, dmClusterId, scopeName)
 }
 
 func testAccCollectionResourceConfigNoTTL(bucketName, scopeName, collName string) string {
@@ -811,7 +811,7 @@ resource "couchbase-capella_collection" "%[7]s" {
 
   depends_on = [couchbase-capella_scope.%[6]s]
 }
-`, globalProviderBlock, bucketName, globalOrgId, globalProjectId, globalClusterId, scopeName, collName)
+`, globalProviderBlock, bucketName, globalOrgId, globalProjectId, dmClusterId, scopeName, collName)
 }
 
 func testAccCollectionResourceConfigWithTTL(bucketName, scopeName, collName string, ttl int) string {
@@ -844,7 +844,7 @@ resource "couchbase-capella_collection" "%[7]s" {
 
   depends_on = [couchbase-capella_scope.%[6]s]
 }
-`, globalProviderBlock, bucketName, globalOrgId, globalProjectId, globalClusterId, scopeName, collName, ttl)
+`, globalProviderBlock, bucketName, globalOrgId, globalProjectId, dmClusterId, scopeName, collName, ttl)
 }
 
 func testAccCollectionResourceConfigInvalidScope(bucketName, collName string) string {
@@ -866,7 +866,7 @@ resource "couchbase-capella_collection" "%[6]s" {
   scope_name      = "nonexistent-scope"
   collection_name = "%[6]s"
 }
-`, globalProviderBlock, bucketName, globalOrgId, globalProjectId, globalClusterId, collName)
+`, globalProviderBlock, bucketName, globalOrgId, globalProjectId, dmClusterId, collName)
 }
 
 func testAccFlushBucketResourceConfig(bucketName, flushName string) string {
@@ -887,7 +887,7 @@ resource "couchbase-capella_flush" "%[6]s" {
   cluster_id      = "%[5]s"
   bucket_id       = couchbase-capella_bucket.%[2]s.id
 }
-`, globalProviderBlock, bucketName, globalOrgId, globalProjectId, globalClusterId, flushName)
+`, globalProviderBlock, bucketName, globalOrgId, globalProjectId, dmClusterId, flushName)
 }
 
 func testAccFlushBucketResourceConfigFlushDisabled(bucketName, flushName string) string {
@@ -908,7 +908,7 @@ resource "couchbase-capella_flush" "%[6]s" {
   cluster_id      = "%[5]s"
   bucket_id       = couchbase-capella_bucket.%[2]s.id
 }
-`, globalProviderBlock, bucketName, globalOrgId, globalProjectId, globalClusterId, flushName)
+`, globalProviderBlock, bucketName, globalOrgId, globalProjectId, dmClusterId, flushName)
 }
 
 func testAccBucketsDatasourceConfig(dsName string) string {
@@ -920,7 +920,7 @@ data "couchbase-capella_buckets" "%[2]s" {
   project_id      = "%[4]s"
   cluster_id      = "%[5]s"
 }
-`, globalProviderBlock, dsName, globalOrgId, globalProjectId, globalClusterId)
+`, globalProviderBlock, dsName, globalOrgId, globalProjectId, dmClusterId)
 }
 
 func testAccScopesDatasourceConfig(dsName string) string {
@@ -933,7 +933,7 @@ data "couchbase-capella_scopes" "%[2]s" {
   cluster_id      = "%[5]s"
   bucket_id       = "%[6]s"
 }
-`, globalProviderBlock, dsName, globalOrgId, globalProjectId, globalClusterId, globalBucketId)
+`, globalProviderBlock, dsName, globalOrgId, globalProjectId, dmClusterId, dmBucketId)
 }
 
 func testAccCollectionsDatasourceConfig(dsName string) string {
@@ -947,7 +947,7 @@ data "couchbase-capella_collections" "%[2]s" {
   bucket_id       = "%[6]s"
   scope_name      = "%[7]s"
 }
-`, globalProviderBlock, dsName, globalOrgId, globalProjectId, globalClusterId, globalBucketId, globalScopeName)
+`, globalProviderBlock, dsName, globalOrgId, globalProjectId, dmClusterId, dmBucketId, globalScopeName)
 }
 
 func testAccSampleBucketsDatasourceConfig(dsName string) string {
@@ -959,7 +959,7 @@ data "couchbase-capella_sample_buckets" "%[2]s" {
   project_id      = "%[4]s"
   cluster_id      = "%[5]s"
 }
-`, globalProviderBlock, dsName, globalOrgId, globalProjectId, globalClusterId)
+`, globalProviderBlock, dsName, globalOrgId, globalProjectId, dmClusterId)
 }
 
 func generateBucketImportIdForResource(resourceReference string) resource.ImportStateIdFunc {

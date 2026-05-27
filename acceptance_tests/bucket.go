@@ -134,6 +134,114 @@ func destroyBucket(ctx context.Context, client *api.Client) error {
 	return nil
 }
 
+func createDMBucket(ctx context.Context, client *api.Client) error {
+	bucketRequest := bucketapi.CreateBucketRequest{
+		Name: dmBucketName,
+	}
+
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets", globalHost, globalOrgId, globalProjectId, dmClusterId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
+	response, err := client.ExecuteWithRetry(
+		ctx,
+		cfg,
+		bucketRequest,
+		globalToken,
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+
+	bucketResponse := bucketapi.GetBucketResponse{}
+	if err = json.Unmarshal(response.Body, &bucketResponse); err != nil {
+		return err
+	}
+
+	dmBucketId = bucketResponse.Id
+	return nil
+}
+
+func destroyDMBucket(ctx context.Context, client *api.Client) error {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", globalHost, globalOrgId, globalProjectId, dmClusterId, dmBucketId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusNoContent}
+	_, err := client.ExecuteWithRetry(ctx, cfg, nil, globalToken, nil)
+	if err != nil {
+		var apiErr *api.Error
+		if errors.As(err, &apiErr) && apiErr.HttpStatusCode == http.StatusNotFound {
+			return nil
+		}
+		return err
+	}
+	log.Printf("DM bucket destroyed: %s", dmBucketId)
+	return nil
+}
+
+func resolveDMBucket(ctx context.Context, client *api.Client) error {
+	listUrl := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets", globalHost, globalOrgId, globalProjectId, dmClusterId)
+	listCfg := api.EndpointCfg{Url: listUrl, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	buckets, err := api.GetPaginated[[]bucketapi.GetBucketResponse](ctx, client, globalToken, listCfg, api.SortById)
+	if err != nil {
+		return err
+	}
+	for _, bucket := range buckets {
+		if bucket.Name == dmBucketName {
+			dmBucketId = bucket.Id
+			log.Printf("Discovered existing DM bucket: %s (%s)", dmBucketName, dmBucketId)
+			return nil
+		}
+	}
+	if len(buckets) > 0 {
+		dmBucketId = buckets[0].Id
+		dmBucketName = buckets[0].Name
+		log.Printf("Discovered existing DM bucket: %s (%s)", dmBucketName, dmBucketId)
+		return nil
+	}
+
+	if err := createDMBucket(ctx, client); err != nil {
+		return err
+	}
+	dmBucketCreated = true
+	if err := dmBucketWait(ctx, client); err != nil {
+		return err
+	}
+	log.Printf("Created DM bucket: %s (%s)", dmBucketName, dmBucketId)
+	return nil
+}
+
+func dmBucketWait(ctx context.Context, client *api.Client) error {
+	const maxWaitTime = 5 * time.Minute
+
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithTimeout(ctx, maxWaitTime)
+	defer cancel()
+
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ErrTimeoutWaitingForBucket
+		case <-ticker.C:
+			url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s", globalHost, globalOrgId, globalProjectId, dmClusterId, dmBucketId)
+			cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+			_, err := client.ExecuteWithRetry(ctx, cfg, nil, globalToken, nil)
+			if err == nil {
+				log.Print("DM bucket created")
+				return nil
+			}
+
+			var apiError *api.Error
+			if !errors.As(err, &apiError) {
+				return err
+			}
+			if apiError.HttpStatusCode != http.StatusNotFound {
+				return err
+			}
+		}
+	}
+}
+
 func resolveBucketNameById(ctx context.Context, client *api.Client, bucketID string) (string, error) {
 	listUrl := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets", globalHost, globalOrgId, globalProjectId, globalClusterId)
 	listCfg := api.EndpointCfg{Url: listUrl, Method: http.MethodGet, SuccessStatus: http.StatusOK}
