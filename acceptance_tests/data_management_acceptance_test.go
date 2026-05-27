@@ -370,14 +370,13 @@ func TestAccCollectionResourceWithTTL(t *testing.T) {
 }
 
 func TestAccCollectionResourceInvalidScope(t *testing.T) {
-	bucketName := randomStringWithPrefix("tf_acc_coll_bad_scope_bkt_")
 	collName := randomStringWithPrefix("tf_acc_coll_bad_scope_")
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccCollectionResourceConfigInvalidScope(bucketName, collName),
+				Config:      testAccCollectionResourceConfigInvalidScope(collName),
 				ExpectError: regexp.MustCompile(`(?s)Error.*collection|scope.*not found|access to the requested resource is denied|Not Found`),
 			},
 		},
@@ -847,26 +846,19 @@ resource "couchbase-capella_collection" "%[7]s" {
 `, globalProviderBlock, bucketName, globalOrgId, globalProjectId, dmClusterId, scopeName, collName, ttl)
 }
 
-func testAccCollectionResourceConfigInvalidScope(bucketName, collName string) string {
+func testAccCollectionResourceConfigInvalidScope(collName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "couchbase-capella_bucket" "%[2]s" {
+resource "couchbase-capella_collection" "%[2]s" {
   organization_id = "%[3]s"
   project_id      = "%[4]s"
   cluster_id      = "%[5]s"
-  name            = "%[2]s"
-}
-
-resource "couchbase-capella_collection" "%[6]s" {
-  organization_id = "%[3]s"
-  project_id      = "%[4]s"
-  cluster_id      = "%[5]s"
-  bucket_id       = couchbase-capella_bucket.%[2]s.id
+  bucket_id       = "%[6]s"
   scope_name      = "nonexistent-scope"
-  collection_name = "%[6]s"
+  collection_name = "%[2]s"
 }
-`, globalProviderBlock, bucketName, globalOrgId, globalProjectId, dmClusterId, collName)
+`, globalProviderBlock, collName, globalOrgId, globalProjectId, dmClusterId, dmBucketId)
 }
 
 func testAccFlushBucketResourceConfig(bucketName, flushName string) string {
