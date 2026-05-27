@@ -91,6 +91,7 @@ func TestAccClusterDeletionProtectionProtectedDestroyFails(t *testing.T) {
 			{
 				Config: testAccClusterDeletionProtectionProtectedClusterConfig(clusterResourceName, deletionProtectionResourceName, cidr, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					registerDeletionProtectionCleanupForClusterResource(t, clusterReference),
 					testAccExistsClusterResource(t, clusterReference),
 					resource.TestCheckResourceAttr(clusterReference, "name", clusterResourceName),
 					resource.TestCheckResourceAttrSet(clusterReference, "id"),
@@ -136,6 +137,7 @@ func TestAccClusterDeletionProtectionProtectedBucketDeleteFails(t *testing.T) {
 			{
 				Config: testAccClusterDeletionProtectionProtectedBucketConfig(clusterResourceName, bucketResourceName, deletionProtectionResourceName, cidr, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					registerDeletionProtectionCleanupForClusterResource(t, clusterReference),
 					testAccExistsClusterResource(t, clusterReference),
 					resource.TestCheckResourceAttr(clusterReference, "name", clusterResourceName),
 					resource.TestCheckResourceAttr(bucketReference, "name", bucketResourceName),
@@ -183,6 +185,7 @@ func TestAccClusterDeletionProtectionProtectedBucketFlushFails(t *testing.T) {
 			{
 				Config: testAccClusterDeletionProtectionProtectedBucketFlushConfig(clusterResourceName, bucketResourceName, flushResourceName, deletionProtectionResourceName, cidr, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					registerDeletionProtectionCleanupForClusterResource(t, clusterReference),
 					testAccExistsClusterResource(t, clusterReference),
 					resource.TestCheckResourceAttr(clusterReference, "name", clusterResourceName),
 					resource.TestCheckResourceAttr(bucketReference, "name", bucketResourceName),
@@ -443,25 +446,61 @@ func generateDeletionProtectionImportId(resourceReference string) resource.Impor
 	}
 }
 
+func registerDeletionProtectionCleanupForClusterResource(t *testing.T, clusterReference string) resource.TestCheckFunc {
+	t.Helper()
+	registered := false
+
+	return func(state *terraform.State) error {
+		if registered {
+			return nil
+		}
+
+		clusterResource, ok := state.RootModule().Resources[clusterReference]
+		if !ok || clusterResource.Primary == nil {
+			return fmt.Errorf("resource %s not found in state", clusterReference)
+		}
+
+		clusterID := clusterResource.Primary.ID
+		if clusterID == "" {
+			clusterID = clusterResource.Primary.Attributes["id"]
+		}
+		if clusterID == "" {
+			return fmt.Errorf("resource %s has no cluster id in state", clusterReference)
+		}
+
+		registered = true
+		t.Cleanup(func() {
+			disableDeletionProtection(t, clusterID)
+		})
+
+		return nil
+	}
+}
+
 // disableDeletionProtectionOnCleanup registers a t.Cleanup hook that
 // unconditionally disables deletion protection on globalClusterId so that
 // TestMain teardown can delete the cluster even if the test fails mid-run.
 func disableDeletionProtectionOnCleanup(t *testing.T) {
 	t.Helper()
 	t.Cleanup(func() {
-		ctx := context.Background()
-		url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/deletionProtection",
-			globalHost, globalOrgId, globalProjectId, globalClusterId)
-		cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
-		_, err := globalClient.ExecuteWithRetry(
-			ctx,
-			cfg,
-			clusterapi.UpdateDeletionProtectionRequest{DeletionProtection: false},
-			globalToken,
-			nil,
-		)
-		if err != nil {
-			t.Logf("WARNING: failed to disable deletion protection on cleanup: %v", err)
-		}
+		disableDeletionProtection(t, globalClusterId)
 	})
+}
+
+func disableDeletionProtection(t *testing.T, clusterID string) {
+	t.Helper()
+	ctx := context.Background()
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/deletionProtection",
+		globalHost, globalOrgId, globalProjectId, clusterID)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
+	_, err := globalClient.ExecuteWithRetry(
+		ctx,
+		cfg,
+		clusterapi.UpdateDeletionProtectionRequest{DeletionProtection: false},
+		globalToken,
+		nil,
+	)
+	if err != nil {
+		t.Logf("WARNING: failed to disable deletion protection on cleanup for cluster %s: %v", clusterID, err)
+	}
 }
