@@ -8,24 +8,30 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-// TestAccPrivateEndpointServiceDisable tests enabling and disabling private endpoint service for a cluster
+// TestAccPrivateEndpointServiceEnableDisable tests enabling, reading, and disabling private endpoint service for a cluster.
 func TestAccPrivateEndpointServiceEnableDisable(t *testing.T) {
-	resourceName := "disable_private_endpoint_service"
+	resourceName := randomStringWithPrefix("tf_acc_private_endpoint_service_")
+	dataSourceName := randomStringWithPrefix("tf_acc_private_endpoints_ds_")
 	resourceReference := "couchbase-capella_private_endpoint_service." + resourceName
+	dataSourceReference := "data.couchbase-capella_private_endpoints." + dataSourceName
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
-			// First enable the service
 			{
-				Config: testAccPrivateEndpointServiceEnableConfig(resourceName, true),
+				Config: testAccPrivateEndpointsDataSourceNoEndpointConfig(resourceName, dataSourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
 					resource.TestCheckResourceAttr(resourceReference, "enabled", "true"),
+					resource.TestCheckResourceAttr(dataSourceReference, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(dataSourceReference, "project_id", globalProjectId),
+					resource.TestCheckResourceAttr(dataSourceReference, "cluster_id", globalClusterId),
+					resource.TestMatchResourceAttr(dataSourceReference, "private_endpoint_dns", regexp.MustCompile(`^private-endpoint\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$`)),
+					resource.TestCheckResourceAttr(dataSourceReference, "data.#", "0"),
 				),
 			},
-			// Then disable it
 			{
 				Config: testAccPrivateEndpointServiceEnableConfig(resourceName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -33,33 +39,6 @@ func TestAccPrivateEndpointServiceEnableDisable(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
 					resource.TestCheckResourceAttr(resourceReference, "enabled", "false"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccDatasourcePrivateEndpointsServiceEnabledNoEndpointAdded(t *testing.T) {
-	serviceResourceName := randomStringWithPrefix("tf_acc_private_endpoint_service_")
-	dataSourceName := randomStringWithPrefix("tf_acc_private_endpoints_ds_")
-	serviceResourceReference := "couchbase-capella_private_endpoint_service." + serviceResourceName
-	dataSourceReference := "data.couchbase-capella_private_endpoints." + dataSourceName
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPrivateEndpointsDataSourceNoEndpointConfig(serviceResourceName, dataSourceName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(serviceResourceReference, "organization_id", globalOrgId),
-					resource.TestCheckResourceAttr(serviceResourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(serviceResourceReference, "cluster_id", globalClusterId),
-					resource.TestCheckResourceAttr(serviceResourceReference, "enabled", "true"),
-					resource.TestCheckResourceAttr(dataSourceReference, "organization_id", globalOrgId),
-					resource.TestCheckResourceAttr(dataSourceReference, "project_id", globalProjectId),
-					resource.TestCheckResourceAttr(dataSourceReference, "cluster_id", globalClusterId),
-					resource.TestMatchResourceAttr(dataSourceReference, "private_endpoint_dns", regexp.MustCompile(`^private-endpoint\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$`)),
-					resource.TestCheckResourceAttr(dataSourceReference, "data.#", "0"),
 				),
 			},
 		},
