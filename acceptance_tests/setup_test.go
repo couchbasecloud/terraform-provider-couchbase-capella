@@ -104,6 +104,17 @@ func setup(ctx context.Context, client *api.Client) error {
 		return err
 	}
 
+	if err := setupDMCluster(ctx, client); err != nil {
+		return err
+	}
+
+	if err := resolveDMBucket(ctx, client); err != nil {
+		return err
+	}
+	if err := dmClusterWait(ctx, client, false); err != nil {
+		return err
+	}
+
 	// Create app service only if not provided via env var
 	if globalAppServiceId == "" {
 		if err := createAppService(ctx, client); err != nil {
@@ -146,6 +157,22 @@ func cleanup(ctx context.Context, client *api.Client) error {
 		}
 
 		if err := appServiceWait(ctx, client, true); err != nil {
+			return err
+		}
+	}
+
+	if dmBucketCreated {
+		if err := destroyDMBucket(ctx, client); err != nil {
+			return err
+		}
+	}
+
+	if dmClusterCreated {
+		if err := destroyDMCluster(ctx, client); err != nil {
+			return err
+		}
+
+		if err := dmClusterWait(ctx, client, true); err != nil {
 			return err
 		}
 	}
