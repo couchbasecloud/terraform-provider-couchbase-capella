@@ -17,8 +17,7 @@ var (
 	_ resource.ResourceWithConfigure = &FlushBucket{}
 )
 
-const errorMessageFlushingBucket = "There is an error during execution of bucket flush. Please check in Capella to see if the documents for" +
-	" have been deleted, unexpected error: "
+const errorMessageFlushingBucket = "There is an error during execution of bucket flush. Please check in Capella to see if the documents for bucket %s have been deleted, unexpected error: "
 
 // FlushBucket is the bucket resource implementation.
 type FlushBucket struct {
@@ -54,7 +53,6 @@ func (c *FlushBucket) Create(ctx context.Context, req resource.CreateRequest, re
 	var clusterId = plan.ClusterId.ValueString()
 	var bucketId = plan.BucketId.ValueString()
 
-	// Execute flush bucket. Nothing gets returned for it.
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/flush", c.HostURL, organizationId, projectId, clusterId, bucketId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusOK}
 	_, err := c.ClientV1.ExecuteWithRetry(
@@ -67,7 +65,7 @@ func (c *FlushBucket) Create(ctx context.Context, req resource.CreateRequest, re
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error flushing the bucket",
-			errorMessageFlushingBucket+api.ParseError(err),
+			fmt.Sprintf(errorMessageFlushingBucket, bucketId)+api.ParseError(err),
 		)
 		return
 	}

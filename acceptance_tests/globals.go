@@ -36,6 +36,15 @@ var (
 	globalClusterCreated     bool
 	globalAppServiceCreated  bool
 
+	// dmClusterId is a dedicated cluster for data management (bucket/scope/collection) tests,
+	// kept separate from the global cluster to avoid rebalance contention with app service tests.
+	dmClusterId      string
+	dmClusterCreated bool
+	dmClusterName    = "tf_acc_test_cluster_dm"
+	dmBucketId       string
+	dmBucketCreated  bool
+	dmBucketName     = "default"
+
 	appEndpointClusterId          string
 	appEndpointClusterName        string
 	appEndpointBucketId           string
