@@ -91,6 +91,20 @@ func (p *PrivateEndpoints) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
+	privateEndpointDNS := privateEndpointsResp.PrivateEndpointDNS
+	if privateEndpointDNS == "" {
+		privateEndpointDNS, err = p.getPrivateEndpointDNS(ctx, organizationId, projectId, clusterId)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error Reading Capella Private Endpoint DNS",
+				"Could not read private endpoint DNS in cluster "+state.ClusterId.String()+": "+api.ParseError(err),
+			)
+			return
+		}
+	}
+
+	state.PrivateEndpointDNS = types.StringValue(privateEndpointDNS)
+
 	for _, e := range privateEndpointsResp.Endpoints {
 		endpointData := providerschema.PrivateEndpointData{}
 		endpointData.Id = types.StringValue(e.Id)
@@ -104,6 +118,29 @@ func (p *PrivateEndpoints) Read(ctx context.Context, req datasource.ReadRequest,
 	if resp.Diagnostics.HasError() {
 		return
 	}
+}
+
+func (p *PrivateEndpoints) getPrivateEndpointDNS(ctx context.Context, organizationId, projectId, clusterId string) (string, error) {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/privateEndpointService", p.HostURL, organizationId, projectId, clusterId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	response, err := p.ClientV1.ExecuteWithRetry(
+		ctx,
+		cfg,
+		nil,
+		p.Token,
+		nil,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	privateEndpointServiceStatus := api.GetPrivateEndpointServiceStatusResponse{}
+	err = json.Unmarshal(response.Body, &privateEndpointServiceStatus)
+	if err != nil {
+		return "", err
+	}
+
+	return privateEndpointServiceStatus.PrivateDns, nil
 }
 
 // Configure adds the provider configured client to the private endpoint data source.

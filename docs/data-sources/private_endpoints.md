@@ -32,6 +32,7 @@ data "couchbase-capella_private_endpoints" "list_endpoints" {
 ### Read-Only
 
 - `data` (Attributes List) (see [below for nested schema](#nestedatt--data))
+- `private_endpoint_dns` (String)
 
 <a id="nestedatt--data"></a>
 ### Nested Schema for `data`
@@ -43,4 +44,5 @@ Read-Only:
 - `id` (String)
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
+- `service_name` (String)
 - `status` (String)
