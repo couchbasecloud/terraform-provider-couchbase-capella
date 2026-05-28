@@ -99,6 +99,47 @@ data "couchbase-capella_users" "%[2]s" {
 	})
 }
 
+func TestAccDatasourceUsersEmptyOrganization(t *testing.T) {
+	dsName := randomStringWithPrefix("tf_acc_users_ds_empty_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+%[1]s
+
+data "couchbase-capella_users" "%[2]s" {
+  organization_id = ""
+}
+`, globalProviderBlock, dsName),
+				ExpectError: regexp.MustCompile(`(?s)Invalid Attribute Value.*Attribute organization_id string length must be at least 1, got: 0`),
+			},
+		},
+	})
+}
+
+func TestAccDatasourceUsersInvalidSortDirection(t *testing.T) {
+	dsName := randomStringWithPrefix("tf_acc_users_ds_sort_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+%[1]s
+
+data "couchbase-capella_users" "%[2]s" {
+	organization_id = "00000000-0000-0000-0000-000000000000"
+  sort_direction  = "sideways"
+}
+`, globalProviderBlock, dsName),
+				ExpectError: regexp.MustCompile(`(?s)Invalid Attribute Value Match.*sideways.*asc.*desc`),
+			},
+		},
+	})
+}
+
 // perPage <= 0 omits per_page from the datasource (walk all pages).
 func testAccUsersDataSourceConfig(resourceName, dsName, username, email string, perPage int) string {
 	perPageLine := ""

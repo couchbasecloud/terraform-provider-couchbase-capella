@@ -13,7 +13,7 @@ var apiKeysBuilder = capellaschema.NewSchemaBuilder("apiKeys")
 func ApiKeysSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
-	capellaschema.AddAttr(attrs, "organization_id", apiKeysBuilder, requiredString())
+	capellaschema.AddAttr(attrs, "organization_id", apiKeysBuilder, requiredStringWithValidator())
 
 	// Build data attributes
 	dataAttrs := make(map[string]schema.Attribute)
