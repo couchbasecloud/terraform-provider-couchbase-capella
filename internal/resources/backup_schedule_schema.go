@@ -14,7 +14,7 @@ func BackupScheduleSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "organization_id", backupScheduleBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "project_id", backupScheduleBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "cluster_id", backupScheduleBuilder, requiredUUIDStringAttribute())
-	capellaschema.AddAttr(attrs, "bucket_id", backupScheduleBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "bucket_id", backupScheduleBuilder, requiredNonEmptyStringAttribute())
 	capellaschema.AddAttr(attrs, "type", backupScheduleBuilder, stringAttribute([]string{required, requiresReplace}))
 
 	weeklyScheduleAttrs := make(map[string]schema.Attribute)

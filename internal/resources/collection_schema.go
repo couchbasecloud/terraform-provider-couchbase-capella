@@ -14,7 +14,7 @@ func CollectionSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "organization_id", collectionBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "project_id", collectionBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "cluster_id", collectionBuilder, requiredUUIDStringAttribute())
-	capellaschema.AddAttr(attrs, "bucket_id", collectionBuilder, requiredUUIDStringAttribute())
+	capellaschema.AddAttr(attrs, "bucket_id", collectionBuilder, requiredNonEmptyStringAttribute())
 	capellaschema.AddAttr(attrs, "scope_name", collectionBuilder, stringAttribute([]string{required, requiresReplace}))
 	capellaschema.AddAttr(attrs, "collection_name", collectionBuilder, stringAttribute([]string{required, requiresReplace}))
 	capellaschema.AddAttr(attrs, "max_ttl", collectionBuilder, int64Attribute(optional, computed))
