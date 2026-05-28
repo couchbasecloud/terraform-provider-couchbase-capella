@@ -12,5 +12,6 @@ type GetPrivateEndpointResponse struct {
 
 // GetPrivateEndpointsResponse is a list of private endpoints.
 type GetPrivateEndpointsResponse struct {
-	Endpoints []GetPrivateEndpointResponse `json:"endpoints"`
+	PrivateEndpointDNS string                       `json:"privateEndpointDNS"`
+	Endpoints          []GetPrivateEndpointResponse `json:"endpoints"`
 }
