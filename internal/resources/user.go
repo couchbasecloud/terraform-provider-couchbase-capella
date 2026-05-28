@@ -470,7 +470,7 @@ func compareResources(existingResources, proposedResources []providerschema.Reso
 // a user includes the role 'organizationOwner'.
 func checkOrganizationOwner(roles []basetypes.StringValue, resources []providerschema.Resource) bool {
 	if resources != nil && slices.Contains(
-		roles, basetypes.NewStringValue("organizationOwner")) {
+		roles, basetypes.NewStringValue(organizationRoleOwner)) {
 		return true
 	}
 	return false
