@@ -30,3 +30,13 @@ resource "couchbase-capella_cluster_deletion_protection" "example" {
 - `deletion_protection` (Boolean)
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+terraform import couchbase-capella_cluster_deletion_protection.example cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>
+```
