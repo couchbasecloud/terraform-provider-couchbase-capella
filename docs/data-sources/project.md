@@ -13,8 +13,13 @@ The data source to retrieve information about a Capella project.
 ## Example Usage
 
 ```terraform
-data "couchbase-capella_projects" "existing_projects" {
+data "couchbase-capella_project" "existing_project" {
   organization_id = "<organization_id>"
+  id              = "<project_id>"
+}
+
+output "existing_project" {
+  value = data.couchbase-capella_project.existing_project
 }
 ```
 
