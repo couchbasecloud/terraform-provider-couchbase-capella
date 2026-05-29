@@ -229,7 +229,7 @@ func TestAccDatasourceQueryIndexMonitorDeferred(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccQueryIndexMonitorDeferredConfig(idxName, monitorName),
-				ExpectError: regexp.MustCompile(`(?i)deferred`),
+				ExpectError: regexp.MustCompile(`(?i)Error monitoring query indexes`),
 			},
 		},
 	})

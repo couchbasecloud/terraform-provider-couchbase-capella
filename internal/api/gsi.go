@@ -93,7 +93,7 @@ func WatchIndexes(
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	const maxConsecutive404s = 5
+	const maxConsecutive404s = 3
 
 	attempt := 0
 	consecutive404s := 0
