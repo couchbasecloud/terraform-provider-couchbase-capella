@@ -220,7 +220,10 @@ func TestAccDatasourceQueryIndexMonitorMultipleIndexes(t *testing.T) {
 	})
 }
 
+// AV-132671: API returns 200 OK with non-"Deferred" status for a deferred index; WatchIndexes polls
+// at 1 req/sec indefinitely since the status never becomes Ready. Skip until the API behavior is known.
 func TestAccDatasourceQueryIndexMonitorDeferred(t *testing.T) {
+	t.Skip("AV-132671: monitor polls indefinitely for deferred index; re-enable once API behavior for deferred state is confirmed")
 	idxName := randomStringWithPrefix("tf_acc_qm_defer_idx_")
 	monitorName := randomStringWithPrefix("tf_acc_qm_defer_ds_")
 
