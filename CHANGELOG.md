@@ -8,6 +8,8 @@
 
 - `tenant_id` is now a required field in the `azure_config` block of `couchbase-capella_network_peer`. Existing configurations that omit this field must add it before upgrading. [\#579](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/579)
 - `cors.origin` is now required when a `cors` block is present on `couchbase-capella_app_endpoint`. Existing configurations with a `cors` block that omit `origin` must add it before upgrading. [\#589](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/589)
+- `cloud_provider` on `couchbase-capella_app_service` is now read-only (computed). Existing configurations that set this field must remove it before upgrading. [\#605](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/605)
+- `organization_id`, `project_id`, `cluster_id`, and `app_service_id` on `couchbase-capella_app_services_cidr` are now required top-level attributes instead of computed fields nested inside each list item. Existing configurations must be updated to set these at the top level. [\#590](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/590)
 
 **Implemented enhancements:**
 
