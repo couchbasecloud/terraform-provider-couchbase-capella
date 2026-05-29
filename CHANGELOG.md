@@ -26,6 +26,7 @@
 - \[AV-130114\] Add unit tests for enum walker [\#587](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/587) ([matty271828](https://github.com/matty271828))
 - \[AV-129828\] Attach oneOf validators to AddAttr [\#586](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/586) ([matty271828](https://github.com/matty271828))
 - \[AV-129819\] Add build time generator to parse enums from open-api spec [\#581](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/581) ([matty271828](https://github.com/matty271828))
+- \[AV-132308\] Add `vbuckets` attribute to `couchbase-capella_buckets` datasource [\#617](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/617) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
 - \[AV-127654\] Add comprehensive acceptance tests for app\_endpoint resource [\#578](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/578) ([nimiyajoseph](https://github.com/nimiyajoseph))
 
 **Fixed bugs:**
@@ -40,7 +41,7 @@
 - \[AV-131315\] Fix racy getLatestBackup that hangs couchbase-capella\_backup Create up to 90 min [\#597](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/597) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
 - \[AV-128559\] Remove rejected endpoint [\#592](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/592) ([l0n3star](https://github.com/l0n3star))
 - \[AV-128558\] Remove resource from state file if not found [\#591](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/591) ([l0n3star](https://github.com/l0n3star))
-- \[AV-132308\] Fix `couchbase-capella_buckets` datasource crash (Value Conversion Error) caused by missing `vbuckets` field in schema [\#617](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/617) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
+- \[AV-132308\] Fix `couchbase-capella_buckets` datasource Value Conversion Error crash caused by missing `vbuckets` field in schema [\#617](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/617) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
 - \[AV-132314\] Fix malformed and misleading error message in `couchbase-capella_flush` when flush fails [\#617](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/617) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
 - \[AV-129755\] Fix App Service CIDR data source and add testing [\#590](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/590) ([IsaacLambat](https://github.com/IsaacLambat))
 - \[AV-128217\] Enforced cors.origin as required for capella\_app\_endpoint when a cors block is present [\#589](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/589) ([nimiyajoseph](https://github.com/nimiyajoseph))
