@@ -424,6 +424,35 @@ resource "couchbase-capella_cluster_deletion_protection" "%[7]s" {
 `, globalProviderBlock, globalOrgId, globalProjectId, clusterResourceName, bucketResourceName, enabled, deletionProtectionResourceName, cidr, flushConfig)
 }
 
+// TestAccClusterDeletionProtectionResourceImportWithIdAlias verifies that importing with
+// "id=<cluster_id>" (instead of "cluster_id=<cluster_id>") works correctly.
+func TestAccClusterDeletionProtectionResourceImportWithIdAlias(t *testing.T) {
+	disableDeletionProtectionOnCleanup(t)
+	resourceName := randomStringWithPrefix("tf_acc_del_prot_alias_")
+	resourceReference := "couchbase-capella_cluster_deletion_protection." + resourceName
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterDeletionProtectionConfig(resourceName, globalClusterId, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(resourceReference, "deletion_protection", "false"),
+				),
+			},
+			// Import using "id=<cluster_id>" alias instead of "cluster_id=<cluster_id>".
+			{
+				ResourceName:                         resourceReference,
+				ImportStateIdFunc:                    generateDeletionProtectionImportIdWithAlias(resourceReference),
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "cluster_id",
+			},
+		},
+	})
+}
+
 // --- Import ID ---
 
 func generateDeletionProtectionImportId(resourceReference string) resource.ImportStateIdFunc {
@@ -441,6 +470,28 @@ func generateDeletionProtectionImportId(resourceReference string) resource.Impor
 		}
 		return fmt.Sprintf(
 			"cluster_id=%s,project_id=%s,organization_id=%s",
+			rawState["cluster_id"], rawState["project_id"], rawState["organization_id"],
+		), nil
+	}
+}
+
+// generateDeletionProtectionImportIdWithAlias produces an import ID that uses "id=" instead of
+// "cluster_id=" to exercise the alias normalization in the provider's ImportState handler.
+func generateDeletionProtectionImportIdWithAlias(resourceReference string) resource.ImportStateIdFunc {
+	return func(state *terraform.State) (string, error) {
+		var rawState map[string]string
+		for _, m := range state.Modules {
+			if len(m.Resources) > 0 {
+				if v, ok := m.Resources[resourceReference]; ok {
+					rawState = v.Primary.Attributes
+				}
+			}
+		}
+		if rawState == nil {
+			return "", fmt.Errorf("resource %s not found in state", resourceReference)
+		}
+		return fmt.Sprintf(
+			"id=%s,project_id=%s,organization_id=%s",
 			rawState["cluster_id"], rawState["project_id"], rawState["organization_id"],
 		), nil
 	}
