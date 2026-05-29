@@ -305,6 +305,10 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 
   Retrieve statistics for a specific cluster in Capella, including resource utilization and performance metrics.
 
+* [Manage Cluster Deletion Protection](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/deletion_protection):
+
+  Enable or disable deletion protection on a Couchbase Capella cluster to prevent accidental deletion. When enabled, the cluster cannot be deleted until protection is explicitly turned off.
+
 * [Turn App Service On/Off On Demand](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/app_service_onoff_ondemand):
 
   You can turn the cluster and any linked app services on or off on demand using the [cluster API](https://docs.couchbase.com/cloud/management-api-reference/index.html#tag/clusters).

@@ -19,6 +19,13 @@ The data source to retrieve users in a Capella organization.
 
 - `organization_id` (String) The GUID4 ID of the organization.
 
+### Optional
+
+- `page` (Number) Sets the page you would like to view.
+- `per_page` (Number) Sets the number of results you would like to have on each page.
+- `sort_by` (String)
+- `sort_direction` (String) The order in which the items will be sorted.
+
 ### Read-Only
 
 - `data` (Attributes List) (see [below for nested schema](#nestedatt--data))
