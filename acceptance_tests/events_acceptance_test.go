@@ -361,7 +361,6 @@ func TestAccDatasourceProjectEvents(t *testing.T) {
 
 func TestAccDatasourceProjectEventsWithoutProjectId(t *testing.T) {
 	dsName := randomStringWithPrefix("tf_acc_prj_events_noproj_")
-	dsReference := "data.couchbase-capella_project_events." + dsName
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -374,10 +373,7 @@ data "couchbase-capella_project_events" "%[2]s" {
   organization_id = "%[3]s"
 }
 `, globalProviderBlock, dsName, globalOrgId),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
-					resource.TestCheckResourceAttrSet(dsReference, "data.#"),
-				),
+				ExpectError: regexp.MustCompile(`(?s)Error Reading Capella Project Events|400|client error`),
 			},
 		},
 	})
@@ -471,6 +467,26 @@ func TestAccDatasourceProjectEventsInvalidSortDirection(t *testing.T) {
 			{
 				Config:      testAccProjectEventsSortedConfig(dsName, "timestamp", "badDirection"),
 				ExpectError: regexp.MustCompile(`(?s)Error Reading Capella Project Events|sort_direction|invalid|asc.*desc`),
+			},
+		},
+	})
+}
+
+func TestAccDatasourceProjectEventsMissingOrganization(t *testing.T) {
+	dsName := randomStringWithPrefix("tf_acc_prj_events_no_org_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+%[1]s
+
+data "couchbase-capella_project_events" "%[2]s" {
+  project_id = "%[3]s"
+}
+`, globalProviderBlock, dsName, globalProjectId),
+				ExpectError: regexp.MustCompile(`(?s)organization_id|argument.*required|Missing required argument`),
 			},
 		},
 	})
@@ -581,6 +597,49 @@ data "couchbase-capella_project_event" "%[2]s" {
 }
 `, globalProviderBlock, dsName, globalOrgId),
 				ExpectError: regexp.MustCompile(`(?s)project_id|argument.*required|Missing required argument`),
+			},
+		},
+	})
+}
+
+func TestAccDatasourceProjectEventMissingOrganization(t *testing.T) {
+	dsName := randomStringWithPrefix("tf_acc_prj_event_no_org_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+%[1]s
+
+data "couchbase-capella_project_event" "%[2]s" {
+  id         = "00000000-0000-0000-0000-000000000001"
+  project_id = "%[3]s"
+}
+`, globalProviderBlock, dsName, globalProjectId),
+				ExpectError: regexp.MustCompile(`(?s)organization_id|argument.*required|Missing required argument`),
+			},
+		},
+	})
+}
+
+func TestAccDatasourceProjectEventInvalidOrganization(t *testing.T) {
+	dsName := randomStringWithPrefix("tf_acc_prj_event_bad_org_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+%[1]s
+
+data "couchbase-capella_project_event" "%[2]s" {
+  id              = "00000000-0000-0000-0000-000000000001"
+  organization_id = "00000000-0000-0000-0000-000000000000"
+  project_id      = "%[3]s"
+}
+`, globalProviderBlock, dsName, globalProjectId),
+				ExpectError: regexp.MustCompile(`(?s)Error Reading Capella Project Event|organization.*not found|access to the requested resource is denied|Not Found|Forbidden`),
 			},
 		},
 	})
