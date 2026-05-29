@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
+	internalerrors "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
@@ -98,11 +99,14 @@ func (g *GsiMonitor) Read(ctx context.Context, req datasource.ReadRequest, resp 
 	case nil:
 		const msg = `All indexes are ready. Please run "terraform apply --refresh-only" to update state.`
 		tflog.Info(ctx, msg)
-	default:
+	case internalerrors.ErrMonitorTimeout:
 		resp.Diagnostics.AddWarning(
 			"All provided indexes are not ready",
-			"All provided indexes have not completed building.  Please run \"terraform apply --refresh-only\" after some time.",
+			`All provided indexes have not completed building. Please run "terraform apply --refresh-only" after some time.`,
 		)
+		return
+	default:
+		resp.Diagnostics.AddError("Error monitoring query indexes", err.Error())
 		return
 	}
 

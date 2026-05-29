@@ -220,9 +220,7 @@ func TestAccDatasourceQueryIndexMonitorMultipleIndexes(t *testing.T) {
 	})
 }
 
-// AV-132671: WatchIndexes polls 60 min for a deferred index; skip until datasource fails fast on Deferred state.
 func TestAccDatasourceQueryIndexMonitorDeferred(t *testing.T) {
-	t.Skip("AV-132671: monitor hangs 60 min on deferred index; re-enable once WatchIndexes returns early for Deferred state")
 	idxName := randomStringWithPrefix("tf_acc_qm_defer_idx_")
 	monitorName := randomStringWithPrefix("tf_acc_qm_defer_ds_")
 
@@ -230,15 +228,14 @@ func TestAccDatasourceQueryIndexMonitorDeferred(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueryIndexMonitorDeferredConfig(idxName, monitorName),
+				Config:      testAccQueryIndexMonitorDeferredConfig(idxName, monitorName),
+				ExpectError: regexp.MustCompile(`(?i)deferred`),
 			},
 		},
 	})
 }
 
-// AV-132670: WatchIndexes retries on 404 for 60 min; skip until datasource fails fast on permanent errors.
 func TestAccDatasourceQueryIndexMonitorNonexistentIndex(t *testing.T) {
-	t.Skip("AV-132670: monitor hangs 60 min on nonexistent index; re-enable once WatchIndexes fails fast on permanent 404")
 	monitorName := randomStringWithPrefix("tf_acc_qm_noexist_ds_")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -259,14 +256,13 @@ data "couchbase-capella_query_index_monitor" "%[2]s" {
 }
 `, globalProviderBlock, monitorName, globalOrgId, globalProjectId, globalClusterId,
 					globalBucketName, globalScopeName, globalCollectionName),
+				ExpectError: regexp.MustCompile(`(?i)Error monitoring query indexes`),
 			},
 		},
 	})
 }
 
-// AV-132670: WatchIndexes retries on cluster 404 for 60 min; skip until datasource fails fast on permanent errors.
 func TestAccDatasourceQueryIndexMonitorInvalidCluster(t *testing.T) {
-	t.Skip("AV-132670: monitor hangs 60 min on invalid cluster ID; re-enable once WatchIndexes fails fast on permanent 404")
 	monitorName := randomStringWithPrefix("tf_acc_qm_bad_cluster_ds_")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -287,6 +283,7 @@ data "couchbase-capella_query_index_monitor" "%[2]s" {
 }
 `, globalProviderBlock, monitorName, globalOrgId, globalProjectId,
 					globalBucketName, globalScopeName, globalCollectionName),
+				ExpectError: regexp.MustCompile(`(?i)Error monitoring query indexes`),
 			},
 		},
 	})
