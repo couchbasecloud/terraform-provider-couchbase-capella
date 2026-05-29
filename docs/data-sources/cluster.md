@@ -30,6 +30,7 @@ The data source retrieves the details of a single Couchbase Capella cluster.
 - `connection_string` (String)
 - `couchbase_server` (Attributes) (see [below for nested schema](#nestedatt--couchbase_server))
 - `current_state` (String)
+- `deletion_protection` (Boolean)
 - `description` (String)
 - `enable_private_dns_resolution` (Boolean)
 - `etag` (String) Entity tag for the resource, used for caching and conditional requests.
