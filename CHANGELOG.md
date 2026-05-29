@@ -6,10 +6,10 @@
 
 **Breaking changes:**
 
-- `tenant_id` is now a required field in the `azure_config` block of `couchbase-capella_network_peer`. Existing configurations that omit this field must add it before upgrading. [\#579](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/579)
-- `cors.origin` is now required when a `cors` block is present on `couchbase-capella_app_endpoint`. Existing configurations with a `cors` block that omit `origin` must add it before upgrading. [\#589](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/589)
-- `cloud_provider` on `couchbase-capella_app_service` is now read-only (computed). Existing configurations that set this field must remove it before upgrading. [\#605](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/605)
-- `organization_id`, `project_id`, `cluster_id`, and `app_service_id` on `couchbase-capella_app_services_cidr` are now required top-level attributes instead of computed fields nested inside each list item. Existing configurations must be updated to set these at the top level. [\#590](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/590)
+- \[AV-131535\] Add acceptance coverage for app service optional fields and scaling updates [\#605](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/605) ([nimiyajoseph](https://github.com/nimiyajoseph))
+- \[AV-129755\] Fix App Service CIDR data source and add testing [\#590](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/590) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-128217\] Enforced cors.origin as required for capella\_app\_endpoint when a cors block is present [\#589](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/589) ([nimiyajoseph](https://github.com/nimiyajoseph))
+- \[AV-129887\] Require tenant\_id in Azure configuration and update documentation [\#579](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/579) ([stanleefdz](https://github.com/stanleefdz))
 
 **Implemented enhancements:**
 
@@ -26,31 +26,25 @@
 - \[AV-130114\] Add unit tests for enum walker [\#587](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/587) ([matty271828](https://github.com/matty271828))
 - \[AV-129828\] Attach oneOf validators to AddAttr [\#586](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/586) ([matty271828](https://github.com/matty271828))
 - \[AV-129819\] Add build time generator to parse enums from open-api spec [\#581](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/581) ([matty271828](https://github.com/matty271828))
-- \[AV-132308\] Add `vbuckets` attribute to `couchbase-capella_buckets` datasource [\#617](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/617) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
 - \[AV-127654\] Add comprehensive acceptance tests for app\_endpoint resource [\#578](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/578) ([nimiyajoseph](https://github.com/nimiyajoseph))
 
 **Fixed bugs:**
 
+- \[AV-132344\] Fix `id=` alias and add import docs for cluster deletion protection [\#622](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/622) ([Talina06](https://github.com/Talina06))
 - \[AV-132306\] Add app service and endpoint validator acceptance coverage [\#616](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/616) ([nimiyajoseph](https://github.com/nimiyajoseph))
 - \[AV-132258\] Add stricter Terraform-side validation for API key and user role configuration [\#615](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/615) ([nimiyajoseph](https://github.com/nimiyajoseph))
 - \[AV-128951\] Use per-test enterprise cluster in audit\_log\_settings tests [\#610](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/610) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
-- \[AV-131535\] Add acceptance coverage for app service optional fields and scaling updates [\#605](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/605) ([nimiyajoseph](https://github.com/nimiyajoseph))
 - \[AV-131479\] Fix failing acceptance tests [\#604](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/604) ([PaulomeeCb](https://github.com/PaulomeeCb))
 - \[AV-131411\] Adds acceptance coverage for the couchbase-capella\_app\_services data source [\#600](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/600) ([nimiyajoseph](https://github.com/nimiyajoseph))
 - \[AV-131401\] Fix TestAccBackupScheduleResourceInvalidType regex for new validator [\#599](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/599) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
 - \[AV-131315\] Fix racy getLatestBackup that hangs couchbase-capella\_backup Create up to 90 min [\#597](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/597) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
 - \[AV-128559\] Remove rejected endpoint [\#592](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/592) ([l0n3star](https://github.com/l0n3star))
 - \[AV-128558\] Remove resource from state file if not found [\#591](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/591) ([l0n3star](https://github.com/l0n3star))
-- \[AV-132308\] Fix `couchbase-capella_buckets` datasource Value Conversion Error crash caused by missing `vbuckets` field in schema [\#617](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/617) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
-- \[AV-132314\] Fix malformed and misleading error message in `couchbase-capella_flush` when flush fails [\#617](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/617) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
-- \[AV-129755\] Fix App Service CIDR data source and add testing [\#590](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/590) ([IsaacLambat](https://github.com/IsaacLambat))
-- \[AV-128217\] Enforced cors.origin as required for capella\_app\_endpoint when a cors block is present [\#589](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/589) ([nimiyajoseph](https://github.com/nimiyajoseph))
 - \[AV-130261\] Fix the ConfigurationType non-pointer field [\#588](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/588) ([PaulomeeCb](https://github.com/PaulomeeCb))
 - \[AV-128948\] Acceptance tests for cluster management \(on/off + stats\) [\#585](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/585) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
 - \[AV-127651\] Add legacy backup/schedule + snapshot schedule acceptance tests; harden bucket setup [\#583](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/583) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
 - \[AV-129731\] Fix cloud snapshot backup pagination, completion gating, and post-restore delete [\#582](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/582) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
 - \[AV-129893\] Enhance network peer error handling and state management [\#580](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/580) ([stanleefdz](https://github.com/stanleefdz))
-- \[AV-129887\] Require tenant\_id in Azure configuration and update documentation [\#579](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/579) ([stanleefdz](https://github.com/stanleefdz))
 
 **Merged pull requests:**
 
