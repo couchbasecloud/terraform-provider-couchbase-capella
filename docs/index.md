@@ -174,15 +174,17 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 
   Every API key is associated with an allowed IP Address list, and one or more organization roles, which determine the [privileges that the API key has](https://docs.couchbase.com/cloud/management-api-guide/management-api-start.html#understand-management-api-keys) within the organization.
 
-* [Create & Manage Projects](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/project):
+* [Create, Manage & Retrieve Projects](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/project):
 
   Within organizations, [projects](https://docs.couchbase.com/cloud/projects/projects.html) are used to organize and manage groups of Couchbase databases.
   An organization can contain any number of projects, and a project can contain any number of databases.
+  You can also retrieve the details of an existing project using the `couchbase-capella_project` datasource.
 
-* [Create & Manage Capella Clusters (databases)](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/cluster):
+* [Create, Manage & Retrieve Capella Clusters (databases)](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/cluster):
 
   The Cluster is the individual instance of a [Couchbase Database](https://docs.couchbase.com/cloud/clusters/databases.html), spanning one or more nodes on your Cloud Service Provider, and containing the Data Service, and any other services which you choose to deploy.
   Within this sits the hierarchy of bucket, scope, collection, and document.
+  You can also retrieve the details of an existing cluster using the `couchbase-capella_cluster` datasource.
 
 * [Retrieve Cluster Certificate Details](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/blob/main/examples/certificate):
 
@@ -235,6 +237,14 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 * [Manage App Endpoint Access Control Functions](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/app_endpoint_access_control_function):
 
   Define custom JavaScript access control functions to implement fine-grained data access policies for App Endpoints.
+
+* [Configure App Endpoint Logging](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/app_endpoint_logging_config):
+
+  Manage the logging configuration for App Endpoints. Controls what logs are streamed to the log collector configured on the App Service. Requires App Service Log Streaming to be enabled.
+
+* [Manage App Endpoint Resync](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/app_endpoint_resync):
+
+  Start and stop an App Endpoint Resync in Capella to re-synchronize data between the Couchbase Server and mobile clients.
 
 * [Configure App Endpoint Import Filters](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/import_filter):
 
@@ -291,9 +301,21 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
   Turning off your database only turns off the compute. All of your data, schema (buckets, scopes, and collections), and indexes remain, as well as your cluster configuration, including users and allow lists.
   When you turn your provisioned database off, you will be charged the OFF amount for the database.
 
+* [Retrieve Cluster Statistics](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/cluster_stats):
+
+  Retrieve statistics for a specific cluster in Capella, including resource utilization and performance metrics.
+
 * [Turn App Service On/Off On Demand](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/app_service_onoff_ondemand):
 
   You can turn the cluster and any linked app services on or off on demand using the [cluster API](https://docs.couchbase.com/cloud/management-api-reference/index.html#tag/clusters).
+
+* [Configure App Service Log Streaming](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/app_service_log_streaming):
+
+  Set up and manage log streaming for a Capella App Service to forward logs to an external log collector.
+
+* [Manage App Service Log Streaming Activation Status](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/app_service_log_streaming_activation_status):
+
+  Control whether App Service Log Streaming is paused or enabled. Log Streaming must already be configured on the App Service.
 
 * [Import Sample Dataset Buckets](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/sample_bucket):
 
@@ -327,6 +349,14 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 
   List the information of all the events within an organization. The list can be customized using filters.
 
+* [Retrieve a Specific Project Event](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/project_event):
+
+  Fetch the details of any specific event within a project using the event ID, project ID, and organization ID.
+
+* [Retrieve All Project Events](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/project_events):
+
+  List all events within a project. The list can be filtered by cluster ID, user ID, severity levels, tags, time range, and other attributes.
+
 * [Retrieve Private Endpoint Command for AWS](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoint_command/AWS):
 
   Retrieve the AWS command used to configure a VPC endpoint.
@@ -338,6 +368,10 @@ To get started, see the [Provider Example Configs](https://github.com/couchbasec
 * [Retrieve Private Endpoint Command for Azure](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoint_command/Azure):
 
   Retrieve the Azure command used to configure a private endpoint.
+
+* [Retrieve Azure Network Peer Role Assignment Command](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/network_peer_command_azure):
+
+  Retrieve the Azure role assignment command to be run in the Azure CLI to configure a network peer. Requires the Admin consent granting process to be completed through the Capella UI first.
 
 * [Manage Private Endpoint Service](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/main/examples/private_endpoint_service):
 
