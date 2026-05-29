@@ -4,6 +4,11 @@
 
 [Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.8.1...v1.9.0)
 
+**Breaking changes:**
+
+- `tenant_id` is now a required field in the `azure_config` block of `couchbase-capella_network_peer`. Existing configurations that omit this field must add it before upgrading. [\#579](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/579)
+- `cors.origin` is now required when a `cors` block is present on `couchbase-capella_app_endpoint`. Existing configurations with a `cors` block that omit `origin` must add it before upgrading. [\#589](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/589)
+
 **Implemented enhancements:**
 
 - \[AV-132461\] Add private endpoint DNS exposure and acceptance coverage [\#620](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/620) ([nimiyajoseph](https://github.com/nimiyajoseph))
