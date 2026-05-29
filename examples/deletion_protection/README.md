@@ -87,3 +87,29 @@ Destroy complete! Resources: 1 destroyed.
 ```
 
 If you need to delete the cluster afterwards, first set `deletion_protection = false` and apply, then destroy.
+
+## IMPORT
+
+To import an existing `couchbase-capella_cluster_deletion_protection` resource into Terraform state, use the following syntax:
+
+```
+terraform import 'couchbase-capella_cluster_deletion_protection.<resource_name>' \
+  'cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>'
+```
+
+**Required keys:**
+
+| Key | Description |
+|---|---|
+| `cluster_id` | UUID of the cluster |
+| `project_id` | UUID of the project |
+| `organization_id` | UUID of the organization |
+
+Sample command:
+
+```
+terraform import 'couchbase-capella_cluster_deletion_protection.cluster' \
+  'cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000001,organization_id=ffffffff-aaaa-1414-eeee-000000000002'
+```
+
+Note: The key `id=` is also accepted as an alias for `cluster_id=` when importing this resource.

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -157,7 +158,30 @@ func (r *ClusterDeletionProtection) Delete(_ context.Context, _ resource.DeleteR
 }
 
 func (r *ClusterDeletionProtection) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	req.ID = normalizeDeletionProtectionImportID(req.ID)
 	resource.ImportStatePassthroughID(ctx, path.Root("cluster_id"), req, resp)
+}
+
+// normalizeDeletionProtectionImportID replaces an "id=<value>" key-value pair in the
+// import string with "cluster_id=<value>", so both forms are accepted on import.
+// Other keys that happen to contain "id" as a substring (e.g. organization_id) are unaffected.
+//
+// This is necessary because this resource has no generic "id" attribute: it uses "cluster_id"
+// as its primary key. ImportStatePassthroughID stores the raw import string into the
+// "cluster_id" field, and splitImportString then parses each key=value pair via the importIds
+// table (validate.go), which maps "id" to the Id attr -- not ClusterId. Without this
+// rewrite, an import string containing "id=<value>" would fail checkKeysAndValues because
+// ClusterId would be absent from the parsed map. Other resources avoid this by targeting
+// path.Root("id"), whose key is already recognised and matches their schema.
+func normalizeDeletionProtectionImportID(importID string) string {
+	pairs := strings.Split(importID, ",")
+	for i, pair := range pairs {
+		kv := strings.SplitN(pair, "=", 2)
+		if len(kv) == 2 && kv[0] == "id" {
+			pairs[i] = "cluster_id=" + kv[1]
+		}
+	}
+	return strings.Join(pairs, ",")
 }
 
 func (r *ClusterDeletionProtection) putDeletionProtection(ctx context.Context, organizationId, projectId, clusterId string, enabled bool) error {
