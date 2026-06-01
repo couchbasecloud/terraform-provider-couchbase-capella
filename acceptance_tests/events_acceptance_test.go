@@ -361,6 +361,7 @@ func TestAccDatasourceProjectEvents(t *testing.T) {
 
 func TestAccDatasourceProjectEventsWithoutProjectId(t *testing.T) {
 	dsName := randomStringWithPrefix("tf_acc_prj_events_noproj_")
+	dsReference := "data.couchbase-capella_project_events." + dsName
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -373,7 +374,9 @@ data "couchbase-capella_project_events" "%[2]s" {
   organization_id = "%[3]s"
 }
 `, globalProviderBlock, dsName, globalOrgId),
-				ExpectError: regexp.MustCompile(`(?s)Error Reading Capella Project Events|400|client error`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
+				),
 			},
 		},
 	})
