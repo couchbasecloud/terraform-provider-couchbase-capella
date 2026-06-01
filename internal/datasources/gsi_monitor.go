@@ -2,6 +2,7 @@ package datasources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -95,11 +96,11 @@ func (g *GsiMonitor) Read(ctx context.Context, req datasource.ReadRequest, resp 
 			Collection: collection,
 		},
 	)
-	switch err {
-	case nil:
+	switch {
+	case err == nil:
 		const msg = `All indexes are ready. Please run "terraform apply --refresh-only" to update state.`
 		tflog.Info(ctx, msg)
-	case internalerrors.ErrMonitorTimeout:
+	case errors.Is(err, internalerrors.ErrMonitorTimeout):
 		resp.Diagnostics.AddWarning(
 			"All provided indexes are not ready",
 			`All provided indexes have not completed building. Please run "terraform apply --refresh-only" after some time.`,

@@ -34,7 +34,9 @@ func TestAccDatasourceQueryIndexes(t *testing.T) {
 					resource.TestCheckResourceAttr(dsReference, "bucket_name", globalBucketName),
 					resource.TestCheckResourceAttr(dsReference, "scope_name", globalScopeName),
 					resource.TestCheckResourceAttr(dsReference, "collection_name", globalCollectionName),
-					resource.TestCheckResourceAttrSet(dsReference, "data.#"),
+					resource.TestCheckTypeSetElemNestedAttrs(dsReference, "data.*", map[string]string{
+						"index_name": idxName,
+					}),
 				),
 			},
 		},
@@ -42,6 +44,7 @@ func TestAccDatasourceQueryIndexes(t *testing.T) {
 }
 
 func TestAccDatasourceQueryIndexesBucketLevelOnly(t *testing.T) {
+	idxName := randomStringWithPrefix("tf_acc_qi_bkt_idx_")
 	dsName := randomStringWithPrefix("tf_acc_qi_bkt_ds_")
 	dsReference := "data.couchbase-capella_query_indexes." + dsName
 
@@ -49,13 +52,15 @@ func TestAccDatasourceQueryIndexesBucketLevelOnly(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueryIndexesDatasourceBucketOnlyConfig(dsName),
+				Config: testAccQueryIndexesDatasourceBucketOnlyConfig(idxName, dsName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dsReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(dsReference, "cluster_id", globalClusterId),
 					resource.TestCheckResourceAttr(dsReference, "bucket_name", globalBucketName),
-					resource.TestCheckResourceAttrSet(dsReference, "data.#"),
+					resource.TestCheckTypeSetElemNestedAttrs(dsReference, "data.*", map[string]string{
+						"index_name": idxName,
+					}),
 				),
 			},
 		},
@@ -63,6 +68,7 @@ func TestAccDatasourceQueryIndexesBucketLevelOnly(t *testing.T) {
 }
 
 func TestAccDatasourceQueryIndexesScopeOnly(t *testing.T) {
+	idxName := randomStringWithPrefix("tf_acc_qi_scope_idx_")
 	dsName := randomStringWithPrefix("tf_acc_qi_scope_ds_")
 	dsReference := "data.couchbase-capella_query_indexes." + dsName
 
@@ -70,14 +76,16 @@ func TestAccDatasourceQueryIndexesScopeOnly(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueryIndexesDatasourceScopeOnlyConfig(dsName),
+				Config: testAccQueryIndexesDatasourceScopeOnlyConfig(idxName, dsName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dsReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(dsReference, "cluster_id", globalClusterId),
 					resource.TestCheckResourceAttr(dsReference, "bucket_name", globalBucketName),
 					resource.TestCheckResourceAttr(dsReference, "scope_name", globalScopeName),
-					resource.TestCheckResourceAttrSet(dsReference, "data.#"),
+					resource.TestCheckTypeSetElemNestedAttrs(dsReference, "data.*", map[string]string{
+						"index_name": idxName,
+					}),
 				),
 			},
 		},
@@ -351,32 +359,65 @@ data "couchbase-capella_query_indexes" "%[9]s" {
 		globalBucketName, globalScopeName, globalCollectionName, dsName)
 }
 
-func testAccQueryIndexesDatasourceBucketOnlyConfig(dsName string) string {
+func testAccQueryIndexesDatasourceBucketOnlyConfig(idxName, dsName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-data "couchbase-capella_query_indexes" "%[2]s" {
-  organization_id = "%[3]s"
-  project_id      = "%[4]s"
-  cluster_id      = "%[5]s"
-  bucket_name     = "%[6]s"
-}
-`, globalProviderBlock, dsName, globalOrgId, globalProjectId, globalClusterId, globalBucketName)
-}
-
-func testAccQueryIndexesDatasourceScopeOnlyConfig(dsName string) string {
-	return fmt.Sprintf(`
-%[1]s
-
-data "couchbase-capella_query_indexes" "%[2]s" {
+resource "couchbase-capella_query_indexes" "%[2]s" {
   organization_id = "%[3]s"
   project_id      = "%[4]s"
   cluster_id      = "%[5]s"
   bucket_name     = "%[6]s"
   scope_name      = "%[7]s"
+  collection_name = "%[8]s"
+  index_name      = "%[2]s"
+  index_keys      = ["bkt_field"]
+  with = {
+    defer_build = false
+  }
 }
-`, globalProviderBlock, dsName, globalOrgId, globalProjectId, globalClusterId,
-		globalBucketName, globalScopeName)
+
+data "couchbase-capella_query_indexes" "%[9]s" {
+  organization_id = "%[3]s"
+  project_id      = "%[4]s"
+  cluster_id      = "%[5]s"
+  bucket_name     = "%[6]s"
+
+  depends_on = [couchbase-capella_query_indexes.%[2]s]
+}
+`, globalProviderBlock, idxName, globalOrgId, globalProjectId, globalClusterId,
+		globalBucketName, globalScopeName, globalCollectionName, dsName)
+}
+
+func testAccQueryIndexesDatasourceScopeOnlyConfig(idxName, dsName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_query_indexes" "%[2]s" {
+  organization_id = "%[3]s"
+  project_id      = "%[4]s"
+  cluster_id      = "%[5]s"
+  bucket_name     = "%[6]s"
+  scope_name      = "%[7]s"
+  collection_name = "%[8]s"
+  index_name      = "%[2]s"
+  index_keys      = ["scope_field"]
+  with = {
+    defer_build = false
+  }
+}
+
+data "couchbase-capella_query_indexes" "%[9]s" {
+  organization_id = "%[3]s"
+  project_id      = "%[4]s"
+  cluster_id      = "%[5]s"
+  bucket_name     = "%[6]s"
+  scope_name      = "%[7]s"
+
+  depends_on = [couchbase-capella_query_indexes.%[2]s]
+}
+`, globalProviderBlock, idxName, globalOrgId, globalProjectId, globalClusterId,
+		globalBucketName, globalScopeName, globalCollectionName, dsName)
 }
 
 func testAccQueryIndexMonitorReadyConfig(idxName, monitorName string) string {
