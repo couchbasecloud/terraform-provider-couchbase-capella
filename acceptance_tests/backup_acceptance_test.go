@@ -134,7 +134,7 @@ resource "couchbase-capella_backup" "%[2]s" {
   restore_times   = 1
 }
 `, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, globalBucketId),
-				ExpectError: regexp.MustCompile("restore times must not be set while create backup"),
+				ExpectError: regexp.MustCompile("restore times must not be set during backup creation"),
 			},
 		},
 	})
@@ -148,7 +148,7 @@ func TestAccBackupResourceRestoreOnCreate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBackupResourceRestoreOnCreateConfig(resourceName),
-				ExpectError: regexp.MustCompile(`restore must not be set while create backup`),
+				ExpectError: regexp.MustCompile(`restore must not be set during backup creation`),
 			},
 		},
 	})

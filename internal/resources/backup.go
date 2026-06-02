@@ -429,6 +429,9 @@ func (a *Backup) validateCreateBackupRequest(plan providerschema.Backup) error {
 	if !plan.RestoreTimes.IsNull() && !plan.RestoreTimes.IsUnknown() {
 		return internal_errors.ErrRestoreTimesMustNotBeSetWhileCreateBackup
 	}
+	if !plan.Restore.IsNull() && !plan.Restore.IsUnknown() {
+		return internal_errors.ErrRestoreMustNotBeSetWhileCreateBackup
+	}
 	return nil
 }
 
