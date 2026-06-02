@@ -1,9 +1,13 @@
 package resources
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
@@ -16,14 +20,14 @@ func ClusterSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "id", clusterBuilder, stringAttribute([]string{computed, useStateForUnknown}))
 	capellaschema.AddAttr(attrs, "organization_id", clusterBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "project_id", clusterBuilder, requiredUUIDStringAttribute())
-	capellaschema.AddAttr(attrs, "name", clusterBuilder, stringAttribute([]string{required}))
+	capellaschema.AddAttr(attrs, "name", clusterBuilder, stringAttribute([]string{required}, stringvalidator.LengthAtMost(256)))
 	capellaschema.AddAttr(attrs, "description", clusterBuilder, stringAttribute([]string{optional, computed}))
 	capellaschema.AddAttr(attrs, "zones", clusterBuilder, stringSetAttribute(optional, requiresReplace))
 	capellaschema.AddAttr(attrs, "enable_private_dns_resolution", clusterBuilder, boolDefaultAttribute(false, optional, computed, requiresReplace))
 	capellaschema.AddAttr(attrs, "deletion_protection", clusterBuilder, boolAttribute(computed))
 
 	cloudProviderAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(cloudProviderAttrs, "type", clusterBuilder, stringAttribute([]string{required}), "CloudProvider")
+	capellaschema.AddAttr(cloudProviderAttrs, "type", clusterBuilder, stringAttribute([]string{required}, stringvalidator.OneOf("aws", "gcp", "azure")), "CloudProvider")
 	capellaschema.AddAttr(cloudProviderAttrs, "region", clusterBuilder, stringAttribute([]string{required}), "CloudProvider")
 	capellaschema.AddAttr(cloudProviderAttrs, "cidr", clusterBuilder, stringAttribute([]string{required}), "CloudProvider")
 
@@ -55,7 +59,7 @@ func ClusterSchema() schema.Schema {
 	capellaschema.AddAttr(computeAttrs, "ram", clusterBuilder, int64Attribute(required))
 
 	diskAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(diskAttrs, "type", clusterBuilder, stringAttribute([]string{required}))
+	capellaschema.AddAttr(diskAttrs, "type", clusterBuilder, stringAttribute([]string{required}, stringvalidator.OneOf("gp3", "io2", "P6", "P10", "P15", "P20", "P30", "P40", "P50", "P60", "Ultra", "pd-ssd")))
 	capellaschema.AddAttr(diskAttrs, "storage", clusterBuilder, int64Attribute(optional, computed))
 	capellaschema.AddAttr(diskAttrs, "iops", clusterBuilder, int64Attribute(optional, computed))
 	capellaschema.AddAttr(diskAttrs, "autoexpansion", clusterBuilder, boolAttribute(optional, computed))
@@ -76,17 +80,26 @@ func ClusterSchema() schema.Schema {
 		Attributes: nodeAttrs,
 	})
 	capellaschema.AddAttr(serviceGroupAttrs, "num_of_nodes", clusterBuilder, int64Attribute(required))
-	capellaschema.AddAttr(serviceGroupAttrs, "services", clusterBuilder, stringSetAttribute(required))
+	capellaschema.AddAttr(serviceGroupAttrs, "services", clusterBuilder, &schema.SetAttribute{
+		Required:    true,
+		ElementType: types.StringType,
+		Validators: []validator.Set{
+			setvalidator.SizeAtLeast(1),
+		},
+	})
 
 	capellaschema.AddAttr(attrs, "service_groups", clusterBuilder, &schema.SetNestedAttribute{
 		Required: true,
+		Validators: []validator.Set{
+			setvalidator.SizeAtLeast(1),
+		},
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: serviceGroupAttrs,
 		},
 	})
 
 	availabilityAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(availabilityAttrs, "type", clusterBuilder, stringAttribute([]string{required}), "Availability")
+	capellaschema.AddAttr(availabilityAttrs, "type", clusterBuilder, stringAttribute([]string{required}, stringvalidator.OneOf("single", "multi")), "Availability")
 
 	capellaschema.AddAttr(attrs, "availability", clusterBuilder, &schema.SingleNestedAttribute{
 		Required:   true,
