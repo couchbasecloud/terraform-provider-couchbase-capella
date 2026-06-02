@@ -186,6 +186,8 @@ var (
 
 	ErrRestoreTimesMustNotBeSetWhileCreateBackup = errors.New("restore times must not be set while create backup")
 
+	ErrRestoreMustNotBeSetWhileCreateBackup = errors.New("restore must not be set while create backup")
+
 	// ErrTFVarHostIsNotSet is returned when TF_VAR_host is not set.
 	ErrTFVarHostIsNotSet = errors.New("TF_VAR_host is not set")
 

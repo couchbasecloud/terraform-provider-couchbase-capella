@@ -24,6 +24,7 @@ var (
 	_ resource.Resource                = &Backup{}
 	_ resource.ResourceWithConfigure   = &Backup{}
 	_ resource.ResourceWithImportState = &Backup{}
+	_ resource.ResourceWithModifyPlan  = &Backup{}
 )
 
 const errorMessageWhileBackupCreation = "There is an error during backup creation. Please check in Capella to see if any hanging resources" +
@@ -47,6 +48,35 @@ func (b *Backup) Metadata(_ context.Context, req resource.MetadataRequest, resp 
 // Schema defines the schema for the Backup resource.
 func (b *Backup) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = BackupSchema()
+}
+
+// ModifyPlan validates backup restore-only fields that are invalid during resource creation.
+func (b *Backup) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if req.Plan.Raw.IsNull() || !req.State.Raw.IsNull() {
+		return
+	}
+
+	var plan providerschema.Backup
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !plan.RestoreTimes.IsNull() && !plan.RestoreTimes.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("restore_times"),
+			"Invalid Backup Restore Configuration",
+			internal_errors.ErrRestoreTimesMustNotBeSetWhileCreateBackup.Error(),
+		)
+	}
+
+	if !plan.Restore.IsNull() && !plan.Restore.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("restore"),
+			"Invalid Backup Restore Configuration",
+			internal_errors.ErrRestoreMustNotBeSetWhileCreateBackup.Error(),
+		)
+	}
 }
 
 // Create creates a new Backup.
