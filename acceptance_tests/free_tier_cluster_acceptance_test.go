@@ -17,8 +17,10 @@ func TestAccFreeTierClusterResourceCloudProvidersSequential(t *testing.T) {
 	gcpCidr := generateRandomCIDR()
 
 	awsConfig := testAccFreeTierClusterResourceCloudProviderConfig(awsResourceName, "aws", "us-east-2", awsCidr, "Valid free tier AWS cluster.")
+	awsUpdatedConfig := testAccFreeTierClusterResourceCloudProviderConfig(awsResourceName, "aws", "us-east-2", awsCidr, "Updated valid free tier AWS cluster.")
 	azureConfig := testAccFreeTierClusterResourceCloudProviderConfig(azureResourceName, "azure", "eastus", azureCidr, "Valid free tier Azure cluster.")
 	gcpConfig := testAccFreeTierClusterResourceCloudProviderConfig(gcpResourceName, "gcp", "us-central1", gcpCidr, "Valid free tier GCP cluster.")
+	awsResourceReference := "couchbase-capella_free_tier_cluster." + awsResourceName
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
@@ -34,7 +36,22 @@ func TestAccFreeTierClusterResourceCloudProvidersSequential(t *testing.T) {
 				),
 			},
 			{
-				Config:  awsConfig,
+				ResourceName:      awsResourceReference,
+				ImportStateIdFunc: generateClusterImportIdForResource(awsResourceReference),
+				ImportState:       true,
+			},
+			{
+				Config: awsUpdatedConfig,
+				Check: testAccFreeTierClusterResourceCloudProviderChecks(
+					awsResourceName,
+					"aws",
+					"us-east-2",
+					awsCidr,
+					"Updated valid free tier AWS cluster.",
+				),
+			},
+			{
+				Config:  awsUpdatedConfig,
 				Destroy: true,
 			},
 			{

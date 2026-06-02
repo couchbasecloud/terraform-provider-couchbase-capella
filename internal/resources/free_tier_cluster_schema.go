@@ -38,7 +38,7 @@ func FreeTierClusterSchema() schema.Schema {
 	})
 
 	cloudProviderAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(cloudProviderAttrs, "type", freeTierClusterBuilder, stringAttribute([]string{required}, stringvalidator.OneOf("aws", "gcp", "azure")), "CloudProvider")
+	capellaschema.AddAttr(cloudProviderAttrs, "type", freeTierClusterBuilder, stringAttribute([]string{required}), "CloudProvider")
 	capellaschema.AddAttr(cloudProviderAttrs, "region", freeTierClusterBuilder, stringAttribute([]string{required}), "CloudProvider")
 	capellaschema.AddAttr(cloudProviderAttrs, "cidr", freeTierClusterBuilder, stringAttribute([]string{required}), "CloudProvider")
 

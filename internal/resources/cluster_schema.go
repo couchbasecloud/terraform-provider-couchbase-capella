@@ -20,14 +20,14 @@ func ClusterSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "id", clusterBuilder, stringAttribute([]string{computed, useStateForUnknown}))
 	capellaschema.AddAttr(attrs, "organization_id", clusterBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "project_id", clusterBuilder, requiredUUIDStringAttribute())
-	capellaschema.AddAttr(attrs, "name", clusterBuilder, stringAttribute([]string{required}, stringvalidator.LengthAtMost(256)))
+	capellaschema.AddAttr(attrs, "name", clusterBuilder, stringAttribute([]string{required}))
 	capellaschema.AddAttr(attrs, "description", clusterBuilder, stringAttribute([]string{optional, computed}))
 	capellaschema.AddAttr(attrs, "zones", clusterBuilder, stringSetAttribute(optional, requiresReplace))
 	capellaschema.AddAttr(attrs, "enable_private_dns_resolution", clusterBuilder, boolDefaultAttribute(false, optional, computed, requiresReplace))
 	capellaschema.AddAttr(attrs, "deletion_protection", clusterBuilder, boolAttribute(computed))
 
 	cloudProviderAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(cloudProviderAttrs, "type", clusterBuilder, stringAttribute([]string{required}, stringvalidator.OneOf("aws", "gcp", "azure")), "CloudProvider")
+	capellaschema.AddAttr(cloudProviderAttrs, "type", clusterBuilder, stringAttribute([]string{required}), "CloudProvider")
 	capellaschema.AddAttr(cloudProviderAttrs, "region", clusterBuilder, stringAttribute([]string{required}), "CloudProvider")
 	capellaschema.AddAttr(cloudProviderAttrs, "cidr", clusterBuilder, stringAttribute([]string{required}), "CloudProvider")
 
@@ -90,16 +90,13 @@ func ClusterSchema() schema.Schema {
 
 	capellaschema.AddAttr(attrs, "service_groups", clusterBuilder, &schema.SetNestedAttribute{
 		Required: true,
-		Validators: []validator.Set{
-			setvalidator.SizeAtLeast(1),
-		},
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: serviceGroupAttrs,
 		},
 	})
 
 	availabilityAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(availabilityAttrs, "type", clusterBuilder, stringAttribute([]string{required}, stringvalidator.OneOf("single", "multi")), "Availability")
+	capellaschema.AddAttr(availabilityAttrs, "type", clusterBuilder, stringAttribute([]string{required}), "Availability")
 
 	capellaschema.AddAttr(attrs, "availability", clusterBuilder, &schema.SingleNestedAttribute{
 		Required:   true,
