@@ -48,8 +48,8 @@ func AuditLogExportSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "cluster_id", auditLogExportBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "audit_log_download_url", auditLogExportBuilder, stringAttribute([]string{computed}))
 	capellaschema.AddAttr(attrs, "expiration", auditLogExportBuilder, stringAttribute([]string{computed}))
-	capellaschema.AddAttr(attrs, "start", auditLogExportBuilder, stringAttribute([]string{required}, rfc3339TimestampValidator{attributeName: "start"}))
-	capellaschema.AddAttr(attrs, "end", auditLogExportBuilder, stringAttribute([]string{required}, rfc3339TimestampValidator{attributeName: "end"}))
+	capellaschema.AddAttr(attrs, "start", auditLogExportBuilder, stringAttribute([]string{required, requiresReplace}, rfc3339TimestampValidator{attributeName: "start"}))
+	capellaschema.AddAttr(attrs, "end", auditLogExportBuilder, stringAttribute([]string{required, requiresReplace}, rfc3339TimestampValidator{attributeName: "end"}))
 	capellaschema.AddAttr(attrs, "created_at", auditLogExportBuilder, stringAttribute([]string{computed}))
 	capellaschema.AddAttr(attrs, "status", auditLogExportBuilder, stringAttribute([]string{computed}))
 
