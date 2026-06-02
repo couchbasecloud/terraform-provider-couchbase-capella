@@ -85,6 +85,10 @@ func TestAccAuditLogExportResource(t *testing.T) {
 	})
 }
 
+// TestAccAuditLogExportResourceInvalidStart asserts the provider surfaces a
+// parse error when the start timestamp is not a valid RFC3339 string. The
+// Create implementation uses time.Parse(time.RFC3339, ...) and wraps the
+// parse error in a "Could not parse start time" diagnostic.
 func TestAccAuditLogExportResourceInvalidStart(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_audit_log_export_bad_start_")
 
