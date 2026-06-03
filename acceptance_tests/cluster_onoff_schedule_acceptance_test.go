@@ -178,6 +178,76 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
 	})
 }
 
+// TestAccClusterOnOffSchedule_AV_132227 verifies that a schedule with every day
+// set to "off" is rejected by local config validation instead of being sent to
+// the API (https://jira.issues.couchbase.com/browse/AV-132227).
+func TestAccClusterOnOffSchedule_AV_132227(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_onoff_schedule_all_off_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
+  organization_id = "%[3]s"
+  project_id      = "%[4]s"
+  cluster_id      = "%[5]s"
+  timezone        = "US/Pacific"
+  days = [
+    { day = "monday",    state = "off" },
+    { day = "tuesday",   state = "off" },
+    { day = "wednesday", state = "off" },
+    { day = "thursday",  state = "off" },
+    { day = "friday",    state = "off" },
+    { day = "saturday",  state = "off" },
+    { day = "sunday",    state = "off" },
+  ]
+}
+`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId),
+				ExpectError: regexp.MustCompile(`(?s)off for the entire day for every day of the week`),
+			},
+		},
+	})
+}
+
+// TestAccClusterOnOffScheduleOutOfOrderDays_AV_132227 verifies that a schedule
+// whose days are not in Monday-to-Sunday order is rejected by local config
+// validation (https://jira.issues.couchbase.com/browse/AV-132227).
+func TestAccClusterOnOffScheduleOutOfOrderDays_AV_132227(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_onoff_schedule_out_of_order_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
+  organization_id = "%[3]s"
+  project_id      = "%[4]s"
+  cluster_id      = "%[5]s"
+  timezone        = "US/Pacific"
+  days = [
+    { day = "sunday",    state = "on" },
+    { day = "monday",    state = "on" },
+    { day = "tuesday",   state = "on" },
+    { day = "wednesday", state = "on" },
+    { day = "thursday",  state = "on" },
+    { day = "friday",    state = "on" },
+    { day = "saturday",  state = "on" },
+  ]
+}
+`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId),
+				ExpectError: regexp.MustCompile(`(?s)sequence starting from Monday and ending\s+with Sunday`),
+			},
+		},
+	})
+}
+
 func testAccClusterOnOffScheduleResourceConfig(resourceName, timezone string) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -204,4 +274,3 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
 }
 `, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, timezone)
 }
-
