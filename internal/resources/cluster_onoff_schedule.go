@@ -72,9 +72,12 @@ func (c *ClusterOnOffSchedule) ValidateConfig(ctx context.Context, req resource.
 	}
 
 	var dayItems []providerschema.DayItem
-	// Entries may still be unknown (e.g. computed from other resources); defer
-	// validation to apply time in that case.
-	if diags := days.ElementsAs(ctx, &dayItems, false); diags.HasError() {
+	// Entries may still be wholly unknown (e.g. computed from other resources),
+	// which cannot be decoded into DayItem; allow them to decode as zero values
+	// so the per-item null/unknown checks below defer validation to apply time,
+	// while genuine decoding errors still surface.
+	resp.Diagnostics.Append(days.ElementsAs(ctx, &dayItems, true)...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
