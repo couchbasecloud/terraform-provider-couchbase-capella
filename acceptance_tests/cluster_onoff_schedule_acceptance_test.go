@@ -213,10 +213,9 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
 	})
 }
 
-// TestAccClusterOnOffScheduleOutOfOrderDays_AV_132227 verifies that a schedule
-// whose days are not in Monday-to-Sunday order is rejected by local config
-// validation (https://jira.issues.couchbase.com/browse/AV-132227).
-func TestAccClusterOnOffScheduleOutOfOrderDays_AV_132227(t *testing.T) {
+// TestAccClusterOnOffScheduleOutOfOrderDays verifies that a schedule
+// whose days are not in Monday-to-Sunday order is rejected by local config validation.
+func TestAccClusterOnOffScheduleOutOfOrderDays(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_onoff_schedule_out_of_order_")
 
 	resource.ParallelTest(t, resource.TestCase{
