@@ -178,10 +178,9 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
 	})
 }
 
-// TestAccClusterOnOffSchedule_AV_132227 verifies that a schedule with every day
-// set to "off" is rejected by local config validation instead of being sent to
-// the API (https://jira.issues.couchbase.com/browse/AV-132227).
-func TestAccClusterOnOffSchedule_AV_132227(t *testing.T) {
+// TestAccClusterOnOffScheduleAllDaysOff verifies that a schedule with every day
+// set to "off" is rejected by local config validation instead of being sent to the API
+func TestAccClusterOnOffScheduleAllDaysOff(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_onoff_schedule_all_off_")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -207,7 +206,7 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
   ]
 }
 `, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId),
-				ExpectError: regexp.MustCompile(`(?s)off for the entire day for every day of the week`),
+				ExpectError: regexp.MustCompile(`off\s+for\s+the\s+entire\s+day\s+for\s+every\s+day\s+of\s+the\s+week`),
 			},
 		},
 	})
@@ -241,7 +240,7 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
   ]
 }
 `, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId),
-				ExpectError: regexp.MustCompile(`(?s)sequence starting from Monday and ending\s+with Sunday`),
+				ExpectError: regexp.MustCompile(`sequence\s+starting\s+from\s+Monday\s+and\s+ending\s+with\s+Sunday`),
 			},
 		},
 	})
