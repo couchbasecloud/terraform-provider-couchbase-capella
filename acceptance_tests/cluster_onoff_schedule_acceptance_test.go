@@ -206,7 +206,9 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
   ]
 }
 `, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId),
-				ExpectError: regexp.MustCompile(`off\s+for\s+the\s+entire\s+day\s+for\s+every\s+day\s+of\s+the\s+week`),
+				// Subset from the start of the message so Terraform's diagnostic
+				// word-wrapping cannot split the match.
+				ExpectError: regexp.MustCompile(`Clusters cannot be scheduled`),
 			},
 		},
 	})
@@ -240,7 +242,9 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
   ]
 }
 `, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId),
-				ExpectError: regexp.MustCompile(`sequence\s+starting\s+from\s+Monday\s+and\s+ending\s+with\s+Sunday`),
+				// Subset from the start of the message so Terraform's diagnostic
+				// word-wrapping cannot split the match.
+				ExpectError: regexp.MustCompile(`must be in sequence`),
 			},
 		},
 	})

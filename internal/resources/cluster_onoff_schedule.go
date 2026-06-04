@@ -29,7 +29,8 @@ var (
 
 // weekdays is the order the V4 API requires for the on/off schedule days list:
 // exactly one entry per day of the week, starting from Monday and ending with Sunday.
-var weekdays = [...]string{"monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"}
+// The explicit length guards at compile time against entries being added or removed.
+var weekdays = [7]string{"monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"}
 
 const errorMessageAfterOnOffScheduleCreation = "Cluster On/Off Schedule creation is successful, but encountered an error while checking the current" +
 	" state of the cluster on/off schedule. Please run `terraform plan` after 1-2 minutes to know the" +
