@@ -65,7 +65,12 @@ func (d *ProjectEvents) Read(ctx context.Context, req datasource.ReadRequest, re
 		return
 	}
 
-	finalUrl := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/events", d.HostURL, organizationId, projectId)
+	var finalUrl string
+	if projectId == "" {
+		finalUrl = fmt.Sprintf("%s/v4/organizations/%s/events", d.HostURL, organizationId)
+	} else {
+		finalUrl = fmt.Sprintf("%s/v4/organizations/%s/projects/%s/events", d.HostURL, organizationId, projectId)
+	}
 	if len(queryParam) > 0 {
 		finalUrl = finalUrl + BuildQueryParams(queryParam)
 	}
