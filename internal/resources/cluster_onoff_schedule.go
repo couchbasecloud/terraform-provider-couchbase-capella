@@ -21,10 +21,16 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource                = &ClusterOnOffSchedule{}
-	_ resource.ResourceWithConfigure   = &ClusterOnOffSchedule{}
-	_ resource.ResourceWithImportState = &ClusterOnOffSchedule{}
+	_ resource.Resource                   = &ClusterOnOffSchedule{}
+	_ resource.ResourceWithConfigure      = &ClusterOnOffSchedule{}
+	_ resource.ResourceWithImportState    = &ClusterOnOffSchedule{}
+	_ resource.ResourceWithValidateConfig = &ClusterOnOffSchedule{}
 )
+
+// weekdays is the order the V4 API requires for the on/off schedule days list:
+// exactly one entry per day of the week, starting from Monday and ending with Sunday.
+// The explicit length guards at compile time against entries being added or removed.
+var weekdays = [7]string{"monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"}
 
 const errorMessageAfterOnOffScheduleCreation = "Cluster On/Off Schedule creation is successful, but encountered an error while checking the current" +
 	" state of the cluster on/off schedule. Please run `terraform plan` after 1-2 minutes to know the" +
@@ -53,6 +59,66 @@ func (c *ClusterOnOffSchedule) Metadata(_ context.Context, req resource.Metadata
 // Schema defines the schema for the OnOffSchedule resource.
 func (c *ClusterOnOffSchedule) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = OnOffScheduleSchema()
+}
+
+// ValidateConfig enforces the cross-item constraints on the days list that the
+// V4 API documents but the attribute-level validators cannot express: the
+// schedule must contain exactly one entry per day of the week in Monday-to-Sunday
+// order, and the cluster cannot be scheduled to be off for every day of the week.
+func (c *ClusterOnOffSchedule) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var days types.List
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("days"), &days)...)
+	if resp.Diagnostics.HasError() || days.IsNull() || days.IsUnknown() {
+		return
+	}
+
+	var dayItems []providerschema.DayItem
+	// Entries may still be wholly unknown (e.g. computed from other resources),
+	// which cannot be decoded into DayItem; allow them to decode as zero values
+	// so the per-item null/unknown checks below defer validation to apply time,
+	// while genuine decoding errors still surface.
+	resp.Diagnostics.Append(days.ElementsAs(ctx, &dayItems, true)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if len(dayItems) != len(weekdays) {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("days"),
+			"Invalid Cluster On/Off Schedule",
+			fmt.Sprintf("The schedule requires exactly %d days, one for each day of the week starting"+
+				" from Monday and ending with Sunday, got %d.", len(weekdays), len(dayItems)),
+		)
+		return
+	}
+
+	allOff := true
+	for i, d := range dayItems {
+		if d.Day.IsNull() || d.Day.IsUnknown() || d.State.IsNull() || d.State.IsUnknown() {
+			return
+		}
+		if d.Day.ValueString() != weekdays[i] {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("days").AtListIndex(i).AtName("day"),
+				"Invalid Cluster On/Off Schedule",
+				fmt.Sprintf("The days of the week must be in sequence starting from Monday and ending"+
+					" with Sunday: expected %q at position %d, got %q.", weekdays[i], i, d.Day.ValueString()),
+			)
+			return
+		}
+		if d.State.ValueString() != "off" {
+			allOff = false
+		}
+	}
+
+	if allOff {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("days"),
+			"Invalid Cluster On/Off Schedule",
+			"Clusters cannot be scheduled to be off for the entire day for every day of the week."+
+				" At least one day must have state \"on\" or \"custom\".",
+		)
+	}
 }
 
 // Create creates a new OnOffSchedule.

@@ -23,7 +23,8 @@ func OnOffScheduleSchema() schema.Schema {
 	capellaschema.AddAttr(timeBoundaryAttrs, "minute", onOffScheduleBuilder, int64DefaultAttribute(0, optional, computed))
 
 	dayAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(dayAttrs, "state", onOffScheduleBuilder, stringAttribute([]string{required}))
+	capellaschema.AddAttr(dayAttrs, "state", onOffScheduleBuilder, stringAttribute([]string{required},
+		validator.String(stringvalidator.OneOf("on", "off", "custom"))))
 	capellaschema.AddAttr(dayAttrs, "day", onOffScheduleBuilder, stringAttribute([]string{required},
 		validator.String(stringvalidator.OneOf("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"))))
 
