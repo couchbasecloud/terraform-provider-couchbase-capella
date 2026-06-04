@@ -251,6 +251,8 @@ var (
 
 	ErrMonitorTimeout = errors.New("timed out while watching indexes")
 
+	ErrIndexDeferred = errors.New("index is in Deferred state and will not become Ready without a BUILD INDEX statement")
+
 	ErrConcurrentIndexCreation = errors.New("another index create request is in progress")
 
 	ErrTimeoutWaitingForClientResponse = errors.New("timeout waiting for index build")
