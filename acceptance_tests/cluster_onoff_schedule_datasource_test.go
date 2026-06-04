@@ -54,6 +54,56 @@ data "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
 	})
 }
 
+// TestAccDatasourceClusterOnOffScheduleEmptyClusterId verifies that an empty
+// cluster_id is rejected by local schema validation instead of being sent to
+// the API (https://jira.issues.couchbase.com/browse/AV-132230).
+func TestAccDatasourceClusterOnOffScheduleEmptyClusterId(t *testing.T) {
+	dsName := randomStringWithPrefix("tf_acc_cluster_onoff_schedule_empty_id_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+%[1]s
+
+data "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
+  organization_id = "%[3]s"
+  project_id      = "%[4]s"
+  cluster_id      = ""
+}
+`, globalProviderBlock, dsName, globalOrgId, globalProjectId),
+				ExpectError: regexp.MustCompile(`must be a valid UUID|at least 1`),
+			},
+		},
+	})
+}
+
+// TestAccDatasourceClusterOnOffScheduleNonUUIDIds verifies that IDs that are
+// not valid UUIDs are rejected by local schema validation
+// (https://jira.issues.couchbase.com/browse/AV-132230).
+func TestAccDatasourceClusterOnOffScheduleNonUUIDIds(t *testing.T) {
+	dsName := randomStringWithPrefix("tf_acc_cluster_onoff_schedule_non_uuid_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+%[1]s
+
+data "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
+  organization_id = "not-a-uuid"
+  project_id      = "also-not-a-uuid"
+  cluster_id      = "definitely-not-a-uuid"
+}
+`, globalProviderBlock, dsName),
+				ExpectError: regexp.MustCompile(`must be a valid UUID`),
+			},
+		},
+	})
+}
+
 func testAccClusterOnOffScheduleResourceAndDatasourceConfig(resName, dsName string) string {
 	return fmt.Sprintf(`
 %[1]s
