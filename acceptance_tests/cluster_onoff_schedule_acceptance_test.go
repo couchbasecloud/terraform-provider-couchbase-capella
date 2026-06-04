@@ -250,11 +250,11 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
 	})
 }
 
-// TestAccClusterOnOffScheduleCustomWithoutFrom_AV_132229 verifies that a custom
+// TestAccClusterOnOffScheduleCustomWithoutFrom verifies that a custom
 // day without the required from time boundary is rejected by local config
 // validation instead of being sent to the API
 // (https://jira.issues.couchbase.com/browse/AV-132229).
-func TestAccClusterOnOffScheduleCustomWithoutFrom_AV_132229(t *testing.T) {
+func TestAccClusterOnOffScheduleCustomWithoutFrom(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_onoff_schedule_custom_no_from_")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -290,10 +290,10 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
 	})
 }
 
-// TestAccClusterOnOffScheduleBoundaryOnNonCustomDay_AV_132229 verifies that a
+// TestAccClusterOnOffScheduleBoundaryOnNonCustomDay verifies that a
 // day with state "on" or "off" cannot contain from/to time boundaries
 // (https://jira.issues.couchbase.com/browse/AV-132229).
-func TestAccClusterOnOffScheduleBoundaryOnNonCustomDay_AV_132229(t *testing.T) {
+func TestAccClusterOnOffScheduleBoundaryOnNonCustomDay(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_onoff_schedule_boundary_on_")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -325,10 +325,10 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
 	})
 }
 
-// TestAccClusterOnOffScheduleFromAfterTo_AV_132229 verifies that a custom day
+// TestAccClusterOnOffScheduleFromAfterTo verifies that a custom day
 // whose from time boundary is later than its to time boundary is rejected by
 // local config validation (https://jira.issues.couchbase.com/browse/AV-132229).
-func TestAccClusterOnOffScheduleFromAfterTo_AV_132229(t *testing.T) {
+func TestAccClusterOnOffScheduleFromAfterTo(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_onoff_schedule_from_after_to_")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -365,10 +365,10 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
 	})
 }
 
-// TestAccClusterOnOffScheduleInvalidBoundaryHour_AV_132229 verifies that a time
+// TestAccClusterOnOffScheduleInvalidBoundaryHour verifies that a time
 // boundary hour outside the valid 0-23 range is rejected by schema validation
 // (https://jira.issues.couchbase.com/browse/AV-132229).
-func TestAccClusterOnOffScheduleInvalidBoundaryHour_AV_132229(t *testing.T) {
+func TestAccClusterOnOffScheduleInvalidBoundaryHour(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_onoff_schedule_invalid_hour_")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -399,6 +399,45 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
 }
 `, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId),
 				ExpectError: regexp.MustCompile(`must be between 0 and 23`),
+			},
+		},
+	})
+}
+
+// TestAccClusterOnOffScheduleInvalidBoundaryMinute verifies that a
+// time boundary minute other than the valid values 0 and 30 is rejected by
+// schema validation (https://jira.issues.couchbase.com/browse/AV-132229).
+func TestAccClusterOnOffScheduleInvalidBoundaryMinute(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_onoff_schedule_invalid_minute_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
+  organization_id = "%[3]s"
+  project_id      = "%[4]s"
+  cluster_id      = "%[5]s"
+  timezone        = "US/Pacific"
+  days = [
+    {
+      day   = "monday"
+      state = "custom"
+      from  = { hour = 8, minute = 15 }
+    },
+    { day = "tuesday",   state = "on" },
+    { day = "wednesday", state = "on" },
+    { day = "thursday",  state = "on" },
+    { day = "friday",    state = "on" },
+    { day = "saturday",  state = "on" },
+    { day = "sunday",    state = "on" },
+  ]
+}
+`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId),
+				ExpectError: regexp.MustCompile(`must be one of`),
 			},
 		},
 	})
