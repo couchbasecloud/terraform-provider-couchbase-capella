@@ -253,7 +253,6 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
 // TestAccClusterOnOffScheduleCustomWithoutFrom verifies that a custom
 // day without the required from time boundary is rejected by local config
 // validation instead of being sent to the API
-// (https://jira.issues.couchbase.com/browse/AV-132229).
 func TestAccClusterOnOffScheduleCustomWithoutFrom(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_onoff_schedule_custom_no_from_")
 
@@ -292,7 +291,6 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
 
 // TestAccClusterOnOffScheduleBoundaryOnNonCustomDay verifies that a
 // day with state "on" or "off" cannot contain from/to time boundaries
-// (https://jira.issues.couchbase.com/browse/AV-132229).
 func TestAccClusterOnOffScheduleBoundaryOnNonCustomDay(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_onoff_schedule_boundary_on_")
 
@@ -327,7 +325,7 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
 
 // TestAccClusterOnOffScheduleFromAfterTo verifies that a custom day
 // whose from time boundary is later than its to time boundary is rejected by
-// local config validation (https://jira.issues.couchbase.com/browse/AV-132229).
+// local config validation
 func TestAccClusterOnOffScheduleFromAfterTo(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_onoff_schedule_from_after_to_")
 
@@ -367,7 +365,6 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
 
 // TestAccClusterOnOffScheduleInvalidBoundaryHour verifies that a time
 // boundary hour outside the valid 0-23 range is rejected by schema validation
-// (https://jira.issues.couchbase.com/browse/AV-132229).
 func TestAccClusterOnOffScheduleInvalidBoundaryHour(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_onoff_schedule_invalid_hour_")
 
@@ -406,7 +403,7 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
 
 // TestAccClusterOnOffScheduleInvalidBoundaryMinute verifies that a
 // time boundary minute other than the valid values 0 and 30 is rejected by
-// schema validation (https://jira.issues.couchbase.com/browse/AV-132229).
+// schema validation
 func TestAccClusterOnOffScheduleInvalidBoundaryMinute(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_onoff_schedule_invalid_minute_")
 
