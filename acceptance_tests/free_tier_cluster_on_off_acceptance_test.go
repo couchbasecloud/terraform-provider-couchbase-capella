@@ -102,6 +102,9 @@ func generateFreeTierClusterOnOffImportId(resourceReference string) resource.Imp
 				}
 			}
 		}
+		if rawState == nil {
+			return "", fmt.Errorf("resource %s not found in state", resourceReference)
+		}
 		return fmt.Sprintf(
 			"organization_id=%s,project_id=%s,cluster_id=%s",
 			rawState["organization_id"],

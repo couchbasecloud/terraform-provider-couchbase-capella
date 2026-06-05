@@ -20,7 +20,7 @@ func ClusterSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "id", clusterBuilder, stringAttribute([]string{computed, useStateForUnknown}))
 	capellaschema.AddAttr(attrs, "organization_id", clusterBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "project_id", clusterBuilder, requiredUUIDStringAttribute())
-	capellaschema.AddAttr(attrs, "name", clusterBuilder, stringAttribute([]string{required}))
+	capellaschema.AddAttr(attrs, "name", clusterBuilder, stringAttribute([]string{required}), "CreateClusterRequest")
 	capellaschema.AddAttr(attrs, "description", clusterBuilder, stringAttribute([]string{optional, computed}))
 	capellaschema.AddAttr(attrs, "zones", clusterBuilder, stringSetAttribute(optional, requiresReplace))
 	capellaschema.AddAttr(attrs, "enable_private_dns_resolution", clusterBuilder, boolDefaultAttribute(false, optional, computed, requiresReplace))
@@ -93,7 +93,7 @@ func ClusterSchema() schema.Schema {
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: serviceGroupAttrs,
 		},
-	})
+	}, "CreateClusterRequest")
 
 	availabilityAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(availabilityAttrs, "type", clusterBuilder, stringAttribute([]string{required}), "Availability")
