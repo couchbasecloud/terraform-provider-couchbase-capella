@@ -52,13 +52,36 @@ func (b *Backup) Schema(_ context.Context, _ resource.SchemaRequest, resp *resou
 
 // ModifyPlan validates backup restore-only fields that are invalid during resource creation.
 func (b *Backup) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	if req.Plan.Raw.IsNull() || !req.State.Raw.IsNull() {
+	if req.Plan.Raw.IsNull() {
 		return
 	}
 
 	var plan providerschema.Backup
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	restoreTimesConfigured := !plan.RestoreTimes.IsNull() && !plan.RestoreTimes.IsUnknown()
+	restoreConfigured := !plan.Restore.IsNull() && !plan.Restore.IsUnknown()
+
+	if !req.State.Raw.IsNull() {
+		if restoreTimesConfigured && !restoreConfigured {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("restore"),
+				"Invalid Backup Restore Configuration",
+				"restore must be configured when restore_times is set.",
+			)
+		}
+
+		if restoreConfigured && !restoreTimesConfigured {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("restore_times"),
+				"Invalid Backup Restore Configuration",
+				"restore_times must be configured when restore is set.",
+			)
+		}
+
 		return
 	}
 
