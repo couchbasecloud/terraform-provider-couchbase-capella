@@ -250,6 +250,196 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
 	})
 }
 
+// TestAccClusterOnOffScheduleCustomWithoutFrom verifies that a custom
+// day without the required from time boundary is rejected by local config
+// validation instead of being sent to the API
+func TestAccClusterOnOffScheduleCustomWithoutFrom(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_onoff_schedule_custom_no_from_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
+  organization_id = "%[3]s"
+  project_id      = "%[4]s"
+  cluster_id      = "%[5]s"
+  timezone        = "US/Pacific"
+  days = [
+    {
+      day   = "monday"
+      state = "custom"
+      to    = { hour = 18, minute = 30 }
+    },
+    { day = "tuesday",   state = "on" },
+    { day = "wednesday", state = "on" },
+    { day = "thursday",  state = "on" },
+    { day = "friday",    state = "on" },
+    { day = "saturday",  state = "on" },
+    { day = "sunday",    state = "on" },
+  ]
+}
+`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId),
+				ExpectError: regexp.MustCompile(`from time boundary is required`),
+			},
+		},
+	})
+}
+
+// TestAccClusterOnOffScheduleBoundaryOnNonCustomDay verifies that a
+// day with state "on" or "off" cannot contain from/to time boundaries
+func TestAccClusterOnOffScheduleBoundaryOnNonCustomDay(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_onoff_schedule_boundary_on_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
+  organization_id = "%[3]s"
+  project_id      = "%[4]s"
+  cluster_id      = "%[5]s"
+  timezone        = "US/Pacific"
+  days = [
+    { day = "monday",    state = "on", from = { hour = 8, minute = 0 } },
+    { day = "tuesday",   state = "on" },
+    { day = "wednesday", state = "on" },
+    { day = "thursday",  state = "on" },
+    { day = "friday",    state = "on" },
+    { day = "saturday",  state = "on" },
+    { day = "sunday",    state = "on" },
+  ]
+}
+`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId),
+				ExpectError: regexp.MustCompile(`cannot contain from/to`),
+			},
+		},
+	})
+}
+
+// TestAccClusterOnOffScheduleFromAfterTo verifies that a custom day
+// whose from time boundary is later than its to time boundary is rejected by
+// local config validation
+func TestAccClusterOnOffScheduleFromAfterTo(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_onoff_schedule_from_after_to_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
+  organization_id = "%[3]s"
+  project_id      = "%[4]s"
+  cluster_id      = "%[5]s"
+  timezone        = "US/Pacific"
+  days = [
+    {
+      day   = "monday"
+      state = "custom"
+      from  = { hour = 18, minute = 30 }
+      to    = { hour = 8, minute = 0 }
+    },
+    { day = "tuesday",   state = "on" },
+    { day = "wednesday", state = "on" },
+    { day = "thursday",  state = "on" },
+    { day = "friday",    state = "on" },
+    { day = "saturday",  state = "on" },
+    { day = "sunday",    state = "on" },
+  ]
+}
+`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId),
+				ExpectError: regexp.MustCompile(`must not be later than`),
+			},
+		},
+	})
+}
+
+// TestAccClusterOnOffScheduleInvalidBoundaryHour verifies that a time
+// boundary hour outside the valid 0-23 range is rejected by schema validation
+func TestAccClusterOnOffScheduleInvalidBoundaryHour(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_onoff_schedule_invalid_hour_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
+  organization_id = "%[3]s"
+  project_id      = "%[4]s"
+  cluster_id      = "%[5]s"
+  timezone        = "US/Pacific"
+  days = [
+    {
+      day   = "monday"
+      state = "custom"
+      from  = { hour = 24, minute = 0 }
+    },
+    { day = "tuesday",   state = "on" },
+    { day = "wednesday", state = "on" },
+    { day = "thursday",  state = "on" },
+    { day = "friday",    state = "on" },
+    { day = "saturday",  state = "on" },
+    { day = "sunday",    state = "on" },
+  ]
+}
+`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId),
+				ExpectError: regexp.MustCompile(`must be between 0 and 23`),
+			},
+		},
+	})
+}
+
+// TestAccClusterOnOffScheduleInvalidBoundaryMinute verifies that a
+// time boundary minute other than the valid values 0 and 30 is rejected by
+// schema validation
+func TestAccClusterOnOffScheduleInvalidBoundaryMinute(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_onoff_schedule_invalid_minute_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
+  organization_id = "%[3]s"
+  project_id      = "%[4]s"
+  cluster_id      = "%[5]s"
+  timezone        = "US/Pacific"
+  days = [
+    {
+      day   = "monday"
+      state = "custom"
+      from  = { hour = 8, minute = 15 }
+    },
+    { day = "tuesday",   state = "on" },
+    { day = "wednesday", state = "on" },
+    { day = "thursday",  state = "on" },
+    { day = "friday",    state = "on" },
+    { day = "saturday",  state = "on" },
+    { day = "sunday",    state = "on" },
+  ]
+}
+`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId),
+				ExpectError: regexp.MustCompile(`must be one of`),
+			},
+		},
+	})
+}
+
 func testAccClusterOnOffScheduleResourceConfig(resourceName, timezone string) string {
 	return fmt.Sprintf(`
 %[1]s

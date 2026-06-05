@@ -61,10 +61,12 @@ func (c *ClusterOnOffSchedule) Schema(_ context.Context, _ resource.SchemaReques
 	resp.Schema = OnOffScheduleSchema()
 }
 
-// ValidateConfig enforces the cross-item constraints on the days list that the
-// V4 API documents but the attribute-level validators cannot express: the
-// schedule must contain exactly one entry per day of the week in Monday-to-Sunday
-// order, and the cluster cannot be scheduled to be off for every day of the week.
+// ValidateConfig enforces the constraints on the days list that the V4 API
+// documents but the attribute-level validators cannot express: the schedule
+// must contain exactly one entry per day of the week in Monday-to-Sunday order,
+// the cluster cannot be scheduled to be off for every day of the week, custom
+// days require a from time boundary, non-custom days cannot have time
+// boundaries, and from must not be later than to.
 func (c *ClusterOnOffSchedule) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	var days types.List
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("days"), &days)...)
@@ -109,6 +111,10 @@ func (c *ClusterOnOffSchedule) ValidateConfig(ctx context.Context, req resource.
 		if d.State.ValueString() != "off" {
 			allOff = false
 		}
+		validateDayTimeBoundaries(i, d, resp)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	if allOff {
@@ -119,6 +125,63 @@ func (c *ClusterOnOffSchedule) ValidateConfig(ctx context.Context, req resource.
 				" At least one day must have state \"on\" or \"custom\".",
 		)
 	}
+}
+
+// validateDayTimeBoundaries enforces the V4 API rules tying a day's state to
+// its from/to time boundaries: custom days must contain the from boundary,
+// on/off days cannot contain any time boundary, and from must not be later
+// than to.
+func validateDayTimeBoundaries(i int, d providerschema.DayItem, resp *resource.ValidateConfigResponse) {
+	day := d.Day.ValueString()
+
+	switch d.State.ValueString() {
+	case "custom":
+		if d.From == nil {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("days").AtListIndex(i).AtName("from"),
+				"Invalid Cluster On/Off Schedule",
+				fmt.Sprintf("The from time boundary is required when state is \"custom\" (day %q).", day),
+			)
+			return
+		}
+		if d.To == nil {
+			return
+		}
+		from, fromKnown := boundaryMinutes(d.From)
+		to, toKnown := boundaryMinutes(d.To)
+		if fromKnown && toKnown && from > to {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("days").AtListIndex(i).AtName("from"),
+				"Invalid Cluster On/Off Schedule",
+				fmt.Sprintf("The from time boundary must not be later than the to time boundary (day %q).", day),
+			)
+		}
+	case "on", "off":
+		if d.From != nil || d.To != nil {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("days").AtListIndex(i),
+				"Invalid Cluster On/Off Schedule",
+				fmt.Sprintf("Days with state \"on\" or \"off\" cannot contain from/to time boundaries (day %q).", day),
+			)
+		}
+	}
+}
+
+// boundaryMinutes converts a time boundary to minutes since midnight. Null
+// hour/minute values default to 0, matching the API default. Returns false
+// when a value is unknown so validation is deferred to apply time.
+func boundaryMinutes(b *providerschema.OnTimeBoundary) (int64, bool) {
+	if b.Hour.IsUnknown() || b.Minute.IsUnknown() {
+		return 0, false
+	}
+	var hour, minute int64
+	if !b.Hour.IsNull() {
+		hour = b.Hour.ValueInt64()
+	}
+	if !b.Minute.IsNull() {
+		minute = b.Minute.ValueInt64()
+	}
+	return hour*60 + minute, true
 }
 
 // Create creates a new OnOffSchedule.
