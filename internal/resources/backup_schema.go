@@ -1,7 +1,6 @@
 package resources
 
 import (
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -73,7 +72,7 @@ func BackupSchema() schema.Schema {
 	capellaschema.AddAttr(restoreAttrs, "include_data", backupBuilder, stringAttribute([]string{optional}))
 	capellaschema.AddAttr(restoreAttrs, "exclude_data", backupBuilder, stringAttribute([]string{optional}))
 	capellaschema.AddAttr(restoreAttrs, "map_data", backupBuilder, stringAttribute([]string{optional}))
-	capellaschema.AddAttr(restoreAttrs, "replace_ttl", backupBuilder, stringAttribute([]string{optional}, stringvalidator.OneOf("none", "all", "expired")))
+	capellaschema.AddAttr(restoreAttrs, "replace_ttl", backupBuilder, stringAttribute([]string{optional}), "CreateOnDemandRestoreRequest")
 	capellaschema.AddAttr(restoreAttrs, "replace_ttl_with", backupBuilder, stringAttribute([]string{optional}))
 	capellaschema.AddAttr(restoreAttrs, "status", backupBuilder, stringAttribute([]string{computed}))
 
