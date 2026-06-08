@@ -440,11 +440,11 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
 	})
 }
 
-// TestAccClusterOnOffSchedule_AV_132231 verifies that a schedule which repeats a
-// weekday and omits another (here monday twice, tuesday missing) is rejected by
+// TestAccClusterOnOffScheduleDuplicateDays verifies that a schedule which repeats
+// a weekday and omits another (here monday twice, tuesday missing) is rejected by
 // local config validation with a clear duplicate/missing-day diagnostic instead
-// of passing terraform validate. Reproduces AV-132231.
-func TestAccClusterOnOffSchedule_AV_132231(t *testing.T) {
+// of passing terraform validate.
+func TestAccClusterOnOffScheduleDuplicateDays(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_cluster_onoff_schedule_dup_days_")
 
 	resource.ParallelTest(t, resource.TestCase{
