@@ -94,6 +94,36 @@ func (c *ClusterOnOffSchedule) ValidateConfig(ctx context.Context, req resource.
 		return
 	}
 
+	// Reject duplicate or missing weekdays before the positional ordering check
+	// below, so a repeated or omitted day produces a clear diagnostic instead of
+	// the less obvious "out of sequence" message. Day values are constrained to
+	// the seven valid weekdays by the attribute-level enum validator, so with
+	// exactly seven entries any weekday whose count is not one implies a
+	// duplicate paired with an omission.
+	counts := make(map[string]int, len(weekdays))
+	for _, d := range dayItems {
+		if d.Day.IsNull() || d.Day.IsUnknown() {
+			// Unknown/computed day values cannot be counted here; the loop below
+			// defers validation for such entries to apply time.
+			counts = nil
+			break
+		}
+		counts[d.Day.ValueString()]++
+	}
+	if counts != nil {
+		for _, weekday := range weekdays {
+			if counts[weekday] != 1 {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("days"),
+					"Invalid Cluster On/Off Schedule",
+					"The days list must contain exactly one entry for each weekday from Monday"+
+						" through Sunday, with no duplicate or missing days.",
+				)
+				return
+			}
+		}
+	}
+
 	allOff := true
 	for i, d := range dayItems {
 		if d.Day.IsNull() || d.Day.IsUnknown() || d.State.IsNull() || d.State.IsUnknown() {

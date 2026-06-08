@@ -440,6 +440,44 @@ resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
 	})
 }
 
+// TestAccClusterOnOffSchedule_AV_132231 verifies that a schedule which repeats a
+// weekday and omits another (here monday twice, tuesday missing) is rejected by
+// local config validation with a clear duplicate/missing-day diagnostic instead
+// of passing terraform validate. Reproduces AV-132231.
+func TestAccClusterOnOffSchedule_AV_132231(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_onoff_schedule_dup_days_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_cluster_onoff_schedule" "%[2]s" {
+  organization_id = "%[3]s"
+  project_id      = "%[4]s"
+  cluster_id      = "%[5]s"
+  timezone        = "US/Pacific"
+  days = [
+    { day = "monday",    state = "on" },
+    { day = "monday",    state = "on" },
+    { day = "wednesday", state = "on" },
+    { day = "thursday",  state = "on" },
+    { day = "friday",    state = "on" },
+    { day = "saturday",  state = "on" },
+    { day = "sunday",    state = "on" },
+  ]
+}
+`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId),
+				// Subset from the start of the message so Terraform's diagnostic
+				// word-wrapping cannot split the match.
+				ExpectError: regexp.MustCompile(`exactly one entry for each weekday`),
+			},
+		},
+	})
+}
+
 func testAccClusterOnOffScheduleResourceConfig(resourceName, timezone string) string {
 	return fmt.Sprintf(`
 %[1]s
