@@ -139,6 +139,21 @@ func (l *LoggingConfig) Read(ctx context.Context, req resource.ReadRequest, resp
 
 	loggingConfig, err := l.getLoggingConfig(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName)
 	if err != nil {
+		if isForbiddenError(err) {
+			result, msg := checkAppEndpointDeletedOrForbidden(ctx, l.Data, organizationId, projectId, clusterId, appServiceId, appEndpointName)
+			switch result {
+			case appEndpointDeleted:
+				tflog.Info(ctx, "App Endpoint has been deleted outside of Terraform, removing from state")
+				resp.State.RemoveResource(ctx)
+				return
+			case appEndpointExists:
+				resp.Diagnostics.AddError("Error Getting App Endpoint Logging Config in Capella", msg)
+				return
+			default:
+				resp.Diagnostics.AddError("Error Getting App Endpoint Logging Config in Capella", msg)
+				return
+			}
+		}
 		resp.Diagnostics.AddError(
 			"Error Getting App Endpoint Logging Config in Capella",
 			"Could not get Capella App Endpoint Logging Config for app endpoint with name "+state.AppEndpointName.String()+": "+err.Error(),

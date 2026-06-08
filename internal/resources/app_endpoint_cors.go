@@ -266,6 +266,21 @@ func (c *Cors) Read(ctx context.Context, req resource.ReadRequest, resp *resourc
 			resp.State.RemoveResource(ctx)
 			return
 		}
+		if isForbiddenError(err) {
+			result, msg := checkAppEndpointDeletedOrForbidden(ctx, c.Data, organizationId, projectId, clusterId, appServiceId, appEndpointName)
+			switch result {
+			case appEndpointDeleted:
+				tflog.Info(ctx, "App Endpoint has been deleted outside of Terraform, removing from state")
+				resp.State.RemoveResource(ctx)
+				return
+			case appEndpointExists:
+				resp.Diagnostics.AddError("Error Reading CORS Configuration", msg)
+				return
+			default:
+				resp.Diagnostics.AddError("Error Reading CORS Configuration", msg)
+				return
+			}
+		}
 		resp.Diagnostics.AddError(
 			"Error Reading CORS Configuration",
 			"Could not read CORS configuration: "+errString,

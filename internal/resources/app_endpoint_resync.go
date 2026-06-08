@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
+	internalapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/api"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/utils"
@@ -144,6 +145,27 @@ func (a *AppEndpointResync) Read(ctx context.Context, req resource.ReadRequest, 
 
 	resyncResponse, err := a.getResyncStatus(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName)
 	if err != nil {
+		resourceNotFound, _ := internalapi.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		if isForbiddenError(err) {
+			result, msg := checkAppEndpointDeletedOrForbidden(ctx, a.Data, organizationId, projectId, clusterId, appServiceId, appEndpointName)
+			switch result {
+			case appEndpointDeleted:
+				tflog.Info(ctx, "App Endpoint has been deleted outside of Terraform, removing from state")
+				resp.State.RemoveResource(ctx)
+				return
+			case appEndpointExists:
+				resp.Diagnostics.AddError("Error Getting App Endpoint Resync status in Capella", msg)
+				return
+			default:
+				resp.Diagnostics.AddError("Error Getting App Endpoint Resync status in Capella", msg)
+				return
+			}
+		}
 		resp.Diagnostics.AddError(
 			"Error Getting App Endpoint Resync status in Capella",
 			errorAfterAppEndpointResyncInitiation+err.Error(),

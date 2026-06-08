@@ -170,6 +170,21 @@ func (f *ImportFilter) Read(ctx context.Context, req resource.ReadRequest, resp 
 			resp.State.RemoveResource(ctx)
 			return
 		}
+		if isForbiddenError(err) {
+			result, msg := checkAppEndpointDeletedOrForbidden(ctx, f.Data, IDs["organizationId"], IDs["projectId"], IDs["clusterId"], IDs["appServiceId"], IDs["appEndpointName"])
+			switch result {
+			case appEndpointDeleted:
+				tflog.Info(ctx, "App Endpoint has been deleted outside of Terraform, removing from state")
+				resp.State.RemoveResource(ctx)
+				return
+			case appEndpointExists:
+				resp.Diagnostics.AddError("Error Reading Import Filter", msg)
+				return
+			default:
+				resp.Diagnostics.AddError("Error Reading Import Filter", msg)
+				return
+			}
+		}
 		resp.Diagnostics.AddError(
 			"Error Reading Import Filter",
 			"Could not read Import Filter: "+errString,
