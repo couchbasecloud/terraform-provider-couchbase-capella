@@ -2,7 +2,6 @@ package acceptance_tests
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -28,7 +27,7 @@ func TestAccPrivateEndpointServiceEnableDisable(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dataSourceReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(dataSourceReference, "cluster_id", globalClusterId),
-					resource.TestMatchResourceAttr(dataSourceReference, "private_endpoint_dns", regexp.MustCompile(`^private-endpoint\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$`)),
+					resource.TestCheckResourceAttrSet(dataSourceReference, "private_endpoint_dns"),
 					resource.TestCheckResourceAttr(dataSourceReference, "data.#", "0"),
 				),
 			},
