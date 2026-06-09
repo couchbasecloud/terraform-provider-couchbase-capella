@@ -11,6 +11,22 @@ import (
 
 var onOffScheduleBuilder = capellaschema.NewSchemaBuilder("onOffSchedule", "ClusterOnOffSchedule")
 
+// onOffScheduleTimezones is the set of timezones the V4 API accepts for a
+// cluster on/off schedule. The generated enum table only carries this enum on
+// the request schema, while the builder resolves "ClusterOnOffSchedule" (the
+// response schema, which has no enum) first, so no OneOf validator is
+// auto-attached. Declaring it here and passing it at the call site enforces the
+// documented values locally and rejects an empty timezone.
+var onOffScheduleTimezones = []string{
+	"Pacific/Midway", "US/Hawaii", "US/Alaska", "US/Pacific", "US/Mountain",
+	"US/Central", "US/Eastern", "America/Puerto_Rico", "Canada/Newfoundland",
+	"America/Argentina/Buenos_Aires", "Atlantic/Cape_Verde", "Europe/London",
+	"Europe/Amsterdam", "Europe/Athens", "Africa/Nairobi", "Asia/Tehran",
+	"Indian/Mauritius", "Asia/Karachi", "Asia/Calcutta", "Asia/Dhaka",
+	"Asia/Bangkok", "Asia/Hong_Kong", "Asia/Tokyo", "Australia/North",
+	"Australia/Sydney", "Pacific/Ponape", "Antarctica/South_Pole",
+}
+
 // onOffScheduleHourAttribute returns the hour attribute for an on/off schedule
 // time boundary. The V4 API accepts hour values from 0 to 23 inclusive.
 func onOffScheduleHourAttribute() *schema.Int64Attribute {
@@ -33,7 +49,8 @@ func OnOffScheduleSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "organization_id", onOffScheduleBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "project_id", onOffScheduleBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "cluster_id", onOffScheduleBuilder, requiredUUIDStringAttribute())
-	capellaschema.AddAttr(attrs, "timezone", onOffScheduleBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "timezone", onOffScheduleBuilder, stringAttribute([]string{required, requiresReplace},
+		validator.String(stringvalidator.OneOf(onOffScheduleTimezones...))))
 
 	timeBoundaryAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(timeBoundaryAttrs, "hour", onOffScheduleBuilder, onOffScheduleHourAttribute())
