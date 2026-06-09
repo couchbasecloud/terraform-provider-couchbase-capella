@@ -11,12 +11,8 @@ import (
 
 var onOffScheduleBuilder = capellaschema.NewSchemaBuilder("onOffSchedule", "ClusterOnOffSchedule")
 
-// onOffScheduleTimezones is the set of timezones the V4 API accepts for a
-// cluster on/off schedule. The generated enum table only carries this enum on
-// the request schema, while the builder resolves "ClusterOnOffSchedule" (the
-// response schema, which has no enum) first, so no OneOf validator is
-// auto-attached. Declaring it here and passing it at the call site enforces the
-// documented values locally and rejects an empty timezone.
+// onOffScheduleTimezones lists the timezones the V4 API accepts. Validated at
+// the call site since the builder's auto-lookup finds no enum for this schema.
 var onOffScheduleTimezones = []string{
 	"Pacific/Midway", "US/Hawaii", "US/Alaska", "US/Pacific", "US/Mountain",
 	"US/Central", "US/Eastern", "America/Puerto_Rico", "Canada/Newfoundland",
