@@ -18,6 +18,13 @@ func TestAccDatasourceFreeTierClusters(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccFreeTierClustersDatasourceClusterConfig(clusterName, cidr),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(clusterReference, "name", clusterName),
+					resource.TestCheckResourceAttrSet(clusterReference, "id"),
+				),
+			},
+			{
 				Config: testAccFreeTierClustersDatasourceConfig(clusterName, dsName, cidr),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(clusterReference, "name", clusterName),
@@ -35,6 +42,25 @@ func TestAccDatasourceFreeTierClusters(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccFreeTierClustersDatasourceClusterConfig(clusterName, cidr string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_free_tier_cluster" "%[4]s" {
+	organization_id = "%[2]s"
+	project_id      = "%[3]s"
+	name            = "%[4]s"
+	description     = "Free tier cluster for clusters data source acceptance testing."
+
+	cloud_provider = {
+		type   = "aws"
+		region = "us-east-2"
+		cidr   = "%[5]s"
+	}
+}
+`, globalProviderBlock, globalOrgId, globalProjectId, clusterName, cidr)
 }
 
 func testAccFreeTierClustersDatasourceConfig(clusterName, dsName, cidr string) string {

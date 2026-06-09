@@ -28,6 +28,7 @@ func TestAccFreeTierBucketResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "memory_allocation_in_mb", "100"),
 					resource.TestCheckResourceAttrSet(resourceReference, "type"),
 					resource.TestCheckResourceAttrSet(resourceReference, "storage_backend"),
+					resource.TestCheckResourceAttrSet(resourceReference, "vbuckets"),
 				),
 			},
 			{

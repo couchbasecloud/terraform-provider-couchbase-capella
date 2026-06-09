@@ -19,12 +19,12 @@ func TestAccFreeTierClusterOnOffResource(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFreeTierClusterOnOffResourceLiveConfig(clusterName, resourceName, cidr, "on"),
+				Config: testAccFreeTierClusterOnOffResourceLiveConfig(clusterName, resourceName, cidr, "off"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttrSet(resourceReference, "cluster_id"),
-					resource.TestCheckResourceAttr(resourceReference, "state", "on"),
+					resource.TestCheckResourceAttr(resourceReference, "state", "off"),
 				),
 			},
 			{
@@ -35,17 +35,17 @@ func TestAccFreeTierClusterOnOffResource(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: "cluster_id",
 			},
 			{
-				Config: testAccFreeTierClusterOnOffResourceLiveConfig(clusterName, resourceName, cidr, "off"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceReference, "cluster_id"),
-					resource.TestCheckResourceAttr(resourceReference, "state", "off"),
-				),
-			},
-			{
 				Config: testAccFreeTierClusterOnOffResourceLiveConfig(clusterName, resourceName, cidr, "on"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceReference, "cluster_id"),
 					resource.TestCheckResourceAttr(resourceReference, "state", "on"),
+				),
+			},
+			{
+				Config: testAccFreeTierClusterOnOffResourceLiveConfig(clusterName, resourceName, cidr, "off"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceReference, "cluster_id"),
+					resource.TestCheckResourceAttr(resourceReference, "state", "off"),
 				),
 			},
 		},
