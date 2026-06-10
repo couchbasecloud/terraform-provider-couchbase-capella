@@ -51,6 +51,7 @@ resource "couchbase-capella_app_service" "new_app_service" {
 
 - `description` (String) - A short description of the App Service.
 - `if_match` (String) A precondition header that specifies the entity tag of a resource.
+- `load_balancer_cidr` (String)
 - `nodes` (Number) - Number of nodes configured for the App Service. Number of nodes configured for the App Service. The number of nodes can range from 2 to 12.
 
 ### Read-Only

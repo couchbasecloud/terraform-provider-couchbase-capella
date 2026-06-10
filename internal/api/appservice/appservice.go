@@ -30,6 +30,10 @@ type CreateAppServiceRequest struct {
 	// The latest Server version will be deployed by default.
 	Version *string `json:"version,omitempty"`
 
+	// LoadBalancerCidr optionally pins the CIDR block used for the app service load balancer subnet.
+	// Supported for Azure App Services only and rejected for other providers. When omitted, the CIDR is allocated dynamically.
+	LoadBalancerCidr *string `json:"loadBalancerCidr,omitempty"`
+
 	// Name is the name of the app service, the name of the app service should follow this naming criteria:
 	// An app service name should have at least 2 characters and up to 256 characters.
 	Name string `json:"name"`
@@ -101,6 +105,10 @@ type GetAppServiceResponse struct {
 
 	// Plan is the plan of the app service.
 	Plan string `json:"plan"`
+
+	// LoadBalancerCidr is the CIDR block reserved for the app service load balancer subnet,
+	// when one was requested (Azure only). Omitted otherwise.
+	LoadBalancerCidr *string `json:"loadBalancerCidr,omitempty"`
 }
 
 type UpdateAppServiceRequest struct {
