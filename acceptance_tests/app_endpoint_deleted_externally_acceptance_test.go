@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // TestAccAppEndpointDeletedExternally verifies that when an App Endpoint is
@@ -211,25 +210,4 @@ resource "couchbase-capella_app_endpoint_access_control_function" "%[9]s" {
 		acfResourceName,
 		acfBody,
 	)
-}
-
-// generateAppEndpointDeletedExternallyImportId generates the import ID for
-// the app endpoint resource used in deleted-externally tests.
-func generateAppEndpointDeletedExternallyImportId(resourceReference string) resource.ImportStateIdFunc {
-	return func(state *terraform.State) (string, error) {
-		var rawState map[string]string
-		for _, m := range state.Modules {
-			if v, ok := m.Resources[resourceReference]; ok {
-				rawState = v.Primary.Attributes
-				break
-			}
-		}
-		if rawState == nil {
-			return "", fmt.Errorf("resource %s not found in state", resourceReference)
-		}
-		return fmt.Sprintf(
-			"app_endpoint_name=%s,app_service_id=%s,cluster_id=%s,project_id=%s,organization_id=%s",
-			rawState["name"], rawState["app_service_id"], rawState["cluster_id"], rawState["project_id"], rawState["organization_id"],
-		), nil
-	}
 }
