@@ -97,6 +97,10 @@ var (
 	globalACFUpdateEPBucketName          = "tf_acc_ep_acf_bkt"
 	globalCorsMaxAgeZeroEPBucketName     = "tf_acc_ep_maz_bkt"
 	globalCorsMaxAgeFromZeroEPBucketName = "tf_acc_ep_mafz_bkt"
+	// Buckets for "deleted externally" tests — validates the 403 → List fallback
+	// that removes resources from state when the App Endpoint is deleted outside TF.
+	globalDeletedExternallyEPBucketName = "tf_acc_ep_del_ext_bkt"
+	globalACFDeletedExtEPBucketName     = "tf_acc_ep_acf_dex_bkt"
 	// Buckets for currently-skipped tests — not provisioned while skipped, but
 	// named so the tests are ready to run once the underlying bugs are fixed.
 	globalCorsDisabledFalseEPBucketName = "tf_acc_ep_cors_df_bkt"
