@@ -21,6 +21,7 @@ func TestAccDatasourceCertificate(t *testing.T) {
 					resource.TestCheckResourceAttr(dsReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(dsReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(dsReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(dsReference, "data.#", "1"),
 					resource.TestCheckResourceAttrSet(dsReference, "data.0.certificate"),
 				),
 			},
@@ -44,7 +45,7 @@ data "couchbase-capella_certificate" "%[2]s" {
   cluster_id      = "00000000-0000-0000-0000-000000000000"
 }
 `, globalProviderBlock, dsName, globalOrgId, globalProjectId),
-				ExpectError: regexp.MustCompile(`Error Reading Capella Certificate`),
+				ExpectError: regexp.MustCompile(`(?s)Error Reading Capella Certificate.*"httpStatusCode":(403|404)`),
 			},
 		},
 	})
