@@ -96,6 +96,10 @@ func (a *AppService) Create(ctx context.Context, req resource.CreateRequest, res
 		appServiceRequest.Version = &version
 	}
 
+	if !plan.LoadBalancerCidr.IsNull() && !plan.LoadBalancerCidr.IsUnknown() {
+		appServiceRequest.LoadBalancerCidr = plan.LoadBalancerCidr.ValueStringPointer()
+	}
+
 	var organizationId = plan.OrganizationId.ValueString()
 	var projectId = plan.ProjectId.ValueString()
 	var clusterId = plan.ClusterId.ValueString()
@@ -151,6 +155,13 @@ func (a *AppService) Create(ctx context.Context, req resource.CreateRequest, res
 		return
 	}
 
+	// load_balancer_cidr is a create-time input that the API only echoes back on Azure with the
+	// defined-CIDR feature enabled. Keep the configured value so state stays consistent with config
+	// when the API omits it.
+	if !plan.LoadBalancerCidr.IsNull() && !plan.LoadBalancerCidr.IsUnknown() {
+		refreshedState.LoadBalancerCidr = plan.LoadBalancerCidr
+	}
+
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
@@ -202,6 +213,12 @@ func (a *AppService) Read(ctx context.Context, req resource.ReadRequest, resp *r
 
 	if !state.IfMatch.IsUnknown() && !state.IfMatch.IsNull() {
 		refreshedState.IfMatch = state.IfMatch
+	}
+
+	// Preserve the configured load_balancer_cidr; the API omits it unless Azure + defined-CIDR is
+	// enabled. On import there is no prior value, so the refreshed (API) value is kept.
+	if !state.LoadBalancerCidr.IsNull() && !state.LoadBalancerCidr.IsUnknown() {
+		refreshedState.LoadBalancerCidr = state.LoadBalancerCidr
 	}
 
 	// Set refreshed state
@@ -309,6 +326,12 @@ func (a *AppService) Update(ctx context.Context, req resource.UpdateRequest, res
 
 	if !plan.IfMatch.IsUnknown() && !plan.IfMatch.IsNull() {
 		currentState.IfMatch = plan.IfMatch
+	}
+
+	// load_balancer_cidr is create-only (requires replace), so it never changes here. Keep the
+	// configured value since the API omits it unless Azure + defined-CIDR is enabled.
+	if !plan.LoadBalancerCidr.IsNull() && !plan.LoadBalancerCidr.IsUnknown() {
+		currentState.LoadBalancerCidr = plan.LoadBalancerCidr
 	}
 
 	// Set state to fully populated data
@@ -568,6 +591,9 @@ func initializePendingAppServiceWithPlanAndId(plan providerschema.AppService, id
 	}
 	if plan.Version.IsNull() || plan.Version.IsUnknown() {
 		plan.Version = types.StringNull()
+	}
+	if plan.LoadBalancerCidr.IsNull() || plan.LoadBalancerCidr.IsUnknown() {
+		plan.LoadBalancerCidr = types.StringNull()
 	}
 	plan.Audit = types.ObjectNull(providerschema.CouchbaseAuditData{}.AttributeTypes())
 	plan.Etag = types.StringNull()
