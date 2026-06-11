@@ -24,7 +24,7 @@ func TestAccAppEndpointDeletedExternally(t *testing.T) {
 
 	cfg := testAccAppEndpointDeletedExternallyConfig(resourceName, epName, globalDeletedExternallyEPBucketName)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			// Step 1: Create the App Endpoint via Terraform.
@@ -90,7 +90,7 @@ func TestAccAppEndpointAccessControlFunctionDeletedExternally(t *testing.T) {
 	)
 	cfgEndpointOnly := testAccAppEndpointDeletedExternallyConfig(epResourceName, epName, globalACFDeletedExtEPBucketName)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			// Step 1: Create App Endpoint + ACF resource.

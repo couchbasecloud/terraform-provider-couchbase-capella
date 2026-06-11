@@ -321,14 +321,18 @@ func (a *AppEndpointResync) getResyncStatus(ctx context.Context, organizationId,
 	}
 
 	if getResyncStatusResp.JSON200 == nil {
-		tflog.Debug(ctx, "unexpected status getting app endpoint logging config", map[string]interface{}{
+		tflog.Debug(ctx, "unexpected status getting app endpoint resync status", map[string]interface{}{
 			"organizationId":  organizationId,
 			"projectId":       projectId,
 			"clusterId":       clusterId,
 			"appServiceId":    appServiceId,
 			"appEndpointName": appEndpointName,
+			"statusCode":      getResyncStatusResp.HTTPResponse.StatusCode,
 		})
-		return nil, errors.New("Unexpected status while getting App Endpoint Logging Config: " + string(getResyncStatusResp.Body))
+		return nil, &internalapi.Error{
+			HttpStatusCode: getResyncStatusResp.HTTPResponse.StatusCode,
+			Message:        "Unexpected status while getting App Endpoint Resync status: " + string(getResyncStatusResp.Body),
+		}
 	}
 
 	return getResyncStatusResp.JSON200, err

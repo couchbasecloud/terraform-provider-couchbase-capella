@@ -2,7 +2,6 @@ package resources
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -31,9 +30,9 @@ const (
 // call is caused by the App Endpoint being deleted outside of Terraform, or by a genuine
 // permission error.
 //
-// It does this by listing all App Endpoints for the App Service and checking whether the
-// target endpoint appears in the response. If the list call itself returns 403, the original
-// error is treated as a genuine permission issue.
+// It does this by listing all App Endpoints for the App Service (using paginated fetches)
+// and checking whether the target endpoint appears in any page. If the list call itself
+// returns 403, the original error is treated as a genuine permission issue.
 func checkAppEndpointDeletedOrForbidden(
 	ctx context.Context,
 	data *providerschema.Data,
@@ -54,12 +53,12 @@ func checkAppEndpointDeletedOrForbidden(
 		SuccessStatus: http.StatusOK,
 	}
 
-	response, err := data.ClientV1.ExecuteWithRetry(
+	allEndpoints, err := api.GetPaginated[[]app_endpoints.GetAppEndpointResponse](
 		ctx,
-		cfg,
-		nil,
+		data.ClientV1,
 		data.Token,
-		nil,
+		cfg,
+		api.SortByName,
 	)
 	if err != nil {
 		var apiError *api.Error
@@ -69,12 +68,7 @@ func checkAppEndpointDeletedOrForbidden(
 		return appEndpointCheckFailed, api.ParseError(err)
 	}
 
-	var listResp app_endpoints.ListAppEndpointsResponse
-	if err := json.Unmarshal(response.Body, &listResp); err != nil {
-		return appEndpointCheckFailed, fmt.Sprintf("could not unmarshal list app endpoints response: %s", err.Error())
-	}
-
-	for _, ep := range listResp.Data {
+	for _, ep := range allEndpoints {
 		if ep.Name == appEndpointName {
 			tflog.Warn(ctx, "App Endpoint exists in list but Get returned 403; possible race condition, please retry")
 			return appEndpointExists, "App Endpoint exists but the Get request returned 403. This may be a transient issue, please retry."
