@@ -81,7 +81,7 @@ func TestAccClusterOnOffScheduleResourceInvalidTimezone(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccClusterOnOffScheduleResourceConfig(resourceName, "Mars/Olympus"),
-				ExpectError: regexp.MustCompile(`must be one of`),
+				ExpectError: regexp.MustCompile(`timezone value must be one of`),
 			},
 		},
 	})
@@ -100,7 +100,7 @@ func TestAccClusterOnOffScheduleEmptyTimezone(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccClusterOnOffScheduleResourceConfig(resourceName, ""),
-				ExpectError: regexp.MustCompile(`must be one of`),
+				ExpectError: regexp.MustCompile(`timezone value must be one of`),
 			},
 		},
 	})
