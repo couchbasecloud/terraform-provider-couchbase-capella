@@ -79,19 +79,20 @@ func checkAppEndpointDeletedOrForbidden(
 }
 
 // handleAppEndpointForbidden checks whether err is a 403, and if so determines
-// whether the App Endpoint was deleted externally. It removes the resource from
-// state when deleted and adds a diagnostic error otherwise. Returns true if the
-// caller should return immediately (i.e. the error was handled).
+// whether the App Endpoint was deleted externally. Returns (true, nil) when the
+// endpoint was confirmed deleted and removed from state — the caller should return.
+// Returns (false, error) when the error is a 403 but the endpoint still exists or
+// the check failed. Returns (false, nil) when the error is not a 403 and the
+// caller should continue with its own error handling.
 func handleAppEndpointForbidden(
 	ctx context.Context,
 	err error,
 	data *providerschema.Data,
 	resp *resource.ReadResponse,
-	diagnosticSummary string,
 	organizationId, projectId, clusterId, appServiceId, appEndpointName string,
-) bool {
+) (bool, error) {
 	if !api.IsForbiddenError(err) {
-		return false
+		return false, nil
 	}
 
 	result, msg := checkAppEndpointDeletedOrForbidden(ctx, data, organizationId, projectId, clusterId, appServiceId, appEndpointName)
@@ -99,8 +100,8 @@ func handleAppEndpointForbidden(
 	case appEndpointDeleted:
 		tflog.Info(ctx, "App Endpoint has been deleted outside of Terraform, removing from state")
 		resp.State.RemoveResource(ctx)
+		return true, nil
 	default:
-		resp.Diagnostics.AddError(diagnosticSummary, msg)
+		return false, fmt.Errorf("%s", msg)
 	}
-	return true
 }

@@ -339,7 +339,10 @@ func (a *AppEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		if handleAppEndpointForbidden(ctx, err, a.Data, resp, "Error refreshing App Endpoint", organizationId, projectId, clusterId, appServiceId, endpointName) {
+		if handled, forbiddenErr := handleAppEndpointForbidden(ctx, err, a.Data, resp, organizationId, projectId, clusterId, appServiceId, endpointName); handled {
+			return
+		} else if forbiddenErr != nil {
+			resp.Diagnostics.AddError("Error refreshing App Endpoint", forbiddenErr.Error())
 			return
 		}
 		resp.Diagnostics.AddError(

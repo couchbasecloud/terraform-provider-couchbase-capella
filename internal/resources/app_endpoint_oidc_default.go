@@ -117,7 +117,10 @@ func (r *AppEndpointDefaultOidcProvider) Read(ctx context.Context, req resource.
 
 	selected, err := r.getDefaultProvider(ctx, IDs[providerschema.OrganizationId], IDs[providerschema.ProjectId], IDs[providerschema.ClusterId], IDs[providerschema.AppServiceId], IDs[providerschema.AppEndpointName])
 	if err != nil {
-		if handleAppEndpointForbidden(ctx, err, r.Data, resp, "Error Reading Default OIDC Provider", IDs[providerschema.OrganizationId], IDs[providerschema.ProjectId], IDs[providerschema.ClusterId], IDs[providerschema.AppServiceId], IDs[providerschema.AppEndpointName]) {
+		if handled, forbiddenErr := handleAppEndpointForbidden(ctx, err, r.Data, resp, IDs[providerschema.OrganizationId], IDs[providerschema.ProjectId], IDs[providerschema.ClusterId], IDs[providerschema.AppServiceId], IDs[providerschema.AppEndpointName]); handled {
+			return
+		} else if forbiddenErr != nil {
+			resp.Diagnostics.AddError("Error Reading Default OIDC Provider", forbiddenErr.Error())
 			return
 		}
 		resp.Diagnostics.AddError("Error Reading Default OIDC Provider", "Could not list OIDC providers: "+err.Error())

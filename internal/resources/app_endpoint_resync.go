@@ -151,7 +151,10 @@ func (a *AppEndpointResync) Read(ctx context.Context, req resource.ReadRequest, 
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		if handleAppEndpointForbidden(ctx, err, a.Data, resp, "Error Getting App Endpoint Resync status in Capella", organizationId, projectId, clusterId, appServiceId, appEndpointName) {
+		if handled, forbiddenErr := handleAppEndpointForbidden(ctx, err, a.Data, resp, organizationId, projectId, clusterId, appServiceId, appEndpointName); handled {
+			return
+		} else if forbiddenErr != nil {
+			resp.Diagnostics.AddError("Error Getting App Endpoint Resync status in Capella", forbiddenErr.Error())
 			return
 		}
 		resp.Diagnostics.AddError(
