@@ -3,6 +3,7 @@ package acceptance_tests
 import (
 	"context"
 	"sync"
+	"testing"
 	"time"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -12,6 +13,16 @@ var (
 	dmClusterOnce sync.Once
 	dmClusterErr  error
 )
+
+// requireDMCluster ensures the data-management cluster is provisioned, failing
+// the test if provisioning errored. DM tests call this before building their
+// config so dmClusterId/dmBucketId are populated.
+func requireDMCluster(t *testing.T) {
+	t.Helper()
+	if err := ensureDMCluster(); err != nil {
+		t.Fatalf("ensureDMCluster: %v", err)
+	}
+}
 
 // ensureDMCluster lazily provisions the dedicated data-management cluster (and
 // its bucket) used by the data_management_* acceptance tests. It is built on
