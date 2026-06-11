@@ -10,6 +10,9 @@ import (
 )
 
 func TestAccBucketResourceRequiredOnly(t *testing.T) {
+	if err := ensureDMCluster(); err != nil {
+		t.Fatalf("ensureDMCluster: %v", err)
+	}
 	resourceName := randomStringWithPrefix("tf_acc_bkt_req_")
 	resourceReference := "couchbase-capella_bucket." + resourceName
 
@@ -48,6 +51,9 @@ func TestAccBucketResourceRequiredOnly(t *testing.T) {
 }
 
 func TestAccBucketResourceAllOptionalFields(t *testing.T) {
+	if err := ensureDMCluster(); err != nil {
+		t.Fatalf("ensureDMCluster: %v", err)
+	}
 	resourceName := randomStringWithPrefix("tf_acc_bkt_full_")
 	resourceReference := "couchbase-capella_bucket." + resourceName
 
@@ -78,6 +84,9 @@ func TestAccBucketResourceAllOptionalFields(t *testing.T) {
 }
 
 func TestAccBucketResourceUpdate(t *testing.T) {
+	if err := ensureDMCluster(); err != nil {
+		t.Fatalf("ensureDMCluster: %v", err)
+	}
 	resourceName := randomStringWithPrefix("tf_acc_bkt_upd_")
 	resourceReference := "couchbase-capella_bucket." + resourceName
 
@@ -111,6 +120,9 @@ func TestAccBucketResourceUpdate(t *testing.T) {
 }
 
 func TestAccBucketResourceEphemeralType(t *testing.T) {
+	if err := ensureDMCluster(); err != nil {
+		t.Fatalf("ensureDMCluster: %v", err)
+	}
 	resourceName := randomStringWithPrefix("tf_acc_bkt_eph_")
 	resourceReference := "couchbase-capella_bucket." + resourceName
 
@@ -153,6 +165,9 @@ resource "couchbase-capella_bucket" "%[2]s" {
 }
 
 func TestAccBucketResourceInvalidProject(t *testing.T) {
+	if err := ensureDMCluster(); err != nil {
+		t.Fatalf("ensureDMCluster: %v", err)
+	}
 	resourceName := randomStringWithPrefix("tf_acc_bkt_bad_project_")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -176,6 +191,9 @@ resource "couchbase-capella_bucket" "%[2]s" {
 }
 
 func TestAccBucketResourceInvalidDurabilityLevel(t *testing.T) {
+	if err := ensureDMCluster(); err != nil {
+		t.Fatalf("ensureDMCluster: %v", err)
+	}
 	resourceName := randomStringWithPrefix("tf_acc_bkt_bad_dur_")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -200,6 +218,9 @@ resource "couchbase-capella_bucket" "%[2]s" {
 }
 
 func TestAccBucketResourceInvalidReplicaCount(t *testing.T) {
+	if err := ensureDMCluster(); err != nil {
+		t.Fatalf("ensureDMCluster: %v", err)
+	}
 	resourceName := randomStringWithPrefix("tf_acc_bkt_bad_rep_")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -224,6 +245,9 @@ resource "couchbase-capella_bucket" "%[2]s" {
 }
 
 func TestAccScopeResource(t *testing.T) {
+	if err := ensureDMCluster(); err != nil {
+		t.Fatalf("ensureDMCluster: %v", err)
+	}
 	bucketName := randomStringWithPrefix("tf_acc_scope_bkt_")
 	scopeName := randomStringWithPrefix("tf_acc_scope_")
 	bucketReference := "couchbase-capella_bucket." + bucketName
@@ -254,6 +278,9 @@ func TestAccScopeResource(t *testing.T) {
 }
 
 func TestAccScopeResourceInvalidBucket(t *testing.T) {
+	if err := ensureDMCluster(); err != nil {
+		t.Fatalf("ensureDMCluster: %v", err)
+	}
 	scopeName := randomStringWithPrefix("tf_acc_scope_bad_bkt_")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -278,6 +305,9 @@ resource "couchbase-capella_scope" "%[2]s" {
 }
 
 func TestAccScopeResourceInvalidCluster(t *testing.T) {
+	if err := ensureDMCluster(); err != nil {
+		t.Fatalf("ensureDMCluster: %v", err)
+	}
 	scopeName := randomStringWithPrefix("tf_acc_scope_bad_cluster_")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -302,6 +332,9 @@ resource "couchbase-capella_scope" "%[2]s" {
 }
 
 func TestAccCollectionResourceNoTTL(t *testing.T) {
+	if err := ensureDMCluster(); err != nil {
+		t.Fatalf("ensureDMCluster: %v", err)
+	}
 	bucketName := randomStringWithPrefix("tf_acc_coll_bkt_nottl_")
 	scopeName := randomStringWithPrefix("tf_acc_coll_scope_nottl_")
 	collName := randomStringWithPrefix("tf_acc_coll_nottl_")
@@ -333,6 +366,9 @@ func TestAccCollectionResourceNoTTL(t *testing.T) {
 }
 
 func TestAccCollectionResourceWithTTL(t *testing.T) {
+	if err := ensureDMCluster(); err != nil {
+		t.Fatalf("ensureDMCluster: %v", err)
+	}
 	bucketName := randomStringWithPrefix("tf_acc_coll_bkt_ttl_")
 	scopeName := randomStringWithPrefix("tf_acc_coll_scope_ttl_")
 	collName := randomStringWithPrefix("tf_acc_coll_ttl_")
@@ -370,6 +406,9 @@ func TestAccCollectionResourceWithTTL(t *testing.T) {
 }
 
 func TestAccCollectionResourceInvalidScope(t *testing.T) {
+	if err := ensureDMCluster(); err != nil {
+		t.Fatalf("ensureDMCluster: %v", err)
+	}
 	collName := randomStringWithPrefix("tf_acc_coll_bad_scope_")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -384,6 +423,9 @@ func TestAccCollectionResourceInvalidScope(t *testing.T) {
 }
 
 func TestAccCollectionResourceInvalidBucket(t *testing.T) {
+	if err := ensureDMCluster(); err != nil {
+		t.Fatalf("ensureDMCluster: %v", err)
+	}
 	collName := randomStringWithPrefix("tf_acc_coll_bad_bkt_")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -410,6 +452,9 @@ resource "couchbase-capella_collection" "%[2]s" {
 
 // AV-132307: API accepts negative max_ttl; restore ExpectError once fixed.
 func TestAccCollectionResourceNegativeTTL(t *testing.T) {
+	if err := ensureDMCluster(); err != nil {
+		t.Fatalf("ensureDMCluster: %v", err)
+	}
 	bucketName := randomStringWithPrefix("tf_acc_coll_neg_ttl_bkt_")
 	scopeName := randomStringWithPrefix("tf_acc_coll_neg_ttl_scope_")
 	collName := randomStringWithPrefix("tf_acc_coll_neg_ttl_")
@@ -430,6 +475,9 @@ func TestAccCollectionResourceNegativeTTL(t *testing.T) {
 }
 
 func TestAccFlushBucketResource(t *testing.T) {
+	if err := ensureDMCluster(); err != nil {
+		t.Fatalf("ensureDMCluster: %v", err)
+	}
 	bucketName := randomStringWithPrefix("tf_acc_flush_bkt_")
 	flushName := randomStringWithPrefix("tf_acc_flush_")
 	bucketReference := "couchbase-capella_bucket." + bucketName
@@ -452,6 +500,9 @@ func TestAccFlushBucketResource(t *testing.T) {
 }
 
 func TestAccFlushBucketResourceFlushDisabled(t *testing.T) {
+	if err := ensureDMCluster(); err != nil {
+		t.Fatalf("ensureDMCluster: %v", err)
+	}
 	bucketName := randomStringWithPrefix("tf_acc_flush_disabled_bkt_")
 	flushName := randomStringWithPrefix("tf_acc_flush_disabled_")
 
@@ -467,6 +518,9 @@ func TestAccFlushBucketResourceFlushDisabled(t *testing.T) {
 }
 
 func TestAccFlushBucketResourceInvalidBucket(t *testing.T) {
+	if err := ensureDMCluster(); err != nil {
+		t.Fatalf("ensureDMCluster: %v", err)
+	}
 	flushName := randomStringWithPrefix("tf_acc_flush_bad_bkt_")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -490,6 +544,9 @@ resource "couchbase-capella_flush" "%[2]s" {
 }
 
 func TestAccDatasourceBuckets(t *testing.T) {
+	if err := ensureDMCluster(); err != nil {
+		t.Fatalf("ensureDMCluster: %v", err)
+	}
 	dsName := randomStringWithPrefix("tf_acc_ds_buckets_")
 	dsReference := "data.couchbase-capella_buckets." + dsName
 
@@ -535,6 +592,9 @@ data "couchbase-capella_buckets" "%[2]s" {
 }
 
 func TestAccDatasourceScopes(t *testing.T) {
+	if err := ensureDMCluster(); err != nil {
+		t.Fatalf("ensureDMCluster: %v", err)
+	}
 	dsName := randomStringWithPrefix("tf_acc_ds_scopes_")
 	dsReference := "data.couchbase-capella_scopes." + dsName
 
@@ -557,6 +617,9 @@ func TestAccDatasourceScopes(t *testing.T) {
 }
 
 func TestAccDatasourceScopesInvalidBucket(t *testing.T) {
+	if err := ensureDMCluster(); err != nil {
+		t.Fatalf("ensureDMCluster: %v", err)
+	}
 	dsName := randomStringWithPrefix("tf_acc_ds_scopes_bad_bkt_")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -580,6 +643,9 @@ data "couchbase-capella_scopes" "%[2]s" {
 }
 
 func TestAccDatasourceCollections(t *testing.T) {
+	if err := ensureDMCluster(); err != nil {
+		t.Fatalf("ensureDMCluster: %v", err)
+	}
 	dsName := randomStringWithPrefix("tf_acc_ds_collections_")
 	dsReference := "data.couchbase-capella_collections." + dsName
 
@@ -604,6 +670,9 @@ func TestAccDatasourceCollections(t *testing.T) {
 }
 
 func TestAccDatasourceCollectionsInvalidScope(t *testing.T) {
+	if err := ensureDMCluster(); err != nil {
+		t.Fatalf("ensureDMCluster: %v", err)
+	}
 	dsName := randomStringWithPrefix("tf_acc_ds_collections_bad_scope_")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -628,6 +697,9 @@ data "couchbase-capella_collections" "%[2]s" {
 }
 
 func TestAccDatasourceCollectionsInvalidBucket(t *testing.T) {
+	if err := ensureDMCluster(); err != nil {
+		t.Fatalf("ensureDMCluster: %v", err)
+	}
 	dsName := randomStringWithPrefix("tf_acc_ds_collections_bad_bkt_")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -652,6 +724,9 @@ data "couchbase-capella_collections" "%[2]s" {
 }
 
 func TestAccDatasourceSampleBuckets(t *testing.T) {
+	if err := ensureDMCluster(); err != nil {
+		t.Fatalf("ensureDMCluster: %v", err)
+	}
 	dsName := randomStringWithPrefix("tf_acc_ds_sample_buckets_")
 	dsReference := "data.couchbase-capella_sample_buckets." + dsName
 
