@@ -288,7 +288,7 @@ func morphToProviderConfig(networkPeer *network_peer_api.GetNetworkPeeringRecord
 		}
 		return newProviderConfig, nil
 	default:
-		return newProviderConfig, nil
+		return newProviderConfig, fmt.Errorf("%w: unable to determine provider type from config fields", errors.ErrReadingProviderConfig)
 	}
 
 }

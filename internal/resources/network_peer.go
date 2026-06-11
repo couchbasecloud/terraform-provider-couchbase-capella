@@ -467,7 +467,7 @@ func (n *NetworkPeer) retrieveNetworkPeer(
 
 	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
 	if diags.HasError() {
-		return nil, fmt.Errorf("%s: %w", errors.ErrUnableToConvertAuditData, err)
+		return nil, fmt.Errorf("%s: %s", errors.ErrUnableToConvertAuditData, diags.Errors())
 	}
 
 	refreshedState, err := providerschema.NewNetworkPeer(ctx, networkPeerResp, organizationId, projectId, clusterId, auditObj)
@@ -521,17 +521,17 @@ func defineProviderForResponse(networkResp *network_peer_api.GetNetworkPeeringRe
 
 	azure, err := networkResp.AsAZURE()
 	if err != nil {
-		return fmt.Errorf("%s: %w", errors.ErrReadingAzureConfig, err)
+		return fmt.Errorf("%w: %w", errors.ErrReadingAzureConfig, err)
 	}
 
 	gcp, err := networkResp.AsGCP()
 	if err != nil {
-		return fmt.Errorf("%s: %w", errors.ErrReadingGCPConfig, err)
+		return fmt.Errorf("%w: %w", errors.ErrReadingGCPConfig, err)
 	}
 
 	aws, err := networkResp.AsAWS()
 	if err != nil {
-		return fmt.Errorf("%s: %w", errors.ErrReadingAWSConfig, err)
+		return fmt.Errorf("%w: %w", errors.ErrReadingAWSConfig, err)
 	}
 
 	switch {
