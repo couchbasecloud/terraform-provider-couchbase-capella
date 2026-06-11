@@ -203,20 +203,8 @@ func (r *AppEndpointActivationStatus) Read(ctx context.Context, req resource.Rea
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		if isForbiddenError(err) {
-			result, msg := checkAppEndpointDeletedOrForbidden(ctx, r.Data, organizationId, projectId, clusterId, appServiceId, appEndpointName)
-			switch result {
-			case appEndpointDeleted:
-				tflog.Info(ctx, "App Endpoint has been deleted outside of Terraform, removing from state")
-				resp.State.RemoveResource(ctx)
-				return
-			case appEndpointExists:
-				resp.Diagnostics.AddError("Error parsing read app endpoint activation request", msg)
-				return
-			default:
-				resp.Diagnostics.AddError("Error parsing read app endpoint activation request", msg)
-				return
-			}
+		if handleAppEndpointForbidden(ctx, err, r.Data, resp, "Error parsing read app endpoint activation request", organizationId, projectId, clusterId, appServiceId, appEndpointName) {
+			return
 		}
 		resp.Diagnostics.AddError(
 			"Error parsing read app endpoint activation request",

@@ -2,10 +2,10 @@ package resources
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -61,11 +61,10 @@ func checkAppEndpointDeletedOrForbidden(
 		api.SortByName,
 	)
 	if err != nil {
-		var apiError *api.Error
-		if errors.As(err, &apiError) && apiError.HttpStatusCode == http.StatusForbidden {
-			return appEndpointCheckFailed, "permission denied: unable to access app endpoints for this app service"
+		if api.IsForbiddenError(err) {
+			return appEndpointCheckFailed, "permission denied: unable to list app endpoints for this app service"
 		}
-		return appEndpointCheckFailed, api.ParseError(err)
+		return appEndpointCheckFailed, fmt.Sprintf("unable to list app endpoints for this app service: %s", api.ParseError(err))
 	}
 
 	for _, ep := range allEndpoints {
@@ -79,8 +78,29 @@ func checkAppEndpointDeletedOrForbidden(
 	return appEndpointDeleted, ""
 }
 
-// isForbiddenError checks whether the given error is an api.Error with HTTP status 403.
-func isForbiddenError(err error) bool {
-	var apiError *api.Error
-	return errors.As(err, &apiError) && apiError.HttpStatusCode == http.StatusForbidden
+// handleAppEndpointForbidden checks whether err is a 403, and if so determines
+// whether the App Endpoint was deleted externally. It removes the resource from
+// state when deleted and adds a diagnostic error otherwise. Returns true if the
+// caller should return immediately (i.e. the error was handled).
+func handleAppEndpointForbidden(
+	ctx context.Context,
+	err error,
+	data *providerschema.Data,
+	resp *resource.ReadResponse,
+	diagnosticSummary string,
+	organizationId, projectId, clusterId, appServiceId, appEndpointName string,
+) bool {
+	if !api.IsForbiddenError(err) {
+		return false
+	}
+
+	result, msg := checkAppEndpointDeletedOrForbidden(ctx, data, organizationId, projectId, clusterId, appServiceId, appEndpointName)
+	switch result {
+	case appEndpointDeleted:
+		tflog.Info(ctx, "App Endpoint has been deleted outside of Terraform, removing from state")
+		resp.State.RemoveResource(ctx)
+	default:
+		resp.Diagnostics.AddError(diagnosticSummary, msg)
+	}
+	return true
 }

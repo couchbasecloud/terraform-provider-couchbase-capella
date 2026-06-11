@@ -117,20 +117,8 @@ func (r *AppEndpointDefaultOidcProvider) Read(ctx context.Context, req resource.
 
 	selected, err := r.getDefaultProvider(ctx, IDs[providerschema.OrganizationId], IDs[providerschema.ProjectId], IDs[providerschema.ClusterId], IDs[providerschema.AppServiceId], IDs[providerschema.AppEndpointName])
 	if err != nil {
-		if isForbiddenError(err) {
-			result, msg := checkAppEndpointDeletedOrForbidden(ctx, r.Data, IDs[providerschema.OrganizationId], IDs[providerschema.ProjectId], IDs[providerschema.ClusterId], IDs[providerschema.AppServiceId], IDs[providerschema.AppEndpointName])
-			switch result {
-			case appEndpointDeleted:
-				tflog.Info(ctx, "App Endpoint has been deleted outside of Terraform, removing from state")
-				resp.State.RemoveResource(ctx)
-				return
-			case appEndpointExists:
-				resp.Diagnostics.AddError("Error Reading Default OIDC Provider", msg)
-				return
-			default:
-				resp.Diagnostics.AddError("Error Reading Default OIDC Provider", msg)
-				return
-			}
+		if handleAppEndpointForbidden(ctx, err, r.Data, resp, "Error Reading Default OIDC Provider", IDs[providerschema.OrganizationId], IDs[providerschema.ProjectId], IDs[providerschema.ClusterId], IDs[providerschema.AppServiceId], IDs[providerschema.AppEndpointName]) {
+			return
 		}
 		resp.Diagnostics.AddError("Error Reading Default OIDC Provider", "Could not list OIDC providers: "+err.Error())
 		return

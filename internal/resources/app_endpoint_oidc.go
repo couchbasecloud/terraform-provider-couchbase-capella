@@ -149,20 +149,8 @@ func (r *AppEndpointOidcProvider) Read(ctx context.Context, req resource.ReadReq
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		if isForbiddenError(err) {
-			result, msg := checkAppEndpointDeletedOrForbidden(ctx, r.Data, IDs[providerschema.OrganizationId], IDs[providerschema.ProjectId], IDs[providerschema.ClusterId], IDs[providerschema.AppServiceId], IDs[providerschema.AppEndpointName])
-			switch result {
-			case appEndpointDeleted:
-				tflog.Info(ctx, "App Endpoint has been deleted outside of Terraform, removing from state")
-				resp.State.RemoveResource(ctx)
-				return
-			case appEndpointExists:
-				resp.Diagnostics.AddError("Error Reading OIDC Provider", msg)
-				return
-			default:
-				resp.Diagnostics.AddError("Error Reading OIDC Provider", msg)
-				return
-			}
+		if handleAppEndpointForbidden(ctx, err, r.Data, resp, "Error Reading OIDC Provider", IDs[providerschema.OrganizationId], IDs[providerschema.ProjectId], IDs[providerschema.ClusterId], IDs[providerschema.AppServiceId], IDs[providerschema.AppEndpointName]) {
+			return
 		}
 		resp.Diagnostics.AddError("Error Reading OIDC Provider", "Could not read OIDC provider: "+errString)
 		return

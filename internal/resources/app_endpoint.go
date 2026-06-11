@@ -339,20 +339,8 @@ func (a *AppEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		if isForbiddenError(err) {
-			result, msg := checkAppEndpointDeletedOrForbidden(ctx, a.Data, organizationId, projectId, clusterId, appServiceId, endpointName)
-			switch result {
-			case appEndpointDeleted:
-				tflog.Info(ctx, "App Endpoint has been deleted outside of Terraform, removing from state")
-				resp.State.RemoveResource(ctx)
-				return
-			case appEndpointExists:
-				resp.Diagnostics.AddError("Error refreshing App Endpoint", msg)
-				return
-			default:
-				resp.Diagnostics.AddError("Error refreshing App Endpoint", msg)
-				return
-			}
+		if handleAppEndpointForbidden(ctx, err, a.Data, resp, "Error refreshing App Endpoint", organizationId, projectId, clusterId, appServiceId, endpointName) {
+			return
 		}
 		resp.Diagnostics.AddError(
 			"Error refreshing App Endpoint",
