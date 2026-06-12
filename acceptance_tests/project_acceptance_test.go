@@ -131,7 +131,15 @@ func TestAccProjectInvalidResource(t *testing.T) {
 			},
 			{
 				Config:      testAccProjectResourceConfigUpdateInvalid(resourceName),
-				ExpectError: regexp.MustCompile("server cannot or will not process the request.*"),
+				ExpectError: regexp.MustCompile(`(?s)Attribute organization_id must be a valid UUID.*abc-def`),
+			},
+			{
+				Config: testAccProjectResourceConfig(resourceName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
+					resource.TestCheckResourceAttr(resourceReference, "description", "terraform acceptance test project"),
+					resource.TestCheckResourceAttr(resourceReference, "etag", "Version: 1"),
+				),
 			},
 		},
 	})

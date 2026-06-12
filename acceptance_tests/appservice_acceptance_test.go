@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -96,6 +97,20 @@ func TestAccAppServiceResourceOptionalFieldsAndScale(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceReference, "audit.modified_at"),
 					resource.TestCheckResourceAttrSet(resourceReference, "audit.version"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAppServiceResourceNameTooLong(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_app_svc_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAppServiceResourceNameTooLongConfig(resourceName),
+				ExpectError: regexp.MustCompile(`(?s)Attribute name string length must be at most 256, got: 257`),
 			},
 		},
 	})
@@ -244,6 +259,26 @@ resource "couchbase-capella_app_service" "%[4]s" {
 	}
 }
 `, globalProviderBlock, globalOrgId, globalProjectId, resourceName, clusterName, cidr, appServiceName, description, nodes, cpu, ram)
+}
+
+func testAccAppServiceResourceNameTooLongConfig(resourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_app_service" "%[2]s" {
+	organization_id = "00000000-0000-0000-0000-000000000000"
+	project_id      = "11111111-1111-1111-1111-111111111111"
+	cluster_id      = "22222222-2222-2222-2222-222222222222"
+	name            = "%[3]s"
+	description     = "Invalid App Service name length."
+	nodes           = 2
+
+	compute = {
+		cpu = 2
+		ram = 4
+	}
+}
+`, globalProviderBlock, resourceName, strings.Repeat("a", 257))
 }
 
 func testAccAppServicesDataSourceConfig(dataSourceName string) string {

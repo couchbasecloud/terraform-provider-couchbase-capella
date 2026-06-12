@@ -2,6 +2,7 @@ package acceptance_tests
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -68,6 +69,20 @@ func testAccAppEndpointActivationStatus() []resource.TestStep {
 	}
 }
 
+func TestAccAppEndpointActivationStatusInvalidState(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_app_endpoint_activation_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAppEndpointActivationStatusInvalidStateConfig(resourceName),
+				ExpectError: regexp.MustCompile(`(?s)Invalid Attribute Value Match.*Archived.*Online.*Offline`),
+			},
+		},
+	})
+}
+
 func testAccAppEndpointActivationStatusConfig(resourceName, endpointName, desiredState string) string {
 	// Create the underlying App Endpoint if it does not exist, then manage activation status
 	return fmt.Sprintf(`
@@ -89,6 +104,24 @@ func testAccAppEndpointActivationStatusConfig(resourceName, endpointName, desire
 		appEndpointAppServiceId,
 		endpointName,
 		desiredState,
+		resourceName,
+	)
+}
+
+func testAccAppEndpointActivationStatusInvalidStateConfig(resourceName string) string {
+	return fmt.Sprintf(`
+	%[1]s
+
+	resource "couchbase-capella_app_endpoint_activation_status" "%[2]s" {
+	  organization_id   = "00000000-0000-0000-0000-000000000000"
+	  project_id        = "11111111-1111-1111-1111-111111111111"
+	  cluster_id        = "22222222-2222-2222-2222-222222222222"
+	  app_service_id    = "33333333-3333-3333-3333-333333333333"
+	  app_endpoint_name = "qe-endpoint"
+	  state             = "Archived"
+	}
+	`,
+		globalProviderBlock,
 		resourceName,
 	)
 }

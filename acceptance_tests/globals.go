@@ -36,6 +36,15 @@ var (
 	globalClusterCreated     bool
 	globalAppServiceCreated  bool
 
+	// dmClusterId is a dedicated cluster for data management (bucket/scope/collection) tests,
+	// kept separate from the global cluster to avoid rebalance contention with app service tests.
+	dmClusterId      string
+	dmClusterCreated bool
+	dmClusterName    = "tf_acc_test_cluster_dm"
+	dmBucketId       string
+	dmBucketCreated  bool
+	dmBucketName     = "default"
+
 	appEndpointClusterId          string
 	appEndpointClusterName        string
 	appEndpointBucketId           string
@@ -88,6 +97,10 @@ var (
 	globalACFUpdateEPBucketName          = "tf_acc_ep_acf_bkt"
 	globalCorsMaxAgeZeroEPBucketName     = "tf_acc_ep_maz_bkt"
 	globalCorsMaxAgeFromZeroEPBucketName = "tf_acc_ep_mafz_bkt"
+	// Buckets for "deleted externally" tests — validates the 403 → List fallback
+	// that removes resources from state when the App Endpoint is deleted outside TF.
+	globalDeletedExternallyEPBucketName = "tf_acc_ep_del_ext_bkt"
+	globalACFDeletedExtEPBucketName     = "tf_acc_ep_acf_dex_bkt"
 	// Buckets for currently-skipped tests — not provisioned while skipped, but
 	// named so the tests are ready to run once the underlying bugs are fixed.
 	globalCorsDisabledFalseEPBucketName = "tf_acc_ep_cors_df_bkt"

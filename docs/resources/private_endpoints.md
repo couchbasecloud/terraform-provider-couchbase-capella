@@ -33,6 +33,7 @@ resource "couchbase-capella_private_endpoints" "accept_endpoint" {
 
 ### Read-Only
 
+- `private_endpoint_dns` (String)
 - `service_name` (String)
 - `status` (String)
 

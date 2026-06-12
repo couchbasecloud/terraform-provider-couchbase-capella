@@ -1,6 +1,8 @@
 package resources
 
 import (
+	"regexp"
+
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -32,6 +34,8 @@ const (
 	deprecated         = "deprecated"
 	deprecationMessage = "Remove this attribute's configuration as it no longer in use and the attribute will be removed in the next major version of the provider."
 )
+
+var uuidRegex = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
 
 // stringAttribute is a variadic function which sets the requested fields
 // in a string attribute to true and then returns the string attribute.
@@ -80,9 +84,20 @@ func stringDefaultAttribute(defaultValue string, fields ...string) *schema.Strin
 // It returns a Terraform string attribute which:
 // - is required
 // - has requires replace set (since the ID cannot be changed without recreating the resource)
-// - has a validator to ensure the string is at least 1 character long
+// - has validators to ensure the string is non-empty and UUID-formatted
 func requiredUUIDStringAttribute() *schema.StringAttribute {
-	return stringAttribute([]string{required, requiresReplace}, validator.String(stringvalidator.LengthAtLeast(1)))
+	return stringAttribute(
+		[]string{required, requiresReplace},
+		validator.String(stringvalidator.LengthAtLeast(1)),
+		validator.String(stringvalidator.RegexMatches(uuidRegex, "must be a valid UUID")),
+	)
+}
+
+func requiredNonEmptyStringAttribute() *schema.StringAttribute {
+	return stringAttribute(
+		[]string{required, requiresReplace},
+		validator.String(stringvalidator.LengthAtLeast(1)),
+	)
 }
 
 // boolAttribute is a variadic function which sets the requested fields

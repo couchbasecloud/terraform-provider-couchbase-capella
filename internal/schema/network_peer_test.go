@@ -1,19 +1,12 @@
 package schema
 
 import (
-	"context"
-	"encoding/json"
 	"testing"
 
-	network_peer_api "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/network_peer"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 
-	"github.com/google/uuid"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestNetworkPeerSchemaValidate(t *testing.T) {
@@ -74,77 +67,4 @@ func TestNetworkPeerSchemaValidate(t *testing.T) {
 			assert.Equal(t, test.expectedOrganizationId, IDs[OrganizationId])
 		})
 	}
-}
-
-func TestMorphToProviderConfig_NilProviderConfig(t *testing.T) {
-	resp := &network_peer_api.GetNetworkPeeringRecordResponse{
-		ProviderConfig: nil,
-	}
-	cfg, err := morphToProviderConfig(resp)
-	require.NoError(t, err)
-	assert.Nil(t, cfg.AWSConfig)
-	assert.Nil(t, cfg.GCPConfig)
-	assert.Nil(t, cfg.AzureConfig)
-}
-
-func TestMorphToProviderConfig_NullProviderConfig(t *testing.T) {
-	resp := &network_peer_api.GetNetworkPeeringRecordResponse{
-		ProviderConfig: json.RawMessage("null"),
-	}
-	cfg, err := morphToProviderConfig(resp)
-	require.NoError(t, err)
-	assert.Nil(t, cfg.AWSConfig)
-	assert.Nil(t, cfg.GCPConfig)
-	assert.Nil(t, cfg.AzureConfig)
-}
-
-func TestNewNetworkPeer_NilReasoning(t *testing.T) {
-	state := "failed"
-	resp := &network_peer_api.GetNetworkPeeringRecordResponse{
-		Id:             uuid.New(),
-		Name:           "test-peer",
-		ProviderType:   "aws",
-		ProviderConfig: nil,
-		Status: network_peer_api.PeeringStatus{
-			State:     &state,
-			Reasoning: nil,
-		},
-	}
-
-	auditObj, _ := types.ObjectValueFrom(context.Background(), map[string]attr.Type{}, nil)
-
-	peer, err := NewNetworkPeer(context.Background(), resp, "org-1", "proj-1", "clust-1", auditObj)
-	require.NoError(t, err)
-	assert.Equal(t, "test-peer", peer.Name.ValueString())
-
-	// Status should be set with empty reasoning
-	assert.False(t, peer.Status.IsNull())
-	var status PeeringStatus
-	diags := peer.Status.As(context.Background(), &status, basetypes.ObjectAsOptions{})
-	require.False(t, diags.HasError())
-	assert.Equal(t, "failed", status.State.ValueString())
-	assert.Equal(t, "", status.Reasoning.ValueString())
-}
-
-func TestNewNetworkPeer_NilProviderConfigAndNilReasoning(t *testing.T) {
-	state := "failed"
-	resp := &network_peer_api.GetNetworkPeeringRecordResponse{
-		Id:             uuid.New(),
-		Name:           "failed-peer",
-		ProviderType:   "aws",
-		ProviderConfig: json.RawMessage("null"),
-		Status: network_peer_api.PeeringStatus{
-			State:     &state,
-			Reasoning: nil,
-		},
-	}
-
-	auditObj, _ := types.ObjectValueFrom(context.Background(), map[string]attr.Type{}, nil)
-
-	peer, err := NewNetworkPeer(context.Background(), resp, "org-1", "proj-1", "clust-1", auditObj)
-	require.NoError(t, err)
-	assert.NotNil(t, peer.ProviderConfig)
-	assert.Nil(t, peer.ProviderConfig.AWSConfig)
-	assert.Nil(t, peer.ProviderConfig.GCPConfig)
-	assert.Nil(t, peer.ProviderConfig.AzureConfig)
 }

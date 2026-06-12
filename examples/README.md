@@ -32,6 +32,8 @@ This directory contains examples that are mostly used for documentation, but can
 
 [Cluster On Off Schedule](cluster_onoff_schedule)
 
+[Cluster Deletion Protection](deletion_protection)
+
 [Database Credential](database_credential)
 
 [Event](event)

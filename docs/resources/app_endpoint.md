@@ -46,12 +46,12 @@ This resource allows you to manage an App Endpoint configuration for a Couchbase
 
 Optional:
 
-- `disabled` (Boolean) - disable CORS
+- `disabled` (Boolean) - Disable CORS headers in all App Endpoint responses. When true, no other CORS configuration properties should be provided.
 - `headers` (Set of String) - List of allowed headers
 - `login_origin` (Set of String) - List of allowed login origins
 - `max_age` (Number) - Specifies the duration (in seconds) for which the results of a preflight request can be cached.
  - **Default**: `5`
-- `origin` (Set of String) - List of allowed origins, use ['*'] to allow access from everywhere
+- `origin` (Set of String) - List of allowed origins, use ['*'] to allow access from everywhere. This is required when CORS is enabled (i.e. disabled is false).
 
 
 <a id="nestedatt--oidc"></a>

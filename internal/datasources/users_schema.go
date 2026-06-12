@@ -1,7 +1,9 @@
 package datasources
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
@@ -13,12 +15,17 @@ var usersBuilder = capellaschema.NewSchemaBuilder("users")
 func UsersSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
-	capellaschema.AddAttr(attrs, "organization_id", usersBuilder, requiredString())
+	capellaschema.AddAttr(attrs, "organization_id", usersBuilder, requiredStringWithValidator())
 
 	capellaschema.AddAttr(attrs, "page", usersBuilder, optionalInt64())
 	capellaschema.AddAttr(attrs, "per_page", usersBuilder, optionalInt64())
 	capellaschema.AddAttr(attrs, "sort_by", usersBuilder, optionalString())
-	capellaschema.AddAttr(attrs, "sort_direction", usersBuilder, optionalString())
+	capellaschema.AddAttr(attrs, "sort_direction", usersBuilder, &schema.StringAttribute{
+		Optional: true,
+		Validators: []validator.String{
+			stringvalidator.OneOf("asc", "desc"),
+		},
+	})
 
 	// Build data attributes
 	dataAttrs := make(map[string]schema.Attribute)

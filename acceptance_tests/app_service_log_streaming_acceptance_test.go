@@ -153,6 +153,97 @@ func TestAccAppServiceLogStreamingMissingCredentials(t *testing.T) {
 	})
 }
 
+// TestAccAppServiceLogStreamingInvalidOutputType tests that output_type is rejected
+// when it is not one of the supported log streaming providers.
+func TestAccAppServiceLogStreamingInvalidOutputType(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_log_streaming_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAppServiceLogStreamingInvalidOutputTypeConfig(resourceName),
+				ExpectError: re.MustCompile(`(?s)Attribute output_type value must be one of.*generic_http.*newrelic`),
+			},
+		},
+	})
+}
+
+// TestAccAppServiceLogStreamingMultipleCredentials tests that a validation error is returned
+// when more than one credentials block is configured.
+func TestAccAppServiceLogStreamingMultipleCredentials(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_log_streaming_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAppServiceLogStreamingMultipleCredentialsConfig(resourceName),
+				ExpectError: re.MustCompile(`(?s)Exactly one of.*generic_http.*sumologic`),
+			},
+		},
+	})
+}
+
+func TestAccAppServiceLogStreamingDatasourceInvalidUUIDs(t *testing.T) {
+	tests := []struct {
+		name           string
+		organizationID string
+		projectID      string
+		clusterID      string
+		appServiceID   string
+	}{
+		{
+			name:           "organization_id",
+			organizationID: "not-a-uuid",
+			projectID:      "11111111-1111-1111-1111-111111111111",
+			clusterID:      "22222222-2222-2222-2222-222222222222",
+			appServiceID:   "33333333-3333-3333-3333-333333333333",
+		},
+		{
+			name:           "project_id",
+			organizationID: "00000000-0000-0000-0000-000000000000",
+			projectID:      "not-a-uuid",
+			clusterID:      "22222222-2222-2222-2222-222222222222",
+			appServiceID:   "33333333-3333-3333-3333-333333333333",
+		},
+		{
+			name:           "cluster_id",
+			organizationID: "00000000-0000-0000-0000-000000000000",
+			projectID:      "11111111-1111-1111-1111-111111111111",
+			clusterID:      "not-a-uuid",
+			appServiceID:   "33333333-3333-3333-3333-333333333333",
+		},
+		{
+			name:           "app_service_id",
+			organizationID: "00000000-0000-0000-0000-000000000000",
+			projectID:      "11111111-1111-1111-1111-111111111111",
+			clusterID:      "22222222-2222-2222-2222-222222222222",
+			appServiceID:   "not-a-uuid",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			resource.ParallelTest(t, resource.TestCase{
+				ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+				Steps: []resource.TestStep{
+					{
+						Config: testAccAppServiceLogStreamingDatasourceInvalidUUIDConfig(
+							test.organizationID,
+							test.projectID,
+							test.clusterID,
+							test.appServiceID,
+						),
+						ExpectError: re.MustCompile(`(?s)Invalid Attribute Value Match.*` + test.name + `.*must be a valid UUID`),
+					},
+				},
+			})
+		})
+	}
+}
+
 // testAccCheckAppServiceLogStreamingDestroy verifies that after Terraform destroys the log streaming resource, the
 // remote config_state has transitioned to "disabled". This is because destroying log streaming does not actually
 // delete a resource, but instead disables log streaming on the app service.
@@ -236,6 +327,25 @@ data "couchbase-capella_app_service_log_streaming" "%[7]s" {
 	)
 }
 
+func testAccAppServiceLogStreamingDatasourceInvalidUUIDConfig(organizationID, projectID, clusterID, appServiceID string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "couchbase-capella_app_service_log_streaming" "test" {
+	organization_id = "%[2]s"
+	project_id      = "%[3]s"
+	cluster_id      = "%[4]s"
+	app_service_id  = "%[5]s"
+}
+`,
+		globalProviderBlock,
+		organizationID,
+		projectID,
+		clusterID,
+		appServiceID,
+	)
+}
+
 // appServiceLogStreamingConfig returns the HCL config for a generic_http log streaming resource without
 // the global provider block, so that it can be reused in other acceptance tests that need to set up
 // log streaming as a prerequisite.
@@ -313,6 +423,69 @@ resource "couchbase-capella_app_service_log_streaming" "%[6]s" {
   output_type     = "generic_http"
 
   credentials = {}
+}
+`,
+		globalProviderBlock,
+		globalOrgId,
+		globalProjectId,
+		globalClusterId,
+		globalAppServiceId,
+		resourceName,
+	)
+}
+
+// testAccAppServiceLogStreamingInvalidOutputTypeConfig returns an HCL config where
+// output_type is not a supported log streaming provider.
+func testAccAppServiceLogStreamingInvalidOutputTypeConfig(resourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_app_service_log_streaming" "%[6]s" {
+	organization_id = "%[2]s"
+	project_id      = "%[3]s"
+	cluster_id      = "%[4]s"
+	app_service_id  = "%[5]s"
+	output_type     = "newrelic"
+
+	credentials = {
+		generic_http = {
+			url      = "https://logs.example.com"
+			user     = "log-user"
+			password = "log-password"
+		}
+	}
+}
+`,
+		globalProviderBlock,
+		globalOrgId,
+		globalProjectId,
+		globalClusterId,
+		globalAppServiceId,
+		resourceName,
+	)
+}
+
+// testAccAppServiceLogStreamingMultipleCredentialsConfig returns an HCL config where
+// output_type is "generic_http" but two credentials blocks are configured.
+func testAccAppServiceLogStreamingMultipleCredentialsConfig(resourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_app_service_log_streaming" "%[6]s" {
+	organization_id = "%[2]s"
+	project_id      = "%[3]s"
+	cluster_id      = "%[4]s"
+	app_service_id  = "%[5]s"
+	output_type     = "generic_http"
+
+	credentials = {
+		generic_http = {
+			url = "https://logs.example.com"
+		}
+		sumologic = {
+			url = "https://sumologic.example.com"
+		}
+	}
 }
 `,
 		globalProviderBlock,

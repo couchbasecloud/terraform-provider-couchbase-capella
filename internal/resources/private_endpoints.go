@@ -276,23 +276,30 @@ func initializePrivateEndpointPlan(plan providerschema.PrivateEndpoint) provider
 	if plan.Status.IsNull() || plan.Status.IsUnknown() {
 		plan.Status = types.StringNull()
 	}
+	if plan.ServiceName.IsNull() || plan.ServiceName.IsUnknown() {
+		plan.ServiceName = types.StringNull()
+	}
+	if plan.PrivateEndpointDNS.IsNull() || plan.PrivateEndpointDNS.IsUnknown() {
+		plan.PrivateEndpointDNS = types.StringNull()
+	}
 	return plan
 }
 
 // getPrivateEndpointState morphs private endpoint status to terraform schema.
 func (p *PrivateEndpoint) getPrivateEndpointState(ctx context.Context, organizationId, projectId, clusterId, endpointId string) (*providerschema.PrivateEndpoint, error) {
-	status, serviceName, err := p.getPrivateEndpointStatus(ctx, organizationId, projectId, clusterId, endpointId)
+	status, serviceName, privateEndpointDNS, err := p.getPrivateEndpointStatus(ctx, organizationId, projectId, clusterId, endpointId)
 	if err != nil {
 		return nil, err
 	}
 
 	state := providerschema.PrivateEndpoint{
-		EndpointId:     types.StringValue(endpointId),
-		Status:         types.StringValue(status),
-		ClusterId:      types.StringValue(clusterId),
-		ProjectId:      types.StringValue(projectId),
-		OrganizationId: types.StringValue(organizationId),
-		ServiceName:    types.StringValue(serviceName),
+		EndpointId:         types.StringValue(endpointId),
+		Status:             types.StringValue(status),
+		ClusterId:          types.StringValue(clusterId),
+		ProjectId:          types.StringValue(projectId),
+		OrganizationId:     types.StringValue(organizationId),
+		ServiceName:        types.StringValue(serviceName),
+		PrivateEndpointDNS: types.StringValue(privateEndpointDNS),
 	}
 
 	return &state, nil
@@ -300,7 +307,7 @@ func (p *PrivateEndpoint) getPrivateEndpointState(ctx context.Context, organizat
 
 // There is currently no V4 endpoint to get a single private endpoint.  We have to loop through the entire list to find
 // the desired private endpoint.
-func (p *PrivateEndpoint) getPrivateEndpointStatus(ctx context.Context, organizationId, projectId, clusterId, endpointId string) (string, string, error) {
+func (p *PrivateEndpoint) getPrivateEndpointStatus(ctx context.Context, organizationId, projectId, clusterId, endpointId string) (string, string, string, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/privateEndpointService/endpoints", p.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := p.ClientV1.ExecuteWithRetry(
@@ -311,20 +318,51 @@ func (p *PrivateEndpoint) getPrivateEndpointStatus(ctx context.Context, organiza
 		nil,
 	)
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 
 	privateEndpointsResp := api.GetPrivateEndpointsResponse{}
 	err = json.Unmarshal(response.Body, &privateEndpointsResp)
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 
 	for _, e := range privateEndpointsResp.Endpoints {
 		if e.Id == endpointId {
-			return e.Status, e.ServiceName, nil
+			privateEndpointDNS := privateEndpointsResp.PrivateEndpointDNS
+			if privateEndpointDNS == "" {
+				privateEndpointDNS, err = p.getPrivateEndpointDNS(ctx, organizationId, projectId, clusterId)
+				if err != nil {
+					return "", "", "", err
+				}
+			}
+
+			return e.Status, e.ServiceName, privateEndpointDNS, nil
 		}
 	}
 
-	return "", "", errors.ErrNotFound
+	return "", "", "", errors.ErrNotFound
+}
+
+func (p *PrivateEndpoint) getPrivateEndpointDNS(ctx context.Context, organizationId, projectId, clusterId string) (string, error) {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/privateEndpointService", p.HostURL, organizationId, projectId, clusterId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	response, err := p.ClientV1.ExecuteWithRetry(
+		ctx,
+		cfg,
+		nil,
+		p.Token,
+		nil,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	privateEndpointServiceStatus := api.GetPrivateEndpointServiceStatusResponse{}
+	err = json.Unmarshal(response.Body, &privateEndpointServiceStatus)
+	if err != nil {
+		return "", err
+	}
+
+	return privateEndpointServiceStatus.PrivateDns, nil
 }

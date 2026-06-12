@@ -61,6 +61,26 @@ data "couchbase-capella_apikeys" "%[2]s" {
 	})
 }
 
+func TestAccDatasourceApiKeysEmptyOrganization(t *testing.T) {
+	dsName := randomStringWithPrefix("tf_acc_apikeys_ds_empty_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+%[1]s
+
+data "couchbase-capella_apikeys" "%[2]s" {
+  organization_id = ""
+}
+`, globalProviderBlock, dsName),
+				ExpectError: regexp.MustCompile(`(?s)Invalid Attribute Value.*Attribute organization_id string length must be at least 1, got: 0`),
+			},
+		},
+	})
+}
+
 func testAccApiKeysDataSourceConfig(resourceName, dsName string) string {
 	return fmt.Sprintf(`
 %[1]s

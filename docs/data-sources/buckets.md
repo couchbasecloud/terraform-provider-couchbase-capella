@@ -53,6 +53,7 @@ Read-Only:
 - `storage_backend` (String)
 - `time_to_live_in_seconds` (Number)
 - `type` (String)
+- `vbuckets` (Number)
 
 <a id="nestedatt--data--stats"></a>
 ### Nested Schema for `data.stats`

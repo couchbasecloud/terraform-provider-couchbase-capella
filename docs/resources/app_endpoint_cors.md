@@ -21,12 +21,12 @@ Manages CORS (Cross-Origin Resource Sharing) configuration for App Endpoints in 
 - `app_service_id` (String) The GUID4 ID of the appService.
 - `cluster_id` (String) The GUID4 ID of the cluster.
 - `organization_id` (String) The GUID4 ID of the organization.
-- `origin` (Set of String) - List of allowed origins, use ['*'] to allow access from everywhere
+- `origin` (Set of String) - List of allowed origins, use ['*'] to allow access from everywhere. This is required when CORS is enabled (i.e. disabled is false).
 - `project_id` (String) The GUID4 ID of the project.
 
 ### Optional
 
-- `disabled` (Boolean) - disable CORS
+- `disabled` (Boolean) - Disable CORS headers in all App Endpoint responses. When true, no other CORS configuration properties should be provided.
 - `headers` (Set of String) - List of allowed headers
 - `login_origin` (Set of String) - List of allowed login origins
 - `max_age` (Number) - Specifies the duration (in seconds) for which the results of a preflight request can be cached.
