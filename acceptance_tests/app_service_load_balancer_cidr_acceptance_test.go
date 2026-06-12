@@ -64,8 +64,8 @@ func TestAccAppServiceLoadBalancerCIDR(t *testing.T) {
 					testAccCheckAppServicesDataSourceLoadBalancerCIDR(dataSourceReference, resourceReference, loadBalancerCIDR),
 				),
 			},
-			// ImportState testing exercises the Read merge that preserves the
-			// configured CIDR (on import there is no prior value, so the API value is kept).
+			// ImportState testing confirms the API round-trips load_balancer_cidr:
+			// on import there is no prior state, so the value comes from the API.
 			{
 				ResourceName:      resourceReference,
 				ImportStateIdFunc: generateAppServiceImportId(resourceReference),
