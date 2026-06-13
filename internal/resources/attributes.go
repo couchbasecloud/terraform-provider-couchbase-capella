@@ -100,6 +100,10 @@ func requiredNonEmptyStringAttribute() *schema.StringAttribute {
 	)
 }
 
+func requiredStringAttributeNoReplace() *schema.StringAttribute {
+	return stringAttribute([]string{required}, validator.String(stringvalidator.LengthAtLeast(1)))
+}
+
 // boolAttribute is a variadic function which sets the requested fields
 // in a bool attribute to true and then returns the string attribute.
 func boolAttribute(fields ...string) *schema.BoolAttribute {

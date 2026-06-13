@@ -42,9 +42,9 @@ type EventingFunction struct {
 	// Bindings holds the bucket, URL and constant bindings.
 	Bindings *EventingFunctionBindings `tfsdk:"bindings"`
 
-	// State is the desired activation action applied via the activationState endpoint.
-	// Enum: deploy, undeploy, pause, resume. It is a write-only control input: the GET
-	// response only reports the read-only Status, so State is carried forward across refreshes.
+	// State is the desired terminal activation state, applied via the activationState endpoint.
+	// Enum: deployed, undeployed, paused, resumed. It is a write-only control input: the GET
+	// response reports the read-only Status, which is mapped back onto State across refreshes.
 	State types.String `tfsdk:"state"`
 }
 
@@ -140,7 +140,6 @@ func NewEventingFunction(
 		Name:                 types.StringValue(resp.Name),
 		Description:          types.StringPointerValue(resp.Description),
 		Code:                 types.StringValue(resp.Code),
-		State:                types.StringValue(resp.Status),
 		EventSource:          keyspaceToSchema(resp.EventSource),
 		EventMetadataStorage: keyspaceToSchema(resp.EventMetadataStorage),
 		Settings:             settingsToSchema(resp.Settings),
