@@ -1,21 +1,14 @@
 package acceptance_tests
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"regexp"
 	"strconv"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/appservice"
 )
 
 // TestAccAppServiceLoadBalancerCIDR tests the load_balancer_cidr attribute on the
@@ -48,9 +41,6 @@ func TestAccAppServiceLoadBalancerCIDR(t *testing.T) {
 			{
 				Config: testAccAppServiceLoadBalancerCIDRConfig(resourceName, clusterName, dataSourceName, appServiceName, clusterCIDR, loadBalancerCIDR),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					// Wait for the deploy to finish so the later replace/teardown
-					// does not try to delete a still-deploying app service (412).
-					testAccCheckAppServiceHealthy(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "load_balancer_cidr", loadBalancerCIDR),
 					resource.TestCheckResourceAttr(resourceReference, "cloud_provider", "Azure"),
 					resource.TestCheckResourceAttr(resourceReference, "name", appServiceName),
@@ -84,9 +74,6 @@ func TestAccAppServiceLoadBalancerCIDR(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceReference, "load_balancer_cidr", loadBalancerCIDRChanged),
-					// Wait for the recreated app service to finish deploying so the
-					// post-test teardown does not race the deploy (412).
-					testAccCheckAppServiceHealthy(resourceReference),
 				),
 			},
 		},
@@ -227,57 +214,4 @@ func testAccCheckAppServicesDataSourceLoadBalancerCIDR(dataSourceReference, reso
 
 		return fmt.Errorf("app service %q not found in %s.data across %d entries", appServiceID, dataSourceReference, count)
 	}
-}
-
-// testAccCheckAppServiceHealthy blocks until the app service reaches the healthy
-// state. The provider's create can return before the deploy finishes, so this
-// keeps the later replace and teardown from deleting a still-deploying app service.
-func testAccCheckAppServiceHealthy(resourceReference string) resource.TestCheckFunc {
-	return func(state *terraform.State) error {
-		appService, ok := state.RootModule().Resources[resourceReference]
-		if !ok {
-			return fmt.Errorf("resource %q not found in state", resourceReference)
-		}
-
-		attrs := appService.Primary.Attributes
-		return waitForAppServiceHealthy(attrs["organization_id"], attrs["project_id"], attrs["cluster_id"], attrs["id"])
-	}
-}
-
-// waitForAppServiceHealthy polls the app service until it is healthy, tolerating
-// transient read errors. It fails fast if the app service settles into a
-// non-healthy final state, or once the timeout elapses.
-func waitForAppServiceHealthy(organizationId, projectId, clusterId, appServiceId string) error {
-	const (
-		timeout      = 40 * time.Minute
-		pollInterval = 15 * time.Second
-	)
-
-	ctx := context.Background()
-	deadline := time.Now().Add(timeout)
-
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s",
-		globalHost, organizationId, projectId, clusterId, appServiceId)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-
-	for time.Now().Before(deadline) {
-		response, err := globalClient.ExecuteWithRetry(ctx, cfg, nil, globalToken, nil)
-		if err == nil {
-			var appServiceResp appservice.GetAppServiceResponse
-			if err := json.Unmarshal(response.Body, &appServiceResp); err != nil {
-				return fmt.Errorf("unmarshalling app service %s: %w", appServiceId, err)
-			}
-
-			switch {
-			case appServiceResp.CurrentState == appservice.Healthy:
-				return nil
-			case appservice.IsFinalState(appServiceResp.CurrentState):
-				return fmt.Errorf("app service %s reached non-healthy final state %q", appServiceId, appServiceResp.CurrentState)
-			}
-		}
-
-		time.Sleep(pollInterval)
-	}
-
-	return fmt.Errorf("timed out waiting for app service %s to become healthy", appServiceId)
 }
