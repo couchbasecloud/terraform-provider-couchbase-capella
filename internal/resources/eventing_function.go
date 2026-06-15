@@ -395,7 +395,7 @@ func (e *EventingFunction) waitForStatus(
 
 			eventingResp := eventingapi.GetEventingFunctionResponse{}
 			if err := json.Unmarshal(response.Body, &eventingResp); err != nil {
-				return fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
+				return fmt.Errorf("%w: %w", errors.ErrUnmarshallingResponse, err)
 			}
 
 			if eventingResp.Status == target {
