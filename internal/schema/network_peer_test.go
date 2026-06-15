@@ -117,13 +117,13 @@ func TestNewNetworkPeer_NilReasoning(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "test-peer", peer.Name.ValueString())
 
-	// Status should be set with empty reasoning
+	// Status should be set with default failure reasoning
 	assert.False(t, peer.Status.IsNull())
 	var status PeeringStatus
 	diags := peer.Status.As(context.Background(), &status, basetypes.ObjectAsOptions{})
 	require.False(t, diags.HasError())
 	assert.Equal(t, "failed", status.State.ValueString())
-	assert.Equal(t, "", status.Reasoning.ValueString())
+	assert.Equal(t, "Network peering failed. Remove this resource with 'terraform destroy' before retrying.", status.Reasoning.ValueString())
 }
 
 func TestNewNetworkPeer_NilProviderConfigAndNilReasoning(t *testing.T) {

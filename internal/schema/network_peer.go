@@ -212,6 +212,9 @@ func NewNetworkPeer(ctx context.Context, networkPeer *network_peer_api.GetNetwor
 		if networkPeer.Status.Reasoning != nil {
 			reasoning = *networkPeer.Status.Reasoning
 		}
+		if state == "failed" && reasoning == "" {
+			reasoning = "Network peering failed. Remove this resource with 'terraform destroy' before retrying."
+		}
 		status := PeeringStatus{
 			State:     types.StringValue(state),
 			Reasoning: types.StringValue(reasoning),
@@ -326,6 +329,9 @@ func NewNetworkPeerData(networkPeer *network_peer_api.GetNetworkPeeringRecordRes
 	}
 	if networkPeer.Status.Reasoning != nil {
 		reasoning = *networkPeer.Status.Reasoning
+	}
+	if state == "failed" && reasoning == "" {
+		reasoning = "Network peering failed. Remove this resource with 'terraform destroy' before retrying."
 	}
 
 	newNetworkPeerData := NetworkPeerData{
