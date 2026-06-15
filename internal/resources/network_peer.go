@@ -507,7 +507,7 @@ func defineProviderForResponse(networkResp *network_peer_api.GetNetworkPeeringRe
 	case aws.AWSConfigData.VpcId != "":
 		networkResp.ProviderType = "aws"
 	default:
-		return fmt.Errorf("%s: %w", errors.ErrReadingProviderConfig, err)
+		return errors.ErrReadingProviderConfig
 	}
 
 	return nil
