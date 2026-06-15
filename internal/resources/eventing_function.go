@@ -9,7 +9,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -64,12 +63,15 @@ func (e *EventingFunction) Create(ctx context.Context, req resource.CreateReques
 
 	createReq := eventingapi.CreateEventingFunctionRequest{
 		Name:                 name,
-		Description:          plan.Description.ValueStringPointer(),
 		Code:                 plan.Code.ValueStringPointer(),
 		EventSource:          keyspaceToAPI(plan.EventSource),
 		EventMetadataStorage: keyspaceToAPI(plan.EventMetadataStorage),
 		Settings:             settingsToAPI(plan.Settings),
 		Bindings:             bindingsToAPI(plan.Bindings),
+	}
+
+	if !plan.Description.IsNull() && !plan.Description.IsUnknown() {
+		createReq.Description = plan.Description.ValueStringPointer()
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/eventingFunctions", e.HostURL, organizationId, projectId, clusterId)
@@ -177,7 +179,8 @@ func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateReques
 			return
 		}
 
-		diags := resp.State.Set(ctx, plan)
+		state.State = plan.State
+		diags := resp.State.Set(ctx, state)
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -187,8 +190,8 @@ func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateReques
 	if !plan.State.IsNull() &&
 		(plan.State.ValueString() == eventingStateDeployed || plan.State.ValueString() == eventingStateResumed) {
 		resp.Diagnostics.AddWarning(
-			"eventing function settings not applied",
-			"eventing function must be undeployed or paused before changes can be applied")
+			"Eventing Function settings not applied",
+			"Eventing Function must be undeployed or paused before changes can be applied")
 
 		return
 	}
@@ -318,38 +321,25 @@ func (e *EventingFunction) retrieveEventingFunction(
 		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
 
-	refreshedState := providerschema.NewEventingFunction(&eventingResp, organizationId, projectId, clusterId, prior)
-	// `state` mirrors the terminal runtime status, so set it directly for the terminal statuses.
-	// Transient statuses (deploying, pausing, undeploying) are left untouched as they are not valid
-	// `state` values.
-	switch eventingResp.Status {
-	case eventingStateUndeployed, eventingStatePaused:
-		refreshedState.State = types.StringValue(eventingResp.Status)
-	case eventingStateDeployed:
-		// deployed status is reached by both deploy and resume; keep the configured distinction
-		// so a function applied as resumed does not show false drift against status deployed.
-		if prior != nil && prior.State.ValueString() == eventingStateResumed {
-			refreshedState.State = types.StringValue(eventingStateResumed)
-		} else {
-			refreshedState.State = types.StringValue(eventingStateDeployed)
-		}
-	}
-	return refreshedState, nil
+	return providerschema.NewEventingFunction(&eventingResp, organizationId, projectId, clusterId, prior), nil
 }
 
 // activationVerb returns the activationState API action verb for the desired state. The API only
 // accepts verbs, while the resource models state as the terminal status it produces.
 func activationVerb(state string) string {
+	action := ""
 	switch state {
 	case eventingStateUndeployed:
-		return "undeploy"
+		action = "undeploy"
 	case eventingStatePaused:
-		return "pause"
+		action = "pause"
 	case eventingStateResumed:
-		return "resume"
-	default: // eventingStateDeployed
-		return "deploy"
+		action = "resume"
+	case eventingStateDeployed:
+		action = "deploy"
 	}
+
+	return action
 }
 
 // targetStatus returns the runtime status the given state drives the function to. resumed has no

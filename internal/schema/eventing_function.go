@@ -146,6 +146,8 @@ func NewEventingFunction(
 		Bindings:             bindingsToSchema(resp.Bindings),
 	}
 
+	fn.State = types.StringValue(resp.Status)
+
 	if prior != nil {
 		carryForwardURLSecrets(fn.Bindings, prior.Bindings)
 	}
