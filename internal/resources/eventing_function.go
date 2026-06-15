@@ -313,12 +313,12 @@ func (e *EventingFunction) retrieveEventingFunction(
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := e.ClientV1.ExecuteWithRetry(ctx, cfg, nil, e.Token, nil)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrExecutingRequest, err)
 	}
 
 	eventingResp := eventingapi.GetEventingFunctionResponse{}
 	if err := json.Unmarshal(response.Body, &eventingResp); err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshallingResponse, err)
 	}
 
 	return providerschema.NewEventingFunction(&eventingResp, organizationId, projectId, clusterId, prior), nil
@@ -390,7 +390,7 @@ func (e *EventingFunction) waitForStatus(
 		case <-ticker.C:
 			response, err := e.ClientV1.ExecuteWithRetry(ctx, cfg, nil, e.Token, nil)
 			if err != nil {
-				return fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
+				return fmt.Errorf("%w: %w", errors.ErrExecutingRequest, err)
 			}
 
 			eventingResp := eventingapi.GetEventingFunctionResponse{}
