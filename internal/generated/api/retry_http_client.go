@@ -61,6 +61,11 @@ func customRetryPolicy(ctx context.Context, resp *http.Response, err error) (boo
 		// Always retry 429 responses - retryablehttp handles Retry-After header automatically
 		return true, nil
 
+	case http.StatusServiceUnavailable:
+		// Retry 503 responses - these indicate transient conditions such as a bucket
+		// deletion in progress that prevents creation of another bucket.
+		return true, nil
+
 	case http.StatusGatewayTimeout:
 		// Check for special code 7001 (do not retry)
 		var apiErr struct {

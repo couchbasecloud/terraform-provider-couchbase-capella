@@ -188,6 +188,7 @@ func exec(
 			case err == nil:
 				return response, nil
 			case goer.Is(err, errors.ErrRatelimit):
+			case goer.Is(err, errors.ErrServiceUnavailable):
 			case !goer.Is(err, errors.ErrGatewayTimeout):
 				return response, err
 			}
