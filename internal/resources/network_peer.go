@@ -466,7 +466,7 @@ func (n *NetworkPeer) retrieveNetworkPeer(
 
 	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
 	if diags.HasError() {
-		return nil, fmt.Errorf("%s: %w", errors.ErrUnableToConvertAuditData, diags.Errors())
+		return nil, fmt.Errorf("%s: %v", errors.ErrUnableToConvertAuditData, diags.Errors())
 	}
 
 	refreshedState, err := providerschema.NewNetworkPeer(ctx, networkPeerResp, organizationId, projectId, clusterId, auditObj)
