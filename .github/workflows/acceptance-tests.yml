@@ -27,6 +27,8 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so testselect can diff against the PR base
       - name: Set up Go
         uses: actions/setup-go@v4 # this action has caching built in
         with:
@@ -41,5 +43,22 @@ jobs:
         with:
           terraform_version: 1.14.9
           terraform_wrapper: false
+      - name: Select acceptance tests
+        id: select
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            pattern=$(go run ./tools/testselect -base "origin/${{ github.base_ref }}")
+          else
+            pattern='.*' # full suite on push to main and manual dispatch
+          fi
+          if [ -z "$pattern" ]; then
+            echo "No resource/data source changes detected; skipping acceptance tests."
+          else
+            echo "Acceptance test -run pattern: $pattern"
+          fi
+          echo "pattern=$pattern" >> "$GITHUB_OUTPUT"
       - name: Run acceptance tests
-        run: make testacc
+        if: steps.select.outputs.pattern != ''
+        env:
+          TESTACC_RUN: ${{ steps.select.outputs.pattern }}
+        run: make testacc TESTACC_RUN="$TESTACC_RUN"

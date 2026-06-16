@@ -108,11 +108,11 @@ test: ## Run unit tests
 	@go test $(TEST_FILES) $(TEST_FLAGS)
 
 .PHONY: testacc
-testacc: ## Run acceptance tests (requires TF_VAR_auth_token, TF_VAR_host, TF_VAR_organization_id)
+testacc: ## Run acceptance tests (set TESTACC_RUN to limit to matching tests; requires TF_VAR_auth_token, TF_VAR_host, TF_VAR_organization_id)
 	@[ "${TF_VAR_auth_token}" ] || ( echo "ERROR: export TF_VAR_auth_token before running acceptance tests"; exit 1 )
 	@[ "${TF_VAR_host}" ] || ( echo "ERROR: export TF_VAR_host before running acceptance tests"; exit 1 )
 	@[ "${TF_VAR_organization_id}" ] || ( echo "ERROR: export TF_VAR_organization_id before running acceptance tests"; exit 1 )
-	@TF_ACC=1 go test -timeout=180m -v ./acceptance_tests/
+	@TF_ACC=1 go test -timeout=180m -v ./acceptance_tests/ $(if $(TESTACC_RUN),-run '$(TESTACC_RUN)')
 
 # ============================================================================
 # Documentation
