@@ -132,7 +132,7 @@ func (n *NetworkPeer) Create(ctx context.Context, req resource.CreateRequest, re
 	if err != nil {
 		// The API may persist a failed peering record even when returning a non-success status.
 		// Attempt to find the resource so we can save it to state for lifecycle management.
-		peerID := n.findNetworkPeerByPlan(ctx, organizationId, projectId, clusterId, plan)
+		peerID := n.findNetworkPeerByName(ctx, organizationId, projectId, clusterId, plan.Name.ValueString())
 		if peerID == "" {
 			resp.Diagnostics.AddError(
 				"Error creating network peer",
@@ -554,11 +554,9 @@ func defineProviderForResponse(networkResp *network_peer_api.GetNetworkPeeringRe
 	return nil
 }
 
-// findNetworkPeerByPlan lists all network peers for a cluster and returns the ID
-// of the peer whose name, provider type, and provider-specific identifiers match
-// the plan. Network peer names are not unique, so matching on name alone could
-// return a different peer.
-func (n *NetworkPeer) findNetworkPeerByPlan(ctx context.Context, organizationId, projectId, clusterId string, plan providerschema.NetworkPeer) string {
+// findNetworkPeerByName lists all network peers for a cluster and returns the ID
+// of the peer whose name matches. Returns empty string if not found.
+func (n *NetworkPeer) findNetworkPeerByName(ctx context.Context, organizationId, projectId, clusterId, name string) string {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/networkPeers", n.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
@@ -570,54 +568,12 @@ func (n *NetworkPeer) findNetworkPeerByPlan(ctx context.Context, organizationId,
 		return ""
 	}
 
-	name := plan.Name.ValueString()
-	providerType := strings.ToLower(plan.ProviderType.ValueString())
-
 	for i := range peers {
-		if peers[i].Name != name {
-			continue
+		if peers[i].Name == name {
+			return peers[i].Id.String()
 		}
-		if !strings.EqualFold(peers[i].ProviderType, providerType) {
-			continue
-		}
-		if !matchesProviderConfig(peers[i], plan) {
-			continue
-		}
-		return peers[i].Id.String()
 	}
 	return ""
-}
-
-// matchesProviderConfig checks whether a peer response matches the provider-specific
-// identifiers in the plan (VPC ID for AWS, network name for GCP, VNet ID for Azure).
-func matchesProviderConfig(peer network_peer_api.GetNetworkPeeringRecordResponse, plan providerschema.NetworkPeer) bool {
-	if len(peer.ProviderConfig) == 0 || bytes.Equal(peer.ProviderConfig, json.RawMessage("null")) {
-		// Cannot verify config fields; accept name+providerType match only.
-		return true
-	}
-
-	switch {
-	case plan.ProviderConfig.AWSConfig != nil:
-		aws, err := peer.AsAWS()
-		if err != nil {
-			return false
-		}
-		return aws.AWSConfigData.VpcId == plan.ProviderConfig.AWSConfig.VpcId.ValueString()
-	case plan.ProviderConfig.GCPConfig != nil:
-		gcp, err := peer.AsGCP()
-		if err != nil {
-			return false
-		}
-		return gcp.GCPConfigData.NetworkName == plan.ProviderConfig.GCPConfig.NetworkName.ValueString()
-	case plan.ProviderConfig.AzureConfig != nil:
-		azure, err := peer.AsAZURE()
-		if err != nil {
-			return false
-		}
-		return azure.AzureConfigData.VnetId == plan.ProviderConfig.AzureConfig.VnetId.ValueString()
-	default:
-		return false
-	}
 }
 
 func validateProviderTypeIsSameInPlanAndState(planProviderType, stateProviderType string) bool {
