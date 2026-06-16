@@ -60,7 +60,7 @@ func (d *EventingFunctions) Read(ctx context.Context, req datasource.ReadRequest
 	)
 
 	// The list endpoint filters by state server-side via a comma-separated status query parameter.
-	if !state.Status.IsNull() {
+	if !state.Status.IsNull() && !state.Status.IsUnknown() {
 		var statuses []string
 		diags := state.Status.ElementsAs(ctx, &statuses, false)
 		resp.Diagnostics.Append(diags...)
