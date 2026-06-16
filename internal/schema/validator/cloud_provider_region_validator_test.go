@@ -9,71 +9,72 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-var testRegions = map[string][]string{
-	"aws":   {"us-west-2", "eu-west-1"},
-	"azure": {"eastus", "swedencentral"},
-}
+func TestCloudProviderRegion(t *testing.T) {
+	allowed := map[string][]string{
+		"aws":   {"us-west-2", "eu-west-1"},
+		"azure": {"eastus", "swedencentral"},
+	}
 
-func cloudProviderObject(t *testing.T, provider, region attr.Value) types.Object {
-	t.Helper()
-	obj, diags := types.ObjectValue(
-		map[string]attr.Type{
-			"type":   types.StringType,
-			"region": types.StringType,
+	objectType := map[string]attr.Type{
+		"type":   types.StringType,
+		"region": types.StringType,
+	}
+
+	tests := []struct {
+		name      string
+		provider  attr.Value
+		region    attr.Value
+		wantError bool
+	}{
+		{
+			name:     "supported region",
+			provider: types.StringValue("aws"),
+			region:   types.StringValue("us-west-2"),
 		},
-		map[string]attr.Value{
-			"type":   provider,
-			"region": region,
+		{
+			name:      "unsupported region",
+			provider:  types.StringValue("aws"),
+			region:    types.StringValue("us-east-99"),
+			wantError: true,
 		},
-	)
-	if diags.HasError() {
-		t.Fatalf("failed to build object: %v", diags)
+		{
+			name:     "unknown provider type is skipped (its enum validator reports it)",
+			provider: types.StringValue("gcp"),
+			region:   types.StringValue("anything"),
+		},
+		{
+			name:     "unknown region value is skipped",
+			provider: types.StringValue("aws"),
+			region:   types.StringUnknown(),
+		},
+		{
+			name:     "null region value is skipped",
+			provider: types.StringValue("aws"),
+			region:   types.StringNull(),
+		},
 	}
-	return obj
-}
 
-func runRegionValidator(t *testing.T, obj types.Object) *validator.ObjectResponse {
-	t.Helper()
-	v := CloudProviderRegion(testRegions)
-	resp := &validator.ObjectResponse{}
-	v.ValidateObject(context.Background(), validator.ObjectRequest{ConfigValue: obj}, resp)
-	return resp
-}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			obj, diags := types.ObjectValue(objectType, map[string]attr.Value{
+				"type":   tc.provider,
+				"region": tc.region,
+			})
+			if diags.HasError() {
+				t.Fatalf("failed to build object: %v", diags)
+			}
 
-func TestCloudProviderRegion_SupportedRegion(t *testing.T) {
-	obj := cloudProviderObject(t, types.StringValue("aws"), types.StringValue("us-west-2"))
-	if resp := runRegionValidator(t, obj); resp.Diagnostics.HasError() {
-		t.Errorf("expected no error for supported region, got: %v", resp.Diagnostics)
-	}
-}
+			resp := &validator.ObjectResponse{}
+			CloudProviderRegion(allowed).ValidateObject(
+				context.Background(),
+				validator.ObjectRequest{ConfigValue: obj},
+				resp,
+			)
 
-func TestCloudProviderRegion_UnsupportedRegion(t *testing.T) {
-	obj := cloudProviderObject(t, types.StringValue("aws"), types.StringValue("us-east-99"))
-	resp := runRegionValidator(t, obj)
-	if !resp.Diagnostics.HasError() {
-		t.Fatalf("expected an error for unsupported region, got none")
-	}
-}
-
-func TestCloudProviderRegion_CaseInsensitiveProviderType(t *testing.T) {
-	obj := cloudProviderObject(t, types.StringValue("AWS"), types.StringValue("eu-west-1"))
-	if resp := runRegionValidator(t, obj); resp.Diagnostics.HasError() {
-		t.Errorf("expected provider type match to be case-insensitive, got: %v", resp.Diagnostics)
-	}
-}
-
-func TestCloudProviderRegion_UnknownProviderSkipped(t *testing.T) {
-	// gcp is absent from testRegions; the type enum validator owns that error.
-	obj := cloudProviderObject(t, types.StringValue("gcp"), types.StringValue("anything"))
-	if resp := runRegionValidator(t, obj); resp.Diagnostics.HasError() {
-		t.Errorf("expected unknown provider type to be skipped, got: %v", resp.Diagnostics)
-	}
-}
-
-func TestCloudProviderRegion_UnknownValuesSkipped(t *testing.T) {
-	obj := cloudProviderObject(t, types.StringValue("aws"), types.StringUnknown())
-	if resp := runRegionValidator(t, obj); resp.Diagnostics.HasError() {
-		t.Errorf("expected unknown region to be skipped, got: %v", resp.Diagnostics)
+			if got := resp.Diagnostics.HasError(); got != tc.wantError {
+				t.Errorf("HasError() = %v, want %v (diags: %v)", got, tc.wantError, resp.Diagnostics)
+			}
+		})
 	}
 }
 
@@ -82,7 +83,15 @@ func TestCloudProviderRegion_NullObjectSkipped(t *testing.T) {
 		"type":   types.StringType,
 		"region": types.StringType,
 	})
-	if resp := runRegionValidator(t, obj); resp.Diagnostics.HasError() {
+
+	resp := &validator.ObjectResponse{}
+	CloudProviderRegion(map[string][]string{"aws": {"us-west-2"}}).ValidateObject(
+		context.Background(),
+		validator.ObjectRequest{ConfigValue: obj},
+		resp,
+	)
+
+	if resp.Diagnostics.HasError() {
 		t.Errorf("expected null object to be skipped, got: %v", resp.Diagnostics)
 	}
 }

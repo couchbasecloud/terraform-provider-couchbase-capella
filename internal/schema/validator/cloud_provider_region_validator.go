@@ -15,9 +15,9 @@ var _ validator.Object = (*cloudProviderRegionValidator)(nil)
 
 // CloudProviderRegion returns an object validator for a cloud_provider block that
 // rejects a region not supported for the configured provider type. allowed maps a
-// lowercased provider type (e.g. "aws") to its supported region codes. The check
-// is skipped when type or region is null/unknown, or when the provider type is
-// absent from the map (its own enum validator reports that).
+// provider type (e.g. "aws", matching the type enum's casing) to its supported
+// region codes. The check is skipped when type or region is null/unknown, or when
+// the provider type is absent from the map (its own enum validator reports that).
 func CloudProviderRegion(allowed map[string][]string) validator.Object {
 	return &cloudProviderRegionValidator{allowed: allowed}
 }
@@ -50,7 +50,7 @@ func (v *cloudProviderRegionValidator) ValidateObject(_ context.Context, req val
 		return
 	}
 
-	regions, ok := v.allowed[strings.ToLower(providerType)]
+	regions, ok := v.allowed[providerType]
 	if !ok {
 		// Unknown provider type — the type attribute's own enum validator reports it.
 		return
