@@ -49,7 +49,7 @@ func (e *EventingFunction) Schema(_ context.Context, _ resource.SchemaRequest, r
 // Create creates a new eventing function. The function is created in the undeployed state; if the
 // plan requests a deployment state, the activationState endpoint is called to reconcile it.
 func (e *EventingFunction) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan providerschema.EventingFunction
+	var plan providerschema.EventingFunctionResource
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -118,7 +118,7 @@ func (e *EventingFunction) Create(ctx context.Context, req resource.CreateReques
 // setEventingFunctionComputedAttributesToNull sets the computed attributes on the plan to null. It is
 // used when setting state after create if the post-create read fails, so the resulting state holds no
 // unknown values.
-func setEventingFunctionComputedAttributesToNull(plan *providerschema.EventingFunction) {
+func setEventingFunctionComputedAttributesToNull(plan *providerschema.EventingFunctionResource) {
 	plan.Description = types.StringNull()
 
 	nullKeyspaceComputedAttributes(plan.EventSource)
@@ -192,7 +192,7 @@ func eventingSettingsChanged(plan, state *providerschema.EventingFunctionSetting
 // change in the number of bucket, URL or constant bindings counts as a change. The sensitive URL
 // authentication secrets (password, bearer token) are not compared: the API masks them as "*****" so
 // they do not round-trip faithfully and would otherwise produce false positives.
-func eventingBindingsChanged(plan, state *providerschema.EventingFunctionBindings) bool {
+func eventingBindingsChanged(plan, state *providerschema.EventingFunctionBindingsResource) bool {
 	if plan == nil {
 		return false
 	}
@@ -256,7 +256,7 @@ func eventingURLAuthChanged(plan, state *providerschema.EventingFunctionUrlAuth)
 
 // Read reads the eventing function information.
 func (e *EventingFunction) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state providerschema.EventingFunction
+	var state providerschema.EventingFunctionResource
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -301,7 +301,7 @@ func (e *EventingFunction) Read(ctx context.Context, req resource.ReadRequest, r
 // Update updates the eventing function. If the desired deployment state changed it is applied first
 // via the activationState endpoint, then the function definition is updated.
 func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state providerschema.EventingFunction
+	var plan, state providerschema.EventingFunctionResource
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -398,7 +398,7 @@ func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateReques
 // Delete deletes the eventing function. The function must be undeployed prior to deletion; if it is
 // not, the API error is surfaced to the user.
 func (e *EventingFunction) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state providerschema.EventingFunction
+	var state providerschema.EventingFunctionResource
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -476,8 +476,8 @@ func (e *EventingFunction) ImportState(ctx context.Context, req resource.ImportS
 // retrieveEventingFunction fetches an eventing function and morphs it into the Terraform state.
 // prior carries forward the State action verb and any URL binding secrets the GET response omits.
 func (e *EventingFunction) retrieveEventingFunction(
-	ctx context.Context, organizationId, projectId, clusterId, name string, prior *providerschema.EventingFunction,
-) (*providerschema.EventingFunction, error) {
+	ctx context.Context, organizationId, projectId, clusterId, name string, prior *providerschema.EventingFunctionResource,
+) (*providerschema.EventingFunctionResource, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/eventingFunctions/%s", e.HostURL, organizationId, projectId, clusterId, name)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := e.ClientV1.ExecuteWithRetry(ctx, cfg, nil, e.Token, nil)
@@ -490,7 +490,7 @@ func (e *EventingFunction) retrieveEventingFunction(
 		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshallingResponse, err)
 	}
 
-	return providerschema.NewEventingFunction(&eventingResp, organizationId, projectId, clusterId, prior), nil
+	return providerschema.NewEventingFunctionResource(&eventingResp, organizationId, projectId, clusterId, prior), nil
 }
 
 // activationVerb returns the activationState API action verb for the desired state. The API only
@@ -606,7 +606,7 @@ func settingsToAPI(s *providerschema.EventingFunctionSettings) *eventingapi.Sett
 	}
 }
 
-func bindingsToAPI(b *providerschema.EventingFunctionBindings) *eventingapi.Bindings {
+func bindingsToAPI(b *providerschema.EventingFunctionBindingsResource) *eventingapi.Bindings {
 	if b == nil {
 		return nil
 	}

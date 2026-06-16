@@ -10,8 +10,8 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 )
 
-// EventingFunction is the Terraform schema for the eventing function resource.
-type EventingFunction struct {
+// EventingFunctionResource is the Terraform schema for the eventing function resource.
+type EventingFunctionResource struct {
 	// OrganizationId is the ID of the organization to which the Capella cluster belongs.
 	OrganizationId types.String `tfsdk:"organization_id"`
 
@@ -40,7 +40,7 @@ type EventingFunction struct {
 	Settings *EventingFunctionSettings `tfsdk:"settings"`
 
 	// Bindings holds the bucket, URL and constant bindings.
-	Bindings *EventingFunctionBindings `tfsdk:"bindings"`
+	Bindings *EventingFunctionBindingsResource `tfsdk:"bindings"`
 
 	// State is the desired terminal activation state, applied via the activationState endpoint.
 	// Enum: deployed, undeployed, paused, resumed. It is a write-only control input: the GET
@@ -67,11 +67,11 @@ type EventingFunctionSettings struct {
 	CursorAware           types.Bool   `tfsdk:"cursor_aware"`
 }
 
-// EventingFunctionBindings groups the bucket, URL and constant bindings.
-type EventingFunctionBindings struct {
-	Buckets   []EventingFunctionBucketBinding   `tfsdk:"buckets"`
-	Urls      []EventingFunctionUrlBinding      `tfsdk:"urls"`
-	Constants []EventingFunctionConstantBinding `tfsdk:"constants"`
+// EventingFunctionBindingsResource groups the bucket, URL and constant bindings.
+type EventingFunctionBindingsResource struct {
+	Buckets   []EventingFunctionBucketBinding      `tfsdk:"buckets"`
+	Urls      []EventingFunctionUrlBindingResource `tfsdk:"urls"`
+	Constants []EventingFunctionConstantBinding    `tfsdk:"constants"`
 }
 
 // EventingFunctionBucketBinding gives the function direct access to a collection.
@@ -83,8 +83,8 @@ type EventingFunctionBucketBinding struct {
 	Permission types.String `tfsdk:"permission"`
 }
 
-// EventingFunctionUrlBinding lets the function access an external resource.
-type EventingFunctionUrlBinding struct {
+// EventingFunctionUrlBindingResource lets the function access an external resource.
+type EventingFunctionUrlBindingResource struct {
 	Alias                  types.String             `tfsdk:"alias"`
 	Url                    types.String             `tfsdk:"url"`
 	AllowCookies           types.Bool               `tfsdk:"allow_cookies"`
@@ -109,7 +109,7 @@ type EventingFunctionConstantBinding struct {
 // Validate splits a composite import ID and confirms all identifying fields are present.
 // The terraform import CLI format is:
 // `terraform import capella_eventing_function.fn function_name=<name>,cluster_id=<id>,project_id=<id>,organization_id=<id>`.
-func (e EventingFunction) Validate() (map[Attr]string, error) {
+func (e EventingFunctionResource) Validate() (map[Attr]string, error) {
 	state := map[Attr]basetypes.StringValue{
 		OrganizationId: e.OrganizationId,
 		ProjectId:      e.ProjectId,
@@ -125,15 +125,15 @@ func (e EventingFunction) Validate() (map[Attr]string, error) {
 	return IDs, nil
 }
 
-// NewEventingFunction converts an eventing function API response into the Terraform schema.
+// NewEventingFunctionResource converts an eventing function API response into the Terraform schema.
 // prior carries forward values that the GET response does not return: the State action verb
 // and any URL binding authentication secrets (matched by alias).
-func NewEventingFunction(
+func NewEventingFunctionResource(
 	resp *eventingapi.GetEventingFunctionResponse,
 	organizationId, projectId, clusterId string,
-	prior *EventingFunction,
-) *EventingFunction {
-	fn := &EventingFunction{
+	prior *EventingFunctionResource,
+) *EventingFunctionResource {
+	fn := &EventingFunctionResource{
 		OrganizationId:       types.StringValue(organizationId),
 		ProjectId:            types.StringValue(projectId),
 		ClusterId:            types.StringValue(clusterId),
@@ -176,12 +176,12 @@ func settingsToSchema(s eventingapi.Settings) *EventingFunctionSettings {
 }
 
 // bindingsToSchema returns nil when no bindings are present so the optional attribute stays null.
-func bindingsToSchema(b eventingapi.Bindings) *EventingFunctionBindings {
+func bindingsToSchema(b eventingapi.Bindings) *EventingFunctionBindingsResource {
 	if len(b.Buckets) == 0 && len(b.Urls) == 0 && len(b.Constants) == 0 {
 		return nil
 	}
 
-	bindings := &EventingFunctionBindings{}
+	bindings := &EventingFunctionBindingsResource{}
 
 	for _, bucket := range b.Buckets {
 		bindings.Buckets = append(bindings.Buckets, EventingFunctionBucketBinding{
@@ -194,7 +194,7 @@ func bindingsToSchema(b eventingapi.Bindings) *EventingFunctionBindings {
 	}
 
 	for _, u := range b.Urls {
-		urlBinding := EventingFunctionUrlBinding{
+		urlBinding := EventingFunctionUrlBindingResource{
 			Alias:                  types.StringValue(u.Alias),
 			Url:                    types.StringValue(u.Url),
 			AllowCookies:           types.BoolPointerValue(u.AllowCookies),
@@ -227,7 +227,7 @@ func bindingsToSchema(b eventingapi.Bindings) *EventingFunctionBindings {
 // eventing API always returns ***** for secrets, so do not set state
 // with those values otherwise it will trigger an update. in other
 // words, drift detection is not possible with secrets.
-func carryForwardURLSecrets(refreshed, prior *EventingFunctionBindings) {
+func carryForwardURLSecrets(refreshed, prior *EventingFunctionBindingsResource) {
 	if refreshed == nil || prior == nil {
 		return
 	}
