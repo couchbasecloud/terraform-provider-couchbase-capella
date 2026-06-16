@@ -442,7 +442,9 @@ func (n *NetworkPeer) retrieveNetworkPeer(
 		return nil, fmt.Errorf("%s: %w", errors.ErrRefreshingState, err)
 	}
 
-	refreshedState.ProviderType = types.StringValue(providerType)
+	if providerType != "" {
+		refreshedState.ProviderType = types.StringValue(providerType)
+	}
 
 	return refreshedState, nil
 }
@@ -471,7 +473,7 @@ func (n *NetworkPeer) getNetworkPeer(
 		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
 	}
 
-	if err := defineProviderForResponse(networkResp); err != nil {
+	if err := defineProviderForResponse(&networkResp); err != nil {
 		return nil, err
 	}
 
@@ -480,7 +482,7 @@ func (n *NetworkPeer) getNetworkPeer(
 
 // defineProviderForResponse sets the provider type in the retrieved network peer as per the fields populated in the provider config.
 // If the provider type is not set through terraform separately in this manner, it will throw error as v4 get doesn't return it, but it's a field in resources.
-func defineProviderForResponse(networkResp network_peer_api.GetNetworkPeeringRecordResponse) error {
+func defineProviderForResponse(networkResp *network_peer_api.GetNetworkPeeringRecordResponse) error {
 	azure, err := networkResp.AsAZURE()
 	if err != nil {
 		return fmt.Errorf("%s: %w", errors.ErrReadingAzureConfig, err)
@@ -505,7 +507,7 @@ func defineProviderForResponse(networkResp network_peer_api.GetNetworkPeeringRec
 	case aws.AWSConfigData.VpcId != "":
 		networkResp.ProviderType = "aws"
 	default:
-		return fmt.Errorf("%s: %w", errors.ErrReadingProviderConfig, err)
+		return errors.ErrReadingProviderConfig
 	}
 
 	return nil
