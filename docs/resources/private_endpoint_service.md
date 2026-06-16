@@ -31,6 +31,11 @@ resource "couchbase-capella_private_endpoint_service" "new_service" {
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
 
+### Read-Only
+
+- `status` (String) - status of the private endpoint
+ - **Valid Values**: `idle`, `unknown`, `enabling`, `enabled`, `enableFailed`, `disabling`, `disabled`, `disableFailed`
+
 ## Import
 
 Import is supported using the following syntax:
