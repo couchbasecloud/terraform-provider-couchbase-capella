@@ -43,6 +43,9 @@ var enumTable = map[string]map[string]EnumDef{
 	"CloudProvider": {
 		"type": {Type: "string", Values: []string{"aws", "gcp", "azure"}},
 	},
+	"ClusterOnOffSchedule": {
+		"timezone": {Type: "string", Values: []string{"Pacific/Midway", "US/Hawaii", "US/Alaska", "US/Pacific", "US/Mountain", "US/Central", "US/Eastern", "America/Puerto_Rico", "Canada/Newfoundland", "America/Argentina/Buenos_Aires", "Atlantic/Cape_Verde", "Europe/London", "Europe/Amsterdam", "Europe/Athens", "Africa/Nairobi", "Asia/Tehran", "Indian/Mauritius", "Asia/Karachi", "Asia/Calcutta", "Asia/Dhaka", "Asia/Bangkok", "Asia/Hong_Kong", "Asia/Tokyo", "Australia/North", "Australia/Sydney", "Pacific/Ponape", "Antarctica/South_Pole"}},
+	},
 	"ColumnarAnalyticsOnOffSchedule": {
 		"timezone": {Type: "string", Values: []string{"Pacific/Midway", "US/Hawaii", "US/Alaska", "US/Pacific", "US/Mountain", "US/Central", "US/Eastern", "America/Puerto_Rico", "Canada/Newfoundland", "America/Argentina/Buenos_Aires", "Atlantic/Cape_Verde", "Europe/London", "Europe/Amsterdam", "Europe/Athens", "Africa/Nairobi", "Asia/Tehran", "Indian/Mauritius", "Asia/Karachi", "Asia/Calcutta", "Asia/Dhaka", "Asia/Bangkok", "Asia/Hong_Kong", "Asia/Tokyo", "Australia/North", "Australia/Sydney", "Pacific/Ponape", "Antarctica/South_Pole"}},
 	},
@@ -60,17 +63,30 @@ var enumTable = map[string]map[string]EnumDef{
 		"logKeys":  {Type: "string", IsArray: true, Values: []string{"Admin", "Access", "Auth", "Cache", "Changes", "CRUD", "HTTP", "HTTP+", "Import", "Javascript", "Query", "Sync", "SyncMsg"}},
 		"logLevel": {Type: "string", Values: []string{"info", "warn", "error"}},
 	},
+	"CreateAPIKeyRequest": {
+		"organizationRoles": {Type: "string", IsArray: true, Values: []string{"organizationOwner", "organizationMember", "projectCreator"}},
+	},
 	"CreateAlertRequest": {
 		"kind": {Type: "string", Values: []string{"webhook"}},
 	},
 	"CreateBucketRequest": {
-		"vbuckets": {Type: "integer", Values: []string{"128", "1024"}},
+		"bucketConflictResolution": {Type: "string", Values: []string{"seqno", "lww"}},
+		"durabilityLevel":          {Type: "string", Values: []string{"none", "majority", "majorityAndPersistActive", "persistToMajority"}},
+		"evictionPolicy":           {Type: "string", Values: []string{"fullEviction", "noEviction", "nruEviction"}},
+		"replicas":                 {Type: "integer", Values: []string{"1", "2", "3"}},
+		"storageBackend":           {Type: "string", Values: []string{"couchstore", "magma"}},
+		"type":                     {Type: "string", Values: []string{"couchbase", "ephemeral"}},
+		"vbuckets":                 {Type: "integer", Values: []string{"128", "1024"}},
+	},
+	"CreateClusterRequest": {
+		"configurationType": {Type: "string", Values: []string{"singleNode", "multiNode"}},
 	},
 	"CreateColumnarAnalyticsClusterRequest": {
 		"cloudProvider": {Type: "string", Values: []string{"aws", "gcp"}},
 	},
 	"CreateOnDemandRestoreRequest": {
 		"replaceTTL": {Type: "string", Values: []string{"none", "all", "expired"}},
+		"services":   {Type: "string", IsArray: true, Values: []string{"data", "query"}},
 	},
 	"CreatePrivateEndpointResponse": {
 		"status": {Type: "string", Values: []string{"pending", "pendingAcceptance", "linked", "rejected", "failed", "unrecognized"}},
@@ -98,6 +114,9 @@ var enumTable = map[string]map[string]EnumDef{
 		"unstructuredDataProcessingConfig.chunkingStrategy.strategyType": {Type: "string", Values: []string{"RECURSIVE_SPLITTER", "SEMANTIC_SPLITTER", "PARAGRAPH_SPLITTER", "SENTENCE_SPLITTER", "FIXED_TOKEN_SPLITTER"}},
 		"unstructuredDataProcessingConfig.exclusions":                    {Type: "string", IsArray: true, Values: []string{"header", "footer", "table"}},
 	},
+	"CreateUserRequest": {
+		"organizationRoles": {Type: "string", IsArray: true, Values: []string{"organizationOwner", "organizationMember", "projectCreator"}},
+	},
 	"CreateWorkflowRequest": {
 		"type": {Type: "string", Values: []string{"structuredDataProcessing", "unstructuredDataProcessing", "vectorization"}},
 	},
@@ -121,6 +140,9 @@ var enumTable = map[string]map[string]EnumDef{
 	"ExternalModel": {
 		"external.modelName": {Type: "string", Values: []string{"text-embedding-3-small", "text-embedding-3-large", "text-embedding-ada-002"}},
 	},
+	"GetAPIKey": {
+		"organizationRoles": {Type: "string", IsArray: true, Values: []string{"organizationOwner", "organizationMember", "projectCreator"}},
+	},
 	"GetAlertResponse": {
 		"kind": {Type: "string", Values: []string{"webhook"}},
 	},
@@ -128,17 +150,45 @@ var enumTable = map[string]map[string]EnumDef{
 		"state":       {Type: "string", Values: []string{"enabled", "enabling", "disabled", "disabling", "failed"}},
 		"targetState": {Type: "string", Values: []string{"enabled", "disabled"}},
 	},
+	"GetAppServiceResponse": {
+		"currentState": {Type: "string", Values: []string{"pending", "deploying", "deploymentFailed", "destroying", "destroyFailed", "healthy", "degraded", "scaling", "scaleFailed", "upgrading", "upgradeFailed", "turnedOff", "turningOff", "turnOffFailed", "turningOn", "turnOnFailed"}},
+		"plan":         {Type: "string", Values: []string{"basic", "developer pro", "enterprise"}},
+	},
+	"GetBackupByIDResponse": {
+		"method": {Type: "string", Values: []string{"incremental", "full"}},
+		"source": {Type: "string", Values: []string{"manual", "scheduled"}},
+		"status": {Type: "string", Values: []string{"pending", "ready", "failed"}},
+	},
+	"GetBackupResponse": {
+		"method": {Type: "string", Values: []string{"incremental", "full"}},
+		"source": {Type: "string", Values: []string{"manual", "scheduled"}},
+		"status": {Type: "string", Values: []string{"pending", "ready", "failed"}},
+	},
 	"GetBucketResponse": {
-		"vbuckets": {Type: "integer", Values: []string{"128", "1024"}},
+		"evictionPolicy": {Type: "string", Values: []string{"fullEviction", "noEviction", "nruEviction"}},
+		"vbuckets":       {Type: "integer", Values: []string{"128", "1024"}},
 	},
 	"GetClusterAuditLogExportResponse": {
 		"status": {Type: "string", Values: []string{"In Progress", "Completed", "Queued", "Failed"}},
 	},
 	"GetClusterOnOffScheduleResponse": {
 		"activationStatus": {Type: "string", Values: []string{"active", "paused"}},
+		"timezone":         {Type: "string", Values: []string{"Pacific/Midway", "US/Hawaii", "US/Alaska", "US/Pacific", "US/Mountain", "US/Central", "US/Eastern", "America/Puerto_Rico", "Canada/Newfoundland", "America/Argentina/Buenos_Aires", "Atlantic/Cape_Verde", "Europe/London", "Europe/Amsterdam", "Europe/Athens", "Africa/Nairobi", "Asia/Tehran", "Indian/Mauritius", "Asia/Karachi", "Asia/Calcutta", "Asia/Dhaka", "Asia/Bangkok", "Asia/Hong_Kong", "Asia/Tokyo", "Australia/North", "Australia/Sydney", "Pacific/Ponape", "Antarctica/South_Pole"}},
 	},
 	"GetClusterResponse": {
-		"expressScaling": {Type: "string", Values: []string{"enabled", "disabled"}},
+		"configurationType": {Type: "string", Values: []string{"singleNode", "multiNode"}},
+		"currentState":      {Type: "string", Values: []string{"draft", "deploying", "scaling", "upgrading", "rebalancing", "peering", "destroying", "healthy", "degraded", "turnedOff", "turningOff", "turningOn", "deploymentFailed", "scaleFailed", "upgradeFailed", "rebalanceFailed", "peeringFailed", "destroyFailed", "offline", "turningOffFailed", "turningOnFailed"}},
+		"expressScaling":    {Type: "string", Values: []string{"enabled", "disabled"}},
+	},
+	"GetClusterSupport": {
+		"plan":     {Type: "string", Values: []string{"basic", "developer pro", "enterprise"}},
+		"timezone": {Type: "string", Values: []string{"ET", "GMT", "IST", "PT"}},
+	},
+	"GetColumnarAnalyticsClusterResponse": {
+		"currentState": {Type: "string", Values: []string{"deploying", "deploymentFailed", "destroying", "destroyFailed", "healthy", "scaling", "scaleFailed", "turningOff", "turnedOff", "turningOn"}},
+	},
+	"GetLanguageModelResponse": {
+		"model.actions": {Type: "string", IsArray: true, Values: []string{"deploy", "delete", "pause", "resume"}},
 	},
 	"GetLogStreamingResponse": {
 		"configState":    {Type: "string", Values: []string{"disabled", "disabling", "enabled", "enabling", "paused", "pausing", "errored"}},
@@ -167,7 +217,8 @@ var enumTable = map[string]map[string]EnumDef{
 		"unstructuredDataProcessingConfig.exclusions":                    {Type: "string", IsArray: true, Values: []string{"header", "footer", "table"}},
 	},
 	"GetUserResponse": {
-		"status": {Type: "string", Values: []string{"verified", "not-verified", "pending-primary"}},
+		"organizationRoles": {Type: "string", IsArray: true, Values: []string{"organizationOwner", "organizationMember", "projectCreator"}},
+		"status":            {Type: "string", Values: []string{"verified", "not-verified", "pending-primary"}},
 	},
 	"GetWorkflowResponse": {
 		"type": {Type: "string", Values: []string{"structuredDataProcessing", "unstructuredDataProcessing", "vectorization"}},
@@ -188,7 +239,8 @@ var enumTable = map[string]map[string]EnumDef{
 		"op": {Type: "string", Values: []string{"update"}},
 	},
 	"PatchEntry": {
-		"op": {Type: "string", Values: []string{"add", "remove"}},
+		"op":    {Type: "string", Values: []string{"add", "remove"}},
+		"value": {Type: "string", IsArray: true, Values: []string{"organizationOwner", "organizationMember", "projectCreator", "projectOwner", "projectManager", "projectViewer", "projectDataReaderWriter", "projectDataReader"}},
 	},
 	"PostLogStreamingRequest": {
 		"outputType": {Type: "string", Values: []string{"datadog", "generic_http", "sumologic", "loki", "elastic", "splunk", "dynatrace"}},
@@ -205,15 +257,29 @@ var enumTable = map[string]map[string]EnumDef{
 	"RequestWebhook": {
 		"method": {Type: "string", Values: []string{"POST", "PUT"}},
 	},
+	"Resource": {
+		"roles": {Type: "string", IsArray: true, Values: []string{"projectOwner", "projectManager", "projectViewer", "projectDataReaderWriter", "projectDataReader"}},
+		"type":  {Type: "string", Values: []string{"project"}},
+	},
 	"ResponseWebhook": {
 		"method": {Type: "string", Values: []string{"POST", "PUT"}},
 	},
 	"ResyncStatus": {
 		"state": {Type: "string", Values: []string{"running", "completed", "stopping", "stopped", "error"}},
 	},
+	"ServiceGroup": {
+		"services": {Type: "string", IsArray: true, Values: []string{"data", "query", "index", "search", "analytics", "eventing"}},
+	},
+	"Support": {
+		"plan":     {Type: "string", Values: []string{"basic", "developer pro", "enterprise"}},
+		"timezone": {Type: "string", Values: []string{"ET", "GMT", "IST", "PT"}},
+	},
 	"UpdateBucketRequest": {
 		"durabilityLevel": {Type: "string", Values: []string{"none", "majority", "majorityAndPersistActive", "persistToMajority"}},
 		"replicas":        {Type: "integer", Values: []string{"1", "2", "3"}},
+	},
+	"UpdateClusterResponse": {
+		"currentState": {Type: "string", Values: []string{"draft", "deploying", "scaling", "upgrading", "rebalancing", "peering", "destroying", "healthy", "degraded", "turnedOff", "turningOff", "turningOn", "deploymentFailed", "scaleFailed", "upgradeFailed", "rebalanceFailed", "peeringFailed", "destroyFailed", "offline", "turningOffFailed", "turningOnFailed"}},
 	},
 	"UpdateReplicationRequest": {
 		"priority": {Type: "string", Values: []string{"low", "medium", "high"}},

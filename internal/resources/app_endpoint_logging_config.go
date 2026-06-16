@@ -139,6 +139,12 @@ func (l *LoggingConfig) Read(ctx context.Context, req resource.ReadRequest, resp
 
 	loggingConfig, err := l.getLoggingConfig(ctx, organizationId, projectId, clusterId, appServiceId, appEndpointName)
 	if err != nil {
+		if handled, forbiddenErr := handleAppEndpointForbidden(ctx, err, l.Data, resp, organizationId, projectId, clusterId, appServiceId, appEndpointName); handled {
+			return
+		} else if forbiddenErr != nil {
+			resp.Diagnostics.AddError("Error Getting App Endpoint Logging Config in Capella", forbiddenErr.Error())
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error Getting App Endpoint Logging Config in Capella",
 			"Could not get Capella App Endpoint Logging Config for app endpoint with name "+state.AppEndpointName.String()+": "+err.Error(),

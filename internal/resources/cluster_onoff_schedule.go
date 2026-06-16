@@ -21,10 +21,16 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource                = &ClusterOnOffSchedule{}
-	_ resource.ResourceWithConfigure   = &ClusterOnOffSchedule{}
-	_ resource.ResourceWithImportState = &ClusterOnOffSchedule{}
+	_ resource.Resource                   = &ClusterOnOffSchedule{}
+	_ resource.ResourceWithConfigure      = &ClusterOnOffSchedule{}
+	_ resource.ResourceWithImportState    = &ClusterOnOffSchedule{}
+	_ resource.ResourceWithValidateConfig = &ClusterOnOffSchedule{}
 )
+
+// weekdays is the order the V4 API requires for the on/off schedule days list:
+// exactly one entry per day of the week, starting from Monday and ending with Sunday.
+// The explicit length guards at compile time against entries being added or removed.
+var weekdays = [7]string{"monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"}
 
 const errorMessageAfterOnOffScheduleCreation = "Cluster On/Off Schedule creation is successful, but encountered an error while checking the current" +
 	" state of the cluster on/off schedule. Please run `terraform plan` after 1-2 minutes to know the" +
@@ -53,6 +59,162 @@ func (c *ClusterOnOffSchedule) Metadata(_ context.Context, req resource.Metadata
 // Schema defines the schema for the OnOffSchedule resource.
 func (c *ClusterOnOffSchedule) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = OnOffScheduleSchema()
+}
+
+// ValidateConfig enforces the constraints on the days list that the V4 API
+// documents but the attribute-level validators cannot express: the schedule
+// must contain exactly one entry per day of the week in Monday-to-Sunday order,
+// the cluster cannot be scheduled to be off for every day of the week, custom
+// days require a from time boundary, non-custom days cannot have time
+// boundaries, and from must not be later than to.
+func (c *ClusterOnOffSchedule) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var days types.List
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("days"), &days)...)
+	if resp.Diagnostics.HasError() || days.IsNull() || days.IsUnknown() {
+		return
+	}
+
+	var dayItems []providerschema.DayItem
+	// Entries may still be wholly unknown (e.g. computed from other resources),
+	// which cannot be decoded into DayItem; allow them to decode as zero values
+	// so the per-item null/unknown checks below defer validation to apply time,
+	// while genuine decoding errors still surface.
+	resp.Diagnostics.Append(days.ElementsAs(ctx, &dayItems, true)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if len(dayItems) != len(weekdays) {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("days"),
+			"Invalid Cluster On/Off Schedule",
+			fmt.Sprintf("The schedule requires exactly %d days, one for each day of the week starting"+
+				" from Monday and ending with Sunday, got %d.", len(weekdays), len(dayItems)),
+		)
+		return
+	}
+
+	// Reject duplicate or missing weekdays before the positional ordering check
+	// so the diagnostic names the actual mistake.
+	validateWeekdayCoverage(dayItems, resp)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	allOff := true
+	for i, d := range dayItems {
+		if d.Day.IsNull() || d.Day.IsUnknown() || d.State.IsNull() || d.State.IsUnknown() {
+			return
+		}
+		if d.Day.ValueString() != weekdays[i] {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("days").AtListIndex(i).AtName("day"),
+				"Invalid Cluster On/Off Schedule",
+				fmt.Sprintf("The days of the week must be in sequence starting from Monday and ending"+
+					" with Sunday: expected %q at position %d, got %q.", weekdays[i], i, d.Day.ValueString()),
+			)
+			return
+		}
+		if d.State.ValueString() != "off" {
+			allOff = false
+		}
+		validateDayTimeBoundaries(i, d, resp)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	if allOff {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("days"),
+			"Invalid Cluster On/Off Schedule",
+			"Clusters cannot be scheduled to be off for the entire day for every day of the week."+
+				" At least one day must have state \"on\" or \"custom\".",
+		)
+	}
+}
+
+// validateWeekdayCoverage rejects a days list that repeats or omits a weekday.
+// Day values are restricted to the seven valid weekdays by the attribute-level
+// enum validator, so with exactly seven entries any weekday counted other than
+// once implies a duplicate paired with an omission. Entries with unknown/computed
+// day values are left to the positional check (and ultimately apply time).
+func validateWeekdayCoverage(dayItems []providerschema.DayItem, resp *resource.ValidateConfigResponse) {
+	counts := make(map[string]int, len(weekdays))
+	for _, d := range dayItems {
+		if d.Day.IsNull() || d.Day.IsUnknown() {
+			return
+		}
+		counts[d.Day.ValueString()]++
+	}
+	for _, weekday := range weekdays {
+		if counts[weekday] != 1 {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("days"),
+				"Invalid Cluster On/Off Schedule",
+				"The days list must contain exactly one entry for each weekday from Monday"+
+					" through Sunday, with no duplicate or missing days.",
+			)
+			return
+		}
+	}
+}
+
+// validateDayTimeBoundaries enforces the V4 API rules tying a day's state to
+// its from/to time boundaries: custom days must contain the from boundary,
+// on/off days cannot contain any time boundary, and from must not be later
+// than to.
+func validateDayTimeBoundaries(i int, d providerschema.DayItem, resp *resource.ValidateConfigResponse) {
+	day := d.Day.ValueString()
+
+	switch d.State.ValueString() {
+	case "custom":
+		if d.From == nil {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("days").AtListIndex(i).AtName("from"),
+				"Invalid Cluster On/Off Schedule",
+				fmt.Sprintf("The from time boundary is required when state is \"custom\" (day %q).", day),
+			)
+			return
+		}
+		if d.To == nil {
+			return
+		}
+		from, fromKnown := boundaryMinutes(d.From)
+		to, toKnown := boundaryMinutes(d.To)
+		if fromKnown && toKnown && from > to {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("days").AtListIndex(i).AtName("from"),
+				"Invalid Cluster On/Off Schedule",
+				fmt.Sprintf("The from time boundary must not be later than the to time boundary (day %q).", day),
+			)
+		}
+	case "on", "off":
+		if d.From != nil || d.To != nil {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("days").AtListIndex(i),
+				"Invalid Cluster On/Off Schedule",
+				fmt.Sprintf("Days with state \"on\" or \"off\" cannot contain from/to time boundaries (day %q).", day),
+			)
+		}
+	}
+}
+
+// boundaryMinutes converts a time boundary to minutes since midnight. Null
+// hour/minute values default to 0, matching the API default. Returns false
+// when a value is unknown so validation is deferred to apply time.
+func boundaryMinutes(b *providerschema.OnTimeBoundary) (int64, bool) {
+	if b.Hour.IsUnknown() || b.Minute.IsUnknown() {
+		return 0, false
+	}
+	var hour, minute int64
+	if !b.Hour.IsNull() {
+		hour = b.Hour.ValueInt64()
+	}
+	if !b.Minute.IsNull() {
+		minute = b.Minute.ValueInt64()
+	}
+	return hour*60 + minute, true
 }
 
 // Create creates a new OnOffSchedule.

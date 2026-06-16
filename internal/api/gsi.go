@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -92,7 +93,10 @@ func WatchIndexes(
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
+	const maxConsecutive404s = 3
+
 	attempt := 0
+	consecutive404s := 0
 	timer := time.NewTimer((1 << attempt) * time.Minute)
 
 	for {
@@ -101,7 +105,7 @@ func WatchIndexes(
 			return internalerrors.ErrMonitorTimeout
 		case <-timer.C:
 			for i := 0; i < len(indexes); {
-				url := fmt.Sprintf(
+				indexURL := fmt.Sprintf(
 					"%s/v4/organizations/%s/projects/%s/clusters/%s/queryService/indexBuildStatus/%s?bucket=%s&scope=%s&collection=%s",
 					options.Host,
 					options.OrgId,
@@ -113,25 +117,34 @@ func WatchIndexes(
 					options.Collection,
 				)
 
-				cfg := EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+				cfg := EndpointCfg{Url: indexURL, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 				response, err := exec(cfg)
-				// retry even on 404 because the index may not have been created yet.
-				// so wait and check again.
 				if err != nil {
-					// exponential backoff upto a max of 20 min.
+					var apiErr *Error
+					if errors.As(err, &apiErr) && apiErr.HttpStatusCode != http.StatusNotFound {
+						return err
+					}
+					consecutive404s++
+					if consecutive404s >= maxConsecutive404s {
+						return err
+					}
 					d := min(maxDuration, 1<<attempt)
 					timer.Reset(time.Duration(d) * time.Minute)
 					attempt++
 					continue
 				}
+				consecutive404s = 0
 
 				status := IndexBuildStatusResponse{}
 				if err = json.Unmarshal(response.Body, &status); err != nil {
 					return err
 				}
 
+				if status.Status == "Deferred" {
+					return internalerrors.ErrIndexDeferred
+				}
+
 				if status.Status != desiredState {
-					// exponential backoff upto a max of 20 min.
 					d := min(maxDuration, 1<<attempt)
 					timer.Reset(time.Duration(d) * time.Minute)
 					attempt++

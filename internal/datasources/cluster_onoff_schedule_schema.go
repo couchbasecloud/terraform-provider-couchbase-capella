@@ -12,9 +12,9 @@ var clusterOnOffScheduleBuilder = capellaschema.NewSchemaBuilder("clusterOnOffSc
 func ClusterOnOffScheduleSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
-	capellaschema.AddAttr(attrs, "organization_id", clusterOnOffScheduleBuilder, requiredString())
-	capellaschema.AddAttr(attrs, "project_id", clusterOnOffScheduleBuilder, requiredString())
-	capellaschema.AddAttr(attrs, "cluster_id", clusterOnOffScheduleBuilder, requiredString())
+	capellaschema.AddAttr(attrs, "organization_id", clusterOnOffScheduleBuilder, requiredUUIDString())
+	capellaschema.AddAttr(attrs, "project_id", clusterOnOffScheduleBuilder, requiredUUIDString())
+	capellaschema.AddAttr(attrs, "cluster_id", clusterOnOffScheduleBuilder, requiredUUIDString())
 	capellaschema.AddAttr(attrs, "timezone", clusterOnOffScheduleBuilder, computedString())
 
 	// Build time attributes (for 'from' and 'to')

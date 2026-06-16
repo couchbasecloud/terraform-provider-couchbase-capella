@@ -1,7 +1,9 @@
 package datasources
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
@@ -22,6 +24,9 @@ func GsiMonitorSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "indexes", gsiMonitorBuilder, &schema.SetAttribute{
 		Required:    true,
 		ElementType: types.StringType,
+		Validators: []validator.Set{
+			setvalidator.SizeAtLeast(1),
+		},
 	})
 
 	return schema.Schema{
