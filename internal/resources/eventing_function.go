@@ -243,7 +243,7 @@ func eventingBindingsChanged(plan, state *providerschema.EventingFunctionBinding
 
 // eventingURLAuthChanged reports whether the plan changes the non-sensitive URL authentication fields.
 // The sensitive password and bearer token are deliberately excluded.
-func eventingURLAuthChanged(plan, state *providerschema.EventingFunctionUrlAuth) bool {
+func eventingURLAuthChanged(plan, state *providerschema.EventingFunctionURLBindingAuthentication) bool {
 	if plan == nil {
 		return false
 	}
