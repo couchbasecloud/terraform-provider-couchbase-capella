@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -472,7 +473,7 @@ func (n *NetworkPeer) retrieveNetworkPeer(
 
 	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
 	if diags.HasError() {
-		return nil, fmt.Errorf("%s: %v", errors.ErrUnableToConvertAuditData, diags.Errors())
+		return nil, fmt.Errorf("%w: %v", errors.ErrUnableToConvertAuditData, diags.Errors())
 	}
 
 	refreshedState, err := providerschema.NewNetworkPeer(ctx, networkPeerResp, organizationId, projectId, clusterId, auditObj)
@@ -555,24 +556,44 @@ func defineProviderForResponse(networkResp *network_peer_api.GetNetworkPeeringRe
 }
 
 // findNetworkPeerByName lists all network peers for a cluster and returns the ID
-// of the peer whose name matches. Returns empty string if not found.
+// of the peer whose name matches. Retries a few times with a short delay to
+// account for eventual consistency where the peer may not be immediately visible
+// after the create API returns an error.
 func (n *NetworkPeer) findNetworkPeerByName(ctx context.Context, organizationId, projectId, clusterId, name string) string {
+	const maxAttempts = 3
+	const retryDelay = 3 * time.Second
+
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/networkPeers", n.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 
-	peers, err := api.GetPaginated[[]network_peer_api.GetNetworkPeeringRecordResponse](ctx, n.ClientV1, n.Token, cfg, api.SortById)
-	if err != nil {
-		tflog.Warn(ctx, "failed to list network peers while searching for persisted record", map[string]interface{}{
-			"error": err.Error(),
-		})
-		return ""
-	}
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		peers, err := api.GetPaginated[[]network_peer_api.GetNetworkPeeringRecordResponse](ctx, n.ClientV1, n.Token, cfg, api.SortById)
+		if err != nil {
+			tflog.Warn(ctx, "failed to list network peers while searching for persisted record", map[string]interface{}{
+				"error":   err.Error(),
+				"attempt": attempt,
+			})
+		} else {
+			for i := range peers {
+				if peers[i].Name == name {
+					return peers[i].Id.String()
+				}
+			}
+		}
 
-	for i := range peers {
-		if peers[i].Name == name {
-			return peers[i].Id.String()
+		if attempt < maxAttempts {
+			tflog.Info(ctx, "network peer not found yet, retrying after delay", map[string]interface{}{
+				"attempt": attempt,
+				"delay":   retryDelay.String(),
+			})
+			select {
+			case <-ctx.Done():
+				return ""
+			case <-time.After(retryDelay):
+			}
 		}
 	}
+
 	return ""
 }
 
