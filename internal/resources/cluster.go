@@ -133,7 +133,8 @@ func (c *Cluster) Create(ctx context.Context, req resource.CreateRequest, resp *
 	}
 
 	if !plan.ConfigurationType.IsNull() && !plan.ConfigurationType.IsUnknown() {
-		clusterRequest.ConfigurationType = clusterapi.ConfigurationType(plan.ConfigurationType.ValueString())
+		ct := clusterapi.ConfigurationType(plan.ConfigurationType.ValueString())
+		clusterRequest.ConfigurationType = &ct
 	}
 
 	//check disk values provided for Azure, if Premium type disks, then do not allow setting storage, iops.
@@ -487,6 +488,14 @@ func (r *Cluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if state.DeletionProtection.ValueBool() {
+		resp.Diagnostics.AddError(
+			"Error Deleting Capella Cluster",
+			"Cluster deletion protection is enabled. Set deletion_protection = false before destroying.",
+		)
 		return
 	}
 

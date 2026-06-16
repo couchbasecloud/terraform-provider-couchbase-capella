@@ -2,7 +2,7 @@ package acceptance_tests
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"log"
 	"os"
 	"testing"
@@ -19,7 +19,7 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
-	globalProviderBlock = fmt.Sprint(`
+	globalProviderBlock = `
 variable "host" {
   description = "The globalHost URL of Couchbase Cloud."
 }
@@ -33,11 +33,12 @@ provider "couchbase-capella" {
   host                 = var.host
   authentication_token = var.auth_token
 }
-`)
+`
 
 	var code int
 	ctx := context.Background()
 	client := api.NewClient(timeout)
+	globalClient = client
 
 	err := setup(ctx, client)
 	if err != nil {
@@ -58,9 +59,11 @@ provider "couchbase-capella" {
 func setup(ctx context.Context, client *api.Client) error {
 	// Create project only if not provided via env var
 	if globalProjectId == "" {
-		if err := createProject(ctx, client); err != nil {
+		created, err := createProject(ctx, client)
+		if err != nil {
 			return err
 		}
+		globalProjectCreated = created
 	} else {
 		log.Printf("Using existing project: %s", globalProjectId)
 	}
@@ -68,7 +71,20 @@ func setup(ctx context.Context, client *api.Client) error {
 	// Create cluster only if not provided via env var
 	if globalClusterId == "" {
 		if err := createCluster(ctx, client); err != nil {
-			return err
+			// Only fall back to findClusterByName on 5xx (AV-129960): the backend
+			// sometimes returns 500 while still creating the cluster.
+			var apiErr *api.Error
+			if !errors.As(err, &apiErr) || apiErr.HttpStatusCode < 500 {
+				return err
+			}
+			id, findErr := findClusterByName(ctx, client, globalClusterName)
+			if findErr != nil || id == "" {
+				return err
+			}
+			log.Printf("createCluster returned 5xx but cluster was found; adopting %s", id)
+			globalClusterId = id
+		} else {
+			globalClusterCreated = true
 		}
 		if err := clusterWait(ctx, client, false); err != nil {
 			return err
@@ -77,23 +93,26 @@ func setup(ctx context.Context, client *api.Client) error {
 		log.Printf("Using existing cluster: %s", globalClusterId)
 	}
 
-	// Create bucket only if not provided via env var
-	if globalBucketId == "" {
-		if err := createBucket(ctx, client); err != nil {
-			return err
-		}
-		if err := bucketWait(ctx, client); err != nil {
-			return err
-		}
-	} else {
-		log.Printf("Using existing bucket: %s", globalBucketId)
+	if err := resolveBucket(ctx, client); err != nil {
+		return err
 	}
+	// Bucket creation triggers a cluster rebalance; wait for the cluster to
+	// return to Healthy before creating dependent resources, otherwise
+	// createAppService races and fails with 412 "cluster is rebalancing".
+	// No-op when the bucket was pre-existing (cluster already Healthy).
+	if err := clusterWait(ctx, client, false); err != nil {
+		return err
+	}
+
+	// The data-management cluster is provisioned lazily by ensureDMCluster()
+	// from the first data_management_* test that runs, so non-DM runs skip it.
 
 	// Create app service only if not provided via env var
 	if globalAppServiceId == "" {
 		if err := createAppService(ctx, client); err != nil {
 			return err
 		}
+		globalAppServiceCreated = true
 		if err := appServiceWait(ctx, client, false); err != nil {
 			return err
 		}
@@ -101,10 +120,12 @@ func setup(ctx context.Context, client *api.Client) error {
 		log.Printf("Using existing app service: %s", globalAppServiceId)
 	}
 
-	if err := createAppEndpoint(ctx, client); err != nil {
+	appEndpointCreated, err := createAppEndpoint(ctx, client, globalAppEndpointName, globalBucketName)
+	if err != nil {
 		return err
 	}
-	if err := appEndpointWait(ctx, client); err != nil {
+	globalAppEndpointCreated = appEndpointCreated
+	if err := appEndpointWait(ctx, client, globalAppEndpointName); err != nil {
 		return err
 	}
 
@@ -112,8 +133,17 @@ func setup(ctx context.Context, client *api.Client) error {
 }
 
 func cleanup(ctx context.Context, client *api.Client) error {
-	// Only destroy app service if it was created by setup (not provided via env var)
-	if globalAppServiceId != "" && os.Getenv("TF_VAR_app_service_id") == "" {
+	if err := cleanupAppEndpointTestEnvironment(ctx, client); err != nil {
+		return err
+	}
+
+	if globalAppEndpointCreated {
+		if err := deleteFixtureEndpoint(ctx, client, globalAppEndpointName); err != nil {
+			return err
+		}
+	}
+
+	if globalAppServiceCreated {
 		if err := destroyAppService(ctx, client); err != nil {
 			return err
 		}
@@ -123,8 +153,29 @@ func cleanup(ctx context.Context, client *api.Client) error {
 		}
 	}
 
-	// Only destroy cluster if it was created by setup (not provided via env var)
-	if globalClusterId != "" && os.Getenv("TF_VAR_cluster_id") == "" {
+	if dmBucketCreated {
+		if err := destroyDMBucket(ctx, client); err != nil {
+			return err
+		}
+	}
+
+	if dmClusterCreated {
+		if err := destroyDMCluster(ctx, client); err != nil {
+			return err
+		}
+
+		if err := dmClusterWait(ctx, client, true); err != nil {
+			return err
+		}
+	}
+
+	if globalBucketCreated {
+		if err := destroyBucket(ctx, client); err != nil {
+			return err
+		}
+	}
+
+	if globalClusterCreated {
 		if err := destroyCluster(ctx, client); err != nil {
 			return err
 		}
@@ -134,8 +185,12 @@ func cleanup(ctx context.Context, client *api.Client) error {
 		}
 	}
 
-	// Only destroy project if it was created by setup (not provided via env var)
-	if globalProjectId != "" && os.Getenv("TF_VAR_project_id") == "" {
+	// Destroy snapshot cluster only if ensureSnapshotCluster() created one.
+	if err := destroySnapshotClusterIfCreated(ctx, client); err != nil {
+		return err
+	}
+
+	if globalProjectCreated {
 		if err := destroyProject(ctx, client); err != nil {
 			return err
 		}

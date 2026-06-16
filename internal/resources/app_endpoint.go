@@ -3,8 +3,11 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -20,9 +23,10 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource                = &AppEndpoint{}
-	_ resource.ResourceWithConfigure   = &AppEndpoint{}
-	_ resource.ResourceWithImportState = &AppEndpoint{}
+	_ resource.Resource                   = &AppEndpoint{}
+	_ resource.ResourceWithConfigure      = &AppEndpoint{}
+	_ resource.ResourceWithImportState    = &AppEndpoint{}
+	_ resource.ResourceWithValidateConfig = &AppEndpoint{}
 )
 
 const errorAppEndpointCreation = "There is an error during App Endpoint creation. unexpected error: "
@@ -52,6 +56,41 @@ func (a *AppEndpoint) Schema(_ context.Context, _ resource.SchemaRequest, resp *
 	resp.Schema = AppEndpointSchema()
 }
 
+// ValidateConfig enforces that CORS origins are configured unless CORS is explicitly disabled.
+func (a *AppEndpoint) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var config providerschema.AppEndpoint
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if config.Cors == nil {
+		return
+	}
+
+	// Defer validation until Terraform resolves expressions that determine whether CORS is disabled.
+	if config.Cors.Disabled.IsUnknown() {
+		return
+	}
+
+	if !config.Cors.Disabled.IsNull() && !config.Cors.Disabled.IsUnknown() && config.Cors.Disabled.ValueBool() {
+		return
+	}
+
+	// Origin may be populated by an expression that is unknown during config validation.
+	if config.Cors.Origin.IsUnknown() {
+		return
+	}
+
+	if config.Cors.Origin.IsNull() || len(config.Cors.Origin.Elements()) == 0 {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("cors").AtName("origin"),
+			"Missing Attribute Configuration",
+			"Expected cors.origin to be configured with at least 1 value when cors.disabled is not true.",
+		)
+	}
+}
+
 // Create creates a new App Endpoint.
 func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan providerschema.AppEndpoint
@@ -75,7 +114,7 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	url := fmt.Sprintf(
+	endpointURL := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints",
 		a.HostURL,
 		organizationId,
@@ -84,7 +123,7 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 		appServiceId,
 	)
 	cfg := api.EndpointCfg{
-		Url:           url,
+		Url:           endpointURL,
 		Method:        http.MethodPost,
 		SuccessStatus: http.StatusCreated,
 	}
@@ -130,6 +169,8 @@ func (a *AppEndpoint) Create(ctx context.Context, req resource.CreateRequest, re
 	// Terraform detecting an unexpected new value.
 	if plan.Cors == nil {
 		state.Cors = nil
+	} else {
+		preserveDisabledCorsOrigin(&plan, state)
 	}
 
 	diags = resp.State.Set(ctx, state)
@@ -298,6 +339,12 @@ func (a *AppEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *
 			resp.State.RemoveResource(ctx)
 			return
 		}
+		if handled, forbiddenErr := handleAppEndpointForbidden(ctx, err, a.Data, resp, organizationId, projectId, clusterId, appServiceId, endpointName); handled {
+			return
+		} else if forbiddenErr != nil {
+			resp.Diagnostics.AddError("Error refreshing App Endpoint", forbiddenErr.Error())
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error refreshing App Endpoint",
 			fmt.Sprintf("Could not refresh App Endpoint %s: %s", endpointName, errString),
@@ -307,8 +354,13 @@ func (a *AppEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 	// If cors was never configured (nil in prior state), keep it nil to
 	// prevent the API's default cors object from causing perpetual drift.
-	if state.Cors == nil {
+	// However, during import the prior state is empty so we must not
+	// suppress cors — the user expects all remote attributes to appear.
+	isImport := state.OrganizationId.IsNull()
+	if state.Cors == nil && !isImport {
 		newstate.Cors = nil
+	} else if !isImport {
+		preserveDisabledCorsOrigin(&state, newstate)
 	}
 
 	diags = resp.State.Set(ctx, newstate)
@@ -338,16 +390,16 @@ func (a *AppEndpoint) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	url := fmt.Sprintf(
+	endpointURL := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
 		a.HostURL,
 		organizationId,
 		projectId,
 		clusterId,
 		appServiceId,
-		endpointName,
+		url.PathEscape(endpointName),
 	)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
+	cfg := api.EndpointCfg{Url: endpointURL, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
 	_, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
@@ -383,10 +435,26 @@ func (a *AppEndpoint) Update(ctx context.Context, req resource.UpdateRequest, re
 	// If the plan did not include CORS, keep it null in state.
 	if plan.Cors == nil {
 		refreshedState.Cors = nil
+	} else {
+		preserveDisabledCorsOrigin(&plan, refreshedState)
 	}
-
 	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
+}
+
+// preserveDisabledCorsOrigin keeps omitted origin absent from state when CORS is disabled.
+func preserveDisabledCorsOrigin(config *providerschema.AppEndpoint, state *providerschema.AppEndpoint) {
+	if config.Cors == nil || state.Cors == nil {
+		return
+	}
+
+	if config.Cors.Disabled.IsNull() || config.Cors.Disabled.IsUnknown() || !config.Cors.Disabled.ValueBool() {
+		return
+	}
+
+	if config.Cors.Origin.IsNull() {
+		state.Cors.Origin = types.SetNull(types.StringType)
+	}
 }
 
 // Delete deletes an existing App Endpoint.
@@ -406,16 +474,16 @@ func (a *AppEndpoint) Delete(ctx context.Context, req resource.DeleteRequest, re
 		endpointName   = state.Name.ValueString()
 	)
 
-	url := fmt.Sprintf(
+	endpointURL := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
 		a.HostURL,
 		organizationId,
 		projectId,
 		clusterId,
 		appServiceId,
-		endpointName,
+		url.PathEscape(endpointName),
 	)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
+	cfg := api.EndpointCfg{Url: endpointURL, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
 
 	_, err := a.ClientV1.ExecuteWithRetry(
 		ctx,
@@ -428,6 +496,7 @@ func (a *AppEndpoint) Delete(ctx context.Context, req resource.DeleteRequest, re
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
 			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			resp.State.RemoveResource(ctx)
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -435,6 +504,77 @@ func (a *AppEndpoint) Delete(ctx context.Context, req resource.DeleteRequest, re
 			fmt.Sprintf("Could not delete App Endpoint %s: %s", endpointName, errString),
 		)
 		return
+	}
+
+	// Wait for the endpoint to be fully removed so that dependent resources
+	// (e.g. the backing bucket) are not deleted while still in use.
+	if err := a.waitForEndpointDeletion(ctx, organizationId, projectId, clusterId, appServiceId, endpointName); err != nil {
+		resp.Diagnostics.AddError(
+			"Error waiting for App Endpoint deletion",
+			fmt.Sprintf("Error while waiting for App Endpoint %s to be fully removed: %s", endpointName, err.Error()),
+		)
+		return
+	}
+
+	resp.State.RemoveResource(ctx)
+}
+
+// waitForEndpointDeletion polls the API until the endpoint is confirmed gone or
+// the timeout is reached. After an accepted DELETE, the App Endpoint API returns
+// 403 instead of 404 when the deleted endpoint is fetched.
+func (a *AppEndpoint) waitForEndpointDeletion(
+	ctx context.Context, orgId, projId, clusterId, appServiceId, endpointName string,
+) error {
+	const maxWait = 5 * time.Minute
+	const interval = 10 * time.Second
+
+	ctx, cancel := context.WithTimeout(ctx, maxWait)
+	defer cancel()
+
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	var lastErr error
+	for {
+		endpointURL := fmt.Sprintf(
+			"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
+			a.HostURL, orgId, projId, clusterId, appServiceId, url.PathEscape(endpointName),
+		)
+		cfg := api.EndpointCfg{Url: endpointURL, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+
+		_, err := a.ClientV1.ExecuteWithRetry(ctx, cfg, nil, a.Token, nil)
+		if err != nil {
+			var apiErr *api.Error
+			if errors.As(err, &apiErr) &&
+				(apiErr.HttpStatusCode == http.StatusNotFound || apiErr.HttpStatusCode == http.StatusForbidden) {
+				return nil // endpoint is gone; API returns 403 (not 404) for deleted endpoints
+			}
+			lastErr = err
+		} else {
+			lastErr = nil // clear stale error when GET succeeds
+		}
+
+		select {
+		case <-ctx.Done():
+			switch ctx.Err() {
+			case context.Canceled:
+				if lastErr != nil {
+					return fmt.Errorf("deletion wait canceled, last error: %w", lastErr)
+				}
+				return fmt.Errorf("deletion wait canceled: %w", ctx.Err())
+			case context.DeadlineExceeded:
+				if lastErr != nil {
+					return fmt.Errorf("timeout after %s, last error: %w", maxWait, lastErr)
+				}
+				return fmt.Errorf("timeout after %s", maxWait)
+			default:
+				if lastErr != nil {
+					return fmt.Errorf("deletion wait stopped: %w", errors.Join(ctx.Err(), lastErr))
+				}
+				return fmt.Errorf("deletion wait stopped: %w", ctx.Err())
+			}
+		case <-ticker.C:
+		}
 	}
 }
 
@@ -470,18 +610,18 @@ func (a *AppEndpoint) refreshAppEndpoint(
 	ctx context.Context, orgId, projId, clusterId, appServiceId, endpointName string,
 ) (*providerschema.AppEndpoint, error) {
 
-	url := fmt.Sprintf(
+	endpointURL := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/appservices/%s/appEndpoints/%s",
 		a.HostURL,
 		orgId,
 		projId,
 		clusterId,
 		appServiceId,
-		endpointName,
+		url.PathEscape(endpointName),
 	)
 
 	cfg := api.EndpointCfg{
-		Url:           url,
+		Url:           endpointURL,
 		Method:        http.MethodGet,
 		SuccessStatus: http.StatusOK,
 	}
@@ -699,7 +839,7 @@ func morphToAppEndpointRequest(
 		Scopes: apiScopes,
 	}
 
-	if !plan.DeltaSyncEnabled.IsNull() || !plan.DeltaSyncEnabled.IsUnknown() {
+	if !plan.DeltaSyncEnabled.IsNull() && !plan.DeltaSyncEnabled.IsUnknown() {
 		appEndpointRequest.DeltaSyncEnabled = plan.DeltaSyncEnabled.ValueBool()
 	}
 

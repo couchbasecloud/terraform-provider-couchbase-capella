@@ -2,11 +2,24 @@ package schema
 
 import (
 	"reflect"
+	"sort"
+	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/float64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	resourceschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/docs"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/generated/enums"
+	customvalidator "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema/validator"
 )
 
 // SchemaAttribute is a type constraint for supported attribute types across resources and datasources
@@ -133,6 +146,30 @@ func AddAttr[M SchemaAttributeMap, T SchemaAttribute](
 
 	setMarkdownDescription(attr, description)
 
+	if def := enums.Lookup(builder, alternateSchemas, fieldName); def != nil {
+		appendOneOfValidator(attr, def)
+	}
+
+	// Check for composition validators (oneOf/anyOf) for SingleNestedAttribute
+	// Uses custom validators that correctly handle nested attributes by checking
+	// if child objects actually have user-provided values.
+	if compDef := enums.CompositionLookup(builder, alternateSchemas, fieldName); compDef != nil {
+		appendCompositionValidator(attr, compDef)
+	}
+
+	// Auto-set Required based on OpenAPI spec if not already explicitly set.
+	// This respects the override mechanism: if the call site has already set
+	// Required, Optional, or Computed, we don't change it.
+	if enums.RequiredLookup(builder, alternateSchemas, fieldName) {
+		setRequiredIfUnset(attr)
+	}
+
+	// Auto-attach min/max validators based on OpenAPI spec constraints.
+	// Skips if validators are already attached (call-site override wins).
+	if constrDef := enums.ConstraintLookup(builder, alternateSchemas, fieldName); constrDef != nil {
+		appendConstraintValidator(attr, constrDef)
+	}
+
 	// Add to map based on map type
 	switch m := any(&attrs).(type) {
 	case *map[string]resourceschema.Attribute:
@@ -165,4 +202,405 @@ func setMarkdownDescription(attr any, description string) {
 	if field.IsValid() && field.CanSet() && field.Kind() == reflect.String {
 		field.SetString(description)
 	}
+}
+
+// setRequiredIfUnset sets Required: true on an attribute only if none of
+// Required, Optional, or Computed are already set. This respects the override
+// mechanism: explicit call-site settings take precedence over auto-detection.
+func setRequiredIfUnset(attr any) {
+	v := reflect.ValueOf(attr)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	if v.Kind() != reflect.Struct {
+		return
+	}
+
+	required := v.FieldByName("Required")
+	optional := v.FieldByName("Optional")
+	computed := v.FieldByName("Computed")
+
+	// Check if any of the flags are already set
+	if required.IsValid() && required.Kind() == reflect.Bool && required.Bool() {
+		return // Already required
+	}
+	if optional.IsValid() && optional.Kind() == reflect.Bool && optional.Bool() {
+		return // Explicitly optional
+	}
+	if computed.IsValid() && computed.Kind() == reflect.Bool && computed.Bool() {
+		return // Computed attribute
+	}
+
+	// Set Required: true
+	if required.IsValid() && required.CanSet() && required.Kind() == reflect.Bool {
+		required.SetBool(true)
+	}
+}
+
+// appendOneOfValidator attaches a OneOf validator derived from def to the
+// attribute. Skips when the call site has already attached any validator
+// — that's the override discipline: a hand-coded OneOf (or any other
+// validator) at the call site wins. Only the four shapes the spec
+// produces are handled: scalar string, scalar int64, list/set of
+// strings, list/set of ints. Nested attributes get validators on their
+// inner fields via separate AddAttr calls.
+func appendOneOfValidator(a any, def *enums.EnumDef) {
+	switch x := a.(type) {
+
+	case *resourceschema.StringAttribute:
+		if def.IsArray || def.Type != "string" || len(x.Validators) > 0 {
+			return
+		}
+		x.Validators = append(x.Validators, stringvalidator.OneOf(def.Values...))
+	case *datasourceschema.StringAttribute:
+		if def.IsArray || def.Type != "string" || len(x.Validators) > 0 {
+			return
+		}
+		x.Validators = append(x.Validators, stringvalidator.OneOf(def.Values...))
+
+	case *resourceschema.Int64Attribute:
+		ints, ok := parseEnumInt64s(def)
+		if !ok || len(x.Validators) > 0 {
+			return
+		}
+		x.Validators = append(x.Validators, int64validator.OneOf(ints...))
+	case *datasourceschema.Int64Attribute:
+		ints, ok := parseEnumInt64s(def)
+		if !ok || len(x.Validators) > 0 {
+			return
+		}
+		x.Validators = append(x.Validators, int64validator.OneOf(ints...))
+
+	case *resourceschema.ListAttribute:
+		if !def.IsArray || len(x.Validators) > 0 {
+			return
+		}
+		if v := elementOneOfList(x.ElementType, def); v != nil {
+			x.Validators = append(x.Validators, v)
+		}
+	case *datasourceschema.ListAttribute:
+		if !def.IsArray || len(x.Validators) > 0 {
+			return
+		}
+		if v := elementOneOfList(x.ElementType, def); v != nil {
+			x.Validators = append(x.Validators, v)
+		}
+
+	case *resourceschema.SetAttribute:
+		if !def.IsArray || len(x.Validators) > 0 {
+			return
+		}
+		if v := elementOneOfSet(x.ElementType, def); v != nil {
+			x.Validators = append(x.Validators, v)
+		}
+	case *datasourceschema.SetAttribute:
+		if !def.IsArray || len(x.Validators) > 0 {
+			return
+		}
+		if v := elementOneOfSet(x.ElementType, def); v != nil {
+			x.Validators = append(x.Validators, v)
+		}
+	}
+}
+
+func parseEnumInt64s(def *enums.EnumDef) ([]int64, bool) {
+	if def.IsArray || def.Type != "integer" {
+		return nil, false
+	}
+	return parseInt64Slice(def.Values)
+}
+
+func parseInt64Slice(values []string) ([]int64, bool) {
+	out := make([]int64, 0, len(values))
+	for _, v := range values {
+		n, err := strconv.ParseInt(v, 10, 64)
+		if err != nil {
+			return nil, false
+		}
+		out = append(out, n)
+	}
+	return out, true
+}
+
+func elementOneOfList(elem attr.Type, def *enums.EnumDef) validator.List {
+	switch {
+	case elem == types.StringType && def.Type == "string":
+		return listvalidator.ValueStringsAre(stringvalidator.OneOf(def.Values...))
+	case elem == types.Int64Type && def.Type == "integer":
+		ints, ok := parseInt64Slice(def.Values)
+		if !ok {
+			return nil
+		}
+		return listvalidator.ValueInt64sAre(int64validator.OneOf(ints...))
+	}
+	return nil
+}
+
+func elementOneOfSet(elem attr.Type, def *enums.EnumDef) validator.Set {
+	switch {
+	case elem == types.StringType && def.Type == "string":
+		return setvalidator.ValueStringsAre(stringvalidator.OneOf(def.Values...))
+	case elem == types.Int64Type && def.Type == "integer":
+		ints, ok := parseInt64Slice(def.Values)
+		if !ok {
+			return nil
+		}
+		return setvalidator.ValueInt64sAre(int64validator.OneOf(ints...))
+	}
+	return nil
+}
+
+// appendCompositionValidator attaches ExactlyOneOfNested (for oneOf) or AtLeastOneOfNested
+// (for anyOf) validators to SingleNestedAttribute based on composition metadata.
+// Uses custom validators that correctly handle nested attributes by checking if child
+// objects actually have user-provided values (not just empty/unknown from Terraform init).
+// Uses schema introspection to discover child attribute names rather than relying
+// on OpenAPI branch schema names which don't reliably map to TF attribute names.
+// Skips if validators are already attached (call-site override wins).
+func appendCompositionValidator(a any, def *enums.CompositionDef) {
+	switch x := a.(type) {
+	case *resourceschema.SingleNestedAttribute:
+		if len(x.Validators) > 0 {
+			return
+		}
+		names := extractChildNames(x.Attributes)
+		if len(names) < 2 {
+			return
+		}
+		switch def.Kind {
+		case "oneOf":
+			x.Validators = append(x.Validators, customvalidator.ExactlyOneOfNested(names...))
+		case "anyOf":
+			x.Validators = append(x.Validators, customvalidator.AtLeastOneOfNested(names...))
+		}
+
+	case *datasourceschema.SingleNestedAttribute:
+		if len(x.Validators) > 0 {
+			return
+		}
+		names := extractChildNamesDS(x.Attributes)
+		if len(names) < 2 {
+			return
+		}
+		switch def.Kind {
+		case "oneOf":
+			x.Validators = append(x.Validators, customvalidator.ExactlyOneOfNested(names...))
+		case "anyOf":
+			x.Validators = append(x.Validators, customvalidator.AtLeastOneOfNested(names...))
+		}
+	}
+}
+
+// extractChildNames introspects a resource schema's Attributes map and returns
+// names of all optional SingleNestedAttribute children. These are the composition
+// branch candidates for ExactlyOneOfNested/AtLeastOneOfNested validators.
+// Only includes children that are truly Optional (user-settable), excluding
+// Required and Computed-only attributes.
+// Does not filter out nested attributes with computed fields because the custom
+// validators correctly handle them by checking for actual user-provided values.
+func extractChildNames(attrs map[string]resourceschema.Attribute) []string {
+	var names []string
+
+	for name, attr := range attrs {
+		nested, ok := attr.(*resourceschema.SingleNestedAttribute)
+		if !ok {
+			continue
+		}
+		// Only include truly optional attributes that users can set.
+		// Exclude Required (must be set) and Computed-only (can't be set).
+		if !nested.Optional {
+			continue
+		}
+		names = append(names, name)
+	}
+
+	sort.Strings(names)
+	return names
+}
+
+// extractChildNamesDS is the datasource equivalent of extractChildNames.
+func extractChildNamesDS(attrs map[string]datasourceschema.Attribute) []string {
+	var names []string
+
+	for name, attr := range attrs {
+		nested, ok := attr.(*datasourceschema.SingleNestedAttribute)
+		if !ok {
+			continue
+		}
+		if !nested.Optional {
+			continue
+		}
+		names = append(names, name)
+	}
+
+	sort.Strings(names)
+	return names
+}
+
+// appendConstraintValidator attaches min/max validators derived from def to the
+// attribute. Skips when the call site has already attached any validator —
+// matching the override discipline used by appendOneOfValidator: a hand-coded
+// validator at the call site wins.
+//
+// Mapping of OpenAPI constraints to attribute kinds:
+//   - StringAttribute  : MinLength / MaxLength → stringvalidator.Length*
+//   - Int64Attribute   : Minimum / Maximum    → int64validator.{AtLeast,AtMost,Between}
+//   - Float64Attribute : Minimum / Maximum    → float64validator.{AtLeast,AtMost,Between}
+//   - List/Set/Map (incl. *NestedAttribute) : MinItems / MaxItems → *validator.Size*
+//
+// NumberAttribute is intentionally unsupported because the numbervalidator
+// package does not provide range validators.
+func appendConstraintValidator(a any, def *enums.ConstraintDef) {
+	switch x := a.(type) {
+
+	case *resourceschema.StringAttribute:
+		if v := stringLengthValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+	case *datasourceschema.StringAttribute:
+		if v := stringLengthValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+
+	case *resourceschema.Int64Attribute:
+		if v := int64RangeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+	case *datasourceschema.Int64Attribute:
+		if v := int64RangeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+
+	case *resourceschema.Float64Attribute:
+		if v := float64RangeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+	case *datasourceschema.Float64Attribute:
+		if v := float64RangeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+
+	case *resourceschema.ListAttribute:
+		if v := listSizeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+	case *datasourceschema.ListAttribute:
+		if v := listSizeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+	case *resourceschema.ListNestedAttribute:
+		if v := listSizeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+	case *datasourceschema.ListNestedAttribute:
+		if v := listSizeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+
+	case *resourceschema.SetAttribute:
+		if v := setSizeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+	case *datasourceschema.SetAttribute:
+		if v := setSizeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+	case *resourceschema.SetNestedAttribute:
+		if v := setSizeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+	case *datasourceschema.SetNestedAttribute:
+		if v := setSizeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+
+	case *resourceschema.MapAttribute:
+		if v := mapSizeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+	case *datasourceschema.MapAttribute:
+		if v := mapSizeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+	case *resourceschema.MapNestedAttribute:
+		if v := mapSizeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+	case *datasourceschema.MapNestedAttribute:
+		if v := mapSizeValidator(def); v != nil && len(x.Validators) == 0 {
+			x.Validators = append(x.Validators, v)
+		}
+	}
+}
+
+func stringLengthValidator(def *enums.ConstraintDef) validator.String {
+	switch {
+	case def.MinLength != nil && def.MaxLength != nil:
+		return stringvalidator.LengthBetween(int(*def.MinLength), int(*def.MaxLength))
+	case def.MinLength != nil:
+		return stringvalidator.LengthAtLeast(int(*def.MinLength))
+	case def.MaxLength != nil:
+		return stringvalidator.LengthAtMost(int(*def.MaxLength))
+	}
+	return nil
+}
+
+func int64RangeValidator(def *enums.ConstraintDef) validator.Int64 {
+	switch {
+	case def.Minimum != nil && def.Maximum != nil:
+		return int64validator.Between(int64(*def.Minimum), int64(*def.Maximum))
+	case def.Minimum != nil:
+		return int64validator.AtLeast(int64(*def.Minimum))
+	case def.Maximum != nil:
+		return int64validator.AtMost(int64(*def.Maximum))
+	}
+	return nil
+}
+
+func float64RangeValidator(def *enums.ConstraintDef) validator.Float64 {
+	switch {
+	case def.Minimum != nil && def.Maximum != nil:
+		return float64validator.Between(*def.Minimum, *def.Maximum)
+	case def.Minimum != nil:
+		return float64validator.AtLeast(*def.Minimum)
+	case def.Maximum != nil:
+		return float64validator.AtMost(*def.Maximum)
+	}
+	return nil
+}
+
+func listSizeValidator(def *enums.ConstraintDef) validator.List {
+	switch {
+	case def.MinItems != nil && def.MaxItems != nil:
+		return listvalidator.SizeBetween(int(*def.MinItems), int(*def.MaxItems))
+	case def.MinItems != nil:
+		return listvalidator.SizeAtLeast(int(*def.MinItems))
+	case def.MaxItems != nil:
+		return listvalidator.SizeAtMost(int(*def.MaxItems))
+	}
+	return nil
+}
+
+func setSizeValidator(def *enums.ConstraintDef) validator.Set {
+	switch {
+	case def.MinItems != nil && def.MaxItems != nil:
+		return setvalidator.SizeBetween(int(*def.MinItems), int(*def.MaxItems))
+	case def.MinItems != nil:
+		return setvalidator.SizeAtLeast(int(*def.MinItems))
+	case def.MaxItems != nil:
+		return setvalidator.SizeAtMost(int(*def.MaxItems))
+	}
+	return nil
+}
+
+func mapSizeValidator(def *enums.ConstraintDef) validator.Map {
+	switch {
+	case def.MinItems != nil && def.MaxItems != nil:
+		return mapvalidator.SizeBetween(int(*def.MinItems), int(*def.MaxItems))
+	case def.MinItems != nil:
+		return mapvalidator.SizeAtLeast(int(*def.MinItems))
+	case def.MaxItems != nil:
+		return mapvalidator.SizeAtMost(int(*def.MaxItems))
+	}
+	return nil
 }

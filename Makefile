@@ -112,7 +112,7 @@ testacc: ## Run acceptance tests (requires TF_VAR_auth_token, TF_VAR_host, TF_VA
 	@[ "${TF_VAR_auth_token}" ] || ( echo "ERROR: export TF_VAR_auth_token before running acceptance tests"; exit 1 )
 	@[ "${TF_VAR_host}" ] || ( echo "ERROR: export TF_VAR_host before running acceptance tests"; exit 1 )
 	@[ "${TF_VAR_organization_id}" ] || ( echo "ERROR: export TF_VAR_organization_id before running acceptance tests"; exit 1 )
-	@TF_ACC=1 go test -timeout=120m -v ./acceptance_tests/
+	@TF_ACC=1 go test -timeout=180m -v ./acceptance_tests/
 
 # ============================================================================
 # Documentation
@@ -131,6 +131,14 @@ build-docs: ## Generate provider documentation
 gen-api: ## Generate OpenAPI client code
 	@echo "==> Generating OpenAPI client (internal/generated/api)"
 	@PATH="$(shell go env GOPATH)/bin:$(PATH)" go generate ./internal/generated/api
+	@echo "==> Done"
+
+.PHONY: gen-enums
+gen-enums: ## Generate enum validator constants from OpenAPI spec
+	@echo "==> Fetching OpenAPI spec from $(OPENAPI_SPEC_URL)"
+	@go run ./internal/generated/enums/openapi_loader
+	@echo "==> Generating enum constants (internal/generated/enums)"
+	@go run ./internal/generated/enums/generate/ > ./internal/generated/enums/enums.gen.go
 	@echo "==> Done"
 
 # ============================================================================

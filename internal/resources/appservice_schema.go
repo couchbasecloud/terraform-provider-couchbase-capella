@@ -25,7 +25,7 @@ func AppServiceSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "name", appServiceBuilder, stringAttribute([]string{required, requiresReplace}))
 	capellaschema.AddAttr(attrs, "description", appServiceBuilder, stringDefaultAttribute("", optional, computed, requiresReplace))
 	capellaschema.AddAttr(attrs, "nodes", appServiceBuilder, int64Attribute(optional, computed))
-	capellaschema.AddAttr(attrs, "cloud_provider", appServiceBuilder, stringAttribute([]string{optional, computed}))
+	capellaschema.AddAttr(attrs, "cloud_provider", appServiceBuilder, stringAttribute([]string{computed}))
 	capellaschema.AddAttr(attrs, "current_state", appServiceBuilder, stringAttribute([]string{computed}))
 	capellaschema.AddAttr(attrs, "version", appServiceBuilder, stringAttribute([]string{computed}))
 	capellaschema.AddAttr(attrs, "audit", appServiceBuilder, computedAuditAttribute())

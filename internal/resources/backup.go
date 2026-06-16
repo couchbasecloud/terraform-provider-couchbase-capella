@@ -402,26 +402,22 @@ func (a *Backup) validateCreateBackupRequest(plan providerschema.Backup) error {
 	return nil
 }
 
-// checkLatestBackupStatus monitors the status of a backup creation operation for a specified
-// organization, project, and cluster ID. It periodically fetches the backup job status using the `getLatestBackup`
-// function and waits until the backup reaches a final state or until a specified timeout is reached.
-// The function returns an error if the operation times out or encounters an error during status retrieval.
+// checkLatestBackupStatus polls the cluster's backup list until a new record
+// appears for the target bucket and reaches a final state (ready/failed).
+//
+// We poll the list because Capella's bucket-backup POST returns 202 with an
+// empty body — there is no per-id endpoint we can poll from a known id.
 func (b *Backup) checkLatestBackupStatus(ctx context.Context, organizationId, projectId, clusterId, bucketId string, backupFound bool, latestBackup *backupapi.GetBackupResponse) (*backupapi.GetBackupResponse, error) {
-	var (
-		backupResp *backupapi.GetBackupResponse
-		err        error
+	const (
+		timeout = 90 * time.Minute
+		sleep   = 30 * time.Second
 	)
 
-	// Assuming 60 minutes is the max time backup completion takes, can change after discussion
-	const timeout = time.Minute * 60
-
-	var cancel context.CancelFunc
-	ctx, cancel = context.WithTimeout(ctx, timeout)
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	const sleep = time.Second * 1
-
-	timer := time.NewTimer(1 * time.Second)
+	timer := time.NewTimer(sleep)
+	defer timer.Stop()
 
 	for {
 		select {
@@ -429,21 +425,20 @@ func (b *Backup) checkLatestBackupStatus(ctx context.Context, organizationId, pr
 			return nil, internal_errors.ErrBucketCreationStatusTimeout
 
 		case <-timer.C:
-			backupResp, err = b.getLatestBackup(ctx, organizationId, projectId, clusterId, bucketId)
-			switch err {
-			case nil:
-				// If there is no existing backup for a bucket, check for a new backup record to be created.
-				// If a backup record exists already, wait for a backup record with a new ID to be created.
-				if !backupFound && backupResp != nil && backupapi.IsFinalState(backupResp.Status) {
-					return backupResp, nil
-				} else if backupFound && backupResp != nil && latestBackup.Id != backupResp.Id && backupapi.IsFinalState(backupResp.Status) {
-					return backupResp, nil
-				}
-				const msg = "waiting for backup to complete the execution"
-				tflog.Info(ctx, msg)
-			default:
+			backupResp, err := b.getLatestBackup(ctx, organizationId, projectId, clusterId, bucketId)
+			if err != nil {
 				return nil, err
 			}
+			// If no prior backup existed for this bucket, any backup in a
+			// final state is ours. If a prior one existed, wait for a record
+			// with a different id (the one our POST just kicked off) AND in
+			// a final state.
+			if backupResp != nil && backupapi.IsFinalState(backupResp.Status) {
+				if !backupFound || latestBackup.Id != backupResp.Id {
+					return backupResp, nil
+				}
+			}
+			tflog.Info(ctx, "waiting for backup to complete the execution")
 			timer.Reset(sleep)
 		}
 	}
@@ -487,33 +482,26 @@ func (b *Backup) retrieveBackup(ctx context.Context, organizationId, projectId, 
 	return refreshedState, nil
 }
 
-// getLatestBackup retrieves the latest backup information for a specified bucket in a cluster
-// from the specified organization, project and cluster using the provided bucket ID by open-api call.
+// getLatestBackup returns the most-recent backup record for the given bucket
+// in a cluster, or (nil, nil) if the bucket has no backups yet.
+// It walks all pages, filters to the target bucket, and sorts by Date desc.
 func (b *Backup) getLatestBackup(ctx context.Context, organizationId, projectId, clusterId, bucketId string) (*backupapi.GetBackupResponse, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/backups", b.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	response, err := b.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		b.Token,
-		nil,
-	)
+
+	all, err := api.GetPaginated[[]backupapi.GetBackupResponse](ctx, b.ClientV1, b.Token, cfg, api.SortById)
 	if err != nil {
 		return nil, err
 	}
 
-	clusterResp := backupapi.GetBackupsResponse{}
-	err = json.Unmarshal(response.Body, &clusterResp)
-	if err != nil {
-		return nil, err
-	}
-
-	// check for a backup record of the specified bucket
-	for _, backup := range clusterResp.Data {
-		if backup.BucketId == bucketId {
-			return &backup, nil
+	var latest *backupapi.GetBackupResponse
+	for i := range all {
+		if all[i].BucketId != bucketId {
+			continue
+		}
+		if latest == nil || all[i].Date > latest.Date {
+			latest = &all[i]
 		}
 	}
-	return nil, nil
+	return latest, nil
 }

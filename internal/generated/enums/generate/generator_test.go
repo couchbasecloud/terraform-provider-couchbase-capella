@@ -1,0 +1,438 @@
+package main
+
+import (
+	"go/parser"
+	"go/token"
+	"reflect"
+	"strings"
+	"testing"
+
+	"github.com/getkin/kin-openapi/openapi3"
+)
+
+func TestBuildEnumTable(t *testing.T) {
+	t.Run("indexes by schema and field", func(t *testing.T) {
+		sites := []enumSite{
+			{Scope: scopeSchema, SchemaName: "AllowedCidr", FieldPath: "status", Type: "string", Values: []string{"active", "expired"}},
+			{Scope: scopeSchema, SchemaName: "AllowedCidr", FieldPath: "type", Type: "string", Values: []string{"temporary", "permanent"}},
+		}
+		got := buildEnumTable(sites)
+		want := map[string]map[string]EnumDef{
+			"AllowedCidr": {
+				"status": {Type: "string", Values: []string{"active", "expired"}},
+				"type":   {Type: "string", Values: []string{"temporary", "permanent"}},
+			},
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("got %#v, want %#v", got, want)
+		}
+	})
+
+	t.Run("strips trailing []", func(t *testing.T) {
+		sites := []enumSite{
+			{Scope: scopeSchema, SchemaName: "APIKey", FieldPath: "roles.[]", Type: "string", Values: []string{"admin"}},
+		}
+		got := buildEnumTable(sites)
+		def, ok := got["APIKey"]["roles"]
+		if !ok {
+			t.Fatalf("missing key 'roles'; got %#v", got)
+		}
+		if !def.IsArray {
+			t.Errorf("IsArray should be true for %q", "roles.[]")
+		}
+	})
+
+	t.Run("strips bare [] suffix", func(t *testing.T) {
+		// Top-level array element path uses bare "[]" rather than ".[]".
+		sites := []enumSite{
+			{Scope: scopeSchema, SchemaName: "Foo", FieldPath: "bar[]", Type: "string", Values: []string{"a"}},
+		}
+		got := buildEnumTable(sites)
+		if _, ok := got["Foo"]["bar"]; !ok {
+			t.Errorf("expected key 'bar' (stripped of '[]'); got %#v", got["Foo"])
+		}
+	})
+
+	t.Run("excludes parameter scope", func(t *testing.T) {
+		sites := []enumSite{
+			{Scope: scopeParameter, SchemaName: "sortBy", FieldPath: "x", Type: "string", Values: []string{"asc"}},
+		}
+		got := buildEnumTable(sites)
+		if len(got) != 0 {
+			t.Errorf("parameter scope sites must be excluded, got %#v", got)
+		}
+	})
+
+	t.Run("excludes non-string/integer types", func(t *testing.T) {
+		sites := []enumSite{
+			{Scope: scopeSchema, SchemaName: "Foo", FieldPath: "flag", Type: "boolean", Values: []string{"true"}},
+			{Scope: scopeSchema, SchemaName: "Foo", FieldPath: "obj", Type: "object", Values: []string{"{}"}},
+		}
+		got := buildEnumTable(sites)
+		if len(got) != 0 {
+			t.Errorf("non-scalar types must be excluded, got %#v", got)
+		}
+	})
+
+	t.Run("includes integer enums", func(t *testing.T) {
+		sites := []enumSite{
+			{Scope: scopeSchema, SchemaName: "CloudConfig", FieldPath: "compute.cpu", Type: "integer", Values: []string{"4", "32"}},
+		}
+		got := buildEnumTable(sites)
+		def := got["CloudConfig"]["compute.cpu"]
+		if def.Type != "integer" {
+			t.Errorf("Type = %q, want \"integer\"", def.Type)
+		}
+	})
+
+	t.Run("excludes top-level enums (empty FieldPath)", func(t *testing.T) {
+		sites := []enumSite{
+			{Scope: scopeSchema, SchemaName: "Status", FieldPath: "", Type: "string", Values: []string{"on", "off"}},
+		}
+		got := buildEnumTable(sites)
+		if len(got) != 0 {
+			t.Errorf("top-level enum sites must be excluded, got %#v", got)
+		}
+	})
+}
+
+func TestBuildEnumTable_RefEnumPopulatesField(t *testing.T) {
+	// End-to-end regression for the $ref-to-named-enum gap: a property that
+	// $refs a scalar enum schema must yield a populated (schema, field) entry
+	// instead of being dropped as a field-less top-level enum.
+	tz := &openapi3.Schema{Type: &openapi3.Types{"string"}, Enum: []any{"PT", "ET"}}
+	doc := &openapi3.T{
+		Components: &openapi3.Components{
+			Schemas: openapi3.Schemas{
+				"onOffTimezone": {Value: tz},
+				"Schedule": {Value: &openapi3.Schema{
+					Type: &openapi3.Types{"object"},
+					Properties: openapi3.Schemas{
+						"timezone": {Ref: "#/components/schemas/onOffTimezone", Value: tz},
+					},
+				}},
+			},
+		},
+	}
+
+	sites, err := discoverDoc(doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	table := buildEnumTable(sites)
+	def, ok := table["Schedule"]["timezone"]
+	if !ok {
+		t.Fatalf("Schedule.timezone missing from enum table: %#v", table)
+	}
+	if def.Type != "string" || !reflect.DeepEqual(def.Values, []string{"PT", "ET"}) {
+		t.Errorf("unexpected def: %#v", def)
+	}
+}
+
+func TestIsArrayLiteral(t *testing.T) {
+	if got := isArrayLiteral(true); got != "IsArray: true, " {
+		t.Errorf("isArrayLiteral(true) = %q", got)
+	}
+	if got := isArrayLiteral(false); got != "" {
+		t.Errorf("isArrayLiteral(false) = %q, want empty", got)
+	}
+}
+
+func TestJoinQuoted(t *testing.T) {
+	cases := []struct {
+		name string
+		in   []string
+		want string
+	}{
+		{"empty", []string{}, ""},
+		{"single", []string{"a"}, `"a"`},
+		{"multiple", []string{"a", "b", "c"}, `"a", "b", "c"`},
+		{"escapes quotes", []string{`a"b`}, `"a\"b"`},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := joinQuoted(tc.in); got != tc.want {
+				t.Errorf("joinQuoted(%v) = %q, want %q", tc.in, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestSortedKeys(t *testing.T) {
+	in := map[string]int{"zebra": 1, "apple": 2, "mango": 3}
+	got := sortedKeys(in)
+	want := []string{"apple", "mango", "zebra"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("sortedKeys = %v, want %v", got, want)
+	}
+}
+
+func TestSortedKeys_Empty(t *testing.T) {
+	got := sortedKeys(map[string]struct{}{})
+	if len(got) != 0 {
+		t.Errorf("sortedKeys(empty) = %v, want []", got)
+	}
+}
+
+func TestGenerate_ProducesValidGo(t *testing.T) {
+	sites := []enumSite{
+		{Scope: scopeSchema, SchemaName: "AllowedCidr", FieldPath: "status", Type: "string", Values: []string{"active", "expired"}},
+		{Scope: scopeSchema, SchemaName: "APIKey", FieldPath: "roles.[]", Type: "string", Values: []string{"admin", "viewer"}},
+		{Scope: scopeSchema, SchemaName: "CloudConfig", FieldPath: "cpu", Type: "integer", Values: []string{"4", "32"}},
+		{Scope: scopeParameter, SchemaName: "sortBy", FieldPath: "x", Type: "string", Values: []string{"asc"}},
+	}
+
+	src, err := generate(sites)
+	if err != nil {
+		t.Fatalf("generate: %v", err)
+	}
+
+	// Output must parse as Go.
+	if _, err := parser.ParseFile(token.NewFileSet(), "enums.gen.go", src, parser.AllErrors); err != nil {
+		t.Fatalf("generated source does not parse: %v\n--- src ---\n%s", err, src)
+	}
+
+	got := string(src)
+	checks := []string{
+		"// Code generated by enums generator. DO NOT EDIT.",
+		"package enums",
+		"type EnumDef struct {",
+		"var enumTable = map[string]map[string]EnumDef{",
+		`"AllowedCidr"`,
+		`"status": {Type: "string", Values: []string{"active", "expired"}}`,
+		`"APIKey"`,
+		`"roles": {Type: "string", IsArray: true, Values: []string{"admin", "viewer"}}`,
+		`"CloudConfig"`,
+		`"cpu": {Type: "integer", Values: []string{"4", "32"}}`,
+	}
+	for _, want := range checks {
+		if !strings.Contains(got, want) {
+			t.Errorf("generated output missing %q\n--- src ---\n%s", want, got)
+		}
+	}
+
+	// Parameter-scope sites must not appear in the table.
+	if strings.Contains(got, `"sortBy"`) {
+		t.Errorf("parameter-scope site leaked into generated table:\n%s", got)
+	}
+
+	// Schema-name keys must be sorted alphabetically.
+	idxAPI := strings.Index(got, `"APIKey"`)
+	idxAllowed := strings.Index(got, `"AllowedCidr"`)
+	idxCloud := strings.Index(got, `"CloudConfig"`)
+	if idxAPI >= idxAllowed || idxAllowed >= idxCloud {
+		t.Errorf("schema keys not sorted: APIKey=%d AllowedCidr=%d CloudConfig=%d", idxAPI, idxAllowed, idxCloud)
+	}
+}
+
+func TestGenerate_EmptyInput(t *testing.T) {
+	src, err := generate(nil)
+	if err != nil {
+		t.Fatalf("generate(nil): %v", err)
+	}
+	if _, err := parser.ParseFile(token.NewFileSet(), "enums.gen.go", src, parser.AllErrors); err != nil {
+		t.Fatalf("empty generated source does not parse: %v\n%s", err, src)
+	}
+	if !strings.Contains(string(src), "var enumTable = map[string]map[string]EnumDef{") {
+		t.Errorf("empty output missing enumTable declaration:\n%s", src)
+	}
+}
+
+func TestBuildCompositionTable(t *testing.T) {
+	t.Run("indexes by schema and field", func(t *testing.T) {
+		sites := []compositionSite{
+			{SchemaName: "CMEKRequest", FieldPath: "config", Kind: "oneOf", Branches: []string{"AWSConfig", "GCPConfig"}},
+			{SchemaName: "NetworkPeer", FieldPath: "providerConfig", Kind: "anyOf", Branches: []string{"AWS", "GCP", "Azure"}},
+		}
+		got := buildCompositionTable(sites)
+		if len(got) != 2 {
+			t.Fatalf("want 2 schemas, got %d", len(got))
+		}
+		if def := got["CMEKRequest"]["config"]; def.Kind != "oneOf" || len(def.Branches) != 2 {
+			t.Errorf("CMEKRequest.config = %+v", def)
+		}
+		if def := got["NetworkPeer"]["providerConfig"]; def.Kind != "anyOf" || len(def.Branches) != 3 {
+			t.Errorf("NetworkPeer.providerConfig = %+v", def)
+		}
+	})
+
+	t.Run("excludes empty FieldPath", func(t *testing.T) {
+		sites := []compositionSite{
+			{SchemaName: "TopLevel", FieldPath: "", Kind: "oneOf", Branches: []string{"A", "B"}},
+		}
+		got := buildCompositionTable(sites)
+		if len(got) != 0 {
+			t.Errorf("top-level sites should be excluded, got %v", got)
+		}
+	})
+}
+
+func TestGenerateAll_ProducesValidGo(t *testing.T) {
+	enumSites := []enumSite{
+		{Scope: scopeSchema, SchemaName: "AllowedCidr", FieldPath: "status", Type: "string", Values: []string{"active", "expired"}},
+	}
+	compSites := []compositionSite{
+		{SchemaName: "CMEKRequest", FieldPath: "config", Kind: "oneOf", Branches: []string{"AWSConfig", "GCPConfig"}},
+		{SchemaName: "NetworkPeer", FieldPath: "providerConfig", Kind: "anyOf", Branches: []string{"AWS", "GCP", "Azure"}},
+		{SchemaName: "MergedSchema", FieldPath: "settings", Kind: "allOf", Branches: []string{"Base", "Extended"}},
+	}
+
+	src, err := generateAll(enumSites, compSites, nil, nil)
+	if err != nil {
+		t.Fatalf("generateAll: %v", err)
+	}
+
+	// Output must parse as Go.
+	if _, err := parser.ParseFile(token.NewFileSet(), "enums.gen.go", src, parser.AllErrors); err != nil {
+		t.Fatalf("generated source does not parse: %v\n--- src ---\n%s", err, src)
+	}
+
+	got := string(src)
+	checks := []string{
+		"type EnumDef struct {",
+		"var enumTable = map[string]map[string]EnumDef{",
+		"type CompositionDef struct {",
+		"var compositionTable = map[string]map[string]CompositionDef{",
+		`"CMEKRequest"`,
+		`"config": {Kind: "oneOf", Branches: []string{"AWSConfig", "GCPConfig"}}`,
+		`"NetworkPeer"`,
+		`"providerConfig": {Kind: "anyOf", Branches: []string{"AWS", "GCP", "Azure"}}`,
+		`"MergedSchema"`,
+		`"settings": {Kind: "allOf", Branches: []string{"Base", "Extended"}}`,
+	}
+	for _, want := range checks {
+		if !strings.Contains(got, want) {
+			t.Errorf("generated output missing %q\n--- src ---\n%s", want, got)
+		}
+	}
+
+	// Schema-name keys must be sorted alphabetically.
+	idxCMEK := strings.Index(got, `"CMEKRequest"`)
+	idxMerged := strings.Index(got, `"MergedSchema"`)
+	idxNetwork := strings.Index(got, `"NetworkPeer"`)
+	if idxCMEK >= idxMerged || idxMerged >= idxNetwork {
+		t.Errorf("composition schema keys not sorted: CMEK=%d Merged=%d Network=%d", idxCMEK, idxMerged, idxNetwork)
+	}
+}
+
+func TestGenerateAll_EmptyComposition(t *testing.T) {
+	enumSites := []enumSite{
+		{Scope: scopeSchema, SchemaName: "Status", FieldPath: "state", Type: "string", Values: []string{"on"}},
+	}
+
+	src, err := generateAll(enumSites, nil, nil, nil)
+	if err != nil {
+		t.Fatalf("generateAll: %v", err)
+	}
+	if _, err := parser.ParseFile(token.NewFileSet(), "enums.gen.go", src, parser.AllErrors); err != nil {
+		t.Fatalf("generated source does not parse: %v\n%s", err, src)
+	}
+	got := string(src)
+	if !strings.Contains(got, "var compositionTable = map[string]map[string]CompositionDef{") {
+		t.Errorf("output missing compositionTable declaration:\n%s", got)
+	}
+	if !strings.Contains(got, "var requiredTable = map[string]map[string]RequiredDef{") {
+		t.Errorf("output missing requiredTable declaration:\n%s", got)
+	}
+}
+
+func TestGenerateAll_RequiredFields(t *testing.T) {
+	reqSites := []requiredSite{
+		{SchemaName: "CreateProjectRequest", FieldPath: "name"},
+		{SchemaName: "CreateProjectRequest", FieldPath: "description"},
+		{SchemaName: "AWSConfigData", FieldPath: "accountId"},
+	}
+
+	src, err := generateAll(nil, nil, reqSites, nil)
+	if err != nil {
+		t.Fatalf("generateAll: %v", err)
+	}
+	if _, err := parser.ParseFile(token.NewFileSet(), "enums.gen.go", src, parser.AllErrors); err != nil {
+		t.Fatalf("generated source does not parse: %v\n%s", err, src)
+	}
+	got := string(src)
+	if !strings.Contains(got, `"CreateProjectRequest"`) {
+		t.Errorf("output missing CreateProjectRequest schema:\n%s", got)
+	}
+	// Check for "name" field - go format may add spacing, so just check the key exists
+	if !strings.Contains(got, `"name"`) {
+		t.Errorf("output missing name field:\n%s", got)
+	}
+	if !strings.Contains(got, `"accountId"`) {
+		t.Errorf("output missing accountId field:\n%s", got)
+	}
+}
+
+func TestGenerateAll_ConstraintFields(t *testing.T) {
+	minVal := 1.0
+	maxVal := 100.0
+	minLen := int64(2)
+	maxLen := int64(256)
+	minItems := int64(1)
+	maxItems := int64(30)
+
+	constrSites := []constraintSite{
+		{SchemaName: "CreateClusterRequest", FieldPath: "name", MinLength: &minLen, MaxLength: &maxLen},
+		{SchemaName: "CreateClusterRequest", FieldPath: "nodes", Minimum: &minVal, Maximum: &maxVal},
+		{SchemaName: "ServiceGroups", FieldPath: "items", MinItems: &minItems, MaxItems: &maxItems},
+	}
+
+	src, err := generateAll(nil, nil, nil, constrSites)
+	if err != nil {
+		t.Fatalf("generateAll: %v", err)
+	}
+	if _, err := parser.ParseFile(token.NewFileSet(), "enums.gen.go", src, parser.AllErrors); err != nil {
+		t.Fatalf("generated source does not parse: %v\n%s", err, src)
+	}
+	got := string(src)
+
+	checks := []string{
+		"type ConstraintDef struct {",
+		"var constraintTable = map[string]map[string]ConstraintDef{",
+		`"CreateClusterRequest"`,
+		"ptrInt64(2)",     // MinLength
+		"ptrInt64(256)",   // MaxLength
+		"ptrFloat64(1)",   // Minimum
+		"ptrFloat64(100)", // Maximum
+		`"ServiceGroups"`,
+		"MinItems: ptrInt64(1)",
+		"MaxItems: ptrInt64(30)",
+	}
+	for _, want := range checks {
+		if !strings.Contains(got, want) {
+			t.Errorf("generated output missing %q\n--- src ---\n%s", want, got)
+		}
+	}
+}
+
+func TestBuildConstraintTable(t *testing.T) {
+	t.Run("indexes by schema and field", func(t *testing.T) {
+		minVal := 50.0
+		maxLen := int64(256)
+		sites := []constraintSite{
+			{SchemaName: "CreateClusterRequest", FieldPath: "name", MaxLength: &maxLen},
+			{SchemaName: "DiskAWS", FieldPath: "storage", Minimum: &minVal},
+		}
+		got := buildConstraintTable(sites)
+		if len(got) != 2 {
+			t.Fatalf("want 2 schemas, got %d", len(got))
+		}
+		if def := got["CreateClusterRequest"]["name"]; def.MaxLength == nil || *def.MaxLength != 256 {
+			t.Errorf("CreateClusterRequest.name = %+v", def)
+		}
+		if def := got["DiskAWS"]["storage"]; def.Minimum == nil || *def.Minimum != 50 {
+			t.Errorf("DiskAWS.storage = %+v", def)
+		}
+	})
+
+	t.Run("excludes empty FieldPath", func(t *testing.T) {
+		minVal := 1.0
+		sites := []constraintSite{
+			{SchemaName: "TopLevel", FieldPath: "", Minimum: &minVal},
+		}
+		got := buildConstraintTable(sites)
+		if len(got) != 0 {
+			t.Errorf("top-level sites should be excluded, got %v", got)
+		}
+	})
+}

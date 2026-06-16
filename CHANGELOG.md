@@ -1,5 +1,61 @@
 # Changelog
 
+## [v1.9.0](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.9.0) (2026-05-29)
+
+[Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.8.1...v1.9.0)
+
+**Breaking changes:**
+
+- \[AV-131535\] Add acceptance coverage for app service optional fields and scaling updates [\#605](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/605) ([nimiyajoseph](https://github.com/nimiyajoseph))
+- \[AV-129755\] Fix App Service CIDR data source and add testing [\#590](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/590) ([IsaacLambat](https://github.com/IsaacLambat))
+- \[AV-128217\] Enforced cors.origin as required for capella\_app\_endpoint when a cors block is present [\#589](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/589) ([nimiyajoseph](https://github.com/nimiyajoseph))
+- \[AV-129887\] Require tenant\_id in Azure configuration and update documentation [\#579](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/579) ([stanleefdz](https://github.com/stanleefdz))
+
+**Implemented enhancements:**
+
+- \[AV-132461\] Add private endpoint DNS exposure and acceptance coverage [\#620](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/620) ([nimiyajoseph](https://github.com/nimiyajoseph))
+- \[AV-132439\] Add deletion protection acceptance coverage [\#619](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/619) ([nimiyajoseph](https://github.com/nimiyajoseph))
+- \[AV-128953\] Add acceptance tests for data management resources [\#617](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/617) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
+- \[AV-129987\] Add acceptance tests for ClusterDeletionProtection resource lifecycle [\#612](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/612) ([stanleefdz](https://github.com/stanleefdz))
+- \[AV-129986\] Add updateDeletionProtection method and request payload for cluster deletion protection [\#608](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/608) ([stanleefdz](https://github.com/stanleefdz))
+- \[AV-129985\] Add DeletionProtection attribute to cluster schema for accidental deletion prevention [\#607](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/607) ([stanleefdz](https://github.com/stanleefdz))
+- \[AV-130574\] Auto-generate min/max value validation from OpenAPI spec [\#603](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/603) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-130573\] Auto-generate required parameter validation [\#598](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/598) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-131117\] Enable composition validator auto-attach via schema introspection [\#596](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/596) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-130571\] Auto-generate manyOf composition validation from OpenAPI spec [\#595](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/595) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-130114\] Add unit tests for enum walker [\#587](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/587) ([matty271828](https://github.com/matty271828))
+- \[AV-129828\] Attach oneOf validators to AddAttr [\#586](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/586) ([matty271828](https://github.com/matty271828))
+- \[AV-129819\] Add build time generator to parse enums from open-api spec [\#581](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/581) ([matty271828](https://github.com/matty271828))
+- \[AV-127654\] Add comprehensive acceptance tests for app\_endpoint resource [\#578](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/578) ([nimiyajoseph](https://github.com/nimiyajoseph))
+
+**Fixed bugs:**
+
+- \[AV-132344\] Fix `id=` alias and add import docs for cluster deletion protection [\#622](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/622) ([Talina06](https://github.com/Talina06))
+- \[AV-132306\] Add app service and endpoint validator acceptance coverage [\#616](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/616) ([nimiyajoseph](https://github.com/nimiyajoseph))
+- \[AV-132258\] Add stricter Terraform-side validation for API key and user role configuration [\#615](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/615) ([nimiyajoseph](https://github.com/nimiyajoseph))
+- \[AV-128951\] Use per-test enterprise cluster in audit\_log\_settings tests [\#610](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/610) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
+- \[AV-131479\] Fix failing acceptance tests [\#604](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/604) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-131411\] Adds acceptance coverage for the couchbase-capella\_app\_services data source [\#600](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/600) ([nimiyajoseph](https://github.com/nimiyajoseph))
+- \[AV-131401\] Fix TestAccBackupScheduleResourceInvalidType regex for new validator [\#599](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/599) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
+- \[AV-131315\] Fix racy getLatestBackup that hangs couchbase-capella\_backup Create up to 90 min [\#597](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/597) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
+- \[AV-128559\] Remove rejected endpoint [\#592](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/592) ([l0n3star](https://github.com/l0n3star))
+- \[AV-128558\] Remove resource from state file if not found [\#591](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/591) ([l0n3star](https://github.com/l0n3star))
+- \[AV-130261\] Fix the ConfigurationType non-pointer field [\#588](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/588) ([PaulomeeCb](https://github.com/PaulomeeCb))
+- \[AV-128948\] Acceptance tests for cluster management \(on/off + stats\) [\#585](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/585) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
+- \[AV-127651\] Add legacy backup/schedule + snapshot schedule acceptance tests; harden bucket setup [\#583](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/583) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
+- \[AV-129731\] Fix cloud snapshot backup pagination, completion gating, and post-restore delete [\#582](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/582) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
+- \[AV-129893\] Enhance network peer error handling and state management [\#580](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/580) ([stanleefdz](https://github.com/stanleefdz))
+
+**Merged pull requests:**
+
+- \[AV-129893\] Revert: Enhance network peer error handling and state management" [\#621](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/621) ([Talina06](https://github.com/Talina06))
+- \[AV-131975\] Update provider configuration in network peer documentation for Azure and GCP [\#613](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/613) ([stanleefdz](https://github.com/stanleefdz))
+- \[AV-131530\] Implemented short-term graceful degradation fix [\#611](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/611) ([nimiyajoseph](https://github.com/nimiyajoseph))
+- \[AV-130081\] Add examples for deletion protection [\#609](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/609) ([stanleefdz](https://github.com/stanleefdz))
+- \[AV-128951\] Add acceptance tests for audit & logging resources and datasources [\#602](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/602) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
+- \[AV-128950\] Add access-management datasource acceptance tests [\#601](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/601) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
+- \[AV-128969\] Acceptance tests for projects data source [\#584](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/584) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
+
 ## [v1.8.1](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/tree/v1.8.1) (2026-04-30)
 
 [Full Changelog](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/compare/v1.8.0...v1.8.1)

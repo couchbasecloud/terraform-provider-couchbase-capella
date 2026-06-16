@@ -1,6 +1,8 @@
 package datasources
 
 import (
+	"regexp"
+
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -8,6 +10,8 @@ import (
 
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
+
+var uuidRegex = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
 
 // Helper functions for common datasource attribute patterns
 
@@ -21,6 +25,16 @@ func requiredStringWithValidator() *schema.StringAttribute {
 	return &schema.StringAttribute{
 		Required:   true,
 		Validators: []validator.String{stringvalidator.LengthAtLeast(1)},
+	}
+}
+
+func requiredUUIDString() *schema.StringAttribute {
+	return &schema.StringAttribute{
+		Required: true,
+		Validators: []validator.String{
+			stringvalidator.LengthAtLeast(1),
+			stringvalidator.RegexMatches(uuidRegex, "must be a valid UUID"),
+		},
 	}
 }
 

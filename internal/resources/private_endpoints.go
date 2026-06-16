@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
@@ -142,11 +143,23 @@ func (p *PrivateEndpoint) Read(ctx context.Context, req resource.ReadRequest, re
 
 	refreshedState, err := p.getPrivateEndpointState(ctx, organizationId, projectId, clusterId, endpointId)
 	if err != nil {
+		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
+		if resourceNotFound {
+			resp.State.RemoveResource(ctx)
+			tflog.Info(ctx, "resource doesn't exist in remote server removing resource from state file")
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error reading private endpoint status",
-			"Error reading private endpoint status, unexpected error: "+err.Error(),
+			"Error reading private endpoint status, unexpected error: "+errString,
 		)
 
+		return
+	}
+
+	if refreshedState.Status.ValueString() == "rejected" {
+		tflog.Info(ctx, "private endpoint association is rejected; removing from state to force re-association")
+		resp.State.RemoveResource(ctx)
 		return
 	}
 
@@ -263,23 +276,30 @@ func initializePrivateEndpointPlan(plan providerschema.PrivateEndpoint) provider
 	if plan.Status.IsNull() || plan.Status.IsUnknown() {
 		plan.Status = types.StringNull()
 	}
+	if plan.ServiceName.IsNull() || plan.ServiceName.IsUnknown() {
+		plan.ServiceName = types.StringNull()
+	}
+	if plan.PrivateEndpointDNS.IsNull() || plan.PrivateEndpointDNS.IsUnknown() {
+		plan.PrivateEndpointDNS = types.StringNull()
+	}
 	return plan
 }
 
 // getPrivateEndpointState morphs private endpoint status to terraform schema.
 func (p *PrivateEndpoint) getPrivateEndpointState(ctx context.Context, organizationId, projectId, clusterId, endpointId string) (*providerschema.PrivateEndpoint, error) {
-	status, serviceName, err := p.getPrivateEndpointStatus(ctx, organizationId, projectId, clusterId, endpointId)
+	status, serviceName, privateEndpointDNS, err := p.getPrivateEndpointStatus(ctx, organizationId, projectId, clusterId, endpointId)
 	if err != nil {
 		return nil, err
 	}
 
 	state := providerschema.PrivateEndpoint{
-		EndpointId:     types.StringValue(endpointId),
-		Status:         types.StringValue(status),
-		ClusterId:      types.StringValue(clusterId),
-		ProjectId:      types.StringValue(projectId),
-		OrganizationId: types.StringValue(organizationId),
-		ServiceName:    types.StringValue(serviceName),
+		EndpointId:         types.StringValue(endpointId),
+		Status:             types.StringValue(status),
+		ClusterId:          types.StringValue(clusterId),
+		ProjectId:          types.StringValue(projectId),
+		OrganizationId:     types.StringValue(organizationId),
+		ServiceName:        types.StringValue(serviceName),
+		PrivateEndpointDNS: types.StringValue(privateEndpointDNS),
 	}
 
 	return &state, nil
@@ -287,7 +307,7 @@ func (p *PrivateEndpoint) getPrivateEndpointState(ctx context.Context, organizat
 
 // There is currently no V4 endpoint to get a single private endpoint.  We have to loop through the entire list to find
 // the desired private endpoint.
-func (p *PrivateEndpoint) getPrivateEndpointStatus(ctx context.Context, organizationId, projectId, clusterId, endpointId string) (string, string, error) {
+func (p *PrivateEndpoint) getPrivateEndpointStatus(ctx context.Context, organizationId, projectId, clusterId, endpointId string) (string, string, string, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/privateEndpointService/endpoints", p.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := p.ClientV1.ExecuteWithRetry(
@@ -298,20 +318,51 @@ func (p *PrivateEndpoint) getPrivateEndpointStatus(ctx context.Context, organiza
 		nil,
 	)
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 
 	privateEndpointsResp := api.GetPrivateEndpointsResponse{}
 	err = json.Unmarshal(response.Body, &privateEndpointsResp)
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 
 	for _, e := range privateEndpointsResp.Endpoints {
 		if e.Id == endpointId {
-			return e.Status, e.ServiceName, nil
+			privateEndpointDNS := privateEndpointsResp.PrivateEndpointDNS
+			if privateEndpointDNS == "" {
+				privateEndpointDNS, err = p.getPrivateEndpointDNS(ctx, organizationId, projectId, clusterId)
+				if err != nil {
+					return "", "", "", err
+				}
+			}
+
+			return e.Status, e.ServiceName, privateEndpointDNS, nil
 		}
 	}
 
-	return "", "", errors.ErrNotFound
+	return "", "", "", errors.ErrNotFound
+}
+
+func (p *PrivateEndpoint) getPrivateEndpointDNS(ctx context.Context, organizationId, projectId, clusterId string) (string, error) {
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/privateEndpointService", p.HostURL, organizationId, projectId, clusterId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	response, err := p.ClientV1.ExecuteWithRetry(
+		ctx,
+		cfg,
+		nil,
+		p.Token,
+		nil,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	privateEndpointServiceStatus := api.GetPrivateEndpointServiceStatusResponse{}
+	err = json.Unmarshal(response.Body, &privateEndpointServiceStatus)
+	if err != nil {
+		return "", err
+	}
+
+	return privateEndpointServiceStatus.PrivateDns, nil
 }

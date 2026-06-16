@@ -43,6 +43,7 @@ Read-Only:
 - `connection_string` (String) - ConnectionString specifies the Capella database endpoint for your client connection.
 - `couchbase_server` (Attributes) (see [below for nested schema](#nestedatt--data--couchbase_server))
 - `current_state` (String) - **Valid Values**: `draft`, `deploying`, `scaling`, `upgrading`, `rebalancing`, `peering`, `destroying`, `healthy`, `degraded`, `turnedOff`, `turningOff`, `turningOn`, `deploymentFailed`, `scaleFailed`, `upgradeFailed`, `rebalanceFailed`, `peeringFailed`, `destroyFailed`, `offline`, `turningOffFailed`, `turningOnFailed`
+- `deletion_protection` (Boolean)
 - `description` (String) - Description of the cluster (up to 1024 characters).
  - **Constraints**: Maximum length: 1024 characters
 - `enable_private_dns_resolution` (Boolean)

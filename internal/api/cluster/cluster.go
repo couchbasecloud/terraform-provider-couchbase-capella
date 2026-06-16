@@ -81,8 +81,9 @@ type CreateClusterRequest struct {
 	// Enum: "single" "multi"
 	Availability Availability `json:"availability"`
 
-	// ConfigurationType defines model for ConfigurationType, either 'multiNode' or 'singleNode'
-	ConfigurationType ConfigurationType `json:"configurationType"`
+	// ConfigurationType defines model for ConfigurationType, either 'multiNode' or 'singleNode'.
+	// Omitted when not set so the API applies its default ("multiNode").
+	ConfigurationType *ConfigurationType `json:"configurationType,omitempty"`
 
 	// Name is the name of the cluster (up to 256 characters).
 	Name string `json:"name"`
@@ -158,6 +159,9 @@ type GetClusterResponse struct {
 	// EnablePrivateDNSResolution signals that the cluster should have hostnames that are hosted in a public DNS zone that resolve to a private DNS address.
 	// This exists to support the use case of customers connecting from their own data centers where it is not possible to make use of a cloud service provider DNS zone.
 	EnablePrivateDNSResolution bool `json:"enablePrivateDNSResolution"`
+
+	// DeletionProtection prevents accidental cluster deletion when enabled.
+	DeletionProtection bool `json:"deletionProtection"`
 
 	// Name is the name of the cluster (up to 256 characters).
 	Name string `json:"name"`

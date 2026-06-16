@@ -416,6 +416,12 @@ func (n *NetworkPeer) validateCreateNetworkPeer(plan providerschema.NetworkPeer)
 		return errors.ErrClusterIdMissing
 	}
 
+	if plan.ProviderConfig != nil && plan.ProviderConfig.AzureConfig != nil {
+		if err := plan.ProviderConfig.AzureConfig.Validate(); err != nil {
+			return err
+		}
+	}
+
 	return n.validateNetworkPeerAttributesTrimmed(plan)
 }
 
@@ -474,7 +480,9 @@ func (n *NetworkPeer) retrieveNetworkPeer(
 		return nil, fmt.Errorf("%s: %w", errors.ErrRefreshingState, err)
 	}
 
-	refreshedState.ProviderType = types.StringValue(providerType)
+	if providerType != "" {
+		refreshedState.ProviderType = types.StringValue(providerType)
+	}
 
 	return refreshedState, nil
 }
@@ -517,7 +525,6 @@ func defineProviderForResponse(networkResp *network_peer_api.GetNetworkPeeringRe
 	if len(networkResp.ProviderConfig) == 0 || bytes.Equal(networkResp.ProviderConfig, json.RawMessage("null")) {
 		return fmt.Errorf("%w: providerConfig is empty", errors.ErrReadingProviderConfig)
 	}
-
 	azure, err := networkResp.AsAZURE()
 	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrReadingAzureConfig, err)

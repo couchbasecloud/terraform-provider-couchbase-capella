@@ -57,60 +57,6 @@ type EndpointCfg struct {
 // defaultWaitAttempt re-attempt http request after 2 seconds.
 const defaultWaitAttempt = time.Second * 2
 
-// Execute is used to construct and execute a HTTP request.
-// It then returns the response.
-func (c *Client) Execute(
-	endpointCfg EndpointCfg,
-	payload any,
-	authToken string,
-	headers map[string]string,
-) (response *Response, err error) {
-	var requestBody []byte
-	if payload != nil {
-		requestBody, err = json.Marshal(payload)
-		if err != nil {
-			return nil, fmt.Errorf("%s: %w", errors.ErrMarshallingPayload, err)
-		}
-	}
-
-	req, err := http.NewRequest(endpointCfg.Method, endpointCfg.Url, bytes.NewReader(requestBody))
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrConstructingRequest, err)
-	}
-
-	req.Header.Set("Authorization", "Bearer "+authToken)
-	req.Header.Set("User-Agent", userAgent)
-	for header, value := range headers {
-		req.Header.Set(header, value)
-	}
-
-	apiRes, err := c.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
-	}
-	defer apiRes.Body.Close()
-
-	responseBody, err := io.ReadAll(apiRes.Body)
-	if err != nil {
-		return
-	}
-
-	if apiRes.StatusCode != endpointCfg.SuccessStatus {
-		var apiError Error
-		if err := json.Unmarshal(responseBody, &apiError); err != nil {
-			return nil, fmt.Errorf(
-				"unexpected code: %d, expected: %d, body: %s",
-				apiRes.StatusCode, endpointCfg.SuccessStatus, responseBody)
-		}
-		return nil, &apiError
-	}
-
-	return &Response{
-		Response: apiRes,
-		Body:     responseBody,
-	}, nil
-}
-
 // ExecuteWithRetry is used to construct and execute a HTTP request with retry.
 // It then returns the response.
 func (c *Client) ExecuteWithRetry(
@@ -218,6 +164,7 @@ func exec(
 	ctx context.Context, fn func() (response *Response, dur time.Duration, err error), waitOnReattempt time.Duration,
 ) (*Response, error) {
 	timer := time.NewTimer(time.Millisecond)
+	defer timer.Stop()
 
 	var (
 		err      error
@@ -234,7 +181,7 @@ func exec(
 	for {
 		select {
 		case <-ctx.Done():
-			return nil, fmt.Errorf("timed out executing request against api: %w", err)
+			return nil, fmt.Errorf("timed out executing request against api: %w", ctx.Err())
 		case <-timer.C:
 			response, backOff, err = fn()
 			switch {

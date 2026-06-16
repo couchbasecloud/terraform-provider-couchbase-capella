@@ -145,6 +145,9 @@ type Cluster struct {
 	// This exists to support the use case of customers connecting from their own data centers where it is not possible to make use of a cloud service provider DNS zone.
 	EnablePrivateDNSResolution types.Bool `tfsdk:"enable_private_dns_resolution"`
 
+	// DeletionProtection prevents accidental cluster deletion when enabled.
+	DeletionProtection types.Bool `tfsdk:"deletion_protection"`
+
 	// Zones is the cloud services provider availability zones for the cluster. Currently Supported only for single AZ clusters so only 1 zone is allowed in list.
 	Zones []types.String `tfsdk:"zones"`
 
@@ -197,6 +200,7 @@ func NewCluster(ctx context.Context, cluster *clusterapi.GetClusterResponse, org
 		Name:                       types.StringValue(cluster.Name),
 		Description:                types.StringValue(cluster.Description),
 		EnablePrivateDNSResolution: types.BoolValue(cluster.EnablePrivateDNSResolution),
+		DeletionProtection:         types.BoolValue(cluster.DeletionProtection),
 		Availability: &Availability{
 			Type: types.StringValue(string(cluster.Availability.Type)),
 		},
@@ -341,6 +345,7 @@ type ClusterData struct {
 	Audit                      types.Object     `tfsdk:"audit"`
 	Description                types.String     `tfsdk:"description"`
 	EnablePrivateDNSResolution types.Bool       `tfsdk:"enable_private_dns_resolution"`
+	DeletionProtection         types.Bool       `tfsdk:"deletion_protection"`
 	Name                       types.String     `tfsdk:"name"`
 	AppServiceId               types.String     `tfsdk:"app_service_id"`
 	ConnectionString           types.String     `tfsdk:"connection_string"`
@@ -357,6 +362,7 @@ func NewClusterData(cluster *clusterapi.GetClusterResponse, organizationId, proj
 		Name:                       types.StringValue(cluster.Name),
 		Description:                types.StringValue(cluster.Description),
 		EnablePrivateDNSResolution: types.BoolValue(cluster.EnablePrivateDNSResolution),
+		DeletionProtection:         types.BoolValue(cluster.DeletionProtection),
 		Availability: &Availability{
 			Type: types.StringValue(string(cluster.Availability.Type)),
 		},

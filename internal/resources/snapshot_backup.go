@@ -3,8 +3,11 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	stderrors "errors"
 	"fmt"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -97,13 +100,30 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups", s.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
-	createResp, err := s.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		createSnapshotBackupRequest,
-		s.Token,
-		nil,
+
+	const (
+		maxRestoringWait   = 20 * time.Minute
+		restoringPollEvery = 30 * time.Second
 	)
+	restoreDeadline := time.Now().Add(maxRestoringWait)
+
+	var (
+		createResp *api.Response
+		err        error
+	)
+	for {
+		createResp, err = s.ClientV1.ExecuteWithRetry(ctx, cfg, createSnapshotBackupRequest, s.Token, nil)
+		if err == nil || !isRestoringError(err) || time.Now().After(restoreDeadline) {
+			break
+		}
+		tflog.Debug(ctx, "cluster is temporarily unavailable (restoring); waiting before retrying backup create", map[string]interface{}{
+			"clusterId": clusterId,
+		})
+		select {
+		case <-ctx.Done():
+		case <-time.After(restoringPollEvery):
+		}
+	}
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -130,23 +150,46 @@ func (s *SnapshotBackup) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	backupResp, err := s.getSnapshotBackup(ctx, organizationId, projectId, clusterId, createSnapshotBackupResponse.ID)
-	if err != nil {
+	var backupResp *snapshot_backup.SnapshotBackup
+	var lookupErr error
+	for attempt := 0; attempt < 10; attempt++ {
+		backupResp, lookupErr = s.getSnapshotBackup(ctx, organizationId, projectId, clusterId, createSnapshotBackupResponse.ID)
+		if lookupErr == nil {
+			break
+		}
+		if !stderrors.Is(lookupErr, errors.ErrNotFound) {
+			break
+		}
+		select {
+		case <-ctx.Done():
+			lookupErr = ctx.Err()
+		case <-time.After(2 * time.Second):
+		}
+	}
+	if lookupErr != nil {
+		// The POST succeeded so the backup exists remotely. Persist the known ID
+		// and planned fields so a re-apply issues an Update rather than a second
+		// Create, preventing orphaned duplicate backups.
+		partial := setNullValues(&providerschema.SnapshotBackup{}, clusterId, projectId, organizationId, createSnapshotBackupResponse.ID)
+		partial.Retention = plan.Retention
+		partial.RegionsToCopy = plan.RegionsToCopy
+		partial.CrossRegionRestorePreference = plan.CrossRegionRestorePreference
+		partial.RestoreTimes = plan.RestoreTimes
+		diags = resp.State.Set(ctx, partial)
+		resp.Diagnostics.Append(diags...)
 		resp.Diagnostics.AddWarning(
 			"Error while checking latest snapshot backup status",
-			errorMessageWhileSnapshotBackupCreation+api.ParseError(err),
+			errorMessageWhileSnapshotBackupCreation+api.ParseError(lookupErr),
 		)
-		refreshedState = &providerschema.SnapshotBackup{}
-		refreshedState = setNullValues(refreshedState, clusterId, projectId, organizationId, createSnapshotBackupResponse.ID)
-	} else {
-		refreshedState, err = morphToTerraformCloudSnapshotBackup(ctx, backupResp, clusterId, projectId, organizationId)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error creating snapshot backup",
-				"Could not create snapshot backup: "+err.Error(),
-			)
-			return
-		}
+		return
+	}
+	refreshedState, err = morphToTerraformCloudSnapshotBackup(ctx, backupResp, clusterId, projectId, organizationId)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating snapshot backup",
+			"Could not create snapshot backup: "+err.Error(),
+		)
+		return
 	}
 
 	refreshedState.RegionsToCopy = plan.RegionsToCopy
@@ -263,6 +306,13 @@ func (s *SnapshotBackup) Update(ctx context.Context, req resource.UpdateRequest,
 	)
 
 	if state.Retention.ValueInt64() != plan.Retention.ValueInt64() {
+		if err = s.waitForSnapshotComplete(ctx, organizationId, projectId, clusterId, Id); err != nil {
+			resp.Diagnostics.AddError(
+				"Error updating snapshot backup retention",
+				"Could not update snapshot backup id "+state.ID.String()+": snapshot did not reach complete state: "+err.Error(),
+			)
+			return
+		}
 		err = s.updateRetention(ctx, organizationId, projectId, clusterId, Id, plan.Retention.ValueInt64())
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -291,6 +341,13 @@ func (s *SnapshotBackup) Update(ctx context.Context, req resource.UpdateRequest,
 			return
 		}
 		if state.RestoreTimes.IsNull() || planRestoreTimes.Cmp(state.RestoreTimes.ValueBigFloat()) == 1 {
+			if err = s.waitForSnapshotComplete(ctx, organizationId, projectId, clusterId, Id); err != nil {
+				resp.Diagnostics.AddError(
+					"Error restoring snapshot backup",
+					"Could not restore snapshot backup id "+state.ID.String()+": snapshot did not reach complete state: "+err.Error(),
+				)
+				return
+			}
 			err = s.restoreSnapshotBackup(ctx, organizationId, projectId, clusterId, Id, providerschema.BaseStringsToStrings(plan.CrossRegionRestorePreference))
 			if err != nil {
 				resp.Diagnostics.AddError(
@@ -364,15 +421,50 @@ func (s *SnapshotBackup) Delete(ctx context.Context, req resource.DeleteRequest,
 		Id             = IDs[providerschema.Id]
 	)
 
+	if err = s.waitForRestoresComplete(ctx, organizationId, projectId, clusterId, Id); err != nil {
+		resp.Diagnostics.AddError(
+			"Error deleting backup",
+			"Could not delete backup id "+state.ID.String()+": waiting for in-progress restores to complete failed: "+err.Error(),
+		)
+		return
+	}
+
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups/%s", s.HostURL, organizationId, projectId, clusterId, Id)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodDelete, SuccessStatus: http.StatusAccepted}
-	_, err = s.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		s.Token,
-		nil,
-	)
+	for attempt := 0; attempt < 30; attempt++ {
+		_, err = s.ClientV1.ExecuteWithRetry(
+			ctx,
+			cfg,
+			nil,
+			s.Token,
+			nil,
+		)
+		if err == nil {
+			break
+		}
+		var apiErr *api.Error
+		if !stderrors.As(err, &apiErr) {
+			break
+		}
+		// Retry on transient backend states:
+		// - HTTP 500: post-restore lock window after a restore reports complete.
+		// - HTTP 409 "currently being restored": restore status flipped to final
+		//   but the backend hasn't released the snapshot lock yet.
+		if apiErr.HttpStatusCode != http.StatusInternalServerError && apiErr.HttpStatusCode != http.StatusConflict {
+			break
+		}
+		tflog.Debug(ctx, "snapshot backup delete returned transient error, retrying", map[string]interface{}{
+			"attempt":        attempt,
+			"httpStatusCode": apiErr.HttpStatusCode,
+			"err":            apiErr.CompleteError(),
+			"id":             Id,
+		})
+		select {
+		case <-ctx.Done():
+			err = ctx.Err()
+		case <-time.After(30 * time.Second):
+		}
+	}
 	if err != nil {
 		resourceNotFound, errString := api.CheckResourceNotFoundError(err)
 		if resourceNotFound {
@@ -417,17 +509,14 @@ func (s *SnapshotBackup) Configure(ctx context.Context, req resource.ConfigureRe
 	s.Data = data
 }
 
-// getSnapshotBackups retrieves a list of snapshot backups for a cluster.
+// getSnapshotBackups retrieves a list of snapshot backups for a cluster,
+// walking all pages so callers see every backup (the LIST endpoint is
+// paginated and a freshly created backup may land on a later page).
 func (s *SnapshotBackup) getSnapshotBackups(ctx context.Context, organizationId, projectId, clusterId string) (*snapshot_backup.ListSnapshotBackupsResponse, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups", s.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-	resp, err := s.ClientV1.ExecuteWithRetry(
-		ctx,
-		cfg,
-		nil,
-		s.Token,
-		nil,
-	)
+
+	all, err := api.GetPaginated[[]snapshot_backup.SnapshotBackup](ctx, s.ClientV1, s.Token, cfg, "")
 	if err != nil {
 		tflog.Debug(ctx, "error reading snapshot backups", map[string]interface{}{
 			"organizationId": organizationId,
@@ -438,20 +527,7 @@ func (s *SnapshotBackup) getSnapshotBackups(ctx context.Context, organizationId,
 		return nil, err
 	}
 
-	var snapshotBackups snapshot_backup.ListSnapshotBackupsResponse
-	err = json.Unmarshal(resp.Body, &snapshotBackups)
-	if err != nil {
-		tflog.Debug(ctx, "error unmarshalling the list of snapshot backups", map[string]interface{}{
-			"organizationId": organizationId,
-			"projectId":      projectId,
-			"clusterId":      clusterId,
-			"resp":           resp,
-			"err":            err,
-		})
-		return nil, err
-	}
-
-	return &snapshotBackups, nil
+	return &snapshot_backup.ListSnapshotBackupsResponse{Data: all}, nil
 }
 
 // getSnapshotBackup retrieves a snapshot backup by its ID.
@@ -604,6 +680,80 @@ func (s *SnapshotBackup) updateRetention(ctx context.Context, organizationId, pr
 	return nil
 }
 
+// waitForRestoresComplete blocks until every restore associated with the given
+// snapshot ID has reached a final state. Capella returns HTTP 500 when a
+// snapshot is deleted while one of its restores is still in progress, so
+// callers must drain in-flight restores before issuing DELETE.
+func (s *SnapshotBackup) waitForRestoresComplete(ctx context.Context, organizationId, projectId, clusterId, snapshotId string) error {
+	const (
+		pollInterval = 30 * time.Second
+		maxAttempts  = 60
+	)
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups/restores", s.HostURL, organizationId, projectId, clusterId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		restores, err := api.GetPaginated[[]snapshot_backup.SnapshotRestore](ctx, s.ClientV1, s.Token, cfg, "")
+		if err != nil {
+			return err
+		}
+		pending := false
+		for _, r := range restores {
+			if r.Snapshot == snapshotId && !snapshot_backup.IsFinalState(r.Status) {
+				pending = true
+				break
+			}
+		}
+		if !pending {
+			return nil
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(pollInterval):
+		}
+	}
+	return fmt.Errorf("restores for snapshot %s did not reach final state within %s", snapshotId, time.Duration(maxAttempts)*pollInterval)
+}
+
+// waitForSnapshotComplete polls the snapshot backup until its progress status
+// reaches a final state. The Capella restore endpoint returns HTTP 500 if the
+// underlying snapshot has not yet completed, so callers that intend to restore
+// must wait first.
+func (s *SnapshotBackup) waitForSnapshotComplete(ctx context.Context, organizationId, projectId, clusterId, Id string) error {
+	const (
+		pollInterval = 30 * time.Second
+		maxAttempts  = 60
+	)
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		backup, err := s.getSnapshotBackup(ctx, organizationId, projectId, clusterId, Id)
+		if err != nil {
+			return err
+		}
+		state := backup.Progress.Status
+		if state == snapshot_backup.Complete {
+			return nil
+		}
+		if state == snapshot_backup.Failed {
+			return fmt.Errorf("snapshot backup %s reached failed state", Id)
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(pollInterval):
+		}
+	}
+	return fmt.Errorf("snapshot backup %s did not reach complete state within %s", Id, time.Duration(maxAttempts)*pollInterval)
+}
+
+// isRestoringError reports whether err is the Capella 422 indicating the
+// cluster is temporarily unavailable because a restore is in progress.
+func isRestoringError(err error) bool {
+	var apiErr *api.Error
+	return stderrors.As(err, &apiErr) &&
+		apiErr.HttpStatusCode == http.StatusUnprocessableEntity &&
+		strings.Contains(apiErr.Message, "Restoring state")
+}
+
 func (s *SnapshotBackup) restoreSnapshotBackup(ctx context.Context, organizationId, projectId, clusterId, Id string, crossRegionRestorePreference []string) error {
 	var (
 		resp *api.Response
@@ -613,25 +763,39 @@ func (s *SnapshotBackup) restoreSnapshotBackup(ctx context.Context, organization
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups/%s/restore", s.HostURL, organizationId, projectId, clusterId, Id)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusAccepted}
 
+	var requestBody interface{}
 	if len(crossRegionRestorePreference) > 0 {
-		restoreSnapshotBackupRequest := snapshot_backup.RestoreSnapshotBackupRequest{
+		requestBody = snapshot_backup.RestoreSnapshotBackupRequest{
 			CrossRegionRestorePreference: crossRegionRestorePreference,
 		}
-		resp, err = s.ClientV1.ExecuteWithRetry(
-			ctx,
-			cfg,
-			restoreSnapshotBackupRequest,
-			s.Token,
-			nil,
-		)
-	} else {
-		resp, err = s.ClientV1.ExecuteWithRetry(
-			ctx,
-			cfg,
-			nil,
-			s.Token,
-			nil,
-		)
+	}
+
+	const (
+		maxConflictWait   = 30 * time.Minute
+		conflictPollEvery = 30 * time.Second
+	)
+	deadline := time.Now().Add(maxConflictWait)
+	for {
+		resp, err = s.ClientV1.ExecuteWithRetry(ctx, cfg, requestBody, s.Token, nil)
+		if err == nil {
+			break
+		}
+		var apiErr *api.Error
+		if !stderrors.As(err, &apiErr) || apiErr.HttpStatusCode != http.StatusConflict {
+			break
+		}
+		if time.Now().After(deadline) {
+			tflog.Debug(ctx, "timed out waiting for in-progress restore to clear", map[string]interface{}{"err": err})
+			break
+		}
+		tflog.Debug(ctx, "another restore in progress on cluster; waiting before retrying", map[string]interface{}{
+			"clusterID": clusterId,
+		})
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(conflictPollEvery):
+		}
 	}
 	if err != nil {
 		tflog.Debug(ctx, "error executing restore snapshot backup", map[string]interface{}{
@@ -653,6 +817,53 @@ func (s *SnapshotBackup) restoreSnapshotBackup(ctx context.Context, organization
 		})
 		return err
 	}
+	if restoreResp.ID == "" {
+		return fmt.Errorf("restore POST succeeded but response did not include a restoreId")
+	}
+
+	// Wait for the restore to be visible in the LIST endpoint before returning.
+	// POST /restore returns 202 Accepted but the new restore is not always
+	// immediately readable via GET /restores (no read-your-writes consistency).
+	// Without this wait, a subsequent waitForRestoresComplete call can see zero
+	// pending restores on its first poll and return a false-positive, causing
+	// Delete to fire while the restore is still running server-side.
+	if err = s.waitForRestoreVisible(ctx, organizationId, projectId, clusterId, restoreResp.ID); err != nil {
+		tflog.Debug(ctx, "restore submitted but did not become visible in list", map[string]interface{}{
+			"restoreId": restoreResp.ID,
+			"err":       err,
+		})
+		return err
+	}
 
 	return nil
+}
+
+// waitForRestoreVisible polls GET /restores until the restore identified by
+// restoreId is present in the list. Capella's POST /restore returns 202 before
+// the restore object is queryable on the read path; this closes that window so
+// downstream pollers don't see a false-positive empty list.
+func (s *SnapshotBackup) waitForRestoreVisible(ctx context.Context, organizationId, projectId, clusterId, restoreId string) error {
+	const (
+		pollInterval = 2 * time.Second
+		maxAttempts  = 30
+	)
+	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackups/restores", s.HostURL, organizationId, projectId, clusterId)
+	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		restores, err := api.GetPaginated[[]snapshot_backup.SnapshotRestore](ctx, s.ClientV1, s.Token, cfg, "")
+		if err != nil {
+			return err
+		}
+		for _, r := range restores {
+			if r.ID == restoreId {
+				return nil
+			}
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(pollInterval):
+		}
+	}
+	return fmt.Errorf("restore %s did not appear in restores list within %s", restoreId, time.Duration(maxAttempts)*pollInterval)
 }
