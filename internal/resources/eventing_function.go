@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -76,8 +77,7 @@ func (e *EventingFunction) Create(ctx context.Context, req resource.CreateReques
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/eventingFunctions", e.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
-	_, err := e.ClientV1.ExecuteWithRetry(ctx, cfg, createReq, e.Token, nil)
-	if err != nil {
+	if _, err := e.ClientV1.ExecuteWithRetry(ctx, cfg, createReq, e.Token, nil); err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating eventing function",
 			"Could not create eventing function, unexpected error: "+api.ParseError(err),
@@ -95,8 +95,66 @@ func (e *EventingFunction) Create(ctx context.Context, req resource.CreateReques
 		}
 	}
 
-	diags = resp.State.Set(ctx, plan)
+	// Read the function back to populate computed attributes with their server-assigned values.
+	// The plan is passed forward so URL binding secrets and the State verb are preserved.
+	refreshedState, err := e.retrieveEventingFunction(ctx, organizationId, projectId, clusterId, name, &plan)
+	if err != nil {
+		// The function was created, so do not error out and orphan it; fall back to the plan.
+		resp.Diagnostics.AddWarning(
+			"Error reading eventing function after create",
+			"Eventing function was created but could not be read back: "+api.ParseError(err),
+		)
+
+		setEventingFunctionComputedAttributesToNull(&plan)
+
+		refreshedState = &plan
+	}
+
+	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
+}
+
+// setEventingFunctionComputedAttributesToNull sets the computed attributes on the plan to null. It is
+// used when setting state after create if the post-create read fails, so the resulting state holds no
+// unknown values.
+func setEventingFunctionComputedAttributesToNull(plan *providerschema.EventingFunction) {
+	plan.Description = types.StringNull()
+
+	nullKeyspaceComputedAttributes(plan.EventSource)
+	nullKeyspaceComputedAttributes(plan.EventMetadataStorage)
+
+	if plan.Settings != nil {
+		plan.Settings.WorkerCount = types.Int64Null()
+		plan.Settings.ScriptTimeout = types.Int64Null()
+		plan.Settings.SqlConsistency = types.StringNull()
+		plan.Settings.LanguageCompatibility = types.StringNull()
+		plan.Settings.FeedBoundary = types.StringNull()
+		plan.Settings.MaxTimerContextSize = types.Int64Null()
+		plan.Settings.AllowSyncDocuments = types.BoolNull()
+		plan.Settings.CursorAware = types.BoolNull()
+	}
+
+	if plan.Bindings != nil {
+		for i := range plan.Bindings.Buckets {
+			plan.Bindings.Buckets[i].Scope = types.StringNull()
+			plan.Bindings.Buckets[i].Collection = types.StringNull()
+			plan.Bindings.Buckets[i].Permission = types.StringNull()
+		}
+		for i := range plan.Bindings.Urls {
+			plan.Bindings.Urls[i].AllowCookies = types.BoolNull()
+			plan.Bindings.Urls[i].ValidateTLSCertificate = types.BoolNull()
+		}
+	}
+}
+
+// nullKeyspaceComputedAttributes sets the computed scope and collection of a keyspace to null. It is a
+// no-op for a nil keyspace.
+func nullKeyspaceComputedAttributes(k *providerschema.EventingFunctionKeyspace) {
+	if k == nil {
+		return
+	}
+	k.Scope = types.StringNull()
+	k.Collection = types.StringNull()
 }
 
 // Read reads the eventing function information.
@@ -380,29 +438,22 @@ func (e *EventingFunction) waitForStatus(
 	ticker := time.NewTicker(retryInterval)
 	defer ticker.Stop()
 
-	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/eventingFunctions/%s", e.HostURL, organizationId, projectId, clusterId, name)
-	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
-
 	for {
 		select {
 		case <-ctx.Done():
 			return fmt.Errorf("timed out waiting for eventing function %q to reach status %q: %w", name, target, ctx.Err())
 		case <-ticker.C:
-			response, err := e.ClientV1.ExecuteWithRetry(ctx, cfg, nil, e.Token, nil)
+			// ok to pass nil as we just need the status
+			f, err := e.retrieveEventingFunction(ctx, organizationId, projectId, clusterId, name, nil)
 			if err != nil {
 				return fmt.Errorf("%w: %w", errors.ErrExecutingRequest, err)
 			}
 
-			eventingResp := eventingapi.GetEventingFunctionResponse{}
-			if err := json.Unmarshal(response.Body, &eventingResp); err != nil {
-				return fmt.Errorf("%w: %w", errors.ErrUnmarshallingResponse, err)
-			}
-
-			if eventingResp.Status == target {
+			if f.State.ValueString() == target {
 				return nil
 			}
 
-			tflog.Debug(ctx, fmt.Sprintf("eventing function %q status %q, waiting for %q", name, eventingResp.Status, target))
+			tflog.Debug(ctx, fmt.Sprintf("eventing function %q status %q, waiting for %q", name, f.State.ValueString(), target))
 		}
 	}
 }

@@ -144,9 +144,8 @@ func NewEventingFunction(
 		EventMetadataStorage: keyspaceToSchema(resp.EventMetadataStorage),
 		Settings:             settingsToSchema(resp.Settings),
 		Bindings:             bindingsToSchema(resp.Bindings),
+		State:                types.StringValue(resp.Status),
 	}
-
-	fn.State = types.StringValue(resp.Status)
 
 	if prior != nil {
 		carryForwardURLSecrets(fn.Bindings, prior.Bindings)

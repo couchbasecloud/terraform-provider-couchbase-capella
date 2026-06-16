@@ -2,12 +2,9 @@ package resources
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/defaults"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
@@ -32,13 +29,25 @@ func EventingFunctionSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "cluster_id", eventingFunctionBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "name", eventingFunctionBuilder, requiredNonEmptyStringAttribute())
 	capellaschema.AddAttr(attrs, "description", eventingFunctionBuilder, stringAttribute([]string{optional, computed}))
-	capellaschema.AddAttr(attrs, "code", eventingFunctionBuilder, stringAttribute([]string{required}))
-	capellaschema.AddAttr(attrs, "state", eventingFunctionBuilder, stringAttribute(
-		[]string{optional},
-		validator.String(stringvalidator.OneOf(
-			eventingStateDeployed, eventingStateUndeployed, eventingStatePaused, eventingStateResumed,
-		)),
-	))
+	capellaschema.AddAttr(attrs, "code", eventingFunctionBuilder, stringAttribute([]string{required, sensitive}))
+	capellaschema.AddAttr(
+		attrs,
+		"state",
+		eventingFunctionBuilder,
+		&schema.StringAttribute{
+			Optional: true,
+			Computed: true,
+			Default:  stringdefault.StaticString(eventingStateUndeployed),
+			Validators: []validator.String{
+				stringvalidator.OneOf(
+					eventingStateDeployed,
+					eventingStateUndeployed,
+					eventingStatePaused,
+					eventingStateResumed,
+				),
+			},
+		},
+	)
 
 	capellaschema.AddAttr(attrs, "event_source", eventingFunctionBuilder, &schema.SingleNestedAttribute{
 		Required:   true,
@@ -51,8 +60,6 @@ func EventingFunctionSchema() schema.Schema {
 
 	capellaschema.AddAttr(attrs, "settings", eventingFunctionBuilder, &schema.SingleNestedAttribute{
 		Optional:   true,
-		Computed:   true,
-		Default:    settingsDefault(),
 		Attributes: settingsAttributes(),
 	})
 
@@ -78,47 +85,22 @@ func keyspaceAttributes() map[string]schema.Attribute {
 
 func settingsAttributes() map[string]schema.Attribute {
 	attrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(attrs, "worker_count", eventingFunctionBuilder, int64DefaultAttribute(1, optional, computed), "EventingFunctionSettings")
-	capellaschema.AddAttr(attrs, "script_timeout", eventingFunctionBuilder, int64DefaultAttribute(60, optional, computed), "EventingFunctionSettings")
+	capellaschema.AddAttr(attrs, "worker_count", eventingFunctionBuilder, int64Attribute(optional, computed), "EventingFunctionSettings")
+	capellaschema.AddAttr(attrs, "script_timeout", eventingFunctionBuilder, int64Attribute(optional, computed), "EventingFunctionSettings")
 
-	sqlConsistency := stringDefaultAttribute("none", optional, computed)
-	sqlConsistency.Validators = append(sqlConsistency.Validators, validator.String(stringvalidator.OneOf("none", "request")))
-	capellaschema.AddAttr(attrs, "sql_consistency", eventingFunctionBuilder, sqlConsistency, "EventingFunctionSettings")
+	capellaschema.AddAttr(attrs, "sql_consistency", eventingFunctionBuilder, stringAttribute(
+		[]string{optional, computed}, validator.String(stringvalidator.OneOf("none", "request"))), "EventingFunctionSettings")
 
-	languageCompatibility := stringDefaultAttribute("7.2.0", optional, computed)
-	languageCompatibility.Validators = append(languageCompatibility.Validators, validator.String(stringvalidator.OneOf("6.0.0", "6.5.0", "6.6.2", "7.2.0")))
-	capellaschema.AddAttr(attrs, "language_compatibility", eventingFunctionBuilder, languageCompatibility, "EventingFunctionSettings")
+	capellaschema.AddAttr(attrs, "language_compatibility", eventingFunctionBuilder, stringAttribute(
+		[]string{optional, computed}, validator.String(stringvalidator.OneOf("6.0.0", "6.5.0", "6.6.2", "7.2.0"))), "EventingFunctionSettings")
 
-	feedBoundary := stringDefaultAttribute("from_now", optional, computed)
-	feedBoundary.Validators = append(feedBoundary.Validators, validator.String(stringvalidator.OneOf("everything", "from_now")))
-	capellaschema.AddAttr(attrs, "feed_boundary", eventingFunctionBuilder, feedBoundary, "EventingFunctionSettings")
+	capellaschema.AddAttr(attrs, "feed_boundary", eventingFunctionBuilder, stringAttribute(
+		[]string{optional, computed}, validator.String(stringvalidator.OneOf("everything", "from_now"))), "EventingFunctionSettings")
 
-	capellaschema.AddAttr(attrs, "max_timer_context_size", eventingFunctionBuilder, int64DefaultAttribute(1024, optional, computed), "EventingFunctionSettings")
-	capellaschema.AddAttr(attrs, "allow_sync_documents", eventingFunctionBuilder, boolDefaultAttribute(false, optional, computed), "EventingFunctionSettings")
-	capellaschema.AddAttr(attrs, "cursor_aware", eventingFunctionBuilder, boolDefaultAttribute(false, optional, computed), "EventingFunctionSettings")
+	capellaschema.AddAttr(attrs, "max_timer_context_size", eventingFunctionBuilder, int64Attribute(optional, computed), "EventingFunctionSettings")
+	capellaschema.AddAttr(attrs, "allow_sync_documents", eventingFunctionBuilder, boolAttribute(optional, computed), "EventingFunctionSettings")
+	capellaschema.AddAttr(attrs, "cursor_aware", eventingFunctionBuilder, boolAttribute(optional, computed), "EventingFunctionSettings")
 	return attrs
-}
-
-// settingsDefault supplies the full default settings object so that the defaults are applied even
-// when the entire settings block is omitted from configuration (the per-attribute defaults only
-// apply when the block is present but a child is omitted). The attribute types are derived from
-// settingsAttributes so the two stay in sync.
-func settingsDefault() defaults.Object {
-	attrTypes := make(map[string]attr.Type)
-	for name, attribute := range settingsAttributes() {
-		attrTypes[name] = attribute.GetType()
-	}
-
-	return objectdefault.StaticValue(types.ObjectValueMust(attrTypes, map[string]attr.Value{
-		"worker_count":           types.Int64Value(1),
-		"script_timeout":         types.Int64Value(60),
-		"sql_consistency":        types.StringValue("none"),
-		"language_compatibility": types.StringValue("7.2.0"),
-		"feed_boundary":          types.StringValue("from_now"),
-		"max_timer_context_size": types.Int64Value(1024),
-		"allow_sync_documents":   types.BoolValue(false),
-		"cursor_aware":           types.BoolValue(false),
-	}))
 }
 
 func bindingsAttributes() map[string]schema.Attribute {
