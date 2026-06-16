@@ -85,21 +85,21 @@ func keyspaceAttributes() map[string]schema.Attribute {
 
 func settingsAttributes() map[string]schema.Attribute {
 	attrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(attrs, "worker_count", eventingFunctionBuilder, int64Attribute(optional, computed), "EventingFunctionSettings")
-	capellaschema.AddAttr(attrs, "script_timeout", eventingFunctionBuilder, int64Attribute(optional, computed), "EventingFunctionSettings")
+	capellaschema.AddAttr(attrs, "worker_count", eventingFunctionBuilder, int64Attribute(optional, computed, useStateForUnknown), "EventingFunctionSettings")
+	capellaschema.AddAttr(attrs, "script_timeout", eventingFunctionBuilder, int64Attribute(optional, computed, useStateForUnknown), "EventingFunctionSettings")
 
 	capellaschema.AddAttr(attrs, "sql_consistency", eventingFunctionBuilder, stringAttribute(
-		[]string{optional, computed}, validator.String(stringvalidator.OneOf("none", "request"))), "EventingFunctionSettings")
+		[]string{optional, computed, useStateForUnknown}, validator.String(stringvalidator.OneOf("none", "request"))), "EventingFunctionSettings")
 
 	capellaschema.AddAttr(attrs, "language_compatibility", eventingFunctionBuilder, stringAttribute(
-		[]string{optional, computed}, validator.String(stringvalidator.OneOf("6.0.0", "6.5.0", "6.6.2", "7.2.0"))), "EventingFunctionSettings")
+		[]string{optional, computed, useStateForUnknown}, validator.String(stringvalidator.OneOf("6.0.0", "6.5.0", "6.6.2", "7.2.0"))), "EventingFunctionSettings")
 
 	capellaschema.AddAttr(attrs, "feed_boundary", eventingFunctionBuilder, stringAttribute(
-		[]string{optional, computed}, validator.String(stringvalidator.OneOf("everything", "from_now"))), "EventingFunctionSettings")
+		[]string{optional, computed, useStateForUnknown}, validator.String(stringvalidator.OneOf("everything", "from_now"))), "EventingFunctionSettings")
 
-	capellaschema.AddAttr(attrs, "max_timer_context_size", eventingFunctionBuilder, int64Attribute(optional, computed), "EventingFunctionSettings")
-	capellaschema.AddAttr(attrs, "allow_sync_documents", eventingFunctionBuilder, boolAttribute(optional, computed), "EventingFunctionSettings")
-	capellaschema.AddAttr(attrs, "cursor_aware", eventingFunctionBuilder, boolAttribute(optional, computed), "EventingFunctionSettings")
+	capellaschema.AddAttr(attrs, "max_timer_context_size", eventingFunctionBuilder, int64Attribute(optional, computed, useStateForUnknown), "EventingFunctionSettings")
+	capellaschema.AddAttr(attrs, "allow_sync_documents", eventingFunctionBuilder, boolAttribute(optional, computed, useStateForUnknown), "EventingFunctionSettings")
+	capellaschema.AddAttr(attrs, "cursor_aware", eventingFunctionBuilder, boolAttribute(optional, computed, useStateForUnknown), "EventingFunctionSettings")
 	return attrs
 }
 

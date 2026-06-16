@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -157,6 +158,102 @@ func nullKeyspaceComputedAttributes(k *providerschema.EventingFunctionKeyspace) 
 	k.Collection = types.StringNull()
 }
 
+// eventingValueChanged reports whether a planned leaf represents a user-driven change: it holds a
+// concrete value (not null, not unknown) that differs from the prior state value. Null and unknown
+// planned values are ignored so computed attributes the user omitted never count as a change.
+func eventingValueChanged(plan, state attr.Value) bool {
+	if plan.IsNull() || plan.IsUnknown() {
+		return false
+	}
+	return !plan.Equal(state)
+}
+
+// eventingSettingsChanged reports whether the plan changes any settings value relative to the prior
+// state. A nil plan means the settings block was omitted and is not a user change.
+func eventingSettingsChanged(plan, state *providerschema.EventingFunctionSettings) bool {
+	if plan == nil {
+		return false
+	}
+	if state == nil {
+		state = &providerschema.EventingFunctionSettings{}
+	}
+
+	return eventingValueChanged(plan.WorkerCount, state.WorkerCount) ||
+		eventingValueChanged(plan.ScriptTimeout, state.ScriptTimeout) ||
+		eventingValueChanged(plan.SqlConsistency, state.SqlConsistency) ||
+		eventingValueChanged(plan.LanguageCompatibility, state.LanguageCompatibility) ||
+		eventingValueChanged(plan.FeedBoundary, state.FeedBoundary) ||
+		eventingValueChanged(plan.MaxTimerContextSize, state.MaxTimerContextSize) ||
+		eventingValueChanged(plan.AllowSyncDocuments, state.AllowSyncDocuments) ||
+		eventingValueChanged(plan.CursorAware, state.CursorAware)
+}
+
+// eventingBindingsChanged reports whether the plan changes any binding relative to the prior state. A
+// change in the number of bucket, URL or constant bindings counts as a change. The sensitive URL
+// authentication secrets (password, bearer token) are not compared: the API masks them as "*****" so
+// they do not round-trip faithfully and would otherwise produce false positives.
+func eventingBindingsChanged(plan, state *providerschema.EventingFunctionBindings) bool {
+	if plan == nil {
+		return false
+	}
+	if state == nil {
+		return true
+	}
+
+	if len(plan.Buckets) != len(state.Buckets) ||
+		len(plan.Urls) != len(state.Urls) ||
+		len(plan.Constants) != len(state.Constants) {
+		return true
+	}
+
+	for i := range plan.Buckets {
+		p, s := plan.Buckets[i], state.Buckets[i]
+		if eventingValueChanged(p.Alias, s.Alias) ||
+			eventingValueChanged(p.Bucket, s.Bucket) ||
+			eventingValueChanged(p.Scope, s.Scope) ||
+			eventingValueChanged(p.Collection, s.Collection) ||
+			eventingValueChanged(p.Permission, s.Permission) {
+			return true
+		}
+	}
+
+	for i := range plan.Urls {
+		p, s := plan.Urls[i], state.Urls[i]
+		if eventingValueChanged(p.Alias, s.Alias) ||
+			eventingValueChanged(p.Url, s.Url) ||
+			eventingValueChanged(p.AllowCookies, s.AllowCookies) ||
+			eventingValueChanged(p.ValidateTLSCertificate, s.ValidateTLSCertificate) {
+			return true
+		}
+		if eventingURLAuthChanged(p.Authentication, s.Authentication) {
+			return true
+		}
+	}
+
+	for i := range plan.Constants {
+		p, s := plan.Constants[i], state.Constants[i]
+		if eventingValueChanged(p.Alias, s.Alias) ||
+			eventingValueChanged(p.Value, s.Value) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// eventingURLAuthChanged reports whether the plan changes the non-sensitive URL authentication fields.
+// The sensitive password and bearer token are deliberately excluded.
+func eventingURLAuthChanged(plan, state *providerschema.EventingFunctionUrlAuth) bool {
+	if plan == nil {
+		return false
+	}
+	if state == nil {
+		return true
+	}
+	return eventingValueChanged(plan.Type, state.Type) ||
+		eventingValueChanged(plan.Username, state.Username)
+}
+
 // Read reads the eventing function information.
 func (e *EventingFunction) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state providerschema.EventingFunction
@@ -227,6 +324,18 @@ func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateReques
 		name           = IDs[providerschema.FunctionName]
 	)
 
+	// Settings and bindings can only be changed while the function is undeployed or paused. Reject the
+	// change up front — before applying any activation state change. This prevents "inconsistent result after apply"
+	// errors.
+	if (plan.State.ValueString() == eventingStateDeployed || plan.State.ValueString() == eventingStateResumed) &&
+		(plan.Code != state.Code && eventingSettingsChanged(plan.Settings, state.Settings) || eventingBindingsChanged(plan.Bindings, state.Bindings)) {
+		resp.Diagnostics.AddError(
+			"Cannot change eventing function settings or bindings while deployed",
+			"Eventing function "+name+" must be undeployed or paused before its settings or bindings can be changed.",
+		)
+		return
+	}
+
 	// Apply a deployment state change first if the desired state was set and differs from the prior state.
 	if !plan.State.IsNull() && plan.State.ValueString() != state.State.ValueString() {
 		if err := e.setActivationState(ctx, organizationId, projectId, clusterId, name, plan.State.ValueString()); err != nil {
@@ -245,12 +354,14 @@ func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateReques
 		}
 	}
 
-	if !plan.State.IsNull() &&
-		(plan.State.ValueString() == eventingStateDeployed || plan.State.ValueString() == eventingStateResumed) {
-		resp.Diagnostics.AddWarning(
-			"Eventing Function settings not applied",
-			"Eventing Function must be undeployed or paused before changes can be applied")
+	// if only eventing function state was changed skip update step.
+	if plan.State.ValueString() == eventingStateDeployed || plan.State.ValueString() == eventingStateResumed {
+		return
+	}
 
+	// if code, settings or bindings have not changed, skip update step.
+	if !eventingSettingsChanged(plan.Settings, state.Settings) && !eventingBindingsChanged(plan.Bindings, state.Bindings) &&
+		plan.Code == state.Code {
 		return
 	}
 
