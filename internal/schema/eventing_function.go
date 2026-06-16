@@ -12,18 +12,35 @@ import (
 
 // EventingFunction is the Terraform data source model for a single eventing function.
 type EventingFunction struct {
+	OneEventingFunction
+	OrganizationId types.String `tfsdk:"organization_id"`
+	ProjectId      types.String `tfsdk:"project_id"`
+	ClusterId      types.String `tfsdk:"cluster_id"`
+	Export         types.Bool   `tfsdk:"export"`
+}
+
+// EventingFunctions is the Terraform data source model for listing eventing functions in a cluster.
+// Status is an optional filter that maps to the status query parameter on the list endpoint.
+type EventingFunctions struct {
+	OrganizationId    types.String          `tfsdk:"organization_id"`
+	ProjectId         types.String          `tfsdk:"project_id"`
+	ClusterId         types.String          `tfsdk:"cluster_id"`
+	Status            types.Set             `tfsdk:"status"`
+	EventingFunctions []OneEventingFunction `tfsdk:"eventing_functions"`
+}
+
+// OneEventingFunction is a single eventing function entry returned by the list eventing functions
+// data source. It mirrors the per-function fields of EventingFunction without the request-scoped
+// identifiers and export flag, which live on the parent EventingFunctions model.
+type OneEventingFunction struct {
 	Description          types.String `tfsdk:"description"`
 	Status               types.String `tfsdk:"status"`
 	Code                 types.String `tfsdk:"code"`
-	OrganizationId       types.String `tfsdk:"organization_id"`
-	ProjectId            types.String `tfsdk:"project_id"`
-	ClusterId            types.String `tfsdk:"cluster_id"`
 	Name                 types.String `tfsdk:"name"`
 	EventSource          types.Object `tfsdk:"event_source"`
 	EventMetadataStorage types.Object `tfsdk:"event_metadata_storage"`
 	Settings             types.Object `tfsdk:"settings"`
 	Bindings             types.Object `tfsdk:"bindings"`
-	Export               types.Bool   `tfsdk:"export"`
 }
 
 // EventingFunctionKeyspace identifies the bucket, scope and collection of an event source or
@@ -160,19 +177,30 @@ func NewEventingFunction(
 	organizationId, projectId, clusterId, name string,
 	export types.Bool,
 ) (EventingFunction, diag.Diagnostics) {
+	one, diags := NewOneEventingFunction(ctx, function)
+
+	model := EventingFunction{
+		OneEventingFunction: one,
+		OrganizationId:      types.StringValue(organizationId),
+		ProjectId:           types.StringValue(projectId),
+		ClusterId:           types.StringValue(clusterId),
+		Export:              export,
+	}
+
+	return model, diags
+}
+
+// NewOneEventingFunction converts a single eventing function API response into its Terraform model.
+// It is shared by the single and list eventing function data sources to build the per-function
+// fields and their nested objects.
+func NewOneEventingFunction(ctx context.Context, function eventing_function.EventingFunction) (OneEventingFunction, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	// name is echoed from the configured value, not the API response, so the required attribute
-	// always matches config in the read result.
-	model := EventingFunction{
-		OrganizationId: types.StringValue(organizationId),
-		ProjectId:      types.StringValue(projectId),
-		ClusterId:      types.StringValue(clusterId),
-		Name:           types.StringValue(name),
-		Export:         export,
-		Description:    types.StringPointerValue(function.Description),
-		Status:         types.StringPointerValue(function.Status),
-		Code:           types.StringPointerValue(function.Code),
+	model := OneEventingFunction{
+		Name:        types.StringValue(function.Name),
+		Description: types.StringPointerValue(function.Description),
+		Status:      types.StringPointerValue(function.Status),
+		Code:        types.StringPointerValue(function.Code),
 	}
 
 	eventSource, d := newEventingFunctionKeyspaceObject(ctx, function.EventSource)
