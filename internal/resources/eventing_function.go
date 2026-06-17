@@ -345,7 +345,7 @@ func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateReques
 		name           = IDs[providerschema.FunctionName]
 	)
 
-	// Settings and bindings can only be changed while the function is undeployed or paused. Reject the
+	// Code, settings and bindings can only be changed while the function is undeployed or paused. Reject the
 	// change up front — before applying any activation state change. This prevents "inconsistent result after apply"
 	// errors.
 	if (plan.State.ValueString() == eventingStateDeployed || plan.State.ValueString() == eventingStateResumed) &&
