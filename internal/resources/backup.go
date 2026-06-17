@@ -50,7 +50,10 @@ func (b *Backup) Schema(_ context.Context, _ resource.SchemaRequest, resp *resou
 	resp.Schema = BackupSchema()
 }
 
-// ModifyPlan validates backup restore-only fields that are invalid during resource creation.
+// ModifyPlan validates restore-related fields at plan time. On create (no prior
+// state) it rejects restore and restore_times, which are only valid when restoring
+// an existing backup. On update (prior state present) it enforces that restore and
+// restore_times are configured together, since one without the other is invalid.
 func (b *Backup) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if req.Plan.Raw.IsNull() {
 		return

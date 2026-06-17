@@ -25,7 +25,7 @@ func BackupScheduleSchema() schema.Schema {
 	capellaschema.AddAttr(weeklyScheduleAttrs, "start_at", backupScheduleBuilder, &schema.Int64Attribute{
 		Required: true,
 		Validators: []validator.Int64{
-			int64validator.OneOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23),
+			int64validator.Between(0, 23),
 		},
 	}, "WeeklySchedule")
 	capellaschema.AddAttr(weeklyScheduleAttrs, "incremental_every", backupScheduleBuilder, &schema.Int64Attribute{
