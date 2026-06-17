@@ -348,7 +348,7 @@ func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateReques
 	// Code, settings and bindings can only be changed while the function is undeployed or paused. Reject the
 	// change up front — before applying any activation state change. This prevents "inconsistent result after apply"
 	// errors.
-	if (plan.State.ValueString() == eventingStateDeployed || plan.State.ValueString() == eventingStateResumed) &&
+	if plan.State.ValueString() == eventingStateDeployed &&
 		(plan.Code != state.Code || eventingSettingsChanged(plannedSettings, stateSettings) || eventingBindingsChanged(plan.Bindings, state.Bindings)) {
 		resp.Diagnostics.AddError(
 			"Cannot change eventing function settings or bindings while deployed",
