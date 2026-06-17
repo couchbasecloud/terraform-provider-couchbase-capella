@@ -90,6 +90,7 @@ func (f *FreeTierClusters) Read(ctx context.Context, req datasource.ReadRequest,
 				"Error Reading Capella Free Tier Clusters",
 				fmt.Sprintf("Could not read free tier clusters in organization %s and project %s, unexpected error: %s", organizationId, projectId, errors.ErrUnableToConvertAuditData),
 			)
+			return
 		}
 
 		newClusterData, err := providerschema.NewClusterData(&cluster, organizationId, projectId, auditObj)
@@ -98,6 +99,7 @@ func (f *FreeTierClusters) Read(ctx context.Context, req datasource.ReadRequest,
 				"Error Reading Capella Free Tier Clusters",
 				fmt.Sprintf("Could not read free tier clusters in organization %s and project %s, unexpected error: %s", organizationId, projectId, err.Error()),
 			)
+			return
 		}
 		state.Data = append(state.Data, *newClusterData)
 	}
