@@ -132,7 +132,7 @@ func TestAccBackupScheduleResourceInvalidStartAt(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBackupScheduleResourceConfig(resourceName, "weekly", "sunday", 99, 4, "30days", false),
-				ExpectError: regexp.MustCompile(`(?s)start_at.*value must be one of|Attribute.*start_at.*one of`),
+				ExpectError: regexp.MustCompile(`(?s)start_at.*value must be between 0 and 23`),
 			},
 		},
 	})
