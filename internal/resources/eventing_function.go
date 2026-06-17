@@ -80,7 +80,7 @@ func (e *EventingFunction) Create(ctx context.Context, req resource.CreateReques
 		Bindings:             bindingsToAPI(plan.Bindings),
 	}
 
-	if !plan.Description.IsNull() && !plan.Description.IsUnknown() {
+	if !plan.Description.IsNull() {
 		createReq.Description = plan.Description.ValueStringPointer()
 	}
 
@@ -127,8 +127,6 @@ func (e *EventingFunction) Create(ctx context.Context, req resource.CreateReques
 // used when setting state after create if the post-create read fails, so the resulting state holds no
 // unknown values.
 func setEventingFunctionComputedAttributesToNull(ctx context.Context, plan *providerschema.EventingFunctionResource) {
-	plan.Description = types.StringNull()
-
 	nullKeyspaceComputedAttributes(plan.EventSource)
 	nullKeyspaceComputedAttributes(plan.EventMetadataStorage)
 
