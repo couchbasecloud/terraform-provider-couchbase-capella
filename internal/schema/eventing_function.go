@@ -313,12 +313,21 @@ func NewEventingFunctionResource(
 	organizationId, projectId, clusterId string,
 	prior *EventingFunctionResource,
 ) *EventingFunctionResource {
+	// The API returns "" for an unset description; preserve the practitioner's planned value
+	// (null or "") so the resulting state matches the plan and Terraform does not report an
+	// inconsistent result after apply. prior is nil from waitForStatus, where the result is
+	// not used as final state, so fall back to the raw API value there.
+	description := types.StringPointerValue(resp.Description)
+	if prior != nil && description.ValueString() == "" {
+		description = prior.Description
+	}
+
 	fn := &EventingFunctionResource{
 		OrganizationId:       types.StringValue(organizationId),
 		ProjectId:            types.StringValue(projectId),
 		ClusterId:            types.StringValue(clusterId),
 		Name:                 types.StringValue(resp.Name),
-		Description:          types.StringPointerValue(resp.Description),
+		Description:          description,
 		Code:                 types.StringValue(resp.Code),
 		EventSource:          keyspaceToSchema(resp.EventSource),
 		EventMetadataStorage: keyspaceToSchema(resp.EventMetadataStorage),
