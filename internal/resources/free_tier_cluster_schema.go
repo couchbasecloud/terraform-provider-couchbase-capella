@@ -8,9 +8,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	customvalidator "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema/validator"
 )
 
 var freeTierClusterBuilder = capellaschema.NewSchemaBuilder("freeTierCluster")
+
+// freeTierClusterRegions maps a lowercased cloud provider type to the regions
+// Capella allows for free tier clusters. Sourced from the "Create Free Tier
+// Cluster" endpoint description; update when that changes:
+// https://docs.couchbase.com/cloud/management-api-reference/index.html#tag/Free-Tier
+var freeTierClusterRegions = map[string][]string{
+	"aws":   {"us-east-2", "eu-west-1", "ap-southeast-1"},
+	"gcp":   {"us-central1", "europe-west1", "asia-east1"},
+	"azure": {"eastus", "swedencentral", "koreacentral"},
+}
 
 func FreeTierClusterSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
@@ -47,6 +58,9 @@ func FreeTierClusterSchema() schema.Schema {
 		Attributes: cloudProviderAttrs,
 		PlanModifiers: []planmodifier.Object{
 			objectplanmodifier.RequiresReplace(),
+		},
+		Validators: []validator.Object{
+			customvalidator.CloudProviderRegion(freeTierClusterRegions),
 		},
 	})
 
