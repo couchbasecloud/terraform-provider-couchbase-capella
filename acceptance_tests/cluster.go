@@ -44,10 +44,13 @@ func createCluster(ctx context.Context, client *api.Client) error {
 					},
 					Disk: node.Disk,
 				},
+				// The global cluster hosts eventing function acceptance tests, so the
+				// eventing service is enabled here alongside the data, index and query services.
 				Services: &[]clusterapi.Service{
 					clusterapi.Service("data"),
 					clusterapi.Service("index"),
-					clusterapi.Service("query")},
+					clusterapi.Service("query"),
+					clusterapi.Service("eventing")},
 				NumOfNodes: ptr.To(3),
 			},
 		},

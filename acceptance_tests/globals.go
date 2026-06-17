@@ -20,14 +20,20 @@ var (
 	globalOrgId string
 
 	// these global variables are set by setup().
-	globalProjectId          string
-	globalClusterId          string
-	globalClusterName        = "tf_acc_test_cluster_common"
-	globalBucketName         = "default"
-	globalScopeName          = "_default"
-	globalCollectionName     = "_default"
-	globalBucketId           string
-	globalBucketCreated      bool
+	globalProjectId      string
+	globalClusterId      string
+	globalClusterName    = "tf_acc_test_cluster_common"
+	globalBucketName     = "default"
+	globalScopeName      = "_default"
+	globalCollectionName = "_default"
+	globalBucketId       string
+
+	// globalMetadataBucketName is a second bucket on the global cluster used as the metadata
+	// storage keyspace for eventing function tests. It must be a different keyspace from the
+	// event source (the global bucket's _default/_default).
+	globalMetadataBucketName = "metadata"
+	globalMetadataBucketId   string
+
 	globalAppServiceId       string
 	globalAppServiceName     = "tf_acc_test_app_service_common"
 	globalAppEndpointName    = "tf_acc_test_app_endpoint_common"
