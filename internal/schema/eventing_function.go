@@ -85,44 +85,6 @@ type EventingFunctionResource struct {
 	State types.String `tfsdk:"state"`
 }
 
-// EventingFunctionResource is the Terraform schema for the eventing function resource.
-type EventingFunctionResource struct {
-	// OrganizationId is the ID of the organization to which the Capella cluster belongs.
-	OrganizationId types.String `tfsdk:"organization_id"`
-
-	// ProjectId is the ID of the project to which the Capella cluster belongs.
-	ProjectId types.String `tfsdk:"project_id"`
-
-	// ClusterId is the ID of the cluster the eventing function belongs to.
-	ClusterId types.String `tfsdk:"cluster_id"`
-
-	// Name is the name of the eventing function. It is the resource identifier and cannot be changed.
-	Name types.String `tfsdk:"name"`
-
-	// Description is the eventing function description.
-	Description types.String `tfsdk:"description"`
-
-	// Code is the JavaScript code executed in response to document mutations.
-	Code types.String `tfsdk:"code"`
-
-	// EventSource is the keyspace on which the function listens for document mutations.
-	EventSource *EventingFunctionKeyspace `tfsdk:"event_source"`
-
-	// EventMetadataStorage is the keyspace used to store function metadata.
-	EventMetadataStorage *EventingFunctionKeyspace `tfsdk:"event_metadata_storage"`
-
-	// Settings holds the runtime settings that control how the function executes.
-	Settings types.Object `tfsdk:"settings"`
-
-	// Bindings holds the bucket, URL and constant bindings.
-	Bindings *EventingFunctionBindingsResource `tfsdk:"bindings"`
-
-	// State is the desired terminal activation state, applied via the activationState endpoint.
-	// Enum: deployed, undeployed, paused, resumed. It is a write-only control input: the GET
-	// response reports the read-only Status, which is mapped back onto State across refreshes.
-	State types.String `tfsdk:"state"`
-}
-
 // EventingFunctionKeyspace identifies the bucket, scope and collection of an event source or
 // metadata store.
 type EventingFunctionKeyspace struct {
