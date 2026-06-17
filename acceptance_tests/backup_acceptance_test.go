@@ -134,10 +134,66 @@ resource "couchbase-capella_backup" "%[2]s" {
   restore_times   = 1
 }
 `, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, globalBucketId),
-				ExpectError: regexp.MustCompile("restore times must not be set while create backup"),
+				ExpectError: regexp.MustCompile("restore times must not be set during backup creation"),
 			},
 		},
 	})
+}
+
+func TestAccBackupResourceRestoreOnCreate(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_backup_restore_on_create_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccBackupResourceRestoreOnCreateConfig(resourceName),
+				ExpectError: regexp.MustCompile(`restore must not be set during backup creation`),
+			},
+		},
+	})
+}
+
+func TestAccBackupResourceRestoreInvalidReplaceTTL(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_backup_invalid_replace_ttl_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccBackupResourceInvalidRestoreReplaceTTLConfig(resourceName),
+				ExpectError: regexp.MustCompile(`(?s)replace_ttl.*(none|all|expired).*forever|forever.*(none|all|expired)`),
+			},
+		},
+	})
+}
+
+func testAccBackupResourceRestoreOnCreateConfig(resourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_backup" "%[2]s" {
+	organization_id = "00000000-0000-0000-0000-000000000000"
+	project_id      = "11111111-1111-1111-1111-111111111111"
+	cluster_id      = "22222222-2222-2222-2222-222222222222"
+	bucket_id       = "default"
+
+	restore = {
+		target_cluster_id       = "33333333-3333-3333-3333-333333333333"
+		source_cluster_id       = "22222222-2222-2222-2222-222222222222"
+		services                = ["data"]
+		force_updates           = true
+		auto_remove_collections = false
+		replace_ttl             = "none"
+		replace_ttl_with        = "0"
+		include_data            = "bucket.scope.collection"
+		exclude_data            = null
+		filter_keys             = null
+		filter_values           = null
+		map_data                = null
+	}
+}
+`, globalProviderBlock, resourceName)
 }
 
 // testAccBackupResourceConfigWithBucketID is used by the invalid-input tests,
@@ -154,6 +210,34 @@ resource "couchbase-capella_backup" "%[2]s" {
   bucket_id       = "%[6]s"
 }
 `, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, bucketID)
+}
+
+func testAccBackupResourceInvalidRestoreReplaceTTLConfig(resourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_backup" "%[2]s" {
+	organization_id = "00000000-0000-0000-0000-000000000000"
+	project_id      = "11111111-1111-1111-1111-111111111111"
+	cluster_id      = "22222222-2222-2222-2222-222222222222"
+	bucket_id       = "default"
+
+	restore = {
+		target_cluster_id       = "33333333-3333-3333-3333-333333333333"
+		source_cluster_id       = "22222222-2222-2222-2222-222222222222"
+		services                = ["data"]
+		force_updates           = true
+		auto_remove_collections = false
+		replace_ttl             = "forever"
+		replace_ttl_with        = "0"
+		include_data            = "bucket.scope.collection"
+		exclude_data            = null
+		filter_keys             = null
+		filter_values           = null
+		map_data                = null
+	}
+}
+`, globalProviderBlock, resourceName)
 }
 
 // testAccBackupOnIsolatedBucketConfig declares a fresh bucket alongside the
