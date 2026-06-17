@@ -389,10 +389,10 @@ func Test503_ServiceUnavailable_Retried(t *testing.T) {
 		count := atomic.AddInt32(&callCount, 1)
 		if count == 1 {
 			w.WriteHeader(http.StatusServiceUnavailable)
-			w.Write([]byte("service unavailable"))
+			_, _ = w.Write([]byte("service unavailable"))
 		} else {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("success"))
+			_, _ = w.Write([]byte("success"))
 		}
 	}))
 	defer server.Close()
@@ -403,7 +403,7 @@ func Test503_ServiceUnavailable_Retried(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Should have retried once after 503
 	if atomic.LoadInt32(&callCount) != 2 {
