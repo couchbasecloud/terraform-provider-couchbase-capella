@@ -96,6 +96,11 @@ func setup(ctx context.Context, client *api.Client) error {
 	if err := resolveBucket(ctx, client); err != nil {
 		return err
 	}
+
+	if err := resolveMetadataBucket(ctx, client); err != nil {
+		return err
+	}
+
 	// Bucket creation triggers a cluster rebalance; wait for the cluster to
 	// return to Healthy before creating dependent resources, otherwise
 	// createAppService races and fails with 412 "cluster is rebalancing".
@@ -173,12 +178,6 @@ func cleanup(ctx context.Context, client *api.Client) error {
 		}
 
 		if err := dmClusterWait(ctx, client, true); err != nil {
-			return err
-		}
-	}
-
-	if globalBucketCreated {
-		if err := destroyBucket(ctx, client); err != nil {
 			return err
 		}
 	}
