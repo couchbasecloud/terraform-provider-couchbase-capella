@@ -43,7 +43,6 @@ func EventingFunctionSchema() schema.Schema {
 					eventingStateDeployed,
 					eventingStateUndeployed,
 					eventingStatePaused,
-					eventingStateResumed,
 				),
 			},
 		},

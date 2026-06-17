@@ -349,7 +349,7 @@ func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateReques
 	// change up front — before applying any activation state change. This prevents "inconsistent result after apply"
 	// errors.
 	if (plan.State.ValueString() == eventingStateDeployed || plan.State.ValueString() == eventingStateResumed) &&
-		(plan.Code != state.Code && eventingSettingsChanged(plannedSettings, stateSettings) || eventingBindingsChanged(plan.Bindings, state.Bindings)) {
+		(plan.Code != state.Code || eventingSettingsChanged(plannedSettings, stateSettings) || eventingBindingsChanged(plan.Bindings, state.Bindings)) {
 		resp.Diagnostics.AddError(
 			"Cannot change eventing function settings or bindings while deployed",
 			"Eventing function "+name+" must be undeployed or paused before its settings or bindings can be changed.",
