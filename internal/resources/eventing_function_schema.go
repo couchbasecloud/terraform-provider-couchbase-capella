@@ -60,6 +60,7 @@ func EventingFunctionSchema() schema.Schema {
 
 	capellaschema.AddAttr(attrs, "settings", eventingFunctionBuilder, &schema.SingleNestedAttribute{
 		Optional:   true,
+		Computed:   true,
 		Attributes: settingsAttributes(),
 	})
 

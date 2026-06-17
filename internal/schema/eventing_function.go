@@ -57,7 +57,7 @@ type EventingFunctionResource struct {
 	EventMetadataStorage *EventingFunctionKeyspace `tfsdk:"event_metadata_storage"`
 
 	// Settings holds the runtime settings that control how the function executes.
-	Settings *EventingFunctionSettings `tfsdk:"settings"`
+	Settings types.Object `tfsdk:"settings"`
 
 	// Bindings holds the bucket, URL and constant bindings.
 	Bindings *EventingFunctionBindingsResource `tfsdk:"bindings"`
@@ -314,17 +314,17 @@ func keyspaceToSchema(k eventingapi.Keyspace) *EventingFunctionKeyspace {
 	}
 }
 
-func settingsToSchema(s eventingapi.Settings) *EventingFunctionSettings {
-	return &EventingFunctionSettings{
-		WorkerCount:           types.Int64PointerValue(s.WorkerCount),
-		ScriptTimeout:         types.Int64PointerValue(s.ScriptTimeout),
-		SqlConsistency:        types.StringPointerValue(s.SqlConsistency),
-		LanguageCompatibility: types.StringPointerValue(s.LanguageCompatibility),
-		FeedBoundary:          types.StringPointerValue(s.FeedBoundary),
-		MaxTimerContextSize:   types.Int64PointerValue(s.MaxTimerContextSize),
-		AllowSyncDocuments:    types.BoolPointerValue(s.AllowSyncDocuments),
-		CursorAware:           types.BoolPointerValue(s.CursorAware),
-	}
+func settingsToSchema(s eventingapi.Settings) types.Object {
+	return types.ObjectValueMust(EventingFunctionSettings{}.AttributeTypes(), map[string]attr.Value{
+		"worker_count":           types.Int64PointerValue(s.WorkerCount),
+		"script_timeout":         types.Int64PointerValue(s.ScriptTimeout),
+		"sql_consistency":        types.StringPointerValue(s.SqlConsistency),
+		"language_compatibility": types.StringPointerValue(s.LanguageCompatibility),
+		"feed_boundary":          types.StringPointerValue(s.FeedBoundary),
+		"max_timer_context_size": types.Int64PointerValue(s.MaxTimerContextSize),
+		"allow_sync_documents":   types.BoolPointerValue(s.AllowSyncDocuments),
+		"cursor_aware":           types.BoolPointerValue(s.CursorAware),
+	})
 }
 
 // bindingsToSchema returns nil when no bindings are present so the optional attribute stays null.

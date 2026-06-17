@@ -8,9 +8,11 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
@@ -63,12 +65,18 @@ func (e *EventingFunction) Create(ctx context.Context, req resource.CreateReques
 		name           = plan.Name.ValueString()
 	)
 
+	plannedSettings, sdiags := eventingSettingsFromObject(ctx, plan.Settings)
+	resp.Diagnostics.Append(sdiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	createReq := eventingapi.CreateEventingFunctionRequest{
 		Name:                 name,
 		Code:                 plan.Code.ValueStringPointer(),
 		EventSource:          keyspaceToAPI(plan.EventSource),
 		EventMetadataStorage: keyspaceToAPI(plan.EventMetadataStorage),
-		Settings:             settingsToAPI(plan.Settings),
+		Settings:             settingsToAPI(plannedSettings),
 		Bindings:             bindingsToAPI(plan.Bindings),
 	}
 
@@ -106,7 +114,7 @@ func (e *EventingFunction) Create(ctx context.Context, req resource.CreateReques
 			"Eventing function was created but could not be read back: "+api.ParseError(err),
 		)
 
-		setEventingFunctionComputedAttributesToNull(&plan)
+		setEventingFunctionComputedAttributesToNull(ctx, &plan)
 
 		refreshedState = &plan
 	}
@@ -118,21 +126,28 @@ func (e *EventingFunction) Create(ctx context.Context, req resource.CreateReques
 // setEventingFunctionComputedAttributesToNull sets the computed attributes on the plan to null. It is
 // used when setting state after create if the post-create read fails, so the resulting state holds no
 // unknown values.
-func setEventingFunctionComputedAttributesToNull(plan *providerschema.EventingFunctionResource) {
+func setEventingFunctionComputedAttributesToNull(ctx context.Context, plan *providerschema.EventingFunctionResource) {
 	plan.Description = types.StringNull()
 
 	nullKeyspaceComputedAttributes(plan.EventSource)
 	nullKeyspaceComputedAttributes(plan.EventMetadataStorage)
 
-	if plan.Settings != nil {
-		plan.Settings.WorkerCount = types.Int64Null()
-		plan.Settings.ScriptTimeout = types.Int64Null()
-		plan.Settings.SqlConsistency = types.StringNull()
-		plan.Settings.LanguageCompatibility = types.StringNull()
-		plan.Settings.FeedBoundary = types.StringNull()
-		plan.Settings.MaxTimerContextSize = types.Int64Null()
-		plan.Settings.AllowSyncDocuments = types.BoolNull()
-		plan.Settings.CursorAware = types.BoolNull()
+	attrTypes := providerschema.EventingFunctionSettings{}.AttributeTypes()
+	if plan.Settings.IsNull() || plan.Settings.IsUnknown() {
+		plan.Settings = types.ObjectNull(attrTypes)
+	} else {
+		var s providerschema.EventingFunctionSettings
+		plan.Settings.As(ctx, &s, basetypes.ObjectAsOptions{UnhandledUnknownAsEmpty: true})
+		plan.Settings = types.ObjectValueMust(attrTypes, map[string]attr.Value{
+			"worker_count":           s.WorkerCount,
+			"script_timeout":         s.ScriptTimeout,
+			"sql_consistency":        s.SqlConsistency,
+			"language_compatibility": s.LanguageCompatibility,
+			"feed_boundary":          s.FeedBoundary,
+			"max_timer_context_size": s.MaxTimerContextSize,
+			"allow_sync_documents":   s.AllowSyncDocuments,
+			"cursor_aware":           s.CursorAware,
+		})
 	}
 
 	if plan.Bindings != nil {
@@ -308,6 +323,14 @@ func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
+	plannedSettings, d := eventingSettingsFromObject(ctx, plan.Settings)
+	resp.Diagnostics.Append(d...)
+	stateSettings, sd := eventingSettingsFromObject(ctx, state.Settings)
+	resp.Diagnostics.Append(sd...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -328,7 +351,7 @@ func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateReques
 	// change up front — before applying any activation state change. This prevents "inconsistent result after apply"
 	// errors.
 	if (plan.State.ValueString() == eventingStateDeployed || plan.State.ValueString() == eventingStateResumed) &&
-		(plan.Code != state.Code && eventingSettingsChanged(plan.Settings, state.Settings) || eventingBindingsChanged(plan.Bindings, state.Bindings)) {
+		(plan.Code != state.Code && eventingSettingsChanged(plannedSettings, stateSettings) || eventingBindingsChanged(plan.Bindings, state.Bindings)) {
 		resp.Diagnostics.AddError(
 			"Cannot change eventing function settings or bindings while deployed",
 			"Eventing function "+name+" must be undeployed or paused before its settings or bindings can be changed.",
@@ -360,7 +383,7 @@ func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	// if code, settings or bindings have not changed, skip update step.
-	if !eventingSettingsChanged(plan.Settings, state.Settings) && !eventingBindingsChanged(plan.Bindings, state.Bindings) &&
+	if !eventingSettingsChanged(plannedSettings, stateSettings) && !eventingBindingsChanged(plan.Bindings, state.Bindings) &&
 		plan.Code == state.Code {
 		return
 	}
@@ -370,7 +393,7 @@ func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateReques
 		Code:                 plan.Code.ValueStringPointer(),
 		EventSource:          keyspaceToAPIPtr(plan.EventSource),
 		EventMetadataStorage: keyspaceToAPIPtr(plan.EventMetadataStorage),
-		Settings:             settingsToAPI(plan.Settings),
+		Settings:             settingsToAPI(plannedSettings),
 		Bindings:             bindingsToAPI(plan.Bindings),
 	}
 
@@ -588,6 +611,21 @@ func keyspaceToAPIPtr(k *providerschema.EventingFunctionKeyspace) *eventingapi.K
 	}
 	keyspace := keyspaceToAPI(k)
 	return &keyspace
+}
+
+// eventingSettingsFromObject converts the settings object value into the concrete struct, returning
+// nil when the block was omitted (null/unknown). Unknown computed leaves are nulled so they are not
+// sent to the API and do not register as user changes.
+func eventingSettingsFromObject(ctx context.Context, obj types.Object) (*providerschema.EventingFunctionSettings, diag.Diagnostics) {
+	if obj.IsNull() || obj.IsUnknown() {
+		return nil, nil
+	}
+	var s providerschema.EventingFunctionSettings
+	diags := obj.As(ctx, &s, basetypes.ObjectAsOptions{UnhandledUnknownAsEmpty: true})
+	if diags.HasError() {
+		return nil, diags
+	}
+	return &s, diags
 }
 
 func settingsToAPI(s *providerschema.EventingFunctionSettings) *eventingapi.Settings {
