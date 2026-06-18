@@ -12,9 +12,10 @@ In this example, we are going to do the following.
 
 1. CREATE: Create a new eventing function in an existing Capella cluster as stated in the `create_eventing_function.tf` file.
 2. READ: Retrieve an existing eventing function using the `couchbase-capella_eventing_function` data source as stated in the `get_eventing_function.tf` file.
-3. UPDATE: Update the eventing function configuration in Capella.
-4. DELETE: Delete the newly created eventing function from Capella.
-5. IMPORT: Import an eventing function that exists in Capella but not in the terraform state file.
+3. LIST: Retrieve all eventing functions in the cluster using the `couchbase-capella_eventing_functions` data source and output the count.
+4. UPDATE: Update the eventing function configuration in Capella.
+5. DELETE: Delete the newly created eventing function from Capella.
+6. IMPORT: Import an eventing function that exists in Capella but not in the terraform state file.
 
 If you check the `terraform.template.tfvars` file - Make sure you copy the file to `terraform.tfvars` and update the values of the variables as per the correct organization access.
 
@@ -117,7 +118,6 @@ Do you want to perform these actions?
 
   Enter a value: yes
 
-
 Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
 
 Outputs:
@@ -126,6 +126,58 @@ existing_function_status = "deployed"
 ```
 
 The data source also exposes the function's other fields.
+
+## LIST
+### Retrieve all eventing functions using the data source
+
+The `couchbase-capella_eventing_functions` data source reads every eventing function in a cluster. You can optionally filter the results by one or more states using the `status` attribute. When `status` is omitted, eventing functions in every state are returned.
+
+Add the following data source block to your configuration. The example below outputs the total number of eventing functions that are in a "deployed" or "deploying" state:
+
+```
+data "couchbase-capella_eventing_functions" "existing_functions" {
+  organization_id = var.organization_id
+  project_id      = var.project_id
+  cluster_id      = var.cluster_id
+
+  # Optional: only return functions in the listed states.
+  status = ["deployed", "deploying"]
+}
+
+output "existing_functions_count" {
+  value = length(data.couchbase-capella_eventing_functions.existing_functions.eventing_functions)
+}
+```
+
+Command: `terraform apply`
+
+Sample Output:
+```
+$ terraform apply
+
+data.couchbase-capella_eventing_functions.existing_functions: Reading...
+data.couchbase-capella_eventing_functions.existing_functions: Read complete after 1s
+
+Changes to Outputs:
+  + existing_functions_count = 1
+
+You can apply this plan to save these new output values to the Terraform state, without changing any real infrastructure.
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+
+Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+existing_functions_count = 1
+```
+
+Each entry in the `eventing_functions` list exposes the same fields as the single eventing function data source.
 
 ## UPDATE
 ### Let us edit the `terraform.tfvars` file to update the eventing function.
