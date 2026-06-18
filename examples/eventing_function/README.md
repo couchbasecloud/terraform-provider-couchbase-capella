@@ -12,7 +12,7 @@ In this example, we are going to do the following.
 
 1. CREATE: Create a new eventing function in an existing Capella cluster as stated in the `create_eventing_function.tf` file.
 2. READ: Retrieve an existing eventing function using the `couchbase-capella_eventing_function` data source as stated in the `get_eventing_function.tf` file.
-3. LIST: Retrieve all eventing functions in the cluster using the `couchbase-capella_eventing_functions` data source.
+3. LIST: Retrieve all eventing functions in the cluster using the `couchbase-capella_eventing_functions` data source and output the count.
 4. UPDATE: Update the eventing function configuration in Capella.
 5. DELETE: Delete the newly created eventing function from Capella.
 6. IMPORT: Import an eventing function that exists in Capella but not in the terraform state file.
