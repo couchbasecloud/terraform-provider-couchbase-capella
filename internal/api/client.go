@@ -123,7 +123,7 @@ func (c *Client) ExecuteWithRetry(
 			})
 			return nil, dur, errors.ErrRatelimit
 		case http.StatusServiceUnavailable:
-			retryAfter := dur
+			var retryAfter time.Duration
 			if header := apiRes.Header.Get("Retry-After"); header != "" {
 				if secs, parseErr := strconv.Atoi(header); parseErr == nil {
 					retryAfter = time.Second * time.Duration(secs)
@@ -132,7 +132,6 @@ func (c *Client) ExecuteWithRetry(
 			tflog.Debug(ctx, "API returned 503 Service Unavailable, retrying", map[string]interface{}{
 				"method": endpointCfg.Method,
 				"url":    endpointCfg.Url,
-				"body":   string(responseBody),
 			})
 			return nil, retryAfter, errors.ErrServiceUnavailable
 		case http.StatusGatewayTimeout:
