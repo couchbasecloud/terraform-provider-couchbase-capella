@@ -91,14 +91,55 @@ func TestAccAuditLogExportResource(t *testing.T) {
 // parse error in a "Could not parse start time" diagnostic.
 func TestAccAuditLogExportResourceInvalidStart(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_audit_log_export_bad_start_")
-	_, end := auditLogExportWindow()
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAuditLogExportResourceConfig(resourceName, "not-a-timestamp", end),
-				ExpectError: regexp.MustCompile(`(?s)Could not parse start time`),
+				Config:      testAccAuditLogExportResourceInvalidStartConfig(resourceName),
+				ExpectError: regexp.MustCompile(`(?s)start must be a valid RFC3339 timestamp`),
+			},
+		},
+	})
+}
+
+func TestAccAuditLogExportResourceMissingStart(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_audit_log_export_missing_start_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAuditLogExportResourceMissingStartConfig(resourceName),
+				ExpectError: regexp.MustCompile(`(?s)The argument "start" is required`),
+			},
+		},
+	})
+}
+
+func TestAccAuditLogExportResourceInvalidEnd(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_audit_log_export_bad_end_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAuditLogExportResourceInvalidEndConfig(resourceName),
+				ExpectError: regexp.MustCompile(`(?s)end must be a valid RFC3339 timestamp`),
+			},
+		},
+	})
+}
+
+func TestAccAuditLogExportResourceEndBeforeStart(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_audit_log_export_bad_window_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAuditLogExportResourceEndBeforeStartConfig(resourceName),
+				ExpectError: regexp.MustCompile(`(?s)end must not be earlier than start`),
 			},
 		},
 	})
@@ -131,6 +172,21 @@ resource "couchbase-capella_audit_log_export" "%[2]s" {
 	})
 }
 
+func TestAccAuditLogExportResourceEmptyClusterID(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_audit_log_export_empty_cluster_")
+	start, end := auditLogExportWindow()
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAuditLogExportResourceEmptyClusterConfig(resourceName, start, end),
+				ExpectError: regexp.MustCompile(`(?s)Invalid Attribute Value.*Attribute cluster_id string length must be at least 1, got: 0`),
+			},
+		},
+	})
+}
+
 func testAccAuditLogExportResourceConfig(resourceName, start, end string) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -143,6 +199,75 @@ resource "couchbase-capella_audit_log_export" "%[2]s" {
   end             = "%[7]s"
 }
 `, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, start, end)
+}
+
+func testAccAuditLogExportResourceEmptyClusterConfig(resourceName, start, end string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_audit_log_export" "%[2]s" {
+	organization_id = "00000000-0000-0000-0000-000000000000"
+	project_id      = "11111111-1111-1111-1111-111111111111"
+	cluster_id      = ""
+	start           = "%[3]s"
+	end             = "%[4]s"
+}
+`, globalProviderBlock, resourceName, start, end)
+}
+
+func testAccAuditLogExportResourceInvalidStartConfig(resourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_audit_log_export" "%[2]s" {
+	organization_id = "00000000-0000-0000-0000-000000000000"
+	project_id      = "11111111-1111-1111-1111-111111111111"
+	cluster_id      = "22222222-2222-2222-2222-222222222222"
+	start           = "not-a-date"
+	end             = "2026-05-02T00:00:00Z"
+}
+`, globalProviderBlock, resourceName)
+}
+
+func testAccAuditLogExportResourceMissingStartConfig(resourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_audit_log_export" "%[2]s" {
+	organization_id = "00000000-0000-0000-0000-000000000000"
+	project_id      = "11111111-1111-1111-1111-111111111111"
+	cluster_id      = "22222222-2222-2222-2222-222222222222"
+	end             = "2026-05-02T00:00:00Z"
+}
+`, globalProviderBlock, resourceName)
+}
+
+func testAccAuditLogExportResourceInvalidEndConfig(resourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_audit_log_export" "%[2]s" {
+	organization_id = "00000000-0000-0000-0000-000000000000"
+	project_id      = "11111111-1111-1111-1111-111111111111"
+	cluster_id      = "22222222-2222-2222-2222-222222222222"
+	start           = "2026-05-01T00:00:00Z"
+	end             = "not-a-date"
+}
+`, globalProviderBlock, resourceName)
+}
+
+func testAccAuditLogExportResourceEndBeforeStartConfig(resourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_audit_log_export" "%[2]s" {
+	organization_id = "00000000-0000-0000-0000-000000000000"
+	project_id      = "11111111-1111-1111-1111-111111111111"
+	cluster_id      = "22222222-2222-2222-2222-222222222222"
+	start           = "2026-05-02T00:00:00Z"
+	end             = "2026-05-01T00:00:00Z"
+}
+`, globalProviderBlock, resourceName)
 }
 
 func generateAuditLogExportImportIdForResource(resourceReference string) resource.ImportStateIdFunc {
