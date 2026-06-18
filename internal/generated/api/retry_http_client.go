@@ -57,11 +57,8 @@ func customRetryPolicy(ctx context.Context, resp *http.Response, err error) (boo
 	}
 
 	switch resp.StatusCode {
-	case http.StatusTooManyRequests:
+	case http.StatusTooManyRequests, http.StatusServiceUnavailable:
 		// Always retry 429 responses - retryablehttp handles Retry-After header automatically
-		return true, nil
-
-	case http.StatusServiceUnavailable:
 		// Retry 503 responses - these indicate transient conditions such as a bucket
 		// deletion in progress that prevents creation of another bucket.
 		return true, nil
