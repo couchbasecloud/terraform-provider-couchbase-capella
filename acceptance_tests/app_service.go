@@ -21,8 +21,7 @@ func createAppService(ctx context.Context, client *api.Client) error {
 			Cpu: 2,
 			Ram: 4,
 		},
-		Nodes:   &n,
-		Version: &version,
+		Nodes:   &n,		
 	}
 
 	url := fmt.Sprintf(
