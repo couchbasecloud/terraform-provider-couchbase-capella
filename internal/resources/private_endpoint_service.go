@@ -28,7 +28,7 @@ var (
 )
 
 const (
-	errorMessageWhileEnablingPrivateEndpointService = "There is an error while enabling private endpoint service. Please check in Capella to see if there are any hanging resources\" +\n\t\" have been created, unexpected error: "
+	errorMessageWhileEnablingPrivateEndpointService = "There is an error while enabling private endpoint service. Please check in Capella to see if there are any hanging resources that have have been created, unexpected error: "
 )
 
 // Private endpoint service lifecycle states returned by the GET status API.
@@ -208,7 +208,7 @@ func (p *PrivateEndpointService) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	diags = resp.State.Set(ctx, &refreshedState)
+	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
