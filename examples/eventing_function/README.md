@@ -11,7 +11,7 @@ To run, configure your Couchbase Capella provider as described in README in the 
 In this example, we are going to do the following.
 
 1. CREATE: Create a new eventing function in an existing Capella cluster as stated in the `create_eventing_function.tf` file.
-2. READ: Retrieve an existing eventing function using the `couchbase-capella_eventing_function` data source.
+2. READ: Retrieve an existing eventing function using the `couchbase-capella_eventing_function` data source as stated in the `get_eventing_function.tf` file.
 3. UPDATE: Update the eventing function configuration in Capella.
 4. DELETE: Delete the newly created eventing function from Capella.
 5. IMPORT: Import an eventing function that exists in Capella but not in the terraform state file.
@@ -104,7 +104,7 @@ Sample Output:
 $ terraform apply
 
 data.couchbase-capella_eventing_function.existing_function: Reading...
-data.couchbase-capella_eventing_function.existing_function: Read complete after 0s [name=aaa]
+data.couchbase-capella_eventing_function.existing_function: Read complete after 0s [name=my_function]
 
 Changes to Outputs:
   + existing_function_status = "deployed"
