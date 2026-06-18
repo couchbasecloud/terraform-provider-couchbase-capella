@@ -92,7 +92,7 @@ func (b *fakeBackend) handler(w http.ResponseWriter, r *http.Request) {
 
 // newTestResource wires a PrivateEndpointService to an httptest server backed
 // by the supplied fakeBackend.
-func newTestResource(t *testing.T, b *fakeBackend) (*PrivateEndpointService, *httptest.Server) {
+func newTestResource(t *testing.T, b *fakeBackend) *PrivateEndpointService {
 	t.Helper()
 	srv := httptest.NewServer(http.HandlerFunc(b.handler))
 	t.Cleanup(srv.Close)
@@ -101,9 +101,8 @@ func newTestResource(t *testing.T, b *fakeBackend) (*PrivateEndpointService, *ht
 		Data: &providerschema.Data{
 			ClientV1: &api.Client{Client: srv.Client()},
 			HostURL:  srv.URL,
-			Token:    "test-token",
 		},
-	}, srv
+	}
 }
 
 func strPtr(s string) *string { return &s }
@@ -190,7 +189,7 @@ func TestWaitUntilStatusChanges(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			b := &fakeBackend{statuses: tc.statuses}
-			p, _ := newTestResource(t, b)
+			p := newTestResource(t, b)
 
 			err := p.waitUntilStatusChanges(context.Background(), tc.finalState, testOrgID, testProjectID, testClusterID)
 
@@ -240,7 +239,7 @@ func TestWaitUntilCleanedUp(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			b := &fakeBackend{statuses: tc.statuses}
-			p, _ := newTestResource(t, b)
+			p := newTestResource(t, b)
 
 			err := p.waitUntilCleanedUp(context.Background(), testOrgID, testProjectID, testClusterID)
 
@@ -261,7 +260,7 @@ func TestCleanupFailedEnableIssuesDelete(t *testing.T) {
 			{Enabled: false, Status: strPtr(statusDisabled)},
 		},
 	}
-	p, _ := newTestResource(t, b)
+	p := newTestResource(t, b)
 
 	err := p.cleanupFailedEnable(context.Background(), testOrgID, testProjectID, testClusterID)
 	assert.NilError(t, err)
@@ -277,7 +276,7 @@ func TestCleanupFailedEnablePropagatesDeleteError(t *testing.T) {
 		deleteStatus: http.StatusInternalServerError,
 		deleteBody:   `{"code":4000,"message":"boom","httpStatusCode":500}`,
 	}
-	p, _ := newTestResource(t, b)
+	p := newTestResource(t, b)
 
 	err := p.cleanupFailedEnable(context.Background(), testOrgID, testProjectID, testClusterID)
 	assert.Assert(t, err != nil, "a failed DELETE must surface an error")
@@ -294,7 +293,7 @@ func TestHandleFailedEnableCleansUpAndRemovesState(t *testing.T) {
 			{Enabled: false, Status: strPtr(statusDisabled)},
 		},
 	}
-	p, _ := newTestResource(t, b)
+	p := newTestResource(t, b)
 
 	state := &tfsdk.State{Schema: PrivateEndpointServiceSchema()}
 	var diags diag.Diagnostics
@@ -317,7 +316,7 @@ func TestHandleFailedEnableRemovesStateEvenWhenCleanupFails(t *testing.T) {
 		deleteStatus: http.StatusInternalServerError,
 		deleteBody:   `{"code":4000,"message":"boom","httpStatusCode":500}`,
 	}
-	p, _ := newTestResource(t, b)
+	p := newTestResource(t, b)
 
 	state := &tfsdk.State{Schema: PrivateEndpointServiceSchema()}
 	var diags diag.Diagnostics
@@ -356,7 +355,7 @@ func TestGetServiceState(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			b := &fakeBackend{statuses: []api.GetPrivateEndpointServiceStatusResponse{tc.status}}
-			p, _ := newTestResource(t, b)
+			p := newTestResource(t, b)
 
 			got, err := p.getServiceState(context.Background(), testOrgID, testProjectID, testClusterID)
 			assert.NilError(t, err)
