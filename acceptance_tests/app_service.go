@@ -14,8 +14,7 @@ import (
 )
 
 func createAppService(ctx context.Context, client *api.Client) error {
-	var n int64 = 2
-	version := "4.0"
+	var n int64 = 2	
 	appServiceRequest := appservice.CreateAppServiceRequest{
 		Name: globalAppServiceName,
 		Compute: appservice.AppServiceCompute{
