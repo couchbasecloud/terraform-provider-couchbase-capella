@@ -43,7 +43,11 @@ const (
 	statusDisabled      = "disabled"
 	statusDisableFailed = "disableFailed"
 	statusUnknown       = "unknown"
+)
 
+// These are vars rather than consts so unit tests can shorten them; production
+// behavior is unchanged.
+var (
 	// cleanupTimeout bounds how long we wait for the backend to tear down a
 	// failed enable before giving up and surfacing an escalation error.
 	cleanupTimeout = 15 * time.Minute
@@ -198,9 +202,6 @@ func (p *PrivateEndpointService) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	// A terminally failed enable is treated like a missing resource: remove it
-	// from state so drift detection recreates it on the next apply instead of
-	// leaving a wedged resource that never converges.
 	if refreshedState.Status.ValueString() == statusEnableFailed {
 		tflog.Info(ctx, "private endpoint service is in enableFailed state; removing from state to force re-create")
 		resp.State.RemoveResource(ctx)
@@ -428,8 +429,9 @@ func initializePrivateEndpointServicePlan(plan providerschema.PrivateEndpointSer
 // waitUntilStatusChanges waits until the service reaches the desired state on the
 // cluster. When the API reports an explicit lifecycle status it is used to fail
 // fast on terminal states (enableFailed/disableFailed) and to keep polling on
-// transient ones (enabling/disabling/unknown). When the status is absent (an
-// older control plane) it falls back to the Enabled boolean, preserving the
+// transient ones (enabling/disabling/unknown). When the status is absent — which
+// happens on GCP, when the private endpoint status feature flag is disabled, or
+// on older control planes — it falls back to the Enabled boolean, preserving the
 // previous behavior. The 60-minute timeout remains as a backstop.
 func (p *PrivateEndpointService) waitUntilStatusChanges(ctx context.Context, finalState bool, organizationId, projectId, clusterId string) error {
 	var cancel context.CancelFunc
@@ -450,8 +452,9 @@ func (p *PrivateEndpointService) waitUntilStatusChanges(ctx context.Context, fin
 				return err
 			}
 
-			// Older control planes do not report a status: fall back to the
-			// Enabled boolean, preserving the previous behavior.
+			// Status is absent on GCP, when the status feature flag is disabled,
+			// or on older control planes: fall back to the Enabled boolean,
+			// preserving the previous behavior.
 			if response.Status == nil {
 				if response.Enabled == finalState {
 					return nil
@@ -480,8 +483,9 @@ func (p *PrivateEndpointService) waitUntilStatusChanges(ctx context.Context, fin
 
 // waitUntilCleanedUp waits for the backend to finish tearing down a failed enable
 // after a disable (DELETE) has been issued. It succeeds once the service reaches
-// disabled/idle (or reports disabled via the boolean on an older API) and fails
-// fast if the teardown itself reports disableFailed. It is bounded by
+// disabled/idle (or reports disabled via the boolean when status is absent — on
+// GCP, with the status feature flag disabled, or on older control planes) and
+// fails fast if the teardown itself reports disableFailed. It is bounded by
 // cleanupTimeout so a stuck cleanup does not block apply indefinitely.
 func (p *PrivateEndpointService) waitUntilCleanedUp(ctx context.Context, organizationId, projectId, clusterId string) error {
 	var cancel context.CancelFunc
@@ -538,7 +542,7 @@ func (p *PrivateEndpointService) cleanupFailedEnable(ctx context.Context, organi
 	return p.waitUntilCleanedUp(ctx, organizationId, projectId, clusterId)
 }
 
-// handleFailedEnable performs the Option A recovery for a terminal enableFailed:
+// handleFailedEnable performs recovery for a terminal enableFailed:
 // it triggers backend cleanup of the orphaned resources, removes the resource
 // from state so the next apply performs a clean re-create, and surfaces an
 // actionable error. State is removed even when cleanup itself fails, because

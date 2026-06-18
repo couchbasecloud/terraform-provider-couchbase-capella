@@ -7,8 +7,9 @@ type GetPrivateEndpointServiceStatusResponse struct {
 
 	// Status is the lifecycle state of the private endpoint service derived from
 	// the most recent enable/disable/update operation (for example "enableFailed"
-	// or "enabling"). It is optional and best-effort: older control planes omit it,
-	// in which case callers fall back to the Enabled boolean.
+	// or "enabling"). It is optional and best-effort: it is omitted on GCP, when
+	// the status feature flag is disabled, and on older control planes, in which
+	// case callers fall back to the Enabled boolean.
 	Status *string `json:"status,omitempty"`
 
 	PrivateDns string `json:"privateDns"`
