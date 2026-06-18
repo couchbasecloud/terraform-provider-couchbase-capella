@@ -12,7 +12,7 @@ In this example, we are going to do the following.
 
 1. CREATE: Create a new eventing function in an existing Capella cluster as stated in the `create_eventing_function.tf` file.
 2. READ: Retrieve an existing eventing function using the `couchbase-capella_eventing_function` data source as stated in the `get_eventing_function.tf` file.
-3. LIST: Retrieve all eventing functions in the cluster using the `couchbase-capella_eventing_functions` data source as stated in the `list_eventing_functions.tf` file.
+3. LIST: Retrieve all eventing functions in the cluster using the `couchbase-capella_eventing_functions` data source.
 4. UPDATE: Update the eventing function configuration in Capella.
 5. DELETE: Delete the newly created eventing function from Capella.
 6. IMPORT: Import an eventing function that exists in Capella but not in the terraform state file.
@@ -132,7 +132,7 @@ The data source also exposes the function's other fields.
 
 The `couchbase-capella_eventing_functions` data source reads every eventing function in a cluster. You can optionally filter the results by one or more states using the `status` attribute. When `status` is omitted, eventing functions in every state are returned.
 
-Add the following data source block to your configuration:
+Add the following data source block to your configuration. The example below outputs the total number of eventing functions that are in a "deployed" or "deploying" state:
 
 ```
 data "couchbase-capella_eventing_functions" "existing_functions" {
