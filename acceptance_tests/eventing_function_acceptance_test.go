@@ -145,3 +145,126 @@ func generateEventingFunctionImportIdForResource(resourceReference string) resou
 		), nil
 	}
 }
+
+func TestAccDatasourceEventingFunction(t *testing.T) {
+	funcName := randomStringWithPrefix("tf_acc_ds_evt_fn_")
+	funcReference := "couchbase-capella_eventing_function." + funcName
+	dataSourceReference := "data.couchbase-capella_eventing_function." + funcName
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventingFunctionDataSourceConfig(funcName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceReference, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(dataSourceReference, "project_id", globalProjectId),
+					resource.TestCheckResourceAttr(dataSourceReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(dataSourceReference, "name", funcName),
+					resource.TestCheckResourceAttr(dataSourceReference, "event_source.bucket", globalBucketName),
+					resource.TestCheckResourceAttr(dataSourceReference, "event_source.scope", globalScopeName),
+					resource.TestCheckResourceAttr(dataSourceReference, "event_source.collection", globalCollectionName),
+					resource.TestCheckResourceAttr(dataSourceReference, "event_metadata_storage.bucket", globalMetadataBucketName),
+					resource.TestCheckResourceAttr(dataSourceReference, "event_metadata_storage.scope", globalScopeName),
+					resource.TestCheckResourceAttr(dataSourceReference, "event_metadata_storage.collection", globalCollectionName),
+					resource.TestCheckResourceAttr(dataSourceReference, "settings.worker_count", "1"),
+					resource.TestCheckResourceAttr(dataSourceReference, "settings.script_timeout", "60"),
+					resource.TestCheckResourceAttr(dataSourceReference, "settings.sql_consistency", "none"),
+					resource.TestCheckResourceAttr(dataSourceReference, "settings.language_compatibility", "7.2.0"),
+					resource.TestCheckResourceAttr(dataSourceReference, "settings.feed_boundary", "from_now"),
+					resource.TestCheckResourceAttr(dataSourceReference, "settings.max_timer_context_size", "1024"),
+					resource.TestCheckResourceAttr(dataSourceReference, "settings.allow_sync_documents", "true"),
+					resource.TestCheckResourceAttr(dataSourceReference, "settings.cursor_aware", "false"),
+					resource.TestCheckResourceAttrPair(dataSourceReference, "code", funcReference, "code"),
+					// export defaults to false, so the read-only fields (currently just status) is returned
+					resource.TestCheckResourceAttr(dataSourceReference, "status", "undeployed"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccDatasourceEventingFunctionExport verifies that setting export = true on the
+// couchbase-capella_eventing_function data source omits the read-only fields (just status currently).
+func TestAccDatasourceEventingFunctionExport(t *testing.T) {
+	funcName := randomStringWithPrefix("tf_acc_ds_evt_exp_fn_")
+	dataSourceReference := "data.couchbase-capella_eventing_function." + funcName
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventingFunctionDataSourceConfig(funcName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceReference, "organization_id", globalOrgId),
+					resource.TestCheckResourceAttr(dataSourceReference, "project_id", globalProjectId),
+					resource.TestCheckResourceAttr(dataSourceReference, "cluster_id", globalClusterId),
+					resource.TestCheckResourceAttr(dataSourceReference, "name", funcName),
+					resource.TestCheckResourceAttr(dataSourceReference, "export", "true"),
+					resource.TestCheckResourceAttr(dataSourceReference, "event_source.bucket", globalBucketName),
+					resource.TestCheckResourceAttr(dataSourceReference, "event_source.scope", globalScopeName),
+					resource.TestCheckResourceAttr(dataSourceReference, "event_source.collection", globalCollectionName),
+					resource.TestCheckResourceAttr(dataSourceReference, "event_metadata_storage.bucket", globalMetadataBucketName),
+					resource.TestCheckResourceAttr(dataSourceReference, "event_metadata_storage.scope", globalScopeName),
+					resource.TestCheckResourceAttr(dataSourceReference, "event_metadata_storage.collection", globalCollectionName),
+					resource.TestCheckResourceAttr(dataSourceReference, "settings.worker_count", "1"),
+					resource.TestCheckResourceAttr(dataSourceReference, "settings.script_timeout", "60"),
+					resource.TestCheckResourceAttrSet(dataSourceReference, "code"),
+					// export omits the read-only status field from the response, so check that is omitted
+					resource.TestCheckNoResourceAttr(dataSourceReference, "status"),
+				),
+			},
+		},
+	})
+}
+
+// testAccEventingFunctionDataSourceConfig creates an eventing function and a single-function data
+// source that reads it back.
+func testAccEventingFunctionDataSourceConfig(funcName string, export bool) string {
+	exportLine := ""
+	if export {
+		exportLine = "\n  export          = true"
+	}
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_eventing_function" "%[5]s" {
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  cluster_id      = "%[4]s"
+  name            = "%[5]s"
+  code            = "%[6]s"
+
+  event_source = {
+    bucket     = "%[7]s"
+    scope      = "%[9]s"
+    collection = "%[10]s"
+  }
+
+  event_metadata_storage = {
+    bucket     = "%[8]s"
+    scope      = "%[9]s"
+    collection = "%[10]s"
+  }
+}
+
+data "couchbase-capella_eventing_function" "%[5]s" {
+  organization_id = "%[2]s"
+  project_id      = "%[3]s"
+  cluster_id      = "%[4]s"
+  name            = couchbase-capella_eventing_function.%[5]s.name%[11]s
+}
+`,
+		globalProviderBlock,
+		globalOrgId,
+		globalProjectId,
+		globalClusterId,
+		funcName,
+		eventingFunctionCode,
+		globalBucketName,
+		globalMetadataBucketName,
+		globalScopeName,
+		globalCollectionName,
+		exportLine,
+	)
+}
