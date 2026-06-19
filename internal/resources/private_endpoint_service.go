@@ -28,7 +28,7 @@ var (
 )
 
 const (
-	errorMessageWhileEnablingPrivateEndpointService = "There is an error while enabling private endpoint service. Please check in Capella to see if there are any hanging resources that have have been created, unexpected error: "
+	errorMessageWhileEnablingPrivateEndpointService = "There is an error while enabling private endpoint service. Please check in Capella to see if there are any hanging resources that have been created, unexpected error: "
 )
 
 // Private endpoint service lifecycle states returned by the GET status API.
@@ -438,7 +438,10 @@ func (p *PrivateEndpointService) waitUntilStatusChanges(ctx context.Context, fin
 	ctx, cancel = context.WithTimeout(ctx, time.Minute*60)
 	defer cancel()
 
-	timer := time.NewTimer(pollInterval)
+	// Fire immediately so a terminal enableFailed/disableFailed is observed
+	// without paying a pollInterval delay; subsequent iterations Reset to
+	// pollInterval below.
+	timer := time.NewTimer(0)
 	defer timer.Stop()
 
 	for {
@@ -492,7 +495,9 @@ func (p *PrivateEndpointService) waitUntilCleanedUp(ctx context.Context, organiz
 	ctx, cancel = context.WithTimeout(ctx, cleanupTimeout)
 	defer cancel()
 
-	timer := time.NewTimer(pollInterval)
+	// Fire immediately so a terminal disableFailed (or post-teardown 404) is
+	// observed without paying a pollInterval delay.
+	timer := time.NewTimer(0)
 	defer timer.Stop()
 
 	for {
@@ -503,6 +508,11 @@ func (p *PrivateEndpointService) waitUntilCleanedUp(ctx context.Context, organiz
 		case <-timer.C:
 			response, err := p.getServiceStatus(ctx, organizationId, projectId, clusterId)
 			if err != nil {
+				// A post-teardown 404 means cleanup finished — the service no
+				// longer exists on the backend, which is the success condition.
+				if resourceNotFound, _ := api.CheckResourceNotFoundError(err); resourceNotFound {
+					return nil
+				}
 				return err
 			}
 
