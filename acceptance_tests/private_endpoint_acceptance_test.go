@@ -52,12 +52,12 @@ func TestAccPrivateEndpointServiceEnableDisable(t *testing.T) {
 func TestAccAWSPrivateEndpointCommandInvalidVPCID(t *testing.T) {
 	dataSourceName := randomStringWithPrefix("tf_acc_aws_pe_command_invalid_")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSPrivateEndpointCommandInvalidVPCIDConfig(dataSourceName),
-				ExpectError: regexp.MustCompile(`(?s)Attribute vpc_id string length must be between 12 and 21`),
+				ExpectError: regexp.MustCompile(`(?s)vpc_id.*string length must be between 12 and 21`),
 			},
 		},
 	})
@@ -83,12 +83,12 @@ data "couchbase-capella_aws_private_endpoint_command" "%[2]s" {
 func TestAccAzurePrivateEndpointCommandInvalidVirtualNetwork(t *testing.T) {
 	dataSourceName := randomStringWithPrefix("tf_acc_azure_pe_command_invalid_")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAzurePrivateEndpointCommandInvalidVirtualNetworkConfig(dataSourceName),
-				ExpectError: regexp.MustCompile(`(?s)Attribute virtual_network string length must be between 2 and 64`),
+				ExpectError: regexp.MustCompile(`(?s)virtual_network.*string length must be between 2 and 64`),
 			},
 		},
 	})
@@ -114,12 +114,12 @@ data "couchbase-capella_azure_private_endpoint_command" "%[2]s" {
 func TestAccGCPPrivateEndpointCommandInvalidVPCNetworkID(t *testing.T) {
 	dataSourceName := randomStringWithPrefix("tf_acc_gcp_pe_command_invalid_")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGCPPrivateEndpointCommandInvalidVPCNetworkIDConfig(dataSourceName),
-				ExpectError: regexp.MustCompile(`(?s)Attribute vpc_network_id string length must be between 12 and 21`),
+				ExpectError: regexp.MustCompile(`(?s)vpc_network_id.*string length must be between 12 and 21`),
 			},
 		},
 	})
