@@ -19,6 +19,7 @@ import (
 	eventingapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/eventingfunction"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/utils"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -597,8 +598,8 @@ func keyspaceToAPI(k *providerschema.EventingFunctionKeyspace) eventingapi.Keysp
 	}
 	return eventingapi.Keyspace{
 		Bucket:     k.Bucket.ValueString(),
-		Scope:      k.Scope.ValueStringPointer(),
-		Collection: k.Collection.ValueStringPointer(),
+		Scope:      utils.StringPointerIfKnown(k.Scope),
+		Collection: utils.StringPointerIfKnown(k.Collection),
 	}
 }
 
@@ -612,7 +613,7 @@ func keyspaceToAPIPtr(k *providerschema.EventingFunctionKeyspace) *eventingapi.K
 }
 
 // eventingSettingsFromObject converts the settings object value into the concrete struct, returning
-// nil when the block was omitted (null/unknown). Unknown computed leaves are nulled so they are not
+// nil when the block was omitted (null/unknown). Unknown computed fields are nulled so they are not
 // sent to the API and do not register as user changes.
 func eventingSettingsFromObject(ctx context.Context, obj types.Object) (*providerschema.EventingFunctionSettings, diag.Diagnostics) {
 	if obj.IsNull() || obj.IsUnknown() {
@@ -631,14 +632,14 @@ func settingsToAPI(s *providerschema.EventingFunctionSettings) *eventingapi.Sett
 		return nil
 	}
 	return &eventingapi.Settings{
-		WorkerCount:           s.WorkerCount.ValueInt64Pointer(),
-		ScriptTimeout:         s.ScriptTimeout.ValueInt64Pointer(),
-		SqlConsistency:        s.SqlConsistency.ValueStringPointer(),
-		LanguageCompatibility: s.LanguageCompatibility.ValueStringPointer(),
-		FeedBoundary:          s.FeedBoundary.ValueStringPointer(),
-		MaxTimerContextSize:   s.MaxTimerContextSize.ValueInt64Pointer(),
-		AllowSyncDocuments:    s.AllowSyncDocuments.ValueBoolPointer(),
-		CursorAware:           s.CursorAware.ValueBoolPointer(),
+		WorkerCount:           utils.Int64PointerIfKnown(s.WorkerCount),
+		ScriptTimeout:         utils.Int64PointerIfKnown(s.ScriptTimeout),
+		SqlConsistency:        utils.StringPointerIfKnown(s.SqlConsistency),
+		LanguageCompatibility: utils.StringPointerIfKnown(s.LanguageCompatibility),
+		FeedBoundary:          utils.StringPointerIfKnown(s.FeedBoundary),
+		MaxTimerContextSize:   utils.Int64PointerIfKnown(s.MaxTimerContextSize),
+		AllowSyncDocuments:    utils.BoolPointerIfKnown(s.AllowSyncDocuments),
+		CursorAware:           utils.BoolPointerIfKnown(s.CursorAware),
 	}
 }
 
@@ -653,9 +654,9 @@ func bindingsToAPI(b *providerschema.EventingFunctionBindingsResource) *eventing
 		bindings.Buckets = append(bindings.Buckets, eventingapi.BucketBinding{
 			Alias:      bucket.Alias.ValueString(),
 			Bucket:     bucket.Bucket.ValueString(),
-			Scope:      bucket.Scope.ValueStringPointer(),
-			Collection: bucket.Collection.ValueStringPointer(),
-			Permission: bucket.Permission.ValueStringPointer(),
+			Scope:      utils.StringPointerIfKnown(bucket.Scope),
+			Collection: utils.StringPointerIfKnown(bucket.Collection),
+			Permission: utils.StringPointerIfKnown(bucket.Permission),
 		})
 	}
 
@@ -663,8 +664,8 @@ func bindingsToAPI(b *providerschema.EventingFunctionBindingsResource) *eventing
 		urlBinding := eventingapi.UrlBinding{
 			Alias:                  u.Alias.ValueString(),
 			Url:                    u.Url.ValueString(),
-			AllowCookies:           u.AllowCookies.ValueBoolPointer(),
-			ValidateTLSCertificate: u.ValidateTLSCertificate.ValueBoolPointer(),
+			AllowCookies:           utils.BoolPointerIfKnown(u.AllowCookies),
+			ValidateTLSCertificate: utils.BoolPointerIfKnown(u.ValidateTLSCertificate),
 		}
 		if u.Authentication != nil {
 			urlBinding.Authentication = &eventingapi.URLBindingAuthentication{
