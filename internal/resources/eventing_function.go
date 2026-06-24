@@ -268,6 +268,35 @@ func eventingURLAuthChanged(plan, state *providerschema.EventingFunctionURLBindi
 		eventingValueChanged(plan.Username, state.Username)
 }
 
+// eventingFunctionChanged reports whether the plan changes any part of the function definition — its
+// name, description, code, event source/metadata keyspaces, settings or bindings — relative to the
+// prior state.
+func eventingFunctionChanged(
+	plan, state *providerschema.EventingFunctionResource,
+	plannedSettings, stateSettings *providerschema.EventingFunctionSettings,
+) bool {
+	return eventingValueChanged(plan.Name, state.Name) ||
+		eventingValueChanged(plan.Description, state.Description) ||
+		eventingValueChanged(plan.Code, state.Code) ||
+		eventingKeyspaceChanged(plan.EventSource, state.EventSource) ||
+		eventingKeyspaceChanged(plan.EventMetadataStorage, state.EventMetadataStorage) ||
+		eventingSettingsChanged(plannedSettings, stateSettings) ||
+		eventingBindingsChanged(plan.Bindings, state.Bindings)
+}
+
+// eventingKeyspaceChanged reports whether the plan changes the keyspace relative to the prior state. A
+// nil plan keyspace means it was omitted and is not a user change; a nil prior state with a non-nil
+// plan is a change.
+func eventingKeyspaceChanged(plan, state *providerschema.EventingFunctionKeyspace) bool {
+	if plan == nil || state == nil {
+		return false
+	}
+
+	return eventingValueChanged(plan.Bucket, state.Bucket) ||
+		eventingValueChanged(plan.Scope, state.Scope) ||
+		eventingValueChanged(plan.Collection, state.Collection)
+}
+
 // Read reads the eventing function information.
 func (e *EventingFunction) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state providerschema.EventingFunctionResource
@@ -346,14 +375,13 @@ func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateReques
 		name           = IDs[providerschema.FunctionName]
 	)
 
-	// Code, settings and bindings can only be changed while the function is undeployed or paused. Reject the
+	// eventing function can only be changed while the function is undeployed or paused. Reject the
 	// change up front — before applying any activation state change. This prevents "inconsistent result after apply"
 	// errors.
-	if plan.State.ValueString() == eventingStateDeployed &&
-		(plan.Code != state.Code || eventingSettingsChanged(plannedSettings, stateSettings) || eventingBindingsChanged(plan.Bindings, state.Bindings)) {
+	if plan.State.ValueString() == eventingStateDeployed && eventingFunctionChanged(&plan, &state, plannedSettings, stateSettings) {
 		resp.Diagnostics.AddError(
-			"Cannot change eventing function settings or bindings while deployed",
-			"Eventing function "+name+" must be undeployed or paused before its settings or bindings can be changed.",
+			"Cannot change eventing function while deployed",
+			"Eventing function "+name+" must be undeployed or paused it can be changed.",
 		)
 		return
 	}
