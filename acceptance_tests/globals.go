@@ -79,35 +79,39 @@ var (
 	appEndpointLoggingEndpointName    = "tf_acc_test_logging_endpoint"
 	appEndpointLoggingBucketName      = "tf_acc_logging_bkt"
 
-	// Fixture buckets for app_endpoint resource tests. Each test gets its
-	// own bucket because Capella only permits one endpoint per bucket/scope/collection.
-	// These buckets are not created or managed by Terraform; instead, test helpers
-	// manage their lifecycle through the API during test runs, including cleanup
-	// when needed.
-	globalEPBucketName                   = "tf_acc_ep_bkt"
-	globalNoCorsEPBucketName             = "tf_acc_ep_nocors_bkt"
-	globalCorsFullEPBucketName           = "tf_acc_ep_cors_full_bkt"
-	globalCorsSpecificEPBucketName       = "tf_acc_ep_cors_spec_bkt"
-	globalCorsMaxAge0EPBucketName        = "tf_acc_ep_cors_ma0_bkt"
-	globalOIDCFullEPBucketName           = "tf_acc_ep_oidc_full_bkt"
-	globalOIDCDiscEPBucketName           = "tf_acc_ep_oidc_disc_bkt"
-	globalCorsExpandEPBucketName         = "tf_acc_ep_cors_exp_bkt"
-	globalCorsWildEPBucketName           = "tf_acc_ep_cors_wld_bkt"
-	globalAddOIDCEPBucketName            = "tf_acc_ep_add_oidc_bkt"
-	globalACFUpdateEPBucketName          = "tf_acc_ep_acf_bkt"
-	globalCorsMaxAgeZeroEPBucketName     = "tf_acc_ep_maz_bkt"
-	globalCorsMaxAgeFromZeroEPBucketName = "tf_acc_ep_mafz_bkt"
-	// Buckets for "deleted externally" tests — validates the 403 → List fallback
+	// Fixture collections for app_endpoint resource tests. Each test gets its
+	// own collection in the shared appEndpointBucketName bucket (under the
+	// _default scope) rather than a dedicated bucket: Capella permits only one
+	// endpoint per bucket/scope/collection, and a cluster's bucket cap (1 per
+	// 0.2 cores, so 20 here) is far smaller than its collection cap. Sharing the
+	// bucket keeps parallel runs well under the bucket limit that previously
+	// caused flaky "maximum number of buckets reached" failures. These
+	// collections are created via the API by ensureFixtureCollection and torn
+	// down with the shared bucket at the end of the suite.
+	globalEPCollectionName                   = "tf_acc_ep_col"
+	globalNoCorsEPCollectionName             = "tf_acc_ep_nocors_col"
+	globalCorsFullEPCollectionName           = "tf_acc_ep_cors_full_col"
+	globalCorsSpecificEPCollectionName       = "tf_acc_ep_cors_spec_col"
+	globalCorsMaxAge0EPCollectionName        = "tf_acc_ep_cors_ma0_col"
+	globalOIDCFullEPCollectionName           = "tf_acc_ep_oidc_full_col"
+	globalOIDCDiscEPCollectionName           = "tf_acc_ep_oidc_disc_col"
+	globalCorsExpandEPCollectionName         = "tf_acc_ep_cors_exp_col"
+	globalCorsWildEPCollectionName           = "tf_acc_ep_cors_wld_col"
+	globalAddOIDCEPCollectionName            = "tf_acc_ep_add_oidc_col"
+	globalACFUpdateEPCollectionName          = "tf_acc_ep_acf_col"
+	globalCorsMaxAgeZeroEPCollectionName     = "tf_acc_ep_maz_col"
+	globalCorsMaxAgeFromZeroEPCollectionName = "tf_acc_ep_mafz_col"
+	// Collections for "deleted externally" tests — validates the 403 → List fallback
 	// that removes resources from state when the App Endpoint is deleted outside TF.
-	globalDeletedExternallyEPBucketName = "tf_acc_ep_del_ext_bkt"
-	globalACFDeletedExtEPBucketName     = "tf_acc_ep_acf_dex_bkt"
-	// Buckets for currently-skipped tests — not provisioned while skipped, but
-	// named so the tests are ready to run once the underlying bugs are fixed.
-	globalCorsDisabledFalseEPBucketName = "tf_acc_ep_cors_df_bkt"
-	globalMultipleOIDCEPBucketName      = "tf_acc_ep_moidc_bkt"
-	globalRemoveCorsEPBucketName        = "tf_acc_ep_rmcors_bkt"
-	globalCorsDisableToggleEPBucketName = "tf_acc_ep_cdtgl_bkt"
-	globalRemoveOIDCEPBucketName        = "tf_acc_ep_rmoidc_bkt"
+	globalDeletedExternallyEPCollectionName = "tf_acc_ep_del_ext_col"
+	globalACFDeletedExtEPCollectionName     = "tf_acc_ep_acf_dex_col"
+	// Collections for currently-skipped tests — not provisioned while skipped, but
+	// named so the tests are ready to run once the underlying bugs are fixed. 
+	globalCorsDisabledFalseEPCollectionName = "tf_acc_ep_cors_df_col"
+	globalMultipleOIDCEPCollectionName      = "tf_acc_ep_moidc_col"
+	globalRemoveCorsEPCollectionName        = "tf_acc_ep_rmcors_col"
+	globalCorsDisableToggleEPCollectionName = "tf_acc_ep_cdtgl_col"
+	globalRemoveOIDCEPCollectionName        = "tf_acc_ep_rmoidc_col"
 	// TestAccAppEndpointInexistentCollection reuses globalBucketName: it tries
 	// _default/INVALID_COLLECTION which does not conflict with the common
 	// endpoint on _default/_default, so no dedicated bucket is needed.

@@ -16,15 +16,17 @@ import (
 // This tests the 403 → List check → remove-from-state flow implemented in
 // checkAppEndpointDeletedOrForbidden.
 func TestAccAppEndpointDeletedExternally(t *testing.T) {
-	ensureFixtureBucketByName(t, globalDeletedExternallyEPBucketName)
+	ensureFixtureCollection(t, globalDeletedExternallyEPCollectionName)
 
 	resourceName := randomStringWithPrefix("tf_acc_ep_del_ext_")
 	resourceReference := "couchbase-capella_app_endpoint." + resourceName
 	epName := randomStringWithPrefix("tf_acc_ep_del_ext_")
 
-	cfg := testAccAppEndpointDeletedExternallyConfig(resourceName, epName, globalDeletedExternallyEPBucketName)
+	cfg := testAccAppEndpointDeletedExternallyConfig(resourceName, epName, globalDeletedExternallyEPCollectionName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	t.Parallel()
+	defer acquireAppEndpointCRUDSlot()()
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			// Step 1: Create the App Endpoint via Terraform.
@@ -37,7 +39,7 @@ func TestAccAppEndpointDeletedExternally(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "cluster_id", appEndpointClusterId),
 					resource.TestCheckResourceAttr(resourceReference, "app_service_id", appEndpointAppServiceId),
 					resource.TestCheckResourceAttr(resourceReference, "name", epName),
-					resource.TestCheckResourceAttr(resourceReference, "bucket", globalDeletedExternallyEPBucketName),
+					resource.TestCheckResourceAttr(resourceReference, "bucket", appEndpointBucketName),
 				),
 			},
 			// Step 2: Delete the App Endpoint externally, then re-apply the same config.
@@ -62,7 +64,7 @@ func TestAccAppEndpointDeletedExternally(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAppEndpointComputedAttrs(resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "name", epName),
-					resource.TestCheckResourceAttr(resourceReference, "bucket", globalDeletedExternallyEPBucketName),
+					resource.TestCheckResourceAttr(resourceReference, "bucket", appEndpointBucketName),
 				),
 			},
 		},
@@ -73,7 +75,7 @@ func TestAccAppEndpointDeletedExternally(t *testing.T) {
 // an App Endpoint is deleted outside of Terraform, the access_control_function
 // resource attached to it is gracefully removed from state during Read.
 func TestAccAppEndpointAccessControlFunctionDeletedExternally(t *testing.T) {
-	ensureFixtureBucketByName(t, globalACFDeletedExtEPBucketName)
+	ensureFixtureCollection(t, globalACFDeletedExtEPCollectionName)
 
 	epResourceName := randomStringWithPrefix("tf_acc_ep_acf_del_")
 	epReference := "couchbase-capella_app_endpoint." + epResourceName
@@ -85,12 +87,14 @@ func TestAccAppEndpointAccessControlFunctionDeletedExternally(t *testing.T) {
 	acfBody := "function(doc, oldDoc, meta) { channel(doc.channels); }"
 
 	cfgWithACF := testAccAppEndpointWithACFDeletedExternallyConfig(
-		epResourceName, epName, globalACFDeletedExtEPBucketName,
+		epResourceName, epName, globalACFDeletedExtEPCollectionName,
 		acfResourceName, acfBody,
 	)
-	cfgEndpointOnly := testAccAppEndpointDeletedExternallyConfig(epResourceName, epName, globalACFDeletedExtEPBucketName)
+	cfgEndpointOnly := testAccAppEndpointDeletedExternallyConfig(epResourceName, epName, globalACFDeletedExtEPCollectionName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	t.Parallel()
+	defer acquireAppEndpointCRUDSlot()()
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			// Step 1: Create App Endpoint + ACF resource.
@@ -134,7 +138,7 @@ func TestAccAppEndpointAccessControlFunctionDeletedExternally(t *testing.T) {
 // Config helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-func testAccAppEndpointDeletedExternallyConfig(resourceName, endpointName, bucketName string) string {
+func testAccAppEndpointDeletedExternallyConfig(resourceName, endpointName, collectionName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -143,13 +147,13 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	project_id      = "%[4]s"
 	cluster_id      = "%[5]s"
 	app_service_id  = "%[6]s"
-	bucket          = "%[7]s"
+	bucket          = "`+appEndpointBucketName+`"
 	name            = "%[8]s"
 
 	scopes = {
 		"_default" = {
 			collections = {
-				"_default" = {}
+				"%[7]s" = {}
 			}
 		}
 	}
@@ -161,13 +165,13 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 		globalProjectId,
 		appEndpointClusterId,
 		appEndpointAppServiceId,
-		bucketName,
+		collectionName,
 		endpointName,
 	)
 }
 
 func testAccAppEndpointWithACFDeletedExternallyConfig(
-	epResourceName, endpointName, bucketName string,
+	epResourceName, endpointName, collectionName string,
 	acfResourceName, acfBody string,
 ) string {
 	return fmt.Sprintf(`
@@ -178,13 +182,13 @@ resource "couchbase-capella_app_endpoint" "%[2]s" {
 	project_id      = "%[4]s"
 	cluster_id      = "%[5]s"
 	app_service_id  = "%[6]s"
-	bucket          = "%[7]s"
+	bucket          = "`+appEndpointBucketName+`"
 	name            = "%[8]s"
 
 	scopes = {
 		"_default" = {
 			collections = {
-				"_default" = {}
+				"%[7]s" = {}
 			}
 		}
 	}
@@ -196,6 +200,8 @@ resource "couchbase-capella_app_endpoint_access_control_function" "%[9]s" {
 	cluster_id              = "%[5]s"
 	app_service_id          = "%[6]s"
 	app_endpoint_name       = couchbase-capella_app_endpoint.%[2]s.name
+	scope                   = "_default"
+	collection              = "%[7]s"
 	access_control_function = "%[10]s"
 }
 `,
@@ -205,7 +211,7 @@ resource "couchbase-capella_app_endpoint_access_control_function" "%[9]s" {
 		globalProjectId,
 		appEndpointClusterId,
 		appEndpointAppServiceId,
-		bucketName,
+		collectionName,
 		endpointName,
 		acfResourceName,
 		acfBody,

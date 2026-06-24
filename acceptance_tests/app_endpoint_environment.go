@@ -24,6 +24,28 @@ var appEndpointEnvironmentOnce struct {
 	err error
 }
 
+// appEndpointCRUDConcurrency bounds how many app_endpoint resource tests run
+// endpoint create/update/delete at once. Every app-endpoint test shares a
+// single app service, and each endpoint mutation forces a Sync Gateway
+// reconfiguration; running too many concurrently triggers transient HTTP 500s
+// ("internal server error", code 10000) on update/list. Bounding concurrency
+// keeps the suite mostly parallel while avoiding that contention. Tune if the
+// 500s persist (lower) or the suite is too slow (raise).
+const appEndpointCRUDConcurrency = 3
+
+var appEndpointCRUDSem = make(chan struct{}, appEndpointCRUDConcurrency)
+
+// acquireAppEndpointCRUDSlot blocks until an endpoint-CRUD slot is free and
+// returns a release function. Call it after t.Parallel() and after fixture
+// provisioning, deferring the returned release for the test body:
+//
+//	t.Parallel()
+//	defer acquireAppEndpointCRUDSlot()()
+func acquireAppEndpointCRUDSlot() func() {
+	appEndpointCRUDSem <- struct{}{}
+	return func() { <-appEndpointCRUDSem }
+}
+
 func ensureAppEndpointTestEnvironment(t *testing.T) {
 	t.Helper()
 
