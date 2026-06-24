@@ -158,6 +158,12 @@ func setEventingFunctionComputedAttributesToNull(ctx context.Context, plan *prov
 		for i := range plan.Bindings.Urls {
 			plan.Bindings.Urls[i].AllowCookies = types.BoolNull()
 			plan.Bindings.Urls[i].ValidateTLSCertificate = types.BoolNull()
+
+			plan.Bindings.Urls[i].Authentication = types.ObjectNull(
+				providerschema.
+					EventingFunctionURLBindingAuthentication{}.
+					AttributeTypes(),
+			)
 		}
 	}
 }
@@ -185,11 +191,8 @@ func eventingValueChanged(plan, state attr.Value) bool {
 // eventingSettingsChanged reports whether the plan changes any settings value relative to the prior
 // state. A nil plan means the settings block was omitted and is not a user change.
 func eventingSettingsChanged(plan, state *providerschema.EventingFunctionSettings) bool {
-	if plan == nil {
+	if plan == nil || state == nil {
 		return false
-	}
-	if state == nil {
-		state = &providerschema.EventingFunctionSettings{}
 	}
 
 	return eventingValueChanged(plan.WorkerCount, state.WorkerCount) ||
@@ -207,11 +210,8 @@ func eventingSettingsChanged(plan, state *providerschema.EventingFunctionSetting
 // authentication secrets (password, bearer token) are not compared: the API masks them as "*****" so
 // they do not round-trip faithfully and would otherwise produce false positives.
 func eventingBindingsChanged(plan, state *providerschema.EventingFunctionBindingsResource) bool {
-	if plan == nil {
+	if plan == nil || state == nil {
 		return false
-	}
-	if state == nil {
-		return true
 	}
 
 	if len(plan.Buckets) != len(state.Buckets) ||
@@ -239,7 +239,10 @@ func eventingBindingsChanged(plan, state *providerschema.EventingFunctionBinding
 			eventingValueChanged(p.ValidateTLSCertificate, s.ValidateTLSCertificate) {
 			return true
 		}
-		if eventingURLAuthChanged(p.Authentication, s.Authentication) {
+		if eventingURLAuthChanged(
+			providerschema.AuthenticationFromObject(p.Authentication),
+			providerschema.AuthenticationFromObject(s.Authentication),
+		) {
 			return true
 		}
 	}
@@ -258,11 +261,8 @@ func eventingBindingsChanged(plan, state *providerschema.EventingFunctionBinding
 // eventingURLAuthChanged reports whether the plan changes the non-sensitive URL authentication fields.
 // The sensitive password and bearer token are deliberately excluded.
 func eventingURLAuthChanged(plan, state *providerschema.EventingFunctionURLBindingAuthentication) bool {
-	if plan == nil {
+	if plan == nil || state == nil {
 		return false
-	}
-	if state == nil {
-		return true
 	}
 	return eventingValueChanged(plan.Type, state.Type) ||
 		eventingValueChanged(plan.Username, state.Username)
@@ -667,19 +667,15 @@ func bindingsToAPI(b *providerschema.EventingFunctionBindingsResource) *eventing
 			AllowCookies:           utils.BoolPointerIfKnown(u.AllowCookies),
 			ValidateTLSCertificate: utils.BoolPointerIfKnown(u.ValidateTLSCertificate),
 		}
-		if u.Authentication != nil {
+		if auth := providerschema.AuthenticationFromObject(u.Authentication); auth != nil {
 			urlBinding.Authentication = &eventingapi.URLBindingAuthentication{
-				Type:     u.Authentication.Type.ValueString(),
-				Username: u.Authentication.Username.ValueStringPointer(),
-			}
-
-			if !u.Authentication.Password.IsNull() {
-				urlBinding.Authentication.Password = u.Authentication.Password.ValueStringPointer()
-			}
-			if !u.Authentication.BearerToken.IsNull() {
-				urlBinding.Authentication.BearerToken = u.Authentication.BearerToken.ValueStringPointer()
+				Type:        auth.Type.ValueString(),
+				Username:    auth.Username.ValueStringPointer(),
+				Password:    utils.StringPointerIfKnown(auth.Password),
+				BearerToken: utils.StringPointerIfKnown(auth.BearerToken),
 			}
 		}
+
 		bindings.Urls = append(bindings.Urls, urlBinding)
 	}
 
