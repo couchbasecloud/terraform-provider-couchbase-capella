@@ -26,7 +26,7 @@ func TestAccAuditLogSettingsResource(t *testing.T) {
 	clusterReference := "couchbase-capella_cluster." + clusterResourceName
 	resourceReference := "couchbase-capella_audit_log_settings." + resourceName
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
