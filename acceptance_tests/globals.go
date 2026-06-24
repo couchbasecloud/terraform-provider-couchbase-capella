@@ -106,7 +106,7 @@ var (
 	globalDeletedExternallyEPCollectionName = "tf_acc_ep_del_ext_col"
 	globalACFDeletedExtEPCollectionName     = "tf_acc_ep_acf_dex_col"
 	// Collections for currently-skipped tests — not provisioned while skipped, but
-	// named so the tests are ready to run once the underlying bugs are fixed.
+	// named so the tests are ready to run once the underlying bugs are fixed. 
 	globalCorsDisabledFalseEPCollectionName = "tf_acc_ep_cors_df_col"
 	globalMultipleOIDCEPCollectionName      = "tf_acc_ep_moidc_col"
 	globalRemoveCorsEPCollectionName        = "tf_acc_ep_rmcors_col"
