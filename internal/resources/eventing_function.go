@@ -381,12 +381,6 @@ func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	// if code, settings or bindings have not changed, skip update step.
-	if !eventingSettingsChanged(plannedSettings, stateSettings) && !eventingBindingsChanged(plan.Bindings, state.Bindings) &&
-		plan.Code == state.Code {
-		return
-	}
-
 	updateReq := eventingapi.UpdateEventingFunctionRequest{
 		Description:          plan.Description.ValueStringPointer(),
 		Code:                 plan.Code.ValueStringPointer(),
