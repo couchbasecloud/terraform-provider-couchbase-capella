@@ -316,7 +316,7 @@ func NewEventingFunctionResource(
 	resp *eventingapi.GetEventingFunctionResponse,
 	organizationId, projectId, clusterId string,
 	prior *EventingFunctionResource,
-) *EventingFunctionResource {
+) (*EventingFunctionResource, error) {
 	// The API returns "" for an unset description; preserve the practitioner's planned value
 	// (null or "") so the resulting state matches the plan and Terraform does not report an
 	// inconsistent result after apply. prior is nil from waitForStatus, where the result is
@@ -324,6 +324,16 @@ func NewEventingFunctionResource(
 	description := types.StringPointerValue(resp.Description)
 	if prior != nil && description.ValueString() == "" {
 		description = prior.Description
+	}
+
+	bindings, err := bindingsToSchema(resp.Bindings)
+	if err != nil {
+		return nil, err
+	}
+
+	settings, err := settingsToSchema(resp.Settings)
+	if err != nil {
+		return nil, err
 	}
 
 	fn := &EventingFunctionResource{
@@ -335,8 +345,8 @@ func NewEventingFunctionResource(
 		Code:                 types.StringValue(resp.Code),
 		EventSource:          keyspaceToSchema(resp.EventSource),
 		EventMetadataStorage: keyspaceToSchema(resp.EventMetadataStorage),
-		Settings:             settingsToSchema(resp.Settings),
-		Bindings:             bindingsToSchema(resp.Bindings),
+		Settings:             settings,
+		Bindings:             bindings,
 		State:                types.StringValue(resp.Status),
 	}
 
@@ -344,7 +354,7 @@ func NewEventingFunctionResource(
 		carryForwardURLSecrets(fn.Bindings, prior.Bindings)
 	}
 
-	return fn
+	return fn, nil
 }
 
 func keyspaceToSchema(k eventingapi.Keyspace) *EventingFunctionKeyspace {
@@ -355,8 +365,8 @@ func keyspaceToSchema(k eventingapi.Keyspace) *EventingFunctionKeyspace {
 	}
 }
 
-func settingsToSchema(s eventingapi.Settings) types.Object {
-	return types.ObjectValueMust(EventingFunctionSettings{}.AttributeTypes(), map[string]attr.Value{
+func settingsToSchema(s eventingapi.Settings) (types.Object, error) {
+	obj, d := types.ObjectValue(EventingFunctionSettings{}.AttributeTypes(), map[string]attr.Value{
 		"worker_count":           types.Int64PointerValue(s.WorkerCount),
 		"script_timeout":         types.Int64PointerValue(s.ScriptTimeout),
 		"sql_consistency":        types.StringPointerValue(s.SqlConsistency),
@@ -366,12 +376,16 @@ func settingsToSchema(s eventingapi.Settings) types.Object {
 		"allow_sync_documents":   types.BoolPointerValue(s.AllowSyncDocuments),
 		"cursor_aware":           types.BoolPointerValue(s.CursorAware),
 	})
+	if d.HasError() {
+		return types.Object{}, fmt.Errorf("failed to convert eventing function settings: %v", d.Errors())
+	}
+	return obj, nil
 }
 
 // bindingsToSchema returns nil when no bindings are present so the optional attribute stays null.
-func bindingsToSchema(b eventingapi.Bindings) *EventingFunctionBindingsResource {
+func bindingsToSchema(b eventingapi.Bindings) (*EventingFunctionBindingsResource, error) {
 	if len(b.Buckets) == 0 && len(b.Urls) == 0 && len(b.Constants) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	bindings := &EventingFunctionBindingsResource{}
@@ -404,7 +418,7 @@ func bindingsToSchema(b eventingapi.Bindings) *EventingFunctionBindingsResource 
 				"bearer_token": types.StringNull(),
 			})
 			if d.HasError() {
-				auth = types.ObjectNull(authTypes)
+				return nil, fmt.Errorf("failed to convert URL binding authentication: %v", d.Errors())
 			}
 			urlBinding.Authentication = auth
 		}
@@ -418,7 +432,7 @@ func bindingsToSchema(b eventingapi.Bindings) *EventingFunctionBindingsResource 
 		})
 	}
 
-	return bindings
+	return bindings, nil
 }
 
 // carryForwardURLSecrets copies sensitive URL binding authentication values (password,

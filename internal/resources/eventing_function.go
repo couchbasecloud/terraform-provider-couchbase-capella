@@ -115,7 +115,10 @@ func (e *EventingFunction) Create(ctx context.Context, req resource.CreateReques
 			"Eventing function was created but could not be read back: "+api.ParseError(err),
 		)
 
-		setEventingFunctionComputedAttributesToNull(ctx, &plan)
+		resp.Diagnostics.Append(setEventingFunctionComputedAttributesToNull(ctx, &plan)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
 		refreshedState = &plan
 	}
@@ -127,7 +130,9 @@ func (e *EventingFunction) Create(ctx context.Context, req resource.CreateReques
 // setEventingFunctionComputedAttributesToNull sets the computed attributes on the plan to null. It is
 // used when setting state after create if the post-create read fails, so the resulting state holds no
 // unknown values.
-func setEventingFunctionComputedAttributesToNull(ctx context.Context, plan *providerschema.EventingFunctionResource) {
+func setEventingFunctionComputedAttributesToNull(ctx context.Context, plan *providerschema.EventingFunctionResource) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	nullKeyspaceComputedAttributes(plan.EventSource)
 	nullKeyspaceComputedAttributes(plan.EventMetadataStorage)
 
@@ -136,8 +141,9 @@ func setEventingFunctionComputedAttributesToNull(ctx context.Context, plan *prov
 		plan.Settings = types.ObjectNull(attrTypes)
 	} else {
 		var s providerschema.EventingFunctionSettings
-		plan.Settings.As(ctx, &s, basetypes.ObjectAsOptions{UnhandledUnknownAsEmpty: true})
-		plan.Settings = types.ObjectValueMust(attrTypes, map[string]attr.Value{
+		diags.Append(plan.Settings.As(ctx, &s, basetypes.ObjectAsOptions{UnhandledUnknownAsEmpty: true})...)
+
+		settings, d := types.ObjectValue(attrTypes, map[string]attr.Value{
 			"worker_count":           s.WorkerCount,
 			"script_timeout":         s.ScriptTimeout,
 			"sql_consistency":        s.SqlConsistency,
@@ -147,6 +153,11 @@ func setEventingFunctionComputedAttributesToNull(ctx context.Context, plan *prov
 			"allow_sync_documents":   s.AllowSyncDocuments,
 			"cursor_aware":           s.CursorAware,
 		})
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+		plan.Settings = settings
 	}
 
 	if plan.Bindings != nil {
@@ -166,6 +177,8 @@ func setEventingFunctionComputedAttributesToNull(ctx context.Context, plan *prov
 			)
 		}
 	}
+
+	return diags
 }
 
 // nullKeyspaceComputedAttributes sets the computed scope and collection of a keyspace to null. It is a
@@ -512,7 +525,12 @@ func (e *EventingFunction) retrieveEventingFunction(
 		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshallingResponse, err)
 	}
 
-	return providerschema.NewEventingFunctionResource(&eventingResp, organizationId, projectId, clusterId, prior), nil
+	fn, err := providerschema.NewEventingFunctionResource(&eventingResp, organizationId, projectId, clusterId, prior)
+	if err != nil {
+		return nil, err
+	}
+
+	return fn, nil
 }
 
 // activationVerb returns the activationState API action verb for the desired state. The API only
