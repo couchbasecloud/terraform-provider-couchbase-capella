@@ -135,6 +135,7 @@ func bindingsAttributes() map[string]schema.Attribute {
 	capellaschema.AddAttr(urlAttrs, "validate_tls_certificate", eventingFunctionBuilder, boolAttribute(optional, computed), "EventingFunctionUrlBinding")
 	capellaschema.AddAttr(urlAttrs, "authentication", eventingFunctionBuilder, &schema.SingleNestedAttribute{
 		Optional:   true,
+		Computed:   true,
 		Attributes: authAttrs,
 	})
 
