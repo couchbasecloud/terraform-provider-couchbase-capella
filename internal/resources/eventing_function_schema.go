@@ -18,6 +18,15 @@ const (
 	eventingStateResumed    = "resumed"
 )
 
+// URL binding authentication types accepted by the eventing API. Each type selects which credential
+// fields of a URL binding authentication block must be set and which must be absent.
+const (
+	eventingURLAuthNone   = "none"
+	eventingURLAuthBasic  = "basic"
+	eventingURLAuthBearer = "bearer"
+	eventingURLAuthDigest = "digest"
+)
+
 var eventingFunctionBuilder = capellaschema.NewSchemaBuilder("eventingFunction")
 
 // EventingFunctionSchema defines the schema for the eventing function resource.
@@ -123,7 +132,16 @@ func bindingsAttributes() map[string]schema.Attribute {
 
 	authAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(authAttrs, "type", eventingFunctionBuilder, stringAttribute(
-		[]string{required}, validator.String(stringvalidator.OneOf("none", "basic", "bearer", "digest"))))
+		[]string{required},
+		validator.String(
+			stringvalidator.OneOf(
+				eventingURLAuthNone,
+				eventingURLAuthBasic,
+				eventingURLAuthBearer,
+				eventingURLAuthDigest,
+			),
+		),
+	))
 	capellaschema.AddAttr(authAttrs, "username", eventingFunctionBuilder, stringAttribute([]string{optional}))
 	capellaschema.AddAttr(authAttrs, "password", eventingFunctionBuilder, stringAttribute([]string{optional, sensitive}))
 	capellaschema.AddAttr(authAttrs, "bearer_token", eventingFunctionBuilder, stringAttribute([]string{optional, sensitive}))

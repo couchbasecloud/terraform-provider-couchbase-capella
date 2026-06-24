@@ -24,9 +24,10 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource                = (*EventingFunction)(nil)
-	_ resource.ResourceWithConfigure   = (*EventingFunction)(nil)
-	_ resource.ResourceWithImportState = (*EventingFunction)(nil)
+	_ resource.Resource                   = (*EventingFunction)(nil)
+	_ resource.ResourceWithConfigure      = (*EventingFunction)(nil)
+	_ resource.ResourceWithImportState    = (*EventingFunction)(nil)
+	_ resource.ResourceWithValidateConfig = (*EventingFunction)(nil)
 )
 
 // EventingFunction is the eventing function resource implementation.
@@ -47,6 +48,89 @@ func (e *EventingFunction) Metadata(_ context.Context, req resource.MetadataRequ
 // Schema defines the schema for the eventing function resource.
 func (e *EventingFunction) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = EventingFunctionSchema()
+}
+
+// ValidateConfig is used to reject URL binding authentication blocks whose credential fields do not match the
+// chosen type. For example, a "basic" type must set username and password but not a bearer token, etc.
+func (e *EventingFunction) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var config providerschema.EventingFunctionResource
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() || config.Bindings == nil {
+		return
+	}
+
+	for i := range config.Bindings.Urls {
+		auth := config.Bindings.Urls[i].Authentication
+		if auth == nil || auth.Type.IsNull() || auth.Type.IsUnknown() {
+			continue
+		}
+
+		authPath := path.Root("bindings").AtName("urls").AtListIndex(i).AtName("authentication")
+		validateURLBindingAuth(*auth, authPath, resp)
+	}
+}
+
+// validateURLBindingAuth checks a single URL binding authentication block against the credential
+// requirements of its type and records an attribute error for any mismatch.
+func validateURLBindingAuth(auth providerschema.EventingFunctionURLBindingAuthentication, authPath path.Path, resp *resource.ValidateConfigResponse) {
+	const summary = "Invalid URL Binding Authentication"
+
+	authType := auth.Type.ValueString()
+	switch authType {
+	case eventingURLAuthNone:
+		if credentialSet(auth.Username) || credentialSet(auth.Password) || credentialSet(auth.BearerToken) {
+			resp.Diagnostics.AddAttributeError(
+				authPath,
+				summary,
+				fmt.Sprintf("Authentication type %q must not set username, password or bearer_token.", authType),
+			)
+		}
+	case eventingURLAuthBasic, eventingURLAuthDigest:
+		if !credentialSet(auth.Username) || !credentialSet(auth.Password) {
+			resp.Diagnostics.AddAttributeError(
+				authPath,
+				summary,
+				fmt.Sprintf("Authentication type %q requires username and password.", authType),
+			)
+		}
+		if credentialSet(auth.BearerToken) {
+			resp.Diagnostics.AddAttributeError(
+				authPath.AtName("bearer_token"),
+				summary,
+				fmt.Sprintf("Authentication type %q must not set bearer_token.", authType),
+			)
+		}
+	case eventingURLAuthBearer:
+		if !credentialSet(auth.BearerToken) {
+			resp.Diagnostics.AddAttributeError(
+				authPath.AtName("bearer_token"),
+				summary,
+				fmt.Sprintf("Authentication type %q requires bearer_token.", authType),
+			)
+		}
+		if credentialSet(auth.Username) || credentialSet(auth.Password) {
+			resp.Diagnostics.AddAttributeError(
+				authPath,
+				summary,
+				fmt.Sprintf("Authentication type %q must not set username or password.", authType),
+			)
+		}
+	}
+}
+
+// credentialSet reports whether a URL binding authentication credential is configured
+func credentialSet(v types.String) bool {
+	// Null counts as unset
+	if v.IsNull() {
+		return false
+	}
+
+	// Unknown counts as set because it resolves to a concrete value at apply time
+	if v.IsUnknown() {
+		return true
+	}
+
+	return v.ValueString() != ""
 }
 
 // Create creates a new eventing function. The function is created in the undeployed state; if the
