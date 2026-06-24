@@ -135,9 +135,9 @@ type EventingFunctionBindings struct {
 
 // EventingFunctionBindingsResource groups the bucket, URL and constant bindings.
 type EventingFunctionBindingsResource struct {
-	Buckets   []EventingFunctionBucketBinding      `tfsdk:"buckets"`
-	Urls      []EventingFunctionUrlBindingResource `tfsdk:"urls"`
-	Constants []EventingFunctionConstantBinding    `tfsdk:"constants"`
+	Buckets   []EventingFunctionBucketBinding   `tfsdk:"buckets"`
+	Urls      []EventingFunctionUrlBinding      `tfsdk:"urls"`
+	Constants []EventingFunctionConstantBinding `tfsdk:"constants"`
 }
 
 func (b EventingFunctionBindings) AttributeTypes() map[string]attr.Type {
@@ -165,15 +165,6 @@ func (b EventingFunctionBucketBinding) AttributeTypes() map[string]attr.Type {
 		"collection": types.StringType,
 		"permission": types.StringType,
 	}
-}
-
-// EventingFunctionUrlBindingResource lets the function access an external resource.
-type EventingFunctionUrlBindingResource struct {
-	Alias                  types.String                              `tfsdk:"alias"`
-	Url                    types.String                              `tfsdk:"url"`
-	AllowCookies           types.Bool                                `tfsdk:"allow_cookies"`
-	ValidateTLSCertificate types.Bool                                `tfsdk:"validate_tls_certificate"`
-	Authentication         *EventingFunctionURLBindingAuthentication `tfsdk:"authentication"`
 }
 
 // EventingFunctionUrlBinding binds an external URL to an alias used in the function code.
@@ -212,6 +203,19 @@ func (a EventingFunctionURLBindingAuthentication) AttributeTypes() map[string]at
 		"password":     types.StringType,
 		"bearer_token": types.StringType,
 	}
+}
+
+// AuthenticationFromObject decodes a URL binding authentication object into its struct form,
+// returning nil for a null or unknown object.
+func AuthenticationFromObject(obj types.Object) *EventingFunctionURLBindingAuthentication {
+	if obj.IsNull() || obj.IsUnknown() {
+		return nil
+	}
+	var auth EventingFunctionURLBindingAuthentication
+	if diags := obj.As(context.Background(), &auth, basetypes.ObjectAsOptions{}); diags.HasError() {
+		return nil
+	}
+	return &auth
 }
 
 // EventingFunctionConstantBinding binds a constant value to an alias used in the function code.
@@ -383,17 +387,26 @@ func bindingsToSchema(b eventingapi.Bindings) *EventingFunctionBindingsResource 
 	}
 
 	for _, u := range b.Urls {
-		urlBinding := EventingFunctionUrlBindingResource{
+		urlBinding := EventingFunctionUrlBinding{
 			Alias:                  types.StringValue(u.Alias),
 			Url:                    types.StringValue(u.Url),
 			AllowCookies:           types.BoolPointerValue(u.AllowCookies),
 			ValidateTLSCertificate: types.BoolPointerValue(u.ValidateTLSCertificate),
+			Authentication:         types.ObjectNull(EventingFunctionURLBindingAuthentication{}.AttributeTypes()),
 		}
+
 		if u.Authentication != nil {
-			urlBinding.Authentication = &EventingFunctionURLBindingAuthentication{
-				Type:     types.StringValue(u.Authentication.Type),
-				Username: types.StringPointerValue(u.Authentication.Username),
+			authTypes := EventingFunctionURLBindingAuthentication{}.AttributeTypes()
+			auth, d := types.ObjectValue(authTypes, map[string]attr.Value{
+				"type":         types.StringValue(u.Authentication.Type),
+				"username":     types.StringPointerValue(u.Authentication.Username),
+				"password":     types.StringNull(),
+				"bearer_token": types.StringNull(),
+			})
+			if d.HasError() {
+				auth = types.ObjectNull(authTypes)
 			}
+			urlBinding.Authentication = auth
 		}
 		bindings.Urls = append(bindings.Urls, urlBinding)
 	}
@@ -423,21 +436,30 @@ func carryForwardURLSecrets(refreshed, prior *EventingFunctionBindingsResource) 
 
 	priorByAlias := make(map[string]*EventingFunctionURLBindingAuthentication, len(prior.Urls))
 	for i := range prior.Urls {
-		if prior.Urls[i].Authentication != nil {
-			priorByAlias[prior.Urls[i].Alias.ValueString()] = prior.Urls[i].Authentication
+		if auth := AuthenticationFromObject(prior.Urls[i].Authentication); auth != nil {
+			priorByAlias[prior.Urls[i].Alias.ValueString()] = auth
 		}
 	}
 
 	for i := range refreshed.Urls {
-		auth := refreshed.Urls[i].Authentication
+		auth := AuthenticationFromObject(refreshed.Urls[i].Authentication)
 		if auth == nil {
 			continue
 		}
+
 		priorAuth, ok := priorByAlias[refreshed.Urls[i].Alias.ValueString()]
-		if ok {
-			auth.Password = priorAuth.Password
-			auth.BearerToken = priorAuth.BearerToken
+		if !ok {
+			continue
 		}
+
+		auth.Password = priorAuth.Password
+		auth.BearerToken = priorAuth.BearerToken
+
+		obj, d := types.ObjectValueFrom(context.Background(), EventingFunctionURLBindingAuthentication{}.AttributeTypes(), auth)
+		if d.HasError() {
+			continue
+		}
+		refreshed.Urls[i].Authentication = obj
 	}
 }
 
