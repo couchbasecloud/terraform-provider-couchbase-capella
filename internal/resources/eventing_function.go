@@ -172,9 +172,7 @@ func nullKeyspaceComputedAttributes(k *providerschema.EventingFunctionKeyspace) 
 	k.Collection = types.StringNull()
 }
 
-// eventingValueChanged reports whether a planned leaf represents a user-driven change: it holds a
-// concrete value (not null, not unknown) that differs from the prior state value. Null and unknown
-// planned values are ignored so computed attributes the user omitted never count as a change.
+// eventingValueChanged determines if scalar values are equal.
 func eventingValueChanged(plan, state attr.Value) bool {
 	if plan.IsNull() || plan.IsUnknown() {
 		return false
@@ -182,14 +180,10 @@ func eventingValueChanged(plan, state attr.Value) bool {
 	return !plan.Equal(state)
 }
 
-// eventingSettingsChanged reports whether the plan changes any settings value relative to the prior
-// state. A nil plan means the settings block was omitted and is not a user change.
+// eventingSettingsChanged determines if any of the eventing function settings have changed.
 func eventingSettingsChanged(plan, state *providerschema.EventingFunctionSettings) bool {
-	if plan == nil {
+	if plan == nil || state == nil {
 		return false
-	}
-	if state == nil {
-		state = &providerschema.EventingFunctionSettings{}
 	}
 
 	return eventingValueChanged(plan.WorkerCount, state.WorkerCount) ||
@@ -202,16 +196,11 @@ func eventingSettingsChanged(plan, state *providerschema.EventingFunctionSetting
 		eventingValueChanged(plan.CursorAware, state.CursorAware)
 }
 
-// eventingBindingsChanged reports whether the plan changes any binding relative to the prior state. A
-// change in the number of bucket, URL or constant bindings counts as a change. The sensitive URL
-// authentication secrets (password, bearer token) are not compared: the API masks them as "*****" so
-// they do not round-trip faithfully and would otherwise produce false positives.
+// eventingBindingsChanged determines if any of the url bindings have changed,
+// except for secrets (password or bearer token).
 func eventingBindingsChanged(plan, state *providerschema.EventingFunctionBindingsResource) bool {
-	if plan == nil {
+	if plan == nil || state == nil {
 		return false
-	}
-	if state == nil {
-		return true
 	}
 
 	if len(plan.Buckets) != len(state.Buckets) ||
@@ -255,28 +244,23 @@ func eventingBindingsChanged(plan, state *providerschema.EventingFunctionBinding
 	return false
 }
 
-// eventingURLAuthChanged reports whether the plan changes the non-sensitive URL authentication fields.
-// The sensitive password and bearer token are deliberately excluded.
+// eventingURLAuthChanged determines if authentication type or username changed.
 func eventingURLAuthChanged(plan, state *providerschema.EventingFunctionURLBindingAuthentication) bool {
-	if plan == nil {
+	if plan == nil || state == nil {
 		return false
 	}
-	if state == nil {
-		return true
-	}
+
 	return eventingValueChanged(plan.Type, state.Type) ||
 		eventingValueChanged(plan.Username, state.Username)
 }
 
-// eventingFunctionChanged reports whether the plan changes any part of the function definition — its
-// name, description, code, event source/metadata keyspaces, settings or bindings — relative to the
-// prior state.
+// eventingFunctionChanged determines if any aspect of the eventing function has changed
+// ie name, description, application code, source/metadata keyspace, settings or bindings.
 func eventingFunctionChanged(
 	plan, state *providerschema.EventingFunctionResource,
 	plannedSettings, stateSettings *providerschema.EventingFunctionSettings,
 ) bool {
-	return eventingValueChanged(plan.Name, state.Name) ||
-		eventingValueChanged(plan.Description, state.Description) ||
+	return eventingValueChanged(plan.Description, state.Description) ||
 		eventingValueChanged(plan.Code, state.Code) ||
 		eventingKeyspaceChanged(plan.EventSource, state.EventSource) ||
 		eventingKeyspaceChanged(plan.EventMetadataStorage, state.EventMetadataStorage) ||
@@ -284,9 +268,7 @@ func eventingFunctionChanged(
 		eventingBindingsChanged(plan.Bindings, state.Bindings)
 }
 
-// eventingKeyspaceChanged reports whether the plan changes the keyspace relative to the prior state. A
-// nil plan keyspace means it was omitted and is not a user change; a nil prior state with a non-nil
-// plan is a change.
+// eventingKeyspaceChanged determines whether the plan changes the keyspace relative to the prior state.
 func eventingKeyspaceChanged(plan, state *providerschema.EventingFunctionKeyspace) bool {
 	if plan == nil || state == nil {
 		return false
@@ -343,6 +325,9 @@ func (e *EventingFunction) Read(ctx context.Context, req resource.ReadRequest, r
 
 // Update updates the eventing function. If the desired deployment state changed it is applied first
 // via the activationState endpoint, then the function definition is updated.
+//
+// The eventing function must be undeployed/paused before any changes can be made.
+// Users can change state to undeployed/paused and make changes at the same time.
 func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan, state providerschema.EventingFunctionResource
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -375,13 +360,14 @@ func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateReques
 		name           = IDs[providerschema.FunctionName]
 	)
 
-	// eventing function can only be changed while the function is undeployed or paused. Reject the
-	// change up front — before applying any activation state change. This prevents "inconsistent result after apply"
-	// errors.
-	if plan.State.ValueString() == eventingStateDeployed && eventingFunctionChanged(&plan, &state, plannedSettings, stateSettings) {
+	// eventing function can only be changed while the function is undeployed or paused.
+	// in other states block any changes up front to prevent "inconsistent result after apply" errors.
+	if (plan.State.ValueString() != eventingStateUndeployed && plan.State.ValueString() != eventingStatePaused) &&
+		eventingFunctionChanged(&plan, &state, plannedSettings, stateSettings) {
 		resp.Diagnostics.AddError(
 			"Cannot change eventing function while deployed",
-			"Eventing function "+name+" must be undeployed or paused it can be changed.",
+			"Eventing function "+name+" must be in an undeployed or paused state in order to be changed."+
+				"You can change the state to undeployed/paused and the eventing function at the same time.",
 		)
 		return
 	}
