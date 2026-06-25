@@ -3,6 +3,8 @@ package resources
 import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 
@@ -134,9 +136,10 @@ func bindingsAttributes() map[string]schema.Attribute {
 	capellaschema.AddAttr(urlAttrs, "allow_cookies", eventingFunctionBuilder, boolAttribute(optional, computed), "EventingFunctionUrlBinding")
 	capellaschema.AddAttr(urlAttrs, "validate_tls_certificate", eventingFunctionBuilder, boolAttribute(optional, computed), "EventingFunctionUrlBinding")
 	capellaschema.AddAttr(urlAttrs, "authentication", eventingFunctionBuilder, &schema.SingleNestedAttribute{
-		Optional:   true,
-		Computed:   true,
-		Attributes: authAttrs,
+		Optional:      true,
+		Computed:      true,
+		PlanModifiers: []planmodifier.Object{objectplanmodifier.UseStateForUnknown()},
+		Attributes:    authAttrs,
 	})
 
 	capellaschema.AddAttr(attrs, "urls", eventingFunctionBuilder, &schema.ListNestedAttribute{
