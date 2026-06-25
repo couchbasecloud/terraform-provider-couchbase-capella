@@ -375,10 +375,11 @@ func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateReques
 		name           = IDs[providerschema.FunctionName]
 	)
 
+	eventingFunctionHasChanged := eventingFunctionChanged(&plan, &state, plannedSettings, stateSettings)
+
 	// eventing function can only be changed while the function is undeployed or paused.
 	// in other states block any changes up front to prevent "inconsistent result after apply" errors.
-	if (plan.State.ValueString() != eventingStateUndeployed && plan.State.ValueString() != eventingStatePaused) &&
-		eventingFunctionChanged(&plan, &state, plannedSettings, stateSettings) {
+	if (plan.State.ValueString() != eventingStateUndeployed && plan.State.ValueString() != eventingStatePaused) && eventingFunctionHasChanged {
 		resp.Diagnostics.AddError(
 			"Cannot change eventing function while deployed",
 			"Eventing function "+name+" must be in an undeployed or paused state in order to be changed."+
@@ -406,7 +407,9 @@ func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	// if only eventing function state was changed skip update step.
-	if plan.State.ValueString() == eventingStateDeployed || plan.State.ValueString() == eventingStateResumed {
+	if plan.State.ValueString() == eventingStateDeployed ||
+		plan.State.ValueString() == eventingStateResumed ||
+		!eventingFunctionHasChanged {
 		return
 	}
 
