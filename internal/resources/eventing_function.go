@@ -244,14 +244,29 @@ func eventingBindingsChanged(plan, state *providerschema.EventingFunctionBinding
 	return false
 }
 
-// eventingURLAuthChanged determines if authentication type or username changed.
+// eventingURLAuthChanged determines if authentication type, username or secret changed.
 func eventingURLAuthChanged(plan, state *providerschema.EventingFunctionURLBindingAuthentication) bool {
 	if plan == nil || state == nil {
 		return false
 	}
 
 	return eventingValueChanged(plan.Type, state.Type) ||
-		eventingValueChanged(plan.Username, state.Username)
+		eventingValueChanged(plan.Username, state.Username) ||
+		eventingSecretChanged(plan, state)
+}
+
+// eventingSecretChanged determines if the URL binding secret changed. The secret compared
+// depends on the auth type: basic and digest use the password, bearer uses the token, and
+// none has no secret.
+func eventingSecretChanged(plan, state *providerschema.EventingFunctionURLBindingAuthentication) bool {
+	switch plan.Type.ValueString() {
+	case "basic", "digest":
+		return eventingValueChanged(plan.Password, state.Password)
+	case "bearer":
+		return eventingValueChanged(plan.BearerToken, state.BearerToken)
+	default:
+		return false
+	}
 }
 
 // eventingFunctionChanged determines if any aspect of the eventing function has changed
