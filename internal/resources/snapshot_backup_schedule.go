@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -362,40 +361,7 @@ func (s *SnapshotBackupSchedule) getSnapshotBackupSchedule(ctx context.Context, 
 		return nil, err
 	}
 
-	snapshotBackupSchedule.StartTime, err = s.getStartTime(ctx, startTimeString, &snapshotBackupSchedule)
-	if err != nil {
-		return nil, err
-	}
-
 	return &snapshotBackupSchedule, nil
-}
-
-// getStartTime compares the start time of the current state with the start time of the actual resource, and returns the resource's start time only if it is different.
-// This ensures that the resource storing an equivalent start time does not cause the state to be unnecessarily updated.
-func (s *SnapshotBackupSchedule) getStartTime(ctx context.Context, currentStartTimeString string, snapshotBackupSchedule *snapshot_backup_schedule.SnapshotBackupSchedule) (string, error) {
-	newStartTime, err := time.Parse(time.RFC3339, snapshotBackupSchedule.StartTime)
-	if err != nil {
-		tflog.Debug(ctx, "Error parsing updated start time", map[string]interface{}{
-			"snapshotBackupSchedule.StartTime": snapshotBackupSchedule.StartTime,
-			"err":                              err,
-		})
-		return "", err
-	}
-	if currentStartTimeString == "" {
-		return newStartTime.Format(time.RFC3339), nil
-	}
-	currentStartTime, err := time.Parse(time.RFC3339, currentStartTimeString)
-	if err != nil {
-		tflog.Debug(ctx, "Error parsing current start time", map[string]interface{}{
-			"currentStartTimeString": currentStartTimeString,
-			"err":                    err,
-		})
-		return "", err
-	}
-	if currentStartTime.Equal(newStartTime) {
-		return currentStartTimeString, nil
-	}
-	return newStartTime.Format(time.RFC3339), nil
 }
 
 func (s *SnapshotBackupSchedule) convertCopyToRegions(ctx context.Context, copyToRegionsSet types.Set) ([]string, error) {
