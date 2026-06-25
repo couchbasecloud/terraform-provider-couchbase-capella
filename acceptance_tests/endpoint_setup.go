@@ -16,48 +16,49 @@ import (
 	bucketapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/bucket"
 )
 
-// fixtBucketState holds a once-and-error pair for a single pre-created bucket.
-type fixtBucketState struct {
-	once    sync.Once
-	err     error
-	created bool // true only if this test process created the bucket
+// fixtCollectionState holds a once-and-error pair for a single pre-created
+// collection in the shared app-endpoint bucket.
+type fixtCollectionState struct {
+	once sync.Once
+	err  error
 }
 
 var (
-	fixtBucketMu     sync.Mutex
-	fixtBucketStates = map[string]*fixtBucketState{}
+	fixtCollectionMu     sync.Mutex
+	fixtCollectionStates = map[string]*fixtCollectionState{}
 )
 
-// ensureFixtureBucketByName creates the named bucket exactly once per test
-// process. Safe to call from parallel tests.
-func ensureFixtureBucketByName(t *testing.T, name string) {
+// ensureFixtureCollection creates the named collection in the shared
+// app-endpoint bucket's _default scope exactly once per test process. App
+// endpoint resource tests use one collection each instead of a dedicated
+// bucket: Capella allows only one endpoint per bucket/scope/collection, and a
+// cluster's bucket cap (1 per 0.2 cores) is far smaller than its collection
+// cap. Sharing the bucket keeps parallel tests well under the bucket limit that
+// previously caused flaky "maximum number of buckets reached" failures.
+//
+// The collection lives in the shared bucket and is torn down with it at the end
+// of the suite, so no per-test cleanup is registered. Safe to call from
+// parallel tests.
+func ensureFixtureCollection(t *testing.T, name string) {
 	t.Helper()
 	ensureAppEndpointTestEnvironment(t)
-	fixtBucketMu.Lock()
-	state, ok := fixtBucketStates[name]
+	fixtCollectionMu.Lock()
+	state, ok := fixtCollectionStates[name]
 	if !ok {
-		state = &fixtBucketState{}
-		fixtBucketStates[name] = state
+		state = &fixtCollectionState{}
+		fixtCollectionStates[name] = state
 	}
-	// Unlock immediately — the mutex only guards the map. Bucket creation is
-	// serialised per-name by state.once (sync.Once), so parallel tests for
-	// different buckets are not blocked behind each other.
-	fixtBucketMu.Unlock()
+	// Unlock immediately — the mutex only guards the map. Collection creation is
+	// serialised per-name by state.once, so parallel tests for different
+	// collections are not blocked behind each other.
+	fixtCollectionMu.Unlock()
 
 	state.once.Do(func() {
 		ctx := context.Background()
-		state.created, state.err = createFixtureBucket(ctx, globalClient, name)
+		state.err = createFixtureCollection(ctx, globalClient, appEndpointBucketId, globalScopeName, name)
 	})
 	if state.err != nil {
-		t.Fatalf("failed to provision test bucket %s: %v", name, state.err)
-	}
-
-	if state.created {
-		t.Cleanup(func() {
-			if err := deleteAppEndpointFixtureBucket(context.Background(), globalClient, globalProjectId, appEndpointClusterId, name); err != nil {
-				t.Logf("warning: failed to delete fixture bucket %q: %v", name, err)
-			}
-		})
+		t.Fatalf("failed to provision test collection %s: %v", name, state.err)
 	}
 }
 
@@ -156,6 +157,76 @@ func createFixtureBucket(ctx context.Context, client *api.Client, name string) (
 	}
 
 	return true, waitForFixtureBucket(ctx, client, bucketResp.Id)
+}
+
+// createFixtureCollection creates the named collection in the given scope of the
+// shared bucket if it does not already exist, then waits until it is listable.
+func createFixtureCollection(ctx context.Context, client *api.Client, bucketID, scope, name string) error {
+	collectionsUrl := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/buckets/%s/scopes/%s/collections",
+		globalHost, globalOrgId, globalProjectId, appEndpointClusterId, bucketID, scope)
+
+	exists, err := fixtureCollectionExists(ctx, client, collectionsUrl, name)
+	if err != nil {
+		return err
+	}
+	if exists {
+		log.Printf("fixture collection %q already exists", name)
+		return nil
+	}
+
+	createCfg := api.EndpointCfg{Url: collectionsUrl, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
+	if _, err = client.ExecuteWithRetry(ctx, createCfg, api.CreateCollectionRequest{Name: name}, globalToken, nil); err != nil {
+		return fmt.Errorf("creating fixture collection %q: %w", name, err)
+	}
+
+	return waitForFixtureCollection(ctx, client, collectionsUrl, name)
+}
+
+// fixtureCollectionExists reports whether a collection with the given name is
+// present at the collections list endpoint.
+func fixtureCollectionExists(ctx context.Context, client *api.Client, collectionsUrl, name string) (bool, error) {
+	listCfg := api.EndpointCfg{Url: collectionsUrl, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	response, err := client.ExecuteWithRetry(ctx, listCfg, nil, globalToken, nil)
+	if err != nil {
+		return false, fmt.Errorf("listing collections for %q: %w", name, err)
+	}
+
+	var collections api.GetCollectionsResponse
+	if err = json.Unmarshal(response.Body, &collections); err != nil {
+		return false, fmt.Errorf("unmarshalling collections list for %q: %w", name, err)
+	}
+	for _, c := range collections.Data {
+		if c.Name != nil && *c.Name == name {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// waitForFixtureCollection polls until the collection is listable. App endpoint
+// creation rejects a collection that is not yet visible ("Collection Not
+// Found"), so fixtures wait for it before pointing endpoints at it.
+func waitForFixtureCollection(ctx context.Context, client *api.Client, collectionsUrl, name string) error {
+	const maxWait = 2 * time.Minute
+	deadline := time.Now().Add(maxWait)
+
+	for {
+		exists, err := fixtureCollectionExists(ctx, client, collectionsUrl, name)
+		if err == nil && exists {
+			return nil
+		}
+		if time.Now().After(deadline) {
+			if err != nil {
+				return fmt.Errorf("timeout waiting for fixture collection %q: %w", name, err)
+			}
+			return fmt.Errorf("timeout waiting for fixture collection %q to become listable", name)
+		}
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("context done waiting for fixture collection %q: %w", name, ctx.Err())
+		case <-time.After(5 * time.Second):
+		}
+	}
 }
 
 // deleteBucketWithRetry retries the bucket DELETE on 412 (App Service not yet
