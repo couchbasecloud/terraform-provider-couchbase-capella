@@ -31,6 +31,7 @@ func FreeTierBucketSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "bucket_conflict_resolution", freeTierBucketBuilder, stringAttribute([]string{computed, useStateForUnknown}))
 	capellaschema.AddAttr(attrs, "durability_level", freeTierBucketBuilder, stringAttribute([]string{computed, useStateForUnknown}))
 	capellaschema.AddAttr(attrs, "replicas", freeTierBucketBuilder, int64Attribute(computed, useStateForUnknown))
+	capellaschema.AddAttr(attrs, "vbuckets", freeTierBucketBuilder, int64Attribute(computed, useStateForUnknown))
 	capellaschema.AddAttr(attrs, "flush", freeTierBucketBuilder, boolAttribute(computed, useStateForUnknown))
 	capellaschema.AddAttr(attrs, "time_to_live_in_seconds", freeTierBucketBuilder, int64Attribute(computed, useStateForUnknown))
 	capellaschema.AddAttr(attrs, "eviction_policy", freeTierBucketBuilder, stringAttribute([]string{computed, useStateForUnknown}))
