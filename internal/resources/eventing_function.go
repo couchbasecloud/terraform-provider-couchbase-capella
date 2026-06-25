@@ -72,13 +72,22 @@ func (e *EventingFunction) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
+	createBindings, err := bindingsToAPI(ctx, plan.Bindings)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating eventing function",
+			"Could not convert eventing function bindings: "+err.Error(),
+		)
+		return
+	}
+
 	createReq := eventingapi.CreateEventingFunctionRequest{
 		Name:                 name,
 		Code:                 plan.Code.ValueStringPointer(),
 		EventSource:          keyspaceToAPI(plan.EventSource),
 		EventMetadataStorage: keyspaceToAPI(plan.EventMetadataStorage),
 		Settings:             settingsToAPI(plannedSettings),
-		Bindings:             bindingsToAPI(plan.Bindings),
+		Bindings:             createBindings,
 	}
 
 	if !plan.Description.IsNull() {
@@ -222,15 +231,15 @@ func eventingSettingsChanged(plan, state *providerschema.EventingFunctionSetting
 // change in the number of bucket, URL or constant bindings counts as a change. The sensitive URL
 // authentication secrets (password, bearer token) are not compared: the API masks them as "*****" so
 // they do not round-trip faithfully and would otherwise produce false positives.
-func eventingBindingsChanged(plan, state *providerschema.EventingFunctionBindingsResource) bool {
+func eventingBindingsChanged(ctx context.Context, plan, state *providerschema.EventingFunctionBindingsResource) (bool, error) {
 	if plan == nil || state == nil {
-		return false
+		return false, nil
 	}
 
 	if len(plan.Buckets) != len(state.Buckets) ||
 		len(plan.Urls) != len(state.Urls) ||
 		len(plan.Constants) != len(state.Constants) {
-		return true
+		return true, nil
 	}
 
 	for i := range plan.Buckets {
@@ -240,7 +249,7 @@ func eventingBindingsChanged(plan, state *providerschema.EventingFunctionBinding
 			eventingValueChanged(p.Scope, s.Scope) ||
 			eventingValueChanged(p.Collection, s.Collection) ||
 			eventingValueChanged(p.Permission, s.Permission) {
-			return true
+			return true, nil
 		}
 	}
 
@@ -250,13 +259,18 @@ func eventingBindingsChanged(plan, state *providerschema.EventingFunctionBinding
 			eventingValueChanged(p.Url, s.Url) ||
 			eventingValueChanged(p.AllowCookies, s.AllowCookies) ||
 			eventingValueChanged(p.ValidateTLSCertificate, s.ValidateTLSCertificate) {
-			return true
+			return true, nil
 		}
-		if eventingURLAuthChanged(
-			providerschema.AuthenticationFromObject(p.Authentication),
-			providerschema.AuthenticationFromObject(s.Authentication),
-		) {
-			return true
+		planAuth, err := providerschema.AuthenticationFromObject(ctx, p.Authentication)
+		if err != nil {
+			return false, err
+		}
+		stateAuth, err := providerschema.AuthenticationFromObject(ctx, s.Authentication)
+		if err != nil {
+			return false, err
+		}
+		if eventingURLAuthChanged(planAuth, stateAuth) {
+			return true, nil
 		}
 	}
 
@@ -264,11 +278,11 @@ func eventingBindingsChanged(plan, state *providerschema.EventingFunctionBinding
 		p, s := plan.Constants[i], state.Constants[i]
 		if eventingValueChanged(p.Alias, s.Alias) ||
 			eventingValueChanged(p.Value, s.Value) {
-			return true
+			return true, nil
 		}
 	}
 
-	return false
+	return false, nil
 }
 
 // eventingURLAuthChanged reports whether the plan changes the non-sensitive URL authentication fields.
@@ -359,11 +373,20 @@ func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateReques
 		name           = IDs[providerschema.FunctionName]
 	)
 
+	bindingsChanged, err := eventingBindingsChanged(ctx, plan.Bindings, state.Bindings)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating eventing function",
+			"Could not compare eventing function bindings: "+err.Error(),
+		)
+		return
+	}
+
 	// Code, settings and bindings can only be changed while the function is undeployed or paused. Reject the
 	// change up front — before applying any activation state change. This prevents "inconsistent result after apply"
 	// errors.
 	if plan.State.ValueString() == eventingStateDeployed &&
-		(plan.Code != state.Code || eventingSettingsChanged(plannedSettings, stateSettings) || eventingBindingsChanged(plan.Bindings, state.Bindings)) {
+		(plan.Code != state.Code || eventingSettingsChanged(plannedSettings, stateSettings) || bindingsChanged) {
 		resp.Diagnostics.AddError(
 			"Cannot change eventing function settings or bindings while deployed",
 			"Eventing function "+name+" must be undeployed or paused before its settings or bindings can be changed.",
@@ -395,8 +418,17 @@ func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	// if code, settings or bindings have not changed, skip update step.
-	if !eventingSettingsChanged(plannedSettings, stateSettings) && !eventingBindingsChanged(plan.Bindings, state.Bindings) &&
+	if !eventingSettingsChanged(plannedSettings, stateSettings) && !bindingsChanged &&
 		plan.Code == state.Code {
+		return
+	}
+
+	updateBindings, err := bindingsToAPI(ctx, plan.Bindings)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating eventing function",
+			"Could not convert eventing function bindings: "+err.Error(),
+		)
 		return
 	}
 
@@ -406,7 +438,7 @@ func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateReques
 		EventSource:          keyspaceToAPIPtr(plan.EventSource),
 		EventMetadataStorage: keyspaceToAPIPtr(plan.EventMetadataStorage),
 		Settings:             settingsToAPI(plannedSettings),
-		Bindings:             bindingsToAPI(plan.Bindings),
+		Bindings:             updateBindings,
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/eventingFunctions/%s", e.HostURL, organizationId, projectId, clusterId, name)
@@ -525,7 +557,7 @@ func (e *EventingFunction) retrieveEventingFunction(
 		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshallingResponse, err)
 	}
 
-	fn, err := providerschema.NewEventingFunctionResource(&eventingResp, organizationId, projectId, clusterId, prior)
+	fn, err := providerschema.NewEventingFunctionResource(ctx, &eventingResp, organizationId, projectId, clusterId, prior)
 	if err != nil {
 		return nil, err
 	}
@@ -661,9 +693,9 @@ func settingsToAPI(s *providerschema.EventingFunctionSettings) *eventingapi.Sett
 	}
 }
 
-func bindingsToAPI(b *providerschema.EventingFunctionBindingsResource) *eventingapi.Bindings {
+func bindingsToAPI(ctx context.Context, b *providerschema.EventingFunctionBindingsResource) (*eventingapi.Bindings, error) {
 	if b == nil {
-		return nil
+		return nil, nil
 	}
 
 	bindings := &eventingapi.Bindings{}
@@ -685,7 +717,11 @@ func bindingsToAPI(b *providerschema.EventingFunctionBindingsResource) *eventing
 			AllowCookies:           utils.BoolPointerIfKnown(u.AllowCookies),
 			ValidateTLSCertificate: utils.BoolPointerIfKnown(u.ValidateTLSCertificate),
 		}
-		if auth := providerschema.AuthenticationFromObject(u.Authentication); auth != nil {
+		auth, err := providerschema.AuthenticationFromObject(ctx, u.Authentication)
+		if err != nil {
+			return nil, err
+		}
+		if auth != nil {
 			urlBinding.Authentication = &eventingapi.URLBindingAuthentication{
 				Type:        auth.Type.ValueString(),
 				Username:    auth.Username.ValueStringPointer(),
@@ -704,5 +740,5 @@ func bindingsToAPI(b *providerschema.EventingFunctionBindingsResource) *eventing
 		})
 	}
 
-	return bindings
+	return bindings, nil
 }

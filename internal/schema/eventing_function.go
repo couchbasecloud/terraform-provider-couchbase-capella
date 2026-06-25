@@ -207,15 +207,15 @@ func (a EventingFunctionURLBindingAuthentication) AttributeTypes() map[string]at
 
 // AuthenticationFromObject decodes a URL binding authentication object into its struct form,
 // returning nil for a null or unknown object.
-func AuthenticationFromObject(obj types.Object) *EventingFunctionURLBindingAuthentication {
+func AuthenticationFromObject(ctx context.Context, obj types.Object) (*EventingFunctionURLBindingAuthentication, error) {
 	if obj.IsNull() || obj.IsUnknown() {
-		return nil
+		return nil, nil
 	}
 	var auth EventingFunctionURLBindingAuthentication
-	if diags := obj.As(context.Background(), &auth, basetypes.ObjectAsOptions{}); diags.HasError() {
-		return nil
+	if diags := obj.As(ctx, &auth, basetypes.ObjectAsOptions{}); diags.HasError() {
+		return nil, fmt.Errorf("failed to decode URL binding authentication: %v", diags.Errors())
 	}
-	return &auth
+	return &auth, nil
 }
 
 // EventingFunctionConstantBinding binds a constant value to an alias used in the function code.
@@ -313,6 +313,7 @@ func newEventingFunctionKeyspaceObject(ctx context.Context, keyspace eventing_fu
 // prior carries forward values that the GET response does not return: the State action verb
 // and any URL binding authentication secrets (matched by alias).
 func NewEventingFunctionResource(
+	ctx context.Context,
 	resp *eventingapi.GetEventingFunctionResponse,
 	organizationId, projectId, clusterId string,
 	prior *EventingFunctionResource,
@@ -351,7 +352,9 @@ func NewEventingFunctionResource(
 	}
 
 	if prior != nil {
-		carryForwardURLSecrets(fn.Bindings, prior.Bindings)
+		if err := carryForwardURLSecrets(ctx, fn.Bindings, prior.Bindings); err != nil {
+			return nil, err
+		}
 	}
 
 	return fn, nil
@@ -443,20 +446,27 @@ func bindingsToSchema(b eventingapi.Bindings) (*EventingFunctionBindingsResource
 // eventing API always returns ***** for secrets, so do not set state
 // with those values otherwise it will trigger an update. in other
 // words, drift detection is not possible with secrets.
-func carryForwardURLSecrets(refreshed, prior *EventingFunctionBindingsResource) {
+func carryForwardURLSecrets(ctx context.Context, refreshed, prior *EventingFunctionBindingsResource) error {
 	if refreshed == nil || prior == nil {
-		return
+		return nil
 	}
 
 	priorByAlias := make(map[string]*EventingFunctionURLBindingAuthentication, len(prior.Urls))
 	for i := range prior.Urls {
-		if auth := AuthenticationFromObject(prior.Urls[i].Authentication); auth != nil {
+		auth, err := AuthenticationFromObject(ctx, prior.Urls[i].Authentication)
+		if err != nil {
+			return err
+		}
+		if auth != nil {
 			priorByAlias[prior.Urls[i].Alias.ValueString()] = auth
 		}
 	}
 
 	for i := range refreshed.Urls {
-		auth := AuthenticationFromObject(refreshed.Urls[i].Authentication)
+		auth, err := AuthenticationFromObject(ctx, refreshed.Urls[i].Authentication)
+		if err != nil {
+			return err
+		}
 		if auth == nil {
 			continue
 		}
@@ -469,12 +479,14 @@ func carryForwardURLSecrets(refreshed, prior *EventingFunctionBindingsResource) 
 		auth.Password = priorAuth.Password
 		auth.BearerToken = priorAuth.BearerToken
 
-		obj, d := types.ObjectValueFrom(context.Background(), EventingFunctionURLBindingAuthentication{}.AttributeTypes(), auth)
+		obj, d := types.ObjectValueFrom(ctx, EventingFunctionURLBindingAuthentication{}.AttributeTypes(), auth)
 		if d.HasError() {
-			continue
+			return fmt.Errorf("failed to convert URL binding authentication: %v", d.Errors())
 		}
 		refreshed.Urls[i].Authentication = obj
 	}
+
+	return nil
 }
 
 func newEventingFunctionSettingsObject(ctx context.Context, settings *eventing_function.Settings) (types.Object, diag.Diagnostics) {
