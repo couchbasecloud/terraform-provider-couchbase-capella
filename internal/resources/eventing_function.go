@@ -172,7 +172,7 @@ func nullKeyspaceComputedAttributes(k *providerschema.EventingFunctionKeyspace) 
 	k.Collection = types.StringNull()
 }
 
-// eventingValueChanged determines if scalar values are equal.
+// eventingValueChanged determines if scalar values are different.
 func eventingValueChanged(plan, state attr.Value) bool {
 	if plan.IsNull() || plan.IsUnknown() {
 		return false
@@ -196,7 +196,7 @@ func eventingSettingsChanged(plan, state *providerschema.EventingFunctionSetting
 		eventingValueChanged(plan.CursorAware, state.CursorAware)
 }
 
-// eventingBindingsChanged determines if any of the url bindings have changed,
+// eventingBindingsChanged determines if any of the bindings have changed,
 // except for secrets (password or bearer token).
 func eventingBindingsChanged(plan, state *providerschema.EventingFunctionBindingsResource) bool {
 	if plan == nil || state == nil {
@@ -269,8 +269,8 @@ func eventingSecretChanged(plan, state *providerschema.EventingFunctionURLBindin
 	}
 }
 
-// eventingFunctionChanged determines if any aspect of the eventing function has changed
-// ie name, description, application code, source/metadata keyspace, settings or bindings.
+// eventingFunctionChanged determines if any of the following has changed for eventing function:
+// description, application code, source/metadata keyspace, settings or bindings.
 func eventingFunctionChanged(
 	plan, state *providerschema.EventingFunctionResource,
 	plannedSettings, stateSettings *providerschema.EventingFunctionSettings,
@@ -382,7 +382,7 @@ func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateReques
 	if (plan.State.ValueString() != eventingStateUndeployed && plan.State.ValueString() != eventingStatePaused) && eventingFunctionHasChanged {
 		resp.Diagnostics.AddError(
 			"Cannot change eventing function while deployed",
-			"Eventing function "+name+" must be in an undeployed or paused state in order to be changed."+
+			"Eventing function "+name+" must be in an undeployed or paused state in order to be changed. "+
 				"You can change the state to undeployed/paused and the eventing function at the same time.",
 		)
 		return
