@@ -94,7 +94,7 @@ func (s *SnapshotBackupSchedule) Create(ctx context.Context, req resource.Create
 	}
 
 	var refreshedState *providerschema.SnapshotBackupSchedule
-	snapshotBackupSchedule, err := s.getSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId, plan.StartTime.ValueString())
+	snapshotBackupSchedule, err := s.getSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId)
 	if err != nil {
 		tflog.Debug(ctx, "Error getting snapshot backup schedule after upsert", map[string]interface{}{
 			"organizationId": organizationId,
@@ -153,7 +153,7 @@ func (s *SnapshotBackupSchedule) Read(ctx context.Context, req resource.ReadRequ
 		clusterId      = IDs[providerschema.ClusterId]
 	)
 
-	snapshotBackupSchedule, err := s.getSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId, state.StartTime.ValueString())
+	snapshotBackupSchedule, err := s.getSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Getting Snapshot Backup Schedule in Capella",
@@ -213,7 +213,7 @@ func (s *SnapshotBackupSchedule) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	snapshotBackupSchedule, err := s.getSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId, plan.StartTime.ValueString())
+	snapshotBackupSchedule, err := s.getSnapshotBackupSchedule(ctx, organizationId, projectId, clusterId)
 	if err != nil {
 		tflog.Debug(ctx, "Error getting snapshot backup schedule after upsert", map[string]interface{}{
 			"organizationId": organizationId,
@@ -330,7 +330,7 @@ func (s *SnapshotBackupSchedule) upsertSnapshotBackupSchedule(ctx context.Contex
 }
 
 // getSnapshotBackupSchedule retrieves the snapshot backup schedule for a cluster.
-func (s *SnapshotBackupSchedule) getSnapshotBackupSchedule(ctx context.Context, organizationId, projectId, clusterId string, startTimeString string) (*snapshot_backup_schedule.SnapshotBackupSchedule, error) {
+func (s *SnapshotBackupSchedule) getSnapshotBackupSchedule(ctx context.Context, organizationId, projectId, clusterId string) (*snapshot_backup_schedule.SnapshotBackupSchedule, error) {
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/cloudsnapshotbackupschedule", s.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	backupScheduleResp, err := s.ClientV1.ExecuteWithRetry(
