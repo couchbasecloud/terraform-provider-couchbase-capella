@@ -5,13 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/appservice"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
-
-	"time"
-
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -255,6 +253,17 @@ func (a *AppService) Update(ctx context.Context, req resource.UpdateRequest, res
 		resp.Diagnostics.AddError(
 			"Error updating app service",
 			"Could not update app service id "+state.Id.String()+" unexpected error: "+errors.ErrUnableToUpdateAppServiceName.Error(),
+		)
+		return
+	}
+
+	if !plan.Version.Equal(state.Version) {
+		resp.Diagnostics.AddError(
+			"Error updating app service",
+			"Could not update app service ID "+state.Id.String()+" version as this is not supported. "+
+				"To fix, destroy the App Service and create a new one with the desired version, "+
+				"update the version in the plan to the current version ("+state.Version.ValueString()+"), "+
+				"or omit version from the plan completely.",
 		)
 		return
 	}
