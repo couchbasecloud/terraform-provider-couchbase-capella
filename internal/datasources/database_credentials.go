@@ -84,7 +84,7 @@ func (d *DatabaseCredentials) Read(ctx context.Context, req datasource.ReadReque
 				Version:    types.Int64Value(int64(databaseCredential.Audit.Version)),
 			},
 		}
-		databaseCredentialState.Access = mapAccess(databaseCredential)
+		databaseCredentialState.Access = mapAccessFromAPI(databaseCredential.Access)
 		state.Data = append(state.Data, databaseCredentialState)
 	}
 
@@ -116,12 +116,12 @@ func (d *DatabaseCredentials) Configure(_ context.Context, req datasource.Config
 	d.Data = data
 }
 
-// mapAccess needs a 1:1 mapping when we store the output as the refreshed state.
+// mapAccessFromAPI converts an API Access slice to the provider schema Access slice.
 // todo: add a unit test, tracking under: https://couchbasecloud.atlassian.net/browse/AV-63401
-func mapAccess(plan api.GetDatabaseCredentialResponse) []providerschema.Access {
-	var access = make([]providerschema.Access, len(plan.Access))
+func mapAccessFromAPI(apiAccess []api.Access) []providerschema.Access {
+	var access = make([]providerschema.Access, len(apiAccess))
 
-	for i, acc := range plan.Access {
+	for i, acc := range apiAccess {
 		access[i] = providerschema.Access{Privileges: make([]types.String, len(acc.Privileges))}
 		for j, permission := range acc.Privileges {
 			access[i].Privileges[j] = types.StringValue(permission)

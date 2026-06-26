@@ -67,3 +67,37 @@ func (d DatabaseRole) Validate() (map[Attr]string, error) {
 	}
 	return IDs, nil
 }
+
+// DatabaseRoles defines the model for the list database roles datasource response.
+type DatabaseRoles struct {
+	OrganizationId types.String       `tfsdk:"organization_id"`
+	ProjectId      types.String       `tfsdk:"project_id"`
+	ClusterId      types.String       `tfsdk:"cluster_id"`
+	Data           []DatabaseRoleItem `tfsdk:"data"`
+}
+
+// Validate checks that all required IDs are present.
+func (d DatabaseRoles) Validate() (clusterId, projectId, organizationId string, err error) {
+	if d.OrganizationId.IsNull() {
+		return "", "", "", errors.ErrOrganizationIdMissing
+	}
+	if d.ProjectId.IsNull() {
+		return "", "", "", errors.ErrProjectIdMissing
+	}
+	if d.ClusterId.IsNull() {
+		return "", "", "", errors.ErrClusterIdMissing
+	}
+	return d.ClusterId.ValueString(), d.ProjectId.ValueString(), d.OrganizationId.ValueString(), nil
+}
+
+// DatabaseRoleItem represents a single database role in the list datasource response.
+type DatabaseRoleItem struct {
+	Id             types.String       `tfsdk:"id"`
+	Name           types.String       `tfsdk:"name"`
+	Description    types.String       `tfsdk:"description"`
+	OrganizationId types.String       `tfsdk:"organization_id"`
+	ProjectId      types.String       `tfsdk:"project_id"`
+	ClusterId      types.String       `tfsdk:"cluster_id"`
+	Access         []Access           `tfsdk:"access"`
+	Audit          CouchbaseAuditData `tfsdk:"audit"`
+}
