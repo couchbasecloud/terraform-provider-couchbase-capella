@@ -76,6 +76,36 @@ func copyBucketResources(buckets []providerschema.BucketResource) []providersche
 	return result
 }
 
+// mapAccessFromAPI converts the API Access slice to the terraform schema Access slice.
+func mapAccessFromAPI(apiAccess []api.Access) []providerschema.Access {
+	access := make([]providerschema.Access, len(apiAccess))
+	for i, acc := range apiAccess {
+		access[i] = providerschema.Access{Privileges: make([]types.String, len(acc.Privileges))}
+		for j, permission := range acc.Privileges {
+			access[i].Privileges[j] = types.StringValue(permission)
+		}
+		if acc.Resources != nil && acc.Resources.Buckets != nil {
+			access[i].Resources = &providerschema.Resources{Buckets: make([]providerschema.BucketResource, len(acc.Resources.Buckets))}
+			for k, bucket := range acc.Resources.Buckets {
+				access[i].Resources.Buckets[k].Name = types.StringValue(bucket.Name)
+				if bucket.Scopes != nil {
+					access[i].Resources.Buckets[k].Scopes = make([]providerschema.ScopeResource, len(bucket.Scopes))
+					for s, scope := range bucket.Scopes {
+						access[i].Resources.Buckets[k].Scopes[s].Name = types.StringValue(scope.Name)
+						if scope.Collections != nil {
+							access[i].Resources.Buckets[k].Scopes[s].Collections = make([]types.String, len(scope.Collections))
+							for c, coll := range scope.Collections {
+								access[i].Resources.Buckets[k].Scopes[s].Collections[c] = types.StringValue(coll)
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return access
+}
+
 // mapAccessFromSlice creates a copy of the terraform schema Access slice for state storage.
 func mapAccessFromSlice(access []providerschema.Access) []providerschema.Access {
 	result := make([]providerschema.Access, len(access))
