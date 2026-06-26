@@ -257,7 +257,7 @@ func (a *AppService) Update(ctx context.Context, req resource.UpdateRequest, res
 		return
 	}
 
-	if !plan.Version.Equal(state.Version) {
+	if !plan.Version.IsNull() && !plan.Version.IsUnknown() && !plan.Version.Equal(state.Version) {
 		resp.Diagnostics.AddError(
 			"Error updating app service",
 			"Could not update app service ID "+state.Id.String()+" version as this is not supported. "+
