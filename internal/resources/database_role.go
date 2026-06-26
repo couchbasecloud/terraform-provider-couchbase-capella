@@ -312,7 +312,7 @@ func (r *DatabaseRole) validateCreateDatabaseRole(plan providerschema.DatabaseRo
 		return errors.ErrClusterIdMissing
 	}
 	if (!plan.Name.IsNull() && !plan.Name.IsUnknown()) && !providerschema.IsTrimmed(plan.Name.ValueString()) {
-		return fmt.Errorf("name %s", errors.ErrNotTrimmed)
+		return fmt.Errorf("name %w", errors.ErrNotTrimmed)
 	}
 	return nil
 }
