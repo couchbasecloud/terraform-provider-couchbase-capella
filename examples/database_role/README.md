@@ -1,38 +1,44 @@
 # Capella Database Role Example
 
-This example shows how to create and manage database user roles in Capella.
+This example shows how to create and manage Database Roles in Capella.
 
-Database roles define reusable sets of privileges scoped to specific buckets, scopes, and collections within a cluster. They can be assigned to database credentials.
+This creates a new database role in the selected Capella cluster and lists existing database roles in the cluster. It uses the cluster ID to create and list database roles.
 
-To run, configure your Couchbase Capella provider as described in the README in the root of this project.
+To run, configure your Couchbase Capella provider as described in README in the root of this project.
 
-## Prerequisites
+# Example Walkthrough
 
-- A Capella organization, project, and cluster
-- A valid V4 API key with `organizationOwner` or `projectOwner` permissions
-- At least one bucket in the cluster (the example uses `travel-sample`)
+In this example, we are going to do the following.
 
-## Example Walkthrough
+1. CREATE: Create a new database role in Capella as stated in the `create_database_role.tf` file.
+2. UPDATE: Update the database role configuration using Terraform.
+3. LIST: List existing database roles in Capella as stated in the `list_database_roles.tf` file.
+4. IMPORT: Import a database role that exists in Capella but not in the terraform state file.
+5. DELETE: Delete the newly created database role from Capella.
 
-1. CREATE: Create a new database role as defined in `create_database_role.tf`.
-2. UPDATE: Update the role's access privileges or description.
-3. IMPORT: Import a database role that exists in Capella but not in the Terraform state file.
-4. DELETE: Delete the database role from Capella.
+If you check the `terraform.template.tfvars` file - Make sure you copy the file to `terraform.tfvars` and update the values of the variables as per the correct organization access.
 
-Copy `terraform.template.tfvars` to `terraform.tfvars` and update the placeholder values.
-
-## CREATE
-
-### View the plan
+## CREATE & LIST
+### View the plan for the resources that Terraform will create
 
 Command: `terraform plan`
 
 Sample Output:
 ```
 $ terraform plan
+╷
+│ Warning: Provider development overrides are in effect
+│ 
+│ The following provider development overrides are set in the CLI configuration:
+│  - couchbasecloud/couchbase-capella in /Users/$USER/workspace/terraform-provider-capella
+│ 
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
+│ published releases.
+╵
+data.couchbase-capella_database_roles.existing_roles: Reading...
+data.couchbase-capella_database_roles.existing_roles: Read complete after 2s
 
-Terraform used the selected providers to generate the following execution plan.
-Resource actions are indicated with the following symbols:
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   + create
 
 Terraform will perform the following actions:
@@ -83,32 +89,68 @@ Terraform will perform the following actions:
             },
         ]
       + audit           = (known after apply)
-      + cluster_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      + cluster_id      = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
       + description     = "A test role with read and write access"
       + id              = (known after apply)
       + name            = "test-role-001"
-      + organization_id = "ffffffff-aaaa-1414-eeee-000000000000"
-      + project_id      = "ffffffff-aaaa-1414-eeee-000000000000"
+      + organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
+      + project_id      = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
     }
 
 Plan: 1 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + database_roles_list = {
+      + cluster_id      = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+      + data            = null
+      + organization_id = "0783f698-ac58-4018-84a3-31c3b6ef785d"
+      + project_id      = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+    }
+  + new_database_role   = (known after apply)
+
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly these actions if you run "terraform apply" now.
 ```
 
-### Apply the plan
+### Apply the Plan, in order to create a new Database Role
 
 Command: `terraform apply`
 
 Sample Output:
 ```
 $ terraform apply
+╷
+│ Warning: Provider development overrides are in effect
+│ 
+│ The following provider development overrides are set in the CLI configuration:
+│  - couchbasecloud/couchbase-capella in /Users/$USER/workspace/terraform-provider-capella
+│ 
+│ The behavior may therefore not match any released version of the provider and applying changes may cause the state to become incompatible with
+│ published releases.
+╵
+data.couchbase-capella_database_roles.existing_roles: Reading...
+data.couchbase-capella_database_roles.existing_roles: Read complete after 2s
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
 
 couchbase-capella_database_role.new_database_role: Creating...
-couchbase-capella_database_role.new_database_role: Creation complete after 1s [id=ffffffff-aaaa-1414-eeee-000000000000]
+couchbase-capella_database_role.new_database_role: Creation complete after 3s [id=95591a3b-7031-4257-8d9e-7c4620d14618]
 
 Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
 
 Outputs:
 
+database_roles_list = {
+  "cluster_id" = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+  "data" = tolist(null) /* of object */
+  "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
+  "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+}
 new_database_role = {
   "access" = toset([
     {
@@ -155,34 +197,38 @@ new_database_role = {
   ])
   "audit" = {
     "created_at" = "2024-01-15 10:30:00.000000000 +0000 UTC"
-    "created_by" = "ffffffff-aaaa-1414-eeee-000000000000"
+    "created_by" = "osxKeibDiShFFyyqAVNvqWRaWryXBxBD"
     "modified_at" = "2024-01-15 10:30:00.000000000 +0000 UTC"
-    "modified_by" = "ffffffff-aaaa-1414-eeee-000000000000"
+    "modified_by" = "osxKeibDiShFFyyqAVNvqWRaWryXBxBD"
     "version" = 1
   }
-  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "cluster_id" = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
   "description" = "A test role with read and write access"
-  "id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "id" = "95591a3b-7031-4257-8d9e-7c4620d14618"
   "name" = "test-role-001"
-  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
-  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
+  "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
 }
-database_role_id = "ffffffff-aaaa-1414-eeee-000000000000"
 ```
 
-### Note the Database Role ID
+### Note the Database Role ID for the new Database Role
+Command: `terraform output new_database_role`
 
-Command: `terraform output database_role_id`
+In this case, the database role ID for my new database role is `95591a3b-7031-4257-8d9e-7c4620d14618`
+
+### List the resources that are present in the Terraform State file.
+
+Command: `terraform state list`
 
 Sample Output:
 ```
-$ terraform output database_role_id
-"ffffffff-aaaa-1414-eeee-000000000000"
+$ terraform state list
+data.couchbase-capella_database_roles.existing_roles
+couchbase-capella_database_role.new_database_role
 ```
 
 ## IMPORT
-
-### Remove the resource from the Terraform state file
+### Remove the resource `new_database_role` from the Terraform State file
 
 Command: `terraform state rm couchbase-capella_database_role.new_database_role`
 
@@ -193,51 +239,169 @@ Removed couchbase-capella_database_role.new_database_role
 Successfully removed 1 resource instance(s).
 ```
 
-This only removes the resource from state. The role still exists in Capella.
+Please note, this command will only remove the resource from the Terraform State file, but in reality, the resource exists in Capella.
 
-### Import the resource back into Terraform
+### Now, let's import the resource in Terraform
 
-Command: `terraform import couchbase-capella_database_role.new_database_role id=<role_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
+Command: `terraform import couchbase-capella_database_role.new_database_role id=<database_role_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
+
+In this case, the complete command is:
+`terraform import couchbase-capella_database_role.new_database_role id=95591a3b-7031-4257-8d9e-7c4620d14618,cluster_id=f499a9e6-e5a1-4f3e-95a7-941a41d046e6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d`
 
 Sample Output:
 ```
-$ terraform import couchbase-capella_database_role.new_database_role id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000
-couchbase-capella_database_role.new_database_role: Importing from ID "id=ffffffff-aaaa-1414-eeee-000000000000,cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000"...
+$ terraform import couchbase-capella_database_role.new_database_role id=95591a3b-7031-4257-8d9e-7c4620d14618,cluster_id=f499a9e6-e5a1-4f3e-95a7-941a41d046e6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d
+couchbase-capella_database_role.new_database_role: Importing from ID "id=95591a3b-7031-4257-8d9e-7c4620d14618,cluster_id=f499a9e6-e5a1-4f3e-95a7-941a41d046e6,project_id=958ad6b5-272d-49f0-babd-cc98c6b54a81,organization_id=0783f698-ac58-4018-84a3-31c3b6ef785d"...
+data.couchbase-capella_database_roles.existing_roles: Reading...
 couchbase-capella_database_role.new_database_role: Import prepared!
+  Prepared couchbase-capella_database_role for import
 couchbase-capella_database_role.new_database_role: Refreshing state...
+data.couchbase-capella_database_roles.existing_roles: Read complete after 2s
 
 Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
 ```
 
-The import ID is a comma-separated string of `id=<role_id>,cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`.
+Here, we pass the IDs as a single comma-separated string.
+The first ID in the string is the database role ID i.e. the ID of the resource that we want to import.
+The second ID is the cluster ID i.e. the ID of the cluster to which the role belongs.
+The third ID is the project ID i.e. the ID of the project to which the cluster belongs.
+The fourth ID is the organization ID i.e. the ID of the organization to which the project belongs.
 
-## UPDATE
-
-Edit `terraform.tfvars` to change the role's access privileges or description, then apply.
+### Let's run a terraform plan to confirm that the import was successful
 
 Command: `terraform apply`
 
 Sample Output:
 ```
 $ terraform apply
+╷
+│ Warning: Provider development overrides are in effect
+╵
+data.couchbase-capella_database_roles.existing_roles: Reading...
+couchbase-capella_database_role.new_database_role: Refreshing state... [id=95591a3b-7031-4257-8d9e-7c4620d14618]
+data.couchbase-capella_database_roles.existing_roles: Read complete after 3s
 
-couchbase-capella_database_role.new_database_role: Modifying...
-couchbase-capella_database_role.new_database_role: Modifications complete after 1s [id=ffffffff-aaaa-1414-eeee-000000000000]
+couchbase-capella_database_role.new_database_role: Modifying... [id=95591a3b-7031-4257-8d9e-7c4620d14618]
+couchbase-capella_database_role.new_database_role: Modifications complete after 5s [id=95591a3b-7031-4257-8d9e-7c4620d14618]
+
+Apply complete! Resources: 0 added, 1 changed, 0 destroyed.
+
+Outputs:
+
+database_roles_list = {
+  "cluster_id" = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+  "data" = tolist([
+    {
+      "access" = tolist([
+        {
+          "privileges" = tolist([
+            "dataRead",
+          ])
+          "resources" = {
+            "buckets" = tolist([
+              {
+                "name" = "travel-sample"
+                "scopes" = tolist([
+                  {
+                    "collections" = tolist([
+                      "airline",
+                      "airport",
+                    ])
+                    "name" = "inventory"
+                  },
+                ])
+              },
+            ])
+          }
+        },
+        {
+          "privileges" = tolist([
+            "queryManage",
+          ])
+          "resources" = {
+            "buckets" = tolist([
+              {
+                "name" = "travel-sample"
+                "scopes" = tolist([
+                  {
+                    "collections" = tolist([
+                      "sales",
+                    ])
+                    "name" = "inventory"
+                  },
+                ])
+              },
+            ])
+          }
+        },
+      ])
+      "audit" = {
+        "created_at" = "2024-01-15 10:30:00.000000000 +0000 UTC"
+        "created_by" = "osxKeibDiShFFyyqAVNvqWRaWryXBxBD"
+        "modified_at" = "2024-01-15 10:30:00.000000000 +0000 UTC"
+        "modified_by" = "osxKeibDiShFFyyqAVNvqWRaWryXBxBD"
+        "version" = 1
+      }
+      "cluster_id" = "f499a9e6-e5a1-4f3e-95a7-941a41d046e6"
+      "description" = "A test role with read and write access"
+      "id" = "95591a3b-7031-4257-8d9e-7c4620d14618"
+      "name" = "test-role-001"
+      "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
+      "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+    },
+  ])
+  "organization_id" = "0783f698-ac58-4018-84a3-31c3b6ef785d"
+  "project_id" = "958ad6b5-272d-49f0-babd-cc98c6b54a81"
+}
+```
+
+## UPDATE
+### Let us edit the terraform.tfvars file to change the Database Role configuration settings.
+
+Command: `terraform apply -var 'access=[{privileges=["dataRead"]}]'`
+
+Sample Output:
+```
+$ terraform apply -var 'access=[{privileges=["dataRead"]}]'
+╷
+│ Warning: Provider development overrides are in effect
+╵
+data.couchbase-capella_database_roles.existing_roles: Reading...
+couchbase-capella_database_role.new_database_role: Refreshing state... [id=95591a3b-7031-4257-8d9e-7c4620d14618]
+data.couchbase-capella_database_roles.existing_roles: Read complete after 2s
+
+couchbase-capella_database_role.new_database_role: Modifying... [id=95591a3b-7031-4257-8d9e-7c4620d14618]
+couchbase-capella_database_role.new_database_role: Modifications complete after 5s [id=95591a3b-7031-4257-8d9e-7c4620d14618]
 
 Apply complete! Resources: 0 added, 1 changed, 0 destroyed.
 ```
 
-## DELETE
+## DESTROY
+### Finally, destroy the resources created by Terraform
 
 Command: `terraform destroy`
 
 Sample Output:
 ```
 $ terraform destroy
+╷
+│ Warning: Provider development overrides are in effect
+╵
+data.couchbase-capella_database_roles.existing_roles: Reading...
+couchbase-capella_database_role.new_database_role: Refreshing state... [id=95591a3b-7031-4257-8d9e-7c4620d14618]
+data.couchbase-capella_database_roles.existing_roles: Read complete after 3s
 
-couchbase-capella_database_role.new_database_role: Destroying... [id=ffffffff-aaaa-1414-eeee-000000000000]
-couchbase-capella_database_role.new_database_role: Destruction complete after 1s
+Do you really want to destroy all resources?
+  Terraform will destroy all your managed infrastructure, as shown above.
+  There is no undo. Only 'yes' will be accepted to confirm.
+
+  Enter a value: yes
+
+couchbase-capella_database_role.new_database_role: Destroying... [id=95591a3b-7031-4257-8d9e-7c4620d14618]
+couchbase-capella_database_role.new_database_role: Destruction complete after 2s
 
 Destroy complete! Resources: 1 destroyed.
 ```
-
