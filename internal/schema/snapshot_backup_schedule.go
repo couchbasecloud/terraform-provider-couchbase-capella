@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -13,13 +14,13 @@ import (
 )
 
 type SnapshotBackupSchedule struct {
-	OrganizationID types.String `tfsdk:"organization_id"`
-	ProjectID      types.String `tfsdk:"project_id"`
-	ClusterID      types.String `tfsdk:"cluster_id"`
-	Interval       types.Int64  `tfsdk:"interval"`
-	Retention      types.Int64  `tfsdk:"retention"`
-	StartTime      types.String `tfsdk:"start_time"`
-	CopyToRegions  types.Set    `tfsdk:"copy_to_regions"`
+	OrganizationID types.String      `tfsdk:"organization_id"`
+	ProjectID      types.String      `tfsdk:"project_id"`
+	ClusterID      types.String      `tfsdk:"cluster_id"`
+	Interval       types.Int64       `tfsdk:"interval"`
+	Retention      types.Int64       `tfsdk:"retention"`
+	StartTime      timetypes.RFC3339 `tfsdk:"start_time"`
+	CopyToRegions  types.Set         `tfsdk:"copy_to_regions"`
 }
 
 func (s SnapshotBackupSchedule) AttributeTypes() map[string]attr.Type {
@@ -29,12 +30,17 @@ func (s SnapshotBackupSchedule) AttributeTypes() map[string]attr.Type {
 		"cluster_id":      types.StringType,
 		"interval":        types.Int64Type,
 		"retention":       types.Int64Type,
-		"start_time":      types.StringType,
+		"start_time":      timetypes.RFC3339Type{},
 		"copy_to_regions": types.SetType{ElemType: types.StringType},
 	}
 }
 
 func NewSnapshotBackupSchedule(ctx context.Context, scheduleResp snapshot_backup_schedule.SnapshotBackupSchedule, organizationID, projectID, clusterID string) (*SnapshotBackupSchedule, error) {
+	startTime, diags := timetypes.NewRFC3339PointerValue(&scheduleResp.StartTime)
+	if diags.HasError() {
+		return nil, fmt.Errorf("error converting startTime: %s", diags.Errors())
+	}
+
 	copyToRegions, diags := types.SetValueFrom(ctx, types.StringType, scheduleResp.CopyToRegions)
 	if diags.HasError() {
 		return nil, fmt.Errorf("copyToRegions set error")
@@ -46,7 +52,7 @@ func NewSnapshotBackupSchedule(ctx context.Context, scheduleResp snapshot_backup
 		ClusterID:      types.StringValue(clusterID),
 		Interval:       types.Int64Value(scheduleResp.Interval),
 		Retention:      types.Int64Value(scheduleResp.Retention),
-		StartTime:      types.StringValue(scheduleResp.StartTime),
+		StartTime:      startTime,
 		CopyToRegions:  copyToRegions,
 	}
 	return &snapshotBackupSchedule, nil

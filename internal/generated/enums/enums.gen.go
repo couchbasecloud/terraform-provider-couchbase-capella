@@ -35,6 +35,9 @@ var enumTable = map[string]map[string]EnumDef{
 	"Caching": {
 		"defaultCache": {Type: "string", Values: []string{"standard", "semantic"}},
 	},
+	"Channel": {
+		"type": {Type: "string", Values: []string{"public", "private"}},
+	},
 	"CloudConfig": {
 		"compute.cpu":       {Type: "integer", Values: []string{"4", "32"}},
 		"compute.gpuMemory": {Type: "integer", Values: []string{"24", "48", "192"}},
@@ -67,7 +70,7 @@ var enumTable = map[string]map[string]EnumDef{
 		"organizationRoles": {Type: "string", IsArray: true, Values: []string{"organizationOwner", "organizationMember", "projectCreator"}},
 	},
 	"CreateAlertRequest": {
-		"kind": {Type: "string", Values: []string{"webhook"}},
+		"kind": {Type: "string", Values: []string{"webhook", "slack", "teams"}},
 	},
 	"CreateBucketRequest": {
 		"bucketConflictResolution": {Type: "string", Values: []string{"seqno", "lww"}},
@@ -144,7 +147,7 @@ var enumTable = map[string]map[string]EnumDef{
 		"organizationRoles": {Type: "string", IsArray: true, Values: []string{"organizationOwner", "organizationMember", "projectCreator"}},
 	},
 	"GetAlertResponse": {
-		"kind": {Type: "string", Values: []string{"webhook"}},
+		"kind": {Type: "string", Values: []string{"webhook", "slack", "teams"}},
 	},
 	"GetAppServicePrivateEndpointStateResponse": {
 		"state":       {Type: "string", Values: []string{"enabled", "enabling", "disabled", "disabling", "failed"}},
@@ -273,6 +276,9 @@ var enumTable = map[string]map[string]EnumDef{
 	"Support": {
 		"plan":     {Type: "string", Values: []string{"basic", "developer pro", "enterprise"}},
 		"timezone": {Type: "string", Values: []string{"ET", "GMT", "IST", "PT"}},
+	},
+	"UpdateAlertRequest": {
+		"kind": {Type: "string", Values: []string{"webhook", "slack", "teams"}},
 	},
 	"UpdateBucketRequest": {
 		"durabilityLevel": {Type: "string", Values: []string{"none", "majority", "majorityAndPersistActive", "persistToMajority"}},
@@ -469,6 +475,9 @@ var requiredTable = map[string]map[string]RequiredDef{
 	},
 	"CategorizedBillingResponse": {
 		"data": {},
+	},
+	"Channel": {
+		"name": {},
 	},
 	"CloudAccounts": {
 		"aws-capella-account":        {},
@@ -1009,18 +1018,19 @@ var requiredTable = map[string]map[string]RequiredDef{
 		"timezone":         {},
 	},
 	"GetClusterResponse": {
-		"audit":             {},
-		"availability":      {},
-		"cloudProvider":     {},
-		"configurationType": {},
-		"connectionString":  {},
-		"couchbaseServer":   {},
-		"currentState":      {},
-		"description":       {},
-		"id":                {},
-		"name":              {},
-		"serviceGroups":     {},
-		"support":           {},
+		"audit":              {},
+		"availability":       {},
+		"cloudProvider":      {},
+		"configurationType":  {},
+		"connectionString":   {},
+		"couchbaseServer":    {},
+		"currentState":       {},
+		"deletionProtection": {},
+		"description":        {},
+		"id":                 {},
+		"name":               {},
+		"serviceGroups":      {},
+		"support":            {},
 	},
 	"GetClusterSupport": {
 		"plan":     {},
@@ -1249,6 +1259,13 @@ var requiredTable = map[string]map[string]RequiredDef{
 	"ListBackupsResponse": {
 		"data": {},
 	},
+	"ListChannelsRequest": {
+		"botToken":      {},
+		"integrationId": {},
+	},
+	"ListChannelsResponse": {
+		"channels": {},
+	},
 	"ListCloudSnapshotBackupsResponse": {
 		"cursor": {},
 		"data":   {},
@@ -1386,7 +1403,17 @@ var requiredTable = map[string]map[string]RequiredDef{
 		"createdBy": {},
 	},
 	"RequestConfig": {
+		"slack":   {},
+		"teams":   {},
 		"webhook": {},
+	},
+	"RequestSlack": {
+		"botToken":                  {},
+		"channel":                   {},
+		"channelWebhookUrlMappings": {},
+	},
+	"RequestTeams": {
+		"webhookUrlMappings": {},
 	},
 	"RequestWebhook": {
 		"method": {},
@@ -1403,6 +1430,8 @@ var requiredTable = map[string]map[string]RequiredDef{
 		"name": {},
 	},
 	"ResponseConfig": {
+		"slack":   {},
+		"teams":   {},
 		"webhook": {},
 	},
 	"ResponseWebhook": {
@@ -1438,6 +1467,9 @@ var requiredTable = map[string]map[string]RequiredDef{
 	"ScopeConfig": {
 		"collections": {},
 	},
+	"SlackCustomPayload": {
+		"payload": {},
+	},
 	"Stats": {
 		"diskUsedInMib":   {},
 		"itemCount":       {},
@@ -1447,8 +1479,16 @@ var requiredTable = map[string]map[string]RequiredDef{
 	"Support": {
 		"plan": {},
 	},
-	"UpdateAlertRequest": {
-		"config": {},
+	"TeamsCustomPayload": {
+		"payload": {},
+	},
+	"TestRequestConfig": {
+		"slack":   {},
+		"teams":   {},
+		"webhook": {},
+	},
+	"TestRequestTeams": {
+		"url": {},
 	},
 	"UpdateAppEndpointRequest": {
 		"bucket":               {},
@@ -1530,6 +1570,11 @@ var requiredTable = map[string]map[string]RequiredDef{
 	},
 	"UpdateProviderRequest": {
 		"configuration": {},
+	},
+	"UpdateRequestConfig": {
+		"slack":   {},
+		"teams":   {},
+		"webhook": {},
 	},
 	"UpsertColumnarAnalyticsBackupScheduleRequest": {
 		"interval":  {},

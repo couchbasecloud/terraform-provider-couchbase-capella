@@ -76,7 +76,7 @@ func TestAccBackupScheduleResourceInvalidDayOfWeek(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBackupScheduleResourceConfig(resourceName, "weekly", "funday", 10, 4, "30days", false),
-				ExpectError: regexp.MustCompile("There is an error during backup schedule creation"),
+				ExpectError: regexp.MustCompile("day_of_week value must be one of"),
 			},
 		},
 	})
@@ -90,7 +90,7 @@ func TestAccBackupScheduleResourceInvalidRetention(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBackupScheduleResourceConfig(resourceName, "weekly", "sunday", 10, 4, "9999days", false),
-				ExpectError: regexp.MustCompile("There is an error during backup schedule creation"),
+				ExpectError: regexp.MustCompile("retention_time value must be one of"),
 			},
 		},
 	})
@@ -118,7 +118,21 @@ func TestAccBackupScheduleResourceInvalidStartAt(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBackupScheduleResourceConfig(resourceName, "weekly", "sunday", 99, 4, "30days", false),
-				ExpectError: regexp.MustCompile("There is an error during backup schedule creation"),
+				ExpectError: regexp.MustCompile("start_at value must be one of"),
+			},
+		},
+	})
+}
+
+func TestAccBackupScheduleResourceInvalidIncrementalEvery(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_backup_schedule_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccBackupScheduleResourceConfig(resourceName, "weekly", "sunday", 10, 3, "30days", false),
+				ExpectError: regexp.MustCompile("incremental_every value must be one of"),
 			},
 		},
 	})
