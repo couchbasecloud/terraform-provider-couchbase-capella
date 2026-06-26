@@ -155,8 +155,6 @@ func (r *DatabaseRole) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	refreshedState.Access = mapAccessFromSlice(state.Access)
-
 	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
 }
@@ -297,6 +295,8 @@ func (r *DatabaseRole) retrieveDatabaseRole(ctx context.Context, organizationId,
 		types.StringValue(clusterId),
 		auditObj,
 	)
+
+	refreshedState.Access = mapAccessFromAPI(roleResp.Access)
 
 	return refreshedState, nil
 }
