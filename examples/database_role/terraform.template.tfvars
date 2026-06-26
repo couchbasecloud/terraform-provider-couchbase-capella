@@ -28,7 +28,7 @@ access = [
         name = "travel-sample"
         scopes = [{
           name        = "inventory"
-          collections = ["sales"]
+          collections = ["hotel", "route"]
         }]
       }]
     }
