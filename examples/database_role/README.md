@@ -359,7 +359,7 @@ database_roles_list = {
 ```
 
 ## UPDATE
-### Let us edit the terraform.tfvars file to change the Database Role configuration settings.
+### Update the Database Role configuration by overriding the `access` variable.
 
 Command: `terraform apply -var 'access=[{privileges=["dataRead"]}]'`
 
