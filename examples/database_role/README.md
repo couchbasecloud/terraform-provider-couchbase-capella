@@ -270,7 +270,7 @@ The second ID is the cluster ID i.e. the ID of the cluster to which the role bel
 The third ID is the project ID i.e. the ID of the project to which the cluster belongs.
 The fourth ID is the organization ID i.e. the ID of the organization to which the project belongs.
 
-### Let's run a terraform plan to confirm that the import was successful
+### Let's run a terraform apply to confirm that the import was successful
 
 Command: `terraform apply`
 
