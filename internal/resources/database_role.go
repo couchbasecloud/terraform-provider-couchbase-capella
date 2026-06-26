@@ -273,19 +273,19 @@ func (r *DatabaseRole) retrieveDatabaseRole(ctx context.Context, organizationId,
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodGet, SuccessStatus: http.StatusOK}
 	response, err := r.ClientV1.ExecuteWithRetry(ctx, cfg, nil, r.Token, nil)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrExecutingRequest, err)
 	}
 
 	roleResp := api.GetDatabaseRoleResponse{}
 	err = json.Unmarshal(response.Body, &roleResp)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrUnmarshallingResponse, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshallingResponse, err)
 	}
 
 	audit := providerschema.NewCouchbaseAuditData(roleResp.Audit)
 	auditObj, diags := types.ObjectValueFrom(ctx, audit.AttributeTypes(), audit)
 	if diags.HasError() {
-		return nil, fmt.Errorf("%s: %s", errors.ErrUnableToConvertAuditData, diags.Errors())
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnableToConvertAuditData, diags.Errors())
 	}
 
 	refreshedState := providerschema.NewDatabaseRole(
