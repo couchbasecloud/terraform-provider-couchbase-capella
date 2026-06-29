@@ -116,35 +116,42 @@ func (d *DatabaseCredentials) Configure(_ context.Context, req datasource.Config
 	d.Data = data
 }
 
+func mapScopesFromAPI(scopes []api.Scope) []providerschema.ScopeResource {
+	result := make([]providerschema.ScopeResource, len(scopes))
+	for s, scope := range scopes {
+		result[s].Name = types.StringValue(scope.Name)
+		if scope.Collections != nil {
+			result[s].Collections = make([]types.String, len(scope.Collections))
+			for c, coll := range scope.Collections {
+				result[s].Collections[c] = types.StringValue(coll)
+			}
+		}
+	}
+	return result
+}
+
+func mapBucketsFromAPI(buckets []api.Bucket) []providerschema.BucketResource {
+	result := make([]providerschema.BucketResource, len(buckets))
+	for k, bucket := range buckets {
+		result[k].Name = types.StringValue(bucket.Name)
+		if bucket.Scopes != nil {
+			result[k].Scopes = mapScopesFromAPI(bucket.Scopes)
+		}
+	}
+	return result
+}
+
 // mapAccessFromAPI converts an API Access slice to the provider schema Access slice.
 // todo: add a unit test, tracking under: https://couchbasecloud.atlassian.net/browse/AV-63401
 func mapAccessFromAPI(apiAccess []api.Access) []providerschema.Access {
-	var access = make([]providerschema.Access, len(apiAccess))
-
+	access := make([]providerschema.Access, len(apiAccess))
 	for i, acc := range apiAccess {
 		access[i] = providerschema.Access{Privileges: make([]types.String, len(acc.Privileges))}
 		for j, permission := range acc.Privileges {
 			access[i].Privileges[j] = types.StringValue(permission)
 		}
-		if acc.Resources != nil {
-			if acc.Resources.Buckets != nil {
-				access[i].Resources = &providerschema.Resources{Buckets: make([]providerschema.BucketResource, len(acc.Resources.Buckets))}
-				for k, bucket := range acc.Resources.Buckets {
-					access[i].Resources.Buckets[k].Name = types.StringValue(acc.Resources.Buckets[k].Name)
-					if bucket.Scopes != nil {
-						access[i].Resources.Buckets[k].Scopes = make([]providerschema.ScopeResource, len(bucket.Scopes))
-						for s, scope := range bucket.Scopes {
-							access[i].Resources.Buckets[k].Scopes[s].Name = types.StringValue(scope.Name)
-							if scope.Collections != nil {
-								access[i].Resources.Buckets[k].Scopes[s].Collections = make([]types.String, len(scope.Collections))
-								for c, coll := range scope.Collections {
-									access[i].Resources.Buckets[k].Scopes[s].Collections[c] = types.StringValue(coll)
-								}
-							}
-						}
-					}
-				}
-			}
+		if acc.Resources != nil && acc.Resources.Buckets != nil {
+			access[i].Resources = &providerschema.Resources{Buckets: mapBucketsFromAPI(acc.Resources.Buckets)}
 		}
 	}
 
