@@ -36,7 +36,6 @@ func TestAccDatabaseRoleResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
 					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
 					resource.TestCheckResourceAttr(resourceReference, "description", description),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceReference, "access.*", map[string]string{}),
 					resource.TestCheckTypeSetElemAttr(resourceReference, "access.*.privileges.*", "dataRead"),
 					resource.TestCheckResourceAttrSet(resourceReference, "id"),
 					resource.TestCheckResourceAttrSet(resourceReference, "audit.created_at"),
@@ -114,6 +113,8 @@ func TestAccDatabaseRoleResourceWithScopedAccess(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(resourceReference, "cluster_id", globalClusterId),
 					resource.TestCheckResourceAttr(resourceReference, "name", resourceName),
+					resource.TestCheckTypeSetElemAttr(resourceReference, "access.*.privileges.*", "dataRead"),
+					resource.TestCheckTypeSetElemAttr(resourceReference, "access.*.privileges.*", "dataManage"),
 					resource.TestCheckResourceAttrSet(resourceReference, "id"),
 				),
 			},
@@ -151,6 +152,8 @@ func TestAccDatasourceDatabaseRoles(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(datasourceReference, "cluster_id", globalClusterId),
 					resource.TestCheckResourceAttrSet(datasourceReference, "data.#"),
+					resource.TestCheckResourceAttrSet(datasourceReference, "data.0.id"),
+					resource.TestCheckResourceAttrSet(datasourceReference, "data.0.name"),
 				),
 			},
 		},
@@ -218,7 +221,6 @@ func testAccDatabaseRoleResourceConfigRequiredOnly(resourceName string) string {
 		project_id      = "%[4]s"
 		cluster_id      = "%[5]s"
 		name            = "%[2]s"
-		description     = ""
 		%[6]s
 	}
 	`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId,
