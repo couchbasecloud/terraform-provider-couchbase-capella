@@ -463,6 +463,12 @@ func (p *PrivateEndpointService) waitUntilStatusChanges(ctx context.Context, fin
 		case <-timer.C:
 			response, err := p.getServiceStatus(ctx, organizationId, projectId, clusterId)
 			if err != nil {
+				// If our deadline expired mid-request, surface the typed
+				// timeout rather than the raw context error — the select may
+				// race with ctx.Done() when both are ready.
+				if ctx.Err() != nil {
+					return errors.ErrPrivateEndpointServiceTimeout
+				}
 				return err
 			}
 
