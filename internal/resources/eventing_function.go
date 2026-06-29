@@ -59,6 +59,14 @@ func (e *EventingFunction) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
+	if plan.State.ValueString() == eventingStatePaused {
+		resp.Diagnostics.AddError(
+			"Invalid eventing function state",
+			"Cannot create a paused eventing function",
+		)
+		return
+	}
+
 	var (
 		organizationId = plan.OrganizationId.ValueString()
 		projectId      = plan.ProjectId.ValueString()
