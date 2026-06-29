@@ -297,9 +297,8 @@ func (r *DatabaseRole) retrieveDatabaseRole(ctx context.Context, organizationId,
 		types.StringValue(projectId),
 		types.StringValue(clusterId),
 		auditObj,
+		mapAccessFromAPI(roleResp.Access),
 	)
-
-	refreshedState.Access = mapAccessFromAPI(roleResp.Access)
 
 	return refreshedState, nil
 }

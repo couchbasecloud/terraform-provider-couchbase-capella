@@ -41,6 +41,7 @@ func NewDatabaseRole(
 	id, name, description types.String,
 	organizationId, projectId, clusterId types.String,
 	auditObject basetypes.ObjectValue,
+	access []Access,
 ) *DatabaseRole {
 	return &DatabaseRole{
 		Id:             id,
@@ -50,6 +51,7 @@ func NewDatabaseRole(
 		ProjectId:      projectId,
 		ClusterId:      clusterId,
 		Audit:          auditObject,
+		Access:         access,
 	}
 }
 
