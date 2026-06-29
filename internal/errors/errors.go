@@ -205,6 +205,9 @@ var (
 	// ErrGatewayTimeoutForIndexDDL is returned when API server times out while waiting for response for index DDL.
 	ErrGatewayTimeoutForIndexDDL = errors.New("timeout waiting for response for index DDL")
 
+	// ErrServiceUnavailable is returned when the API returns 503 due to a transient condition (e.g. bucket deletion in progress).
+	ErrServiceUnavailable = errors.New("service unavailable")
+
 	// ErrNotTrimmed is returned when any attribute has leading or trailing spaces.
 	ErrNotTrimmed = errors.New("attribute has leading or trailing spaces")
 

@@ -62,6 +62,21 @@ func TestCustomRetryPolicyDirectly(t *testing.T) {
 	if err != nil {
 		t.Errorf("expected no error for 429, got: %v", err)
 	}
+
+	// Test 503 case
+	resp = &http.Response{
+		StatusCode: http.StatusServiceUnavailable,
+		Body:       io.NopCloser(bytes.NewBufferString("service unavailable")),
+		Header:     make(http.Header),
+	}
+
+	shouldRetry, err = customRetryPolicy(context.Background(), resp, nil)
+	if !shouldRetry {
+		t.Error("expected retry for 503 case")
+	}
+	if err != nil {
+		t.Errorf("expected no error for 503, got: %v", err)
+	}
 }
 
 func TestCustomRetryPolicyJSONDecoder(t *testing.T) {
@@ -366,6 +381,40 @@ func Test429_RetryAfter_Respected(t *testing.T) {
 	}
 }
 
+func Test503_ServiceUnavailable_Retried(t *testing.T) {
+	var callCount int32
+
+	// Create test server that returns 503 on the first call, then success
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		count := atomic.AddInt32(&callCount, 1)
+		if count == 1 {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			_, _ = w.Write([]byte("service unavailable"))
+		} else {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte("success"))
+		}
+	}))
+	defer server.Close()
+
+	client := NewRetryHTTPClient(context.Background(), 30*time.Second, false, WithFastBackoff())
+
+	resp, err := client.Get(server.URL)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	// Should have retried once after 503
+	if atomic.LoadInt32(&callCount) != 2 {
+		t.Fatalf("expected 2 calls, got %d", atomic.LoadInt32(&callCount))
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("expected successful status, got %d", resp.StatusCode)
+	}
+}
+
 func TestSuccessPassthrough(t *testing.T) {
 	var callCount int32
 
@@ -412,7 +461,6 @@ func TestDefaultCase_NoRetry(t *testing.T) {
 		{"NotFound", http.StatusNotFound, "not found"},
 		{"InternalServerError", http.StatusInternalServerError, "internal server error"},
 		{"BadGateway", http.StatusBadGateway, "bad gateway"},
-		{"ServiceUnavailable", http.StatusServiceUnavailable, "service unavailable"},
 	}
 
 	for _, tc := range testCases {

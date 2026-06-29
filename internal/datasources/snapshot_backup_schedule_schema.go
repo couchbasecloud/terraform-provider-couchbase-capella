@@ -15,7 +15,7 @@ func SnapshotBackupScheduleSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "cluster_id", snapshotBackupScheduleBuilder, requiredStringWithValidator())
 	capellaschema.AddAttr(attrs, "interval", snapshotBackupScheduleBuilder, computedInt64())
 	capellaschema.AddAttr(attrs, "retention", snapshotBackupScheduleBuilder, computedInt64())
-	capellaschema.AddAttr(attrs, "start_time", snapshotBackupScheduleBuilder, computedString())
+	capellaschema.AddAttr(attrs, "start_time", snapshotBackupScheduleBuilder, computedRFC3339())
 	capellaschema.AddAttr(attrs, "copy_to_regions", snapshotBackupScheduleBuilder, computedStringSet())
 	return schema.Schema{
 		MarkdownDescription: "The snapshot backups data source retrieves the snapshot backup schedule for a cluster.",
