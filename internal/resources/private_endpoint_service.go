@@ -53,8 +53,12 @@ var (
 	cleanupTimeout = 15 * time.Minute
 
 	// pollInterval is how often the service status is polled while waiting for a
-	// transition. The overall 60-minute timeout remains the backstop.
+	// transition.
 	pollInterval = 30 * time.Second
+
+	// statusChangeTimeout bounds how long we wait for the service to reach the
+	// desired lifecycle state, end-to-end.
+	statusChangeTimeout = 60 * time.Minute
 )
 
 // PrivateEndpointService is the scope resource implementation.
@@ -427,22 +431,29 @@ func initializePrivateEndpointServicePlan(plan providerschema.PrivateEndpointSer
 }
 
 // waitUntilStatusChanges waits until the service reaches the desired state on the
-// cluster. When the API reports an explicit lifecycle status it is used to fail
-// fast on terminal states (enableFailed/disableFailed) and to keep polling on
-// transient ones (enabling/disabling/unknown). When the status is absent — which
-// happens on GCP, when the private endpoint status feature flag is disabled, or
-// on older control planes — it falls back to the Enabled boolean, preserving the
-// previous behavior. The 60-minute timeout remains as a backstop.
+// cluster. When the API reports an explicit lifecycle status it keeps polling on
+// transient ones (enabling/disabling/unknown) and fails fast on terminal ones
+// (enableFailed/disableFailed) — but only once it has seen evidence the current
+// operation is in flight, so a residual terminal state from a prior attempt is
+// not mistaken for failure of the operation we just issued. When the status is
+// absent — which happens on GCP, when the private endpoint status feature flag
+// is disabled, or on older control planes — it falls back to the Enabled
+// boolean, preserving the previous behavior. The overall timeout remains as a
+// backstop.
 func (p *PrivateEndpointService) waitUntilStatusChanges(ctx context.Context, finalState bool, organizationId, projectId, clusterId string) error {
 	var cancel context.CancelFunc
-	ctx, cancel = context.WithTimeout(ctx, time.Minute*60)
+	ctx, cancel = context.WithTimeout(ctx, statusChangeTimeout)
 	defer cancel()
 
-	// Fire immediately so a terminal enableFailed/disableFailed is observed
-	// without paying a pollInterval delay; subsequent iterations Reset to
-	// pollInterval below.
 	timer := time.NewTimer(0)
 	defer timer.Stop()
+
+	// sawInFlight flips true once we observe any status other than the
+	// terminal-failure ones, which is our evidence that the backend has
+	// progressed past whatever residual state was present before our POST.
+	// Until then, a reported enableFailed/disableFailed could be stale and is
+	// treated as transient.
+	var sawInFlight bool
 
 	for {
 		select {
@@ -468,13 +479,17 @@ func (p *PrivateEndpointService) waitUntilStatusChanges(ctx context.Context, fin
 
 			switch *response.Status {
 			case statusEnableFailed:
-				return errors.ErrPrivateEndpointServiceEnableFailed
+				if sawInFlight {
+					return errors.ErrPrivateEndpointServiceEnableFailed
+				}
 			case statusDisableFailed:
-				return errors.ErrPrivateEndpointServiceDisableFailed
+				if sawInFlight {
+					return errors.ErrPrivateEndpointServiceDisableFailed
+				}
 			case statusEnabling, statusDisabling, statusUnknown:
-				// Transient states: keep polling.
+				sawInFlight = true
 			case statusEnabled, statusDisabled, statusIdle:
-				// Resolved states: confirm against the requested final state.
+				sawInFlight = true
 				if response.Enabled == finalState {
 					return nil
 				}

@@ -111,12 +111,14 @@ func strPtr(s string) *string { return &s }
 // so the poll loops resolve in milliseconds rather than seconds.
 func fastPolling(t *testing.T) {
 	t.Helper()
-	origPoll, origCleanup := pollInterval, cleanupTimeout
+	origPoll, origCleanup, origStatus := pollInterval, cleanupTimeout, statusChangeTimeout
 	pollInterval = time.Millisecond
 	cleanupTimeout = 2 * time.Second
+	statusChangeTimeout = 2 * time.Second
 	t.Cleanup(func() {
 		pollInterval = origPoll
 		cleanupTimeout = origCleanup
+		statusChangeTimeout = origStatus
 	})
 }
 
@@ -130,20 +132,26 @@ func TestWaitUntilStatusChanges(t *testing.T) {
 		wantErr    error
 	}{
 		{
-			name:       "terminal enableFailed returns enable-failed error",
+			// Without ever observing the backend progress past the terminal
+			// state, the poll cannot tell a stale enableFailed apart from a
+			// real one — it must wait for evidence the current operation is
+			// in flight. If nothing ever changes, the overall timeout fires
+			// and surfaces the (less specific) timeout error.
+			name:       "enableFailed stuck without any progress times out",
 			finalState: true,
 			statuses: []api.GetPrivateEndpointServiceStatusResponse{
 				{Enabled: false, Status: strPtr(statusEnableFailed)},
 			},
-			wantErr: errors.ErrPrivateEndpointServiceEnableFailed,
+			wantErr: errors.ErrPrivateEndpointServiceTimeout,
 		},
 		{
-			name:       "terminal disableFailed returns disable-failed error",
+			// Symmetric case on the disable path.
+			name:       "disableFailed stuck without any progress times out",
 			finalState: false,
 			statuses: []api.GetPrivateEndpointServiceStatusResponse{
 				{Enabled: true, Status: strPtr(statusDisableFailed)},
 			},
-			wantErr: errors.ErrPrivateEndpointServiceDisableFailed,
+			wantErr: errors.ErrPrivateEndpointServiceTimeout,
 		},
 		{
 			name:       "transient enabling resolves to enabled",
@@ -183,6 +191,45 @@ func TestWaitUntilStatusChanges(t *testing.T) {
 				{Enabled: true, Status: strPtr(statusEnabled)},
 			},
 			wantErr: nil,
+		},
+		{
+			// Reproduces the stale-state race: a prior failed attempt left the
+			// backend in enableFailed; our POST has been accepted but the GET we
+			// fire immediately afterward may still see the residual terminal
+			// state before the new enable job is observed. The poll must wait
+			// for evidence the current operation is in flight (a transient
+			// state) before short-circuiting on a terminal status.
+			name:       "stale enableFailed before current operation in flight resolves to enabled",
+			finalState: true,
+			statuses: []api.GetPrivateEndpointServiceStatusResponse{
+				{Enabled: false, Status: strPtr(statusEnableFailed)},
+				{Enabled: false, Status: strPtr(statusEnabling)},
+				{Enabled: true, Status: strPtr(statusEnabled)},
+			},
+			wantErr: nil,
+		},
+		{
+			// Symmetric case on the disable path.
+			name:       "stale disableFailed before current operation in flight resolves to disabled",
+			finalState: false,
+			statuses: []api.GetPrivateEndpointServiceStatusResponse{
+				{Enabled: true, Status: strPtr(statusDisableFailed)},
+				{Enabled: true, Status: strPtr(statusDisabling)},
+				{Enabled: false, Status: strPtr(statusDisabled)},
+			},
+			wantErr: nil,
+		},
+		{
+			// After we have evidence the current operation is in flight, a
+			// terminal status IS authoritative — the existing fail-fast
+			// behavior must be preserved.
+			name:       "enableFailed after transient enabling is terminal",
+			finalState: true,
+			statuses: []api.GetPrivateEndpointServiceStatusResponse{
+				{Enabled: false, Status: strPtr(statusEnabling)},
+				{Enabled: false, Status: strPtr(statusEnableFailed)},
+			},
+			wantErr: errors.ErrPrivateEndpointServiceEnableFailed,
 		},
 	}
 
