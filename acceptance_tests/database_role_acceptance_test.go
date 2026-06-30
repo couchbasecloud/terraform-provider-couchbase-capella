@@ -28,7 +28,7 @@ func TestAccDatabaseRoleResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read
 			{
-				Config: testAccDatabaseRoleResourceConfig(resourceName, description),
+				Config: testAccDatabaseRoleResourceConfig(resourceName, "", description, `"dataRead"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsDatabaseRoleResource(t, resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
@@ -54,7 +54,7 @@ func TestAccDatabaseRoleResource(t *testing.T) {
 			},
 			// Update description and access
 			{
-				Config: testAccDatabaseRoleResourceConfigUpdated(resourceName, updatedDescription),
+				Config: testAccDatabaseRoleResourceConfig(resourceName, "", updatedDescription, `"dataManage"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsDatabaseRoleResource(t, resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
@@ -81,7 +81,7 @@ func TestAccDatabaseRoleResourceWithRequiredFieldsOnly(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseRoleResourceConfigRequiredOnly(resourceName),
+				Config: testAccDatabaseRoleResourceConfig(resourceName, "", "", `"dataRead"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccExistsDatabaseRoleResource(t, resourceReference),
 					resource.TestCheckResourceAttr(resourceReference, "organization_id", globalOrgId),
@@ -130,7 +130,7 @@ func TestAccDatabaseRoleResourceInvalidName(t *testing.T) {
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDatabaseRoleResourceConfigInvalidName(resourceName),
+				Config:      testAccDatabaseRoleResourceConfig(resourceName, "  "+resourceName+"  ", "", `"dataRead"`),
 				ExpectError: regexp.MustCompile(`(?s)leading.*trailing spaces`),
 			},
 		},
@@ -180,7 +180,14 @@ func databaseRoleAccessBlock(privileges string) string {
 		]`, privileges)
 }
 
-func testAccDatabaseRoleResourceConfig(resourceName, description string) string {
+func testAccDatabaseRoleResourceConfig(resourceName, name, description, privileges string) string {
+	if name == "" {
+		name = resourceName
+	}
+	descBlock := ""
+	if description != "" {
+		descBlock = fmt.Sprintf(`description     = "%s"`, description)
+	}
 	return fmt.Sprintf(`
 	%[1]s
 
@@ -188,43 +195,12 @@ func testAccDatabaseRoleResourceConfig(resourceName, description string) string 
 		organization_id = "%[3]s"
 		project_id      = "%[4]s"
 		cluster_id      = "%[5]s"
-		name            = "%[2]s"
-		description     = "%[6]s"
+		name            = "%[6]s"
 		%[7]s
+		%[8]s
 	}
 	`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId,
-		description, databaseRoleAccessBlock(`"dataRead"`))
-}
-
-func testAccDatabaseRoleResourceConfigUpdated(resourceName, description string) string {
-	return fmt.Sprintf(`
-	%[1]s
-
-	resource "couchbase-capella_database_role" "%[2]s" {
-		organization_id = "%[3]s"
-		project_id      = "%[4]s"
-		cluster_id      = "%[5]s"
-		name            = "%[2]s"
-		description     = "%[6]s"
-		%[7]s
-	}
-	`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId,
-		description, databaseRoleAccessBlock(`"dataManage"`))
-}
-
-func testAccDatabaseRoleResourceConfigRequiredOnly(resourceName string) string {
-	return fmt.Sprintf(`
-	%[1]s
-
-	resource "couchbase-capella_database_role" "%[2]s" {
-		organization_id = "%[3]s"
-		project_id      = "%[4]s"
-		cluster_id      = "%[5]s"
-		name            = "%[2]s"
-		%[6]s
-	}
-	`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId,
-		databaseRoleAccessBlock(`"dataRead"`))
+		name, descBlock, databaseRoleAccessBlock(privileges))
 }
 
 func testAccDatabaseRoleResourceConfigWithScopedAccess(resourceName string) string {
@@ -258,22 +234,6 @@ func testAccDatabaseRoleResourceConfigWithScopedAccess(resourceName string) stri
 	}
 	`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId,
 		globalBucketName, globalScopeName, globalCollectionName)
-}
-
-func testAccDatabaseRoleResourceConfigInvalidName(resourceName string) string {
-	return fmt.Sprintf(`
-	%[1]s
-
-	resource "couchbase-capella_database_role" "%[2]s" {
-		organization_id = "%[3]s"
-		project_id      = "%[4]s"
-		cluster_id      = "%[5]s"
-		name            = "  %[2]s  "
-		description     = ""
-		%[6]s
-	}
-	`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId,
-		databaseRoleAccessBlock(`"dataRead"`))
 }
 
 func testAccDatabaseRolesDatasourceConfig(resourceName string) string {
