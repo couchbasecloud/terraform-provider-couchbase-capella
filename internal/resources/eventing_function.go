@@ -235,8 +235,12 @@ func eventingSettingsChanged(plan, state *providerschema.EventingFunctionSetting
 // eventingBindingsChanged determines if any of the bindings have changed,
 // except for secrets (password or bearer token).
 func eventingBindingsChanged(ctx context.Context, plan, state *providerschema.EventingFunctionBindingsResource) (bool, error) {
-	if plan == nil || state == nil {
+	if plan == nil {
 		return false, nil
+	}
+
+	if state == nil {
+		return true, nil
 	}
 
 	if len(plan.Buckets) != len(state.Buckets) ||
