@@ -433,73 +433,13 @@ func (r *DatabaseCredential) validateDatabaseCredentialAttributesTrimmed(plan pr
 
 // todo: add a unit test for this, tracking under: https://couchbasecloud.atlassian.net/browse/AV-63401
 func createAccess(input providerschema.DatabaseCredential) []api.Access {
-	var access = make([]api.Access, len(input.Access))
-
-	for i, acc := range input.Access {
-		access[i] = api.Access{Privileges: make([]string, len(acc.Privileges))}
-		for j, permission := range acc.Privileges {
-			access[i].Privileges[j] = permission.ValueString()
-		}
-		if acc.Resources != nil {
-			if acc.Resources.Buckets != nil {
-				access[i].Resources = &api.AccessibleResources{Buckets: make([]api.Bucket, len(acc.Resources.Buckets))}
-				for k, bucket := range acc.Resources.Buckets {
-					access[i].Resources.Buckets[k].Name = acc.Resources.Buckets[k].Name.ValueString()
-					if bucket.Scopes != nil {
-						access[i].Resources.Buckets[k].Scopes = make([]api.Scope, len(bucket.Scopes))
-						for s, scope := range bucket.Scopes {
-							access[i].Resources.Buckets[k].Scopes[s].Name = scope.Name.ValueString()
-							if scope.Collections != nil {
-								access[i].Resources.Buckets[k].Scopes[s].Collections = make([]string, len(scope.Collections))
-								for c, coll := range scope.Collections {
-									access[i].Resources.Buckets[k].Scopes[s].Collections[c] = coll.ValueString()
-								}
-							}
-						}
-					}
-				}
-			}
-		} else {
-			// todo: There is a bug in the PUT V4 API where we cannot pass empty buckets list as it leads to a nil pointer exception.
-			// to workaround this bug, I have temporarily added a fix where we pass an empty list of buckets if the terraform input field doesn't contain any buckets.
-			// fix for the V4 API bug will come as part of https://couchbasecloud.atlassian.net/browse/AV-63388
-
-			access[i].Resources = &api.AccessibleResources{Buckets: make([]api.Bucket, 0)}
-		}
-	}
-
-	return access
+	return createAccessFromSlice(input.Access)
 }
 
 // mapAccess needs a 1:1 mapping when we store the output as the refreshed state.
 // todo: add a unit test, tracking under: https://couchbasecloud.atlassian.net/browse/AV-63401
 func mapAccess(plan providerschema.DatabaseCredential) []providerschema.Access {
-	var access = make([]providerschema.Access, len(plan.Access))
-
-	for i, acc := range plan.Access {
-		access[i] = providerschema.Access{Privileges: make([]types.String, len(acc.Privileges))}
-		copy(access[i].Privileges, acc.Privileges)
-		if acc.Resources != nil {
-			if acc.Resources.Buckets != nil {
-				access[i].Resources = &providerschema.Resources{Buckets: make([]providerschema.BucketResource, len(acc.Resources.Buckets))}
-				for k, bucket := range acc.Resources.Buckets {
-					access[i].Resources.Buckets[k].Name = acc.Resources.Buckets[k].Name
-					if bucket.Scopes != nil {
-						access[i].Resources.Buckets[k].Scopes = make([]providerschema.ScopeResource, len(bucket.Scopes))
-						for s, scope := range bucket.Scopes {
-							access[i].Resources.Buckets[k].Scopes[s].Name = scope.Name
-							if scope.Collections != nil {
-								access[i].Resources.Buckets[k].Scopes[s].Collections = make([]types.String, len(scope.Collections))
-								copy(access[i].Resources.Buckets[k].Scopes[s].Collections, scope.Collections)
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-	return access
+	return mapAccessFromSlice(plan.Access)
 }
 
 // initializeDataBaseCredentialWithPlanPasswordAndId initializes an instance of providerschema.DatabaseCredential

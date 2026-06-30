@@ -96,6 +96,45 @@ func computedStringSet() *schema.SetAttribute {
 	}
 }
 
+// computedAccessAttribute builds the access schema block (privileges, resources.buckets.scopes.collections)
+// using Set types consistent with the corresponding resource schemas.
+func computedAccessAttribute(builder *capellaschema.SchemaBuilder) *schema.SetNestedAttribute {
+	scopeAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(scopeAttrs, "name", builder, computedString())
+	capellaschema.AddAttr(scopeAttrs, "collections", builder, computedStringSet())
+
+	bucketAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(bucketAttrs, "name", builder, computedString())
+	capellaschema.AddAttr(bucketAttrs, "scopes", builder, &schema.SetNestedAttribute{
+		Computed: true,
+		NestedObject: schema.NestedAttributeObject{
+			Attributes: scopeAttrs,
+		},
+	})
+
+	resourcesAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(resourcesAttrs, "buckets", builder, &schema.SetNestedAttribute{
+		Computed: true,
+		NestedObject: schema.NestedAttributeObject{
+			Attributes: bucketAttrs,
+		},
+	})
+
+	accessAttrs := make(map[string]schema.Attribute)
+	capellaschema.AddAttr(accessAttrs, "privileges", builder, computedStringSet())
+	capellaschema.AddAttr(accessAttrs, "resources", builder, &schema.SingleNestedAttribute{
+		Computed:   true,
+		Attributes: resourcesAttrs,
+	})
+
+	return &schema.SetNestedAttribute{
+		Computed: true,
+		NestedObject: schema.NestedAttributeObject{
+			Attributes: accessAttrs,
+		},
+	}
+}
+
 func computedAudit() *schema.SingleNestedAttribute {
 	tempBuilder := capellaschema.NewSchemaBuilder("audit")
 	auditAttrs := make(map[string]schema.Attribute)
