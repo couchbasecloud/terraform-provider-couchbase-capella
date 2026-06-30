@@ -455,9 +455,25 @@ func (p *PrivateEndpointService) waitUntilStatusChanges(ctx context.Context, fin
 	// treated as transient.
 	var sawInFlight bool
 
+	// lastTerminalFailure records a terminal-failure status we observed but
+	// deferred on because sawInFlight was still false (i.e. it might have been
+	// residual from a prior attempt). If the backend never transitions and we
+	// hit the overall timeout, this lets us surface the typed failure error so
+	// the caller still routes to cleanup, instead of a generic timeout that
+	// would leave orphaned infra behind and skip state removal.
+	var lastTerminalFailure error
+
 	for {
 		select {
 		case <-ctx.Done():
+			// If the operation appeared stuck at a terminal failure the whole
+			// time (sawInFlight never flipped), trust that failure now rather
+			// than returning a generic timeout — the generic timeout does not
+			// route to handleFailedEnable, so cleanup/state-removal would be
+			// skipped.
+			if lastTerminalFailure != nil {
+				return lastTerminalFailure
+			}
 			return errors.ErrPrivateEndpointServiceTimeout
 
 		case <-timer.C:
@@ -467,6 +483,9 @@ func (p *PrivateEndpointService) waitUntilStatusChanges(ctx context.Context, fin
 				// timeout rather than the raw context error — the select may
 				// race with ctx.Done() when both are ready.
 				if ctx.Err() != nil {
+					if lastTerminalFailure != nil {
+						return lastTerminalFailure
+					}
 					return errors.ErrPrivateEndpointServiceTimeout
 				}
 				return err
@@ -488,14 +507,22 @@ func (p *PrivateEndpointService) waitUntilStatusChanges(ctx context.Context, fin
 				if sawInFlight {
 					return errors.ErrPrivateEndpointServiceEnableFailed
 				}
+				// Possibly-stale: defer, but remember it so a never-transitioning
+				// enableFailed is still routed to cleanup on timeout.
+				lastTerminalFailure = errors.ErrPrivateEndpointServiceEnableFailed
 			case statusDisableFailed:
 				if sawInFlight {
 					return errors.ErrPrivateEndpointServiceDisableFailed
 				}
+				lastTerminalFailure = errors.ErrPrivateEndpointServiceDisableFailed
 			case statusEnabling, statusDisabling, statusUnknown:
 				sawInFlight = true
+				// The backend progressed, so any earlier terminal status was
+				// genuinely stale; a later stall is a real transition timeout.
+				lastTerminalFailure = nil
 			case statusEnabled, statusDisabled, statusIdle:
 				sawInFlight = true
+				lastTerminalFailure = nil
 				if response.Enabled == finalState {
 					return nil
 				}

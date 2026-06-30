@@ -132,24 +132,38 @@ func TestWaitUntilStatusChanges(t *testing.T) {
 		wantErr    error
 	}{
 		{
-			// Without ever observing the backend progress past the terminal
-			// state, the poll cannot tell a stale enableFailed apart from a
-			// real one — it must wait for evidence the current operation is
-			// in flight. If nothing ever changes, the overall timeout fires
-			// and surfaces the (less specific) timeout error.
-			name:       "enableFailed stuck without any progress times out",
+			// A terminal enableFailed that is present from the first poll and
+			// never transitions cannot be told apart from a stale one while it
+			// is happening, so the loop keeps polling. But on the overall
+			// timeout we trust the persistent terminal status and surface the
+			// typed failure (not a generic timeout) so the caller still routes
+			// to cleanup / state removal instead of leaving orphaned infra.
+			name:       "enableFailed stuck without any progress surfaces enableFailed on timeout",
 			finalState: true,
 			statuses: []api.GetPrivateEndpointServiceStatusResponse{
 				{Enabled: false, Status: strPtr(statusEnableFailed)},
 			},
-			wantErr: errors.ErrPrivateEndpointServiceTimeout,
+			wantErr: errors.ErrPrivateEndpointServiceEnableFailed,
 		},
 		{
 			// Symmetric case on the disable path.
-			name:       "disableFailed stuck without any progress times out",
+			name:       "disableFailed stuck without any progress surfaces disableFailed on timeout",
 			finalState: false,
 			statuses: []api.GetPrivateEndpointServiceStatusResponse{
 				{Enabled: true, Status: strPtr(statusDisableFailed)},
+			},
+			wantErr: errors.ErrPrivateEndpointServiceDisableFailed,
+		},
+		{
+			// Once the backend shows progress (enabling) the earlier terminal
+			// status was genuinely stale, so a later stall is a real transition
+			// timeout — NOT a failure. This proves the deferred-failure latch is
+			// cleared when sawInFlight flips.
+			name:       "stale enableFailed then stuck enabling times out generically",
+			finalState: true,
+			statuses: []api.GetPrivateEndpointServiceStatusResponse{
+				{Enabled: false, Status: strPtr(statusEnableFailed)},
+				{Enabled: false, Status: strPtr(statusEnabling)},
 			},
 			wantErr: errors.ErrPrivateEndpointServiceTimeout,
 		},
