@@ -116,31 +116,6 @@ func (d *DatabaseCredentials) Configure(_ context.Context, req datasource.Config
 	d.Data = data
 }
 
-func mapScopesFromAPI(scopes []api.Scope) []providerschema.ScopeResource {
-	result := make([]providerschema.ScopeResource, len(scopes))
-	for s, scope := range scopes {
-		result[s].Name = types.StringValue(scope.Name)
-		if scope.Collections != nil {
-			result[s].Collections = make([]types.String, len(scope.Collections))
-			for c, coll := range scope.Collections {
-				result[s].Collections[c] = types.StringValue(coll)
-			}
-		}
-	}
-	return result
-}
-
-func mapBucketsFromAPI(buckets []api.Bucket) []providerschema.BucketResource {
-	result := make([]providerschema.BucketResource, len(buckets))
-	for k, bucket := range buckets {
-		result[k].Name = types.StringValue(bucket.Name)
-		if bucket.Scopes != nil {
-			result[k].Scopes = mapScopesFromAPI(bucket.Scopes)
-		}
-	}
-	return result
-}
-
 // mapAccessFromAPI converts an API Access slice to the provider schema Access slice.
 // todo: add a unit test, tracking under: https://couchbasecloud.atlassian.net/browse/AV-63401
 func mapAccessFromAPI(apiAccess []api.Access) []providerschema.Access {
@@ -151,7 +126,7 @@ func mapAccessFromAPI(apiAccess []api.Access) []providerschema.Access {
 			access[i].Privileges[j] = types.StringValue(permission)
 		}
 		if acc.Resources != nil && acc.Resources.Buckets != nil {
-			access[i].Resources = &providerschema.Resources{Buckets: mapBucketsFromAPI(acc.Resources.Buckets)}
+			access[i].Resources = &providerschema.Resources{Buckets: providerschema.MapBucketsFromAPI(acc.Resources.Buckets)}
 		}
 	}
 

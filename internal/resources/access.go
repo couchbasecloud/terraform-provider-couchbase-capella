@@ -80,31 +80,6 @@ func copyBucketResources(buckets []providerschema.BucketResource) []providersche
 	return result
 }
 
-func mapScopesFromAPI(scopes []api.Scope) []providerschema.ScopeResource {
-	result := make([]providerschema.ScopeResource, len(scopes))
-	for s, scope := range scopes {
-		result[s].Name = types.StringValue(scope.Name)
-		if scope.Collections != nil {
-			result[s].Collections = make([]types.String, len(scope.Collections))
-			for c, coll := range scope.Collections {
-				result[s].Collections[c] = types.StringValue(coll)
-			}
-		}
-	}
-	return result
-}
-
-func mapBucketsFromAPI(buckets []api.Bucket) []providerschema.BucketResource {
-	result := make([]providerschema.BucketResource, len(buckets))
-	for k, bucket := range buckets {
-		result[k].Name = types.StringValue(bucket.Name)
-		if bucket.Scopes != nil {
-			result[k].Scopes = mapScopesFromAPI(bucket.Scopes)
-		}
-	}
-	return result
-}
-
 // mapAccessFromAPI converts the API Access slice to the terraform schema Access slice.
 func mapAccessFromAPI(apiAccess []api.Access) []providerschema.Access {
 	access := make([]providerschema.Access, len(apiAccess))
@@ -114,7 +89,7 @@ func mapAccessFromAPI(apiAccess []api.Access) []providerschema.Access {
 			access[i].Privileges[j] = types.StringValue(permission)
 		}
 		if acc.Resources != nil && acc.Resources.Buckets != nil {
-			access[i].Resources = &providerschema.Resources{Buckets: mapBucketsFromAPI(acc.Resources.Buckets)}
+			access[i].Resources = &providerschema.Resources{Buckets: providerschema.MapBucketsFromAPI(acc.Resources.Buckets)}
 		}
 	}
 	return access
@@ -132,14 +107,10 @@ func reconcileAccess(apiAccess, stateAccess []providerschema.Access) []providers
 
 	// Build a lookup of state access entries keyed by sorted privileges to
 	// allow matching entries regardless of ordering.
-	type accessKey struct {
-		index int
-		entry providerschema.Access
-	}
-	stateByPrivileges := make(map[string][]accessKey, len(stateAccess))
-	for i, sa := range stateAccess {
+	stateByPrivileges := make(map[string][]providerschema.Access, len(stateAccess))
+	for _, sa := range stateAccess {
 		key := privilegesKey(sa.Privileges)
-		stateByPrivileges[key] = append(stateByPrivileges[key], accessKey{index: i, entry: sa})
+		stateByPrivileges[key] = append(stateByPrivileges[key], sa)
 	}
 
 	result := make([]providerschema.Access, len(apiAccess))
@@ -152,7 +123,7 @@ func reconcileAccess(apiAccess, stateAccess []providerschema.Access) []providers
 		}
 
 		// Pop the first matching candidate to handle duplicate privilege sets.
-		stateEntry := candidates[0].entry
+		stateEntry := candidates[0]
 		stateByPrivileges[key] = candidates[1:]
 
 		if stateEntry.Resources == nil && apiEntry.Resources != nil && isWildcardOnlyResourcesSchema(apiEntry.Resources) {
@@ -164,8 +135,8 @@ func reconcileAccess(apiAccess, stateAccess []providerschema.Access) []providers
 	return result
 }
 
-// isWildcardOnlyResourcesSchema mirrors isWildcardOnlyResources for the
-// schema representation.
+// isWildcardOnlyResourcesSchema returns true when the resources contain only
+// a single wildcard ("*") bucket with no scopes.
 func isWildcardOnlyResourcesSchema(res *providerschema.Resources) bool {
 	if res == nil || len(res.Buckets) != 1 {
 		return false
