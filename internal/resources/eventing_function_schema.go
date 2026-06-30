@@ -29,7 +29,7 @@ func EventingFunctionSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "cluster_id", eventingFunctionBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "name", eventingFunctionBuilder, requiredNonEmptyStringAttribute())
 	capellaschema.AddAttr(attrs, "description", eventingFunctionBuilder, stringAttribute([]string{optional}))
-	capellaschema.AddAttr(attrs, "code", eventingFunctionBuilder, stringAttribute([]string{optional, computed, sensitive}))
+	capellaschema.AddAttr(attrs, "code", eventingFunctionBuilder, stringAttribute([]string{optional, computed, sensitive}, validator.String(stringvalidator.LengthAtLeast(1))))
 	capellaschema.AddAttr(
 		attrs,
 		"state",
