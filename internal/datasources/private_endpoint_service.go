@@ -92,6 +92,10 @@ func (p *PrivateEndpointService) Read(ctx context.Context, req datasource.ReadRe
 	}
 
 	state.Enabled = types.BoolValue(privateEndpointServiceStatus.Enabled)
+	state.Status = types.StringNull()
+	if privateEndpointServiceStatus.Status != nil {
+		state.Status = types.StringValue(*privateEndpointServiceStatus.Status)
+	}
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
