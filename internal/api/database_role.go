@@ -36,5 +36,5 @@ type UpdateDatabaseRoleRequest struct {
 	Description string `json:"description,omitempty"`
 
 	// Access describes the updated access information of the database user role.
-	Access []Access `json:"access,omitempty"`
+	Access []Access `json:"access"`
 }
