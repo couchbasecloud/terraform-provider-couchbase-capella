@@ -6,7 +6,7 @@ import (
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
-var databasePrivilegesBuilder = capellaschema.NewSchemaBuilder("databasePrivileges", "GetCapellaPrivilegeResponse")
+var databasePrivilegesBuilder = capellaschema.NewSchemaBuilder("databasePrivileges")
 
 // DatabasePrivilegesSchema returns the schema for the DatabasePrivileges data source.
 func DatabasePrivilegesSchema() schema.Schema {

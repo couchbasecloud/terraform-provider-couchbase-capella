@@ -23,13 +23,13 @@ type DatabasePrivilegeItem struct {
 
 // Validate checks that all required IDs are present.
 func (d DatabasePrivileges) Validate() (clusterId, projectId, organizationId string, err error) {
-	if d.OrganizationId.IsNull() {
+	if d.OrganizationId.IsNull() || d.OrganizationId.IsUnknown() {
 		return "", "", "", errors.ErrOrganizationIdMissing
 	}
-	if d.ProjectId.IsNull() {
+	if d.ProjectId.IsNull() || d.ProjectId.IsUnknown() {
 		return "", "", "", errors.ErrProjectIdMissing
 	}
-	if d.ClusterId.IsNull() {
+	if d.ClusterId.IsNull() || d.ClusterId.IsUnknown() {
 		return "", "", "", errors.ErrClusterIdMissing
 	}
 	return d.ClusterId.ValueString(), d.ProjectId.ValueString(), d.OrganizationId.ValueString(), nil
