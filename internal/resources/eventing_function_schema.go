@@ -3,6 +3,8 @@ package resources
 import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 
@@ -58,8 +60,11 @@ func EventingFunctionSchema() schema.Schema {
 	})
 
 	capellaschema.AddAttr(attrs, "settings", eventingFunctionBuilder, &schema.SingleNestedAttribute{
-		Optional:   true,
-		Computed:   true,
+		Optional: true,
+		Computed: true,
+		PlanModifiers: []planmodifier.Object{
+			objectplanmodifier.UseStateForUnknown(),
+		},
 		Attributes: settingsAttributes(),
 	})
 
@@ -78,8 +83,8 @@ func EventingFunctionSchema() schema.Schema {
 func keyspaceAttributes() map[string]schema.Attribute {
 	attrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(attrs, "bucket", eventingFunctionBuilder, requiredStringAttributeNoReplace(), "EventingFunctionKeyspace")
-	capellaschema.AddAttr(attrs, "scope", eventingFunctionBuilder, stringAttribute([]string{optional, computed}), "EventingFunctionKeyspace")
-	capellaschema.AddAttr(attrs, "collection", eventingFunctionBuilder, stringAttribute([]string{optional, computed}), "EventingFunctionKeyspace")
+	capellaschema.AddAttr(attrs, "scope", eventingFunctionBuilder, stringAttribute([]string{optional, computed, useStateForUnknown}), "EventingFunctionKeyspace")
+	capellaschema.AddAttr(attrs, "collection", eventingFunctionBuilder, stringAttribute([]string{optional, computed, useStateForUnknown}), "EventingFunctionKeyspace")
 	return attrs
 }
 
@@ -109,10 +114,10 @@ func bindingsAttributes() map[string]schema.Attribute {
 	bucketAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(bucketAttrs, "alias", eventingFunctionBuilder, requiredStringAttributeNoReplace(), "EventingFunctionBucketBinding")
 	capellaschema.AddAttr(bucketAttrs, "bucket", eventingFunctionBuilder, requiredStringAttributeNoReplace(), "EventingFunctionBucketBinding")
-	capellaschema.AddAttr(bucketAttrs, "scope", eventingFunctionBuilder, stringAttribute([]string{optional, computed}), "EventingFunctionBucketBinding")
-	capellaschema.AddAttr(bucketAttrs, "collection", eventingFunctionBuilder, stringAttribute([]string{optional, computed}), "EventingFunctionBucketBinding")
+	capellaschema.AddAttr(bucketAttrs, "scope", eventingFunctionBuilder, stringAttribute([]string{optional, computed, useStateForUnknown}), "EventingFunctionBucketBinding")
+	capellaschema.AddAttr(bucketAttrs, "collection", eventingFunctionBuilder, stringAttribute([]string{optional, computed, useStateForUnknown}), "EventingFunctionBucketBinding")
 	capellaschema.AddAttr(bucketAttrs, "permission", eventingFunctionBuilder, stringAttribute(
-		[]string{optional, computed}, validator.String(stringvalidator.OneOf("read", "readWrite"))), "EventingFunctionBucketBinding")
+		[]string{optional, computed, useStateForUnknown}, validator.String(stringvalidator.OneOf("read", "readWrite"))), "EventingFunctionBucketBinding")
 
 	capellaschema.AddAttr(attrs, "buckets", eventingFunctionBuilder, &schema.ListNestedAttribute{
 		Optional: true,
@@ -131,8 +136,8 @@ func bindingsAttributes() map[string]schema.Attribute {
 	urlAttrs := make(map[string]schema.Attribute)
 	capellaschema.AddAttr(urlAttrs, "alias", eventingFunctionBuilder, requiredStringAttributeNoReplace(), "EventingFunctionUrlBinding")
 	capellaschema.AddAttr(urlAttrs, "url", eventingFunctionBuilder, requiredStringAttributeNoReplace(), "EventingFunctionUrlBinding")
-	capellaschema.AddAttr(urlAttrs, "allow_cookies", eventingFunctionBuilder, boolAttribute(optional, computed), "EventingFunctionUrlBinding")
-	capellaschema.AddAttr(urlAttrs, "validate_tls_certificate", eventingFunctionBuilder, boolAttribute(optional, computed), "EventingFunctionUrlBinding")
+	capellaschema.AddAttr(urlAttrs, "allow_cookies", eventingFunctionBuilder, boolAttribute(optional, computed, useStateForUnknown), "EventingFunctionUrlBinding")
+	capellaschema.AddAttr(urlAttrs, "validate_tls_certificate", eventingFunctionBuilder, boolAttribute(optional, computed, useStateForUnknown), "EventingFunctionUrlBinding")
 	capellaschema.AddAttr(urlAttrs, "authentication", eventingFunctionBuilder, &schema.SingleNestedAttribute{
 		Optional:   true,
 		Attributes: authAttrs,
