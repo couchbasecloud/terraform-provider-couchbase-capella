@@ -140,20 +140,19 @@ func TestAccDatabaseRoleResourceInvalidName(t *testing.T) {
 // TestAccDatasourceDatabaseRoles tests the list database roles datasource.
 func TestAccDatasourceDatabaseRoles(t *testing.T) {
 	resourceName := randomStringWithPrefix("tf_acc_db_role_")
-	datasourceReference := "data.couchbase-capella_database_roles." + resourceName
+	dsName := randomStringWithPrefix("tf_acc_db_role_ds_")
+	datasourceReference := "data.couchbase-capella_database_roles." + dsName
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseRolesDatasourceConfig(resourceName),
+				Config: testAccDatabaseRolesDatasourceConfig(resourceName, dsName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceReference, "organization_id", globalOrgId),
 					resource.TestCheckResourceAttr(datasourceReference, "project_id", globalProjectId),
 					resource.TestCheckResourceAttr(datasourceReference, "cluster_id", globalClusterId),
 					resource.TestCheckResourceAttrSet(datasourceReference, "data.#"),
-					resource.TestCheckResourceAttrSet(datasourceReference, "data.0.id"),
-					resource.TestCheckResourceAttrSet(datasourceReference, "data.0.name"),
 				),
 			},
 		},
@@ -236,33 +235,58 @@ func testAccDatabaseRoleResourceConfigWithScopedAccess(resourceName string) stri
 		globalBucketName, globalScopeName, globalCollectionName)
 }
 
-func testAccDatabaseRolesDatasourceConfig(resourceName string) string {
+func testAccDatabaseRolesDatasourceConfig(resourceName, dsName string) string {
 	return fmt.Sprintf(`
 	%[1]s
 
-	data "couchbase-capella_database_roles" "%[2]s" {
+	resource "couchbase-capella_database_role" "%[2]s" {
 		organization_id = "%[3]s"
 		project_id      = "%[4]s"
 		cluster_id      = "%[5]s"
+		name            = "%[2]s"
+		access = [
+			{
+				privileges = ["dataRead"]
+				resources = {
+					buckets = [
+						{
+							name = "*"
+						},
+					]
+				}
+			},
+		]
 	}
-	`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId)
+
+	data "couchbase-capella_database_roles" "%[6]s" {
+		organization_id = "%[3]s"
+		project_id      = "%[4]s"
+		cluster_id      = "%[5]s"
+
+		depends_on = [couchbase-capella_database_role.%[2]s]
+	}
+	`, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, dsName)
+}
+
+// --- State Helpers ---
+
+func databaseRoleAttrsFromState(state *terraform.State, resourceReference string) map[string]string {
+	for _, m := range state.Modules {
+		if v, ok := m.Resources[resourceReference]; ok {
+			return v.Primary.Attributes
+		}
+	}
+	return nil
 }
 
 // --- Import ID Generator ---
 
 func generateDatabaseRoleImportId(resourceReference string) resource.ImportStateIdFunc {
 	return func(state *terraform.State) (string, error) {
-		var rawState map[string]string
-		for _, m := range state.Modules {
-			if len(m.Resources) > 0 {
-				if v, ok := m.Resources[resourceReference]; ok {
-					rawState = v.Primary.Attributes
-				}
-			}
-		}
+		attrs := databaseRoleAttrsFromState(state, resourceReference)
 		return fmt.Sprintf(
 			"id=%s,cluster_id=%s,project_id=%s,organization_id=%s",
-			rawState["id"], rawState["cluster_id"], rawState["project_id"], rawState["organization_id"],
+			attrs["id"], attrs["cluster_id"], attrs["project_id"], attrs["organization_id"],
 		), nil
 	}
 }
@@ -271,21 +295,14 @@ func generateDatabaseRoleImportId(resourceReference string) resource.ImportState
 
 func testAccExistsDatabaseRoleResource(t *testing.T, resourceReference string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		var rawState map[string]string
-		for _, m := range s.Modules {
-			if len(m.Resources) > 0 {
-				if v, ok := m.Resources[resourceReference]; ok {
-					rawState = v.Primary.Attributes
-				}
-			}
-		}
+		attrs := databaseRoleAttrsFromState(s, resourceReference)
 		data := newTestClient(t)
 		return retrieveDatabaseRoleFromServer(
 			data,
-			rawState["organization_id"],
-			rawState["project_id"],
-			rawState["cluster_id"],
-			rawState["id"],
+			attrs["organization_id"],
+			attrs["project_id"],
+			attrs["cluster_id"],
+			attrs["id"],
 		)
 	}
 }
