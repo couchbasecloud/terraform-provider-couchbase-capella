@@ -218,8 +218,13 @@ func eventingValueChanged(plan, state attr.Value) bool {
 
 // eventingSettingsChanged determines if any of the eventing function settings have changed.
 func eventingSettingsChanged(plan, state *providerschema.EventingFunctionSettings) bool {
-	if plan == nil || state == nil {
+	if plan == nil {
 		return false
+	}
+
+	// this should not happen since settings are computed
+	if state == nil {
+		return true
 	}
 
 	return eventingValueChanged(plan.WorkerCount, state.WorkerCount) ||
@@ -294,8 +299,13 @@ func eventingBindingsChanged(ctx context.Context, plan, state *providerschema.Ev
 
 // eventingURLAuthChanged determines if authentication type, username or secret changed.
 func eventingURLAuthChanged(plan, state *providerschema.EventingFunctionURLBindingAuthentication) bool {
-	if plan == nil || state == nil {
+	if plan == nil {
 		return false
+	}
+
+	// should not happen as auth is computed
+	if state == nil {
+		return true
 	}
 
 	return eventingValueChanged(plan.Type, state.Type) ||
@@ -340,8 +350,13 @@ func eventingFunctionChanged(
 
 // eventingKeyspaceChanged determines whether the plan changes the keyspace relative to the prior state.
 func eventingKeyspaceChanged(plan, state *providerschema.EventingFunctionKeyspace) bool {
-	if plan == nil || state == nil {
+	if plan == nil {
 		return false
+	}
+
+	// this should not happen since keepspace is required
+	if state == nil {
+		return true
 	}
 
 	return eventingValueChanged(plan.Bucket, state.Bucket) ||
