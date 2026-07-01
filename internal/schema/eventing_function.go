@@ -135,9 +135,9 @@ type EventingFunctionBindings struct {
 
 // EventingFunctionBindingsResource groups the bucket, URL and constant bindings.
 type EventingFunctionBindingsResource struct {
-	Buckets   []EventingFunctionBucketBinding      `tfsdk:"buckets"`
-	Urls      []EventingFunctionUrlBindingResource `tfsdk:"urls"`
-	Constants []EventingFunctionConstantBinding    `tfsdk:"constants"`
+	Buckets   []EventingFunctionBucketBinding   `tfsdk:"buckets"`
+	Urls      []EventingFunctionUrlBinding      `tfsdk:"urls"`
+	Constants []EventingFunctionConstantBinding `tfsdk:"constants"`
 }
 
 func (b EventingFunctionBindings) AttributeTypes() map[string]attr.Type {
@@ -165,15 +165,6 @@ func (b EventingFunctionBucketBinding) AttributeTypes() map[string]attr.Type {
 		"collection": types.StringType,
 		"permission": types.StringType,
 	}
-}
-
-// EventingFunctionUrlBindingResource lets the function access an external resource.
-type EventingFunctionUrlBindingResource struct {
-	Alias                  types.String                              `tfsdk:"alias"`
-	Url                    types.String                              `tfsdk:"url"`
-	AllowCookies           types.Bool                                `tfsdk:"allow_cookies"`
-	ValidateTLSCertificate types.Bool                                `tfsdk:"validate_tls_certificate"`
-	Authentication         *EventingFunctionURLBindingAuthentication `tfsdk:"authentication"`
 }
 
 // EventingFunctionUrlBinding binds an external URL to an alias used in the function code.
@@ -212,6 +203,19 @@ func (a EventingFunctionURLBindingAuthentication) AttributeTypes() map[string]at
 		"password":     types.StringType,
 		"bearer_token": types.StringType,
 	}
+}
+
+// AuthenticationFromObject decodes a URL binding authentication object into its struct form,
+// returning nil for a null or unknown object.
+func AuthenticationFromObject(ctx context.Context, obj types.Object) (*EventingFunctionURLBindingAuthentication, error) {
+	if obj.IsNull() || obj.IsUnknown() {
+		return nil, nil
+	}
+	var auth EventingFunctionURLBindingAuthentication
+	if diags := obj.As(ctx, &auth, basetypes.ObjectAsOptions{}); diags.HasError() {
+		return nil, fmt.Errorf("failed to decode URL binding authentication: %v", diags.Errors())
+	}
+	return &auth, nil
 }
 
 // EventingFunctionConstantBinding binds a constant value to an alias used in the function code.
@@ -309,10 +313,11 @@ func newEventingFunctionKeyspaceObject(ctx context.Context, keyspace eventing_fu
 // prior carries forward values that the GET response does not return: the State action verb
 // and any URL binding authentication secrets (matched by alias).
 func NewEventingFunctionResource(
+	ctx context.Context,
 	resp *eventingapi.GetEventingFunctionResponse,
 	organizationId, projectId, clusterId string,
 	prior *EventingFunctionResource,
-) *EventingFunctionResource {
+) (*EventingFunctionResource, error) {
 	// The API returns "" for an unset description; preserve the practitioner's planned value
 	// (null or "") so the resulting state matches the plan and Terraform does not report an
 	// inconsistent result after apply. prior is nil from waitForStatus, where the result is
@@ -320,6 +325,16 @@ func NewEventingFunctionResource(
 	description := types.StringPointerValue(resp.Description)
 	if prior != nil && description.ValueString() == "" {
 		description = prior.Description
+	}
+
+	bindings, err := bindingsToSchema(resp.Bindings)
+	if err != nil {
+		return nil, err
+	}
+
+	settings, err := settingsToSchema(resp.Settings)
+	if err != nil {
+		return nil, err
 	}
 
 	fn := &EventingFunctionResource{
@@ -331,16 +346,18 @@ func NewEventingFunctionResource(
 		Code:                 types.StringValue(resp.Code),
 		EventSource:          keyspaceToSchema(resp.EventSource),
 		EventMetadataStorage: keyspaceToSchema(resp.EventMetadataStorage),
-		Settings:             settingsToSchema(resp.Settings),
-		Bindings:             bindingsToSchema(resp.Bindings),
+		Settings:             settings,
+		Bindings:             bindings,
 		State:                types.StringValue(resp.Status),
 	}
 
 	if prior != nil {
-		carryForwardURLSecrets(fn.Bindings, prior.Bindings)
+		if err := carryForwardURLSecrets(ctx, fn.Bindings, prior.Bindings); err != nil {
+			return nil, err
+		}
 	}
 
-	return fn
+	return fn, nil
 }
 
 func keyspaceToSchema(k eventingapi.Keyspace) *EventingFunctionKeyspace {
@@ -351,8 +368,8 @@ func keyspaceToSchema(k eventingapi.Keyspace) *EventingFunctionKeyspace {
 	}
 }
 
-func settingsToSchema(s eventingapi.Settings) types.Object {
-	return types.ObjectValueMust(EventingFunctionSettings{}.AttributeTypes(), map[string]attr.Value{
+func settingsToSchema(s eventingapi.Settings) (types.Object, error) {
+	obj, d := types.ObjectValue(EventingFunctionSettings{}.AttributeTypes(), map[string]attr.Value{
 		"worker_count":           types.Int64PointerValue(s.WorkerCount),
 		"script_timeout":         types.Int64PointerValue(s.ScriptTimeout),
 		"sql_consistency":        types.StringPointerValue(s.SqlConsistency),
@@ -362,12 +379,16 @@ func settingsToSchema(s eventingapi.Settings) types.Object {
 		"allow_sync_documents":   types.BoolPointerValue(s.AllowSyncDocuments),
 		"cursor_aware":           types.BoolPointerValue(s.CursorAware),
 	})
+	if d.HasError() {
+		return types.Object{}, fmt.Errorf("failed to convert eventing function settings: %v", d.Errors())
+	}
+	return obj, nil
 }
 
 // bindingsToSchema returns nil when no bindings are present so the optional attribute stays null.
-func bindingsToSchema(b eventingapi.Bindings) *EventingFunctionBindingsResource {
+func bindingsToSchema(b eventingapi.Bindings) (*EventingFunctionBindingsResource, error) {
 	if len(b.Buckets) == 0 && len(b.Urls) == 0 && len(b.Constants) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	bindings := &EventingFunctionBindingsResource{}
@@ -383,17 +404,26 @@ func bindingsToSchema(b eventingapi.Bindings) *EventingFunctionBindingsResource 
 	}
 
 	for _, u := range b.Urls {
-		urlBinding := EventingFunctionUrlBindingResource{
+		urlBinding := EventingFunctionUrlBinding{
 			Alias:                  types.StringValue(u.Alias),
 			Url:                    types.StringValue(u.Url),
 			AllowCookies:           types.BoolPointerValue(u.AllowCookies),
 			ValidateTLSCertificate: types.BoolPointerValue(u.ValidateTLSCertificate),
+			Authentication:         types.ObjectNull(EventingFunctionURLBindingAuthentication{}.AttributeTypes()),
 		}
+
 		if u.Authentication != nil {
-			urlBinding.Authentication = &EventingFunctionURLBindingAuthentication{
-				Type:     types.StringValue(u.Authentication.Type),
-				Username: types.StringPointerValue(u.Authentication.Username),
+			authTypes := EventingFunctionURLBindingAuthentication{}.AttributeTypes()
+			auth, d := types.ObjectValue(authTypes, map[string]attr.Value{
+				"type":         types.StringValue(u.Authentication.Type),
+				"username":     types.StringPointerValue(u.Authentication.Username),
+				"password":     types.StringNull(),
+				"bearer_token": types.StringNull(),
+			})
+			if d.HasError() {
+				return nil, fmt.Errorf("failed to convert URL binding authentication: %v", d.Errors())
 			}
+			urlBinding.Authentication = auth
 		}
 		bindings.Urls = append(bindings.Urls, urlBinding)
 	}
@@ -405,7 +435,7 @@ func bindingsToSchema(b eventingapi.Bindings) *EventingFunctionBindingsResource 
 		})
 	}
 
-	return bindings
+	return bindings, nil
 }
 
 // carryForwardURLSecrets copies sensitive URL binding authentication values (password,
@@ -416,29 +446,47 @@ func bindingsToSchema(b eventingapi.Bindings) *EventingFunctionBindingsResource 
 // eventing API always returns ***** for secrets, so do not set state
 // with those values otherwise it will trigger an update. in other
 // words, drift detection is not possible with secrets.
-func carryForwardURLSecrets(refreshed, prior *EventingFunctionBindingsResource) {
+func carryForwardURLSecrets(ctx context.Context, refreshed, prior *EventingFunctionBindingsResource) error {
 	if refreshed == nil || prior == nil {
-		return
+		return nil
 	}
 
 	priorByAlias := make(map[string]*EventingFunctionURLBindingAuthentication, len(prior.Urls))
 	for i := range prior.Urls {
-		if prior.Urls[i].Authentication != nil {
-			priorByAlias[prior.Urls[i].Alias.ValueString()] = prior.Urls[i].Authentication
+		auth, err := AuthenticationFromObject(ctx, prior.Urls[i].Authentication)
+		if err != nil {
+			return err
+		}
+		if auth != nil {
+			priorByAlias[prior.Urls[i].Alias.ValueString()] = auth
 		}
 	}
 
 	for i := range refreshed.Urls {
-		auth := refreshed.Urls[i].Authentication
+		auth, err := AuthenticationFromObject(ctx, refreshed.Urls[i].Authentication)
+		if err != nil {
+			return err
+		}
 		if auth == nil {
 			continue
 		}
+
 		priorAuth, ok := priorByAlias[refreshed.Urls[i].Alias.ValueString()]
-		if ok {
-			auth.Password = priorAuth.Password
-			auth.BearerToken = priorAuth.BearerToken
+		if !ok {
+			continue
 		}
+
+		auth.Password = priorAuth.Password
+		auth.BearerToken = priorAuth.BearerToken
+
+		obj, d := types.ObjectValueFrom(ctx, EventingFunctionURLBindingAuthentication{}.AttributeTypes(), auth)
+		if d.HasError() {
+			return fmt.Errorf("failed to convert URL binding authentication: %v", d.Errors())
+		}
+		refreshed.Urls[i].Authentication = obj
 	}
+
+	return nil
 }
 
 func newEventingFunctionSettingsObject(ctx context.Context, settings *eventing_function.Settings) (types.Object, diag.Diagnostics) {

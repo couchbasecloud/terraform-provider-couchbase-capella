@@ -80,13 +80,22 @@ func (e *EventingFunction) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
+	createBindings, err := bindingsToAPI(ctx, plan.Bindings)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating eventing function",
+			"Could not convert eventing function bindings: "+err.Error(),
+		)
+		return
+	}
+
 	createReq := eventingapi.CreateEventingFunctionRequest{
 		Name:                 name,
 		Code:                 plan.Code.ValueStringPointer(),
 		EventSource:          keyspaceToAPI(plan.EventSource),
 		EventMetadataStorage: keyspaceToAPI(plan.EventMetadataStorage),
 		Settings:             settingsToAPI(plannedSettings),
-		Bindings:             bindingsToAPI(plan.Bindings),
+		Bindings:             createBindings,
 	}
 
 	if !plan.Description.IsNull() {
@@ -123,7 +132,10 @@ func (e *EventingFunction) Create(ctx context.Context, req resource.CreateReques
 			"Eventing function was created but could not be read back: "+api.ParseError(err),
 		)
 
-		setEventingFunctionComputedAttributesToNull(ctx, &plan)
+		resp.Diagnostics.Append(setEventingFunctionComputedAttributesToNull(ctx, &plan)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
 		refreshedState = &plan
 	}
@@ -135,7 +147,9 @@ func (e *EventingFunction) Create(ctx context.Context, req resource.CreateReques
 // setEventingFunctionComputedAttributesToNull sets the computed attributes on the plan to null. It is
 // used when setting state after create if the post-create read fails, so the resulting state holds no
 // unknown values.
-func setEventingFunctionComputedAttributesToNull(ctx context.Context, plan *providerschema.EventingFunctionResource) {
+func setEventingFunctionComputedAttributesToNull(ctx context.Context, plan *providerschema.EventingFunctionResource) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	nullKeyspaceComputedAttributes(plan.EventSource)
 	nullKeyspaceComputedAttributes(plan.EventMetadataStorage)
 
@@ -144,8 +158,9 @@ func setEventingFunctionComputedAttributesToNull(ctx context.Context, plan *prov
 		plan.Settings = types.ObjectNull(attrTypes)
 	} else {
 		var s providerschema.EventingFunctionSettings
-		plan.Settings.As(ctx, &s, basetypes.ObjectAsOptions{UnhandledUnknownAsEmpty: true})
-		plan.Settings = types.ObjectValueMust(attrTypes, map[string]attr.Value{
+		diags.Append(plan.Settings.As(ctx, &s, basetypes.ObjectAsOptions{UnhandledUnknownAsEmpty: true})...)
+
+		settings, d := types.ObjectValue(attrTypes, map[string]attr.Value{
 			"worker_count":           s.WorkerCount,
 			"script_timeout":         s.ScriptTimeout,
 			"sql_consistency":        s.SqlConsistency,
@@ -155,6 +170,11 @@ func setEventingFunctionComputedAttributesToNull(ctx context.Context, plan *prov
 			"allow_sync_documents":   s.AllowSyncDocuments,
 			"cursor_aware":           s.CursorAware,
 		})
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+		plan.Settings = settings
 	}
 
 	if plan.Bindings != nil {
@@ -166,8 +186,16 @@ func setEventingFunctionComputedAttributesToNull(ctx context.Context, plan *prov
 		for i := range plan.Bindings.Urls {
 			plan.Bindings.Urls[i].AllowCookies = types.BoolNull()
 			plan.Bindings.Urls[i].ValidateTLSCertificate = types.BoolNull()
+
+			plan.Bindings.Urls[i].Authentication = types.ObjectNull(
+				providerschema.
+					EventingFunctionURLBindingAuthentication{}.
+					AttributeTypes(),
+			)
 		}
 	}
+
+	return diags
 }
 
 // nullKeyspaceComputedAttributes sets the computed scope and collection of a keyspace to null. It is a
@@ -206,15 +234,19 @@ func eventingSettingsChanged(plan, state *providerschema.EventingFunctionSetting
 
 // eventingBindingsChanged determines if any of the bindings have changed,
 // except for secrets (password or bearer token).
-func eventingBindingsChanged(plan, state *providerschema.EventingFunctionBindingsResource) bool {
-	if plan == nil || state == nil {
-		return false
+func eventingBindingsChanged(ctx context.Context, plan, state *providerschema.EventingFunctionBindingsResource) (bool, error) {
+	if plan == nil {
+		return false, nil
+	}
+
+	if state == nil {
+		return true, nil
 	}
 
 	if len(plan.Buckets) != len(state.Buckets) ||
 		len(plan.Urls) != len(state.Urls) ||
 		len(plan.Constants) != len(state.Constants) {
-		return true
+		return true, nil
 	}
 
 	for i := range plan.Buckets {
@@ -224,7 +256,7 @@ func eventingBindingsChanged(plan, state *providerschema.EventingFunctionBinding
 			eventingValueChanged(p.Scope, s.Scope) ||
 			eventingValueChanged(p.Collection, s.Collection) ||
 			eventingValueChanged(p.Permission, s.Permission) {
-			return true
+			return true, nil
 		}
 	}
 
@@ -234,10 +266,18 @@ func eventingBindingsChanged(plan, state *providerschema.EventingFunctionBinding
 			eventingValueChanged(p.Url, s.Url) ||
 			eventingValueChanged(p.AllowCookies, s.AllowCookies) ||
 			eventingValueChanged(p.ValidateTLSCertificate, s.ValidateTLSCertificate) {
-			return true
+			return true, nil
 		}
-		if eventingURLAuthChanged(p.Authentication, s.Authentication) {
-			return true
+		planAuth, err := providerschema.AuthenticationFromObject(ctx, p.Authentication)
+		if err != nil {
+			return false, err
+		}
+		stateAuth, err := providerschema.AuthenticationFromObject(ctx, s.Authentication)
+		if err != nil {
+			return false, err
+		}
+		if eventingURLAuthChanged(planAuth, stateAuth) {
+			return true, nil
 		}
 	}
 
@@ -245,11 +285,11 @@ func eventingBindingsChanged(plan, state *providerschema.EventingFunctionBinding
 		p, s := plan.Constants[i], state.Constants[i]
 		if eventingValueChanged(p.Alias, s.Alias) ||
 			eventingValueChanged(p.Value, s.Value) {
-			return true
+			return true, nil
 		}
 	}
 
-	return false
+	return false, nil
 }
 
 // eventingURLAuthChanged determines if authentication type, username or secret changed.
@@ -280,15 +320,22 @@ func eventingSecretChanged(plan, state *providerschema.EventingFunctionURLBindin
 // eventingFunctionChanged determines if any of the following has changed for eventing function:
 // description, application code, source/metadata keyspace, settings or bindings.
 func eventingFunctionChanged(
+	ctx context.Context,
 	plan, state *providerschema.EventingFunctionResource,
 	plannedSettings, stateSettings *providerschema.EventingFunctionSettings,
-) bool {
+) (bool, error) {
+
+	bindingsChanged, err := eventingBindingsChanged(ctx, plan.Bindings, state.Bindings)
+	if err != nil {
+		return false, err
+	}
+
 	return eventingValueChanged(plan.Description, state.Description) ||
 		eventingValueChanged(plan.Code, state.Code) ||
 		eventingKeyspaceChanged(plan.EventSource, state.EventSource) ||
 		eventingKeyspaceChanged(plan.EventMetadataStorage, state.EventMetadataStorage) ||
 		eventingSettingsChanged(plannedSettings, stateSettings) ||
-		eventingBindingsChanged(plan.Bindings, state.Bindings)
+		bindingsChanged, nil
 }
 
 // eventingKeyspaceChanged determines whether the plan changes the keyspace relative to the prior state.
@@ -383,7 +430,14 @@ func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateReques
 		name           = IDs[providerschema.FunctionName]
 	)
 
-	eventingFunctionHasChanged := eventingFunctionChanged(&plan, &state, plannedSettings, stateSettings)
+	eventingFunctionHasChanged, err := eventingFunctionChanged(ctx, &plan, &state, plannedSettings, stateSettings)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error detecting eventing function change",
+			err.Error(),
+		)
+		return
+	}
 
 	// eventing function can only be changed while the function is undeployed or paused.
 	// in other states block any changes up front to prevent "inconsistent result after apply" errors.
@@ -421,13 +475,22 @@ func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
+	updateBindings, err := bindingsToAPI(ctx, plan.Bindings)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating eventing function",
+			"Could not convert eventing function bindings: "+err.Error(),
+		)
+		return
+	}
+
 	updateReq := eventingapi.UpdateEventingFunctionRequest{
 		Description:          plan.Description.ValueStringPointer(),
 		Code:                 plan.Code.ValueStringPointer(),
 		EventSource:          keyspaceToAPIPtr(plan.EventSource),
 		EventMetadataStorage: keyspaceToAPIPtr(plan.EventMetadataStorage),
 		Settings:             settingsToAPI(plannedSettings),
-		Bindings:             bindingsToAPI(plan.Bindings),
+		Bindings:             updateBindings,
 	}
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/eventingFunctions/%s", e.HostURL, organizationId, projectId, clusterId, name)
@@ -559,7 +622,12 @@ func (e *EventingFunction) retrieveEventingFunction(
 		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshallingResponse, err)
 	}
 
-	return providerschema.NewEventingFunctionResource(&eventingResp, organizationId, projectId, clusterId, prior), nil
+	fn, err := providerschema.NewEventingFunctionResource(ctx, &eventingResp, organizationId, projectId, clusterId, prior)
+	if err != nil {
+		return nil, err
+	}
+
+	return fn, nil
 }
 
 // activationVerb returns the activationState API action verb for the desired state. The API only
@@ -690,9 +758,9 @@ func settingsToAPI(s *providerschema.EventingFunctionSettings) *eventingapi.Sett
 	}
 }
 
-func bindingsToAPI(b *providerschema.EventingFunctionBindingsResource) *eventingapi.Bindings {
+func bindingsToAPI(ctx context.Context, b *providerschema.EventingFunctionBindingsResource) (*eventingapi.Bindings, error) {
 	if b == nil {
-		return nil
+		return nil, nil
 	}
 
 	bindings := &eventingapi.Bindings{}
@@ -714,19 +782,19 @@ func bindingsToAPI(b *providerschema.EventingFunctionBindingsResource) *eventing
 			AllowCookies:           utils.BoolPointerIfKnown(u.AllowCookies),
 			ValidateTLSCertificate: utils.BoolPointerIfKnown(u.ValidateTLSCertificate),
 		}
-		if u.Authentication != nil {
+		auth, err := providerschema.AuthenticationFromObject(ctx, u.Authentication)
+		if err != nil {
+			return nil, err
+		}
+		if auth != nil {
 			urlBinding.Authentication = &eventingapi.URLBindingAuthentication{
-				Type:     u.Authentication.Type.ValueString(),
-				Username: u.Authentication.Username.ValueStringPointer(),
-			}
-
-			if !u.Authentication.Password.IsNull() {
-				urlBinding.Authentication.Password = u.Authentication.Password.ValueStringPointer()
-			}
-			if !u.Authentication.BearerToken.IsNull() {
-				urlBinding.Authentication.BearerToken = u.Authentication.BearerToken.ValueStringPointer()
+				Type:        auth.Type.ValueString(),
+				Username:    auth.Username.ValueStringPointer(),
+				Password:    utils.StringPointerIfKnown(auth.Password),
+				BearerToken: utils.StringPointerIfKnown(auth.BearerToken),
 			}
 		}
+
 		bindings.Urls = append(bindings.Urls, urlBinding)
 	}
 
@@ -737,5 +805,5 @@ func bindingsToAPI(b *providerschema.EventingFunctionBindingsResource) *eventing
 		})
 	}
 
-	return bindings
+	return bindings, nil
 }

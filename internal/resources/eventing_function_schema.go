@@ -136,8 +136,10 @@ func bindingsAttributes() map[string]schema.Attribute {
 	capellaschema.AddAttr(urlAttrs, "allow_cookies", eventingFunctionBuilder, boolAttribute(optional, computed, useStateForUnknown), "EventingFunctionUrlBinding")
 	capellaschema.AddAttr(urlAttrs, "validate_tls_certificate", eventingFunctionBuilder, boolAttribute(optional, computed, useStateForUnknown), "EventingFunctionUrlBinding")
 	capellaschema.AddAttr(urlAttrs, "authentication", eventingFunctionBuilder, &schema.SingleNestedAttribute{
-		Optional:   true,
-		Attributes: authAttrs,
+		Optional:      true,
+		Computed:      true,
+		PlanModifiers: []planmodifier.Object{objectplanmodifier.UseStateForUnknown()},
+		Attributes:    authAttrs,
 	})
 
 	capellaschema.AddAttr(attrs, "urls", eventingFunctionBuilder, &schema.ListNestedAttribute{
