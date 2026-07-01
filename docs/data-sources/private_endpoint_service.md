@@ -32,3 +32,5 @@ data "couchbase-capella_private_endpoint_service" "service_status" {
 ### Read-Only
 
 - `enabled` (Boolean) - Returns true if private endpoint is enabled
+- `status` (String) - status of the private endpoint
+ - **Valid Values**: `idle`, `unknown`, `enabling`, `enabled`, `enableFailed`, `disabling`, `disabled`, `disableFailed`

@@ -109,16 +109,8 @@ func setup(ctx context.Context, client *api.Client) error {
 		return err
 	}
 
-	if err := setupDMCluster(ctx, client); err != nil {
-		return err
-	}
-
-	if err := resolveDMBucket(ctx, client); err != nil {
-		return err
-	}
-	if err := dmClusterWait(ctx, client, false); err != nil {
-		return err
-	}
+	// The data-management cluster is provisioned lazily by ensureDMCluster()
+	// from the first data_management_* test that runs, so non-DM runs skip it.
 
 	// Create app service only if not provided via env var
 	if globalAppServiceId == "" {

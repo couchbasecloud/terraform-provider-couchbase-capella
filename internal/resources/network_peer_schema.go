@@ -1,10 +1,12 @@
 package resources
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
@@ -25,7 +27,10 @@ func NetworkPeerSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "project_id", networkPeerBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "cluster_id", networkPeerBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "name", networkPeerBuilder, stringAttribute([]string{required, requiresReplace}))
-	capellaschema.AddAttr(attrs, "provider_type", networkPeerBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "provider_type", networkPeerBuilder, stringAttribute(
+		[]string{required, requiresReplace},
+		validator.String(stringvalidator.OneOf("aws", "gcp", "azure")),
+	))
 	capellaschema.AddAttr(attrs, "audit", networkPeerBuilder, computedAuditAttribute())
 	capellaschema.AddAttr(attrs, "commands", networkPeerBuilder, &schema.SetAttribute{
 		Computed:    true,

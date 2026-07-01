@@ -205,6 +205,9 @@ var (
 	// ErrGatewayTimeoutForIndexDDL is returned when API server times out while waiting for response for index DDL.
 	ErrGatewayTimeoutForIndexDDL = errors.New("timeout waiting for response for index DDL")
 
+	// ErrServiceUnavailable is returned when the API returns 503 due to a transient condition (e.g. bucket deletion in progress).
+	ErrServiceUnavailable = errors.New("service unavailable")
+
 	// ErrNotTrimmed is returned when any attribute has leading or trailing spaces.
 	ErrNotTrimmed = errors.New("attribute has leading or trailing spaces")
 
@@ -242,6 +245,14 @@ var (
 	ErrProviderConfigCannotBeEmpty = errors.New("provider_config cannot be empty, it should be populated with one of- aws_config, gcp_config or azure_config. Please contact Couchbase Capella Support")
 
 	ErrPrivateEndpointServiceTimeout = errors.New("changing private endpoint service status timed out after initiation")
+
+	// ErrPrivateEndpointServiceEnableFailed is returned when the backend reports a terminal
+	// enableFailed state for the private endpoint service. This is not retried by polling.
+	ErrPrivateEndpointServiceEnableFailed = errors.New("private endpoint service enablement failed")
+
+	// ErrPrivateEndpointServiceDisableFailed is returned when the backend reports a terminal
+	// disableFailed state for the private endpoint service. This is not retried by polling.
+	ErrPrivateEndpointServiceDisableFailed = errors.New("private endpoint service disable failed")
 
 	ErrBucketCreationStatusTimeout = errors.New("bucket backup creation status transition timed out after initiation")
 
