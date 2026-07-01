@@ -35,6 +35,9 @@ var enumTable = map[string]map[string]EnumDef{
 	"Caching": {
 		"defaultCache": {Type: "string", Values: []string{"standard", "semantic"}},
 	},
+	"Channel": {
+		"type": {Type: "string", Values: []string{"public", "private"}},
+	},
 	"CloudConfig": {
 		"compute.cpu":       {Type: "integer", Values: []string{"4", "32"}},
 		"compute.gpuMemory": {Type: "integer", Values: []string{"24", "48", "192"}},
@@ -61,7 +64,10 @@ var enumTable = map[string]map[string]EnumDef{
 		"logLevel": {Type: "string", Values: []string{"info", "warn", "error"}},
 	},
 	"CreateAlertRequest": {
-		"kind": {Type: "string", Values: []string{"webhook"}},
+		"kind": {Type: "string", Values: []string{"webhook", "slack", "teams"}},
+	},
+	"CreateBedrockConfigurationRequest": {
+		"region": {Type: "string", Values: []string{"us-east-1", "us-west-2", "ap-northeast-1", "ap-northeast-2", "ap-northeast-3", "ap-south-1", "ap-south-2", "ap-southeast-1", "ap-southeast-2", "ca-central-1", "eu-central-1", "eu-central-2", "eu-north-1", "eu-south-1", "eu-south-2", "eu-west-1", "eu-west-2", "eu-west-3", "sa-east-1"}},
 	},
 	"CreateBucketRequest": {
 		"vbuckets": {Type: "integer", Values: []string{"128", "1024"}},
@@ -118,11 +124,22 @@ var enumTable = map[string]map[string]EnumDef{
 	"EnableCMEKAzureRequest": {
 		"cloudProvider": {Type: "string", Values: []string{"azure"}},
 	},
+	"EventingFunctionBucketBinding": {
+		"permission": {Type: "string", Values: []string{"read", "readWrite"}},
+	},
+	"EventingFunctionSettings": {
+		"feedBoundary":          {Type: "string", Values: []string{"everything", "from_now"}},
+		"languageCompatibility": {Type: "string", Values: []string{"6.0.0", "6.5.0", "6.6.2", "7.2.0"}},
+		"sqlConsistency":        {Type: "string", Values: []string{"none", "request"}},
+	},
+	"ExternalEmbeddingModel": {
+		"provider": {Type: "string", Values: []string{"openAI", "awsBedrock"}},
+	},
 	"ExternalModel": {
 		"external.modelName": {Type: "string", Values: []string{"text-embedding-3-small", "text-embedding-3-large", "text-embedding-ada-002"}},
 	},
 	"GetAlertResponse": {
-		"kind": {Type: "string", Values: []string{"webhook"}},
+		"kind": {Type: "string", Values: []string{"webhook", "slack", "teams"}},
 	},
 	"GetAppServicePrivateEndpointStateResponse": {
 		"state":       {Type: "string", Values: []string{"enabled", "enabling", "disabled", "disabling", "failed"}},
@@ -150,6 +167,9 @@ var enumTable = map[string]map[string]EnumDef{
 	},
 	"GetPrivateEndpointServiceResponse": {
 		"status": {Type: "string", Values: []string{"idle", "unknown", "enabling", "enabled", "enableFailed", "disabling", "disabled", "disableFailed"}},
+	},
+	"GetPrivateEndpointServiceStatusResponse": {
+		"status": {Type: "string", Values: []string{"idle", "enabling", "enabled", "enableFailed", "disabling", "disabled", "disableFailed", "unknown"}},
 	},
 	"GetReplicationJobResponse": {
 		"state": {Type: "string", Values: []string{"pending", "processing", "complete", "failed", "skipped", "killed", "notfound", "unknown"}},
@@ -210,6 +230,27 @@ var enumTable = map[string]map[string]EnumDef{
 	},
 	"ResyncStatus": {
 		"state": {Type: "string", Values: []string{"running", "completed", "stopping", "stopped", "error"}},
+	},
+	"SetFunctionStateRequest": {
+		"state": {Type: "string", Values: []string{"deploy", "undeploy", "pause", "resume"}},
+	},
+	"URLBindingAuthBasic": {
+		"type": {Type: "string", Values: []string{"basic"}},
+	},
+	"URLBindingAuthBearer": {
+		"type": {Type: "string", Values: []string{"bearer"}},
+	},
+	"URLBindingAuthDigest": {
+		"type": {Type: "string", Values: []string{"digest"}},
+	},
+	"URLBindingAuthNone": {
+		"type": {Type: "string", Values: []string{"none"}},
+	},
+	"UpdateAlertRequest": {
+		"kind": {Type: "string", Values: []string{"webhook", "slack", "teams"}},
+	},
+	"UpdateBedrockConfigurationRequest": {
+		"region": {Type: "string", Values: []string{"us-east-1", "us-west-2", "ap-northeast-1", "ap-northeast-2", "ap-northeast-3", "ap-south-1", "ap-south-2", "ap-southeast-1", "ap-southeast-2", "ca-central-1", "eu-central-1", "eu-central-2", "eu-north-1", "eu-south-1", "eu-south-2", "eu-west-1", "eu-west-2", "eu-west-3", "sa-east-1"}},
 	},
 	"UpdateBucketRequest": {
 		"durabilityLevel": {Type: "string", Values: []string{"none", "majority", "majorityAndPersistActive", "persistToMajority"}},
@@ -299,9 +340,6 @@ var compositionTable = map[string]map[string]CompositionDef{
 	},
 	"UpdateProviderRequest": {
 		"configuration": {Kind: "oneOf", Branches: []string{"UpdateS3ConfigurationRequest", "UpdateOpenAIConfigurationRequest", "UpdateBedrockConfigurationRequest"}},
-	},
-	"VectorizationConfig": {
-		"embeddingModel": {Kind: "oneOf", Branches: []string{"ExternalModel", "CapellaHostedModel"}},
 	},
 }
 
@@ -403,6 +441,9 @@ var requiredTable = map[string]map[string]RequiredDef{
 	},
 	"CategorizedBillingResponse": {
 		"data": {},
+	},
+	"Channel": {
+		"name": {},
 	},
 	"CloudAccounts": {
 		"aws-capella-account":        {},
@@ -506,10 +547,6 @@ var requiredTable = map[string]map[string]RequiredDef{
 		"resourceGroupName": {},
 		"virtualNetwork":    {},
 	},
-	"CreateBedrockConfigurationRequest": {
-		"accessKeyId":     {},
-		"secretAccessKey": {},
-	},
 	"CreateBucketRequest": {
 		"name": {},
 	},
@@ -577,6 +614,11 @@ var requiredTable = map[string]map[string]RequiredDef{
 	"CreateDatabaseCredentialResponse": {
 		"id":       {},
 		"password": {},
+	},
+	"CreateEventingFunctionRequest": {
+		"eventMetadataStorage": {},
+		"eventSource":          {},
+		"name":                 {},
 	},
 	"CreateFreeTierAppServiceRequest": {
 		"name": {},
@@ -745,6 +787,10 @@ var requiredTable = map[string]map[string]RequiredDef{
 	"EditColumnarAnalyticsBackupRetentionRequest": {
 		"retention": {},
 	},
+	"EmbeddingDimensions": {
+		"default":   {},
+		"supported": {},
+	},
 	"EnableCMEKAzureRequest": {
 		"cloudProvider": {},
 	},
@@ -753,6 +799,32 @@ var requiredTable = map[string]map[string]RequiredDef{
 		"hint":           {},
 		"httpStatusCode": {},
 		"message":        {},
+	},
+	"EventingFunction": {
+		"eventMetadataStorage": {},
+		"eventSource":          {},
+		"name":                 {},
+	},
+	"EventingFunctionBucketBinding": {
+		"alias":  {},
+		"bucket": {},
+	},
+	"EventingFunctionConstantBinding": {
+		"alias": {},
+		"value": {},
+	},
+	"EventingFunctionKeyspace": {
+		"bucket": {},
+	},
+	"EventingFunctionUrlBinding": {
+		"alias": {},
+		"url":   {},
+	},
+	"ExternalEmbeddingModel": {
+		"contextWindowSize": {},
+		"dimensions":        {},
+		"name":              {},
+		"provider":          {},
 	},
 	"ExternalModel": {
 		"external": {},
@@ -943,18 +1015,19 @@ var requiredTable = map[string]map[string]RequiredDef{
 		"timezone":         {},
 	},
 	"GetClusterResponse": {
-		"audit":             {},
-		"availability":      {},
-		"cloudProvider":     {},
-		"configurationType": {},
-		"connectionString":  {},
-		"couchbaseServer":   {},
-		"currentState":      {},
-		"description":       {},
-		"id":                {},
-		"name":              {},
-		"serviceGroups":     {},
-		"support":           {},
+		"audit":              {},
+		"availability":       {},
+		"cloudProvider":      {},
+		"configurationType":  {},
+		"connectionString":   {},
+		"couchbaseServer":    {},
+		"currentState":       {},
+		"deletionProtection": {},
+		"description":        {},
+		"id":                 {},
+		"name":               {},
+		"serviceGroups":      {},
+		"support":            {},
 	},
 	"GetClusterSupport": {
 		"plan":     {},
@@ -1005,6 +1078,10 @@ var requiredTable = map[string]map[string]RequiredDef{
 		"severity":  {},
 		"source":    {},
 		"timestamp": {},
+	},
+	"GetEventingFunctionsResponse": {
+		"cursor": {},
+		"data":   {},
 	},
 	"GetEventsResponse": {
 		"cursor": {},
@@ -1087,6 +1164,10 @@ var requiredTable = map[string]map[string]RequiredDef{
 		"structuredDataProcessingConfig": {},
 		"targetCouchbaseKeyspace":        {},
 		"vectorizationConfig":            {},
+	},
+	"GetSupportedExternalEmbeddingModelsResponse": {
+		"cursor": {},
+		"data":   {},
 	},
 	"GetUnstructuredWorkflowResponse": {
 		"source":                           {},
@@ -1182,6 +1263,13 @@ var requiredTable = map[string]map[string]RequiredDef{
 	},
 	"ListBackupsResponse": {
 		"data": {},
+	},
+	"ListChannelsRequest": {
+		"botToken":      {},
+		"integrationId": {},
+	},
+	"ListChannelsResponse": {
+		"channels": {},
 	},
 	"ListCloudSnapshotBackupsResponse": {
 		"cursor": {},
@@ -1320,7 +1408,17 @@ var requiredTable = map[string]map[string]RequiredDef{
 		"createdBy": {},
 	},
 	"RequestConfig": {
+		"slack":   {},
+		"teams":   {},
 		"webhook": {},
+	},
+	"RequestSlack": {
+		"botToken":                  {},
+		"channel":                   {},
+		"channelWebhookUrlMappings": {},
+	},
+	"RequestTeams": {
+		"webhookUrlMappings": {},
 	},
 	"RequestWebhook": {
 		"method": {},
@@ -1337,6 +1435,8 @@ var requiredTable = map[string]map[string]RequiredDef{
 		"name": {},
 	},
 	"ResponseConfig": {
+		"slack":   {},
+		"teams":   {},
 		"webhook": {},
 	},
 	"ResponseWebhook": {
@@ -1372,6 +1472,12 @@ var requiredTable = map[string]map[string]RequiredDef{
 	"ScopeConfig": {
 		"collections": {},
 	},
+	"SetFunctionStateRequest": {
+		"state": {},
+	},
+	"SlackCustomPayload": {
+		"payload": {},
+	},
 	"Stats": {
 		"diskUsedInMib":   {},
 		"itemCount":       {},
@@ -1381,8 +1487,33 @@ var requiredTable = map[string]map[string]RequiredDef{
 	"Support": {
 		"plan": {},
 	},
-	"UpdateAlertRequest": {
-		"config": {},
+	"TeamsCustomPayload": {
+		"payload": {},
+	},
+	"TestRequestConfig": {
+		"slack":   {},
+		"teams":   {},
+		"webhook": {},
+	},
+	"TestRequestTeams": {
+		"url": {},
+	},
+	"URLBindingAuthBasic": {
+		"password": {},
+		"type":     {},
+		"username": {},
+	},
+	"URLBindingAuthBearer": {
+		"bearerToken": {},
+		"type":        {},
+	},
+	"URLBindingAuthDigest": {
+		"password": {},
+		"type":     {},
+		"username": {},
+	},
+	"URLBindingAuthNone": {
+		"type": {},
 	},
 	"UpdateAppEndpointRequest": {
 		"bucket":               {},
@@ -1464,6 +1595,11 @@ var requiredTable = map[string]map[string]RequiredDef{
 	},
 	"UpdateProviderRequest": {
 		"configuration": {},
+	},
+	"UpdateRequestConfig": {
+		"slack":   {},
+		"teams":   {},
+		"webhook": {},
 	},
 	"UpsertColumnarAnalyticsBackupScheduleRequest": {
 		"interval":  {},
@@ -1586,6 +1722,9 @@ var constraintTable = map[string]map[string]ConstraintDef{
 		"name":     {MinLength: ptrInt64(2), MaxLength: ptrInt64(128)},
 		"password": {MinLength: ptrInt64(8)},
 	},
+	"CreateEventingFunctionRequest": {
+		"name": {MinLength: ptrInt64(1), MaxLength: ptrInt64(100)},
+	},
 	"CreateFreeTierAppServiceRequest": {
 		"description": {MaxLength: ptrInt64(256)},
 		"name":        {MaxLength: ptrInt64(256)},
@@ -1629,6 +1768,28 @@ var constraintTable = map[string]map[string]ConstraintDef{
 	"DiskGCP": {
 		"storage": {Minimum: ptrFloat64(50)},
 	},
+	"EventingFunction": {
+		"name": {MinLength: ptrInt64(1), MaxLength: ptrInt64(100)},
+	},
+	"EventingFunctionBucketBinding": {
+		"alias":  {MinLength: ptrInt64(1), MaxLength: ptrInt64(64)},
+		"bucket": {MinLength: ptrInt64(1), MaxLength: ptrInt64(100)},
+	},
+	"EventingFunctionConstantBinding": {
+		"alias": {MinLength: ptrInt64(1), MaxLength: ptrInt64(64)},
+		"value": {MinLength: ptrInt64(1)},
+	},
+	"EventingFunctionKeyspace": {
+		"bucket": {MinLength: ptrInt64(1), MaxLength: ptrInt64(100)},
+	},
+	"EventingFunctionSettings": {
+		"maxTimerContextSize": {Minimum: ptrFloat64(20), Maximum: ptrFloat64(2.097152e+07)},
+		"scriptTimeout":       {Minimum: ptrFloat64(1)},
+		"workerCount":         {Minimum: ptrFloat64(1), Maximum: ptrFloat64(64)},
+	},
+	"EventingFunctionUrlBinding": {
+		"alias": {MinLength: ptrInt64(1), MaxLength: ptrInt64(64)},
+	},
 	"GetAlertResponse": {
 		"name": {MaxLength: ptrInt64(1024)},
 	},
@@ -1665,6 +1826,17 @@ var constraintTable = map[string]map[string]ConstraintDef{
 	"ServiceGroup": {
 		"services": {MinItems: ptrInt64(1)},
 	},
+	"URLBindingAuthBasic": {
+		"password": {MinLength: ptrInt64(1)},
+		"username": {MinLength: ptrInt64(1)},
+	},
+	"URLBindingAuthBearer": {
+		"bearerToken": {MinLength: ptrInt64(1)},
+	},
+	"URLBindingAuthDigest": {
+		"password": {MinLength: ptrInt64(1)},
+		"username": {MinLength: ptrInt64(1)},
+	},
 	"UpdateAlertRequest": {
 		"name": {MaxLength: ptrInt64(1024)},
 	},
@@ -1697,5 +1869,11 @@ var constraintTable = map[string]map[string]ConstraintDef{
 	"UpdateProjectRequest": {
 		"description": {MaxLength: ptrInt64(256)},
 		"name":        {MaxLength: ptrInt64(128)},
+	},
+	"VectorizationConfig": {
+		"embeddingModel.external.dimensions": {Minimum: ptrFloat64(1)},
+	},
+	"VectorizationConfigCreation": {
+		"embeddingModel.external.dimensions": {Minimum: ptrFloat64(1)},
 	},
 }
