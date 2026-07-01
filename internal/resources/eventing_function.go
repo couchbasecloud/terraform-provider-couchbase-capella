@@ -447,7 +447,20 @@ func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	diags := resp.State.Set(ctx, plan)
+	refreshedState, err := e.retrieveEventingFunction(ctx, organizationId, projectId, clusterId, name, &plan)
+	if err != nil {
+		// The function was created, so do not error out and orphan it; fall back to the plan.
+		resp.Diagnostics.AddWarning(
+			"Error reading eventing function after create",
+			"Eventing function was created but could not be read back: "+api.ParseError(err),
+		)
+
+		setEventingFunctionComputedAttributesToNull(ctx, &plan)
+
+		refreshedState = &plan
+	}
+
+	diags := resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
 }
 
