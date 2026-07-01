@@ -27,7 +27,7 @@ func EventingFunctionSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "organization_id", eventingFunctionBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "project_id", eventingFunctionBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "cluster_id", eventingFunctionBuilder, requiredUUIDStringAttribute())
-	capellaschema.AddAttr(attrs, "name", eventingFunctionBuilder, requiredNonEmptyStringAttribute())
+	capellaschema.AddAttr(attrs, "name", eventingFunctionBuilder, stringAttribute([]string{required, requiresReplace}))
 	capellaschema.AddAttr(attrs, "description", eventingFunctionBuilder, stringAttribute([]string{optional}))
 	capellaschema.AddAttr(attrs, "code", eventingFunctionBuilder, stringAttribute([]string{required, sensitive}))
 	capellaschema.AddAttr(
@@ -77,7 +77,7 @@ func EventingFunctionSchema() schema.Schema {
 
 func keyspaceAttributes() map[string]schema.Attribute {
 	attrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(attrs, "bucket", eventingFunctionBuilder, requiredStringAttributeNoReplace(), "EventingFunctionKeyspace")
+	capellaschema.AddAttr(attrs, "bucket", eventingFunctionBuilder, stringAttribute([]string{required}), "EventingFunctionKeyspace")
 	capellaschema.AddAttr(attrs, "scope", eventingFunctionBuilder, stringAttribute([]string{optional, computed}), "EventingFunctionKeyspace")
 	capellaschema.AddAttr(attrs, "collection", eventingFunctionBuilder, stringAttribute([]string{optional, computed}), "EventingFunctionKeyspace")
 	return attrs
@@ -88,14 +88,11 @@ func settingsAttributes() map[string]schema.Attribute {
 	capellaschema.AddAttr(attrs, "worker_count", eventingFunctionBuilder, int64Attribute(optional, computed, useStateForUnknown), "EventingFunctionSettings")
 	capellaschema.AddAttr(attrs, "script_timeout", eventingFunctionBuilder, int64Attribute(optional, computed, useStateForUnknown), "EventingFunctionSettings")
 
-	capellaschema.AddAttr(attrs, "sql_consistency", eventingFunctionBuilder, stringAttribute(
-		[]string{optional, computed, useStateForUnknown}, validator.String(stringvalidator.OneOf("none", "request"))), "EventingFunctionSettings")
+	capellaschema.AddAttr(attrs, "sql_consistency", eventingFunctionBuilder, stringAttribute([]string{optional, computed, useStateForUnknown}), "EventingFunctionSettings")
 
-	capellaschema.AddAttr(attrs, "language_compatibility", eventingFunctionBuilder, stringAttribute(
-		[]string{optional, computed, useStateForUnknown}, validator.String(stringvalidator.OneOf("6.0.0", "6.5.0", "6.6.2", "7.2.0"))), "EventingFunctionSettings")
+	capellaschema.AddAttr(attrs, "language_compatibility", eventingFunctionBuilder, stringAttribute([]string{optional, computed, useStateForUnknown}), "EventingFunctionSettings")
 
-	capellaschema.AddAttr(attrs, "feed_boundary", eventingFunctionBuilder, stringAttribute(
-		[]string{optional, computed, useStateForUnknown}, validator.String(stringvalidator.OneOf("everything", "from_now"))), "EventingFunctionSettings")
+	capellaschema.AddAttr(attrs, "feed_boundary", eventingFunctionBuilder, stringAttribute([]string{optional, computed, useStateForUnknown}), "EventingFunctionSettings")
 
 	capellaschema.AddAttr(attrs, "max_timer_context_size", eventingFunctionBuilder, int64Attribute(optional, computed, useStateForUnknown), "EventingFunctionSettings")
 	capellaschema.AddAttr(attrs, "allow_sync_documents", eventingFunctionBuilder, boolAttribute(optional, computed, useStateForUnknown), "EventingFunctionSettings")
@@ -107,12 +104,11 @@ func bindingsAttributes() map[string]schema.Attribute {
 	attrs := make(map[string]schema.Attribute)
 
 	bucketAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(bucketAttrs, "alias", eventingFunctionBuilder, requiredStringAttributeNoReplace(), "EventingFunctionBucketBinding")
-	capellaschema.AddAttr(bucketAttrs, "bucket", eventingFunctionBuilder, requiredStringAttributeNoReplace(), "EventingFunctionBucketBinding")
+	capellaschema.AddAttr(bucketAttrs, "alias", eventingFunctionBuilder, stringAttribute([]string{required}), "EventingFunctionBucketBinding")
+	capellaschema.AddAttr(bucketAttrs, "bucket", eventingFunctionBuilder, stringAttribute([]string{required}), "EventingFunctionBucketBinding")
 	capellaschema.AddAttr(bucketAttrs, "scope", eventingFunctionBuilder, stringAttribute([]string{optional, computed}), "EventingFunctionBucketBinding")
 	capellaschema.AddAttr(bucketAttrs, "collection", eventingFunctionBuilder, stringAttribute([]string{optional, computed}), "EventingFunctionBucketBinding")
-	capellaschema.AddAttr(bucketAttrs, "permission", eventingFunctionBuilder, stringAttribute(
-		[]string{optional, computed}, validator.String(stringvalidator.OneOf("read", "readWrite"))), "EventingFunctionBucketBinding")
+	capellaschema.AddAttr(bucketAttrs, "permission", eventingFunctionBuilder, stringAttribute([]string{optional, computed}), "EventingFunctionBucketBinding")
 
 	capellaschema.AddAttr(attrs, "buckets", eventingFunctionBuilder, &schema.ListNestedAttribute{
 		Optional: true,
@@ -129,7 +125,7 @@ func bindingsAttributes() map[string]schema.Attribute {
 	capellaschema.AddAttr(authAttrs, "bearer_token", eventingFunctionBuilder, stringAttribute([]string{optional, sensitive}))
 
 	urlAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(urlAttrs, "alias", eventingFunctionBuilder, requiredStringAttributeNoReplace(), "EventingFunctionUrlBinding")
+	capellaschema.AddAttr(urlAttrs, "alias", eventingFunctionBuilder, stringAttribute([]string{required}), "EventingFunctionUrlBinding")
 	capellaschema.AddAttr(urlAttrs, "url", eventingFunctionBuilder, requiredStringAttributeNoReplace(), "EventingFunctionUrlBinding")
 	capellaschema.AddAttr(urlAttrs, "allow_cookies", eventingFunctionBuilder, boolAttribute(optional, computed), "EventingFunctionUrlBinding")
 	capellaschema.AddAttr(urlAttrs, "validate_tls_certificate", eventingFunctionBuilder, boolAttribute(optional, computed), "EventingFunctionUrlBinding")
@@ -146,8 +142,8 @@ func bindingsAttributes() map[string]schema.Attribute {
 	})
 
 	constantAttrs := make(map[string]schema.Attribute)
-	capellaschema.AddAttr(constantAttrs, "alias", eventingFunctionBuilder, requiredStringAttributeNoReplace(), "EventingFunctionConstantBinding")
-	capellaschema.AddAttr(constantAttrs, "value", eventingFunctionBuilder, requiredStringAttributeNoReplace(), "EventingFunctionConstantBinding")
+	capellaschema.AddAttr(constantAttrs, "alias", eventingFunctionBuilder, stringAttribute([]string{required}), "EventingFunctionConstantBinding")
+	capellaschema.AddAttr(constantAttrs, "value", eventingFunctionBuilder, stringAttribute([]string{required}), "EventingFunctionConstantBinding")
 
 	capellaschema.AddAttr(attrs, "constants", eventingFunctionBuilder, &schema.ListNestedAttribute{
 		Optional: true,
