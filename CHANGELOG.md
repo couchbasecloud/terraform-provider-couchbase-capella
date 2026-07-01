@@ -6,6 +6,7 @@
 
 **Implemented enhancements:**
 
+- \[AV-134634\] Fix - Fail fast and auto-recover from private endpoint service failed states [\#647](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/647) ([cloudy-vishnu](https://github.com/cloudy-vishnu))
 - \[AV-128971\] Add certificate datasource tests; provision DM cluster lazily [\#637](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/637) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
 - \[AV-127227\] Handle app endpoint deletion and forbidden errors in various resource operations [\#634](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/634) ([stanleefdz](https://github.com/stanleefdz))
 - \[AV-128970\] Add acceptance tests for query index datasources [\#625](https://github.com/couchbasecloud/terraform-provider-couchbase-capella/pull/625) ([panigrahisubhrajit](https://github.com/panigrahisubhrajit))
