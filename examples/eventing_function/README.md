@@ -329,3 +329,15 @@ The resources that were imported are shown above. These resources are now in
 your Terraform state and will henceforth be managed by Terraform.
 ```
 
+### Re-supplying URL binding secrets after import
+
+If the imported function has a URL binding that uses authentication (`type = "basic"`, `"digest"` or `"bearer"`), its secret (`password` for `basic`/`digest`, or `bearer_token` for `bearer`) is redacted by the Capella API. As a result, the secret is **not** populated in the Terraform state on import, and the first `terraform plan` after import shows it being added from your configuration:
+
+```
+  ~ authentication = {
+      + password = (sensitive value)
+    }
+```
+
+Re-supply the secret in your configuration (it must match the value already configured on the function) and run `terraform apply` to reconcile the state. Subsequent plans will then show no changes.
+
