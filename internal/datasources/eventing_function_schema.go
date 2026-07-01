@@ -116,7 +116,7 @@ func EventingFunctionSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "organization_id", eventingFunctionBuilder, requiredUUIDString())
 	capellaschema.AddAttr(attrs, "project_id", eventingFunctionBuilder, requiredUUIDString())
 	capellaschema.AddAttr(attrs, "cluster_id", eventingFunctionBuilder, requiredUUIDString())
-	capellaschema.AddAttr(attrs, "name", eventingFunctionBuilder, requiredStringWithValidator())
+	capellaschema.AddAttr(attrs, "name", eventingFunctionBuilder, requiredString())
 
 	// export omits the read-only status field from the response so the result can be reused as a
 	// create payload. It maps to the export query parameter on the get eventing function endpoint.
