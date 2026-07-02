@@ -1,7 +1,9 @@
 package resources
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
@@ -14,7 +16,10 @@ func PrivateEndpointsSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "organization_id", privateEndpointsBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "project_id", privateEndpointsBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "cluster_id", privateEndpointsBuilder, requiredUUIDStringAttribute())
-	capellaschema.AddAttr(attrs, "endpoint_id", privateEndpointsBuilder, stringAttribute([]string{required, requiresReplace}))
+	capellaschema.AddAttr(attrs, "endpoint_id", privateEndpointsBuilder, stringAttribute(
+		[]string{required, requiresReplace},
+		validator.String(stringvalidator.LengthAtLeast(1)),
+	))
 	capellaschema.AddAttr(attrs, "status", privateEndpointsBuilder, stringAttribute([]string{computed}))
 	capellaschema.AddAttr(attrs, "service_name", privateEndpointsBuilder, stringAttribute([]string{computed}))
 	capellaschema.AddAttr(attrs, "private_endpoint_dns", privateEndpointsBuilder, stringAttribute([]string{computed}), "GetPrivateEndpointsResponse")

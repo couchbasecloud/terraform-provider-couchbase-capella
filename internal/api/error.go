@@ -65,3 +65,9 @@ func CheckResourceNotFoundError(err error) (bool, string) {
 		return false, err.Error()
 	}
 }
+
+// IsForbiddenError checks whether the given error is an api.Error with HTTP status 403.
+func IsForbiddenError(err error) bool {
+	var apiError *Error
+	return errors.As(err, &apiError) && apiError.HttpStatusCode == http.StatusForbidden
+}

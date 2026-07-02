@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/getkin/kin-openapi/openapi3"
 )
 
 func TestBuildEnumTable(t *testing.T) {
@@ -92,6 +94,39 @@ func TestBuildEnumTable(t *testing.T) {
 			t.Errorf("top-level enum sites must be excluded, got %#v", got)
 		}
 	})
+}
+
+func TestBuildEnumTable_RefEnumPopulatesField(t *testing.T) {
+	// End-to-end regression for the $ref-to-named-enum gap: a property that
+	// $refs a scalar enum schema must yield a populated (schema, field) entry
+	// instead of being dropped as a field-less top-level enum.
+	tz := &openapi3.Schema{Type: &openapi3.Types{"string"}, Enum: []any{"PT", "ET"}}
+	doc := &openapi3.T{
+		Components: &openapi3.Components{
+			Schemas: openapi3.Schemas{
+				"onOffTimezone": {Value: tz},
+				"Schedule": {Value: &openapi3.Schema{
+					Type: &openapi3.Types{"object"},
+					Properties: openapi3.Schemas{
+						"timezone": {Ref: "#/components/schemas/onOffTimezone", Value: tz},
+					},
+				}},
+			},
+		},
+	}
+
+	sites, err := discoverDoc(doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	table := buildEnumTable(sites)
+	def, ok := table["Schedule"]["timezone"]
+	if !ok {
+		t.Fatalf("Schedule.timezone missing from enum table: %#v", table)
+	}
+	if def.Type != "string" || !reflect.DeepEqual(def.Values, []string{"PT", "ET"}) {
+		t.Errorf("unexpected def: %#v", def)
+	}
 }
 
 func TestIsArrayLiteral(t *testing.T) {

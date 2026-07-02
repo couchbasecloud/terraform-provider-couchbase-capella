@@ -81,7 +81,26 @@ func TestAccClusterOnOffScheduleResourceInvalidTimezone(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccClusterOnOffScheduleResourceConfig(resourceName, "Mars/Olympus"),
-				ExpectError: regexp.MustCompile(`(?s)timezone|invalid value|Validation Error`),
+				ExpectError: regexp.MustCompile(`timezone value must be one of`),
+			},
+		},
+	})
+}
+
+// TestAccClusterOnOffScheduleEmptyTimezone verifies that an empty timezone is
+// rejected by local config validation at terraform validate. The timezone enum
+// validator is attached automatically by the schema builder from the OpenAPI
+// spec (no hand-coded list), so this also exercises the generator's handling of
+// $ref-to-named-enum properties.
+func TestAccClusterOnOffScheduleEmptyTimezone(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_cluster_onoff_schedule_empty_tz_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterOnOffScheduleResourceConfig(resourceName, ""),
+				ExpectError: regexp.MustCompile(`timezone value must be one of`),
 			},
 		},
 	})
