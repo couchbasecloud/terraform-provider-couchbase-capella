@@ -327,14 +327,19 @@ func NewEventingFunctionResource(
 		description = prior.Description
 	}
 
+	settings, err := settingsToSchema(resp.Settings)
+	if err != nil {
+		return nil, err
+	}
+
 	bindings, err := bindingsToSchema(resp.Bindings)
 	if err != nil {
 		return nil, err
 	}
 
-	settings, err := settingsToSchema(resp.Settings)
-	if err != nil {
-		return nil, err
+	// handle binding is empty object
+	if bindings == nil && prior != nil && prior.Bindings != nil {
+		bindings = &EventingFunctionBindingsResource{}
 	}
 
 	fn := &EventingFunctionResource{
