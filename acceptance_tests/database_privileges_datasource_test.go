@@ -38,7 +38,7 @@ func TestAccDatasourceDatabasePrivilegesInvalidCluster(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDatabasePrivilegesDataSourceConfig(dsName, "00000000-0000-0000-0000-000000000000"),
-				ExpectError: regexp.MustCompile(`(?s)Error Reading Capella Database Privileges|cluster.*not found|access to the requested resource is denied|Not Found`),
+				ExpectError: regexp.MustCompile(`(?s)Error Reading Capella Database Privileges.*"httpStatusCode":(403|404)`),
 			},
 		},
 	})
@@ -60,6 +60,27 @@ data "couchbase-capella_database_privileges" "%[2]s" {
 }
 `, globalProviderBlock, dsName, globalOrgId, globalProjectId),
 				ExpectError: regexp.MustCompile(`(?s)cluster_id|argument.*required`),
+			},
+		},
+	})
+}
+
+func TestAccDatasourceDatabasePrivilegesMissingOrganization(t *testing.T) {
+	dsName := randomStringWithPrefix("tf_acc_db_privs_missing_org_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+%[1]s
+
+data "couchbase-capella_database_privileges" "%[2]s" {
+  project_id = "%[3]s"
+  cluster_id = "%[4]s"
+}
+`, globalProviderBlock, dsName, globalProjectId, globalClusterId),
+				ExpectError: regexp.MustCompile(`(?s)organization_id|argument.*required`),
 			},
 		},
 	})
