@@ -47,7 +47,7 @@ func (d *DatabasePrivileges) Read(ctx context.Context, req datasource.ReadReques
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Database Privileges",
-			"Could not read Capella database privileges in cluster "+clusterId+": "+err.Error(),
+			"Could not read Capella database privileges: "+err.Error(),
 		)
 		return
 	}

@@ -12,9 +12,6 @@ var databasePrivilegesBuilder = capellaschema.NewSchemaBuilder("databasePrivileg
 func DatabasePrivilegesSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
-	capellaschema.AddAttr(attrs, "organization_id", databasePrivilegesBuilder, requiredStringWithValidator())
-	capellaschema.AddAttr(attrs, "project_id", databasePrivilegesBuilder, requiredStringWithValidator())
-	capellaschema.AddAttr(attrs, "cluster_id", databasePrivilegesBuilder, requiredStringWithValidator())
 
 	// Build data item attributes
 	dataAttrs := make(map[string]schema.Attribute)
