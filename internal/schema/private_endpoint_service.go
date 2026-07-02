@@ -22,6 +22,13 @@ type PrivateEndpointService struct {
 
 	// Enabled indicates if private endpoint service is enabled/disabled on cluster.
 	Enabled types.Bool `tfsdk:"enabled"`
+
+	// Status is the lifecycle state of the private endpoint service derived from
+	// the most recent enable/disable/update operation. Terminal states are
+	// enableFailed and disableFailed; transient states are enabling, disabling,
+	// and unknown; idle means no operation has run. It may be empty when the
+	// control plane does not report a status.
+	Status types.String `tfsdk:"status"`
 }
 
 // Validate is used to verify that IDs have been properly imported.
