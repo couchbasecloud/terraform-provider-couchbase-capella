@@ -10,6 +10,5 @@ type GetDatabasePrivilegeResponse struct {
 	Group string `json:"group"`
 
 	// Resources is the RBAC template indicating which resource levels (bucket/scope/collection) are configurable.
-	// A nil value means the privilege is global.
 	Resources *AccessibleResources `json:"resources,omitempty"`
 }
