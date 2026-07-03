@@ -4,11 +4,14 @@ page_title: "couchbase-capella_private_endpoint_service Resource - terraform-pro
 subcategory: ""
 description: |-
   This resource allows you to manage the private endpoint service for an operational cluster. The private endpoint service must be enabled before you can create private endpoints to connect your Cloud Service Provider's private network (VPC/VNET) to your operational cluster. This enables secure access to your cluster without exposing traffic to the public internet.
+  ~> Enablement failure handling: If enablement terminally fails (status = enableFailed), the provider automatically issues a cleanup request to tear down the partially provisioned service and then removes the resource from Terraform state before the apply errors out. This is intentional: the resource disappearing from state is expected, and the next terraform apply performs a clean re-create. If the automatic cleanup cannot complete, the error will say so — contact Couchbase Capella Support to check for orphaned resources in your cloud account.
 ---
 
 # couchbase-capella_private_endpoint_service (Resource)
 
 This resource allows you to manage the private endpoint service for an operational cluster. The private endpoint service must be enabled before you can create private endpoints to connect your Cloud Service Provider's private network (VPC/VNET) to your operational cluster. This enables secure access to your cluster without exposing traffic to the public internet.
+
+~> **Enablement failure handling:** If enablement terminally fails (`status` = `enableFailed`), the provider automatically issues a cleanup request to tear down the partially provisioned service and then removes the resource from Terraform state before the apply errors out. This is intentional: the resource disappearing from state is expected, and the next `terraform apply` performs a clean re-create. If the automatic cleanup cannot complete, the error will say so — contact Couchbase Capella Support to check for orphaned resources in your cloud account.
 
 ## Example Usage
 
@@ -30,6 +33,11 @@ resource "couchbase-capella_private_endpoint_service" "new_service" {
 - `enabled` (Boolean) - Returns true if private endpoint is enabled
 - `organization_id` (String) The GUID4 ID of the organization.
 - `project_id` (String) The GUID4 ID of the project.
+
+### Read-Only
+
+- `status` (String) - status of the private endpoint
+ - **Valid Values**: `idle`, `unknown`, `enabling`, `enabled`, `enableFailed`, `disabling`, `disabled`, `disableFailed`
 
 ## Import
 

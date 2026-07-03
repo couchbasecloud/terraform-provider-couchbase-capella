@@ -4,6 +4,7 @@ resource "couchbase-capella_app_service" "new_app_service" {
   cluster_id      = "<cluster_id>"
   name            = "MyAppSyncService"
   description     = "My app sync service."
+  version         = "4.0"
   nodes           = 2
   compute = {
     cpu = 2

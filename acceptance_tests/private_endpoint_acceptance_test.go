@@ -2,6 +2,7 @@ package acceptance_tests
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -44,6 +45,100 @@ func TestAccPrivateEndpointServiceEnableDisable(t *testing.T) {
 	})
 }
 
+// TestAccAWSPrivateEndpointCommandInvalidVPCID verifies that the AWS private endpoint
+// command data source rejects a vpc_id shorter than the OpenAPI minimum length at plan
+// time. The generated LengthBetween(12, 21) validator fires before any API call, so dummy
+// org/project/cluster IDs are sufficient.
+func TestAccAWSPrivateEndpointCommandInvalidVPCID(t *testing.T) {
+	dataSourceName := randomStringWithPrefix("tf_acc_aws_pe_command_invalid_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSPrivateEndpointCommandInvalidVPCIDConfig(dataSourceName),
+				ExpectError: regexp.MustCompile(`(?s)vpc_id.*string length must be between 12 and 21`),
+			},
+		},
+	})
+}
+
+func testAccAWSPrivateEndpointCommandInvalidVPCIDConfig(dataSourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "couchbase-capella_aws_private_endpoint_command" "%[2]s" {
+  organization_id = "00000000-0000-0000-0000-000000000000"
+  project_id      = "11111111-1111-1111-1111-111111111111"
+  cluster_id      = "22222222-2222-2222-2222-222222222222"
+  vpc_id          = "vpc-short"
+  subnet_ids      = ["subnet-1234567890abcdef0"]
+}
+`, globalProviderBlock, dataSourceName)
+}
+
+// TestAccAzurePrivateEndpointCommandInvalidVirtualNetwork verifies that the Azure private
+// endpoint command data source rejects a virtual_network shorter than the OpenAPI minimum
+// length at plan time. The generated LengthBetween(2, 64) validator fires before any API call.
+func TestAccAzurePrivateEndpointCommandInvalidVirtualNetwork(t *testing.T) {
+	dataSourceName := randomStringWithPrefix("tf_acc_azure_pe_command_invalid_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAzurePrivateEndpointCommandInvalidVirtualNetworkConfig(dataSourceName),
+				ExpectError: regexp.MustCompile(`(?s)virtual_network.*string length must be between 2 and 64`),
+			},
+		},
+	})
+}
+
+func testAccAzurePrivateEndpointCommandInvalidVirtualNetworkConfig(dataSourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "couchbase-capella_azure_private_endpoint_command" "%[2]s" {
+  organization_id     = "00000000-0000-0000-0000-000000000000"
+  project_id          = "11111111-1111-1111-1111-111111111111"
+  cluster_id          = "22222222-2222-2222-2222-222222222222"
+  resource_group_name = "my-resource-group"
+  virtual_network     = "a"
+}
+`, globalProviderBlock, dataSourceName)
+}
+
+// TestAccGCPPrivateEndpointCommandInvalidVPCNetworkID verifies that the GCP private endpoint
+// command data source rejects a vpc_network_id shorter than the OpenAPI minimum length at
+// plan time. The generated LengthBetween(12, 21) validator fires before any API call.
+func TestAccGCPPrivateEndpointCommandInvalidVPCNetworkID(t *testing.T) {
+	dataSourceName := randomStringWithPrefix("tf_acc_gcp_pe_command_invalid_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccGCPPrivateEndpointCommandInvalidVPCNetworkIDConfig(dataSourceName),
+				ExpectError: regexp.MustCompile(`(?s)vpc_network_id.*string length must be between 12 and 21`),
+			},
+		},
+	})
+}
+
+func testAccGCPPrivateEndpointCommandInvalidVPCNetworkIDConfig(dataSourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "couchbase-capella_gcp_private_endpoint_command" "%[2]s" {
+  organization_id = "00000000-0000-0000-0000-000000000000"
+  project_id      = "11111111-1111-1111-1111-111111111111"
+  cluster_id      = "22222222-2222-2222-2222-222222222222"
+  vpc_network_id  = "vpc-short"
+  subnet_ids      = ["subnet-1234567890abcdef0"]
+}
+`, globalProviderBlock, dataSourceName)
+}
+
 // testAccPrivateEndpointServiceEnableConfig returns terraform config for enabling/disabling private endpoint service
 func testAccPrivateEndpointServiceEnableConfig(resourceName string, enabled bool) string {
 	return fmt.Sprintf(
@@ -78,4 +173,34 @@ data "couchbase-capella_private_endpoints" "%[3]s" {
   depends_on = [couchbase-capella_private_endpoint_service.%[2]s]
 }
 `, globalProviderBlock, serviceResourceName, dataSourceName, globalOrgId, globalProjectId, globalClusterId)
+}
+
+// TestAccPrivateEndpointsInvalidEndpointID verifies that the private endpoints resource rejects
+// an empty endpoint_id at plan time. The LengthAtLeast(1) validator fires before any API call,
+// so dummy org/project/cluster IDs are sufficient.
+func TestAccPrivateEndpointsInvalidEndpointID(t *testing.T) {
+	resourceName := randomStringWithPrefix("tf_acc_private_endpoints_invalid_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccPrivateEndpointsInvalidEndpointIDConfig(resourceName),
+				ExpectError: regexp.MustCompile(`(?s)endpoint_id.*string length must be at least 1`),
+			},
+		},
+	})
+}
+
+func testAccPrivateEndpointsInvalidEndpointIDConfig(resourceName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "couchbase-capella_private_endpoints" "%[2]s" {
+  organization_id = "00000000-0000-0000-0000-000000000000"
+  project_id      = "11111111-1111-1111-1111-111111111111"
+  cluster_id      = "22222222-2222-2222-2222-222222222222"
+  endpoint_id     = ""
+}
+`, globalProviderBlock, resourceName)
 }

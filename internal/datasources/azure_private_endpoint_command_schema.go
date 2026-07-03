@@ -15,8 +15,8 @@ func AzurePrivateEndpointCommandSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "organization_id", azurePrivateEndpointCommandBuilder, requiredString())
 	capellaschema.AddAttr(attrs, "project_id", azurePrivateEndpointCommandBuilder, requiredString())
 	capellaschema.AddAttr(attrs, "cluster_id", azurePrivateEndpointCommandBuilder, requiredString())
-	capellaschema.AddAttr(attrs, "resource_group_name", azurePrivateEndpointCommandBuilder, requiredString())
-	capellaschema.AddAttr(attrs, "virtual_network", azurePrivateEndpointCommandBuilder, requiredString())
+	capellaschema.AddAttr(attrs, "resource_group_name", azurePrivateEndpointCommandBuilder, requiredString(), "CreateAzurePrivateEndpointCommandRequest")
+	capellaschema.AddAttr(attrs, "virtual_network", azurePrivateEndpointCommandBuilder, requiredString(), "CreateAzurePrivateEndpointCommandRequest")
 	capellaschema.AddAttr(attrs, "command", azurePrivateEndpointCommandBuilder, computedString())
 
 	return schema.Schema{
