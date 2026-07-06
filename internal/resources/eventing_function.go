@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/couchbase/tools-common/types/ptr"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -189,7 +190,7 @@ func setEventingFunctionComputedAttributesToNull(ctx context.Context, plan *prov
 
 			plan.Bindings.Urls[i].Authentication = types.ObjectNull(
 				providerschema.
-					EventingFunctionURLBindingAuthentication{}.
+				EventingFunctionURLBindingAuthentication{}.
 					AttributeTypes(),
 			)
 		}
@@ -340,7 +341,7 @@ func eventingFunctionChanged(
 		return false, err
 	}
 
-	return eventingValueChanged(plan.Description, state.Description) ||
+	return !plan.Description.Equal(state.Description) ||
 		eventingValueChanged(plan.Code, state.Code) ||
 		eventingKeyspaceChanged(plan.EventSource, state.EventSource) ||
 		eventingKeyspaceChanged(plan.EventMetadataStorage, state.EventMetadataStorage) ||
@@ -500,7 +501,8 @@ func (e *EventingFunction) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	updateReq := eventingapi.UpdateEventingFunctionRequest{
-		Description:          plan.Description.ValueStringPointer(),
+		// ValueStringPointer not used for description as null is a valid value to clear the description
+		Description:          ptr.To(plan.Description.ValueString()),
 		Code:                 plan.Code.ValueStringPointer(),
 		EventSource:          keyspaceToAPIPtr(plan.EventSource),
 		EventMetadataStorage: keyspaceToAPIPtr(plan.EventMetadataStorage),
