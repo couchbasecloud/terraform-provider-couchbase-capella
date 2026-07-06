@@ -406,8 +406,27 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 		state.IndexName = types.StringValue(indexName)
 		state.Status = types.StringValue(index.Status)
 
+		// Fetch the full DDL definition to get index keys with modifiers
+		// like INCLUDE MISSING, which are not present in SecExprs.
+		indexKeys := index.SecExprs
+		definition, err := g.getIndexDefinition(
+			ctx,
+			organizationID,
+			projectID,
+			clusterID,
+			bucketName,
+			scopeName,
+			collectionName,
+			indexName,
+		)
+		if err == nil && definition != "" {
+			if parsed, parseErr := parseIndexKeysFromDefinition(definition); parseErr == nil && len(parsed) > 0 {
+				indexKeys = parsed
+			}
+		}
+
 		var keys []attr.Value
-		for _, key := range index.SecExprs {
+		for _, key := range indexKeys {
 			keys = append(keys, types.StringValue(key))
 		}
 
@@ -748,4 +767,126 @@ func (g *GSI) getQueryIndex(
 	}
 
 	return &index, nil
+}
+
+// getIndexDefinition fetches the CREATE INDEX DDL statement for a specific index
+// from the list definitions endpoint. The DDL includes key modifiers such as
+// INCLUDE MISSING that are not present in the SecExprs field.
+func (g *GSI) getIndexDefinition(
+	ctx context.Context, organizationID, projectID, clusterID, bucketName, scopeName, collectionName, indexName string,
+) (string, error) {
+	uri := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/queryService/indexes?bucket=%s&scope=%s&collection=%s",
+		g.HostURL,
+		organizationID,
+		projectID,
+		clusterID,
+		bucketName,
+		scopeName,
+		collectionName,
+	)
+
+	if err := api.Limiter.Wait(ctx); err != nil {
+		tflog.Error(ctx, "rate limiter error: "+err.Error())
+	}
+
+	cfg := api.EndpointCfg{Url: uri, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	response, err := g.ClientV1.ExecuteWithRetry(
+		ctx,
+		cfg,
+		nil,
+		g.Token,
+		nil,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	var list api.ListIndexDefinitionsResponse
+	if err = json.Unmarshal(response.Body, &list); err != nil {
+		return "", err
+	}
+
+	for _, def := range list.Definitions {
+		if def.IndexName == indexName {
+			return def.Definition, nil
+		}
+	}
+
+	return "", fmt.Errorf("index definition not found for %s", indexName)
+}
+
+// parseIndexKeysFromDefinition extracts index key expressions from a CREATE INDEX
+// DDL statement. Unlike SecExprs from the API, the DDL includes key modifiers
+// such as INCLUDE MISSING, DESC, and ASC.
+func parseIndexKeysFromDefinition(definition string) ([]string, error) {
+	// Find the key list which starts after ON <keyspace>( in the DDL.
+	// The keyspace reference (e.g., `bucket`.`scope`.`collection`) does not
+	// contain parentheses, so the first '(' after ON marks the key list start.
+	onIdx := strings.Index(strings.ToUpper(definition), " ON ")
+	if onIdx == -1 {
+		return nil, fmt.Errorf("could not find ON clause in definition")
+	}
+
+	// Find the opening parenthesis of the key list.
+	keyStart := strings.Index(definition[onIdx:], "(")
+	if keyStart == -1 {
+		return nil, fmt.Errorf("could not find key list opening parenthesis")
+	}
+	keyStart += onIdx
+
+	// Find the matching closing parenthesis, tracking depth for nested parens.
+	depth := 0
+	keyEnd := -1
+	for i := keyStart; i < len(definition); i++ {
+		switch definition[i] {
+		case '(':
+			depth++
+		case ')':
+			depth--
+			if depth == 0 {
+				keyEnd = i
+				break
+			}
+		}
+		if keyEnd != -1 {
+			break
+		}
+	}
+
+	if keyEnd == -1 {
+		return nil, fmt.Errorf("could not find matching closing parenthesis for key list")
+	}
+
+	// Extract the content between the parentheses.
+	keysContent := definition[keyStart+1 : keyEnd]
+
+	// Split by top-level commas (commas not inside nested parentheses).
+	var keys []string
+	depth = 0
+	start := 0
+	for i := 0; i < len(keysContent); i++ {
+		switch keysContent[i] {
+		case '(':
+			depth++
+		case ')':
+			depth--
+		case ',':
+			if depth == 0 {
+				key := strings.TrimSpace(keysContent[start:i])
+				if key != "" {
+					keys = append(keys, key)
+				}
+				start = i + 1
+			}
+		}
+	}
+
+	// Add the last key.
+	lastKey := strings.TrimSpace(keysContent[start:])
+	if lastKey != "" {
+		keys = append(keys, lastKey)
+	}
+
+	return keys, nil
 }
