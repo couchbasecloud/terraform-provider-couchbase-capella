@@ -76,6 +76,11 @@ func TestParseIndexKeysFromDefinition(t *testing.T) {
 			definition: "CREATE PRIMARY INDEX `primary_idx` ON `bucket`.`scope`.`collection`",
 			wantErr:    true,
 		},
+		{
+			name:       "primary index with WHERE clause",
+			definition: "CREATE PRIMARY INDEX `primary_idx` ON `bucket`.`scope`.`collection` WHERE (`type` = \"user\")",
+			wantErr:    true,
+		},
 	}
 
 	for _, tt := range tests {

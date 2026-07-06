@@ -420,7 +420,7 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 			indexName,
 		)
 		if err == nil && definition != "" {
-			if parsed, parseErr := parseIndexKeysFromDefinition(definition); parseErr == nil && len(parsed) > 0 {
+			if parsed, parseErr := parseIndexKeysFromDefinition(definition); parseErr == nil && len(parsed) == len(indexKeys) {
 				indexKeys = parsed
 			}
 		}
@@ -781,9 +781,9 @@ func (g *GSI) getIndexDefinition(
 		organizationID,
 		projectID,
 		clusterID,
-		bucketName,
-		scopeName,
-		collectionName,
+		url.QueryEscape(bucketName),
+		url.QueryEscape(scopeName),
+		url.QueryEscape(collectionName),
 	)
 
 	if err := api.Limiter.Wait(ctx); err != nil {
@@ -820,6 +820,12 @@ func (g *GSI) getIndexDefinition(
 // DDL statement. Unlike SecExprs from the API, the DDL includes key modifiers
 // such as INCLUDE MISSING, DESC, and ASC.
 func parseIndexKeysFromDefinition(definition string) ([]string, error) {
+	// Primary indexes have no key list; any '(' after the ON clause belongs
+	// to something else (e.g., a WHERE predicate), so bail out early.
+	if strings.HasPrefix(strings.ToUpper(strings.TrimSpace(definition)), "CREATE PRIMARY INDEX") {
+		return nil, fmt.Errorf("primary index definitions have no index keys")
+	}
+
 	// Find the key list which starts after ON <keyspace>( in the DDL.
 	// The keyspace reference (e.g., `bucket`.`scope`.`collection`) does not
 	// contain parentheses, so the first '(' after ON marks the key list start.
