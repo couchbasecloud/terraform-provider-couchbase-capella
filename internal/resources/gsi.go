@@ -846,7 +846,6 @@ func parseIndexKeysFromDefinition(definition string) ([]string, error) {
 			depth--
 			if depth == 0 {
 				keyEnd = i
-				break
 			}
 		}
 		if keyEnd != -1 {
