@@ -190,7 +190,7 @@ func setEventingFunctionComputedAttributesToNull(ctx context.Context, plan *prov
 
 			plan.Bindings.Urls[i].Authentication = types.ObjectNull(
 				providerschema.
-				EventingFunctionURLBindingAuthentication{}.
+					EventingFunctionURLBindingAuthentication{}.
 					AttributeTypes(),
 			)
 		}
