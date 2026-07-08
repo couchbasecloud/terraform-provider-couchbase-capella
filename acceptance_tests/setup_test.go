@@ -109,38 +109,38 @@ func setup(ctx context.Context, client *api.Client) error {
 		return err
 	}
 
-	if err := setupDMCluster(ctx, client); err != nil {
-		return err
-	}
+	//if err := setupDMCluster(ctx, client); err != nil {
+	//	return err
+	//}
 
-	if err := resolveDMBucket(ctx, client); err != nil {
-		return err
-	}
-	if err := dmClusterWait(ctx, client, false); err != nil {
-		return err
-	}
+	//if err := resolveDMBucket(ctx, client); err != nil {
+	//	return err
+	//}
+	//if err := dmClusterWait(ctx, client, false); err != nil {
+	//	return err
+	//}
 
-	// Create app service only if not provided via env var
-	if globalAppServiceId == "" {
-		if err := createAppService(ctx, client); err != nil {
-			return err
-		}
-		globalAppServiceCreated = true
-		if err := appServiceWait(ctx, client, false); err != nil {
-			return err
-		}
-	} else {
-		log.Printf("Using existing app service: %s", globalAppServiceId)
-	}
-
-	appEndpointCreated, err := createAppEndpoint(ctx, client, globalAppEndpointName, globalBucketName)
-	if err != nil {
-		return err
-	}
-	globalAppEndpointCreated = appEndpointCreated
-	if err := appEndpointWait(ctx, client, globalAppEndpointName); err != nil {
-		return err
-	}
+	//// Create app service only if not provided via env var
+	//if globalAppServiceId == "" {
+	//	if err := createAppService(ctx, client); err != nil {
+	//		return err
+	//	}
+	//	globalAppServiceCreated = true
+	//	if err := appServiceWait(ctx, client, false); err != nil {
+	//		return err
+	//	}
+	//} else {
+	//	log.Printf("Using existing app service: %s", globalAppServiceId)
+	//}
+	//
+	//appEndpointCreated, err := createAppEndpoint(ctx, client, globalAppEndpointName, globalBucketName)
+	//if err != nil {
+	//	return err
+	//}
+	//globalAppEndpointCreated = appEndpointCreated
+	//if err := appEndpointWait(ctx, client, globalAppEndpointName); err != nil {
+	//	return err
+	//}
 
 	return nil
 }
