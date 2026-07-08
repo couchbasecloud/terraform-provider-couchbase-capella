@@ -150,20 +150,20 @@ type UpdateEventingFunctionRequest struct {
 	Bindings             *Bindings `json:"bindings,omitempty"`
 }
 
-// GetEventingFunctionResponse is the definition of a retrieved eventing function.
+// GetEventingFunctionResponse is the definition of a retrieved eventing function
 type GetEventingFunctionResponse struct {
 	// Name is the name of the eventing function.
 	Name string `json:"name"`
 
 	// Description is the eventing function description.
-	Description *string `json:"description"`
+	Description *string `json:"description,omitempty"`
 
-	// Status is the read-only current runtime status of the function.
-	// Enum: deployed, undeployed, paused, deploying, undeploying, pausing.
-	Status string `json:"status"`
+	// Status is the read-only current runtime status of the function. It is omitted from an export
+	// response. Enum: deployed, undeployed, paused, deploying, undeploying, pausing.
+	Status *string `json:"status,omitempty"`
 
 	// Code is the JavaScript code of the eventing function.
-	Code string `json:"code"`
+	Code *string `json:"code,omitempty"`
 
 	// EventSource is the keyspace on which the function listens for document mutations.
 	EventSource Keyspace `json:"eventSource"`
@@ -172,10 +172,10 @@ type GetEventingFunctionResponse struct {
 	EventMetadataStorage Keyspace `json:"eventMetadataStorage"`
 
 	// Settings holds the runtime settings.
-	Settings Settings `json:"settings"`
+	Settings *Settings `json:"settings,omitempty"`
 
 	// Bindings holds the bucket, URL and constant bindings.
-	Bindings Bindings `json:"bindings"`
+	Bindings *Bindings `json:"bindings,omitempty"`
 }
 
 // SetFunctionStateRequest is the payload for changing an eventing function's activation state.

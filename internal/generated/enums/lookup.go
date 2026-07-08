@@ -39,6 +39,12 @@ func Lookup(b SchemaBuilder, alternateSchemas []string, tfFieldName string) *Enu
 		patterns = append(patterns, schemaPatterns(b.GetResourceName())...)
 	}
 
+	// Resolve nested object fields keyed by OpenAPI path, e.g.
+	// "weeklySchedule.dayOfWeek" under CreateScheduledBackupRequest. Dotted
+	// candidates are tried before the bare name so a hinted nested field never
+	// resolves to a same-named top-level field in the same schema.
+	candidates = append(nestedFieldCandidates(alternateSchemas, candidates), candidates...)
+
 	for _, p := range patterns {
 		if p == "" {
 			continue
@@ -178,6 +184,30 @@ func capitalize(s string) string {
 		return s
 	}
 	return strings.ToUpper(s[:1]) + s[1:]
+}
+
+func lowerCamel(s string) string {
+	if s == "" {
+		return s
+	}
+	return strings.ToLower(s[:1]) + s[1:]
+}
+
+// nestedFieldCandidates prefixes each base field with the lower-camel of each
+// alternate schema (the flattened nested object's name), yielding dotted keys
+// like "weeklySchedule.dayOfWeek" that match the generated table.
+func nestedFieldCandidates(alternateSchemas, base []string) []string {
+	var out []string
+	for _, s := range alternateSchemas {
+		prefix := lowerCamel(s)
+		if prefix == "" {
+			continue
+		}
+		for _, f := range base {
+			out = append(out, prefix+"."+f)
+		}
+	}
+	return out
 }
 
 // CompositionLookup returns the composition definition (oneOf/anyOf/allOf)

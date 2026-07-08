@@ -485,9 +485,9 @@ network_peers_list = {
           "region" = "us-east-1"
           "vpc_id" = "vpc-141f0fffff141aa00ff"
         }
+        "azure_config" = null /* object */
         "gcp_config" = null /* object */
       }
-      "provider_type" = ""
       "status" = {
         "reasoning" = ""
         "state" = "complete"
@@ -618,9 +618,9 @@ Changes to Outputs:
                       - region      = "us-east-1"
                       - vpc_id      = "vpc-12345678912345678"
                     }
+                  - azure_config = null
                   - gcp_config = null
                 }
-              - provider_type   = ""
               - status          = {
                   - reasoning = ""
                   - state     = "complete"
@@ -1114,6 +1114,7 @@ Changes to Outputs:
               - name            = "VPCPeerTFTestGCP"
               - provider_config = {
                   - aws_config = null
+                  - azure_config = null
                   - gcp_config = {
                       - cidr            = "10.0.4.0/23"
                       - network_name    = "cc-ffffffff-aaaa-1414-eeee-000000000000"
@@ -1297,6 +1298,7 @@ Changes to Outputs:
               - name            = "VPCPeerTFTestGCP"
               - provider_config = {
                   - aws_config = null
+                  - azure_config = null
                   - gcp_config = {
                       - cidr            = "10.0.4.0/23"
                       - network_name    = "cc-ffffffff-aaaa-1414-eeee-000000000000"

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/eventing_function"
+	eventingapi "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/eventingfunction"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
@@ -75,7 +75,7 @@ func (d *EventingFunction) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	var function eventing_function.EventingFunction
+	var function eventingapi.GetEventingFunctionResponse
 	if err := json.Unmarshal(response.Body, &function); err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Eventing Function",

@@ -9,6 +9,10 @@ import (
 )
 
 func TestAccDatasourceCloudSnapshotRestores(t *testing.T) {
+	t.Parallel()
+	cloudSnapshotRestoreMu.Lock()
+	defer cloudSnapshotRestoreMu.Unlock()
+
 	clusterID, err := ensureSnapshotCluster()
 	if err != nil {
 		t.Fatalf("ensureSnapshotCluster: %v", err)
@@ -17,7 +21,7 @@ func TestAccDatasourceCloudSnapshotRestores(t *testing.T) {
 	dsName := randomStringWithPrefix("tf_acc_cloud_snapshot_restores_ds_")
 	dsReference := "data.couchbase-capella_cloud_snapshot_restores." + dsName
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			// Step 1: create snapshot backup (no restore yet).
@@ -41,6 +45,10 @@ func TestAccDatasourceCloudSnapshotRestores(t *testing.T) {
 }
 
 func TestAccDatasourceCloudSnapshotRestore(t *testing.T) {
+	t.Parallel()
+	cloudSnapshotRestoreMu.Lock()
+	defer cloudSnapshotRestoreMu.Unlock()
+
 	clusterID, err := ensureSnapshotCluster()
 	if err != nil {
 		t.Fatalf("ensureSnapshotCluster: %v", err)
@@ -50,7 +58,7 @@ func TestAccDatasourceCloudSnapshotRestore(t *testing.T) {
 	singleDsName := randomStringWithPrefix("tf_acc_cloud_snapshot_restore_ds_")
 	singleDsReference := "data.couchbase-capella_cloud_snapshot_restore." + singleDsName
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
 		Steps: []resource.TestStep{
 			{
