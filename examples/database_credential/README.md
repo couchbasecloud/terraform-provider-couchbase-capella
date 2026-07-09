@@ -4,6 +4,13 @@ This example shows how to create and manage Database Credentials in Capella.
 
 This creates a new database credential in the selected Capella cluster and lists existing database credentials in the cluster. It uses the cluster ID to create and list database credentials.
 
+A database credential can be one of two credential types:
+
+1. `basic` (the default): permissions are defined through bucket-level access using the `access` attribute.
+2. `advanced`: capella user roles are assigned for fine-grained RBAC access using the `user_roles` attribute. The user roles must already exist in the cluster.
+
+Exactly one of `access` or `user_roles` must be configured, matching the credential type. The credential type cannot be changed after creation; changing it forces the credential to be replaced.
+
 To run, configure your Couchbase Capella provider as described in README in the root of this project.
 
 # Example Walkthrough
