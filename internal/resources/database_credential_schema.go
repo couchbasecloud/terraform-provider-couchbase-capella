@@ -1,9 +1,13 @@
 package resources
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 
 	capellaschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
@@ -24,6 +28,13 @@ func DatabaseCredentialSchema() schema.Schema {
 	})
 	capellaschema.AddAttr(attrs, "name", databaseCredentialBuilder, stringAttribute([]string{required, requiresReplace}))
 	capellaschema.AddAttr(attrs, "password", databaseCredentialBuilder, stringAttribute([]string{optional, computed, sensitive, useStateForUnknown}))
+
+	// The credential type cannot be changed once the database credential is created,
+	// so a change to it requires replacing the resource.
+	credentialTypeAttr := stringDefaultAttribute(credentialTypeBasic, optional, computed, requiresReplace)
+	credentialTypeAttr.Validators = append(credentialTypeAttr.Validators, stringvalidator.OneOf(credentialTypeBasic, credentialTypeAdvanced))
+	capellaschema.AddAttr(attrs, "credential_type", databaseCredentialBuilder, credentialTypeAttr)
+
 	capellaschema.AddAttr(attrs, "organization_id", databaseCredentialBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "project_id", databaseCredentialBuilder, requiredUUIDStringAttribute())
 	capellaschema.AddAttr(attrs, "cluster_id", databaseCredentialBuilder, requiredUUIDStringAttribute())
@@ -57,12 +68,21 @@ func DatabaseCredentialSchema() schema.Schema {
 		Attributes: resourcesAttrs,
 	})
 
+	// Exactly one of access or user_roles must be configured: access for a basic
+	// credential type and user_roles for an advanced credential type.
 	capellaschema.AddAttr(attrs, "access", databaseCredentialBuilder, &schema.SetNestedAttribute{
-		Required: true,
+		Optional: true,
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: accessAttrs,
 		},
+		Validators: []validator.Set{
+			setvalidator.ExactlyOneOf(path.MatchRoot("user_roles")),
+		},
 	})
+
+	userRolesAttr := stringSetAttribute(optional)
+	userRolesAttr.Validators = append(userRolesAttr.Validators, setvalidator.SizeAtLeast(1))
+	capellaschema.AddAttr(attrs, "user_roles", databaseCredentialBuilder, userRolesAttr)
 
 	return schema.Schema{
 		MarkdownDescription: "Resource to create and manage a database credential for a cluster. Database credentials provide programmatic and application-level access to data on a database.",

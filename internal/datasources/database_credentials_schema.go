@@ -28,6 +28,8 @@ func DatabaseCredentialsSchema() schema.Schema {
 
 	capellaschema.AddAttr(dataAttrs, "access", databaseCredentialsBuilder, computedAccessAttribute(databaseCredentialsBuilder))
 
+	capellaschema.AddAttr(dataAttrs, "user_roles", databaseCredentialsBuilder, computedStringSet())
+
 	capellaschema.AddAttr(attrs, "data", databaseCredentialsBuilder, &schema.ListNestedAttribute{
 		Computed: true,
 		NestedObject: schema.NestedAttributeObject{
