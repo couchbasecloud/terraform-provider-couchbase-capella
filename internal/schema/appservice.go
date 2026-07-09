@@ -2,6 +2,7 @@ package schema
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 
@@ -97,11 +98,20 @@ func NewAppService(
 		},
 		ClusterId:    types.StringValue(appService.ClusterId),
 		CurrentState: types.StringValue(string(appService.CurrentState)),
-		Version:      types.StringValue(appService.Version),
+		Version:      types.StringValue(truncateToMajorMinor(appService.Version)),
 		Audit:        auditObject,
 		Etag:         types.StringValue(appService.Etag),
 	}
 	return &newAppService
+}
+
+// truncateToMajorMinor reduces a fully-expanded app service version such as "4.0.5-1.0.0" to its major.minor form ("4.0")
+func truncateToMajorMinor(version string) string {
+	parts := strings.SplitN(version, ".", 3)
+	if len(parts) < 2 {
+		return version
+	}
+	return parts[0] + "." + parts[1]
 }
 
 // Validate is used to verify that IDs have been properly imported.

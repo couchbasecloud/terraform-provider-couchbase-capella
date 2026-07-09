@@ -9,6 +9,7 @@ import (
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
+	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/utils"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -155,6 +156,8 @@ func (r *DatabaseRole) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
+	refreshedState.Access = reconcileAccess(refreshedState.Access, state.Access)
+
 	diags = resp.State.Set(ctx, refreshedState)
 	resp.Diagnostics.Append(diags...)
 }
@@ -294,9 +297,8 @@ func (r *DatabaseRole) retrieveDatabaseRole(ctx context.Context, organizationId,
 		types.StringValue(projectId),
 		types.StringValue(clusterId),
 		auditObj,
+		mapAccessFromAPI(roleResp.Access),
 	)
-
-	refreshedState.Access = mapAccessFromAPI(roleResp.Access)
 
 	return refreshedState, nil
 }
@@ -310,6 +312,14 @@ func (r *DatabaseRole) validateCreateDatabaseRole(plan providerschema.DatabaseRo
 	}
 	if plan.ClusterId.IsNull() {
 		return errors.ErrClusterIdMissing
+	}
+	_, err := utils.ParseUUIDs(
+		utils.IDField{Name: "organization_id", Value: plan.OrganizationId.ValueString()},
+		utils.IDField{Name: "project_id", Value: plan.ProjectId.ValueString()},
+		utils.IDField{Name: "cluster_id", Value: plan.ClusterId.ValueString()},
+	)
+	if err != nil {
+		return err
 	}
 	if (!plan.Name.IsNull() && !plan.Name.IsUnknown()) && !providerschema.IsTrimmed(plan.Name.ValueString()) {
 		return fmt.Errorf("name %w", errors.ErrNotTrimmed)
