@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"time"
 
+	"github.com/couchbase/tools-common/utils/v3/retry"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -189,7 +191,7 @@ func setEventingFunctionComputedAttributesToNull(ctx context.Context, plan *prov
 
 			plan.Bindings.Urls[i].Authentication = types.ObjectNull(
 				providerschema.
-					EventingFunctionURLBindingAuthentication{}.
+				EventingFunctionURLBindingAuthentication{}.
 					AttributeTypes(),
 			)
 		}
@@ -687,37 +689,50 @@ func (e *EventingFunction) setActivationState(
 	return e.waitForStatus(ctx, organizationId, projectId, clusterId, name, targetStatus(target))
 }
 
-// waitForStatus polls the eventing function every 5 seconds until its runtime status equals target,
-// returning an error if the target is not reached within 5 minutes.
+// waitForStatus polls the eventing function until its runtime status equals target. It waits 5 seconds
+// before the first retry and then backs off exponentially, capped at 30 seconds, returning an error if
+// the target is not reached within 5 minutes.
 func (e *EventingFunction) waitForStatus(
 	ctx context.Context, organizationId, projectId, clusterId, name, target string,
 ) error {
 	const timeout = 5 * time.Minute
-	const retryInterval = 5 * time.Second
 
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	ticker := time.NewTicker(retryInterval)
-	defer ticker.Stop()
+	retryer := retry.NewRetryer(retry.RetryerOptions[string]{
+		Algorithm: retry.AlgorithmExponential,
+		MinDelay:  5 * time.Second,
+		MaxDelay:  30 * time.Second,
+		// Retries are bounded by the context timeout above rather than a fixed count.
+		MaxRetries: math.MaxInt32,
+		Log: func(_ *retry.Context, status string, _ error) {
+			tflog.Debug(ctx, fmt.Sprintf("eventing function %q status %q, waiting for %q", name, status, target))
+		},
+	})
 
-	for {
-		select {
-		case <-ctx.Done():
-			return fmt.Errorf("timed out waiting for eventing function %q to reach status %q: %w", name, target, ctx.Err())
-		case <-ticker.C:
-			// ok to pass nil as we just need the status
-			f, err := e.retrieveEventingFunction(ctx, organizationId, projectId, clusterId, name, nil)
-			if err != nil {
-				return fmt.Errorf("%w: %w", errors.ErrExecutingRequest, err)
-			}
-
-			if f.State.ValueString() == target {
-				return nil
-			}
-
-			tflog.Debug(ctx, fmt.Sprintf("eventing function %q status %q, waiting for %q", name, f.State.ValueString(), target))
+	_, err := retryer.DoWithContext(ctx, func(retryCtx *retry.Context) (string, error) {
+		// ok to pass nil as we just need the status
+		f, err := e.retrieveEventingFunction(retryCtx, organizationId, projectId, clusterId, name, nil)
+		if err != nil {
+			return "", retry.NewAbortRetriesError(fmt.Errorf("%w: %w", errors.ErrExecutingRequest, err))
 		}
+
+		status := f.State.ValueString()
+		if status == target {
+			return status, nil
+		}
+
+		return status, fmt.Errorf("eventing function %q status %q, waiting for %q", name, status, target)
+	})
+
+	switch {
+	case err == nil:
+		return nil
+	case ctx.Err() != nil:
+		return fmt.Errorf("timed out waiting for eventing function %q to reach status %q: %w", name, target, err)
+	default:
+		return err
 	}
 }
 

@@ -79,7 +79,7 @@ func GetPaginated[DataSchema ~[]T, T any](
 	var (
 		responses DataSchema
 		page      = 1
-		perPage   = 25
+		perPage   = 100
 		baseUrl   = cfg.Url
 	)
 
