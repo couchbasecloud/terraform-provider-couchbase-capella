@@ -95,11 +95,31 @@ func (c *Client) ExecuteWithRetry(
 		for header, value := range headers {
 			req.Header.Set(header, value)
 		}
+
+		tflog.Info(ctx, "executing API request", map[string]interface{}{
+			"method": endpointCfg.Method,
+			"url":    endpointCfg.Url,
+		})
+
+		start := time.Now()
 		apiRes, err := c.Do(req)
 		if err != nil {
+			tflog.Info(ctx, "API request failed", map[string]interface{}{
+				"method":      endpointCfg.Method,
+				"url":         endpointCfg.Url,
+				"duration_ms": time.Since(start).Milliseconds(),
+				"error":       err.Error(),
+			})
 			return nil, dur, fmt.Errorf("%s: %w", errors.ErrExecutingRequest, err)
 		}
 		defer apiRes.Body.Close()
+
+		tflog.Info(ctx, "API request returned", map[string]interface{}{
+			"method":      endpointCfg.Method,
+			"url":         endpointCfg.Url,
+			"status_code": apiRes.StatusCode,
+			"duration_ms": time.Since(start).Milliseconds(),
+		})
 
 		responseBody, err := io.ReadAll(apiRes.Body)
 		if err != nil {
