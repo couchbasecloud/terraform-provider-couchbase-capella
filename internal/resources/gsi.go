@@ -406,24 +406,7 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 		state.IndexName = types.StringValue(indexName)
 		state.Status = types.StringValue(index.Status)
 
-		// Fetch the full DDL definition to get index keys with modifiers
-		// like INCLUDE MISSING, which are not present in SecExprs.
-		indexKeys := index.SecExprs
-		definition, err := g.getIndexDefinition(
-			ctx,
-			organizationID,
-			projectID,
-			clusterID,
-			bucketName,
-			scopeName,
-			collectionName,
-			indexName,
-		)
-		if err == nil && definition != "" {
-			if parsed, parseErr := parseIndexKeysFromDefinition(definition); parseErr == nil && len(parsed) == len(indexKeys) {
-				indexKeys = parsed
-			}
-		}
+		indexKeys := g.resolveIndexKeys(ctx, index.SecExprs, organizationID, projectID, clusterID, bucketName, scopeName, collectionName, indexName)
 
 		var keys []attr.Value
 		for _, key := range indexKeys {
@@ -816,6 +799,49 @@ func (g *GSI) getIndexDefinition(
 	return "", fmt.Errorf("index definition not found for %s", indexName)
 }
 
+// resolveIndexKeys attempts to enrich SecExprs with key modifiers (INCLUDE MISSING,
+// DESC, ASC) by fetching and parsing the full DDL definition. If any step fails it
+// logs a warning and returns the original SecExprs unchanged.
+func (g *GSI) resolveIndexKeys(
+	ctx context.Context, secExprs []string, organizationID, projectID, clusterID, bucketName, scopeName, collectionName, indexName string,
+) []string {
+	definition, err := g.getIndexDefinition(ctx, organizationID, projectID, clusterID, bucketName, scopeName, collectionName, indexName)
+	if err != nil {
+		tflog.Warn(ctx, "failed to fetch index DDL definition, falling back to SecExprs", map[string]any{
+			"index": indexName,
+			"error": err.Error(),
+		})
+		return secExprs
+	}
+
+	if definition == "" {
+		tflog.Warn(ctx, "index DDL definition was empty, falling back to SecExprs", map[string]any{
+			"index": indexName,
+		})
+		return secExprs
+	}
+
+	parsed, parseErr := parseIndexKeysFromDefinition(definition)
+	if parseErr != nil {
+		tflog.Warn(ctx, "failed to parse index keys from DDL definition, falling back to SecExprs", map[string]any{
+			"index": indexName,
+			"error": parseErr.Error(),
+		})
+		return secExprs
+	}
+
+	if len(parsed) != len(secExprs) {
+		tflog.Warn(ctx, "parsed key count does not match SecExprs count, falling back to SecExprs", map[string]any{
+			"index":          indexName,
+			"parsed_count":   len(parsed),
+			"secexprs_count": len(secExprs),
+		})
+		return secExprs
+	}
+
+	return mergeModifiers(secExprs, parsed)
+}
+
 // parseIndexKeysFromDefinition extracts index key expressions from a CREATE INDEX
 // DDL statement. Unlike SecExprs from the API, the DDL includes key modifiers
 // such as INCLUDE MISSING, DESC, and ASC.
@@ -894,4 +920,35 @@ func parseIndexKeysFromDefinition(definition string) ([]string, error) {
 	}
 
 	return keys, nil
+}
+
+// indexKeyModifiers are suffixes that appear after the base expression in a
+// DDL key definition but are absent from SecExprs. Ordered longest-first so
+// composite modifiers match before their sub-strings.
+var indexKeyModifiers = []string{
+	"INCLUDE MISSING",
+	"DESC",
+	"ASC",
+}
+
+// mergeModifiers preserves the original SecExprs formatting and appends any
+// trailing modifier found in the corresponding parsed DDL key. This avoids
+// introducing formatting diffs (backtick style, spacing) while still capturing
+// modifiers like INCLUDE MISSING that SecExprs omits.
+func mergeModifiers(secExprs, ddlKeys []string) []string {
+	merged := make([]string, len(secExprs))
+	for i, expr := range secExprs {
+		merged[i] = expr
+		if i >= len(ddlKeys) {
+			continue
+		}
+		ddlUpper := strings.ToUpper(strings.TrimSpace(ddlKeys[i]))
+		for _, mod := range indexKeyModifiers {
+			if strings.HasSuffix(ddlUpper, mod) {
+				merged[i] = expr + " " + mod
+				break
+			}
+		}
+	}
+	return merged
 }

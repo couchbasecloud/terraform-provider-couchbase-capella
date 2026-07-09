@@ -2,6 +2,8 @@ package resources
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParseIndexKeysFromDefinition(t *testing.T) {
@@ -102,6 +104,59 @@ func TestParseIndexKeysFromDefinition(t *testing.T) {
 					t.Errorf("parseIndexKeysFromDefinition() key[%d] = %q, want %q", i, got[i], tt.wantKeys[i])
 				}
 			}
+		})
+	}
+}
+
+func TestMergeModifiers(t *testing.T) {
+	tests := []struct {
+		name     string
+		secExprs []string
+		ddlKeys  []string
+		want     []string
+	}{
+		{
+			name:     "appends INCLUDE MISSING from DDL",
+			secExprs: []string{"`name`"},
+			ddlKeys:  []string{"`name` INCLUDE MISSING"},
+			want:     []string{"`name` INCLUDE MISSING"},
+		},
+		{
+			name:     "appends DESC from DDL",
+			secExprs: []string{"`timestamp`"},
+			ddlKeys:  []string{"`timestamp` DESC"},
+			want:     []string{"`timestamp` DESC"},
+		},
+		{
+			name:     "no modifier leaves SecExprs unchanged",
+			secExprs: []string{"`field1`"},
+			ddlKeys:  []string{"`field1`"},
+			want:     []string{"`field1`"},
+		},
+		{
+			name:     "mixed keys only some with modifiers",
+			secExprs: []string{"`key1`", "`key2`", "`key3`"},
+			ddlKeys:  []string{"`key1` INCLUDE MISSING", "`key2`", "`key3` DESC"},
+			want:     []string{"`key1` INCLUDE MISSING", "`key2`", "`key3` DESC"},
+		},
+		{
+			name:     "preserves SecExprs formatting when DDL differs",
+			secExprs: []string{"lower(`name`)"},
+			ddlKeys:  []string{"LOWER(`name`) INCLUDE MISSING"},
+			want:     []string{"lower(`name`) INCLUDE MISSING"},
+		},
+		{
+			name:     "empty slices",
+			secExprs: []string{},
+			ddlKeys:  []string{},
+			want:     []string{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := mergeModifiers(tt.secExprs, tt.ddlKeys)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
