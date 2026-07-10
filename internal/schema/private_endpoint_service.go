@@ -34,8 +34,8 @@ type PrivateEndpointService struct {
 	// endpoints connect to (for AWS, the VPC endpoint service name, e.g.
 	// com.amazonaws.vpce.us-east-1.vpce-svc-1234). It is populated once the
 	// service is enabled and can be fed directly into an aws_vpc_endpoint
-	// resource. It may be empty on older control planes or when the name cannot
-	// be determined.
+	// resource. It may be empty when the service is not enabled or when the
+	// name cannot be determined.
 	ServiceName types.String `tfsdk:"service_name"`
 }
 

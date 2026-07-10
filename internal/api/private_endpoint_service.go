@@ -16,8 +16,8 @@ type GetPrivateEndpointServiceStatusResponse struct {
 	// endpoints connect to (for AWS, the VPC endpoint service name). It is
 	// available once the private endpoint service is enabled so it can be fed
 	// directly into the customer-side endpoint resource. It is optional and
-	// best-effort: it is omitted when the service is not enabled, when the name
-	// cannot be determined, and on older control planes.
+	// best-effort: it is omitted when the service is not enabled or when the
+	// name cannot be determined.
 	ServiceName *string `json:"serviceName,omitempty"`
 
 	PrivateDns string `json:"privateDns"`
