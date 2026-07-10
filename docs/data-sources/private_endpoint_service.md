@@ -32,6 +32,6 @@ data "couchbase-capella_private_endpoint_service" "service_status" {
 ### Read-Only
 
 - `enabled` (Boolean) - Returns true if private endpoint is enabled
-- `service_name` (String) - AWS private DNS service name
+- `service_name` (String) - Cloud provider endpoint service name (for AWS PrivateLink, the VPC endpoint service name like `com.amazonaws.vpce.<region>.vpce-svc-...`)
 - `status` (String) - status of the private endpoint
  - **Valid Values**: `idle`, `unknown`, `enabling`, `enabled`, `enableFailed`, `disabling`, `disabled`, `disableFailed`
