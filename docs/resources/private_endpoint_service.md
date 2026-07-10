@@ -36,6 +36,7 @@ resource "couchbase-capella_private_endpoint_service" "new_service" {
 
 ### Read-Only
 
+- `service_name` (String) - AWS private DNS service name
 - `status` (String) - status of the private endpoint
  - **Valid Values**: `idle`, `unknown`, `enabling`, `enabled`, `enableFailed`, `disabling`, `disabled`, `disableFailed`
 

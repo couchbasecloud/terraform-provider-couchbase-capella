@@ -427,6 +427,10 @@ func initializePrivateEndpointServicePlan(plan providerschema.PrivateEndpointSer
 	if plan.Status.IsNull() || plan.Status.IsUnknown() {
 		plan.Status = types.StringNull()
 	}
+	// service_name is computed; never persist an unknown value to state.
+	if plan.ServiceName.IsNull() || plan.ServiceName.IsUnknown() {
+		plan.ServiceName = types.StringNull()
+	}
 	return plan
 }
 
@@ -672,9 +676,13 @@ func (p *PrivateEndpointService) getServiceState(ctx context.Context, organizati
 		ClusterId:      types.StringValue(clusterId),
 		Enabled:        types.BoolValue(response.Enabled),
 		Status:         types.StringNull(),
+		ServiceName:    types.StringNull(),
 	}
 	if response.Status != nil {
 		state.Status = types.StringValue(*response.Status)
+	}
+	if response.ServiceName != nil {
+		state.ServiceName = types.StringValue(*response.ServiceName)
 	}
 
 	return &state, nil
