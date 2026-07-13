@@ -45,7 +45,7 @@ func createProject(ctx context.Context, client *api.Client) (bool, error) {
 		return false, err
 	}
 
-	log.Print("project created")
+	log.Printf("project created - %s", projectResponse.Id.String())
 	globalProjectId = projectResponse.Id.String()
 	return true, nil
 }
