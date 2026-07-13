@@ -94,18 +94,20 @@ func (r *DatabaseCredential) ValidateConfig(ctx context.Context, req resource.Va
 	}
 
 	// A null credential_type defaults to basic.
-	if credentialType.IsNull() || credentialType.ValueString() == credentialTypeBasic {
-		if !userRoles.IsNull() && !userRoles.IsUnknown() {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("user_roles"),
-				"Invalid Database Credential Configuration",
-				"user_roles can only be configured when credential_type is \"advanced\". Use the access attribute for a basic database credential.",
-			)
-		}
+	isBasic := credentialType.IsNull() || credentialType.ValueString() == credentialTypeBasic
+	userRolesConfigured := !userRoles.IsNull() && !userRoles.IsUnknown()
+	accessConfigured := !access.IsNull() && !access.IsUnknown()
+
+	if isBasic && userRolesConfigured {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("user_roles"),
+			"Invalid Database Credential Configuration",
+			"user_roles can only be configured when credential_type is \"advanced\". Use the access attribute for a basic database credential.",
+		)
 		return
 	}
 
-	if !access.IsNull() && !access.IsUnknown() {
+	if !isBasic && accessConfigured {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("access"),
 			"Invalid Database Credential Configuration",

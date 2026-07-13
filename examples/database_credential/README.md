@@ -7,7 +7,7 @@ This creates a new database credential in the selected Capella cluster and lists
 A database credential can be one of two credential types:
 
 1. `basic` (the default): permissions are defined through bucket-level access using the `access` attribute.
-2. `advanced`: capella user roles are assigned for fine-grained RBAC access using the `user_roles` attribute. The user roles must already exist in the cluster.
+2. `advanced`: Capella user roles are assigned for fine-grained RBAC access using the `user_roles` attribute. The user roles must already exist in the cluster.
 
 Exactly one of `access` or `user_roles` must be configured, matching the credential type. The credential type cannot be changed after creation; changing it forces the credential to be replaced.
 

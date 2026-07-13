@@ -14,8 +14,9 @@ resource "couchbase-capella_database_credential" "new_database_credential" {
   ]
 }
 
-# An advanced database credential is assigned capella user roles for
+# An advanced database credential is assigned Capella user roles for
 # fine-grained RBAC access instead of bucket-level access permissions.
+# Exactly one of `access` or `user_roles` must be configured (matching credential_type).
 # The user roles must already exist in the cluster.
 resource "couchbase-capella_database_credential" "new_advanced_database_credential" {
   name            = "AdvancedCredential"
