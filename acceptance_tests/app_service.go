@@ -14,14 +14,14 @@ import (
 )
 
 func createAppService(ctx context.Context, client *api.Client) error {
-	var n int64 = 2	
+	var n int64 = 2
 	appServiceRequest := appservice.CreateAppServiceRequest{
 		Name: globalAppServiceName,
 		Compute: appservice.AppServiceCompute{
 			Cpu: 2,
 			Ram: 4,
 		},
-		Nodes:   &n,		
+		Nodes: &n,
 	}
 
 	url := fmt.Sprintf(
@@ -107,7 +107,7 @@ func appServiceWait(ctx context.Context, client *api.Client, destroy bool) error
 			}
 
 			if appServiceResponse.CurrentState == appservice.Healthy {
-				log.Print("app service created")
+				log.Printf("app service created - %s", globalAppServiceId)
 				return nil
 			}
 		}
