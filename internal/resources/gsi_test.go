@@ -6,157 +6,108 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestParseIndexKeysFromDefinition(t *testing.T) {
+func TestBuildSystemIndexesQuery(t *testing.T) {
 	tests := []struct {
-		name       string
-		definition string
-		wantKeys   []string
-		wantErr    bool
+		name           string
+		bucketName     string
+		scopeName      string
+		collectionName string
+		indexName      string
+		wantQuery      string
 	}{
 		{
-			name:       "single key with INCLUDE MISSING",
-			definition: "CREATE INDEX `repro_include_missing` ON `travel-sample`.`_default`.`_default`(`name` INCLUDE MISSING)",
-			wantKeys:   []string{"`name` INCLUDE MISSING"},
+			name:           "named scope and collection",
+			bucketName:     "source",
+			scopeName:      "s1",
+			collectionName: "c1",
+			indexName:      "user_notification_oktaId",
+			wantQuery: "SELECT RAW i.index_key FROM system:indexes AS i" +
+				" WHERE i.name = \"user_notification_oktaId\" AND i.`using` = \"gsi\"" +
+				` AND (i.bucket_id = "source" AND i.scope_id = "s1" AND i.keyspace_id = "c1")`,
 		},
 		{
-			name:       "single key without modifier",
-			definition: "CREATE INDEX `idx1` ON `bucket`.`scope`.`collection`(`field1`)",
-			wantKeys:   []string{"`field1`"},
+			name:           "default scope and collection accepts legacy keyspace form",
+			bucketName:     "source",
+			scopeName:      "_default",
+			collectionName: "_default",
+			indexName:      "idx1",
+			wantQuery: "SELECT RAW i.index_key FROM system:indexes AS i" +
+				" WHERE i.name = \"idx1\" AND i.`using` = \"gsi\"" +
+				` AND ((i.bucket_id = "source" AND i.scope_id = "_default" AND i.keyspace_id = "_default")` +
+				` OR (i.bucket_id IS MISSING AND i.keyspace_id = "source"))`,
 		},
 		{
-			name:       "multiple keys with mixed modifiers",
-			definition: "CREATE INDEX `idx` ON `bucket`.`scope`.`collection`(`key1` INCLUDE MISSING, `key2`, `key3` INCLUDE MISSING)",
-			wantKeys:   []string{"`key1` INCLUDE MISSING", "`key2`", "`key3` INCLUDE MISSING"},
-		},
-		{
-			name:       "key with WHERE clause",
-			definition: "CREATE INDEX `user_notification_oktaId` ON `synergy_sv2_dev`(`oktaId` INCLUDE MISSING) WHERE (`type` = \"user_notification_status\")",
-			wantKeys:   []string{"`oktaId` INCLUDE MISSING"},
-		},
-		{
-			name:       "key with WITH clause",
-			definition: "CREATE INDEX `idx` ON `bucket`.`_default`.`_default`(`name` INCLUDE MISSING) WITH {\"num_replica\":1}",
-			wantKeys:   []string{"`name` INCLUDE MISSING"},
-		},
-		{
-			name:       "key with function expression",
-			definition: "CREATE INDEX `idx` ON `bucket`.`scope`.`collection`(LOWER(`name`) INCLUDE MISSING, `age`)",
-			wantKeys:   []string{"LOWER(`name`) INCLUDE MISSING", "`age`"},
-		},
-		{
-			name:       "key with nested function calls",
-			definition: "CREATE INDEX `idx` ON `bucket`.`scope`.`collection`(LOWER(TRIM(`name`)) INCLUDE MISSING)",
-			wantKeys:   []string{"LOWER(TRIM(`name`)) INCLUDE MISSING"},
-		},
-		{
-			name:       "key with DESC modifier",
-			definition: "CREATE INDEX `idx` ON `bucket`.`scope`.`collection`(`timestamp` DESC, `name` INCLUDE MISSING)",
-			wantKeys:   []string{"`timestamp` DESC", "`name` INCLUDE MISSING"},
-		},
-		{
-			name:       "key with PARTITION BY clause after keys",
-			definition: "CREATE INDEX `idx` ON `bucket`.`scope`.`collection`(`key1` INCLUDE MISSING, `key2`) PARTITION BY HASH(`key1`)",
-			wantKeys:   []string{"`key1` INCLUDE MISSING", "`key2`"},
-		},
-		{
-			name:       "single bucket keyspace",
-			definition: "CREATE INDEX `idx` ON `mybucket`(`field` INCLUDE MISSING)",
-			wantKeys:   []string{"`field` INCLUDE MISSING"},
-		},
-		{
-			name:       "array index expression",
-			definition: "CREATE INDEX `idx` ON `bucket`.`scope`.`collection`(ALL ARRAY `v`.`name` FOR `v` IN `items` END INCLUDE MISSING)",
-			wantKeys:   []string{"ALL ARRAY `v`.`name` FOR `v` IN `items` END INCLUDE MISSING"},
-		},
-		{
-			name:       "missing ON clause",
-			definition: "DROP INDEX `idx` ON `bucket`",
-			wantErr:    true,
-		},
-		{
-			name:       "primary index no keys",
-			definition: "CREATE PRIMARY INDEX `primary_idx` ON `bucket`.`scope`.`collection`",
-			wantErr:    true,
-		},
-		{
-			name:       "primary index with WHERE clause",
-			definition: "CREATE PRIMARY INDEX `primary_idx` ON `bucket`.`scope`.`collection` WHERE (`type` = \"user\")",
-			wantErr:    true,
+			name:           "names with quotes and backslashes are escaped",
+			bucketName:     `bu"cket`,
+			scopeName:      "s1",
+			collectionName: `col\1`,
+			indexName:      `idx"1`,
+			wantQuery: "SELECT RAW i.index_key FROM system:indexes AS i" +
+				" WHERE i.name = \"idx\\\"1\" AND i.`using` = \"gsi\"" +
+				` AND (i.bucket_id = "bu\"cket" AND i.scope_id = "s1" AND i.keyspace_id = "col\\1")`,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := parseIndexKeysFromDefinition(tt.definition)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("parseIndexKeysFromDefinition() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if tt.wantErr {
-				return
-			}
-			if len(got) != len(tt.wantKeys) {
-				t.Errorf("parseIndexKeysFromDefinition() got %d keys, want %d keys\ngot:  %v\nwant: %v", len(got), len(tt.wantKeys), got, tt.wantKeys)
-				return
-			}
-			for i := range got {
-				if got[i] != tt.wantKeys[i] {
-					t.Errorf("parseIndexKeysFromDefinition() key[%d] = %q, want %q", i, got[i], tt.wantKeys[i])
-				}
-			}
+			query := buildSystemIndexesQuery(tt.bucketName, tt.scopeName, tt.collectionName, tt.indexName)
+			assert.Equal(t, tt.wantQuery, query)
 		})
 	}
 }
 
-func TestMergeModifiers(t *testing.T) {
+func TestExtractIndexKeys(t *testing.T) {
 	tests := []struct {
 		name     string
-		secExprs []string
-		ddlKeys  []string
-		want     []string
+		body     string
+		wantKeys []string
+		wantErr  bool
 	}{
 		{
-			name:     "appends INCLUDE MISSING from DDL",
-			secExprs: []string{"`name`"},
-			ddlKeys:  []string{"`name` INCLUDE MISSING"},
-			want:     []string{"`name` INCLUDE MISSING"},
+			name:     "single key with INCLUDE MISSING",
+			body:     "{\"results\": [[\"`oktaId` INCLUDE MISSING\"]], \"status\": \"success\"}",
+			wantKeys: []string{"`oktaId` INCLUDE MISSING"},
 		},
 		{
-			name:     "appends DESC from DDL",
-			secExprs: []string{"`timestamp`"},
-			ddlKeys:  []string{"`timestamp` DESC"},
-			want:     []string{"`timestamp` DESC"},
+			name: "multiple keys with modifiers",
+			body: "{\"results\": [[\"`c1` INCLUDE MISSING DESC\", \"`c2`\", \"`v` VECTOR\"]]}",
+			wantKeys: []string{
+				"`c1` INCLUDE MISSING DESC",
+				"`c2`",
+				"`v` VECTOR",
+			},
 		},
 		{
-			name:     "no modifier leaves SecExprs unchanged",
-			secExprs: []string{"`field1`"},
-			ddlKeys:  []string{"`field1`"},
-			want:     []string{"`field1`"},
+			name:    "query service returns errors",
+			body:    `{"errors": [{"msg": "syntax error - invalid statement"}]}`,
+			wantErr: true,
 		},
 		{
-			name:     "mixed keys only some with modifiers",
-			secExprs: []string{"`key1`", "`key2`", "`key3`"},
-			ddlKeys:  []string{"`key1` INCLUDE MISSING", "`key2`", "`key3` DESC"},
-			want:     []string{"`key1` INCLUDE MISSING", "`key2`", "`key3` DESC"},
+			name:    "no results",
+			body:    `{"results": [], "status": "success"}`,
+			wantErr: true,
 		},
 		{
-			name:     "preserves SecExprs formatting when DDL differs",
-			secExprs: []string{"lower(`name`)"},
-			ddlKeys:  []string{"LOWER(`name`) INCLUDE MISSING"},
-			want:     []string{"lower(`name`) INCLUDE MISSING"},
+			name:    "empty index key",
+			body:    `{"results": [[]], "status": "success"}`,
+			wantErr: true,
 		},
 		{
-			name:     "empty slices",
-			secExprs: []string{},
-			ddlKeys:  []string{},
-			want:     []string{},
+			name:    "malformed response",
+			body:    `not json`,
+			wantErr: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := mergeModifiers(tt.secExprs, tt.ddlKeys)
-			assert.Equal(t, tt.want, got)
+			keys, err := extractIndexKeys([]byte(tt.body))
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.wantKeys, keys)
 		})
 	}
 }
