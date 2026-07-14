@@ -6,102 +6,71 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBuildSystemIndexesQuery(t *testing.T) {
+func TestParseIndexKeysFromDDL(t *testing.T) {
 	tests := []struct {
-		name           string
-		bucketName     string
-		scopeName      string
-		collectionName string
-		indexName      string
-		wantQuery      string
+		name       string
+		definition string
+		wantKeys   []string
+		wantErr    bool
 	}{
 		{
-			name:           "named scope and collection",
-			bucketName:     "source",
-			scopeName:      "s1",
-			collectionName: "c1",
-			indexName:      "user_notification_oktaId",
-			wantQuery: "SELECT RAW i.index_key FROM system:indexes AS i" +
-				" WHERE i.name = \"user_notification_oktaId\" AND i.`using` = \"gsi\"" +
-				` AND (i.bucket_id = "source" AND i.scope_id = "s1" AND i.keyspace_id = "c1")`,
+			name:       "single key with INCLUDE MISSING",
+			definition: "CREATE INDEX `repro_include_missing` ON `travel-sample`.`_default`.`_default`(`name` INCLUDE MISSING)",
+			wantKeys:   []string{"`name` INCLUDE MISSING"},
 		},
 		{
-			name:           "default scope and collection accepts legacy keyspace form",
-			bucketName:     "source",
-			scopeName:      "_default",
-			collectionName: "_default",
-			indexName:      "idx1",
-			wantQuery: "SELECT RAW i.index_key FROM system:indexes AS i" +
-				" WHERE i.name = \"idx1\" AND i.`using` = \"gsi\"" +
-				` AND ((i.bucket_id = "source" AND i.scope_id = "_default" AND i.keyspace_id = "_default")` +
-				` OR (i.bucket_id IS MISSING AND i.keyspace_id = "source"))`,
+			name:       "multiple keys with DESC and ASC",
+			definition: "CREATE INDEX `idx1` ON `b`.`s`.`c`(`c1` INCLUDE MISSING DESC, `c2`, `c3` ASC)",
+			wantKeys:   []string{"`c1` INCLUDE MISSING DESC", "`c2`", "`c3` ASC"},
 		},
 		{
-			name:           "names with quotes and backslashes are escaped",
-			bucketName:     `bu"cket`,
-			scopeName:      "s1",
-			collectionName: `col\1`,
-			indexName:      `idx"1`,
-			wantQuery: "SELECT RAW i.index_key FROM system:indexes AS i" +
-				" WHERE i.name = \"idx\\\"1\" AND i.`using` = \"gsi\"" +
-				` AND (i.bucket_id = "bu\"cket" AND i.scope_id = "s1" AND i.keyspace_id = "col\\1")`,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			query := buildSystemIndexesQuery(tt.bucketName, tt.scopeName, tt.collectionName, tt.indexName)
-			assert.Equal(t, tt.wantQuery, query)
-		})
-	}
-}
-
-func TestExtractIndexKeys(t *testing.T) {
-	tests := []struct {
-		name     string
-		body     string
-		wantKeys []string
-		wantErr  bool
-	}{
-		{
-			name:     "single key with INCLUDE MISSING",
-			body:     "{\"results\": [[\"`oktaId` INCLUDE MISSING\"]], \"status\": \"success\"}",
-			wantKeys: []string{"`oktaId` INCLUDE MISSING"},
+			name:       "vector key passes through without modifier knowledge",
+			definition: "CREATE INDEX `vec_idx` ON `b`.`s`.`c`(`embedding` VECTOR, `category`)",
+			wantKeys:   []string{"`embedding` VECTOR", "`category`"},
 		},
 		{
-			name: "multiple keys with modifiers",
-			body: "{\"results\": [[\"`c1` INCLUDE MISSING DESC\", \"`c2`\", \"`v` VECTOR\"]]}",
+			name:       "array expression with nested parens and commas",
+			definition: "CREATE INDEX `arr_idx` ON `b`.`s`.`c`((ALL ARRAY FLATTEN_KEYS(`s`.`day` DESC, `s`.`flight`) FOR s IN `schedule` END), `type`)",
 			wantKeys: []string{
-				"`c1` INCLUDE MISSING DESC",
-				"`c2`",
-				"`v` VECTOR",
+				"(ALL ARRAY FLATTEN_KEYS(`s`.`day` DESC, `s`.`flight`) FOR s IN `schedule` END)",
+				"`type`",
 			},
 		},
 		{
-			name:    "query service returns errors",
-			body:    `{"errors": [{"msg": "syntax error - invalid statement"}]}`,
-			wantErr: true,
+			name:       "backticked identifier containing comma and paren",
+			definition: "CREATE INDEX `weird` ON `b`.`s`.`c`(`fie,ld(1`, `f2`)",
+			wantKeys:   []string{"`fie,ld(1`", "`f2`"},
 		},
 		{
-			name:    "no results",
-			body:    `{"results": [], "status": "success"}`,
-			wantErr: true,
+			name:       "string literal containing comma and paren",
+			definition: `CREATE INDEX ` + "`case_idx`" + ` ON ` + "`b`.`s`.`c`" + `(CASE WHEN ` + "`t`" + ` = "a,(b" THEN 1 ELSE 2 END, ` + "`f2`" + `)`,
+			wantKeys:   []string{`CASE WHEN ` + "`t`" + ` = "a,(b" THEN 1 ELSE 2 END`, "`f2`"},
 		},
 		{
-			name:    "empty index key",
-			body:    `{"results": [[]], "status": "success"}`,
-			wantErr: true,
+			name:       "trailing partition by, where and with clauses are ignored",
+			definition: "CREATE INDEX `idx2` ON `b`.`s`.`c`(`airline`, `destinationairport`) PARTITION BY HASH(`airline`) WHERE (`id` IN [1000, 2000]) WITH {\"num_replica\":1}",
+			wantKeys:   []string{"`airline`", "`destinationairport`"},
 		},
 		{
-			name:    "malformed response",
-			body:    `not json`,
-			wantErr: true,
+			name:       "primary index has no key list",
+			definition: "CREATE PRIMARY INDEX `#primary` ON `b`.`s`.`c`",
+			wantErr:    true,
+		},
+		{
+			name:       "unbalanced parentheses",
+			definition: "CREATE INDEX `broken` ON `b`.`s`.`c`(`f1`",
+			wantErr:    true,
+		},
+		{
+			name:       "empty key list",
+			definition: "CREATE INDEX `empty` ON `b`.`s`.`c`()",
+			wantErr:    true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			keys, err := extractIndexKeys([]byte(tt.body))
+			keys, err := parseIndexKeysFromDDL(tt.definition)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return

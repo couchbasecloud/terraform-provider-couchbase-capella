@@ -402,7 +402,11 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 		state.BucketName = types.StringValue(bucketName)
 		state.ScopeName = types.StringValue(scopeName)
 		state.CollectionName = types.StringValue(collectionName)
-		state.IsPrimary = types.BoolValue(index.IsPrimary)
+		// configs omit is_primary for secondary indexes, so import false as
+		// null to avoid a spurious diff.
+		if index.IsPrimary {
+			state.IsPrimary = types.BoolValue(true)
+		}
 		state.IndexName = types.StringValue(indexName)
 		state.Status = types.StringValue(index.Status)
 
@@ -425,10 +429,18 @@ func (g *GSI) Read(ctx context.Context, req resource.ReadRequest, resp *resource
 
 		state.IndexKeys = keyList
 		// TODO:  set partition by.
-		state.Where = types.StringValue(index.Where)
+		// where is empty for indexes without a WHERE clause; import it as
+		// null since where requires replacement when changed.
+		if index.Where != "" {
+			state.Where = types.StringValue(index.Where)
+		}
 		state.With = &providerschema.WithOptions{}
 		state.With.NumReplica = types.Int64Value(int64(index.NumReplica))
-		state.With.NumPartition = types.Int64Value(int64(index.NumPartition))
+		// num_partition is 0 for non-partitioned indexes, which is invalid
+		// per the schema validator (at least 1), so import it as null.
+		if index.NumPartition > 0 {
+			state.With.NumPartition = types.Int64Value(int64(index.NumPartition))
+		}
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
@@ -641,43 +653,28 @@ func (g *GSI) ValidateConfig(
 	}
 }
 
-// postQueryServiceStatement sends a statement to the query service and returns
-// the raw response.
-func (g *GSI) postQueryServiceStatement(
-	ctx context.Context, organizationID, projectID, clusterID, statement string,
-) (*api.Response, error) {
+func (g *GSI) executeGsiDdl(ctx context.Context, plan *providerschema.GsiDefinition, ddl string) error {
 	uri := fmt.Sprintf(
 		"%s/v4/organizations/%s/projects/%s/clusters/%s/queryService/indexes",
 		g.HostURL,
-		organizationID,
-		projectID,
-		clusterID,
+		plan.OrganizationId.ValueString(),
+		plan.ProjectId.ValueString(),
+		plan.ClusterId.ValueString(),
 	)
 
 	cfg := api.EndpointCfg{Url: uri, Method: http.MethodPost, SuccessStatus: http.StatusOK}
-	ddlRequest := api.IndexDDLRequest{Definition: statement}
+	ddlRequest := api.IndexDDLRequest{Definition: ddl}
 
 	if err := api.Limiter.Wait(ctx); err != nil {
 		// do not block if rate limiter fails
 		tflog.Error(ctx, "rate limiter error: "+err.Error())
 	}
-
-	return g.ClientV1.ExecuteWithRetry(
+	response, err := g.ClientV1.ExecuteWithRetry(
 		ctx,
 		cfg,
 		ddlRequest,
 		g.Token,
 		nil,
-	)
-}
-
-func (g *GSI) executeGsiDdl(ctx context.Context, plan *providerschema.GsiDefinition, ddl string) error {
-	response, err := g.postQueryServiceStatement(
-		ctx,
-		plan.OrganizationId.ValueString(),
-		plan.ProjectId.ValueString(),
-		plan.ClusterId.ValueString(),
-		ddl,
 	)
 	switch {
 	case err == nil:
@@ -767,26 +764,58 @@ func (g *GSI) getQueryIndex(
 	return &index, nil
 }
 
-// getIndexKeysFromSystemIndexes fetches an index's keys from system:indexes
-// via the query service. Unlike the indexer's SecExprs, the query service's
-// index_key field retains key modifiers such as INCLUDE MISSING, DESC and
-// VECTOR.
-func (g *GSI) getIndexKeysFromSystemIndexes(
+// getIndexDefinition fetches the CREATE INDEX DDL statement for a specific
+// index from the list definitions endpoint. Unlike the SecExprs field of the
+// get index endpoint, the DDL retains key modifiers such as INCLUDE MISSING,
+// DESC and VECTOR.
+func (g *GSI) getIndexDefinition(
 	ctx context.Context, organizationID, projectID, clusterID, bucketName, scopeName, collectionName, indexName string,
-) ([]string, error) {
-	query := buildSystemIndexesQuery(bucketName, scopeName, collectionName, indexName)
+) (string, error) {
+	uri := fmt.Sprintf(
+		"%s/v4/organizations/%s/projects/%s/clusters/%s/queryService/indexes?bucket=%s&scope=%s&collection=%s",
+		g.HostURL,
+		organizationID,
+		projectID,
+		clusterID,
+		url.QueryEscape(bucketName),
+		url.QueryEscape(scopeName),
+		url.QueryEscape(collectionName),
+	)
 
-	response, err := g.postQueryServiceStatement(ctx, organizationID, projectID, clusterID, query)
-	if err != nil {
-		return nil, err
+	if err := api.Limiter.Wait(ctx); err != nil {
+		// do not block if rate limiter fails
+		tflog.Error(ctx, "rate limiter error: "+err.Error())
 	}
 
-	return extractIndexKeys(response.Body)
+	cfg := api.EndpointCfg{Url: uri, Method: http.MethodGet, SuccessStatus: http.StatusOK}
+	response, err := g.ClientV1.ExecuteWithRetry(
+		ctx,
+		cfg,
+		nil,
+		g.Token,
+		nil,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	var list api.ListIndexDefinitionsResponse
+	if err = json.Unmarshal(response.Body, &list); err != nil {
+		return "", err
+	}
+
+	for _, def := range list.Definitions {
+		if def.IndexName == indexName {
+			return def.Definition, nil
+		}
+	}
+
+	return "", fmt.Errorf("index definition not found for %s", indexName)
 }
 
-// resolveIndexKeys returns index keys including key modifiers by querying
-// system:indexes. If the lookup fails it logs a warning and falls back to the
-// indexer's SecExprs, which lack modifiers.
+// resolveIndexKeys returns index keys including key modifiers by extracting
+// them from the index DDL definition. If any step fails it logs a warning and
+// falls back to the indexer's SecExprs, which lack modifiers.
 func (g *GSI) resolveIndexKeys(
 	ctx context.Context, secExprs []string, organizationID, projectID, clusterID, bucketName, scopeName, collectionName, indexName string,
 ) []string {
@@ -795,11 +824,20 @@ func (g *GSI) resolveIndexKeys(
 		return secExprs
 	}
 
-	indexKeys, err := g.getIndexKeysFromSystemIndexes(
+	definition, err := g.getIndexDefinition(
 		ctx, organizationID, projectID, clusterID, bucketName, scopeName, collectionName, indexName,
 	)
 	if err != nil {
-		tflog.Warn(ctx, "failed to get index keys from system:indexes, falling back to SecExprs", map[string]any{
+		tflog.Warn(ctx, "failed to fetch index DDL definition, falling back to SecExprs", map[string]any{
+			"index": indexName,
+			"error": err.Error(),
+		})
+		return secExprs
+	}
+
+	indexKeys, err := parseIndexKeysFromDDL(definition)
+	if err != nil {
+		tflog.Warn(ctx, "failed to extract index keys from DDL definition, falling back to SecExprs", map[string]any{
 			"index": indexName,
 			"error": err.Error(),
 		})
@@ -807,10 +845,10 @@ func (g *GSI) resolveIndexKeys(
 	}
 
 	if len(indexKeys) != len(secExprs) {
-		tflog.Warn(ctx, "system:indexes key count does not match SecExprs count, falling back to SecExprs", map[string]any{
-			"index":           indexName,
-			"index_key_count": len(indexKeys),
-			"secexprs_count":  len(secExprs),
+		tflog.Warn(ctx, "extracted key count does not match SecExprs count, falling back to SecExprs", map[string]any{
+			"index":          indexName,
+			"extracted":      len(indexKeys),
+			"secexprs_count": len(secExprs),
 		})
 		return secExprs
 	}
@@ -818,61 +856,93 @@ func (g *GSI) resolveIndexKeys(
 	return indexKeys
 }
 
-// escapeN1QLString escapes a value for embedding in a double-quoted N1QL
-// string literal.
-func escapeN1QLString(s string) string {
-	s = strings.ReplaceAll(s, `\`, `\\`)
-	return strings.ReplaceAll(s, `"`, `\"`)
-}
-
-// buildSystemIndexesQuery builds a system:indexes lookup for a single index.
-// Indexes on the default collection can appear in the legacy form where
-// keyspace_id is the bucket name and bucket_id/scope_id are missing, so the
-// filter accepts both forms when scope and collection are "_default".
-func buildSystemIndexesQuery(bucketName, scopeName, collectionName, indexName string) string {
-	keyspaceFilter := fmt.Sprintf(
-		`(i.bucket_id = "%s" AND i.scope_id = "%s" AND i.keyspace_id = "%s")`,
-		escapeN1QLString(bucketName),
-		escapeN1QLString(scopeName),
-		escapeN1QLString(collectionName),
+// parseIndexKeysFromDDL extracts the index key expressions from a CREATE INDEX
+// DDL statement, verbatim. The key list is the first top-level parenthesized
+// group (only backticked identifiers precede it in canonical DDL), and keys
+// are separated by top-level commas. The scan skips quoted regions -- backtick
+// identifiers and string literals -- so delimiters inside them are ignored.
+// No key modifier is interpreted, so INCLUDE MISSING, DESC, VECTOR and any
+// future modifiers pass through unchanged.
+func parseIndexKeysFromDDL(definition string) ([]string, error) {
+	var (
+		inBacktick, inSingle, inDouble bool
+		depth                          int
+		segStart                       = -1
+		keys                           []string
 	)
-	if scopeName == "_default" && collectionName == "_default" {
-		keyspaceFilter = fmt.Sprintf(
-			`(%s OR (i.bucket_id IS MISSING AND i.keyspace_id = "%s"))`,
-			keyspaceFilter,
-			escapeN1QLString(bucketName),
-		)
+
+	for i := 0; i < len(definition); i++ {
+		c := definition[i]
+
+		switch {
+		case inBacktick:
+			if c == '`' {
+				// a doubled backtick is an escaped backtick inside an identifier.
+				if i+1 < len(definition) && definition[i+1] == '`' {
+					i++
+				} else {
+					inBacktick = false
+				}
+			}
+		case inSingle, inDouble:
+			quote := byte('\'')
+			if inDouble {
+				quote = '"'
+			}
+			switch c {
+			case '\\':
+				i++ // skip the escaped character
+			case quote:
+				// a doubled quote is an escaped quote inside a string literal.
+				if i+1 < len(definition) && definition[i+1] == quote {
+					i++
+				} else {
+					inSingle, inDouble = false, false
+				}
+			}
+		default:
+			switch c {
+			case '`':
+				inBacktick = true
+			case '\'':
+				inSingle = true
+			case '"':
+				inDouble = true
+			case '(':
+				depth++
+				if depth == 1 && segStart == -1 {
+					segStart = i + 1
+				}
+			case ')':
+				if depth == 0 {
+					return nil, fmt.Errorf("unbalanced parentheses in index DDL definition")
+				}
+				depth--
+				if depth == 0 {
+					// end of the key list; ignore trailing clauses (WHERE, WITH, ...).
+					key := strings.TrimSpace(definition[segStart:i])
+					if key != "" {
+						keys = append(keys, key)
+					}
+					if len(keys) == 0 {
+						return nil, fmt.Errorf("empty index key list in index DDL definition")
+					}
+					return keys, nil
+				}
+			case ',':
+				if depth == 1 {
+					key := strings.TrimSpace(definition[segStart:i])
+					if key != "" {
+						keys = append(keys, key)
+					}
+					segStart = i + 1
+				}
+			}
+		}
 	}
 
-	// "using" is a reserved word in N1QL so it must be escaped with backticks.
-	return fmt.Sprintf(
-		"SELECT RAW i.index_key FROM system:indexes AS i WHERE i.name = \"%s\" AND i.`using` = \"gsi\" AND %s",
-		escapeN1QLString(indexName),
-		keyspaceFilter,
-	)
-}
-
-// systemIndexesResponse is the query service response for the system:indexes
-// lookup. SELECT RAW i.index_key makes each result row the index_key array
-// itself.
-type systemIndexesResponse struct {
-	Results [][]string       `json:"results"`
-	Errors  []api.QueryError `json:"errors,omitempty"`
-}
-
-func extractIndexKeys(body []byte) ([]string, error) {
-	var queryResponse systemIndexesResponse
-	if err := json.Unmarshal(body, &queryResponse); err != nil {
-		return nil, err
+	if segStart == -1 {
+		return nil, fmt.Errorf("no index key list found in index DDL definition")
 	}
-
-	if len(queryResponse.Errors) > 0 {
-		return nil, errors.New(queryResponse.Errors[0].Msg)
-	}
-
-	if len(queryResponse.Results) == 0 || len(queryResponse.Results[0]) == 0 {
-		return nil, fmt.Errorf("index keys not found in system:indexes")
-	}
-
-	return queryResponse.Results[0], nil
+	return nil, fmt.Errorf("unbalanced parentheses in index DDL definition")
 }
