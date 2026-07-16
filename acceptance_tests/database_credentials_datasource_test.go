@@ -62,8 +62,8 @@ func TestAccDatasourceDatabaseCredentialsAdvanced(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(dsReference, "data.*", map[string]string{
 						"name":         resourceName,
 						"user_roles.#": "1",
-						"user_roles.0": roleName,
 					}),
+					resource.TestCheckTypeSetElemAttr(dsReference, "data.*.user_roles.*", roleName),
 				),
 			},
 		},
