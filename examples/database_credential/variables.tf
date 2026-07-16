@@ -22,6 +22,18 @@ variable "database_credential" {
   })
 }
 
+variable "advanced_database_credential" {
+  type = object({
+    database_credential_name = string
+    password                 = optional(string)
+  })
+}
+
+variable "user_roles" {
+  description = "Capella user role names assigned to the advanced database credential"
+  type        = list(string)
+}
+
 variable "access" {
   type = list(object({
     privileges = list(string)

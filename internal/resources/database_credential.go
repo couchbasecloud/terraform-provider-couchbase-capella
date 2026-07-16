@@ -18,9 +18,18 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource                = &DatabaseCredential{}
-	_ resource.ResourceWithConfigure   = &DatabaseCredential{}
-	_ resource.ResourceWithImportState = &DatabaseCredential{}
+	_ resource.Resource                   = &DatabaseCredential{}
+	_ resource.ResourceWithConfigure      = &DatabaseCredential{}
+	_ resource.ResourceWithImportState    = &DatabaseCredential{}
+	_ resource.ResourceWithValidateConfig = &DatabaseCredential{}
+)
+
+// Credential types supported by the V4 API. A basic credential defines its permissions
+// through bucket-level access, while an advanced credential assigns capella user roles
+// for fine-grained RBAC access.
+const (
+	credentialTypeBasic    = "basic"
+	credentialTypeAdvanced = "advanced"
 )
 
 const errorMessageAfterDatabaseCredentialCreation = "Bucket creation is successful, but encountered an error while checking the current" +
@@ -69,6 +78,44 @@ func (r *DatabaseCredential) Configure(_ context.Context, req resource.Configure
 	r.Data = data
 }
 
+// ValidateConfig verifies that the configured access/user_roles fields match the credential type,
+// as the V4 API rejects mismatched combinations: a basic credential must define its permissions
+// through the access field and an advanced credential through the user_roles field.
+// The exactly-one-of constraint between access and user_roles is enforced by the schema validator.
+func (r *DatabaseCredential) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var credentialType types.String
+	var access, userRoles types.Set
+
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("credential_type"), &credentialType)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("access"), &access)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("user_roles"), &userRoles)...)
+	if resp.Diagnostics.HasError() || credentialType.IsUnknown() {
+		return
+	}
+
+	// A null credential_type defaults to basic.
+	isBasic := credentialType.IsNull() || credentialType.ValueString() == credentialTypeBasic
+	userRolesConfigured := !userRoles.IsNull() && !userRoles.IsUnknown()
+	accessConfigured := !access.IsNull() && !access.IsUnknown()
+
+	if isBasic && userRolesConfigured {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("user_roles"),
+			"Invalid Database Credential Configuration",
+			"user_roles can only be configured when credential_type is \"advanced\". Use the access attribute for a basic database credential.",
+		)
+		return
+	}
+
+	if !isBasic && accessConfigured {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("access"),
+			"Invalid Database Credential Configuration",
+			"access can only be configured when credential_type is \"basic\". Use the user_roles attribute for an advanced database credential.",
+		)
+	}
+}
+
 // Create creates a new database credential. This function will validate the mandatory fields in the resource.CreateRequest
 // before invoking the Capella V4 API.
 func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -93,7 +140,8 @@ func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequ
 	var clusterId = plan.ClusterId.ValueString()
 
 	dbCredRequest := api.CreateDatabaseCredentialRequest{
-		Name: plan.Name.ValueString(),
+		Name:           plan.Name.ValueString(),
+		CredentialType: plan.CredentialType.ValueString(),
 	}
 
 	if !plan.Password.IsNull() {
@@ -101,6 +149,7 @@ func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	dbCredRequest.Access = createAccess(plan)
+	dbCredRequest.UserRoles = convertUserRoles(plan.UserRoles)
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users", r.HostURL, organizationId, projectId, clusterId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPost, SuccessStatus: http.StatusCreated}
@@ -153,6 +202,8 @@ func (r *DatabaseCredential) Create(ctx context.Context, req resource.CreateRequ
 
 	// Update: GET API response gives the access field however the formats passed in terraform files and the GET response are different.
 	refreshedState.Access = mapAccess(plan)
+	refreshedState.CredentialType = plan.CredentialType
+	refreshedState.UserRoles = plan.UserRoles
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, refreshedState)
@@ -260,6 +311,7 @@ func (r *DatabaseCredential) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	dbCredRequest.Access = createAccess(state)
+	dbCredRequest.UserRoles = convertUserRoles(state.UserRoles)
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/users/%s", r.HostURL, organizationId, projectId, clusterId, dbId)
 	cfg := api.EndpointCfg{Url: url, Method: http.MethodPut, SuccessStatus: http.StatusNoContent}
@@ -300,6 +352,8 @@ func (r *DatabaseCredential) Update(ctx context.Context, req resource.UpdateRequ
 	// The fix will be done in SURF-7366
 	// For now, we are appending same permissions that the customer passed in the terraform files and not relying on the GET API response.
 	currentState.Access = mapAccess(state)
+	currentState.CredentialType = state.CredentialType
+	currentState.UserRoles = state.UserRoles
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, currentState)
@@ -408,6 +462,15 @@ func (r *DatabaseCredential) retrieveDatabaseCredential(ctx context.Context, org
 		auditObj,
 	)
 
+	// The GET API response does not include the credential type, but user roles are
+	// only present for advanced credentials, so the type is derived from them. This
+	// keeps the credential type populated when a credential is imported.
+	refreshedState.CredentialType = types.StringValue(credentialTypeBasic)
+	if len(dbResp.UserRoles) > 0 {
+		refreshedState.CredentialType = types.StringValue(credentialTypeAdvanced)
+	}
+	refreshedState.UserRoles = providerschema.MorphRoles(dbResp.UserRoles)
+
 	return refreshedState, nil
 }
 
@@ -436,9 +499,26 @@ func createAccess(input providerschema.DatabaseCredential) []api.Access {
 	return createAccessFromSlice(input.Access)
 }
 
+// convertUserRoles converts the terraform schema user role names to the API string slice.
+func convertUserRoles(userRoles []types.String) []string {
+	if userRoles == nil {
+		return nil
+	}
+	roles := make([]string, len(userRoles))
+	for i, role := range userRoles {
+		roles[i] = role.ValueString()
+	}
+	return roles
+}
+
 // mapAccess needs a 1:1 mapping when we store the output as the refreshed state.
+// A nil slice is preserved so that an advanced credential, which has no access
+// configured, stores a null set in the state rather than an empty one.
 // todo: add a unit test, tracking under: https://couchbasecloud.atlassian.net/browse/AV-63401
 func mapAccess(plan providerschema.DatabaseCredential) []providerschema.Access {
+	if plan.Access == nil {
+		return nil
+	}
 	return mapAccessFromSlice(plan.Access)
 }
 

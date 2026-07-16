@@ -85,6 +85,7 @@ func (d *DatabaseCredentials) Read(ctx context.Context, req datasource.ReadReque
 			},
 		}
 		databaseCredentialState.Access = mapAccessFromAPI(databaseCredential.Access)
+		databaseCredentialState.UserRoles = providerschema.MorphRoles(databaseCredential.UserRoles)
 		state.Data = append(state.Data, databaseCredentialState)
 	}
 
