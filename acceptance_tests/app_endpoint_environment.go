@@ -229,7 +229,7 @@ func waitForAppEndpointTestCluster(ctx context.Context, client *api.Client, dest
 				return err
 			}
 			if clusterResp.CurrentState == clusterapi.Healthy {
-				log.Print("app endpoint test cluster created")
+				log.Printf("app endpoint test cluster created - %s", appEndpointClusterId)
 				return nil
 			}
 		}
@@ -352,7 +352,7 @@ func waitForAppEndpointTestAppService(ctx context.Context, client *api.Client, d
 				return fmt.Errorf("error unmarshalling app service response: %w", err)
 			}
 			if appServiceResponse.CurrentState == appservice.Healthy {
-				log.Print("app endpoint test app service created")
+				log.Printf("app endpoint test app service created - %s", appEndpointAppServiceId)
 				return nil
 			}
 		}
