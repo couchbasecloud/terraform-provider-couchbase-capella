@@ -107,7 +107,7 @@ func appServiceWait(ctx context.Context, client *api.Client, destroy bool) error
 			}
 
 			if appServiceResponse.CurrentState == appservice.Healthy {
-				log.Print("app service created")
+				log.Printf("app service created - %s", globalAppServiceId)
 				return nil
 			}
 		}

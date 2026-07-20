@@ -26,6 +26,10 @@ func PrivateEndpointServiceSchema() schema.Schema {
 		Computed: true,
 	})
 
+	capellaschema.AddAttr(attrs, "service_name", privateEndpointServiceBuilder, &schema.StringAttribute{
+		Computed: true,
+	})
+
 	return schema.Schema{
 		MarkdownDescription: "This resource allows you to manage the private endpoint service for an operational cluster. " +
 			"The private endpoint service must be enabled before you can create private endpoints to connect your Cloud Service Provider's private network (VPC/VNET) to your operational cluster. " +

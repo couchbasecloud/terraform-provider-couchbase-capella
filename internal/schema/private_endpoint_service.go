@@ -29,6 +29,15 @@ type PrivateEndpointService struct {
 	// and unknown; idle means no operation has run. It may be empty when the
 	// control plane does not report a status.
 	Status types.String `tfsdk:"status"`
+
+	// ServiceName is the endpoint service name that customer endpoints connect
+	// to. For AWS it is the VPC endpoint service name (e.g.
+	// com.amazonaws.vpce.us-east-1.vpce-svc-1234); for Azure it is the Private
+	// Link Service resource ID. It is populated once the service is enabled and
+	// can be fed directly into the customer-side endpoint resource. It may be
+	// empty when the service is not enabled, when the name cannot be
+	// determined, and for GCP clusters (not currently returned).
+	ServiceName types.String `tfsdk:"service_name"`
 }
 
 // Validate is used to verify that IDs have been properly imported.

@@ -32,5 +32,6 @@ data "couchbase-capella_private_endpoint_service" "service_status" {
 ### Read-Only
 
 - `enabled` (Boolean) - Returns true if private endpoint is enabled
+- `service_name` (String) - Endpoint service name that customer endpoints connect to. For AWS, the VPC endpoint service name (e.g. `com.amazonaws.vpce.us-east-1.vpce-svc-1234`); for Azure, the Private Link Service resource ID (e.g. `/subscriptions/.../providers/Microsoft.Network/privateLinkServices/<name>`). Not currently returned for GCP.
 - `status` (String) - status of the private endpoint
  - **Valid Values**: `idle`, `unknown`, `enabling`, `enabled`, `enableFailed`, `disabling`, `disabled`, `disableFailed`

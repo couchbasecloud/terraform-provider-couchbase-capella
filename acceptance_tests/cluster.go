@@ -269,7 +269,7 @@ func dmClusterWait(ctx context.Context, client *api.Client, destroy bool) error 
 			}
 
 			if clusterResp.CurrentState == clusterapi.Healthy {
-				log.Print("DM cluster created")
+				log.Printf("DM cluster created - %s", dmClusterId)
 				return nil
 			}
 		}
@@ -329,7 +329,7 @@ func clusterWait(ctx context.Context, client *api.Client, destroy bool) error {
 			}
 
 			if clusterResp.CurrentState == clusterapi.Healthy {
-				log.Print("cluster created")
+				log.Printf("cluster created - %s", globalClusterId)
 				return nil
 			}
 		}

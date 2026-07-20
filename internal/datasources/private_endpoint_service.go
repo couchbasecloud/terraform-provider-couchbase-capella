@@ -96,6 +96,10 @@ func (p *PrivateEndpointService) Read(ctx context.Context, req datasource.ReadRe
 	if privateEndpointServiceStatus.Status != nil {
 		state.Status = types.StringValue(*privateEndpointServiceStatus.Status)
 	}
+	state.ServiceName = types.StringNull()
+	if privateEndpointServiceStatus.ServiceName != nil {
+		state.ServiceName = types.StringValue(*privateEndpointServiceStatus.ServiceName)
+	}
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
