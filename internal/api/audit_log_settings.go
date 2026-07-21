@@ -8,8 +8,8 @@ package api
 //	- Project Manager
 //	To learn more, see [Organization, Project, and Database Access Overview](https://docs.couchbase.com/cloud/organizations/organization-projects-overview.html).
 type UpdateClusterAuditSettingsRequest struct {
-	DisabledUsers   AuditSettingsDisabledUsers `json:"disabledUsers"`
-	EnabledEventIDs []int32                    `json:"enabledEventIDs"`
+	DisabledUsers   AuditSettingsDisabledUsers `json:"disabledUsers,omitempty"`
+	EnabledEventIDs []int32                    `json:"enabledEventIDs,omitempty"`
 	AuditEnabled    bool                       `json:"auditEnabled"`
 }
 
