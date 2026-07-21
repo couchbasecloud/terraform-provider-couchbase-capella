@@ -151,8 +151,12 @@ func (e *EventingFunction) Create(ctx context.Context, req resource.CreateReques
 func setEventingFunctionComputedAttributesToNull(ctx context.Context, plan *providerschema.EventingFunctionResource) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	nullKeyspaceComputedAttributes(plan.EventSource)
-	nullKeyspaceComputedAttributes(plan.EventMetadataStorage)
+	if plan.EventSource == nil {
+		nullKeyspaceComputedAttributes(plan.EventSource)
+	}
+	if plan.EventMetadataStorage == nil {
+		nullKeyspaceComputedAttributes(plan.EventMetadataStorage)
+	}
 
 	attrTypes := providerschema.EventingFunctionSettings{}.AttributeTypes()
 	if plan.Settings.IsNull() || plan.Settings.IsUnknown() {
