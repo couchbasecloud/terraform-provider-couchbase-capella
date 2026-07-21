@@ -10,7 +10,6 @@ import (
 
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api"
 	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/api/data_api"
-	"github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/errors"
 	providerschema "github.com/couchbasecloud/terraform-provider-couchbase-capella/internal/schema"
 )
 
@@ -48,7 +47,7 @@ func (d *DataApi) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 		return
 	}
 
-	err := d.validate(state)
+	IDs, err := state.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Capella Data API Status",
@@ -58,9 +57,9 @@ func (d *DataApi) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 	}
 
 	var (
-		organizationId = state.OrganizationId.ValueString()
-		projectId      = state.ProjectId.ValueString()
-		clusterId      = state.ClusterId.ValueString()
+		organizationId = IDs[providerschema.OrganizationId]
+		projectId      = IDs[providerschema.ProjectId]
+		clusterId      = IDs[providerschema.ClusterId]
 	)
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/dataAPI", d.HostURL, organizationId, projectId, clusterId)
@@ -109,24 +108,11 @@ func (d *DataApi) Configure(_ context.Context, req datasource.ConfigureRequest, 
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *ProviderSourceData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			fmt.Sprintf("Expected *providerschema.Data, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 
 		return
 	}
 
 	d.Data = data
-}
-
-func (d *DataApi) validate(state providerschema.DataApi) error {
-	if state.OrganizationId.IsNull() {
-		return errors.ErrOrganizationIdMissing
-	}
-	if state.ProjectId.IsNull() {
-		return errors.ErrProjectIdMissing
-	}
-	if state.ClusterId.IsNull() {
-		return errors.ErrClusterIdMissing
-	}
-	return nil
 }

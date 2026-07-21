@@ -12,9 +12,9 @@ var dataApiBuilder = capellaschema.NewSchemaBuilder("dataApi")
 func DataApiSchema() schema.Schema {
 	attrs := make(map[string]schema.Attribute)
 
-	capellaschema.AddAttr(attrs, "organization_id", dataApiBuilder, requiredString())
-	capellaschema.AddAttr(attrs, "project_id", dataApiBuilder, requiredString())
-	capellaschema.AddAttr(attrs, "cluster_id", dataApiBuilder, requiredString())
+	capellaschema.AddAttr(attrs, "organization_id", dataApiBuilder, requiredUUIDString())
+	capellaschema.AddAttr(attrs, "project_id", dataApiBuilder, requiredUUIDString())
+	capellaschema.AddAttr(attrs, "cluster_id", dataApiBuilder, requiredUUIDString())
 	capellaschema.AddAttr(attrs, "enable_data_api", dataApiBuilder, computedBool())
 	capellaschema.AddAttr(attrs, "enable_network_peering", dataApiBuilder, computedBool())
 	capellaschema.AddAttr(attrs, "state_for_data_api", dataApiBuilder, computedString())
