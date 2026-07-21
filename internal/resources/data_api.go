@@ -219,7 +219,7 @@ func (d *DataApi) ImportState(ctx context.Context, req resource.ImportStateReque
 func (d *DataApi) updateDataApi(ctx context.Context, plan providerschema.DataApi) error {
 	updateRequest := data_api.UpdateDataApiRequest{
 		EnableDataApi:        plan.EnableDataApi.ValueBool(),
-		EnableNetworkPeering: plan.EnableNetworkPeering.ValueBool(),
+		EnableNetworkPeering: plan.EnableNetworkPeering.ValueBoolPointer(),
 	}
 
 	url := fmt.Sprintf(
@@ -258,6 +258,9 @@ func (d *DataApi) checkDataApiStatus(ctx context.Context, organizationId, projec
 		statusResp, err := d.getDataApiStatus(ctx, organizationId, projectId, clusterId)
 		switch {
 		case err != nil:
+			if resourceNotFound, _ := api.CheckResourceNotFoundError(err); resourceNotFound {
+				return nil, err
+			}
 			tflog.Info(ctx, "retrying after error polling Data API status", map[string]interface{}{"error": err.Error()})
 		case data_api.IsFinalState(statusResp.State) && data_api.IsFinalState(statusResp.StateForNetworkPeering):
 			tflog.Debug(ctx, "data api has reached a final state", map[string]interface{}{

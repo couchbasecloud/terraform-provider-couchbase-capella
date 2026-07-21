@@ -44,7 +44,7 @@ func (d *DataApi) Validate() (map[Attr]string, error) {
 		ClusterId:      d.ClusterId,
 	}
 
-	IDs, err := validateSchemaState(state)
+	IDs, err := validateSchemaState(state, ClusterId)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", errors.ErrValidatingResource, err)
 	}

@@ -7,7 +7,7 @@ type UpdateDataApiRequest struct {
 	EnableDataApi bool `json:"enableDataApi"`
 
 	// EnableNetworkPeering enables or disables network peering when the Data API is enabled.
-	EnableNetworkPeering bool `json:"enableNetworkPeering"`
+	EnableNetworkPeering *bool `json:"enableNetworkPeering"`
 }
 
 // GetDataApiStatusResponse is the response received from the Capella V4 Public API when retrieving
