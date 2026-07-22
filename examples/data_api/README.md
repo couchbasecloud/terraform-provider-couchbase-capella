@@ -1,13 +1,14 @@
 # Capella Data API Example
 
-This example shows how to enable or disable the Data API and network peering on an existing Couchbase Capella operational cluster using the `couchbase-capella_data_api` resource.
+This example shows how to enable or disable the Data API and network peering on an existing Couchbase Capella operational cluster using the `couchbase-capella_data_api` resource, and how to read the current Data API status using the `couchbase-capella_data_api` data source.
 
 ## Example Walkthrough
 
 1. **CREATE** - Enable the Data API on an existing cluster.
 2. **UPDATE** - Enable network peering for the Data API.
-3. **IMPORT** - Import an existing Data API configuration into Terraform state.
-4. **DESTROY** - Remove the resource from state (a no-op operation that does not alter the cluster Data API configuration).
+3. **GET** - Read the current Data API status using the data source.
+4. **IMPORT** - Import an existing Data API configuration into Terraform state.
+5. **DESTROY** - Remove the resource from state (a no-op operation that does not alter the cluster Data API configuration).
 
 Copy `terraform.template.tfvars` to `terraform.tfvars` and update the values with your credentials.
 
@@ -100,6 +101,27 @@ couchbase-capella_data_api.new_data_api: Still modifying... [01m00s elapsed]
 couchbase-capella_data_api.new_data_api: Modifications complete after 1m0s
 
 Apply complete! Resources: 0 added, 1 changed, 0 destroyed.
+```
+
+## GET - Read the Data API status
+
+The `get_data_api.tf` file reads the current Data API status of the cluster using the `couchbase-capella_data_api` data source and exposes it as the `existing_data_api` output.
+
+Command: `terraform output existing_data_api`
+
+Sample Output:
+```
+$ terraform output existing_data_api
+{
+  "cluster_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "connection_string" = "couchbases://cb.abcdefghijklmnop.cloud.couchbase.com"
+  "enable_data_api" = true
+  "enable_network_peering" = true
+  "organization_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "project_id" = "ffffffff-aaaa-1414-eeee-000000000000"
+  "state_for_data_api" = "enabled"
+  "state_for_network_peering" = "enabled"
+}
 ```
 
 ## IMPORT
