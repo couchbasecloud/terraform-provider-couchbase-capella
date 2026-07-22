@@ -1,6 +1,6 @@
 # Capella Data API Example
 
-This example shows how to enable or disable the Data API and network peering on an existing Couchbase Capella operational cluster using the `couchbase-capella_data_api` resource, and how to read the current Data API status using the `couchbase-capella_data_api` data source.
+This example shows how to enable or disable the Data API and network peering on an existing Couchbase Capella operational cluster using the `couchbase-capella_data_api` resource.
 
 ## Example Walkthrough
 
