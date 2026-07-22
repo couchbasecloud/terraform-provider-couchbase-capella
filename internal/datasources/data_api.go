@@ -47,19 +47,10 @@ func (d *DataApi) Read(ctx context.Context, req datasource.ReadRequest, resp *da
 		return
 	}
 
-	IDs, err := state.Validate()
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Reading Capella Data API Status",
-			"Could not read Data API status for cluster ID "+state.ClusterId.String()+": "+err.Error(),
-		)
-		return
-	}
-
 	var (
-		organizationId = IDs[providerschema.OrganizationId]
-		projectId      = IDs[providerschema.ProjectId]
-		clusterId      = IDs[providerschema.ClusterId]
+		organizationId = state.OrganizationId.ValueString()
+		projectId      = state.ProjectId.ValueString()
+		clusterId      = state.ClusterId.ValueString()
 	)
 
 	url := fmt.Sprintf("%s/v4/organizations/%s/projects/%s/clusters/%s/dataAPI", d.HostURL, organizationId, projectId, clusterId)
