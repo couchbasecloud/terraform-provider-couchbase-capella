@@ -154,6 +154,54 @@ func TestAccDataApiResourceInvalidUUIDs(t *testing.T) {
 	}
 }
 
+// TestAccDatasourceDataApiInvalidUUIDs verifies that each ID attribute rejects
+// non-UUID values via local schema validation, one attribute per subtest.
+func TestAccDatasourceDataApiInvalidUUIDs(t *testing.T) {
+	tests := []struct {
+		name           string
+		organizationID string
+		projectID      string
+		clusterID      string
+	}{
+		{
+			name:           "organization_id",
+			organizationID: "not-a-uuid",
+			projectID:      "11111111-1111-1111-1111-111111111111",
+			clusterID:      "22222222-2222-2222-2222-222222222222",
+		},
+		{
+			name:           "project_id",
+			organizationID: "00000000-0000-0000-0000-000000000000",
+			projectID:      "not-a-uuid",
+			clusterID:      "22222222-2222-2222-2222-222222222222",
+		},
+		{
+			name:           "cluster_id",
+			organizationID: "00000000-0000-0000-0000-000000000000",
+			projectID:      "11111111-1111-1111-1111-111111111111",
+			clusterID:      "not-a-uuid",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			dsName := randomStringWithPrefix("tf_acc_data_api_ds_non_uuid_")
+
+			resource.ParallelTest(t, resource.TestCase{
+				ProtoV6ProviderFactories: globalProtoV6ProviderFactory,
+				Steps: []resource.TestStep{
+					{
+						Config: testAccDataApiDatasourceIDsConfig(
+							dsName, test.organizationID, test.projectID, test.clusterID),
+						ExpectError: regexp.MustCompile(
+							`(?s)Invalid Attribute Value Match.*` + test.name + `.*must be a valid UUID`),
+					},
+				},
+			})
+		})
+	}
+}
+
 func testAccDataApiResourceConfig(resourceName string, enableDataApi, enableNetworkPeering bool) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -179,6 +227,18 @@ resource "couchbase-capella_data_api" "%[2]s" {
   enable_data_api = true
 }
 `, globalProviderBlock, resourceName, organizationID, projectID, clusterID)
+}
+
+func testAccDataApiDatasourceIDsConfig(dsName, organizationID, projectID, clusterID string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "couchbase-capella_data_api" "%[2]s" {
+  organization_id = "%[3]s"
+  project_id      = "%[4]s"
+  cluster_id      = "%[5]s"
+}
+`, globalProviderBlock, dsName, organizationID, projectID, clusterID)
 }
 
 func testAccDataApiResourceAndDatasourceConfig(resourceName, dsName string, enableDataApi, enableNetworkPeering bool) string {
