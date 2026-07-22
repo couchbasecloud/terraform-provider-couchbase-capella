@@ -85,6 +85,7 @@ func (c *Client) ExecuteWithRetry(
 	}
 
 	var fn = func() (response *Response, backoff time.Duration, err error) {
+		fmt.Println("Executing request to endpoint:", endpointCfg.Method, endpointCfg.Url)
 		req, err := http.NewRequest(endpointCfg.Method, endpointCfg.Url, bytes.NewReader(requestBody))
 		if err != nil {
 			return nil, dur, fmt.Errorf("%s: %w", errors.ErrConstructingRequest, err)
@@ -110,6 +111,7 @@ func (c *Client) ExecuteWithRetry(
 		case endpointCfg.SuccessStatus:
 			// success case
 		case http.StatusTooManyRequests:
+			fmt.Println("TOO MANY REQs:", endpointCfg.Method, endpointCfg.Url)
 			header := apiRes.Header.Get("Retry-After")
 			retryAfter, err := strconv.Atoi(header)
 			if err != nil {
@@ -135,6 +137,7 @@ func (c *Client) ExecuteWithRetry(
 			})
 			return nil, retryAfter, errors.ErrServiceUnavailable
 		case http.StatusGatewayTimeout:
+			fmt.Println("TIMEOUT:", endpointCfg.Method, endpointCfg.Url)
 			var apiError Error
 			if err := json.Unmarshal(responseBody, &apiError); err != nil {
 				return nil, dur, fmt.Errorf(
@@ -148,6 +151,7 @@ func (c *Client) ExecuteWithRetry(
 
 			return nil, dur, errors.ErrGatewayTimeout
 		default:
+			fmt.Println("UNEXPECTED CODE:", endpointCfg.Method, endpointCfg.Url, apiRes.StatusCode, string(responseBody))
 			var apiError Error
 			if err := json.Unmarshal(responseBody, &apiError); err != nil {
 				return nil, dur, fmt.Errorf(
@@ -208,6 +212,7 @@ func exec(
 			if backOff > 0 {
 				timer.Reset(backOff)
 			} else {
+				fmt.Println("Retrying request")
 				timer.Reset(waitOnReattempt)
 			}
 		}
