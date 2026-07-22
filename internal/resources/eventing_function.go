@@ -124,10 +124,8 @@ func (e *EventingFunction) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	// Read the function back to populate computed attributes with their server-assigned values.
-	// The plan is passed forward so URL binding secrets and the State verb are preserved.
 	refreshedState, err := e.retrieveEventingFunction(ctx, organizationId, projectId, clusterId, name, &plan)
 	if err != nil {
-		// The function was created, so do not error out and orphan it; fall back to the plan.
 		resp.Diagnostics.AddWarning(
 			"Error reading eventing function after create",
 			"Eventing function was created but could not be read back: "+api.ParseError(err),
@@ -151,8 +149,8 @@ func (e *EventingFunction) Create(ctx context.Context, req resource.CreateReques
 func setEventingFunctionComputedAttributesToNull(ctx context.Context, plan *providerschema.EventingFunctionResource) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	nullKeyspaceComputedAttributes(plan.EventSource)
-	nullKeyspaceComputedAttributes(plan.EventMetadataStorage)
+	setComputedAttributesInKeyspaceToNull(plan.EventSource)
+	setComputedAttributesInKeyspaceToNull(plan.EventMetadataStorage)
 
 	attrTypes := providerschema.EventingFunctionSettings{}.AttributeTypes()
 	if plan.Settings.IsNull() || plan.Settings.IsUnknown() {
@@ -199,14 +197,21 @@ func setEventingFunctionComputedAttributesToNull(ctx context.Context, plan *prov
 	return diags
 }
 
-// nullKeyspaceComputedAttributes sets the computed scope and collection of a keyspace to null. It is a
-// no-op for a nil keyspace.
-func nullKeyspaceComputedAttributes(k *providerschema.EventingFunctionKeyspace) {
+// setComputedAttributesInKeyspaceToNull sets the computed scope and collection of a keyspace to null,
+// only if not set by the user.
+func setComputedAttributesInKeyspaceToNull(k *providerschema.EventingFunctionKeyspace) {
+	// this should not be nil as keyspace is required in the schema
 	if k == nil {
 		return
 	}
-	k.Scope = types.StringNull()
-	k.Collection = types.StringNull()
+
+	if k.Scope.IsNull() || k.Scope.IsUnknown() {
+		k.Scope = types.StringNull()
+	}
+
+	if k.Collection.IsNull() || k.Collection.IsUnknown() {
+		k.Collection = types.StringNull()
+	}
 }
 
 // eventingValueChanged determines if scalar values are different.
