@@ -18,7 +18,7 @@ func DataApiSchema() schema.Schema {
 	capellaschema.AddAttr(attrs, "enable_network_peering", dataApiBuilder, boolDefaultAttribute(false, optional, computed))
 	capellaschema.AddAttr(attrs, "state_for_data_api", dataApiBuilder, stringAttribute([]string{computed}))
 	capellaschema.AddAttr(attrs, "state_for_network_peering", dataApiBuilder, stringAttribute([]string{computed}))
-	capellaschema.AddAttr(attrs, "connection_string", dataApiBuilder, stringAttribute([]string{computed, useStateForUnknown}))
+	capellaschema.AddAttr(attrs, "connection_string", dataApiBuilder, stringAttribute([]string{computed}))
 
 	return schema.Schema{
 		MarkdownDescription: "This resource allows you to enable or disable the Data API and network peering for an operational cluster.",
