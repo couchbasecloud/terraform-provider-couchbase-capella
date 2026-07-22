@@ -182,15 +182,20 @@ resource "couchbase-capella_data_api" "%[2]s" {
 }
 
 func testAccDataApiResourceAndDatasourceConfig(resourceName, dsName string, enableDataApi, enableNetworkPeering bool) string {
+	// enable_network_peering is omitted when false so those steps also exercise the attribute's default.
+	enableNetworkPeeringAttr := ""
+	if enableNetworkPeering {
+		enableNetworkPeeringAttr = "\n  enable_network_peering = true"
+	}
+
 	return fmt.Sprintf(`
 %[1]s
 
 resource "couchbase-capella_data_api" "%[2]s" {
-  organization_id        = "%[4]s"
-  project_id             = "%[5]s"
-  cluster_id             = "%[6]s"
-  enable_data_api        = %[7]t
-  enable_network_peering = %[8]t
+  organization_id = "%[4]s"
+  project_id      = "%[5]s"
+  cluster_id      = "%[6]s"
+  enable_data_api = %[7]t%[8]s
 }
 
 data "couchbase-capella_data_api" "%[3]s" {
@@ -200,7 +205,7 @@ data "couchbase-capella_data_api" "%[3]s" {
 
   depends_on = [couchbase-capella_data_api.%[2]s]
 }
-`, globalProviderBlock, resourceName, dsName, globalOrgId, globalProjectId, globalClusterId, enableDataApi, enableNetworkPeering)
+`, globalProviderBlock, resourceName, dsName, globalOrgId, globalProjectId, globalClusterId, enableDataApi, enableNetworkPeeringAttr)
 }
 
 func generateDataApiImportId(resourceReference string) resource.ImportStateIdFunc {
