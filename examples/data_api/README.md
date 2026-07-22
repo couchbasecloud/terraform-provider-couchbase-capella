@@ -103,13 +103,23 @@ Apply complete! Resources: 0 added, 1 changed, 0 destroyed.
 ```
 
 ## IMPORT
+Command: `terraform import couchbase-capella_data_api.new_data_api cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>`
 
-Import is supported using the following syntax:
+In this case, the complete command is:
+`terraform import couchbase-capella_data_api.new_data_api cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000`
 
-The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+Sample Output:
+```
+$ terraform import couchbase-capella_data_api.new_data_api cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000
+couchbase-capella_data_api.new_data_api: Importing from ID "cluster_id=ffffffff-aaaa-1414-eeee-000000000000,project_id=ffffffff-aaaa-1414-eeee-000000000000,organization_id=ffffffff-aaaa-1414-eeee-000000000000"...
+couchbase-capella_data_api.new_data_api: Import prepared!
+  Prepared couchbase-capella_data_api for import
+couchbase-capella_data_api.test: Refreshing state...
 
-```shell
-terraform import couchbase-capella_data_api.new_data_api cluster_id=<cluster_id>,project_id=<project_id>,organization_id=<organization_id>
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
 ```
 
 ## DESTROY
