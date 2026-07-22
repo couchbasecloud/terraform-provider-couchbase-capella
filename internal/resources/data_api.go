@@ -18,9 +18,10 @@ import (
 )
 
 var (
-	_ resource.Resource                = (*DataApi)(nil)
-	_ resource.ResourceWithConfigure   = (*DataApi)(nil)
-	_ resource.ResourceWithImportState = (*DataApi)(nil)
+	_ resource.Resource                   = (*DataApi)(nil)
+	_ resource.ResourceWithConfigure      = (*DataApi)(nil)
+	_ resource.ResourceWithImportState    = (*DataApi)(nil)
+	_ resource.ResourceWithValidateConfig = (*DataApi)(nil)
 )
 
 const errorMessageWhileDataApiUpdate = "There is an error during the Data API configuration update. Please check in Capella to see if any" +
@@ -48,6 +49,31 @@ func (d *DataApi) Metadata(_ context.Context, req resource.MetadataRequest, resp
 // Schema defines the schema for the Data API configuration resource.
 func (d *DataApi) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = DataApiSchema()
+}
+
+// ValidateConfig rejects enabling network peering while the Data API is disabled, as the Capella API does
+// not allow this combination.
+func (d *DataApi) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var config providerschema.DataApi
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Defer validation until Terraform resolves expressions that determine these attribute values.
+	if config.EnableDataApi.IsNull() || config.EnableDataApi.IsUnknown() ||
+		config.EnableNetworkPeering.IsNull() || config.EnableNetworkPeering.IsUnknown() {
+		return
+	}
+
+	if !config.EnableDataApi.ValueBool() && config.EnableNetworkPeering.ValueBool() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("enable_network_peering"),
+			"Invalid Data API Configuration",
+			"Network peering cannot be enabled while the Data API is disabled. "+
+				"Set enable_data_api to true to enable network peering.",
+		)
+	}
 }
 
 // Configure adds the provider configured client to the Data API configuration resource.
@@ -219,7 +245,7 @@ func (d *DataApi) ImportState(ctx context.Context, req resource.ImportStateReque
 func (d *DataApi) updateDataApi(ctx context.Context, plan providerschema.DataApi) error {
 	updateRequest := data_api.UpdateDataApiRequest{
 		EnableDataApi:        plan.EnableDataApi.ValueBool(),
-		EnableNetworkPeering: plan.EnableNetworkPeering.ValueBoolPointer(),
+		EnableNetworkPeering: plan.EnableNetworkPeering.ValueBool(),
 	}
 
 	url := fmt.Sprintf(
