@@ -134,7 +134,7 @@ resource "couchbase-capella_backup" "%[2]s" {
   restore_times   = 1
 }
 `, globalProviderBlock, resourceName, globalOrgId, globalProjectId, globalClusterId, globalBucketId),
-				ExpectError: regexp.MustCompile("restore times must not be set during backup creation"),
+				ExpectError: regexp.MustCompile("restore times must not be set while create backup"),
 			},
 		},
 	})

@@ -77,7 +77,6 @@ func TestAccBackupScheduleResourceInvalidDayOfWeek(t *testing.T) {
 			{
 				Config:      testAccBackupScheduleResourceConfig(resourceName, "weekly", "funday", 10, 4, "30days", false),
 				ExpectError: regexp.MustCompile("day_of_week value must be one of"),
-				ExpectError: regexp.MustCompile(`(?s)day_of_week.*value must be one of|Attribute.*day_of_week.*one of`),
 			},
 		},
 	})
